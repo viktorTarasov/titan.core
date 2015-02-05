@@ -11,6 +11,30 @@ https://www.youtube.com/watch?v=2knzZuwzn-Y.
 ##Titan Datasheet on polarsys.org:
 http://polarsys.org/sites/default/files/custom_uploads/TITAN%20Datasheet%20A4%202.1.pdf
 
+##Binaries for a number of Linux platforms can be downloaded from:
+
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux32-gcc4.1.0-sles10.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux32-gcc4.1.0-sles10.tgz.sha512
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux32-gcc4.1.2-sled10.2.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux32-gcc4.1.2-sled10.2.tgz.sha512
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux32-gcc4.3-SLED11.1.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux32-gcc4.3-SLED11.1.tgz.sha512
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.1.2-rhel5.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.1.2-rhel5.tgz.sha512
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.3-SLED11.1.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.3-SLED11.1.tgz.sha512
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.3-sled11.0.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.3-sled11.0.tgz.sha512
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.3-sles11.1.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.3-sles11.1.tgz.sha512
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.4.5-rhel6.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.4.5-rhel6.tgz.sha512
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.6-ubuntu12.04.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.6-ubuntu12.04.tgz.sha512
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.8-ubuntu14.04.tgz
+https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux64-gcc4.8-ubuntu14.04.tgz.sha512
+
+
 # Related products:
  
 ## Test Ports:
