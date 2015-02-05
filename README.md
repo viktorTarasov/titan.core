@@ -11,7 +11,7 @@
 ##Titan Datasheet on polarsys.org:
 http://polarsys.org/sites/default/files/custom_uploads/TITAN%20Datasheet%20A4%202.1.pdf
 
-##Binaries for a number of Linux platforms can be downloaded from:
+##Binaries and SHA512 checksums for a number of Linux platforms can be downloaded from:
 
 * https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux32-gcc4.1.0-sles10.tgz
 * https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.1.pl0-linux32-gcc4.1.0-sles10.tgz.sha512
