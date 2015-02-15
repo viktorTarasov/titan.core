@@ -1,5 +1,12 @@
 # titan.core
 
+TTCN-3 is a standardized, modular language specifically designed for testing. 
+Eclipse Titan offers a free and open source compiler both for TTCN-3 and for 
+ASN.1 (Abstract Syntax Notation One).
+
+# Standards page (also including downloadable code):
+
+* http://www.ttcn-3.org/
 
 # Main project page:
 
