@@ -1306,7 +1306,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 
     src = mputprintf(src, /* XERSTUFF XER_encode for union */
       "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-      "unsigned int p_flavor, int p_indent) const\n"
+      "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const\n"
       "{\n"
       "%s"
       "  if (%s==union_selection) {\n"
@@ -1318,7 +1318,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "  int encoded_length=(int)p_buf.get_len();\n"
       , name
       , (use_runtime_2 ? "  if (err_descr) return XER_encode_negtest"
-        "(err_descr, p_td, p_buf, p_flavor, p_indent);\n" : "")
+        "(err_descr, p_td, p_buf, p_flavor, p_indent, 0);\n" : "")
       , unbound_value
     );
 
@@ -1380,7 +1380,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       src = mputprintf(src, "  case %s_%s:\n"
 	"    ec_1.set_msg(\"%s': \");\n"
 	"    field_%s->XER_encode(%s_xer_, p_buf, flavor_0, "
-	"p_indent + (!p_indent || !omit_tag));\n"
+	"p_indent + (!p_indent || !omit_tag), 0);\n"
 	"    break;\n",
 	selection_prefix, sdef->elements[i].name,
 	sdef->elements[i].dispname,
@@ -1403,11 +1403,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       def = mputstr(def,
         "int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
         "const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-        "unsigned int p_flavor, int p_indent) const;\n");
+        "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const;\n");
       src = mputprintf(src, /* XERSTUFF XER_encode for union */
         "int %s::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
         "const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-        "unsigned int p_flavor, int p_indent) const\n"
+        "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const\n"
         "{\n"
         "  if (%s==union_selection) {\n"
         "    TTCN_error(\"Attempt to XER-encode an unbound union value.\");\n"
@@ -1486,15 +1486,15 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "(\"internal error: erroneous value typedescriptor missing\");\n"
           "          else err_vals->value->errval->XER_encode("
           "*err_vals->value->type_descr->xer, p_buf, flavor_0, "
-          "p_indent + (!p_indent || !omit_tag));\n"
+          "p_indent + (!p_indent || !omit_tag), 0);\n"
           "        }\n"
           "      }\n"
           "    } else {\n"
           "      ec_1.set_msg(\"%s': \");\n"
           "      if (emb_descr) field_%s->XER_encode_negtest(emb_descr, "
-          "%s_xer_, p_buf, flavor_0, p_indent + (!p_indent || !omit_tag));\n"
+          "%s_xer_, p_buf, flavor_0, p_indent + (!p_indent || !omit_tag), 0);\n"
           "      else field_%s->XER_encode(%s_xer_, p_buf, flavor_0, "
-          "p_indent + (!p_indent || !omit_tag));\n"
+          "p_indent + (!p_indent || !omit_tag), 0);\n"
           "    }\n"
           "    break;\n",
           selection_prefix, sdef->elements[i].name, /* case label */
@@ -1533,7 +1533,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 #endif
     src = mputprintf(src, /* XERSTUFF decoder functions for union */
       "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,"
-      " unsigned int p_flavor)\n"
+      " unsigned int p_flavor, embed_values_dec_struct_t*)\n"
       "{\n"
       "  int e_xer = is_exer(p_flavor);\n"
       "  int type = 0;\n" /* None */
@@ -1643,7 +1643,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "      ec_2.set_msg(\"%s': \");\n"
           "      if (%s==union_selection) {\n"
           "        matched = %d;\n"
-          "        %s().XER_decode(%s_xer_, p_reader, flavor_1);\n"
+          "        %s().XER_decode(%s_xer_, p_reader, flavor_1, 0);\n"
           "      }\n"
           "      if (field_%s->is_bound()) break; else clean_up();\n"
           "    }\n",
@@ -1696,7 +1696,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           src = mputprintf(src,
             "    %sif (%s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT)) {\n"
             "      ec_2.set_msg(\"%s': \");\n"
-            "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1);\n"
+            "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, 0);\n"
             "      if (!%s%s().is_bound()) {\n"
             "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, \"Failed to decode field.\");\n"
             "      }\n"
@@ -1713,7 +1713,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         src = mputprintf(src,
           "    %sif ((e_xer && (type==XML_READER_TYPE_END_ELEMENT || !own_tag)) || %s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT)) {\n"
           "empty_xml:  ec_2.set_msg(\"%s': \");\n"
-          "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1);\n"
+          "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, 0);\n"
           "      if (!%s%s().is_bound()) {\n"
           "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, \"Failed to decode field.\");\n"
           "      }\n"

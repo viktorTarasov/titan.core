@@ -318,8 +318,8 @@ public:
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
                          const ASN_BER_TLV_t& p_tlv, unsigned L_form);
   
-  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int) const;
-  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int);
+  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const;
+  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, embed_values_dec_struct_t*);
   /** Decodes UTF-8 into the internal representation (UCS4-BE)
    *
    * @param n_octets number of UTF-8 bytes (not characters)

@@ -14,7 +14,7 @@ CODIRS := dynamicTemplate styleGuide topLevelPdu \
 	centralstorage mfgen-tpd \
 	openType optionalAssignCompare portConstructor \
 	isbound namedActualParameters assignmentNotation \
-	attribQualif
+	attribQualif HT48786
 
 all dep clean distclean:
 	for dir in $(CODIRS); do $(MAKE) -C $$dir $@ || exit; done

@@ -260,6 +260,9 @@ public:
   LIMITTYPE get_minimal() const;
   LIMITTYPE get_maximal() const;
 
+  bool is_upper_limit_infinity() const;
+  bool is_lower_limit_infinity() const;
+
   string to_string(bool add_brackets=true) const;
 
   /** conversion from integer range to size range,
@@ -539,6 +542,20 @@ LIMITTYPE RangeListConstraint<LIMITTYPE>::get_maximal() const
 }
 
 template <typename LIMITTYPE>
+bool RangeListConstraint<LIMITTYPE>::is_upper_limit_infinity () const
+{
+  if (0 == values.size()) return false;
+  return LIMITTYPE::maximum == values[values.size()-1];
+}
+
+template <typename LIMITTYPE>
+bool RangeListConstraint<LIMITTYPE>::is_lower_limit_infinity () const
+{
+  if (0 == values.size()) return false;
+  return LIMITTYPE::minimum == values[0];
+}
+
+template <typename LIMITTYPE>
 string RangeListConstraint<LIMITTYPE>::to_string(bool add_brackets) const
 {
   string ret_val;
@@ -597,6 +614,8 @@ public:
   real_limit_t get_maximal() const { return rlc.get_maximal(); }
 
   string to_string() const;
+  bool is_upper_limit_infinity() const;
+  bool is_lower_limit_infinity() const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

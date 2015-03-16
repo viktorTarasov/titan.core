@@ -25,6 +25,15 @@ void ASN_ANY::encode(const TTCN_Typedescriptor_t& p_td,
     tlv->put_in_buffer(p_buf);
     ASN_BER_TLV_t::destruct(tlv);
     break;}
+  case TTCN_EncDec::CT_JSON: {
+    TTCN_EncDec_ErrorContext ec("While JSON-encoding type '%s': ", p_td.name);
+    if(!p_td.json)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No JSON descriptor available for type '%s'.", p_td.name);
+    JSON_Tokenizer tok(va_arg(pvar, int) != 0);
+    JSON_encode(p_td, tok);
+    p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
+    break;}
   case TTCN_EncDec::CT_RAW:
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'",
@@ -47,6 +56,19 @@ void ASN_ANY::decode(const TTCN_Typedescriptor_t& p_td,
     BER_decode_str2TLV(p_buf, tlv, L_form);
     BER_decode_TLV(p_td, tlv, L_form);
     if(tlv.isComplete) p_buf.increase_pos(tlv.get_len());
+    break;}
+  case TTCN_EncDec::CT_JSON: {
+    TTCN_EncDec_ErrorContext ec("While JSON-decoding type '%s': ", p_td.name);
+    if(!p_td.json)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No JSON descriptor available for type '%s'.", p_td.name);
+    JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
+    if(JSON_decode(p_td, tok, false)<0)
+      ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
+               "Can not decode type '%s', because invalid or incomplete"
+               " message was received"
+               , p_td.name);
+    p_buf.set_pos(tok.get_buf_pos());
     break;}
   case TTCN_EncDec::CT_RAW:
   default:

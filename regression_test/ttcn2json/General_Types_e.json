@@ -3,178 +3,222 @@
 		"General_Types" : {
 			"BIT1" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT10" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT11" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT12" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT12n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT14" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT14_24n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT14n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT15" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT15n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT15np" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT16" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT16_BO_LAST" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT16n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT1n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT1np" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT2" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT24" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT2n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT2np" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT3" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT31" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT32_BO_LAST" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT3n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT3np" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT4" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT4n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT4np" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT5" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT56" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT56n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT5n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT5np" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT6" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT6_BO_LAST" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT6n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT6np" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT7" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT7n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT7np" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT8" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT8n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT9" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"BIT9n" : {
 				"type" : "string",
+				"subType" : "bitstring",
 				"pattern" : "^[01]*$"
 			},
 			"CHAR4" : {
@@ -183,58 +227,72 @@
 			},
 			"Dummy" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"HEX0_16" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX0_18n" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX1" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX15n" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX16n" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX1_20n" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX1_32" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX1_34n" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX24n" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX4n" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX5_16" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX6n" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"HEX8n" : {
 				"type" : "string",
+				"subType" : "hexstring",
 				"pattern" : "^[0-9A-Fa-f]*$"
 			},
 			"INT1" : {
@@ -343,102 +401,127 @@
 			},
 			"OCT0" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT0n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT10" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT100n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT10n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT11" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT11n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT12" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT128n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT12n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT13" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT13n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT14" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT14n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT15" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT15n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT16" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT16n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT17" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT17n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT18" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT18n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT19" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT19n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1List" : {
@@ -450,122 +533,152 @@
 			},
 			"OCT1_112n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_12" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_127n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_128n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_12n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_15n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_16n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_172n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_18n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_20n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_24n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_260" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_32" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_32n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_34n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_3n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_46n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_4n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_50" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_50n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_5n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_6n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_7n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_8" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1_8n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT1n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT2" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT20" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT20n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT28n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT2List" : {
@@ -577,26 +690,32 @@
 			},
 			"OCT2n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT3" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT32" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT32n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT34" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT34n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT3List" : {
@@ -608,42 +727,52 @@
 			},
 			"OCT3_14n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT3_17n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT3_5n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT3_7n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT3_8" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT3_8n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT3n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT4" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT46" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT46n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT4List" : {
@@ -655,22 +784,27 @@
 			},
 			"OCT4_8n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT4n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT5" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT500n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT50n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT5List" : {
@@ -682,14 +816,17 @@
 			},
 			"OCT5n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT6" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT69n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT6List" : {
@@ -701,10 +838,12 @@
 			},
 			"OCT6n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT7" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT7List" : {
@@ -716,30 +855,37 @@
 			},
 			"OCT7n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT8" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT8n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT9" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCT9n" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCTN" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"OCTNn" : {
 				"type" : "string",
+				"subType" : "octetstring",
 				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
 			},
 			"ProtocolList" : {
@@ -761,10 +907,586 @@
 					"bssmap",
 					"ranap",
 					"dtap"
+				],
+				"numericValues" : [
+					0,
+					1,
+					2,
+					3,
+					4,
+					5,
+					6,
+					7,
+					8,
+					9
 				]
 			}
 		}
 	},
 	"anyOf" : [
+		{
+			"$ref" : "#/definitions/General_Types/OCT7n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT8n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT9n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT2n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT3n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT4n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT5n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT6n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT7n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT8n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT9n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT12n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT14n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT15n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT16n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT56n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT14_24n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT1np"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT2np"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT11"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT3np"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT4np"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT5np"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT6np"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT7np"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT15np"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT1"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT2"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT3"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT4"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT1n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT5"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT6"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT7"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT8"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT9"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT10"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT46n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT12"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT14"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT15"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT16"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT24"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT31"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT56"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT0n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT2n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT3n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT4n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT5n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT6n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT10n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT11n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT12n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT13n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT14n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT15n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT16n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT17n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT18n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT19n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT20n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT28n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT32n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT34n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT6"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT50n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT69n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT100n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT128n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT500n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCTNn"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_3n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_4n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_5n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_6n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_7n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_8n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_12n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_15n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_16n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_18n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_20n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_24n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_32n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_34n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_46n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_50n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_112n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_127n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_128n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_172n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT3_5n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT3_7n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT3_8n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT3_14n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT3_17n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT4_8n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/CHAR4"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX4n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX6n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX8n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX15n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX16n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX24n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX0_18n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX1_20n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX1_34n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT3nb"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT4nb"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT5nb"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT8nb"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT2nbp"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT1nbp"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT3nbp"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT5nbp"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT9nbp"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT13nbp"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT15nbp"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT6_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT16_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/BIT32_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/Dummy"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT0"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT2"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT3"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT4"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT5"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT7"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT8"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT9"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT10"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT11"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT12"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT13"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT14"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT15"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT16"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT17"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT18"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT19"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT20"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT32"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT34"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT46"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_260"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_8"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_12"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_32"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1_50"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT3_8"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCTN"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX1"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX0_16"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX5_16"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/HEX1_32"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT1"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/LIN1"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/LIN2"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/LIN2_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/LIN3_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/LIN4_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT1b"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT2b"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT3b"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT4b"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT5b"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT6b"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT7b"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT11b_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT12b_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT13b_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT14b_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT20b_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/INT31b_BO_LAST"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/Integers"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/Integer_array"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/Protocols"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT1List"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT2List"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT3List"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT4List"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT5List"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT6List"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT7List"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/ProtocolList"
+		}
 	]
 }

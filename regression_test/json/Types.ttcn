@@ -7,6 +7,8 @@
  ******************************************************************************/
 module Types {
 
+import from JsonData all;
+
 const integer c_imported_i :=11;
 
 type component MTC {}
@@ -156,6 +158,11 @@ type record RecDef {
   variant(b) "JSON:default(false)";
 }
 
+type record HasPardType {
+  ProtocolElem_Field1 pard,
+  boolean buul,
+  Price price
+}
 
 } with {
   encode "JSON";

@@ -3178,10 +3178,10 @@ namespace Common {
       case OPTYPE_CONCAT:
         return get_expr_governor_v1v2(exp_val);
       case OPTYPE_COMP_MTC:
-	if (my_scope) return my_scope->get_mtc_system_comptype(false, false);
+	if (my_scope) return my_scope->get_mtc_system_comptype(false);
 	else return 0;
       case OPTYPE_COMP_SYSTEM:
-	if (my_scope) return my_scope->get_mtc_system_comptype(true, false);
+	if (my_scope) return my_scope->get_mtc_system_comptype(true);
 	else return 0;
       case OPTYPE_COMP_SELF:
 	if (my_scope) {
@@ -3233,18 +3233,6 @@ namespace Common {
   {
     if(valuetype != V_INVOKE) FATAL_ERROR("Value::get_invoked_type()");
     return u.invoke.v->get_expr_governor(exp_val);
-  }
-  
-  Type* Value::get_component_governor()
-  {
-    if (V_EXPR == valuetype && OPTYPE_COMP_MTC == u.expr.v_optype) {
-      if (my_scope) {
-        return my_scope->get_mtc_system_comptype(false, true);
-      } else {
-        return 0;
-      }
-    }
-    return get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE);
   }
 
   const char* Value::get_opname() const
@@ -4048,10 +4036,10 @@ namespace Common {
     Type *t_comptype;
     switch (u.expr.v_optype) {
     case OPTYPE_COMP_MTC:
-      t_comptype = my_scope->get_mtc_system_comptype(false, false);
+      t_comptype = my_scope->get_mtc_system_comptype(false);
       break;
     case OPTYPE_COMP_SYSTEM:
-      t_comptype = my_scope->get_mtc_system_comptype(true, false);
+      t_comptype = my_scope->get_mtc_system_comptype(true);
       break;
     case OPTYPE_COMP_SELF: {
       Ttcn::RunsOnScope *t_ros = my_scope->get_scope_runs_on();
@@ -10009,13 +9997,14 @@ error:
 
   string Value::create_stringRepr()
   {
+    // note: cannot call is_asn1() when only parsing (scopes are not properly set) 
     switch (valuetype) {
     case V_ERROR:
       return string("<erroneous>");
     case V_NULL:
       return string("NULL");
     case V_BOOL:
-      if (is_asn1()) {
+      if (!parse_only && is_asn1()) {
         if (u.val_bool) return string("TRUE");
         else return string("FALSE");
       }
@@ -10066,7 +10055,7 @@ error:
     case V_OID:
     case V_ROID: {
       string ret_val;
-      if (!is_asn1()) ret_val += "objid ";
+      if (parse_only || !is_asn1()) ret_val += "objid ";
       ret_val += "{ ";
       for (size_t i = 0; i < u.oid_comps->size(); i++) {
         if (i>0) ret_val += ' ';
@@ -10075,7 +10064,7 @@ error:
       ret_val += " }";
       return ret_val; }
     case V_CHOICE:
-      if (is_asn1()) {
+      if (!parse_only && is_asn1()) {
         string ret_val(u.choice.alt_name->get_dispname());
         ret_val += " : ";
         ret_val += u.choice.alt_value->get_stringRepr();
@@ -10109,7 +10098,7 @@ error:
     case V_SEQ:
     case V_SET: {
       string ret_val("{ ");
-      bool asn1_flag = is_asn1();
+      bool asn1_flag = !parse_only && is_asn1();
       for (size_t i = 0; i < u.val_nvs->get_nof_nvs(); i++) {
         if (i > 0) ret_val += ", ";
           NamedValue *nv = u.val_nvs->get_nv_byIndex(i);

@@ -47,3 +47,13 @@ const TTCN_JSONdescriptor_t TeletexString_json_ = { false, NULL, false, NULL };
 const TTCN_JSONdescriptor_t VideotexString_json_ = { false, NULL, false, NULL };
 
 const TTCN_JSONdescriptor_t VisibleString_json_ = { false, NULL, false, NULL };
+
+const TTCN_JSONdescriptor_t ASN_NULL_json_ = { false, NULL, false, NULL };
+
+const TTCN_JSONdescriptor_t OBJID_json_ = { false, NULL, false, NULL };
+
+const TTCN_JSONdescriptor_t ASN_ROID_json_ = { false, NULL, false, NULL };
+
+const TTCN_JSONdescriptor_t ASN_ANY_json_ = { false, NULL, false, NULL };
+
+const TTCN_JSONdescriptor_t ENUMERATED_json_ = { false, NULL, false, NULL };

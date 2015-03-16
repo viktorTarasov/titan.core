@@ -26,19 +26,23 @@ enum optional_sel { OPTIONAL_UNBOUND, OPTIONAL_OMIT, OPTIONAL_PRESENT };
 
 template <typename T_type>
 class OPTIONAL : public Base_Type {
+  /** The value, if present (owned by OPTIONAL) 
+    * In Runtime2 the pointer is null, when the value is not present.
+    * In Runtime1 its presence is indicated by the optional_selection member. */
+  T_type *optional_value;
+  
   /** Specifies the state of the optional field
-    * @tricky The optional value can be modified through parameter references,
+    * @tricky In Runtime2 the optional value can be modified through parameter references,
     * in which case this member variable will not be updated. Always use the function
     * get_selection() instead of directly referencing this variable. */
-  optional_sel optional_selection; 
+  optional_sel optional_selection;
   
-  /** The value, if present (owned by OPTIONAL) */
-  T_type *optional_value; 
-  
+#ifdef TITAN_RUNTIME_2
   /** Stores the number of elements referenced by 'out' and 'inout' parameters,
-    * if the optional field is a record of/set of/array. 
+    * if the optional field is a record of/set of/array (only in Runtime2).
     * If at least one element is referenced, the value must not be deleted. */
-  int param_refs; 
+  int param_refs;
+#endif
 
   /** Set the optional value to present.
    * If the value was already present, does nothing.
@@ -55,9 +59,10 @@ public:
   void set_to_present() {
     if (optional_selection != OPTIONAL_PRESENT) {
       optional_selection = OPTIONAL_PRESENT;
-      if (optional_value == NULL) {
+#ifdef TITAN_RUNTIME_2
+      if (optional_value == NULL)
+#endif
         optional_value = new T_type;
-      }
     }
   }
 
@@ -72,6 +77,7 @@ public:
   inline
 #endif
   void set_to_omit() {
+#ifdef TITAN_RUNTIME_2
     if (is_present()) {
       if (param_refs > 0) {
         optional_value->clean_up();
@@ -81,12 +87,21 @@ public:
         optional_value = NULL;
       }
     }
+#else
+    if (optional_selection == OPTIONAL_PRESENT) {
+      delete optional_value;
+    }
+#endif
     optional_selection = OPTIONAL_OMIT;
   }
 
 public:
   /// Default constructor creates an unbound object
-  OPTIONAL() : optional_selection(OPTIONAL_UNBOUND), optional_value(NULL), param_refs(0) { }
+  OPTIONAL() : optional_value(NULL), optional_selection(OPTIONAL_UNBOUND)
+#ifdef TITAN_RUNTIME_2
+  , param_refs(0)
+#endif
+  { }
 
   /// Construct an optional object set to omit.
   /// @p other_value must be OMIT_VALUE, or else dynamic testcase error.
@@ -104,12 +119,21 @@ public:
   /// Construct from an object of different type
   template <typename T_tmp>
   OPTIONAL(const T_tmp& other_value)
-  : optional_selection(OPTIONAL_PRESENT),
-    optional_value(new T_type(other_value)),
-    param_refs(0) { }
+  : optional_value(new T_type(other_value))
+  ,  optional_selection(OPTIONAL_PRESENT)
+#ifdef TITAN_RUNTIME_2
+  ,  param_refs(0)
+#endif
+  { }
 
-  ~OPTIONAL()
-    { if (NULL != optional_value) delete optional_value; }
+  ~OPTIONAL() {
+#ifdef TITAN_RUNTIME_2
+    if (NULL != optional_value)
+#else
+    if (optional_selection == OPTIONAL_PRESENT)
+#endif
+      delete optional_value; 
+  }
 
   void clean_up();
 
@@ -161,12 +185,20 @@ public:
     { return is_equal(other_value); }
 #endif
 
+#ifdef TITAN_RUNTIME_2
   boolean is_bound() const;
+#else
+  inline boolean is_bound() const { return optional_selection != OPTIONAL_UNBOUND; }
+#endif
   boolean is_value() const
    { return optional_selection == OPTIONAL_PRESENT && optional_value->is_value(); }
   /** Whether the optional value is present.
    * @return \c true if optional_selection is OPTIONAL_PRESENT, else \c false */
+#ifdef TITAN_RUNTIME_2
   boolean is_present() const;
+#else
+  inline boolean is_present() const { return optional_selection==OPTIONAL_PRESENT; }
+#endif
 
 #ifdef TITAN_RUNTIME_2
   /** @name override virtual functions of Base_Type
@@ -207,9 +239,14 @@ public:
    */
   boolean ispresent() const;
   
+#ifdef TITAN_RUNTIME_2
   /** @tricky Calculates and returns the actual state of the optional object, 
-    * not just the optional_selection member. */
+    * not just the optional_selection member.
+    * (Only needed in Runtime2, in Runtime1 optional_selection is always up to date.) */
   optional_sel get_selection() const;
+#else
+  inline optional_sel get_selection() const { return optional_selection; }
+#endif
 
   void log() const;
   void set_param(Module_Param& param);
@@ -221,10 +258,12 @@ public:
     raw_order_t top_bit_ord, boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
 #endif
 
-  int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor, int indent) const;
+  int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor,
+    int indent, embed_values_enc_struct_t* emb_val) const;
 #ifdef TITAN_RUNTIME_2
   int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
-    const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor, int indent) const;
+    const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor,
+    int indent, embed_values_enc_struct_t* emb_val) const;
 #endif
   /** Used during XML decoding, in case this object is an AnyElement field in a record.
     * Determines whether XER_decode() should be called or this field should be omitted.
@@ -236,7 +275,8 @@ public:
     * @param next_field_name name of the next field in the record, or null if this is the last one
     * @param parent_tag_closed true, if the record's XML tag is closed (is an empty element)*/
   bool XER_check_any_elem(XmlReaderWrap& reader, const char* next_field_name, bool parent_tag_closed);
-  int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor);
+  int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
+    unsigned int flavor, embed_values_dec_struct_t* emb_val);
 
   char ** collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const;
 
@@ -274,16 +314,18 @@ public:
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
   
+#ifdef TITAN_RUNTIME_2
   /** Called before an element of an optional record of/set of is indexed and passed as an
-    * 'inout' or 'out' parameter to a function.
+    * 'inout' or 'out' parameter to a function (only in Runtime2).
     * Sets the optional value to present (this would be done by the indexing operation
     * anyway) and redirects the call to the optional value. */
   void add_refd_index(int index);
   
   /** Called after an element of an optional record of/set of is passed as an
-    * 'inout' or 'out' parameter to a function.
+    * 'inout' or 'out' parameter to a function (only in Runtime2).
     * Redirects the call to the optional value. */
   void remove_refd_index(int index);
+#endif
   
   /** Called before an element of an optional record of/set of is passed as an
     * 'inout' or 'out' parameter to a function. Returns the size of the record of/
@@ -302,7 +344,11 @@ public:
 template<typename T_type>
 Base_Type* OPTIONAL<T_type>::get_opt_value()
 {
+#ifdef TITAN_RUNTIME_2
   if (!is_present())
+#else
+  if (optional_selection!=OPTIONAL_PRESENT)
+#endif
     TTCN_error("Internal error: get_opt_value() called on a non-present optional field.");
   return optional_value;
 }
@@ -310,7 +356,11 @@ Base_Type* OPTIONAL<T_type>::get_opt_value()
 template<typename T_type>
 const Base_Type* OPTIONAL<T_type>::get_opt_value() const
 {
+#ifdef TITAN_RUNTIME_2
   if (!is_present())
+#else
+  if (optional_selection!=OPTIONAL_PRESENT)
+#endif
     TTCN_error("Internal error: get_opt_value() const called on a non-present optional field.");
   return optional_value;
 }
@@ -318,20 +368,35 @@ const Base_Type* OPTIONAL<T_type>::get_opt_value() const
 template<typename T_type>
 boolean OPTIONAL<T_type>::is_seof() const
 {
-  return (is_present()) ? optional_value->is_seof() : T_type().is_seof();
+  return
+#ifdef TITAN_RUNTIME_2
+  (is_present())
+#else
+  (optional_selection==OPTIONAL_PRESENT)
+#endif
+  ? optional_value->is_seof() : T_type().is_seof();
 }
 
 template<typename T_type>
 const TTCN_Typedescriptor_t* OPTIONAL<T_type>::get_descriptor() const
 {
-  return (is_present()) ? optional_value->get_descriptor() : T_type().get_descriptor();
+  return 
+#ifdef TITAN_RUNTIME_2
+  (is_present())
+#else
+  (optional_selection==OPTIONAL_PRESENT)
+#endif
+  ? optional_value->get_descriptor() : T_type().get_descriptor();
 }
 
 #endif
 
 template<typename T_type>
 OPTIONAL<T_type>::OPTIONAL(template_sel other_value)
-  : optional_selection(OPTIONAL_OMIT), optional_value(NULL), param_refs(0)
+  : optional_value(NULL), optional_selection(OPTIONAL_OMIT)
+#ifdef TITAN_RUNTIME_2
+  , param_refs(0)
+#endif
 {
   if (other_value != OMIT_VALUE)
     TTCN_error("Setting an optional field to an invalid value.");
@@ -340,9 +405,11 @@ OPTIONAL<T_type>::OPTIONAL(template_sel other_value)
 template<typename T_type>
 OPTIONAL<T_type>::OPTIONAL(const OPTIONAL& other_value)
   : Base_Type(other_value)
-  , optional_selection(other_value.optional_selection)
   , optional_value(NULL)
+  , optional_selection(other_value.optional_selection)
+#ifdef TITAN_RUNTIME_2
   , param_refs(0)
+#endif
 {
   switch (other_value.optional_selection) {
   case OPTIONAL_PRESENT:
@@ -357,7 +424,10 @@ OPTIONAL<T_type>::OPTIONAL(const OPTIONAL& other_value)
 
 template<typename T_type> template<typename T_tmp>
 OPTIONAL<T_type>::OPTIONAL(const OPTIONAL<T_tmp>& other_value)
-  : optional_selection(other_value.get_selection()), optional_value(NULL), param_refs(0)
+  : optional_value(NULL), optional_selection(other_value.get_selection())
+#ifdef TITAN_RUNTIME_2
+  , param_refs(0)
+#endif
 {
   switch (other_value.get_selection()) {
   case OPTIONAL_PRESENT:
@@ -373,6 +443,7 @@ OPTIONAL<T_type>::OPTIONAL(const OPTIONAL<T_tmp>& other_value)
 template<typename T_type>
 void OPTIONAL<T_type>::clean_up()
 {
+#ifdef TITAN_RUNTIME_2
   if (is_present()) {
     if (param_refs > 0) {
       optional_value->clean_up();
@@ -382,6 +453,11 @@ void OPTIONAL<T_type>::clean_up()
       optional_value = NULL;
     }
   }
+#else
+  if (OPTIONAL_PRESENT == optional_selection) {
+    delete optional_value;
+  }
+#endif
   optional_selection = OPTIONAL_UNBOUND;
 }
 
@@ -399,9 +475,13 @@ OPTIONAL<T_type>& OPTIONAL<T_type>::operator=(const OPTIONAL& other_value)
 {
   switch (other_value.optional_selection) {
   case OPTIONAL_PRESENT:
-    optional_selection = OPTIONAL_PRESENT;
+#ifdef TITAN_RUNTIME_2
     if (NULL == optional_value) {
+#else
+    if (optional_selection != OPTIONAL_PRESENT) {
+#endif
       optional_value = new T_type(*other_value.optional_value);
+      optional_selection = OPTIONAL_PRESENT;
     } else *optional_value = *other_value.optional_value;
     break;
   case OPTIONAL_OMIT:
@@ -420,9 +500,13 @@ OPTIONAL<T_type>::operator=(const OPTIONAL<T_tmp>& other_value)
 {
   switch (other_value.get_selection()) {
   case OPTIONAL_PRESENT:
-    optional_selection = OPTIONAL_PRESENT;
+#ifdef TITAN_RUNTIME_2
     if (NULL == optional_value) {
+#else
+    if (optional_selection != OPTIONAL_PRESENT) {
+#endif
       optional_value = new T_type((const T_tmp&)other_value);
+      optional_selection = OPTIONAL_PRESENT;
     } else *optional_value = (const T_tmp&)other_value;
     break;
   case OPTIONAL_OMIT:
@@ -439,9 +523,13 @@ template<typename T_type> template <typename T_tmp>
 OPTIONAL<T_type>&
 OPTIONAL<T_type>::operator=(const T_tmp& other_value)
 {
-  optional_selection = OPTIONAL_PRESENT;
+#ifdef TITAN_RUNTIME_2
   if (NULL == optional_value) {
+#else
+  if (optional_selection != OPTIONAL_PRESENT) {
+#endif
     optional_value = new T_type(other_value);
+    optional_selection = OPTIONAL_PRESENT;
   } else *optional_value = other_value;
   return *this;
 }
@@ -449,28 +537,52 @@ OPTIONAL<T_type>::operator=(const T_tmp& other_value)
 template<typename T_type>
 boolean OPTIONAL<T_type>::is_equal(template_sel other_value) const
 {
+#ifdef TITAN_RUNTIME_2
   if (!is_bound()) {
+#else
+  if (optional_selection == OPTIONAL_UNBOUND) {
+#endif
     if (other_value == UNINITIALIZED_TEMPLATE) return TRUE;
     TTCN_error("The left operand of comparison is an unbound optional value.");
   }
   if (other_value != OMIT_VALUE) TTCN_error("Internal error: The right operand "
     "of comparison is an invalid value.");
-  return !is_present();
+  return
+#ifdef TITAN_RUNTIME_2
+  !is_present();
+#else
+  optional_selection == OPTIONAL_OMIT;
+#endif
 }
 
 template<typename T_type>
 boolean OPTIONAL<T_type>::is_equal(const OPTIONAL& other_value) const
 {
+#ifdef TITAN_RUNTIME_2
   if (!is_bound()) {
-    if (!other_value.is_bound()) return TRUE;
+    if (!other_value.is_bound())
+#else
+  if (optional_selection == OPTIONAL_UNBOUND) {
+    if (other_value.optional_selection == OPTIONAL_UNBOUND)
+#endif
+      return TRUE;
     TTCN_error("The left operand of "
     "comparison is an unbound optional value.");
   }
+#ifdef TITAN_RUNTIME_2
   if (!other_value.is_bound())
+#else
+  if (other_value.optional_selection == OPTIONAL_UNBOUND)
+#endif
     TTCN_error("The right operand of comparison is an unbound optional value.");
+#ifdef TITAN_RUNTIME_2
   boolean present = is_present();
   if (present != other_value.is_present()) return FALSE;
   else if (present)
+#else
+  if (optional_selection != other_value.optional_selection) return FALSE;
+  else if (optional_selection == OPTIONAL_PRESENT)
+#endif
     return *optional_value == *other_value.optional_value;
   else return TRUE;
 }
@@ -478,7 +590,11 @@ boolean OPTIONAL<T_type>::is_equal(const OPTIONAL& other_value) const
 template<typename T_type> template <typename T_tmp>
 boolean OPTIONAL<T_type>::is_equal(const T_tmp& other_value) const
 {
+#ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
+#else
+  switch (optional_selection) {
+#endif
   case OPTIONAL_PRESENT:
     return *optional_value == other_value;
   case OPTIONAL_OMIT:
@@ -492,20 +608,37 @@ boolean OPTIONAL<T_type>::is_equal(const T_tmp& other_value) const
 template<typename T_type> template <typename T_tmp>
 boolean OPTIONAL<T_type>::is_equal(const OPTIONAL<T_tmp>& other_value) const
 {
+#ifdef TITAN_RUNTIME_2
   if (!is_bound()) {
-    if (!other_value.is_bound()) return TRUE;
+    if (!other_value.is_bound())
+#else
+  optional_sel other_selection = other_value.get_selection();
+  if (optional_selection == OPTIONAL_UNBOUND) {
+    if (other_selection == OPTIONAL_UNBOUND)
+#endif
+      return TRUE;
     TTCN_error("The left operand of "
     "comparison is an unbound optional value.");
   }
-  if (!other_value.is_bound()) TTCN_error("The right operand of "
-    "comparison is an unbound optional value.");
+#ifdef TITAN_RUNTIME_2
+  if (!other_value.is_bound())
+#else
+  if (other_selection == OPTIONAL_UNBOUND)
+#endif
+    TTCN_error("The right operand of comparison is an unbound optional value.");
+#ifdef TITAN_RUNTIME_2
   boolean present = is_present();
   if (present != other_value.is_present()) return FALSE;
   else if (present)
+#else
+  if (optional_selection != other_selection) return FALSE;
+  else if (optional_selection == OPTIONAL_PRESENT)
+#endif
     return *optional_value == (const T_tmp&)other_value;
   else return TRUE;
 }
 
+#ifdef TITAN_RUNTIME_2
 template<typename T_type>
 boolean OPTIONAL<T_type>::is_bound() const
 {
@@ -535,6 +668,7 @@ boolean OPTIONAL<T_type>::is_present() const
     return FALSE;
   }
 }
+#endif
 
 template<typename T_type>
 boolean OPTIONAL<T_type>::ispresent() const
@@ -543,19 +677,24 @@ boolean OPTIONAL<T_type>::ispresent() const
   case OPTIONAL_PRESENT:
     return TRUE;
   case OPTIONAL_OMIT:
+#ifdef TITAN_RUNTIME_2
     if (NULL != optional_value) {
       return optional_value->is_bound();
     }
+#endif
     return FALSE;
   default:
+#ifdef TITAN_RUNTIME_2
     if (NULL != optional_value && optional_value->is_bound()) {
       return TRUE;
     }
+#endif
     TTCN_error("Using an unbound optional field.");
-    return FALSE;
   }
+  return FALSE;
 }
 
+#ifdef TITAN_RUNTIME_2
 template<typename T_type>
 optional_sel OPTIONAL<T_type>::get_selection() const
 {
@@ -568,11 +707,16 @@ optional_sel OPTIONAL<T_type>::get_selection() const
   }
   return OPTIONAL_UNBOUND;
 }
+#endif
 
 template<typename T_type>
 void OPTIONAL<T_type>::log() const
 {
+#ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
+#else
+  switch (optional_selection) {
+#endif
   case OPTIONAL_PRESENT:
     optional_value->log();
     break;
@@ -600,7 +744,11 @@ void OPTIONAL<T_type>::set_param(Module_Param& param) {
 template<typename T_type>
 void OPTIONAL<T_type>::encode_text(Text_Buf& text_buf) const
 {
+#ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
+#else
+  switch (optional_selection) {
+#endif
   case OPTIONAL_OMIT:
     text_buf.push_int((RInt)FALSE);
     break;
@@ -625,7 +773,11 @@ void OPTIONAL<T_type>::decode_text(Text_Buf& text_buf)
 template<typename T_type>
 int OPTIONAL<T_type>::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok) const
 {
+#ifdef TITAN_RUNTIME_2
   switch(get_selection()) {
+#else
+  switch(optional_selection) {
+#endif
   case OPTIONAL_PRESENT:
     return optional_value->JSON_encode(p_td, p_tok);
   case OPTIONAL_OMIT:
@@ -640,33 +792,36 @@ int OPTIONAL<T_type>::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokeni
 template<typename T_type>
 int OPTIONAL<T_type>::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
 {
+  // try the optional value first
+  set_to_present();
   size_t buf_pos = p_tok.get_buf_pos();
-  json_token_t token = JSON_TOKEN_NONE;
-  int dec_len = p_tok.get_next_token(&token, NULL, NULL);
-  if (JSON_TOKEN_ERROR == token) {
-    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, "");
-    dec_len = JSON_ERROR_FATAL;
-  }
-  else if (JSON_TOKEN_LITERAL_NULL == token) {
-    set_to_omit();
-  }
-  else {
-    // read the token again
-    set_to_present();
-    p_tok.set_buf_pos(buf_pos);
-    int ret_val = optional_value->JSON_decode(p_td, p_tok, p_silent);
-    if (0 > ret_val) {
-      if (p_silent) {
-        clean_up();
-      } else {
-        set_to_omit();
-      }
+  int dec_len = optional_value->JSON_decode(p_td, p_tok, p_silent);
+  if (JSON_ERROR_FATAL == dec_len) {
+    if (p_silent) {
+      clean_up();
+    } else {
+      set_to_omit();
     }
-    dec_len = ret_val;
+  }
+  else if (JSON_ERROR_INVALID_TOKEN == dec_len) {
+    // invalid token, rewind the buffer and check if it's a "null" (= omit)
+    // this needs to be checked after the optional value, because it might also be
+    // able to decode a "null" value
+    p_tok.set_buf_pos(buf_pos);
+    json_token_t token = JSON_TOKEN_NONE;
+    dec_len = p_tok.get_next_token(&token, NULL, NULL);
+    if (JSON_TOKEN_LITERAL_NULL == token) {
+      set_to_omit();
+    }
+    else {
+      // cannot get JSON_TOKEN_ERROR here, that was already checked by the optional value
+      dec_len = JSON_ERROR_INVALID_TOKEN;
+    }
   }
   return dec_len;
 }
 
+#ifdef TITAN_RUNTIME_2
 template<typename T_type>
 void OPTIONAL<T_type>::add_refd_index(int index)
 {
@@ -681,15 +836,7 @@ void OPTIONAL<T_type>::remove_refd_index(int index)
   --param_refs;
   optional_value->remove_refd_index(index);
 }
-
-template<typename T_type>
-int OPTIONAL<T_type>::size_of()
-{
-  if (!is_present()) {
-    return 0;
-  }
-  return optional_value->size_of();
-}
+#endif
 
 template<typename T_type>
 OPTIONAL<T_type>::operator T_type&()
@@ -701,7 +848,11 @@ OPTIONAL<T_type>::operator T_type&()
 template<typename T_type>
 OPTIONAL<T_type>::operator const T_type&() const
 {
+#ifdef TITAN_RUNTIME_2
   if (!is_present())
+#else
+  if (optional_selection != OPTIONAL_PRESENT)
+#endif
     TTCN_error("Using the value of an optional field containing omit.");
   return *optional_value;
 }
@@ -712,7 +863,11 @@ OPTIONAL<T_type>::BER_encode_TLV(const TTCN_Typedescriptor_t& p_td,
                                  unsigned p_coding) const
 {
   BER_chk_descr(p_td);
+#ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
+#else
+  switch (optional_selection) {
+#endif
   case OPTIONAL_PRESENT:
     return optional_value->BER_encode_TLV(p_td, p_coding);
   case OPTIONAL_OMIT:
@@ -729,7 +884,11 @@ OPTIONAL<T_type>::BER_encode_TLV_negtest(const Erroneous_descriptor_t* p_err_des
     const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const
 {
   BER_chk_descr(p_td);
+#ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
+#else
+  switch (optional_selection) {
+#endif
   case OPTIONAL_PRESENT:
     return optional_value->BER_encode_TLV_negtest(p_err_descr, p_td, p_coding);
   case OPTIONAL_OMIT:
@@ -752,11 +911,15 @@ int OPTIONAL<T_type>::RAW_decode(const TTCN_Typedescriptor_t& p_td,
 
 template<typename T_type>
 int
-OPTIONAL<T_type>::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor, int indent) const
+OPTIONAL<T_type>::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val) const
 {
+#ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
+#else
+  switch (optional_selection) {
+#endif
   case OPTIONAL_PRESENT:
-    return optional_value->XER_encode(p_td, buf, flavor, indent);
+    return optional_value->XER_encode(p_td, buf, flavor, indent, emb_val);
   case OPTIONAL_OMIT:
     return 0; // nothing to do !
   default:
@@ -770,11 +933,12 @@ OPTIONAL<T_type>::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsi
 template<typename T_type>
 int
 OPTIONAL<T_type>::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
-  const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor, int indent) const
+  const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor, int indent,
+  embed_values_enc_struct_t* emb_val) const
 {
   switch (get_selection()) {
   case OPTIONAL_PRESENT:
-    return optional_value->XER_encode_negtest(p_err_descr, p_td, buf, flavor, indent);
+    return optional_value->XER_encode_negtest(p_err_descr, p_td, buf, flavor, indent, emb_val);
   case OPTIONAL_OMIT:
     return 0; // nothing to do !
   default:
@@ -819,7 +983,8 @@ OPTIONAL<T_type>::XER_check_any_elem(XmlReaderWrap& reader, const char* next_fie
 
 template<typename T_type>
 int
-OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor)
+OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
+  unsigned int flavor, embed_values_dec_struct_t* emb_val)
 {
   int exer  = is_exer(flavor);
   for (int success = reader.Ok(); success==1; success=reader.Read()) {
@@ -841,7 +1006,7 @@ OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
         if (!check_namespace((const char*)reader.NamespaceUri(), p_td)) break;
 
         set_to_present();
-        optional_value->XER_decode(p_td, reader, flavor);
+        optional_value->XER_decode(p_td, reader, flavor, emb_val);
         goto finished;
       }
       else break;
@@ -858,7 +1023,7 @@ OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
           found_it:
           set_to_present();
           //success = reader.Read(); // move to next thing TODO should it loop till an element ?
-          optional_value->XER_decode(p_td, reader, flavor);
+          optional_value->XER_decode(p_td, reader, flavor, emb_val);
         }
         else break; // it's not us, bail
 
@@ -881,7 +1046,11 @@ finished:
 
 template<typename T_type>
 char ** OPTIONAL<T_type>::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const {
+#ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
+#else
+  switch (optional_selection) {
+#endif
   case OPTIONAL_PRESENT:
     return optional_value->collect_ns(p_td, num, def_ns);
   case OPTIONAL_OMIT:
@@ -921,8 +1090,12 @@ template<typename T_type>
 void OPTIONAL<T_type>::BER_decode_opentypes(TTCN_Type_list& p_typelist,
   unsigned L_form)
 {
+#ifdef TITAN_RUNTIME_2
   if (is_present()) {
     optional_selection = OPTIONAL_PRESENT;
+#else
+  if (optional_selection==OPTIONAL_PRESENT) {
+#endif
     optional_value->BER_decode_opentypes(p_typelist, L_form);
   }
 }
@@ -933,7 +1106,7 @@ template<typename T_type>
 int OPTIONAL<T_type>::TEXT_encode(const TTCN_Typedescriptor_t& p_td,
                            TTCN_Buffer& buff) const
 {
-  if (get_selection())
+  if (is_present())
     return optional_value->TEXT_encode(p_td, buff);
   TTCN_error("Internal error: TEXT encoding an unbound/omit optional field.");
   return 0;
@@ -943,7 +1116,7 @@ template<typename T_type>
 int OPTIONAL<T_type>::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
   const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff) const
 {
-  if (get_selection())
+  if (is_present())
     return optional_value->TEXT_encode_negtest(p_err_descr, p_td, buff);
   TTCN_error("Internal error: TEXT encoding an unbound/omit optional field.");
   return 0;

@@ -29,7 +29,10 @@
 // Do _NOT_ #include "string.hh", it drags in ustring.o, common/Quadruple.o,
 // Int.o, ttcn3/PatternString.o, and then the entire AST :(
 #include "map.hh"
+#include "ProjectGenHelper.hh"
 #include "../common/path.h"
+#include "ttcn3/ttcn3_preparser.h"
+#include "asn1/asn1_preparser.h"
 
 // in makefile.c
 void ERROR  (const char *fmt, ...);
@@ -51,6 +54,8 @@ void fatal_error(const char * filename, int lineno, const char * fmt, ...)
   va_end(va);
   abort();
 }
+
+ProjectGenHelper& projGenHelper = ProjectGenHelper::Instance();
 
 /// Run an XPath query and return an xmlXPathObjectPtr, which must be freed
 xmlXPathObjectPtr run_xpath(xmlXPathContextPtr xpathCtx, const char *xpathExpr)
@@ -218,12 +223,299 @@ void xsdbool2boolean(const XPathContext& xpathCtx, const char *actcfg,
   }
 }
 
+extern "C" string_list* getExternalLibs(const char* projName)
+{
+  if (!projGenHelper.getZflag()) return NULL;
+  ProjectDescriptor* proj = projGenHelper.getTargetOfProject(projName);
+  if (!proj) return NULL;
+
+  std::vector<const char*> externalLibs;
+  projGenHelper.getExternalLibs(externalLibs);
+
+  if (0 == externalLibs.size()) return NULL;
+
+  struct string_list* head = (struct string_list*)Malloc(sizeof(struct string_list));
+  struct string_list* last_elem = head;
+  struct string_list* tail = head;
+
+  for (size_t i = 0; i < externalLibs.size(); ++i) {
+     tail = last_elem;
+     last_elem->str = mcopystr(externalLibs[i]);
+     last_elem->next = (struct string_list*)Malloc(sizeof(struct string_list));
+     last_elem = last_elem->next;
+  }
+  Free(last_elem);
+  tail->next = NULL;
+  return head;
+}
+
+extern "C" string_list* getExternalLibPathes(const char* projName)
+{
+  if (!projGenHelper.getZflag()) return NULL;
+  ProjectDescriptor* proj = projGenHelper.getTargetOfProject(projName);
+  if (!proj) return NULL;
+
+  std::vector<const char*> externalLibs;
+  projGenHelper.getExternalLibSearchPathes(externalLibs);
+
+  if (0 == externalLibs.size()) return NULL;
+
+  struct string_list* head = (struct string_list*)Malloc(sizeof(struct string_list));
+  struct string_list* last_elem = head;
+  struct string_list* tail = head;
+
+  for (size_t i = 0; i < externalLibs.size(); ++i) {
+     tail = last_elem;
+     last_elem->str = mcopystr(externalLibs[i]);
+     last_elem->next = (struct string_list*)Malloc(sizeof(struct string_list));
+     last_elem = last_elem->next;
+  }
+  Free(last_elem);
+  tail->next = NULL;
+  return head;
+}
+
+extern "C" string_list* getRefWorkingDirs(const char* projName)
+{
+  if (!projGenHelper.getZflag()) return NULL;
+  ProjectDescriptor* proj = projGenHelper.getTargetOfProject(projName);
+  if (!proj) FATAL_ERROR("Project \"%s\" was not found in the project list", projName);
+
+  struct string_list* head = (struct string_list*)Malloc(sizeof(struct string_list));
+  struct string_list* last_elem = head;
+  struct string_list* tail = head;
+  last_elem->str = NULL;
+  last_elem->next = NULL;
+  for (size_t i = 0; i < proj->numOfRefProjWorkingDirs(); ++i) {
+    tail = last_elem;
+    last_elem->str = mcopystr(proj->getRefProjWorkingDir(i).c_str());
+    last_elem->next = (struct string_list*)Malloc(sizeof(struct string_list));
+    last_elem = last_elem->next;
+  }
+  Free(last_elem);
+  tail->next = NULL;
+  return head;
+}
+
+extern "C" string2_list* getLinkerLibs(const char* projName)
+{
+
+  if (!projGenHelper.getZflag()) return NULL;
+  if (1 == projGenHelper.numOfProjects() || 0 == projGenHelper.numOfLibs()){
+    return NULL; //no library
+  }
+  ProjectDescriptor* projLib = projGenHelper.getTargetOfProject(projName);
+  if (!projLib) FATAL_ERROR("Project \"%s\" was not found in the project list", projName);
+
+  struct string2_list* head = (struct string2_list*)Malloc(sizeof(struct string2_list));
+  struct string2_list* last_elem = head;
+  struct string2_list* tail = head;
+  last_elem->next = NULL;
+  last_elem->str1 = NULL;
+  last_elem->str2 = NULL;
+  for (std::map<std::string, ProjectDescriptor>::const_iterator it = projGenHelper.getHead();
+       it != projGenHelper.getEnd(); ++it) {
+    if ((it->second).isLibrary()) {
+      if (!(it->second).getLinkingStrategy() &&
+          !projLib->hasLinkerLibTo((it->second).getProjectName())) { // static linked library
+          continue;
+      }
+      std::string relPath = projLib->setRelativePathTo((it->second).getProjectAbsWorkingDir());
+      if (relPath == std::string(".")) {
+        continue; // the relpath shows to itself
+      }
+      tail = last_elem;
+      last_elem->str1 = mcopystr(relPath.c_str());
+      last_elem->str2 = mcopystr((it->second).getTargetExecName().c_str());
+      last_elem->next = (struct string2_list*)Malloc(sizeof(struct string2_list));
+      last_elem = last_elem->next;
+    }
+  }
+  tail->next = NULL;
+  Free(last_elem);
+
+  if (head->str1 && head->str2)
+    return head;
+  else
+    return NULL;
+}
+
+extern "C" const char* getLibFromProject(const char* projName)
+{
+  if (!projGenHelper.getZflag()) return NULL;
+  ProjectDescriptor* lib = projGenHelper.getTargetOfProject(projName);
+  if (lib) return lib->getTargetExecName().c_str();
+  return NULL;
+}
+
+extern "C" void erase_libs() {
+  projGenHelper.cleanUp();
+}
+
+extern "C" void print_libs() {
+  projGenHelper.print();
+}
+
+
+extern "C" boolean hasSubProject(const char* projName) {
+  if (!projGenHelper.getZflag()) return FALSE;
+  if (projGenHelper.getHflag())
+    return static_cast<boolean>(projGenHelper.hasReferencedProject());
+  else if(std::string(projName) == projGenHelper.getToplevelProjectName())
+    return static_cast<boolean>(projGenHelper.hasReferencedProject());
+  else
+    return FALSE;
+}
+
+extern "C" boolean hasExternalLibrary(const char* libName, const char* projName) {
+  if (!projGenHelper.getZflag()) return FALSE;
+  ProjectDescriptor* projLib = projGenHelper.getTargetOfProject(projName);
+  if (projLib && projLib->hasLinkerLib(libName))
+    return TRUE;
+  else
+    return FALSE;
+}
+
+extern "C" boolean isTopLevelExecutable(const char* projName) {
+  if (!projGenHelper.getZflag()) return false;
+  ProjectDescriptor* proj = projGenHelper.getTargetOfProject(projName);
+  if (projGenHelper.getToplevelProjectName() != std::string(projName)) return FALSE;
+  if (proj && proj->isLibrary())
+    return FALSE;
+  else
+    return TRUE;
+}
+
+extern "C" boolean isDynamicLibrary(const char* key) {
+  if (!projGenHelper.getZflag()) return false;
+  ProjectDescriptor* proj = projGenHelper.getProjectDescriptor(key);
+  if (proj) return proj->getLinkingStrategy();
+  FATAL_ERROR("Library \"%s\" was not found", key);
+  return false;
+}
+
+extern "C" const char* getTPDFileName(const char* projName) {
+  if (!projGenHelper.getZflag()) return NULL;
+  ProjectDescriptor* proj = projGenHelper.getTargetOfProject(projName);
+  if (proj) return proj->getTPDFileName().c_str();
+  FATAL_ERROR("TPD file name to project \"%s\" was not found", projName);
+}
+
+extern "C" const char* getPathToRootDir(const char* projName) {
+  if (!projGenHelper.getZflag()) return NULL;
+  ProjectDescriptor* proj = projGenHelper.getTargetOfProject(projName);
+  const char* rootDir = projGenHelper.getRootDirOS(projName).c_str();
+  if (proj && rootDir) {
+    return rootDir;
+  }
+  FATAL_ERROR("Project \"%s\": no relative path was found to top directory at OS level.", projName);
+}
+
+extern "C" const char* findLibraryPath(const char* libraryName, const char* projName)
+{
+  if (!projGenHelper.getZflag()) return NULL;
+  ProjectDescriptor* projLib = projGenHelper.getTargetOfProject(projName);
+  if (!projLib) FATAL_ERROR("Project \"%s\" was not found in the project list", projName);
+  ProjectDescriptor* libLib = projGenHelper.getProjectDescriptor(libraryName);
+  if (!libLib) return NULL;
+  std::string str = projLib->setRelativePathTo(libLib->getProjectAbsWorkingDir());
+  size_t refIndex = projLib->getLibSearchPathIndex(libLib->getProjectName());
+  if (refIndex > projLib->numOfLibSearchPaths()) return NULL;
+  projLib->setLibSearchPath(refIndex, str);
+  return projLib->getLibSearchPath(libLib->getProjectName());
+}
+
+extern "C" const char* findLibraryName(const char* libraryName, const char* projName)
+{
+  if (!projGenHelper.getZflag()) return NULL;
+  ProjectDescriptor* projLib = projGenHelper.getTargetOfProject(projName);
+  if (!projLib) FATAL_ERROR("Project \"%s\" was not found in the project list", projName);
+  ProjectDescriptor* libLib = projGenHelper.getProjectDescriptor(libraryName);
+  if (!libLib) return NULL;
+  for (size_t i = 0; i < projLib->numOfReferencedProjects(); ++i) {
+    const std:: string refProjName = projLib->getReferencedProject(i);
+    ProjectDescriptor* refLib = projGenHelper.getTargetOfProject(refProjName.c_str());
+    if (refLib->getTargetExecName() == std::string(libraryName))
+      return libraryName;
+  }
+  return NULL;
+}
+
+extern "C" boolean isTtcn3ModuleInLibrary(const char* moduleName)
+{
+  if (!projGenHelper.getZflag()) return FALSE;
+  return (boolean)projGenHelper.isTtcn3ModuleInLibrary(moduleName);
+}
+
+extern "C" boolean isAsn1ModuleInLibrary(const char* moduleName)
+{
+  if (!projGenHelper.getZflag()) return FALSE;
+  return (boolean)projGenHelper.isAsn1ModuleInLibrary(moduleName);
+}
+
+extern "C" boolean isSourceFileInLibrary(const char* fileName)
+{
+  if (!projGenHelper.getZflag()) return FALSE;
+  return (boolean)projGenHelper.isSourceFileInLibrary(fileName);
+}
+
+extern "C" boolean isHeaderFileInLibrary(const char* fileName)
+{
+  if (!projGenHelper.getZflag()) return FALSE;
+  return (boolean)projGenHelper.isHeaderFileInLibrary(fileName);
+}
+
+extern "C" boolean isTtcnPPFileInLibrary(const char* fileName)
+{
+  if (!projGenHelper.getZflag()) return FALSE;
+  return (boolean)projGenHelper.isTtcnPPFileInLibrary(fileName);
+}
+
+
+extern "C" boolean buildObjects(const char* projName, boolean add_referenced)
+{
+  if (!projGenHelper.getZflag()) return FALSE;
+  if (projGenHelper.getHflag()) return FALSE;
+  if (add_referenced) return FALSE;
+  ProjectDescriptor* desc =projGenHelper.getTargetOfProject(projName);
+  if (desc && desc->isLibrary()) return FALSE;
+  return TRUE;
+}
+
+void append_to_library_list (const char* prjName,
+                             const XPathContext& xpathCtx,
+                             const char *actcfg)
+{
+  if (!projGenHelper.getZflag()) return;
+
+  char *exeXpath = mprintf(
+    "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
+    "/ProjectProperties/MakefileSettings/targetExecutable/text()",
+    actcfg);
+  XPathObject exeObj(run_xpath(xpathCtx, exeXpath));
+  Free(exeXpath);
+  std::string lib_name;
+  if (exeObj->nodesetval && exeObj->nodesetval->nodeNr > 0) {
+    const char* target_executable = (const char*)exeObj->nodesetval->nodeTab[0]->content;
+    autostring target_exe_dir(get_dir_from_path(target_executable));
+    autostring target_exe_file(get_file_from_path(target_executable));
+    lib_name = target_exe_file;
+    ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(prjName);
+    if (projDesc) {
+      projDesc->setTargetExecName(lib_name.c_str());
+    }
+  }
+}
+
 // data structures and functions to manage excluded folders/files
 
-map<cstring, void> excluded_files;
+map<cstring, const char> excluded_files;
 
-boolean is_excluded_file(const cstring& path) {
-  return excluded_files.has_key(path);
+boolean is_excluded_file(const cstring& path, const char* project) {
+  if (!excluded_files.has_key(path)) return false;
+  const char* proj = excluded_files[path];
+  if (0 == strcmp(project, proj)) return true;
+  return false;
 }
 
 vector<const char> excluded_folders;
@@ -305,58 +597,80 @@ static void clear_seen_tpd_files(map<cstring, int>& seen_tpd_files) {
   seen_tpd_files.clear();
 }
 
+const char* get_act_config(struct string2_list* cfg, const char* project_name) {
+  while (cfg && cfg->str1 && project_name) {
+    if (!strcmp(cfg->str1, project_name)) return cfg->str2;
+    cfg = cfg->next;
+  }
+  return NULL;
+}
+
 static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
-  int *p_optind, char **p_ets_name,
+  int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
   boolean *p_Rflag, boolean *p_lflag, boolean *p_mflag, boolean *p_Pflag,
   boolean *p_Lflag, boolean recursive, boolean force_overwrite, boolean gen_only_top_level,
   const char *output_file, char** abs_work_dir_p, struct string_list* sub_project_dirs,
   const char* program_name, FILE* prj_graph_fp, struct string2_list* create_symlink_list, struct string_list* ttcn3_prep_includes,
-  struct string_list* ttcn3_prep_defines, struct string_list* prep_includes, struct string_list* prep_defines,
-  boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag, char** cxxcompiler,
-  char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag, boolean* p_djflag,
-  boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
+  struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
+  struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
+  char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
+  boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
   boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   struct string_list* linkerlibs, struct string_list* additionalObjects, struct string_list* linkerlibsearchp, boolean Vflag, boolean Dflag,
-  char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, struct string2_list* run_command_list,
-  map<cstring, int>& seen_tpd_files);
+  boolean *p_Zflag, boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, 
+  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs);
 
 extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
-  int *p_optind, char **p_ets_name,
+  int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
   boolean *p_Rflag, boolean *p_lflag, boolean *p_mflag, boolean *p_Pflag,
   boolean *p_Lflag, boolean recursive, boolean force_overwrite, boolean gen_only_top_level,
   const char *output_file, char** abs_work_dir_p, struct string_list* sub_project_dirs,
   const char* program_name, FILE* prj_graph_fp, struct string2_list* create_symlink_list, struct string_list* ttcn3_prep_includes,
-  struct string_list* ttcn3_prep_defines, struct string_list* prep_includes, struct string_list* prep_defines,
-  boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag, char** cxxcompiler,
-  char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag, boolean* p_djflag,
-  boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
+  struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes, 
+  struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
+  char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag, 
+  boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
   boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
-  string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag,
-  char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, struct string2_list* run_command_list) {
+  string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
+  boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir,
+  struct string2_list* run_command_list, struct string2_list* required_configs) {
 
   map<cstring, int> seen_tpd_files;
+  projGenHelper.setZflag(*p_Zflag);
+  projGenHelper.setWflag(prefix_workdir);
+  projGenHelper.setHflag(*p_Hflag);
 
   tpd_result success = process_tpd_internal(p_tpd_name,
-      actcfg, file_list_path, p_argc, p_argv, p_optind, p_ets_name,
+      actcfg, file_list_path, p_argc, p_argv, p_optind, p_ets_name, p_project_name,
       p_gflag, p_sflag, p_cflag, p_aflag, preprocess,
       p_Rflag, p_lflag, p_mflag, p_Pflag,
       p_Lflag, recursive, force_overwrite, gen_only_top_level,
       output_file, abs_work_dir_p, sub_project_dirs,
       program_name, prj_graph_fp, create_symlink_list, ttcn3_prep_includes,
-      ttcn3_prep_defines, prep_includes, prep_defines,
-      p_csflag, p_quflag, p_dsflag, cxxcompiler,
+      ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines,
+      prep_undefines, p_csflag, p_quflag, p_dsflag, cxxcompiler,
       optlevel, optflags, p_dbflag, p_drflag, p_dtflag, p_dxflag, p_djflag,
       p_fxflag, p_doflag, p_gfflag, p_lnflag, p_isflag,
       p_asflag, p_swflag, p_Yflag, solspeclibs, sol8speclibs,
       linuxspeclibs, freebsdspeclibs, win32speclibs, ttcn3prep,
-      linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag,
-      generatorCommandOutput, target_placement_list, prefix_workdir, run_command_list, seen_tpd_files);
+      linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag, p_Zflag,
+      p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
+      run_command_list, seen_tpd_files, required_configs);
+
+  if (TPD_FAILED == success) exit(EXIT_FAILURE);
+
+  if (false == projGenHelper.sanityCheck()) {
+    fprintf (stderr, "makefilegen exits\n");
+    exit(EXIT_FAILURE);
+  }
+
+  projGenHelper.generateRefProjectWorkingDirsTo(*p_project_name);
 
   for (size_t i = 0, num = seen_tpd_files.size(); i < num; ++i) {
     const cstring& key = seen_tpd_files.get_nth_key(i);
@@ -381,22 +695,23 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
 // it must nevertheless make a copy on the heap via mcopystr().
 static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
-  int *p_optind, char **p_ets_name,
+  int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
   boolean *p_Rflag, boolean *p_lflag, boolean *p_mflag, boolean *p_Pflag,
   boolean *p_Lflag, boolean recursive, boolean force_overwrite, boolean gen_only_top_level,
   const char *output_file, char** abs_work_dir_p, struct string_list* sub_project_dirs,
   const char* program_name, FILE* prj_graph_fp, struct string2_list* create_symlink_list, struct string_list* ttcn3_prep_includes,
-  struct string_list* ttcn3_prep_defines, struct string_list* prep_includes, struct string_list* prep_defines,
-  boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag, char** cxxcompiler,
-  char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag, boolean* p_djflag,
-  boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
+  struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
+  struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
+  char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
+  boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
   boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
-  string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag,
-  char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, struct string2_list* run_command_list,
-  map<cstring, int>& seen_tpd_files)
+  string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
+  boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir,
+  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs)
 {
+  tpd_result result = TPD_SUCCESS;
   // read-only non-pointer aliases
   //char** const& local_argv = *p_argv;
   int const& local_argc = *p_argc;
@@ -410,7 +725,10 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
 
   autostring tpd_dir(get_dir_from_path(p_tpd_name));
   autostring abs_tpd_dir(get_absolute_dir(tpd_dir, NULL));
-
+  if (NULL == (const char*)abs_tpd_dir) {
+    ERROR("absolut TPD directory could not be retreaved from %s", (const char*)tpd_dir);
+    return TPD_FAILED;
+  }
   autostring tpd_filename(get_file_from_path(p_tpd_name));
   autostring abs_tpd_name(compose_path_name(abs_tpd_dir, tpd_filename));
 
@@ -552,8 +870,25 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
     } // next FolderResource
   }
 
-  if (actcfg == NULL)
+  /////////////////////////////////////////////////////////////////////////////
   {
+    char *projectNameXpath = mprintf("/TITAN_Project_File_Information/ProjectName/text()");
+    XPathObject projectNameObj(run_xpath(xpathCtx, projectNameXpath));
+    Free(projectNameXpath);
+    if (projectNameObj->nodesetval && projectNameObj->nodesetval->nodeNr > 0) {
+      *p_project_name = mcopystr((const char*)projectNameObj->nodesetval->nodeTab[0]->content);
+      projGenHelper.addTarget(*p_project_name);
+      projGenHelper.setToplevelProjectName(*p_project_name);
+      ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
+      if (projDesc) projDesc->setProjectAbsTpdDir((const char*)abs_tpd_dir);
+    }
+  }
+  /////////////////////////////////////////////////////////////////////////////
+
+  if (!actcfg) {
+    actcfg = get_act_config(required_configs,*p_project_name);
+  }
+  if (actcfg == NULL) {
     // Find out the active config
     XPathObject  activeConfig(run_xpath(xpathCtx,
       "/TITAN_Project_File_Information/ActiveConfiguration/text()"));
@@ -590,8 +925,6 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
       return TPD_FAILED;
     }
   }
-
-  /////////////////////////////////////////////////////////////////////////////
   // working directory stuff
   autostring workdir;
   {
@@ -623,6 +956,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   const char *real_workdir = folders[workdir]; // This is relative to the location of the tpd file
   excluded_folders.add(real_workdir); // excluded by convention
 
+  autostring proj_abs_workdir;
+
   autostring abs_workdir;
   // If -D flag was specified then we ignore the workdir
   // in the TPD (the current dir is considered the work dir).
@@ -643,7 +978,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
         break;
       default:
         if (recursive || local_argc != 0) { // we only want to create workdir if necessary
-          printf("Working directory `%s' in project `%s' does not exist, trying to create it...\n", real_workdir, (const char*)abs_tpd_dir);
+          fprintf(stderr, "Working directory `%s' in project `%s' does not exist, trying to create it...\n",
+                  real_workdir, (const char*)abs_tpd_dir);
           int rv = mkdir(real_workdir, 0755);
           if (rv) ERROR("Could not create working directory, mkdir() failed: %s", strerror(errno));
           else printf("Working directory created\n");
@@ -660,8 +996,21 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
     if (hasWorkDir) { //we created working directory, or its already been created (from a parent makefilegen process maybe)
       *abs_work_dir_p = get_absolute_dir(real_workdir, abs_tpd_dir);
       abs_workdir = (mcopystr(*abs_work_dir_p));
+      proj_abs_workdir = mcopystr(*abs_work_dir_p);
     }
   }
+
+  if (Dflag) { // the path to subproject working dir is needed to find the linkerlibsearchpath
+    proj_abs_workdir = compose_path_name(abs_tpd_dir, real_workdir);
+  }
+
+  ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
+  if (projDesc) {
+    projDesc->setProjectAbsWorkingDir((const char*)proj_abs_workdir);
+    projDesc->setProjectWorkingDir(real_workdir);
+    projDesc->setTPDFileName(p_tpd_name);
+  }
+
   /////////////////////////////////////////////////////////////////////////////
 
   // Gather the excluded folders in the active config
@@ -697,7 +1046,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
       xmlNodePtr curnode = nodes->nodeTab[i];
 
       cstring aa((const char*)curnode->content);
-      excluded_files.add(aa, 0);
+      excluded_files.add(aa, *p_project_name);
     }
   }
 
@@ -742,13 +1091,45 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
       }
 
       cstring cpath(path);
-      if (!is_excluded_file(cpath) && !is_excluded_folder(path)) {
+      if (!is_excluded_file(cpath, *p_project_name) && !is_excluded_folder(path)) {
         // relativeURI wins over rawURI
         char *ruri = uri ? mcopystr(uri) : cook(raw, path_vars);
-
         if (files.has_key(cpath)) {
           ERROR("A FileResource %s must be unique!", (const char*)cpath);
-        } else {
+        }
+        else {
+          const char* file_path = ruri;
+          expstring_t rel_file_dir = get_dir_from_path(file_path);
+          expstring_t file_name = get_file_from_path(file_path);
+          expstring_t abs_dir_path = get_absolute_dir(rel_file_dir, abs_tpd_dir);
+          expstring_t abs_file_name = compose_path_name(abs_dir_path, file_name);
+          if (abs_file_name != NULL) {
+            if (get_path_status(abs_file_name) == PS_FILE) {
+              FILE *fp = fopen(abs_file_name, "r");
+              if (fp != NULL) {
+                char* ttcn3_module_name;
+                if (is_ttcn3_module(abs_file_name, fp, &ttcn3_module_name)) {
+                  projGenHelper.addTtcn3ModuleToProject(*p_project_name, ttcn3_module_name);
+                }
+                Free(ttcn3_module_name);
+                char* asn1_module_name;
+                if (is_asn1_module(abs_file_name, fp, &asn1_module_name)) {
+                  projGenHelper.addAsn1ModuleToProject(*p_project_name, asn1_module_name);
+                }
+                Free(asn1_module_name);
+                if (projGenHelper.isCPPSourceFile(file_name)) {
+                   projGenHelper.addUserSourceToProject(*p_project_name, file_name);
+                }
+                if (projGenHelper.isCPPHeaderFile(file_name)) {
+                   projGenHelper.addUserHeaderToProject(*p_project_name, file_name);
+                }
+                if (projGenHelper.isTtcnPPFile(file_name)) {
+                   projGenHelper.addTtcnPPToProject(*p_project_name, file_name);
+                }
+              }
+              fclose(fp);
+            }
+          }
           files.add(cpath, ruri); // relativeURI to the TPD location
           { // set the *preprocess value if .ttcnpp file was found
             const size_t ttcnpp_extension_len = 7; // ".ttcnpp"
@@ -757,6 +1138,10 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
               *preprocess = TRUE;
             }
           }
+          Free(rel_file_dir);
+          Free(file_name);
+          Free(abs_dir_path);
+          Free(abs_file_name);
         }
       }
     } // next FileResource
@@ -765,6 +1150,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   // Check options
   xsdbool2boolean(xpathCtx, actcfg, "useAbsolutePath", p_aflag);
   xsdbool2boolean(xpathCtx, actcfg, "GNUMake", p_gflag);
+  if (*p_Zflag) *p_lflag = FALSE;
   xsdbool2boolean(xpathCtx, actcfg, "dynamicLinking", p_lflag);
   xsdbool2boolean(xpathCtx, actcfg, "functiontestRuntime", p_Rflag);
   xsdbool2boolean(xpathCtx, actcfg, "singleMode", p_sflag);
@@ -784,6 +1170,9 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   xsdbool2boolean(xpathCtx, actcfg, "addSourceLineInfo", p_asflag);
   xsdbool2boolean(xpathCtx, actcfg, "suppressWarnings", p_swflag);
   xsdbool2boolean(xpathCtx, actcfg, "outParamBoundness", p_Yflag);
+
+  projDesc = projGenHelper.getTargetOfProject(*p_project_name);
+  if (projDesc) projDesc->setLinkingStrategy(*p_lflag);
 
   // Extract the "incremental dependencies" option
   {
@@ -811,7 +1200,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   // Extract the default target option
   // if it is not defined as a command line argument
   if (!(*p_Lflag)) {
-    char *defTargetXpath = mprintf(
+    expstring_t defTargetXpath = mprintf(
       "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
       "/ProjectProperties/MakefileSettings/defaultTarget/text()",
       actcfg);
@@ -828,6 +1217,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
             " The available targets are: 'executable', 'library'", content);
       }
     }
+    ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
+    if (projDesc) projDesc->setLibrary(*p_Lflag);
   }
 
   // Executable name (don't care unless top-level invocation)
@@ -940,6 +1331,36 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
     }
   }
   {
+    //TTCN3preprocessorUnDefines
+    char *ttcn3preUndefinesXpath = mprintf(
+        "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
+        "/ProjectProperties/MakefileSettings/TTCN3preprocessorUndefines/listItem/text()",
+        actcfg);
+    XPathObject ttcn3preUndefinesObj(run_xpath(xpathCtx, ttcn3preUndefinesXpath));
+    Free(ttcn3preUndefinesXpath);
+
+    xmlNodeSetPtr nodes = ttcn3preUndefinesObj->nodesetval;
+
+    if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
+      const char* content = (const char*)ttcn3preUndefinesObj->nodesetval->nodeTab[i]->content;
+
+      // add includes to the end of list
+      if (ttcn3_prep_undefines) {
+        // go to last element
+        struct string_list* last_elem = ttcn3_prep_undefines;
+        while (last_elem->next) last_elem = last_elem->next;
+        // add string to last element if empty or create new last element and add it to that
+        if (last_elem->str) {
+          last_elem->next = (struct string_list*)Malloc(sizeof(struct string_list));
+          last_elem = last_elem->next;
+          last_elem->next = NULL;
+        }
+        last_elem->str = mcopystr(content);
+      }
+    }
+  }
+
+  {
     //preprocessorIncludes
     char *preincludesXpath = mprintf(
         "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
@@ -987,6 +1408,35 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
       if (prep_defines) {
         // go to last element
         struct string_list* last_elem = prep_defines;
+        while (last_elem->next) last_elem = last_elem->next;
+        // add string to last element if empty or create new last element and add it to that
+        if (last_elem->str) {
+          last_elem->next = (struct string_list*)Malloc(sizeof(struct string_list));
+          last_elem = last_elem->next;
+          last_elem->next = NULL;
+        }
+        last_elem->str = mcopystr(content);
+      }
+    }
+  }
+  {
+    //preprocessorUnDefines
+    char *preUndefinesXpath = mprintf(
+        "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
+        "/ProjectProperties/MakefileSettings/preprocessorUndefines/listItem/text()",
+        actcfg);
+    XPathObject preUndefinesObj(run_xpath(xpathCtx, preUndefinesXpath));
+    Free(preUndefinesXpath);
+
+    xmlNodeSetPtr nodes = preUndefinesObj->nodesetval;
+
+    if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
+      const char* content = (const char*)preUndefinesObj->nodesetval->nodeTab[i]->content;
+
+      // add includes to the end of list
+      if (prep_undefines) {
+        // go to last element
+        struct string_list* last_elem = prep_undefines;
         while (last_elem->next) last_elem = last_elem->next;
         // add string to last element if empty or create new last element and add it to that
         if (last_elem->str) {
@@ -1229,6 +1679,16 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
     }
   }
   {
+    //The project name needed the hierarchical projects
+    char* prjNameStr = 0;
+    char *prjNameStrXpath = mprintf("/TITAN_Project_File_Information/ProjectName/text()");
+    XPathObject  prjName(run_xpath(xpathCtx, prjNameStrXpath));
+    if (prjName->nodesetval && prjName->nodesetval->nodeNr == 1) {
+      prjNameStr = (char*)prjName->nodesetval->nodeTab[0]->content;
+    }
+    Free(prjNameStrXpath);
+    append_to_library_list (prjNameStr, xpathCtx, actcfg);
+
     //linkerLibraries
     char *linkerlibsXpath = mprintf(
         "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
@@ -1255,6 +1715,9 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
         }
         replacechar(&content);
         last_elem->str = content;
+
+        ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
+        if (projDesc) projDesc->addToLinkerLibs(last_elem->str);
       }
     }
   }
@@ -1285,6 +1748,9 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
         }
         replacechar(&content);
         last_elem->str = content;
+
+        ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
+        if (projDesc) projDesc->addToLibSearchPaths(last_elem->str);
       }
     }
   }
@@ -1350,6 +1816,63 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
     }
   }
 
+// collect the required configurations
+  {
+    if (required_configs) {
+      char* cfgReqsXpath(mprintf(
+        "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
+        "/ProjectProperties/ConfigurationRequirements/configurationRequirement",
+        actcfg));
+      XPathObject reqcfgObjects(run_xpath(xpathCtx, cfgReqsXpath));
+      Free (cfgReqsXpath);
+      xmlNodeSetPtr configs = reqcfgObjects->nodesetval;
+      if (configs) for (int i = 0; i < configs->nodeNr; ++i) {
+        xmlNodePtr curNodePtr = configs->nodeTab[i]->children;
+        const char* projectName = NULL;
+        const char* reqConfig = NULL;
+        while(curNodePtr) {
+          if (!strcmp((const char*)curNodePtr->name, "projectName")) {
+            projectName = (const char*)curNodePtr->children->content;
+          }
+          if (!strcmp((const char*)curNodePtr->name, "rerquiredConfiguration") || // backward compatibility
+              !strcmp((const char*)curNodePtr->name, "requiredConfiguration")) {
+              reqConfig = (const char*)curNodePtr->children->content;
+          }
+          curNodePtr = curNodePtr->next;
+        }
+        struct string2_list* last_elem = required_configs;
+        bool duplicate = false;
+        while (last_elem->next) {
+          if (!strcmp(last_elem->str1, projectName) && !strcmp(last_elem->str2, reqConfig)) {
+            duplicate = true;
+          }
+          else if (!strcmp(last_elem->str1, projectName) && strcmp(last_elem->str2, reqConfig)) {
+            ERROR("Required configuration is inconsistent : Project '%s' cannot have 2 "
+                  "different configuration '%s' '%s'",
+                  last_elem->str1, last_elem->str2, reqConfig);
+            result = TPD_FAILED;
+          }
+          last_elem = last_elem->next;
+        }
+        // add string to last element if empty or create new last element and add it to that
+        if (last_elem->str1 && !duplicate) {
+          if (strcmp(last_elem->str1, projectName) || strcmp(last_elem->str2, reqConfig)) {
+            last_elem->next = (struct string2_list*)Malloc(sizeof(struct string2_list));
+            last_elem = last_elem->next;
+            last_elem->next = NULL;
+          }
+          else {
+            duplicate = true;
+          }
+        }
+        if (!duplicate) {
+          last_elem->str1 = mcopystr(projectName);
+          last_elem->str2 = mcopystr(reqConfig);
+        }
+      }
+    }
+  }
+
   // Referenced projects
   {
     XPathObject subprojects(run_xpath(xpathCtx,
@@ -1374,28 +1897,17 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
 
       if (name && projectLocationURI) { // collected both
         // see if there is a specified configuration for the project
-        const char *my_actcfg = NULL;
-        autostring req_xpath(mprintf(
-          "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
-          "/ProjectProperties/ConfigurationRequirements/configurationRequirement"
-          "/projectName[text()='%s']"
-          // Up to this point, we selected the projectName node which contains
-          // the name of the subproject. But we want its sibling.
-          // So we go up one and down the other path.
-          "/parent::*/rerquiredConfiguration/text()",
-          //Yes, it's rerquiredConfiguration; the Designer misspells it :(
-          actcfg, name));
-        XPathObject reqcfgObj(run_xpath(xpathCtx, req_xpath));
-        if (reqcfgObj->nodesetval && reqcfgObj->nodesetval->nodeNr == 1) {
-          my_actcfg = (const char*)reqcfgObj->nodesetval->nodeTab[0]->content;
-        }
 
+        ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
+        if (projDesc) projDesc->addToReferencedProjects(name);
+
+        const char *my_actcfg = NULL;
         int my_argc = 0;
         char *my_args[] = { NULL };
         char **my_argv = my_args + 0;
         int my_optind = 0;
         boolean my_gflag = *p_gflag, my_aflag = *p_aflag, my_cflag = *p_cflag, // pass down
-          my_Rflag = *p_Rflag, my_Pflag = *p_Pflag,
+          my_Rflag = *p_Rflag, my_Pflag = *p_Pflag, my_Zflag = *p_Zflag, my_Hflag = *p_Hflag,
           my_sflag =  0, my_Lflag =  0, my_lflag =  0, my_mflag =  0, my_csflag = 0,
           my_quflag = 0, my_dsflag = 0, my_dbflag = 0, my_drflag = 0,
           my_dtflag = 0, my_dxflag = 0, my_djflag = 0, my_fxflag = 0, my_doflag = 0, 
@@ -1403,24 +1915,28 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
           my_swflag = 0, my_Yflag = 0;
 
         char *my_ets = NULL;
-
+        char *my_proj_name = NULL;
         autostring abs_projectLocationURI(
           compose_path_name(abs_tpd_dir, projectLocationURI));
 
         char* sub_proj_abs_work_dir = NULL;
+
         tpd_result success = process_tpd_internal((const char*)abs_projectLocationURI,
-          my_actcfg, file_list_path, &my_argc, &my_argv, &my_optind, &my_ets,
+          my_actcfg, file_list_path, &my_argc, &my_argv, &my_optind, &my_ets, &my_proj_name,
           &my_gflag, &my_sflag, &my_cflag, &my_aflag, preprocess, &my_Rflag, &my_lflag,
           &my_mflag, &my_Pflag, &my_Lflag, recursive, force_overwrite, gen_only_top_level, NULL, &sub_proj_abs_work_dir,
-          sub_project_dirs, program_name, prj_graph_fp, create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, prep_includes, prep_defines, &my_csflag,
+          sub_project_dirs, program_name, prj_graph_fp, create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, ttcn3_prep_undefines, 
+          prep_includes, prep_defines, prep_undefines, &my_csflag,
           &my_quflag, &my_dsflag, cxxcompiler, optlevel, optflags, &my_dbflag, &my_drflag,
           &my_dtflag, &my_dxflag, &my_djflag, &my_fxflag, &my_doflag,
           &my_gfflag, &my_lnflag, &my_isflag, &my_asflag, &my_swflag, &my_Yflag, solspeclibs, sol8speclibs, linuxspeclibs, freebsdspeclibs, win32speclibs,
-          ttcn3prep, linkerlibs, additionalObjects, linkerlibsearchp, Vflag, FALSE, NULL, NULL, prefix_workdir, run_command_list, seen_tpd_files);
+          ttcn3prep, linkerlibs, additionalObjects, linkerlibsearchp, Vflag, FALSE, &my_Zflag, 
+          &my_Hflag, NULL, NULL, prefix_workdir, run_command_list, seen_tpd_files, required_configs);
+
         autostring sub_proj_abs_work_dir_as(sub_proj_abs_work_dir); // ?!
 
         if (success == TPD_SUCCESS) {
-
+          my_actcfg = get_act_config(required_configs, my_proj_name);
           if (recursive) { // call ttcn3_makefilegen on referenced project's tpd file
             // -r is not needed any more because top level process traverses all projects recursively
             expstring_t command = mprintf("%s -cVD", program_name);
@@ -1432,6 +1948,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
             if (*p_Rflag) command = mputc(command, 'R');
             if (*p_lflag) command = mputc(command, 'l');
             if (*p_mflag) command = mputc(command, 'm');
+            if (*p_Zflag) command = mputc(command, 'Z');
+            if (*p_Hflag) command = mputc(command, 'H');
             command = mputstr(command, " -t ");
             command = mputstr(command, (const char*)abs_projectLocationURI);
             if (my_actcfg) {
@@ -1491,6 +2009,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
 
           Free(my_argv); // free the array; we keep the pointers
           Free(my_ets);
+          Free(my_proj_name);
         }
         else if (success == TPD_FAILED) {
           ERROR("Failed to process %s", (const char*)abs_projectLocationURI);
@@ -1650,5 +2169,5 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   xmlCleanupParser();
   // ifdef debug
     xmlMemoryDump();
-  return TPD_SUCCESS;
+  return result;
 }

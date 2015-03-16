@@ -592,10 +592,9 @@ public:
     virtual bool has_ass_withId(const Identifier& p_id);
     virtual bool is_valid_moduleid(const Identifier& p_id);
     /** Returns the TTCN-3 component type that is associated with
-     * keywords 'mtc' or 'system'. Returns NULL outside testcase definitions 
-     * (unless it's a 'map' or 'connect' statement block) or if the component type
-     * cannot be determined. */
-    virtual Type *get_mtc_system_comptype(bool is_system, bool is_connecting);
+     * keywords 'mtc' or 'system'. Returns NULL if the component type
+     * cannot be determined (i.e. outside testcase definitions). */
+    virtual Type *get_mtc_system_comptype(bool is_system);
     /** Checks the 'runs on' clause of definition \a p_ass that it can
      * be called from this scope unit. Parameters \a p_loc and \a
      * p_what are used in error messages. \a p_what contains "call" or

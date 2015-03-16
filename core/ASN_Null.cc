@@ -105,7 +105,16 @@ void ASN_NULL::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer, p_buf, XER_coding, 0);
+    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0);
+    break;}
+  case TTCN_EncDec::CT_JSON: {
+    TTCN_EncDec_ErrorContext ec("While JSON-encoding type '%s': ", p_td.name);
+    if(!p_td.json)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No JSON descriptor available for type '%s'.", p_td.name);
+    JSON_Tokenizer tok(va_arg(pvar, int) != 0);
+    JSON_encode(p_td, tok);
+    p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break;}
   case TTCN_EncDec::CT_RAW:
   default:
@@ -130,7 +139,7 @@ void ASN_NULL::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     if(tlv.isComplete) p_buf.increase_pos(tlv.get_len());
     break;}
   case TTCN_EncDec::CT_XER: {
-    TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
+    TTCN_EncDec_ErrorContext ec("While XER-decoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
     XmlReaderWrap reader(p_buf);
     int success = reader.Read();
@@ -139,9 +148,22 @@ void ASN_NULL::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       if (type==XML_READER_TYPE_ELEMENT)
 	break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding);
+    XER_decode(*p_td.xer, reader, XER_coding, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
+    break;}
+  case TTCN_EncDec::CT_JSON: {
+    TTCN_EncDec_ErrorContext ec("While JSON-decoding type '%s': ", p_td.name);
+    if(!p_td.json)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No JSON descriptor available for type '%s'.", p_td.name);
+    JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
+    if(JSON_decode(p_td, tok, false)<0)
+      ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
+               "Can not decode type '%s', because invalid or incomplete"
+               " message was received"
+               , p_td.name);
+    p_buf.set_pos(tok.get_buf_pos());
     break;}
   case TTCN_EncDec::CT_RAW:
   default:
@@ -181,7 +203,7 @@ boolean ASN_NULL::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
 }
 
 int ASN_NULL::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent ) const
+    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
   int exer  = is_exer(flavor);
   TTCN_EncDec_ErrorContext ec("While XER encoding NULL type: ");
@@ -205,7 +227,7 @@ int ASN_NULL::XER_encode(const XERdescriptor_t& p_td,
 }
 
 int ASN_NULL::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-    unsigned int flavor)
+    unsigned int flavor, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   TTCN_EncDec_ErrorContext ec("While XER decoding NULL type: ");
@@ -233,6 +255,32 @@ int ASN_NULL::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
 
   reader.Read();
   return 1; // decode successful
+}
+
+int ASN_NULL::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) const
+{
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound ASN.1 NULL value.");
+    return -1;
+  }
+  
+  return p_tok.put_next_token(JSON_TOKEN_LITERAL_NULL);
+}
+
+int ASN_NULL::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, boolean p_silent)
+{
+  json_token_t token = JSON_TOKEN_NONE;
+  int dec_len = p_tok.get_next_token(&token, NULL, NULL);
+  if (JSON_TOKEN_ERROR == token) {
+    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, "");
+    return JSON_ERROR_FATAL;
+  }
+  else if (JSON_TOKEN_LITERAL_NULL != token) {
+    return JSON_ERROR_INVALID_TOKEN;
+  }
+  bound_flag = TRUE;
+  return dec_len;
 }
 
 boolean operator==(asn_null_type, const ASN_NULL& other_value)

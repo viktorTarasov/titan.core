@@ -715,7 +715,7 @@ void INTEGER::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer, p_buf, XER_coding, 0);
+    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0);
     break;}
   case TTCN_EncDec::CT_JSON: {
     TTCN_EncDec_ErrorContext ec("While JSON-encoding type '%s': ", p_td.name);
@@ -794,7 +794,7 @@ void INTEGER::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       if (type==XML_READER_TYPE_ELEMENT)
         break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding);
+    XER_decode(*p_td.xer, reader, XER_coding, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -1265,7 +1265,7 @@ int INTEGER::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
 }
 
 int INTEGER::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-  unsigned int flavor, int indent) const
+  unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
@@ -1295,7 +1295,7 @@ int INTEGER::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 }
 
 int INTEGER::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-  unsigned int flavor)
+  unsigned int flavor, embed_values_dec_struct_t*)
 {
   const boolean exer = is_exer(flavor);
   int depth = -1, success = reader.Ok(), type;

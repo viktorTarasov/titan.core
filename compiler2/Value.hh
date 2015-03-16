@@ -479,11 +479,6 @@ namespace Common {
     Type* get_expr_governor_last();
     /** get the type invoked */
     Type *get_invoked_type(Type::expected_value_t exp_val);
-    
-    /** An alternative version of get_expr_governor for components. This will
-      * return the MTC component type in function and altstep scopes as well. 
-      * Calls get_expr_governor in all other cases. */
-    Type* get_component_governor();
   private:
     const char* get_opname() const;
     /** Used to determine whether the reference points to value or

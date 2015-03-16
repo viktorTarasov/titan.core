@@ -13,8 +13,15 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = TrecofOper.ttcn TrecofParamRef.ttcn
+TTCN3_MODULES = TrecofOper.ttcn
+ifdef RT2
+TTCN3_MODULES += TrecofParamRef.ttcn
 ASN1_MODULES = BerType.asn
+CFG_FILE = config_rt2.cfg
+else
+ASN1_MODULES =
+CFG_FILE = config.cfg
+endif
 
 GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc) $(ASN1_MODULES:.asn=.cc)
 GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)
@@ -41,7 +48,7 @@ clean distclean:
 dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
 
-run: $(TARGET) config.cfg
+run: $(TARGET) $(CFG_FILE)
 	./$^
 
 .NOTPARALLEL:

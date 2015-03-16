@@ -86,9 +86,9 @@ public:
   ASN_BER_TLV_t* BER_encode_TLV(const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const;
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
   int XER_encode(const XERdescriptor_t& p_td,
-                 TTCN_Buffer& p_buf, unsigned int flavor, int indent) const;
+                 TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-                 unsigned int flavor);
+                 unsigned int flavor, embed_values_dec_struct_t*);
 private:
   boolean BER_decode_set_selection(const ASN_BER_TLV_t& p_tlv);
 public:
@@ -207,8 +207,8 @@ public:
   //void decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTCN_EncDec::coding_t p_coding, ...);
   ASN_BER_TLV_t* BER_encode_TLV(const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const;
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
-  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int) const;
-  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int);
+  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const;
+  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, embed_values_dec_struct_t*);
 };
 
 class EMBEDDED_PDV_identification_syntaxes_template : public Base_Template {
@@ -312,8 +312,8 @@ public:
   //void decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTCN_EncDec::coding_t p_coding, ...);
   ASN_BER_TLV_t* BER_encode_TLV(const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const;
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
-  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int) const;
-  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int);
+  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const;
+  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, embed_values_dec_struct_t*);
 };
 
 class EMBEDDED_PDV_identification_context__negotiation_template : public Base_Template {
@@ -423,8 +423,8 @@ public:
   void decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTCN_EncDec::coding_t p_coding, ...);
   ASN_BER_TLV_t* BER_encode_TLV(const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const;
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
-  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int) const;
-  int XER_decode(const XERdescriptor_t&, XmlReaderWrap&, unsigned int);
+  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const;
+  int XER_decode(const XERdescriptor_t&, XmlReaderWrap&, unsigned int, embed_values_dec_struct_t*);
 };
 
 class EMBEDDED_PDV_template : public Base_Template {

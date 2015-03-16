@@ -68,7 +68,7 @@ main.cc Real.cc Setting.cc SigParam.cc string.cc subtype.cc Stopwatch.cc \
 Type.cc Type_chk.cc Type_codegen.cc TypeCompat.cc \
 Typestuff.cc ustring.cc Value.cc Valuestuff.cc XerAttributes.cc subtypestuff.cc CodeGenHelper.cc
 
-MFGEN_SOURCES := makefile.c xpather.cc
+MFGEN_SOURCES := makefile.c xpather.cc ProjectGenHelper.cc
 
 TCOV2LCOV_SOURCES := tcov2lcov.cc
 

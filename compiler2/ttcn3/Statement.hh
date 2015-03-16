@@ -96,7 +96,7 @@ namespace Ttcn {
     void register_def(Definition *p_def);
     virtual bool has_ass_withId(const Identifier& p_id);
     virtual Common::Assignment* get_ass_bySRef(Ref_simple *p_ref);
-    virtual Type *get_mtc_system_comptype(bool is_system, bool is_connecting);
+    virtual Type *get_mtc_system_comptype(bool is_system);
     Definition* get_my_def() const { return my_def; }
     virtual Ttcn::StatementBlock *get_statementblock_scope();
     void set_my_sb(StatementBlock *p_sb, size_t p_index);
@@ -702,9 +702,8 @@ namespace Ttcn {
      *  type is a component type). Returns a pointer to the component
      *  type if available or NULL otherwise. Flags \a allow_mtc and \a
      *  allow_system indicate whether the mtc or system component
-     *  reference is acceptable in this context. Flag \a is_connecting
-     *  is set if the component is part of a 'map' or 'connect' statement. */
-    Type *chk_comp_ref(Value *p_val, bool allow_mtc, bool allow_system, bool is_connecting = false);
+     *  reference is acceptable in this context. */
+    Type *chk_comp_ref(Value *p_val, bool allow_mtc, bool allow_system);
     /** Checks an endpoint for a port connection or mapping. Parameter
      *  \a p_compref is a component reference, \a p_portref refers to
      *  a port within the corresponding component type.  A pointer to

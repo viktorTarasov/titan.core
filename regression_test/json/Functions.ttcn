@@ -102,6 +102,9 @@ external function f_enc_cba(in CBA u) return octetstring
 external function f_enc_stuff(in Stuff x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
 
+external function f_enc_hpt(in HasPardType x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+
 // for ASN.1 types
 external function f_enc_seqofint(in SeqOfInt x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
@@ -116,6 +119,12 @@ external function f_enc_strings(in ManyStrings x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
 
 external function f_enc_complex(in ComplexSet x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+
+external function f_enc_obj(in Object x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+
+external function f_enc_null(in HasNull x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
   
 //=================== Decoders =====================================
@@ -199,6 +208,9 @@ external function f_dec_stuff(in octetstring x) return Stuff
 external function f_dec_def(in octetstring x) return RecDef
   with { extension "prototype(convert) decode(JSON)" }
 
+external function f_dec_hpt(in octetstring x) return HasPardType
+  with { extension "prototype(convert) decode(JSON)" }
+
 // for ASN.1 types
 external function f_dec_seqofint(in octetstring x) return SeqOfInt
   with { extension "prototype(convert) decode(JSON)" }
@@ -213,6 +225,12 @@ external function f_dec_strings(in octetstring x) return ManyStrings
   with { extension "prototype(convert) decode(JSON)" }
 
 external function f_dec_complex(in octetstring x) return ComplexSet
+  with { extension "prototype(convert) decode(JSON)" }
+
+external function f_dec_obj(in octetstring x) return Object
+  with { extension "prototype(convert) decode(JSON)" }
+
+external function f_dec_null(in octetstring x) return HasNull
   with { extension "prototype(convert) decode(JSON)" }
   
 //============== Internal Functions ====================

@@ -9,6 +9,7 @@
 module Testcases {
 
 import from Shell all;
+import from CompareSchemas all;
 
 function f_test_ttcn2json(in charstring p_args, in charstring p_gen_file_name, in charstring p_exp_file_name,
   in integer p_exp_result) runs on Shell_CT
@@ -16,34 +17,32 @@ function f_test_ttcn2json(in charstring p_args, in charstring p_gen_file_name, i
   var charstring v_cmd := "compiler --ttcn2json " & p_args;
   f_shellCommandWithVerdict(v_cmd, "", p_exp_result);
 
-  /* The generated schema cannot be checked this way, as different platforms generate the parts of the schema
-     in a different order
   if (getverdict == pass) {
-    f_compareFiles(p_gen_file_name, p_exp_file_name, 0);
-    if (getverdict == fail) {
-      action("Generated and expected files do not match");
+    if (f_compare_schemas(p_gen_file_name, p_exp_file_name) == false) {
+      setverdict(fail, "Generated and expected files do not match");
     }
   }
   else {
     action("Command ", v_cmd, " failed");
-  }*/
+  }
+  
 }
 
 testcase tc_t2j_one() runs on Shell_CT 
 {
-  f_test_ttcn2json("one.ttcn two.ttcn three.ttcn zero.asn", "one.json", "one_e.json", 
+  f_test_ttcn2json("-f one.ttcn two.ttcn three.ttcn zero.asn", "one.json", "one_e.json", 
     c_shell_successWithWarning);
 }
 
 testcase tc_t2j_two() runs on Shell_CT 
 {
-  f_test_ttcn2json("one.ttcn two.ttcn three.ttcn zero.asn - two.json", "two.json", "one_e.json", 
+  f_test_ttcn2json("-jf one.ttcn two.ttcn three.ttcn zero.asn - two.json", "two.json", "two_e.json", 
     c_shell_successWithWarning);
 }
 
 testcase tc_t2j_three() runs on Shell_CT 
 {
-  f_test_ttcn2json("-T one.ttcn -T two.ttcn -T three.ttcn -A zero.asn - three.json", "three.json", "one_e.json", 
+  f_test_ttcn2json("-j -T one.ttcn -T two.ttcn -T three.ttcn -A zero.asn - three.json", "three.json", "three_e.json", 
     c_shell_successWithWarning);
 }
 
@@ -53,11 +52,25 @@ testcase tc_t2j_general_types() runs on Shell_CT
     c_shell_successWithoutWarningAndError);
 }
 
+testcase tc_t2j_main_asn() runs on Shell_CT
+{
+  f_test_ttcn2json("-f Main.ttcn PDU_Definitions.asn", "Main.json", "Main_e.json", 
+    c_shell_successWithoutWarningAndError);
+}
+
+testcase tc_t2j_mini_ranap() runs on Shell_CT
+{
+  f_test_ttcn2json("MiniRanap.asn", "MiniRanap.json", "MiniRanap_e.json", 
+    c_shell_successWithoutWarningAndError);
+}
+
 control {
   execute(tc_t2j_one());
   execute(tc_t2j_two());
   execute(tc_t2j_three());
   execute(tc_t2j_general_types());
+  execute(tc_t2j_main_asn());
+  execute(tc_t2j_mini_ranap());
 }
 
 }

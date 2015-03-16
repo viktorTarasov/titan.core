@@ -573,6 +573,7 @@ namespace Common {
     ownertype = OT_UNKNOWN;
     owner = 0;
     chk_finished = false;
+    pard_type_instance = false;
   }
 
   void Type::clean_up()
@@ -5204,8 +5205,8 @@ end_ext:
   
   bool Type::hasEncodeAttr(const MessageEncodingType_t encoding_type)
   {
-    if (CT_JSON == encoding_type && 
-        (is_asn1() || (is_ref() && get_type_refd()->is_asn1()))) {
+    if (CT_JSON == encoding_type && (implicit_json_encoding
+        || is_asn1() || (is_ref() && get_type_refd()->is_asn1()))) {
       // ASN.1 types automatically support JSON encoding
       return true;
     }
@@ -5573,10 +5574,15 @@ end_ext:
           case T_UNIVERSALSTRING:
           case T_BMPSTRING:
           case T_VERDICT:
+          case T_NULL:
+          case T_OID:
+          case T_ROID:
+          case T_ANY:
             // these basic types support JSON encoding by default
             return json_mem.remember(t, ANSWER_YES);
           case T_SEQ_T:
           case T_SEQ_A:
+          case T_OPENTYPE:
           case T_SET_T:
           case T_SET_A:
           case T_CHOICE_T:
@@ -5645,7 +5651,7 @@ end_ext:
           case T_ENUM_T:
           case T_ENUM_A:
             break; // check for an encode attribute
-          default: 
+          default:
             return json_mem.remember(t, ANSWER_NO);
           } // switch
           return json_mem.remember(t, hasEncodeAttr(CT_JSON) ? ANSWER_YES : ANSWER_NO);
@@ -6815,10 +6821,6 @@ end_ext:
   
   string Type::get_dispname() const
   {
-    if (T_REFD == typetype) {
-      // cannot calculate the display name for referenced types this way
-      FATAL_ERROR("Type::get_dispname()");
-    }
     string dispname = genname;
     size_t pos = 0;
     while(pos < dispname.size()) {

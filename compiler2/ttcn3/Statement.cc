@@ -152,13 +152,11 @@ namespace Ttcn {
     else return get_parent_scope()->get_ass_bySRef(p_ref);
   }
 
-  Type *StatementBlock::get_mtc_system_comptype(bool is_system, bool is_connecting)
+  Type *StatementBlock::get_mtc_system_comptype(bool is_system)
   {
     // return NULL outside test cases
-    if (!my_def || ((is_system || !is_connecting) &&
-                    my_def->get_asstype() != Common::Assignment::A_TESTCASE)) {
+    if (!my_def || my_def->get_asstype() != Common::Assignment::A_TESTCASE)
       return 0;
-    }
     if (is_system) {
       Def_Testcase *t_tc = dynamic_cast<Def_Testcase*>(my_def);
       if (!t_tc) FATAL_ERROR("StatementBlock::get_mtc_system_comptype()");
@@ -4958,7 +4956,7 @@ error:
     }
   }
 
-  Type *Statement::chk_comp_ref(Value *p_val, bool allow_mtc, bool allow_system, bool is_connecting)
+  Type *Statement::chk_comp_ref(Value *p_val, bool allow_mtc, bool allow_system)
   {
     if (!my_sb->get_my_def())
       error("Component operation is not allowed in the control part");
@@ -5001,8 +4999,7 @@ error:
       p_val->error("A component reference was expected as operand");
       return 0;
     }
-    Type *ret_val = is_connecting ? p_val->get_component_governor() :
-      p_val->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE);
+    Type *ret_val = p_val->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE);
     if (!ret_val) return 0;
     ret_val = ret_val->get_type_refd_last();
     switch (ret_val->get_typetype()) {
@@ -5020,7 +5017,7 @@ error:
   Type *Statement::chk_conn_endpoint(Value *p_compref, Reference *p_portref,
     bool allow_system)
   {
-    Type *comp_type = chk_comp_ref(p_compref, true, allow_system, true);
+    Type *comp_type = chk_comp_ref(p_compref, true, allow_system);
     if (comp_type) {
       ComponentTypeBody *comp_body = comp_type->get_CompBody();
       p_portref->set_base_scope(comp_body);

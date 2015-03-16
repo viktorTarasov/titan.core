@@ -40,7 +40,7 @@ BuildLibraryL: a.ttcn
 	 -L a.ttcn && ${MAKEPROG}
 
 CheckLibraryL: BuildLibraryL
-	if [ ! -f ./bin/a.a ]; then exit 1; fi
+	if [ ! -f ./bin/liba.a ]; then exit 1; fi
 	if [ -f ./bin/a ]; then exit 1; fi
 
 # ttcn3_makefilegen -L; make executable
@@ -51,7 +51,7 @@ BuildLibrary3L: a.ttcn
 	 -L a.ttcn && ${MAKEPROG} executable
 
 CheckLibrary3L: BuildLibrary3L
-	if [ -f ./bin3/a.a ]; then exit 1; fi
+	if [ -f ./bin3/liba.a ]; then exit 1; fi
 	if [ ! -f ./bin3/a ]; then exit 1; fi
 
 # ttcn3_makefilegen -L; make library
@@ -62,7 +62,7 @@ BuildLibrary2L: a.ttcn
 	 -L a.ttcn && ${MAKEPROG} library
 
 CheckLibrary2L: BuildLibrary2L
-	if [ ! -f ./bin2/a.a ]; then exit 1; fi
+	if [ ! -f ./bin2/liba.a ]; then exit 1; fi
 	if [ -f ./bin2/a ]; then exit 1; fi
 
 # ttcn3_makefilegen -L; make run
@@ -73,7 +73,7 @@ BuildLibrary4L: a.ttcn
 	 -L a.ttcn && ${MAKEPROG} all
 
 CheckLibrary4L: BuildLibrary4L
-	if [ ! -f ./bin4/a.a ]; then exit 1; fi
+	if [ ! -f ./bin4/liba.a ]; then exit 1; fi
 	if [ -f ./bin4/a ]; then exit 1; fi
 
 #### Without -L ####
@@ -86,7 +86,7 @@ BuildLibrary: a.ttcn
 	 a.ttcn && ${MAKEPROG}
 
 CheckLibrary: BuildLibrary
-	if [ -f ./bin/a.a ]; then exit 1; fi
+	if [ -f ./bin/liba.a ]; then exit 1; fi
 	if [ ! -f ./bin/a ]; then exit 1; fi
 
 # ttcn3_makefilegen; make executable
@@ -97,7 +97,7 @@ BuildLibrary3: a.ttcn
 	 a.ttcn && ${MAKEPROG} executable
 
 CheckLibrary3: BuildLibrary3
-	if [ -f ./bin3/a.a ]; then exit 1; fi
+	if [ -f ./bin3/liba.a ]; then exit 1; fi
 	if [ ! -f ./bin3/a ]; then exit 1; fi
 
 # ttcn3_makefilegen; make library
@@ -108,7 +108,7 @@ BuildLibrary2: a.ttcn
 	 a.ttcn && ${MAKEPROG} library
 
 CheckLibrary2: BuildLibrary2
-	if [ ! -f ./bin2/a.a ]; then exit 1; fi
+	if [ ! -f ./bin2/liba.a ]; then exit 1; fi
 	if [ -f ./bin2/a ]; then exit 1; fi
 
 # ttcn3_makefilegen; make all
@@ -119,7 +119,7 @@ BuildLibrary4: a.ttcn
 	 a.ttcn && ${MAKEPROG} all
 
 CheckLibrary4: BuildLibrary4
-	if [ -f ./bin4/a.a ]; then exit 1; fi
+	if [ -f ./bin4/liba.a ]; then exit 1; fi
 	if [ ! -f ./bin4/a ]; then exit 1; fi
 
 ###############################
@@ -136,7 +136,7 @@ Build_dynamic: a.ttcn
 	 a.ttcn && ${MAKEPROG}
 
 Check_dynamic: Build_dynamic
-	if [ ! -f ./bin_dynamic/a_lib.so ]; then exit 1; fi
+	if [ ! -f ./bin_dynamic/liba.so ]; then exit 1; fi
 	if [ -f ./bin_dynamic/a ]; then exit 1; fi
 
 # ttcn3_makefilegen -L -l; make library
@@ -147,7 +147,7 @@ Build_dynamic2: a.ttcn
 	 a.ttcn && ${MAKEPROG} library
 
 Check_dynamic2: Build_dynamic2
-	if [ ! -f ./bin_dynamic2/a_lib.so ]; then exit 1; fi
+	if [ ! -f ./bin_dynamic2/liba.so ]; then exit 1; fi
 	if [ -f ./bin_dynamic2/a ]; then exit 1; fi
 
 # ttcn3_makefilegen -L -l; make executable
@@ -158,7 +158,7 @@ Build_dynamic3: a.ttcn
 	 a.ttcn && ${MAKEPROG} executable
 
 Check_dynamic3: Build_dynamic3
-	if [ ! -f ./bin_dynamic3/a_lib.so ]; then exit 1; fi
+	if [ ! -f ./bin_dynamic3/liba.so ]; then exit 1; fi
 	if [ -f ./bin_dynamic3/a.so ]; then exit 1; fi
 	if [ ! -f ./bin_dynamic3/a ]; then exit 1; fi
 
@@ -172,7 +172,7 @@ Build_dynamic4: a.ttcn
 	 a.ttcn && ${MAKEPROG}
 
 Check_dynamic4: Build_dynamic4
-	if [ -f ./bin_dynamic4/a_lib.so ]; then exit 1; fi
+	if [ -f ./bin_dynamic4/liba.so ]; then exit 1; fi
 	if [ ! -f ./bin_dynamic4/a ]; then exit 1; fi
 
 # ttcn3_makefilegen -l; make library 
@@ -183,7 +183,7 @@ Build_dynamic5: a.ttcn
 	 a.ttcn && ${MAKEPROG} library
 
 Check_dynamic5: Build_dynamic5
-	if [ ! -f ./bin_dynamic5/a_lib.so ]; then exit 1; fi
+	if [ ! -f ./bin_dynamic5/liba.so ]; then exit 1; fi
 	if [ -f ./bin_dynamic5/a ]; then exit 1; fi
 
 # ttcn3_makefilegen -l; make executable 
@@ -194,7 +194,7 @@ Build_dynamic6: a.ttcn
 	 a.ttcn && ${MAKEPROG} executable 
 
 Check_dynamic6: Build_dynamic6
-	if [ -f ./bin_dynamic6/a_lib.so ]; then exit 1; fi
+	if [ -f ./bin_dynamic6/liba.so ]; then exit 1; fi
 	if [ ! -f ./bin_dynamic6/a ]; then exit 1; fi
 
 
@@ -208,7 +208,7 @@ Build_dynamic_central: b.ttcn Central
 	 b.ttcn ../central_storage/central.ttcn && ${MAKEPROG}
 
 Check_dynamic_central: Build_dynamic_central
-	if [ ! -f ./bin_central/b_lib.so ]; then exit 1; fi
+	if [ ! -f ./bin_central/libb.so ]; then exit 1; fi
 	if [ -f ./bin_central/b ]; then exit 1; fi
 
 # ttcn3_makefilegen  -c -l; make
@@ -236,7 +236,7 @@ BuildHelloTpd:
 
 CheckHelloTpd: BuildHelloTpd
 	if [ -f HelloTpd/bin/HelloTpd_test.exe ]; then exit 1; fi
-	if [ ! -f HelloTpd/bin/HelloTpd_test.a ]; then exit 1; fi
+	if [ ! -f HelloTpd/bin/libHelloTpd_test.a ]; then exit 1; fi
 
 # the default target is executable in the tpd file
 # check if the command line option overrides the one defined in the tpd
@@ -249,7 +249,7 @@ BuildHelloTpd2:
 
 CheckHelloTpd2: BuildHelloTpd2
 	if [ -f HelloTpd2/bin/HelloTpd_test.exe ]; then exit 1; fi
-	if [ ! -f HelloTpd2/bin/HelloTpd_test.a ]; then exit 1; fi
+	if [ ! -f HelloTpd2/bin/libHelloTpd_test.a ]; then exit 1; fi
 
 clean:
 	-rm -rf bin* 

@@ -121,7 +121,7 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
 %x SC_commentblock SC_cstring SC_DEFINE
 %s SC_MODULE_PARAMETERS SC_LOGGING SC_TESTPORT_PARAMETERS SC_EXECUTE SC_GROUPS
 %s SC_COMPONENTS SC_EXTERNAL_COMMANDS SC_MAIN_CONTROLLER SC_INCLUDE SC_ORDERED_INCLUDE
-%s SC_STRING2TTCN_COMPONENT
+%s SC_STRING2TTCN_COMPONENT SC_PROFILER
 
 %%
 
@@ -182,6 +182,13 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
   if (YY_START!=SC_commentblock && YY_START!=SC_cstring) {
 	BEGIN(SC_LOGGING);
 	return LoggingKeyword;
+	}
+}
+
+<*>"["{WS}PROFILER{WS}"]"		{
+  if (YY_START!=SC_commentblock && YY_START!=SC_cstring) {
+	BEGIN(SC_PROFILER);
+	return ProfilerKeyword;
 	}
 }
 
@@ -493,7 +500,7 @@ ifpresent   return IfpresentKeyword;
 infinity    return InfinityKeyword;
 }
 
-<SC_MODULE_PARAMETERS,SC_LOGGING>
+<SC_MODULE_PARAMETERS,SC_LOGGING,SC_PROFILER>
 {
 true		{
 	yylval.bool_val = TRUE;
@@ -955,6 +962,16 @@ LOG_ALL	{
 [Rr]etry   return Retry;
 
 [Dd]elete  return Delete;
+}
+
+<SC_PROFILER>
+{
+  [Dd]isable[Pp]rofiler   return DisableProfilerKeyword;
+  [Dd]isable[Cc]overage   return DisableCoverageKeyword;
+  [Dd]ata[Bb]ase[Ff]ile   return DatabaseFileKeyword;
+  [Aa]ggregate[Dd]ata     return AggregateDataKeyword;
+  [Ss]tatistics[Ff]ile    return StatisticsFileKeyword;
+  [Dd]isable[Ss]tatistics return DisableStatisticsKeyword;
 }
 
 <SC_EXECUTE>control		return ControlKeyword;

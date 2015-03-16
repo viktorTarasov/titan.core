@@ -69,9 +69,17 @@ public:
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
                          const ASN_BER_TLV_t& p_tlv, unsigned L_form);
   int XER_encode(const XERdescriptor_t& p_td,
-                 TTCN_Buffer& p_buf, unsigned int flavor, int indent) const;
+                 TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-                 unsigned int flavor);
+                 unsigned int flavor, embed_values_dec_struct_t*);
+  
+  /** Encodes accordingly to the JSON encoding rules.
+    * Returns the length of the encoded data. */
+  int JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;
+  
+  /** Decodes accordingly to the JSON decoding rules.
+    * Returns the length of the encoded data. */
+  int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
 };
 
 extern boolean operator==(asn_null_type par_value, const ASN_NULL& other_value);

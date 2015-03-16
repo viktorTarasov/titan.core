@@ -264,7 +264,16 @@ void OBJID::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer, p_buf, XER_coding, 0);
+    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0);
+    break;}
+  case TTCN_EncDec::CT_JSON: {
+    TTCN_EncDec_ErrorContext ec("While JSON-encoding type '%s': ", p_td.name);
+    if(!p_td.json)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No JSON descriptor available for type '%s'.", p_td.name);
+    JSON_Tokenizer tok(va_arg(pvar, int) != 0);
+    JSON_encode(p_td, tok);
+    p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'",
@@ -293,7 +302,7 @@ void OBJID::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       ("No RAW descriptor available for type '%s'.", p_td.name);
     break;}
   case TTCN_EncDec::CT_XER: {
-    TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
+    TTCN_EncDec_ErrorContext ec("While XER-decoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
     XmlReaderWrap reader(p_buf);
     int success = reader.Read();
@@ -302,9 +311,22 @@ void OBJID::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       if (type==XML_READER_TYPE_ELEMENT)
 	break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding);
+    XER_decode(*p_td.xer, reader, XER_coding, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
+    break;}
+  case TTCN_EncDec::CT_JSON: {
+    TTCN_EncDec_ErrorContext ec("While JSON-decoding type '%s': ", p_td.name);
+    if(!p_td.json)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No JSON descriptor available for type '%s'.", p_td.name);
+    JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
+    if(JSON_decode(p_td, tok, false)<0)
+      ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
+               "Can not decode type '%s', because invalid or incomplete"
+               " message was received"
+               , p_td.name);
+    p_buf.set_pos(tok.get_buf_pos());
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'",
@@ -446,7 +468,7 @@ boolean OBJID::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
 
 
 int OBJID::XER_encode(const XERdescriptor_t& p_td,
-		  TTCN_Buffer& p_buf, unsigned int flavor, int indent ) const
+		  TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
@@ -478,8 +500,33 @@ int OBJID::XER_encode(const XERdescriptor_t& p_td,
   return (int)p_buf.get_len() - encoded_length;
 }
 
+void OBJID::from_string(char* p_str)
+{
+  // Count dots to find number of components. (1 dot = 2 components, etc.)
+  unsigned comps = 1;
+  const char *p;
+  for (p = p_str; *p != 0; ++p) {
+    if (*p == '.') ++comps;
+  }
+  // p now points at the end of the string. If it was empty, then there were
+  // no components; compensate the fact that we started at 1.
+  init_struct((p != p_str) ? comps : 0);
+
+  char *beg, *end = 0;
+  comps = 0;
+  for (beg = p_str; beg < p; ++beg) {
+    errno = 0;
+    long ret = strtol(beg, &end, 10);
+    if (errno) break;
+
+    // TODO check value for too big ?
+    (*this)[comps++] = ret;
+    beg = end; // move to the dot; will move past it when incremented
+  }
+}
+
 int OBJID::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-		  unsigned int flavor)
+		  unsigned int flavor, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1;
@@ -497,27 +544,8 @@ int OBJID::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, "Bogus object identifier");
       return 0;
     }
-    // Count dots to find number of components. (1 dot = 2 components, etc.)
-    unsigned comps = 1;
-    const char *p;
-    for (p = val; *p != 0; ++p) {
-      if (*p == '.') ++comps;
-    }
-    // p now points at the end of the string. If it was empty, then there were
-    // no components; compensate the fact that we started at 1.
-    init_struct((p != val) ? comps : 0);
-
-    char *beg, *end = 0;
-    comps = 0;
-    for (beg = val; beg < p; ++beg) {
-      errno = 0;
-      long ret = strtol(beg, &end, 10);
-      if (errno) break;
-
-      // TODO check value for too big ?
-      (*this)[comps++] = ret;
-      beg = end; // move to the dot; will move past it when incremented
-    }
+    
+    from_string(val);
 
     xmlFree(val);
   }
@@ -532,6 +560,69 @@ int OBJID::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   return 1; // decode successful
 }
 
+int OBJID::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) const
+{
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound object identifier value.");
+    return -1;
+  }
+  
+  char* objid_str = mcopystrn("\"", 1);
+  for (int i = 0; i < val_ptr->n_components; ++i) {
+    objid_str = mputprintf(objid_str, "%s" OBJID_FMT, (i > 0 ? "." : ""), val_ptr->components_ptr[i]);
+  }
+  objid_str = mputstrn(objid_str, "\"", 1);
+  int enc_len = p_tok.put_next_token(JSON_TOKEN_STRING, objid_str);
+  Free(objid_str);
+  return enc_len;
+}
+
+int OBJID::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+{
+  json_token_t token = JSON_TOKEN_NONE;
+  char* value = 0;
+  size_t value_len = 0;
+  boolean error = false;
+  int dec_len = 0;
+  boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
+  if (use_default) {
+    // No JSON data in the buffer -> use default value
+    value = (char*)p_td.json->default_value;
+    value_len = strlen(value);
+  } else {
+    dec_len = p_tok.get_next_token(&token, &value, &value_len);
+  }
+  if (JSON_TOKEN_ERROR == token) {
+    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, "");
+    return JSON_ERROR_FATAL;
+  }
+  else if (JSON_TOKEN_STRING == token || use_default) {
+    if (use_default || (value_len > 2 && value[0] == '\"' && value[value_len - 1] == '\"')) {
+      if (!use_default) {
+        // The default value doesn't have quotes around it
+        value_len -= 2;
+        ++value;
+      }
+      // need a null-terminated string
+      char* value2 = mcopystrn(value, value_len);
+      from_string(value2);
+      Free(value2);
+    }
+  }
+  else {
+    return JSON_ERROR_INVALID_TOKEN;
+  }
+  
+  if (error) {
+    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FORMAT_ERROR, "string", "object identifier");
+    if (p_silent) {
+      clean_up();
+    }
+    return JSON_ERROR_FATAL;    
+  }
+  return dec_len;
+}
 
 void OBJID_template::clean_up()
 {

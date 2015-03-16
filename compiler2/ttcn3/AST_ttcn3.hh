@@ -625,14 +625,15 @@ namespace Ttcn {
 
     bool is_visible(const Identifier& id, visibility_t visibility);
     
-    /** Generates JSON schema segments for the types defined in the module
-      * and adds them to the JSON schema parameter. */
-    void add_types_to_json_schema(JSON_Tokenizer& json);
-    
-    /** Generates JSON schemas containing references to the types that have JSON
-      * encoding and/or decoding functions declared in the module. Information 
-      * related to these functions is also inserted after the references. */
-    void add_func_to_json_schema(map<Type*, JSON_Tokenizer>& json_refs);
+    /** Generates JSON schema segments for the types defined in the modules,
+      * and references to these types. Information related to the types' 
+      * JSON encoding and decoding functions is also inserted after the references.
+      *
+      * @param json JSON document containing the main schema, schema segments for 
+      * the types will be inserted here
+      * @param json_refs map of JSON documents containing the references and function
+      * info related to each type */
+    virtual void generate_json_schema(JSON_Tokenizer& json, map<Type*, JSON_Tokenizer>& json_refs);
   };
 
   /**
@@ -888,10 +889,6 @@ namespace Ttcn {
     virtual void set_with_attr(MultiWithAttrib* p_attrib);
     virtual WithAttribPath* get_attrib_path();
     virtual void set_parent_path(WithAttribPath* p_path);
-    
-    /** Generates a JSON schema segment for the defined type and inserts it into
-      * the JSON schema parameter. */
-    void generate_json_schema(JSON_Tokenizer& json);
   };
 
   /**

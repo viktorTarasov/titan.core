@@ -298,7 +298,7 @@ namespace Common {
     if (++error_count >= max_errors) {
       fputs("Maximum number of errors reached, aborting.\n", stderr);
       fflush(stderr);
-      abort();
+      exit(EXIT_FAILURE);
     }
   }
 

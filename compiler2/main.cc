@@ -66,7 +66,9 @@ boolean generate_skeleton = FALSE, force_overwrite = FALSE,
   semantic_check_only = FALSE, output_only_linenum = FALSE,
   default_as_optional = FALSE, enable_set_bound_out_param = FALSE,
   use_runtime_2 = FALSE, gcc_compat = FALSE, asn1_xer = FALSE,
-  check_subtype = TRUE, suppress_context = FALSE, display_up_to_date = FALSE;
+  check_subtype = TRUE, suppress_context = FALSE, display_up_to_date = FALSE,
+  implicit_json_encoding = FALSE, json_refs_for_all_types = TRUE,
+  profiler_enabled = FALSE;
 
 // Default code splitting mode is set to 'no splitting'.
 CodeGenHelper::split_type code_splitting_mode = CodeGenHelper::SPLIT_NONE;
@@ -356,7 +358,7 @@ static void usage()
     "	[-U none|type] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
     "	[-T] module.ttcn [-A] module.asn ...\n"
     "	or  %s -v\n"
-    "	or  %s --ttcn2json [-T] module.ttcn [-A] module.asn ... - schema.json\n"
+    "	or  %s --ttcn2json [-jf] ... [-T] module.ttcn [-A] module.asn ... [- schema.json]\n"
     "\n"
     "OPTIONS:\n"
     "	-a:		force XER in ASN.1 files\n"
@@ -366,10 +368,13 @@ static void usage()
     "	-f:		force overwriting of output files\n"
     "	-g:		emulate GCC error/warning message format\n"
     "	-i:		use only line numbers in error/warning messages\n"
+    "	-j:		disable JSON encoder/decoder functions\n"
     "	-l:		include source line info in C++ code\n"
     "	-L:		add source line info for logging\n"
     "	-K file:	enable selective code coverage\n"
+    "	-o dir:		output files will be placed into dir\n"
     "	-p:		parse only (no semantic check or code generation)\n"
+    "	-P pduname:	define top-level pdu\n"
     "	-q:		suppress all messages (quiet mode)\n"
     "	-Qn:		quit after n errors\n"
     "	-r:		disable RAW encoder/decoder functions\n"
@@ -379,19 +384,20 @@ static void usage()
     "	-t:		generate Test Port skeleton\n"
     "	-u:		duplicate underscores in file names\n"
     "	-U none|type:	select code splitting mode for the generated C++ code\n"
+    "	-V verb_level:	set verbosity level bitmask (decimal)\n"
     "	-w:		suppress warnings\n"
     "	-x:		disable TEXT encoder/decoder functions\n"
     "	-X:		disable XER encoder/decoder functions\n"
-    "	-j:		disable JSON encoder/decoder functions\n"
     "	-y:		disable subtype checking\n"
-    "	-V verb_level:	set verbosity level bitmask (decimal)\n"
-    "	-o dir:		output files will be placed into dir\n"
     "	-Y:		Enforces legacy behaviour of the \"out\" function parameters (see refguide)\n"
-    "	-P pduname:	define top-level pdu\n"
+    //"	-z:		enable profiling and code coverage for TTCN-3 files\n" - not open to the public yet
     "	-T file:	force interpretation of file as TTCN-3 module\n"
     "	-A file:	force interpretation of file as ASN.1 module\n"
     "	-v:		show version\n"
-    "	--ttcn2json:	generate JSON schema from input modules\n", argv0, argv0, argv0);
+    "	--ttcn2json:	generate JSON schema from input modules\n"
+    "JSON schema generator options:\n"
+    "	-j:		only include types with JSON encoding\n"
+    "	-f:		only generate references to types with JSON encoding/decoding functions\n", argv0, argv0, argv0);
 }
 
 #define SET_FLAG(x) if (x##flag) {\
@@ -441,7 +447,7 @@ int main(int argc, char *argv[])
     tflag = false, uflag = false, vflag = false, wflag = false, xflag = false,
     dflag = false, Xflag = false, Rflag = false, gflag = false, aflag = false,
     s0flag = false, Cflag = false, yflag = false, Uflag = false, Qflag = false,
-    Sflag = false, Kflag = false, jflag = false,
+    Sflag = false, Kflag = false, jflag = false, zflag = false,
     errflag = false, print_usage = false, ttcn2json = false;
 
   CodeGenHelper cgh;
@@ -457,6 +463,7 @@ int main(int argc, char *argv[])
   if (0 == strcmp(argv[1], "--ttcn2json")) {
     ttcn2json = true;
     display_up_to_date = TRUE;
+    implicit_json_encoding = TRUE;
     for (int i = 2; i < argc; ++i) {
       // A dash (-) is used to separate the schema file name from the input files
       if (0 == strcmp(argv[i], "-")) {
@@ -486,6 +493,16 @@ int main(int argc, char *argv[])
           break;
         }
         add_module(n_modules, module_list, argv[i], Module::MOD_TTCN);
+      }
+      else if (0 == strcmp(argv[i], "-j")) {
+        implicit_json_encoding = FALSE;
+      }
+      else if (0 == strcmp(argv[i], "-f")) {
+        json_refs_for_all_types = FALSE;
+      }
+      else if (0 == strcmp(argv[i], "-fj") || 0 == strcmp(argv[i], "-jf")) {
+        implicit_json_encoding = FALSE;
+        json_refs_for_all_types = FALSE;
       }
       else if (argv[i][0] == '-') {
         ERROR("Invalid option `%s' after option `--ttcn2json'", argv[i]);
@@ -523,7 +540,7 @@ int main(int argc, char *argv[])
 
   if (!ttcn2json) {
     for ( ; ; ) {
-      int c = getopt(argc, argv, "aA:C:K:LP:T:V:bcdfgilo:YpqQ:rRs0StuU:vwxXjy-");
+      int c = getopt(argc, argv, "aA:C:K:LP:T:V:bcdfgilo:YpqQ:rRs0StuU:vwxXjyz-");
       if (c == -1) break;
       switch (c) {
       case 'a':
@@ -678,6 +695,10 @@ int main(int argc, char *argv[])
         SET_FLAG(y);
         check_subtype = FALSE;
         break;
+      case 'z':
+        SET_FLAG(z);
+        profiler_enabled = TRUE;
+        break;
 
       case 'Q': {
         long max_errs;
@@ -704,7 +725,7 @@ int main(int argc, char *argv[])
       
       case '-': 
         if (!strcmp(argv[optind], "--ttcn2json")) {
-          ERROR("Option `--ttcn2json' does not allow the use of other options");
+          ERROR("Option `--ttcn2json' is only allowed as the first option");
         } else {
           ERROR("Invalid option: `%s'", argv[optind]);
         }
@@ -722,7 +743,7 @@ int main(int argc, char *argv[])
       if (Aflag || Lflag || Pflag || Tflag || Vflag || Yflag ||
         bflag || fflag || iflag || lflag || oflag || pflag || qflag ||
         rflag || sflag || tflag || uflag || wflag || xflag || Xflag || Rflag ||
-        Uflag || yflag || Kflag || jflag) {
+        Uflag || yflag || Kflag || jflag || zflag) {
         errflag = true;
         print_usage = true;
       }
@@ -736,6 +757,10 @@ int main(int argc, char *argv[])
       }
       if (Kflag && !Lflag) {
         ERROR("Source line information `-L' is necessary for code coverage `-K'.");
+        errflag = true;
+      }
+      if (zflag && !Lflag) {
+        ERROR("Source line information `-L' is necessary for profiling `-z'.");
         errflag = true;
       }
       if (iflag && gflag) {

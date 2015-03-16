@@ -154,6 +154,71 @@ testcase decode_emb_any() runs on EMB
   CHECK_DECODE(exer_dec_emb_any, str_emb_any, EmbedAnyElem, c_emb_any);
 }
 
+// EMBED-VALUES with untagged array
+// the values are also embedded between the array elements, not just the fields of the record
+type record Inner {
+  integer num,
+  charstring str
+}
+
+type record length (1..infinity) of Inner RoInner;
+
+type record Outer {
+  record of universal charstring embed_values,
+  integer attr,
+  octetstring bytes,
+  RoInner stuff
+} with {
+  variant "embedValues";
+  variant(attr) "attribute";
+  variant(bytes) "name as 'Bytes'";
+  variant(stuff) "untagged";
+}
+
+DECLARE_EXER_ENCODERS(Outer, emb_outer);
+
+const Outer c_emb_array := {
+  embed_values := { "one", "two", "three", "four", "five", "six" },
+  attr := 48,
+  bytes := 'DEADBEEF'O,
+  stuff := { { 3, "abc" }, { 4, "def" }, { -6, "red" }, { 118, "blue" } }
+}
+
+const Outer c_emb_array_w_holes := {
+  embed_values := { "one", "", "three", "", "five" },
+  attr := 48,
+  bytes := 'DEADBEEF'O,
+  stuff := { { 3, "abc" }, { 4, "def" }, { -6, "red" }, { 118, "blue" } }
+}
+
+const universal charstring str_emb_array :=
+"<Outer attr='48'>one" &
+"<Bytes>DEADBEEF</Bytes>two" &
+"<Inner><num>3</num><str>abc</str></Inner>three" &
+"<Inner><num>4</num><str>def</str></Inner>four" &
+"<Inner><num>-6</num><str>red</str></Inner>five" &
+"<Inner><num>118</num><str>blue</str></Inner>six</Outer>\n";
+
+const universal charstring str_emb_array_w_holes :=
+"<Outer attr='48'>one" &
+"<Bytes>DEADBEEF</Bytes>" &
+"<Inner><num>3</num><str>abc</str></Inner>three" &
+"<Inner><num>4</num><str>def</str></Inner>" &
+"<Inner><num>-6</num><str>red</str></Inner>five" &
+"<Inner><num>118</num><str>blue</str></Inner></Outer>\n";
+
+testcase encode_emb_array() runs on EMB
+{
+  CHECK_METHOD(exer_enc_emb_outer, c_emb_array, str_emb_array);
+  CHECK_METHOD(exer_enc_emb_outer, c_emb_array_w_holes, str_emb_array_w_holes);
+}
+
+testcase decode_emb_array() runs on EMB
+{
+  CHECK_DECODE(exer_dec_emb_outer, str_emb_array, Outer, c_emb_array);
+  CHECK_DECODE(exer_dec_emb_outer, str_emb_array_w_holes, Outer, c_emb_array_w_holes);
+}
+
 control {
   execute(encode_emb());
   execute(decode_emb());
@@ -161,6 +226,8 @@ control {
   execute(decode_emb_all());
   execute(encode_emb_any());
   execute(decode_emb_any());
+  //execute(encode_emb_array()); - this functionality was temporarily removed in RT1
+  //execute(decode_emb_array());
 }
 
 }

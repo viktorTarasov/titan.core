@@ -633,7 +633,7 @@ boolean EMBEDDED_PDV_identification::BER_decode_TLV(const TTCN_Typedescriptor_t&
 // FIXME maybe: XER_encode and decode is virtually identical to CHARACTER_STRING
 
 int EMBEDDED_PDV_identification::XER_encode(const XERdescriptor_t& p_td,
-  TTCN_Buffer& p_buf, unsigned int flavor, int indent) const
+  TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
   int indenting = !is_canonical(flavor);
   int exer  = is_exer(flavor);
@@ -646,22 +646,22 @@ int EMBEDDED_PDV_identification::XER_encode(const XERdescriptor_t& p_td,
   ++indent;
   switch (union_selection) {
   case ALT_syntaxes:
-    field_syntaxes->XER_encode(EMBEDDED_PDV_identification_sxs_xer_, p_buf, flavor, indent);;
+    field_syntaxes->XER_encode(EMBEDDED_PDV_identification_sxs_xer_, p_buf, flavor, indent, 0);;
     break;
   case ALT_syntax:
-    field_syntax->XER_encode(EMBEDDED_PDV_identification_sx_xer_, p_buf, flavor, indent);;
+    field_syntax->XER_encode(EMBEDDED_PDV_identification_sx_xer_, p_buf, flavor, indent, 0);;
     break;
   case ALT_presentation__context__id:
-    field_presentation__context__id->XER_encode(EMBEDDED_PDV_identification_pci_xer_, p_buf, flavor, indent);;
+    field_presentation__context__id->XER_encode(EMBEDDED_PDV_identification_pci_xer_, p_buf, flavor, indent, 0);;
     break;
   case ALT_context__negotiation:
-    field_context__negotiation->XER_encode(EMBEDDED_PDV_identification_cn_xer_, p_buf, flavor, indent);;
+    field_context__negotiation->XER_encode(EMBEDDED_PDV_identification_cn_xer_, p_buf, flavor, indent, 0);;
     break;
   case ALT_transfer__syntax:
-    field_transfer__syntax->XER_encode(EMBEDDED_PDV_identification_ts_xer_, p_buf, flavor, indent);;
+    field_transfer__syntax->XER_encode(EMBEDDED_PDV_identification_ts_xer_, p_buf, flavor, indent, 0);;
     break;
   case ALT_fixed:
-    field_fixed->XER_encode(EMBEDDED_PDV_identification_fix_xer_, p_buf, flavor, indent);;
+    field_fixed->XER_encode(EMBEDDED_PDV_identification_fix_xer_, p_buf, flavor, indent, 0);;
     break;
   default:
     TTCN_EncDec_ErrorContext::error_internal("Unknown selection.");
@@ -677,7 +677,7 @@ int EMBEDDED_PDV_identification::XER_encode(const XERdescriptor_t& p_td,
 }
 
 int EMBEDDED_PDV_identification::XER_decode(const XERdescriptor_t& p_td,
-  XmlReaderWrap& reader, unsigned int flavor)
+  XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   // we are supposed to be parked on our element
@@ -697,27 +697,27 @@ int EMBEDDED_PDV_identification::XER_decode(const XERdescriptor_t& p_td,
 	size_t namelen = strlen(name);
 	switch (namelen) {
 	case 8: // syntaxes
-	  syntaxes().XER_decode(EMBEDDED_PDV_identification_sxs_xer_, reader, flavor);
+	  syntaxes().XER_decode(EMBEDDED_PDV_identification_sxs_xer_, reader, flavor, 0);
 	  break;
 
 	case 6: // syntax
-	  syntax().XER_decode(EMBEDDED_PDV_identification_sx_xer_, reader, flavor);
+	  syntax().XER_decode(EMBEDDED_PDV_identification_sx_xer_, reader, flavor, 0);
 	  break;
 
 	case 23: // presentation-context-id
-	  presentation__context__id().XER_decode(EMBEDDED_PDV_identification_pci_xer_, reader, flavor);
+	  presentation__context__id().XER_decode(EMBEDDED_PDV_identification_pci_xer_, reader, flavor, 0);
 	  break;
 
 	case 19: // context-negotiation
-	  context__negotiation().XER_decode(EMBEDDED_PDV_identification_cn_xer_, reader, flavor);
+	  context__negotiation().XER_decode(EMBEDDED_PDV_identification_cn_xer_, reader, flavor, 0);
 	  break;
 
 	case 15: // transfer-syntax
-	  transfer__syntax().XER_decode(EMBEDDED_PDV_identification_ts_xer_, reader, flavor);
+	  transfer__syntax().XER_decode(EMBEDDED_PDV_identification_ts_xer_, reader, flavor, 0);
 	  break;
 
 	case 5: // fixed
-	  fixed().XER_decode(EMBEDDED_PDV_identification_fix_xer_, reader, flavor);
+	  fixed().XER_decode(EMBEDDED_PDV_identification_fix_xer_, reader, flavor, 0);
 	  break;
 
 	default:
@@ -1667,7 +1667,7 @@ boolean EMBEDDED_PDV_identification_syntaxes::BER_decode_TLV(const TTCN_Typedesc
 }
 
 int EMBEDDED_PDV_identification_syntaxes::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent) const
+    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
   int indenting = !is_canonical(flavor);
   int exer  = is_exer(flavor);
@@ -1678,8 +1678,8 @@ int EMBEDDED_PDV_identification_syntaxes::XER_encode(const XERdescriptor_t& p_td
   p_buf.put_s((size_t)p_td.namelens[exer] - 1 + indenting, (const unsigned char*)p_td.names[exer]);
 
   ++indent;
-  field_abstract.XER_encode(EMBEDDED_PDV_identification_sxs_abs_xer_, p_buf, flavor, indent);
-  field_transfer.XER_encode(EMBEDDED_PDV_identification_sxs_xfr_xer_, p_buf, flavor, indent);
+  field_abstract.XER_encode(EMBEDDED_PDV_identification_sxs_abs_xer_, p_buf, flavor, indent, 0);
+  field_transfer.XER_encode(EMBEDDED_PDV_identification_sxs_xfr_xer_, p_buf, flavor, indent, 0);
 
   if (indenting) do_indent(p_buf, --indent);
   p_buf.put_c('<');
@@ -1690,7 +1690,7 @@ int EMBEDDED_PDV_identification_syntaxes::XER_encode(const XERdescriptor_t& p_td
 }
 
 int EMBEDDED_PDV_identification_syntaxes::XER_decode(const XERdescriptor_t& /*p_td*/,
-  XmlReaderWrap& reader, unsigned int flavor)
+  XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
 { // we stand on <syntaxes>, move ahead first
   int type;
   for (int success = reader.Read(); success == 1; success = reader.Read())
@@ -1701,8 +1701,8 @@ int EMBEDDED_PDV_identification_syntaxes::XER_decode(const XERdescriptor_t& /*p_
       break;
   }
   // FIXME this assumes the right element
-  field_abstract.XER_decode(EMBEDDED_PDV_identification_sxs_abs_xer_, reader, flavor);
-  field_transfer.XER_decode(EMBEDDED_PDV_identification_sxs_xfr_xer_, reader, flavor);
+  field_abstract.XER_decode(EMBEDDED_PDV_identification_sxs_abs_xer_, reader, flavor, 0);
+  field_transfer.XER_decode(EMBEDDED_PDV_identification_sxs_xfr_xer_, reader, flavor, 0);
   for (int success = 1; success == 1; success = reader.Read())
   {
     type = reader.NodeType();
@@ -2323,7 +2323,7 @@ boolean EMBEDDED_PDV_identification_context__negotiation::BER_decode_TLV(const T
 }
 
 int EMBEDDED_PDV_identification_context__negotiation::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent) const
+    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
   int indenting = !is_canonical(flavor);
   int exer  = is_exer(flavor);
@@ -2334,8 +2334,8 @@ int EMBEDDED_PDV_identification_context__negotiation::XER_encode(const XERdescri
   p_buf.put_s((size_t)p_td.namelens[exer] - 1 + indenting, (const unsigned char*)p_td.names[exer]);
 
   ++indent;
-  field_presentation__context__id.XER_encode(EMBEDDED_PDV_identification_cn_pci_xer_, p_buf, flavor, indent);
-  field_transfer__syntax         .XER_encode(EMBEDDED_PDV_identification_cn_tsx_xer_, p_buf, flavor, indent);
+  field_presentation__context__id.XER_encode(EMBEDDED_PDV_identification_cn_pci_xer_, p_buf, flavor, indent, 0);
+  field_transfer__syntax         .XER_encode(EMBEDDED_PDV_identification_cn_tsx_xer_, p_buf, flavor, indent, 0);
 
   if (indenting) do_indent(p_buf, --indent);
   p_buf.put_c('<');
@@ -2346,7 +2346,7 @@ int EMBEDDED_PDV_identification_context__negotiation::XER_encode(const XERdescri
 }
 
 int EMBEDDED_PDV_identification_context__negotiation::XER_decode(
-  const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor)
+  const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   int type = reader.NodeType(), depth = -1;
@@ -2357,8 +2357,8 @@ int EMBEDDED_PDV_identification_context__negotiation::XER_decode(
     depth = reader.Depth();
     success = reader.Read();
   }
-  field_presentation__context__id.XER_decode(EMBEDDED_PDV_identification_cn_pci_xer_, reader, flavor);
-  field_transfer__syntax         .XER_decode(EMBEDDED_PDV_identification_cn_tsx_xer_, reader, flavor);
+  field_presentation__context__id.XER_decode(EMBEDDED_PDV_identification_cn_pci_xer_, reader, flavor, 0);
+  field_transfer__syntax         .XER_decode(EMBEDDED_PDV_identification_cn_tsx_xer_, reader, flavor, 0);
   for (; success == 1; success = reader.Read()) {
     type = reader.NodeType();
     if (XML_READER_TYPE_END_ELEMENT == type) {
@@ -2984,7 +2984,7 @@ void EMBEDDED_PDV::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer,p_buf, XER_coding, 0);
+    XER_encode(*p_td.xer,p_buf, XER_coding, 0, 0);
     break;}
   case TTCN_EncDec::CT_JSON: {
     TTCN_EncDec_ErrorContext ec("While JSON-encoding type '%s': ", p_td.name);
@@ -3030,7 +3030,7 @@ void EMBEDDED_PDV::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       if (type==XML_READER_TYPE_ELEMENT)
 	break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding);
+    XER_decode(*p_td.xer, reader, XER_coding, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -3097,7 +3097,7 @@ boolean EMBEDDED_PDV::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const AS
 }
 
 int EMBEDDED_PDV::XER_encode(const XERdescriptor_t& p_td,
-                         TTCN_Buffer& p_buf, unsigned int flavor, int indent) const {
+  TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const {
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error
       (TTCN_EncDec::ET_UNBOUND, "Encoding an unbound value.");
@@ -3111,13 +3111,13 @@ int EMBEDDED_PDV::XER_encode(const XERdescriptor_t& p_td,
   p_buf.put_s((size_t)p_td.namelens[exer] - 1 + indenting, (const unsigned char*)p_td.names[exer]);
   flavor &= XER_MASK;
   ++indent;
-  field_identification         .XER_encode(EMBEDDED_PDV_identification_xer_       , p_buf, flavor, indent);
+  field_identification         .XER_encode(EMBEDDED_PDV_identification_xer_       , p_buf, flavor, indent, 0);
   if (field_data__value__descriptor.is_value()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,
       "data-value-descriptor not allowed for EMBEDDED PDV");
   }
-  field_data__value__descriptor.XER_encode(EMBEDDED_PDV_data_value_descriptor_xer_, p_buf, flavor, indent);
-  field_data__value            .XER_encode(EMBEDDED_PDV_data_value_xer_           , p_buf, flavor, indent);
+  field_data__value__descriptor.XER_encode(EMBEDDED_PDV_data_value_descriptor_xer_, p_buf, flavor, indent, 0);
+  field_data__value            .XER_encode(EMBEDDED_PDV_data_value_xer_           , p_buf, flavor, indent, 0);
 
   if (indenting) do_indent(p_buf, --indent);
   p_buf.put_c('<');
@@ -3127,7 +3127,7 @@ int EMBEDDED_PDV::XER_encode(const XERdescriptor_t& p_td,
   return (int)p_buf.get_len() - encoded_length;
 }
 
-int EMBEDDED_PDV::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor)
+int EMBEDDED_PDV::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   int depth = 1, type, success;
@@ -3140,13 +3140,13 @@ int EMBEDDED_PDV::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
       break;
     }
   }
-  field_identification         .XER_decode(EMBEDDED_PDV_identification_xer_       , reader, flavor);
-  field_data__value__descriptor.XER_decode(EMBEDDED_PDV_data_value_descriptor_xer_, reader, flavor);
+  field_identification         .XER_decode(EMBEDDED_PDV_identification_xer_       , reader, flavor, 0);
+  field_data__value__descriptor.XER_decode(EMBEDDED_PDV_data_value_descriptor_xer_, reader, flavor, 0);
   if (field_data__value__descriptor.is_value()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,
       "data-value-descriptor not allowed for EMBEDDED PDV");
   }
-  field_data__value            .XER_decode(EMBEDDED_PDV_data_value_xer_           , reader, flavor);
+  field_data__value            .XER_decode(EMBEDDED_PDV_data_value_xer_           , reader, flavor, 0);
   for (success = reader.Read(); success == 1; success = reader.Read()) {
     type = reader.NodeType();
     if (XML_READER_TYPE_END_ELEMENT == type) {

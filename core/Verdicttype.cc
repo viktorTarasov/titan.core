@@ -154,7 +154,7 @@ void VERDICTTYPE::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer, p_buf, XER_coding, 0);
+    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0);
     break;}
   case TTCN_EncDec::CT_JSON: {
     TTCN_EncDec_ErrorContext ec("While JSON-encoding type '%s': ", p_td.name);
@@ -227,7 +227,7 @@ void VERDICTTYPE::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       if (type==XML_READER_TYPE_ELEMENT)
         break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding);
+    XER_decode(*p_td.xer, reader, XER_coding, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -253,7 +253,7 @@ void VERDICTTYPE::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
 
 
 int VERDICTTYPE::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-  unsigned int p_flavor, int p_indent) const
+  unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const
 {
   int encoded_length=(int)p_buf.get_len();
   //const boolean e_xer = is_exer(p_flavor);
@@ -285,7 +285,7 @@ verdicttype VERDICTTYPE::str_to_verdict(const char *v, boolean silent)
 }
 
 int VERDICTTYPE::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,
-  unsigned int p_flavor)
+  unsigned int p_flavor, embed_values_dec_struct_t*)
 {
   int rd_ok = 1, type;
   const int e_xer = is_exer(p_flavor);

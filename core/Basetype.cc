@@ -16,6 +16,7 @@
 #include "JSON.hh"
 #include "XmlReader.hh"
 #include "Module_list.hh"
+#include "Universal_charstring.hh"
 
 #include <openssl/bn.h>
 
@@ -74,7 +75,7 @@ void Base_Type::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     if(!p_td.xer) TTCN_EncDec_ErrorContext::error_internal(
       "No XER descriptor available for type '%s'.", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*(p_td.xer),p_buf, XER_coding, 0);
+    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0);
     p_buf.put_c('\n');
     break;}
   case TTCN_EncDec::CT_JSON: {
@@ -148,7 +149,7 @@ void Base_Type::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     for (int success=reader.Read(); success==1; success=reader.Read()) {
       if (reader.NodeType() == XML_READER_TYPE_ELEMENT) break;
     }
-    XER_decode(*(p_td.xer), reader, XER_coding);
+    XER_decode(*(p_td.xer), reader, XER_coding, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -966,14 +967,15 @@ int Base_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
 }
 
 int Base_Type::XER_encode(const XERdescriptor_t& p_td,
-                          TTCN_Buffer&, unsigned int, int) const
+                          TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const
 {
   TTCN_error("XER encoding requested for type '%-.*s' which has no"
              " XER encoding method.", p_td.namelens[0]-2, p_td.names[0]);
   return 0;
 }
 
-int Base_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap&, unsigned int) {
+int Base_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap&,
+                          unsigned int, embed_values_dec_struct_t*) {
   TTCN_error("XER decoding requested for type '%-.*s' which has no"
              " XER decoding method.", p_td.namelens[0]-2, p_td.names[0]);
   return 0;
@@ -1096,7 +1098,7 @@ const TTCN_Typedescriptor_t VERDICTTYPE_descr_={"verdicttype", NULL, NULL,
   NULL, &VERDICTTYPE_xer_, &VERDICTTYPE_json_, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t OBJID_descr_={"OBJECT IDENTIFIER", &OBJID_ber_,
-  NULL, NULL, &OBJID_xer_, NULL, TTCN_Typedescriptor_t::OBJID};
+  NULL, NULL, &OBJID_xer_, &OBJID_json_, TTCN_Typedescriptor_t::OBJID};
 
 const TTCN_Typedescriptor_t BITSTRING_descr_={"BIT STRING", &BITSTRING_ber_,
   &BITSTRING_raw_, NULL, &BITSTRING_xer_, &BITSTRING_json_, TTCN_Typedescriptor_t::DONTCARE};
@@ -1120,10 +1122,10 @@ const TTCN_Typedescriptor_t DEFAULT_descr_={"default", NULL, NULL, NULL,
   NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t ASN_NULL_descr_={"NULL", &ASN_NULL_ber_, NULL,
-  NULL, &ASN_NULL_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, &ASN_NULL_xer_, &ASN_NULL_json_, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t ASN_ANY_descr_={"ANY", &ASN_ANY_ber_, NULL,
-  NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, NULL, &ASN_ANY_json_, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t EXTERNAL_descr_={"EXTERNAL", &EXTERNAL_ber_, NULL,
   NULL, &EXTERNAL_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};
@@ -1141,7 +1143,7 @@ const TTCN_Typedescriptor_t UTF8String_descr_={"UTF8String", &UTF8String_ber_,
   NULL, NULL, &UTF8String_xer_, NULL, TTCN_Typedescriptor_t::UTF8STRING};
 
 const TTCN_Typedescriptor_t ASN_ROID_descr_={"RELATIVE-OID", &ASN_ROID_ber_,
-  NULL, NULL, &ASN_ROID_xer_, NULL, TTCN_Typedescriptor_t::ROID};
+  NULL, NULL, &ASN_ROID_xer_, &ASN_ROID_json_, TTCN_Typedescriptor_t::ROID};
 
 const TTCN_Typedescriptor_t NumericString_descr_={"NumericString",
   &NumericString_ber_, NULL, NULL, &NumericString_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};

@@ -190,7 +190,11 @@ namespace Asn {
     new_ass->set_location(*this);
     new_ass->set_dontgen();
     new_ass->chk();
-
+    
+    if (Common::Assignment::A_TYPE == new_ass->get_asstype()) {
+      new_ass->get_Type()->set_pard_type_instance();
+    }
+    
     ref_ds=new Ref_defd_simple(new Identifier(my_mod->get_modid()),
                                new Identifier(new_ass_id));
     ref_ds->set_fullname(get_fullname());

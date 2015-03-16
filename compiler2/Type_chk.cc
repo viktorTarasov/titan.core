@@ -639,8 +639,8 @@ void Type::chk_xer_any_attributes()
     for (size_t x = 0; x < parent_type->get_nof_comps(); ++x) {
       CompField * cf = parent_type->get_comp_byIndex(x);
       if (cf->get_type() != this) continue;
-      if (cf->has_default() || cf->get_is_optional()) {
-        error("The field with ANY-ATTRIBUTES cannot be OPTIONAL or DEFAULT");
+      if (cf->has_default()) {
+        error("The field with ANY-ATTRIBUTES cannot have DEFAULT");
       }
     }
     break;
@@ -5613,6 +5613,37 @@ void Type::chk_this_template_Str(Template *t)
   }
 }
 
+void Type::chk_range_boundary_infinity(Value *v, bool is_upper)
+{
+  if (v) {
+    v->set_my_governor(this);
+    {
+      Error_Context cntxt2(v, "In %s boundary", is_upper ? "upper" : "lower");
+      chk_this_value_ref(v);
+      Value *v_last = v->get_value_refd_last(0, EXPECTED_STATIC_VALUE);
+      if (v_last->get_valuetype() == Value::V_OMIT) {
+        v->error("`omit' value is not allowed in this context");
+        v->set_valuetype(Value::V_ERROR);
+        return;
+      }
+      if (sub_type != NULL) {
+        if (is_upper) {
+          if (!sub_type->get_root()->is_upper_limit_infinity()) {
+            v->error("Infinity is not a valid value for type '%s' which has subtype %s",
+                     asString(), sub_type->to_string().c_str());
+          }
+        }
+        else {
+          if (!sub_type->get_root()->is_lower_limit_infinity()) {
+            v->error("Infinity is not a valid value for type '%s' which has subtype %s",
+                     asString(), sub_type->to_string().c_str());
+          }
+        }
+      }
+    }
+  }
+}
+
 Value *Type::chk_range_boundary(Value *v, const char *which,
   const Location& loc)
 {
@@ -5692,6 +5723,12 @@ void Type::chk_this_template_Int_Real(Template *t)
       default:
         FATAL_ERROR("Type::chk_this_template_Int_Real()");
       }
+    }
+    if (v_lower && !v_upper) {
+      chk_range_boundary_infinity(v_lower, true);
+    }
+    if (!v_lower && v_upper) {
+      chk_range_boundary_infinity(v_upper, false);
     }
     break;}
   default:

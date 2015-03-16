@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <ctype.h>
 #if defined SOLARIS || defined SOLARIS8
-# include <sys/utsname.h>
+#include <sys/utsname.h>
 #endif
 
 #include "../common/memory.h"
@@ -32,7 +32,8 @@
 static const char *program_name = NULL;
 static unsigned int error_count = 0;
 static boolean suppress_warnings = FALSE;
-
+void free_string2_list(struct string2_list* act_elem);
+void free_string_list(struct string_list* act_elem);
 void ERROR(const char *fmt, ...)
 {
   va_list parameters;
@@ -163,6 +164,7 @@ struct base_dir_struct {
 
 /** data structure that describes the information needed for the Makefile */
 struct makefile_struct {
+  char *project_name;
   size_t nTTCN3Modules;
   struct module_struct *TTCN3Modules;
 
@@ -206,11 +208,15 @@ struct makefile_struct {
   boolean coverage;
   char *tcov_file_name;
   boolean library;
+  boolean linkingStrategy;
+  boolean hierarchical;
   struct string_list* sub_project_dirs; /* not owned */
   struct string_list* ttcn3_prep_includes; /* not owned */
   struct string_list* ttcn3_prep_defines; /* not owned */
+  struct string_list* ttcn3_prep_undefines; /* not owned */
   struct string_list* prep_includes; /* not owned */
   struct string_list* prep_defines; /* not owned */
+  struct string_list* prep_undefines; /* not owned */
   boolean codesplittpd;
   boolean quietly;
   boolean disablesubtypecheck;
@@ -246,6 +252,7 @@ struct makefile_struct {
 /** Initializes structure \a makefile with empty lists and default settings. */
 static void init_makefile_struct(struct makefile_struct *makefile)
 {
+  makefile->project_name = NULL;
   makefile->nTTCN3Modules = 0;
   makefile->TTCN3Modules = NULL;
   makefile->preprocess = FALSE;
@@ -283,6 +290,8 @@ static void init_makefile_struct(struct makefile_struct *makefile)
   makefile->coverage = FALSE;
   makefile->tcov_file_name = NULL;
   makefile->library = FALSE;
+  makefile->linkingStrategy = FALSE;
+  makefile->hierarchical = FALSE;
   makefile->sub_project_dirs = NULL;
   makefile->ttcn3_prep_includes = NULL;
   makefile->prep_includes = NULL;
@@ -303,6 +312,7 @@ static void init_makefile_struct(struct makefile_struct *makefile)
 /** Deallocates all memory associated with structure \a makefile. */
 static void free_makefile_struct(const struct makefile_struct *makefile)
 {
+  Free(makefile->project_name);
   size_t i;
   for (i = 0; i < makefile->nTTCN3Modules; i++) {
     Free(makefile->TTCN3Modules[i].dir_name);
@@ -348,6 +358,7 @@ static void dump_makefile_struct(const struct makefile_struct *makefile,
 {
   size_t i;
   DEBUG(level, "Data used for Makefile generation:");
+  DEBUG(level + 1, "TTCN-3 project name: %s", makefile->project_name);
   DEBUG(level + 1, "TTCN-3 modules: (%u pcs.)", makefile->nTTCN3Modules);
   for (i = 0; i < makefile->nTTCN3Modules; i++) {
     const struct module_struct *module = makefile->TTCN3Modules + i;
@@ -406,12 +417,12 @@ static void dump_makefile_struct(const struct makefile_struct *makefile,
     if (user->header_name != NULL) {
       DEBUG(level + 3, "Header file: %s", user->header_name);
       DEBUG(level + 3, "Header file has .hh or .hpp suffix: %s",
-	user->has_hh_suffix ? "yes" : "no");
+      user->has_hh_suffix ? "yes" : "no");
     }
     if (user->source_name != NULL) {
       DEBUG(level + 3, "Source file: %s", user->source_name);
       DEBUG(level + 3, "Source file has .cc or .cpp suffix: %s",
-	user->has_cc_suffix ? "yes" : "no");
+      user->has_cc_suffix ? "yes" : "no");
       DEBUG(level + 3, "Object file: %s.o", user->file_prefix);
     }
   }
@@ -437,7 +448,7 @@ static void dump_makefile_struct(const struct makefile_struct *makefile,
       const struct base_dir_struct *base_dir = makefile->BaseDirs + i;
       DEBUG(level + 2, "Directory: %s", base_dir->dir_name);
       DEBUG(level + 3, "Has TTCN-3/ASN.1 modules: %s",
-	base_dir->has_modules ? "yes" : "no");
+      base_dir->has_modules ? "yes" : "no");
     }
   }
   DEBUG(level + 1, "Working directory: %s",
@@ -914,7 +925,7 @@ static void add_path_to_list(size_t *list_size, char ***list_ptr,
   for (i = 0; i < *list_size; i++) {
     if (!strcmp(canonized_path_name, (*list_ptr)[i])) {
       if (report_warning) WARNING("File `%s' was given more than once for the "
-	  "Makefile.", path_name);
+                                  "Makefile.", path_name);
       Free(canonized_path_name);
       return;
     }
@@ -934,28 +945,32 @@ static void add_user_file(struct makefile_struct *makefile,
   const char *suffix = get_suffix(path_name);
   if (suffix != NULL) {
     if (!strcmp(suffix, "ttcn") || !strcmp(suffix, "ttcn3") ||
-	!strcmp(suffix, "3mp") || !strcmp(suffix, "ttcnpp")) {
+        !strcmp(suffix, "3mp") || !strcmp(suffix, "ttcnpp")) {
       /* The file content was already checked. Since it doesn't look like
        * a valid TTCN-3 file, these suffixes are suspect */
       WARNING("File `%s' does not contain a valid TTCN-3 module. "
-	"It will be added to the Makefile as other file.", path_name);
-    } else if (!strcmp(suffix, "ttcnin")) {
+              "It will be added to the Makefile as other file.", path_name);
+    }
+    else if (!strcmp(suffix, "ttcnin")) {
       /* this is a TTCN-3 include file */
       if (makefile->preprocess) {
-	add_path_to_list(&makefile->nTTCN3IncludeFiles,
-	  &makefile->TTCN3IncludeFiles, path_name, makefile->working_dir, TRUE);
-	return;
-      } else {
-	WARNING("The suffix of file `%s' indicates that it is a TTCN-3 "
-	  "include file, but TTCN-3 preprocessing is not enabled. The file "
-	  "will be added to the Makefile as other file.", path_name);
+        add_path_to_list(&makefile->nTTCN3IncludeFiles,
+        &makefile->TTCN3IncludeFiles, path_name, makefile->working_dir, TRUE);
+        return;
+      } 
+      else {
+        WARNING("The suffix of file `%s' indicates that it is a TTCN-3 "
+                "include file, but TTCN-3 preprocessing is not enabled. The file "
+                "will be added to the Makefile as other file.", path_name);
       }
-    } else if (!strcmp(suffix, "asn") || !strcmp(suffix, "asn1")) {
+    } 
+    else if (!strcmp(suffix, "asn") || !strcmp(suffix, "asn1")) {
       /* The file content was already checked. Since it doesn't look like
        * a valid ASN.1 file, these suffixes are suspect */
       WARNING("File `%s' does not contain a valid ASN.1 module. "
-	"It will be added to the Makefile as other file.", path_name);
-    } else if (!strcmp(suffix, "cc") || !strcmp(suffix, "c") || !strcmp(suffix, "cpp")) {
+              "It will be added to the Makefile as other file.", path_name);
+    }
+    else if (!strcmp(suffix, "cc") || !strcmp(suffix, "c") || !strcmp(suffix, "cpp")) {
       /* this is a source file */
       char *dir_name = get_dir_name(path_name, makefile->working_dir);
       char *file_name = get_file_from_path(path_name);
@@ -963,48 +978,49 @@ static void add_user_file(struct makefile_struct *makefile,
       struct user_struct *user;
       size_t i;
       for (i = 0; i < makefile->nUserFiles; i++) {
-	user = makefile->UserFiles + i;
-	if (!strcmp(file_prefix, user->file_prefix)) {
-	  if (user->source_name != NULL) {
-	    /* the source file is already present */
-	    if (is_same_file(dir_name, file_name,
-			     user->dir_name, user->source_name)) {
-	      WARNING("File `%s' was given more than once for the Makefile.",
-		path_name);
-	    } else {
-	      char *path_name1 = compose_path_name(user->dir_name,
-		user->source_name);
-	      char *path_name2 = compose_path_name(dir_name, file_name);
-	      ERROR("C/C++ source files `%s' and `%s' cannot be used together "
-		"in the same Makefile.", path_name1, path_name2);
-	      Free(path_name1);
-	      Free(path_name2);
-	    }
-	  } else {
-	    /* a header file with the same prefix is already present */
-	    if (is_same_directory(dir_name, user->dir_name)) {
-	      user->source_name = file_name;
-	      file_name = NULL;
-	      if (!strcmp(suffix, "cc") || !strcmp(suffix, "cpp")) user->has_cc_suffix = TRUE;
-	    } else {
-	      char *path_name1 = compose_path_name(dir_name, file_name);
-	      char *path_name2 = compose_path_name(user->dir_name,
-		user->header_name);
-	      ERROR("C/C++ source file `%s' cannot be used together with "
-		"header file `%s' in the same Makefile.", path_name1,
-		path_name2);
-	      Free(path_name1);
-	      Free(path_name2);
-	    }
-	  }
-	  Free(dir_name);
-	  Free(file_name);
-	  Free(file_prefix);
-	  return;
-	}
+        user = makefile->UserFiles + i;
+        if (!strcmp(file_prefix, user->file_prefix)) {
+          if (user->source_name != NULL) {
+          /* the source file is already present */
+            if (is_same_file(dir_name, file_name,
+              user->dir_name, user->source_name)) {
+              WARNING("File `%s' was given more than once for the Makefile.", path_name);
+            }
+            else {
+              char *path_name1 = compose_path_name(user->dir_name, user->source_name);
+              char *path_name2 = compose_path_name(dir_name, file_name);
+              ERROR("C/C++ source files `%s' and `%s' cannot be used together "
+                    "in the same Makefile.", path_name1, path_name2);
+              Free(path_name1);
+              Free(path_name2);
+            }
+          }
+          else {
+            /* a header file with the same prefix is already present */
+            if (is_same_directory(dir_name, user->dir_name)) {
+              user->source_name = file_name;
+              file_name = NULL;
+              if (!strcmp(suffix, "cc") || !strcmp(suffix, "cpp")) 
+                user->has_cc_suffix = TRUE;
+            }
+            else {
+              char *path_name1 = compose_path_name(dir_name, file_name);
+              char *path_name2 = compose_path_name(user->dir_name, user->header_name);
+              ERROR("C/C++ source file `%s' cannot be used together with "
+              "header file `%s' in the same Makefile.", path_name1,
+              path_name2);
+              Free(path_name1);
+              Free(path_name2);
+            }
+          }
+          Free(dir_name);
+          Free(file_name);
+          Free(file_prefix);
+          return;
+        }
       }
       makefile->UserFiles = (struct user_struct*)Realloc(makefile->UserFiles,
-	(makefile->nUserFiles + 1) * sizeof(*makefile->UserFiles));
+      (makefile->nUserFiles + 1) * sizeof(*makefile->UserFiles));
       user = makefile->UserFiles + makefile->nUserFiles;
       makefile->nUserFiles++;
       user->dir_name = dir_name;
@@ -1015,7 +1031,8 @@ static void add_user_file(struct makefile_struct *makefile,
       if (!strcmp(suffix, "cc") || !strcmp(suffix, "cpp")) user->has_cc_suffix = TRUE;
       else user->has_cc_suffix = FALSE;
       return;
-    } else if (!strcmp(suffix, "hh") || !strcmp(suffix, "h")) {
+    }
+    else if (!strcmp(suffix, "hh") || !strcmp(suffix, "h")) {
       /* this is a header file */
       char *dir_name = get_dir_name(path_name, makefile->working_dir);
       char *file_name = get_file_from_path(path_name);
@@ -1023,48 +1040,47 @@ static void add_user_file(struct makefile_struct *makefile,
       struct user_struct *user;
       size_t i;
       for (i = 0; i < makefile->nUserFiles; i++) {
-	user = makefile->UserFiles + i;
-	if (!strcmp(file_prefix, user->file_prefix)) {
-	  if (user->header_name != NULL) {
-	    /* the header file is already present */
-	    if (is_same_file(dir_name, file_name,
-			     user->dir_name, user->header_name)) {
-	      WARNING("File `%s' was given more than once for the Makefile.",
-		path_name);
-	    } else {
-	      char *path_name1 = compose_path_name(user->dir_name,
-		user->header_name);
-	      char *path_name2 = compose_path_name(dir_name, file_name);
-	      ERROR("C/C++ header files `%s' and `%s' cannot be used together "
-		"in the same Makefile.", path_name1, path_name2);
-	      Free(path_name1);
-	      Free(path_name2);
-	    }
-	  } else {
-	    /* a source file with the same prefix is already present */
-	    if (is_same_directory(dir_name, user->dir_name)) {
-	      user->header_name = file_name;
-	      file_name = NULL;
-	      if (!strcmp(suffix, "hh") || !strcmp(suffix, "hpp")) user->has_hh_suffix = TRUE;
-	    } else {
-	      char *path_name1 = compose_path_name(dir_name, file_name);
-	      char *path_name2 = compose_path_name(user->dir_name,
-		user->source_name);
-	      ERROR("C/C++ header file `%s' cannot be used together with "
-		"source file `%s' in the same Makefile.", path_name1,
-		path_name2);
-	      Free(path_name1);
-	      Free(path_name2);
-	    }
-	  }
-	  Free(dir_name);
-	  Free(file_name);
-	  Free(file_prefix);
-	  return;
-	}
+        user = makefile->UserFiles + i;
+        if (!strcmp(file_prefix, user->file_prefix)) {
+          if (user->header_name != NULL) {
+          /* the header file is already present */
+            if (is_same_file(dir_name, file_name, user->dir_name, user->header_name)) {
+              WARNING("File `%s' was given more than once for the Makefile.", path_name);
+            }
+            else {
+              char *path_name1 = compose_path_name(user->dir_name, user->header_name);
+              char *path_name2 = compose_path_name(dir_name, file_name);
+              ERROR("C/C++ header files `%s' and `%s' cannot be used together "
+              "in the same Makefile.", path_name1, path_name2);
+              Free(path_name1);
+              Free(path_name2);
+            }
+          }
+          else {
+          /* a source file with the same prefix is already present */
+            if (is_same_directory(dir_name, user->dir_name)) {
+              user->header_name = file_name;
+              file_name = NULL;
+              if (!strcmp(suffix, "hh") || !strcmp(suffix, "hpp")) 
+                user->has_hh_suffix = TRUE;
+            }
+            else {
+              char *path_name1 = compose_path_name(dir_name, file_name);
+              char *path_name2 = compose_path_name(user->dir_name, user->source_name);
+              ERROR("C/C++ header file `%s' cannot be used together with "
+                    "source file `%s' in the same Makefile.", path_name1, path_name2);
+              Free(path_name1);
+              Free(path_name2);
+            }
+          }
+          Free(dir_name);
+          Free(file_name);
+          Free(file_prefix);
+          return;
+        }
       }
       makefile->UserFiles = (struct user_struct*)Realloc(makefile->UserFiles,
-	(makefile->nUserFiles + 1) * sizeof(*makefile->UserFiles));
+        (makefile->nUserFiles + 1) * sizeof(*makefile->UserFiles));
       user = makefile->UserFiles + makefile->nUserFiles;
       makefile->nUserFiles++;
       user->dir_name = dir_name;
@@ -1176,31 +1192,34 @@ static void complete_user_files(const struct makefile_struct *makefile)
       static const char * const suffix_list[] = { "hh", "h", "hpp", NULL };
       const char * const *suffix_ptr;
       for (suffix_ptr = suffix_list; *suffix_ptr != NULL; suffix_ptr++) {
-	char *file_name = mprintf("%s.%s", user->file_prefix, *suffix_ptr);
-	char *path_name = compose_path_name(user->dir_name, file_name);
-	if (get_path_status(path_name) == PS_FILE) {
-	  Free(path_name);
-	  user->header_name = file_name;
-	  if (!strcmp(*suffix_ptr, "hh") || !strcmp(*suffix_ptr, "hpp")) user->has_hh_suffix = TRUE;
-	  break;
-	}
-	Free(file_name);
-	Free(path_name);
+        char *file_name = mprintf("%s.%s", user->file_prefix, *suffix_ptr);
+        char *path_name = compose_path_name(user->dir_name, file_name);
+        if (get_path_status(path_name) == PS_FILE) {
+          Free(path_name);
+          user->header_name = file_name;
+          if (!strcmp(*suffix_ptr, "hh") || !strcmp(*suffix_ptr, "hpp"))
+            user->has_hh_suffix = TRUE;
+          break;
+        }
+        Free(file_name);
+        Free(path_name);
       }
-    } else if (user->source_name == NULL) {
+    }
+    else if (user->source_name == NULL) {
       static const char * const suffix_list[] = { "cc", "c", "cpp", NULL };
       const char * const *suffix_ptr;
       for (suffix_ptr = suffix_list; *suffix_ptr != NULL; suffix_ptr++) {
-	char *file_name = mprintf("%s.%s", user->file_prefix, *suffix_ptr);
-	char *path_name = compose_path_name(user->dir_name, file_name);
-	if (get_path_status(path_name) == PS_FILE) {
-	  Free(path_name);
-	  user->source_name = file_name;
-	  if (!strcmp(*suffix_ptr, "cc") || !strcmp(*suffix_ptr, "cpp")) user->has_cc_suffix = TRUE;
-	  break;
-	}
-	Free(file_name);
-	Free(path_name);
+        char *file_name = mprintf("%s.%s", user->file_prefix, *suffix_ptr);
+        char *path_name = compose_path_name(user->dir_name, file_name);
+        if (get_path_status(path_name) == PS_FILE) {
+          Free(path_name);
+          user->source_name = file_name;
+          if (!strcmp(*suffix_ptr, "cc") || !strcmp(*suffix_ptr, "cpp"))
+            user->has_cc_suffix = TRUE;
+          break;
+        }
+        Free(file_name);
+        Free(path_name);
       }
     }
   }
@@ -1434,16 +1453,17 @@ static void check_naming_convention(struct makefile_struct *makefile)
     for (i = 0; i < makefile->nTTCN3Modules; i++) {
       const struct module_struct *module = makefile->TTCN3Modules + i;
       if (module->dir_name != NULL) {
-	if (!module->is_regular) makefile->BaseTTCN3ModulesRegular = FALSE;
-      } else {
-	if (!module->is_regular) makefile->TTCN3ModulesRegular = FALSE;
+        if (!module->is_regular) makefile->BaseTTCN3ModulesRegular = FALSE;
+      } 
+      else {
+        if (!module->is_regular) makefile->TTCN3ModulesRegular = FALSE;
       }
       if (!makefile->TTCN3ModulesRegular && !makefile->BaseTTCN3ModulesRegular)
-	break;
+        break;
     }
     /* ttcnpp files are ttcn files */
     if ((makefile->TTCN3ModulesRegular || makefile->BaseTTCN3ModulesRegular) &&
-	makefile->preprocess) {
+         makefile->preprocess) {
       for (i = 0; i < makefile->nTTCN3PPModules; i++) {
         const struct module_struct *module = makefile->TTCN3PPModules + i;
         if (module->dir_name != NULL) {
@@ -1458,29 +1478,31 @@ static void check_naming_convention(struct makefile_struct *makefile)
     for (i = 0; i < makefile->nASN1Modules; i++) {
       const struct module_struct *module = makefile->ASN1Modules + i;
       if (module->dir_name != NULL) {
-	if (!module->is_regular) makefile->BaseASN1ModulesRegular = FALSE;
-      } else {
-	if (!module->is_regular) makefile->ASN1ModulesRegular = FALSE;
+        if (!module->is_regular) makefile->BaseASN1ModulesRegular = FALSE;
+      }
+      else {
+        if (!module->is_regular) makefile->ASN1ModulesRegular = FALSE;
       }
       if (!makefile->ASN1ModulesRegular && !makefile->BaseASN1ModulesRegular)
-	break;
+        break;
     }
     for (i = 0; i < makefile->nUserFiles; i++) {
       const struct user_struct *user = makefile->UserFiles + i;
       if (user->dir_name != NULL) {
-	if (!user->has_cc_suffix)
-	  makefile->BaseUserSourcesRegular = FALSE;
-	if (!user->has_cc_suffix || !user->has_hh_suffix)
-	  makefile->BaseUserHeadersRegular = FALSE;
-      } else {
-	if (!user->has_cc_suffix)
-	  makefile->UserSourcesRegular = FALSE;
-	if (!user->has_cc_suffix || !user->has_hh_suffix)
-	  makefile->UserHeadersRegular = FALSE;
+        if (!user->has_cc_suffix)
+          makefile->BaseUserSourcesRegular = FALSE;
+        if (!user->has_cc_suffix || !user->has_hh_suffix)
+          makefile->BaseUserHeadersRegular = FALSE;
+      }
+      else {
+        if (!user->has_cc_suffix)
+          makefile->UserSourcesRegular = FALSE;
+        if (!user->has_cc_suffix || !user->has_hh_suffix)
+          makefile->UserHeadersRegular = FALSE;
       }
       if (!makefile->UserHeadersRegular && !makefile->UserSourcesRegular &&
-	  !makefile->BaseUserHeadersRegular &&
-	  !makefile->BaseUserSourcesRegular) break;
+          !makefile->BaseUserHeadersRegular &&
+          !makefile->BaseUserSourcesRegular) break;
     }
   } else {
     /* this project (Makefile) will-be stand-alone */
@@ -1488,8 +1510,8 @@ static void check_naming_convention(struct makefile_struct *makefile)
     for (i = 0; i < makefile->nTTCN3Modules; i++) {
       const struct module_struct *module = makefile->TTCN3Modules + i;
       if (!module->is_regular || module->dir_name != NULL) {
-	makefile->TTCN3ModulesRegular = FALSE;
-	break;
+        makefile->TTCN3ModulesRegular = FALSE;
+        break;
       }
     }
     if (makefile->TTCN3ModulesRegular && makefile->preprocess) {
@@ -1504,18 +1526,18 @@ static void check_naming_convention(struct makefile_struct *makefile)
     for (i = 0; i < makefile->nASN1Modules; i++) {
       const struct module_struct *module = makefile->ASN1Modules + i;
       if (!module->is_regular || module->dir_name != NULL) {
-	makefile->ASN1ModulesRegular = FALSE;
-	break;
+        makefile->ASN1ModulesRegular = FALSE;
+        break;
       }
     }
     for (i = 0; i < makefile->nUserFiles; i++) {
       const struct user_struct *user = makefile->UserFiles + i;
       if (!user->has_cc_suffix)
-	makefile->UserSourcesRegular = FALSE;
+        makefile->UserSourcesRegular = FALSE;
       if (!user->has_cc_suffix || !user->has_hh_suffix)
-	makefile->UserHeadersRegular = FALSE;
+        makefile->UserHeadersRegular = FALSE;
       if (!makefile->UserHeadersRegular && !makefile->UserSourcesRegular)
-	break;
+        break;
     }
   }
 }
@@ -1639,8 +1661,13 @@ static void fprint_extra_targets(FILE* fp, struct string2_list* target_placement
 /** Prints the Makefile based on structure \a makefile. */
 static void print_makefile(struct makefile_struct *makefile)
 {
-  boolean add_refd_prjs = makefile->sub_project_dirs && makefile->sub_project_dirs->str;
-
+  boolean add_refd_prjs = FALSE;
+  if (makefile->linkingStrategy && makefile->hierarchical) {
+    add_refd_prjs = hasSubProject(makefile->project_name);
+  }
+  else {
+    add_refd_prjs = makefile->sub_project_dirs && makefile->sub_project_dirs->str;
+  }
   NOTIFY("Generating Makefile skeleton...");
 
   if (makefile->force_overwrite ||
@@ -1673,7 +1700,7 @@ static void print_makefile(struct makefile_struct *makefile)
     fp = fopen(makefile->output_file, "w");
     if (fp == NULL){
       ERROR("Cannot open output file `%s' for writing: %s",
-	makefile->output_file, strerror(errno));
+      makefile->output_file, strerror(errno));
       return;
     }
     user_info = get_user_info();
@@ -1685,15 +1712,21 @@ static void print_makefile(struct makefile_struct *makefile)
       "# - make, make all      Builds the %s.\n"
       "# - make archive        Archives all source files.\n"
       "# - make check          Checks the semantics of TTCN-3 and ASN.1 "
-	    "modules.\n"
-      "# - make clean          Removes all generated files.\n"
+      "modules.\n"
+      "%s" // clean:
+      "%s" //clean-all
       "# - make compile        Translates TTCN-3 and ASN.1 modules to C++.\n"
       "# - make dep            Creates/updates dependency list.\n"
       "# - make executable     Builds the executable test suite.\n"
       "# - make library        Builds the library archive.\n"
       "# - make objects        Builds the object files without linking the "
       "executable.\n", user_info,
-      makefile->library ? "library archive." : "executable test suite");
+      makefile->library ? "library archive." : "executable test suite",
+      (makefile->linkingStrategy && makefile->hierarchical) ?
+      "# - make clean          Removes generated files from project.\n" :
+      "# - make clean          Removes all generated files.\n",
+      (makefile->linkingStrategy && makefile->hierarchical) ?
+      "# - make clean-all      Removes all generated files from the project hierarchy.\n" : "");
     Free(user_info);
     if (makefile->dynamic)
       fprintf(fp, "# - make shared_objects Builds the shared object files "
@@ -1702,14 +1735,14 @@ static void print_makefile(struct makefile_struct *makefile)
       fputs("# - make preprocess     Preprocess TTCN-3 files.\n", fp);
     if (makefile->central_storage) {
       fputs("# WARNING! This Makefile uses pre-compiled files from the "
-		"following directories:\n", fp);
+            "following directories:\n", fp);
       for (i = 0; i < makefile->nBaseDirs; i++)
         fprintf(fp, "# %s\n", makefile->BaseDirs[i].dir_name);
       fputs("# The executable tests will be consistent only if all directories "
-		"use\n"
-	    "# the same platform and the same version of TTCN-3 Test Executor "
-		"and\n"
-	    "# C++ compiler with the same command line switches.\n\n", fp);
+            "use\n"
+            "# the same platform and the same version of TTCN-3 Test Executor "
+            "and\n"
+            "# C++ compiler with the same command line switches.\n\n", fp);
     }
     if (makefile->gnu_make) {
       fputs("# WARNING! This Makefile can be used with GNU make only.\n"
@@ -1720,8 +1753,10 @@ static void print_makefile(struct makefile_struct *makefile)
             ".PHONY: all shared_objects executable library objects check clean dep archive", fp);
       if (makefile->preprocess) fputs(" preprocess", fp);
       if (add_refd_prjs) {
-        fputs("\\\n referenced-all referenced-shared_objects referenced-executable referenced-library referenced-objects referenced-check"
-              "\\\n referenced-clean referenced-archive", fp);
+        fprintf(fp, "\\\n referenced-all referenced-shared_objects referenced-executable referenced-library referenced-objects referenced-check"
+              "\\\n referenced-clean%s",
+              (makefile->linkingStrategy && makefile->hierarchical) ?
+              "-all" : "");
       }
       fprint_extra_targets(fp, makefile->target_placement_list, "PHONY");
 
@@ -1731,10 +1766,31 @@ static void print_makefile(struct makefile_struct *makefile)
       fputs("\n\n", fp);
     }
 
+    if (makefile->linkingStrategy) {
+      const char* tpd_name = getTPDFileName(makefile->project_name);
+      if (tpd_name) {
+        fputs("# Titan Project Descriptor file what this Makefile is generated from.\n", fp);
+        fprintf(fp, "TPD = %s\n\n", tpd_name);
+      }
+      const char* root_dir = getPathToRootDir(makefile->project_name);
+      if (root_dir) {
+        fputs("# Relative path to top directory at OS level.\n", fp);
+        fprintf(fp, "ROOT_DIR = %s\n\n", root_dir);
+      }
+    }
+
     if (add_refd_prjs) {
-      struct string_list* act_elem = makefile->sub_project_dirs;
-      fputs("# This is the top level makefile of a Makefile hierarchy generated from\n"
-            "# a Titan Project Descriptor hierarchy. List of referenced project\n"
+      struct string_list* act_elem = NULL;
+      struct string_list* head = NULL;
+      if (makefile->linkingStrategy && makefile->hierarchical) {// pair with free_string_list
+        head = act_elem = getRefWorkingDirs(makefile->project_name);
+      }
+      else {
+        act_elem = makefile->sub_project_dirs;
+      }
+      if (!makefile->linkingStrategy)
+        fputs("# This is the top level makefile of a Makefile hierarchy generated from\n", fp);
+      fputs("# Titan Project Descriptor hierarchy. List of referenced project\n"
             "# working directories (ordered by dependencies):\n", fp);
       while (act_elem) {
         if (act_elem->str) {
@@ -1742,8 +1798,16 @@ static void print_makefile(struct makefile_struct *makefile)
         }
         act_elem = act_elem->next;
       }
+      if (makefile->linkingStrategy && makefile->hierarchical) { // pair with getRefWorkingDirs
+        free_string_list(head);
+      }
       fputs("REFERENCED_PROJECT_DIRS = ", fp);
-      act_elem = makefile->sub_project_dirs;
+      if (makefile->linkingStrategy && makefile->hierarchical) {
+        head = act_elem = getRefWorkingDirs(makefile->project_name); // pair with free_string_list
+      }
+      else {
+        act_elem = makefile->sub_project_dirs;
+      }
       while (act_elem) {
         if (act_elem->str) {
           fprintf(fp, "%s ", act_elem->str);
@@ -1751,6 +1815,9 @@ static void print_makefile(struct makefile_struct *makefile)
         act_elem = act_elem->next;
       }
       fputs("\n\n", fp);
+      if (makefile->linkingStrategy && makefile->hierarchical) {// pair with getRefWorkingDirs
+        free_string_list(head);
+      }
     }
 
     fprintf(fp, "#\n"
@@ -1819,6 +1886,16 @@ static void print_makefile(struct makefile_struct *makefile)
       }
     }
 
+    if (makefile->prep_undefines) {
+      struct string_list* act_elem = makefile->prep_undefines;
+      while (act_elem) {
+        if (act_elem->str) {
+          fprintf(fp, " -U%s", act_elem->str);
+        }
+        act_elem = act_elem->next;
+      }
+    }
+
     fputs("\n\n", fp);
 
     if (makefile->gcc_dep) {
@@ -1849,6 +1926,15 @@ static void print_makefile(struct makefile_struct *makefile)
         while (act_elem) {
           if (act_elem->str) {
             fprintf(fp, " -D%s", act_elem->str);
+          }
+          act_elem = act_elem->next;
+        }
+      }
+      if (makefile->ttcn3_prep_undefines) {
+        struct string_list* act_elem = makefile->ttcn3_prep_undefines;
+        while (act_elem) {
+          if (act_elem->str) {
+            fprintf(fp, " -U%s", act_elem->str);
           }
           act_elem = act_elem->next;
         }
@@ -1937,7 +2023,7 @@ static void print_makefile(struct makefile_struct *makefile)
     fprint_extra_targets(fp, makefile->target_placement_list, "TTCN3_MODULES");
     if (makefile->preprocess) {
       fputs("\n\n"
-	    "# TTCN-3 modules to preprocess:\n"
+      "# TTCN-3 modules to preprocess:\n"
             "TTCN3_PP_MODULES =", fp);
       for (i = 0; i < makefile->nTTCN3PPModules; i++) {
         const struct module_struct *module = makefile->TTCN3PPModules + i;
@@ -1948,21 +2034,58 @@ static void print_makefile(struct makefile_struct *makefile)
     }
     if (makefile->central_storage) {
       fputs("\n\n"
-	    "# TTCN-3 modules used from central project(s):\n"
-	    "BASE_TTCN3_MODULES =", fp);
-      for (i = 0; i < makefile->nTTCN3Modules; i++) {
-	const struct module_struct *module = makefile->TTCN3Modules + i;
-	/* Central storage used AND file is not in the current directory =>
-	 * it goes into BASE_TTCN3_MODULES */
-	if (module->dir_name != NULL) print_file_name(fp, module);
-      }
-      if (makefile->preprocess) {
-        fputs("\n\n"
-        "# TTCN-3 modules to preprocess used from central project(s):\n"
-        "BASE_TTCN3_PP_MODULES =", fp);
-        for (i = 0; i < makefile->nTTCN3PPModules; i++) {
-          const struct module_struct *module = makefile->TTCN3PPModules + i;
+      "# TTCN-3 modules used from central project(s):\n"
+      "BASE_TTCN3_MODULES =", fp);
+      if (!makefile->linkingStrategy) {
+        for (i = 0; i < makefile->nTTCN3Modules; i++) {
+          const struct module_struct *module = makefile->TTCN3Modules + i;
+          /* Central storage used AND file is not in the current directory => it goes into BASE_TTCN3_MODULES */
           if (module->dir_name != NULL) print_file_name(fp, module);
+        }
+        if (makefile->preprocess) {
+          fputs("\n\n"
+          "# TTCN-3 modules to preprocess used from central project(s):\n"
+          "BASE_TTCN3_PP_MODULES =", fp);
+          for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+            const struct module_struct *module = makefile->TTCN3PPModules + i;
+            if (module->dir_name != NULL && !isTtcnPPFileInLibrary(module->file_name))
+              print_file_name(fp, module);
+          }
+        }
+      }
+      else { // new linking strategy
+        for (i = 0; i < makefile->nTTCN3Modules; i++) {
+          const struct module_struct *module = makefile->TTCN3Modules + i;
+          /* Central storage used AND file is not in the current directory => it goes into BASE_TTCN3_MODULES */
+          if (module->dir_name != NULL && !isTtcn3ModuleInLibrary(module->module_name))
+            print_file_name(fp, module);
+        }
+        fputs("\n\n"
+        "# TTCN-3 library linked modules used from central project(s):\n"
+        "BASE2_TTCN3_MODULES =", fp);
+        for (i = 0; i < makefile->nTTCN3Modules; i++) {
+          const struct module_struct *module = makefile->TTCN3Modules + i;
+          /* Central storage used AND file is not in the current directory => it goes into BASE_TTCN3_MODULES */
+          if (module->dir_name != NULL && isTtcn3ModuleInLibrary(module->module_name))
+            print_file_name(fp, module);
+        }
+        if (makefile->preprocess) {
+          fputs("\n\n"
+          "# TTCN-3 modules to preprocess used from central project(s):\n"
+          "BASE_TTCN3_PP_MODULES =", fp);
+          for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+            const struct module_struct *module = makefile->TTCN3PPModules + i;
+            if (module->dir_name != NULL && !isTtcnPPFileInLibrary(module->file_name))
+              print_file_name(fp, module);
+          }
+          fputs("\n\n"
+          "# TTCN-3 library linked modules to preprocess used from central project(s):\n"
+          "BASE2_TTCN3_PP_MODULES =", fp);
+          for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+            const struct module_struct *module = makefile->TTCN3PPModules + i;
+            if (module->dir_name != NULL && isTtcnPPFileInLibrary(module->file_name))
+              print_file_name(fp, module);
+          }
         }
       }
     }
@@ -1971,7 +2094,7 @@ static void print_makefile(struct makefile_struct *makefile)
             "# Files to include in TTCN-3 preprocessed modules:\n"
             "TTCN3_INCLUDES =", fp);
       for (i = 0; i < makefile->nTTCN3IncludeFiles; i++)
-	fprintf(fp, " %s", makefile->TTCN3IncludeFiles[i]);
+        fprintf(fp, " %s", makefile->TTCN3IncludeFiles[i]);
       fprint_extra_targets(fp, makefile->target_placement_list, "TTCN3_INCLUDES");
     }
     fputs("\n\n"
@@ -1980,16 +2103,33 @@ static void print_makefile(struct makefile_struct *makefile)
     for (i = 0; i < makefile->nASN1Modules; i++) {
       const struct module_struct *module = makefile->ASN1Modules + i;
       if (module->dir_name == NULL || !makefile->central_storage)
-	print_file_name(fp, module);
+        print_file_name(fp, module);
     }
     fprint_extra_targets(fp, makefile->target_placement_list, "ASN1_MODULES");
     if (makefile->central_storage) {
       fputs("\n\n"
-	    "# ASN.1 modules used from central project(s):\n"
-	    "BASE_ASN1_MODULES =", fp);
-      for (i = 0; i < makefile->nASN1Modules; i++) {
-	const struct module_struct *module = makefile->ASN1Modules + i;
-	if (module->dir_name != NULL) print_file_name(fp, module);
+      "# ASN.1 modules used from central project(s):\n"
+      "BASE_ASN1_MODULES =", fp);
+      if (!makefile->linkingStrategy) {
+        for (i = 0; i < makefile->nASN1Modules; i++) {
+          const struct module_struct *module = makefile->ASN1Modules + i;
+          if (module->dir_name != NULL) print_file_name(fp, module);
+        }
+      }
+      else {
+        for (i = 0; i < makefile->nASN1Modules; i++) {
+          const struct module_struct *module = makefile->ASN1Modules + i;
+          if (module->dir_name != NULL  && !isAsn1ModuleInLibrary(module->module_name))
+            print_file_name(fp, module);
+        }
+        fputs("\n\n"
+        "# ASN.1 library linked modules used from central project(s):\n"
+        "BASE2_ASN1_MODULES =", fp);
+        for (i = 0; i < makefile->nASN1Modules; i++) {
+          const struct module_struct *module = makefile->ASN1Modules + i;
+          if (module->dir_name != NULL  && isAsn1ModuleInLibrary(module->module_name))
+            print_file_name(fp, module);
+        }
       }
     }
     if (makefile->preprocess) {
@@ -1998,17 +2138,34 @@ static void print_makefile(struct makefile_struct *makefile)
             "PREPROCESSED_TTCN3_MODULES =", fp);
       for (i = 0; i < makefile->nTTCN3PPModules; i++) {
         const struct module_struct *module = makefile->TTCN3PPModules + i;
-	if (module->dir_name == NULL || !makefile->central_storage)
-	  print_preprocessed_file_name(fp, module);
+        if (module->dir_name == NULL || !makefile->central_storage)
+          print_preprocessed_file_name(fp, module);
       }
       if (makefile->central_storage) {
         fputs("\n\n"
         "# TTCN-3 files generated by the CPP used from central project(s):\n"
         "BASE_PREPROCESSED_TTCN3_MODULES =", fp);
-        for (i = 0; i < makefile->nTTCN3PPModules; i++) {
-          const struct module_struct *module = makefile->TTCN3PPModules + i;
-          if (module->dir_name != NULL)
-	    print_preprocessed_file_name(fp, module);
+        if (!makefile->linkingStrategy) {
+          for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+            const struct module_struct *module = makefile->TTCN3PPModules + i;
+            if (module->dir_name != NULL)
+              print_preprocessed_file_name(fp, module);
+          }
+        }
+        else { // new linking strategy
+          for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+            const struct module_struct *module = makefile->TTCN3PPModules + i;
+            if (module->dir_name != NULL && !isTtcnPPFileInLibrary(module->file_name))
+              print_preprocessed_file_name(fp, module);
+          }
+          fputs("\n\n"
+          "# TTCN-3 library linked files generated by the CPP used from central project(s):\n"
+          "BASE2_PREPROCESSED_TTCN3_MODULES =", fp);
+          for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+            const struct module_struct *module = makefile->TTCN3PPModules + i;
+            if (module->dir_name != NULL && isTtcnPPFileInLibrary(module->file_name))
+              print_preprocessed_file_name(fp, module);
+          }
         }
       }
     }
@@ -2080,11 +2237,12 @@ static void print_makefile(struct makefile_struct *makefile)
     fputs("\nGENERATED_HEADERS =", fp);
     if (makefile->gnu_make) {
       fputs(" $(GENERATED_SOURCES:.cc=.hh)", fp);
-    } else {
+    } 
+    else {
       for (i = 0; i < makefile->nTTCN3Modules; i++) {
-	const struct module_struct *module = makefile->TTCN3Modules + i;
-	if (module->dir_name == NULL || !makefile->central_storage)
-	  print_generated_file_name(fp, module, FALSE, ".hh");
+        const struct module_struct *module = makefile->TTCN3Modules + i;
+        if (module->dir_name == NULL || !makefile->central_storage)
+          print_generated_file_name(fp, module, FALSE, ".hh");
       }
       if (makefile->preprocess) {
         for (i = 0; i < makefile->nTTCN3PPModules; i++) {
@@ -2094,9 +2252,9 @@ static void print_makefile(struct makefile_struct *makefile)
         }
       }
       for (i = 0; i < makefile->nASN1Modules; i++) {
-	const struct module_struct *module = makefile->ASN1Modules + i;
-	if (module->dir_name == NULL || !makefile->central_storage)
-	  print_generated_file_name(fp, module, FALSE, ".hh");
+        const struct module_struct *module = makefile->ASN1Modules + i;
+        if (module->dir_name == NULL || !makefile->central_storage)
+          print_generated_file_name(fp, module, FALSE, ".hh");
       }
     }
     if (makefile->central_storage) {
@@ -2168,36 +2326,74 @@ static void print_makefile(struct makefile_struct *makefile)
       }
       fputs("\nBASE_GENERATED_HEADERS =", fp);
       if (makefile->gnu_make) {
-	fputs(" $(BASE_GENERATED_SOURCES:.cc=.hh)", fp);
+        fputs(" $(BASE_GENERATED_SOURCES:.cc=.hh)", fp);
       } else {
-	for (i = 0; i < makefile->nTTCN3Modules; i++) {
-	  const struct module_struct *module = makefile->TTCN3Modules + i;
-	  if (module->dir_name != NULL)
-	    print_generated_file_name(fp, module, TRUE, ".hh");
-	}
-	if (makefile->preprocess) {
-	  for (i = 0; i < makefile->nTTCN3PPModules; i++) {
-	    const struct module_struct *module = makefile->TTCN3PPModules + i;
-	    if (module->dir_name != NULL)
-	      print_generated_file_name(fp, module, TRUE, ".hh");
-	  }
-	}
-	for (i = 0; i < makefile->nASN1Modules; i++) {
-	  const struct module_struct *module = makefile->ASN1Modules + i;
-	  if (module->dir_name != NULL)
-	    print_generated_file_name(fp, module, TRUE, ".hh");
-	}
+        for (i = 0; i < makefile->nTTCN3Modules; i++) {
+          const struct module_struct *module = makefile->TTCN3Modules + i;
+          if (module->dir_name != NULL)
+            print_generated_file_name(fp, module, TRUE, ".hh");
+        }
+        if (makefile->preprocess) {
+          for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+            const struct module_struct *module = makefile->TTCN3PPModules + i;
+            if (module->dir_name != NULL)
+              print_generated_file_name(fp, module, TRUE, ".hh");
+          }
+        }
+        for (i = 0; i < makefile->nASN1Modules; i++) {
+          const struct module_struct *module = makefile->ASN1Modules + i;
+          if (module->dir_name != NULL)
+            print_generated_file_name(fp, module, TRUE, ".hh");
+        }
       }
     }
+
+    if (makefile->linkingStrategy) {
+      fputs("\n\n"
+            "# C++ source & header files generated from the TTCN-3 "
+            " library linked modules of\n"
+            "# central project(s):\n"
+            "BASE2_GENERATED_SOURCES =", fp);
+      if (makefile->gnu_make && makefile->BaseTTCN3ModulesRegular) {
+        fputs(" $(BASE2_TTCN3_MODULES:.ttcn=.cc)", fp);
+        fputs(" $(BASE2_ASN1_MODULES:.asn=.cc)", fp);
+        if (makefile->preprocess)
+          fputs(" $(BASE2_TTCN3_PP_MODULES:.ttcnpp=.cc)", fp);
+      }
+      else {
+        for (i = 0; i < makefile->nTTCN3Modules; i++) {
+          const struct module_struct *module = makefile->TTCN3Modules + i;
+          if (module->dir_name != NULL && isTtcn3ModuleInLibrary(module->module_name)) {
+            print_generated_file_name(fp, module, TRUE, ".cc");
+          }
+        }
+        if (makefile->preprocess) {
+          for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+            const struct module_struct *module = makefile->TTCN3PPModules + i;
+            if (module->dir_name != NULL && isTtcnPPFileInLibrary(module->file_name)) {
+              print_generated_file_name(fp, module, TRUE, ".cc");
+            }
+          }
+        }
+      }
+
+      fputs("\nBASE2_GENERATED_HEADERS =", fp);
+      if (makefile->gnu_make) {
+        fputs(" $(BASE2_GENERATED_SOURCES:.cc=.hh)", fp);
+      }
+      else
+        ERROR("the usage of 'Z' flag requires GNU make");
+    }
+
     fputs("\n\n"
           "# C/C++ Source & header files of Test Ports, external functions "
-	      "and\n"
-	  "# other modules:\n"
+          "and\n"
+          "# other modules:\n"
           "USER_SOURCES =", fp);
     for (i = 0; i < makefile->nUserFiles; i++) {
       const struct user_struct *user = makefile->UserFiles + i;
       if (user->dir_name == NULL || !makefile->central_storage)
-	print_source_name(fp, user);
+        print_source_name(fp, user);
     }
     fprint_extra_targets(fp, makefile->target_placement_list, "USER_SOURCES");
     fputs("\nUSER_HEADERS =", fp);
@@ -2205,35 +2401,80 @@ static void print_makefile(struct makefile_struct *makefile)
       fputs(" $(USER_SOURCES:.cc=.hh)", fp);
     } else {
       for (i = 0; i < makefile->nUserFiles; i++) {
-	const struct user_struct *user = makefile->UserFiles + i;
-	if (user->dir_name == NULL || !makefile->central_storage)
-	  print_header_name(fp, user);
+        const struct user_struct *user = makefile->UserFiles + i;
+        if (user->dir_name == NULL || !makefile->central_storage)
+          print_header_name(fp, user);
       }
     }
     fprint_extra_targets(fp, makefile->target_placement_list, "USER_HEADERS");
     if (makefile->central_storage) {
       fputs("\n\n"
             "# C/C++ Source & header files of Test Ports, external functions "
-		"and\n"
-	    "# other modules used from central project(s):\n"
+            "and\n"
+            "# other modules used from central project(s):\n"
             "BASE_USER_SOURCES =", fp);
-      for (i = 0; i < makefile->nUserFiles; i++) {
-	const struct user_struct *user = makefile->UserFiles + i;
-	if (user->dir_name != NULL)
-	  print_source_name(fp, user);
+      if (!makefile->linkingStrategy) {
+        for (i = 0; i < makefile->nUserFiles; i++) {
+          const struct user_struct *user = makefile->UserFiles + i;
+          if (user->dir_name != NULL) {
+            print_source_name(fp, user);
+          }
+        }
+        fputs("\nBASE_USER_HEADERS =", fp);
+        if (makefile->gnu_make && makefile->BaseUserHeadersRegular) {
+          fputs(" $(BASE_USER_SOURCES:.cc=.hh)", fp);
+        } 
+        else {
+          for (i = 0; i < makefile->nUserFiles; i++) {
+            const struct user_struct *user = makefile->UserFiles + i;
+            if (user->dir_name != NULL)
+              print_header_name(fp, user);
+          }
+        }
       }
-      fputs("\nBASE_USER_HEADERS =", fp);
-      if (makefile->gnu_make && makefile->BaseUserHeadersRegular) {
-	fputs(" $(BASE_USER_SOURCES:.cc=.hh)", fp);
-      } else {
-	for (i = 0; i < makefile->nUserFiles; i++) {
-	  const struct user_struct *user = makefile->UserFiles + i;
-	  if (user->dir_name != NULL)
-	    print_header_name(fp, user);
-	}
+      else {
+        for (i = 0; i < makefile->nUserFiles; i++) {
+          const struct user_struct *user = makefile->UserFiles + i;
+          if (user->dir_name != NULL && !isSourceFileInLibrary(user->source_name)) {
+            print_source_name(fp, user);
+          }
+        }
+        fputs("\nBASE_USER_HEADERS =", fp);
+        if (makefile->gnu_make && makefile->BaseUserHeadersRegular) {
+          fputs(" $(BASE_USER_SOURCES:.cc=.hh)", fp);
+        }
+        else {
+          for (i = 0; i < makefile->nUserFiles; i++) {
+            const struct user_struct *user = makefile->UserFiles + i;
+            if (user->dir_name != NULL && !isHeaderFileInLibrary(user->header_name))
+              print_header_name(fp, user);
+          }
+        }
+
+        fputs("\n\n"
+              "# C/C++ Source & header files of Test Ports, external functions "
+              "and\n"
+              "# other modules used from library linked central project(s):\n"
+              "BASE2_USER_SOURCES =", fp);
+        for (i = 0; i < makefile->nUserFiles; i++) {
+          const struct user_struct *user = makefile->UserFiles + i;
+          if (user->dir_name != NULL && isSourceFileInLibrary(user->source_name)) {
+            print_source_name(fp, user);
+          }
+        }
+        fputs("\nBASE2_USER_HEADERS =", fp);
+        if (makefile->gnu_make && makefile->BaseUserHeadersRegular) {
+          fputs(" $(BASE2_USER_SOURCES:.cc=.hh)", fp);
+        }
+        else {
+          for (i = 0; i < makefile->nUserFiles; i++) {
+            const struct user_struct *user = makefile->UserFiles + i;
+            if (user->dir_name != NULL && isHeaderFileInLibrary(user->header_name))
+              print_header_name(fp, user);
+          }
+        }
       }
     }
-
     if (makefile->dynamic) {
       fputs("\n\n"
             "# Shared object files of this project:\n"
@@ -2299,7 +2540,7 @@ static void print_makefile(struct makefile_struct *makefile)
 
     fputs("\n\n"
           "# Object files of this project that are needed for the executable "
-	        "test suite:\n"
+          "test suite:\n"
           "OBJECTS = $(GENERATED_OBJECTS) $(USER_OBJECTS)\n\n" /* never := */
           "GENERATED_OBJECTS =", fp);
     if (makefile->gnu_make) {
@@ -2376,35 +2617,57 @@ static void print_makefile(struct makefile_struct *makefile)
         fputs("\n\n"
               "# Shared object files of central project(s):\n"
               "BASE_SHARED_OBJECTS =", fp);
-        if (makefile->gnu_make) {
-          fputs(" $(BASE_GENERATED_SOURCES:.cc=.so)", fp);
-        } else {
-          for (i = 0; i < makefile->nTTCN3Modules; i++) {
-            const struct module_struct *module = makefile->TTCN3Modules + i;
-            if (module->dir_name != NULL)
-              print_generated_file_name(fp, module, TRUE, ".so");
+        if (!makefile->linkingStrategy) {
+          if (makefile->gnu_make) {
+            fputs(" $(BASE_GENERATED_SOURCES:.cc=.so)", fp);
           }
-          if (makefile->preprocess) {
-            for (i = 0; i < makefile->nTTCN3PPModules; i++) {
-              const struct module_struct *module =
-                makefile->TTCN3PPModules + i;
+          else {
+            for (i = 0; i < makefile->nTTCN3Modules; i++) {
+              const struct module_struct *module = makefile->TTCN3Modules + i;
+              if (module->dir_name != NULL)
+                print_generated_file_name(fp, module, TRUE, ".so");
+            }
+            if (makefile->preprocess) {
+              for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+                const struct module_struct *module =
+                  makefile->TTCN3PPModules + i;
+                if (module->dir_name != NULL)
+                  print_generated_file_name(fp, module, TRUE, ".so");
+              }
+            }
+            for (i = 0; i < makefile->nASN1Modules; i++) {
+              const struct module_struct *module = makefile->ASN1Modules + i;
               if (module->dir_name != NULL)
                 print_generated_file_name(fp, module, TRUE, ".so");
             }
           }
-          for (i = 0; i < makefile->nASN1Modules; i++) {
-            const struct module_struct *module = makefile->ASN1Modules + i;
-            if (module->dir_name != NULL)
-              print_generated_file_name(fp, module, TRUE, ".so");
+          if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
+            fputs(" $(BASE_USER_SOURCES:.cc=.so)", fp);
+          }
+          else {
+            for (i = 0; i < makefile->nUserFiles; i++) {
+              const struct user_struct *user = makefile->UserFiles + i;
+              if (user->dir_name != NULL)
+                print_shared_object_name(fp, user);
+            }
           }
         }
-        if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
-          fputs(" $(BASE_USER_SOURCES:.cc=.so)", fp);
-        } else {
-          for (i = 0; i < makefile->nUserFiles; i++) {
-            const struct user_struct *user = makefile->UserFiles + i;
-            if (user->dir_name != NULL)
-              print_shared_object_name(fp, user);
+        else { // new linkingStrategy
+          if (makefile->gnu_make) {
+            fputs(" $(BASE_GENERATED_SOURCES:.cc=.so)", fp);
+          }
+          else
+            ERROR("the usage of 'Z' flag requires GNU make");
+
+          if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
+            fputs(" $(BASE_USER_SOURCES:.cc=.so)", fp);
+          }
+          else {
+            for (i = 0; i < makefile->nUserFiles; i++) {
+              const struct user_struct *user = makefile->UserFiles + i;
+              if (user->dir_name != NULL && !isSourceFileInLibrary(user->source_name))
+                print_shared_object_name(fp, user);
+            }
           }
         }
       } /* if dynamic */
@@ -2412,41 +2675,112 @@ static void print_makefile(struct makefile_struct *makefile)
             "# Object files of central project(s) that are needed for the "
             "executable test suite:\n"
             "BASE_OBJECTS =", fp);
-      if (makefile->gnu_make) {
-        fputs(" $(BASE_GENERATED_SOURCES:.cc=.o)", fp);
-      } else {
-        for (i = 0; i < makefile->nTTCN3Modules; i++) {
-          const struct module_struct *module = makefile->TTCN3Modules + i;
-          if (module->dir_name != NULL)
-            print_generated_file_name(fp, module, TRUE, ".o");
-        }
-        if (makefile->preprocess) {
-          for (i = 0; i < makefile->nTTCN3PPModules; i++) {
-            const struct module_struct *module = makefile->TTCN3PPModules + i;
+      if (!makefile->linkingStrategy) {
+        if (makefile->gnu_make) {
+          fputs(" $(BASE_GENERATED_SOURCES:.cc=.o)", fp);
+        } 
+        else {
+          for (i = 0; i < makefile->nTTCN3Modules; i++) {
+            const struct module_struct *module = makefile->TTCN3Modules + i;
+            if (module->dir_name != NULL)
+              print_generated_file_name(fp, module, TRUE, ".o");
+          }
+          if (makefile->preprocess) {
+            for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+              const struct module_struct *module = makefile->TTCN3PPModules + i;
+              if (module->dir_name != NULL)
+                print_generated_file_name(fp, module, TRUE, ".o");
+            }
+          }
+          for (i = 0; i < makefile->nASN1Modules; i++) {
+            const struct module_struct *module = makefile->ASN1Modules + i;
             if (module->dir_name != NULL)
               print_generated_file_name(fp, module, TRUE, ".o");
           }
         }
-        for (i = 0; i < makefile->nASN1Modules; i++) {
-          const struct module_struct *module = makefile->ASN1Modules + i;
-          if (module->dir_name != NULL)
-            print_generated_file_name(fp, module, TRUE, ".o");
+        if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
+          fputs(" $(BASE_USER_SOURCES:.cc=.o)", fp);
+        }
+        else {
+          for (i = 0; i < makefile->nUserFiles; i++) {
+            const struct user_struct *user = makefile->UserFiles + i;
+            if (user->dir_name != NULL)
+              print_object_name(fp, user);
+          }
         }
       }
-      if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
-        fputs(" $(BASE_USER_SOURCES:.cc=.o)", fp);
-      } else {
-        for (i = 0; i < makefile->nUserFiles; i++) {
-          const struct user_struct *user = makefile->UserFiles + i;
-          if (user->dir_name != NULL)
-            print_object_name(fp, user);
+      else { // new linkingStrategy
+        if (makefile->gnu_make) {
+          fputs(" $(BASE_GENERATED_SOURCES:.cc=.o)", fp);
+        }
+        else
+          ERROR("the usage of 'Z' flag requires GNU make");
+
+        if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
+          fputs(" $(BASE_USER_SOURCES:.cc=.o)", fp);
+        }
+        else {
+          for (i = 0; i < makefile->nUserFiles; i++) {
+            const struct user_struct *user = makefile->UserFiles + i;
+            if (user->dir_name != NULL && !isSourceFileInLibrary(user->source_name))
+              print_object_name(fp, user);
+          }
         }
       }
     }
+    if (makefile->linkingStrategy) {
+      fputs("\n\n"
+            "# Object files of library linked central project(s) that are needed for the "
+            "executable test suite:\n"
+            "BASE2_OBJECTS =", fp);
+      if (makefile->gnu_make) {
+        if (makefile->dynamic)
+          fputs(" $(BASE2_GENERATED_SOURCES:.cc=.so)", fp);
+        else
+          fputs(" $(BASE2_GENERATED_SOURCES:.cc=.o)", fp);
+      }
+      else ERROR("the usage of 'Z' flag requires GNU make");
+
+      if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
+        if (makefile->dynamic)
+          fputs(" $(BASE2_USER_SOURCES:.cc=.so)", fp);
+        else
+          fputs(" $(BASE2_USER_SOURCES:.cc=.o)", fp);
+      }
+      else {
+        for (i = 0; i < makefile->nUserFiles; i++) {
+          const struct user_struct *user = makefile->UserFiles + i;
+          if (user->dir_name != NULL && isSourceFileInLibrary(user->source_name)) {
+             if (makefile->dynamic)
+               print_shared_object_name(fp, user);
+             else
+               print_object_name(fp, user);
+          }
+        }
+      }
+      if (makefile->hierarchical) {
+        fputs("\n\n"
+              "#Libraries of referenced project(s) that are needed for the "
+              "executable or library target:\n"
+              "BASE2_LIBRARY =", fp);
+        struct string2_list* head = getLinkerLibs(makefile->project_name);
+        struct string2_list* act_elem = head;
+        while (act_elem) {
+          if (act_elem->str2) {
+            fputs(" ", fp);
+            fprintf(fp, "%s/lib%s.%s", act_elem->str1, act_elem->str2,
+                    isDynamicLibrary(act_elem->str2) ? "so" : "a");
+          }
+          act_elem = act_elem->next;
+        }
+        free_string2_list(head);
+      }
+    }
+
     fputs("\n\n"
-	  "# Other files of the project (Makefile, configuration files, etc.)\n"
-	  "# that will be added to the archived source files:\n"
-	  "OTHER_FILES =", fp);
+    "# Other files of the project (Makefile, configuration files, etc.)\n"
+    "# that will be added to the archived source files:\n"
+    "OTHER_FILES =", fp);
     for (i = 0; i < makefile->nOtherFiles; i++)
       fprintf(fp, " %s", makefile->OtherFiles[i]);
     fprint_extra_targets(fp, makefile->target_placement_list, "OTHER_FILES");
@@ -2465,19 +2799,35 @@ static void print_makefile(struct makefile_struct *makefile)
           fputs(".exe", fp);
       }
 #endif
-      fputs("\n", fp);
-
+      fputs("\n\n", fp);
+      if (makefile->linkingStrategy) {
+#ifndef WIN32
+        fputs("DYNAMIC_LIBRARY = lib$(EXECUTABLE).so\n", fp);
+        fputs("STATIC_LIBRARY = lib$(EXECUTABLE).a\n", fp);
+#else
+        char* name_prefix = cut_suffix(makefile->ets_name);
+        fprintf(fp, "DYNAMIC_LIBRARY = lib%s.so\n", name_prefix);
+        fprintf(fp, "STATIC_LIBRARY = lib%s.a\n", name_prefix);
+        Free(name_prefix);
+#endif
+      }
       /* LIBRARY variable */
       ets_suffix = get_suffix(makefile->ets_name);
       if (ets_suffix != NULL && !strcmp(ets_suffix, "exe")) {
         char* name_prefix = cut_suffix(makefile->ets_name);
-        fprintf(fp, "\n\nLIBRARY = %s%s\n", name_prefix ? name_prefix :  "library",
-            makefile->dynamic ? "_lib.so" : ".a");
-        Free(name_prefix);
-      } else {
-        fprintf(fp, "\n\nLIBRARY = %s%s\n", makefile->ets_name,
-            makefile->dynamic ? "_lib.so" : ".a");
+          fprintf(fp, "\n\nLIBRARY = %s%s%s\n", "lib", name_prefix ? name_prefix :  "library",
+              makefile->dynamic ? ".so" : ".a");
+          Free(name_prefix);
       }
+      else {
+#ifndef WIN32
+        fprintf(fp, "\n\nLIBRARY = lib$(EXECUTABLE)%s\n",
+                makefile->dynamic ? ".so" : ".a");
+#else
+        fprintf(fp, "\n\nLIBRARY = lib%s%s\n",
+                makefile->ets_name, makefile->dynamic ? ".so" : ".a");
+#endif
+        }
 
     } else {
       fputs("\n\n"
@@ -2485,10 +2835,20 @@ static void print_makefile(struct makefile_struct *makefile)
           "EXECUTABLE =\n"
           "LIBRARY =\n", fp);
     }
-
-    fprintf(fp, "\n"
+    if (!makefile->linkingStrategy || !buildObjects(makefile->project_name, add_refd_prjs)) {
+      fprintf(fp, "\n"
         "TARGET = $(%s)", makefile->library ? "LIBRARY" : "EXECUTABLE");
-
+    }
+    else {
+      if (makefile->dynamic) {
+        fputs("\n"
+              "TARGET = $(SHARED_OBJECTS)", fp);
+      }
+      else {
+        fputs("\n"
+              "TARGET = $(OBJECTS)", fp);
+      }
+    }
     fputs("\n\n"
       "#\n"
       "# Do not modify these unless you know what you are doing...\n"
@@ -2583,8 +2943,10 @@ static void print_makefile(struct makefile_struct *makefile)
       /* There is no need to create the .so for all the source files */
       fputs("$(EXECUTABLE): $(LIBRARY)\n"
           "\tif $(CXX) $(LDFLAGS) -o $@ $(LIBRARY)", fp);
-    } else {
-        fprintf(fp, "$(EXECUTABLE): %s", makefile->dynamic ? "$(SHARED_OBJECTS)" : "$(OBJECTS)");
+    }
+    else {
+      fprintf(fp, "$(EXECUTABLE): %s", makefile->dynamic ? "$(SHARED_OBJECTS)" : "$(OBJECTS)");
+      if (!makefile->linkingStrategy) { // use the old linking method
         if (makefile->central_storage) {
           if (makefile->dynamic) {
             fputs(" $(BASE_SHARED_OBJECTS)", fp);
@@ -2592,19 +2954,39 @@ static void print_makefile(struct makefile_struct *makefile)
             fputs(" $(BASE_OBJECTS)", fp);
           }
         }
-        fputs("\n"
-            "\tif $(CXX) $(LDFLAGS) -o $@ ", fp); /* start writing the link step */
-        if (makefile->gnu_make) fputs("$^", fp);
-        else {
+      }
+      else {
+        if (!makefile->library) {
           if (makefile->dynamic) {
-            fputs("$(SHARED_OBJECTS)", fp);
-            if (makefile->central_storage)
-              fputs(" $(BASE_SHARED_OBJECTS)", fp);
-          } else {
-            fputs("$(OBJECTS)", fp);
-            if (makefile->central_storage)
-              fputs(" $(BASE_OBJECTS)", fp);
+            fputs(" $(BASE_SHARED_OBJECTS)", fp);
           }
+          else {
+            fputs(" $(BASE_OBJECTS)", fp);
+          }
+          if (makefile->hierarchical) {
+            fputs(" $(BASE2_LIBRARY)", fp);
+          }
+        }
+      }
+      fprintf(fp, "\n"
+              "\tif $(CXX) $(LDFLAGS) -o $@ %s",
+#if defined (SOLARIS) || defined (SOLARIS8)
+              "");
+#else
+              makefile->dynamic ? "-Wl,--no-as-needed " : ""); /* start writing the link step */
+#endif
+      if (makefile->gnu_make) fputs("$^", fp);
+      else {
+        if (makefile->dynamic) {
+          fputs("$(SHARED_OBJECTS)", fp);
+            if (makefile->central_storage)
+            fputs(" $(BASE_SHARED_OBJECTS)", fp);
+        } 
+        else {
+          fputs("$(OBJECTS)", fp);
+            if (makefile->central_storage)
+            fputs(" $(BASE_OBJECTS)", fp);
+        }
       }
     }
 
@@ -2622,27 +3004,65 @@ static void print_makefile(struct makefile_struct *makefile)
         "\t-L$(TTCN3_DIR)/lib -l$(TTCN3_LIB)"
         " \\\n"
         "\t-L$(OPENSSL_DIR)/lib -lcrypto");
-    if (makefile->linkerlibraries) {
-      struct string_list* act_elem = makefile->linkerlibraries;
-      while (act_elem) {
-        if (act_elem->str) {
-          fprintf(fp, " -l%s", act_elem->str);
+    if (!makefile->linkingStrategy) {
+      if (makefile->linkerlibraries) {
+        struct string_list* act_elem = makefile->linkerlibraries;
+        while (act_elem) {
+          if (act_elem->str) {
+            fprintf(fp, " -l%s", act_elem->str);
+          }
+          act_elem = act_elem->next;
         }
-        act_elem = act_elem->next;
       }
-    }
-    if (makefile->linkerlibsearchpath) {
-      struct string_list* act_elem = makefile->linkerlibsearchpath;
-      while (act_elem) {
-        if (act_elem->str) {
-          fprintf(fp, " -L%s", act_elem->str);
+      if (makefile->linkerlibsearchpath) {
+        struct string_list* act_elem = makefile->linkerlibsearchpath;
+        while (act_elem) {
+          if (act_elem->str) {
+            fprintf(fp, " -L%s", act_elem->str);
+          }
+          act_elem = act_elem->next;
         }
-        act_elem = act_elem->next;
       }
+      fprintf(fp, " \\\n"
+            "\t-L$(XMLDIR)/lib $($(PLATFORM)_LIBS); \\\n"
+            "\tthen : ; else $(TTCN3_DIR)/bin/titanver $(OBJECTS); exit 1; fi\n");
     }
-    fprintf(fp, " \\\n"
-          "\t-L$(XMLDIR)/lib $($(PLATFORM)_LIBS); \\\n"
-          "\tthen : ; else $(TTCN3_DIR)/bin/titanver $(OBJECTS); exit 1; fi\n");
+    else { // new linking strategy
+     fputs (" \\\n", fp);
+     if (makefile->linkerlibraries && !makefile->library) {
+       struct string2_list* head = getLinkerLibs(makefile->project_name);
+       struct string2_list* act_elem = head;
+       while (act_elem) {
+         if (act_elem->str1 && act_elem->str2) {
+            fprintf(fp, "\t-L%s -Wl,-rpath=%s -l%s \\\n", act_elem->str1, act_elem->str1, act_elem->str2);
+         }
+         act_elem = act_elem->next;
+       }
+       free_string2_list(head);
+
+       struct string_list* act_head = getExternalLibPathes(makefile->project_name);
+       struct string_list* act_ext_elem = act_head;
+       while (act_ext_elem) {
+         if (act_ext_elem->str) {
+           fprintf(fp, "\t-L%s \\\n", act_ext_elem->str);
+         }
+         act_ext_elem = act_ext_elem->next;
+       }
+       free_string_list(act_head);
+       act_head = getExternalLibs(makefile->project_name);
+       act_ext_elem = act_head;
+       while (act_ext_elem) {
+         if (act_ext_elem->str) {
+           fprintf(fp, "\t-l%s \\\n", act_ext_elem->str);
+         }
+         act_ext_elem = act_ext_elem->next;
+       }
+       free_string_list(act_head);
+     }
+     fprintf(fp,
+           "\t-L$(XMLDIR)/lib $($(PLATFORM)_LIBS); \\\n"
+           "\tthen : ; else $(TTCN3_DIR)/bin/titanver $(OBJECTS); exit 1; fi\n");
+    }
     /* If the compiler will not be run because there are no TTCN(PP) or ASN.1
      * files, create the "compile" marker file which is checked by the
      * superior makefile if using this project as central storage */
@@ -2651,21 +3071,115 @@ static void print_makefile(struct makefile_struct *makefile)
 
     /* target $(LIBRARY) */
     if (makefile->dynamic) {
-      fputs("\n"
-            "$(LIBRARY): $(OBJECTS)\n"
-            "\t$(CXX) -shared -o $@ $(OBJECTS)", fp);
-      if (makefile->central_storage) {
-        fputs(" $(BASE_SHARED_OBJECTS)", fp);
+      fprintf(fp, "\n"
+                  "$(LIBRARY): $(OBJECTS)%s\n"
+                  "\t$(CXX) -shared -o $@ $(OBJECTS)",
+                  makefile->hierarchical ? " $(BASE2_LIBRARY)" : "");
+      if (makefile->central_storage && !makefile->linkingStrategy) {
+        fputs(" $(BASE_SHARED_OBJECTS) ;\n"
+              "\tln -s $@ $(subst lib, ,$@) > /dev/null 2>&1 ;", fp);
       }
-    } else {
-      fputs("\n"
-            "$(LIBRARY): $(OBJECTS)\n"
-            "\t$(AR) -r $(ARFLAGS) $(LIBRARY) $(OBJECTS)", fp);
-      if (makefile->central_storage) {
-        fputs(" $(BASE_OBJECTS)", fp);
+      if (makefile->linkingStrategy) {
+        struct string2_list* head = getLinkerLibs(makefile->project_name);
+        struct string2_list* act_elem = head;
+        // If the project is Executable on Top Level the linker can link the *.a and *.so together
+        while (act_elem && !isTopLevelExecutable(makefile->project_name)) {
+            if (act_elem->str1 && act_elem->str2 && isDynamicLibrary(act_elem->str2)) {
+              fputs(" \\\n", fp);
+              fprintf(fp, "\t-L%s -Wl,-rpath=%s -l%s", act_elem->str1, act_elem->str1, act_elem->str2);
+            }
+            else {
+              const char* mainLibName = getLibFromProject(makefile->project_name);
+              ERROR("Library archive 'lib%s.a' cannot be linked to dynamic library 'lib%s.so' "
+                    "in project '%s' ",
+                    act_elem->str2, mainLibName ? mainLibName : "", makefile->project_name);
+              free_string2_list(head);
+              exit(EXIT_FAILURE);
+            }
+          act_elem = act_elem->next;
+        }
+        free_string2_list(head);
+        struct string_list* act_head = getExternalLibPathes(makefile->project_name);
+        struct string_list* act_ext_elem = act_head;
+        while (act_ext_elem) {
+          if (act_ext_elem->str) {
+            fputs(" \\\n", fp);
+            fprintf(fp, "\t-L%s", act_ext_elem->str);
+          }
+          act_ext_elem = act_ext_elem->next;
+        }
+        free_string_list(act_head);
+        act_head = getExternalLibs(makefile->project_name);
+        act_ext_elem = act_head;
+        while (act_ext_elem) {
+          if (act_ext_elem->str) {
+            fputs(" \\\n", fp);
+            fprintf(fp, "\t-l%s", act_ext_elem->str);
+          }
+          act_ext_elem = act_ext_elem->next;
+        }
+        free_string_list(act_head);
       }
     }
+    else { // static linking
+      fprintf(fp, "\n"
+                  "$(LIBRARY): $(OBJECTS)%s\n"
+                  "\t$(AR) -r%s $(ARFLAGS) $(LIBRARY) $(OBJECTS)",
+                  makefile->hierarchical ? " $(BASE2_LIBRARY)" : "",
+                  makefile->linkingStrategy ? "cT" : "");
+      if (makefile->central_storage && !makefile->linkingStrategy) {
+        fputs(" $(BASE_OBJECTS)", fp);
+      }
+      if (makefile->linkingStrategy) {
+        if ( makefile->library) {
+          struct string2_list* head = getLinkerLibs(makefile->project_name);
+          struct string2_list* act_elem = head;
+          while (act_elem) {
+            if (act_elem->str2 && !isDynamicLibrary(act_elem->str2)) {
+              fputs(" \\\n", fp);
+              fprintf(fp, "\t%s/lib%s.a", act_elem->str1, act_elem->str2);
+            }
+            else {
+              const char* mainLibName = getLibFromProject(makefile->project_name);
+              if (act_elem->str2) {
+                ERROR("Dynamic library 'lib%s.so' cannot be linked to static library 'lib%s.a' "
+                      "in project '%s' ",
+                      act_elem->str2, mainLibName ? mainLibName : "", makefile->project_name);
+                exit(EXIT_FAILURE);
+              }
+              else {
+                struct string_list* ext_libs = getExternalLibs(makefile->project_name);
+                if (ext_libs && ext_libs->str) {
+                  ERROR("Third party dynamic library '%s' cannot be linked to static library 'lib%s.a' "
+                        "in project '%s' ", ext_libs->str,
+                        mainLibName ? mainLibName : "", makefile->project_name);
+                  free_string_list(ext_libs);
+                  exit(EXIT_FAILURE);
+                }
+                free_string_list(ext_libs);
+              }
+            }
+            act_elem = act_elem->next;
+          }
+          free_string2_list(head);
 
+          struct string_list* act_head = getExternalLibs(makefile->project_name);
+          struct string_list* act_ext_elem = act_head;
+          while (act_ext_elem) {
+            if (act_ext_elem->str && hasExternalLibrary(act_ext_elem->str, makefile->project_name)) {
+              fputs(" \\\n", fp);
+              fprintf(fp, "\tlib%s.a", act_ext_elem->str);
+              ERROR("linking static 3d party or sytem library 'lib%s.a' to "
+                      "project library 'lib%s.a' is not supported ",
+                      act_ext_elem->str, makefile->ets_name);
+              exit(EXIT_FAILURE);
+            }
+            act_ext_elem = act_ext_elem->next;
+          }
+          free_string_list(act_head);
+        }
+      }
+    }
     fputs("\n\n.cc.o .c.o:\n"
           "\t$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<\n\n", fp);
 
@@ -2698,7 +3212,9 @@ static void print_makefile(struct makefile_struct *makefile)
 
     if (makefile->central_storage) {
       boolean is_first = TRUE;
-      fputs("$(GENERATED_SOURCES) $(GENERATED_HEADERS): compile-all compile ", fp);
+      fprintf(fp, "$(GENERATED_SOURCES) $(GENERATED_HEADERS):%s compile-all compile ",
+              makefile->hierarchical ? " update" : "");
+
       if (add_refd_prjs) fputs("referenced-dep", fp);
       /* These extra compile dependencies for the generated .cc are here to
        * check if all the referenced projects are up to date.
@@ -2707,175 +3223,260 @@ static void print_makefile(struct makefile_struct *makefile)
        */
       if (!add_refd_prjs) for (i = 0; i < makefile->nBaseDirs; i++) {
         const struct base_dir_struct *base_dir = makefile->BaseDirs + i;
-	if (base_dir->has_modules) {
-	  if (is_first) {
-	    fputs(" \\\n", fp);
-	    is_first = FALSE;
-	  } else putc(' ', fp);
-	  fprintf(fp, "%s/compile", base_dir->dir_name);
-	}
-      }
-      
-      if (makefile->preprocess) {
-	fprintf(fp, "\n"
-	  "\t@if [ ! -f $@ ]; then %s compile-all; $(MAKE) compile-all; fi\n"
-	  "\n"
-	  "check:%s $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-	  "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
-	  "\\\n"
-	  "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)\n"
-	  "\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ", rm_command, add_refd_prjs?" referenced-check":"");
-  if (makefile->gnu_make) {
-    if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
-      fputs("$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-            "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
-            "\\\n"
-            "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)\n", fp);
-    else
-      fputs("$^", fp);
-  }
-	else {
-	  fputs("\\\n"
-	    "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-	    "\t$(PREPROCESSED_TTCN3_MODULES) "
-	      "$(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
-	    "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)", fp);
-	}
-	fputs("\n\n"
-	  "compile: $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) "
-	    "$(ASN1_MODULES)\n"
-	  "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
-	  "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-	  "\t$(PREPROCESSED_TTCN3_MODULES) "
-	    "$(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
-	  "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) - $?\n"
-	  "\ttouch $@\n"
-	  "\n"
-	  "compile-all: $(BASE_TTCN3_MODULES) "
-	    "$(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
-	  "$(BASE_ASN1_MODULES)\n"
-	  "\t$(MAKE) preprocess\n"
-	  "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
-	  "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-	  "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
-	    "\\\n"
-	  "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) \\\n"
-	  "\t- $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) $(ASN1_MODULES)\n"
-	  "\ttouch $@ compile\n\n", fp);
-      } else {
-	fprintf(fp, "\n"
-	  "\t@if [ ! -f $@ ]; then %s compile-all; $(MAKE) compile-all; fi\n"
-	  "\n"
-	  "check:%s $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-	  "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)\n"
-	  "\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ", rm_command, add_refd_prjs?" referenced-check":"");
-	if (makefile->gnu_make) {
-    if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
-      fputs("$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-            "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)\n", fp);
-    else
-      fputs("$^", fp);
-  }
-	else {
-	  fputs("\\\n"
-	    "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-	    "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)", fp);
-	}
-	fputs("\n\n"
-	  "compile: $(TTCN3_MODULES) $(ASN1_MODULES)\n"
-	  "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
-	  "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-	  "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) \\\n"
-	  "\t- $?\n"
-	  "\ttouch $@\n"
-	  "\n"
-	  "compile-all: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES)\n"
-	  "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
-	  "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
-	  "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) \\\n"
-	  "\t- $(TTCN3_MODULES) $(ASN1_MODULES)\n"
-	  "\ttouch $@ compile\n\n", fp);
-      }
-      for (i = 0; i < makefile->nBaseDirs; i++) {
-        const struct base_dir_struct *base_dir = makefile->BaseDirs + i;
-	if (base_dir->has_modules) {
-	  size_t j;
-	  fprintf(fp, "%s/compile:", base_dir->dir_name);
-	  for (j = 0; j < makefile->nTTCN3Modules; j++) {
-	    const struct module_struct *module = makefile->TTCN3Modules + j;
-	    if (module->dir_name != NULL &&
-		!strcmp(base_dir->dir_name, module->dir_name))
-	      print_file_name(fp, module);
-	  }
-	  for (j = 0; j < makefile->nTTCN3PPModules; j++) {
-	    const struct module_struct *module = makefile->TTCN3PPModules + j;
-	    if (module->dir_name != NULL &&
-        	!strcmp(base_dir->dir_name, module->dir_name))
-              print_file_name(fp, module);
-	  }
-	  for (j = 0; j < makefile->nASN1Modules; j++) {
-	    const struct module_struct *module = makefile->ASN1Modules + j;
-	    if (module->dir_name != NULL &&
-		!strcmp(base_dir->dir_name, module->dir_name))
-	      print_file_name(fp, module);
-	  }
-	  fprintf(fp, "\n"
-		"\t@echo 'Central directory %s is not up-to-date!'\n"
-		"\t@exit 2\n\n", base_dir->dir_name);
-	}
+        if (base_dir->has_modules) {
+          if (is_first) {
+            fputs(" \\\n", fp);
+            is_first = FALSE;
+          }
+          else putc(' ', fp);
+        fprintf(fp, "%s/compile", base_dir->dir_name);
         }
-    } else { /* not central storage */
+      }
+      if (makefile->preprocess) {
+        fprintf(fp, "\n"
+        "\t@if [ ! -f $@ ]; then %s compile-all; $(MAKE) compile-all; fi\n"
+        "\n"
+        "check:%s $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+        "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
+        "%s\\\n"
+        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\n"
+        "\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ",
+        rm_command, add_refd_prjs?" referenced-check":"",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+        makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
+        makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
+        if (makefile->gnu_make) {
+          if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
+            fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+                        "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
+                        "%s\\\n"
+                        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\n",
+                    makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+                    makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
+                    makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
+          else
+            fputs("$^", fp);
+        }
+        else {
+          fputs("\\\n"
+          "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
+          "\t$(PREPROCESSED_TTCN3_MODULES) "
+          "$(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
+          "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)", fp);
+        }
+        if (makefile->linkingStrategy && makefile->hierarchical) {
+          fputs("\n\n"
+          "update: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
+          "\t$(BASE2_TTCN3_MODULES) $(BASE2_ASN1_MODULES) $(BASE2_PREPROCESSED_TTCN3_MODULES)\n"
+          "ifneq ($(wildcard $(GENERATED_SOURCES)), ) \n"
+          "ifeq ($(wildcard $?), ) \n"
+          "\ttouch compile-all; \n"
+          "\ttouch update; \n"
+          "endif\n"
+          "endif",fp);
+        }
+        fprintf(fp, "\n\n"
+        "compile: $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) "
+        "$(ASN1_MODULES)\n"
+        "\t@echo \"compiling \"'$(patsubst %%.tpd, %%, $(TPD))';\n"
+        "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
+        "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+        "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) %s\\\n"
+        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s - $?\n"
+        "\ttouch $@\n\n",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+        makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
+        makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES)":"");
+        fprintf (fp,
+        "compile-all: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
+        "%s"
+        "\t$(MAKE) preprocess\n"
+        "\t@echo \"compiling all \"'$(patsubst %%.tpd, %%, $(TPD))';\n"
+        "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
+        "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+        "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) %s"
+        "\\\n"
+        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\\\n"
+        "\t- $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) $(ASN1_MODULES)\n"
+        "\ttouch $@ compile\n\n",
+        makefile->linkingStrategy ? "\\\n\t$(BASE2_TTCN3_MODULES) $(BASE2_ASN1_MODULES) "
+                                    "$(BASE2_PREPROCESSED_TTCN3_MODULES) \n":"\n",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+        makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
+        makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
+      } 
+      else {
+        fprintf(fp, "\n"
+        "\t@if [ ! -f $@ ]; then %s compile-all; $(MAKE) compile-all; fi\n", rm_command);
+        fprintf(fp, "\n"
+        "check:%s $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\n"
+        "\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ",
+        add_refd_prjs?" referenced-check":"",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+        makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
+        if (makefile->gnu_make) {
+          if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
+            fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+                        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\n",
+                    makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+                    makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
+          else
+            fputs("$^", fp);
+        }
+        else {
+          fputs("\\\n"
+          "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
+          "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)", fp);
+        }
+
+        if (makefile->linkingStrategy && makefile->hierarchical) {
+          fputs("\n\n"
+          "update: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
+          "\t$(BASE2_TTCN3_MODULES) $(BASE2_ASN1_MODULES) $(BASE2_PREPROCESSED_TTCN3_MODULES)\n"
+          "ifneq ($(wildcard $(GENERATED_SOURCES)), ) \n"
+          "ifeq ($(wildcard $?), ) \n"
+          "\ttouch compile-all; \n"
+          "\ttouch update; \n"
+          "endif\n"
+          "endif",fp);
+        }
+
+        fprintf(fp, "\n\n"
+        "compile: $(TTCN3_MODULES) $(ASN1_MODULES)\n"
+        "\t@echo \"compiling \"'$(patsubst %%.tpd, %%, $(TPD))';\n"
+        "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
+        "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\\\n"
+        "\t- $?\n"
+        "\ttouch $@\n\n",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) " : "",
+        makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) " : "");
+        fprintf(fp,
+        "compile-all: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) %s\n",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) $(BASE2_ASN1_MODULES)" : "");
+        fputs("\t@echo \"compiling all \"'$(patsubst %.tpd, %, $(TPD))';\n", fp);
+        fprintf(fp,"\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
+        "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\\\n"
+        "\t- $(TTCN3_MODULES) $(ASN1_MODULES)\n"
+        "\ttouch $@ compile\n\n",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) " : "",
+        makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) " : "");
+      }
+      if (!makefile->hierarchical)
+        for (i = 0; i < makefile->nBaseDirs; i++) {
+          const struct base_dir_struct *base_dir = makefile->BaseDirs + i;
+          if (base_dir->has_modules) {
+            size_t j;
+            fprintf(fp, "%s/compile:", base_dir->dir_name);
+            for (j = 0; j < makefile->nTTCN3Modules; j++) {
+              const struct module_struct *module = makefile->TTCN3Modules + j;
+              if (module->dir_name != NULL &&
+                  !strcmp(base_dir->dir_name, module->dir_name))
+                print_file_name(fp, module);
+            }
+            for (j = 0; j < makefile->nTTCN3PPModules; j++) {
+              const struct module_struct *module = makefile->TTCN3PPModules + j;
+              if (module->dir_name != NULL &&
+                  !strcmp(base_dir->dir_name, module->dir_name))
+                print_file_name(fp, module);
+            }
+            for (j = 0; j < makefile->nASN1Modules; j++) {
+              const struct module_struct *module = makefile->ASN1Modules + j;
+              if (module->dir_name != NULL &&
+                  !strcmp(base_dir->dir_name, module->dir_name))
+                print_file_name(fp, module);
+            }
+            fprintf(fp, "\n"
+                    "\t@echo 'Central directory %s is not up-to-date!'\n"
+                    "\t@exit 2\n\n", base_dir->dir_name);
+          }
+        }
+    } 
+    else { /* not central storage */
       fprintf(fp, "$(GENERATED_SOURCES) $(GENERATED_HEADERS): compile\n"
-	"\t@if [ ! -f $@ ]; then %s compile; $(MAKE) compile; fi\n\n"
-	"check: $(TTCN3_MODULES) ", rm_command);
+              "\t@if [ ! -f $@ ]; then %s compile; $(MAKE) compile; fi\n\n"
+              "check: $(TTCN3_MODULES) ", rm_command);
       if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
       fputs("$(ASN1_MODULES)\n"
-	"\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ", fp);
+            "\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ", fp);
       if (makefile->gnu_make) fputs("$^", fp);
       else {
-	fputs("\\\n"
-	  "\t$(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) $(ASN1_MODULES)",
-	  fp);
+        fputs("\\\n"
+              "\t$(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) $(ASN1_MODULES)",
+              fp);
       }
       fputs("\n\n"
-	"compile: $(TTCN3_MODULES) ", fp);
+            "compile: $(TTCN3_MODULES) ", fp);
       if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
       fputs("$(ASN1_MODULES)\n"
-	"\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) ", fp);
+            "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) ", fp);
       if (makefile->gnu_make) fputs("$^", fp);
       else {
-	fputs("\\\n"
-	  "\t$(TTCN3_MODULES) ", fp);
-	if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
-	fputs("$(ASN1_MODULES)", fp);
+        fputs("\\\n"
+              "\t$(TTCN3_MODULES) ", fp);
+        if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
+        fputs("$(ASN1_MODULES)", fp);
       }
       fputs(" - $?\n"
-	"\ttouch $@\n"
-	"\n", fp);
+            "\ttouch $@\n"
+            "\n", fp);
     }
-    fprintf(fp, "clean:%s\n"
-      "\t-%s $(EXECUTABLE) $(LIBRARY) $(OBJECTS) $(GENERATED_HEADERS) \\\n"
-      "\t$(GENERATED_SOURCES) ", add_refd_prjs?" referenced-clean":"", rm_command);
-    if (makefile->dynamic) fputs("$(SHARED_OBJECTS) ", fp);
-    if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
-    fputs("compile", fp);
-    if (makefile->central_storage) fputs(" compile-all", fp);
-    if (makefile->gcc_dep) fputs(" $(DEPFILES)", fp);
-    fprintf(fp, " \\\n"
-      "\ttags *.log%s",
-      add_refd_prjs?" referenced*":"");
-    
+// clean:
+    if (makefile->linkingStrategy) {
+      fprintf(fp, "clean:%s\n", (add_refd_prjs && !makefile->hierarchical) ?
+              " referenced-clean" : "");
+      if (makefile->dynamic && (makefile->central_storage || makefile->linkingStrategy)) {
+        fprintf(fp,"\tfind . -type l -name \"*.so\" -exec  unlink {} \\;\n");
+      }
+      fprintf(fp, "\t%s $(EXECUTABLE) $(DYNAMIC_LIBRARY) $(STATIC_LIBRARY) "
+        "$(OBJECTS) $(GENERATED_HEADERS) \\\n"
+        "\t$(GENERATED_SOURCES) ", rm_command);
+      if (makefile->dynamic) fputs("$(SHARED_OBJECTS) ", fp);
+      if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
+      fputs("compile", fp);
+      if (makefile->central_storage) fputs(" compile-all", fp);
+      if (makefile->gcc_dep) fputs(" $(DEPFILES)", fp);
+      fprintf(fp, " \\\n"
+        "\ttags *.log%s%s\n\n",
+        add_refd_prjs?" referenced*":"",
+        makefile->hierarchical ? " update":"");
+    }
+    else {
+      fprintf(fp, "clean:%s\n"
+        "\t-%s $(EXECUTABLE) $(LIBRARY) $(OBJECTS) $(GENERATED_HEADERS) \\\n"
+        "\t$(GENERATED_SOURCES) ", add_refd_prjs?" referenced-clean":"", rm_command);
+      if (makefile->dynamic) fputs("$(SHARED_OBJECTS) ", fp);
+      if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
+      fputs("compile", fp);
+      if (makefile->central_storage) fputs(" compile-all", fp);
+      if (makefile->gcc_dep) fputs(" $(DEPFILES)", fp);
+      fprintf(fp, " \\\n"
+        "\ttags *.log%s",
+        add_refd_prjs?" referenced*":"");
+    }
+
+// clean-all:
+    if (makefile->linkingStrategy && makefile->hierarchical)
+      fprintf(fp, "clean-all: %s clean\n", add_refd_prjs ? "referenced-clean-all":"");
+
+// dep:
     fputs("\n\ndep: $(GENERATED_SOURCES) $(USER_SOURCES)",fp);
-    if (add_refd_prjs) fprintf(fp, "\n\t%s referenced-dep", rm_command);
+    if (add_refd_prjs) {
+      fprintf(fp, "\n\t%s referenced-dep", rm_command);
+    }
     else fputs(" ;",fp);
-    
+
     if (makefile->gcc_dep) {
       fprintf(fp, " \n\n"
         "ifeq ($(findstring n,$(MAKEFLAGS)),)\n"
-        "ifeq ($(filter clean check compile archive diag%s,$(MAKECMDGOALS)),)\n"
+        "ifeq ($(filter clean%s check compile archive diag%s,$(MAKECMDGOALS)),)\n"
         "-include $(DEPFILES)\n"
         "endif\n"
-        "endif", (makefile->preprocess ? " preprocess" : ""));
+        "endif", 
+        (makefile->linkingStrategy && makefile->hierarchical) ? " clean-all" : "",
+        (makefile->preprocess ? " preprocess" : ""));
       /* Don't include .d files when cleaning etc.; make will try to build them
        * and this involves running the Titan compiler. Same for preprocess.
        * The check target would be pointless if running the compiler
@@ -2887,36 +3488,50 @@ static void print_makefile(struct makefile_struct *makefile)
       if (makefile->gnu_make) fputs("$^", fp);
       else fputs("$(GENERATED_SOURCES) $(USER_SOURCES)", fp);
     }
-    fprintf(fp, "\n\n"
-      "archive:%s\n"
-      "\tmkdir -p $(ARCHIVE_DIR)\n"
-      "\ttar -cvhf - ", add_refd_prjs?" referenced-archive":"");
-    if (makefile->central_storage) {
-      fputs("$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n", fp);
-      if (makefile->preprocess) {
-	fputs("\t$(TTCN3_PP_MODULES) $(BASE_TTCN3_PP_MODULES) "
-	  "$(TTCN3_INCLUDES)\\\n", fp);
-      }
-      fputs("\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) \\\n"
-	    "\t$(USER_HEADERS) $(BASE_USER_HEADERS) \\\n"
-	    "\t$(USER_SOURCES) $(BASE_USER_SOURCES)", fp);
-    } else {
-      fputs("$(TTCN3_MODULES) ", fp);
-      if (makefile->preprocess) {
-	fputs("$(TTCN3_PP_MODULES) \\\n"
-	      "\t$(TTCN3_INCLUDES) ", fp);
-      }
-      fputs("$(ASN1_MODULES) \\\n"
-	    "\t$(USER_HEADERS) $(USER_SOURCES)", fp);
+
+    if (makefile->linkingStrategy) {
+      fputs("\n\n"
+        "archive:\n"
+        "\t@perl $(TTCN3_DIR)/bin/ttcn3_archive.pl\n\n", fp);
     }
-    fputs(" $(OTHER_FILES) \\\n"
-          "\t| gzip >$(ARCHIVE_DIR)/`basename $(TARGET) .exe`-"
-          "`date '+%y%m%d-%H%M'`.tgz\n\n", fp);
+    else {
+      fputs("\n\n"
+        "archive:\n"
+        "\tmkdir -p $(ARCHIVE_DIR)\n"
+        "\ttar -cvhf - ", fp);
+      if (makefile->central_storage) {
+        fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n", 
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) " : "");
+        if (makefile->preprocess) {
+          fprintf(fp, "\t$(TTCN3_PP_MODULES) $(BASE_TTCN3_PP_MODULES) "
+          "%s $(TTCN3_INCLUDES) \\\n",
+          makefile->linkingStrategy ? "$(BASE2_TTCN3_PP_MODULES)" : "");
+        }
+        fprintf(fp, "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\\\n"
+        "\t$(USER_HEADERS) $(BASE_USER_HEADERS) %s\\\n"
+        "\t$(USER_SOURCES) $(BASE_USER_SOURCES) %s",
+        makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) " : "",
+        makefile->linkingStrategy ? "$(BASE2_USER_HEADERS) " : "",
+        makefile->linkingStrategy ? "$(BASE2_USER_SOURCES)" : "");
+      }
+      else {
+        fputs("$(TTCN3_MODULES) ", fp);
+        if (makefile->preprocess) {
+          fputs("$(TTCN3_PP_MODULES) \\\n"
+          "\t$(TTCN3_INCLUDES) ", fp);
+        }
+        fputs("$(ASN1_MODULES) \\\n"
+        "\t$(USER_HEADERS) $(USER_SOURCES)", fp);
+      }
+      fputs(" $(OTHER_FILES) \\\n"
+            "\t| gzip >$(ARCHIVE_DIR)/`basename $(TARGET) .exe`-"
+            "`date '+%y%m%d-%H%M'`.tgz\n\n", fp);
+    }
 
     fprintf(fp, "diag:\n"
-	  "\t$(TTCN3_DIR)/bin/compiler -v 2>&1\n"
-	  "\t$(TTCN3_DIR)/bin/mctr_cli -v 2>&1\n"
-	  "\t$(CXX) -v 2>&1\n"
+    "\t$(TTCN3_DIR)/bin/compiler -v 2>&1\n"
+    "\t$(TTCN3_DIR)/bin/mctr_cli -v 2>&1\n"
+    "\t$(CXX) -v 2>&1\n"
     "%s"
           "\t@echo TTCN3_DIR=$(TTCN3_DIR)\n"
           "\t@echo OPENSSL_DIR=$(OPENSSL_DIR)\n"
@@ -2925,12 +3540,13 @@ static void print_makefile(struct makefile_struct *makefile)
     makefile->dynamic ? "" : "\t$(AR) -V 2>&1\n");
 
     if (add_refd_prjs) {
-      fputs("referenced-all referenced-shared_objects referenced-executable referenced-library \\\n"
-            "referenced-objects referenced-check \\\n"
-            "referenced-clean referenced-archive:\n"
-            "\t@for dir in $(REFERENCED_PROJECT_DIRS); do \\\n"
-            "\t  $(MAKE) -C $$dir $(subst referenced-,,$@) || exit; \\\n"
-            "\tdone; \n\n", fp);
+      fprintf(fp, "referenced-all referenced-shared_objects referenced-executable referenced-library \\\n"
+              "referenced-objects referenced-check \\\n"
+              "referenced-clean%s:\n"
+              "\t@for dir in $(REFERENCED_PROJECT_DIRS); do \\\n"
+              "\t  $(MAKE) -C $$dir $(subst referenced-,,$@) || exit; \\\n"
+              "\tdone; \n\n",
+              (makefile->linkingStrategy && makefile->hierarchical) ? "-all" : "");
       fputs("referenced-dep:\n"
             "\t@for dir in $(REFERENCED_PROJECT_DIRS); do \\\n"
             "\t  $(MAKE) -C $$dir $(subst referenced-,,$@) || exit; \\\n"
@@ -2953,9 +3569,12 @@ static void print_makefile(struct makefile_struct *makefile)
     } else {
       NOTIFY("Makefile skeleton was generated.");
     }
-  } else {
-    ERROR("Output file `%s' already exists. Use switch `-f' to force "
-      "overwrite.", makefile->output_file);
+  } 
+  else {
+    ERROR("Output file `%s' already exists. Use switch `%s' to force "
+      "overwrite.", 
+      makefile->output_file,
+      makefile->linkingStrategy ? "-F" : "-f");
   }
 }
 
@@ -2977,7 +3596,8 @@ static void run_makefilegen_commands(struct string2_list* run_command_list)
       rv = set_working_dir(sub_proj_effective_work_dir);
       if (rv) ERROR("Could not set working dir to `%s'", sub_proj_effective_work_dir);
       else {
-        printf("Executing `%s' in working directory `%s'...\n", command, sub_proj_effective_work_dir);
+        fprintf(stderr, "Executing `%s' in working directory `%s'...\n",
+                command, sub_proj_effective_work_dir);
         rv = system(command);
         if (rv) ERROR("Execution failed with error code %d", rv); // TODO: it's not clear what system()'s return codes can be in different situations and platforms
       }
@@ -3015,15 +3635,15 @@ static void generate_symlinks(struct string2_list* create_symlink_list)
  * command line switches. */
 static void generate_makefile(size_t n_arguments, char *arguments[],
   size_t n_other_files, const char *other_files[], const char *output_file,
-  const char *ets_name, boolean gnu_make, boolean single_mode,
+  const char *ets_name, char *project_name, boolean gnu_make, boolean single_mode,
   boolean central_storage, boolean absolute_paths, boolean preprocess,
   boolean dump_makefile_data, boolean force_overwrite, boolean use_runtime_2,
   boolean dynamic, boolean makedepend, boolean coverage,
   const char *code_splitting_mode, const char *tcov_file_name,
-  boolean Lflag, struct string_list* sub_project_dirs, struct string_list* ttcn3_prep_includes,
-  struct string_list* ttcn3_prep_defines, struct string_list* prep_includes, struct string_list* prep_defines,
-  boolean codesplittpd, boolean quietly, boolean disablesubtypecheck, const char* cxxcompiler,
-  const char* optlevel, const char* optflags, boolean disableber, boolean disableraw, boolean disabletext,
+  boolean Lflag, boolean Zflag, boolean Hflag, struct string_list* sub_project_dirs, struct string_list* ttcn3_prep_includes,
+  struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
+  struct string_list* prep_defines, struct string_list* prep_undefines, boolean codesplittpd, boolean quietly, boolean disablesubtypecheck,
+  const char* cxxcompiler, const char* optlevel, const char* optflags, boolean disableber, boolean disableraw, boolean disabletext,
   boolean disablexer, boolean disablejson, boolean forcexerinasn, boolean defaultasomit, boolean gccmsgformat,
   boolean linenumbersonlymsg, boolean includesourceinfo, boolean addsourcelineinfo, boolean suppresswarnings,
   boolean outparamboundness, struct string_list* solspeclibraries, struct string_list* sol8speclibraries,
@@ -3037,6 +3657,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   struct makefile_struct makefile;
   init_makefile_struct(&makefile);
 
+  makefile.project_name = project_name;
   makefile.central_storage = central_storage;
   makefile.gnu_make = gnu_make;
   makefile.preprocess = preprocess;
@@ -3047,11 +3668,15 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   makefile.gcc_dep = gnu_make && !makedepend;
   makefile.coverage = coverage;
   makefile.library = Lflag;
+  makefile.linkingStrategy = Zflag;
+  makefile.hierarchical = Hflag;
   makefile.sub_project_dirs = sub_project_dirs;
   makefile.ttcn3_prep_includes =  ttcn3_prep_includes;
   makefile.ttcn3_prep_defines =  ttcn3_prep_defines;
+  makefile.ttcn3_prep_undefines =  ttcn3_prep_undefines;
   makefile.prep_includes =  prep_includes;
   makefile.prep_defines =  prep_defines;
+  makefile.prep_undefines =  prep_undefines;
   makefile.codesplittpd = codesplittpd;
   makefile.quietly = quietly;
   makefile.disablesubtypecheck = disablesubtypecheck;
@@ -3148,7 +3773,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   }
 
   if (tcov_file_name != NULL) {
-	makefile.tcov_file_name = mputprintf(makefile.tcov_file_name, "-K %s", tcov_file_name);
+    makefile.tcov_file_name = mputprintf(makefile.tcov_file_name, "-K %s", tcov_file_name);
   }
 
   if (makefile.nTTCN3Modules >= 1) {
@@ -3188,7 +3813,6 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   if (dump_makefile_data) dump_makefile_struct(&makefile, 0);
 
   if (error_count == 0) print_makefile(&makefile);
-
   free_makefile_struct(&makefile);
 }
 
@@ -3202,7 +3826,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
 static void usage(void)
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abc" C_flag "dDfFglLmprRstTVwWX] [-K file] [-P dir]"
+    "usage: %s [-abc" C_flag "dDfFglLmprRstTVwWXZ] [-K file] [-P dir]"
     " [-U none|type] [-e ets_name] [-o dir|file]\n"
     "        [-t project_descriptor.tpd [-b buildconfig]]\n"
     "        [-O file] ... module_name ... testport_name ...\n"
@@ -3242,6 +3866,8 @@ static void usage(void)
     "	-P dir:		prints out a file list found in a given TPD relative to the given directory\n"
     "	-X:		generate XML file that describes the TPD hierarchy, use with -r\n"
     "	-W:		prefix working directories with project name\n"
+    "	-Z:		recursive Makefile generation from TPD using object files and dynamic libraries too\n"
+    "	-H:		hierachical Makefile generation from TPD use with -Z\n"
     , program_name, program_name);
 }
 
@@ -3285,10 +3911,11 @@ int main(int argc, char *argv[])
     dxflag = FALSE, fxflag = FALSE, doflag = FALSE,
     gfflag = FALSE, lnflag = FALSE, isflag = FALSE, asflag = FALSE,
     swflag = FALSE, Vflag = FALSE, Dflag = FALSE, Wflag = FALSE,
-    djflag = FALSE;
+    djflag = FALSE, Zflag = FALSE, Hflag = FALSE;
   boolean error_flag = FALSE;
   char *output_file = NULL;
   char *ets_name = NULL;
+  char *project_name = NULL;
   size_t n_other_files = 0;
   const char **other_files = NULL;
   const char *code_splitting_mode = NULL;
@@ -3301,8 +3928,10 @@ int main(int argc, char *argv[])
   struct string2_list* create_symlink_list = NULL;
   struct string_list* ttcn3_prep_includes = NULL;
   struct string_list* ttcn3_prep_defines = NULL;
+  struct string_list* ttcn3_prep_undefines = NULL;
   struct string_list* prep_includes = NULL;
   struct string_list* prep_defines = NULL;
+  struct string_list* prep_undefines = NULL;
   char *cxxcompiler = NULL;
   char *optlevel = NULL;
   char *optflags = NULL;
@@ -3318,6 +3947,7 @@ int main(int argc, char *argv[])
   char* generatorCommandOutput = NULL;
   struct string2_list* target_placement_list = NULL;
   struct string2_list* run_command_list = NULL;
+  struct string2_list* required_configs = NULL;
 
 #ifdef LICENSE
   license_struct lstr;
@@ -3334,7 +3964,7 @@ int main(int argc, char *argv[])
   }
 
   for ( ; ; ) {
-    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:fFgK:o:lLmpP:rRst:TU:vVwWXY");
+    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:fFgK:o:lLmpP:rRst:TU:vVwWXYZH");
     if (c == -1) break;
     switch (c) {
     case 'O':
@@ -3381,6 +4011,9 @@ int main(int argc, char *argv[])
     case 'g':
       SET_FLAG(g);
       break;
+    case 'H':
+      SET_FLAG(H);
+      break;
     case 'o':
       SET_FLAG(o);
       output_file = optarg;
@@ -3401,11 +4034,11 @@ int main(int argc, char *argv[])
       SET_FLAG(P);
       /* Optional arguments with `::' are GNU specific... */
       if (get_path_status(optarg) == PS_DIRECTORY) {
-    	file_list_path = optarg;
+        file_list_path = optarg;
       } else {
-    	ERROR("The -P flag requires a valid directory as its argument "
-    	      "instead of `%s'", optarg);
-    	error_flag = TRUE;
+        ERROR("The -P flag requires a valid directory as its argument "
+              "instead of `%s'", optarg);
+        error_flag = TRUE;
       }
       break;
     case 'r':
@@ -3451,6 +4084,9 @@ int main(int argc, char *argv[])
     case 'X':
       SET_FLAG(X);
       break;
+    case 'Z':
+      SET_FLAG(Z);
+      break;
     default:
       error_flag = TRUE;
       break;
@@ -3463,12 +4099,17 @@ int main(int argc, char *argv[])
     if ( aflag || bflag || cflag || Cflag || dflag || eflag || fflag || Fflag || gflag
       || mflag || oflag || lflag || pflag || Pflag || rflag || Rflag || sflag
       || tflag || Tflag || Vflag || wflag || Xflag || Kflag || Dflag || Wflag || Yflag
-      || n_other_files > 0)
-	    error_flag = TRUE;
+      || Zflag || Hflag || n_other_files > 0)
+      error_flag = TRUE;
   }
 
-  if ((bflag || Dflag || Pflag || Vflag || rflag || Wflag) && !tflag) {
-    ERROR("Using the '-b', '-D', '-P', '-V', '-r' or '-W' option requires the use of the -t' option.");
+  if (Zflag) {
+    if (!gflag) gflag = TRUE; // GNU make
+    if (!cflag) cflag = TRUE; // central sorage 
+  }
+
+  if ((bflag || Dflag || Pflag || Vflag || rflag || Wflag || Zflag) && !tflag) {
+    ERROR("Using the '-b', '-D', '-P', '-V', '-r' 'Z' or '-W' option requires the use of the -t' option.");
     error_flag = TRUE;
   }
 
@@ -3489,6 +4130,16 @@ int main(int argc, char *argv[])
 
   if (Tflag && !rflag) {
     ERROR("Using the '-T' option requires use of the '-r' option.");
+    error_flag = TRUE;
+  }
+
+  if (!Zflag && Hflag) {
+    ERROR("Using the '-H' option requires use of the '-Z' option.");
+    error_flag = TRUE;
+  }
+
+  if (Zflag && !Fflag && !fflag) {
+    ERROR("Using the '-Z' option requires use of the '-F' option.");
     error_flag = TRUE;
   }
 
@@ -3544,12 +4195,18 @@ int main(int argc, char *argv[])
     ttcn3_prep_defines = (struct string_list*)Malloc(sizeof(struct string_list));
     ttcn3_prep_defines->str = NULL;
     ttcn3_prep_defines->next = NULL;
+    ttcn3_prep_undefines = (struct string_list*)Malloc(sizeof(struct string_list));
+    ttcn3_prep_undefines->str = NULL;
+    ttcn3_prep_undefines->next = NULL;
     prep_includes = (struct string_list*)Malloc(sizeof(struct string_list));
     prep_includes->str = NULL;
     prep_includes->next = NULL;
     prep_defines = (struct string_list*)Malloc(sizeof(struct string_list));
     prep_defines->str = NULL;
     prep_defines->next = NULL;
+    prep_undefines = (struct string_list*)Malloc(sizeof(struct string_list));
+    prep_undefines->str = NULL;
+    prep_undefines->next = NULL;
     solspeclibraries = (struct string_list*)Malloc(sizeof(struct string_list));
     solspeclibraries->str = NULL;
     solspeclibraries->next = NULL;
@@ -3593,29 +4250,45 @@ int main(int argc, char *argv[])
     run_command_list->str1 = NULL;
     run_command_list->str2 = NULL;
     run_command_list->next = NULL;
+    required_configs = (struct string2_list*)Malloc(sizeof(struct string2_list));
+    required_configs->str1 = NULL;
+    required_configs->str2 = NULL;
+    required_configs->next = NULL;
+
     tpd_processed = process_tpd(tpd_file_name, tpd_build_config, file_list_path,
-      &argc, &argv, &optind, &ets_name,
+      &argc, &argv, &optind, &ets_name, &project_name,
       &gflag, &sflag, &cflag, &aflag, &pflag,
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
-      create_symlink_list,ttcn3_prep_includes, ttcn3_prep_defines, prep_includes, prep_defines, &csflag, &quflag, &dsflag, &cxxcompiler,
-      &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
+      create_symlink_list,ttcn3_prep_includes, ttcn3_prep_defines,ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csflag, 
+      &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
       &asflag, &swflag, &Yflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
-      linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &generatorCommandOutput, target_placement_list, Wflag, run_command_list);
+      linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &Zflag, &Hflag,
+      &generatorCommandOutput, target_placement_list, Wflag, run_command_list, required_configs);
+
     Free(abs_work_dir);
     if (prj_graph_fp) {
       fprintf(prj_graph_fp, "</project_hierarchy_graph>\n");
       fclose(prj_graph_fp);
     }
-    if (tpd_processed == TPD_FAILED) ERROR("Failed to process %s", tpd_file_name);
+    if (tpd_processed == TPD_FAILED) {
+      ERROR("Failed to process %s", tpd_file_name);
+      exit(EXIT_FAILURE);
+    }
   }
 
   if (!Pflag) {
     run_makefilegen_commands(run_command_list);
     generate_symlinks(create_symlink_list);
+    if (Zflag) {
+      if (Fflag)
+        NOTIFY("Makefile generation from top-level TPD: %s", tpd_file_name);
+      if (!Fflag && fflag)
+        NOTIFY("Makefile generation from lower level TPD: %s", tpd_file_name);
+    }
     generate_makefile(argc - optind, argv + optind, n_other_files, other_files,
-      output_file, ets_name, gflag, sflag, cflag, aflag, pflag, dflag, fflag||Fflag,
-      Rflag, lflag, mflag, Cflag, code_splitting_mode, tcov_file_name, Lflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
-      ttcn3_prep_defines, prep_includes, prep_defines, csflag, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
+      output_file, ets_name, project_name, gflag, sflag, cflag, aflag, pflag, dflag, fflag||Fflag,
+      Rflag, lflag, mflag, Cflag, code_splitting_mode, tcov_file_name, Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
+      ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, csflag, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
       drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, swflag, Yflag, solspeclibraries,
       sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, ttcn3prep, linkerlibraries, additionalObjects,
       linkerlibsearchpath, generatorCommandOutput, target_placement_list);
@@ -3624,8 +4297,10 @@ int main(int argc, char *argv[])
   free_string_list(sub_project_dirs);
   free_string_list(ttcn3_prep_includes);
   free_string_list(ttcn3_prep_defines);
+  free_string_list(ttcn3_prep_undefines);
   free_string_list(prep_includes);
   free_string_list(prep_defines);
+  free_string_list(prep_undefines);
   free_string_list(solspeclibraries);
   free_string_list(sol8speclibraries);
   free_string_list(linuxspeclibraries);
@@ -3637,6 +4312,7 @@ int main(int argc, char *argv[])
 
   Free(generatorCommandOutput);
   free_string2_list(target_placement_list);
+  free_string2_list(required_configs);
 
   Free(other_files);
   if (tpd_processed == TPD_SUCCESS) {
@@ -3655,8 +4331,7 @@ int main(int argc, char *argv[])
     for (E = 0; E < argc; ++E) Free(argv[E]);
     Free(argv);
   }
-  /* check_mem_leak(program_name); not needed when linked to new.cc */
+   /* check_mem_leak(program_name); not needed when linked to new.cc */
   return error_count > 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 }
-
 

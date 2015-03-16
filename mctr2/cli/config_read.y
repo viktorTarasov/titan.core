@@ -69,12 +69,14 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 	char *str_val;
 	BIGNUM *int_val;
 	double float_val;
+  boolean bool_val;
   cf_timestamp_format ts_val;
 	execute_list_item	execute_item_val;
 }
 
 %token ModuleParametersKeyword
 %token LoggingKeyword
+%token ProfilerKeyword
 %token TestportParametersKeyword
 %token ExecuteKeyword
 %token ExternalCommandsKeyword
@@ -163,6 +165,13 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token Re_try /* Retry clashes with an enum in Qt */
 %token Delete
 
+%token DisableProfilerKeyword   "DisableProfiler"
+%token DisableCoverageKeyword   "DisableCoverage"
+%token DatabaseFileKeyword      "DatabaseFile"
+%token AggregateDataKeyword     "AggregateData"
+%token StatisticsFileKeyword    "StatisticsFile"
+%token DisableStatisticsKeyword "DisableStatistics"
+
 %type <int_val> IntegerValue
 %type <float_val> FloatValue KillTimerValue
 %type <str_val> HostName StringValue LogFileName
@@ -219,6 +228,7 @@ ConfigFile:
 Section:
 	ModuleParametersSection
 	| LoggingSection
+  | ProfilerSection
 	| TestportParametersSection
 	| ExecuteSection
 	| ExternalCommandsSection
@@ -676,6 +686,50 @@ LogEventTypesValue:
 MatchVerbosityValue:
 	Compact
 	| Detailed
+;
+
+/*********************** [PROFILER] ********************************/
+
+ProfilerSection:
+  ProfilerKeyword ProfilerSettings
+;
+
+ProfilerSettings:
+  /* empty */
+| ProfilerSettings ProfilerSetting optSemiColon
+;
+
+ProfilerSetting:
+  DisableProfilerSetting
+| DisableCoverageSetting
+| DatabaseFileSetting
+| AggregateDataSetting
+| StatisticsFileSetting
+| DisableStatisticsSetting
+;
+
+DisableProfilerSetting:
+  DisableProfilerKeyword AssignmentChar BooleanValue
+;
+
+DisableCoverageSetting:
+  DisableCoverageKeyword AssignmentChar BooleanValue
+;
+
+DatabaseFileSetting:
+  DatabaseFileKeyword AssignmentChar StringValue { Free($3); }
+;
+
+AggregateDataSetting:
+  AggregateDataKeyword AssignmentChar BooleanValue
+;
+
+StatisticsFileSetting:
+  StatisticsFileKeyword AssignmentChar StringValue { Free($3); }
+;
+
+DisableStatisticsSetting:
+  DisableStatisticsKeyword AssignmentChar BooleanValue
 ;
 
 /******************* [TESTPORT_PARAMETERS] section *******************/

@@ -1241,6 +1241,30 @@ bool SubtypeConstraint::is_length_compatible(const SubtypeConstraint *p_st) cons
   return ((*length_restriction * *(p_st->length_restriction)).is_empty()!=TTRUE);
 }
 
+bool SubtypeConstraint::is_upper_limit_infinity() const
+{
+  if (ST_INTEGER == subtype && integer_st) {
+    return integer_st->is_upper_limit_infinity();
+  }
+  if (ST_FLOAT == subtype && float_st) {
+    return float_st->is_upper_limit_infinity();
+  }
+  return false;
+}
+
+bool SubtypeConstraint::is_lower_limit_infinity() const
+{
+  if (ST_INTEGER == subtype && integer_st) {
+    return integer_st->is_lower_limit_infinity();
+  }
+  
+  if (ST_FLOAT == subtype && float_st) {
+    return float_st->is_lower_limit_infinity();
+  }
+  return false;
+}
+
+
 void SubtypeConstraint::except(const SubtypeConstraint* other)
 {
   if (other==NULL) FATAL_ERROR("SubtypeConstraint::except()");

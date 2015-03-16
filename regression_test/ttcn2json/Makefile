@@ -13,7 +13,7 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = PIPEasp_PortType.ttcn PIPEasp_Types.ttcn PIPEasp_Templates.ttcn Shell.ttcn Testcases.ttcn
+TTCN3_MODULES = PIPEasp_PortType.ttcn PIPEasp_Types.ttcn PIPEasp_Templates.ttcn Shell.ttcn Testcases.ttcn CompareSchemas.ttcn
 
 ASN1_MODULES =
 
@@ -23,14 +23,14 @@ ifdef CODE_SPLIT
 GENERATED_SOURCES := $(foreach file, $(GENERATED_SOURCES:.cc=), $(addprefix $(file), .cc _seq.cc _set.cc  _seqof.cc _setof.cc _union.cc))
 endif
 
-USER_SOURCES = PIPEasp_PT.cc
+USER_SOURCES = PIPEasp_PT.cc f_ext_import_schema.cc
 USER_HEADERS = $(USER_SOURCES:.cc=.hh)
 
 OBJECTS = $(GENERATED_SOURCES:.cc=.o) $(USER_SOURCES:.cc=.o)
 
 TARGET = ttcn2json$(EXESUFFIX)
 
-TEMP_FILES = General_Types.json one.json two.json three.json
+TEMP_FILES = General_Types.json one.json two.json three.json Main.json
 
 all: $(TARGET)
 

@@ -26,8 +26,20 @@ or
 .br
 .B compiler
 .B \-v
+.br
+or
+.br
+.B compiler \-\-ttcn2json
+.RB "[\| " \-jf " \|]"
+.RB "[\| " \-T " \|]"
+module.ttcn ...
+.RB "[\| " \-A " \|]"
+module.asn ...
+.RB "[\| " \-
+schema.json
+.RB " \|]"
 .SH DESCRIPTION
-This manual page is a quick reference for the TTCN-3 and ASN.1 to C++
+This manual page is a quick reference for the TTCN-3 and ASN.1 to C++ (or JSON schema)
 compiler of the TTCN-3 Test Executor. It only summarizes the meaning of
 all command line options. For more details please consult the
 .B Programmer's Technical Reference for TITAN TTCN-3 Test Executor.
@@ -298,6 +310,29 @@ in the list before the dash. If the single dash is not present in the command
 line the compiler will generate code for
 .I all
 modules.
+.TP
+.B \-\-ttcn2json
+Generates a JSON schema from the types defined in the specified TTCN-3 and ASN.1 modules.
+Must always be the first compiler option. From the previously listed options only
+.B \-T
+and
+.B \-A
+can be used, instead the JSON schema generator has options of its own:
+.TP
+.B \-j
+Only types that have JSON coding enabled are included in the schema.
+.TP
+.B \-f
+The schema only validates types that have a JSON encoding or decoding method declared.
+.TP
+.BI \- " file"
+The single dash character as command line argument specifies the name of the generated
+JSON schema file. If it is not present, then the schema file name is generated from
+the name of the first input file (by replacing its suffix with
+.I \.json
+or appending
+.I \.json
+to the end of the file).
 .SH EXIT STATUS
 The compiler exits with a status of zero when no errors were encountered
 during its operation. A status of one will be returned if syntax or

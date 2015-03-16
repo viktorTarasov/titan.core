@@ -513,21 +513,34 @@ namespace Asn {
     asss->add_ass(p_ass);
   }
   
-  void Module::add_types_to_json_schema(JSON_Tokenizer& json)
+  void Module::generate_json_schema(JSON_Tokenizer& json, map<Type*, JSON_Tokenizer>& json_refs)
   {
     // add a new property for this module
-    json.put_next_token(JSON_TOKEN_NAME, modid->get_dispname().c_str());
+    json.put_next_token(JSON_TOKEN_NAME, modid->get_ttcnname().c_str());
     
     // add type definitions into an object
     json.put_next_token(JSON_TOKEN_OBJECT_START);
     
-    // pass the JSON tokenizer onto each type definition
+    // cycle through all type assignments, insert schema segments and references
+    // when needed
     for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
       Common::Assignment* ass = asss->get_ass_byIndex(i);
       if (Common::Assignment::A_TYPE == ass->get_asstype()) {
-        Type* t = ass->get_Type();
-        if (t->has_encoding(Type::CT_JSON)) {
-          t->generate_json_schema(json, false, false);
+        Asn::Assignment* asn_ass = dynamic_cast<Asn::Assignment*>(ass);
+        // skip parameterized types and their instances
+        if (NULL == asn_ass || NULL == asn_ass->get_ass_pard()) {
+          Type* t = ass->get_Type();
+          if (!t->is_pard_type_instance() && t->has_encoding(Type::CT_JSON)) {
+            // insert type's schema segment
+            t->generate_json_schema(json, false, false);
+            
+            if (json_refs_for_all_types && !json_refs.has_key(t)) {
+              // create JSON schema reference for the type
+              JSON_Tokenizer* json_ref = new JSON_Tokenizer;
+              json_refs.add(t, json_ref);
+              t->generate_json_schema_ref(*json_ref);
+            }
+          }
         }
       }
     }
@@ -1192,6 +1205,14 @@ namespace Asn {
   {
     classify_ass(refch);
     return asstype != A_ERROR ? ass->is_asstype(p_asstype, refch) : false;
+  }
+  
+  Ass_pard* Ass_Undef::get_ass_pard() const
+  {
+    if (NULL != ass) {
+      return ass->get_ass_pard();
+    }
+    return ass_pard;
   }
 
   bool Ass_Undef::_error_if_pard()

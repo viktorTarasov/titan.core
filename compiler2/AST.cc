@@ -263,17 +263,10 @@ namespace Common {
     return versions;
   }
   
-  void Modules::add_types_to_json_schema(JSON_Tokenizer& json)
+  void Modules::generate_json_schema(JSON_Tokenizer& json, map<Type*, JSON_Tokenizer>& json_refs)
   {
     for(size_t i = 0; i < mods_v.size(); ++i) {
-      mods_v[i]->add_types_to_json_schema(json);
-    }
-  }
-  
-  void Modules::add_func_to_json_schema(map<Type*, JSON_Tokenizer>& json_refs)
-  {
-    for(size_t i = 0; i < mods_v.size(); ++i) {
-      mods_v[i]->add_func_to_json_schema(json_refs);
+      mods_v[i]->generate_json_schema(json, json_refs);
     }
   }
 
@@ -807,6 +800,12 @@ namespace Common {
               mputprintf(effective_module_functions, "%s\"%s\"",
               		   (effective_module_functions ? ", " : ""), get_modid().get_dispname().c_str());
         }
+        if (profiler_enabled && MOD_TTCN == get_moduletype()) {
+          output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+            "TTCN3_Stack_Depth stack_depth;\n"
+            "ttcn3_prof.enter_function(\"%s\", 0, \"%s\");\n",
+            get_filename(), get_modid().get_dispname().c_str());
+        }
       }
       output->source.static_function_bodies =
         mputstr(output->source.static_function_bodies, output->functions.pre_init);
@@ -843,6 +842,12 @@ namespace Common {
           effective_module_functions =
             mputprintf(effective_module_functions, "%s\"%s\"",
             		   (effective_module_functions ? ", " : ""), get_modid().get_dispname().c_str());
+        }
+        if (profiler_enabled && MOD_TTCN == get_moduletype()) {
+          output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+            "TTCN3_Stack_Depth stack_depth;\n"
+            "ttcn3_prof.enter_function(\"%s\", 0, \"%s\");\n",
+            get_filename(), get_modid().get_dispname().c_str());
         }
       }
       output->source.static_function_bodies =

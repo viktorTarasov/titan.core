@@ -142,6 +142,7 @@ MACRO_REFERENCE_INT \$"{"{WS}{TTCN3IDENTIFIER}{WS}(","{WS}integer{WS})?"}"
 }
 
 "["{WS}LOGGING{WS}"]"             BEGIN(INITIAL);
+"["{WS}PROFILER{WS}"]"            BEGIN(INITIAL);
 "["{WS}EXECUTE{WS}"]"             BEGIN(INITIAL);
 "["{WS}EXTERNAL_COMMANDS{WS}"]"   BEGIN(INITIAL);
 "["{WS}GROUPS{WS}"]"              BEGIN(INITIAL);

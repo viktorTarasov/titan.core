@@ -243,6 +243,7 @@ void Type::generate_code_typedescriptor(output_struct *target)
     case OT_TYPE_DEF:
     case OT_COMP_FIELD:
     case OT_RECORD_OF:
+    case OT_REF_SPEC:
       force_xer = has_encoding(CT_XER); // && (is_ref() || (xerattrib && !xerattrib->empty()));
       break;
     default:
@@ -362,9 +363,19 @@ void Type::generate_code_typedescriptor(output_struct *target)
       case T_UNIVERSALSTRING:
       case T_BMPSTRING:
       case T_VERDICT:
+      case T_NULL:
+      case T_OID:
+      case T_ROID:
+      case T_ANY:
         // use predefined JSON descriptors instead of null pointers for basic types
         target->source.global_vars = mputprintf(target->source.global_vars,
           "&%s_json_, ", gennamejsondescriptor.c_str());
+        break;
+      case T_ENUM_T:
+      case T_ENUM_A:
+        // use a predefined JSON descriptor for enumerated types
+        target->source.global_vars = mputstr(target->source.global_vars,
+          "&ENUMERATED_json_, ");
         break;
       default:
         target->source.global_vars = mputstr(target->source.global_vars,
@@ -389,24 +400,14 @@ void Type::generate_code_typedescriptor(output_struct *target)
         "const TTCN_Typedescriptor_t& %s_descr_ = %s_descr_;\n",
         gennameown_str, gennametypedescriptor.c_str());
     }
-    else {
-      /* In general, we avoid generating a XER descriptor for
-       * "artificial" types. */
-
-      if (ownertype==OT_REF_SPEC) {
-        // A XER descriptor without a TTCN descriptor to own it
-        generate_code_xerdescriptor(target);
-      }
 #ifndef NDEBUG
-      else
-        target->source.global_vars = mputprintf(target->source.global_vars,
-          "// %s_xer_ elided\n", gennameown_str);
-
+    else {
       target->source.global_vars = mputprintf( target->source.global_vars,
         "// %s_descr_ not needed, use %s_descr_\n",
         gennameown_str, gennametypedescriptor.c_str());
-#endif
     } // if(needs_alias())
+#endif
+    
   } // if (gennameown == gennametypedescriptor)
 }
 
@@ -2617,10 +2618,10 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
   // stored if this is a field of a union with the "as value" coding instruction
   if (ownertype == OT_COMP_FIELD) {
     CompField* cf = static_cast<CompField*>(owner);
-    if(as_value || (cf->get_type()->jsonattrib != NULL
-       && cf->get_type()->jsonattrib->alias != NULL)) {
+    if (as_value || (cf->get_type()->jsonattrib != NULL
+        && cf->get_type()->jsonattrib->alias != NULL)) {
       json.put_next_token(JSON_TOKEN_NAME, "originalName");
-      char* field_str = mprintf("\"%s\"", cf->get_name().get_dispname().c_str());
+      char* field_str = mprintf("\"%s\"", cf->get_name().get_ttcnname().c_str());
       json.put_next_token(JSON_TOKEN_STRING, field_str);
       Free(field_str);
     }
@@ -2635,18 +2636,20 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
       Free(alias_str);
     }
   }
-
+  
   // get the type at the end of the reference chain
   Type* last = get_type_refd_last();
   
   // if the type has its own definition and it's embedded in another type, then
   // its schema already exists, only add a reference to it
-  if (embedded && (last->ownertype == OT_TYPE_DEF /* TTCN-3 type definition */
+  // exception: instances of ASN.1 parameterized types, always embed their schemas
+  if (embedded && (!is_ref() || !get_type_refd()->pard_type_instance) &&
+      (last->ownertype == OT_TYPE_DEF /* TTCN-3 type definition */
       || last->ownertype == OT_TYPE_ASS /* ASN.1 type assignment */ )) {
     json.put_next_token(JSON_TOKEN_NAME, "$ref");
     char* ref_str = mprintf("\"#/definitions/%s/%s\"",
-      last->my_scope->get_scope_mod()->get_modid().get_dispname().c_str(),
-      last->get_dispname().c_str());
+      last->my_scope->get_scope_mod()->get_modid().get_ttcnname().c_str(),
+      (is_ref() && last->pard_type_instance) ? get_type_refd()->get_dispname().c_str() : last->get_dispname().c_str());
     json.put_next_token(JSON_TOKEN_STRING, ref_str);
     Free(ref_str);
   } else {
@@ -2685,15 +2688,17 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
     case T_BSTR_A:
     case T_HSTR:
     case T_OSTR:
+    case T_ANY:
       // use the JSON string type and add a pattern to only allow bits or hex digits
       json.put_next_token(JSON_TOKEN_NAME, "type");
       json.put_next_token(JSON_TOKEN_STRING, "\"string\"");
       json.put_next_token(JSON_TOKEN_NAME, "subType");
-      json.put_next_token(JSON_TOKEN_STRING, (last->typetype == T_OSTR) ? "\"octetstring\"" :
+      json.put_next_token(JSON_TOKEN_STRING, 
+        (last->typetype == T_OSTR || last->typetype == T_ANY) ? "\"octetstring\"" :
         ((last->typetype == T_HSTR) ? "\"hexstring\"" : "\"bitstring\""));
       json.put_next_token(JSON_TOKEN_NAME, "pattern");
       json.put_next_token(JSON_TOKEN_STRING, 
-        (last->typetype == T_OSTR) ? "\"^([0-9A-Fa-f][0-9A-Fa-f])*$\"" :
+        (last->typetype == T_OSTR || last->typetype == T_ANY) ? "\"^([0-9A-Fa-f][0-9A-Fa-f])*$\"" :
         ((last->typetype == T_HSTR) ? "\"^[0-9A-Fa-f]*$\"" : "\"^[01]*$\""));
       break;
     case T_CSTR:
@@ -2723,6 +2728,15 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
       json.put_next_token(JSON_TOKEN_NAME, "subType");
       json.put_next_token(JSON_TOKEN_STRING, "\"universal charstring\"");
       break;
+    case T_OID:
+    case T_ROID:
+      json.put_next_token(JSON_TOKEN_NAME, "type");
+      json.put_next_token(JSON_TOKEN_STRING, "\"string\"");
+      json.put_next_token(JSON_TOKEN_NAME, "subType");
+      json.put_next_token(JSON_TOKEN_STRING, "\"objid\"");
+      json.put_next_token(JSON_TOKEN_NAME, "pattern");
+      json.put_next_token(JSON_TOKEN_STRING, "\"^[0-2][.][1-3]?[0-9]([.][0-9]|([1-9][0-9]+))*$\"");
+      break;
     case T_VERDICT:
       // enumerate the possible values
       json.put_next_token(JSON_TOKEN_NAME, "enum");
@@ -2739,8 +2753,8 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
       // enumerate the possible values
       json.put_next_token(JSON_TOKEN_NAME, "enum");
       json.put_next_token(JSON_TOKEN_ARRAY_START);
-      for (size_t i = 0; i < u.enums.eis->get_nof_eis(); ++i) {
-        char* enum_str = mprintf("\"%s\"", get_ei_byIndex(i)->get_name().get_dispname().c_str());
+      for (size_t i = 0; i < last->u.enums.eis->get_nof_eis(); ++i) {
+        char* enum_str = mprintf("\"%s\"", last->get_ei_byIndex(i)->get_name().get_ttcnname().c_str());
         json.put_next_token(JSON_TOKEN_STRING, enum_str);
         Free(enum_str);
       }
@@ -2748,12 +2762,17 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
       // list the numeric values for the enumerated items
       json.put_next_token(JSON_TOKEN_NAME, "numericValues");
       json.put_next_token(JSON_TOKEN_ARRAY_START);
-      for (size_t i = 0; i < u.enums.eis->get_nof_eis(); ++i) {
-        char* num_val_str = mprintf("%lli", get_ei_byIndex(i)->get_value()->get_val_Int()->get_val());
+      for (size_t i = 0; i < last->u.enums.eis->get_nof_eis(); ++i) {
+        char* num_val_str = mprintf("%lli", last->get_ei_byIndex(i)->get_value()->get_val_Int()->get_val());
         json.put_next_token(JSON_TOKEN_NUMBER, num_val_str);
         Free(num_val_str);
       }
       json.put_next_token(JSON_TOKEN_ARRAY_END);
+      break;
+    case T_NULL:
+      // use the JSON null value for the ASN.1 NULL type
+      json.put_next_token(JSON_TOKEN_NAME, "type");
+      json.put_next_token(JSON_TOKEN_STRING, "\"null\"");
       break;
     case T_SEQOF:
     case T_SETOF:
@@ -2769,6 +2788,7 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
     case T_CHOICE_T:
     case T_CHOICE_A:
     case T_ANYTYPE:
+    case T_OPENTYPE:
       last->generate_json_schema_union(json);
       break;
     default:
@@ -2862,17 +2882,20 @@ void Type::generate_json_schema_record(JSON_Tokenizer& json)
     // use the field's alias if it has one
     json.put_next_token(JSON_TOKEN_NAME, 
       (field->jsonattrib != NULL && field->jsonattrib->alias != NULL) ?
-      field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_dispname().c_str());
+      field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_ttcnname().c_str());
     
     // optional fields can also get the JSON null value
     if (get_comp_byIndex(i)->get_is_optional()) {
-      json.put_next_token(JSON_TOKEN_OBJECT_START);
-      json.put_next_token(JSON_TOKEN_NAME, "anyOf");
-      json.put_next_token(JSON_TOKEN_ARRAY_START);
-      json.put_next_token(JSON_TOKEN_OBJECT_START);
-      json.put_next_token(JSON_TOKEN_NAME, "type");
-      json.put_next_token(JSON_TOKEN_STRING, "\"null\"");
-      json.put_next_token(JSON_TOKEN_OBJECT_END);
+      // special case: ASN NULL type, since it uses the JSON literal "null" as a value
+      if (T_NULL != field->get_type_refd_last()->typetype) {
+        json.put_next_token(JSON_TOKEN_OBJECT_START);
+        json.put_next_token(JSON_TOKEN_NAME, "anyOf");
+        json.put_next_token(JSON_TOKEN_ARRAY_START);
+        json.put_next_token(JSON_TOKEN_OBJECT_START);
+        json.put_next_token(JSON_TOKEN_NAME, "type");
+        json.put_next_token(JSON_TOKEN_STRING, "\"null\"");
+        json.put_next_token(JSON_TOKEN_OBJECT_END);
+      }
     } else if (!has_non_optional) {
       has_non_optional = true;
     }
@@ -2882,7 +2905,8 @@ void Type::generate_json_schema_record(JSON_Tokenizer& json)
     
     // for optional fields: specify the presence of the "omit as null" coding instruction
     // and close structures
-    if (get_comp_byIndex(i)->get_is_optional()) {
+    if (get_comp_byIndex(i)->get_is_optional() &&
+        T_NULL != field->get_type_refd_last()->typetype) {
       json.put_next_token(JSON_TOKEN_ARRAY_END);
       json.put_next_token(JSON_TOKEN_NAME, "omitAsNull");
       json.put_next_token((field->jsonattrib != NULL && field->jsonattrib->omit_as_null) ?
@@ -2907,7 +2931,7 @@ void Type::generate_json_schema_record(JSON_Tokenizer& json)
       // use the field's alias if it has one
       char* field_str = mprintf("\"%s\"", 
         (field->jsonattrib != NULL && field->jsonattrib->alias != NULL) ?
-        field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_dispname().c_str());
+        field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_ttcnname().c_str());
       json.put_next_token(JSON_TOKEN_STRING, field_str);
       Free(field_str);
     }
@@ -2924,7 +2948,7 @@ void Type::generate_json_schema_record(JSON_Tokenizer& json)
         // use the field's alias if it has one
         char* field_str = mprintf("\"%s\"", 
           (field->jsonattrib != NULL && field->jsonattrib->alias != NULL) ?
-          field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_dispname().c_str());
+          field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_ttcnname().c_str());
         json.put_next_token(JSON_TOKEN_STRING, field_str);
         Free(field_str);
       }
@@ -2959,7 +2983,7 @@ void Type::generate_json_schema_union(JSON_Tokenizer& json)
       // use the alternative's alias if it has one
       json.put_next_token(JSON_TOKEN_NAME, 
         (field->jsonattrib != NULL && field->jsonattrib->alias != NULL) ?
-        field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_dispname().c_str());
+        field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_ttcnname().c_str());
       
       // let the alternative's type insert its schema
       field->generate_json_schema(json, true, false);
@@ -2977,7 +3001,7 @@ void Type::generate_json_schema_union(JSON_Tokenizer& json)
       // use the alternative's alias here as well
       char* field_str = mprintf("\"%s\"", 
         (field->jsonattrib != NULL && field->jsonattrib->alias != NULL) ?
-        field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_dispname().c_str());
+        field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_ttcnname().c_str());
       json.put_next_token(JSON_TOKEN_STRING, field_str);
       Free(field_str);
       
@@ -2990,6 +3014,23 @@ void Type::generate_json_schema_union(JSON_Tokenizer& json)
   // close the "anyOf" array
   json.put_next_token(JSON_TOKEN_ARRAY_END);
 }
+
+void Type::generate_json_schema_ref(JSON_Tokenizer& json) 
+{
+  // start the object containing the reference
+  json.put_next_token(JSON_TOKEN_OBJECT_START);
+  
+  // insert the reference
+  json.put_next_token(JSON_TOKEN_NAME, "$ref");
+  char* ref_str = mprintf("\"#/definitions/%s/%s\"",
+    my_scope->get_scope_mod()->get_modid().get_ttcnname().c_str(),
+    get_dispname().c_str());
+  json.put_next_token(JSON_TOKEN_STRING, ref_str);
+  Free(ref_str);
+  
+  // the object will be closed later, as it may contain other properties
+}
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

@@ -64,6 +64,11 @@ extern const TTCN_JSONdescriptor_t IA5String_json_;
 extern const TTCN_JSONdescriptor_t TeletexString_json_;
 extern const TTCN_JSONdescriptor_t VideotexString_json_;
 extern const TTCN_JSONdescriptor_t VisibleString_json_;
+extern const TTCN_JSONdescriptor_t ASN_NULL_json_;
+extern const TTCN_JSONdescriptor_t OBJID_json_;
+extern const TTCN_JSONdescriptor_t ASN_ROID_json_;
+extern const TTCN_JSONdescriptor_t ASN_ANY_json_;
+extern const TTCN_JSONdescriptor_t ENUMERATED_json_;
 
 /** JSON decoder error codes */
 enum json_decode_error {

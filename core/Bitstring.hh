@@ -172,8 +172,8 @@ public:
   int RAW_decode(const TTCN_Typedescriptor_t& , TTCN_Buffer&, int, raw_order_t,
      boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
 
-  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int) const;
-  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int);
+  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const;
+  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, embed_values_dec_struct_t*);
   
   /** Encodes accordingly to the JSON encoding rules.
     * Returns the length of the encoded data. */

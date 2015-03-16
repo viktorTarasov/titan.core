@@ -517,6 +517,38 @@ testcase tc_asn_complex() runs on MTC {
   f_bool2verdict(match(f_dec_complex(os), c_set_val));
 }
 
+// ====== Special ASN.1 types ======
+// record containing an open type and a possible NULL value
+testcase tc_asn_open_type_and_null() runs on MTC {
+  var HasPardType x := {
+    pard := {
+      id := 0,
+      priority := low,
+      val := { iNTEGER := 19 }
+    },
+    buul := true,
+    price := { invaluable := NULL }
+  };
+  var octetstring os := char2oct("{\"pard\":{\"id\":0,\"priority\":\"low\",\"val\":{\"iNTEGER\":19}},\"buul\":true,\"price\":{\"invaluable\":null}}");
+  f_check_encoding(encoded := f_enc_hpt(x), expected := os);
+  f_bool2verdict(match(f_dec_hpt(os), x));
+}
+
+// SEQUENCE containing an object identifier and an ANY type
+testcase tc_asn_objid_and_any() runs on MTC {
+  var octetstring os := char2oct(c_obj_str);
+  f_check_encoding(encoded:= f_enc_obj(c_obj), expected := os);
+  f_bool2verdict(match(f_dec_obj(os), c_obj));
+}
+
+testcase tc_asn_optional_null() runs on MTC {
+  var octetstring os := char2oct(c_null_str);
+  f_check_encoding(encoded:= f_enc_null(c_null), expected := os);
+  f_bool2verdict(match(f_dec_null(os), c_null));
+  os := char2oct(c_not_null_str);
+  f_check_encoding(encoded:= f_enc_null(c_not_null), expected := os);
+  f_bool2verdict(match(f_dec_null(os), c_not_null));
+}
 
 //=========================================================================
 // Control
@@ -572,6 +604,10 @@ control {
   execute(tc_asn_choice());
   execute(tc_asn_strings());
   execute(tc_asn_complex());
+
+  execute(tc_asn_open_type_and_null());
+  execute(tc_asn_objid_and_any());
+  execute(tc_asn_optional_null());
 }
 
 

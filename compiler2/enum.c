@@ -605,7 +605,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
 
     src = mputprintf(src,
       "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,"
-      " unsigned int p_flavor, int p_indent) const\n"
+      " unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const\n"
       "{\n"
       "  int encoded_length=(int)p_buf.get_len();\n"
       "  const boolean e_xer = is_exer(p_flavor);\n"
@@ -643,7 +643,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "// written by %s in " __FILE__ " at %d\n"
 #endif
       "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,"
-      " unsigned int p_flavor)\n"
+      " unsigned int p_flavor, embed_values_dec_struct_t*)\n"
       "{\n"
       "  int rd_ok = 1, type;\n"
 

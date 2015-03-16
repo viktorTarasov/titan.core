@@ -232,6 +232,12 @@ namespace Common {
             mputprintf(effective_module_functions, "%s\"%s\"",
             		   (effective_module_functions ? ", " : ""), entityname);
       }
+      if (profiler_enabled) {
+        str = mputprintf(str,
+          "TTCN3_Stack_Depth stack_depth;\n"
+          "ttcn3_prof.enter_function(\"%s\", %d, \"%s\");\n",
+          filename, yyloc.first_line, entityname);
+      }
     }
     return str;
   }
@@ -242,6 +248,10 @@ namespace Common {
       if (include_location_info && !transparency) {
         str = mputprintf(str, "current_location.update_lineno(%d);\n",
                          yyloc.first_line);
+        if (profiler_enabled) {
+          str = mputprintf(str, "ttcn3_prof.execute_line(\"%s\", %d);\n",
+                  get_filename(), yyloc.first_line);
+        }
         if (tcov_file_name && in_tcov_files(get_filename())) {
             effective_module_lines =
               mputprintf(effective_module_lines, "%s%d",
@@ -544,9 +554,9 @@ namespace Common {
     else return false;
   }
 
-  Type *Scope::get_mtc_system_comptype(bool is_system, bool is_connecting)
+  Type *Scope::get_mtc_system_comptype(bool is_system)
   {
-    if (parent_scope) return parent_scope->get_mtc_system_comptype(is_system, is_connecting);
+    if (parent_scope) return parent_scope->get_mtc_system_comptype(is_system);
     else return 0;
   }
 

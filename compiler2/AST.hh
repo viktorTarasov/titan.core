@@ -116,14 +116,15 @@ namespace Common {
     void generate_code(CodeGenHelper& cgh);
     void dump(unsigned level=1) const;
     
-    /** Generates JSON schema segments for the types defined in the modules
-      * and adds them to the JSON schema parameter. */
-    void add_types_to_json_schema(JSON_Tokenizer& json);
-    
-    /** Generates JSON schemas containing references to the types defined in the
-      * modules. Information related to the types' JSON encoding and decoding
-      * functions is also inserted after the references. */
-    void add_func_to_json_schema(map<Type*, JSON_Tokenizer>& json_refs);
+    /** Generates JSON schema segments for the types defined in the modules,
+      * and references to these types. Information related to the types' 
+      * JSON encoding and decoding functions is also inserted after the references.
+      *
+      * @param json JSON document containing the main schema, schema segments for 
+      * the types will be inserted here
+      * @param json_refs map of JSON documents containing the references and function
+      * info related to each type */
+    void generate_json_schema(JSON_Tokenizer& json, map<Type*, JSON_Tokenizer>& json_refs);
   };
 
   /**
@@ -391,15 +392,15 @@ namespace Common {
     void generate_code(CodeGenHelper& cgh);
     virtual void dump(unsigned level) const;
     
-    /** Generates JSON schema segments for the types defined in the module
-      * and adds them to the JSON schema parameter. */
-    virtual void add_types_to_json_schema(JSON_Tokenizer&) = 0;
-    
-    /** Generates JSON schemas containing references to the types that have JSON
-      * encoding and/or decoding functions declared in the module. Information 
-      * related to these functions is also inserted after the references
-      * (only for TTCN-3 modules). */
-    virtual void add_func_to_json_schema(map<Type*, JSON_Tokenizer>&) = 0;
+    /** Generates JSON schema segments for the types defined in the modules,
+      * and references to these types. Information related to the types' 
+      * JSON encoding and decoding functions is also inserted after the references.
+      *
+      * @param json JSON document containing the main schema, schema segments for 
+      * the types will be inserted here
+      * @param json_refs map of JSON documents containing the references and function
+      * info related to each type */
+    virtual void generate_json_schema(JSON_Tokenizer& json, map<Type*, JSON_Tokenizer>& json_refs) = 0;
   };
 
   /**

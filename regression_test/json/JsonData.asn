@@ -19,8 +19,10 @@ IMPORTS ;
 -- Type definitions --
 ----------------------
 
+-- Sequence of
 SeqOfInt ::= SEQUENCE OF INTEGER
 
+-- Sequence
 SeqProduct ::= SEQUENCE {
   name UniversalString,
   price REAL,
@@ -28,12 +30,14 @@ SeqProduct ::= SEQUENCE {
   available BOOLEAN
 }
 
+-- Choice
 Number ::= CHOICE {
   decimal INTEGER,
   binary BIT STRING,
   hexadecimal OCTET STRING
 }
 
+-- Choice containing all string types
 AnyString ::= CHOICE {
   generalstr GeneralString,
   numericstr NumericString,
@@ -48,13 +52,92 @@ AnyString ::= CHOICE {
   visiblestr VisibleString
 }
 
+-- Sequence of strings
 ManyStrings ::= SEQUENCE OF AnyString
 
+-- Set containing all of the above
 ComplexSet ::= SET {
   product SeqProduct,
   numbers SET OF Number,
   strings ManyStrings
 }
+
+Priority        ::= ENUMERATED { low, normal, medium, high, urgent }
+
+Conditionality  ::= ENUMERATED { optional, conditional, mandatory }
+
+ProtocolElem-ID   ::= INTEGER (0..65535)
+
+-- IOC
+PROTOCOL-ELEMS ::= CLASS
+{
+    &id             ProtocolElem-ID UNIQUE,
+    &priority       Priority,
+    &Value,
+    &conditionality Conditionality
+}
+WITH SYNTAX
+{
+    ID                  &id
+    PRIORITY            &priority
+    TYPE                &Value
+    CONDITIONALITY      &conditionality
+}
+
+-- parameterized type
+ProtocolElem-Field {PROTOCOL-ELEMS : ElemsSetParam} ::= SEQUENCE
+{
+    id                  PROTOCOL-ELEMS.&id            ({ElemsSetParam}),
+    priority            PROTOCOL-ELEMS.&priority      ({ElemsSetParam}{@id}),
+    val                 PROTOCOL-ELEMS.&Value         ({ElemsSetParam}{@id})
+}
+
+
+-- Information objects
+ies-Set-Element-1 PROTOCOL-ELEMS ::=
+{
+    ID 0
+    PRIORITY low
+    TYPE INTEGER
+    CONDITIONALITY mandatory
+}
+
+ies-Set-Element-2 PROTOCOL-ELEMS ::=
+{
+    ID 1
+    PRIORITY high
+    TYPE IA5String
+    CONDITIONALITY optional
+}
+-- Information Object Set
+Elems-Set PROTOCOL-ELEMS ::= { ies-Set-Element-1 | ies-Set-Element-2 }
+
+
+-- instantiation
+ProtocolElem-Field1 ::= ProtocolElem-Field {{Elems-Set}}
+
+ProtocolElem-Field2 ::= ProtocolElem-Field {{ies-Set-Element-2 }}
+
+-- Choice containing NULL
+Price ::= CHOICE
+{
+  value REAL,
+  invaluable NULL
+}
+
+-- Sequence containing an object identifier and an ANY type
+Object ::= SEQUENCE
+{
+  id OBJECT IDENTIFIER,
+  data ANY
+}
+
+-- Sequence containing an optional NULL field
+HasNull ::= SEQUENCE
+{
+  theNull NULL OPTIONAL
+}
+
 
 -- Values and their encoding --
 -------------------------------
@@ -113,5 +196,20 @@ c-set-val ComplexSet ::= {
 }
 
 c-set-val-str VisibleString ::= "{""product"":{""name"":""Headset"",""price"":28.500000,""available"":false},""numbers"":[{""hexadecimal"":""16678D""},{""decimal"":12}],""strings"":[{""printablestr"":""first""},{""numericstr"":""2""}]}"
+
+-- Object
+c-obj Object ::= {
+  id { joint-iso-itu-t remote-operations(4) informationObjects(5) version1(0) },
+  data 'DEADBEEF'H
+}
+
+c-obj-str VisibleString ::= "{""id"":""2.4.5.0"",""data"":""DEADBEEF""}"
+
+-- HasNull
+c-null HasNull ::= { theNull NULL }
+c-not-null HasNull ::= {}
+
+c-null-str VisibleString ::= "{""theNull"":null}"
+c-not-null-str VisibleString ::= "{}"
 
 END

@@ -36,31 +36,32 @@ void Ttcn2Json::create_schema(JSON_Tokenizer& json)
   json.put_next_token(JSON_TOKEN_NAME, "definitions");
   json.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
   
-  // insert module names and schemas for types
-  modules->add_types_to_json_schema(json);
+  // insert module names and schemas for types; gather references to types and
+  // JSON encoding/decoding function information
+  map<Common::Type*, JSON_Tokenizer> json_refs;
+  modules->generate_json_schema(json, json_refs);
   
   // end of type definitions
   json.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
-  
-  // top-level "anyOf" structure containing references to the types the schema validates
-  json.put_next_token(JSON_TOKEN_NAME, "anyOf");
-  json.put_next_token(JSON_TOKEN_ARRAY_START, NULL);
-  
-  // gather type references and JSON encoding/decoding function data
-  map<Common::Type*, JSON_Tokenizer> json_refs;
-  modules->add_func_to_json_schema(json_refs);
-  
-  // close schema segments and add them to the main schema
-  for (size_t i = 0; i < json_refs.size(); ++i) {
-    JSON_Tokenizer* segment = json_refs.get_nth_elem(i);
-    segment->put_next_token(JSON_TOKEN_OBJECT_END, NULL);
-    insert_schema(json, *segment);
-    delete segment;
+
+  if (!json_refs.empty()) {
+    // top-level "anyOf" structure containing references to the types the schema validates
+    // don't insert an empty "anyOf" if there are no references
+    json.put_next_token(JSON_TOKEN_NAME, "anyOf");
+    json.put_next_token(JSON_TOKEN_ARRAY_START, NULL);
+
+    // close schema segments and add them to the main schema
+    for (size_t i = 0; i < json_refs.size(); ++i) {
+      JSON_Tokenizer* segment = json_refs.get_nth_elem(i);
+      segment->put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+      insert_schema(json, *segment);
+      delete segment;
+    }
+    json_refs.clear();
+
+    // end of the "anyOf" structure
+    json.put_next_token(JSON_TOKEN_ARRAY_END, NULL);
   }
-  json_refs.clear();
-  
-  // end of the "anyOf" structure
-  json.put_next_token(JSON_TOKEN_ARRAY_END, NULL);
   
   // top-level object end
   json.put_next_token(JSON_TOKEN_OBJECT_END, NULL);

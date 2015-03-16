@@ -33,7 +33,8 @@ extern unsigned int nof_notupdated_files;
 extern boolean generate_skeleton, force_overwrite, include_line_info,
   include_location_info, duplicate_underscores, parse_only, semantic_check_only,
   output_only_linenum, default_as_optional, use_runtime_2, gcc_compat, asn1_xer,
-  check_subtype, suppress_context, enable_set_bound_out_param, display_up_to_date;
+  check_subtype, suppress_context, enable_set_bound_out_param, display_up_to_date,
+  implicit_json_encoding, json_refs_for_all_types, profiler_enabled;
 
 extern const char *expected_platform;
 

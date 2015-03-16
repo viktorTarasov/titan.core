@@ -1079,7 +1079,7 @@ void UNIVERSAL_CHARSTRING::encode(const TTCN_Typedescriptor_t& p_td,
     default: // nothing to do
       break;
     }
-    XER_encode(*p_td.xer,p_buf, XER_coding, 0);
+    XER_encode(*p_td.xer,p_buf, XER_coding, 0, 0);
     p_buf.put_c('\n');
     break; }
   case TTCN_EncDec::CT_JSON: {
@@ -1126,7 +1126,7 @@ void UNIVERSAL_CHARSTRING::decode(const TTCN_Typedescriptor_t& p_td,
       if (type==XML_READER_TYPE_ELEMENT)
 	break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding);
+    XER_decode(*p_td.xer, reader, XER_coding, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break; }
@@ -1486,7 +1486,7 @@ boolean UNIVERSAL_CHARSTRING::BER_decode_TLV
 extern void xml_escape(const unsigned int c, TTCN_Buffer& p_buf);
 
 int UNIVERSAL_CHARSTRING::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent) const
+    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
@@ -1799,7 +1799,7 @@ in_word_set (const char *str, unsigned int len)
 universal_char const uspace = {0,0,0,32};
 
 int UNIVERSAL_CHARSTRING::XER_decode(const XERdescriptor_t& p_td,
-  XmlReaderWrap& reader, unsigned int flavor)
+  XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1;

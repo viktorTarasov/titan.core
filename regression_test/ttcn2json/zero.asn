@@ -61,14 +61,19 @@ Big-Choice ::= CHOICE {
   strings ManyStrings
 }
 
+Season ::= ENUMERATED {
+  spring (1), summer (2), fall (3), winter (4)
+}
+
 SelectionType ::= numbers < Big-Choice
 
--- non-encodable types
 NullType ::= NULL
 
 ObjIdType ::= OBJECT IDENTIFIER
 
 RelObjIdType ::= RELATIVE-OID
+
+-- non-encodable types
 
 EmbPdvType ::= EMBEDDED PDV
 

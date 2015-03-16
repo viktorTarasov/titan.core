@@ -1729,7 +1729,8 @@ namespace Ttcn {
         vs->add_v(v);
       }
       ret_val = new Value(Value::V_SEQOF, vs);
-      if (gov) ret_val->set_my_governor(gov->get_parent_type());
+      if (gov) gov = gov->get_parent_type();
+      if (gov) ret_val->set_my_governor(gov);
       break; }
     case NAMED_TEMPLATE_LIST: {
       NamedValues *nvs = new NamedValues;
@@ -1744,7 +1745,8 @@ namespace Ttcn {
         nvs->add_nv(nv);
       }
       ret_val = new Value(Value::V_SEQ, nvs);
-      if (gov) ret_val->set_my_governor(gov->get_parent_type());
+      if (gov) gov = gov->get_parent_type();
+      if (gov) ret_val->set_my_governor(gov);
       break; }
     case INDEXED_TEMPLATE_LIST: {
       Values *ivs = new Values(true);
@@ -1759,7 +1761,8 @@ namespace Ttcn {
         ivs->add_iv(iv);
       }
       ret_val = new Value(Value::V_SEQOF, ivs);
-      if (gov) ret_val->set_my_governor(gov->get_parent_type());
+      if (gov) gov = gov->get_parent_type();
+      if (gov) ret_val->set_my_governor(gov);
       break; }
     default:
       FATAL_ERROR("Template::get_Value()");

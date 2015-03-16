@@ -27,6 +27,112 @@ char* str2;
 struct string2_list* next;
 };
 
+#ifdef __cplusplus
+extern "C"
+#endif
+boolean isTopLevelExecutable(const char* projName);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+boolean isDynamicLibrary(const char* key);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+const char* findLibraryPath(const char* libraryName, const char* projName);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+const char* findLibraryName(const char* libraryName, const char* projName);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+void erase_libs();
+
+#ifdef __cplusplus
+extern "C"
+#endif
+const char* getLibFromProject(const char* projName);
+
+#ifdef __cplusplus
+  extern "C"
+#endif
+struct string_list* getExternalLibs(const char* projName);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+struct string_list* getExternalLibPathes(const char* projName);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+struct string2_list* getLinkerLibs(const char* projName);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+struct string_list* getRefWorkingDirs(const char* projName);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+boolean hasExternalLibrary(const char* libName, const char* projName);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+boolean hasSubProject(const char* projName);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+void print_libs();
+
+#ifdef __cplusplus
+extern "C"
+#endif
+boolean isTtcn3ModuleInLibrary(const char* moduleName);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+const char* getTPDFileName(const char* projName);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+const char* getPathToRootDir(const char* projName);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+boolean isAsn1ModuleInLibrary(const char* moduleName);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+boolean isSourceFileInLibrary(const char* fileName);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+boolean isHeaderFileInLibrary(const char* fileName);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+boolean isTtcnPPFileInLibrary(const char* fileName);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+boolean buildObjects(const char* projName, boolean add_referenced);
+
+
 /**
  *
  * @param p_tpd_name filename
@@ -102,7 +208,7 @@ enum
 tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   const char *file_list_path,
   int *argc, char ***argv,
-  int *optind, char **ets_name,
+  int *optind, char **ets_name, char **project_name,
   boolean *gnu_make, boolean *single_mode,
   boolean *central_storage, boolean *absolute_paths,
   boolean *preprocess, boolean *use_runtime_2,
@@ -110,14 +216,15 @@ tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   boolean *library, boolean recursive, boolean force_overwrite, boolean gen_only_top_level,
   const char *output_file, char** abs_work_dir, struct string_list* sub_project_dirs,
   const char* program_name, FILE* prj_graph_fp, struct string2_list* create_symlink_list, struct string_list* ttcn3_prep_includes,
-  struct string_list* ttcn3_prep_defines, struct string_list* prep_includes, struct string_list* prep_defines,
-  boolean *codesplit, boolean *quietly, boolean *disablesubtypecheck, char** cxxcompiler,
-  char** optlevel, char** optflags, boolean *disableber, boolean *disableraw, boolean *disabletext, boolean *disablexer,
+  struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
+  struct string_list* prep_defines, struct string_list* prep_undefines, boolean *codesplit, boolean *quietly, boolean *disablesubtypecheck,
+  char** cxxcompiler, char** optlevel, char** optflags, boolean *disableber, boolean *disableraw, boolean *disabletext, boolean *disablexer,
   boolean *disablejson, boolean *forcexerinasn, boolean *defaultasomit, boolean *gccmessageformat,
   boolean *linenumber, boolean *includesourceinfo, boolean *addsourcelineinfo, boolean *suppresswarnings,
   boolean *outparamboundness, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs,
   char** ttcn3preprocessor, struct string_list* linkerlibs, struct string_list* additionalObjects, struct string_list* linkerlibsearchpath, boolean Vflag, boolean Dflag,
-  char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, struct string2_list* run_command_list);
+  boolean *Zflag, boolean *Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, struct string2_list* run_command_list,
+  struct string2_list* required_configs);
 
 #endif /* XPATHER_H_ */

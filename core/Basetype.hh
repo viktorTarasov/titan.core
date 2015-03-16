@@ -15,6 +15,7 @@
 #include "Vector.hh"
 #ifdef TITAN_RUNTIME_2
 #include "Struct_of.hh"
+#include "XER.hh"
 #endif
 
 struct ASN_BERdescriptor_t;
@@ -25,6 +26,8 @@ struct XERdescriptor_t;
 struct TTCN_JSONdescriptor_t;
 class  XmlReaderWrap;
 class Module_Param;
+struct embed_values_enc_struct_t;
+struct embed_values_dec_struct_t;
 
 /** @brief Type descriptor
  *
@@ -204,7 +207,7 @@ public:
    */
   virtual void set_to_present();
   /** @} */
-
+  
   virtual ~Base_Type() { }
 
 #endif
@@ -444,15 +447,16 @@ public:
    * @param p_buf buffer
    * @param flavor one of XER_flavor values
    * @param indent indentation level
+   * @param emb_val embed values data (only relevant for record of types)
    * @return number of bytes written into the buffer
    */
   VIRTUAL_IF_RUNTIME_2 int XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent) const;
+    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val) const;
 
 #ifdef TITAN_RUNTIME_2
   virtual int XER_encode_negtest(const Erroneous_descriptor_t* /*p_err_descr*/,
     const XERdescriptor_t& /*p_td*/, TTCN_Buffer& /*p_buf*/,
-    unsigned int /*flavor*/, int /*indent*/) const;
+    unsigned int /*flavor*/, int /*indent*/, embed_values_enc_struct_t* /*emb_val*/) const;
 #endif
 
   /** Decode the current object from the supplied buffer.
@@ -482,10 +486,11 @@ public:
    * @param p_td type descriptor
    * @param reader Wrapper around the XML processor
    * @param flavor one of XER_flavor values
+   * @param emb_val embed values data (only relevant for record of types)
    * @return number of bytes "consumed"
    */
   VIRTUAL_IF_RUNTIME_2 int XER_decode(const XERdescriptor_t& p_td,
-    XmlReaderWrap& reader, unsigned int flavor);
+    XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t* emb_val);
 
   /** Return an array of namespace declarations.
    *
@@ -651,15 +656,17 @@ protected:
   } *val_ptr;
   Erroneous_descriptor_t* err_descr;
   
-  /** Stores the indices of elements that are referenced by 'out' and 'inout' parameters.
-    * These elements must not be deleted.*/
-  Vector<int> refd_indices;
-  
-  /** Cached maximum value of \a refd_indices (default: -1).*/
-  int max_refd_index;
+  struct refd_index_struct {
+    /** Stores the indices of elements that are referenced by 'out' and 'inout' parameters.
+      * These elements must not be deleted.*/
+    Vector<int> refd_indices;
+
+    /** Cached maximum value of \a refd_indices (default: -1).*/
+    int max_refd_index;
+  } *refd_ind_ptr;
   
   static boolean compare_function(const Record_Of_Type *left_ptr, int left_index, const Record_Of_Type *right_ptr, int right_index);
-  Record_Of_Type() : val_ptr(NULL), err_descr(NULL), max_refd_index(-1) {}
+  Record_Of_Type() : val_ptr(NULL), err_descr(NULL), refd_ind_ptr(NULL) {}
   Record_Of_Type(null_type other_value);
   Record_Of_Type(const Record_Of_Type& other_value);
   /// Assignment disabled
@@ -765,14 +772,14 @@ public:
   virtual int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, Limit_Token_List&, boolean no_err=FALSE, boolean first_call=TRUE);
 
   virtual int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent) const;
+    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
   virtual int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
-    const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned flavor, int indent) const;
+    const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned flavor, int indent, embed_values_enc_struct_t*) const;
   /// Helper for XER_encode_negtest
   int encode_element(int i, const Erroneous_values_t* err_vals,
     const Erroneous_descriptor_t* emb_descr,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent) const;
-  virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int);
+    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val) const;
+  virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int, embed_values_dec_struct_t*);
   virtual boolean isXerAttribute() const;
   virtual boolean isXmlValueList() const;
   
@@ -905,11 +912,12 @@ public:
   virtual int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, Limit_Token_List&, boolean no_err=FALSE, boolean first_call=TRUE);
 
   virtual int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent) const;
+    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
   virtual int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
     const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent) const;
-  virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int);
+    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+  virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
+    unsigned int, embed_values_dec_struct_t*);
   /// @{
   /// Methods overridden in the derived (generated) class
   virtual int get_xer_num_attr() const { return 0; /* default */ }
@@ -932,7 +940,7 @@ public:
 private:
   /// Helper for XER_encode_negtest
   int encode_field(int i, const Erroneous_values_t* err_vals, const Erroneous_descriptor_t* emb_descr,
-  TTCN_Buffer& p_buf, unsigned int sub_flavor, int indent) const;
+  TTCN_Buffer& p_buf, unsigned int sub_flavor, int indent, embed_values_enc_struct_t* emb_val) const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -978,8 +986,9 @@ public:
   virtual int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, Limit_Token_List&, boolean no_err=FALSE, boolean first_call=TRUE);
 
   virtual int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent) const;
-  virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int);
+    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+  virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
+    unsigned int, embed_values_dec_struct_t*);
   
   /** Encodes accordingly to the JSON encoding rules.
     * Returns the length of the encoded data. */

@@ -37,6 +37,8 @@
 #include "LoggingBits.hh"
 #include "LoggingParam.hh"
 
+#include "Profiler.hh"
+
 #define YYERROR_VERBOSE
 
 #include "config_process.lex.hh"
@@ -128,6 +130,7 @@ string_map_t *config_defines;
 
 %token ModuleParametersKeyword
 %token LoggingKeyword
+%token ProfilerKeyword
 %token TestportParametersKeyword
 %token ExecuteKeyword
 %token ExternalCommandsKeyword
@@ -216,6 +219,12 @@ string_map_t *config_defines;
 %token Retry
 %token Delete
 %token TtcnStringParsingKeyword
+%token DisableProfilerKeyword   "DisableProfiler"
+%token DisableCoverageKeyword   "DisableCoverage"
+%token DatabaseFileKeyword      "DatabaseFile"
+%token AggregateDataKeyword     "AggregateData"
+%token StatisticsFileKeyword    "StatisticsFile"
+%token DisableStatisticsKeyword "DisableStatistics"
 
 %type <int_val> IntegerValue
 %type <float_val> FloatValue
@@ -375,6 +384,7 @@ ConfigFile:
 Section:
 	ModuleParametersSection
 	| LoggingSection
+  | ProfilerSection
 	| TestportParametersSection
 	| ExecuteSection
 	| ExternalCommandsSection
@@ -1660,6 +1670,62 @@ LogEventTypesValue:
 	| Detailed { $$ = TTCN_Logger::LOGEVENTTYPES_SUBCATEGORIES; }
 ;
 
+/*********************** [PROFILER] ********************************/
+
+ProfilerSection:
+  ProfilerKeyword ProfilerSettings
+;
+
+ProfilerSettings:
+  /* empty */
+| ProfilerSettings ProfilerSetting optSemiColon
+;
+
+ProfilerSetting:
+  DisableProfilerSetting
+| DisableCoverageSetting
+| DatabaseFileSetting
+| AggregateDataSetting
+| StatisticsFileSetting
+| DisableStatisticsSetting
+;
+
+DisableProfilerSetting:
+  DisableProfilerKeyword AssignmentChar BooleanValue {
+    ttcn3_prof.set_disable_profiler($3);
+  }
+;
+
+DisableCoverageSetting:
+  DisableCoverageKeyword AssignmentChar BooleanValue {
+    ttcn3_prof.set_disable_coverage($3);
+  }
+;
+
+DatabaseFileSetting:
+  DatabaseFileKeyword AssignmentChar StringValue {
+    ttcn3_prof.set_database_filename($3);
+  }
+;
+
+AggregateDataSetting:
+  AggregateDataKeyword AssignmentChar BooleanValue {
+    ttcn3_prof.set_aggregate_data($3);
+  }
+;
+
+StatisticsFileSetting:
+  StatisticsFileKeyword AssignmentChar StringValue {
+    ttcn3_prof.set_stats_filename($3);
+  }
+;
+
+DisableStatisticsSetting:
+  DisableStatisticsKeyword AssignmentChar BooleanValue {
+    ttcn3_prof.set_disable_stats($3);
+  }
+;
+
 /**************** [TESTPORT_PARAMETERS] ****************************/
 
 TestportParametersSection:
@@ -2140,6 +2206,8 @@ boolean process_config_file(const char *file_name)
 
   string_map_free(config_defines);
   config_defines = NULL;
+
+  ttcn3_prof.init_data_file();
 
   return !error_flag;
 }

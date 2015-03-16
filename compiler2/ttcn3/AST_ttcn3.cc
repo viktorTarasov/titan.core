@@ -2707,28 +2707,37 @@ namespace Ttcn {
     return false;
   }
   
-  void Module::add_types_to_json_schema(JSON_Tokenizer& json)
+  void Module::generate_json_schema(JSON_Tokenizer& json, map<Type*, JSON_Tokenizer>& json_refs)
   {
     // add a new property for this module
-    json.put_next_token(JSON_TOKEN_NAME, modid->get_dispname().c_str());
+    json.put_next_token(JSON_TOKEN_NAME, modid->get_ttcnname().c_str());
     
     // add type definitions into an object
     json.put_next_token(JSON_TOKEN_OBJECT_START);
     
-    // pass the JSON tokenizer onto each type definition
+    // cycle through each type, generate schema segment and reference when needed
     for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
       Def_Type* def = dynamic_cast<Def_Type*>(asss->get_ass_byIndex(i));
       if (def != NULL) {
-        def->generate_json_schema(json);
+        Type* t = def->get_Type();
+        if (t->has_encoding(Type::CT_JSON)) {
+          // insert type's schema segment
+          t->generate_json_schema(json, false, false);
+          
+          if (json_refs_for_all_types && !json_refs.has_key(t)) {
+            // create JSON schema reference for the type
+            JSON_Tokenizer* json_ref = new JSON_Tokenizer;
+            json_refs.add(t, json_ref);
+            t->generate_json_schema_ref(*json_ref);
+          }
+        }
       }
     }
     
     // end of type definitions
     json.put_next_token(JSON_TOKEN_OBJECT_END);
-  }
-  
-  void Module::add_func_to_json_schema(map<Type*, JSON_Tokenizer>& json_refs)
-  {
+    
+    // insert function data
     for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
       Def_ExtFunction* def = dynamic_cast<Def_ExtFunction*>(asss->get_ass_byIndex(i));
       if (def != NULL) {
@@ -3123,13 +3132,6 @@ namespace Ttcn {
       type->set_parent_path(w_attrib_path);
     }
     w_attrib_path->set_parent(p_path);
-  }
-  
-  void Def_Type::generate_json_schema(JSON_Tokenizer& json)
-  {
-    if (type->has_encoding(Type::CT_JSON)) {
-      type->generate_json_schema(json, false, false);
-    }
   }
 
   // =================================
@@ -6729,13 +6731,7 @@ namespace Ttcn {
         // the schema segment doesn't exist yet, create it and insert the reference
         json = new JSON_Tokenizer;
         json_refs.add(type, json);
-        json->put_next_token(JSON_TOKEN_OBJECT_START);
-        json->put_next_token(JSON_TOKEN_NAME, "$ref");
-        char* ref_str = mprintf("\"#/definitions/%s/%s\"",
-          type->get_my_scope()->get_scope_mod()->get_modid().get_dispname().c_str(),
-          type->get_dispname().c_str());
-        json->put_next_token(JSON_TOKEN_STRING, ref_str);
-        Free(ref_str);
+        type->generate_json_schema_ref(*json);
       }
       
       // insert a property to specify which function this is (encoding or decoding)
@@ -9087,7 +9083,7 @@ namespace Ttcn {
     case AP_REF:
       if (gen_restriction_check!=TR_NONE ||
           gen_post_restriction_check!=TR_NONE) return false;
-      if (ref->get_subrefs() != NULL) {
+      if (use_runtime_2 && ref->get_subrefs() != NULL) {
         FieldOrArrayRefs* subrefs = ref->get_subrefs();
         for (size_t i = 0; i < subrefs->get_nof_refs(); ++i) {
           if (FieldOrArrayRef::ARRAY_REF == subrefs->get_ref(i)->get_type()) {
@@ -9488,7 +9484,7 @@ namespace Ttcn {
 	}
       }
       
-      if (ActualPar::AP_REF == par->get_selection()) {
+      if (use_runtime_2 && ActualPar::AP_REF == par->get_selection()) {
         // if the parameter references an element of a record of/set of, then
         // the record of object needs to know, so it doesn't delete the referenced
         // element
@@ -9526,17 +9522,12 @@ namespace Ttcn {
               // let the array object know that the index is referenced before
               // calling the function, and let it know that it's now longer
               // referenced after the function call
-              string tmp_id = ref->get_my_scope()->get_scope_mod_gen()->get_temporary_id();
-              expr->preamble = mputprintf(expr->preamble, 
-                "INTEGER %s = %s;\n"
+              expr->preamble = mputprintf(expr->preamble,
                 "%s.add_refd_index(%s);\n",
-                tmp_id.c_str(), index_expr.expr, array_expr.expr, index_expr.expr);
+                array_expr.expr, index_expr.expr);
               expr->postamble = mputprintf(expr->postamble, 
-                "%s.remove_refd_index(%s);\n"
-                "if (%s >= %s.size_of())  TTCN_warning(\""
-                "Warning: possibly incompatible behaviour related to TR HT24380;"
-                " for details see release notes\");\n",
-                array_expr.expr, index_expr.expr, tmp_id.c_str(), array_expr.expr);
+                "%s.remove_refd_index(%s);\n",
+                array_expr.expr, index_expr.expr);
               // insert any postambles the array object or the index might have
               if (array_expr.postamble != NULL) {
                 expr->preamble = mputstr(expr->preamble, array_expr.postamble);

@@ -16,6 +16,10 @@
 class XmlReaderWrap;
 
 class Base_Type;
+#ifdef TITAN_RUNTIME_2
+class Record_Of_Type;
+class Erroneous_descriptor_t;
+#endif
 class TTCN_Module;
 
 /** @defgroup XER XER codec
@@ -171,7 +175,7 @@ inline bool is_exerlist(unsigned int f)
  * Example:
  * @code
  * int Foo::XER_encode(const XERdescriptor_t& p_td,
- *                     TTCN_Buffer& p_buf, unsigned int flavor, int indent) const {
+ *                     TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const {
  *   int canon = is_canonical(flavor);
  *   if (!canon) do_indent(p_buf, indent);
  *   // output the start tag
@@ -193,7 +197,7 @@ inline bool is_exerlist(unsigned int f)
  *
  * @code
  * int Foo::XER_encode(const XERdescriptor_t& p_td,
- *                     TTCN_Buffer& p_buf, unsigned int flavor, int indent) const {
+ *                     TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const {
  *   int canon = is_canonical(flavor);
  *   if (!canon) do_indent(p_buf, indent);
  *   // output an empty element tag
@@ -251,6 +255,51 @@ struct XERdescriptor_t
     * or invalid ("anyElement except ...") namespace URIs. 
     * The unqualified namespace is marked by an empty string ("").*/
   const char** ns_uris; 
+};
+
+/** Information related to the embedded values in XML encoding
+  * 
+  * Used when a record/set with the EMBED-VALUES coding instruction contains
+  * one or more record of/set of fields. */
+struct embed_values_enc_struct_t
+{
+#ifdef TITAN_RUNTIME_2
+  /** Stores the array of embedded values */
+  const Record_Of_Type* embval_array;
+  /** Stores the erroneous descriptor of the embedded values field (for negative tests) */
+  const Erroneous_descriptor_t* embval_err;
+  /** Error value index for the embedded values (for negative tests) */
+  int embval_err_val_idx;
+  /** Erroneous descriptor index for the embedded values (for negative tests) */
+  int embval_err_descr_idx;
+#else
+  /** Stores the array of embedded values as a Base_Type (use get_embedded_value
+    * to retrieve values - temporarily disabled) */
+  const Base_Type* embval_array;
+  /** Stores the size of the embedded value array */
+  int embval_size;
+#endif
+  /** Stores the index of the next embedded value to be read */
+  int embval_index;
+};
+
+/** Information related to the embedded values in XML decoding
+  * 
+  * Used when a record/set with the EMBED-VALUES coding instruction contains
+  * one or more record of/set of fields. */
+struct embed_values_dec_struct_t
+{
+#ifdef TITAN_RUNTIME_2
+  /** Stores the array of embedded values */
+  Record_Of_Type* embval_array;
+#else
+  /** Stores the array of embedded values as a Base_type (use set_embedded_value
+    * to insert new values - temporarily disabled) */
+  Base_Type* embval_array;
+#endif
+  /** Stores the number of embedded values that are currently in the array,
+    * and the index where the next one should be inserted */
+  int embval_index;
 };
 
 /** Check the name of an XML node against a XER type descriptor.

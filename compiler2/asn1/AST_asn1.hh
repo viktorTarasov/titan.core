@@ -129,7 +129,7 @@ namespace Asn {
     virtual void set_right_scope(Scope *p_scope) =0;
     void set_dontgen() {dontgen=true;}
     /** Returns 0 if assignment is not parameterized! */
-    Ass_pard* get_ass_pard() const { return ass_pard; }
+    virtual Ass_pard* get_ass_pard() const { return ass_pard; }
     /** Returns 0 if this assignment is not parameterized! */
     Assignment* new_instance(Common::Module *p_mod);
     virtual Type* get_Type();
@@ -244,12 +244,13 @@ namespace Asn {
     void add_ass(Assignment *p_ass);
     TagDefault::tagdef_t get_tagdef() const { return tagdef; }
     
-    /** Generates JSON schema segments for the types defined in the module
-      * and adds them to the JSON schema parameter. */
-    virtual void add_types_to_json_schema(JSON_Tokenizer&);
-    
-    /** Does nothing. ASN.1 modules can't contain functions. */
-    virtual void add_func_to_json_schema(map<Type*, JSON_Tokenizer>&) {}
+    /** Generates JSON schema segments for the types defined in the modules,
+      * and references to these types.
+      *
+      * @param json JSON document containing the main schema, schema segments for 
+      * the types will be inserted here
+      * @param json_refs map of JSON documents containing the references to each type */
+    virtual void generate_json_schema(JSON_Tokenizer& json, map<Type*, JSON_Tokenizer>& json_refs);
   };
 
   /**
@@ -442,6 +443,7 @@ namespace Asn {
     virtual void set_my_scope(Scope *p_scope);
     virtual void set_right_scope(Scope *p_scope);
     virtual bool is_asstype(asstype_t p_asstype, ReferenceChain* refch=0);
+    virtual Ass_pard* get_ass_pard() const;
     virtual Setting* get_Setting();
     virtual Type* get_Type();
     virtual Value* get_Value();

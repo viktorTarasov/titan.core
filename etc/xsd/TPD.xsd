@@ -367,13 +367,22 @@ XML Schema for JunitLogger plugin
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="rerquiredConfiguration" minOccurs="1" maxOccurs="1">
-        <xs:simpleType>
-          <xs:restriction base="xs:normalizedString">
-            <xs:minLength value="1" />
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
+      <xs:choice>
+	      <xs:element name="requiredConfiguration" minOccurs="1" maxOccurs="1">
+	        <xs:simpleType>
+	          <xs:restriction base="xs:normalizedString">
+	            <xs:minLength value="1" />
+	          </xs:restriction>
+	        </xs:simpleType>
+	      </xs:element>
+	      <xs:element name="rerquiredConfiguration" minOccurs="1" maxOccurs="1">
+	        <xs:simpleType>
+	          <xs:restriction base="xs:normalizedString">
+	            <xs:minLength value="1" />
+	          </xs:restriction>
+	        </xs:simpleType>
+	      </xs:element>
+      </xs:choice>      
     </xs:sequence>
   </xs:complexType>
 
@@ -453,7 +462,7 @@ XML Schema for JunitLogger plugin
   <xs:complexType name="TopLevelProjectType">
   <!--
   This is an extra indirection level. It adds the "version" attribute to
-  ProjecType and the optional element "PackedReferencedProjects"
+  ProjectType and the optional element "PackedReferencedProjects"
   -->
 	<xs:complexContent>
 		<xs:extension base="ProjectType">         

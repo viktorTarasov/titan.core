@@ -121,7 +121,7 @@ IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
 
 %x SC_blockcomment SC_DEFINE SC_CSTRING SC_ORDERED_INCLUDE
 %s SC_MODULE_PARAMETERS SC_LOGGING SC_TESTPORT_PARAMETERS SC_EXECUTE SC_GROUPS
-%s SC_COMPONENTS SC_EXTERNAL_COMMANDS SC_MAIN_CONTROLLER SC_INCLUDE
+%s SC_COMPONENTS SC_EXTERNAL_COMMANDS SC_MAIN_CONTROLLER SC_INCLUDE SC_PROFILER
 
 %%
 	int comment_caller = INITIAL;
@@ -155,6 +155,13 @@ IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
   if (YY_START!=SC_blockcomment) {
     BEGIN(SC_LOGGING);
     RETURN(LoggingKeyword);
+	}
+}
+
+<*>"["{WS}PROFILER{WS}"]"		{
+  if (YY_START!=SC_blockcomment) {
+    BEGIN(SC_PROFILER);
+    RETURN(ProfilerKeyword);
 	}
 }
 
@@ -390,7 +397,7 @@ ifpresent   RETURN(IfpresentKeyword);
 infinity    RETURN(InfinityKeyword);
 }
 
-<SC_MODULE_PARAMETERS,SC_LOGGING>
+<SC_MODULE_PARAMETERS,SC_LOGGING,SC_PROFILER>
 {
 true	|
 false	RETURN(BooleanValue);
@@ -549,6 +556,16 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
 [Rr]etry  RETURN(Re_try);
 
 [Dd]elete RETURN(Delete);
+}
+
+<SC_PROFILER>
+{
+[Dd]isable[Pp]rofiler   return DisableProfilerKeyword;
+[Dd]isable[Cc]overage   return DisableCoverageKeyword;
+[Dd]ata[Bb]ase[Ff]ile   return DatabaseFileKeyword;
+[Aa]ggregate[Dd]ata     return AggregateDataKeyword;
+[Ss]tatistics[Ff]ile    return StatisticsFileKeyword;
+[Dd]isable[Ss]tatistics return DisableStatisticsKeyword;
 }
 
 <SC_EXECUTE>control		RETURN(ControlKeyword);

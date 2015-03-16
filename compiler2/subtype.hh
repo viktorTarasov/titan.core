@@ -199,6 +199,8 @@ public:
   bool is_compatible_with_elem() const;
   // used to check compatibility of structured types
   bool is_length_compatible(const SubtypeConstraint *p_st) const;
+  bool is_upper_limit_infinity() const;
+  bool is_lower_limit_infinity() const;
 };
 
 /**

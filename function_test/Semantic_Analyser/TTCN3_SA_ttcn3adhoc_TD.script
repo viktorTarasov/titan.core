@@ -8609,4 +8609,35 @@ Temp.control
 <END_TC>
 :exmp.
 
+*-----------------------------------------------------------*
+:h3.Adhoc:: HT23335: Type Infinity is not a valid value for type `integer' which as subtype (-1..65535)  
+.*-----------------------------------------------------------*
+:xmp tab=0.
+<TC - HT23335: Type Infinity is not a valid value for type `integer' which as subtype (-1..65535)>
+
+<COMPILE>
+<VERDICT_LEAF FAIL>
+<MODULE TTCN Temp Temp.ttcn>
+module Temp {
+const integer limes_i := 65535;
+const float limes_f2 := 65535.0;
+const float limes_f1 := -1.0;
+type record MyRecI {
+  integer inum (-1..limes_i)
+};
+type record MyRecF {
+  float fnum (limes_f1..limes_f2)
+};
+
+template MyRecI t1 := { inum := (0..infinity) };
+template MyRecF t2 := { fnum := (-infinity..0.0) };
+
+}
+<END_MODULE>
+<RESULT IF_FAIL COUNT 2>
+(?im)\Infinity is not a valid value for type\b
+<END_RESULT>
+<END_TC>
+:exmp.
+
 :etext.

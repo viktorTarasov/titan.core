@@ -1799,11 +1799,6 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   /* start_at is the index of the first "real" member of the record */
   size_t start_at = uo + (sdef->xerUseOrderPossible != 0);
 
-  /* Max. number of EMBED-VALUES strings. The actual number may change
-   * at runtime: omitted optional (non-attribute) members decrease the
-   * number of embed strings needed, and xsi:nil=true sets it to zero.*/
-  size_t max_embed;
-
   /* Number of optional non-attributes */
   size_t n_opt_elements = 0;
 
@@ -1828,7 +1823,6 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       ++n_opt_elements;
     }
   }
-  max_embed = sdef->nElements - start_at - num_attributes + 1;
 
   /* Write some helper functions */
   def = mputstr(def,
@@ -1904,7 +1898,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   /* * * * * * * * * * XER_encode * * * * * * * * * * * * * * */
   src = mputprintf(src,
     "int %s::XER_encode(const XERdescriptor_t& p_td, "
-    "TTCN_Buffer& p_buf, unsigned int p_flavor, int p_indent) const\n"
+    "TTCN_Buffer& p_buf, unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const\n"
     "{\n"
     "  if (!is_bound()) TTCN_EncDec_ErrorContext::error"
     "(TTCN_EncDec::ET_UNBOUND, \"Encoding an unbound value.\");\n"
@@ -1994,7 +1988,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  if (e_xer && (p_td.xer_bits & USE_QNAME)) {\n"
       "    if (field_%s.is_value()) {\n"
       "      p_buf.put_s(11, (cbyte*)\" xmlns:b0='\");\n"
-      "      field_%s.XER_encode(%s_xer_, p_buf, p_flavor | XER_LIST, p_indent+1);\n"
+      "      field_%s.XER_encode(%s_xer_, p_buf, p_flavor | XER_LIST, p_indent+1, 0);\n"
       "      p_buf.put_c('\\'');\n"
       "    }\n"
       "    if (p_td.xer_bits & XER_ATTRIBUTE) begin_attribute(p_td, p_buf);\n"
@@ -2003,7 +1997,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "      p_buf.put_s(3, (cbyte*)\"b0:\");\n"
       "      sub_len += 3;\n"
       "    }\n"
-      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor | XER_LIST, p_indent+1);\n"
+      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor | XER_LIST, p_indent+1, 0);\n"
       "    if (p_td.xer_bits & XER_ATTRIBUTE) p_buf.put_c('\\'');\n"
       "  } else" /* no newline */
       , sdef->elements[0].name
@@ -2017,12 +2011,10 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   /* First, the EMBED-VALUES member as an ordinary member if not doing EXER */
   if (sdef->xerEmbedValuesPossible) {
     src = mputprintf(src,
-      "  int exp_emb = %u;\n"
       "  if (!e_xer && (p_td.xer_bits & EMBED_VALUES)) {\n"
       "    ec_1.set_msg(\"%s': \");\n"
-      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1);\n"
+      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1, 0);\n"
       "  }\n"
-      , (unsigned int)max_embed
       , sdef->elements[0].dispname
       , sdef->elements[0].name, sdef->elements[0].typegen
     );
@@ -2031,7 +2023,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   if (sdef->xerUseOrderPossible) {
     src = mputprintf(src,
       "  if (!e_xer && (p_td.xer_bits & USE_ORDER)) {\n"
-      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1);\n"
+      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1, 0);\n"
       "  }\n"
       , sdef->elements[uo].name, sdef->elements[uo].typegen
     );
@@ -2067,7 +2059,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     if (i==0 && sdef->xerEmbedValuesPossible && (sdef->elements[i].xerAnyKind & ANY_ATTRIB_BIT)) continue ;
     src = mputprintf(src,
       "  ec_1.set_msg(\"%s': \");\n"
-      "  tmp_len = field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1);\n"
+      "  tmp_len = field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1, 0);\n"
       "  %ssub_len += tmp_len;\n" /* do not add if attribute and EXER */
       , sdef->elements[i].dispname
       , sdef->elements[i].name, sdef->elements[i].typegen
@@ -2098,46 +2090,19 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   }
 
   if (sdef->xerEmbedValuesPossible) {
-    size_t op;
     src = mputprintf(src,
       "  ec_1.set_msg(\"%s': \");\n"
       "  if (e_xer && (p_td.xer_bits & EMBED_VALUES)) {\n"
-      , sdef->elements[0].dispname
-    );
-
-    if (sdef->xerUseNilPossible) {
-      src = mputstr(src, /* 25.2.6 a */
-        "    if ((p_td.xer_bits & USE_NIL) && nil_attribute) exp_emb = 0;\n"
-        "    else {\n");
-    }
-
-    for (op = 0; op < sdef->nElements; ++op) {
-      if (sdef->elements[op].isOptional && !sdef->elements[op].xerAttribute) {
-        src = mputprintf(src,
-          "    if (!field_%s.ispresent()) --exp_emb;\n"
-          , sdef->elements[op].name
-        );
-      }
-    }
-
-    if (sdef->xerUseNilPossible) src = mputstr(src, "    }\n");
-
-    src = mputprintf(src,
-      "    if (field_%s.size_of()!=exp_emb) "
-      "TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_CONSTRAINT, "
-      "\"Wrong number %%d of EMBED-VALUEs, expected %%d\", field_%s.size_of(), exp_emb);\n"
-      , sdef->elements[0].name
-      , sdef->elements[0].name);
     /* write the first string (must come AFTER the attributes) */
-    src = mputprintf(src,
-      "    %ssub_len += field_%s[0].XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1);\n"
+      "    if (field_%s.size_of() > 0) {\n"
+      "      sub_len += field_%s[0].XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+      "    }\n"
       "  }\n"
-      , (sdef->xerUseNilPossible ? "if (exp_emb > 0) " : "")
-      , sdef->elements[0].name);
+      , sdef->elements[0].dispname, sdef->elements[0].name, sdef->elements[0].name);
     if (want_namespaces) { /* here's another chance */
       src = mputprintf(src,
         "  else if ( !(p_td.xer_bits & EMBED_VALUES)) {\n"
-        "    %sfield_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1);\n"
+        "    %sfield_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1, 0);\n"
         "  }\n"
         , ((sdef->elements[0].xerAnyKind & ANY_ATTRIB_BIT) ? "" : "sub_len += " )
         , sdef->elements[0].name, sdef->elements[0].typegen
@@ -2148,6 +2113,17 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   /* Then, all the non-attributes. Structuring the code like this depends on
    * all attributes appearing before all non-attributes (excluding
    * special members for EMBED-VALUES, USE-ORDER, etc.) */
+  if (sdef->xerEmbedValuesPossible) {
+    src = mputprintf(src,
+      "  embed_values_enc_struct_t* emb_val = 0;\n"
+      "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && field_%s.size_of() > 1) {\n"
+      "    emb_val = new embed_values_enc_struct_t;\n"
+      "    emb_val->embval_array = &field_%s;\n"
+      "    emb_val->embval_index = 1;\n"
+      "    emb_val->embval_size = field_%s.size_of();\n"
+      "  }\n", sdef->elements[0].name, sdef->elements[0].name, sdef->elements[0].name);
+  }
+  
   if (sdef->xerUseOrderPossible) {
     int max_ordered = sdef->nElements - start_at - num_attributes;
     int min_ordered = max_ordered - n_opt_elements;
@@ -2169,7 +2145,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputprintf(src,
         "  if (!nil_attribute) {\n"
         "%s"
-        "  if (!e_xer) sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+!omit_tag);\n"
+        "  if (!e_xer) sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+!omit_tag, 0);\n"
         "  else" /* no newline */
         , (sdef->xerUseNilPossible ? "  if (!(p_td.xer_bits & USE_ORDER)) p_flavor |= (p_td.xer_bits & USE_NIL);\n" : "")
         /* If USE-ORDER is on, the tag-removing effect of USE-NIL has been
@@ -2224,7 +2200,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputprintf(src,
         "    case %lu:\n"
         "      ec_1.set_msg(\"%s': \");\n"
-        "      sub_len += field_%s%s%s%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+!omit_tag);\n"
+        "      sub_len += field_%s%s%s%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+!omit_tag, %s);\n"
 
         , (unsigned long)offset++
         , sdef->elements[i].dispname
@@ -2233,7 +2209,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         , (sdef->xerUseNilPossible ? sdef->elements[i].name : "")
         , (sdef->xerUseNilPossible ? "()" : "")
         , sdef->elements[i].typegen
-
+        , sdef->xerEmbedValuesPossible ? "emb_val" : "0"
       );
 
       src = mputstr(src, "    break;\n");
@@ -2246,8 +2222,11 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
 
     if (sdef->xerEmbedValuesPossible) {
       src = mputprintf(src,
-        "    if (e_xer && i+1 < exp_emb && (p_td.xer_bits & EMBED_VALUES)) { // embed-val\n"
-        "      field_%s[i+1].XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1);\n"
+        "    if (e_xer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&\n"
+        "        emb_val->embval_index < emb_val->embval_size) { // embed-val\n"
+        "      field_%s[emb_val->embval_index].XER_encode(\n"
+        "        UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+        "      ++emb_val->embval_index;\n"
         "    }\n"
         , sdef->elements[0].name);
     }
@@ -2267,21 +2246,37 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         , sdef->elements[i].dispname
       );
       src = mputprintf(src,
-        "  sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor%s, p_indent+!omit_tag);\n"
+        "  sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor%s, p_indent+!omit_tag, %s);\n"
         , sdef->elements[i].name, sdef->elements[i].typegen
         , sdef->xerUseNilPossible ? "| (p_td.xer_bits & USE_NIL)" : ""
+        , sdef->xerEmbedValuesPossible ? "emb_val" : "0"
       );
 
       if (sdef->xerEmbedValuesPossible) {
-        unsigned long idx = i - start_at - num_attributes + 1;
         src = mputprintf(src,
-          "  if (e_xer && exp_emb > %lu && (p_td.xer_bits & EMBED_VALUES)) {\n"
-          "    field_%s[%lu].XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1);\n"
+          "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&\n"
+          "      emb_val->embval_index < emb_val->embval_size) {\n"
+          "    field_%s[emb_val->embval_index].XER_encode(\n"
+          "      UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+          "    ++emb_val->embval_index;\n"
           "  }\n"
-          , idx
-          , sdef->elements[0].name, idx);
+          , sdef->elements[0].name);
       }
     } /* next field when not USE-ORDER */
+
+  if (sdef->xerEmbedValuesPossible) {
+    src = mputprintf(src,
+      "  if (0 != emb_val) {\n"
+      "    if (emb_val->embval_index < emb_val->embval_size) {\n"
+      "      ec_1.set_msg(\"%s': \");\n"
+      "      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_CONSTRAINT,\n"
+      "        \"Too many EMBED-VALUEs specified: %%d (expected %%d or less)\",\n"
+      "        emb_val->embval_size, emb_val->embval_index);\n"
+      "    }\n"
+      "    delete emb_val;\n"
+      "  }\n"
+      , sdef->elements[0].name);
+  }
 
   src = mputstr(src, "  } // QN?\n");
 
@@ -2335,7 +2330,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
 
   src = mputprintf(src, /* XERSTUFF decodegen for record/SEQUENCE*/
     "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,"
-    " unsigned int p_flavor)\n"
+    " unsigned int p_flavor, embed_values_dec_struct_t*)\n"
     "{\n"
     "  bound_flag = TRUE;\n"
     /* Remove XER_LIST, XER_RECOF from p_flavor. This is not required
@@ -2441,8 +2436,9 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       }
       else { /* must be the ANY-ATTRIBUTES */
         src = mputprintf(src,
-          "  field_%s.set_size(0);\n",
-          sdef->elements[aaa].name);
+          "  field_%s%s;\n"
+        , sdef->elements[aaa].name
+        , sdef->elements[aaa].isOptional ? " = OMIT_VALUE" : ".set_size(0)");
       }
     }
 
@@ -2493,7 +2489,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputprintf(src,
         "    if (check_name(attr_name, %s_xer_, 1) && check_namespace(ns_uri, %s_xer_)) {\n"
         "      ec_1.set_msg(\"%s': \");\n"
-        "      field_%s.XER_decode(%s_xer_, p_reader, p_flavor | (p_td.xer_bits & USE_NIL));\n"
+        "      field_%s.XER_decode(%s_xer_, p_reader, p_flavor | (p_td.xer_bits & USE_NIL), 0);\n"
         "    } else"
         , sdef->elements[i].typegen, sdef->elements[i].typegen
         , sdef->elements[i].dispname /* set_msg */
@@ -2514,8 +2510,8 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       /* we are at a dangling else */
       src = mputprintf(src,
         "    {\n"
-        "      TTCN_EncDec_ErrorContext ec_0(\"Attribute %%d: \", (int)num_aa);"
-        "      UNIVERSAL_CHARSTRING& new_elem = field_%s[num_aa++];\n"
+        "      TTCN_EncDec_ErrorContext ec_0(\"Attribute %%d: \", (int)num_aa);\n"
+        "      UNIVERSAL_CHARSTRING& new_elem = field_%s%s[num_aa++];\n"
         /* Construct the AnyAttributeFormat (X.693amd1, 18.2.6) */
         "      TTCN_Buffer aabuf;\n"
         "      const xmlChar *x_name = p_reader.LocalName();\n"
@@ -2536,6 +2532,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         "      new_elem.decode_utf8(aabuf.get_len(), aabuf.get_data());\n"
         "    } \n"
         , sdef->elements[aa_index].name
+        , sdef->elements[aa_index].isOptional ? "()" : ""
         , sdef->elements[aa_index].typegen, sdef->elements[aa_index].typegen
       );
     }
@@ -2584,7 +2581,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  if (!(p_td.xer_bits & EMBED_VALUES)) {\n"
       "    ec_1.set_msg(\"%s': \");\n"
       "    field_%s.XER_decode(%s_xer_, p_reader, "
-      "p_flavor | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : 0));\n"
+      "p_flavor | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : 0), 0);\n"
       "  }\n"
       , sdef->elements[0].dispname
       , sdef->elements[0].name, sdef->elements[0].typegen
@@ -2618,7 +2615,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputprintf(src,
         "  {\n"
         "    ec_1.set_msg(\"%s': \");\n"
-        "    field_%s.XER_decode(%s_xer_, p_reader, p_flavor | (p_td.xer_bits & USE_NIL));\n"
+        "    field_%s.XER_decode(%s_xer_, p_reader, p_flavor | (p_td.xer_bits & USE_NIL), 0);\n"
         "  }\n"
         , sdef->elements[i].dispname
         , sdef->elements[i].name, sdef->elements[i].typegen
@@ -2632,6 +2629,17 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
 
   if (num_attributes || sdef->xerEmbedValuesPossible || sdef->xerUseOrderPossible) {
     src = mputstr(src, "}\n");
+  }
+  
+  if (sdef->xerEmbedValuesPossible) {
+    src = mputprintf(src,
+      "  embed_values_dec_struct_t* emb_val = 0;\n"
+      "  if (e_xer && (p_td.xer_bits & EMBED_VALUES)) {\n"
+      "    emb_val = new embed_values_dec_struct_t;\n"
+      "    emb_val->embval_array = &field_%s;\n"
+      "    emb_val->embval_index = 0;\n"
+      "    field_%s.set_size(0);\n"
+      "  }\n", sdef->elements[0].name, sdef->elements[0].name);
   }
 
   if (sdef->xerUseOrderPossible) {
@@ -2657,23 +2665,6 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       }
     }
 
-    if (sdef->xerEmbedValuesPossible) { /* EMBED-VALUES with USE-ORDER */
-      src = mputprintf(src,
-        "    if (p_td.xer_bits & EMBED_VALUES) {\n"
-        "    field_%s.set_size(%lu);\n"
-        "    %s::of_type empty_string(\"\");\n"
-        "    for (int j_j=0; j_j<%lu; ++j_j) {\n"
-        "      field_%s[j_j] = empty_string;\n"
-        "    }\n"
-        "    }\n"
-        , sdef->elements[0].name
-        , (unsigned long)(n_embed + 1)
-        , sdef->elements[0].type
-        , (unsigned long)(n_embed + 1)
-        , sdef->elements[0].name
-      );
-    }
-
     if (sdef->xerUseNilPossible) { /* USE-NIL and USE-ORDER */
       src = mputprintf(src,
         "    if (nil_attribute) field_%s.set_size(0);\n    else"
@@ -2684,18 +2675,26 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "    {\n"
       "    field_%s.set_size(0);\n"
       "    int e_val, num_seen = 0, *seen_f = new int[%lu];\n"
-      "    for (int i=0; i < %lu; ++i) {\n"
-      "      for (rd_ok=p_reader.Ok(); rd_ok==1; rd_ok=p_reader.Read()) {\n"
       , sdef->elements[uo].name
       , (unsigned long)(n_embed)
+    );
+    if (sdef->xerEmbedValuesPossible) {
+      // The index of the latest embedded value can change outside of this function
+      // (if the field is a untagged record of), in this case the next value should
+      // be ignored, as it's already been handled by the record of
+      src = mputstr(src, "    int last_embval_index = 0;\n");
+    }
+    src = mputprintf(src,
+      "    for (int i=0; i < %lu; ++i) {\n"
+      "      for (rd_ok=p_reader.Ok(); rd_ok==1; rd_ok=p_reader.Read()) {\n"
       , (unsigned long)(n_embed));
 
     if (sdef->xerEmbedValuesPossible) {
       /* read and store embedValues text if present */
       src = mputprintf(src,
-        "        if ((p_td.xer_bits & EMBED_VALUES) && (p_reader.NodeType()==XML_READER_TYPE_TEXT)) {\n"
+        "        if (0 != emb_val && p_reader.NodeType()==XML_READER_TYPE_TEXT) {\n"
         "          UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
-        "          field_%s[i] = emb_ustr;\n"
+        "          field_%s[emb_val->embval_index] = emb_ustr;\n"
         "        }\n"
         , sdef->elements[0].name);
     }
@@ -2706,7 +2705,16 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "      }\n"
       "      if (rd_ok != 1) break;\n"
       "      const char * x_name = (const char*)p_reader.LocalName();\n" /* Name or LocalName ? */);
-      
+    
+    if (sdef->xerEmbedValuesPossible) {
+      src = mputstr(src,
+        "      if (0 != emb_val) {\n"
+        "        if (last_embval_index == emb_val->embval_index) {\n"
+        "          ++emb_val->embval_index;\n"
+        "        }\n"
+        "        last_embval_index = emb_val->embval_index;\n"
+        "      }\n");
+    }
 
     /* * * * * code for USE-ORDER * * * * */
 
@@ -2716,20 +2724,20 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         src = mputprintf(src,
           "      if (check_name(x_name, %s_xer_, 1)) {\n"
           "        ec_1.set_msg(\"%s': \");\n"
-          "        field_%s%s%s%s.XER_decode(%s_xer_, p_reader, p_flavor);\n"
+          "        field_%s%s%s%s.XER_decode(%s_xer_, p_reader, p_flavor, %s);\n"
           , sdef->elements[i].typegen
           , sdef->elements[i].dispname
-
           , (sdef->xerUseNilPossible ? sdef->elements[sdef->nElements-1].name: sdef->elements[i].name)
           , (sdef->xerUseNilPossible ? "()." : "")
           , (sdef->xerUseNilPossible ? sdef->elements[i].name : "")
           , (sdef->xerUseNilPossible ? "()" : "")
           , sdef->elements[i].typegen
+          , sdef->xerEmbedValuesPossible ? "emb_val" : "0"
         );
         src = mputprintf(src,
-          "        field_%s[i] = e_val = %s::of_type::%s;\n"
-          , sdef->elements[uo].name
-          , sdef->elements[uo].typegen, sdef->elements[i].name);
+        "        field_%s[i] = e_val = %s::of_type::%s;\n"
+        , sdef->elements[uo].name
+        , sdef->elements[uo].typegen, sdef->elements[i].name);
         src = mputstr(src, "      }\n      else");
       }
     }
@@ -2753,7 +2761,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
           "          }\n"
           "          if (!next_any) {\n"
           "            ec_1.set_msg(\"%s': \");\n"
-          "            field_%s%s%s%s.XER_decode(%s_xer_, p_reader, p_flavor);\n"
+          "            field_%s%s%s%s.XER_decode(%s_xer_, p_reader, p_flavor, 0);\n"
           "            field_%s[i] = e_val;\n"
           "            any_found = true;\n"
           "          }\n"
@@ -2781,11 +2789,16 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     if (sdef->xerEmbedValuesPossible) {
       /* read and store embedValues text if present */
       src = mputprintf(src,
-        "    if ((p_td.xer_bits & EMBED_VALUES) && (p_reader.NodeType()==XML_READER_TYPE_TEXT)) {\n"
-        "      UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
-        "      field_%s[%lu] = emb_ustr;\n"
+        "    if (0 != emb_val) {\n"
+        "      if (p_reader.NodeType()==XML_READER_TYPE_TEXT) {\n"
+        "        UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
+        "        field_%s[emb_val->embval_index] = emb_ustr;\n"
+        "      }\n"
+        "      if (last_embval_index == emb_val->embval_index) {\n"
+        "        ++emb_val->embval_index;\n"
+        "      }\n"
         "    }\n"
-        , sdef->elements[0].name, (unsigned long)(n_embed));
+        , sdef->elements[0].name);
     }
 
     src = mputprintf(src,
@@ -2816,16 +2829,29 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "    p_reader.MoveToElement();\n"
       "  } else {\n");
   }
+  if (sdef->xerEmbedValuesPossible) {
+    // The index of the latest embedded value can change outside of this function
+    // (if the field is a untagged record of), in this case the next value should
+    // be ignored, as it's already been handled by the record of
+    // Omitted fields can also reset this value
+    src = mputstr(src, "  int last_embval_index = 0;\n");
+  }
   /* for all the non-attribute fields... */
   for (i = start_at + num_attributes; i < sdef->nElements; ++i) {
     if (sdef->xerEmbedValuesPossible) {
       /* read and store embedValues text if present */
       src = mputprintf(src,
-        "  if ((p_td.xer_bits & EMBED_VALUES) && (p_reader.NodeType()==XML_READER_TYPE_TEXT)) {\n"
-        "    UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
-        "    field_%s[%lu] = emb_ustr;\n"
+        "  if (0 != emb_val) {\n"
+        "    if (p_reader.NodeType()==XML_READER_TYPE_TEXT) {\n"
+        "      UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
+        "      field_%s[emb_val->embval_index] = emb_ustr;\n"
+        "    }\n"
+        "    if (last_embval_index == emb_val->embval_index) {\n"
+        "      ++emb_val->embval_index;\n"
+        "    }\n"
+        "    last_embval_index = emb_val->embval_index;\n"
         "  }\n"
-        , sdef->elements[0].name, (unsigned long)(i-(start_at+num_attributes)));
+        , sdef->elements[0].name);
     }
     /* The DEFAULT-FOR-EMPTY member can not be involved with EMBED-VALUES,
      * so we can use the same pattern: optional "if(...) else" before {}
@@ -2860,67 +2886,57 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     
     src = mputprintf(src, 
       "    field_%s.XER_decode(%s_xer_, p_reader, p_flavor"
-      " | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : 0));\n"
+      " | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : 0), %s);\n"
       "  }\n"
-      , sdef->elements[i].name, sdef->elements[i].typegen);
+      , sdef->elements[i].name, sdef->elements[i].typegen
+      , sdef->xerEmbedValuesPossible ? "emb_val" : "0");
+    if (sdef->xerEmbedValuesPossible) {
+      src = mputprintf(src,
+        "  if (!field_%s.is_present()) {\n"
+        // there was no new element, the last embedded value is for the next field
+        // (or the end of the record if this is the last field) 
+        "    last_embval_index = -1;\n"
+        "  }\n"
+        , sdef->elements[i].name);
+    }
   } /* next field */
+  
+  if (sdef->xerEmbedValuesPossible) {
+    /* read and store embedValues text if present */
+    src = mputprintf(src,
+      "  if (0 != emb_val) {\n"
+      "    if (p_reader.NodeType()==XML_READER_TYPE_TEXT) {\n"
+      "      UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
+      "      field_%s[emb_val->embval_index] = emb_ustr;\n"
+      "    }\n"
+      "    if (last_embval_index == emb_val->embval_index) {\n"
+      "      ++emb_val->embval_index;\n"
+      "    }\n"
+      "  }\n"
+      , sdef->elements[0].name);
+  }
   
   if (sdef->xerUseNilPossible) {
     src = mputstr(src, "  } // use_nil\n");
   }
 
-  if (sdef->xerEmbedValuesPossible) {
-    /* read and store embedValues text if present */
-    src = mputprintf(src,
-      "  if ((p_td.xer_bits & EMBED_VALUES) && (p_reader.NodeType()==XML_READER_TYPE_TEXT)) {\n"
-      "    UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
-      "    field_%s[%lu] = emb_ustr;\n"
-      "  }\n"
-      , sdef->elements[0].name, (unsigned long)(i-(start_at+num_attributes)));
+  if (sdef->xerUseOrderPossible) {
+    src = mputstr(src,  "  } // uo\n");
   }
-
+  
   if (sdef->xerEmbedValuesPossible) {
-    size_t op;
     src = mputprintf(src,
-      /* Set the embed-values member to the correct nr of strings */
-      "  if (e_xer && (p_td.xer_bits & EMBED_VALUES)) {\n"
-      "    int exp_embed = %lu;\n"
-      , (unsigned long)max_embed
-    );
-
-    if (sdef->xerUseNilPossible) {
-      src = mputstr(src,
-        "    if (nil_attribute) exp_embed = 0;\n"
-        "    else {");
-    }
-
-    for (op = 0; op < sdef->nElements; ++op) {
-      if (sdef->elements[op].isOptional && !sdef->elements[op].xerAttribute) {
-        src = mputprintf(src,
-          "    if (!field_%s.ispresent()) --exp_embed;\n"
-          , sdef->elements[op].name
-        );
-      }
-    }
-
-    if (sdef->xerUseNilPossible) src = mputstr(src, "    }\n");
-
-    src = mputprintf(src,
-      "    field_%s.set_size(exp_embed);//normal\n"
+      "  if (0 != emb_val) {\n"
       "    %s::of_type empty_string(\"\");\n"
-      "    for (int j_j=0; j_j<exp_embed; ++j_j) {\n"
+      "    for (int j_j = 0; j_j < emb_val->embval_index; ++j_j) {\n"
       "      if (!field_%s[j_j].is_bound()) field_%s[j_j] = empty_string;\n"
       "    }\n"
-      "  }"
-      , sdef->elements[0].name
+      "    delete emb_val;\n"
+      "  }\n"
       , sdef->elements[0].type
       , sdef->elements[0].name
       , sdef->elements[0].name
     );
-  }
-
-  if (sdef->xerUseOrderPossible) {
-    src = mputstr(src,  "  } // uo\n");
   }
 
   if (sdef->xerUseQName) {
@@ -5773,8 +5789,8 @@ static void defEmptyRecordClass(const struct_def *sdef,
 
         );
       src = mputprintf(src,
-        "int %s::XER_encode(const XERdescriptor_t& p_td,"
-        " TTCN_Buffer& p_buf, unsigned int p_flavor, int p_indent) const{\n"
+        "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
+        "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const{\n"
         "  int encoded_length=(int)p_buf.get_len();\n"
         "  int is_indented = !is_canonical(p_flavor);\n"
         "  int e_xer = is_exer(p_flavor);\n"
@@ -5791,7 +5807,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
         "// written by %s in " __FILE__ " at %d\n"
 #endif
         "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader, "
-        "unsigned int p_flavor)\n"
+        "unsigned int p_flavor, embed_values_dec_struct_t*)\n"
         "{\n"
         "  int e_xer = is_exer(p_flavor);\n"
         "  bound_flag = true;\n"

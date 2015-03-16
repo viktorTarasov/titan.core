@@ -56,8 +56,6 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "int n_elements;\n"
     "%s **value_elements;\n"
     "} *val_ptr;\n"
-    "Vector<int> refd_indices;\n"
-    "int max_refd_index;\n"
 #ifndef NDEBUG
       , __FUNCTION__, __LINE__
 #endif
@@ -98,63 +96,6 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         "}\n"
         "}\n\n", name, name, dispname, name, dispname, name, name, name, name, name);
   }
-  
-  /* function that returns the actual number of elements */
-  def = mputstr(def, "int get_nof_elements() const;\n");
-  src = mputprintf(src,
-    "int %s::get_nof_elements() const\n"
-    "{\n"
-    "  int nof_elements = (val_ptr != NULL) ? val_ptr->n_elements : 0;\n"
-    "  if (!refd_indices.empty()) {\n"
-    "    while (nof_elements > 0) {\n"
-    "      if (is_elem_bound(nof_elements - 1)) {\n"
-    "        break;\n"
-    "      }\n"
-    "      --nof_elements;\n"
-    "    }\n"
-    "  }\n"
-    "  return nof_elements;\n"
-    "}\n\n", name);
-  
-  /* element boundness check function */
-  def = mputstr(def, "bool is_elem_bound(int index) const;\n");
-  src = mputprintf(src,
-    "bool %s::is_elem_bound(int index) const\n"
-    "{\n"
-    "  return val_ptr->value_elements[index] != NULL &&\n"
-    "    val_ptr->value_elements[index]->is_bound();\n"
-    "}\n\n", name);
-  
-  /* function that calculates and caches the maximum referenced index */
-  def = mputstr(def, "int get_max_refd_index();\n");
-  src = mputprintf(src,
-    "int %s::get_max_refd_index()\n"
-    "{\n"
-    "  if (refd_indices.empty()) {\n"
-    "    return -1;\n"
-    "  }\n"
-    "  if (-1 == max_refd_index) {\n"
-    "    for (size_t i = 0; i < refd_indices.size(); ++i) {\n"
-    "      if (refd_indices[i] > max_refd_index) {\n"
-    "        max_refd_index = refd_indices[i];\n"
-    "      }\n"
-    "    }\n"
-    "  }\n"
-    "  return max_refd_index;\n"
-    "}\n\n", name);
-  
-  /* referenced index check function */
-  def = mputstr(def, "bool is_index_refd(int index);\n");
-  src = mputprintf(src,
-    "bool %s::is_index_refd(int index)\n"
-    "{\n"
-    "  for (size_t i = 0; i < refd_indices.size(); ++i) {\n"
-    "    if (index == refd_indices[i]) {\n"
-    "      return true;\n"
-    "    }\n"
-    "  }\n"
-    "  return false;\n"
-    "}\n\n", name);
 
   /* public member functions */
   def = mputstr(def, "\npublic:\n");
@@ -166,7 +107,6 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "%s::%s()\n"
     "{\n"
     "val_ptr = NULL;\n"
-    "max_refd_index = -1;\n"
     "}\n\n", name, name);
 
   def = mputprintf(def, "%s(null_type other_value);\n", name);
@@ -177,7 +117,6 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "val_ptr->ref_count = 1;\n"
     "val_ptr->n_elements = 0;\n"
     "val_ptr->value_elements = NULL;\n"
-    "max_refd_index = -1;\n"
     "}\n\n", name, name);
 
   /* copy constructor */
@@ -187,23 +126,9 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
      "{\n"
      "if (!other_value.is_bound()) "
      "TTCN_error(\"Copying an unbound value of type %s.\");\n"
-     "if (other_value.refd_indices.empty()) {\n"
      "val_ptr = other_value.val_ptr;\n"
      "val_ptr->ref_count++;\n"
-     "}\n"
-     "else {\n"
-     // there are references to at least one element => the array must be copied
-     "val_ptr = NULL;\n"
-     "int nof_elements = other_value.get_nof_elements();\n"
-     "set_size(nof_elements);\n"
-     "for (int i = 0; i < nof_elements; ++i) {\n"
-     "if (other_value.is_elem_bound(i)) {\n"
-     "val_ptr->value_elements[i] = new %s(*(other_value.val_ptr->value_elements[i]));\n"
-     "}\n"
-     "}\n"
-     "}\n"
-     "max_refd_index = -1;\n"
-     "}\n\n", name, name, name, dispname, type);
+     "}\n\n", name, name, name, dispname);
 
   /* destructor */
   def = mputprintf(def, "~%s();\n\n", name);
@@ -226,7 +151,6 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
      "val_ptr = NULL;\n"
      "}\n"
      "else if (val_ptr->ref_count == 1) {\n"
-     "if (refd_indices.empty()) {\n"
      "for (int elem_count = 0; elem_count < val_ptr->n_elements;\n"
      "elem_count++)\n"
      "if (val_ptr->value_elements[elem_count] != NULL)\n"
@@ -234,10 +158,6 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
      "free_pointers((void**)val_ptr->value_elements);\n"
      "delete val_ptr;\n"
      "val_ptr = NULL;\n"
-     "}\n"
-     "else {\n"
-     "set_size(0);\n"
-     "}\n"
      "}\n"
      "else\n"
      "TTCN_error(\"Internal error: Invalid reference counter in a record "
@@ -250,7 +170,11 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
   src = mputprintf(src,
     "%s& %s::operator=(null_type)\n"
     "{\n"
-    "set_size(0);\n"
+    "clean_up();\n"
+    "val_ptr = new recordof_setof_struct;\n"
+    "val_ptr->ref_count = 1;\n"
+    "val_ptr->n_elements = 0;\n"
+    "val_ptr->value_elements = NULL;\n"
     "return *this;\n"
     "}\n\n", name, name);
 
@@ -259,39 +183,15 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
   src = mputprintf(src,
     "%s& %s::operator=(const %s& other_value)\n"
     "{\n"
-    "if (!other_value.is_bound()) "
+    "if (other_value.val_ptr == NULL) "
     "TTCN_error(\"Assigning an unbound value of type %s.\");\n"
     "if (this != &other_value) {\n"
-    "if (refd_indices.empty() && other_value.refd_indices.empty()) {\n"
     "clean_up();\n"
     "val_ptr = other_value.val_ptr;\n"
     "val_ptr->ref_count++;\n"
     "}\n"
-    "else {\n"
-    // there are references to at least one element => the array must be copied
-    "int nof_elements = other_value.get_nof_elements();\n"
-    "set_size(nof_elements);\n"
-    "for (int i = 0; i < nof_elements; ++i) {\n"
-    "if (other_value.is_elem_bound(i)) {\n"
-    "if (val_ptr->value_elements[i] == NULL) {\n"
-    "val_ptr->value_elements[i] = new %s;\n"
-    "}\n"
-    "*val_ptr->value_elements[i] = *other_value.val_ptr->value_elements[i];\n"
-    "}\n"
-    "else if (val_ptr->value_elements[i] != NULL) {\n"
-    "if (is_index_refd(i)) {\n"
-    "val_ptr->value_elements[i]->clean_up();\n"
-    "}\n"
-    "else {\n"
-    "delete val_ptr->value_elements[i];\n"
-    "val_ptr->value_elements[i] = NULL;\n"
-    "}\n"
-    "}\n"
-    "}\n"
-    "}\n"
-    "}\n"
     "return *this;\n"
-    "}\n\n", name, name, name, dispname, type);
+    "}\n\n", name, name, name, dispname);
 
   /* comparison operators */
   def = mputstr(def, "boolean operator==(null_type other_value) const;\n");
@@ -301,7 +201,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "if (val_ptr == NULL)\n"
     "TTCN_error(\"The left operand of comparison is an unbound value of "
     "type %s.\");\n"
-    "return get_nof_elements() == 0 ;\n"
+    "return val_ptr->n_elements == 0 ;\n"
     "}\n\n", name, dispname);
 
   def = mputprintf(def, "boolean operator==(const %s& other_value) const;\n",
@@ -319,22 +219,23 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     dispname, dispname);
   if (sdef->kind == SET_OF) {
     src = mputstr(src,
-       "return compare_set_of(this, get_nof_elements(), &other_value, "
-       "other_value.get_nof_elements(), compare_function);\n");
+       "return compare_set_of(this, val_ptr->n_elements, &other_value, "
+       "(other_value.val_ptr)->n_elements, compare_function);\n");
   } else {
     src = mputstr
       (src,
-       "if (get_nof_elements() != other_value.get_nof_elements())\n"
+       "if (val_ptr->n_elements != (other_value.val_ptr)->n_elements)\n"
        "return FALSE;\n"
-       "for (int elem_count = 0; elem_count < get_nof_elements(); elem_count++){\n"
-       "if (is_elem_bound(elem_count)){\n"
-       "if (other_value.is_elem_bound(elem_count)){\n"
+       "for (int elem_count = 0; elem_count < val_ptr->n_elements; elem_count++){\n"
+       "if (val_ptr->value_elements[elem_count] != NULL){\n"
+       "if ((other_value.val_ptr)->value_elements[elem_count] != NULL){\n"
        "  if (*val_ptr->value_elements[elem_count] != "
           "*(other_value.val_ptr)->value_elements[elem_count]) "
           "return FALSE;\n"
        "} else return FALSE;\n"
        "} else {\n"
-       "if (other_value.is_elem_bound(elem_count)) return FALSE;\n"
+       "if ((other_value.val_ptr)->value_elements[elem_count] != NULL) "
+         "return FALSE;\n"
        "}\n"
        "}\n"
        "return TRUE;\n");
@@ -403,9 +304,9 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "TTCN_error(\"Accessing an element in an unbound value of type %s.\");\n"
     "if (index_value < 0) TTCN_error(\"Accessing an element of type %s "
     "using a negative index: %%d.\", index_value);\n"
-    "if (index_value >= get_nof_elements()) TTCN_error(\"Index overflow in "
+    "if (index_value >= val_ptr->n_elements) TTCN_error(\"Index overflow in "
     "a value of type %s: The index is %%d, but the value has only %%d "
-    "elements.\", index_value, get_nof_elements());\n"
+    "elements.\", index_value, val_ptr->n_elements);\n"
     "return (val_ptr->value_elements[index_value] != NULL) ?\n"
     "*val_ptr->value_elements[index_value] : UNBOUND_ELEM;\n"
     "}\n\n", type, name, dispname, dispname, dispname);
@@ -449,17 +350,16 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "if (val_ptr == NULL) "
     "TTCN_error(\"Performing rotation operation on an unbound value of type "
     "%s.\");\n"
-    "int nof_elements = get_nof_elements();\n"
-    "if (nof_elements == 0) return *this;\n"
+    "if (val_ptr->n_elements == 0) return *this;\n"
     "int rc;\n"
-    "if (rotate_count>=0) rc = rotate_count %% nof_elements;\n"
-    "else rc = nof_elements - ((-rotate_count) %% nof_elements);\n"
+    "if (rotate_count>=0) rc = rotate_count %% val_ptr->n_elements;\n"
+    "else rc = val_ptr->n_elements - ((-rotate_count) %% val_ptr->n_elements);\n"
     "if (rc == 0) return *this;\n"
     "%s ret_val;\n"
-    "ret_val.set_size(nof_elements);\n"
-    "for (int i=0; i<nof_elements; i++) {\n"
-    "if (is_elem_bound(i)) {\n"
-    "ret_val.val_ptr->value_elements[(i+rc)%%nof_elements] ="
+    "ret_val.set_size(val_ptr->n_elements);\n"
+    "for (int i=0; i<val_ptr->n_elements; i++) {\n"
+    "if (val_ptr->value_elements[i] != NULL) {\n"
+    "ret_val.val_ptr->value_elements[(i+rc)%%val_ptr->n_elements] ="
       "new %s(*val_ptr->value_elements[i]);\n"
     "}\n"
     "}\n"
@@ -475,20 +375,18 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "{\n"
     "if (val_ptr == NULL || other_value.val_ptr == NULL) "
       "TTCN_error(\"Unbound operand of %s concatenation.\");\n"
-    "int nof_elements = get_nof_elements();\n"
-    "if (nof_elements == 0) return other_value;\n"
-    "int other_value_nof_elements = other_value.get_nof_elements();"
-    "if (other_value_nof_elements == 0) return *this;\n"
+    "if (val_ptr->n_elements == 0) return other_value;\n"
+    "if (other_value.val_ptr->n_elements == 0) return *this;\n"
     "%s ret_val;\n"
-    "ret_val.set_size(nof_elements + other_value_nof_elements);\n"
-    "for (int i=0; i<nof_elements; i++) {\n"
-    "if (is_elem_bound(i)) {\n"
+    "ret_val.set_size(val_ptr->n_elements+other_value.val_ptr->n_elements);\n"
+    "for (int i=0; i<val_ptr->n_elements; i++) {\n"
+    "if (val_ptr->value_elements[i] != NULL) {\n"
     "ret_val.val_ptr->value_elements[i] = new %s(*val_ptr->value_elements[i]);\n"
     "}\n"
     "}\n"
-    "for (int i=0; i<other_value_nof_elements; i++) {\n"
-    "if (other_value.is_elem_bound(i)) {\n"
-    "ret_val.val_ptr->value_elements[i + nof_elements] = "
+    "for (int i=0; i<other_value.val_ptr->n_elements; i++) {\n"
+    "if (other_value.val_ptr->value_elements[i] != NULL) {\n"
+    "ret_val.val_ptr->value_elements[i+val_ptr->n_elements] = "
     "new %s(*other_value.val_ptr->value_elements[i]);\n"
     "}\n"
     "}\n"
@@ -504,12 +402,12 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "if (val_ptr == NULL) "
       "TTCN_error(\"The first argument of substr() is an unbound value of "
         "type %s.\");\n"
-    "check_substr_arguments(get_nof_elements(), index, returncount, "
+    "check_substr_arguments(val_ptr->n_elements, index, returncount, "
       "\"%s\",\"element\");\n"
     "%s ret_val;\n"
     "ret_val.set_size(returncount);\n"
     "for (int i=0; i<returncount; i++) {\n"
-    "if (is_elem_bound(i+index)) {\n"
+    "if (val_ptr->value_elements[i+index] != NULL) {\n"
     "ret_val.val_ptr->value_elements[i] = "
     "new %s(*val_ptr->value_elements[i+index]);\n"
     "}\n"
@@ -529,26 +427,24 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "if (repl.val_ptr == NULL) "
       "TTCN_error(\"The fourth argument of replace() is an unbound value of "
         "type %s.\");\n"
-    "int nof_elements = get_nof_elements();\n"
-    "check_replace_arguments(nof_elements, index, len, "
+    "check_replace_arguments(val_ptr->n_elements, index, len, "
       "\"%s\",\"element\");\n"
     "%s ret_val;\n"
-    "int repl_nof_elements = repl.get_nof_elements();\n"
-    "ret_val.set_size(nof_elements + repl_nof_elements - len);\n"
+    "ret_val.set_size(val_ptr->n_elements + repl.val_ptr->n_elements - len);\n"
     "for (int i = 0; i < index; i++) {\n"
-    "if (is_elem_bound(i)) {\n"
+    "if (val_ptr->value_elements[i] != NULL) {\n"
     "ret_val.val_ptr->value_elements[i] = new %s(*val_ptr->value_elements[i]);\n"
     "}\n"
     "}\n"
-    "for (int i = 0; i < repl_nof_elements; i++) {\n"
-    "if (repl.is_elem_bound(i)) {\n"
+    "for (int i = 0; i < repl.val_ptr->n_elements; i++) {\n"
+    "if (repl.val_ptr->value_elements[i] != NULL) {\n"
     "ret_val.val_ptr->value_elements[i+index] = "
     "new %s(*repl.val_ptr->value_elements[i]);\n"
     "}\n"
     "}\n"
-    "for (int i = 0; i < nof_elements - index - len; i++) {\n"
-    "if (is_elem_bound(index+i+len)) {\n"
-    "ret_val.val_ptr->value_elements[index+i+repl_nof_elements] = "
+    "for (int i = 0; i < val_ptr->n_elements - index - len; i++) {\n"
+    "if (val_ptr->value_elements[index+i+len] != NULL) {\n"
+    "ret_val.val_ptr->value_elements[index+i+repl.val_ptr->n_elements] = "
     "new %s(*val_ptr->value_elements[index+i+len]);\n"
     "}\n"
     "}\n"
@@ -604,40 +500,19 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "val_ptr->n_elements = new_size;\n"
     "} else if (new_size < val_ptr->n_elements) {\n"
     "for (int elem_count = new_size; elem_count < val_ptr->n_elements; "
-    "elem_count++) {\n"
-    "if (val_ptr->value_elements[elem_count] != NULL) {\n"
-    "if (is_index_refd(elem_count)) {\n"
-    "val_ptr->value_elements[elem_count]->clean_up();\n"
-    "}\n"
-    "else {\n"
+    "elem_count++)\n"
+    "if (val_ptr->value_elements[elem_count] != NULL)"
     "delete val_ptr->value_elements[elem_count];\n"
-    "val_ptr->value_elements[elem_count] = 0;\n"
-    "}\n"
-    "}\n"
-    "}\n"
-    "if (new_size <= get_max_refd_index()) {\n"
-    "new_size = get_max_refd_index() + 1;\n"
-    "}\n"
-    "if (new_size < val_ptr->n_elements) {\n"
     "val_ptr->value_elements = (%s**)"
     "reallocate_pointers((void**)val_ptr->value_elements, "
     "val_ptr->n_elements, new_size);\n"
     "val_ptr->n_elements = new_size;\n"
     "}\n"
-    "}\n"
     "}\n\n", name, dispname, type, type, type, dispname, type);
 
   /* is_bound function */
   def = mputstr(def,
-    "boolean is_bound() const;\n");
-  src = mputprintf(src,
-    "boolean %s::is_bound() const\n"
-    "{\n"
-    "if (refd_indices.empty()) {\n"
-    "return (val_ptr != NULL);\n"
-    "}\n"
-    "return (get_nof_elements() != 0);\n"
-    "}\n\n", name);
+    "inline boolean is_bound() const {return val_ptr != NULL; }\n");
 
   /* is_present function */
   def = mputstr(def,
@@ -650,8 +525,8 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "boolean %s::is_value() const\n"
     "{\n"
     "if (val_ptr == NULL) return false;\n"
-    "for(int i = 0; i < get_nof_elements(); ++i) {\n"
-    "if (!is_elem_bound(i) || "
+    "for(int i = 0; i < val_ptr->n_elements; ++i) {\n"
+    "if (val_ptr->value_elements[i] == NULL || "
     "!val_ptr->value_elements[i]->is_value()) return FALSE;\n"
     "}\n"
     "return TRUE;\n"
@@ -667,7 +542,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "if (val_ptr == NULL) "
     "TTCN_error(\"Performing sizeof operation on an unbound value of type "
     "%s.\");\n"
-    "return get_nof_elements();\n"
+    "return val_ptr->n_elements;\n"
     "}\n\n", name, dispname);
 
   /* lengthof operation */
@@ -678,8 +553,8 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "if (val_ptr == NULL) "
       "TTCN_error(\"Performing lengthof operation on an unbound value of type "
     "%s.\");\n"
-    "for (int my_length=get_nof_elements(); my_length>0; my_length--) "
-      "if (is_elem_bound(my_length-1)) return my_length;\n"
+    "for (int my_length=val_ptr->n_elements; my_length>0; my_length--) "
+      "if (val_ptr->value_elements[my_length-1] != NULL) return my_length;\n"
     "return 0;\n"
     "}\n\n", name, dispname);
 
@@ -693,13 +568,13 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
      "TTCN_Logger::log_event_unbound();\n"
      "return;\n"
      "}\n"
-     "switch (get_nof_elements()) {\n"
+     "switch (val_ptr->n_elements) {\n"
      "case 0:\n"
      "TTCN_Logger::log_event_str(\"{ }\");\n"
      "break;\n"
      "default:\n"
      "TTCN_Logger::log_event_str(\"{ \");\n"
-     "for (int elem_count = 0; elem_count < get_nof_elements(); "
+     "for (int elem_count = 0; elem_count < val_ptr->n_elements; "
      "elem_count++) {\n"
      "if (elem_count > 0) TTCN_Logger::log_event_str(\", \");\n"
      "(*this)[elem_count].log();\n"
@@ -786,35 +661,9 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
   src = mputprintf(src,
     "void %s::set_implicit_omit()\n{\n"
     "if (val_ptr == NULL) return;\n"
-    "for (int i = 0; i < get_nof_elements(); i++) {\n"
-    "if (is_elem_bound(i)) val_ptr->value_elements[i]->set_implicit_omit();\n"
+    "for (int i = 0; i < val_ptr->n_elements; i++) {\n"
+    "if (val_ptr->value_elements[i] != NULL) val_ptr->value_elements[i]->set_implicit_omit();\n"
     "}\n}\n\n", name);
-  
-  /* functions for inserting and removing references to elements of the record of */
-  def = mputstr(def, "  void add_refd_index(int index);\n");
-  src = mputprintf(src, 
-    "void %s::add_refd_index(int index)\n"
-    "{\n"
-    "  refd_indices.push_back(index);\n"
-    "  if (index > get_max_refd_index()) {\n"
-    "  max_refd_index = index;\n"
-    "  }\n"
-    "}\n\n", name);
-  
-  def = mputstr(def, "  void remove_refd_index(int index);\n");
-  src = mputprintf(src,
-    "void %s::remove_refd_index(int index)\n"
-    "{\n"
-    "  for (size_t i = refd_indices.size(); i > 0; --i) {\n"
-    "    if (refd_indices[i - 1] == index) {\n"
-    "      refd_indices.erase_at(i - 1);\n"
-    "      break;\n"
-    "    }\n"
-    "  }\n"
-    "  if (get_max_refd_index() == index) {\n"
-    "    max_refd_index = -1;\n"
-    "  }\n"
-    "}\n\n", name);
 
   /* encoding / decoding functions */
   def = mputstr(def, "void encode_text(Text_Buf& text_buf) const;\n");
@@ -823,8 +672,8 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "{\n"
     "if (val_ptr == NULL) "
     "TTCN_error(\"Text encoder: Encoding an unbound value of type %s.\");\n"
-    "text_buf.push_int(get_nof_elements());\n"
-    "for (int elem_count = 0; elem_count < get_nof_elements(); "
+    "text_buf.push_int(val_ptr->n_elements);\n"
+    "for (int elem_count = 0; elem_count < val_ptr->n_elements; "
     "elem_count++)\n"
     "(*this)[elem_count].encode_text(text_buf);\n"
     "}\n\n", name, dispname);
@@ -833,18 +682,19 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
   src = mputprintf(src,
     "void %s::decode_text(Text_Buf& text_buf)\n"
     "{\n"
-    "int new_size = text_buf.pull_int().get_val();\n"
-    "if (new_size < 0)\n TTCN_error(\"Text decoder: Negative size "
+    "clean_up();\n"
+    "val_ptr = new recordof_setof_struct;\n"
+    "val_ptr->ref_count = 1;\n"
+    "val_ptr->n_elements = text_buf.pull_int().get_val();\n"
+    "if (val_ptr->n_elements < 0) TTCN_error(\"Text decoder: Negative size "
     "was received for a value of type %s.\");\n"
-    "set_size(new_size);\n"
-    "for (int elem_count = 0; elem_count < new_size; "
+    "val_ptr->value_elements = (%s**)allocate_pointers(val_ptr->n_elements);\n"
+    "for (int elem_count = 0; elem_count < val_ptr->n_elements; "
     "elem_count++) {\n"
-    "if (val_ptr->value_elements[elem_count] == NULL) {\n"
     "val_ptr->value_elements[elem_count] = new %s;\n"
-    "}\n"
     "val_ptr->value_elements[elem_count]->decode_text(text_buf);\n"
     "}\n"
-    "}\n\n", name, dispname, type);
+    "}\n\n", name, dispname, type, type);
 
   if(ber_needed || raw_needed || text_needed || xer_needed || json_needed)
     def_encdec(name, &def, &src, ber_needed, raw_needed, text_needed,
@@ -868,7 +718,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "    }\n"
       "    return encoded_length;\n"
       "  }\n"
-      "  for(int a=0;a<get_nof_elements();a++){\n"
+      "  for(int a=0;a<val_ptr->n_elements;a++){\n"
       "   if(a!=0 && p_td.text->separator_encode){\n"
       "    p_buf.put_cs(*p_td.text->separator_encode);\n"
       "    encoded_length+=p_td.text->separator_encode->lengthof();\n"
@@ -914,9 +764,13 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "    ml++;\n"
       "  }\n"
       "  if(first_call) {\n"
-      "    set_size(0);\n"
+      "    clean_up();\n"
+      "    val_ptr=new recordof_setof_struct;\n"
+      "    val_ptr->ref_count=1;\n"
+      "    val_ptr->n_elements=0;\n"
+      "    val_ptr->value_elements=NULL;\n"
       "  }\n"
-      "  int more=get_nof_elements();\n"
+      "  int more=val_ptr->n_elements;\n"
       "  while(TRUE){\n"
       "    %s *val=new %s;\n"
       "    pos=p_buf.get_pos();\n"
@@ -931,17 +785,11 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "      break;\n"
       "    }\n"
       "    sep_found=FALSE;\n"
-      "    if (refd_indices.empty()) {\n"
-      "      val_ptr->value_elements = (%s**)reallocate_pointers"
+      "    val_ptr->value_elements = (%s**)reallocate_pointers"
       "((void**)val_ptr->value_elements, val_ptr->n_elements, "
       "val_ptr->n_elements + 1);\n"
-      "      val_ptr->value_elements[val_ptr->n_elements]=val;\n"
-      "      val_ptr->n_elements++;\n"
-      "    }\n"
-      "    else {\n"
-      "      (*this)[get_nof_elements()] = *val;\n"
-      "      delete val;\n"
-      "    }\n"
+      "    val_ptr->value_elements[val_ptr->n_elements]=val;\n"
+      "    val_ptr->n_elements++;\n"
       "    decoded_length+=len;\n"
       "    if(p_td.text->separator_decode){\n"
       "      int tl;\n"
@@ -977,7 +825,9 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "    if((tl=p_td.text->end_decode->match_begin(p_buf))<0){\n"
       "          if(no_err){"
       "            if(!first_call){\n"
-      "              set_size(more);\n"
+      "              for(int a=more; a<val_ptr->n_elements; a++) "
+      "delete val_ptr->value_elements[a];\n"
+      "              val_ptr->n_elements=more;\n"
       "            }\n"
       "            return -1;\n"
       "          }\n"
@@ -990,7 +840,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "    decoded_length+=tl;\n"
       "    p_buf.increase_pos(tl);\n"
       "  }\n"
-      "  if(get_nof_elements()==0){\n"
+      "  if(val_ptr->n_elements==0){\n"
       "    if(!(p_td.text->end_decode || p_td.text->begin_decode)) {\n"
       "      if(no_err)return -1;\n"
       "      TTCN_EncDec_ErrorContext::error"
@@ -998,7 +848,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "      return decoded_length;\n"
       "    }\n"
       "  }\n"
-      "  if(!first_call && more==get_nof_elements() && "
+      "  if(!first_call && more==val_ptr->n_elements && "
       "!(p_td.text->end_decode || p_td.text->begin_decode)) return -1;\n"
       "  return decoded_length;\n"
       "}\n"
@@ -1018,7 +868,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
        "  if(!new_tlv) {\n"
        "    new_tlv=ASN_BER_TLV_t::construct(NULL);\n"
        "    TTCN_EncDec_ErrorContext ec;\n"
-       "    for(int elem_i=0; elem_i<get_nof_elements(); elem_i++) {\n"
+       "    for(int elem_i=0; elem_i<val_ptr->n_elements; elem_i++) {\n"
        "      ec.set_msg(\"Component #%%d: \", elem_i);\n"
        "      new_tlv->add_TLV((*this)[elem_i].BER_encode_TLV"
        "(%s_descr_, p_coding));\n"
@@ -1039,23 +889,32 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
        "  TTCN_EncDec_ErrorContext ec_0(\"While decoding '%%s' type: \","
        " p_td.name);\n"
        "  stripped_tlv.chk_constructed_flag(TRUE);\n"
-       "  set_size(0);\n"
+       "  clean_up();\n"
+       "  val_ptr = new recordof_setof_struct;\n"
+       "  val_ptr->ref_count = 1;\n"
+       "  val_ptr->n_elements = 0;\n"
+       "  val_ptr->value_elements = NULL;\n"
        "  size_t V_pos=0;\n"
        "  ASN_BER_TLV_t tmp_tlv;\n"
        "  TTCN_EncDec_ErrorContext ec_1(\"Component #\");\n"
        "  TTCN_EncDec_ErrorContext ec_2(\"0: \");\n"
        "  while(BER_decode_constdTLV_next(stripped_tlv, V_pos, L_form, "
        "tmp_tlv)) {\n"
-       "    (*this)[get_nof_elements()].BER_decode_TLV(%s_descr_, tmp_tlv, "
+       "    val_ptr->value_elements = (%s**)reallocate_pointers("
+       "(void**)val_ptr->value_elements, val_ptr->n_elements, "
+       "val_ptr->n_elements + 1);\n"
+       "    val_ptr->n_elements++;\n"
+       "    val_ptr->value_elements[val_ptr->n_elements - 1] = new %s;\n"
+       "    val_ptr->value_elements[val_ptr->n_elements - 1]->BER_decode_TLV(%s_descr_, tmp_tlv, "
        "L_form);\n"
-       "    ec_2.set_msg(\"%%d: \", get_nof_elements());\n"
+       "    ec_2.set_msg(\"%%d: \", val_ptr->n_elements);\n"
        "  }\n"
        "  return TRUE;\n"
        "}\n"
        "\n"
        , name, sdef->oftypedescrname
        , sdef->kind==SET_OF?"    new_tlv->sort_tlvs();\n":""
-       , name, sdef->oftypedescrname
+       , name, type, type, sdef->oftypedescrname
        );
 
     if(sdef->has_opentypes) {
@@ -1072,9 +931,9 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
          "  p_typelist.push(this);\n"
          "  TTCN_EncDec_ErrorContext ec_0(\"Component #\");\n"
          "  TTCN_EncDec_ErrorContext ec_1;\n"
-         "  for(int elem_i=0; elem_i<get_nof_elements(); elem_i++) {\n"
+         "  for(int elem_i=0; elem_i<val_ptr->n_elements; elem_i++) {\n"
          "    ec_1.set_msg(\"%%d: \", elem_i);\n"
-         "    (*this)[elem_i].BER_decode_opentypes(p_typelist,"
+         "    val_ptr->value_elements[elem_i]->BER_decode_opentypes(p_typelist,"
          " L_form);\n"
          "  }\n"
          "  p_typelist.pop();\n"
@@ -1096,9 +955,13 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "  int decoded_field_length=0;\n"
     "  size_t start_of_field=0;\n"
     "  if(first_call) {\n"
-    "    set_size(0);\n"
+    "    clean_up();\n"
+    "    val_ptr=new recordof_setof_struct;\n"
+    "    val_ptr->ref_count=1;\n"
+    "    val_ptr->n_elements=0;\n"
+    "    val_ptr->value_elements=NULL;\n"
     "  }\n"
-    "  int start_field=get_nof_elements();\n"
+    "  int start_field=val_ptr->n_elements;\n"
     "  if(p_td.raw->fieldlength || sel_field!=-1){\n"
     "    int a=0;\n"
     "    if(sel_field==-1) sel_field=p_td.raw->fieldlength;\n"
@@ -1109,10 +972,12 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "      decoded_length+=decoded_field_length;\n"
     "      limit-=decoded_field_length;\n"
     "    }\n"
+    "    if(a==0) val_ptr->n_elements=0;\n"
     "  } else {\n"
     "    int a=start_field;\n"
     "    if(limit==0){\n"
     "      if(!first_call) return -1;\n"
+    "      val_ptr->n_elements=0;\n"
     "      return decoded_length+p_buf.increase_pos_padd(p_td.raw->padding)"
     "+prepaddlength;\n"
     "    }\n"
@@ -1121,7 +986,8 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "      decoded_field_length=(*this)[a].RAW_decode(%s_descr_,p_buf,limit,"
     "top_bit_ord,TRUE);\n"
     "      if(decoded_field_length < 0){\n"
-    "        set_size(get_nof_elements() - 1);\n"
+    "        delete &(*this)[a];\n"
+    "        val_ptr->n_elements--;\n"
     "        p_buf.set_pos_bit(start_of_field);\n"
     "        if(a>start_field){\n"
     "        return decoded_length+p_buf.increase_pos_padd(p_td.raw->padding)"
@@ -1149,8 +1015,8 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "RAW_enc_tree& myleaf) const{\n"
     "  int encoded_length=0;\n"
     "  int encoded_num_of_records=p_td.raw->fieldlength?"
-    "smaller(get_nof_elements(), p_td.raw->fieldlength)"
-    ":get_nof_elements();\n"
+    "smaller(val_ptr->n_elements, p_td.raw->fieldlength)"
+    ":val_ptr->n_elements;\n"
     "  myleaf.isleaf=FALSE;\n"
     "  myleaf.rec_of=TRUE;\n"
     "  myleaf.body.node.num_of_nodes=encoded_num_of_records;\n"
@@ -1215,7 +1081,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "  if (val_ptr) try {\n"
       "    char **new_ns;\n"
       "    size_t num_new;\n"
-      "    for (int i = 0; i < get_nof_elements(); ++i) {\n"
+      "    for (int i = 0; i < val_ptr->n_elements; ++i) {\n"
       "      bool def_ns_1 = false;"
       "      new_ns = (*this)[i].collect_ns(%s_xer_, num_new, def_ns_1);\n"
       "      merge_ns(collected_ns, num_collected, new_ns, num_new);\n"
@@ -1235,8 +1101,8 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       , name, sdef->oftypedescrname);
 
     src=mputprintf(src,
-      "int %s::XER_encode(const XERdescriptor_t& p_td,"
-      " TTCN_Buffer& p_buf, unsigned int p_flavor, int p_indent) const\n{\n"
+      "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
+      "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t* emb_val) const\n{\n"
       "  if (val_ptr == 0) TTCN_error(\"Attempt to XER-encode an unbound record of\");\n" /* TODO type name */
       "  int encoded_length=(int)p_buf.get_len();\n"
       "  boolean e_xer = is_exer(p_flavor);\n"
@@ -1244,8 +1110,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "    || (p_flavor & USE_TYPE_ATTR)));\n"
       "  boolean indenting = !is_canonical(p_flavor) && own_tag;\n"
       "%s" /* Factor out p_indent if not attribute */
-      "  int nof_elements = get_nof_elements();\n"
-      "  if (nof_elements==0) {\n" /* Empty record of */
+      "  if (val_ptr->n_elements==0) {\n" /* Empty record of */
       , name
       , sdef->xerAttribute ? "" : "  if (indenting) do_indent(p_buf, p_indent);\n"
       );
@@ -1298,9 +1163,9 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         "      unsigned char saved[4];\n"
         "      memcpy(saved, buf_data + (buf_len - shorter), shorter);\n"
         "      p_buf.increase_length(-shorter);\n"
-        "      for (int i = 0; i < nof_elements; ++i) {\n"
+        "      for (int i = 0; i < val_ptr->n_elements; ++i) {\n"
         "        TTCN_EncDec_ErrorContext ec_0(\"Attribute %d: \", i);\n"
-        "        if (!is_elem_bound(i)) {\n"
+        "        if (val_ptr->value_elements[i] == NULL) {\n"
         "          TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"
         "            \"Encoding an unbound universal charstring value.\");\n"
         "          continue;\n"
@@ -1330,7 +1195,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         "          p_buf.put_s(ns_len, (const unsigned char*)ns);\n"
 
         "          UNIVERSAL_CHARSTRING before(sp_at, (const universal_char*)(*val_ptr->value_elements[i]));\n"
-        "          before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent);\n"
+        "          before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent, 0);\n"
         // Ensure the namespace abides to its restrictions
         "          if (p_td.xer_bits & (ANY_FROM | ANY_EXCEPT)) {\n"
         "            TTCN_Buffer ns_buf;\n"
@@ -1358,7 +1223,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         "        }\n"
 
         "        UNIVERSAL_CHARSTRING after(len - j, (const universal_char*)(*val_ptr->value_elements[i]) + j);\n"
-        "        after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent);\n"
+        "        after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent, 0);\n"
         // Put this attribute in a dummy element and walk through it to check its validity
         "        TTCN_Buffer check_buf;\n"
         "        check_buf.put_s(2, (unsigned char*)\"<a\");\n"
@@ -1413,10 +1278,16 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "    TTCN_EncDec_ErrorContext ec_1;\n"
       );
     src=mputprintf(src,
-      "    for (int i = 0; i < nof_elements; ++i) {\n"
+      "    for (int i = 0; i < val_ptr->n_elements; ++i) {\n"
+      /*"      if (i > 0 && !own_tag && 0 != emb_val &&\n"
+      "          emb_val->embval_index < emb_val->embval_size) {\n"
+      "        emb_val->embval_array->get_embedded_value(emb_val->embval_index).XER_encode(\n"
+      "          UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+      "        ++emb_val->embval_index;\n"
+      "      }\n" - temporarily removed in RT1 */
       "      ec_1.set_msg(\"%%d: \", i);\n"
       "      if (e_xer && (p_td.xer_bits & XER_LIST) && i>0) p_buf.put_c(' ');\n"
-      "      (*this)[i].XER_encode(%s_xer_, p_buf, p_flavor, p_indent+own_tag);\n"
+      "      (*this)[i].XER_encode(%s_xer_, p_buf, p_flavor, p_indent+own_tag, emb_val);\n"
       "    }\n"
       "    if (indenting && !is_exerlist(p_flavor)) {\n",
       sdef->oftypedescrname
@@ -1453,7 +1324,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "// written by %s in " __FILE__ " at %d\n"
 #endif
       "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader, "
-      "unsigned int p_flavor)\n{\n"
+      "unsigned int p_flavor, embed_values_dec_struct_t* emb_val)\n{\n"
       "  boolean e_xer = is_exer(p_flavor);\n"
       "  int xerbits = p_td.xer_bits;\n"
       "  if (p_flavor & XER_TOPLEVEL) xerbits &= ~UNTAGGED;\n"
@@ -1462,7 +1333,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       /* not toplevel anymore and remove the flags for USE-UNION the oftype doesn't need them */
       "  p_flavor &= ~XER_TOPLEVEL & ~XER_LIST & ~USE_TYPE_ATTR;\n" 
       "  int rd_ok=1, xml_depth=-1;\n"
-      "  set_size(0);\n" /* empty but initialized array */
+      "  *this = NULL_VALUE;\n" /* empty but initialized array */
       "  int type = 0;\n" /* none */
       "  if (own_tag) for (rd_ok = p_reader.Ok(); rd_ok == 1; rd_ok = p_reader.Read()) {\n"
       "    type = p_reader.NodeType();\n"
@@ -1530,14 +1401,14 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       /* Don't move to the #text, that's the callee's responsibility. */
       /* The call to the non-const operator[] creates a new element object,
        * then we call its XER_decode with the temporary XML reader. */
-      "      (*this)[get_nof_elements()].XER_decode(%s_xer_, reader_2, p_flavor);\n"
-      "      if (p_flavor & EXIT_ON_ERROR && !(*this)[get_nof_elements() - 1].is_bound()) {\n"
-      "        if (1 == get_nof_elements()) {\n"
+      "      (*this)[val_ptr->n_elements].XER_decode(%s_xer_, reader_2, p_flavor, 0);\n"
+      "      if (p_flavor & EXIT_ON_ERROR && !(*this)[val_ptr->n_elements - 1].is_bound()) {\n"
+      "        if (1 == val_ptr->n_elements) {\n"
       // Failed to decode even the first element
       "          clean_up();\n"
       "        } else {\n"
       // Some elements were successfully decoded -> only delete the last one
-      "          set_size(get_nof_elements() - 1);\n"
+      "          set_size(val_ptr->n_elements - 1);\n"
       "        }\n"
       "        xmlFree(x_val);\n"
       "       return -1;\n"
@@ -1580,7 +1451,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
          * for the element type (a string), so behave like a record-of
          * (string with ANY-ELEMENT): call the non-const operator[]
          * to create a new element, then read the entire XML element into it. */
-        "            (*this)[get_nof_elements()] = (const char*)p_reader.ReadOuterXml();\n"
+        "            (*this)[val_ptr->n_elements] = (const char*)p_reader.ReadOuterXml();\n"
         /* Consume the element, then move ahead */
         "            for (rd_ok = p_reader.Read(); rd_ok == 1 && p_reader.Depth() > xml_depth; rd_ok = p_reader.Read()) {}\n"
         "            if (p_reader.NodeType() != XML_READER_TYPE_ELEMENT) rd_ok = p_reader.Read();\n"
@@ -1596,7 +1467,10 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "              break;\n"
       "            }\n"
       /* The call to the non-const operator[] creates the element */
-      "            (*this)[get_nof_elements()].XER_decode(%s_xer_, p_reader, p_flavor);\n"
+      "            (*this)[val_ptr->n_elements].XER_decode(%s_xer_, p_reader, p_flavor, emb_val);\n"
+      "            if (0 != emb_val && !own_tag && val_ptr->n_elements > 1) {\n"
+      "              ++emb_val->embval_index;\n"
+      "            }\n"      
       "          }\n"
       "        }\n"
       "        else if (XML_READER_TYPE_END_ELEMENT == type) {\n"
@@ -1607,6 +1481,11 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "          }\n"
       "          break;\n"
       "        }\n"
+      /*"        else if (XML_READER_TYPE_TEXT == type && 0 != emb_val && !own_tag && get_nof_elements() > 0) {\n"
+      "          UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
+      "          emb_val->embval_array->set_embedded_value(emb_val->embval_index, emb_ustr);\n"
+      "          rd_ok = p_reader.Read();\n"
+      "        }\n" - temporarily removed in RT1 */
       "        else {\n"
       "          rd_ok = p_reader.Read();\n"
       "        }\n"
@@ -1629,7 +1508,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "    return -1;\n"
       "  }\n\n"
       "  int enc_len = p_tok.put_next_token(JSON_TOKEN_ARRAY_START, NULL);\n"
-      "  for(int i = 0; i < get_nof_elements(); ++i) {\n"
+      "  for(int i = 0; i < val_ptr->n_elements; ++i) {\n"
       "    int ret_val = (*this)[i].JSON_encode(%s_descr_, p_tok);\n"
       "    if (0 > ret_val) break;\n"
       "    enc_len += ret_val;\n"
@@ -1669,17 +1548,11 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "      }\n"
       "      return JSON_ERROR_FATAL;\n"
       "    }\n"
-      "    if (refd_indices.empty()) {\n"
-      "      val_ptr->value_elements = (%s**)reallocate_pointers(\n"
-      "        (void**)val_ptr->value_elements, val_ptr->n_elements, val_ptr->n_elements + 1);\n"
-      "      val_ptr->value_elements[val_ptr->n_elements] = val;\n"
-      "      val_ptr->n_elements++;\n"
-      "      dec_len += ret_val;\n"
-      "    }\n"
-      "    else {\n"
-      "      (*this)[get_nof_elements()] = *val;\n"
-      "      delete val;\n"
-      "    }\n"
+      "    val_ptr->value_elements = (%s**)reallocate_pointers(\n"
+      "      (void**)val_ptr->value_elements, val_ptr->n_elements, val_ptr->n_elements + 1);\n"
+      "    val_ptr->value_elements[val_ptr->n_elements] = val;\n"
+      "    val_ptr->n_elements++;\n"
+      "    dec_len += ret_val;\n"
       "  }\n\n"
       "  dec_len += p_tok.get_next_token(&token, NULL, NULL);\n"
       "  if (JSON_TOKEN_ARRAY_END != token) {\n"
@@ -1714,7 +1587,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "if (other_value.val_ptr == NULL)\n"
 	"TTCN_error(\"The right operand of comparison is an unbound value of "
     "type %s.\");\n"
-	"return other_value.get_nof_elements() == 0;\n"
+	"return other_value.val_ptr->n_elements == 0;\n"
 	"}\n\n", name, dispname);
 
   output->header.function_prototypes =
@@ -2657,8 +2530,8 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       , name, sdef->oftypedescrname);
 
     src=mputprintf(src,
-      "int %s::XER_encode(const XERdescriptor_t& p_td,"
-      " TTCN_Buffer& p_buf, unsigned int p_flavor, int p_indent) const\n{\n"
+      "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
+      "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t* emb_val) const\n{\n"
       "  if (n_elements==-1) TTCN_error(\"Attempt to XER-encode an unbound record of\");\n" /* TODO type name */
       "  int encoded_length=(int)p_buf.get_len();\n"
       "  boolean e_xer = is_exer(p_flavor);\n"
@@ -2746,7 +2619,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
         "          p_buf.put_s(ns_len, (const unsigned char*)ns);\n"
 
         "          UNIVERSAL_CHARSTRING before(sp_at, (const universal_char*)(value_elements[i]));\n"
-        "          before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent);\n"
+        "          before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent, 0);\n"
         // Ensure the namespace abides to its restrictions
         "          if (p_td.xer_bits & (ANY_FROM | ANY_EXCEPT)) {\n"
         "            TTCN_Buffer ns_buf;\n"
@@ -2774,7 +2647,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
         "        }\n"
 
         "        UNIVERSAL_CHARSTRING after(len - j, (const universal_char*)(value_elements[i]) + j);\n"
-        "        after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent);\n"
+        "        after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent, 0);\n"
         // Put this attribute in a dummy element and walk through it to check its validity
         "        TTCN_Buffer check_buf;\n"
         "        check_buf.put_s(2, (unsigned char*)\"<a\");\n"
@@ -2830,9 +2703,15 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       );
     src=mputprintf(src,
       "    for (int i = 0; i < n_elements; ++i) {\n"
+      /*"      if (i > 0 && !own_tag && 0 != emb_val &&\n"
+      "          emb_val->embval_index < emb_val->embval_size) {\n"
+      "        emb_val->embval_array->get_embedded_value(emb_val->embval_index).XER_encode(\n"
+      "          UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+      "        ++emb_val->embval_index;\n"
+      "      }\n" - temporarily removed in RT1 */
       "      ec_1.set_msg(\"%%d: \", i);\n"
       "      if (e_xer && (p_td.xer_bits & XER_LIST) && i>0) p_buf.put_c(' ');\n"
-      "      value_elements[i].XER_encode(%s_xer_, p_buf, p_flavor, p_indent+own_tag);\n"
+      "      value_elements[i].XER_encode(%s_xer_, p_buf, p_flavor, p_indent+own_tag, emb_val);\n"
       "    }\n"
       "    if (indenting && !is_exerlist(p_flavor)) {\n",
       sdef->oftypedescrname
@@ -2869,7 +2748,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "// written by %s in " __FILE__ " at %d\n"
 #endif
       "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader, "
-      "unsigned int p_flavor)\n{\n"
+      "unsigned int p_flavor, embed_values_dec_struct_t* emb_val)\n{\n"
       "  boolean e_xer = is_exer(p_flavor);\n"
       "  int xerbits = p_td.xer_bits;\n"
       "  if (p_flavor & XER_TOPLEVEL) xerbits &= ~UNTAGGED;\n"
@@ -2946,7 +2825,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       /* Don't move to the #text, that's the callee's responsibility. */
       /* The call to the non-const operator[] creates a new element object,
        * then we call its XER_decode with the temporary XML reader. */
-      "      (*this)[n_elements].XER_decode(%s_xer_, reader_2, p_flavor);\n"
+      "      (*this)[n_elements].XER_decode(%s_xer_, reader_2, p_flavor, 0);\n"
       "      if (p_flavor & EXIT_ON_ERROR && !(*this)[n_elements - 1].is_bound()) {\n"
       "        if (1 == n_elements) {\n"
       // Failed to decode even the first element
@@ -3012,7 +2891,10 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "              break;\n"
       "            }\n"
       /* The call to the non-const operator[] creates the element */
-      "            operator [](n_elements).XER_decode(%s_xer_, p_reader, p_flavor);\n"
+      "            operator [](n_elements).XER_decode(%s_xer_, p_reader, p_flavor, emb_val);\n"
+      "            if (0 != emb_val && !own_tag && n_elements > 1) {\n"
+      "              ++emb_val->embval_index;\n"
+      "            }\n"
       "          }\n"
       "        }\n"
       "        else if (XML_READER_TYPE_END_ELEMENT == type) {\n"
@@ -3023,6 +2905,11 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "          }\n"
       "          break;\n"
       "        }\n"
+      /*"        else if (XML_READER_TYPE_TEXT == type && 0 != emb_val && !own_tag && n_elements > 0) {\n"
+      "          UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
+      "          emb_val->embval_array->set_embedded_value(emb_val->embval_index, emb_ustr);\n"
+      "          rd_ok = p_reader.Read();\n"
+      "        }\n" - temporarily removed in RT1 */
       "        else {\n"
       "          rd_ok = p_reader.Read();\n"
       "        }\n"
@@ -3099,11 +2986,6 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "}\n\n"
       , name, type, sdef->oftypedescrname);
   }
-  
-  /* functions for keeping track of referenced indices (only implemented for regular record of class) */
-  def = mputstr(def,
-    "void add_refd_index(int) {}\n"
-    "void remove_refd_index(int) {}\n\n");
   /* end of class */
   def = mputstr(def, "};\n\n");
 

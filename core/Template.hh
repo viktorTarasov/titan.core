@@ -161,9 +161,11 @@ public:
   boolean is_omit() const;
   boolean is_any_or_omit() const;
   
-  // Dummy functions, only used in record of/set of value
+#ifdef TITAN_RUNTIME_2
+  // Dummy functions, only used in record of/set of value in RT2
   void add_refd_index(int) {}
   void remove_refd_index(int) {}
+#endif
 };
 
 #ifndef TITAN_RUNTIME_2

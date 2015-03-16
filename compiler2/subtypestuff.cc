@@ -451,6 +451,16 @@ string RealRangeListConstraint::to_string() const
   return ret_val;
 }
 
+bool RealRangeListConstraint::is_upper_limit_infinity () const
+{
+  return rlc.is_upper_limit_infinity();
+}
+
+bool RealRangeListConstraint::is_lower_limit_infinity () const
+{
+  return rlc.is_lower_limit_infinity();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 string BooleanListConstraint::to_string() const

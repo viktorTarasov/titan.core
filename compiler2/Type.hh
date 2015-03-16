@@ -380,6 +380,11 @@ namespace Common {
     /** True if chk() has finished running. 
       * Prevents force_raw() from running chk_raw(), chk_text() or chk_json() on unchecked types. */
     bool chk_finished;
+    
+    /** Signifies that this type is an instance of an ASN.1 parameterized type.
+      * It will not have its own segment and reference generated in the JSON schema,
+      * its schema segment will be generated as an embedded type's would. */
+    bool pard_type_instance;
 
     /** Copy constructor, for the use of Type::clone() only. */
     Type(const Type& p);
@@ -786,6 +791,7 @@ namespace Common {
      * If \a v is correct and it is or refers to a constant the constant value
      * is returned for further checking. Otherwise the return value is NULL. */
     Value *chk_range_boundary(Value *v, const char *which, const Location& loc);
+    void chk_range_boundary_infinity(Value *v, bool is_upper);
     void chk_this_template_builtin(Template *t);
     void chk_this_template_Int_Real(Template *t);
     void chk_this_template_Enum(Template *t);
@@ -1128,6 +1134,9 @@ namespace Common {
 
     bool is_untagged() const;
     
+    inline boolean is_pard_type_instance() { return pard_type_instance; }
+    inline void set_pard_type_instance() { pard_type_instance = true; }
+    
     /** Calculates the type's display name from the genname (replaces double
       * underscore characters with single ones) */
     string get_dispname() const;
@@ -1152,6 +1161,10 @@ namespace Common {
     /** Generates the JSON schema segment that would validate a union type or 
       * an anytype and inserts it into the main schema. */
     void generate_json_schema_union(JSON_Tokenizer& json);
+    
+    /** Generates a reference to this type's schema segment and inserts it into
+      * the given schema. */
+    void generate_json_schema_ref(JSON_Tokenizer& json);
   };
 
   /** @} end of AST_Type group */

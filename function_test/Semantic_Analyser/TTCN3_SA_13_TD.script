@@ -1116,49 +1116,6 @@ error: at or before token `permutation': syntax error, unexpected PermutationKey
 
 <END_TC>
 :exmp
-*---------------------------------------------------------------------*
-:h3. Component mapping: invalid ports
-.*---------------------------------------------------------------------*
-:xmp tab=0.
-
-<TC -Component mapping: invalid port  >
-
-<COMPILE>
-
-<MODULE TTCN test test.ttcn >
-module test {
-
-type port P message {
-  inout charstring;
-} with { extension "internal" }
-
-type component MTCType
-{
-  port P MyPCO_PT1;
-}
-
-function akarmi () runs on MTCType {
-map(mtc:MyPCO_PT, system:MyPCO_PT2);
-
-}
-
-testcase  tc_akarmi () runs on MTCType {
-map(mtc:MyPCO_PT, system:MyPCO_PT2);
-
-}
-
-}
-<END_MODULE>
-
-<RESULT COUNT 2>
-Component type `@test.MTCType' does not have port with name `MyPCO_PT'
-<END_RESULT>
-<RESULT COUNT 1>
-Component type `@test.MTCType' does not have port with name `MyPCO_PT2'
-<END_RESULT>
-
-<END_TC>
-:exmp
 
 .*---------------------------------------------------------------------*
 :h1.Abbreviations
