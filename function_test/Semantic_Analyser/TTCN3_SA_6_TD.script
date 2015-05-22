@@ -16,9 +16,9 @@
 :docname.Test Description
 :docno.17/152 91-CRL 113 200/3 Uen
 :rev.A
-:date.2013-01-17
+:date.2015-04-27
 
-:prep.ETH/XZR Krisztian Pandi
+:prep.ETH/XZ Jeno Balasko
 :appr.ETH/XZ (Gyula Koos)
 :checked.EKRISZA
 
@@ -16537,7 +16537,7 @@ ConsoleMask := WARNING | ERROR | TESTCASE | STATISTICS
 ModuleA
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)Dynamic test case error: Accessing an element in an unbound value of type @ModuleA.t_recof.
+(?im)Dynamic test case error: Accessing an element in an unbound value of type @PreGenRecordOf.PREGEN_RECORD_OF_INTEGER.
 <END_RESULT>
 <END_TC>
 :exmp.
@@ -16577,7 +16577,7 @@ ConsoleMask := WARNING | ERROR | TESTCASE | STATISTICS
 ModuleA
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)Dynamic test case error: Index overflow in a value of type @ModuleA.t_recof: The index is 10, but the value has only 2 elements.
+(?im)Dynamic test case error: Index overflow in a value of type @PreGenRecordOf.PREGEN_RECORD_OF_INTEGER: The index is 10, but the value has only 2 elements.
 <END_RESULT>
 <END_TC>
 :exmp.
@@ -16617,7 +16617,7 @@ ConsoleMask := WARNING | ERROR | TESTCASE | STATISTICS
 ModuleA
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)Dynamic test case error: Accessing an element in an unbound value of type @ModuleA.t_setof.
+(?im)Dynamic test case error: Accessing an element in an unbound value of type @PreGenRecordOf.PREGEN_SET_OF_INTEGER.
 <END_RESULT>
 <END_TC>
 :exmp.
@@ -16657,7 +16657,7 @@ ConsoleMask := WARNING | ERROR | TESTCASE | STATISTICS
 ModuleA
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)Dynamic test case error: Index overflow in a value of type @ModuleA.t_setof: The index is 10, but the value has only 2 elements.
+(?im)Dynamic test case error: Index overflow in a value of type @PreGenRecordOf.PREGEN_SET_OF_INTEGER: The index is 10, but the value has only 2 elements.
 <END_RESULT>
 <END_TC>
 :exmp.

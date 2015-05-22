@@ -468,6 +468,8 @@ namespace Ttcn {
     case S_CONTINUE:
     case S_STOP_EXEC:
     case S_REPEAT:
+    case S_START_PROFILER:
+    case S_STOP_PROFILER:
       break;
     case S_START_UNDEF:
     case S_STOP_UNDEF:
@@ -689,6 +691,8 @@ namespace Ttcn {
       ags=0;
     case S_ERROR:
     case S_STOP_EXEC:
+    case S_START_PROFILER:
+    case S_STOP_PROFILER:
       break;
     case S_BREAK:
     case S_CONTINUE:
@@ -1451,6 +1455,8 @@ namespace Ttcn {
     case S_TESTCASE_INSTANCE_REFD:
       return "execute";
     case S_STRING2TTCN: return "string2ttcn";
+    case S_START_PROFILER: return "@profiler.start";
+    case S_STOP_PROFILER: return "@profiler.stop";
     default:
       FATAL_ERROR("Statement::get_stmt_name()");
       return "";
@@ -1529,6 +1535,8 @@ namespace Ttcn {
     case S_CONTINUE:
     case S_STOP_EXEC:
     case S_REPEAT:
+    case S_START_PROFILER:
+    case S_STOP_PROFILER:
       break;
     case S_START_UNDEF:
     case S_STOP_UNDEF:
@@ -1756,6 +1764,8 @@ namespace Ttcn {
     case S_CONTINUE:
     case S_STOP_EXEC:
     case S_REPEAT:
+    case S_START_PROFILER:
+    case S_STOP_PROFILER:
       break;
     case S_START_UNDEF:
     case S_STOP_UNDEF:
@@ -2256,6 +2266,8 @@ namespace Ttcn {
     case S_SETVERDICT:
     case S_TESTCASE_INSTANCE:
     case S_TESTCASE_INSTANCE_REFD:
+    case S_START_PROFILER:
+    case S_STOP_PROFILER:
       return false;
     case S_ALT:
     case S_INTERLEAVE:
@@ -2495,6 +2507,10 @@ namespace Ttcn {
       break;
     case S_STRING2TTCN:
       chk_string2ttcn();
+      break;
+    case S_START_PROFILER:
+    case S_STOP_PROFILER:
+      // do nothing
       break;
     default:
       FATAL_ERROR("Statement::chk()");
@@ -5079,6 +5095,8 @@ error:
     case S_CONTINUE:
     case S_STOP_EXEC:
     case S_REPEAT:
+    case S_START_PROFILER:
+    case S_STOP_PROFILER:
       break;
     case S_ASSIGNMENT:
       ass->set_code_section(p_code_section);
@@ -5466,6 +5484,12 @@ error:
       break;
     case S_STRING2TTCN:
       str=generate_code_string2ttcn(str);
+      break;
+    case S_START_PROFILER:
+      str = mputstr(str, "ttcn3_prof.start();\n");
+      break;
+    case S_STOP_PROFILER:
+      str = mputstr(str, "ttcn3_prof.stop();\n");
       break;
     default:
       FATAL_ERROR("Statement::generate_code()");
@@ -7124,6 +7148,8 @@ error:
         case S_FUNCTION_INVOKED:
         case S_ALTSTEP_INVOKED:
         case S_STRING2TTCN:
+        case S_START_PROFILER:
+        case S_STOP_PROFILER:
           break;
         default:
           FATAL_ERROR("Statement::set_parent_path()");
@@ -9086,22 +9112,32 @@ error:
       for(size_t i=0; i<tis->get_nof_tis(); i++) {
         TemplateInstance *ti=tis->get_ti_byIndex(i);
         Template *tb=ti->get_Template();
-        bool specval = tb->is_Value();
+        bool is_value = NULL == ti->get_DerivedRef() && tb->is_Value();
         expression_struct exprs;
         Code::init_expr(&exprs);
-        if (!specval) ti->generate_code(&exprs);
-        else if (tb->get_templatetype() == Template::SPECIFIC_VALUE) {
-          tb->get_specific_value()->generate_code_expr_mandatory(&exprs);
+        if (is_value) {
+          if (tb->get_templatetype() == Template::SPECIFIC_VALUE) {
+            tb->get_specific_value()->generate_code_expr_mandatory(&exprs);
+          }
+          else {
+            Value* val = tb->get_Value();
+            if (NULL == val->get_my_governor()) {
+              // the value's governor could not be determined, treat it as a non-value template
+              is_value = false;
+            }
+            else {
+              val->generate_code_expr_mandatory(&exprs);
+            }
+            delete val;
+          }
         }
-        else {
-          Value* val = tb->get_Value();
-          val->generate_code_expr_mandatory(&exprs);
-          delete val;
+        if (!is_value) {
+          ti->generate_code(&exprs);
         }
         str=tb->update_location_object(str);
         if(!exprs.preamble && !exprs.postamble) {
           str=mputstr(str, "if(");
-          if(!specval)
+          if(!is_value)
             str=mputprintf(str, "%s.match(%s)", exprs.expr, expr_name);
           else str=mputprintf(str, "%s == %s", expr_name, exprs.expr);
           str=mputprintf(str, ") goto %s_%lu;\n", tmp_prefix,
@@ -9113,7 +9149,7 @@ error:
             (unsigned long) idx);
           char *s=exprs.expr;
           exprs.expr=mprintf("%s_%lub = ", tmp_prefix, (unsigned long) idx);
-          if(!specval)
+          if(!is_value)
             exprs.expr=mputprintf(exprs.expr, "%s.match(%s)", s, expr_name);
           else exprs.expr=mputprintf(exprs.expr, "(%s == %s)", expr_name, s);
           Free(s);

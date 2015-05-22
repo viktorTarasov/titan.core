@@ -1964,6 +1964,21 @@ end:
         // Cannot flatten at compile time if the template has parameters.
         can_flatten = false;
       }
+
+      // check for subreferences in the 'all from' target
+      FieldOrArrayRefs* subrefs = ref->get_subrefs();
+      if (NULL != subrefs) {
+        // flattening values/templates with subreferences is not implemented yet
+        can_flatten = false;
+        for (size_t i = 0; i < subrefs->get_nof_refs(); ++i) {
+          FieldOrArrayRef* subref = subrefs->get_ref(i);
+          if (FieldOrArrayRef::ARRAY_REF == subref->get_type()) {
+            // set any array indexes from undefined lowerID to reference
+            subref->get_val()->set_lowerid_to_ref();
+          }
+        }
+      }
+
       Common::Assignment *ass = ref->get_refd_assignment();
       if (ass == NULL) { // perhaps erroneous
         break;
@@ -2073,11 +2088,18 @@ end:
         switch (val->get_valuetype()) {
         case Common::Value::V_SEQOF: case Common::Value::V_SETOF:
         case Common::Value::V_ARRAY: {
-          const size_t ncomp = val->get_nof_comps();
-          for (size_t i = 0; i < ncomp; ++i) {
-            Value *v = val->get_comp_byIndex(i);
-            Template *newt = new Template(v->clone());
-            new_templates->add_t(newt);
+          if (can_flatten) {
+            const size_t ncomp = val->get_nof_comps();
+            for (size_t i = 0; i < ncomp; ++i) {
+              Value *v = val->get_comp_byIndex(i);
+              Template *newt = new Template(v->clone());
+              new_templates->add_t(newt);
+            }
+          }
+          else {
+            delete new_templates;
+            new_templates = 0;
+            killer = false;
           }
           break; }
 
@@ -2095,7 +2117,9 @@ end:
       case Common::Assignment::A_MODULEPAR: // all from a module parameter
       case Common::Assignment::A_VAR: // all from a variable
       case Common::Assignment::A_PAR_VAL_IN:
-      case Common::Assignment::A_PAR_VAL_INOUT: {
+      case Common::Assignment::A_PAR_VAL_INOUT: 
+      case Common::Assignment::A_FUNCTION_RVAL:
+      case Common::Assignment::A_EXT_FUNCTION_RVAL: {
         delete new_templates; // cannot flatten at compile time
         new_templates = 0;
         break; }
@@ -3232,7 +3256,6 @@ end:
          // variable part
         for (size_t i = 0; i < nof_ts; i++) {
           Template *t = u.templates->get_t_byIndex(i);
-          printf("generate_code_init_seof ALL_FROM: temptype %u\n", t->templatetype);
           for (size_t k = 0, v = variables.size(); k < v; ++k) {
             if (t->templatetype == ALL_FROM) {
               Value *refv = t->u.all_from->u.specific_value;

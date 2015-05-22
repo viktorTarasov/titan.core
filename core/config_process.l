@@ -35,6 +35,8 @@
 
 #include "../common/dbgnew.hh"
 
+#include "Profiler.hh"
+
 extern string_map_t *config_defines;
 
 #define yylval config_process_lval
@@ -276,6 +278,25 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
 
 . /* eat unnecessary chars */
 
+}
+
+<SC_PROFILER>{HEX}+ {
+  /* numeric statistics filter (check this before checking for NUMBERs) */
+  yylval.uint_val = 0;
+  while(0 != *yytext) {
+    yylval.uint_val *= 16;
+    if ('0' <= *yytext && '9' >= *yytext) {
+      yylval.uint_val += *yytext - '0';
+    }
+    else if ('a' <= *yytext && 'f' >= *yytext) {
+      yylval.uint_val += *yytext - 'a' + 10;
+    }
+    else {
+      yylval.uint_val += *yytext - 'A' + 10;
+    }
+    ++yytext;
+  }
+  return ProfilerStatsFlag;
 }
 
 	/* Values */
@@ -966,12 +987,170 @@ LOG_ALL	{
 
 <SC_PROFILER>
 {
-  [Dd]isable[Pp]rofiler   return DisableProfilerKeyword;
-  [Dd]isable[Cc]overage   return DisableCoverageKeyword;
-  [Dd]ata[Bb]ase[Ff]ile   return DatabaseFileKeyword;
-  [Aa]ggregate[Dd]ata     return AggregateDataKeyword;
-  [Ss]tatistics[Ff]ile    return StatisticsFileKeyword;
-  [Dd]isable[Ss]tatistics return DisableStatisticsKeyword;
+  [Dd]isable[Pp]rofiler     return DisableProfilerKeyword;
+  [Dd]isable[Cc]overage     return DisableCoverageKeyword;
+  [Dd]ata[Bb]ase[Ff]ile     return DatabaseFileKeyword;
+  [Aa]ggregate[Dd]ata       return AggregateDataKeyword;
+  [Ss]tatistics[Ff]ile      return StatisticsFileKeyword;
+  [Dd]isable[Ss]tatistics   return DisableStatisticsKeyword;
+  [Ss]tatistics[Ff]ilter    return StatisticsFilterKeyword;
+  [Ss]tart[Aa]utomatically  return StartAutomaticallyKeyword;
+  [Nn]et[Ll]ine[Tt]imes     return NetLineTimesKeyword;
+  [Nn]et[Ff]unction[Tt]imes return NetFunctionTimesKeyword;
+  
+  /* statistics filters */
+  [Nn]umber[Oo]f[Ll]ines {
+    yylval.uint_val = TTCN3_Profiler::STATS_NUMBER_OF_LINES;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Dd]ata[Rr]aw {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_DATA_RAW;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Dd]ata[Rr]aw {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_DATA_RAW;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Aa]vg[Rr]aw {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_AVG_RAW;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Aa]vg[Rr]aw {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_AVG_RAW;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Tt]imes[Ss]orted[Bb]y[Mm]od {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_TIMES_SORTED_BY_MOD;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Tt]imes[Ss]orted[Bb]y[Mm]od {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_TIMES_SORTED_BY_MOD;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Tt]imes[Ss]orted[Tt]otal {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_TIMES_SORTED_TOTAL;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Tt]imes[Ss]orted[Tt]otal {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_TIMES_SORTED_TOTAL;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Cc]ount[Ss]orted[Bb]y[Mm]od {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_COUNT_SORTED_BY_MOD;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Cc]ount[Ss]orted[Bb]y[Mm]od {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_COUNT_SORTED_BY_MOD;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Cc]ount[Ss]orted[Tt]otal {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_COUNT_SORTED_TOTAL;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Cc]ount[Ss]orted[Tt]otal {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_COUNT_SORTED_TOTAL;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Aa]vg[Ss]orted[Bb]y[Mm]od {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_AVG_SORTED_BY_MOD;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Aa]vg[Ss]orted[Bb]y[Mm]od {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_AVG_SORTED_BY_MOD;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Aa]vg[Ss]orted[Tt]otal {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_AVG_SORTED_TOTAL;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Aa]vg[Ss]orted[Tt]otal {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_AVG_SORTED_TOTAL;
+    return ProfilerStatsFlag;
+  }
+  [Tt]op10[Ll]ine[Tt]imes {
+    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_LINE_TIMES;
+    return ProfilerStatsFlag;
+  }
+  [Tt]op10[Ff]unc[Tt]imes {
+    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_FUNC_TIMES;
+    return ProfilerStatsFlag;
+  }
+  [Tt]op10[Ll]ine[Cc]ount {
+    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_LINE_COUNT;
+    return ProfilerStatsFlag;
+  }
+  [Tt]op10[Ff]unc[Cc]ount {
+    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_FUNC_COUNT;
+    return ProfilerStatsFlag;
+  }
+  [Tt]op10[Ll]ine[Aa]vg {
+    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_LINE_AVG;
+    return ProfilerStatsFlag;
+  }
+  [Tt]op10[Ff]unc[Aa]vg {
+    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_FUNC_AVG;
+    return ProfilerStatsFlag;
+  }
+  [Uu]nused[Ll]ines {
+    yylval.uint_val = TTCN3_Profiler::STATS_UNUSED_LINES;
+    return ProfilerStatsFlag;
+  }
+  [Uu]nused[Ff]unc {
+    yylval.uint_val = TTCN3_Profiler::STATS_UNUSED_FUNC;
+    return ProfilerStatsFlag;
+  }
+  [Aa]ll[Rr]aw[Dd]ata {
+    yylval.uint_val = TTCN3_Profiler::STATS_ALL_RAW_DATA;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Dd]ata[Ss]orted[Bb]y[Mm]od {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_DATA_SORTED_BY_MOD;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Dd]ata[Ss]orted[Bb]y[Mm]od {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_DATA_SORTED_BY_MOD;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Dd]ata[Ss]orted[Tt]otal {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_DATA_SORTED_TOTAL;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Dd]ata[Ss]orted[Tt]otal {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_DATA_SORTED_TOTAL;
+    return ProfilerStatsFlag;
+  }
+  [Ll]ine[Dd]ata[Ss]orted {
+    yylval.uint_val = TTCN3_Profiler::STATS_LINE_DATA_SORTED;
+    return ProfilerStatsFlag;
+  }
+  [Ff]unc[Dd]ata[Ss]orted {
+    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_DATA_SORTED;
+    return ProfilerStatsFlag;
+  }
+  [Aa]ll[Dd]ata[Ss]orted {
+    yylval.uint_val = TTCN3_Profiler::STATS_ALL_DATA_SORTED;
+    return ProfilerStatsFlag;
+  }
+  [Tt]op10[Ll]ine[Dd]ata {
+    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_LINE_DATA;
+    return ProfilerStatsFlag;
+  }
+  [Tt]op10[Ff]unc[Dd]ata {
+    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_FUNC_DATA;
+    return ProfilerStatsFlag;
+  }
+  [Tt]op10[Aa]ll[Dd]ata {
+    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_ALL_DATA;
+    return ProfilerStatsFlag;
+  }
+  [Uu]nused[Dd]ata {
+    yylval.uint_val = TTCN3_Profiler::STATS_UNUSED_DATA;
+    return ProfilerStatsFlag;
+  }
+  [Aa]ll {
+    yylval.uint_val = TTCN3_Profiler::STATS_ALL;
+    return ProfilerStatsFlag;
+  }
 }
 
 <SC_EXECUTE>control		return ControlKeyword;

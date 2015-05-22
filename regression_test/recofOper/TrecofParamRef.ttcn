@@ -660,6 +660,32 @@ testcase tc_param_ref_emb_lazy() runs on CT_Empty
   else { setverdict(fail, "@4 got: ", v_roi, ", expected: { 10, <unbound>, <unbound>, <unbound>, <unbound>, 20 }"); }
 }
 
+// 19. The function call is interrupted by a DTE, the reference to the element should be cleaned up (HT47424)
+function f_dte(in RoI p_roi, inout integer p_val) runs on CT_Empty
+{
+  var integer bad_index := -1;
+  if (p_val < p_roi[bad_index]) {
+    setverdict(fail, "expected DTE in if clause");
+  }
+}
+
+testcase tc_param_ref_dte() runs on CT_Empty
+{
+  var RoI v_roi := { 0, 1, 2, 3 };
+  @try {
+    f_dte(v_roi, v_roi[2]);
+    setverdict(fail, "expected DTE in function call");
+  }
+  @catch (dummy) {}
+  v_roi := { };
+  var RoI v_copy := v_roi;
+  var charstring log_exp := "{ }";
+  if (log2str(v_roi) == log_exp) { setverdict(pass); }
+  else { setverdict(fail, "@1 got: ", v_roi, ", expected: ", log_exp); }
+  if (log2str(v_copy) == log_exp) { setverdict(pass); }
+  else { setverdict(fail, "@2 got: ", v_copy, ", expected: ", log_exp); }
+}
+
 control {
   execute(tc_param_ref_assign());
   execute(tc_param_ref_concat());
@@ -684,6 +710,8 @@ control {
 
   execute(tc_param_ref_emb_recof_opt());
   execute(tc_param_ref_emb_lazy());
+
+  execute(tc_param_ref_dte());
 }
 
 } // end of module

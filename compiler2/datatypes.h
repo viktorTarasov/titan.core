@@ -70,6 +70,8 @@ typedef struct {
   boolean jsonOmitAsNull;
   const char* jsonAlias;
   const char* jsonDefaultValue;
+  /** true if the field is a record-of or set-of with optimized memory allocation */
+  boolean optimizedMemAlloc;
 } struct_field;
 
 /** Structure (record, set, union, anytype) descriptor for code generation */

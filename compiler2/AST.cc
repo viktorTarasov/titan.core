@@ -23,6 +23,7 @@
 #include "../common/version.h"
 #include "CodeGenHelper.hh"
 #include <limits.h>
+#include "ttcn3/profiler.h"
 
 reffer::reffer(const char*) {}
 
@@ -774,7 +775,9 @@ namespace Common {
     }
     // pre_init function
     bool has_pre_init = false;
-    if (output->functions.pre_init) {
+    bool profiled = MOD_TTCN == get_moduletype() && is_file_profiled(get_filename());
+    // always generate pre_init_module if the file is profiled
+    if (output->functions.pre_init || profiled) {
       output->source.static_function_prototypes =
 	mputstr(output->source.static_function_prototypes,
 	  "static void pre_init_module();\n");
@@ -800,11 +803,11 @@ namespace Common {
               mputprintf(effective_module_functions, "%s\"%s\"",
               		   (effective_module_functions ? ", " : ""), get_modid().get_dispname().c_str());
         }
-        if (profiler_enabled && MOD_TTCN == get_moduletype()) {
+        if (profiled) {
           output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+            "%s::init_ttcn3_profiler();\n"
             "TTCN3_Stack_Depth stack_depth;\n"
-            "ttcn3_prof.enter_function(\"%s\", 0, \"%s\");\n",
-            get_filename(), get_modid().get_dispname().c_str());
+            "ttcn3_prof.execute_line(\"%s\", 0);\n", get_modid().get_name().c_str(), get_filename());
         }
       }
       output->source.static_function_bodies =
@@ -843,11 +846,10 @@ namespace Common {
             mputprintf(effective_module_functions, "%s\"%s\"",
             		   (effective_module_functions ? ", " : ""), get_modid().get_dispname().c_str());
         }
-        if (profiler_enabled && MOD_TTCN == get_moduletype()) {
+        if (MOD_TTCN == get_moduletype() && is_file_profiled(get_filename())) {
           output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
             "TTCN3_Stack_Depth stack_depth;\n"
-            "ttcn3_prof.enter_function(\"%s\", 0, \"%s\");\n",
-            get_filename(), get_modid().get_dispname().c_str());
+            "ttcn3_prof.execute_line(\"%s\", 0);\n", get_filename());
         }
       }
       output->source.static_function_bodies =
@@ -1482,13 +1484,38 @@ namespace Common {
     // language specific parts (definitions, imports, etc.)
     //generate_code_internal(&target);  <- needed to pass cgh
     generate_code_internal(cgh);
+    
+    output_struct* output = cgh.get_current_outputstruct();
 
     // string literals
-    generate_literals(cgh.get_current_outputstruct());
+    generate_literals(output);
     // module level entry points
-    generate_functions(cgh.get_current_outputstruct());
+    generate_functions(output);
     // type conversion functions for type compatibility
-    generate_conversion_functions(cgh.get_current_outputstruct());
+    generate_conversion_functions(output);
+    
+    /* generate the initializer function for the TTCN-3 profiler
+     * (this is done at the end of the code generation, to make sure all code 
+     * lines have been added to the profiler database) */
+    if (is_file_profiled(get_filename())) {
+      output->source.global_vars = mputstr(output->source.global_vars,
+        "\n/* Initializing TTCN-3 profiler */\n"
+        "void init_ttcn3_profiler()\n"
+        "{\n");
+      char* function_name = 0;
+      int line_no = -1;
+      while(get_profiler_code_line(get_filename(), &function_name, &line_no)) {
+        output->source.global_vars = mputprintf(output->source.global_vars,
+          "  ttcn3_prof.create_line(ttcn3_prof.get_element(\"%s\"), %d);\n",
+          get_filename(), line_no);
+        if (0 != function_name) {
+          output->source.global_vars = mputprintf(output->source.global_vars,
+            "  ttcn3_prof.create_function(ttcn3_prof.get_element(\"%s\"), %d, \"%s\");\n",
+            get_filename(), line_no, function_name);
+        }
+      }
+      output->source.global_vars = mputstr(output->source.global_vars, "}\n\n");
+    }
   }
 
   void Module::dump(unsigned level) const

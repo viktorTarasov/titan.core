@@ -16,6 +16,7 @@ type component A {
 
 type record of integer RoI;
 type set    of integer SoI;
+type record of float RoF;
 type record of SoI RoSoI;
 type record of RoI RoRoI;
 type record of RoOS RoRoOS;
@@ -23,11 +24,17 @@ type record of SoOS RoSoOS;
 
 type set of integer MySetOfType (0 .. 10);
 
+type record of bitstring RoBS;
+
+type record of hexstring RoHS;
+
 type record of charstring RoCS;
 type set of charstring CoCS;
 
 type record of octetstring RoOS;
 type set of octetstring SoOS;
+
+type record of universal charstring RoUCS;
 
 type record MyRecord {
   integer i optional,
@@ -79,5 +86,42 @@ type record CAI3gCommand {
   GetResp getResponse
 }
 */
+
+/* * * * Subtypes * * * */
+
+type integer PosInt (0..infinity);
+
+type float NegFloat (-infinity..0.0);
+
+type bitstring ByteString length (8);
+
+type hexstring WordString length (4);
+
+type octetstring DWordString length (4);
+
+type charstring TtcnFileName (pattern "*.ttcn");
+
+type universal charstring XsdString (
+  char(0,0,0,9)..char(0,0,0,9),
+  char(0,0,0,10)..char(0,0,0,10),
+  char(0,0,0,12)..char(0,0,0,12),
+  char(0,0,0,32)..char(0,0,215,255),
+  char(0,0,224,0)..char(0,0,255,253),
+  char(0,1,0,0)..char(0,16,255,253)
+);
+
+type record length (0..3) of integer ShortRoI;
+
+type record length (0..3) of float ShortRoF;
+
+type record length (0..3) of bitstring ShortRoBS;
+
+type record length (0..3) of hexstring ShortRoHS;
+
+type record length (0..3) of octetstring ShortRoOS;
+
+type record length (0..3) of charstring ShortRoCS;
+
+type record length (0..3) of universal charstring ShortRoUCS;
 
 }

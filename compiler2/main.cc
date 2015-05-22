@@ -45,6 +45,8 @@
 
 #include "ttcn3/Ttcn2Json.hh"
 
+#include "ttcn3/profiler.h"
+
 #ifdef LICENSE
 #include "../common/license.h"
 #endif
@@ -53,6 +55,7 @@ using namespace Common;
 
 const char *output_dir = NULL;
 const char *tcov_file_name = NULL;
+const char *profiler_file_name = NULL;
 tcov_file_list *tcov_files = NULL;
 expstring_t effective_module_lines = NULL;
 expstring_t effective_module_functions = NULL;
@@ -68,7 +71,7 @@ boolean generate_skeleton = FALSE, force_overwrite = FALSE,
   use_runtime_2 = FALSE, gcc_compat = FALSE, asn1_xer = FALSE,
   check_subtype = TRUE, suppress_context = FALSE, display_up_to_date = FALSE,
   implicit_json_encoding = FALSE, json_refs_for_all_types = TRUE,
-  profiler_enabled = FALSE;
+  force_gen_seof = FALSE;
 
 // Default code splitting mode is set to 'no splitting'.
 CodeGenHelper::split_type code_splitting_mode = CodeGenHelper::SPLIT_NONE;
@@ -286,7 +289,8 @@ boolean in_tcov_files(const char *file_name)
   return get_tcov_file_name(file_name) ? TRUE : FALSE;
 }
 
-static bool check_file_list(const char *file_name, module_struct *module_list, size_t n_modules)
+static bool check_file_list(const char *file_name, module_struct *module_list,
+                            size_t n_modules, tcov_file_list *&file_list_head)
 {
   FILE *fp = fopen(file_name, "r");
   if (fp == NULL) {
@@ -316,11 +320,11 @@ static bool check_file_list(const char *file_name, module_struct *module_list, s
     for (; i < n_modules; ++i) {
       const module_struct *module = module_list + i;
       if (!strncmp(module->file_name, line, line_len)) {
-        tcov_file_list *next_file = new tcov_file_list;
-        next_file->next = tcov_files;
+        tcov_file_list *next_file = (tcov_file_list*)Malloc(sizeof(tcov_file_list));
+        next_file->next = file_list_head;
         // We'll need the `.ttcnpp' file name.
         next_file->file_name = mcopystr(line);
-        tcov_files = next_file;
+        file_list_head = next_file;
         break;
       }
     }
@@ -332,13 +336,13 @@ static bool check_file_list(const char *file_name, module_struct *module_list, s
   }
   fclose(fp);
   if (unlisted_files) {
-	while (tcov_files != NULL) {
-	  tcov_file_list *next_file = tcov_files->next;
-	  Free(tcov_files->file_name);
-	  delete tcov_files;
-	  tcov_files = next_file;
+	while (file_list_head != NULL) {
+	  tcov_file_list *next_file = file_list_head->next;
+	  Free(file_list_head->file_name);
+	  Free(file_list_head);
+	  file_list_head = next_file;
 	}
-	tcov_files = NULL;
+	file_list_head = NULL;
   }
   return !unlisted_files;
 }
@@ -354,8 +358,8 @@ static boolean is_valid_asn1_filename(const char* file_name)
 static void usage()
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abcdfgilLOpqrRsStuwxXjy] [-K file] [-V verb_level] [-o dir]\n"
-    "	[-U none|type] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
+    "usage: %s [-abcdfgijlLOpqrRsStuwxXyY] [-K file] [-z file] [-V verb_level]\n"
+    "	[-o dir] [-U none|type] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
     "	[-T] module.ttcn [-A] module.asn ...\n"
     "	or  %s -v\n"
     "	or  %s --ttcn2json [-jf] ... [-T] module.ttcn [-A] module.asn ... [- schema.json]\n"
@@ -390,7 +394,7 @@ static void usage()
     "	-X:		disable XER encoder/decoder functions\n"
     "	-y:		disable subtype checking\n"
     "	-Y:		Enforces legacy behaviour of the \"out\" function parameters (see refguide)\n"
-    //"	-z:		enable profiling and code coverage for TTCN-3 files\n" - not open to the public yet
+    "	-z file:	enable profiling and code coverage for the TTCN-3 files in the argument\n"
     "	-T file:	force interpretation of file as TTCN-3 module\n"
     "	-A file:	force interpretation of file as ASN.1 module\n"
     "	-v:		show version\n"
@@ -438,7 +442,7 @@ int main(int argc, char *argv[])
     usage();
     return EXIT_FAILURE;
   }
-
+  
   bool
     Aflag = false,  Lflag = false, Yflag = false,
     Pflag = false, Tflag = false, Vflag = false, bflag = false,
@@ -447,7 +451,7 @@ int main(int argc, char *argv[])
     tflag = false, uflag = false, vflag = false, wflag = false, xflag = false,
     dflag = false, Xflag = false, Rflag = false, gflag = false, aflag = false,
     s0flag = false, Cflag = false, yflag = false, Uflag = false, Qflag = false,
-    Sflag = false, Kflag = false, jflag = false, zflag = false,
+    Sflag = false, Kflag = false, jflag = false, zflag = false, Fflag = false,
     errflag = false, print_usage = false, ttcn2json = false;
 
   CodeGenHelper cgh;
@@ -540,7 +544,7 @@ int main(int argc, char *argv[])
 
   if (!ttcn2json) {
     for ( ; ; ) {
-      int c = getopt(argc, argv, "aA:C:K:LP:T:V:bcdfgilo:YpqQ:rRs0StuU:vwxXjyz-");
+      int c = getopt(argc, argv, "aA:C:K:LP:T:V:bcdfFgilo:YpqQ:rRs0StuU:vwxXjyz:-");
       if (c == -1) break;
       switch (c) {
       case 'a':
@@ -697,7 +701,11 @@ int main(int argc, char *argv[])
         break;
       case 'z':
         SET_FLAG(z);
-        profiler_enabled = TRUE;
+        profiler_file_name = optarg;
+        break;
+      case 'F':
+        SET_FLAG(F);
+        force_gen_seof = TRUE;
         break;
 
       case 'Q': {
@@ -722,8 +730,8 @@ int main(int argc, char *argv[])
 
         Error_Context::set_max_errors(max_errs);
         break; }
-      
-      case '-': 
+
+      case '-':
         if (!strcmp(argv[optind], "--ttcn2json")) {
           ERROR("Option `--ttcn2json' is only allowed as the first option");
         } else {
@@ -743,7 +751,7 @@ int main(int argc, char *argv[])
       if (Aflag || Lflag || Pflag || Tflag || Vflag || Yflag ||
         bflag || fflag || iflag || lflag || oflag || pflag || qflag ||
         rflag || sflag || tflag || uflag || wflag || xflag || Xflag || Rflag ||
-        Uflag || yflag || Kflag || jflag || zflag) {
+        Uflag || yflag || Kflag || jflag || zflag || Fflag) {
         errflag = true;
         print_usage = true;
       }
@@ -966,10 +974,19 @@ int main(int argc, char *argv[])
   has_xer_feature = check_feature(&lstr, FEATURE_XER);
   free_license(&lstr);
 #endif
-  if (Kflag && !check_file_list(tcov_file_name, module_list, n_modules)) {
+  if (Kflag && !check_file_list(tcov_file_name, module_list, n_modules, tcov_files)) {
 	ERROR("Error while processing `%s' provided for code coverage data "
 	      "generation.", tcov_file_name);
 	return EXIT_FAILURE;
+  }
+  if (zflag) {
+    tcov_file_list *file_list_head = NULL;
+    if(!check_file_list(profiler_file_name, module_list, n_modules, file_list_head)) {
+      ERROR("Error while processing `%s' provided for profiling and code coverage.",
+        profiler_file_name);
+      return EXIT_FAILURE;
+    }
+    init_profiler_data(file_list_head);
   }
   {
     STOPWATCH("Parsing modules");
@@ -1069,7 +1086,7 @@ int main(int argc, char *argv[])
     while (tcov_files != NULL) {
 	  tcov_file_list *next_file = tcov_files->next;
 	  Free(tcov_files->file_name);
-	  delete tcov_files;
+	  Free(tcov_files);
 	  tcov_files = next_file;
     }
     tcov_files = NULL;
@@ -1081,6 +1098,9 @@ int main(int argc, char *argv[])
   Common::Node::chk_counter();
   Location::delete_source_file_names();
   Free(json_schema_name);
+  if (zflag) {
+    free_profiler_data();
+  }
 
   // dbgnew.hh already does it: check_mem_leak(argv[0]);
 

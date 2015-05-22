@@ -2118,10 +2118,17 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  embed_values_enc_struct_t* emb_val = 0;\n"
       "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && field_%s.size_of() > 1) {\n"
       "    emb_val = new embed_values_enc_struct_t;\n"
-      "    emb_val->embval_array = &field_%s;\n"
+      /* If the first field is a record of ANY-ELEMENTs, then it won't be a pre-generated
+       * record of universal charstring, so it needs a cast to avoid a compilation error */
+      "    emb_val->embval_array%s = (const PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING%s*)&field_%s;\n"
+      "    emb_val->embval_array%s = NULL;\n"
       "    emb_val->embval_index = 1;\n"
-      "    emb_val->embval_size = field_%s.size_of();\n"
-      "  }\n", sdef->elements[0].name, sdef->elements[0].name, sdef->elements[0].name);
+      "  }\n"
+      , sdef->elements[0].name
+      , sdef->elements[0].optimizedMemAlloc ? "_opt" : "_reg"
+      , sdef->elements[0].optimizedMemAlloc ? "__OPTIMIZED" : ""
+      , sdef->elements[0].name
+      , sdef->elements[0].optimizedMemAlloc ? "_reg" : "_opt");
   }
   
   if (sdef->xerUseOrderPossible) {
@@ -2223,12 +2230,12 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     if (sdef->xerEmbedValuesPossible) {
       src = mputprintf(src,
         "    if (e_xer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&\n"
-        "        emb_val->embval_index < emb_val->embval_size) { // embed-val\n"
+        "        emb_val->embval_index < field_%s.size_of()) { // embed-val\n"
         "      field_%s[emb_val->embval_index].XER_encode(\n"
         "        UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
         "      ++emb_val->embval_index;\n"
         "    }\n"
-        , sdef->elements[0].name);
+        , sdef->elements[0].name, sdef->elements[0].name);
     }
 
 
@@ -2255,27 +2262,27 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       if (sdef->xerEmbedValuesPossible) {
         src = mputprintf(src,
           "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&\n"
-          "      emb_val->embval_index < emb_val->embval_size) {\n"
+          "      emb_val->embval_index < field_%s.size_of()) {\n"
           "    field_%s[emb_val->embval_index].XER_encode(\n"
           "      UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
           "    ++emb_val->embval_index;\n"
           "  }\n"
-          , sdef->elements[0].name);
+          , sdef->elements[0].name, sdef->elements[0].name);
       }
     } /* next field when not USE-ORDER */
 
   if (sdef->xerEmbedValuesPossible) {
     src = mputprintf(src,
       "  if (0 != emb_val) {\n"
-      "    if (emb_val->embval_index < emb_val->embval_size) {\n"
+      "    if (emb_val->embval_index < field_%s.size_of()) {\n"
       "      ec_1.set_msg(\"%s': \");\n"
       "      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_CONSTRAINT,\n"
       "        \"Too many EMBED-VALUEs specified: %%d (expected %%d or less)\",\n"
-      "        emb_val->embval_size, emb_val->embval_index);\n"
+      "        field_%s.size_of(), emb_val->embval_index);\n"
       "    }\n"
       "    delete emb_val;\n"
       "  }\n"
-      , sdef->elements[0].name);
+      , sdef->elements[0].name, sdef->elements[0].name, sdef->elements[0].name);
   }
 
   src = mputstr(src, "  } // QN?\n");
@@ -2636,10 +2643,18 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  embed_values_dec_struct_t* emb_val = 0;\n"
       "  if (e_xer && (p_td.xer_bits & EMBED_VALUES)) {\n"
       "    emb_val = new embed_values_dec_struct_t;\n"
-      "    emb_val->embval_array = &field_%s;\n"
+      /* If the first field is a record of ANY-ELEMENTs, then it won't be a pre-generated
+       * record of universal charstring, so it needs a cast to avoid a compilation error */
+      "    emb_val->embval_array%s = (PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING%s*)&field_%s;\n"
+      "    emb_val->embval_array%s = NULL;\n"
       "    emb_val->embval_index = 0;\n"
       "    field_%s.set_size(0);\n"
-      "  }\n", sdef->elements[0].name, sdef->elements[0].name);
+      "  }\n"
+      , sdef->elements[0].optimizedMemAlloc ? "_opt" : "_reg"
+      , sdef->elements[0].optimizedMemAlloc ? "__OPTIMIZED" : ""
+      , sdef->elements[0].name
+      , sdef->elements[0].optimizedMemAlloc ? "_reg" : "_opt"
+      , sdef->elements[0].name);
   }
 
   if (sdef->xerUseOrderPossible) {

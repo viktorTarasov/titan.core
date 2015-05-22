@@ -6,7 +6,7 @@
 # http://www.eclipse.org/legal/epl-v10.html
 ###############################################################################
 DIRS := \
-JUnitLogger TSTLogger
+JUnitLogger TSTLogger JUnitLogger2
 
 all run dep clean distclean install:
 	for d in $(DIRS); do $(MAKE) -C $$d $@ || exit 1; done

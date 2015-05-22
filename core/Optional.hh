@@ -25,7 +25,11 @@
 enum optional_sel { OPTIONAL_UNBOUND, OPTIONAL_OMIT, OPTIONAL_PRESENT };
 
 template <typename T_type>
-class OPTIONAL : public Base_Type {
+class OPTIONAL : public Base_Type 
+#ifdef TITAN_RUNTIME_2
+  , public RefdIndexInterface
+#endif
+{
   /** The value, if present (owned by OPTIONAL) 
     * In Runtime2 the pointer is null, when the value is not present.
     * In Runtime1 its presence is indicated by the optional_selection member. */
@@ -319,19 +323,13 @@ public:
     * 'inout' or 'out' parameter to a function (only in Runtime2).
     * Sets the optional value to present (this would be done by the indexing operation
     * anyway) and redirects the call to the optional value. */
-  void add_refd_index(int index);
+  virtual void add_refd_index(int index);
   
   /** Called after an element of an optional record of/set of is passed as an
     * 'inout' or 'out' parameter to a function (only in Runtime2).
     * Redirects the call to the optional value. */
-  void remove_refd_index(int index);
+  virtual void remove_refd_index(int index);
 #endif
-  
-  /** Called before an element of an optional record of/set of is passed as an
-    * 'inout' or 'out' parameter to a function. Returns the size of the record of/
-    * set of.
-    * Redirects the call to the optional value. */
-  int size_of();
 };
 
 #if HAVE_GCC(4,6)
@@ -827,14 +825,20 @@ void OPTIONAL<T_type>::add_refd_index(int index)
 {
   ++param_refs;
   set_to_present();
-  optional_value->add_refd_index(index);
+  RefdIndexInterface* refd_opt_val = dynamic_cast<RefdIndexInterface*>(optional_value);
+  if (0 != refd_opt_val) {
+    refd_opt_val->add_refd_index(index);
+  }
 }
 
 template<typename T_type>
 void OPTIONAL<T_type>::remove_refd_index(int index)
 {
   --param_refs;
-  optional_value->remove_refd_index(index);
+  RefdIndexInterface* refd_opt_val = dynamic_cast<RefdIndexInterface*>(optional_value);
+  if (0 != refd_opt_val) {
+    refd_opt_val->remove_refd_index(index);
+  }
 }
 #endif
 
@@ -1005,6 +1009,12 @@ OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
         // we already checked for exer==1
         if (!check_namespace((const char*)reader.NamespaceUri(), p_td)) break;
 
+        // set to omit if the attribute is empty
+        const char * value = (const char *)reader.Value();
+        if (strlen(value) == 0) {
+          break;
+        }
+        
         set_to_present();
         optional_value->XER_decode(p_td, reader, flavor, emb_val);
         goto finished;

@@ -13,7 +13,7 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = TrecofOper.ttcn
+TTCN3_MODULES = TrecofOper.ttcn TrecofCompat.ttcn
 ifdef RT2
 TTCN3_MODULES += TrecofParamRef.ttcn
 ASN1_MODULES = BerType.asn

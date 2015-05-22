@@ -1,0 +1,74 @@
+/******************************************************************************
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ ******************************************************************************/
+
+module Testcases {
+
+import from Shell all;
+
+type record of charstring CharstringList;
+
+function f_test_profiler(in charstring p_target_file, in charstring p_config_file,
+  in CharstringList p_output_files, in CharstringList p_exp_output_files) runs on Shell_CT
+{
+  // make the target (the makefile must have a rule for it)
+  f_shellCommandWithVerdict("make " & p_target_file, "", c_shell_successWithoutWarningAndError);
+
+  if (getverdict == pass) {
+    // run the executable with the specified configuration file
+    f_shellCommandWithVerdict("ttcn3_start " & p_target_file & " " & p_config_file, "",
+      c_shell_successWithoutWarningAndError);
+    
+    if (getverdict == pass) {
+      // compare the output files
+      var integer i;
+      for (i := 0; i < sizeof(p_output_files); i := i + 1) {
+        f_compareFiles(p_output_files[i], p_exp_output_files[i], 0);
+        if (getverdict != pass) {
+          action("Output file '" & p_output_files[i] & "' does not match the expected file '" &
+            p_exp_output_files[i] & "'");
+        }
+      }
+    }
+    else {
+      action("Failed to run target '", p_target_file, "', with configuration file '", p_config_file, "'");
+    }
+  }
+  else {
+    action("Failed to make target '", p_target_file, "'");
+  }
+}
+
+testcase tc_coverage() runs on Shell_CT
+{
+  // only code coverage is done in this case, since that is exact, and the results can be checked with
+  // a simple file comparison
+  f_test_profiler("prof.exe", "prof1.cfg", { "data.json", "prof1.stats" }, { "data_e.json", "prof1_e.stats" } );
+}
+
+testcase tc_profiling() runs on Shell_CT
+{
+  // only profiling is done in this case
+  // the results cannot be checked, since the call times will vary in each run
+  f_test_profiler("prof.exe", "prof2.cfg", { }, { } );
+}
+
+testcase tc_profiling_and_coverage() runs on Shell_CT
+{
+  // both profiling and code coverage is activated in this case
+  // although the call times cannot be checked, the statistics filter is set to generate an 
+  // empty statistics file, which can be cheked
+  f_test_profiler("prof.exe", "prof3.cfg", { "empty.stats" }, { "empty_e.stats" } );
+}
+
+control {
+  execute(tc_coverage());
+  execute(tc_profiling());
+  execute(tc_profiling_and_coverage());
+}
+
+}

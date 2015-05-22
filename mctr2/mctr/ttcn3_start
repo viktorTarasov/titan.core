@@ -63,11 +63,12 @@ proc wait_mc_prompt {} {
 
 proc error_cleanup {error_msg error_retcode} {
     global mctr_id hc_id
+    puts "ttcn3_start: error: $error_msg"
     send -i $mctr_id "exit\r"
     expect -i $mctr_id eof
+    expect -i $hc_id eof
     wait -i $hc_id
     wait -i $mctr_id
-    puts "ttcn3_start: error: $error_msg"
     exit $error_retcode
 }
 
@@ -245,6 +246,8 @@ expect {
     } -i $hc_id -re ".*\r" {
 	exp_continue
     } -i $mctr_id "New HC connected from " {
+    } -i $hc_id eof {
+        error_cleanup "Host Controller with id $hc_id stopped unexpectedly" 10
     }
 }
 

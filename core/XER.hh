@@ -19,6 +19,11 @@ class Base_Type;
 #ifdef TITAN_RUNTIME_2
 class Record_Of_Type;
 class Erroneous_descriptor_t;
+#else
+namespace PreGenRecordOf {
+  class PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING;
+  class PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING__OPTIMIZED;
+}
 #endif
 class TTCN_Module;
 
@@ -255,6 +260,9 @@ struct XERdescriptor_t
     * or invalid ("anyElement except ...") namespace URIs. 
     * The unqualified namespace is marked by an empty string ("").*/
   const char** ns_uris; 
+  
+  /** Points to the element type's XER descriptor in case of 'record of' and 'set of' types */
+  const XERdescriptor_t* oftype_descr;
 };
 
 /** Information related to the embedded values in XML encoding
@@ -273,11 +281,10 @@ struct embed_values_enc_struct_t
   /** Erroneous descriptor index for the embedded values (for negative tests) */
   int embval_err_descr_idx;
 #else
-  /** Stores the array of embedded values as a Base_Type (use get_embedded_value
-    * to retrieve values - temporarily disabled) */
-  const Base_Type* embval_array;
-  /** Stores the size of the embedded value array */
-  int embval_size;
+  /** Stores the array of embedded values (regular record-of) */
+  const PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING* embval_array_reg;
+  /** Stores the array of embedded values (optimized record-of) */
+  const PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING__OPTIMIZED* embval_array_opt;
 #endif
   /** Stores the index of the next embedded value to be read */
   int embval_index;
@@ -293,9 +300,10 @@ struct embed_values_dec_struct_t
   /** Stores the array of embedded values */
   Record_Of_Type* embval_array;
 #else
-  /** Stores the array of embedded values as a Base_type (use set_embedded_value
-    * to insert new values - temporarily disabled) */
-  Base_Type* embval_array;
+  /** Stores the array of embedded values (regular record-of) */
+  PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING* embval_array_reg;
+  /** Stores the array of embedded values (optimized record-of) */
+  PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING__OPTIMIZED* embval_array_opt;
 #endif
   /** Stores the number of embedded values that are currently in the array,
     * and the index where the next one should be inserted */
@@ -414,7 +422,7 @@ void check_namespace_restrictions(const XERdescriptor_t& p_td, const char* p_xml
   extern const XERdescriptor_t type_name##_xer_ = { \
     { xmlname ">\n", xmlname ">\n" }, \
     { 2+sizeof(xmlname)-1, 2+sizeof(xmlname)-1 }, \
-    0UL, WHITESPACE_PRESERVE, NULL, NULL, 0, 0, NULL }
+    0UL, WHITESPACE_PRESERVE, NULL, NULL, 0, 0, NULL, NULL }
 // The compiler should fold the two identical strings into one
 
 # define XER_STRUCT_COPY(cpy,original) \

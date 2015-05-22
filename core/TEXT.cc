@@ -268,6 +268,9 @@ const TTCN_TEXTdescriptor_t BOOLEAN_text_ = { NULL, NULL, NULL, NULL,
 const TTCN_TEXTdescriptor_t CHARSTRING_text_ = { NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, { NULL } };
 
+const TTCN_TEXTdescriptor_t UNIVERSAL_CHARSTRING_text_ = { NULL, NULL, NULL, NULL,
+  NULL, NULL, NULL, { NULL } };
+
 const TTCN_TEXTdescriptor_t BITSTRING_text_ = { NULL, NULL, NULL, NULL,
   NULL, NULL, NULL, { NULL } };
 

@@ -37,55 +37,55 @@ make the type descriptors of embedded types static
 
 static const ASN_Tag_t CHARACTER_STRING_identification_tag_[] = { { ASN_TAG_CONT, 0u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_ber_ = { 1u, CHARACTER_STRING_identification_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_descr_ = { "CHARACTER STRING.identification", &CHARACTER_STRING_identification_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_descr_ = { "CHARACTER STRING.identification", &CHARACTER_STRING_identification_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_syntaxes_abstract_tag_[] = { { ASN_TAG_CONT, 0u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_syntaxes_abstract_ber_ = { 1u, CHARACTER_STRING_identification_syntaxes_abstract_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_syntaxes_abstract_descr_ = { "CHARACTER STRING.identification.syntaxes.abstract", &CHARACTER_STRING_identification_syntaxes_abstract_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_syntaxes_abstract_descr_ = { "CHARACTER STRING.identification.syntaxes.abstract", &CHARACTER_STRING_identification_syntaxes_abstract_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_syntaxes_transfer_tag_[] = { { ASN_TAG_CONT, 1u }};
 const ASN_BERdescriptor_t CHARACTER_STRING_identification_syntaxes_transfer_ber_ = { 1u, CHARACTER_STRING_identification_syntaxes_transfer_tag_ };
-const TTCN_Typedescriptor_t CHARACTER_STRING_identification_syntaxes_transfer_descr_ = { "CHARACTER STRING.identification.syntaxes.transfer", &CHARACTER_STRING_identification_syntaxes_transfer_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+const TTCN_Typedescriptor_t CHARACTER_STRING_identification_syntaxes_transfer_descr_ = { "CHARACTER STRING.identification.syntaxes.transfer", &CHARACTER_STRING_identification_syntaxes_transfer_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_syntaxes_tag_[] = { { ASN_TAG_CONT, 0u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_syntaxes_ber_ = { 1u, CHARACTER_STRING_identification_syntaxes_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_syntaxes_descr_ = { "CHARACTER STRING.identification.syntaxes", &CHARACTER_STRING_identification_syntaxes_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_syntaxes_descr_ = { "CHARACTER STRING.identification.syntaxes", &CHARACTER_STRING_identification_syntaxes_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_syntax_tag_[] = { { ASN_TAG_CONT, 1u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_syntax_ber_ = { 1u, CHARACTER_STRING_identification_syntax_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_syntax_descr_ = { "CHARACTER STRING.identification.syntax", &CHARACTER_STRING_identification_syntax_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_syntax_descr_ = { "CHARACTER STRING.identification.syntax", &CHARACTER_STRING_identification_syntax_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_presentation__context__id_tag_[] = { { ASN_TAG_CONT, 2u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_presentation__context__id_ber_ = { 1u, CHARACTER_STRING_identification_presentation__context__id_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_presentation__context__id_descr_ = { "CHARACTER STRING.identification.presentation-context-id", &CHARACTER_STRING_identification_presentation__context__id_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_presentation__context__id_descr_ = { "CHARACTER STRING.identification.presentation-context-id", &CHARACTER_STRING_identification_presentation__context__id_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_context__negotiation_presentation__context__id_tag_[] = { { ASN_TAG_CONT, 0u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_context__negotiation_presentation__context__id_ber_ = { 1u, CHARACTER_STRING_identification_context__negotiation_presentation__context__id_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_context__negotiation_presentation__context__id_descr_ = { "CHARACTER STRING.identification.context-negotiation.presentation-context-id", &CHARACTER_STRING_identification_context__negotiation_presentation__context__id_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_context__negotiation_presentation__context__id_descr_ = { "CHARACTER STRING.identification.context-negotiation.presentation-context-id", &CHARACTER_STRING_identification_context__negotiation_presentation__context__id_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_context__negotiation_transfer__syntax_tag_[] = { { ASN_TAG_CONT, 1u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_context__negotiation_transfer__syntax_ber_ = { 1u, CHARACTER_STRING_identification_context__negotiation_transfer__syntax_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_context__negotiation_transfer__syntax_descr_ = { "CHARACTER STRING.identification.context-negotiation.transfer-syntax", &CHARACTER_STRING_identification_context__negotiation_transfer__syntax_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_context__negotiation_transfer__syntax_descr_ = { "CHARACTER STRING.identification.context-negotiation.transfer-syntax", &CHARACTER_STRING_identification_context__negotiation_transfer__syntax_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_context__negotiation_tag_[] = { { ASN_TAG_CONT, 3u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_context__negotiation_ber_ = { 1u, CHARACTER_STRING_identification_context__negotiation_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_context__negotiation_descr_ = { "CHARACTER STRING.identification.context-negotiation", &CHARACTER_STRING_identification_context__negotiation_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_context__negotiation_descr_ = { "CHARACTER STRING.identification.context-negotiation", &CHARACTER_STRING_identification_context__negotiation_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_transfer__syntax_tag_[] = { { ASN_TAG_CONT, 4u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_transfer__syntax_ber_ = { 1u, CHARACTER_STRING_identification_transfer__syntax_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_transfer__syntax_descr_ = { "CHARACTER STRING.identification.transfer-syntax", &CHARACTER_STRING_identification_transfer__syntax_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_transfer__syntax_descr_ = { "CHARACTER STRING.identification.transfer-syntax", &CHARACTER_STRING_identification_transfer__syntax_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t CHARACTER_STRING_identification_fixed_tag_[] = { { ASN_TAG_CONT, 5u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_identification_fixed_ber_ = { 1u, CHARACTER_STRING_identification_fixed_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_fixed_descr_ = { "CHARACTER STRING.identification.fixed", &CHARACTER_STRING_identification_fixed_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_identification_fixed_descr_ = { "CHARACTER STRING.identification.fixed", &CHARACTER_STRING_identification_fixed_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t CHARACTER_STRING_string__value_tag_[] = { { ASN_TAG_CONT, 2u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_string__value_ber_ = { 1u, CHARACTER_STRING_string__value_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_string__value_descr_ = { "CHARACTER STRING.string-value", &CHARACTER_STRING_string__value_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_string__value_descr_ = { "CHARACTER STRING.string-value", &CHARACTER_STRING_string__value_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t CHARACTER_STRING_data__value__descriptor_tag_[] = { { ASN_TAG_CONT, 1u }};
 static const ASN_BERdescriptor_t CHARACTER_STRING_data__value__descriptor_ber_ = { 1u, CHARACTER_STRING_data__value__descriptor_tag_ };
-static const TTCN_Typedescriptor_t CHARACTER_STRING_data__value__descriptor_descr_ = { "CHARACTER STRING.data-value-descriptor", &CHARACTER_STRING_data__value__descriptor_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING };
+static const TTCN_Typedescriptor_t CHARACTER_STRING_data__value__descriptor_descr_ = { "CHARACTER STRING.data-value-descriptor", &CHARACTER_STRING_data__value__descriptor_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING };
 
 void CHARACTER_STRING_identification::clean_up()
 {

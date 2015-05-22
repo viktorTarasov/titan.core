@@ -205,7 +205,7 @@ namespace Ttcn {
     Node::set_fullname(p_fullname);
     for (size_t i = 0; i < refs.size(); i++)
       refs[i]->set_fullname(p_fullname +
-	".<sub_reference" + Int2string(i + 1) + ">");
+        ".<sub_reference" + Int2string(i + 1) + ">");
   }
 
   void FieldOrArrayRefs::set_my_scope(Scope *p_scope)
@@ -218,9 +218,9 @@ namespace Ttcn {
     for (size_t i = 0; i < refs.size(); i++) {
       FieldOrArrayRef *ref = refs[i];
       if (ref->get_type() == FieldOrArrayRef::ARRAY_REF) {
-	Value *v = ref->get_val();
-	v->set_lowerid_to_ref();
-	if (v->is_unfoldable()) return true;
+        Value *v = ref->get_val();
+        v->set_lowerid_to_ref();
+        if (v->is_unfoldable()) return true;
       }
     }
     return false;
@@ -312,38 +312,38 @@ namespace Ttcn {
         expr->expr = mputprintf(expr->expr, ".%s%s()",
           ((type!=0 && type->get_typetype()==Type::T_ANYTYPE) ? "AT_" : ""),
           id.get_name().c_str());
-	if (type) {
-	  CompField *cf = type->get_comp_byName(id);
-	  // If the field is optional, the return type of the accessor is an
-	  // OPTIONAL<T>. Write a call to OPTIONAL<T>::operator(),
-	  // which "reaches into" the OPTIONAL to get the contained type T.
-	  // Don't do this at the end of the reference chain.
-	  // Accessor methods for a foo_template return a bar_template
-	  // and OPTIONAL<> is not involved, hence no "()".
-	  if (!is_template && i < n_refs - 1 && cf->get_is_optional())
-	    expr->expr = mputstr(expr->expr, "()");
+        if (type) {
+          CompField *cf = type->get_comp_byName(id);
+          // If the field is optional, the return type of the accessor is an
+          // OPTIONAL<T>. Write a call to OPTIONAL<T>::operator(),
+          // which "reaches into" the OPTIONAL to get the contained type T.
+          // Don't do this at the end of the reference chain.
+          // Accessor methods for a foo_template return a bar_template
+          // and OPTIONAL<> is not involved, hence no "()".
+          if (!is_template && i < n_refs - 1 && cf->get_is_optional())
+            expr->expr = mputstr(expr->expr, "()");
           // Follow the field type.
-	  type = cf->get_type();
-	}
+          type = cf->get_type();
+        }
       } else {
         // Generate code for array reference.
         expr->expr = mputc(expr->expr, '[');
-	ref->get_val()->generate_code_expr(expr);
+        ref->get_val()->generate_code_expr(expr);
         expr->expr = mputc(expr->expr, ']');
-	if (type) {
+        if (type) {
           // Follow the embedded type.
-	  switch (type->get_typetype()) {
-	  case Type::T_SEQOF:
-	  case Type::T_SETOF:
-	  case Type::T_ARRAY:
-	    type = type->get_ofType();
-	    break;
-	  default:
-	    // The index points to a string element.
-	    // There are no further sub-references.
-	    type = 0;
-	  } // switch
-	} // if (type)
+          switch (type->get_typetype()) {
+          case Type::T_SEQOF:
+          case Type::T_SETOF:
+          case Type::T_ARRAY:
+            type = type->get_ofType();
+            break;
+          default:
+            // The index points to a string element.
+            // There are no further sub-references.
+            type = 0;
+          } // switch
+        } // if (type)
       } // if (ref->get_type)
     } // next reference
   }
@@ -451,10 +451,10 @@ namespace Ttcn {
   }
 
   /* Called by:
-   * 	Common::PortTypeBody::PortTypeBody
-   * 	Common::Type::Type
-   * 	Common::TypeMappingTarget::TypeMappingTarget
-   * 	Common::PatternString::ps_elem_t::chk_ref */
+   *         Common::PortTypeBody::PortTypeBody
+   *         Common::Type::Type
+   *         Common::TypeMappingTarget::TypeMappingTarget
+   *         Common::PatternString::ps_elem_t::chk_ref */
   Reference *Reference::clone() const
   {
     return new Reference(*this);
@@ -465,8 +465,8 @@ namespace Ttcn {
     string ret_val;
     if (id) {
       if (modid) {
-	ret_val += modid->get_dispname();
-	ret_val += '.';
+        ret_val += modid->get_dispname();
+        ret_val += '.';
       }
       ret_val += id->get_dispname();
       subrefs.append_stringRepr(ret_val);
@@ -498,7 +498,7 @@ namespace Ttcn {
           parlist->set_my_scope(my_scope);
         } else {
           error("Reference to parameterized definition `%s' without "
-	    "actual parameter list", ass->get_id().get_dispname().c_str());
+            "actual parameter list", ass->get_id().get_dispname().c_str());
         }
       }
     }
@@ -531,7 +531,7 @@ namespace Ttcn {
       break;
     default:
       error("Reference to a variable or value parameter was "
-	"expected instead of %s", t_ass->get_description().c_str());
+        "expected instead of %s", t_ass->get_description().c_str());
       return 0;
     }
     FieldOrArrayRefs *t_subrefs = get_subrefs();
@@ -539,7 +539,7 @@ namespace Ttcn {
       Type::EXPECTED_DYNAMIC_VALUE);
     if (ret_val && t_subrefs && t_subrefs->refers_to_string_element()) {
       error("Reference to a string element of type `%s' cannot be used in "
-	"this context", ret_val->get_typename().c_str());
+        "this context", ret_val->get_typename().c_str());
     }
     return ret_val;
   }
@@ -550,19 +550,19 @@ namespace Ttcn {
     if (ass) {
       if (ass->get_asstype() == Common::Assignment::A_TYPE) {
         Type *t = ass->get_Type()->get_type_refd_last();
-	switch (t->get_typetype()) {
-	case Type::T_ERROR:
-	  // remain silent
-	  break;
-	case Type::T_COMPONENT:
-	  return t;
-	default:
-	  error("Reference `%s' does not refer to a component type",
-	    get_dispname().c_str());
-	}
+        switch (t->get_typetype()) {
+        case Type::T_ERROR:
+          // remain silent
+          break;
+        case Type::T_COMPONENT:
+          return t;
+        default:
+          error("Reference `%s' does not refer to a component type",
+            get_dispname().c_str());
+        }
       } else {
-	error("Reference `%s' does not refer to a type",
-	  get_dispname().c_str());
+        error("Reference `%s' does not refer to a type",
+          get_dispname().c_str());
       }
     }
     return 0;
@@ -720,21 +720,21 @@ namespace Ttcn {
       FieldOrArrayRef *second_ref = subrefs.get_ref(1);
       if (second_ref->get_type() == FieldOrArrayRef::FIELD_REF) {
         // the reference begins with <id>.<id> (most complicated case)
-	// there are 3 possible situations:
-	// 1. first_id points to a local definition (this has the priority)
-	//      modid: 0, id: first_id
-	// 2. first_id points to an imported module (trivial case)
-	//      modid: first_id, id: second_id
-	// 3. none of the above (first_id might be an imported symbol)
-	//      modid: 0, id: first_id
-	// Note: Rule 1 has the priority because it can be overridden using
-	// the notation <id>.objid { ... }.<id> (modid and id are set in the
-	// constructor), but there is no work-around in the reverse way.
-	if (!my_scope->has_ass_withId(*first_id)
-	    && my_scope->is_valid_moduleid(*first_id)) {
-	  // rule 1 is not fulfilled, but rule 2 is fulfilled
-	  second_id = second_ref->get_id();
-	}
+        // there are 3 possible situations:
+        // 1. first_id points to a local definition (this has the priority)
+        //      modid: 0, id: first_id
+        // 2. first_id points to an imported module (trivial case)
+        //      modid: first_id, id: second_id
+        // 3. none of the above (first_id might be an imported symbol)
+        //      modid: 0, id: first_id
+        // Note: Rule 1 has the priority because it can be overridden using
+        // the notation <id>.objid { ... }.<id> (modid and id are set in the
+        // constructor), but there is no work-around in the reverse way.
+        if (!my_scope->has_ass_withId(*first_id)
+            && my_scope->is_valid_moduleid(*first_id)) {
+          // rule 1 is not fulfilled, but rule 2 is fulfilled
+          second_id = second_ref->get_id();
+        }
       } // else: the reference begins with <id>[<arrayref>] -> there is no modid
     } // else: the reference consists of a single <id>  -> there is no modid
     if (second_id) {
@@ -804,14 +804,14 @@ namespace Ttcn {
     if (params_checked) {
       // used after semantic analysis
       for (size_t i = 0; i < parlist.get_nof_pars(); i++) {
-	if (i > 0) ret_val += ", ";
-	parlist.get_par(i)->append_stringRepr(ret_val);
+        if (i > 0) ret_val += ", ";
+        parlist.get_par(i)->append_stringRepr(ret_val);
       }
     } else {
       // used before semantic analysis
       for (size_t i = 0; i < params->get_nof_tis(); i++) {
-	if (i > 0) ret_val += ", ";
-	params->get_ti_byIndex(i)->append_stringRepr(ret_val);
+        if (i > 0) ret_val += ", ";
+        params->get_ti_byIndex(i)->append_stringRepr(ret_val);
       }
     }
     ret_val += ')';
@@ -826,17 +826,17 @@ namespace Ttcn {
       params_checked = true;
       FormalParList *fplist = ass->get_FormalParList();
       if (fplist) {
-	Error_Context cntxt(params, "In actual parameter list of %s",
-	  ass->get_description().c_str());
-	is_erroneous = fplist->fold_named_and_chk(params, &parlist);
-	parlist.set_fullname(get_fullname());
-	parlist.set_my_scope(my_scope);
-	// the parsed parameter list is no longer needed
-	delete params;
-	params = 0;
+        Error_Context cntxt(params, "In actual parameter list of %s",
+          ass->get_description().c_str());
+        is_erroneous = fplist->fold_named_and_chk(params, &parlist);
+        parlist.set_fullname(get_fullname());
+        parlist.set_my_scope(my_scope);
+        // the parsed parameter list is no longer needed
+        delete params;
+        params = 0;
       } else {
         params->error("The referenced %s cannot have actual parameters",
-	  ass->get_description().c_str());
+          ass->get_description().c_str());
       }
     }
     return ass;
@@ -864,7 +864,7 @@ namespace Ttcn {
     if (!t_ass) return false;
     if (t_ass->get_asstype() != Common::Assignment::A_ALTSTEP) {
       error("Reference to an altstep was expected in the argument instead of "
-	"%s", t_ass->get_description().c_str());
+        "%s", t_ass->get_description().c_str());
       return false;
     }
     my_scope->chk_runs_on_clause(t_ass, *this, "activate");
@@ -1048,11 +1048,11 @@ namespace Ttcn {
       const Identifier& id = comp_def->get_id();
       if (parent_scope->has_ass_withId(id)) {
         comp_def->warning("Imported component element definition `%s' hides a "
-	  "definition at module scope", comp_def->get_fullname().c_str());
-	Reference ref(0, id.clone());
-	Common::Assignment *hidden_ass = parent_scope->get_ass_bySRef(&ref);
-	hidden_ass->warning("Hidden definition `%s' is here",
-	  hidden_ass->get_fullname().c_str());
+          "definition at module scope", comp_def->get_fullname().c_str());
+        Reference ref(0, id.clone());
+        Common::Assignment *hidden_ass = parent_scope->get_ass_bySRef(&ref);
+        hidden_ass->warning("Hidden definition `%s' is here",
+          hidden_ass->get_fullname().c_str());
       }
 
     }
@@ -1424,12 +1424,12 @@ namespace Ttcn {
       duplicate_underscores ? module_name : modid->get_ttcnname().c_str());
 
     target->functions.pre_init = mputprintf(target->functions.pre_init,
-	"%s%s.pre_init_module();\n", module_name,
+        "%s%s.pre_init_module();\n", module_name,
   "::module_object");
 
     if (mod->get_moduletype() == Common::Module::MOD_TTCN) {
       target->functions.post_init = mputprintf(target->functions.post_init,
-	  "%s%s.post_init_module();\n", module_name,
+          "%s%s.post_init_module();\n", module_name,
     "::module_object");
 
     }
@@ -1441,8 +1441,8 @@ namespace Ttcn {
     if (w_attrib_path) {
       MultiWithAttrib *attrib = w_attrib_path->get_with_attr();
       if (attrib) {
-	DEBUG(level + 1, "Attributes:");
-	attrib->dump(level + 2);
+        DEBUG(level + 1, "Attributes:");
+        attrib->dump(level + 2);
       }
     }
   }
@@ -1614,19 +1614,19 @@ namespace Ttcn {
       // imported module that imports m
       bool covered = false;
       for (size_t j = 0; j < impmods_v.size(); j++) {
-	// skip over the same import definition
-	if (j == i) continue;
-	ImpMod *im2 = impmods_v[j];
-	Common::Module *m2 = im2->get_mod();
-	// a module that is equivalent to the current module due to
-	// circular imports cannot be used to cover anything
-	if (m2->is_visible(my_mod)) continue;
-	if (m2->is_visible(m) && !m->is_visible(m2)) {
-	  // m2 covers m (i.e. m is visible from m2)
-	  // and they are not in the same import loop
-	  covered = true;
-	  break;
-	}
+        // skip over the same import definition
+        if (j == i) continue;
+        ImpMod *im2 = impmods_v[j];
+        Common::Module *m2 = im2->get_mod();
+        // a module that is equivalent to the current module due to
+        // circular imports cannot be used to cover anything
+        if (m2->is_visible(my_mod)) continue;
+        if (m2->is_visible(m) && !m->is_visible(m2)) {
+          // m2 covers m (i.e. m is visible from m2)
+          // and they are not in the same import loop
+          covered = true;
+          break;
+        }
       }
       // do not generate the #include if a covering module is found
       if (!covered) im->generate_code(target);
@@ -1729,11 +1729,11 @@ namespace Ttcn {
         ass->error("Duplicate definition with name `%s'", dispname_str);
         ass_m[name]->note("Previous definition of `%s' is here", dispname_str);
       } else {
-	ass_m.add(name, ass);
-	if (parent_scope->is_valid_moduleid(id)) {
-	  ass->warning("Definition with name `%s' hides a module identifier",
-	    id.get_dispname().c_str());
-	}
+        ass_m.add(name, ass);
+        if (parent_scope->is_valid_moduleid(id)) {
+          ass->warning("Definition with name `%s' hides a module identifier",
+            id.get_dispname().c_str());
+        }
       }
     }
     checked = true;
@@ -1756,26 +1756,26 @@ namespace Ttcn {
       const Identifier& id = def->get_id();
       const string& name = id.get_name();
       if (ass_m.has_key(name)) {
-	const char *dispname_str = id.get_dispname().c_str();
-	def->error("Duplicate definition with name `%s'", dispname_str);
-	ass_m[name]->note("Previous definition of `%s' is here", dispname_str);
+        const char *dispname_str = id.get_dispname().c_str();
+        def->error("Duplicate definition with name `%s'", dispname_str);
+        ass_m[name]->note("Previous definition of `%s' is here", dispname_str);
       } else {
-	ass_m.add(name, def);
-	if (parent_scope) {
-	  if (parent_scope->has_ass_withId(id)) {
-	    const char *dispname_str = id.get_dispname().c_str();
-	    def->error("Definition with identifier `%s' is not unique in the "
-	      "scope hierarchy", dispname_str);
-	    Reference ref(0, id.clone());
-	    Common::Assignment *ass = parent_scope->get_ass_bySRef(&ref);
-	    if (!ass) FATAL_ERROR("OtherDefinitions::chk_for()");
-	    ass->note("Previous definition with identifier `%s' in higher "
-	      "scope unit is here", dispname_str);
-	  } else if (parent_scope->is_valid_moduleid(id)) {
-	    def->warning("Definition with name `%s' hides a module identifier",
-	      id.get_dispname().c_str());
-	  }
-	}
+        ass_m.add(name, def);
+        if (parent_scope) {
+          if (parent_scope->has_ass_withId(id)) {
+            const char *dispname_str = id.get_dispname().c_str();
+            def->error("Definition with identifier `%s' is not unique in the "
+              "scope hierarchy", dispname_str);
+            Reference ref(0, id.clone());
+            Common::Assignment *ass = parent_scope->get_ass_bySRef(&ref);
+            if (!ass) FATAL_ERROR("OtherDefinitions::chk_for()");
+            ass->note("Previous definition with identifier `%s' in higher "
+              "scope unit is here", dispname_str);
+          } else if (parent_scope->is_valid_moduleid(id)) {
+            def->warning("Definition with name `%s' hides a module identifier",
+              id.get_dispname().c_str());
+          }
+        }
       }
       def->chk();
     }
@@ -1914,15 +1914,15 @@ namespace Ttcn {
       const string& group_name = group_id.get_name();
       if (ass_m.has_key(group_name)) {
         group->error("Group name `%s' clashes with a definition",
-	  group_id.get_dispname().c_str());
+          group_id.get_dispname().c_str());
         ass_m[group_name]->note("Definition of `%s' is here",
-	  group_id.get_dispname().c_str());
+          group_id.get_dispname().c_str());
       }
       if (group_m.has_key(group_name)) {
         group->error("Duplicate group with name `%s'",
-	  group_id.get_dispname().c_str());
+          group_id.get_dispname().c_str());
         group_m[group_name]->note("Group `%s' is already defined here",
-	  group_id.get_dispname().c_str());
+          group_id.get_dispname().c_str());
       } else group_m.add(group_name, group);
     }
     checked = true;
@@ -1969,8 +1969,8 @@ namespace Ttcn {
     if (w_attrib_path) {
       MultiWithAttrib *attrib = w_attrib_path->get_with_attr();
       if (attrib) {
-	DEBUG(level + 1, "Group Attributes:");
-	attrib->dump(level + 2);
+        DEBUG(level + 1, "Group Attributes:");
+        attrib->dump(level + 2);
       }
     }
   }
@@ -2063,8 +2063,8 @@ namespace Ttcn {
     if (w_attrib_path) {
       MultiWithAttrib *attrib = w_attrib_path->get_with_attr();
       if (attrib) {
-	DEBUG(level + 1, "Attributes:");
-	attrib->dump(level + 2);
+        DEBUG(level + 1, "Attributes:");
+        attrib->dump(level + 2);
       }
     }
   }
@@ -2583,16 +2583,16 @@ namespace Ttcn {
       if(ass_m.has_key(group_name))
       {
         group->error("Group name `%s' clashes with a definition",
-	  group_id.get_dispname().c_str());
+          group_id.get_dispname().c_str());
         ass_m[group_name]->note("Definition of `%s' is here",
-	  group_id.get_dispname().c_str());
+          group_id.get_dispname().c_str());
       }
       if(group_m.has_key(group_name))
       {
         group->error("Duplicate group with name `%s'",
-	  group_id.get_dispname().c_str());
+          group_id.get_dispname().c_str());
         group_m[group_name]->note("Group `%s' is already defined here",
-	  group_id.get_dispname().c_str());
+          group_id.get_dispname().c_str());
       }else{
         group_m.add(group_name,group_v[i]);
       }
@@ -2645,8 +2645,8 @@ namespace Ttcn {
     if (w_attrib_path) {
       MultiWithAttrib *attrib = w_attrib_path->get_with_attr();
       if (attrib) {
-	DEBUG(level, "Module Attributes:");
-	attrib->dump(level + 1);
+        DEBUG(level, "Module Attributes:");
+        attrib->dump(level + 1);
       }
     }
   }
@@ -2920,8 +2920,8 @@ namespace Ttcn {
     if (w_attrib_path) {
       MultiWithAttrib *attrib = w_attrib_path->get_with_attr();
       if (attrib) {
-	DEBUG(level + 1, "Definition Attributes:");
-	attrib->dump(level + 2);
+        DEBUG(level + 1, "Definition Attributes:");
+        attrib->dump(level + 2);
       }
     }
     if (erroneous_attrs) erroneous_attrs->dump(level+1);
@@ -3260,7 +3260,7 @@ namespace Ttcn {
     if (p_def->get_asstype() != A_CONST) {
       const char *dispname_str = id->get_dispname().c_str();
       error("Local definition `%s' is a constant, but the definition "
-	"inherited from component type `%s' is a %s", dispname_str,
+        "inherited from component type `%s' is a %s", dispname_str,
         p_def->get_my_scope()->get_fullname().c_str(), p_def->get_assname());
       p_def->note("The inherited definition of `%s' is here", dispname_str);
       return false;
@@ -3270,16 +3270,16 @@ namespace Ttcn {
     if (!type->is_identical(p_def_const->type)) {
       const char *dispname_str = id->get_dispname().c_str();
       type->error("Local constant `%s' has type `%s', but the constant "
-	"inherited from component type `%s' has type `%s'", dispname_str,
-	type->get_typename().c_str(),
+        "inherited from component type `%s' has type `%s'", dispname_str,
+        type->get_typename().c_str(),
         p_def_const->get_my_scope()->get_fullname().c_str(),
-	p_def_const->type->get_typename().c_str());
+        p_def_const->type->get_typename().c_str());
       p_def_const->note("The inherited constant `%s' is here", dispname_str);
       return false;
     } else if (!(*value == *p_def_const->value)) {
       const char *dispname_str = id->get_dispname().c_str();
       value->error("Local constant `%s' and the constant inherited from "
-	"component type `%s' have different values", dispname_str,
+        "component type `%s' have different values", dispname_str,
         p_def_const->get_my_scope()->get_fullname().c_str());
       p_def_const->note("The inherited constant `%s' is here", dispname_str);
       return false;
@@ -3515,8 +3515,6 @@ namespace Ttcn {
     map<Type*,void> type_chain;
     map<Type::typetype_t, void> not_allowed;
     not_allowed.add(Type::T_PORT, 0);
-    not_allowed.add(Type::T_COMPONENT, 0);
-    not_allowed.add(Type::T_DEFAULT, 0);
     Type *t = type->get_type_refd_last();
     // if the type is valid the original will be returned
     Type::typetype_t tt = t->search_for_not_allowed_type(type_chain, not_allowed);
@@ -3531,14 +3529,6 @@ namespace Ttcn {
       error("Type of module parameter cannot be signature `%s'",
         t->get_fullname().c_str());
       break;
-    case Type::T_COMPONENT:
-        error("Type of module parameter cannot be or embed component `%s'",
-          t->get_fullname().c_str());
-        break;
-    case Type::T_DEFAULT:
-        error("Type of module parameter cannot be or embed default `%s'",
-          t->get_fullname().c_str());
-        break;
     case Type::T_FUNCTION:
     case Type::T_ALTSTEP:
     case Type::T_TESTCASE:
@@ -3599,11 +3589,11 @@ namespace Ttcn {
     if (target->functions.log_param) {
       // this is not the first modulepar
       target->functions.log_param = mputprintf(target->functions.log_param,
-	"TTCN_Logger::log_event_str(\", %s := \");\n", dispname);
+        "TTCN_Logger::log_event_str(\", %s := \");\n", dispname);
     } else {
       // this is the first modulepar
       target->functions.log_param = mputprintf(target->functions.log_param,
-	"TTCN_Logger::log_event_str(\"%s := \");\n", dispname);
+        "TTCN_Logger::log_event_str(\"%s := \");\n", dispname);
     }
     target->functions.log_param = mputprintf(target->functions.log_param,
       "%s.log();\n", name);
@@ -3767,11 +3757,11 @@ namespace Ttcn {
     if (target->functions.log_param) {
       // this is not the first modulepar
       target->functions.log_param = mputprintf(target->functions.log_param,
-	"TTCN_Logger::log_event_str(\", %s := \");\n", dispname);
+        "TTCN_Logger::log_event_str(\", %s := \");\n", dispname);
     } else {
       // this is the first modulepar
       target->functions.log_param = mputprintf(target->functions.log_param,
-	"TTCN_Logger::log_event_str(\"%s := \");\n", dispname);
+        "TTCN_Logger::log_event_str(\"%s := \");\n", dispname);
     }
     target->functions.log_param = mputprintf(target->functions.log_param,
       "%s.log();\n", name);
@@ -4148,8 +4138,8 @@ namespace Ttcn {
       {
         if (iter->recurs_deriv_checked) break;
         else if (refch.add(iter->get_fullname()))
-	  iter->recurs_deriv_checked = true;
-	else break;
+          iter->recurs_deriv_checked = true;
+        else break;
       }
     }
     recurs_deriv_checked = true;
@@ -4170,8 +4160,8 @@ namespace Ttcn {
       fp_list->generate_code_defval(target);
       target->header.function_prototypes =
         mputprintf(target->header.function_prototypes,
-	  "extern %s %s(%s);\n",
-	  type_genname_str, template_name, formal_par_list);
+          "extern %s %s(%s);\n",
+          type_genname_str, template_name, formal_par_list);
       char *function_body = mprintf("%s %s(%s)\n"
         "{\n", type_genname_str, template_name, formal_par_list);
       function_body = create_location_object(function_body, "TEMPLATE",
@@ -4179,24 +4169,24 @@ namespace Ttcn {
       if (base_template) {
         // modified template
         function_body = mputprintf(function_body, "%s ret_val(%s",
-	  type_genname_str,
-	  base_template->get_genname_from_scope(my_scope).c_str());
-	if (base_template->fp_list) {
-	  // the base template is also parameterized
-	  function_body = mputc(function_body, '(');
-	  size_t nof_base_pars = base_template->fp_list->get_nof_fps();
-	  for (size_t i = 0; i < nof_base_pars; i++) {
-	    if (i > 0) function_body = mputstr(function_body, ", ");
-	    function_body = mputstr(function_body,
-	      fp_list->get_fp_byIndex(i)->get_id().get_name().c_str());
-	  }
-	  function_body = mputc(function_body, ')');
-	}
-	function_body = mputstr(function_body, ");\n");
+          type_genname_str,
+          base_template->get_genname_from_scope(my_scope).c_str());
+        if (base_template->fp_list) {
+          // the base template is also parameterized
+          function_body = mputc(function_body, '(');
+          size_t nof_base_pars = base_template->fp_list->get_nof_fps();
+          for (size_t i = 0; i < nof_base_pars; i++) {
+            if (i > 0) function_body = mputstr(function_body, ", ");
+            function_body = mputstr(function_body,
+              fp_list->get_fp_byIndex(i)->get_id().get_name().c_str());
+          }
+          function_body = mputc(function_body, ')');
+        }
+        function_body = mputstr(function_body, ");\n");
       } else {
         // simple template
         function_body = mputprintf(function_body, "%s ret_val;\n",
-	  type_genname_str);
+          type_genname_str);
       }
       if (erroneous_attrs && erroneous_attrs->get_err_descr()) {
         function_body = erroneous_attrs->get_err_descr()->
@@ -4347,19 +4337,19 @@ namespace Ttcn {
     if (fp_list) {
       const char *dispname_str = id->get_dispname().c_str();
       NOTSUPP("Code generation for parameterized local template `%s'",
-	dispname_str);
+        dispname_str);
       def = mputprintf(def, "/* NOT SUPPORTED: template %s */\n", dispname_str);
       init = mputprintf(init, "/* NOT SUPPORTED: template %s */\n",
-	dispname_str);
+        dispname_str);
     } else {
       // non-parameterized template
       // use the default constructor for initialization
       def = mputprintf(def, "%s %s;\n",
-	type->get_genname_template(my_scope).c_str(), genname_str);
+        type->get_genname_template(my_scope).c_str(), genname_str);
       if (base_template) {
-	// copy the base template with an assignment
-	init = mputprintf(init, "%s = %s;\n", genname_str,
-	  base_template->get_genname_from_scope(my_scope).c_str());
+        // copy the base template with an assignment
+        init = mputprintf(init, "%s = %s;\n", genname_str,
+          base_template->get_genname_from_scope(my_scope).c_str());
       }
       // finally assign the body
       init = body->generate_code_init(init, genname_str);
@@ -4471,7 +4461,7 @@ namespace Ttcn {
     if (p_def->get_asstype() != A_VAR) {
       const char *dispname_str = id->get_dispname().c_str();
       error("Local definition `%s' is a variable, but the definition "
-	"inherited from component type `%s' is a %s", dispname_str,
+        "inherited from component type `%s' is a %s", dispname_str,
         p_def->get_my_scope()->get_fullname().c_str(), p_def->get_assname());
       p_def->note("The inherited definition of `%s' is here", dispname_str);
       return false;
@@ -4481,36 +4471,36 @@ namespace Ttcn {
     if (!type->is_identical(p_def_var->type)) {
       const char *dispname_str = id->get_dispname().c_str();
       type->error("Local variable `%s' has type `%s', but the variable "
-	"inherited from component type `%s' has type `%s'", dispname_str,
-	type->get_typename().c_str(),
+        "inherited from component type `%s' has type `%s'", dispname_str,
+        type->get_typename().c_str(),
         p_def_var->get_my_scope()->get_fullname().c_str(),
-	p_def_var->type->get_typename().c_str());
+        p_def_var->type->get_typename().c_str());
       p_def_var->note("The inherited variable `%s' is here", dispname_str);
       return false;
     }
     if (initial_value) {
       if (p_def_var->initial_value) {
         if (!initial_value->is_unfoldable() &&
-	    !p_def_var->initial_value->is_unfoldable() &&
-	    !(*initial_value == *p_def_var->initial_value)) {
-	  const char *dispname_str = id->get_dispname().c_str();
-	  initial_value->warning("Local variable `%s' and the variable "
-	    "inherited from component type `%s' have different initial values",
-	    dispname_str, p_def_var->get_my_scope()->get_fullname().c_str());
-	  p_def_var->note("The inherited variable `%s' is here", dispname_str);
-	}
+            !p_def_var->initial_value->is_unfoldable() &&
+            !(*initial_value == *p_def_var->initial_value)) {
+          const char *dispname_str = id->get_dispname().c_str();
+          initial_value->warning("Local variable `%s' and the variable "
+            "inherited from component type `%s' have different initial values",
+            dispname_str, p_def_var->get_my_scope()->get_fullname().c_str());
+          p_def_var->note("The inherited variable `%s' is here", dispname_str);
+        }
       } else {
-	const char *dispname_str = id->get_dispname().c_str();
-	initial_value->warning("Local variable `%s' has initial value, but "
-	  "the variable inherited from component type `%s' does not",
-	  dispname_str, p_def_var->get_my_scope()->get_fullname().c_str());
-	p_def_var->note("The inherited variable `%s' is here", dispname_str);
+        const char *dispname_str = id->get_dispname().c_str();
+        initial_value->warning("Local variable `%s' has initial value, but "
+          "the variable inherited from component type `%s' does not",
+          dispname_str, p_def_var->get_my_scope()->get_fullname().c_str());
+        p_def_var->note("The inherited variable `%s' is here", dispname_str);
       }
     } else if (p_def_var->initial_value) {
       const char *dispname_str = id->get_dispname().c_str();
       warning("Local variable `%s' does not have initial value, but the "
-	"variable inherited from component type `%s' has", dispname_str,
-	p_def_var->get_my_scope()->get_fullname().c_str());
+        "variable inherited from component type `%s' has", dispname_str,
+        p_def_var->get_my_scope()->get_fullname().c_str());
       p_def_var->note("The inherited variable `%s' is here", dispname_str);
     }
     return true;
@@ -4547,15 +4537,15 @@ namespace Ttcn {
       // the initial value can be represented by a single C++ expression
       // the object is initialized by the constructor
       str = mputprintf(str, "%s %s(%s);\n",
-	type->get_genname_value(my_scope).c_str(), genname_str,
-	initial_value->get_single_expr().c_str());
+        type->get_genname_value(my_scope).c_str(), genname_str,
+        initial_value->get_single_expr().c_str());
     } else {
       // use the default constructor
       str = mputprintf(str, "%s %s;\n",
-	type->get_genname_value(my_scope).c_str(), genname_str);
+        type->get_genname_value(my_scope).c_str(), genname_str);
       if (initial_value) {
-	// the initial value is assigned using subsequent statements
-	str = initial_value->generate_code_init(str, genname_str);
+        // the initial value is assigned using subsequent statements
+        str = initial_value->generate_code_init(str, genname_str);
       }
     }
     return str;
@@ -4577,7 +4567,7 @@ namespace Ttcn {
   {
     if (initial_value) {
       str = initial_value->generate_code_init(str,
-	base_defn->get_genname_from_scope(my_scope).c_str());
+        base_defn->get_genname_from_scope(my_scope).c_str());
     }
     return str;
   }
@@ -4685,7 +4675,7 @@ namespace Ttcn {
     if (p_def->get_asstype() != A_VAR_TEMPLATE) {
       const char *dispname_str = id->get_dispname().c_str();
       error("Local definition `%s' is a template variable, but the definition "
-	"inherited from component type `%s' is a %s", dispname_str,
+        "inherited from component type `%s' is a %s", dispname_str,
         p_def->get_my_scope()->get_fullname().c_str(), p_def->get_assname());
       p_def->note("The inherited definition of `%s' is here", dispname_str);
       return false;
@@ -4696,32 +4686,32 @@ namespace Ttcn {
     if (!type->is_identical(p_def_var_template->type)) {
       const char *dispname_str = id->get_dispname().c_str();
       type->error("Local template variable `%s' has type `%s', but the "
-	"template variable inherited from component type `%s' has type `%s'",
-	dispname_str, type->get_typename().c_str(),
+        "template variable inherited from component type `%s' has type `%s'",
+        dispname_str, type->get_typename().c_str(),
         p_def_var_template->get_my_scope()->get_fullname().c_str(),
-	p_def_var_template->type->get_typename().c_str());
+        p_def_var_template->type->get_typename().c_str());
       p_def_var_template->note("The inherited template variable `%s' is here",
-	dispname_str);
+        dispname_str);
       return false;
     }
     if (initial_value) {
       if (!p_def_var_template->initial_value) {
-	const char *dispname_str = id->get_dispname().c_str();
-	initial_value->warning("Local template variable `%s' has initial "
-	  "value, but the template variable inherited from component type "
-	  "`%s' does not", dispname_str,
-	  p_def_var_template->get_my_scope()->get_fullname().c_str());
-	p_def_var_template->note("The inherited template variable `%s' is here",
-	  dispname_str);
+        const char *dispname_str = id->get_dispname().c_str();
+        initial_value->warning("Local template variable `%s' has initial "
+          "value, but the template variable inherited from component type "
+          "`%s' does not", dispname_str,
+          p_def_var_template->get_my_scope()->get_fullname().c_str());
+        p_def_var_template->note("The inherited template variable `%s' is here",
+          dispname_str);
       }
     } else if (p_def_var_template->initial_value) {
       const char *dispname_str = id->get_dispname().c_str();
       warning("Local template variable `%s' does not have initial value, but "
-	"the template variable inherited from component type `%s' has",
-	dispname_str,
-	p_def_var_template->get_my_scope()->get_fullname().c_str());
+        "the template variable inherited from component type `%s' has",
+        dispname_str,
+        p_def_var_template->get_my_scope()->get_fullname().c_str());
       p_def_var_template->note("The inherited template variable `%s' is here",
-	dispname_str);
+        dispname_str);
     }
     return true;
   }
@@ -4809,7 +4799,7 @@ namespace Ttcn {
   {
     if (initial_value) {
       str = initial_value->generate_code_init(str,
-	base_defn->get_genname_from_scope(my_scope).c_str());
+        base_defn->get_genname_from_scope(my_scope).c_str());
       if (template_restriction != TR_NONE && gen_restriction_check)
         str = Template::generate_restriction_check_code(str,
                 base_defn->get_genname_from_scope(my_scope).c_str(),
@@ -4892,7 +4882,7 @@ namespace Ttcn {
     if (p_def->get_asstype() != A_TIMER) {
       const char *dispname_str = id->get_dispname().c_str();
       error("Local definition `%s' is a timer, but the definition inherited "
-	"from component type `%s' is a %s", dispname_str,
+        "from component type `%s' is a %s", dispname_str,
         p_def->get_my_scope()->get_fullname().c_str(), p_def->get_assname());
       p_def->note("The inherited definition of `%s' is here", dispname_str);
       return false;
@@ -4902,25 +4892,25 @@ namespace Ttcn {
     if (dimensions) {
       if (p_def_timer->dimensions) {
         if (!dimensions->is_identical(p_def_timer->dimensions)) {
-	  const char *dispname_str = id->get_dispname().c_str();
-	  error("Local timer `%s' and the timer inherited from component type "
-	    "`%s' have different array dimensions", dispname_str,
+          const char *dispname_str = id->get_dispname().c_str();
+          error("Local timer `%s' and the timer inherited from component type "
+            "`%s' have different array dimensions", dispname_str,
             p_def_timer->get_my_scope()->get_fullname().c_str());
-	  p_def_timer->note("The inherited timer `%s' is here", dispname_str);
-	  return false;
-	}
+          p_def_timer->note("The inherited timer `%s' is here", dispname_str);
+          return false;
+        }
       } else {
-	const char *dispname_str = id->get_dispname().c_str();
-	error("Local definition `%s' is a timer array, but the definition "
-	  "inherited from component type `%s' is a single timer", dispname_str,
+        const char *dispname_str = id->get_dispname().c_str();
+        error("Local definition `%s' is a timer array, but the definition "
+          "inherited from component type `%s' is a single timer", dispname_str,
           p_def_timer->get_my_scope()->get_fullname().c_str());
-	p_def_timer->note("The inherited timer `%s' is here", dispname_str);
-	return false;
+        p_def_timer->note("The inherited timer `%s' is here", dispname_str);
+        return false;
       }
     } else if (p_def_timer->dimensions) {
       const char *dispname_str = id->get_dispname().c_str();
       error("Local definition `%s' is a single timer, but the definition "
-	"inherited from component type `%s' is a timer array", dispname_str,
+        "inherited from component type `%s' is a timer array", dispname_str,
         p_def_timer->get_my_scope()->get_fullname().c_str());
       p_def_timer->note("The inherited timer `%s' is here", dispname_str);
       return false;
@@ -4928,27 +4918,27 @@ namespace Ttcn {
     if (default_duration) {
       if (p_def_timer->default_duration) {
         if (!default_duration->is_unfoldable() &&
-	    !p_def_timer->default_duration->is_unfoldable() &&
-	    !(*default_duration == *p_def_timer->default_duration)) {
-	  const char *dispname_str = id->get_dispname().c_str();
-	  default_duration->warning("Local timer `%s' and the timer inherited "
-	    "from component type `%s' have different default durations",
-	    dispname_str, p_def_timer->get_my_scope()->get_fullname().c_str());
-	  p_def_timer->note("The inherited timer `%s' is here", dispname_str);
-	}
+            !p_def_timer->default_duration->is_unfoldable() &&
+            !(*default_duration == *p_def_timer->default_duration)) {
+          const char *dispname_str = id->get_dispname().c_str();
+          default_duration->warning("Local timer `%s' and the timer inherited "
+            "from component type `%s' have different default durations",
+            dispname_str, p_def_timer->get_my_scope()->get_fullname().c_str());
+          p_def_timer->note("The inherited timer `%s' is here", dispname_str);
+        }
       } else {
-	const char *dispname_str = id->get_dispname().c_str();
-	default_duration->error("Local timer `%s' has default duration, but "
-	  "the timer inherited from component type `%s' does not", dispname_str,
+        const char *dispname_str = id->get_dispname().c_str();
+        default_duration->error("Local timer `%s' has default duration, but "
+          "the timer inherited from component type `%s' does not", dispname_str,
           p_def_timer->get_my_scope()->get_fullname().c_str());
-	p_def_timer->note("The inherited timer `%s' is here", dispname_str);
-	return false;
+        p_def_timer->note("The inherited timer `%s' is here", dispname_str);
+        return false;
       }
     } else if (p_def_timer->default_duration) {
       const char *dispname_str = id->get_dispname().c_str();
       error("Local timer `%s' does not have default duration, but the timer "
-	"inherited from component type `%s' has", dispname_str,
-	p_def_timer->get_my_scope()->get_fullname().c_str());
+        "inherited from component type `%s' has", dispname_str,
+        p_def_timer->get_my_scope()->get_fullname().c_str());
       p_def_timer->note("The inherited timer `%s' is here", dispname_str);
       return false;
     }
@@ -5094,49 +5084,49 @@ namespace Ttcn {
       const string& array_type = dimensions->get_timer_type();
       const char *array_type_str = array_type.c_str();
       target->header.global_vars = mputprintf(target->header.global_vars,
-	"extern %s %s;\n", array_type_str, genname_str);
+        "extern %s %s;\n", array_type_str, genname_str);
       target->source.global_vars = mputprintf(target->source.global_vars,
-	"%s %s;\n", array_type_str, genname_str);
+        "%s %s;\n", array_type_str, genname_str);
       target->functions.pre_init = mputstr(target->functions.pre_init, "{\n"
-	"static const char * const timer_name = \"");
+        "static const char * const timer_name = \"");
       target->functions.pre_init = mputstr(target->functions.pre_init,
-	dispname.c_str());
+        dispname.c_str());
       target->functions.pre_init = mputprintf(target->functions.pre_init,
-	"\";\n"
+        "\";\n"
         "%s.set_name(timer_name);\n"
-	"}\n", genname_str);
+        "}\n", genname_str);
       if (default_duration) target->functions.post_init =
-	generate_code_array_duration(target->functions.post_init, genname_str,
-	  default_duration);
+        generate_code_array_duration(target->functions.post_init, genname_str,
+          default_duration);
     } else {
       // single timer
       target->header.global_vars = mputprintf(target->header.global_vars,
-	"extern TIMER %s;\n", genname_str);
+        "extern TIMER %s;\n", genname_str);
       if (default_duration) {
-	// has default duration
-	Value *v = default_duration->get_value_refd_last();
-	if (v->get_valuetype() == Value::V_REAL) {
-	  // duration is known at compilation time -> set in the constructor
-	  target->source.global_vars = mputprintf(target->source.global_vars,
-	    "TIMER %s(\"%s\", %s);\n", genname_str, dispname.c_str(),
-	    v->get_single_expr().c_str());
-	} else {
-	  // duration is known only at runtime -> set in post_init
-	  target->source.global_vars = mputprintf(target->source.global_vars,
-	    "TIMER %s(\"%s\");\n", genname_str, dispname.c_str());
-	  expression_struct expr;
-	  Code::init_expr(&expr);
-	  expr.expr = mputprintf(expr.expr, "%s.set_default_duration(",
-	    genname_str);
-	  default_duration->generate_code_expr(&expr);
-	  expr.expr = mputc(expr.expr, ')');
-	  target->functions.post_init =
-	    Code::merge_free_expr(target->functions.post_init, &expr);
-	}
+        // has default duration
+        Value *v = default_duration->get_value_refd_last();
+        if (v->get_valuetype() == Value::V_REAL) {
+          // duration is known at compilation time -> set in the constructor
+          target->source.global_vars = mputprintf(target->source.global_vars,
+            "TIMER %s(\"%s\", %s);\n", genname_str, dispname.c_str(),
+            v->get_single_expr().c_str());
+        } else {
+          // duration is known only at runtime -> set in post_init
+          target->source.global_vars = mputprintf(target->source.global_vars,
+            "TIMER %s(\"%s\");\n", genname_str, dispname.c_str());
+          expression_struct expr;
+          Code::init_expr(&expr);
+          expr.expr = mputprintf(expr.expr, "%s.set_default_duration(",
+            genname_str);
+          default_duration->generate_code_expr(&expr);
+          expr.expr = mputc(expr.expr, ')');
+          target->functions.post_init =
+            Code::merge_free_expr(target->functions.post_init, &expr);
+        }
       } else {
-	// does not have default duration
-	target->source.global_vars = mputprintf(target->source.global_vars,
-	  "TIMER %s(\"%s\");\n", genname_str, dispname.c_str());
+        // does not have default duration
+        target->source.global_vars = mputprintf(target->source.global_vars,
+          "TIMER %s(\"%s\");\n", genname_str, dispname.c_str());
       }
     }
   }
@@ -5274,33 +5264,33 @@ namespace Ttcn {
       const char *array_type_str = array_type.c_str();
       str = mputprintf(str, "%s %s;\n", array_type_str, genname_str);
       str = mputstr(str, "{\n"
-	"static const char * const timer_name =  \"");
+        "static const char * const timer_name =  \"");
       str = mputstr(str, dispname.c_str());
       str = mputprintf(str, "\";\n"
         "%s.set_name(timer_name);\n"
-	"}\n", genname_str);
+        "}\n", genname_str);
       if (default_duration) str = generate_code_array_duration(str,
-	genname_str, default_duration);
+        genname_str, default_duration);
     } else {
       // single timer
       if (default_duration && default_duration->has_single_expr()) {
-	// the default duration can be passed to the constructor
-	str = mputprintf(str, "TIMER %s(\"%s\", %s);\n", genname_str,
-	  dispname.c_str(), default_duration->get_single_expr().c_str());
+        // the default duration can be passed to the constructor
+        str = mputprintf(str, "TIMER %s(\"%s\", %s);\n", genname_str,
+          dispname.c_str(), default_duration->get_single_expr().c_str());
       } else {
-	// only the name is passed to the constructor
-	str = mputprintf(str, "TIMER %s(\"%s\");\n", genname_str,
-	  dispname.c_str());
-	if (default_duration) {
-	  // the default duration is set explicitly
-	  expression_struct expr;
-	  Code::init_expr(&expr);
-	  expr.expr = mputprintf(expr.expr, "%s.set_default_duration(",
-	    genname_str);
-	  default_duration->generate_code_expr(&expr);
-	  expr.expr = mputc(expr.expr, ')');
-	  str = Code::merge_free_expr(str, &expr);
-	}
+        // only the name is passed to the constructor
+        str = mputprintf(str, "TIMER %s(\"%s\");\n", genname_str,
+          dispname.c_str());
+        if (default_duration) {
+          // the default duration is set explicitly
+          expression_struct expr;
+          Code::init_expr(&expr);
+          expr.expr = mputprintf(expr.expr, "%s.set_default_duration(",
+            genname_str);
+          default_duration->generate_code_expr(&expr);
+          expr.expr = mputc(expr.expr, ')');
+          str = Code::merge_free_expr(str, &expr);
+        }
       }
     }
     return str;
@@ -5321,39 +5311,39 @@ namespace Ttcn {
       const char *array_type_str = array_type.c_str();
       def = mputprintf(def, "%s %s;\n", array_type_str, genname_str);
       def = mputstr(def, "{\n"
-	"static const char * const timer_names[] = { ");
+        "static const char * const timer_names[] = { ");
       def = dimensions->generate_element_names(def, dispname);
       def = mputprintf(def, " };\n"
         "%s.set_name(%lu, timer_names);\n"
-	"}\n", genname_str, (unsigned long) dimensions->get_array_size());
+        "}\n", genname_str, (unsigned long) dimensions->get_array_size());
       if (default_duration) init = generate_code_array_duration(init,
-	genname_str, default_duration);
+        genname_str, default_duration);
     } else {
       // single timer
       if (default_duration) {
-	// has default duration
-	Value *v = default_duration->get_value_refd_last();
-	if (v->get_valuetype() == Value::V_REAL) {
-	  // duration is known at compilation time -> set in the constructor
-	  def = mputprintf(def, "TIMER %s(\"%s\", %s);\n", genname_str,
-	    dispname.c_str(), v->get_single_expr().c_str());
-	} else {
-	  // duration is known only at runtime -> set when control reaches the
-	  // timer definition
-	  def = mputprintf(def, "TIMER %s(\"%s\");\n", genname_str,
-	    dispname.c_str());
+        // has default duration
+        Value *v = default_duration->get_value_refd_last();
+        if (v->get_valuetype() == Value::V_REAL) {
+          // duration is known at compilation time -> set in the constructor
+          def = mputprintf(def, "TIMER %s(\"%s\", %s);\n", genname_str,
+            dispname.c_str(), v->get_single_expr().c_str());
+        } else {
+          // duration is known only at runtime -> set when control reaches the
+          // timer definition
+          def = mputprintf(def, "TIMER %s(\"%s\");\n", genname_str,
+            dispname.c_str());
           expression_struct expr;
           Code::init_expr(&expr);
-	  expr.expr = mputprintf(expr.expr, "%s.set_default_duration(",
-	    genname_str);
-	  default_duration->generate_code_expr(&expr);
-	  expr.expr = mputc(expr.expr, ')');
-	  init = Code::merge_free_expr(init, &expr);
-	}
+          expr.expr = mputprintf(expr.expr, "%s.set_default_duration(",
+            genname_str);
+          default_duration->generate_code_expr(&expr);
+          expr.expr = mputc(expr.expr, ')');
+          init = Code::merge_free_expr(init, &expr);
+        }
       } else {
-	// does not have default duration
-	def = mputprintf(def, "TIMER %s(\"%s\");\n", genname_str,
-	  dispname.c_str());
+        // does not have default duration
+        def = mputprintf(def, "TIMER %s(\"%s\");\n", genname_str,
+          dispname.c_str());
       }
     }
   }
@@ -5363,25 +5353,25 @@ namespace Ttcn {
     if (default_duration) {
       Def_Timer *base_timer_defn = dynamic_cast<Def_Timer*>(base_defn);
       if (!base_timer_defn || !base_timer_defn->default_duration)
-	FATAL_ERROR("Def_Timer::generate_code_init_comp()");
+        FATAL_ERROR("Def_Timer::generate_code_init_comp()");
       // initializer is not needed if the default durations are the same
       // constants in both timers
       if (default_duration->is_unfoldable() ||
-	  base_timer_defn->default_duration->is_unfoldable() ||
-	  !(*default_duration == *base_timer_defn->default_duration)) {
-	if (dimensions) {
-	  str = generate_code_array_duration(str,
-	    base_timer_defn->get_genname_from_scope(my_scope).c_str(),
-	    default_duration);
-	} else {
-	  expression_struct expr;
-	  Code::init_expr(&expr);
-	  expr.expr = mputprintf(expr.expr, "%s.set_default_duration(",
-	    base_timer_defn->get_genname_from_scope(my_scope).c_str());
-	  default_duration->generate_code_expr(&expr);
-	  expr.expr = mputc(expr.expr, ')');
-	  str = Code::merge_free_expr(str, &expr);
-	}
+          base_timer_defn->default_duration->is_unfoldable() ||
+          !(*default_duration == *base_timer_defn->default_duration)) {
+        if (dimensions) {
+          str = generate_code_array_duration(str,
+            base_timer_defn->get_genname_from_scope(my_scope).c_str(),
+            default_duration);
+        } else {
+          expression_struct expr;
+          Code::init_expr(&expr);
+          expr.expr = mputprintf(expr.expr, "%s.set_default_duration(",
+            base_timer_defn->get_genname_from_scope(my_scope).c_str());
+          default_duration->generate_code_expr(&expr);
+          expr.expr = mputc(expr.expr, ')');
+          str = Code::merge_free_expr(str, &expr);
+        }
       }
     }
     return str;
@@ -5456,9 +5446,9 @@ namespace Ttcn {
     if (ass) {
       if (ass->get_asstype() == A_TYPE) {
         Type *t = ass->get_Type()->get_type_refd_last();
-	if (t->get_typetype() == Type::T_PORT) port_type = t;
-	else type_ref->error("Type reference `%s' does not refer to a "
-	  "port type", type_ref->get_dispname().c_str());
+        if (t->get_typetype() == Type::T_PORT) port_type = t;
+        else type_ref->error("Type reference `%s' does not refer to a "
+          "port type", type_ref->get_dispname().c_str());
       } else type_ref->error("Reference `%s' does not refer to a "
         "type", type_ref->get_dispname().c_str());
     }
@@ -5476,7 +5466,7 @@ namespace Ttcn {
     if (p_def->get_asstype() != A_PORT) {
       const char *dispname_str = id->get_dispname().c_str();
       error("Local definition `%s' is a port, but the definition inherited "
-	"from component type `%s' is a %s", dispname_str,
+        "from component type `%s' is a %s", dispname_str,
         p_def->get_my_scope()->get_fullname().c_str(), p_def->get_assname());
       p_def->note("The inherited definition of `%s' is here", dispname_str);
       return false;
@@ -5484,38 +5474,38 @@ namespace Ttcn {
     Def_Port *p_def_port = dynamic_cast<Def_Port*>(p_def);
     if (!p_def_port) FATAL_ERROR("Def_Port::chk_identical()");
     if (port_type && p_def_port->port_type &&
-	port_type != p_def_port->port_type) {
+        port_type != p_def_port->port_type) {
       const char *dispname_str = id->get_dispname().c_str();
       type_ref->error("Local port `%s' has type `%s', but the port inherited "
-	"from component type `%s' has type `%s'", dispname_str,
-	port_type->get_typename().c_str(),
+        "from component type `%s' has type `%s'", dispname_str,
+        port_type->get_typename().c_str(),
         p_def_port->get_my_scope()->get_fullname().c_str(),
-	p_def_port->port_type->get_typename().c_str());
+        p_def_port->port_type->get_typename().c_str());
       p_def_port->note("The inherited port `%s' is here", dispname_str);
       return false;
     }
     if (dimensions) {
       if (p_def_port->dimensions) {
         if (!dimensions->is_identical(p_def_port->dimensions)) {
-	  const char *dispname_str = id->get_dispname().c_str();
-	  error("Local port `%s' and the port inherited from component type "
-	    "`%s' have different array dimensions", dispname_str,
+          const char *dispname_str = id->get_dispname().c_str();
+          error("Local port `%s' and the port inherited from component type "
+            "`%s' have different array dimensions", dispname_str,
             p_def_port->get_my_scope()->get_fullname().c_str());
-	  p_def_port->note("The inherited port `%s' is here", dispname_str);
-	  return false;
-	}
+          p_def_port->note("The inherited port `%s' is here", dispname_str);
+          return false;
+        }
       } else {
-	const char *dispname_str = id->get_dispname().c_str();
-	error("Local definition `%s' is a port array, but the definition "
-	  "inherited from component type `%s' is a single port", dispname_str,
+        const char *dispname_str = id->get_dispname().c_str();
+        error("Local definition `%s' is a port array, but the definition "
+          "inherited from component type `%s' is a single port", dispname_str,
           p_def_port->get_my_scope()->get_fullname().c_str());
-	p_def_port->note("The inherited port `%s' is here", dispname_str);
-	return false;
+        p_def_port->note("The inherited port `%s' is here", dispname_str);
+        return false;
       }
     } else if (p_def_port->dimensions) {
       const char *dispname_str = id->get_dispname().c_str();
       error("Local definition `%s' is a single port, but the definition "
-	"inherited from component type `%s' is a port array", dispname_str,
+        "inherited from component type `%s' is a port array", dispname_str,
         p_def_port->get_my_scope()->get_fullname().c_str());
       p_def_port->note("The inherited port `%s' is here", dispname_str);
       return false;
@@ -5534,24 +5524,24 @@ namespace Ttcn {
       const string& array_type = dimensions->get_port_type(type_genname);
       const char *array_type_str = array_type.c_str();
       target->header.global_vars = mputprintf(target->header.global_vars,
-	"extern %s %s;\n", array_type_str, genname_str);
+        "extern %s %s;\n", array_type_str, genname_str);
       target->source.global_vars = mputprintf(target->source.global_vars,
-	"%s %s;\n", array_type_str, genname_str);
+        "%s %s;\n", array_type_str, genname_str);
       target->functions.pre_init = mputstr(target->functions.pre_init, "{\n"
-	"static const char * const port_name = \"");
+        "static const char * const port_name = \"");
       target->functions.pre_init = mputstr(target->functions.pre_init,
-	dispname.c_str());
+        dispname.c_str());
       target->functions.pre_init = mputprintf(target->functions.pre_init,
-	"\";\n"
+        "\";\n"
         "%s.set_name(port_name);\n"
-	"}\n", genname_str);
+        "}\n", genname_str);
     } else {
       // single port
       const char *type_genname_str = type_genname.c_str();
       target->header.global_vars = mputprintf(target->header.global_vars,
-	"extern %s %s;\n", type_genname_str, genname_str);
+        "extern %s %s;\n", type_genname_str, genname_str);
       target->source.global_vars = mputprintf(target->source.global_vars,
-	"%s %s(\"%s\");\n", type_genname_str, genname_str, dispname.c_str());
+        "%s %s(\"%s\");\n", type_genname_str, genname_str, dispname.c_str());
     }
     target->functions.init_comp = mputprintf(target->functions.init_comp,
       "%s.activate_port();\n", genname_str);
@@ -5584,21 +5574,21 @@ namespace Ttcn {
   {
     if (is_external) {
       if (has_return_type) {
-	if (returns_template) return A_EXT_FUNCTION_RTEMP;
-	else return A_EXT_FUNCTION_RVAL;
+        if (returns_template) return A_EXT_FUNCTION_RTEMP;
+        else return A_EXT_FUNCTION_RVAL;
       } else {
-	if (returns_template)
-	  FATAL_ERROR("Def_Function_Base::determine_asstype()");
-	return A_EXT_FUNCTION;
+        if (returns_template)
+          FATAL_ERROR("Def_Function_Base::determine_asstype()");
+        return A_EXT_FUNCTION;
       }
     } else { // not an external function
       if (has_return_type) {
-	if (returns_template) return A_FUNCTION_RTEMP;
-	else return A_FUNCTION_RVAL;
+        if (returns_template) return A_FUNCTION_RTEMP;
+        else return A_FUNCTION_RVAL;
       } else {
-	if (returns_template)
-	  FATAL_ERROR("Def_Function_Base::determine_asstype()");
-	return A_FUNCTION;
+        if (returns_template)
+          FATAL_ERROR("Def_Function_Base::determine_asstype()");
+        return A_FUNCTION;
       }
     }
   }
@@ -5616,8 +5606,8 @@ namespace Ttcn {
     FormalParList *p_fpl, Type *p_return_type, bool returns_template,
     template_restriction_t p_template_restriction)
     : Definition(determine_asstype(is_external, p_return_type != 0,
-	returns_template), p_id), fp_list(p_fpl), return_type(p_return_type),
-	prototype(PROTOTYPE_NONE), input_type(0), output_type(0),
+        returns_template), p_id), fp_list(p_fpl), return_type(p_return_type),
+        prototype(PROTOTYPE_NONE), input_type(0), output_type(0),
         template_restriction(p_template_restriction)
   {
     if (!p_fpl) FATAL_ERROR("Def_Function_Base::Def_Function_Base()");
@@ -5693,100 +5683,100 @@ namespace Ttcn {
     // checking the formal parameter list
     if (prototype == PROTOTYPE_CONVERT) {
       if (fp_list->get_nof_fps() == 1) {
-	FormalPar *par = fp_list->get_fp_byIndex(0);
-	if (par->get_asstype() == A_PAR_VAL_IN) {
-	  input_type = par->get_Type();
-	} else {
-	  par->error("The parameter must be an `in' value parameter for "
-	    "attribute `prototype(%s)' instead of %s", get_prototype_name(),
-	    par->get_assname());
-	}
+        FormalPar *par = fp_list->get_fp_byIndex(0);
+        if (par->get_asstype() == A_PAR_VAL_IN) {
+          input_type = par->get_Type();
+        } else {
+          par->error("The parameter must be an `in' value parameter for "
+            "attribute `prototype(%s)' instead of %s", get_prototype_name(),
+            par->get_assname());
+        }
       } else {
-	fp_list->error("The function must have one parameter instead of %lu "
-	  "for attribute `prototype(%s)'", (unsigned long) fp_list->get_nof_fps(),
-	  get_prototype_name());
+        fp_list->error("The function must have one parameter instead of %lu "
+          "for attribute `prototype(%s)'", (unsigned long) fp_list->get_nof_fps(),
+          get_prototype_name());
       }
     } else { // not PROTOTYPE_CONVERT
       if (fp_list->get_nof_fps() == 2) {
-	FormalPar *first_par = fp_list->get_fp_byIndex(0);
-	if (prototype == PROTOTYPE_SLIDING) {
-	  if (first_par->get_asstype() == A_PAR_VAL_INOUT) {
-	    Type *first_par_type = first_par->get_Type();
-	    switch (first_par_type->get_type_refd_last()
-		    ->get_typetype_ttcn3()) {
-	    case Type::T_ERROR:
-	    case Type::T_OSTR:
-	    case Type::T_CSTR:
-	    case Type::T_BSTR:
-	      input_type = first_par_type;
-	      break;
-	    default:
-	      first_par_type->error("The type of the first parameter must be "
-		"`octetstring' or `charstring' or `bitstring' for attribute "
-		"`prototype(%s)' instead of `%s'", get_prototype_name(),
-		first_par_type->get_typename().c_str());
-	    }
-	  } else {
-	    first_par->error("The first parameter must be an `inout' value "
-	      "parameter for attribute `prototype(%s)' instead of %s",
-	      get_prototype_name(), first_par->get_assname());
-	  }
-	} else {
-	  if (first_par->get_asstype() == A_PAR_VAL_IN) {
-	    input_type = first_par->get_Type();
-	  } else {
-	    first_par->error("The first parameter must be an `in' value "
-	      "parameter for attribute `prototype(%s)' instead of %s",
-	      get_prototype_name(), first_par->get_assname());
-	  }
-	}
-	FormalPar *second_par = fp_list->get_fp_byIndex(1);
-	if (second_par->get_asstype() == A_PAR_VAL_OUT) {
-	  output_type = second_par->get_Type();
-	} else {
-	  second_par->error("The second parameter must be an `out' value "
-	    "parameter for attribute `prototype(%s)' instead of %s",
-	    get_prototype_name(), second_par->get_assname());
-	}
+        FormalPar *first_par = fp_list->get_fp_byIndex(0);
+        if (prototype == PROTOTYPE_SLIDING) {
+          if (first_par->get_asstype() == A_PAR_VAL_INOUT) {
+            Type *first_par_type = first_par->get_Type();
+            switch (first_par_type->get_type_refd_last()
+                    ->get_typetype_ttcn3()) {
+            case Type::T_ERROR:
+            case Type::T_OSTR:
+            case Type::T_CSTR:
+            case Type::T_BSTR:
+              input_type = first_par_type;
+              break;
+            default:
+              first_par_type->error("The type of the first parameter must be "
+                "`octetstring' or `charstring' or `bitstring' for attribute "
+                "`prototype(%s)' instead of `%s'", get_prototype_name(),
+                first_par_type->get_typename().c_str());
+            }
+          } else {
+            first_par->error("The first parameter must be an `inout' value "
+              "parameter for attribute `prototype(%s)' instead of %s",
+              get_prototype_name(), first_par->get_assname());
+          }
+        } else {
+          if (first_par->get_asstype() == A_PAR_VAL_IN) {
+            input_type = first_par->get_Type();
+          } else {
+            first_par->error("The first parameter must be an `in' value "
+              "parameter for attribute `prototype(%s)' instead of %s",
+              get_prototype_name(), first_par->get_assname());
+          }
+        }
+        FormalPar *second_par = fp_list->get_fp_byIndex(1);
+        if (second_par->get_asstype() == A_PAR_VAL_OUT) {
+          output_type = second_par->get_Type();
+        } else {
+          second_par->error("The second parameter must be an `out' value "
+            "parameter for attribute `prototype(%s)' instead of %s",
+            get_prototype_name(), second_par->get_assname());
+        }
       } else {
-	fp_list->error("The function must have two parameters for attribute "
-	  "`prototype(%s)' instead of %lu", get_prototype_name(),
-	  (unsigned long) fp_list->get_nof_fps());
+        fp_list->error("The function must have two parameters for attribute "
+          "`prototype(%s)' instead of %lu", get_prototype_name(),
+          (unsigned long) fp_list->get_nof_fps());
       }
     }
     // checking the return type
     if (prototype == PROTOTYPE_FAST) {
       if (return_type) {
-	return_type->error("The function cannot have return type for "
-	  "attribute `prototype(%s)'", get_prototype_name());
+        return_type->error("The function cannot have return type for "
+          "attribute `prototype(%s)'", get_prototype_name());
       }
     } else {
       if (return_type) {
-	if (asstype == A_FUNCTION_RTEMP || asstype == A_EXT_FUNCTION_RTEMP)
-	  return_type->error("The function must return a value instead of a "
-	    "template for attribute `prototype(%s)'", get_prototype_name());
-	if (prototype == PROTOTYPE_CONVERT) {
-	  output_type = return_type;
-	} else {
-	  switch (return_type->get_type_refd_last()->get_typetype_ttcn3()) {
-	  case Type::T_ERROR:
-	  case Type::T_INT:
-	    break;
-	  default:
-	    return_type->error("The return type of the function must be "
-	      "`integer' instead of `%s' for attribute `prototype(%s)'",
-	      return_type->get_typename().c_str(), get_prototype_name());
-	  }
-	}
+        if (asstype == A_FUNCTION_RTEMP || asstype == A_EXT_FUNCTION_RTEMP)
+          return_type->error("The function must return a value instead of a "
+            "template for attribute `prototype(%s)'", get_prototype_name());
+        if (prototype == PROTOTYPE_CONVERT) {
+          output_type = return_type;
+        } else {
+          switch (return_type->get_type_refd_last()->get_typetype_ttcn3()) {
+          case Type::T_ERROR:
+          case Type::T_INT:
+            break;
+          default:
+            return_type->error("The return type of the function must be "
+              "`integer' instead of `%s' for attribute `prototype(%s)'",
+              return_type->get_typename().c_str(), get_prototype_name());
+          }
+        }
       } else {
-	error("The function must have return type for attribute "
-	  "`prototype(%s)'", get_prototype_name());
+        error("The function must have return type for attribute "
+          "`prototype(%s)'", get_prototype_name());
       }
     }
     // checking the 'runs on' clause
     if (get_RunsOnType()) {
       error("The function cannot have `runs on' clause for attribute "
-	"`prototype(%s)'", get_prototype_name());
+        "`prototype(%s)'", get_prototype_name());
     }
   }
 
@@ -5814,8 +5804,8 @@ namespace Ttcn {
                              StatementBlock *p_block)
     : Def_Function_Base(false, p_id, p_fpl, p_return_type, returns_template,
         p_template_restriction),
-	runs_on_ref(p_runs_on_ref), runs_on_type(0), block(p_block),
-	is_startable(false), transparent(false)
+        runs_on_ref(p_runs_on_ref), runs_on_type(0), block(p_block),
+        is_startable(false), transparent(false)
   {
     if (!p_block) FATAL_ERROR("Def_Function::Def_Function()");
     block->set_my_def(this);
@@ -5891,7 +5881,7 @@ namespace Ttcn {
     is_startable = runs_on_ref != 0;
     if (is_startable && !fp_list->get_startability()) is_startable = false;
     if (is_startable && return_type && return_type->is_component_internal())
-	  is_startable = false;
+          is_startable = false;
     // checking of statement block
     block->chk();
     if (return_type) {
@@ -5899,13 +5889,13 @@ namespace Ttcn {
       switch (block->has_return()) {
       case StatementBlock::RS_NO:
         error("The function has return type, but it does not have any return "
-	  "statement");
+          "statement");
         break;
       case StatementBlock::RS_MAYBE:
-    	error("The function has return type, but control might leave it "
-	  "without reaching a return statement");
+            error("The function has return type, but control might leave it "
+          "without reaching a return statement");
       default:
-	break;
+        break;
       }
     }
     if (!semantic_check_only) {
@@ -6002,7 +5992,7 @@ namespace Ttcn {
     // function prototype
     target->header.function_prototypes =
       mputprintf(target->header.function_prototypes, "extern %s %s(%s);\n",
-	return_type_str, genname_str, formal_par_list);
+        return_type_str, genname_str, formal_par_list);
 
     // function body
     char *body = mprintf("%s %s(%s)\n"
@@ -6020,107 +6010,107 @@ namespace Ttcn {
     if (is_startable) {
       size_t nof_fps = fp_list->get_nof_fps();
       // starter function (stub)
-	// function prototype
-	target->header.function_prototypes =
-	  mputprintf(target->header.function_prototypes,
-	    "extern void start_%s(const COMPONENT& component_reference%s%s);\n",
-	    genname_str, nof_fps>0?", ":"", formal_par_list);
-	// function body
-	body = mprintf("void start_%s(const COMPONENT& component_reference%s"
-	    "%s)\n"
-	  "{\n"
-	  "TTCN_Logger::begin_event(TTCN_Logger::PARALLEL_PTC);\n"
-	  "TTCN_Logger::log_event_str(\"Starting function %s(\");\n",
-	  genname_str, nof_fps>0?", ":"", formal_par_list, dispname_str);
-	for (size_t i = 0; i < nof_fps; i++) {
-	  if (i > 0) body = mputstr(body,
+        // function prototype
+        target->header.function_prototypes =
+          mputprintf(target->header.function_prototypes,
+            "extern void start_%s(const COMPONENT& component_reference%s%s);\n",
+            genname_str, nof_fps>0?", ":"", formal_par_list);
+        // function body
+        body = mprintf("void start_%s(const COMPONENT& component_reference%s"
+            "%s)\n"
+          "{\n"
+          "TTCN_Logger::begin_event(TTCN_Logger::PARALLEL_PTC);\n"
+          "TTCN_Logger::log_event_str(\"Starting function %s(\");\n",
+          genname_str, nof_fps>0?", ":"", formal_par_list, dispname_str);
+        for (size_t i = 0; i < nof_fps; i++) {
+          if (i > 0) body = mputstr(body,
              "TTCN_Logger::log_event_str(\", \");\n");
-	  body = mputprintf(body, "%s.log();\n",
-	    fp_list->get_fp_byIndex(i)->get_reference_name(my_scope).c_str());
-	}
-	body = mputprintf(body,
-	  "TTCN_Logger::log_event_str(\") on component \");\n"
-	  "component_reference.log();\n"
-	  "TTCN_Logger::log_char('.');\n"
-	  "TTCN_Logger::end_event();\n"
-	  "Text_Buf text_buf;\n"
-	  "TTCN_Runtime::prepare_start_component(component_reference, "
-	    "\"%s\", \"%s\", text_buf);\n",
-	  my_scope->get_scope_mod()->get_modid().get_dispname().c_str(),
-	  dispname_str);
-	for (size_t i = 0; i < nof_fps; i++) {
-	  body = mputprintf(body, "%s.encode_text(text_buf);\n",
-	    fp_list->get_fp_byIndex(i)->get_reference_name(my_scope).c_str());
-	}
-	body = mputstr(body, "TTCN_Runtime::send_start_component(text_buf);\n"
-	  "}\n\n");
-	target->source.function_bodies = mputstr(target->source.function_bodies,
-	  body);
-	Free(body);
+          body = mputprintf(body, "%s.log();\n",
+            fp_list->get_fp_byIndex(i)->get_reference_name(my_scope).c_str());
+        }
+        body = mputprintf(body,
+          "TTCN_Logger::log_event_str(\") on component \");\n"
+          "component_reference.log();\n"
+          "TTCN_Logger::log_char('.');\n"
+          "TTCN_Logger::end_event();\n"
+          "Text_Buf text_buf;\n"
+          "TTCN_Runtime::prepare_start_component(component_reference, "
+            "\"%s\", \"%s\", text_buf);\n",
+          my_scope->get_scope_mod()->get_modid().get_dispname().c_str(),
+          dispname_str);
+        for (size_t i = 0; i < nof_fps; i++) {
+          body = mputprintf(body, "%s.encode_text(text_buf);\n",
+            fp_list->get_fp_byIndex(i)->get_reference_name(my_scope).c_str());
+        }
+        body = mputstr(body, "TTCN_Runtime::send_start_component(text_buf);\n"
+          "}\n\n");
+        target->source.function_bodies = mputstr(target->source.function_bodies,
+          body);
+        Free(body);
 
       // an entry in start_ptc_function
       body = mprintf("if (!strcmp(function_name, \"%s\")) {\n",
-	dispname_str);
+        dispname_str);
       if (nof_fps > 0) {
-	body = fp_list->generate_code_object(body, "", ' ');
-	for (size_t i = 0; i < nof_fps; i++) {
-	  body = mputprintf(body, "%s.decode_text(function_arguments);\n",
-	    fp_list->get_fp_byIndex(i)->get_reference_name(my_scope).c_str());
-	}
-	body = mputprintf(body,
-	  "TTCN_Logger::begin_event(TTCN_Logger::PARALLEL_PTC);\n"
-	  "TTCN_Logger::log_event_str(\"Starting function %s(\");\n",
-	  dispname_str);
-	for (size_t i = 0; i < nof_fps; i++) {
-	  if (i > 0) body = mputstr(body,
+        body = fp_list->generate_code_object(body, "", ' ');
+        for (size_t i = 0; i < nof_fps; i++) {
+          body = mputprintf(body, "%s.decode_text(function_arguments);\n",
+            fp_list->get_fp_byIndex(i)->get_reference_name(my_scope).c_str());
+        }
+        body = mputprintf(body,
+          "TTCN_Logger::begin_event(TTCN_Logger::PARALLEL_PTC);\n"
+          "TTCN_Logger::log_event_str(\"Starting function %s(\");\n",
+          dispname_str);
+        for (size_t i = 0; i < nof_fps; i++) {
+          if (i > 0) body = mputstr(body,
              "TTCN_Logger::log_event_str(\", \");\n");
-	  body = mputprintf(body, "%s.log();\n",
-	    fp_list->get_fp_byIndex(i)->get_reference_name(my_scope).c_str());
-	}
-	body = mputstr(body, "TTCN_Logger::log_event_str(\").\");\n"
-	  "TTCN_Logger::end_event();\n");
+          body = mputprintf(body, "%s.log();\n",
+            fp_list->get_fp_byIndex(i)->get_reference_name(my_scope).c_str());
+        }
+        body = mputstr(body, "TTCN_Logger::log_event_str(\").\");\n"
+          "TTCN_Logger::end_event();\n");
       } else {
-	body = mputprintf(body,
-	  "TTCN_Logger::log_str(TTCN_Logger::PARALLEL_PTC, \"Starting function "
+        body = mputprintf(body,
+          "TTCN_Logger::log_str(TTCN_Logger::PARALLEL_PTC, \"Starting function "
           "%s().\");\n", dispname_str);
       }
       body = mputstr(body,
-	"TTCN_Runtime::function_started(function_arguments);\n");
+        "TTCN_Runtime::function_started(function_arguments);\n");
       char *actual_par_list =
-	fp_list->generate_code_actual_parlist(memptystr(), "");
+        fp_list->generate_code_actual_parlist(memptystr(), "");
       bool return_value_kept = false;
       if (asstype == A_FUNCTION_RVAL) {
-	// the return value is kept only if the function returns a value
-	// (rather than a template) and the return type has the "done"
-	// extension attribute
-	for (Type *t = return_type; ; t = t->get_type_refd()) {
-	  if (t->has_done_attribute()) {
-	    return_value_kept = true;
-	    break;
-	  } else if (!t->is_ref()) break;
-	}
+        // the return value is kept only if the function returns a value
+        // (rather than a template) and the return type has the "done"
+        // extension attribute
+        for (Type *t = return_type; ; t = t->get_type_refd()) {
+          if (t->has_done_attribute()) {
+            return_value_kept = true;
+            break;
+          } else if (!t->is_ref()) break;
+        }
       }
       if (return_value_kept) {
-	const string& return_type_dispname = return_type->get_typename();
-	const char *return_type_dispname_str = return_type_dispname.c_str();
-	body = mputprintf(body, "%s ret_val(%s(%s));\n"
-	  "TTCN_Logger::begin_event(TTCN_PARALLEL);\n"
-	  "TTCN_Logger::log_event_str(\"Function %s returned %s : \");\n"
-	  "ret_val.log();\n"
-	  "Text_Buf text_buf;\n"
-	  "TTCN_Runtime::prepare_function_finished(\"%s\", text_buf);\n"
-	  "ret_val.encode_text(text_buf);\n"
-	  "TTCN_Runtime::send_function_finished(text_buf);\n",
-	  return_type_str, genname_str, actual_par_list, dispname_str,
-	  return_type_dispname_str, return_type_dispname_str);
+        const string& return_type_dispname = return_type->get_typename();
+        const char *return_type_dispname_str = return_type_dispname.c_str();
+        body = mputprintf(body, "%s ret_val(%s(%s));\n"
+          "TTCN_Logger::begin_event(TTCN_PARALLEL);\n"
+          "TTCN_Logger::log_event_str(\"Function %s returned %s : \");\n"
+          "ret_val.log();\n"
+          "Text_Buf text_buf;\n"
+          "TTCN_Runtime::prepare_function_finished(\"%s\", text_buf);\n"
+          "ret_val.encode_text(text_buf);\n"
+          "TTCN_Runtime::send_function_finished(text_buf);\n",
+          return_type_str, genname_str, actual_par_list, dispname_str,
+          return_type_dispname_str, return_type_dispname_str);
       } else {
-	body = mputprintf(body, "%s(%s);\n"
-	  "TTCN_Runtime::function_finished(\"%s\");\n",
-	  genname_str, actual_par_list, dispname_str);
+        body = mputprintf(body, "%s(%s);\n"
+          "TTCN_Runtime::function_finished(\"%s\");\n",
+          genname_str, actual_par_list, dispname_str);
       }
       Free(actual_par_list);
       body = mputstr(body, "return TRUE;\n"
-	"} else ");
+        "} else ");
       target->functions.start = mputstr(target->functions.start, body);
       Free(body);
     }
@@ -6225,20 +6215,20 @@ namespace Ttcn {
     switch (function_type) {
     case EXTFUNC_MANUAL:
       if (eb_list) {
-	eb_list->error("Attribute `errorbehavior' can only be used together "
-	  "with `encode' or `decode'");
-	eb_list->chk();
+        eb_list->error("Attribute `errorbehavior' can only be used together "
+          "with `encode' or `decode'");
+        eb_list->chk();
       }
       break;
     case EXTFUNC_ENCODE:
       switch (prototype) {
       case PROTOTYPE_NONE:
-	error("Attribute `encode' cannot be used without `prototype'");
-	break;
+        error("Attribute `encode' cannot be used without `prototype'");
+        break;
       case PROTOTYPE_BACKTRACK:
       case PROTOTYPE_SLIDING:
-	error("Attribute `encode' cannot be used with `prototype(%s)'",
-	  get_prototype_name());
+        error("Attribute `encode' cannot be used with `prototype(%s)'",
+          get_prototype_name());
       default: /* CONVERT and FAST allowed */
         break;
       }
@@ -6256,34 +6246,59 @@ namespace Ttcn {
         }
       }
       if (output_type) {
-	Type *stream_type = Type::get_stream_type(encoding_type);
-	if (!stream_type->is_identical(output_type)) {
-	  output_type->error("The output type of %s encoding should be `%s' "
-	    "instead of `%s'", Type::get_encoding_name(encoding_type),
-	    stream_type->get_typename().c_str(),
-	    output_type->get_typename().c_str());
-	}
+        if(encoding_type == Common::Type::CT_TEXT){  // the TEXT encoding support both octetstring ans charstring stream type
+          Type *stream_type = Type::get_stream_type(encoding_type,0);
+          Type *stream_type2 = Type::get_stream_type(encoding_type,1);
+          if ( (!stream_type->is_identical(output_type)) && (!stream_type2->is_identical(output_type)) ) {
+            input_type->error("The output type of %s encoding should be `%s' or `%s' "
+              "instead of `%s'", Type::get_encoding_name(encoding_type),
+              stream_type->get_typename().c_str(),
+              stream_type2->get_typename().c_str(),
+              input_type->get_typename().c_str());
+          }
+        } else {
+          Type *stream_type = Type::get_stream_type(encoding_type);
+          if (!stream_type->is_identical(output_type)) {
+            input_type->error("The output type of %s encoding should be `%s' "
+              "instead of `%s'", Type::get_encoding_name(encoding_type),
+              stream_type->get_typename().c_str(),
+              input_type->get_typename().c_str());
+          }
+        }
       }
       if (eb_list) eb_list->chk();
       chk_allowed_encode();
       break;
     case EXTFUNC_DECODE:
       if (prototype == PROTOTYPE_NONE) {
-	error("Attribute `decode' cannot be used without `prototype'");
+        error("Attribute `decode' cannot be used without `prototype'");
       }
       if (input_type) {
-	Type *stream_type = Type::get_stream_type(encoding_type);
-	if (!stream_type->is_identical(input_type)) {
-	  input_type->error("The input type of %s encoding should be `%s' "
-	    "instead of `%s'", Type::get_encoding_name(encoding_type),
-	    stream_type->get_typename().c_str(),
-	    input_type->get_typename().c_str());
-	}
+        if(encoding_type == Common::Type::CT_TEXT){  // the TEXT encoding support both octetstring ans charstring stream type
+          Type *stream_type = Type::get_stream_type(encoding_type,0);
+          Type *stream_type2 = Type::get_stream_type(encoding_type,1);
+          if ( (!stream_type->is_identical(input_type)) && (!stream_type2->is_identical(input_type)) ) {
+            input_type->error("The input type of %s encoding should be `%s' or `%s' "
+              "instead of `%s'", Type::get_encoding_name(encoding_type),
+              stream_type->get_typename().c_str(),
+              stream_type2->get_typename().c_str(),
+              input_type->get_typename().c_str());
+          }
+        } else {
+          Type *stream_type = Type::get_stream_type(encoding_type);
+          if (!stream_type->is_identical(input_type)) {
+            input_type->error("The input type of %s encoding should be `%s' "
+              "instead of `%s'", Type::get_encoding_name(encoding_type),
+              stream_type->get_typename().c_str(),
+              input_type->get_typename().c_str());
+          }
+        }
+        
       }
       if (output_type && !output_type->has_encoding(encoding_type)) {
-	output_type->error("Output type `%s' does not support %s encoding",
-	  output_type->get_typename().c_str(),
-	  Type::get_encoding_name(encoding_type));
+        output_type->error("Output type `%s' does not support %s encoding",
+          output_type->get_typename().c_str(),
+          Type::get_encoding_name(encoding_type));
       }
       if (eb_list) eb_list->chk();
       chk_allowed_encode();
@@ -6334,7 +6349,7 @@ namespace Ttcn {
       Error_Context cntxt2(return_type, "In return type");
       return_type->chk();
       return_type->chk_as_return_type(asstype == A_EXT_FUNCTION_RVAL,
-	"external function");
+        "external function");
     }
     if (!semantic_check_only) fp_list->set_genname(get_genname());
     if (w_attrib_path) {
@@ -6477,7 +6492,7 @@ namespace Ttcn {
       result_name = "ret_val";
       // creating a local variable for the result stream
       str = mputprintf(str, "%s ret_val;\n",
-	output_type->get_genname_value(my_scope).c_str());
+        output_type->get_genname_value(my_scope).c_str());
       break;
     case PROTOTYPE_FAST:
       result_name = fp_list->get_fp_byIndex(1)->get_id().get_name().c_str();
@@ -6522,7 +6537,7 @@ namespace Ttcn {
     // setting error behavior
     if (eb_list) str = eb_list->generate_code(str);
     else if (prototype == PROTOTYPE_BACKTRACK || prototype == PROTOTYPE_SLIDING) {
-    	str = mputstr(str, "TTCN_EncDec::set_error_behavior("
+            str = mputstr(str, "TTCN_EncDec::set_error_behavior("
       "TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);\n");
     } else str = mputstr(str, "TTCN_EncDec::set_error_behavior("
       "TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_DEFAULT);\n");
@@ -6533,7 +6548,7 @@ namespace Ttcn {
     if (prototype == PROTOTYPE_CONVERT) {
       // creating a local variable for the result
       str = mputprintf(str, "%s ret_val;\n",
-	output_type->get_genname_value(my_scope).c_str());
+        output_type->get_genname_value(my_scope).c_str());
       result_name = "ret_val";
     } else {
       result_name = fp_list->get_fp_byIndex(1)->get_id().get_name().c_str();
@@ -6562,47 +6577,47 @@ namespace Ttcn {
     if (prototype != PROTOTYPE_SLIDING) {
       // checking for remaining data in the buffer if decoding was successful
       str = mputprintf(str, "if (TTCN_EncDec::get_last_error_type() == "
-	  "TTCN_EncDec::ET_NONE) {\n"
-	"if (ttcn_buffer.get_pos() < ttcn_buffer.get_len()-1 && "
-	  "TTCN_Logger::log_this_event(TTCN_WARNING)) {\n"
-	"ttcn_buffer.cut();\n"
-	"%s remaining_stream;\n"
-	"ttcn_buffer.get_string(remaining_stream);\n"
-	"TTCN_Logger::begin_event(TTCN_WARNING);\n"
-	"TTCN_Logger::log_event_str(\"%s(): Warning: Data remained at the end "
-	  "of the stream after successful decoding: \");\n"
-	"remaining_stream.log();\n"
-	"TTCN_Logger::end_event();\n"
-	"}\n", input_type->get_genname_value(my_scope).c_str(), function_name);
+          "TTCN_EncDec::ET_NONE) {\n"
+        "if (ttcn_buffer.get_pos() < ttcn_buffer.get_len()-1 && "
+          "TTCN_Logger::log_this_event(TTCN_WARNING)) {\n"
+        "ttcn_buffer.cut();\n"
+        "%s remaining_stream;\n"
+        "ttcn_buffer.get_string(remaining_stream);\n"
+        "TTCN_Logger::begin_event(TTCN_WARNING);\n"
+        "TTCN_Logger::log_event_str(\"%s(): Warning: Data remained at the end "
+          "of the stream after successful decoding: \");\n"
+        "remaining_stream.log();\n"
+        "TTCN_Logger::end_event();\n"
+        "}\n", input_type->get_genname_value(my_scope).c_str(), function_name);
       // closing the block and returning the appropriate result or status code
       if (prototype == PROTOTYPE_BACKTRACK) {
-	str = mputstr(str, "return 0;\n"
-	  "} else return 1;\n");
+        str = mputstr(str, "return 0;\n"
+          "} else return 1;\n");
       } else {
-	str = mputstr(str, "}\n");
-	if (prototype == PROTOTYPE_CONVERT)
+        str = mputstr(str, "}\n");
+        if (prototype == PROTOTYPE_CONVERT)
           str = mputstr(str, "return ret_val;\n");
       }
     } else {
       // result handling and debug printout for sliding decoders
       str = mputprintf(str, "switch (TTCN_EncDec::get_last_error_type()) {\n"
-	"case TTCN_EncDec::ET_NONE:\n"
-	// TTCN_Buffer::get_string will call OCTETSTRING::clean_up()
-	"ttcn_buffer.cut();\n"
-	"ttcn_buffer.get_string(%s);\n"
-	"if (TTCN_Logger::log_this_event(TTCN_Logger::DEBUG_ENCDEC)) {\n"
-	"TTCN_Logger::begin_event(TTCN_Logger::DEBUG_ENCDEC);\n"
-	"TTCN_Logger::log_event_str(\"%s(): Stream after decoding: \");\n"
-	"%s.log();\n"
-	"TTCN_Logger::end_event();\n"
-	"}\n"
-	"return 0;\n"
+        "case TTCN_EncDec::ET_NONE:\n"
+        // TTCN_Buffer::get_string will call OCTETSTRING::clean_up()
+        "ttcn_buffer.cut();\n"
+        "ttcn_buffer.get_string(%s);\n"
+        "if (TTCN_Logger::log_this_event(TTCN_Logger::DEBUG_ENCDEC)) {\n"
+        "TTCN_Logger::begin_event(TTCN_Logger::DEBUG_ENCDEC);\n"
+        "TTCN_Logger::log_event_str(\"%s(): Stream after decoding: \");\n"
+        "%s.log();\n"
+        "TTCN_Logger::end_event();\n"
+        "}\n"
+        "return 0;\n"
         "case TTCN_EncDec::ET_INCOMPL_MSG:\n"
-	"case TTCN_EncDec::ET_LEN_ERR:\n"
-	"return 2;\n"
-	"default:\n"
-	"return 1;\n"
-	"}\n", first_par_name, function_name, first_par_name);
+        "case TTCN_EncDec::ET_LEN_ERR:\n"
+        "return 2;\n"
+        "default:\n"
+        "return 1;\n"
+        "}\n", first_par_name, function_name, first_par_name);
     }
     return str;
   }
@@ -6631,7 +6646,7 @@ namespace Ttcn {
     // function prototype
     target->header.function_prototypes =
       mputprintf(target->header.function_prototypes, "extern %s %s(%s);\n",
-	return_type_str, genname_str, formal_par_list);
+        return_type_str, genname_str, formal_par_list);
 
     if (function_type != EXTFUNC_MANUAL) {
       // function body written by the compiler
@@ -6641,22 +6656,22 @@ namespace Ttcn {
         , __FUNCTION__, __LINE__);
 #endif
       body = mputprintf(body,
-	"%s %s(%s)\n"
-	"{\n"
-	, return_type_str, genname_str, formal_par_list);
+        "%s %s(%s)\n"
+        "{\n"
+        , return_type_str, genname_str, formal_par_list);
       switch (function_type) {
       case EXTFUNC_ENCODE:
         body = generate_code_encode(body);
-	break;
+        break;
       case EXTFUNC_DECODE:
         body = generate_code_decode(body);
-	break;
+        break;
       default:
         FATAL_ERROR("Def_ExtFunction::generate_code()");
       }
       body = mputstr(body, "}\n\n");
       target->source.function_bodies = mputstr(target->source.function_bodies,
-	body);
+        body);
       Free(body);
     }
 
@@ -6685,11 +6700,11 @@ namespace Ttcn {
       DEBUG(level + 1, "Prototype: %s", get_prototype_name());
     if (function_type != EXTFUNC_MANUAL) {
       DEBUG(level + 1, "Automatically generated: %s",
-	function_type == EXTFUNC_ENCODE ? "encoder" : "decoder");
+        function_type == EXTFUNC_ENCODE ? "encoder" : "decoder");
       DEBUG(level + 2, "Encoding type: %s",
-	Type::get_encoding_name(encoding_type));
+        Type::get_encoding_name(encoding_type));
       if (encoding_options)
-	DEBUG(level + 2, "Encoding options: %s", encoding_options->c_str());
+        DEBUG(level + 2, "Encoding options: %s", encoding_options->c_str());
     }
     if (eb_list) eb_list->dump(level + 1);
   }
@@ -6925,7 +6940,7 @@ namespace Ttcn {
     // function for altstep instance: prototype
     target->header.function_prototypes =
       mputprintf(target->header.function_prototypes,
-	"extern alt_status %s_instance(%s);\n", genname_str, formal_par_list);
+        "extern alt_status %s_instance(%s);\n", genname_str, formal_par_list);
 
     // function for altstep instance: body
     char *str = mprintf("alt_status %s_instance(%s)\n"
@@ -6945,34 +6960,34 @@ namespace Ttcn {
     // wrapper function for stand-alone instantiation: prototype
     target->header.function_prototypes =
       mputprintf(target->header.function_prototypes,
-	"extern void %s(%s);\n", genname_str, formal_par_list);
+        "extern void %s(%s);\n", genname_str, formal_par_list);
 
     // wrapper function for stand-alone instantiation: body
     target->source.function_bodies =
       mputprintf(target->source.function_bodies, "void %s(%s)\n"
-	"{\n"
-	"altstep_begin:\n"
-	"boolean block_flag = FALSE;\n"
-	"alt_status altstep_flag = ALT_UNCHECKED, "
-	"default_flag = ALT_UNCHECKED;\n"
-	"for ( ; ; ) {\n"
-	"TTCN_Snapshot::take_new(block_flag);\n"
-	"if (altstep_flag != ALT_NO) {\n"
-	"altstep_flag = %s_instance(%s);\n"
-	"if (altstep_flag == ALT_YES || altstep_flag == ALT_BREAK) return;\n"
-	"else if (altstep_flag == ALT_REPEAT) goto altstep_begin;\n"
-	"}\n"
-	"if (default_flag != ALT_NO) {\n"
-	"default_flag = TTCN_Default::try_altsteps();\n"
-	"if (default_flag == ALT_YES || default_flag == ALT_BREAK) return;\n"
-	"else if (default_flag == ALT_REPEAT) goto altstep_begin;\n"
-	"}\n"
-	"if (altstep_flag == ALT_NO && default_flag == ALT_NO) "
-	"TTCN_error(\"None of the branches can be chosen in altstep %s.\");\n"
-	"else block_flag = TRUE;\n"
-	"}\n"
-	"}\n\n", genname_str, formal_par_list, genname_str, actual_par_list,
-	dispname_str);
+        "{\n"
+        "altstep_begin:\n"
+        "boolean block_flag = FALSE;\n"
+        "alt_status altstep_flag = ALT_UNCHECKED, "
+        "default_flag = ALT_UNCHECKED;\n"
+        "for ( ; ; ) {\n"
+        "TTCN_Snapshot::take_new(block_flag);\n"
+        "if (altstep_flag != ALT_NO) {\n"
+        "altstep_flag = %s_instance(%s);\n"
+        "if (altstep_flag == ALT_YES || altstep_flag == ALT_BREAK) return;\n"
+        "else if (altstep_flag == ALT_REPEAT) goto altstep_begin;\n"
+        "}\n"
+        "if (default_flag != ALT_NO) {\n"
+        "default_flag = TTCN_Default::try_altsteps();\n"
+        "if (default_flag == ALT_YES || default_flag == ALT_BREAK) return;\n"
+        "else if (default_flag == ALT_REPEAT) goto altstep_begin;\n"
+        "}\n"
+        "if (altstep_flag == ALT_NO && default_flag == ALT_NO) "
+        "TTCN_error(\"None of the branches can be chosen in altstep %s.\");\n"
+        "else block_flag = TRUE;\n"
+        "}\n"
+        "}\n\n", genname_str, formal_par_list, genname_str, actual_par_list,
+        dispname_str);
 
     // class for keeping the altstep in the default context
     // the class is for internal use, we do not need to publish it in the
@@ -6987,11 +7002,11 @@ namespace Ttcn {
     Free(str);
     // member functions of the class
     str = mprintf("%s_Default::%s_Default(%s)\n"
-	" : Default_Base(\"%s\")", genname_str, genname_str, formal_par_list,
-	dispname_str);
+        " : Default_Base(\"%s\")", genname_str, genname_str, formal_par_list,
+        dispname_str);
     for (size_t i = 0; i < fp_list->get_nof_fps(); i++) {
       const char *fp_name_str =
-	fp_list->get_fp_byIndex(i)->get_id().get_name().c_str();
+        fp_list->get_fp_byIndex(i)->get_id().get_name().c_str();
       str = mputprintf(str, ", par_%s(%s)", fp_name_str, fp_name_str);
     }
     str = mputstr(str, "\n{\n}\n\n");
@@ -7008,8 +7023,8 @@ namespace Ttcn {
     // function for default activation: prototype
     target->header.function_prototypes =
       mputprintf(target->header.function_prototypes,
-	"extern Default_Base *activate_%s(%s);\n", genname_str,
-	formal_par_list);
+        "extern Default_Base *activate_%s(%s);\n", genname_str,
+        formal_par_list);
 
     // function for default activation: body
     str = mprintf("Default_Base *activate_%s(%s)\n"
@@ -7025,7 +7040,7 @@ namespace Ttcn {
 
     target->functions.pre_init = mputprintf(target->functions.pre_init,
       "%s.add_altstep(\"%s\", (genericfunc_t)&%s_instance, (genericfunc_t )&activate_%s, "
-	"(genericfunc_t )&%s);\n", get_module_object_name(), dispname_str, genname_str,
+        "(genericfunc_t )&%s);\n", get_module_object_name(), dispname_str, genname_str,
       genname_str, genname_str);
   }
 
@@ -7179,7 +7194,7 @@ namespace Ttcn {
     // function prototype
     target->header.function_prototypes =
       mputprintf(target->header.function_prototypes,
-	"extern verdicttype testcase_%s(%s);\n", genname_str, formal_par_list);
+        "extern verdicttype testcase_%s(%s);\n", genname_str, formal_par_list);
 
     // function body
     char *body = mprintf("verdicttype testcase_%s(%s)\n"
@@ -7189,7 +7204,7 @@ namespace Ttcn {
     // At this point the location information should refer to the execute()
     // statement rather than this testcase.
     body = mputstr(body, "TTCN_Runtime::check_begin_testcase(has_timer, "
-	"timer_value);\n");
+        "timer_value);\n");
     body = create_location_object(body, "TESTCASE", dispname_str);
     body = fp_list->generate_shadow_objects(body);
     body = mputprintf(body, "try {\n"
@@ -7218,8 +7233,8 @@ namespace Ttcn {
     if (fp_list->get_nof_fps() == 0) {
       // adding to the list of startable testcases
       target->functions.pre_init = mputprintf(target->functions.pre_init,
-	"%s.add_testcase_nonpard(\"%s\", testcase_%s);\n",
-	get_module_object_name(), dispname_str, genname_str);
+        "%s.add_testcase_nonpard(\"%s\", testcase_%s);\n",
+        get_module_object_name(), dispname_str, genname_str);
     } else {
       target->functions.pre_init = mputprintf(target->functions.pre_init,
         "%s.add_testcase_pard(\"%s\", (genericfunc_t)&testcase_%s);\n",
@@ -7441,36 +7456,36 @@ namespace Ttcn {
       switch (t->get_typetype()) {
       case Type::T_PORT:
         switch (asstype) {
-	case A_PAR_VAL:
-	case A_PAR_VAL_INOUT:
-	  asstype = A_PAR_PORT;
-	  break;
-	default:
-	  error("Port type `%s' cannot be used as %s",
-	    t->get_fullname().c_str(), get_assname());
-	}
-	break;
+        case A_PAR_VAL:
+        case A_PAR_VAL_INOUT:
+          asstype = A_PAR_PORT;
+          break;
+        default:
+          error("Port type `%s' cannot be used as %s",
+            t->get_fullname().c_str(), get_assname());
+        }
+        break;
       case Type::T_SIGNATURE:
         switch (asstype) {
-	case A_PAR_TEMPL_IN:
-	case A_PAR_TEMPL_OUT:
-	case A_PAR_TEMPL_INOUT:
-	  break;
-	default:
-	  error("Signature `%s' cannot be used as %s",
-	    t->get_fullname().c_str(), get_assname());
-	}
-	break;
+        case A_PAR_TEMPL_IN:
+        case A_PAR_TEMPL_OUT:
+        case A_PAR_TEMPL_INOUT:
+          break;
+        default:
+          error("Signature `%s' cannot be used as %s",
+            t->get_fullname().c_str(), get_assname());
+        }
+        break;
       default:
         switch (asstype) {
-	case A_PAR_PORT:
-	case A_PAR_TIMER:
-	  FATAL_ERROR("FormalPar::chk()");
-	case A_PAR_VAL:
-	  asstype = A_PAR_VAL_IN;
-	default:
+        case A_PAR_PORT:
+        case A_PAR_TIMER:
+          FATAL_ERROR("FormalPar::chk()");
+        case A_PAR_VAL:
+          asstype = A_PAR_VAL_IN;
+        default:
           break;
-	}
+        }
       }
     } else if (asstype != A_PAR_TIMER) FATAL_ERROR("FormalPar::chk()");
 
@@ -7479,7 +7494,7 @@ namespace Ttcn {
       defval.ap = chk_actual_par(default_value, Type::EXPECTED_STATIC_VALUE);
       delete default_value;
       if (!semantic_check_only)
-	defval.ap->set_code_section(GovernedSimple::CS_POST_INIT);
+        defval.ap->set_code_section(GovernedSimple::CS_POST_INIT);
     }
   }
 
@@ -7583,7 +7598,7 @@ namespace Ttcn {
       return new ActualPar(v);
     } else {
       actual_par->error("A specific value without matching symbols "
-	"was expected for a %s", get_assname());
+        "was expected for a %s", get_assname());
       return new ActualPar();
     }
   }
@@ -7785,13 +7800,13 @@ namespace Ttcn {
     Type *ap_type = actual_par->get_Type();
     if (ap_type) {
       ap_type->warning("Explicit type specification is useless for an %s",
-	get_assname());
+        get_assname());
       actual_par->chk_Type(type);
     }
     Ref_base *derived_ref = actual_par->get_DerivedRef();
     if (derived_ref) {
       derived_ref->error("An in-line modified template cannot be used as %s",
-	get_assname());
+        get_assname());
       actual_par->chk_DerivedRef(type);
     }
     // needed for the error messages
@@ -7803,59 +7818,59 @@ namespace Ttcn {
       Ref_base *ref = ap_template->get_Ref();
       Common::Assignment *ass = ref->get_refd_assignment();
       if (!ass) {
-	delete ref;
-	return new ActualPar();
+        delete ref;
+        return new ActualPar();
       }
       bool asstype_correct = false;
       switch (ass->get_asstype()) {
       case A_PAR_VAL_IN:
-	ass->use_as_lvalue(*ref);
-	if (get_asstype() == A_PAR_VAL_OUT || get_asstype() == A_PAR_TEMPL_OUT) {
-	  ass->warning("Passing an `in' parameter as another function's `out' parameter");
-	}
-	// no break
+        ass->use_as_lvalue(*ref);
+        if (get_asstype() == A_PAR_VAL_OUT || get_asstype() == A_PAR_TEMPL_OUT) {
+          ass->warning("Passing an `in' parameter as another function's `out' parameter");
+        }
+        // no break
       case A_VAR:
       case A_PAR_VAL_OUT:
       case A_PAR_VAL_INOUT:
         if (!is_template) asstype_correct = true;
-	break;
+        break;
       case A_PAR_TEMPL_IN:
-	ass->use_as_lvalue(*ref);
-	if (get_asstype() == A_PAR_VAL_OUT || get_asstype() == A_PAR_TEMPL_OUT) {
-	  ass->warning("Passing an `in' parameter as another function's `out' parameter");
-	}
-	// no break
+        ass->use_as_lvalue(*ref);
+        if (get_asstype() == A_PAR_VAL_OUT || get_asstype() == A_PAR_TEMPL_OUT) {
+          ass->warning("Passing an `in' parameter as another function's `out' parameter");
+        }
+        // no break
       case A_VAR_TEMPLATE:
       case A_PAR_TEMPL_OUT:
       case A_PAR_TEMPL_INOUT:
         if (is_template) asstype_correct = true;
-	break;
+        break;
       default:
-	break;
+        break;
       }
       if (asstype_correct) {
-	FieldOrArrayRefs *t_subrefs = ref->get_subrefs();
-	Type *ref_type = ass->get_Type()->get_field_type(t_subrefs, exp_val);
-	if (ref_type) {
-	  if (!type->is_identical(ref_type)) {
-	    ref->error("Type mismatch: Reference to a %s of type "
-	      "`%s' was expected instead of `%s'", expected_string,
-	      type->get_typename().c_str(), ref_type->get_typename().c_str());
-	  } else if (type->get_sub_type() && ref_type->get_sub_type() &&
+        FieldOrArrayRefs *t_subrefs = ref->get_subrefs();
+        Type *ref_type = ass->get_Type()->get_field_type(t_subrefs, exp_val);
+        if (ref_type) {
+          if (!type->is_identical(ref_type)) {
+            ref->error("Type mismatch: Reference to a %s of type "
+              "`%s' was expected instead of `%s'", expected_string,
+              type->get_typename().c_str(), ref_type->get_typename().c_str());
+          } else if (type->get_sub_type() && ref_type->get_sub_type() &&
       (type->get_sub_type()->get_subtypetype()==ref_type->get_sub_type()->get_subtypetype()) &&
       (!type->get_sub_type()->is_compatible(ref_type->get_sub_type()))) {
         ref->error("Subtype mismatch: subtype %s has no common value with subtype %s",
                    type->get_sub_type()->to_string().c_str(),
                    ref_type->get_sub_type()->to_string().c_str());
     }
-	  if (t_subrefs && t_subrefs->refers_to_string_element()) {
-	    ref->error("Reference to a string element of type `%s' cannot be "
-	      "used in this context", ref_type->get_typename().c_str());
-	  }
-	}
+          if (t_subrefs && t_subrefs->refers_to_string_element()) {
+            ref->error("Reference to a string element of type `%s' cannot be "
+              "used in this context", ref_type->get_typename().c_str());
+          }
+        }
       } else {
         ref->error("Reference to a %s was expected for an %s instead of %s",
-	  expected_string, get_assname(), ass->get_description().c_str());
+          expected_string, get_assname(), ass->get_description().c_str());
       }
       ActualPar* ret_val_ap = new ActualPar(ref);
       // restriction checking if this is a reference to a template variable
@@ -7938,24 +7953,24 @@ namespace Ttcn {
       Ref_base *ref = ap_template->get_Ref();
       Common::Assignment *ass = ref->get_refd_assignment();
       if (!ass) {
-	delete ref;
-	return new ActualPar();
+        delete ref;
+        return new ActualPar();
       }
       switch (ass->get_asstype()) {
       case A_TIMER: {
         ArrayDimensions *dims = ass->get_Dimensions();
-	if (dims) dims->chk_indices(ref, "timer", false, exp_val);
-	else if (ref->get_subrefs()) ref->error("Reference to single %s "
-	  "cannot have field or array sub-references",
-	  ass->get_description().c_str());
-	break; }
+        if (dims) dims->chk_indices(ref, "timer", false, exp_val);
+        else if (ref->get_subrefs()) ref->error("Reference to single %s "
+          "cannot have field or array sub-references",
+          ass->get_description().c_str());
+        break; }
       case A_PAR_TIMER:
         if (ref->get_subrefs()) ref->error("Reference to %s cannot have "
-	  "field or array sub-references", ass->get_description().c_str());
-	break;
+          "field or array sub-references", ass->get_description().c_str());
+        break;
       default:
         ref->error("Reference to a timer or timer parameter was expected for "
-	  "a timer parameter instead of %s", ass->get_description().c_str());
+          "a timer parameter instead of %s", ass->get_description().c_str());
       }
       return new ActualPar(ref);
     } else {
@@ -7985,34 +8000,34 @@ namespace Ttcn {
       Ref_base *ref = ap_template->get_Ref();
       Common::Assignment *ass = ref->get_refd_assignment();
       if (!ass) {
-	delete ref;
-	return new ActualPar();
+        delete ref;
+        return new ActualPar();
       }
       bool asstype_correct = false;
       switch (ass->get_asstype()) {
       case A_PORT: {
         ArrayDimensions *dims = ass->get_Dimensions();
-	if (dims) dims->chk_indices(ref, "port", false, exp_val);
-	else if (ref->get_subrefs()) ref->error("Reference to single %s "
-	  "cannot have field or array sub-references",
-	  ass->get_description().c_str());
+        if (dims) dims->chk_indices(ref, "port", false, exp_val);
+        else if (ref->get_subrefs()) ref->error("Reference to single %s "
+          "cannot have field or array sub-references",
+          ass->get_description().c_str());
         asstype_correct = true;
-	break; }
+        break; }
       case A_PAR_PORT:
         if (ref->get_subrefs()) ref->error("Reference to %s cannot have "
-	  "field or array sub-references", ass->get_description().c_str());
+          "field or array sub-references", ass->get_description().c_str());
         asstype_correct = true;
-	break;
+        break;
       default:
         ref->error("Reference to a port or port parameter was expected for a "
-	  "port parameter instead of %s", ass->get_description().c_str());
+          "port parameter instead of %s", ass->get_description().c_str());
       }
       if (asstype_correct) {
-	Type *ref_type = ass->get_Type();
-	if (ref_type && !type->is_identical(ref_type))
-	  ref->error("Type mismatch: Reference to a port or port parameter "
-	    "of type `%s' was expected instead of `%s'",
-	    type->get_typename().c_str(), ref_type->get_typename().c_str());
+        Type *ref_type = ass->get_Type();
+        if (ref_type && !type->is_identical(ref_type))
+          ref->error("Type mismatch: Reference to a port or port parameter "
+            "of type `%s' was expected instead of `%s'",
+            type->get_typename().c_str(), ref_type->get_typename().c_str());
       }
       return new ActualPar(ref);
     } else {
@@ -8035,15 +8050,15 @@ namespace Ttcn {
       Definition *my_def = my_parlist->get_my_def();
       if (!my_def) FATAL_ERROR("FormalPar::use_as_lvalue()");
       if (my_def->get_asstype() == A_TEMPLATE)
-	p_loc.error("Parameter `%s' of the template cannot be passed further "
-	  "as `out' or `inout' parameter", id->get_dispname().c_str());
+        p_loc.error("Parameter `%s' of the template cannot be passed further "
+          "as `out' or `inout' parameter", id->get_dispname().c_str());
       else {
-	// update the genname so that all references in the generated code
-	// will point to the shadow object
+        // update the genname so that all references in the generated code
+        // will point to the shadow object
   if (!lazy_eval) {
-	  set_genname(id->get_name() + "_shadow");
+          set_genname(id->get_name() + "_shadow");
   }
-	used_as_lvalue = true;
+        used_as_lvalue = true;
       }
     }
   }
@@ -8122,7 +8137,7 @@ namespace Ttcn {
     case A_PAR_VAL_INOUT:
     case A_PAR_PORT:
       str = mputprintf(str, "%s& %s", type->get_genname_value(my_scope).c_str(),
-	name_str);
+        name_str);
       break;
     case A_PAR_TEMPL_IN:
       if (lazy_eval) {
@@ -8134,7 +8149,7 @@ namespace Ttcn {
     case A_PAR_TEMPL_OUT:
     case A_PAR_TEMPL_INOUT:
       str = mputprintf(str, "%s& %s",
-	type->get_genname_template(my_scope).c_str(), name_str);
+        type->get_genname_template(my_scope).c_str(), name_str);
       break;
     case A_PAR_TIMER:
       str = mputprintf(str, "TIMER& %s", name_str);
@@ -8182,7 +8197,7 @@ namespace Ttcn {
     case A_PAR_VAL_INOUT:
     case A_PAR_PORT:
       str = mputprintf(str, "%s%c %s%s;\n",
-	type->get_genname_value(my_scope).c_str(), refch, p_prefix, name_str);
+        type->get_genname_value(my_scope).c_str(), refch, p_prefix, name_str);
       break;
     case A_PAR_TEMPL_IN:
       if (lazy_eval) {
@@ -8194,7 +8209,7 @@ namespace Ttcn {
     case A_PAR_TEMPL_OUT:
     case A_PAR_TEMPL_INOUT:
       str = mputprintf(str, "%s%c %s%s;\n",
-	type->get_genname_template(my_scope).c_str(), refch, p_prefix, name_str);
+        type->get_genname_template(my_scope).c_str(), refch, p_prefix, name_str);
       break;
     case A_PAR_TIMER:
       str = mputprintf(str, "TIMER& %s%s;\n", p_prefix, name_str);
@@ -8213,15 +8228,15 @@ namespace Ttcn {
       const char *name_str = id->get_name().c_str();
       switch (asstype) {
       case A_PAR_VAL_IN:
-	str = mputprintf(str, "%s %s(%s);\n",
-	  type->get_genname_value(my_scope).c_str(), genname_str, name_str);
-	break;
+        str = mputprintf(str, "%s %s(%s);\n",
+          type->get_genname_value(my_scope).c_str(), genname_str, name_str);
+        break;
       case A_PAR_TEMPL_IN:
-	str = mputprintf(str, "%s %s(%s);\n",
-	  type->get_genname_template(my_scope).c_str(), genname_str, name_str);
-	break;
+        str = mputprintf(str, "%s %s(%s);\n",
+          type->get_genname_template(my_scope).c_str(), genname_str, name_str);
+        break;
       default:
-	FATAL_ERROR("FormalPar::generate_shadow_object()");
+        FATAL_ERROR("FormalPar::generate_shadow_object()");
       }
     }
     return str;
@@ -8362,27 +8377,27 @@ namespace Ttcn {
       FormalPar *par = pars_v[i];
       const string& par_name = par->get_id().get_name();
       if (par->get_asstype() != Definition::A_PAR_TIMER)
-	par->get_Type()->set_genname(p_prefix, par_name);
+        par->get_Type()->set_genname(p_prefix, par_name);
       if (par->has_defval()) {
-	string embedded_genname(p_prefix);
-	embedded_genname += '_';
-	embedded_genname += par_name;
-	embedded_genname += "_defval";
+        string embedded_genname(p_prefix);
+        embedded_genname += '_';
+        embedded_genname += par_name;
+        embedded_genname += "_defval";
         ActualPar *defval = par->get_defval();
         switch (defval->get_selection()) {
         case ActualPar::AP_ERROR:
         case ActualPar::AP_REF:
           break;
         case ActualPar::AP_VALUE: {
-	  Value *v = defval->get_Value();
+          Value *v = defval->get_Value();
           v->set_genname_prefix("const_");
-	  v->set_genname_recursive(embedded_genname);
+          v->set_genname_recursive(embedded_genname);
           break; }
         case ActualPar::AP_TEMPLATE: {
-	  Template *t = defval->get_TemplateInstance()->get_Template();
-	  t->set_genname_prefix("template_");
-	  t->set_genname_recursive(embedded_genname);
-	  break; }
+          Template *t = defval->get_TemplateInstance()->get_Template();
+          t->set_genname_prefix("template_");
+          t->set_genname_recursive(embedded_genname);
+          break; }
         default:
           FATAL_ERROR("FormalParList::set_genname()");
         }
@@ -8403,19 +8418,19 @@ namespace Ttcn {
       const string& name = id.get_name();
       const char *dispname = id.get_dispname().c_str();
       if (pars_m.has_key(name)) {
-	par->error("Duplicate parameter with name `%s'", dispname);
-	pars_m[name]->note("Previous definition of `%s' is here", dispname);
+        par->error("Duplicate parameter with name `%s'", dispname);
+        pars_m[name]->note("Previous definition of `%s' is here", dispname);
       } else {
-	pars_m.add(name, par);
-	if (parent_scope && parent_scope->has_ass_withId(id)) {
-	  par->error("Parameter name `%s' is not unique in the scope "
-	    "hierarchy", dispname);
-	  Reference ref(0, id.clone());
-	  Common::Assignment *ass = parent_scope->get_ass_bySRef(&ref);
-	  if (!ass) FATAL_ERROR("FormalParList::chk()");
-	  ass->note("Symbol `%s' is already defined here in a higher scope "
-	    "unit", dispname);
-	}
+        pars_m.add(name, par);
+        if (parent_scope && parent_scope->has_ass_withId(id)) {
+          par->error("Parameter name `%s' is not unique in the scope "
+            "hierarchy", dispname);
+          Reference ref(0, id.clone());
+          Common::Assignment *ass = parent_scope->get_ass_bySRef(&ref);
+          if (!ass) FATAL_ERROR("FormalParList::chk()");
+          ass->note("Symbol `%s' is already defined here in a higher scope "
+            "unit", dispname);
+        }
       }
       Error_Context cntxt2(par, "In parameter `%s'", dispname);
       par->chk();
@@ -8423,23 +8438,23 @@ namespace Ttcn {
       switch (deftype) {
       case Definition::A_TEMPLATE:
         switch (par->get_asstype()) {
-	case Definition::A_PAR_VAL_IN:
-	case Definition::A_PAR_TEMPL_IN:
-	  // these are allowed
+        case Definition::A_PAR_VAL_IN:
+        case Definition::A_PAR_TEMPL_IN:
+          // these are allowed
           break;
-	default:
+        default:
           par->error("A template cannot have %s", par->get_assname());
-	}
-	break;
+        }
+        break;
       case Definition::A_TESTCASE:
         switch (par->get_asstype()) {
-	case Definition::A_PAR_TIMER:
-	case Definition::A_PAR_PORT:
-	  // these are forbidden
+        case Definition::A_PAR_TIMER:
+        case Definition::A_PAR_PORT:
+          // these are forbidden
           par->error("A testcase cannot have %s", par->get_assname());
-	default:
+        default:
           break;
-	}
+        }
       default:
         // everything is allowed for functions and altsteps
         break;
@@ -8497,7 +8512,7 @@ namespace Ttcn {
         break;
       default:
         par->error("%s `%s' cannot be started on a parallel test component "
-	  "because it has %s", p_what, p_name, par->get_description().c_str());
+          "because it has %s", p_what, p_name, par->get_description().c_str());
       }
     }
   }
@@ -8510,8 +8525,8 @@ namespace Ttcn {
     // check for the number of parameters
     if (nof_type_pars != nof_function_pars) {
       p_fp_list->error("Too %s parameters: %lu was expected instead of %lu",
-	nof_type_pars < nof_function_pars ? "many" : "few",
-	(unsigned long) nof_type_pars, (unsigned long) nof_function_pars);
+        nof_type_pars < nof_function_pars ? "many" : "few",
+        (unsigned long) nof_type_pars, (unsigned long) nof_function_pars);
     }
     size_t upper_limit =
       nof_type_pars < nof_function_pars ? nof_type_pars : nof_function_pars;
@@ -8525,21 +8540,21 @@ namespace Ttcn {
       // check for parameter kind equivalence
       // (in, out or inout / value or template)
       if (type_par_asstype != function_par_asstype) {
-	function_par->error("The kind of the parameter is not the same as in "
-	  "type `%s': %s was expected instead of %s", where,
-	  type_par->get_assname(), function_par->get_assname());
+        function_par->error("The kind of the parameter is not the same as in "
+          "type `%s': %s was expected instead of %s", where,
+          type_par->get_assname(), function_par->get_assname());
       }
       // check for type equivalence
       if (type_par_asstype != FormalPar::A_PAR_TIMER &&
-	  function_par_asstype != FormalPar::A_PAR_TIMER) {
-	Type *type_par_type = type_par->get_Type();
-	Type *function_par_type = function_par->get_Type();
-	if (!type_par_type->is_identical(function_par_type)) {
-	  function_par_type->error("The type of the parameter is not the same "
-	    "as in type `%s': `%s' was expected instead of `%s'", where,
-	    type_par_type->get_typename().c_str(),
-	    function_par_type->get_typename().c_str());
-	} else if (type_par_type->get_sub_type() && function_par_type->get_sub_type() &&
+          function_par_asstype != FormalPar::A_PAR_TIMER) {
+        Type *type_par_type = type_par->get_Type();
+        Type *function_par_type = function_par->get_Type();
+        if (!type_par_type->is_identical(function_par_type)) {
+          function_par_type->error("The type of the parameter is not the same "
+            "as in type `%s': `%s' was expected instead of `%s'", where,
+            type_par_type->get_typename().c_str(),
+            function_par_type->get_typename().c_str());
+        } else if (type_par_type->get_sub_type() && function_par_type->get_sub_type() &&
         (type_par_type->get_sub_type()->get_subtypetype()==function_par_type->get_sub_type()->get_subtypetype()) &&
         (!type_par_type->get_sub_type()->is_compatible(function_par_type->get_sub_type()))) {
     // TODO: maybe equivalence should be checked, or maybe that is too strict
@@ -8555,7 +8570,7 @@ namespace Ttcn {
         function_par->error("The template restriction of the parameter is "
           "not the same as in type `%s': %s restriction was expected instead "
           "of %s restriction", where,
-	  type_par->get_template_restriction()==TR_NONE ? "no" :
+          type_par->get_template_restriction()==TR_NONE ? "no" :
           Template::get_restriction_name(type_par->get_template_restriction()),
           function_par->get_template_restriction()==TR_NONE ? "no" :
           Template::get_restriction_name(function_par->
@@ -8569,10 +8584,10 @@ namespace Ttcn {
       const Identifier& type_par_id = type_par->get_id();
       const Identifier& function_par_id = function_par->get_id();
       if (type_par_id != function_par_id) {
-	function_par->warning("The name of the parameter is not the same "
-	  "as in type `%s': `%s' was expected instead of `%s'", where,
-	  type_par_id.get_dispname().c_str(),
-	  function_par_id.get_dispname().c_str());
+        function_par->warning("The name of the parameter is not the same "
+          "as in type `%s': `%s' was expected instead of `%s'", where,
+          type_par_id.get_dispname().c_str(),
+          function_par_id.get_dispname().c_str());
       }
     }
   }
@@ -8600,82 +8615,82 @@ namespace Ttcn {
       // We are now responsible for np.
 
       if (has_fp_withName(*np->get_name())) {
-      	// there is a formal parameter with that name
-	FormalPar *fp = get_fp_byName(*np->get_name());
-	const size_t is_at = *formalpar_map[fp]; // the index of the formal par
-	if (is_at >= num_actual) {
-	  // There is no actual par in the unnamed part.
-	  // Create one from the named param.
+              // there is a formal parameter with that name
+        FormalPar *fp = get_fp_byName(*np->get_name());
+        const size_t is_at = *formalpar_map[fp]; // the index of the formal par
+        if (is_at >= num_actual) {
+          // There is no actual par in the unnamed part.
+          // Create one from the named param.
 
-	  // First, pad the gap with '-'
-	  for (; num_actual < is_at; ++num_actual) {
-	    Template *not_used;
-	    if (pars_v[num_actual]->has_defval()) {
-	      not_used = new Template(Template::TEMPLATE_NOTUSED);
-	    }
-	    else { // cannot use '-' if no default value
-	      not_used = new Template(Template::TEMPLATE_ERROR);
-	    }
-	    TemplateInstance *new_ti = new TemplateInstance(0, 0, not_used);
-	    // Conjure a location info at the beginning of the unnamed part
-	    // (that is, the beginning of the actual parameter list)
-	    new_ti->set_location(p_paps->get_tis()->get_filename(),
-	      p_paps->get_tis()->get_first_line(),
-	      p_paps->get_tis()->get_first_column(), 0, 0);
-	    p_paps->get_tis()->add_ti(new_ti);
-	  }
-	  TemplateInstance * namedti = np->extract_ti();
-	  p_paps->get_tis()->add_ti(namedti);
-	  ++num_actual;
-	} else {
-	  // There is already an actual par at that position, fetch it
-	  TemplateInstance * ti = p_paps->get_tis()->get_ti_byIndex(is_at);
-	  Template::templatetype_t tt = ti->get_Template()->get_templatetype();
+          // First, pad the gap with '-'
+          for (; num_actual < is_at; ++num_actual) {
+            Template *not_used;
+            if (pars_v[num_actual]->has_defval()) {
+              not_used = new Template(Template::TEMPLATE_NOTUSED);
+            }
+            else { // cannot use '-' if no default value
+              not_used = new Template(Template::TEMPLATE_ERROR);
+            }
+            TemplateInstance *new_ti = new TemplateInstance(0, 0, not_used);
+            // Conjure a location info at the beginning of the unnamed part
+            // (that is, the beginning of the actual parameter list)
+            new_ti->set_location(p_paps->get_tis()->get_filename(),
+              p_paps->get_tis()->get_first_line(),
+              p_paps->get_tis()->get_first_column(), 0, 0);
+            p_paps->get_tis()->add_ti(new_ti);
+          }
+          TemplateInstance * namedti = np->extract_ti();
+          p_paps->get_tis()->add_ti(namedti);
+          ++num_actual;
+        } else {
+          // There is already an actual par at that position, fetch it
+          TemplateInstance * ti = p_paps->get_tis()->get_ti_byIndex(is_at);
+          Template::templatetype_t tt = ti->get_Template()->get_templatetype();
 
-	  if (is_at >= num_unnamed && !ti->get_Type() && !ti->get_DerivedRef()
-	    && (tt == Template::TEMPLATE_NOTUSED || tt == Template::TEMPLATE_ERROR)) {
-	    // NotUsed in the named part => padding
-	    np->error("Named parameter `%s' out of order",
-	      np->get_name()->get_dispname().c_str());
-	  } else {
-	    // attempt to override an original unnamed param with a named one
-	    np->error("Formal parameter `%s' assigned more than once",
-	      np->get_name()->get_dispname().c_str());
-	  }
-	}
+          if (is_at >= num_unnamed && !ti->get_Type() && !ti->get_DerivedRef()
+            && (tt == Template::TEMPLATE_NOTUSED || tt == Template::TEMPLATE_ERROR)) {
+            // NotUsed in the named part => padding
+            np->error("Named parameter `%s' out of order",
+              np->get_name()->get_dispname().c_str());
+          } else {
+            // attempt to override an original unnamed param with a named one
+            np->error("Formal parameter `%s' assigned more than once",
+              np->get_name()->get_dispname().c_str());
+          }
+        }
       }
       else { // no formal parameter with that name
-	char * nam = 0;
-	switch (my_def->get_asstype()) {
-	case Common::Assignment::A_TYPE: {
-	  Type *t = my_def->get_Type();
+        char * nam = 0;
+        switch (my_def->get_asstype()) {
+        case Common::Assignment::A_TYPE: {
+          Type *t = my_def->get_Type();
 
-	  switch (t ? t->get_typetype() : 0) {
-	  case Type::T_FUNCTION:
-	    nam = mcopystr("Function reference");
-	    break;
-	  case Type::T_ALTSTEP:
-	    nam = mcopystr("Altstep reference");
-	    break;
-	  case Type::T_TESTCASE:
-	    nam = mcopystr("Testcase reference");
-	    break;
-	  default:
-	    FATAL_ERROR("FormalParList::chk_actual_parlist() "
-	                "Unexpected type %s", t->get_typename().c_str());
-	  } // switch(typetype)
-	  break; }
-	default:
-	  nam = mcopystr(my_def->get_assname());
-	  break;
-	} // switch(asstype)
+          switch (t ? t->get_typetype() : 0) {
+          case Type::T_FUNCTION:
+            nam = mcopystr("Function reference");
+            break;
+          case Type::T_ALTSTEP:
+            nam = mcopystr("Altstep reference");
+            break;
+          case Type::T_TESTCASE:
+            nam = mcopystr("Testcase reference");
+            break;
+          default:
+            FATAL_ERROR("FormalParList::chk_actual_parlist() "
+                        "Unexpected type %s", t->get_typename().c_str());
+          } // switch(typetype)
+          break; }
+        default:
+          nam = mcopystr(my_def->get_assname());
+          break;
+        } // switch(asstype)
 
-	*nam &= ~('a'-'A'); // Make the first letter uppercase
-	p_paps->get_tis()->error("%s `%s' has no formal parameter `%s'",
-	  nam,
-	  my_def->get_fullname().c_str(),
-	  np->get_name()->get_dispname().c_str());
-	Free(nam);
+        *nam &= ~('a'-'A'); // Make the first letter uppercase
+        p_paps->get_tis()->error("%s `%s' has no formal parameter `%s'",
+          nam,
+          my_def->get_fullname().c_str(),
+          np->get_name()->get_dispname().c_str());
+        Free(nam);
       }
       delete np;
     }
@@ -8728,22 +8743,22 @@ namespace Ttcn {
       // the formal parameter for the current actual parameter
       FormalPar *fp = pars_v[i];
       Error_Context cntxt(ti, "In parameter #%lu for `%s'",
-	(unsigned long) (i + 1), fp->get_id().get_dispname().c_str());
+        (unsigned long) (i + 1), fp->get_id().get_dispname().c_str());
       if (!ti->get_Type() && !ti->get_DerivedRef() && ti->get_Template()
-	  ->get_templatetype() == Template::TEMPLATE_NOTUSED) {
-	if (fp->has_defval()) {
-	  ActualPar *defval = fp->get_defval();
-	  p_aplist->add(new ActualPar(defval));
-	  if (defval->is_erroneous()) error_flag = true;
-	} else {
-	  ti->error("Not used symbol (`-') cannot be used for parameter "
-	    "that does not have default value");
-	  p_aplist->add(new ActualPar());
-	  error_flag = true;
-	}
+          ->get_templatetype() == Template::TEMPLATE_NOTUSED) {
+        if (fp->has_defval()) {
+          ActualPar *defval = fp->get_defval();
+          p_aplist->add(new ActualPar(defval));
+          if (defval->is_erroneous()) error_flag = true;
+        } else {
+          ti->error("Not used symbol (`-') cannot be used for parameter "
+            "that does not have default value");
+          p_aplist->add(new ActualPar());
+          error_flag = true;
+        }
       } else if (!ti->get_Type() && !ti->get_DerivedRef() && ti->get_Template()
-	  ->get_templatetype() == Template::TEMPLATE_ERROR) {
-	ti->error("Parameter not specified");
+          ->get_templatetype() == Template::TEMPLATE_ERROR) {
+        ti->error("Parameter not specified");
       } else {
         ActualPar *ap = fp->chk_actual_par(ti, Type::EXPECTED_DYNAMIC_VALUE);
         p_aplist->add(ap);
@@ -8757,7 +8772,7 @@ namespace Ttcn {
     for (size_t i = upper_limit; i < formal_pars; i++) {
       FormalPar *fp = pars_v[i];
       if (fp->has_defval()) {
-	ActualPar *defval = fp->get_defval();
+        ActualPar *defval = fp->get_defval();
         p_aplist->add(new ActualPar(defval));
         if (defval->is_erroneous()) error_flag = true;
       } else {
@@ -8798,17 +8813,17 @@ namespace Ttcn {
       case Common::Assignment::A_VAR:
       case Common::Assignment::A_VAR_TEMPLATE:
       case Common::Assignment::A_TIMER:
-	// it is not allowed to pass references of local variables or timers
-	if (t_par_ass->is_local()) {
-	  t_ref->error("Parameter #%lu of %s refers to %s, which is a local "
-	    "definition within a statement block and may have shorter "
-	    "lifespan than the activated default. Only references to "
-	    "variables and timers defined in the component type can be passed "
-	    "to activated defaults", (unsigned long) (i + 1), p_description,
-	    t_par_ass->get_description().c_str());
-	  ret_val = false;
-	}
-	break;
+        // it is not allowed to pass references of local variables or timers
+        if (t_par_ass->is_local()) {
+          t_ref->error("Parameter #%lu of %s refers to %s, which is a local "
+            "definition within a statement block and may have shorter "
+            "lifespan than the activated default. Only references to "
+            "variables and timers defined in the component type can be passed "
+            "to activated defaults", (unsigned long) (i + 1), p_description,
+            t_par_ass->get_description().c_str());
+          ret_val = false;
+        }
+        break;
       case Common::Assignment::A_PAR_VAL_IN:
       case Common::Assignment::A_PAR_VAL_OUT:
       case Common::Assignment::A_PAR_VAL_INOUT:
@@ -8816,24 +8831,24 @@ namespace Ttcn {
       case Common::Assignment::A_PAR_TEMPL_OUT:
       case Common::Assignment::A_PAR_TEMPL_INOUT:
       case Common::Assignment::A_PAR_TIMER: {
-	// it is not allowed to pass references pointing to formal parameters
-	// except for activate() statements within testcases
-	// note: all defaults are deactivated at the end of the testcase
-	FormalPar *t_refd_fp = dynamic_cast<FormalPar*>(t_par_ass);
-	if (!t_refd_fp) FATAL_ERROR("FormalParList::chk_activate_argument()");
-	FormalParList *t_fpl = t_refd_fp->get_my_parlist();
-	if (!t_fpl || !t_fpl->my_def)
-	  FATAL_ERROR("FormalParList::chk_activate_argument()");
-	if (t_fpl->my_def->get_asstype() != Common::Assignment::A_TESTCASE) {
+        // it is not allowed to pass references pointing to formal parameters
+        // except for activate() statements within testcases
+        // note: all defaults are deactivated at the end of the testcase
+        FormalPar *t_refd_fp = dynamic_cast<FormalPar*>(t_par_ass);
+        if (!t_refd_fp) FATAL_ERROR("FormalParList::chk_activate_argument()");
+        FormalParList *t_fpl = t_refd_fp->get_my_parlist();
+        if (!t_fpl || !t_fpl->my_def)
+          FATAL_ERROR("FormalParList::chk_activate_argument()");
+        if (t_fpl->my_def->get_asstype() != Common::Assignment::A_TESTCASE) {
           t_ref->error("Parameter #%lu of %s refers to %s, which may have "
-	    "shorter lifespan than the activated default. Only references to "
-	    "variables and timers defined in the component type can be passed "
-	    "to activated defaults", (unsigned long) (i + 1), p_description,
-	    t_par_ass->get_description().c_str());
+            "shorter lifespan than the activated default. Only references to "
+            "variables and timers defined in the component type can be passed "
+            "to activated defaults", (unsigned long) (i + 1), p_description,
+            t_par_ass->get_description().c_str());
           ret_val = false;
-	} }
+        } }
       default:
-	break;
+        break;
       }
     }
     return ret_val;
@@ -9351,7 +9366,7 @@ namespace Ttcn {
     size_t nof_pars = params.size();
     for(size_t i = 0; i < nof_pars; i++)
       params[i]->set_fullname(p_fullname +
-	".<parameter" + Int2string(i + 1) + ">");
+        ".<parameter" + Int2string(i + 1) + ">");
   }
 
   void ActualParList::set_my_scope(Scope *p_scope)
@@ -9385,24 +9400,24 @@ namespace Ttcn {
     for (size_t i = 0; i < nof_pars; i++) {
       ActualPar *par = params[i];
       if (par->get_selection() == ActualPar::AP_DEFAULT)
-	par = par->get_ActualPar();
+        par = par->get_ActualPar();
       if (par->get_selection() == ActualPar::AP_REF) {
-	Common::Assignment *ass = par->get_Ref()->get_refd_assignment();
-	switch (ass->get_asstype()) {
-	case Common::Assignment::A_VAR:
-	case Common::Assignment::A_PAR_VAL_IN:
-	case Common::Assignment::A_PAR_VAL_OUT:
-	case Common::Assignment::A_PAR_VAL_INOUT:
-	  if (!value_refs.has_key(ass)) value_refs.add(ass, 0);
-	  break;
-	case Common::Assignment::A_VAR_TEMPLATE:
-	case Common::Assignment::A_PAR_TEMPL_IN:
-	case Common::Assignment::A_PAR_TEMPL_OUT:
-	case Common::Assignment::A_PAR_TEMPL_INOUT:
-	  if (!template_refs.has_key(ass)) template_refs.add(ass, 0);
-	default:
-	  break;
-	}
+        Common::Assignment *ass = par->get_Ref()->get_refd_assignment();
+        switch (ass->get_asstype()) {
+        case Common::Assignment::A_VAR:
+        case Common::Assignment::A_PAR_VAL_IN:
+        case Common::Assignment::A_PAR_VAL_OUT:
+        case Common::Assignment::A_PAR_VAL_INOUT:
+          if (!value_refs.has_key(ass)) value_refs.add(ass, 0);
+          break;
+        case Common::Assignment::A_VAR_TEMPLATE:
+        case Common::Assignment::A_PAR_TEMPL_IN:
+        case Common::Assignment::A_PAR_TEMPL_OUT:
+        case Common::Assignment::A_PAR_TEMPL_INOUT:
+          if (!template_refs.has_key(ass)) template_refs.add(ass, 0);
+        default:
+          break;
+        }
       }
     }
     // walk through the parameter list and generate the code
@@ -9416,72 +9431,72 @@ namespace Ttcn {
       // the copy constructor call is not needed if the parameter is copied
       // into a shadow object in the body of the called function
       if (!p_fpl || !p_fpl->get_fp_byIndex(i)->get_used_as_lvalue()) {
-	switch (par->get_selection()) {
-	case ActualPar::AP_VALUE: {
-	  Value *v = par->get_Value();
-	  if (v->get_valuetype() == Value::V_REFD) {
-	    Common::Assignment *t_ass =
-	      v->get_reference()->get_refd_assignment();
-	    if (value_refs.has_key(t_ass)) {
-	      // a reference to the same variable is also passed to the called
-	      // definition
-	      copy_needed = true;
-	    } else if (p_comptype || p_compself) {
-	      // the called definition has a 'runs on' clause so it can access
-	      // component variables
-	      switch (t_ass->get_asstype()) {
-	      case Common::Assignment::A_PAR_VAL_OUT:
-	      case Common::Assignment::A_PAR_VAL_INOUT:
-		// the parameter may be an alias of a component variable
-		copy_needed = true;
-		break;
-	      case Common::Assignment::A_VAR:
-		// copy is needed if t_ass is a component variable that is
-		// visible by the called definition
-		if (!t_ass->is_local()) copy_needed = true;
-		/** \todo component type compatibility: check whether t_ass is
-		 * visible from p_comptype (otherwise copy is not needed) */
-	      default:
-		break;
-	      }
-	    }
-	  }
-	  break; }
-	case ActualPar::AP_TEMPLATE: {
-	  TemplateInstance *ti = par->get_TemplateInstance();
-	  if (!ti->get_DerivedRef()) {
-	    Template *t = ti->get_Template();
-	    if (t->get_templatetype() == Template::TEMPLATE_REFD) {
-	      Common::Assignment *t_ass =
-		t->get_reference()->get_refd_assignment();
-	      if (template_refs.has_key(t_ass)) {
-		// a reference to the same variable is also passed to the called
-		// definition
-		copy_needed = true;
-	      } else if (p_comptype || p_compself) {
-		// the called definition has a 'runs on' clause so it can access
-		// component variables
-		switch (t_ass->get_asstype()) {
-		case Common::Assignment::A_PAR_TEMPL_OUT:
-		case Common::Assignment::A_PAR_TEMPL_INOUT:
-		  // the parameter may be an alias of a component variable
-		  copy_needed = true;
-		  break;
-		case Common::Assignment::A_VAR_TEMPLATE:
-		  // copy is needed if t_ass is a component variable that is
-		  // visible by the called definition
-		  if (!t_ass->is_local()) copy_needed = true;
-		  /** \todo component type compatibility: check whether t_ass is
-		   * visible from p_comptype (otherwise copy is not needed) */
-		default:
-		  break;
-		}
-	      }
-	    }
-	  } }
-	default:
-	  break;
-	}
+        switch (par->get_selection()) {
+        case ActualPar::AP_VALUE: {
+          Value *v = par->get_Value();
+          if (v->get_valuetype() == Value::V_REFD) {
+            Common::Assignment *t_ass =
+              v->get_reference()->get_refd_assignment();
+            if (value_refs.has_key(t_ass)) {
+              // a reference to the same variable is also passed to the called
+              // definition
+              copy_needed = true;
+            } else if (p_comptype || p_compself) {
+              // the called definition has a 'runs on' clause so it can access
+              // component variables
+              switch (t_ass->get_asstype()) {
+              case Common::Assignment::A_PAR_VAL_OUT:
+              case Common::Assignment::A_PAR_VAL_INOUT:
+                // the parameter may be an alias of a component variable
+                copy_needed = true;
+                break;
+              case Common::Assignment::A_VAR:
+                // copy is needed if t_ass is a component variable that is
+                // visible by the called definition
+                if (!t_ass->is_local()) copy_needed = true;
+                /** \todo component type compatibility: check whether t_ass is
+                 * visible from p_comptype (otherwise copy is not needed) */
+              default:
+                break;
+              }
+            }
+          }
+          break; }
+        case ActualPar::AP_TEMPLATE: {
+          TemplateInstance *ti = par->get_TemplateInstance();
+          if (!ti->get_DerivedRef()) {
+            Template *t = ti->get_Template();
+            if (t->get_templatetype() == Template::TEMPLATE_REFD) {
+              Common::Assignment *t_ass =
+                t->get_reference()->get_refd_assignment();
+              if (template_refs.has_key(t_ass)) {
+                // a reference to the same variable is also passed to the called
+                // definition
+                copy_needed = true;
+              } else if (p_comptype || p_compself) {
+                // the called definition has a 'runs on' clause so it can access
+                // component variables
+                switch (t_ass->get_asstype()) {
+                case Common::Assignment::A_PAR_TEMPL_OUT:
+                case Common::Assignment::A_PAR_TEMPL_INOUT:
+                  // the parameter may be an alias of a component variable
+                  copy_needed = true;
+                  break;
+                case Common::Assignment::A_VAR_TEMPLATE:
+                  // copy is needed if t_ass is a component variable that is
+                  // visible by the called definition
+                  if (!t_ass->is_local()) copy_needed = true;
+                  /** \todo component type compatibility: check whether t_ass is
+                   * visible from p_comptype (otherwise copy is not needed) */
+                default:
+                  break;
+                }
+              }
+            }
+          } }
+        default:
+          break;
+        }
       }
       
       if (use_runtime_2 && ActualPar::AP_REF == par->get_selection()) {
@@ -9521,13 +9536,12 @@ namespace Ttcn {
               }
               // let the array object know that the index is referenced before
               // calling the function, and let it know that it's now longer
-              // referenced after the function call
+              // referenced after the function call (this is done with the help
+              // of the RefdIndexHandler's constructor and destructor)
+              string tmp_id = ref->get_my_scope()->get_scope_mod_gen()->get_temporary_id();
               expr->preamble = mputprintf(expr->preamble,
-                "%s.add_refd_index(%s);\n",
-                array_expr.expr, index_expr.expr);
-              expr->postamble = mputprintf(expr->postamble, 
-                "%s.remove_refd_index(%s);\n",
-                array_expr.expr, index_expr.expr);
+                "RefdIndexHandler %s(&%s, %s);\n",
+                tmp_id.c_str(), array_expr.expr, index_expr.expr);
               // insert any postambles the array object or the index might have
               if (array_expr.postamble != NULL) {
                 expr->preamble = mputstr(expr->preamble, array_expr.postamble);

@@ -219,12 +219,17 @@ string_map_t *config_defines;
 %token Retry
 %token Delete
 %token TtcnStringParsingKeyword
-%token DisableProfilerKeyword   "DisableProfiler"
-%token DisableCoverageKeyword   "DisableCoverage"
-%token DatabaseFileKeyword      "DatabaseFile"
-%token AggregateDataKeyword     "AggregateData"
-%token StatisticsFileKeyword    "StatisticsFile"
-%token DisableStatisticsKeyword "DisableStatistics"
+%token DisableProfilerKeyword    "DisableProfiler"
+%token DisableCoverageKeyword    "DisableCoverage"
+%token DatabaseFileKeyword       "DatabaseFile"
+%token AggregateDataKeyword      "AggregateData"
+%token StatisticsFileKeyword     "StatisticsFile"
+%token DisableStatisticsKeyword  "DisableStatistics"
+%token StatisticsFilterKeyword   "StatisticsFilter"
+%token StartAutomaticallyKeyword "StartAutomatically"
+%token NetLineTimesKeyword       "NetLineTimes"
+%token NetFunctionTimesKeyword   "NetFunctionTimes"
+%token <uint_val> ProfilerStatsFlag "profiler statistics filter"
 
 %type <int_val> IntegerValue
 %type <float_val> FloatValue
@@ -269,6 +274,7 @@ string_map_t *config_defines;
 %type <module_param_length_restriction> LengthMatch
 %type <str_val> PatternChunk PatternChunkList
 %type <int_native> IndexItemIndex LengthBound
+%type <uint_val> ProfilerStatsFlags
 
 %destructor { Free($$); }
 ArrayRef
@@ -1688,6 +1694,10 @@ ProfilerSetting:
 | AggregateDataSetting
 | StatisticsFileSetting
 | DisableStatisticsSetting
+| StatisticsFilterSetting
+| StartAutomaticallySetting
+| NetLineTimesSetting
+| NetFunctionTimesSetting
 ;
 
 DisableProfilerSetting:
@@ -1725,6 +1735,46 @@ DisableStatisticsSetting:
     ttcn3_prof.set_disable_stats($3);
   }
 ;
+
+StatisticsFilterSetting:
+  StatisticsFilterKeyword AssignmentChar ProfilerStatsFlags {
+    ttcn3_prof.reset_stats_flags();
+    ttcn3_prof.add_stats_flags($3);
+  }
+| StatisticsFilterKeyword ConcatChar ProfilerStatsFlags {
+    ttcn3_prof.add_stats_flags($3);
+  }
+;
+
+ProfilerStatsFlags:
+  ProfilerStatsFlag                        { $$ = $1; }
+| ProfilerStatsFlag '&' ProfilerStatsFlags { $$ = $1 | $3; }
+| ProfilerStatsFlag '|' ProfilerStatsFlags { $$ = $1 | $3; }
+;
+
+StartAutomaticallySetting:
+  StartAutomaticallyKeyword AssignmentChar BooleanValue {
+    if ($3) {
+      ttcn3_prof.start();
+    }
+    else {
+      ttcn3_prof.stop();
+    }
+  }
+;
+
+NetLineTimesSetting:
+  NetLineTimesKeyword AssignmentChar BooleanValue {
+    TTCN3_Stack_Depth::set_net_line_times($3);
+  }
+;
+
+NetFunctionTimesSetting:
+  NetFunctionTimesKeyword AssignmentChar BooleanValue {
+    TTCN3_Stack_Depth::set_net_func_times($3);
+  }
+;
+
 
 /**************** [TESTPORT_PARAMETERS] ****************************/
 
@@ -2206,8 +2256,6 @@ boolean process_config_file(const char *file_name)
 
   string_map_free(config_defines);
   config_defines = NULL;
-
-  ttcn3_prof.init_data_file();
 
   return !error_flag;
 }

@@ -143,6 +143,7 @@ namespace Common {
       case OPTYPE_TMR_RUNNING_ANY:
       case OPTYPE_GETVERDICT:
       case OPTYPE_TESTCASENAME:
+      case OPTYPE_PROF_RUNNING:
         break;
       case OPTYPE_UNARYPLUS: // v1
       case OPTYPE_UNARYMINUS:
@@ -446,6 +447,7 @@ namespace Common {
     case OPTYPE_TMR_RUNNING_ANY:
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
+    case OPTYPE_PROF_RUNNING:
       break;
     case OPTYPE_UNARYPLUS: // v1
     case OPTYPE_UNARYMINUS:
@@ -809,6 +811,7 @@ namespace Common {
     case OPTYPE_TMR_RUNNING_ANY:
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
+    case OPTYPE_PROF_RUNNING:
       break;
     default:
       FATAL_ERROR("Value::Value()");
@@ -1388,6 +1391,7 @@ namespace Common {
     case OPTYPE_TMR_RUNNING_ANY:
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
+    case OPTYPE_PROF_RUNNING:
       break;
     case OPTYPE_UNARYPLUS: // v1
     case OPTYPE_UNARYMINUS:
@@ -1567,6 +1571,7 @@ namespace Common {
     case OPTYPE_TMR_RUNNING_ANY:
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
+    case OPTYPE_PROF_RUNNING:
       break;
     case OPTYPE_UNARYPLUS: // v1
     case OPTYPE_UNARYMINUS:
@@ -1876,6 +1881,7 @@ namespace Common {
       case OPTYPE_TMR_RUNNING_ANY:
       case OPTYPE_GETVERDICT:
       case OPTYPE_TESTCASENAME:
+      case OPTYPE_PROF_RUNNING:
         break;
       case OPTYPE_UNARYPLUS: // v1
       case OPTYPE_UNARYMINUS:
@@ -2765,6 +2771,7 @@ namespace Common {
       case OPTYPE_ISCHOSEN_T:
       case OPTYPE_ISVALUE:
       case OPTYPE_ISBOUND:
+      case OPTYPE_PROF_RUNNING:
         return Type::T_BOOL;
       case OPTYPE_GETVERDICT:
         return Type::T_VERDICT;
@@ -3448,6 +3455,8 @@ namespace Common {
       return "log2str()";
     case OPTYPE_TTCN2STRING:
       return "ttcn2string()";
+    case OPTYPE_PROF_RUNNING:
+      return "@profiler.running";
     default:
       FATAL_ERROR("Value::get_opname()");
     } // switch
@@ -6038,6 +6047,7 @@ error:
     switch (u.expr.v_optype) {
     case OPTYPE_COMP_NULL:
     case OPTYPE_TESTCASENAME:
+    case OPTYPE_PROF_RUNNING:
       break;
     case OPTYPE_COMP_MTC:
     case OPTYPE_COMP_SYSTEM:
@@ -6998,6 +7008,7 @@ error:
     case OPTYPE_COMP_ALIVE_ALL:
     case OPTYPE_TMR_RUNNING_ANY:
     case OPTYPE_GETVERDICT:
+    case OPTYPE_PROF_RUNNING:
     case OPTYPE_RNDWITHVAL: // v1
     case OPTYPE_COMP_RUNNING: // v1
     case OPTYPE_COMP_ALIVE:
@@ -8294,6 +8305,7 @@ error:
       case OPTYPE_TMR_RUNNING_ANY:
       case OPTYPE_GETVERDICT:
       case OPTYPE_TESTCASENAME:
+      case OPTYPE_PROF_RUNNING:
       case OPTYPE_RNDWITHVAL: // v1
       case OPTYPE_MATCH: // v1 t2
       case OPTYPE_UNDEF_RUNNING: // v1
@@ -9797,6 +9809,7 @@ error:
     case OPTYPE_COMP_ALIVE_ALL: // -
     case OPTYPE_TMR_RUNNING_ANY: // -
     case OPTYPE_GETVERDICT: // -
+    case OPTYPE_PROF_RUNNING: // -
       break; // nothing to do
 
     case OPTYPE_MATCH: // v1 t2
@@ -10496,6 +10509,8 @@ error:
         }
         ret_val += ')';
         return ret_val; }
+      case OPTYPE_PROF_RUNNING:
+        return string("@profiler.running");
       default:
         return string("<unsupported optype>");
       } // switch u.expr.v_optype
@@ -11771,6 +11786,9 @@ error:
       }
       expr->expr = mputstr(expr->expr, ")"); 
     } break;
+    case OPTYPE_PROF_RUNNING:
+      expr->expr = mputstr(expr->expr, "ttcn3_prof.is_running()");
+      break;
     default:
       FATAL_ERROR("Value::generate_code_expr_expr()");
     }
@@ -12857,6 +12875,7 @@ error:
     case OPTYPE_TMR_RUNNING_ANY:
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
+    case OPTYPE_PROF_RUNNING:
       return true;
     case OPTYPE_ENCODE:
     case OPTYPE_DECODE:
@@ -13178,13 +13197,16 @@ error:
     if (t_subrefs) {
       // the evaluation of the reference does not have side effects
       // (i.e. false shall be returned) only if all sub-references point to
-      // mandatory fields of record/set types
+      // mandatory fields of record/set types, and neither sub-reference points
+      // to a field of a union type
       Type *t_type = t_ass->get_Type();
       for (size_t i = 0; i < t_subrefs->get_nof_refs(); i++) {
 	Ttcn::FieldOrArrayRef *t_fieldref = t_subrefs->get_ref(i);
 	if (t_fieldref->get_type() == Ttcn::FieldOrArrayRef::FIELD_REF) {
 	  CompField *t_cf = t_type->get_comp_byName(*t_fieldref->get_id());
-	  if (t_cf->get_is_optional()) return true;
+	  if (Type::T_CHOICE_T == t_type->get_type_refd_last()->get_typetype() ||
+        Type::T_CHOICE_A == t_type->get_type_refd_last()->get_typetype() ||
+        t_cf->get_is_optional()) return true;
 	  t_type = t_cf->get_type();
 	} else return true;
       }

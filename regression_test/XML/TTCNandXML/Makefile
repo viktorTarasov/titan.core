@@ -41,7 +41,7 @@ CPPFLAGS += -D$(PLATFORM)
 CXXFLAGS += -g -W -Wformat=2
 
 # Flags for the linker:
-LDFLAGS += -g -rdynamic
+#LDFLAGS += -g -rdynamic
 WIN32_LIBS += -liconv
 FREEBSD_LIBS += -liconv
 

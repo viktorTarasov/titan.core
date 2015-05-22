@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <sys/select.h>
 #include <sys/types.h>
 #include <poll.h>
 #ifdef USE_EPOLL

@@ -14,11 +14,11 @@
 
 .* Document header information
 :docname.Test Description
-:docno.20/152 91-CRL 113 200/3 Uen
+:docno.2x/152 91-CRL 113 200/5 Uen
 :rev.A
-:date.2013-01-17
+:date.2015-04-27
 
-:prep.ETH/XZR Krisztian Pandi
+:prep.ETH/XZ Jeno Balasko
 :appr.ETH/XZ (Gyula Koos)
 :checked.ETHGRY
 
@@ -33,7 +33,7 @@
 :xmp tab=2.
 REV   DATE         PREPARED   CHANGE
 __________________________________________________
--     2005-02-19   EGBOTAT    New document for TITAN R6
+-     2005-02-19   EGBOTAT    New document for TITAN R1.6
 -     2005-06-30   ETIBHRA    Added select-case, alive, interleave tests
 -     2005-08-16   ETIBHRA    Deleted select-case, alive, interleave tests
 -     2007-12-03   ETHNBA     TCs for IsBound are added
@@ -3644,22 +3644,19 @@ testcase tc() runs on Empty
 module bad_arguments
 {
 type component empty { }
-type record of integer intlist1
-type record of integer intlist2
+type record of integer intlist
 testcase tc () runs on empty
 {
   var integer a := 0
   var charstring cs_1 := "My name is JJ"
   var bitstring bs_1 := '11'B
   var charstring cs_2 := replace("My name is JJ", -1, 2, "xx")
-  var intlist1 il1 := { 1, 2, 3 }
-  var intlist2 il2 := { 4 }
+  var intlist il1 := { 1, 2, 3 }
   cs_2 := replace("My name is JJ", 1, 2, '11'B)
   cs_2 := replace("My name is JJ", 100, 2, "x")
   cs_2 := replace("My name is JJ", a, 100, "x")
   cs_2 := replace(cs_1, 1, 2, bs_1)
   cs_2 := replace(cs_1, 1.0, 2, "xx")
-  il1 := replace(il1, 1, 1, il2)
   il1 := replace(il1, 1, 1, cs_1[10])
 }
 }
@@ -3670,11 +3667,8 @@ testcase tc () runs on empty
 <RESULT COUNT 2>
 (?is)\berror:.+?Fourth operand of operation `replace\(\)' is of type `bitstring', but a value of type `charstring' was expected here
 <END_RESULT>
-<RESULT LTRT COUNT 1>
-(?is)\berror:.+?Fourth operand of operation `replace\(\)' is of type `\@bad_arguments.intlist2', but a value of type `\@bad_arguments.intlist1' was expected here
-<END_RESULT>
 <RESULT COUNT 1>
-(?is)\berror:.+?Fourth operand of operation `replace\(\)' is of type `charstring', but a value of type `\@bad_arguments.intlist1' was expected here
+(?is)\berror:.+?Fourth operand of operation `replace\(\)' is of type `charstring', but a value of type `\@bad_arguments.intlist' was expected here
 <END_RESULT>
 <RESULT COUNT 1>
 (?is)\berror:.+?The sum of second operand `index' \(100\) and third operand `len' \(2\) is greater than the length of the first operand \(13\)
@@ -4302,31 +4296,6 @@ control {
 :exmp.
 
 .*---------------------------------------------------------------------*
-:h3.Adhoc:: TR 935 - concatenation of incompatible list types
-.*---------------------------------------------------------------------*
-:xmp tab=0.
-<TC - TR 935 - concatenation of incompatible list types>
-<COMPILE>
-<VERDICT_LEAF PASS>
-<MODULE TTCN TR935 TR935.ttcn>
-module TR935 {
-type record of integer intlist1
-type record of integer intlist2
-control {
-  var intlist1 il1 := { 1, 2, 3 }
-  var intlist2 il2 := { 4 }
-  il1 := il1 & il2
-  // Merge this small test-case later.
-}
-}
-<END_MODULE>
-<RESULT LTRT COUNT 1>
-(?is)\berror: The operands of operation `&' should be of compatible types
-<END_RESULT>
-<END_TC>
-:exmp.
-
-.*---------------------------------------------------------------------*
 :h3.Adhoc:: Type Compatibility - Sample tests for structured types
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -4376,13 +4345,13 @@ ro2 := substr(myrec1 : t_myrecof3, 0, 1)  // !OK
 <RESULT LTRT COUNT 1>
 (?is)\berror: Type mismatch: a value of type `\@Compat1.myrecof1' was expected instead of `integer\[4\]'
 <END_RESULT>
-<RESULT LTRT COUNT 3>
+<RESULT LTRT COUNT 2>
 (?is)\berror: The operands of operation `==' should be of compatible types
 <END_RESULT>
 <RESULT FTRT COUNT 1>
 (?is)\berror: Type mismatch: `\@Compat1.myrecof1' and `integer\[4\]' are not compatible: Incompatible record of/SEQUENCE OF subtypes
 <END_RESULT>
-<RESULT FTRT COUNT 1>
+<RESULT COUNT 1>
 (?is)\berror: Type mismatch: `@Compat1.myrecof1' and `@Compat1.myrecof3' are not compatible: Incompatible record of/SEQUENCE OF subtypes
 <END_RESULT>
 <RESULT LTRT COUNT 1>
@@ -6116,13 +6085,7 @@ module module1
 <RESULT COUNT 1>
 (?is)\berror: \{  \} is not a valid value for type `\@module1.myro1' which has subtype length\(1\)
 <END_RESULT>
-<RESULT LTRT COUNT 2>
-(?is)\berror: The operands of operation `==' should be of compatible types
-<END_RESULT>
-<RESULT LTRT COUNT 1>
-(?is)\berror: Type mismatch: a value or template of type `\@module1.myro1' was expected instead of `\@module1.myro2'
-<END_RESULT>
-<RESULT FTRT COUNT 3>
+<RESULT COUNT 3>
 (?is)\berror: Type mismatch: `\@module1.myro1' and `\@module1.myro2' are not compatible: Incompatible record of/SEQUENCE OF subtypes
 <END_RESULT>
 <RESULT COUNT 1>
@@ -6202,13 +6165,7 @@ module module1
 <RESULT COUNT 1>
 (?is)\berror: \{  \} is not a valid value for type `\@module1.myso1' which has subtype length\(1\)
 <END_RESULT>
-<RESULT LTRT COUNT 2>
-(?is)\berror: The operands of operation `==' should be of compatible types
-<END_RESULT>
-<RESULT LTRT COUNT 1>
-(?is)\berror: Type mismatch: a value or template of type `\@module1.myso1' was expected instead of `\@module1.myso2'
-<END_RESULT>
-<RESULT FTRT COUNT 3>
+<RESULT COUNT 3>
 (?is)\berror: Type mismatch: `\@module1.myso1' and `\@module1.myso2' are not compatible: Incompatible set of/SET OF subtypes
 <END_RESULT>
 <RESULT COUNT 20>
@@ -8323,10 +8280,10 @@ Temp
 :exmp.
 
 .*---------------------------------------------------------------------*
-:h3.Adhoc:: modulepar invalid simple type: component, port, default
+:h3.Adhoc:: modulepar invalid simple type: port
 .*---------------------------------------------------------------------*
 :xmp tab=0.
-<TC - Adhoc::modulepar invalid type - component, port, default>
+<TC - Adhoc::modulepar invalid type - port>
 <COMPILE>
 <VERDICT_LEAF FAIL>
 <MODULE TTCN Temp Temp.ttcn>
@@ -8343,76 +8300,7 @@ module Temp {
   type default default_DT;
 }
 <END_MODULE>
-<RESULT IF_FAIL COUNT 3>
-(?is)\berror:
-<END_RESULT>
-<RESULT IF_FAIL POSITIVE>
-(?im)\bnotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
-<END_RESULT><END_TC>
-:exmp.
-
-.*------------------------------------------------------------------------------------*
-:h3.Adhoc:: modulepar invalid compound type: record, set with component, default
-.*------------------------------------------------------------------------------------*
-:xmp tab=0.
-<TC - Adhoc::modulepar invalid type - compound type>
-<COMPILE>
-<VERDICT_LEAF FAIL>
-<MODULE TTCN Temp Temp.ttcn>
-module Temp {
-  modulepar invalidRec tsp_Rec;
-  modulepar invalidSet tsp_Set;
-  modulepar invalidUnion tsp_Union;
-  type record invalidRec {
-    integer varI1,
-    default_DT varDT,
-    charstring varStr
-  }
-  type set invalidSet {
-    integer varI2,
-    comp_CT varCT1,
-    charstring varStr
-  }
-  type union invalidUnion {
-    integer varI3,
-    comp_CT varCT2
-  }
-  type default default_DT;
-  type component comp_CT {
-	var integer v_int := 0;
-  }
-}
-<END_MODULE>
-<RESULT IF_FAIL COUNT 3>
-(?is)\berror:
-<END_RESULT>
-<RESULT IF_FAIL POSITIVE>
-(?im)\bnotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
-<END_RESULT><END_TC>
-:exmp.
-
-.*------------------------------------------------------------------------------------*
-:h3.Adhoc:: modulepar invalid list: record of, set of and array with component, default
-.*------------------------------------------------------------------------------------*
-:xmp tab=0.
-<TC - Adhoc::modulepar invalid list - record of, set of and array with component, default>
-<COMPILE>
-<VERDICT_LEAF FAIL>
-<MODULE TTCN Temp Temp.ttcn>
-module Temp {
-  modulepar ListRec tsp_ListRec;
-  modulepar ListSet tsp_listSet;
-  modulepar compArrayType tsp_compArray;
-  type record of comp_CT ListRec;
-  type set of default_DT ListSet;
-  type comp_CT compArrayType[3];
-  type default default_DT;
-  type component comp_CT {
-	var integer v_int := 0;
-  }
-}
-<END_MODULE>
-<RESULT IF_FAIL COUNT 3>
+<RESULT IF_FAIL COUNT 1>
 (?is)\berror:
 <END_RESULT>
 <RESULT IF_FAIL POSITIVE>
@@ -8448,7 +8336,7 @@ module Temp {
 <RESULT IF_FAIL COUNT 1>
 (?im)\bcircular\b.+?\breference\b
 <END_RESULT>
-<RESULT IF_FAIL COUNT 2>
+<RESULT IF_FAIL COUNT 1>
 (?is)\berror:
 <END_RESULT>
 <RESULT IF_FAIL POSITIVE>

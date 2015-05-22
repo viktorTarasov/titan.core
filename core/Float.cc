@@ -793,9 +793,66 @@ int FLOAT::XER_encode(const XERdescriptor_t& p_td,
   return (int)p_buf.get_len() - encoded_length;
 }
 
+boolean FLOAT::is_float(const char* p_str)
+{
+  bool first_digit = false; // first digit reached
+  bool decimal_point = false; // decimal point (.) reached
+  bool exponent_mark = false; // exponential mark (e or E) reached
+  bool exponent_sign = false; // sign of the exponential (- or +) reached
+  
+  if ('-' == *p_str || '+' == *p_str) {
+    ++p_str;
+  }
+  
+  while (0 != *p_str) {
+    switch(*p_str) {
+    case '.':
+      if (decimal_point || exponent_mark || !first_digit) {
+        return false;
+      }
+      decimal_point = true;
+      first_digit = false;
+      break;
+    case 'e':
+    case 'E':
+      if (exponent_mark || !first_digit) {
+        return false;
+      }
+      exponent_mark = true;
+      first_digit = false;
+      break;
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+      first_digit = true;
+      break;
+    case '-':
+    case '+':
+      if (exponent_sign || !exponent_mark || first_digit) {
+        return false;
+      }
+      exponent_sign = true;
+      break;
+    default:
+      return false;
+    }
+    
+    ++p_str; 
+  }
+  return first_digit;
+}
+
 int FLOAT::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   unsigned int flavor, embed_values_dec_struct_t*)
 {
+  bound_flag = false;
   int exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1;
   if (success <= 0) return 0;
@@ -807,8 +864,10 @@ int FLOAT::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
 tagless:
     const char * value = (const char *)reader.Value();
 
-    if (value && sscanf(value, "%lf", &float_value))
+    if (value && is_float(value)) {
       bound_flag = true;
+      sscanf(value, "%lf", &float_value);
+    }
 
     // Let the caller do reader.AdvanceAttribute();
   }
@@ -828,8 +887,10 @@ tagless:
       }
       else if (XML_READER_TYPE_TEXT == type && depth != -1) {
         const char * value = (const char*)reader.Value();
-        if (value && sscanf(value, "%lf", &float_value) == 1)
+        if (value && is_float(value)) {
           bound_flag = true;
+          sscanf(value, "%lf", &float_value);
+        }
       }
       else if (XML_READER_TYPE_END_ELEMENT == type) {
         verify_end(reader, p_td, depth, exer);

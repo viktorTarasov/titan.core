@@ -41,6 +41,10 @@ class FLOAT : public Base_Type {
 
   boolean bound_flag;
   ttcn3float float_value;
+  
+  /** Returns true if the string parameter contains the string representation 
+    * of a real number, otherwise returns false. */
+  boolean is_float(const char* p_str);
 
 public:
 

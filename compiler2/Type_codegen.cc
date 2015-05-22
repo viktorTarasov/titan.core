@@ -382,6 +382,16 @@ void Type::generate_code_typedescriptor(output_struct *target)
           "NULL, ");
       }
     }
+    
+    if (T_SEQOF == get_type_refd_last()->typetype || 
+        T_SETOF == get_type_refd_last()->typetype) {
+      target->source.global_vars=mputprintf(target->source.global_vars,
+        "&%s_descr_, ", get_type_refd_last()->u.seof.ofType->get_genname_typedescriptor(my_scope).c_str());
+    }
+    else {
+      target->source.global_vars = mputstr(target->source.global_vars,
+        "NULL, ");
+    }
 
     target->source.global_vars=mputprintf(target->source.global_vars,
       "TTCN_Typedescriptor_t::%s };\n"
@@ -483,6 +493,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
   any_except=0, nof_ns_uris=0;
   const char* dfe_str = 0;
   char** ns_uris = 0;
+  char* oftype_descr_name = 0;
   if (xerattrib) {
     change_name(last_s, xerattrib->name_);
 
@@ -572,6 +583,12 @@ void Type::generate_code_xerdescriptor(output_struct* target)
   size_t last_len = 2 + last_s.size();    // 2 for > \n
   size_t bxer_len = 2 + bxer_name.size(); // 2 for > \n
   
+  if ((T_SEQOF == last->typetype || T_SETOF == last->typetype) &&
+      T_ANYTYPE != last->u.seof.ofType->get_type_refd_last()->typetype) {
+    // anytypes don't have XER descriptors
+    oftype_descr_name = mprintf("&%s_xer_", last->u.seof.ofType->get_genname_typedescriptor(my_scope).c_str());
+  }
+  
   // Generate a separate variable for the namespace URIs, if there are any
   char* ns_uris_var = 0;
   if (ns_uris && nof_ns_uris) {
@@ -591,7 +608,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
   target->source.global_vars = mputprintf(target->source.global_vars,
     "const XERdescriptor_t       %s_xer_ = { {\"%s>\\n\", \"%s>\\n\"},"
     " {%lu, %lu}, %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s, WHITESPACE_%s, %c%s, "
-    "&%s, %ld, %u, %s };\n",
+    "&%s, %ld, %u, %s, %s };\n",
     gennameown_str,
     bxer_name.c_str(), last_s.c_str(), // names
     (unsigned long)bxer_len, (unsigned long)last_len, // lengths
@@ -618,10 +635,12 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     "module_object",
     ns_index,
     nof_ns_uris,
-    (ns_uris_var ? ns_uris_var : "NULL")
+    (ns_uris_var ? ns_uris_var : "NULL"),
+    (oftype_descr_name ? oftype_descr_name : "NULL")
     );
   
   Free(ns_uris_var);
+  Free(oftype_descr_name);
 }
 
 void Type::generate_code_rawdescriptor(output_struct *target)
@@ -1471,6 +1490,7 @@ void Type::generate_code_Se(output_struct *target)
     cur.dispname = id.get_ttcnname().c_str();
     cur.isOptional = cf->get_is_optional();
     cur.isDefault = cf->has_default();
+    cur.optimizedMemAlloc = cur.of_type && (type->get_optimize_attribute() == "memalloc");
     if (cur.isDefault) {
       Value *defval = cf->get_defval();
       const_def cdef;
@@ -1810,6 +1830,41 @@ bool Type::is_untagged() const { return xerattrib && xerattrib->untagged_; }
 
 void Type::generate_code_SeOf(output_struct *target)
 {
+  const Type *oftypelast = u.seof.ofType->get_type_refd_last();
+  const string& oftypename = u.seof.ofType->get_genname_value(my_scope);
+  boolean optimized_memalloc = !use_runtime_2 && get_optimize_attribute() == "memalloc";
+  
+  if (is_pregenerated()) {
+    switch(oftypelast->typetype) {
+    case T_USTR:
+    case T_UTF8STRING:
+    case T_TELETEXSTRING:
+    case T_VIDEOTEXSTRING:
+    case T_GRAPHICSTRING:
+    case T_GENERALSTRING:
+    case T_UNIVERSALSTRING:
+    case T_BMPSTRING:
+    case T_OBJECTDESCRIPTOR:
+      target->header.typedefs = mputprintf(target->header.typedefs,
+        "typedef PreGenRecordOf::PREGEN__%s__OF__UNIVERSAL__CHARSTRING%s %s;\n"
+        "typedef PreGenRecordOf::PREGEN__%s__OF__UNIVERSAL__CHARSTRING%s_template %s_template;\n",
+        (typetype == T_SEQOF) ? "RECORD" : "SET",
+        optimized_memalloc ? "__OPTIMIZED" : "", get_genname_own().c_str(),
+        (typetype == T_SEQOF) ? "RECORD" : "SET",
+        optimized_memalloc ? "__OPTIMIZED" : "", get_genname_own().c_str());
+      return;
+    default:
+      target->header.typedefs = mputprintf(target->header.typedefs,
+        "typedef PreGenRecordOf::PREGEN__%s__OF__%s%s %s;\n"
+        "typedef PreGenRecordOf::PREGEN__%s__OF__%s%s_template %s_template;\n",
+        (typetype == T_SEQOF) ? "RECORD" : "SET", oftypename.c_str(), 
+        optimized_memalloc ? "__OPTIMIZED" : "", get_genname_own().c_str(),
+        (typetype == T_SEQOF) ? "RECORD" : "SET", oftypename.c_str(),
+        optimized_memalloc ? "__OPTIMIZED" : "",  get_genname_own().c_str());
+      return;
+    }
+  }
+  
   stringpool pool;
   struct_of_def sofdef;
   memset(&sofdef, 0, sizeof(sofdef));
@@ -1826,10 +1881,8 @@ void Type::generate_code_SeOf(output_struct *target)
   }
   // If a record of UTF8String, we need to prepare for ANY-ATTRIBUTES and
   // ANY-ELEMENT
-  const Type *oftypelast = u.seof.ofType->get_type_refd_last();
   sofdef.xerAnyAttrElem = oftypelast->typetype == T_USTR
   ||                      oftypelast->typetype == T_UTF8STRING;
-  const string& oftypename = u.seof.ofType->get_genname_value(my_scope);
   sofdef.type = oftypename.c_str();
   sofdef.has_opentypes = get_has_opentypes();
   const string& oftypedescrname =
@@ -1895,7 +1948,7 @@ void Type::generate_code_SeOf(output_struct *target)
     sofdef.hasRaw=true;
   } else sofdef.hasRaw=false;
 
-  if (!use_runtime_2 && get_optimize_attribute()=="memalloc") {
+  if (optimized_memalloc) {
     defRecordOfClassMemAllocOptimized(&sofdef, target);
   } else {
     defRecordOfClass(&sofdef, target);

@@ -53,8 +53,10 @@
 
 #ifdef TITAN_RUNTIME_2
 #include "RT2/TitanLoggerApiSimple.hh"
+#include "RT2/PreGenRecordOf.hh"
 #else
 #include "RT1/TitanLoggerApiSimple.hh"
+#include "RT1/PreGenRecordOf.hh"
 #endif
 
 #include "Module_list.hh"
@@ -70,5 +72,6 @@
 #include "JSON.hh"
 #include "Error.hh"
 #include "XmlReader.hh"
+#include "Profiler.hh"
 
 #endif

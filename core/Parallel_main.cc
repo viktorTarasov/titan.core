@@ -24,6 +24,9 @@
 #include "Error.hh"
 #include "Encdec.hh"
 #include "TCov.hh"
+#ifdef LINUX
+#include <execinfo.h>
+#endif  
 
 #ifdef LICENSE
 #include "../common/license.h"
@@ -35,7 +38,7 @@ const char * stored_argv = "Unidentified program";
 
 //static const char segfault[] = " : Segmentation fault occurred\n";
 
-void signal_handler(int)
+void signal_handler(int signum)
 {
   int retval;
   time_t now=time(0);
@@ -44,7 +47,7 @@ void signal_handler(int)
   struct tm *tmp;
   tmp=localtime(&now);
   if(tmp==NULL){
-    fprintf(stderr,"<Unknown> %s: Segmentation fault occurred\n",stored_argv);
+    fprintf(stderr,"<Unknown> %s: %s\n",stored_argv, signum==SIGABRT?"Abort was called":"Segmentation fault occurred");
   } else {
 /*  retval = write(STDERR_FILENO, stored_argv, strlen(stored_argv));
   retval = write(STDERR_FILENO, segfault , sizeof(segfault)-1); // sizeof includes \0
@@ -52,10 +55,18 @@ void signal_handler(int)
   (void)retval;
 */
     retval=strftime(ts,60,"%F %T",tmp);
-    fprintf(stderr,"%s %s: Segmentation fault occurred\n",ts,stored_argv);
+    fprintf(stderr,"%s %s: %s\n",ts,stored_argv,signum==SIGABRT?"Abort was called":"Segmentation fault occurred");
   }
   fflush(stderr);
+#ifdef LINUX
+  int nptrs;
+  void *buffer[100];
+  nptrs = backtrace(buffer, 100);
+  backtrace_symbols_fd(buffer, nptrs, STDERR_FILENO);
   
+  fflush(stderr);
+#endif  
+  signal(SIGABRT, SIG_DFL);
   abort();
 }
 
@@ -185,6 +196,7 @@ int main(int argc, char *argv[])
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
   sigaction(SIGSEGV, &act, 0);
+  sigaction(SIGABRT, &act, 0);
 
 #ifdef MEMORY_DEBUG
   debug_new_counter.set_program_name(argv[0]);

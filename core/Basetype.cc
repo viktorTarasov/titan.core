@@ -1086,101 +1086,101 @@ const Base_Type* TTCN_Type_list::get_nth(size_t pos) const
 }
 
 const TTCN_Typedescriptor_t BOOLEAN_descr_={"BOOLEAN", &BOOLEAN_ber_,
-  &BOOLEAN_raw_, &BOOLEAN_text_, &BOOLEAN_xer_, &BOOLEAN_json_, TTCN_Typedescriptor_t::DONTCARE};
+  &BOOLEAN_raw_, &BOOLEAN_text_, &BOOLEAN_xer_, &BOOLEAN_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t INTEGER_descr_={"INTEGER", &INTEGER_ber_,
-  &INTEGER_raw_, &INTEGER_text_, &INTEGER_xer_, &INTEGER_json_, TTCN_Typedescriptor_t::DONTCARE};
+  &INTEGER_raw_, &INTEGER_text_, &INTEGER_xer_, &INTEGER_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t FLOAT_descr_={"REAL", &FLOAT_ber_, &FLOAT_raw_,
-  NULL, &FLOAT_xer_, &FLOAT_json_, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, &FLOAT_xer_, &FLOAT_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t VERDICTTYPE_descr_={"verdicttype", NULL, NULL,
-  NULL, &VERDICTTYPE_xer_, &VERDICTTYPE_json_, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, &VERDICTTYPE_xer_, &VERDICTTYPE_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t OBJID_descr_={"OBJECT IDENTIFIER", &OBJID_ber_,
-  NULL, NULL, &OBJID_xer_, &OBJID_json_, TTCN_Typedescriptor_t::OBJID};
+  NULL, NULL, &OBJID_xer_, &OBJID_json_, NULL, TTCN_Typedescriptor_t::OBJID};
 
 const TTCN_Typedescriptor_t BITSTRING_descr_={"BIT STRING", &BITSTRING_ber_,
-  &BITSTRING_raw_, NULL, &BITSTRING_xer_, &BITSTRING_json_, TTCN_Typedescriptor_t::DONTCARE};
+  &BITSTRING_raw_, NULL, &BITSTRING_xer_, &BITSTRING_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t HEXSTRING_descr_={"hexstring", NULL,
-  &HEXSTRING_raw_, NULL, &HEXSTRING_xer_, &HEXSTRING_json_, TTCN_Typedescriptor_t::DONTCARE};
+  &HEXSTRING_raw_, NULL, &HEXSTRING_xer_, &HEXSTRING_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t OCTETSTRING_descr_={"OCTET STRING",
-  &OCTETSTRING_ber_, &OCTETSTRING_raw_, &OCTETSTRING_text_, &OCTETSTRING_xer_, &OCTETSTRING_json_, TTCN_Typedescriptor_t::DONTCARE};
+  &OCTETSTRING_ber_, &OCTETSTRING_raw_, &OCTETSTRING_text_, &OCTETSTRING_xer_, &OCTETSTRING_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t CHARSTRING_descr_={"charstring", NULL,
-  &CHARSTRING_raw_, &CHARSTRING_text_, &CHARSTRING_xer_, &CHARSTRING_json_, TTCN_Typedescriptor_t::DONTCARE};
+  &CHARSTRING_raw_, &CHARSTRING_text_, &CHARSTRING_xer_, &CHARSTRING_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t UNIVERSAL_CHARSTRING_descr_={"universal charstring",
-  NULL, NULL, NULL, &UNIVERSAL_CHARSTRING_xer_, &UNIVERSAL_CHARSTRING_json_, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, NULL, &UNIVERSAL_CHARSTRING_text_, &UNIVERSAL_CHARSTRING_xer_, &UNIVERSAL_CHARSTRING_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t COMPONENT_descr_={"component", NULL, NULL, NULL,
-  NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t DEFAULT_descr_={"default", NULL, NULL, NULL,
-  NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t ASN_NULL_descr_={"NULL", &ASN_NULL_ber_, NULL,
-  NULL, &ASN_NULL_xer_, &ASN_NULL_json_, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, &ASN_NULL_xer_, &ASN_NULL_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t ASN_ANY_descr_={"ANY", &ASN_ANY_ber_, NULL,
-  NULL, NULL, &ASN_ANY_json_, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, NULL, &ASN_ANY_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t EXTERNAL_descr_={"EXTERNAL", &EXTERNAL_ber_, NULL,
-  NULL, &EXTERNAL_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, &EXTERNAL_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t EMBEDDED_PDV_descr_={"EMBEDDED PDV",
-  &EMBEDDED_PDV_ber_, NULL, NULL, &EMBEDDED_PDV_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  &EMBEDDED_PDV_ber_, NULL, NULL, &EMBEDDED_PDV_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t CHARACTER_STRING_descr_={"CHARACTER STRING",
-  &CHARACTER_STRING_ber_, NULL, NULL, &CHARACTER_STRING_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  &CHARACTER_STRING_ber_, NULL, NULL, &CHARACTER_STRING_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t ObjectDescriptor_descr_={"ObjectDescriptor",
-  &ObjectDescriptor_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING};
+  &ObjectDescriptor_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING};
 
 const TTCN_Typedescriptor_t UTF8String_descr_={"UTF8String", &UTF8String_ber_,
-  NULL, NULL, &UTF8String_xer_, NULL, TTCN_Typedescriptor_t::UTF8STRING};
+  NULL, NULL, &UTF8String_xer_, NULL, NULL, TTCN_Typedescriptor_t::UTF8STRING};
 
 const TTCN_Typedescriptor_t ASN_ROID_descr_={"RELATIVE-OID", &ASN_ROID_ber_,
-  NULL, NULL, &ASN_ROID_xer_, &ASN_ROID_json_, TTCN_Typedescriptor_t::ROID};
+  NULL, NULL, &ASN_ROID_xer_, &ASN_ROID_json_, NULL, TTCN_Typedescriptor_t::ROID};
 
 const TTCN_Typedescriptor_t NumericString_descr_={"NumericString",
-  &NumericString_ber_, NULL, NULL, &NumericString_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  &NumericString_ber_, NULL, NULL, &NumericString_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t PrintableString_descr_={"PrintableString",
-  &PrintableString_ber_, NULL, NULL, &PrintableString_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  &PrintableString_ber_, NULL, NULL, &PrintableString_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t TeletexString_descr_={"TeletexString",
-  &TeletexString_ber_, NULL, NULL, &TeletexString_xer_, NULL, TTCN_Typedescriptor_t::TELETEXSTRING};
+  &TeletexString_ber_, NULL, NULL, &TeletexString_xer_, NULL, NULL, TTCN_Typedescriptor_t::TELETEXSTRING};
 const TTCN_Typedescriptor_t& T61String_descr_=TeletexString_descr_;
 
 const TTCN_Typedescriptor_t VideotexString_descr_={"VideotexString",
-  &VideotexString_ber_, NULL, NULL, &VideotexString_xer_, NULL, TTCN_Typedescriptor_t::VIDEOTEXSTRING};
+  &VideotexString_ber_, NULL, NULL, &VideotexString_xer_, NULL, NULL, TTCN_Typedescriptor_t::VIDEOTEXSTRING};
 
 const TTCN_Typedescriptor_t IA5String_descr_={"IA5String", &IA5String_ber_,
-  NULL, NULL, &IA5String_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, NULL, &IA5String_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t ASN_GeneralizedTime_descr_={"GeneralizedTime",
-  &ASN_GeneralizedTime_ber_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  &ASN_GeneralizedTime_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t ASN_UTCTime_descr_={"UTCTime", &ASN_UTCTime_ber_,
-  NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t GraphicString_descr_={"GraphicString",
-  &GraphicString_ber_, NULL, NULL, &GraphicString_xer_, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING};
+  &GraphicString_ber_, NULL, NULL, &GraphicString_xer_, NULL, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING};
 
 const TTCN_Typedescriptor_t VisibleString_descr_={"VisibleString",
-  &VisibleString_ber_, NULL, NULL, &VisibleString_xer_, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  &VisibleString_ber_, NULL, NULL, &VisibleString_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 const TTCN_Typedescriptor_t& ISO646String_descr_=VisibleString_descr_;
 
 const TTCN_Typedescriptor_t GeneralString_descr_={"GeneralString",
-  &GeneralString_ber_, NULL, NULL, &GeneralString_xer_, NULL, TTCN_Typedescriptor_t::GENERALSTRING};
+  &GeneralString_ber_, NULL, NULL, &GeneralString_xer_, NULL, NULL, TTCN_Typedescriptor_t::GENERALSTRING};
 
 const TTCN_Typedescriptor_t UniversalString_descr_={"UniversalString",
-  &UniversalString_ber_, NULL, NULL, &UniversalString_xer_, NULL, TTCN_Typedescriptor_t::UNIVERSALSTRING};
+  &UniversalString_ber_, NULL, NULL, &UniversalString_xer_, NULL, NULL, TTCN_Typedescriptor_t::UNIVERSALSTRING};
 
 const TTCN_Typedescriptor_t BMPString_descr_={"BMPString", &BMPString_ber_,
-  NULL, NULL, &BMPString_xer_, NULL, TTCN_Typedescriptor_t::BMPSTRING};
+  NULL, NULL, &BMPString_xer_, NULL, NULL, TTCN_Typedescriptor_t::BMPSTRING};
 
 

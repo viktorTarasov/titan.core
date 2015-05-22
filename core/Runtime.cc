@@ -41,6 +41,7 @@
 #include "Charstring.hh"
 #include "Fd_And_Timeout_User.hh"
 #include <TitanLoggerApi.hh>
+#include "Profiler.hh"
 
 namespace API = TitanLoggerApi;
 
@@ -403,6 +404,7 @@ int TTCN_Runtime::hc_main(const char *local_addr, const char *MC_addr,
       TTCN_Communication::set_local_address(local_addr);
     TTCN_Communication::set_mc_address(MC_addr, MC_port);
     TTCN_Communication::connect_mc();
+    Module_List::send_versions();
     executor_state = HC_IDLE;
     TTCN_Communication::send_version();
     initialize_component_process_tables();
@@ -2303,6 +2305,9 @@ void TTCN_Runtime::process_create_ptc(component component_reference,
       "state.");
     return;
   }
+  
+  // let the HC's TTCN-3 Profiler know of this new PTC
+  ttcn3_prof.add_ptc(component_reference);
 
   // clean Emergency log buffer before fork, to avoid duplication
   TTCN_Logger::ring_buffer_dump(false);

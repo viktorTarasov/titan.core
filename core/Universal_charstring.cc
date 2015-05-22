@@ -19,6 +19,7 @@
 #include "Logger.hh"
 #include "Encdec.hh"
 #include "Addfunc.hh" // for unichar2int
+#include "TEXT.hh"
 #include <string>
 #include <iostream>
 #include <stdint.h>
@@ -200,7 +201,7 @@ UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING
   other_value.must_bound("Initialization of a universal charstring with an "
     "unbound universal charstring element.");
   if (charstring) {
-    cstr = CHARSTRING(other_value.get_uchar().uc_cell);
+    cstr = CHARSTRING((const char)(other_value.get_uchar().uc_cell));
     val_ptr = NULL;
   } else {
     init_struct(1);
@@ -1068,6 +1069,13 @@ void UNIVERSAL_CHARSTRING::encode(const TTCN_Typedescriptor_t& p_td,
     TTCN_EncDec_ErrorContext::error_internal
       ("No RAW descriptor available for type '%s'.", p_td.name);
     break;}
+  case TTCN_EncDec::CT_TEXT: {
+    TTCN_EncDec_ErrorContext ec("While TEXT-encoding type '%s': ", p_td.name);
+    if(!p_td.text)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No TEXT descriptor available for type '%s'.", p_td.name);
+    TEXT_encode(p_td,p_buf);
+    break;}
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
@@ -1116,6 +1124,24 @@ void UNIVERSAL_CHARSTRING::decode(const TTCN_Typedescriptor_t& p_td,
     TTCN_EncDec_ErrorContext ec("While RAW-decoding type '%s': ", p_td.name);
     TTCN_EncDec_ErrorContext::error_internal
       ("No RAW descriptor available for type '%s'.", p_td.name);
+    break;}
+  case TTCN_EncDec::CT_TEXT: {
+    Limit_Token_List limit;
+    TTCN_EncDec_ErrorContext ec("While TEXT-decoding type '%s': ", p_td.name);
+    if(!p_td.text)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No TEXT descriptor available for type '%s'.", p_td.name);
+    const unsigned char *b=p_buf.get_data();
+    if(b[p_buf.get_len()-1]!='\0'){
+      p_buf.set_pos(p_buf.get_len());
+      p_buf.put_zero(8,ORDER_LSB);
+      p_buf.rewind();
+    }
+    if(TEXT_decode(p_td,p_buf,limit)<0)
+      ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
+               "Can not decode type '%s', because invalid or incomplete"
+               " message was received"
+               , p_td.name);
     break;}
   case TTCN_EncDec::CT_XER : {
     unsigned XER_coding=va_arg(pvar, unsigned);
@@ -1199,6 +1225,198 @@ UNIVERSAL_CHARSTRING::BER_encode_TLV(const TTCN_Typedescriptor_t& p_td,
   }
   new_tlv=ASN_BER_V2TLV(new_tlv, p_td, p_coding);
   return new_tlv;
+}
+int UNIVERSAL_CHARSTRING::TEXT_decode(const TTCN_Typedescriptor_t& p_td,
+  TTCN_Buffer& buff, Limit_Token_List& limit, boolean no_err, boolean /*first_call*/)
+{
+  int decoded_length = 0;
+  int str_len = 0;
+  clean_up();
+  if (p_td.text->begin_decode) {
+    int tl;
+    if ((tl = p_td.text->begin_decode->match_begin(buff)) < 0) {
+      if (no_err) return -1;
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_TOKEN_ERR,
+        "The specified token '%s' not found for '%s': ",
+        (const char*) *(p_td.text->begin_decode), p_td.name);
+      return 0;
+    }
+    decoded_length += tl;
+    buff.increase_pos(tl);
+  }
+  //  never return "not enough bits"
+  //  if(buff.get_read_len()<=1 && no_err) return -TTCN_EncDec::ET_LEN_ERR;
+
+  if (p_td.text->select_token) {
+    int tl;
+    if ((tl = p_td.text->select_token->match_begin(buff)) < 0) {
+      if (no_err) return -1;
+      else tl = 0;
+    }
+    str_len = tl;
+  }
+  // The length restriction needs some more work
+/*  else if (   p_td.text->val.parameters
+    &&        p_td.text->val.parameters->decoding_params.min_length != -1) {
+    str_len = p_td.text->val.parameters->decoding_params.min_length;
+  }*/
+  else if (p_td.text->end_decode) {
+    int tl;
+    if ((tl = p_td.text->end_decode->match_first(buff)) < 0) {
+      if (no_err) return -1;
+      else tl = 0;
+    }
+    str_len = tl;
+  }
+  else if (limit.has_token()) {
+    int tl;
+    if ((tl = limit.match(buff)) < 0) tl = buff.get_read_len() - 1;
+    str_len = tl;
+  }
+  else {
+    str_len = buff.get_read_len() - 1;
+  }
+
+// only utf8 is supported now.
+  decode_utf8(str_len,buff.get_read_data());
+
+  decoded_length += str_len;
+  buff.increase_pos(str_len);
+
+// Case conversion is an another study
+// and it is locale dependent
+/*  if (  p_td.text->val.parameters
+    &&  p_td.text->val.parameters->decoding_params.convert != 0) {
+    if (p_td.text->val.parameters->decoding_params.convert == 1) {
+      for (int a = 0; a < str_len; a++) {
+        val_ptr->chars_ptr[a] = toupper(val_ptr->chars_ptr[a]);
+      }
+    }
+    else {
+      for (int a = 0; a < str_len; a++) {
+        val_ptr->chars_ptr[a] = tolower(val_ptr->chars_ptr[a]);
+      }
+    }
+  }*/
+  if (p_td.text->end_decode) {
+    int tl;
+    if ((tl = p_td.text->end_decode->match_begin(buff)) < 0) {
+      if (no_err) return -1;
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_TOKEN_ERR,
+        "The specified token '%s' not found for '%s': ",
+        (const char*) *(p_td.text->end_decode), p_td.name);
+      return 0;
+    }
+    decoded_length += tl;
+    buff.increase_pos(tl);
+  }
+  return decoded_length;
+}
+
+int UNIVERSAL_CHARSTRING::TEXT_encode(const TTCN_Typedescriptor_t& p_td,
+                 TTCN_Buffer& buff) const{
+  int encoded_length=0;
+  if(p_td.text->begin_encode){
+    buff.put_cs(*p_td.text->begin_encode);
+    encoded_length+=p_td.text->begin_encode->lengthof();
+  }
+  if(!is_bound()) {
+    TTCN_EncDec_ErrorContext::error
+      (TTCN_EncDec::ET_UNBOUND, "Encoding an unbound value.");
+    if(p_td.text->end_encode){
+      buff.put_cs(*p_td.text->end_encode);
+      encoded_length+=p_td.text->end_encode->lengthof();
+    }
+    return encoded_length;
+  }
+
+// The length restriction and case conversion will be added later
+//  if(p_td.text->val.parameters==NULL){
+
+    int base_size=buff.get_len(); // strore the current length of the data 
+                                   // in the buffer
+    
+    encode_utf8(buff);
+    
+    encoded_length+=buff.get_len()-base_size;  // calculate the number of the
+                                               // stored octets
+
+/*  } else {
+    int chars_before=0;
+    int chars_after=0;
+    if(val_ptr->n_chars<p_td.text->val.parameters->coding_params.min_length){
+      switch(p_td.text->val.parameters->coding_params.just){
+        case -1: //left
+          chars_after=p_td.text->
+              val.parameters->coding_params.min_length-val_ptr->n_chars;
+          break;
+        case 0:{  // center
+          int pad=p_td.text->
+              val.parameters->coding_params.min_length-val_ptr->n_chars;
+          chars_after=pad/2;
+          chars_before=pad-chars_after;
+          break;
+          }
+        case 1:  // right
+        default:
+          chars_before=p_td.text->
+              val.parameters->coding_params.min_length-val_ptr->n_chars;
+          break;
+      }
+    }
+    if(chars_before){
+      unsigned char* p=NULL;
+      size_t len=chars_before;
+      buff.get_end(p,len);
+      for(int a=0;a<chars_before;a++) p[a]=(unsigned char)' ';
+      buff.increase_length(chars_before);
+      encoded_length+=chars_before;
+    }
+
+    switch(p_td.text->val.parameters->coding_params.convert){
+      case -1:{ //lower_case
+        unsigned char* p=NULL;
+        size_t len=val_ptr->n_chars;
+        buff.get_end(p,len);
+        for(int a=0;a<val_ptr->n_chars;a++)
+            p[a]=(unsigned char)tolower(val_ptr->chars_ptr[a]);
+        buff.increase_length(val_ptr->n_chars);
+        break;
+        }
+      case 0:{  // no conversion
+        buff.put_cs(*this);
+        break;
+        }
+      case 1:  // upper_case
+      default:
+        {
+        unsigned char* p=NULL;
+        size_t len=val_ptr->n_chars;
+        buff.get_end(p,len);
+        for(int a=0;a<val_ptr->n_chars;a++)
+            p[a]=(unsigned char)toupper(val_ptr->chars_ptr[a]);
+        buff.increase_length(val_ptr->n_chars);
+        break;
+        }
+    }
+    encoded_length+=val_ptr->n_chars;
+
+    if(chars_after){
+      unsigned char* p=NULL;
+      size_t len=chars_after;
+      buff.get_end(p,len);
+      for(int a=0;a<chars_after;a++) p[a]=(unsigned char)' ';
+      buff.increase_length(chars_after);
+      encoded_length+=chars_after;
+    }
+  }
+*/
+
+  if(p_td.text->end_encode){
+    buff.put_cs(*p_td.text->end_encode);
+    encoded_length+=p_td.text->end_encode->lengthof();
+  }
+  return encoded_length;
 }
 
 void UNIVERSAL_CHARSTRING::encode_utf8(TTCN_Buffer& buf, bool addBOM /*= false*/) const
@@ -2214,7 +2432,9 @@ void UNIVERSAL_CHARSTRING::decode_utf8(int n_octets,
     // count all octets except the continuing octets (10xxxxxx)
     if ((octets_ptr[i] & 0xC0) != 0x80) n_uchars++;
   }
-  // allocate enough memory
+  // allocate enough memory, start from clean state
+  clean_up();
+  charstring=false;
   init_struct(n_uchars);
   n_uchars = 0;
 
@@ -2676,22 +2896,13 @@ UNIVERSAL_CHARSTRING_ELEMENT& UNIVERSAL_CHARSTRING_ELEMENT::operator=
 {
   other_value.must_bound("Assignment of an unbound universal charstring value "
     "to a universal charstring element.");
-  if (other_value.val_ptr->n_uchars != 1)
+  int other_value_size = other_value.charstring ? other_value.cstr.val_ptr->n_chars :
+    other_value.val_ptr->n_uchars;
+  if (other_value_size != 1)
     TTCN_error("Assignment of a universal charstring value with length other "
       "than 1 to a universal charstring element.");
   bound_flag = TRUE;
-  const universal_char& uchar = other_value.val_ptr->uchars_ptr[0];
-  if (str_val.charstring) {
-    if (uchar.is_char())
-      str_val.cstr.val_ptr->chars_ptr[uchar_pos] = uchar.uc_cell;
-    else {
-      str_val.convert_cstr_to_uni();
-      str_val.val_ptr->uchars_ptr[uchar_pos] = uchar;
-    }
-  } else {
-    str_val.copy_value();
-    str_val.val_ptr->uchars_ptr[uchar_pos] = uchar;
-  }
+  *this = other_value[0];
   return *this;
 }
 

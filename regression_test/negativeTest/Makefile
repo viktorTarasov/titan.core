@@ -25,7 +25,7 @@ CXXFLAGS += -Wall -Wextra -Wshadow -g
 CXXDEPFLAGS := -MM
 
 #COMPILER_FLAGS +=
-LDFLAGS += -rdynamic
+#LDFLAGS += -rdynamic
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 

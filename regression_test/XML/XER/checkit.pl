@@ -51,6 +51,7 @@ my %versions = (
 # built-in modules for the logger
 'TitanLoggerApi' => '',
 'TitanLoggerControl' => '',
+'PreGenRecordOf' => '',
 );
 
 

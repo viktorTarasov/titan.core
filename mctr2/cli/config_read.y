@@ -165,12 +165,17 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token Re_try /* Retry clashes with an enum in Qt */
 %token Delete
 
-%token DisableProfilerKeyword   "DisableProfiler"
-%token DisableCoverageKeyword   "DisableCoverage"
-%token DatabaseFileKeyword      "DatabaseFile"
-%token AggregateDataKeyword     "AggregateData"
-%token StatisticsFileKeyword    "StatisticsFile"
-%token DisableStatisticsKeyword "DisableStatistics"
+%token DisableProfilerKeyword    "DisableProfiler"
+%token DisableCoverageKeyword    "DisableCoverage"
+%token DatabaseFileKeyword       "DatabaseFile"
+%token AggregateDataKeyword      "AggregateData"
+%token StatisticsFileKeyword     "StatisticsFile"
+%token DisableStatisticsKeyword  "DisableStatistics"
+%token StatisticsFilterKeyword   "StatisticsFilter"
+%token StartAutomaticallyKeyword "StartAutomatically"
+%token NetLineTimesKeyword       "NetLineTimes"
+%token NetFunctionTimesKeyword   "NetFunctionTimes"
+%token ProfilerStatsFlag        "profiler statistics flag"
 
 %type <int_val> IntegerValue
 %type <float_val> FloatValue KillTimerValue
@@ -706,6 +711,10 @@ ProfilerSetting:
 | AggregateDataSetting
 | StatisticsFileSetting
 | DisableStatisticsSetting
+| StatisticsFilterSetting
+| StartAutomaticallySetting
+| NetLineTimesSetting
+| NetFunctionTimesSetting
 ;
 
 DisableProfilerSetting:
@@ -730,6 +739,29 @@ StatisticsFileSetting:
 
 DisableStatisticsSetting:
   DisableStatisticsKeyword AssignmentChar BooleanValue
+;
+
+StatisticsFilterSetting:
+  StatisticsFilterKeyword AssignmentChar ProfilerStatsFlags
+| StatisticsFilterKeyword ConcatChar ProfilerStatsFlags
+;
+
+ProfilerStatsFlags:
+  ProfilerStatsFlag
+| ProfilerStatsFlag '&' ProfilerStatsFlags
+| ProfilerStatsFlag '|' ProfilerStatsFlags
+;
+
+StartAutomaticallySetting:
+  StartAutomaticallyKeyword AssignmentChar BooleanValue
+;
+
+NetLineTimesSetting:
+  NetLineTimesKeyword AssignmentChar BooleanValue
+;
+
+NetFunctionTimesSetting:
+  NetFunctionTimesKeyword AssignmentChar BooleanValue
 ;
 
 /******************* [TESTPORT_PARAMETERS] section *******************/

@@ -124,21 +124,31 @@ void COMPONENT::kill() const
 
 void COMPONENT::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "component reference (integer or null) value");
-  switch (param.get_type()) {
-  case Module_Param::MP_Integer:
-    component_value = (component)param.get_integer()->get_val();
-    break;
-  case Module_Param::MP_Ttcn_Null:
+  if (Ttcn_String_Parsing::happening()) {
+    // accept all component values in case it's a string2ttcn operation
+    switch (param.get_type()) {
+    case Module_Param::MP_Integer:
+      component_value = (component)param.get_integer()->get_val();
+      break;
+    case Module_Param::MP_Ttcn_Null:
+      component_value = NULL_COMPREF;
+      break;
+    case Module_Param::MP_Ttcn_mtc:
+      component_value = MTC_COMPREF;
+      break;
+    case Module_Param::MP_Ttcn_system:
+      component_value = SYSTEM_COMPREF;
+      break;
+    default:
+      param.type_error("component reference (integer or null) value");
+    }
+  }
+  else {
+    // only accept the null value if it's a module parameter
+    if (Module_Param::MP_Ttcn_Null != param.get_type()) {
+      param.error("Only the 'null' value is allowed for module parameters of type 'component'.");
+    }
     component_value = NULL_COMPREF;
-    break;
-  case Module_Param::MP_Ttcn_mtc:
-    component_value = MTC_COMPREF;
-    break;
-  case Module_Param::MP_Ttcn_system:
-    component_value = SYSTEM_COMPREF;
-    break;
-  default:
-    param.type_error("component reference (integer or null) value");
   }
 }
 

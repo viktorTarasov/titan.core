@@ -78,7 +78,7 @@ proc _compiler {message} {
 
 }
 
-proc _executor {message coverage_args rt_2} {
+proc _executor {message coverage_args} {
 	global sh_id
 
 	if {![file exists Makefile]} {
@@ -162,12 +162,11 @@ set tc_counter 0
 set err_counter 0
 set errpostfix "_error"
 set coverage_args ""
-set rt_2 ""
 set start_date [exec date +"%H:%M:%S"]
 
 if {[lindex $argv 0] == "-coverage"} {set argv [lrange $argv 1 end]; set coverage_args "COVERAGE=1"; puts "Coverage mode enabled!"}
 # RT2 comes after coverage
-if {[lindex $argv 0] == "-rt2"}      {set argv [lrange $argv 1 end]; set rt_2 "RT2=2"; puts "Function-test runtime enabled!"}
+if {[lindex $argv 0] == "-rt2"}      {set argv [lrange $argv 1 end]; set env(RT2) yes; puts "Function-test runtime enabled!"}
 
 set errorfilename $argv$errpostfix
 
@@ -249,9 +248,9 @@ while {$i <= $tc_counter} {
 	}
 
 	if {([string length $result_mess] > 3)&&($tc_state != "execute")&&($tc_state != "pure_execute")} {_compiler $result_mess}
-	if {([string length $Line] > 3)&&($tc_state == "execute")} {_executor $result_mess $coverage_args $rt_2}
+	if {([string length $Line] > 3)&&($tc_state == "execute")} {_executor $result_mess $coverage_args}
 	if {([string length $Line] > 3)&&($tc_state == "pure_execute")} {
-		_executor $result_mess $coverage_args $rt_2
+		_executor $result_mess $coverage_args
 	}
 
 	incr i

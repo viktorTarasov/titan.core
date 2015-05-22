@@ -12,9 +12,13 @@ include $(TOP)/Makefile.cfg
 SCHEMAS := TitanLoggerApi.xsd
 # Generated from `TitanLoggerApi.xsd'.
 GENERATED_MODULES := TitanLoggerApi.ttcn
+	
+PREGENERATOR_MODULES := PreGenRecordOf.ttcn
 
 GENERATED_LOGGERAPI_SOURCES := $(GENERATED_MODULES:.ttcn=.cc)
 GENERATED_LOGGERCONTROL_SOURCES := TitanLoggerControl.cc
+	
+PREGENERATED_SOURCES := $(PREGENERATOR_MODULES:.ttcn=.cc)
 
 ORIGINATORS := TitanLoggerApi.xsd TitanLoggerApi.ttcn TitanLoggerControl.ttcn gccversion.c \
 config_process.l config_process.y
@@ -33,12 +37,14 @@ endif
 # These directories (RT1/RT2) are replicated inside $(INCDIR)
 GENERATED_LOGGERAPI_SOURCES     := $(addprefix $(APIDIR)/,$(GENERATED_LOGGERAPI_SOURCES))
 GENERATED_LOGGERCONTROL_SOURCES := $(addprefix $(APIDIR)/,$(GENERATED_LOGGERCONTROL_SOURCES))
+PREGENERATED_SOURCES		:= $(addprefix $(APIDIR)/,$(PREGENERATED_SOURCES))
 
 GENERATED_SOURCES := $(GENERATED_LOGGERAPI_SOURCES)          $(GENERATED_LOGGERCONTROL_SOURCES)         config_process.lex.cc config_process.tab.cc
+GENERATED_SOURCES += $(PREGENERATED_SOURCES)
 GENERATED_HEADERS := $(GENERATED_LOGGERAPI_SOURCES:.cc=.hh)  $(GENERATED_LOGGERCONTROL_SOURCES:.cc=.hh) config_process.tab.hh config_process.lex.hh
-GENERATED_HEADERS += $(GENERATED_LOGGERAPI_SOURCES:.cc=Simple.hh)
+GENERATED_HEADERS += $(GENERATED_LOGGERAPI_SOURCES:.cc=Simple.hh) $(PREGENERATED_SOURCES:.cc=.hh)
 GENERATED_OTHERS  := $(GENERATED_LOGGERAPI_SOURCES).compiled $(GENERATED_LOGGERCONTROL_SOURCES).compiled
-GENERATED_OTHERS  += config_process.output lex.backup
+GENERATED_OTHERS  += $(PREGENERATED_SOURCES).compiled config_process.output lex.backup
 
 TTCN_COMPILER_FLAGS :=
 ifeq ($(FUNCTION_TEST_RUNTIME), yes)
@@ -157,7 +163,7 @@ Port.hh Event_Handler.hh Struct_of.hh Array.hh Optional.hh Textbuf.hh Encdec.hh 
 Module_list.hh Parameters.h Addfunc.hh RAW.hh BER.hh TEXT.hh ASN_Null.hh \
 ASN_Any.hh ASN_External.hh ASN_EmbeddedPDV.hh ASN_CharacterString.hh XER.hh \
 XmlReader.hh cversion.h TitanLoggerControl.ttcn TitanLoggerApi.xsd Vector.hh \
-JSON.hh Profiler.hh
+JSON.hh Profiler.hh RefdIndex.hh
 # Copied during "make install"
 
 ifdef REGEX_DIR
@@ -257,6 +263,7 @@ endif
 endif
 	mkdir -p $(INCDIR)/$(APIDIR)
 	cp $(APIDIR)/TitanLoggerApi*.hh $(INCDIR)/$(APIDIR)
+	cp $(APIDIR)/PreGenRecordOf.hh $(INCDIR)/$(APIDIR)
 
 # # # # executables
 single$(RT2_SUFFIX)$(EXESUFFIX): $(LIBRARY)
@@ -349,6 +356,17 @@ $(GENERATED_LOGGERCONTROL_SOURCES).compiled:: ../compiler2/compiler$(EXESUFFIX)
 $(GENERATED_LOGGERCONTROL_SOURCES).compiled:: TitanLoggerControl.ttcn
 	mkdir -p $(APIDIR)
 	../compiler2/compiler$(EXESUFFIX) $(TTCN_COMPILER_FLAGS) $^ - $?
+	touch $@
+	
+$(PREGENERATED_SOURCES): $(PREGENERATED_SOURCES).compiled
+	@if [ ! -f $@ ]; then $(RM) $<; $(MAKE) $<; fi
+
+$(PREGENERATED_SOURCES).compiled:: ../compiler2/compiler$(EXESUFFIX)
+	@if [ -f $@ ]; then $(RM) $@; $(MAKE) $@; fi
+
+$(PREGENERATED_SOURCES).compiled:: $(PREGENERATOR_MODULES)
+	mkdir -p $(APIDIR)
+	../compiler2/compiler$(EXESUFFIX) -F $(TTCN_COMPILER_FLAGS) $^ - $?
 	touch $@
 
 include ../Makefile.genrules

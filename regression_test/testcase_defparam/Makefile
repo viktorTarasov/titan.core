@@ -32,7 +32,7 @@ CXXDEPFLAGS = -MM
 CXXFLAGS += -g
 
 # Flags for the linker:
-LDFLAGS += -g -rdynamic
+#LDFLAGS += -g -rdynamic
 
 
 # Flags for the TTCN-3 and ASN.1 compiler:

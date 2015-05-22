@@ -1,0 +1,84 @@
+##################################################
+######### TTCN-3 code coverage statistics ########
+##################################################
+
+
+--------------------------------------
+- Number of code lines and functions -
+--------------------------------------
+prof1.ttcn:	10 lines,	3 functions
+prof2.ttcn:	13 lines,	4 functions
+prof3.ttcn:	13 lines,	3 functions
+--------------------------------------
+Total:	36 lines,	10 functions
+
+-------------------------------------------------
+-------- Code line data (execution count) -------
+-------------------------------------------------
+3	prof1.ttcn:13
+3	prof1.ttcn:15 [f1]
+3	prof1.ttcn:16
+1	prof1.ttcn:19 [tc1]
+1	prof1.ttcn:20
+1	prof1.ttcn:21
+1	prof1.ttcn:22
+1	prof1.ttcn:23
+-------------------------------------------------
+2	prof2.ttcn:13 [f2]
+2	prof2.ttcn:14
+2	prof2.ttcn:18
+1	prof2.ttcn:22 [t1]
+1	prof2.ttcn:24 [tc2]
+1	prof2.ttcn:25
+1	prof2.ttcn:26
+1	prof2.ttcn:27
+1	prof2.ttcn:28
+1	prof2.ttcn:29
+-------------------------------------------------
+1	prof3.ttcn:14 [f3]
+1	prof3.ttcn:16
+1	prof3.ttcn:17
+1	prof3.ttcn:18
+1	prof3.ttcn:21 [tc3]
+1	prof3.ttcn:23
+1	prof3.ttcn:24
+1	prof3.ttcn:25
+1	prof3.ttcn:26
+1	prof3.ttcn:27
+1	prof3.ttcn:28
+1	prof3.ttcn:31 [control]
+1	prof3.ttcn:32
+
+------------------------------------------------
+-------- Function data (execution count) -------
+------------------------------------------------
+3	prof1.ttcn:15 [f1]
+1	prof1.ttcn:19 [tc1]
+------------------------------------------------
+2	prof2.ttcn:13 [f2]
+1	prof2.ttcn:22 [t1]
+1	prof2.ttcn:24 [tc2]
+------------------------------------------------
+1	prof3.ttcn:14 [f3]
+1	prof3.ttcn:21 [tc3]
+1	prof3.ttcn:31 [control]
+
+---------------------
+- Unused code lines -
+---------------------
+prof1.ttcn:26 [control]
+prof1.ttcn:27
+---------------------
+prof2.ttcn:15
+prof2.ttcn:32 [control]
+prof2.ttcn:33
+---------------------
+
+--------------------
+- Unused functions -
+--------------------
+prof1.ttcn:26 [control]
+--------------------
+prof2.ttcn:32 [control]
+--------------------
+

@@ -18,6 +18,7 @@
 #include "Value.hh"
 #include "Int.hh"
 #include "main.hh"
+#include "ttcn3/profiler.h"
 
 namespace Common {
 
@@ -232,11 +233,20 @@ namespace Common {
             mputprintf(effective_module_functions, "%s\"%s\"",
             		   (effective_module_functions ? ", " : ""), entityname);
       }
-      if (profiler_enabled) {
+      if (is_file_profiled(filename)) {
+        // .ttcnpp -> .ttcn
+        size_t file_name_len = strlen(filename);
+        if ('p' == filename[file_name_len - 1] && 'p' == filename[file_name_len - 2]) {
+          file_name_len -= 2;
+        }
+        char* file_name2 = mcopystrn(filename, file_name_len);
         str = mputprintf(str,
           "TTCN3_Stack_Depth stack_depth;\n"
-          "ttcn3_prof.enter_function(\"%s\", %d, \"%s\");\n",
-          filename, yyloc.first_line, entityname);
+          "ttcn3_prof.enter_function(\"%s\", %d);\n", file_name2, yyloc.first_line);
+        insert_profiler_code_line(file_name2, 
+          (0 == strcmp(entitytype, "CONTROLPART") ? "control" : entityname),
+          yyloc.first_line);
+        Free(file_name2);
       }
     }
     return str;
@@ -248,11 +258,20 @@ namespace Common {
       if (include_location_info && !transparency) {
         str = mputprintf(str, "current_location.update_lineno(%d);\n",
                          yyloc.first_line);
-        if (profiler_enabled) {
+        const char* file_name = get_filename();
+        if (is_file_profiled(file_name)) {
+          // .ttcnpp -> .ttcn
+          size_t file_name_len = strlen(file_name);
+          if ('p' == file_name[file_name_len - 1] && 'p' == file_name[file_name_len - 2]) {
+            file_name_len -= 2;
+          }
+          char* file_name2 = mcopystrn(file_name, file_name_len);
           str = mputprintf(str, "ttcn3_prof.execute_line(\"%s\", %d);\n",
-                  get_filename(), yyloc.first_line);
+                  file_name2, yyloc.first_line);
+          insert_profiler_code_line(file_name2, NULL, yyloc.first_line);
+          Free(file_name2);
         }
-        if (tcov_file_name && in_tcov_files(get_filename())) {
+        if (tcov_file_name && in_tcov_files(file_name)) {
             effective_module_lines =
               mputprintf(effective_module_lines, "%s%d",
               		   (effective_module_lines ? ", " : ""), yyloc.first_line);

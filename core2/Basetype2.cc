@@ -856,7 +856,7 @@ int Record_Of_Type::TEXT_encode(const TTCN_Typedescriptor_t& p_td,
     }
     return encoded_length;
   }
-  const TTCN_Typedescriptor_t* elem_descr = get_elem_descr();
+  const TTCN_Typedescriptor_t* elem_descr = p_td.oftype_descr;
   for(int a=0;a<get_nof_elements();a++) {
     if(a!=0 && p_td.text->separator_encode) {
       buff.put_cs(*p_td.text->separator_encode);
@@ -942,9 +942,9 @@ int Record_Of_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_desc
       }
       if (emb_descr) {
         encoded_length += get_at(a)->TEXT_encode_negtest(
-          emb_descr,*get_elem_descr(),buff);
+          emb_descr,*p_td.oftype_descr,buff);
       } else {
-        encoded_length += get_at(a)->TEXT_encode(*get_elem_descr(),buff);
+        encoded_length += get_at(a)->TEXT_encode(*p_td.oftype_descr,buff);
       }
       need_separator=true;
     }
@@ -1012,7 +1012,7 @@ int Record_Of_Type::TEXT_decode(const TTCN_Typedescriptor_t& p_td,
   while(TRUE){
     Base_Type* val = create_elem();
     pos=buff.get_pos();
-    int len = val->TEXT_decode(*get_elem_descr(),buff,limit,TRUE);
+    int len = val->TEXT_decode(*p_td.oftype_descr,buff,limit,TRUE);
     if(len==-1 || (len==0 && !limit.has_token())){
       buff.set_pos(pos);
       delete val;
@@ -1103,7 +1103,7 @@ ASN_BER_TLV_t* Record_Of_Type::BER_encode_TLV(const TTCN_Typedescriptor_t& p_td,
     TTCN_EncDec_ErrorContext ec;
     for(int elem_i=0; elem_i<get_nof_elements(); elem_i++) {
       ec.set_msg("Component #%d: ", elem_i);
-      new_tlv->add_TLV(get_at(elem_i)->BER_encode_TLV(*get_elem_descr(), p_coding));
+      new_tlv->add_TLV(get_at(elem_i)->BER_encode_TLV(*p_td.oftype_descr, p_coding));
     }
     if (is_set()) new_tlv->sort_tlvs();
   }
@@ -1156,10 +1156,10 @@ ASN_BER_TLV_t* Record_Of_Type::BER_encode_TLV_negtest(const Erroneous_descriptor
         ec.set_msg("Component #%d: ", elem_i);
         if (emb_descr) {
           new_tlv->add_TLV(get_at(elem_i)->BER_encode_TLV_negtest(
-            emb_descr, *get_elem_descr(), p_coding));
+            emb_descr, *p_td.oftype_descr, p_coding));
         } else {
           new_tlv->add_TLV(get_at(elem_i)->BER_encode_TLV(
-            *get_elem_descr(), p_coding));
+            *p_td.oftype_descr, p_coding));
         }
       }
 
@@ -1199,7 +1199,7 @@ boolean Record_Of_Type::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
   TTCN_EncDec_ErrorContext ec_1("Component #");
   TTCN_EncDec_ErrorContext ec_2("0: ");
   while(BER_decode_constdTLV_next(stripped_tlv, V_pos, L_form, tmp_tlv)) {
-    get_at(get_nof_elements())->BER_decode_TLV(*get_elem_descr(), tmp_tlv, L_form);
+    get_at(get_nof_elements())->BER_decode_TLV(*p_td.oftype_descr, tmp_tlv, L_form);
     ec_2.set_msg("%d: ", val_ptr->n_elements);
   }
   return TRUE;
@@ -1232,7 +1232,7 @@ int Record_Of_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
     set_size(0);
   }
   int start_field = get_nof_elements(); // append at the end
-  TTCN_Typedescriptor_t const& elem_descr = *get_elem_descr();
+  TTCN_Typedescriptor_t const& elem_descr = *p_td.oftype_descr;
   if (p_td.raw->fieldlength || sel_field != -1) {
     if (sel_field == -1) sel_field = p_td.raw->fieldlength;
     for (int a = 0; a < sel_field; a++) {
@@ -1250,7 +1250,6 @@ int Record_Of_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
       if (!first_call) return -1;
       goto finished;
     }
-    int ext_bit = rawdec_ebv();
     while (limit > 0) {
       start_of_field = buff.get_pos_bit();
       Base_Type* field_bt = get_at(a); // non-const, extend the record-of
@@ -1267,12 +1266,11 @@ int Record_Of_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
       decoded_length += decoded_field_length;
       limit -= decoded_field_length;
       a++;
-      if (ext_bit != 1/*XDEFNO*/&& ext_bit != -1/*XDEFDEFAULT*/) {
-        // ext_bit here may be 2 (XDEFYES) or 3 (XDEFREVERSE).
-        // (ext_bit != 2) is   0           or 1
+      if (EXT_BIT_NO != p_td.raw->extension_bit) {
+        // (EXT_BIT_YES != p_td.raw->extension_bit) is 0 or 1
         // This is the opposite value of what the bit needs to be to signal
         // the end of decoding, because x-or is the equivalent of !=
-        if ((ext_bit != 2/*XDEFYES*/) ^ buff.get_last_bit()) {
+        if ((EXT_BIT_YES != p_td.raw->extension_bit) ^ buff.get_last_bit()) {
           goto finished;
         }
       }
@@ -1294,7 +1292,7 @@ int Record_Of_Type::RAW_encode(const TTCN_Typedescriptor_t& p_td, RAW_enc_tree& 
   myleaf.rec_of = TRUE;
   myleaf.body.node.num_of_nodes = encoded_num_of_records;
   myleaf.body.node.nodes = init_nodes_of_enc_tree(encoded_num_of_records);
-  TTCN_Typedescriptor_t const& elem_descr = *get_elem_descr();
+  TTCN_Typedescriptor_t const& elem_descr = *p_td.oftype_descr;
   for (int a = 0; a < encoded_num_of_records; a++) {
     const Base_Type *field_bt = get_at(a);
     myleaf.body.node.nodes[a] = new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos), a, elem_descr.raw);
@@ -1345,7 +1343,7 @@ int Record_Of_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr
       continue;
     const Erroneous_values_t *err_vals = p_err_descr->next_field_err_values(i, values_idx);
     const Erroneous_descriptor_t *emb_descr = p_err_descr->next_field_emb_descr(i, edescr_idx);
-    TTCN_Typedescriptor_t const& elem_descr = *get_elem_descr();
+    TTCN_Typedescriptor_t const& elem_descr = *p_td.oftype_descr;
     if (err_vals && err_vals->before) {
       if (err_vals->before->errval == NULL)
         TTCN_error("internal error: erroneous before value missing");
@@ -1388,11 +1386,11 @@ int Record_Of_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr
         myleaf.body.node.nodes[node_pos] = new RAW_enc_tree(TRUE, &myleaf,
           &(myleaf.curr_pos), node_pos, elem_descr.raw);
         encoded_length += get_at(i)->RAW_encode_negtest(emb_descr, 
-          *get_elem_descr(), *myleaf.body.node.nodes[node_pos++]);
+          *p_td.oftype_descr, *myleaf.body.node.nodes[node_pos++]);
       } else {
         myleaf.body.node.nodes[node_pos] = new RAW_enc_tree(TRUE, &myleaf,
           &(myleaf.curr_pos), node_pos, elem_descr.raw);
-        encoded_length += get_at(i)->RAW_encode(*get_elem_descr(), 
+        encoded_length += get_at(i)->RAW_encode(*p_td.oftype_descr, 
           *myleaf.body.node.nodes[node_pos++]);
       }
     }
@@ -1421,7 +1419,7 @@ int Record_Of_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr
   return myleaf.length = encoded_length;
 }
 
-int Record_Of_Type::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) const
+int Record_Of_Type::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok) const
 {
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
@@ -1432,7 +1430,7 @@ int Record_Of_Type::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_
   int enc_len = p_tok.put_next_token(JSON_TOKEN_ARRAY_START, NULL);
   
   for(int i = 0; i < get_nof_elements(); ++i) {
-    int ret_val = get_at(i)->JSON_encode(*get_elem_descr(), p_tok);
+    int ret_val = get_at(i)->JSON_encode(*p_td.oftype_descr, p_tok);
     if (0 > ret_val) break;
     enc_len += ret_val;
   }
@@ -1458,7 +1456,7 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
     // Read value tokens until we reach some other token
     size_t buf_pos = p_tok.get_buf_pos();
     Base_Type* val = create_elem();
-    int ret_val = val->JSON_decode(*get_elem_descr(), p_tok, p_silent);
+    int ret_val = val->JSON_decode(*p_td.oftype_descr, p_tok, p_silent);
     if (JSON_ERROR_INVALID_TOKEN == ret_val) {
       // undo the last action on the buffer
       p_tok.set_buf_pos(buf_pos);
@@ -1634,7 +1632,7 @@ char **Record_Of_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool
     if (val_ptr) for (int i = 0; i < get_nof_elements(); ++i) {
       size_t num_new = 0;
       char **new_namespaces = get_at(i)->collect_ns(
-        *get_elem_descr()->xer, num_new, def_ns_1);
+        *p_td.oftype_descr, num_new, def_ns_1);
       merge_ns(collected_ns, num_collected, new_namespaces, num_new);
       def_ns = def_ns || def_ns_1; // alas, no ||=
     }
@@ -1786,6 +1784,8 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   }
   else { // not ANY-ATTRIBUTES
     unsigned int sub_flavor = flavor | XER_RECOF | (p_td.xer_bits & (XER_LIST));
+    TTCN_EncDec_ErrorContext ec_0("Index ");
+    TTCN_EncDec_ErrorContext ec_1;
 
     for (int i = 0; i < nof_elements; ++i) {
       if (i > 0 && !own_tag && 0 != emb_val &&
@@ -1794,8 +1794,9 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
           UNIVERSAL_CHARSTRING_xer_, p_buf, flavor | EMBED_VALUES, indent+1, 0);
         ++emb_val->embval_index;
       }
+      ec_1.set_msg("%d: ", i);
       if (exer && (p_td.xer_bits & XER_LIST) && i>0) p_buf.put_c(' ');
-      get_at(i)->XER_encode(*get_elem_descr()->xer, p_buf,
+      get_at(i)->XER_encode(*p_td.oftype_descr, p_buf,
         sub_flavor, indent+own_tag, emb_val);
     }
 
@@ -1824,7 +1825,7 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
  * @param indent indentation level
  * @return number of bytes generated
  */
-int Record_Of_Type::encode_element(int i,
+int Record_Of_Type::encode_element(int i, const XERdescriptor_t& p_td,
   const Erroneous_values_t* ev, const Erroneous_descriptor_t* ed,
   TTCN_Buffer& p_buf, unsigned int sub_flavor, int indent, embed_values_enc_struct_t* emb_val) const
 {
@@ -1869,10 +1870,10 @@ int Record_Of_Type::encode_element(int i,
   } else {
     ec.set_msg("Component #%d: ", i);
     if (ed) {
-      get_at(i)->XER_encode_negtest(ed, *get_elem_descr()->xer, p_buf, sub_flavor, indent, emb_val);
+      get_at(i)->XER_encode_negtest(ed, p_td, p_buf, sub_flavor, indent, emb_val);
     } else {
       // the "real" encoder
-      get_at(i)->XER_encode(*get_elem_descr()->xer, p_buf, sub_flavor, indent, emb_val);
+      get_at(i)->XER_encode(p_td, p_buf, sub_flavor, indent, emb_val);
     }
   }
 
@@ -2069,8 +2070,8 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
           ev0_i = emb_val->embval_err->next_field_err_values(emb_val->embval_index, emb_val->embval_err_val_idx);
           ed0_i = emb_val->embval_err->next_field_emb_descr (emb_val->embval_index, emb_val->embval_err_descr_idx);
         }
-        emb_val->embval_array->encode_element(emb_val->embval_index, ev0_i, ed0_i,
-          p_buf, flavor | EMBED_VALUES, indent + own_tag, 0);
+        emb_val->embval_array->encode_element(emb_val->embval_index, UNIVERSAL_CHARSTRING_xer_,
+          ev0_i, ed0_i, p_buf, flavor | EMBED_VALUES, indent + own_tag, 0);
         ++emb_val->embval_index;
       }
 
@@ -2079,7 +2080,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
       const Erroneous_descriptor_t* emb_descr =
         p_err_descr->next_field_emb_descr (i, edescr_idx);
 
-      encode_element(i, err_vals, emb_descr, p_buf, sub_flavor, indent+own_tag, emb_val);
+      encode_element(i, *p_td.oftype_descr, err_vals, emb_descr, p_buf, sub_flavor, indent+own_tag, emb_val);
 
       // omit_after value -1 becomes "very big"
       if ((unsigned int)i >= (unsigned int)p_err_descr->omit_after) break;
@@ -2146,7 +2147,7 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
       pos += strlen(str) + 1;
       // Construct a new XML Reader with the current token.
       TTCN_Buffer buf2;
-      const XERdescriptor_t& sub_xer = *get_elem_descr()->xer;
+      const XERdescriptor_t& sub_xer = *p_td.oftype_descr;
       buf2.put_c('<');
       write_ns_prefix(sub_xer, buf2);
 
@@ -2233,7 +2234,7 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
              * belong to the embedded type, the record-of has already ended. */
             if (!own_tag && !can_start_v(
               (const char*)reader.LocalName(), (const char*)reader.NamespaceUri(),
-              *get_elem_descr()->xer, flavor | UNTAGGED))
+              p_td, flavor | UNTAGGED))
             {
               for (; success == 1 && reader.Depth() > depth; success = reader.Read()) ;
               // We should now be back at the same depth as we started.
@@ -2241,7 +2242,7 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
             }
             ec_1.set_msg("%d: ", get_nof_elements());
             /* The call to the non-const get_at() creates the element */
-            get_at(get_nof_elements())->XER_decode(*get_elem_descr()->xer, reader, flavor, emb_val);
+            get_at(get_nof_elements())->XER_decode(*p_td.oftype_descr, reader, flavor, emb_val);
             if (0 != emb_val && !own_tag && get_nof_elements() > 1) {
               ++emb_val->embval_index;
             }
@@ -4690,8 +4691,8 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
           ev0_0 = ed0->next_field_err_values(0, embed_values_val_idx);
           ed0_0 = ed0->next_field_emb_descr (0, embed_values_descr_idx);
         }
-        sub_len += embed_values->encode_element(0, ev0_0, ed0_0,
-          p_buf, flavor | EMBED_VALUES, indent+!omit_tag, 0);
+        sub_len += embed_values->encode_element(0, UNIVERSAL_CHARSTRING_xer_,
+          ev0_0, ed0_0, p_buf, flavor | EMBED_VALUES, indent+!omit_tag, 0);
       }
     }
 
@@ -4844,8 +4845,8 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
             ev0_i = ed0->next_field_err_values(emb_val->embval_index, emb_val->embval_err_val_idx);
             ed0_i = ed0->next_field_emb_descr (emb_val->embval_index, emb_val->embval_err_descr_idx);
           }
-          embed_values->encode_element(emb_val->embval_index, ev0_i, ed0_i,
-            p_buf, flavor | EMBED_VALUES, indent + !omit_tag, 0);
+          embed_values->encode_element(emb_val->embval_index, UNIVERSAL_CHARSTRING_xer_,
+            ev0_i, ed0_i, p_buf, flavor | EMBED_VALUES, indent + !omit_tag, 0);
           ++emb_val->embval_index;
         }
       } //for

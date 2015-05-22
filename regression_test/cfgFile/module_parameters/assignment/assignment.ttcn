@@ -173,10 +173,10 @@ modulepar anytype tsp_anytype_float;
 modulepar anytype tsp_anytype_MyRec;
 
 // Component
-//modulepar MyComp_CT tsp_component_null; // modulepar cannot be of type component 
+modulepar MyComp_CT tsp_component_null;
 
 // Default
-//modulepar default tsp_default; // modulepar cannot be of type default 
+modulepar default tsp_default;
 
 // Nested array, record of & set of
 modulepar NestedRec tsp_nested := { { 1, 2, 3 }, { 1, 2, 3 } };
@@ -496,6 +496,16 @@ testcase tc_anytype() runs on MyComp_CT {
   else { setverdict(fail, "tsp_anytype_MyRec");}
 }
 
+testcase tc_component() runs on MyComp_CT {
+  if (tsp_component_null == null) { setverdict(pass); }
+  else { setverdict(fail, "tsp_component_null");}
+}
+
+testcase tc_default() runs on MyComp_CT {
+  if (tsp_default == null) { setverdict(pass); }
+  else { setverdict(fail, "tsp_default");}
+}
+
 testcase tc_nested() runs on MyComp_CT {
   if (tsp_nested == { { 4, 5, 9 }, { 6, 7, 8 } }) { setverdict(pass); }
   else { setverdict(fail, "tsp_nested = ", tsp_nested); }
@@ -558,6 +568,8 @@ control {
   execute(tc_set_of());
   execute(tc_anytype());
   execute(tc_array());
+  execute(tc_component());
+  execute(tc_default());
   execute(tc_nested());
   execute(tc_nested_templ());
 }

@@ -22,6 +22,9 @@
 #include "Encdec.hh"
 #include "TitanLoggerApi.hh"
 #include "TCov.hh"
+#ifdef LINUX
+#include <execinfo.h>
+#endif  
 
 #ifdef LICENSE
 #include "../common/license.h"
@@ -32,15 +35,29 @@
 const char * stored_argv = "Unidentified program";
 
 static const char segfault[] = ": Segmentation fault occurred\n";
+static const char abortcall[] = ": Abort was called\n";
 
-void signal_handler(int)
+void signal_handler(int signum)
 {
   int retval;
   retval = write(STDERR_FILENO, stored_argv, strlen(stored_argv));
+  if(signum==SIGSEGV){
   retval = write(STDERR_FILENO, segfault , sizeof(segfault)-1); // sizeof includes \0
+  } else {
+  retval = write(STDERR_FILENO, abortcall , sizeof(abortcall)-1); // sizeof includes \0
+  }
+#ifdef LINUX
+  int nptrs;
+  void *buffer[100];
+  nptrs = backtrace(buffer, 100);
+  backtrace_symbols_fd(buffer, nptrs, STDERR_FILENO);
+  
+  fflush(stderr);
+#endif
   (void)retval;
   TTCN_Logger::close_file();
 
+  signal(SIGABRT, SIG_DFL);
   abort();
 }
 
@@ -65,6 +82,7 @@ int main(int argc, char *argv[])
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
   sigaction(SIGSEGV, &act, 0);
+  sigaction(SIGABRT, &act, 0);
 
 #ifdef MEMORY_DEBUG
   debug_new_counter.set_program_name(argv[0]);

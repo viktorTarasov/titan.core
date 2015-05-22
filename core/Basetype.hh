@@ -12,10 +12,11 @@
 #include "Encdec.hh"
 #include "RInt.hh"
 #include "JSON_Tokenizer.hh"
-#include "Vector.hh"
 #ifdef TITAN_RUNTIME_2
 #include "Struct_of.hh"
 #include "XER.hh"
+#include "Vector.hh"
+#include "RefdIndex.hh"
 #endif
 
 struct ASN_BERdescriptor_t;
@@ -43,6 +44,7 @@ struct TTCN_Typedescriptor_t {
   const TTCN_TEXTdescriptor_t * const text; /**< Information for TEXT coding */
   const XERdescriptor_t * const xer; /**< Information for XER */
   const TTCN_JSONdescriptor_t * const json; /**< Information for JSON coding */
+  const TTCN_Typedescriptor_t * const oftype_descr; /**< Record-of element's type descriptor */
   /** ASN subtype
    *
    *  Used by classes implementing more than one ASN.1 type
@@ -642,7 +644,7 @@ class INTEGER;
  *
  */
 // Record_Of_Template can be found in Template.hh
-class Record_Of_Type : public Base_Type
+class Record_Of_Type : public Base_Type, public RefdIndexInterface
 {
   friend class Set_Of_Template;
   friend class Record_Of_Template;
@@ -776,7 +778,7 @@ public:
   virtual int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
     const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned flavor, int indent, embed_values_enc_struct_t*) const;
   /// Helper for XER_encode_negtest
-  int encode_element(int i, const Erroneous_values_t* err_vals,
+  int encode_element(int i, const XERdescriptor_t& p_td, const Erroneous_values_t* err_vals,
     const Erroneous_descriptor_t* emb_descr,
     TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val) const;
   virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int, embed_values_dec_struct_t*);
@@ -794,8 +796,6 @@ public:
   /** @returns \c true  if this is a set-of type,
    *           \c false if this is a record-of type */
   virtual boolean is_set() const = 0;
-  /** return the type descriptor of the element */
-  virtual const TTCN_Typedescriptor_t* get_elem_descr() const = 0;
   /** creates an instance of the record's element class, using the default constructor */
   virtual Base_Type* create_elem() const = 0;
 
@@ -812,12 +812,12 @@ public:
   /** Indicates that the element at the given index is referenced by an 'out' or
     * 'inout' parameter and must not be deleted.
     * Used just before the actual function call that references the element. */
-  void add_refd_index(int index);
+  virtual void add_refd_index(int index);
   
   /** Indicates that the element at the given index is no longer referenced by
     * an 'out' or 'inout' parameter.
     * Used immediately after the actual function call that referenced the element. */
-  void remove_refd_index(int index);
+  virtual void remove_refd_index(int index);
 };
 
 extern boolean operator==(null_type null_value,

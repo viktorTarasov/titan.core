@@ -14,9 +14,9 @@
 
 .* Document header information
 :docname.Test Description
-:docno.
+:docno.20/15291-CRL200/5 Uen
 :rev.
-:date.2005.01.31.
+:date.2015-04-27
 
 :prep.ETH/RZD Endre Szalai (+36 1 437 7796)
 :appr.
@@ -33,7 +33,7 @@
 :xmp tab=2.
 REV   DATE         PREPARED   CHANGE
 __________________________________________________
--     2005-01-31   ETHESI     New document for TITAN R6
+-     2005-01-31   ETHESI     New document for TITAN R1.6
 :exmp.
 .*---------------------------------------------------------------------*
 :h2.Purpose

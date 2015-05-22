@@ -235,7 +235,10 @@ namespace Ttcn {
       /* control statement */
       S_TESTCASE_INSTANCE, // testcase_inst
       S_TESTCASE_INSTANCE_REFD, //execute_refd
-      S_STRING2TTCN // str2ttcn
+      S_STRING2TTCN, // str2ttcn
+      /* TTCN-3 Profiler statements */
+      S_START_PROFILER,
+      S_STOP_PROFILER
     };
 
     enum component_t {
@@ -437,8 +440,8 @@ namespace Ttcn {
     Statement& operator=(const Statement& p); ///< assignment disabled
     void clean_up();
   public:
-    /** Constructor used by S_ERROR, S_STOP_EXEC and S_REPEAT, S_BREAK and
-     *  S_CONTINUE */
+    /** Constructor used by S_ERROR, S_STOP_EXEC and S_REPEAT, S_BREAK,
+     *  S_CONTINUE, S_START_PROFILER and S_STOP_PROFILER */
     Statement(statementtype_t p_st);
     /** Constructor used by S_START_UNDEF and S_STOP_UNDEF */
     Statement(statementtype_t p_st, Ref_base *p_ref, Value *p_val);

@@ -121,6 +121,7 @@ void MainController::add_poll_fd(int fd)
 {
   if (fd < 0) return;
   epoll_event event;
+  memset(&event,0,sizeof(event));
   event.events = EPOLLIN;
   event.data.fd = fd;
   if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event) < 0)
@@ -132,6 +133,7 @@ void MainController::remove_poll_fd(int fd)
 {
   if (fd < 0) return;
   epoll_event event;
+  memset(&event,0,sizeof(event));
   event.events = EPOLLIN;
   event.data.fd = fd;
   if (epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &event) < 0)

@@ -35,9 +35,10 @@
 <p>1. <a href="#Terminating a test component">Stopping components</a></p>
 <p>2. <a href="#Starting a port">Stopping ports</a></p>
 <p>3. <a href="#timer">Stopping timers</a></p>
+<p>4. <a href="profiler.html#1">Stopping the profiler</a></p>
 </blockquote>
 <hr align="left" width="75%">
-<p>0. <a name="Terminating execution">Terminating execution</a></p>
+<h3>0. <a name="Terminating execution">Terminating execution</a></h3>
 <p>The stop statement is used to terminate test execution. Whenever a stop statement is reached, the execution of the underlying testcase is immediately terminatef. The result of execution will be
 error.
 <hr align="left" width="50%">
@@ -55,7 +56,9 @@ error.
 <hr align="left" width="50%">
 <p><a href="#Example1b">Examples:</a></p>
 <hr align="left" width="75%">
-<p>1. <a name="Terminating a test component">Stopping components</a></p>
+
+
+<h3>1. <a name="Terminating a test component">Stopping components</a></h3>
 <ul>
   <li>When used in a test case, altstep or function that are executed on a test component, the keyword terminates the relevant test component;</li>
   <li>when used in the control part of a module or in a function used by the control part of a module, it terminates the execution of the module control part.</li>
@@ -68,6 +71,7 @@ error.
   <li><a href="all.html"><b><font face="Courier New" color="#003258" size="4">all</font></b></a></li>
   <li><a href="component.html"> <b><font face="Courier New" color="#003258" size="4">component</font></b> </a></li>
   <li><a href="create.html"><b><font face="Courier New" color="#003258" size="4">create</font></b></a></li>
+  <li><a href="profiler.html"><b><font face="Courier New" color="#003258" size="4">@profiler</font></b></a></li>
 </ul>
 <hr align="left" width="50%">
 <div align="center">
@@ -99,9 +103,11 @@ error.
   </li>
 </ul>
 <hr align="left" width="50%">
-<p><a href="#Example 4:">Examples</a></p>
+<p>See <a href="#Example 4:">Examples</a></p>
 <hr align="left" width="75%">
-<p>2. <a name="Starting a port">Stopping a port</a></p>
+
+
+<h3>2. <a name="Stopping a port">Stopping a port</a></h3>
 <hr align="left" width="50%">
 <p>The keyword may be used to stop a <a href="#Example 2a">port</a>.</p>
 <ul>
@@ -141,7 +147,7 @@ error.
   </li>
 </ul>
 <hr align="left" width="75%">
-<p>3. <a name="timer">Stopping&nbsp; timers</a></p>
+<h3>3. <a name="timer">Stopping&nbsp; timers</a></h3>
 <hr align="left" width="50%">
 <p>The keyword may be used to indicate that a <a href="#timer_start">timer should stop running</a>.</p>
 <ul>
@@ -177,9 +183,9 @@ error.
   <p><i>timer_identifier</i> is the&nbsp;name used to refer to the timer. It must begin with a letter, may contain letters, numbers and underscore characters.</p>
   </li>
 </ul>
-<hr align="left" width="75%" color="#0094D2">
+<hr align="left" width="50%">
 <p>It is possible to stop a member of an <a href="#array">timer array</a>.</p>
-<hr align="left" width="50%" color="#0094D2">
+<hr align="left" width="50%">
 <div align="center">
 <center>
 <table border="0" width="90%" bgcolor="#FFB599" cellpadding="4">
@@ -198,7 +204,7 @@ error.
   <p><i>timer_identifier</i> is the&nbsp;name used to refer to the timer. It must begin with a letter, may contain letters, numbers and underscore characters.</p>
   </li>
   <li>
-  <p><i>array_index</i> points out the timer to be stoped.</p>
+  <p><i>array_index</i> points out the timer to be stopped.</p>
   </li>
 </ul>
 <p><a href="#timer_start">Examples</a></p>

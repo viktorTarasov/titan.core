@@ -8,6 +8,8 @@ compiler \- TTCN-3 and ASN.1 to C++ translator
 .IR " verb_level" " \|]"
 .RB "[\| " \-K
 .IR " file" " \|]"
+.RB "[\| " \-z
+.IR " file" " \|]"
 .RB "[\| " \-o
 .IR " dir" " \|]"
 .RB "[\| " \-P
@@ -293,6 +295,11 @@ checking
 .TP
 .B \-Y
 Enforces legacy behaviour of the "out" function parameters (see refguide).
+.TP
+.BI \-z " file"
+Enables profiling and code coverage in the selected TTCN-3 files. The
+.I file
+argument contains a list of TTCN-3 files separated by new lines. Each TTCN-3 file must be among the compiler's TTCN-3 file arguments.
 .TP
 .B \-
 The single dash character as command line argument controls the

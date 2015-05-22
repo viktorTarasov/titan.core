@@ -149,7 +149,7 @@ namespace Common {
     }
   }
 
-  Type *Type::get_stream_type(MessageEncodingType_t encoding_type)
+  Type *Type::get_stream_type(MessageEncodingType_t encoding_type, int stream_variant)
   {
     switch (encoding_type) {
     case CT_BER:
@@ -159,7 +159,11 @@ namespace Common {
     case CT_JSON:
       return get_pooltype(T_OSTR);
     case CT_TEXT:
-      return get_pooltype(T_CSTR);
+      if(stream_variant==0){
+        return get_pooltype(T_CSTR);
+      } else {
+        return get_pooltype(T_OSTR);
+      }
     default:
       FATAL_ERROR("Type::get_stream_type()");
       return 0;
@@ -3529,6 +3533,20 @@ namespace Common {
   {
     if (typetype != T_SEQOF) FATAL_ERROR("Type::is_compatible_record_of()");
     if (this == p_type) return true;
+    else if (T_SEQOF == p_type->get_type_refd_last()->typetype &&
+             is_pregenerated() && p_type->is_pregenerated() &&
+             get_ofType()->get_type_refd_last()->typetype ==
+             p_type->get_ofType()->get_type_refd_last()->typetype &&
+             (use_runtime_2 || get_optimize_attribute() == p_type->get_optimize_attribute())) {
+      // Pre-generated record-ofs of the same element type are compatible with 
+      // each other (in RT1 optimized record-ofs are not compatible with non-optimized ones)
+      if (!is_subtype_length_compatible(p_type)) {
+        p_info->set_is_erroneous(this, p_type, string("Incompatible "
+                                 "record of/SEQUENCE OF subtypes"));
+        return false;
+      }
+      return true;
+    }
     else if (!use_runtime_2 || !p_info
              || (p_info && p_info->is_strict())) return false;
     switch (p_type->typetype) {
@@ -3878,6 +3896,20 @@ namespace Common {
   {
     if (typetype != T_SETOF) FATAL_ERROR("Type::is_compatible_set_of()");
     if (this == p_type) return true;
+    else if (T_SETOF == p_type->get_type_refd_last()->typetype &&
+             is_pregenerated() && p_type->is_pregenerated() &&
+             get_ofType()->get_type_refd_last()->typetype ==
+             p_type->get_ofType()->get_type_refd_last()->typetype &&
+             (use_runtime_2 || get_optimize_attribute() == p_type->get_optimize_attribute())) {
+      // Pre-generated set-ofs of the same element type are compatible with 
+      // each other (in RT1 optimized set-ofs are not compatible with non-optimized ones)
+      if (!is_subtype_length_compatible(p_type)) {
+        p_info->set_is_erroneous(this, p_type, string("Incompatible "
+                                 "set of/SET OF subtypes"));
+        return false;
+      }
+      return true;
+    }
     else if (!use_runtime_2 || !p_info
              || (p_info && p_info->is_strict())) return false;
     Type *of_type = get_ofType();
@@ -5523,6 +5555,7 @@ end_ext:
           case T_INT:
           case T_OSTR:
           case T_CSTR:
+          case T_USTR:    // TTCN3 universal charstring
             // these basic types support TEXT encoding by default
             return true;
           default:
@@ -6832,6 +6865,50 @@ end_ext:
       ++pos;
     }
     return dispname;
+  }
+  
+  bool Type::is_pregenerated()
+  {
+    // records/sets of base types are already pre-generated, only a type alias will be generated
+    // exception: record of universal charstring with the XER coding instruction "anyElement"
+    if (!force_gen_seof && (T_SEQOF == get_type_refd_last()->typetype ||
+        T_SETOF == get_type_refd_last()->typetype) &&
+        (NULL == xerattrib || /* check for "anyElement" at the record of type */
+        NamespaceRestriction::UNUSED == xerattrib->anyElement_.type_) &&
+        (NULL == u.seof.ofType->xerattrib || /* check for "anyElement" at the element type */
+        NamespaceRestriction::UNUSED == u.seof.ofType->xerattrib->anyElement_.type_)) {
+      switch(u.seof.ofType->get_type_refd_last()->typetype) {
+      case T_BOOL:
+      case T_INT:
+      case T_INT_A:
+      case T_REAL:
+      case T_BSTR:
+      case T_BSTR_A:
+      case T_HSTR:
+      case T_OSTR:
+      case T_CSTR:
+      case T_NUMERICSTRING:
+      case T_PRINTABLESTRING:
+      case T_IA5STRING:
+      case T_VISIBLESTRING:
+      case T_UNRESTRICTEDSTRING:
+      case T_UTCTIME:
+      case T_GENERALIZEDTIME:
+      case T_USTR:
+      case T_UTF8STRING:
+      case T_TELETEXSTRING:
+      case T_VIDEOTEXSTRING:
+      case T_GRAPHICSTRING:
+      case T_GENERALSTRING:
+      case T_UNIVERSALSTRING:
+      case T_BMPSTRING:
+      case T_OBJECTDESCRIPTOR:
+        return true;
+      default:
+        return false;
+      }
+    }
+    return false;
   }
 
 } // namespace Common

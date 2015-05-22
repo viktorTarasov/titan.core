@@ -706,6 +706,7 @@ static const string anyname("anytype");
 %token TitanSpecificTryKeyword
 %token TitanSpecificCatchKeyword
 %token TitanSpecificLazyKeyword
+%token TitanSpecificProfilerKeyword
 
 /* Keywords combined with a leading dot */
 
@@ -900,7 +901,7 @@ static const string anyname("anytype");
   StartTimerStatement StopExecutionStatement StopStatement StopTCStatement
   StopTimerStatement TimeoutStatement TimerStatements TriggerStatement
   UnmapStatement VerdictStatements WhileStatement SelectCaseConstruct
-  StopTestcaseStatement String2TtcnStatement
+  StopTestcaseStatement String2TtcnStatement ProfilerStatement
 %type <statementblock> StatementBlock optElseClause FunctionStatementOrDefList
   ControlStatementOrDefList ModuleControlBody
 %type <subtypeparse> ValueOrRange
@@ -940,7 +941,7 @@ static const string anyname("anytype");
   PredefinedValue ReadTimerOp ReferOp ReferencedValue RunningOp RunningTimerOp
   SelfOp SingleExpression SingleLowerBound SystemOp TemplateOps TimerOps
   TimerValue UpperBound Value ValueofOp VerdictOps VerdictValue optReplyValue
-  optTestcaseTimerValue optToClause
+  optTestcaseTimerValue optToClause ProfilerRunningOp
 %type <values> ArrayElementExpressionList seqArrayExpressionSpec
 %type <variableentries> VariableList
 %type <variableentry> VariableEntry
@@ -1204,6 +1205,8 @@ PortType
 PredefOrIdentifier
 PredefinedOps
 PredefinedValue
+ProfilerRunningOp
+ProfilerStatement
 RaiseStatement
 Range
 ReadTimerOp
@@ -1711,12 +1714,12 @@ optRunsOnComprefOrSelf
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 24
+%expect 25
 
 %start GrammarRoot
 
 /*
-XXX Source of conflicts (24 S/R):
+XXX Source of conflicts (25 S/R):
 
 1.) 8 conflicts in one state
 The Expression after 'return' keyword is optional in ReturnStatement.
@@ -1754,9 +1757,14 @@ non-standard language extension.
 
 6.) 1 Conflict due to pattern concatenation
 
+7.) 1 conflict
+The TitanSpecificProfilerKeyword following the ReturnKeyword in a ReturnStatement
+can either be the returned boolean value if followed by the DotRunningKeyword (shift)
+or the next statement if followed by the DotStartKeyword or the DotStopKeyword (reduce).
+
 Note that the parser implemented by bison always chooses to shift instead of
 reduce in case of conflicts. This is the desired behaviour in situations 1.),
-2.) and 4.) since the opposite alternative can be forced by the correct usage
+2.), 4.) and 7.) since the opposite alternative can be forced by the correct usage
 of semi-colons. Situation 3.) does not cause any problems as anytype is not
 supported at the moment.
 */
@@ -3910,6 +3918,7 @@ FunctionStatement: // 180
 | SUTStatements {$$=$1;}
 | StopExecutionStatement { $$ = $1; }
 | StopTestcaseStatement { $$ = $1; }
+| ProfilerStatement { $$ = $1; }
 ;
 
 FunctionInstance: /* refpard */ // 181
@@ -5078,6 +5087,7 @@ ControlStatement: /* Statement *stmt */ // 295
 | BehaviourStatements { $$ = $1; }
 | SUTStatements { $$ = $1; }
 | StopExecutionStatement { $$ = $1; }
+| ProfilerStatement { $$ = $1; }
 ;
 
 /* A.1.6.2.1 Variable instantiation */
@@ -7538,6 +7548,26 @@ StopTestcaseStatement:
   }
 ;
 
+  /* these deliberately don't have their locations set */
+ProfilerStatement:
+  TitanSpecificProfilerKeyword DotStartKeyword
+  {
+    $$ = new Statement(Statement::S_START_PROFILER);
+  }
+| TitanSpecificProfilerKeyword DotStopKeyword
+  {
+    $$ = new Statement(Statement::S_STOP_PROFILER);
+  }
+;
+
+ProfilerRunningOp:
+  TitanSpecificProfilerKeyword DotRunningKeyword
+  {
+    $$ = new Value(Value::OPTYPE_PROF_RUNNING);
+    $$->set_location(infile, @$);
+  }
+;
+
 ReturnStatement: // 552
   ReturnKeyword
   {
@@ -8336,6 +8366,7 @@ OpCall: // 611
     else $$ = new Value(Value::V_ERROR);
     $$->set_location(infile, @$);
   }
+| ProfilerRunningOp { $$ = $1; }
 ;
 
 PredefinedOps:

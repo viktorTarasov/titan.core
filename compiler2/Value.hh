@@ -238,7 +238,8 @@ namespace Common {
       OPTYPE_EXECUTE, // r1 [v2]
       OPTYPE_EXECUTE_REFD, // v1 t_list2 [v3]
 
-      OPTYPE_LOG2STR, // logagrs   98
+      OPTYPE_LOG2STR, // logagrs
+      OPTYPE_PROF_RUNNING, // -     99
 
       NUMBER_OF_OPTYPES // must be last
     };
@@ -369,7 +370,8 @@ namespace Common {
     Value(valuetype_t p_vt, Value *p_v, Ttcn::ParsedActualParameters *p_t_list);
     /** Constructor used by V_EXPR "-": RND, TESTCASENAME, COMP_NULL, COMP_MTC,
      *  COMP_SYSTEM, COMP_SELF, COMP_RUNNING_ANY, COMP_RUNNING_ALL,
-     *  COMP_ALIVE_ALL, COMP_ALIVE_ANY, TMR_RUNNING_ANY, GETVERDICT */
+     *  COMP_ALIVE_ALL, COMP_ALIVE_ANY, TMR_RUNNING_ANY, GETVERDICT,
+     *  PROF_RUNNING */
     Value(operationtype_t p_optype);
     /** Constructor used by V_EXPR "v1" */
     Value(operationtype_t p_optype, Value *p_v1);

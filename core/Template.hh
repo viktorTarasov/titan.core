@@ -12,6 +12,7 @@
 
 #ifdef TITAN_RUNTIME_2
 #include "Struct_of.hh"
+#include "RefdIndex.hh"
 struct TTCN_Typedescriptor_t;
 struct Erroneous_descriptor_t;
 #endif
@@ -113,7 +114,11 @@ public:
 #endif
 };
 
-class Restricted_Length_Template : public Base_Template {
+class Restricted_Length_Template : public Base_Template
+#ifdef TITAN_RUNTIME_2
+  , public RefdIndexInterface
+#endif
+{
 protected:
   enum length_restriction_type_t {
     NO_LENGTH_RESTRICTION = 0,
@@ -160,12 +165,6 @@ public:
 
   boolean is_omit() const;
   boolean is_any_or_omit() const;
-  
-#ifdef TITAN_RUNTIME_2
-  // Dummy functions, only used in record of/set of value in RT2
-  void add_refd_index(int) {}
-  void remove_refd_index(int) {}
-#endif
 };
 
 #ifndef TITAN_RUNTIME_2

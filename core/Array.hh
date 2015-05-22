@@ -36,7 +36,11 @@ extern unsigned int get_timer_array_index(const INTEGER& index_value,
  *
  * */
 template <typename T_type, unsigned int array_size, int index_offset>
-class TIMER_ARRAY {
+class TIMER_ARRAY 
+#ifdef TITAN_RUNTIME_2
+  : public RefdIndexInterface
+#endif
+{
   T_type array_elements[array_size];
   char * names[array_size];
 
@@ -85,13 +89,6 @@ public:
     }
     TTCN_Logger::log_event_str(" }");
   }
-  
-#ifdef TITAN_RUNTIME_2
-  // Dummy functions, only used in record of/set of in RT2 (the referenced indices
-  // cannot be deleted, since arrays have a fixed size)
-  void add_refd_index(int) {}
-  void remove_refd_index(int) {}
-#endif
 };
 
 extern unsigned int get_port_array_index(int index_value,
@@ -100,7 +97,11 @@ extern unsigned int get_port_array_index(const INTEGER& index_value,
   unsigned int array_size, int index_offset);
 
 template <typename T_type, unsigned int array_size, int index_offset>
-class PORT_ARRAY {
+class PORT_ARRAY
+#ifdef TITAN_RUNTIME_2
+  : public RefdIndexInterface
+#endif
+{
   T_type array_elements[array_size];
   char * names[array_size];
 
@@ -152,13 +153,6 @@ public:
     }
     TTCN_Logger::log_event_str(" }");
   }
-  
-#ifdef TITAN_RUNTIME_2
-  // Dummy functions, only used in record of/set of in RT2 (the referenced indices
-  // cannot be deleted, since arrays have a fixed size)
-  void add_refd_index(int) {}
-  void remove_refd_index(int) {}
-#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +164,9 @@ extern unsigned int get_array_index(const INTEGER& index_value,
 
 template <typename T_type, unsigned int array_size, int index_offset>
 class VALUE_ARRAY : public Base_Type
+#ifdef TITAN_RUNTIME_2
+  , public RefdIndexInterface
+#endif
 {
   T_type array_elements[array_size];
 public:
@@ -240,13 +237,6 @@ public:
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
-  
-#ifdef TITAN_RUNTIME_2
-  // Dummy functions, only used in record of/set of in RT2 (the referenced indices
-  // cannot be deleted, since arrays have a fixed size)
-  void add_refd_index(int) {}
-  void remove_refd_index(int) {}
-#endif
 };
 
 template <typename T_type, unsigned int array_size, int index_offset>

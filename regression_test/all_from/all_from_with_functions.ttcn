@@ -11,7 +11,7 @@ module all_from_with_functions {
 
 external function f_ext(in template RoI r) return template RoI;
 
-type record of integer RoI;
+type record of integer RoI with { encode "JSON" };
 type set of integer SoI;
 
 type record Rec {
@@ -119,10 +119,52 @@ testcase tc_all_from_func_params() runs on CT_Empty {
   else { setverdict(fail, "Expected: ", c_res_log, ", got: ", vt_res); }
 }
 
+function f_non_templ(in RoI x) return RoI
+{
+  return x;
+}
+
+external function f_dec_roi(in octetstring os) return RoI
+  with { extension "prototype(convert) decode(JSON)" }
+
+// all from used on regular (non-template) functions
+testcase tc_all_from_with_functions2() runs on CT_Empty
+{
+  var template RoI vt_func_roi := { permutation ( all from f_non_templ( { 1, 4, 7, 10 } ) ) };
+  var template integer vt_func_int := ( 0, 1, all from f_non_templ( { 3, 6, 9 } ) );
+
+  var octetstring v_enc := char2oct("[ 4, 2, 10, 100 ]");
+  var template RoI vt_ext_func_roi := { permutation ( all from f_dec_roi(v_enc) ) };
+  var template integer vt_ext_func_int := ( 0, 1, all from f_dec_roi(v_enc) );
+
+  var charstring v_res_log := "{ permutation(1, 4, 7, 10) }";
+  if (log2str(vt_func_roi) != v_res_log) {
+    setverdict(fail, "Expected: ", v_res_log, ", got: ", vt_func_roi);
+  }
+
+  v_res_log := "(0, 1, 3, 6, 9)";
+  if (log2str(vt_func_int) != v_res_log) {
+    setverdict(fail, "Expected: ", v_res_log, ", got: ", vt_func_int);
+  }
+
+  v_res_log := "{ permutation(4, 2, 10, 100) }";
+  if (log2str(vt_ext_func_roi) != v_res_log) {
+    setverdict(fail, "Expected: ", v_res_log, ", got: ", vt_ext_func_roi);
+  }
+
+  v_res_log := "(0, 1, 4, 2, 10, 100)";
+  if (log2str(vt_ext_func_int) != v_res_log) {
+    setverdict(fail, "Expected: ", v_res_log, ", got: ", vt_ext_func_int);
+  }
+
+  setverdict(pass);
+}
+
 
 control {
   execute(tc_all_from_with_functions());
   execute(tc_all_from_func_params());
+  execute(tc_all_from_with_functions2());
 }
 
 }

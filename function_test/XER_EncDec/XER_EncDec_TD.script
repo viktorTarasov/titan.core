@@ -9,12 +9,12 @@
 :lang eng.
 .*
 :docname.Test Description
-:docno.7/152 91-CRL 113 200/4 Uen
+:docno.9/152 91-CRL 113 200/5 Uen
 :rev.A
-:date.2014-04-29
+:date.2015-04-27
 .*
 :prep.ETH/XZ Botond Baranyi
-:appr.ETH/XZ (Jeno Balasko)
+:appr.ETH/XZ (Elemer Lelik)
 :checked.ETHBAAT
 .*
 :title.Test description - XER coder
@@ -828,7 +828,7 @@ control {
 
 <RESULT>
 
-Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': While checking anyElement: XML namespace "http://www.somewhere.com" is not in the allowed namespace list.
+Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': Index 0: While checking anyElement: XML namespace "http://www.somewhere.com" is not in the allowed namespace list.
 
 <END_TC>  
   
@@ -875,7 +875,7 @@ control {
 
 <RESULT>
 
-Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': While checking anyElement: XML namespace "http://www.somewhereelse.com" is not in the allowed namespace list.
+Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': Index 0: While checking anyElement: XML namespace "http://www.somewhereelse.com" is not in the allowed namespace list.
 
 <END_TC>  
   
@@ -924,7 +924,7 @@ control {
 
 <RESULT>
 
-Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': While checking anyElement: XML namespace "http://www.someotherplace.com" is not in the allowed namespace list.
+Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': Index 0: While checking anyElement: XML namespace "http://www.someotherplace.com" is not in the allowed namespace list.
 
 <END_TC>  
   
@@ -1124,7 +1124,7 @@ control {
 
 <RESULT>
 
-Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': While checking anyElement: The unqualified XML namespace is in the excluded namespace list.
+Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': Index 0: While checking anyElement: The unqualified XML namespace is in the excluded namespace list.
 
 <END_TC>  
   
@@ -1171,7 +1171,7 @@ control {
 
 <RESULT>
 
-Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': While checking anyElement: XML namespace "http://www.somewhere.com" is in the excluded namespace list.
+Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': Index 0: While checking anyElement: XML namespace "http://www.somewhere.com" is in the excluded namespace list.
 
 <END_TC>  
   
@@ -1218,7 +1218,7 @@ control {
 
 <RESULT>
 
-Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': While checking anyElement: XML namespace "http://www.somewhereelse.com" is in the excluded namespace list.
+Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': Index 0: While checking anyElement: XML namespace "http://www.somewhereelse.com" is in the excluded namespace list.
 
 <END_TC>  
   

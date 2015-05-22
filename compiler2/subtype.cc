@@ -1930,6 +1930,9 @@ void SubType::chk_this_template(Template *templ)
   case Template::VALUE_RANGE:
     /* Should be canonical before */
     break;
+  case Template::ALL_FROM:
+  case Template::VALUE_LIST_ALL_FROM:
+    break;
   case Template::SUPERSET_MATCH:
   case Template::SUBSET_MATCH:
     if (subtype!=ST_SETOF){

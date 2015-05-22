@@ -244,7 +244,7 @@ namespace Common {
     static const char *get_encoding_name(MessageEncodingType_t encoding_type);
     /** Returns a pool type that represents the encoded stream of the given
      * \a encoding_type. */
-    static Type *get_stream_type(MessageEncodingType_t encoding_type);
+    static Type *get_stream_type(MessageEncodingType_t encoding_type, int stream_variant=0);
 
     enum truth {
       No, Maybe, Yes
@@ -1017,6 +1017,10 @@ namespace Common {
         otherwise returns false.  **/
     bool ispresent_anyvalue_embedded_field(Type* t,
       Ttcn::FieldOrArrayRefs *subrefs, size_t begin_index);
+    
+    /** Returns true if the C++ class for this type has already been pre-generated
+      * or false if it still needs to be generated */
+    bool is_pregenerated();
   public:
     /** Generates type specific call for the reference used in isbound call
      * into argument \a expr. Argument \a subrefs holds the reference path

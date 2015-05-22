@@ -38,7 +38,7 @@ GENERATED_OTHERS := compiler.output rawAST.output coding_attrib_p.output lex.bac
 
 STATIC_SOURCES := ArrayDimensions.cc AST_ttcn3.cc Attributes.cc ILT.cc PatternString.cc \
 RawAST.cc Statement.cc TtcnTemplate.cc Templatestuff.cc TextAST.cc Ttcnstuff.cc \
-compiler.c port.c signature.c BerAST.cc JsonAST.cc Ttcn2Json.cc
+compiler.c port.c signature.c BerAST.cc JsonAST.cc Ttcn2Json.cc profiler.c
 
 SOURCES := $(STATIC_SOURCES) $(GENERATED_SOURCES)
 	

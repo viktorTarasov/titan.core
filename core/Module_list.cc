@@ -95,8 +95,6 @@ void Module_List::pre_init_modules()
 {
   for (TTCN_Module *list_iter = list_head; list_iter != NULL;
     list_iter = list_iter->list_next) list_iter->pre_init_module();
-
-  send_versions();
 }
 
 void Module_List::post_init_modules()

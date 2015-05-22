@@ -121,6 +121,7 @@ extern const TTCN_TEXTdescriptor_t CHARSTRING_text_;
 extern const TTCN_TEXTdescriptor_t BITSTRING_text_;
 extern const TTCN_TEXTdescriptor_t HEXSTRING_text_;
 extern const TTCN_TEXTdescriptor_t OCTETSTRING_text_;
+extern const TTCN_TEXTdescriptor_t UNIVERSAL_CHARSTRING_text_;
 
 /** @} end of TEXT group */
 

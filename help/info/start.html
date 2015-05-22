@@ -34,12 +34,13 @@
 <p>1. <a href="#1"> Starting a component</a></p>
 <p>2. <a href="#Starting a port">Starting a port</a></p>
 <p>3. <a href="##1">Starting a timer</a></p>
+<p>4. <a href="profiler.html#2">Starting the profiler</a></p>
 </blockquote>
 <hr align="left" width="75%">
-<p>1. <a name="#1">Starting a component</a></p>
+<h3>1. <a name="#1">Starting a component</a></h3>
 <hr align="left" width="50%">
 <p>When a parallel test component is created it is not executing any behavior yet.
-<p>The start operation can be used to execute the required function on the addressed<a href="#component_start">parallel test component</a>.</p>
+<p>The start operation can be used to execute the required function on the addressed <a href="#component_start">parallel test component</a>.</p>
 <p>The function will be executed remotely, thus the start operation does not block execution on the component on which it was invoked.
 <p>Normal parallel test components can only be started once, but alive parallel test components may execute several functions consecutively.
 <P>Some limitations apply to the argument function:
@@ -61,6 +62,7 @@
   <li><a href="killed.html"><b><font face="Courier New" color="#003258" size="4">killed</font></b></a></li>
   <li><a href="running.html"><b><font face="Courier New" color="#003258" size="4">running</font></b></a></li>
   <li><a href="stop.html"><b><font face="Courier New" color="#003258" size="4">stop</font></b></a></li>
+  <li><a href="profiler.html"><b><font face="Courier New" color="#003258" size="4">@profiler</font></b></a></li>
 </ul>
 <hr align="left" width="50%">
 <div align="center">
@@ -87,7 +89,7 @@
   </li>
 </ul>
 <hr align="left" width="75%">
-<p>2. <a name="Starting a port">Starting a port</a></p>
+<h3>2. <a name="Starting a port">Starting a port</a></h3>
 <hr align="left" width="50%">
 <p>The keyword may be used to start a <a href="#Example 2a">port</a>.</p>
 <ul>
@@ -129,7 +131,7 @@
   </li>
 </ul>
 <hr align="left" width="75%">
-<p>3. <a name="timer">Starting a timer</a></p>
+<h3>3. <a name="timer">Starting a timer</a></h3>
 <hr align="left" width="50%">
 <p>The keyword may be used to indicate that a <a href="#timer_start">timer should start running</a>.</p>
 <ul>
@@ -165,9 +167,9 @@
   Otherwise it is optional and overwrites the default value. The value is measured in seconds; <a href="float.html"><b><font face="Courier New" color="#003258" size="4">float</font></b></a>ing point
   value must be used.</li>
 </ul>
-<hr align="left" width="75%" color="#0094D2">
+<hr align="left" width="50%"/>
 <p>It is possible to start a member of an <a href="#array">timer array</a>.</p>
-<hr align="left" width="50%" color="#0094D2">
+<hr align="left" width="50%"/>
 <div align="center">
 <center>
 <table border="0" width="90%" bgcolor="#FFB599" cellpadding="4">

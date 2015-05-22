@@ -323,6 +323,12 @@ IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
   /* SC_cstring */
 
 
+<SC_PROFILER>{HEX}+ {
+  /* numeric statistics filter (check this before checking NUMBERs) */
+  RETURN(ProfilerStatsFlag);
+}
+
+
 	/* Values */
 
 {NUMBER} {
@@ -560,12 +566,56 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
 
 <SC_PROFILER>
 {
-[Dd]isable[Pp]rofiler   return DisableProfilerKeyword;
-[Dd]isable[Cc]overage   return DisableCoverageKeyword;
-[Dd]ata[Bb]ase[Ff]ile   return DatabaseFileKeyword;
-[Aa]ggregate[Dd]ata     return AggregateDataKeyword;
-[Ss]tatistics[Ff]ile    return StatisticsFileKeyword;
-[Dd]isable[Ss]tatistics return DisableStatisticsKeyword;
+  [Dd]isable[Pp]rofiler     RETURN(DisableProfilerKeyword);
+  [Dd]isable[Cc]overage     RETURN(DisableCoverageKeyword);
+  [Dd]ata[Bb]ase[Ff]ile     RETURN(DatabaseFileKeyword);
+  [Aa]ggregate[Dd]ata       RETURN(AggregateDataKeyword);
+  [Ss]tatistics[Ff]ile      RETURN(StatisticsFileKeyword);
+  [Dd]isable[Ss]tatistics   RETURN(DisableStatisticsKeyword);
+  [Ss]tatistics[Ff]ilter    RETURN(StatisticsFilterKeyword);
+  [Ss]tart[Aa]utomatically  RETURN(StartAutomaticallyKeyword);
+  [Nn]et[Ll]ine[Tt]imes     RETURN(NetLineTimesKeyword);
+  [Nn]et[Ff]unction[Tt]imes RETURN(NetFunctionTimesKeyword);
+  
+  /* statistics filters */
+  [Nn]umber[Oo]f[Ll]ines |
+  [Ll]ine[Dd]ata[Rr]aw |
+  [Ff]unc[Dd]ata[Rr]aw |
+  [Ll]ine[Aa]vg[Rr]aw |
+  [Ff]unc[Aa]vg[Rr]aw |
+  [Ll]ine[Tt]imes[Ss]orted[Bb]y[Mm]od |
+  [Ff]unc[Tt]imes[Ss]orted[Bb]y[Mm]od |
+  [Ll]ine[Tt]imes[Ss]orted[Tt]otal |
+  [Ff]unc[Tt]imes[Ss]orted[Tt]otal |
+  [Ll]ine[Cc]ount[Ss]orted[Bb]y[Mm]od |
+  [Ff]unc[Cc]ount[Ss]orted[Bb]y[Mm]od |
+  [Ll]ine[Cc]ount[Ss]orted[Tt]otal |
+  [Ff]unc[Cc]ount[Ss]orted[Tt]otal |
+  [Ll]ine[Aa]vg[Ss]orted[Bb]y[Mm]od |
+  [Ff]unc[Aa]vg[Ss]orted[Bb]y[Mm]od |
+  [Ll]ine[Aa]vg[Ss]orted[Tt]otal |
+  [Ff]unc[Aa]vg[Ss]orted[Tt]otal |
+  [Tt]op10[Ll]ine[Tt]imes |
+  [Tt]op10[Ff]unc[Tt]imes |
+  [Tt]op10[Ll]ine[Cc]ount |
+  [Tt]op10[Ff]unc[Cc]ount |
+  [Tt]op10[Ll]ine[Aa]vg |
+  [Tt]op10[Ff]unc[Aa]vg |
+  [Uu]nused[Ll]ines |
+  [Uu]nused[Ff]unc |
+  [Aa]ll[Rr]aw[Dd]ata |
+  [Ll]ine[Dd]ata[Ss]orted[Bb]y[Mm]od |
+  [Ff]unc[Dd]ata[Ss]orted[Bb]y[Mm]od |
+  [Ll]ine[Dd]ata[Ss]orted[Tt]otal |
+  [Ff]unc[Dd]ata[Ss]orted[Tt]otal |
+  [Ll]ine[Dd]ata[Ss]orted |
+  [Ff]unc[Dd]ata[Ss]orted |
+  [Aa]ll[Dd]ata[Ss]orted |
+  [Tt]op10[Ll]ine[Dd]ata |
+  [Tt]op10[Ff]unc[Dd]ata |
+  [Tt]op10[Aa]ll[Dd]ata |
+  [Uu]nused[Dd]ata |
+  [Aa]ll RETURN(ProfilerStatsFlag);
 }
 
 <SC_EXECUTE>control		RETURN(ControlKeyword);
@@ -935,6 +985,7 @@ static boolean whether_update_buffer()
   case SC_LOGGING:
   case SC_TESTPORT_PARAMETERS:
   case SC_EXTERNAL_COMMANDS:
+  case SC_PROFILER:
     return TRUE;
   default:
     return FALSE;
