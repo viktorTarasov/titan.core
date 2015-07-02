@@ -35,6 +35,8 @@ http://polarsys.org/sites/default/files/custom_uploads/TITAN%20Datasheet%20A4%20
 * https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.3.pl0-linux64-gcc4.3-sles11.1.tgz.sha512
 * https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.3.pl0-linux64-gcc4.4.5-rhel6.tgz
 * https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.3.pl0-linux64-gcc4.4.5-rhel6.tgz.sha512
+* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.3.pl0-linux64-gcc4.8.2-rhel7.tgz
+* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.3.pl0-linux64-gcc4.8.2-rhel7.tgz.sha512
 * https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.3.pl0-linux64-gcc4.6-ubuntu12.04.tgz
 * https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.3.pl0-linux64-gcc4.6-ubuntu12.04.tgz.sha512
 * https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.3.pl0-linux64-gcc4.8-ubuntu14.04.tgz
