@@ -75,38 +75,30 @@ GEN_PDF := no
 
 make
 
-4. Run make install
+4. Set environment variables
+
+setenv TTCN3_DIR /home/<user id>/titan/Install
+setenv PATH /home/<userid>/titan.core/Install/bin/:${PATH}
+setenv LD_LIBRARY_PATH /home/<userid>/titan.core/Install/lib:${LD_LIBRARY_PATH}
+
+for csh
+
+or 
+
+export TTCN3_DIR=/home/<user id>/titan/Install
+export PATH=/home/<userid>/titan.core/Install/bin/:${PATH}
+export LD_LIBRARY_PATH=/home/<userid>/titan.core/Install/lib:${LD_LIBRARY_PATH}
+
+for bash
+
+5. Run make install
 
 make install
 
 This will install Titan into  /home/<user id>/titan/Install
 
-Note: If make install fails with something like:
 
-make[2]: Leaving directory '/path/to/install/titan/demo'
-/bin/sh: line 4: ttcn3_start: command not found
-kMakefile:25: recipe for target 'install' failed
-make[1]: *** [install] Error 127
-make[1]: Leaving directory '/home/user/3rdPartyApps/titan/hello'
-Makefile:53: recipe for target 'install' failed
-make: *** [install] Error 2
-
-then add /path/to/install/titan/bin/ to PATH and retry:
-
-PATH=/path/to/install/titan/bin/:${PATH} 
-make install
-
-
-
-
-5. Optionally , run function/regression tests
-
-set environment variable TTCN3_DIR to /home/<user id>/titan/Install
-
-(setenv  TTCN3_DIR /home/<user id>/titan/Install  for csh,
-export TTCN3_DIR=/home/<user id>/titan/Install for bash )
-
-
+6. Optionally , run function/regression tests
 
 cd /home/<user id>/titan/function_test
 
@@ -131,6 +123,7 @@ make run
 
 These tests might run for half an hour (regr.tests)  to two hours (func.tests)
 
-6. Optionally , copy Titan into its' final directory.
-From here on, you can continue with the Titan installation guide, see /Install/docs, to set environment variables etc.
+7. Optionally , copy Titan into its final directory.
+From here on, you can continue with the Titan installation guide, see /Install/docs, 
+to set/change environment variables etc.
 
