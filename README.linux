@@ -81,6 +81,24 @@ make install
 
 This will install Titan into  /home/<user id>/titan/Install
 
+Note: If make install fails with something like:
+
+make[2]: Leaving directory '/path/to/install/titan/demo'
+/bin/sh: line 4: ttcn3_start: command not found
+kMakefile:25: recipe for target 'install' failed
+make[1]: *** [install] Error 127
+make[1]: Leaving directory '/home/user/3rdPartyApps/titan/hello'
+Makefile:53: recipe for target 'install' failed
+make: *** [install] Error 2
+
+then add /path/to/install/titan/bin/ to PATH and retry:
+
+PATH=/path/to/install/titan/bin/:${PATH} 
+make install
+
+
+
+
 5. Optionally , run function/regression tests
 
 set environment variable TTCN3_DIR to /home/<user id>/titan/Install
