@@ -44,6 +44,10 @@ http://polarsys.org/sites/default/files/custom_uploads/TITAN%20Datasheet%20A4%20
 
 
 # Related products:
+
+##Eclipse IDE plug-ins (Designer, Executor, LogViewer, Titanium):
+
+* https://github.com/eclipse/titan.EclipsePlug-ins
  
 ## Test Ports:
  
