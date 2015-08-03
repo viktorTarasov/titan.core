@@ -47,7 +47,14 @@ http://polarsys.org/sites/default/files/custom_uploads/TITAN%20Datasheet%20A4%20
 
 ##Eclipse IDE plug-ins (Designer, Executor, LogViewer, Titanium):
 
+Source code:
+
 * https://github.com/eclipse/titan.EclipsePlug-ins
+
+Compressed update site and SHA512 checksum:
+
+* https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_Designer_and_Executor_plugin-5.3.pl1-opensource.zip
+* https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_Designer_and_Executor_plugin-5.3.pl1-opensource.zip.sha512
  
 ## Test Ports:
  
