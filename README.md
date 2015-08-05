@@ -18,6 +18,9 @@ ASN.1 (Abstract Syntax Notation One).
 ##Titan Datasheet on polarsys.org:
 http://polarsys.org/sites/default/files/custom_uploads/TITAN%20Datasheet%20A4%202.1.pdf
 
+## Ericsson TTCN-3 Course, Presentation material
+http://www.ttcn-3.org/files/TTCN3_P.pdf
+
 ##Binaries and SHA512 checksums for a number of Linux platforms can be downloaded from:
 
 
