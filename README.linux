@@ -71,11 +71,11 @@ GEN_PDF := no
 
 
 
-3. Run make
+4. Run make
 
 make
 
-4. Set environment variables
+5. Set environment variables
 
 setenv TTCN3_DIR /home/<user id>/titan/Install
 setenv PATH /home/<userid>/titan.core/Install/bin/:${PATH}
@@ -91,14 +91,14 @@ export LD_LIBRARY_PATH=/home/<userid>/titan.core/Install/lib:${LD_LIBRARY_PATH}
 
 for bash
 
-5. Run make install
+6. Run make install
 
 make install
 
 This will install Titan into  /home/<user id>/titan/Install
 
 
-6. Optionally , run function/regression tests
+7. Optionally , run function/regression tests
 
 cd /home/<user id>/titan/function_test
 
@@ -123,7 +123,7 @@ make run
 
 These tests might run for half an hour (regr.tests)  to two hours (func.tests)
 
-7. Optionally , copy Titan into its final directory.
+8. Optionally , copy Titan into its final directory.
 From here on, you can continue with the Titan installation guide, see /Install/docs, 
 to set/change environment variables etc.
 
