@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -11,49 +11,44 @@
 #include "TTCN3Module.hh"
 #include "TTCN3ModuleInventory.hh"
 
-extern bool c_flag_used;
-
 ImportStatement::ImportStatement(XMLParser * a_parser, TTCN3Module * a_module, ConstructType a_construct)
 : RootType(a_parser, a_module, a_construct)
 , from_namespace()
 , from_schemaLocation()
-, source_module()
-{}
+, source_module() {
+}
 
-void ImportStatement::loadWithValues()
-{
+void ImportStatement::loadWithValues() {
   const XMLParser::TagAttributes & attr = parser->getActualTagAttributes();
 
-  switch (parser->getActualTagName())
-  {
-  case XMLParser::n_import:
-    name.upload(Mstring("import"));
-    type.upload(Mstring("import"));
-    from_namespace = attr.namespace_;
-    from_schemaLocation = attr.schemaLocation;
-    break;
-  case XMLParser::n_include:
-    name.upload(Mstring("include"));
-    type.upload(Mstring("include"));
-    from_namespace = attr.namespace_;
-    from_schemaLocation = attr.schemaLocation;
-    break;
-  case XMLParser::n_label:
-    addComment(Mstring("LABEL:"));
-    break;
-  case XMLParser::n_definition:
-    addComment(Mstring("DEFINITION:"));
-    break;
+  switch (parser->getActualTagName()) {
+    case n_import:
+      name.upload(Mstring("import"));
+      type.upload(Mstring("import"));
+      from_namespace = attr.namespace_;
+      from_schemaLocation = attr.schemaLocation;
+      break;
+    case n_include:
+      name.upload(Mstring("include"));
+      type.upload(Mstring("include"));
+      from_namespace = attr.namespace_;
+      from_schemaLocation = attr.schemaLocation;
+      break;
+    case n_label:
+      addComment(Mstring("LABEL:"));
+      break;
+    case n_definition:
+      addComment(Mstring("DEFINITION:"));
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 }
 
 const Mstring XMLSchema("http://www.w3.org/2001/XMLSchema");
 
-void ImportStatement::referenceResolving(void)
-{
+void ImportStatement::referenceResolving(void) {
   if (from_namespace == XMLSchema) {
     visible = false;
     return;
@@ -61,8 +56,7 @@ void ImportStatement::referenceResolving(void)
 
   TTCN3ModuleInventory& modules = TTCN3ModuleInventory::getInstance();
 
-  for (List<TTCN3Module*>::iterator mod = modules.getModules().begin(); mod; mod = mod->Next)
-  {
+  for (List<TTCN3Module*>::iterator mod = modules.getModules().begin(); mod; mod = mod->Next) {
     if (module == mod->Data) {
       // it's the module that *contains* the import statement
       continue;
@@ -84,22 +78,19 @@ void ImportStatement::referenceResolving(void)
 
   if (!source_module) // still not found
   {
-    if (from_schemaLocation.empty())
-    {
+    if (from_schemaLocation.empty()) {
       printWarning(module->getSchemaname(), getName().convertedValue,
         "The \'" + from_namespace + "\' specified in the \'namespace\' attribute"
         " is not resolvable.");
       modules.incrNumWarnings();
-    }
-    else // schemaLocation is not empty
+    } else // schemaLocation is not empty
     {
       if (from_schemaLocation.isFound("http://") || from_schemaLocation.isFound("urn:")) {
         printWarning(module->getSchemaname(), getName().convertedValue,
           "It is not supported using a URI (\'" + from_schemaLocation +
           "\') in the \'schemalocation\' attribute to get access to a file.");
         modules.incrNumWarnings();
-      }
-      else {
+      } else {
         printWarning(module->getSchemaname(), getName().convertedValue,
           "The \'" + from_schemaLocation + "\' specified in the \'schemaLocation\' attribute"
           " is not resolvable.");
@@ -107,12 +98,10 @@ void ImportStatement::referenceResolving(void)
       }
     }
     visible = false;
-  }
-  else module->addImportedModule(source_module);
+  } else module->addImportedModule(source_module);
 }
 
-void ImportStatement::printToFile(FILE * file)
-{
+void ImportStatement::printToFile(FILE * file) {
   if (!visible) return;
 
   if (from_namespace == module->getTargetNamespace()) return;
@@ -120,41 +109,40 @@ void ImportStatement::printToFile(FILE * file)
 
   printComment(file);
 
-  switch (getConstruct())
-  {
-  case c_import: {
-    bool found = false;
-    for (List<TTCN3Module*>::iterator wImport = TTCN3ModuleInventory::getInstance().getWrittenImports().begin(); wImport; wImport = wImport->Next)
+  switch (getConstruct()) {
+    case c_import:
     {
-      if (wImport->Data == source_module) {
-        found = true;
-        break;
+      bool found = false;
+      for (List<TTCN3Module*>::iterator wImport = TTCN3ModuleInventory::getInstance().getWrittenImports().begin(); wImport; wImport = wImport->Next) {
+        if (wImport->Data == source_module) {
+          found = true;
+          break;
+        }
       }
+      if (!found) {
+        fprintf(file, "import from %s all;\n\n\n", source_module->getModulename().c_str());
+        TTCN3ModuleInventory::getInstance().getWrittenImports().push_back(source_module);
+      }
+      break;
     }
-    if (!found) {
-      fprintf(file, "import from %s all;\n\n\n", source_module->getModulename().c_str());
-      TTCN3ModuleInventory::getInstance().getWrittenImports().push_back(source_module);
-    }
-    break; }
-  case c_include: {
-    for (List<TTCN3Module*>::iterator mod = TTCN3ModuleInventory::getInstance().getModules().begin(); mod; mod = mod->Next)
+    case c_include:
     {
-      if (mod->Data->getSchemaname() == from_schemaLocation)
-      {
-        mod->Data->generate_TTCN3_types(file);
-        break;
+      for (List<TTCN3Module*>::iterator mod = TTCN3ModuleInventory::getInstance().getModules().begin(); mod; mod = mod->Next) {
+        if (mod->Data->getSchemaname() == from_schemaLocation) {
+          mod->Data->generate_TTCN3_types(file);
+          break;
+        }
       }
+      break;
     }
-    break; }
-  default:
-    break;
+    default:
+      break;
   }
 }
 
-void ImportStatement::dump(unsigned int depth) const
-{
+void ImportStatement::dump(unsigned int depth) const {
   fprintf(stderr, "%*s Import statement at %p, ns='%s' loc='%s'\n", depth * 2, "",
-    (const void*)this, from_namespace.c_str(), from_schemaLocation.c_str());
+    (const void*) this, from_namespace.c_str(), from_schemaLocation.c_str());
   fprintf(stderr, "%*s import from %s into %s\n", depth * 2 + 2, "",
     (source_module ? source_module->getModulename().c_str() : "**unknown**"),
     module->getModulename().c_str());

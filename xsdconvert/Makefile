@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2000-2014 Ericsson Telecom AB
+# Copyright (c) 2000-2015 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@ include $(TOP)/Makefile.cfg
 
 SOURCES :=	converter.cc \
 			XMLParser.cc TTCN3Module.cc TTCN3ModuleInventory.cc \
-			RootType.cc SimpleType.cc FieldType.cc ComplexType.cc \
+			RootType.cc SimpleType.cc AttributeType.cc ComplexType.cc \
 			Annotation.cc ImportStatement.cc \
 			PredefinedModules.cc GeneralFunctions.cc \
 			Mstring.cc

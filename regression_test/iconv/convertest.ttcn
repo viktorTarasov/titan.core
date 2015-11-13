@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -69,9 +69,8 @@ testcase tc_o2u() runs on C
     errno := o2u("US-ASCII", input, output);
     if (errno != 0) { setverdict(fail, "conversion failed: ", errno); }
 
-    log(output);
     if (output == "31415") {setverdict(pass);}
-    else {setverdict(fail);}
+    else {setverdict(fail, "output is ", output);}
     {
         var universal charstring rez;
         errno := o2u("UTF-16LE", nagy_utf16le, rez);
@@ -130,10 +129,9 @@ testcase tc_u2o() runs on C
 
     errno := u2o("UTF-8", input, output);
     if (errno != 0) { setverdict(fail, "conversion failed: ", errno); }
-    log(output);
 
     if (output == '323731383238'O) {setverdict(pass);}
-    else {setverdict(fail);}
+    else {setverdict(fail, "output is ", output);}
 
         /*
         var octetstring rez := u2o("UTF-16LE", nagy_arvizturo);

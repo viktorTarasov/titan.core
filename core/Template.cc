@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -17,7 +17,8 @@
 #ifdef TITAN_RUNTIME_2
 #include "Integer.hh"
 
-void Base_Template::check_restriction(template_res t_res, const char* t_name) const
+void Base_Template::check_restriction(template_res t_res, const char* t_name,
+                                      boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -29,7 +30,7 @@ void Base_Template::check_restriction(template_res t_res, const char* t_name) co
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -138,6 +139,12 @@ const char* Base_Template::get_res_name(template_res tr)
 void Base_Template::set_param(Module_Param& /*param*/)
 {
   TTCN_error("Internal error: Base_Template::set_param()");
+}
+
+Module_Param* Base_Template::get_param(Module_Param_Name& /* param_name */) const
+{
+  TTCN_error("Internal error: Base_Template::get_param()");
+  return NULL;
 }
 
 Restricted_Length_Template::Restricted_Length_Template()
@@ -391,6 +398,24 @@ void Restricted_Length_Template::set_length_range(const Module_Param& param)
   }
 }
 
+Module_Param_Length_Restriction* Restricted_Length_Template::get_length_range() const
+{
+  if (length_restriction_type == NO_LENGTH_RESTRICTION) {
+    return NULL;
+  }
+  Module_Param_Length_Restriction* mp_res = new Module_Param_Length_Restriction();
+  if (length_restriction_type == SINGLE_LENGTH_RESTRICTION) {
+    mp_res->set_single(length_restriction.single_length);
+  }
+  else {
+    mp_res->set_min(length_restriction.range_length.min_length);
+    if (length_restriction.range_length.max_length_set) {
+      mp_res->set_max(length_restriction.range_length.max_length);
+    }
+  }
+  return mp_res;
+}
+
 void Restricted_Length_Template::set_single_length(int single_length)
 {
   length_restriction_type = SINGLE_LENGTH_RESTRICTION;
@@ -487,12 +512,13 @@ void Record_Of_Template::set_selection(const Record_Of_Template& other_value)
 
 boolean Record_Of_Template::match_function_specific(
   const Base_Type *value_ptr, int value_index,
-  const Restricted_Length_Template *template_ptr, int template_index)
+  const Restricted_Length_Template *template_ptr, int template_index,
+  boolean legacy)
 {
   const Record_Of_Template* rec_tmpl_ptr = static_cast<const Record_Of_Template*>(template_ptr);
   if (value_index >= 0) {
     const Record_Of_Type* recof_ptr = static_cast<const Record_Of_Type*>(value_ptr);
-    return rec_tmpl_ptr->single_value.value_elements[template_index]->matchv(recof_ptr->get_at(value_index));
+    return rec_tmpl_ptr->single_value.value_elements[template_index]->matchv(recof_ptr->get_at(value_index), legacy);
   } else {
     return rec_tmpl_ptr->single_value.value_elements[template_index]->is_any_or_omit();
   }
@@ -942,7 +968,8 @@ int Record_Of_Template::n_elem() const
              "template of type %s.", get_descriptor()->name);
 }
 
-boolean Record_Of_Template::matchv(const Base_Type* other_value) const
+boolean Record_Of_Template::matchv(const Base_Type* other_value,
+                                   boolean legacy) const
 {
   const Record_Of_Type* other_recof = static_cast<const Record_Of_Type*>(other_value);
   if (!other_value->is_bound()) return FALSE;
@@ -950,7 +977,8 @@ boolean Record_Of_Template::matchv(const Base_Type* other_value) const
   if (!match_length(value_length)) return FALSE;
   switch (template_selection) {
   case SPECIFIC_VALUE:
-    return match_record_of(other_recof, value_length, this, single_value.n_elements, match_function_specific);
+    return match_record_of(other_recof, value_length, this,
+      single_value.n_elements, match_function_specific, legacy);
   case OMIT_VALUE:
     return FALSE;
   case ANY_VALUE:
@@ -959,7 +987,7 @@ boolean Record_Of_Template::matchv(const Base_Type* other_value) const
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
     for (int list_count = 0; list_count < value_list.n_values; list_count++)
-      if (value_list.list_value[list_count]->matchv(other_value))
+      if (value_list.list_value[list_count]->matchv(other_value, legacy))
         return template_selection == VALUE_LIST;
     return template_selection == COMPLEMENTED_LIST;
   default:
@@ -1041,10 +1069,10 @@ void Record_Of_Template::log() const
   if (err_descr) err_descr->log();
 }
 
-void Record_Of_Template::log_matchv(const Base_Type* match_value) const
+void Record_Of_Template::log_matchv(const Base_Type* match_value, boolean legacy) const
 {
   if (TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()) {
-    if (matchv(match_value)) {
+    if (matchv(match_value, legacy)) {
       TTCN_Logger::print_logmatch_buffer();
       TTCN_Logger::log_event_str(" matched");
     } else {
@@ -1054,9 +1082,9 @@ void Record_Of_Template::log_matchv(const Base_Type* match_value) const
           single_value.n_elements == recof_value->size_of()) {
         size_t previous_size = TTCN_Logger::get_logmatch_buffer_len();
         for (int elem_count = 0; elem_count < single_value.n_elements; elem_count++) {
-          if(!single_value.value_elements[elem_count]->matchv(recof_value->get_at(elem_count))){
+          if(!single_value.value_elements[elem_count]->matchv(recof_value->get_at(elem_count), legacy)){
             TTCN_Logger::log_logmatch_info("[%d]", elem_count);
-            single_value.value_elements[elem_count]->log_matchv(recof_value->get_at(elem_count));
+            single_value.value_elements[elem_count]->log_matchv(recof_value->get_at(elem_count), legacy);
             TTCN_Logger::set_logmatch_buffer_len(previous_size);
           }
         }
@@ -1077,7 +1105,7 @@ void Record_Of_Template::log_matchv(const Base_Type* match_value) const
       TTCN_Logger::log_event_str("{ ");
       for (int elem_count = 0; elem_count < single_value.n_elements; elem_count++) {
         if (elem_count > 0) TTCN_Logger::log_event_str(", ");
-        single_value.value_elements[elem_count]->log_matchv(recof_value->get_at(elem_count));
+        single_value.value_elements[elem_count]->log_matchv(recof_value->get_at(elem_count), legacy);
       }
       TTCN_Logger::log_event_str(" }");
       log_match_length(single_value.n_elements);
@@ -1085,7 +1113,7 @@ void Record_Of_Template::log_matchv(const Base_Type* match_value) const
       match_value->log();
       TTCN_Logger::log_event_str(" with ");
       log();
-      if (matchv(match_value)) TTCN_Logger::log_event_str(" matched");
+      if (matchv(match_value, legacy)) TTCN_Logger::log_event_str(" matched");
       else TTCN_Logger::log_event_str(" unmatched");
     }
   }
@@ -1151,13 +1179,13 @@ void Record_Of_Template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean Record_Of_Template::is_present() const
+boolean Record_Of_Template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean Record_Of_Template::match_omit() const
+boolean Record_Of_Template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -1166,10 +1194,14 @@ boolean Record_Of_Template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i]->match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i]->match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -1194,7 +1226,13 @@ void Record_Of_Template::set_param(Module_Param& param)
   }
   
   param.basic_check(Module_Param::BC_TEMPLATE|Module_Param::BC_LIST, "record of template");
-  switch (param.get_type()) {
+  
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     set_value(OMIT_VALUE);
     break;
@@ -1205,17 +1243,24 @@ void Record_Of_Template::set_param(Module_Param& param)
     set_value(ANY_OR_OMIT);
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t i=0; i<param.get_size(); i++) {
-      get_list_item(i)->set_param(*param.get_elem(i));
+  case Module_Param::MP_ComplementList_Template: {
+    Record_Of_Template** list_items = (Record_Of_Template**)
+      allocate_pointers(mp->get_size());
+    for (size_t i = 0; i < mp->get_size(); i++) {
+      list_items[i] = create();
+      list_items[i]->set_param(*mp->get_elem(i));
     }
-    break;
+    clean_up();
+    template_selection = mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST;
+    value_list.n_values = mp->get_size();
+    value_list.list_value = list_items;
+    break; }
   case Module_Param::MP_Value_List: {
-    set_size(param.get_size()); // at least this size if there are no permutation elements, if there are then get_at() will automatically resize
+    set_size(mp->get_size()); // at least this size if there are no permutation elements, if there are then get_at() will automatically resize
     int curr_idx = 0; // current index into this
-    for (size_t i=0; i<param.get_size(); ++i) {
-      Module_Param* const curr = param.get_elem(i);
+    for (size_t i=0; i<mp->get_size(); ++i) {
+      Module_Param* const curr = mp->get_elem(i);
       switch (curr->get_type()) {
       case Module_Param::MP_NotUsed:
         // skip this element
@@ -1239,19 +1284,85 @@ void Record_Of_Template::set_param(Module_Param& param)
   } break;
   case Module_Param::MP_Indexed_List:
     if (template_selection!=SPECIFIC_VALUE) set_size(0);
-    for (size_t i=0; i<param.get_size(); ++i) {
-      Module_Param* const current = param.get_elem(i);
+    for (size_t i=0; i<mp->get_size(); ++i) {
+      Module_Param* const current = mp->get_elem(i);
       get_at((int)current->get_id()->get_index())->set_param(*current);
     }
     break;
   default:
     param.type_error("record of template", get_descriptor()->name);
   }
-  is_ifpresent = param.get_ifpresent();
-  set_length_range(param);
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+  if (param.get_length_restriction() != NULL) {
+    set_length_range(param);
+  }
+  else {
+    set_length_range(*mp);
+  }
 }
 
-void Record_Of_Template::check_restriction(template_res t_res, const char* t_name) const
+Module_Param* Record_Of_Template::get_param(Module_Param_Name& param_name) const
+{
+  if (param_name.next_name()) {
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the elements, not to the whole record of
+    char* param_field = param_name.get_current_name();
+    if (param_field[0] < '0' || param_field[0] > '9') {
+      TTCN_error("Unexpected record field name in module parameter reference, "
+        "expected a valid index for record of template type `%s'",
+        get_descriptor()->name);
+    }
+    int param_index = -1;
+    sscanf(param_field, "%d", &param_index);
+    return get_at(param_index)->get_param(param_name);
+  }
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Vector<Module_Param*> values;
+    for (int i = 0; i < single_value.n_elements; ++i) {
+      values.push_back(single_value.value_elements[i]->get_param(param_name));
+    }
+    mp = new Module_Param_Value_List();
+    mp->add_list_with_implicit_ids(&values);
+    values.clear();
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (int i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i]->get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  mp->set_length_restriction(get_length_range());
+  return mp;
+}
+
+void Record_Of_Template::check_restriction(template_res t_res, const char* t_name,
+                                           boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name && (t_res==TR_VALUE)) ? TR_OMIT : t_res) {
@@ -1264,7 +1375,7 @@ void Record_Of_Template::check_restriction(template_res t_res, const char* t_nam
       single_value.value_elements[i]->check_restriction(t_res, t_name ? t_name : get_descriptor()->name);
     return;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -1631,12 +1742,13 @@ int Set_Of_Template::n_elem() const
 
 boolean Set_Of_Template::match_function_specific(
   const Base_Type *value_ptr, int value_index,
-  const Restricted_Length_Template *template_ptr, int template_index)
+  const Restricted_Length_Template *template_ptr, int template_index,
+  boolean legacy)
 {
   const Set_Of_Template* set_tmpl_ptr = static_cast<const Set_Of_Template*>(template_ptr);
   if (value_index >= 0) {
     const Record_Of_Type* recof_ptr = static_cast<const Record_Of_Type*>(value_ptr);
-    return set_tmpl_ptr->single_value.value_elements[template_index]->matchv(recof_ptr->get_at(value_index));
+    return set_tmpl_ptr->single_value.value_elements[template_index]->matchv(recof_ptr->get_at(value_index), legacy);
   } else {
     return set_tmpl_ptr->single_value.value_elements[template_index]->is_any_or_omit();
   }
@@ -1644,12 +1756,13 @@ boolean Set_Of_Template::match_function_specific(
 
 boolean Set_Of_Template::match_function_set(
   const Base_Type *value_ptr, int value_index,
-  const Restricted_Length_Template *template_ptr, int template_index)
+  const Restricted_Length_Template *template_ptr, int template_index,
+  boolean legacy)
 {
   const Set_Of_Template* set_tmpl_ptr = static_cast<const Set_Of_Template*>(template_ptr);
   if (value_index >= 0) {
     const Record_Of_Type* recof_ptr = static_cast<const Record_Of_Type*>(value_ptr);
-    return set_tmpl_ptr->single_value.value_elements[template_index]->matchv(recof_ptr->get_at(value_index));
+    return set_tmpl_ptr->single_value.value_elements[template_index]->matchv(recof_ptr->get_at(value_index), legacy);
   } else {
     return set_tmpl_ptr->single_value.value_elements[template_index]->is_any_or_omit();
   }
@@ -1657,19 +1770,20 @@ boolean Set_Of_Template::match_function_set(
 
 void Set_Of_Template::log_function(
   const Base_Type *value_ptr, const Restricted_Length_Template *template_ptr,
-  int index_value, int index_template)
+  int index_value, int index_template, boolean legacy)
 {
   const Set_Of_Template* set_tmpl_ptr = static_cast<const Set_Of_Template*>(template_ptr);
   const Record_Of_Type* recof_ptr = static_cast<const Record_Of_Type*>(value_ptr);
   if (value_ptr != NULL && template_ptr != NULL)
-    set_tmpl_ptr->single_value.value_elements[index_template]->log_matchv(recof_ptr->get_at(index_value));
+    set_tmpl_ptr->single_value.value_elements[index_template]->log_matchv(recof_ptr->get_at(index_value), legacy);
   else if (value_ptr != NULL)
     recof_ptr->get_at(index_value)->log();
   else if (template_ptr != NULL)
     set_tmpl_ptr->single_value.value_elements[index_template]->log();
 }
 
-boolean Set_Of_Template::matchv(const Base_Type* other_value) const
+boolean Set_Of_Template::matchv(const Base_Type* other_value,
+                                boolean legacy) const
 {
   const Record_Of_Type* other_recof = static_cast<const Record_Of_Type*>(other_value);
   if (!other_recof->is_bound())
@@ -1680,7 +1794,7 @@ boolean Set_Of_Template::matchv(const Base_Type* other_value) const
   switch (template_selection) {
   case SPECIFIC_VALUE:
     return match_set_of(other_recof, value_length, this,
-                        single_value.n_elements, match_function_specific);
+                        single_value.n_elements, match_function_specific, legacy);
   case OMIT_VALUE:
     return FALSE;
   case ANY_VALUE:
@@ -1689,13 +1803,13 @@ boolean Set_Of_Template::matchv(const Base_Type* other_value) const
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
     for (int list_count = 0; list_count < value_list.n_values; list_count++)
-      if (value_list.list_value[list_count]->matchv(other_recof))
+      if (value_list.list_value[list_count]->matchv(other_recof, legacy))
         return template_selection == VALUE_LIST;
     return template_selection == COMPLEMENTED_LIST;
   case SUPERSET_MATCH:
   case SUBSET_MATCH:
     return match_set_of(other_recof, value_length, this,
-                        single_value.n_elements, match_function_set);
+                        single_value.n_elements, match_function_set, legacy);
   default:
     TTCN_error("Matching with an uninitialized/unsupported template of type %s.",
                get_descriptor()->name);
@@ -1820,17 +1934,18 @@ void Set_Of_Template::log() const
   if (err_descr) err_descr->log();
 }
 
-void Set_Of_Template::log_matchv(const Base_Type* match_value) const
+void Set_Of_Template::log_matchv(const Base_Type* match_value, boolean legacy) const
 {
   if (TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()) {
-    if (matchv(match_value)) {
+    if (matchv(match_value, legacy)) {
       TTCN_Logger::print_logmatch_buffer();
       TTCN_Logger::log_event_str(" matched");
     } else {
       size_t previous_size = TTCN_Logger::get_logmatch_buffer_len();
       if (template_selection == SPECIFIC_VALUE) {
         const Record_Of_Type* setof_value = static_cast<const Record_Of_Type*>(match_value);
-        log_match_heuristics(setof_value, setof_value->size_of(), this, single_value.n_elements, match_function_specific, log_function);
+        log_match_heuristics(setof_value, setof_value->size_of(), this,
+          single_value.n_elements, match_function_specific, log_function, legacy);
       } else {
         if (previous_size != 0) {
           TTCN_Logger::print_logmatch_buffer();
@@ -1847,12 +1962,13 @@ void Set_Of_Template::log_matchv(const Base_Type* match_value) const
     match_value->log();
     TTCN_Logger::log_event_str(" with ");
     log();
-    if (matchv(match_value)) TTCN_Logger::log_event_str(" matched");
+    if (matchv(match_value, legacy)) TTCN_Logger::log_event_str(" matched");
     else {
       TTCN_Logger::log_event_str(" unmatched");
       if (template_selection == SPECIFIC_VALUE) {
         const Record_Of_Type* setof_value = static_cast<const Record_Of_Type*>(match_value);
-        log_match_heuristics(setof_value, setof_value->size_of(), this, single_value.n_elements, match_function_specific, log_function);
+        log_match_heuristics(setof_value, setof_value->size_of(), this,
+          single_value.n_elements, match_function_specific, log_function, legacy);
       }
     }
   }
@@ -1922,13 +2038,13 @@ void Set_Of_Template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean Set_Of_Template::is_present() const
+boolean Set_Of_Template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean Set_Of_Template::match_omit() const
+boolean Set_Of_Template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -1937,10 +2053,14 @@ boolean Set_Of_Template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i]->match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i]->match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -1965,7 +2085,13 @@ void Set_Of_Template::set_param(Module_Param& param)
   }
   
   param.basic_check(Module_Param::BC_TEMPLATE|Module_Param::BC_LIST, "set of template");
-  switch (param.get_type()) {
+  
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     set_value(OMIT_VALUE);
     break;
@@ -1976,16 +2102,23 @@ void Set_Of_Template::set_param(Module_Param& param)
     set_value(ANY_OR_OMIT);
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t i=0; i<param.get_size(); i++) {
-      get_list_item(i)->set_param(*param.get_elem(i));
+  case Module_Param::MP_ComplementList_Template: {
+    Set_Of_Template** list_items = (Set_Of_Template**)
+      allocate_pointers(mp->get_size());
+    for (size_t i = 0; i < mp->get_size(); i++) {
+      list_items[i] = create();
+      list_items[i]->set_param(*mp->get_elem(i));
     }
-    break;
+    clean_up();
+    template_selection = mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST;
+    value_list.n_values = mp->get_size();
+    value_list.list_value = list_items;
+    break; }
   case Module_Param::MP_Value_List:
-    set_size(param.get_size());
-    for (size_t i=0; i<param.get_size(); ++i) {
-      Module_Param* const curr = param.get_elem(i);
+    set_size(mp->get_size());
+    for (size_t i=0; i<mp->get_size(); ++i) {
+      Module_Param* const curr = mp->get_elem(i);
       if (curr->get_type()!=Module_Param::MP_NotUsed) {
         get_at(i)->set_param(*curr);
       }
@@ -1993,26 +2126,92 @@ void Set_Of_Template::set_param(Module_Param& param)
     break;
   case Module_Param::MP_Indexed_List:
     if (template_selection!=SPECIFIC_VALUE) set_size(0);
-    for (size_t i=0; i<param.get_size(); ++i) {
-      Module_Param* const current = param.get_elem(i);
+    for (size_t i=0; i<mp->get_size(); ++i) {
+      Module_Param* const current = mp->get_elem(i);
       get_at((int)current->get_id()->get_index())->set_param(*current);
     }
     break;
   case Module_Param::MP_Superset_Template:
   case Module_Param::MP_Subset_Template:
-    set_type(param.get_type()==Module_Param::MP_Superset_Template ? SUPERSET_MATCH : SUBSET_MATCH, param.get_size());
-    for (size_t i=0; i<param.get_size(); i++) {
-      get_set_item((int)i)->set_param(*param.get_elem(i));
+    set_type(mp->get_type()==Module_Param::MP_Superset_Template ? SUPERSET_MATCH : SUBSET_MATCH, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      get_set_item((int)i)->set_param(*mp->get_elem(i));
     }
     break;
   default:
     param.type_error("set of template", get_descriptor()->name);
   }
-  is_ifpresent = param.get_ifpresent();
-  set_length_range(param);
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+  if (param.get_length_restriction() != NULL) {
+    set_length_range(param);
+  }
+  else {
+    set_length_range(*mp);
+  }
 }
 
-void Set_Of_Template::check_restriction(template_res t_res, const char* t_name) const
+Module_Param* Set_Of_Template::get_param(Module_Param_Name& param_name) const
+{
+  if (param_name.next_name()) {
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the elements, not to the whole record of
+    char* param_field = param_name.get_current_name();
+    if (param_field[0] < '0' || param_field[0] > '9') {
+      TTCN_error("Unexpected record field name in module parameter reference, "
+        "expected a valid index for set of template type `%s'",
+        get_descriptor()->name);
+    }
+    int param_index = -1;
+    sscanf(param_field, "%d", &param_index);
+    return get_at(param_index)->get_param(param_name);
+  }
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Vector<Module_Param*> values;
+    for (int i = 0; i < single_value.n_elements; ++i) {
+      values.push_back(single_value.value_elements[i]->get_param(param_name));
+    }
+    mp = new Module_Param_Value_List();
+    mp->add_list_with_implicit_ids(&values);
+    values.clear();
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (int i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i]->get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  mp->set_length_restriction(get_length_range());
+  return mp;
+}
+
+void Set_Of_Template::check_restriction(template_res t_res, const char* t_name,
+                                        boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -2025,7 +2224,7 @@ void Set_Of_Template::check_restriction(template_res t_res, const char* t_name) 
       single_value.value_elements[i]->check_restriction(t_res, t_name ? t_name : get_descriptor()->name);
     return;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -2307,7 +2506,8 @@ void Record_Template::log() const
   if (err_descr) err_descr->log();
 }
 
-boolean Record_Template::matchv(const Base_Type* other_value) const
+boolean Record_Template::matchv(const Base_Type* other_value,
+                                boolean legacy) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -2325,8 +2525,8 @@ boolean Record_Template::matchv(const Base_Type* other_value) const
       const Base_Type* elem_value = other_rec->get_at(elem_count);
       if (!elem_value->is_bound()) return FALSE;
       boolean elem_match = is_optional ?
-        ( elem_value->ispresent() ? elem_tmpl->matchv(elem_value->get_opt_value()) : elem_tmpl->match_omit() ) :
-        elem_tmpl->matchv(other_rec->get_at(elem_count));
+        ( elem_value->ispresent() ? elem_tmpl->matchv(elem_value->get_opt_value(), legacy) : elem_tmpl->match_omit(legacy) ) :
+        elem_tmpl->matchv(other_rec->get_at(elem_count), legacy);
       if (!elem_match) return FALSE;
       if (is_optional) next_optional_idx++;
     }
@@ -2334,7 +2534,7 @@ boolean Record_Template::matchv(const Base_Type* other_value) const
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
     for (int list_count = 0; list_count < value_list.n_values; list_count++)
-      if (value_list.list_value[list_count]->matchv(other_value)) return template_selection == VALUE_LIST;
+      if (value_list.list_value[list_count]->matchv(other_value, legacy)) return template_selection == VALUE_LIST;
     return template_selection == COMPLEMENTED_LIST;
   default:
     TTCN_error("Matching an uninitialized/unsupported template of type %s.", get_descriptor()->name);
@@ -2342,10 +2542,10 @@ boolean Record_Template::matchv(const Base_Type* other_value) const
   return FALSE;
 }
 
-void Record_Template::log_matchv(const Base_Type* match_value) const
+void Record_Template::log_matchv(const Base_Type* match_value, boolean legacy) const
 {
   if (TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()) {
-    if (matchv(match_value)) {
+    if (matchv(match_value, legacy)) {
       TTCN_Logger::print_logmatch_buffer();
       TTCN_Logger::log_event_str(" matched");
     } else {
@@ -2360,13 +2560,13 @@ void Record_Template::log_matchv(const Base_Type* match_value) const
           const Base_Type* elem_value = match_rec->get_at(elem_count);
           if (is_optional) {
             if (elem_value->ispresent()) {
-              if (!elem_tmpl->matchv(elem_value->get_opt_value())) {
+              if (!elem_tmpl->matchv(elem_value->get_opt_value(), legacy)) {
                 TTCN_Logger::log_logmatch_info(".%s", fld_name(elem_count));
-                elem_tmpl->log_matchv(elem_value->get_opt_value());
+                elem_tmpl->log_matchv(elem_value->get_opt_value(), legacy);
                 TTCN_Logger::set_logmatch_buffer_len(previous_size);
               }
             } else {
-              if (!elem_tmpl->match_omit()) {
+              if (!elem_tmpl->match_omit(legacy)) {
                 TTCN_Logger::log_logmatch_info(".%s := omit with ", fld_name(elem_count));
                 TTCN_Logger::print_logmatch_buffer();
                 elem_tmpl->log();
@@ -2375,9 +2575,9 @@ void Record_Template::log_matchv(const Base_Type* match_value) const
               }
             }
           } else {//mandatory
-            if (!elem_tmpl->matchv(elem_value)) {
+            if (!elem_tmpl->matchv(elem_value, legacy)) {
               TTCN_Logger::log_logmatch_info(".%s", fld_name(elem_count));
-              elem_tmpl->log_matchv(elem_value);
+              elem_tmpl->log_matchv(elem_value, legacy);
               TTCN_Logger::set_logmatch_buffer_len(previous_size);
             }
           }//if
@@ -2405,15 +2605,15 @@ void Record_Template::log_matchv(const Base_Type* match_value) const
         TTCN_Logger::log_event_str(fld_name(elem_count));
         TTCN_Logger::log_event_str(" := ");
         if (is_optional) {
-          if (elem_value->ispresent()) elem_tmpl->log_matchv(elem_value->get_opt_value());
+          if (elem_value->ispresent()) elem_tmpl->log_matchv(elem_value->get_opt_value(), legacy);
           else {
             TTCN_Logger::log_event_str("omit with ");
             elem_tmpl->log();
-            if (elem_tmpl->match_omit()) TTCN_Logger::log_event_str(" matched");
+            if (elem_tmpl->match_omit(legacy)) TTCN_Logger::log_event_str(" matched");
             else TTCN_Logger::log_event_str(" unmatched");
           }
         } else {
-          elem_tmpl->log_matchv(elem_value);
+          elem_tmpl->log_matchv(elem_value, legacy);
         }
         if (is_optional) next_optional_idx++;
       }
@@ -2422,7 +2622,7 @@ void Record_Template::log_matchv(const Base_Type* match_value) const
       match_value->log();
       TTCN_Logger::log_event_str(" with ");
       log();
-      if (matchv(match_value)) TTCN_Logger::log_event_str(" matched");
+      if (matchv(match_value, legacy)) TTCN_Logger::log_event_str(" matched");
       else TTCN_Logger::log_event_str(" unmatched");
     }
   }
@@ -2481,13 +2681,13 @@ void Record_Template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean Record_Template::is_present() const
+boolean Record_Template::is_present(boolean legacy /*= FALSE*/) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean Record_Template::match_omit() const
+boolean Record_Template::match_omit(boolean legacy /*= FALSE*/) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -2496,9 +2696,13 @@ boolean Record_Template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i]->match_omit()) return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i]->match_omit()) return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -2528,7 +2732,13 @@ void Record_Template::set_param(Module_Param& param)
   }
   
   param.basic_check(Module_Param::BC_TEMPLATE, "record/set template");
-  switch (param.get_type()) {
+  
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     set_value(OMIT_VALUE);
     break;
@@ -2539,28 +2749,35 @@ void Record_Template::set_param(Module_Param& param)
     set_value(ANY_OR_OMIT);
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t i=0; i<param.get_size(); i++) {
-      get_list_item(i)->set_param(*param.get_elem(i));
+  case Module_Param::MP_ComplementList_Template: {
+    Record_Template** list_items = (Record_Template**)
+      allocate_pointers(mp->get_size());
+    for (size_t i = 0; i < mp->get_size(); i++) {
+      list_items[i] = create();
+      list_items[i]->set_param(*mp->get_elem(i));
     }
-    break;
+    clean_up();
+    template_selection = mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST;
+    value_list.n_values = mp->get_size();
+    value_list.list_value = list_items;
+    break; }
   case Module_Param::MP_Value_List:
     set_specific();
-    if (single_value.n_elements<(int)param.get_size()) {
-      param.error("Record/set template of type %s has %d fields but list value has %d fields", get_descriptor()->name, single_value.n_elements, (int)param.get_size());
+    if (single_value.n_elements<(int)mp->get_size()) {
+      param.error("Record/set template of type %s has %d fields but list value has %d fields", get_descriptor()->name, single_value.n_elements, (int)mp->get_size());
     }
-    for (size_t i=0; i<param.get_size(); i++) {
-      Module_Param* mp = param.get_elem(i);
-      if (mp->get_type()!=Module_Param::MP_NotUsed) {
-        get_at((int)i)->set_param(*mp);
+    for (size_t i=0; i<mp->get_size(); i++) {
+      Module_Param* mp_field = mp->get_elem(i);
+      if (mp_field->get_type()!=Module_Param::MP_NotUsed) {
+        get_at((int)i)->set_param(*mp_field);
       }
     }
     break;
   case Module_Param::MP_Assignment_List:
     set_specific();
-    for (size_t i=0; i<param.get_size(); ++i) {
-      Module_Param* const current = param.get_elem(i);
+    for (size_t i=0; i<mp->get_size(); ++i) {
+      Module_Param* const current = mp->get_elem(i);
       bool found = false;
       for (int j=0; j<single_value.n_elements; ++j) {
         if (!strcmp(fld_name(j), current->get_id()->get_name())) {
@@ -2579,10 +2796,73 @@ void Record_Template::set_param(Module_Param& param)
   default:
     param.type_error("record/set template", get_descriptor()->name);
   }
-  is_ifpresent = param.get_ifpresent();
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
-void Record_Template::check_restriction(template_res t_res, const char* t_name) const
+Module_Param* Record_Template::get_param(Module_Param_Name& param_name) const
+{
+  if (param_name.next_name()) {
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the fields, not to the whole record
+    char* param_field = param_name.get_current_name();
+    if (param_field[0] >= '0' && param_field[0] <= '9') {
+      TTCN_error("Unexpected array index in module parameter reference, "
+        "expected a valid field name for record/set template type `%s'",
+        get_descriptor()->name);
+    }
+    for (int field_idx = 0; field_idx < single_value.n_elements; field_idx++) {
+      if (strcmp(fld_name(field_idx), param_field) == 0) {
+        return get_at(field_idx)->get_param(param_name);
+      }
+    }
+    TTCN_error("Field `%s' not found in record/set type `%s'",
+      param_field, get_descriptor()->name);
+  }
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    mp = new Module_Param_Assignment_List();
+    for (int i = 0; i < single_value.n_elements; ++i) {
+      Module_Param* mp_field = get_at(i)->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr(fld_name(i))));
+      mp->add_elem(mp_field);
+    }
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (int i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i]->get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
+}
+
+void Record_Template::check_restriction(template_res t_res, const char* t_name,
+                                        boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -2595,7 +2875,7 @@ void Record_Template::check_restriction(template_res t_res, const char* t_name) 
       single_value.value_elements[i]->check_restriction(t_res, t_name ? t_name : get_descriptor()->name);
     return;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -2780,7 +3060,8 @@ void Empty_Record_Template::log() const
   log_ifpresent();
 }
 
-boolean Empty_Record_Template::matchv(const Base_Type* other_value) const
+boolean Empty_Record_Template::matchv(const Base_Type* other_value,
+                                      boolean legacy) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -2793,7 +3074,7 @@ boolean Empty_Record_Template::matchv(const Base_Type* other_value) const
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
     for (int list_count = 0; list_count < value_list.n_values; list_count++)
-      if (value_list.list_value[list_count]->matchv(other_value)) return template_selection == VALUE_LIST;
+      if (value_list.list_value[list_count]->matchv(other_value, legacy)) return template_selection == VALUE_LIST;
     return template_selection == COMPLEMENTED_LIST;
   default:
     TTCN_error("Matching an uninitialized/unsupported template of type %s.", get_descriptor()->name);
@@ -2801,12 +3082,12 @@ boolean Empty_Record_Template::matchv(const Base_Type* other_value) const
   return FALSE;
 }
 
-void Empty_Record_Template::log_matchv(const Base_Type* match_value) const
+void Empty_Record_Template::log_matchv(const Base_Type* match_value, boolean legacy) const
 {
   match_value->log();
   TTCN_Logger::log_event_str(" with ");
   log();
-  if (matchv(match_value)) TTCN_Logger::log_event_str(" matched");
+  if (matchv(match_value, legacy)) TTCN_Logger::log_event_str(" matched");
   else TTCN_Logger::log_event_str(" unmatched");
 }
 
@@ -2854,13 +3135,13 @@ void Empty_Record_Template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean Empty_Record_Template::is_present() const
+boolean Empty_Record_Template::is_present(boolean legacy /*= FALSE*/) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean Empty_Record_Template::match_omit() const
+boolean Empty_Record_Template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -2869,9 +3150,13 @@ boolean Empty_Record_Template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i]->match_omit()) return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i]->match_omit()) return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -2881,7 +3166,11 @@ boolean Empty_Record_Template::match_omit() const
 void Empty_Record_Template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "empty record/set template");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     set_value(OMIT_VALUE);
     break;
@@ -2892,20 +3181,69 @@ void Empty_Record_Template::set_param(Module_Param& param)
     set_value(ANY_OR_OMIT);
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t i=0; i<param.get_size(); i++) {
-      get_list_item(i)->set_param(*param.get_elem(i));
+  case Module_Param::MP_ComplementList_Template: {
+    Empty_Record_Template** list_items = (Empty_Record_Template**)
+      allocate_pointers(mp->get_size());
+    for (size_t i = 0; i < mp->get_size(); i++) {
+      list_items[i] = create();
+      list_items[i]->set_param(*mp->get_elem(i));
     }
-    break;
+    clean_up();
+    template_selection = mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST;
+    value_list.n_values = mp->get_size();
+    value_list.list_value = list_items;
+    break; }
   case Module_Param::MP_Value_List:
-    if (param.get_size()==0) set_value(SPECIFIC_VALUE);
+    if (mp->get_size()==0) {
+      set_selection(SPECIFIC_VALUE);
+    }
     else param.type_error("empty record/set template", get_descriptor()->name);
     break;
   default:
     param.type_error("empty record/set template", get_descriptor()->name);
   }
-  is_ifpresent = param.get_ifpresent();
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* Empty_Record_Template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE:
+    mp = new Module_Param_Value_List();
+    break;
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (int i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i]->get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
 }
 
 #endif

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -153,5 +153,8 @@ extern bool operator==(const ustring::universal_char& uc1,
 
 extern bool operator<(const ustring::universal_char& uc1,
   const ustring::universal_char& uc2);
+
+/** Converts the unicode string to UTF-8 format */
+extern string ustring_to_uft8(const ustring&);
 
 #endif // _Common_ustring_HH

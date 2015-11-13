@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -148,7 +148,8 @@ static EventTypes get_event_type(char *buf)
 	ptr2=strstr(buf,EventTypeNames[a]);
 	if(ptr2<ptr1&&ptr2!=NULL) {
 	    ptr1=ptr2;
-	    if(*(ptr2+strlen(EventTypeNames[a]))==' '&& *(ptr2-1)==' ')
+	    if(*(ptr2+strlen(EventTypeNames[a]))==' '&& *(ptr2-1)==' ' 
+               && *(ptr2+strlen(EventTypeNames[a])+1)!='|')
 		return a;
 	}
     }

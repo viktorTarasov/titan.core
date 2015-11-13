@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -64,8 +64,6 @@ testcase calculationTest() runs on FuncRef_comp
     { binary  := refers(add) } };
   var integer result_1 := calculate_expr(operands_1, operators_1);
   var integer result_2 := calculate_expr(operands_2, operators_2);
-  log("result 1 = ", result_1);
-  log("result 2 = ", result_2);
   if (result_1 == result_2) { setverdict(pass); }
   else { setverdict(fail); }
 }
@@ -76,9 +74,6 @@ template bin_oper bin_oper_tmpl3 := omit;
 
 testcase funcTemplateTest() runs on FuncRef_comp
 {
-  log(bin_oper_tmpl);
-  log(bin_oper_tmpl2);
-  log(bin_oper_tmpl3);
   var bin_oper a := refers(add);
   var bin_oper s := refers(sub);
   var bin_oper m := refers(mul);
@@ -166,7 +161,6 @@ type function fact_func_type(in integer num, inout integer steps,
 
 function factorial1(in integer num, inout integer steps) return integer
 {
-  //log("factorial1 called");
   steps := steps + 1;
   if (num<2) { return 1; }
   else { return num*factorial1(num-1,steps); }
@@ -176,7 +170,6 @@ function factorial1(in integer num, inout integer steps) return integer
 function factorial2(in integer num, inout integer steps, in fact_func_type ff)
 return integer
 {
-  //log("factorial2 called");
   steps := steps + 1;
   if (num<2) { return 1; }
   else { return num*ff.apply(num-1,steps,refers(factorial3)); }
@@ -185,7 +178,6 @@ return integer
 function factorial3(in integer num, inout integer steps, in fact_func_type ff)
 return integer
 {
-  //log("factorial3 called");
   steps := steps + 1;
   if (num<2) { return 1; }
   else { return num*ff.apply(num-1,steps,refers(factorial2)); }

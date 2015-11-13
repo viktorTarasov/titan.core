@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2000-2014 Ericsson Telecom AB
+# Copyright (c) 2000-2015 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
@@ -21,7 +21,7 @@ nonMandatoryPar logFiles logger_control namedActualParameters \
 assignmentNotation omitdef anytype RAW implicitMsgEncoding pattern_quadruples \
 macros visibility hexstrOper ucharstrOper objidOper CRTR00015758 slider \
 XML ipv6 implicitOmit testcase_defparam transparent HQ16404 cfgFile \
-all_from lazyEval tryCatch text2ttcn json junitlogger ttcn2json profiler
+all_from lazyEval tryCatch text2ttcn json junitlogger ttcn2json profiler templateOmit
 
 ifdef DYN
 DIRS += loggerplugin

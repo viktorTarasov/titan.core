@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2000-2014 Ericsson Telecom AB
+# Copyright (c) 2000-2015 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = TrecofOper.ttcn TrecofCompat.ttcn
+TTCN3_MODULES = TrecofOper.ttcn TrecofCompat.ttcn Circular1.ttcn Circular2.ttcn
 ifdef RT2
 TTCN3_MODULES += TrecofParamRef.ttcn
 ASN1_MODULES = BerType.asn

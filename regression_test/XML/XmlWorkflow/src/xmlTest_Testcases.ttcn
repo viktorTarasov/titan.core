@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -158,7 +158,7 @@ testcase tc_xsd2ttcn_versionTest() runs on xmlTest_CT
 //simple records
 testcase tc_firstTrial() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn elements.xsd","",c_shell_successWithWarning)
+  f_shellCommandWithVerdict("xsd2ttcn elements.xsd","",c_shell_successWithoutWarningAndError)
 }
 
 // see http://www.w3.org/TR/xmlschema-0/ 2.1 The Purchase Order Schema
@@ -179,7 +179,7 @@ testcase tc_empty() runs on xmlTest_CT
 
 testcase tc_annotation() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn XmlTest_annotation.xsd","",c_shell_successWithoutWarningAndError);
+  f_shellCommandWithVerdict("xsd2ttcn XmlTest_annotation.xsd","",c_shell_successWithWarning);
   if(getverdict==pass) {
       f_compareFiles(
       "www_XmlTest_org_annotation_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
@@ -194,6 +194,15 @@ testcase tc_annotation1() runs on xmlTest_CT
 testcase tc_annotation2() runs on xmlTest_CT
 {
   f_shellCommandWithVerdict("xsd2ttcn XmlTest_annotation2.xsd","",c_shell_error);
+}
+
+testcase tc_xml_in_annotation() runs on xmlTest_CT
+{
+  f_shellCommandWithVerdict("xsd2ttcn xml_in_annotation.xsd","",c_shell_successWithoutWarningAndError);
+  if(getverdict==pass) {
+      f_compareFiles(
+      "www_example_org_xml_in_annotation_e.ttcn","www_example_org_xml_in_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
 }
 
 //Incorrect version: 1.1
@@ -223,7 +232,7 @@ testcase tc_version() runs on xmlTest_CT
 //TODO:Not ready yet
 testcase tc_options_c() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn -c XmlTest_annotation.xsd","",c_shell_successWithoutWarningAndError );
+  f_shellCommandWithVerdict("xsd2ttcn -c XmlTest_annotation.xsd","",c_shell_successWithWarning );
   if(getverdict==pass) {
     f_compareFiles("www_XmlTest_org_annotation_c_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
   }
@@ -232,7 +241,7 @@ testcase tc_options_c() runs on xmlTest_CT
 //         -e:             disable the generation of encoding instructions in TTCN-3 modules
 testcase tc_options_e() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn -e XmlTest_annotation.xsd","",c_shell_successWithoutWarningAndError );
+  f_shellCommandWithVerdict("xsd2ttcn -e XmlTest_annotation.xsd","",c_shell_successWithWarning );
   if(getverdict==pass) {
     f_compareFiles("www_XmlTest_org_annotation_e_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
   }
@@ -241,9 +250,24 @@ testcase tc_options_e() runs on xmlTest_CT
 //         -f file:        the XSD files are taken from file instead of the command line
 testcase tc_options_f() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn -f XmlTest_files1.txt","",c_shell_successWithoutWarningAndError );
+  f_shellCommandWithVerdict("xsd2ttcn -f XmlTest_files1.txt","",c_shell_successWithWarning );
   if(getverdict==pass) {
     f_compareFiles("www_XmlTest_org_annotation_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
+  }
+}
+
+testcase tc_options_g() runs on xmlTest_CT
+{
+  f_shellCommandWithVerdict("xsd2ttcn -g dont_generate_element_substitution.xsd","",c_shell_successWithoutWarningAndError );
+  if(getverdict==pass) {
+    f_compareFiles("www_example_org_dont_generate_element_substitution_e.ttcn",
+                   "www_example_org_dont_generate_element_substitution.ttcn", c_numOfDiff_headerModNameAndNamespace);
+  }
+
+  f_shellCommandWithVerdict("xsd2ttcn generate_element_substitution.xsd","",c_shell_successWithoutWarningAndError );
+  if(getverdict==pass) {
+    f_compareFiles("www_example_org_generate_element_substitution_e.ttcn",
+                   "www_example_org_generate_element_substitution.ttcn", c_numOfDiff_headerModNameAndNamespace);
   }
 }
 
@@ -263,7 +287,7 @@ testcase tc_options_p() runs on xmlTest_CT
   f_shellCommandWithVerdict("mv XSD.ttcn  tmp_XSD.ttcn","",c_shell_successWithoutWarningAndError );
   f_shellCommandWithVerdict("mv UsefulTtcn3Types.ttcn tmp_UsefulTtcn3Types.ttcn","",c_shell_successWithoutWarningAndError );
 
-  f_shellCommandWithVerdict("xsd2ttcn -p XmlTest_annotation.xsd","",c_shell_successWithoutWarningAndError );
+  f_shellCommandWithVerdict("xsd2ttcn -p XmlTest_annotation.xsd","",c_shell_successWithWarning );
   if(getverdict==pass) {
     f_shellCommandWithVerdict("ls www_XmlTest_org_annotation.ttcn", "",c_shell_successWithoutWarningAndError);
     f_shellCommandWithVerdict("ls  XSD.ttcn", "",c_shell_error_noSuchFileOrDirectory );
@@ -300,7 +324,7 @@ testcase tc_options_s() runs on xmlTest_CT
 //         -t:             disable the generation of timing information in TTCN-3 modules
 testcase tc_options_t() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn -t  XmlTest_annotation.xsd","",c_shell_successWithoutWarningAndError );
+  f_shellCommandWithVerdict("xsd2ttcn -t  XmlTest_annotation.xsd","",c_shell_successWithWarning );
   if(getverdict==pass) {
     f_compareFiles("www_XmlTest_org_annotation_t_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
   }
@@ -317,7 +341,7 @@ testcase tc_options_v() runs on xmlTest_CT
 //         -q:             quiet - disable the issue of status messages
 testcase tc_options_V() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn -q XmlTest_annotation.xsd","",c_shell_successWithoutWarningAndError );
+  f_shellCommandWithVerdict("xsd2ttcn -q XmlTest_annotation.xsd","",c_shell_successWithWarning);
 }
 
 //TODO:Not ready yet
@@ -331,7 +355,7 @@ testcase tc_options_w() runs on xmlTest_CT
 //         -x:             disable schema validation but generate TTCN-3 modules
 testcase tc_options_x() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn -x XmlTest_annotation.xsd","",c_shell_successWithoutWarningAndError );
+  f_shellCommandWithVerdict("xsd2ttcn -x XmlTest_annotation.xsd","",c_shell_successWithWarning);
 }
 
 testcase tc_options_wrong() runs on xmlTest_CT
@@ -364,12 +388,21 @@ group Testcases_basedOnTtcnStandard9 {
   testcase tc_XmlTest_all() runs on xmlTest_CT
   {
     f_shellCommandWithVerdict("xsd2ttcn all.xsd","",c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+	"www_example_org_all_e.ttcn","www_example_org_all.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_element_in_all_neg() runs on xmlTest_CT
+  {
+    f_shellCommandWithVerdict("xsd2ttcn element_in_all_minmax.xsd","",c_shell_error);
   }
 
   //Passed
   testcase tc_XmlTest_any_anyAttribute() runs on xmlTest_CT
   {
-    f_shellCommandWithVerdict("xsd2ttcn any_anyAttribute.xsd","",c_shell_successWithoutWarningAndError);
+    f_shellCommandWithVerdict("xsd2ttcn any_anyAttribute.xsd","",c_shell_successWithWarning);
   }
 
   //HQ73011
@@ -384,6 +417,34 @@ group Testcases_basedOnTtcnStandard9 {
     }
   }
 
+  testcase tc_anyattribute_optional() runs on xmlTest_CT
+  {
+  f_shellCommandWithVerdict("xsd2ttcn anyattribute_optional.xsd","",c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "http_www_example_org_wildcards_e.ttcn","http_www_example_org_wildcards.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_anyattribute_single() runs on xmlTest_CT
+  {
+  f_shellCommandWithVerdict("xsd2ttcn anyattrib_single.xsd","",c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_anyattrib_single_e.ttcn","www_example_org_anyattrib_single.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_anyattribute_in_complex() runs on xmlTest_CT
+  {
+  f_shellCommandWithVerdict("xsd2ttcn anyattr_in_complex.xsd","",c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_anyattr_in_complex_e.ttcn","www_example_org_anyattr_in_complex.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+  }
+
+
   //Passed
   testcase tc_XmlTest_attributeGroup() runs on xmlTest_CT
   {
@@ -394,6 +455,98 @@ group Testcases_basedOnTtcnStandard9 {
   testcase tc_XmlTest_attribute_use_noTNS() runs on xmlTest_CT
   {
     f_shellCommandWithVerdict("xsd2ttcn attribute_use_noTNS.xsd","",c_shell_error);
+  }
+
+  testcase tc_id_attribute() runs on xmlTest_CT
+  {
+    f_shellCommandWithVerdict("xsd2ttcn id_attrib.xsd","",c_shell_successWithWarning);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_id_attrib_e.ttcn", "www_example_org_id_attrib.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_attribute_order() runs on xmlTest_CT
+  {
+    f_shellCommandWithVerdict("xsd2ttcn attrib_order_a.xsd attrib_order_b.xsd attrib_order_c.xsd","",c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_attrib_order_a_e.ttcn", "www_example_org_attrib_order_a.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_attrib_order_b_e.ttcn", "www_example_org_attrib_order_b.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_name_conv_non_alphanumeric() runs on xmlTest_CT
+  {
+    f_shellCommandWithVerdict("xsd2ttcn name_conv_non_alphanumeric.xsd","",c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "http_www_example_org_name_conv2_e.ttcn",
+        "http_www_example_org_name_conv2.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_module_name_convert_with_diff_namespace() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn imported_module.xsd imported_module_.xsd","",c_shell_successWithoutWarningAndError);
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "imported_module_e.ttcn","imported_module.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "imported_module_1_e.ttcn","imported_module_1.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_module_typename_conversion() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn module_typename_conversion.xsd module_typename_conversion_1.xsd","",c_shell_successWithoutWarningAndError);
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "module_typename_conversion_e.ttcn","module_typename_conversion.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "MyTypes_e.ttcn","MyTypes.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_name_conv_remove_seq_of_low_line() runs on xmlTest_CT
+  {
+    f_shellCommandWithVerdict("xsd2ttcn name_conv_remove_seq_of_low_line.xsd","",
+                              c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "http_www_example_org_name_conv3_e.ttcn",
+        "http_www_example_org_name_conv3.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_name_conv_with_z() runs on xmlTest_CT
+  {
+    f_shellCommandWithVerdict("xsd2ttcn -z name_conv_with_z.xsd","",c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_name_conv_http_e.ttcn",
+        "www_example_org_name_conv_http.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_comment_placement() runs on xmlTest_CT
+  {
+    f_shellCommandWithVerdict("xsd2ttcn comment_placement.xsd","",c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_comment_placement_e.ttcn",
+        "www_example_org_comment_placement.ttcn", c_numOfDiff_headerAndModuleName);
+    }
   }
 
 }//group
@@ -486,7 +639,17 @@ group StringTest {
   //Passed
   testcase tc_string_withFixedLength() runs on xmlTest_CT
   {
-    f_shellCommandWithVerdict("xsd2ttcn XmlTest_string_withFixedLength.xsd","",c_shell_error)
+    f_shellCommandWithVerdict("xsd2ttcn XmlTest_string_withFixedLength.xsd","",c_shell_error);
+  }
+
+  testcase tc_fixed_value() runs on xmlTest_CT
+  {
+    f_shellCommandWithVerdict("xsd2ttcn fixed_value.xsd","",c_shell_successWithWarning);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_fixed_value.ttcn",
+        "www_example_org_fixed_value_e.ttcn", c_numOfDiff_headerAndModuleName);
+    }
   }
 
   //Passed
@@ -557,6 +720,15 @@ group StringTest {
   {
     f_shellCommandWithVerdict("xsd2ttcn  XmlTest_string_withTypeAndBase.xsd","",c_shell_error)
   }
+
+  //testcase tc_string_pattern_square_brackets() runs on xmlTest_CT
+  //{
+  //  f_shellCommandWithVerdict("xsd2ttcn regex_square_brackets.xsd","",c_shell_successWithoutWarningAndError);
+  //  if(getverdict==pass) {
+  //    f_compareFiles(
+  //      "www_example_org_regex_square_brackets_e.ttcn","www_example_org_regex_square_brackets.ttcn", c_numOfDiff_headerAndModuleName);
+  //  }
+  //}
 }//StringTest
 
 //******************************
@@ -570,6 +742,15 @@ group BooleanTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_boolean_e.ttcn","www_XmlTest_org_boolean.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_boolean_variant_commented() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn  boolean_variant_commented.xsd","",c_shell_successWithoutWarningAndError)
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_boolean_variant_commented_e.ttcn",
+        "www_example_org_boolean_variant_commented.ttcn", c_numOfDiff_headerAndModuleName);
     }
   }
 }//BooleanTest
@@ -631,6 +812,16 @@ group DecimalTest {
       f_compareFiles(
         "www_XmlTest_org_decimal_withEnum_e.ttcn",
         "www_XmlTest_org_decimal_withEnum.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+  testcase tc_decimal_fractiondigits() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn  decimal_fractiondigits.xsd","",c_shell_successWithWarning)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_decimal_fractiondigits_e.ttcn",
+        "www_example_org_decimal_fractiondigits.ttcn", c_numOfDiff_headerAndModuleName);
     }
   }
 }//DecimalTest
@@ -717,6 +908,17 @@ group IntegerTest {
 
 }//IntegerTest
 
+
+  testcase tc_float_not_a_number() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn  not_a_number_minex_inf_maxex_-inf.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_not_a_number_minex_inf_maxex_inf_e.ttcn",
+        "www_example_org_not_a_number_minex_inf_maxex_inf.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
   //
   testcase tc_simpleType_enum() runs on xmlTest_CT {
 
@@ -725,6 +927,51 @@ group IntegerTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_simple_enum_e.ttcn","www_XmlTest_org_simple_enum.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+  }//tc_
+
+  testcase tc_simpleType_restrict_comp() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  simpletype_restrict_comp.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_simpletype_restrict_comp_e.ttcn","www_example_org_simpletype_restrict_comp.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+  }//tc_
+
+  testcase tc_simpleType_ref() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  simpletype_ref.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_simpletype_ref_e.ttcn","www_example_org_simpletype_ref.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+  }//tc_
+
+  testcase tc_simpleType_base() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  simpletype_base.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_simpletype_base_e.ttcn","www_example_org_simpletype_base.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+  }//tc_
+
+  //
+  testcase tc_enum_field_names() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  enum_field_names.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_enum_field_names_e.ttcn","www_example_org_enum_field_names.ttcn", c_numOfDiff_headerAndModuleName);
     }
 
   }//tc_
@@ -785,6 +1032,17 @@ group ListTest {
     }
 
   }//tc_
+
+  testcase tc_list_simpletype() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  list_simpletype.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_list_simpletype_e.ttcn","www_example_org_list_simpletype.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+  }//tc_
 }//ListTest
 
 group UnionTest {
@@ -806,6 +1064,39 @@ group UnionTest {
     if(getverdict==pass) {
       f_compareFiles(
         "ETSI_CR5852_union_e.ttcn","ETSI_CR5852_union.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+ testcase tc_enumeration_union_restriction() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  enumeration_restriction.xsd","",c_shell_successWithWarning)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_enumeration_restriction_e.ttcn",
+        "www_example_org_enumeration_restriction.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+ testcase tc_enumeration_union_restriction2() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  enumeration_restriction2.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_seq_enumeration_restriction_e.ttcn",
+        "www_example_org_seq_enumeration_restriction.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+ testcase tc_enumeration_remove_dup() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  enumeration_remove_dup.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_enumeration_remove_dup_e.ttcn",
+        "www_example_org_enumeration_remove_dup.ttcn", c_numOfDiff_headerAndModuleName);
     }
   }
 
@@ -853,6 +1144,18 @@ group ComplexType {
      }
   }//tc_
 
+  testcase tc_complex_namespaceas() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn namespaceas.xsd imported2.xsd","",c_shell_successWithoutWarningAndError)
+
+     if(getverdict==pass) {
+       f_compareFiles(
+        "www_example_org_namespaceas_e.ttcn","www_example_org_namespaceas.ttcn", c_numOfDiff_headerAndModuleName);
+       f_compareFiles(
+        "www_example_org_imported2_e.ttcn","www_example_org_imported2.ttcn", c_numOfDiff_headerAndModuleName);
+     }
+  }//tc_
+
   testcase tc_complex_mixed_conv() runs on xmlTest_CT {
 
     f_shellCommandWithVerdict("xsd2ttcn  XmlTest_complex_mixed.xsd","",c_shell_successWithoutWarningAndError)
@@ -863,15 +1166,35 @@ group ComplexType {
      }
   }//tc_
 
+  testcase tc_complex_group_reference() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  seq_group_reference.xsd","",c_shell_successWithoutWarningAndError)
+
+     if(getverdict==pass) {
+       f_compareFiles(
+        "www_example_org_seq_group_reference_e.ttcn","www_example_org_seq_group_reference.ttcn", c_numOfDiff_headerAndModuleName);
+     }
+  }//tc_
+
   //TR:HL29258
   testcase tc_complex_mixed_encDec() runs on xmlTest_CT {
      f_encDecTest_ComplexTypeWithMixed();
   }//tc_
 
+ testcase tc_complex_seq_embeds_seq() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  sequence_embeds_sequence.xsd","",c_shell_successWithoutWarningAndError)
+
+     if(getverdict==pass) {
+       f_compareFiles(
+        "http_www_example_org_seq_embeds_seq_e.ttcn","http_www_example_org_seq_embeds_seq.ttcn", c_numOfDiff_headerModNameAndNamespace);
+       f_encDecTest_InternationalPrice();
+     }
+  }//tc_
 
   testcase tc_complex_choice_converter() runs on xmlTest_CT {
 
-    f_shellCommandWithVerdict("xsd2ttcn  XmlTest_complex_choice.xsd","",c_shell_successWithoutWarningAndError)
+    f_shellCommandWithVerdict("xsd2ttcn  XmlTest_complex_choice.xsd","",c_shell_successWithWarning)
 
      if(getverdict==pass) {
        f_compareFiles(
@@ -960,16 +1283,13 @@ group ComplexType {
   //positive testcase for group "all". The type has no optional field (element).The input is correct
   testcase tc_complex_all_noOptional_pos_encDec() runs on xmlTest_CT {
     var  MySubjects2 vl_pdu:= {
+      order:={math,english,chemistry, physics,history},
       year:="2009",
-      subject:= {
-        order:={math,english,chemistry, physics,history},
-
-        english:="Advanced Group 1",
-        math:="Beginners 1",
-        physics:="Mechanics 1",
-        chemistry:="CH2",
-        history:="H1"
-      }
+      english:="Advanced Group 1",
+      math:="Beginners 1",
+      physics:="Mechanics 1",
+      chemistry:="CH2",
+      history:="H1"
     }
     var charstring vl_expectedEncodedPdu:=
       "<MySubjects2 Year='2009'>\n\t<Math>Beginners 1</Math>\n\t<English>Advanced Group 1</English>\n\t<Chemistry>CH2</Chemistry>\n\t<Physics>Mechanics 1</Physics>\n\t<History>H1</History>\n</MySubjects2>\n\n";
@@ -981,26 +1301,22 @@ group ComplexType {
   //Passed, TR: HL32978
   testcase tc_complex_all_noOptional_neg1_encDec() runs on xmlTest_CT {
     var  MySubjects2 vl_pdu:= {
+      order:={math,english,chemistry, physics,history},
       year:="2009",
-      subject:= {
-        order:={math,english,chemistry, physics,history},
-        english:="Advanced Group 1",
-        math:="Beginners 1",
-        physics:="Mechanics 1",
-        chemistry:="CH2"
-        //history:="H1"
-      }
+      english:="Advanced Group 1",
+      math:="Beginners 1",
+      physics:="Mechanics 1",
+      chemistry:="CH2"
+      //history:="H1"
     }
     var  MySubjects2 vl_expectedDecodedPdu:= {
+      order:={math,english,chemistry, physics,history},
       year:="2009",
-      subject:= {
-        order:={math,english,chemistry, physics,history},
-        english:="Advanced Group 1",
-        math:="Beginners 1",
-        physics:="Mechanics 1",
-        chemistry:="CH2",
-        history:=""
-      }
+      english:="Advanced Group 1",
+      math:="Beginners 1",
+      physics:="Mechanics 1",
+      chemistry:="CH2",
+      history:=""
     }
     var charstring vl_expectedEncodedPdu:="<MySubjects2 Year='2009'>\n\t<Math>Beginners 1</Math>\n\t<English>Advanced Group 1</English>\n\t<Chemistry>CH2</Chemistry>\n\t<Physics>Mechanics 1</Physics>\n\t<History/>\n</MySubjects2>\n\n"
       f_encDecTest_ComplexTypeWithAll_MySubject2(vl_pdu,vl_expectedEncodedPdu,vl_expectedDecodedPdu,0);
@@ -1013,26 +1329,22 @@ group ComplexType {
   //Passed, TR: HL32978
   testcase tc_complex_all_noOptional_neg2_encDec() runs on xmlTest_CT {
     var  MySubjects2 vl_pdu:= {
+      order:={math,english,chemistry, physics},
       year:="2009",
-      subject:= {
-        order:={math,english,chemistry, physics},
-        english:="Advanced Group 1",
-        math:="Beginners 1",
-        physics:="Mechanics 1",
-        chemistry:="CH2"
-        //history:="H1"
-      }
+      english:="Advanced Group 1",
+      math:="Beginners 1",
+      physics:="Mechanics 1",
+      chemistry:="CH2"
+      //history:="H1"
     }
     var  MySubjects2 vl_expectedDecodedPdu:= {
+      order:={math,english,chemistry, physics},
       year:="2009",
-      subject:= {
-        order:={math,english,chemistry, physics},
-        english:="Advanced Group 1",
-        math:="Beginners 1",
-        physics:="Mechanics 1",
-        chemistry:="CH2",
-        history:=""
-      }
+      english:="Advanced Group 1",
+      math:="Beginners 1",
+      physics:="Mechanics 1",
+      chemistry:="CH2",
+      history:=""
     }
     var charstring vl_expectedEncodedPdu:="<MySubjects2 Year='2009'/>\n\n"; //expecting error report!!!
       //"<MySubjects2 Year='2009'>\n\t<Math>Beginners 1</Math>\n\t<English>Advanced Group 1</English>\n\t<Chemistry>CH2</Chemistry>\n\t<Physics>Mechanics 1</Physics>\n</MySubjects2>\n\n"
@@ -1045,15 +1357,13 @@ group ComplexType {
   //Passed,  TR: HL32978
   testcase tc_complex_all_noOptional_neg3_encDec() runs on xmlTest_CT {
     var  MySubjects2 vl_pdu:= {
+      order:={math,english,chemistry,math,math},
       year:="2009",
-      subject:= {
-        order:={math,english,chemistry,math,math},
-        english:="Advanced Group 1",
-        math:="Beginners 1",
-        physics:="Mechanics 1",
-        chemistry:="CH2"
-        //history:="H1"
-      }
+      english:="Advanced Group 1",
+      math:="Beginners 1",
+      physics:="Mechanics 1",
+      chemistry:="CH2"
+      //history:="H1"
     }
     var charstring vl_expectedEncodedPdu:="<MySubjects2 Year='2009'/>\n\n"; //expecting error report!!!
       //"<MySubjects2 Year='2009'>\n\t<Math>Beginners 1</Math>\n\t<English>Advanced Group 1</English>\n\t<Chemistry>CH2</Chemistry>\n\t<Physics>Mechanics 1</Physics>\n</MySubjects2>\n\n"
@@ -1070,15 +1380,13 @@ group ComplexType {
   //Passed,  TR: HL32978
   testcase tc_complex_all_noOptional_empty_encDec() runs on xmlTest_CT {
     var  MySubjects2 vl_pdu:= {
-      year:="2009",
-      subject:= {
-        order:={ }
-        //english:="Advanced Group 1",
-        //math:="Beginners 1",
-        //physics:="Mechanics 1",
-        //chemistry:="CH2"
-        //history:="H1"
-      }
+      order:={ },
+      year:="2009"
+      //english:="Advanced Group 1",
+      //math:="Beginners 1",
+      //physics:="Mechanics 1",
+      //chemistry:="CH2"
+      //history:="H1"
     }
     var charstring vl_expectedEncodedPdu:="<MySubjects2 Year='2009'/>\n\n"; //expecting error report!!!
       f_encDecTest_ComplexTypeWithAll_MySubject2(vl_pdu,vl_expectedEncodedPdu,vl_pdu,1);
@@ -1108,6 +1416,69 @@ group ComplexType {
     }
   }//tc_
 
+  testcase tc_complex_extension_name_attrib_convert() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn name_conversion_extension_attrib.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "name_conversion_extension_attrib_e.ttcn","name_conversion_extension_attrib.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_complex_long_extension() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn long_extension.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_long_extension_e.ttcn","www_example_org_long_extension.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_complex_self_recursion() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn complex_self_recursion.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_self_recursion_e.ttcn","www_example_org_self_recursion.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_type_name_conversion_follow() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn type_conversion_follow.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_conversion_follow_e.ttcn","www_example_org_type_conversion_follow.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_complex_extension_with_attrib() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn attribute_in_extension.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "attribute_in_extension_e.ttcn","attribute_in_extension.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_extension_restriction_with_attrib() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn attrib_restriction_extension.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_attr_ext_rest_e.ttcn","www_example_org_attr_ext_rest.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_attrib_enum() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn attrib_enum.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_attrib_enum_e.ttcn","www_example_org_attrib_enum.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+  }//tc_
+
   testcase tc_complex_extension_encDec() runs on xmlTest_CT
   {
     var MySubjects3Extension vl_pdu:={
@@ -1130,6 +1501,47 @@ group ComplexType {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_complex_restriction_e.ttcn","www_XmlTest_org_complex_restriction.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+ testcase tc_complex_restriction_with_use() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn complex_restriction_with_use.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "http_www_example_org_complex_restriction_with_use_e.ttcn",
+         "http_www_example_org_complex_restriction_with_use.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+ testcase tc_complex_nillable() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn complex_nillable.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_complex_nillable_e.ttcn",
+         "www_example_org_complex_nillable.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+ //Fixed or defaultforempty attribute is not allowed on nillable elements according to TITAN
+ testcase tc_nillable_fixed() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn nillable_fixed.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_nillable_fixed_e.ttcn",
+         "www_example_org_nillable_fixed.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+ testcase tc_no_ns_connector() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn no_ns_connector.xsd","",c_shell_successWithWarning)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_no_ns_connector_e.ttcn",
+         "www_example_org_no_ns_connector.ttcn", c_numOfDiff_headerModNameAndNamespace);
     }
   }//tc_
 
@@ -1303,11 +1715,20 @@ group ComplexType {
   //  tc_complex_any_pos_converter
   //=========================================================================
   testcase tc_complex_any_pos_converter() runs on xmlTest_CT {
-    f_shellCommandWithVerdict("xsd2ttcn XmlTest_complex_any.xsd","",c_shell_successWithoutWarningAndError);
+    f_shellCommandWithVerdict("xsd2ttcn XmlTest_complex_any.xsd","",c_shell_successWithWarning);
 
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_complex_any_e.ttcn","www_XmlTest_org_complex_any.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_imported_type_prefix() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn import_prefix_name.xsd imported_prefix_name.xsd","",c_shell_successWithoutWarningAndError);
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_import_prefix_e.ttcn","www_example_org_import_prefix.ttcn", c_numOfDiff_headerAndModuleName);
     }
   }//tc_
 
@@ -1378,6 +1799,26 @@ group Elements{
      if(getverdict==pass) {
        f_compareFiles(
         "www_XmlTest_org_element_anyType_e.ttcn","www_XmlTest_org_element_anyType.ttcn", c_numOfDiff_headerAndModuleName);
+     }
+  }//tc_
+
+  testcase tc_element_attrib_qualified() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn qualified_element_attrib.xsd","",c_shell_successWithoutWarningAndError)
+
+     if(getverdict==pass) {
+       f_compareFiles(
+        "www_example_org_qualified_element_attrib_e.ttcn","www_example_org_qualified_element_attrib.ttcn", c_numOfDiff_headerAndModuleName);
+     }
+  }//tc_
+
+  testcase tc_element_attrib_unqualified() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn unqualified_element_attrib.xsd","",c_shell_successWithoutWarningAndError)
+
+     if(getverdict==pass) {
+       f_compareFiles(
+        "www_example_org_unqualified_element_attrib_e.ttcn","www_example_org_unqualified_element_attrib.ttcn", c_numOfDiff_headerAndModuleName);
      }
   }//tc_
 
@@ -1557,6 +1998,91 @@ group Elements{
   }//tc_
 
 
+  testcase tc_substitutiongroup() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_e.ttcn","www_example_org_substitutiongroup.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_substitutiongroup_abstract_block_rest() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_abstract_block_1.xsd","",c_shell_successWithWarning)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_abstract_block_1_e.ttcn",
+        "www_example_org_substitutiongroup_abstract_block_1.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_substitutiongroup_abstract_block_ext() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_abstract_block_2.xsd","",c_shell_successWithWarning)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_abstract_block_2_e.ttcn",
+        "www_example_org_substitutiongroup_abstract_block_2.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_substitutiongroup_complex_without_element() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_complex_without_element.xsd","",c_shell_successWithWarning)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_complex_without_element_e.ttcn",
+        "www_example_org_substitutiongroup_complex_without_element.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_substitutiongroup_long_extension() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_complex_without_element.xsd","",c_shell_successWithWarning)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_complex_without_element_e.ttcn",
+        "www_example_org_substitutiongroup_complex_without_element.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_substitutiongroup_neg() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_neg.xsd","",c_shell_error)
+
+  }//tc_
+
+  testcase tc_substitutiongroup_diff_module() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_main.xsd substitutiongroup_ref.xsd","",c_shell_successWithWarning)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_ref_e.ttcn",
+        "www_example_org_substitutiongroup_ref.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_main_e.ttcn",
+        "www_example_org_substitutiongroup_main.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+
+
   //========================================================
   // tc_element_nameInheritance_conv
   // Checks if name of named (aliased) type is not inherited
@@ -1583,7 +2109,7 @@ group Elements{
     f_encDecTest_Tgc();
   }//tc_
 
-  //"Abstract" and "substitutionGroup" are not supported. Therefore converter sends WARNINGs
+  //"Abstract" are not supported. Therefore converter sends WARNINGs
   testcase tc_element_abstract_conv() runs on xmlTest_CT {
     f_shellCommandWithVerdict("xsd2ttcn XmlTest_element_abstract.xsd","",c_shell_successWithWarning);
   }//tc_
@@ -1594,6 +2120,45 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "XmlTest_imsike_e.ttcn","XmlTest_imsike.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_element_nillable_with_annotations() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn nillable_annotations.xsd","",c_shell_successWithoutWarningAndError );
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "nillable_annotations_e.ttcn","nillable_annotations.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_element_nillable_in_nillable_extension() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn nillable_in_nillable_extension.xsd","",c_shell_successWithoutWarningAndError );
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "http_www_example_org_nillable_in_nillable_extension_e.ttcn",
+        "http_www_example_org_nillable_in_nillable_extension.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_element_attributegroup_nillable() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn attributegroup_nillable.xsd","",c_shell_successWithoutWarningAndError );
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_attributegroup_nillable_e.ttcn",
+        "www_example_org_type_attributegroup_nillable.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  testcase tc_element_attributegroup_ingroup() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn attribgroup_ingroup.xsd","",c_shell_successWithoutWarningAndError );
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_attribgroup_ingroup_e.ttcn",
+        "www_example_org_attribgroup_ingroup.ttcn", c_numOfDiff_headerModNameAndNamespace);
     }
   }//tc_
 
@@ -1645,11 +2210,13 @@ control {
   execute(tc_annotation());
   execute(tc_annotation1());
   execute(tc_annotation2());
+  execute(tc_xml_in_annotation());
   //option tests:
   execute(tc_version());
   execute(tc_options_c());
   execute(tc_options_e());
   execute(tc_options_f());
+  execute(tc_options_g());
   execute(tc_options_p());
   execute(tc_options_s());
   execute(tc_options_t());
@@ -1663,10 +2230,22 @@ control {
 
   //===ttcn standard===
   execute(tc_XmlTest_all());//Passed
+  execute(tc_element_in_all_neg());
   execute(tc_XmlTest_any_anyAttribute());//Passed
   execute(tc_XmlTest_HQ73011());//Passed
+  execute(tc_anyattribute_optional());
+  execute(tc_anyattribute_single());
+  execute(tc_anyattribute_in_complex());
   execute(tc_XmlTest_attributeGroup());//Passed
   execute(tc_XmlTest_attribute_use_noTNS());//Passed
+  execute(tc_id_attribute());
+  execute(tc_attribute_order());
+  execute(tc_name_conv_non_alphanumeric());
+  execute(tc_module_name_convert_with_diff_namespace());
+  execute(tc_module_typename_conversion());
+  execute(tc_name_conv_remove_seq_of_low_line());
+  execute(tc_name_conv_with_z());
+  execute(tc_comment_placement());
 
   //===W3C standard===
 
@@ -1678,6 +2257,7 @@ control {
   execute(tc_string_withEmptyLength()); //TR: HL20441, Solved
   execute(tc_string_withNegativeLength());//Passed
   execute(tc_string_withFixedLength());  //Passed
+  execute(tc_fixed_value());
   execute(tc_string_withFloatLength()); //passed ???
   execute(tc_string_withPosMinLength()); //Passed, TR: HL21690
   execute(tc_string_withEmptyMin());//Passed
@@ -1688,14 +2268,18 @@ control {
   execute(tc_string_withFaultyMinMaxLength());//Passed, TR: TODO
   execute(tc_string_withOverDefinition()); //TR: HL25948, Solved
   execute(tc_string_withTypeAndBase());//Passed
+  //TODO: put this test back later
+  //execute(tc_string_pattern_square_brackets());
   //===Boolean===
   execute(tc_boolean());//Passed
+  execute(tc_boolean_variant_commented());
   //===Decimal===
   execute(tc_decimal());//Passed
   //execute(tc_decimal_withLength()); length not supported
   execute(tc_decimal_withMinMaxInclusive());//TR: HL20715
   execute(tc_decimal_withMinMaxExclusive());//Passed TR: HL21166 -solved
   execute(tc_decimal_withEnum());           //Passed,TR HL21196 -solved
+  execute(tc_decimal_fractiondigits());
   //===Integer===
   execute(tc_integer());//Passed
   execute(tc_integer_empty1());//Passed
@@ -1711,19 +2295,31 @@ control {
   execute(tc_list_conv()); //Passed
   execute(tc_list_encDec());//Passed
   execute(tc_integerList());//Passed
+  execute(tc_list_simpletype());//Passed
+  //===Float===
+  execute(tc_float_not_a_number());
 
   //===simpleType enum====
   execute(tc_simpleType_enum());//Passed
+  execute(tc_simpleType_restrict_comp());
+  execute(tc_simpleType_ref());
+  execute(tc_simpleType_base());
+  execute(tc_enum_field_names());
   //===union===
   execute(tc_union());//TR:HL23577
   execute(tc_union_optional());//CR_TR18883
+  execute(tc_enumeration_union_restriction());
+  execute(tc_enumeration_union_restriction2());
+  execute(tc_enumeration_remove_dup());
   //===complex===
   execute(tc_complex1()); //Passed
   execute(tc_complex2());//TR: HL24977
   execute(tc_complex_simpleContent());
+  execute(tc_complex_namespaceas());
   execute(tc_complex_mixed_conv()); //Passed
+  execute(tc_complex_group_reference());
   execute(tc_complex_mixed_encDec()); //TR:HL29258 - Rejected. Reason: Not supported feature, TODO:Write CR!!
-
+  execute(tc_complex_seq_embeds_seq());
   execute(tc_complex_choice_converter());//Passed
   execute(tc_complex_choice_encDec());//Passed
 
@@ -1740,12 +2336,22 @@ control {
   execute(tc_complex_minOccursMaxOccurs());  //Passed, TR (ethgry): HL10386
   execute(tc_complex_extension_converter()); //TR HL32505
   execute(tc_complex_extension_encDec());    //Passed
+  execute(tc_complex_extension_name_attrib_convert());
+  execute(tc_complex_long_extension());
+  execute(tc_type_name_conversion_follow());
+  execute(tc_complex_extension_with_attrib());
+  execute(tc_extension_restriction_with_attrib());
+  execute(tc_attrib_enum());
+  execute(tc_complex_self_recursion());
   execute(tc_complex_restriction_converter()); //Failed, TR HL32896
+  execute(tc_complex_restriction_with_use());
+  execute(tc_complex_nillable());
+  execute(tc_nillable_fixed());
+  execute(tc_no_ns_connector());
 
 
 
-
-//  execute(tc_complex_restriction_encDec());
+  //execute(tc_complex_restriction_encDec()); Dynamic test case error:Attempt to XER-encode an unbound record of
 
 
 
@@ -1759,15 +2365,18 @@ control {
   execute(tc_complex_import_pos2_converter());
   execute(tc_complex_import_neg1_converter());
   execute(tc_complex_import_withSL_converter());//SchemaLocation
-  //execute(tc_complex_import_withSL_encDec());
+  execute(tc_complex_import_withSL_encDec());
   execute(tc_complex_import_nameCollision_converter());
   execute(tc_complex_import_nameCollision2_converter());
   execute(tc_complex_any_pos_converter());
+  execute(tc_imported_type_prefix());
   execute(tc_complex_any_pos1_encDec()); //Failed, TR: HL37887
   execute(tc_complex_any_pos2_encDec());
   execute(tc_complex_any_pos3_encDec());//failed, TR:
   //===element===
   execute(tc_element_anyType_converter());//Passed
+  execute(tc_element_attrib_qualified());
+  execute(tc_element_attrib_unqualified());
   execute(tc_element_anyType_empty_encDec());//Passed TR: HL29679
   execute(tc_element_anyType_attrOnly_encDec());//Passed
   execute(tc_element_anyType_2attrOnly_encDec());//Passed
@@ -1784,11 +2393,27 @@ control {
   execute(tc_element_recOfElements_anonymousType_conv());
   execute(tc_element_recOfElements_anonymousType_encDec());
 
+
+  //===substitutiongroup===
+  execute(tc_substitutiongroup());
+  execute(tc_substitutiongroup_abstract_block_rest());
+  execute(tc_substitutiongroup_abstract_block_ext());
+  execute(tc_substitutiongroup_complex_without_element());
+  execute(tc_substitutiongroup_long_extension());
+  execute(tc_substitutiongroup_neg());
+  execute(tc_substitutiongroup_diff_module());
+
+
+
   execute(tc_element_nameInheritance_conv());
   execute(tc_element_nameInheritance_encDec());//TR HL49978
   execute(tc_element_Tgc_encDec());//TR HL49978
   execute(tc_element_abstract_conv()); //Not supported features
   execute(tc_element_nillable_converter());
+  execute(tc_element_nillable_with_annotations());
+  execute(tc_element_nillable_in_nillable_extension());
+  execute(tc_element_attributegroup_nillable());
+  execute(tc_element_attributegroup_ingroup());
   execute(tc_element_nillable_IndividualTrigger_nilFalse_encDec());
   execute(tc_element_nillable_IndividualTrigger_nilTrue_encDec());
   execute(tc_element_nillable_Isp_nilFalse_encDec());

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -10,8 +10,7 @@
 
 #include "../common/memory.h"
 
-class Mstring
-{
+class Mstring {
   expstring_t text;
 
 public:
@@ -109,6 +108,14 @@ public:
   bool isFound(char c);
 
   /**
+   * Look for c-string content
+   * and returns a pointer to the first
+   * character where the matching found,
+   * returns null otherwise
+   */
+  char * foundAt(const char * c);
+
+  /**
    * The first character of the Mstring is set to uppercase
    */
   void setCapitalized();
@@ -149,17 +156,21 @@ public:
    * Get character in string
    * Returns a reference the character at position pos in the string.
    */
-  char & operator [](size_t pos);
-  const char & operator [](size_t pos) const;
+  char & operator[](size_t pos);
+  const char & operator[](size_t pos) const;
 
   /**
    * Mstring assignment
    * Sets a copy of the argument as the new content for the string object.
    * The previous content is dropped.
    */
-  Mstring & operator =(const Mstring & str);
-  Mstring & operator =(const char * s);
-  Mstring & operator =(char c);
+  Mstring & operator=(const Mstring & str);
+  Mstring & operator=(const char * s);
+  Mstring & operator=(char c);
+
+  const Mstring * operator*() const {
+    return this;
+  }
 
   /**
    * Append to Mstring
@@ -167,73 +178,73 @@ public:
    * The new Mstring content is the content existing in the string object before the call
    * followed by the content of the argument.
    */
-  Mstring & operator +=(const Mstring & str);
-  Mstring & operator +=(const char * s);
-  Mstring & operator +=(char c);
+  Mstring & operator+=(const Mstring & str);
+  Mstring & operator+=(const char * s);
+  Mstring & operator+=(char c);
 
   /**
    * String comparison operators
    * These overloaded global operator functions perform the appropriate comparison operation between lhs and rhs.
    *
    */
-  friend bool operator ==(const Mstring & lhs, const Mstring & rhs);
-  friend bool operator ==(const char * lhs, const Mstring & rhs);
-  friend bool operator ==(const Mstring & lhs, const char * rhs);
+  friend bool operator==(const Mstring & lhs, const Mstring & rhs);
+  friend bool operator==(const char * lhs, const Mstring & rhs);
+  friend bool operator==(const Mstring & lhs, const char * rhs);
 
-  friend bool operator !=(const Mstring & lhs, const Mstring & rhs);
-  friend bool operator !=(const char * lhs, const Mstring & rhs);
-  friend bool operator !=(const Mstring & lhs, const char * rhs);
+  friend bool operator!=(const Mstring & lhs, const Mstring & rhs);
+  friend bool operator!=(const char * lhs, const Mstring & rhs);
+  friend bool operator!=(const Mstring & lhs, const char * rhs);
 
-  friend bool operator <(const Mstring & lhs, const Mstring & rhs);
-  friend bool operator <(const char * lhs, const Mstring & rhs);
-  friend bool operator <(const Mstring & lhs, const char * rhs);
+  friend bool operator<(const Mstring & lhs, const Mstring & rhs);
+  friend bool operator<(const char * lhs, const Mstring & rhs);
+  friend bool operator<(const Mstring & lhs, const char * rhs);
 
-  friend bool operator >(const Mstring & lhs, const Mstring & rhs);
-  friend bool operator >(const char * lhs, const Mstring & rhs);
-  friend bool operator >(const Mstring & lhs, const char * rhs);
+  friend bool operator>(const Mstring & lhs, const Mstring & rhs);
+  friend bool operator>(const char * lhs, const Mstring & rhs);
+  friend bool operator>(const Mstring & lhs, const char * rhs);
 
-  friend bool operator <=(const Mstring & lhs, const Mstring & rhs);
-  friend bool operator <=(const char * lhs, const Mstring & rhs);
-  friend bool operator <=(const Mstring & lhs, const char * rhs);
+  friend bool operator<=(const Mstring & lhs, const Mstring & rhs);
+  friend bool operator<=(const char * lhs, const Mstring & rhs);
+  friend bool operator<=(const Mstring & lhs, const char * rhs);
 
-  friend bool operator >=(const Mstring & lhs, const Mstring & rhs);
-  friend bool operator >=(const char * lhs, const Mstring & rhs);
-  friend bool operator >=(const Mstring & lhs, const char * rhs);
+  friend bool operator>=(const Mstring & lhs, const Mstring & rhs);
+  friend bool operator>=(const char * lhs, const Mstring & rhs);
+  friend bool operator>=(const Mstring & lhs, const char * rhs);
 };
 
 /*
  * Add strings
  * Returns an Mstring object whose contents are the combination of the content of lhs followed by those of rhs.
  */
-const Mstring operator +(const Mstring & lhs, const Mstring & rhs);
-const Mstring operator +(const char * lhs, const Mstring & rhs);
-const Mstring operator +(char lhs, const Mstring & rhs);
-const Mstring operator +(const Mstring & lhs, const char * rhs);
-const Mstring operator +(const Mstring & lhs, char rhs);
+const Mstring operator+(const Mstring & lhs, const Mstring & rhs);
+const Mstring operator+(const char * lhs, const Mstring & rhs);
+const Mstring operator+(char lhs, const Mstring & rhs);
+const Mstring operator+(const Mstring & lhs, const char * rhs);
+const Mstring operator+(const Mstring & lhs, char rhs);
 
-bool operator ==(const Mstring & lhs, const Mstring & rhs);
-bool operator ==(const char * lhs, const Mstring & rhs);
-bool operator ==(const Mstring & lhs, const char * rhs);
+bool operator==(const Mstring & lhs, const Mstring & rhs);
+bool operator==(const char * lhs, const Mstring & rhs);
+bool operator==(const Mstring & lhs, const char * rhs);
 
-bool operator !=(const Mstring & lhs, const Mstring & rhs);
-bool operator !=(const char * lhs, const Mstring & rhs);
-bool operator !=(const Mstring & lhs, const char * rhs);
+bool operator!=(const Mstring & lhs, const Mstring & rhs);
+bool operator!=(const char * lhs, const Mstring & rhs);
+bool operator!=(const Mstring & lhs, const char * rhs);
 
-bool operator <(const Mstring & lhs, const Mstring & rhs);
-bool operator <(const char * lhs, const Mstring & rhs);
-bool operator <(const Mstring & lhs, const char * rhs);
+bool operator<(const Mstring & lhs, const Mstring & rhs);
+bool operator<(const char * lhs, const Mstring & rhs);
+bool operator<(const Mstring & lhs, const char * rhs);
 
-bool operator >(const Mstring & lhs, const Mstring & rhs);
-bool operator >(const char * lhs, const Mstring & rhs);
-bool operator >(const Mstring & lhs, const char * rhs);
+bool operator>(const Mstring & lhs, const Mstring & rhs);
+bool operator>(const char * lhs, const Mstring & rhs);
+bool operator>(const Mstring & lhs, const char * rhs);
 
-bool operator <=(const Mstring & lhs, const Mstring & rhs);
-bool operator <=(const char * lhs, const Mstring & rhs);
-bool operator <=(const Mstring & lhs, const char * rhs);
+bool operator<=(const Mstring & lhs, const Mstring & rhs);
+bool operator<=(const char * lhs, const Mstring & rhs);
+bool operator<=(const Mstring & lhs, const char * rhs);
 
-bool operator >=(const Mstring & lhs, const Mstring & rhs);
-bool operator >=(const char * lhs, const Mstring & rhs);
-bool operator >=(const Mstring & lhs, const char * rhs);
+bool operator>=(const Mstring & lhs, const Mstring & rhs);
+bool operator>=(const char * lhs, const Mstring & rhs);
+bool operator>=(const Mstring & lhs, const char * rhs);
 
 extern const Mstring empty_string;
 

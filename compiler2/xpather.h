@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -65,7 +65,7 @@ struct string_list* getExternalLibs(const char* projName);
 #ifdef __cplusplus
 extern "C"
 #endif
-struct string_list* getExternalLibPathes(const char* projName);
+struct string_list* getExternalLibPaths(const char* projName);
 
 #ifdef __cplusplus
 extern "C"
@@ -183,6 +183,7 @@ boolean buildObjects(const char* projName, boolean add_referenced);
  * @param addsourcelineinfo addSourceLineInfo -l
  * @param suppresswarnings suppressWarnings -S
  * @param outparamboundness  outParamBoundness -Y
+ * @param omit_in_value_list omitInValueList -M
  * @param solspeclibs SolarisSpecificLibraries
  * @param sol8speclibs Solaris8SpecificLibraries
  * @param linuxspeclibs LinuxSpecificLibraries
@@ -197,7 +198,7 @@ boolean buildObjects(const char* projName, boolean add_referenced);
  * @param target_placement_list a list of (target,placement) strings pairs from the TPD
  * @param prefix_workdir prefix working directory with project name
  * @param run_command_list contains the working directories and the makefilegen commands to be called there
- * @return TPD_SUCESS if parsing successful, TPD_SKIPPED if the tpd
+ * @return TPD_SUCCESS if parsing successful, TPD_SKIPPED if the tpd
  *         was seen already, or TPD_FAILED on error.
  */
 #ifdef __cplusplus
@@ -221,10 +222,10 @@ tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   char** cxxcompiler, char** optlevel, char** optflags, boolean *disableber, boolean *disableraw, boolean *disabletext, boolean *disablexer,
   boolean *disablejson, boolean *forcexerinasn, boolean *defaultasomit, boolean *gccmessageformat,
   boolean *linenumber, boolean *includesourceinfo, boolean *addsourcelineinfo, boolean *suppresswarnings,
-  boolean *outparamboundness, struct string_list* solspeclibs, struct string_list* sol8speclibs,
+  boolean *outparamboundness, boolean *omit_in_value_list, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs,
   char** ttcn3preprocessor, struct string_list* linkerlibs, struct string_list* additionalObjects, struct string_list* linkerlibsearchpath, boolean Vflag, boolean Dflag,
   boolean *Zflag, boolean *Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, struct string2_list* run_command_list,
-  struct string2_list* required_configs);
+  struct string2_list* required_configs, struct string_list** profiled_file_list);
 
 #endif /* XPATHER_H_ */

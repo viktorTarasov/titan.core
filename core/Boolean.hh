@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -71,6 +71,7 @@ public:
   void log() const;
 
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
@@ -156,33 +157,34 @@ public:
   BOOLEAN_template& operator=(const OPTIONAL<BOOLEAN>& other_value);
   BOOLEAN_template& operator=(const BOOLEAN_template& other_value);
 
-  boolean match(boolean other_value) const;
-  boolean match(const BOOLEAN& other_value) const;
+  boolean match(boolean other_value, boolean legacy = FALSE) const;
+  boolean match(const BOOLEAN& other_value, boolean legacy = FALSE) const;
   boolean valueof() const;
 
   void set_type(template_sel template_type, unsigned int list_length);
   BOOLEAN_template& list_item(unsigned int list_index);
 
   void log() const;
-  void log_match(const BOOLEAN& match_value) const;
+  void log_match(const BOOLEAN& match_value, boolean legacy = FALSE) const;
 
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
 #ifdef TITAN_RUNTIME_2
   void valueofv(Base_Type* value) const { *(static_cast<BOOLEAN*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const BOOLEAN*>(other_value)); }
   Base_Template* clone() const { return new BOOLEAN_template(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &BOOLEAN_descr_; }
-  boolean matchv(const Base_Type* other_value) const { return match(*(static_cast<const BOOLEAN*>(other_value))); }
-  void log_matchv(const Base_Type* match_value) const  { log_match(*(static_cast<const BOOLEAN*>(match_value))); }
+  boolean matchv(const Base_Type* other_value, boolean legacy) const { return match(*(static_cast<const BOOLEAN*>(other_value)), legacy); }
+  void log_matchv(const Base_Type* match_value, boolean legacy) const  { log_match(*(static_cast<const BOOLEAN*>(match_value)), legacy); }
 #else
-  void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
 #endif
 };
 

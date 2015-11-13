@@ -1,4 +1,5 @@
 {
+	"$schema" : "http://json-schema.org/draft-04/schema#",
 	"definitions" : {
 		"one" : {
 			"HasAny" : {
@@ -56,7 +57,8 @@
 				"required" : [
 					"num",
 					"str"
-				]
+				],
+				"comment" : "abc"
 			},
 			"Set" : {
 				"type" : "object",
@@ -65,7 +67,8 @@
 					"os" : {
 						"type" : "string",
 						"subType" : "octetstring",
-						"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+						"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+						"MSB" : "first"
 					},
 					"buul" : {
 						"anyOf" : [
@@ -162,7 +165,8 @@
 							"bytes"
 						]
 					}
-				]
+				],
+				"defaultSelection" : "numbr"
 			},
 			"Width" : {
 				"enum" : [
@@ -269,7 +273,8 @@
 				"subType" : "record of",
 				"items" : {
 					"$ref" : "#/definitions/two/Ints"
-				}
+				},
+				"alias" : "RoRoI"
 			},
 			"Octets" : {
 				"type" : "array",
@@ -278,10 +283,13 @@
 					"type" : "string",
 					"subType" : "octetstring",
 					"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
-				}
+				},
+				"comment" : "set of octetstrings"
 			},
 			"PosInt" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false
 			},
 			"PosInts" : {
 				"type" : "array",
@@ -317,7 +325,8 @@
 						"inconc",
 						"fail",
 						"error"
-					]
+					],
+					"comment" : "verdict type"
 				}
 			}
 		},
@@ -357,7 +366,9 @@
 						"required" : [
 							"size",
 							"filled"
-						]
+						],
+						"comment" : "first comment",
+						"comment" : "second comment"
 					}
 				},
 				"additionalProperties" : false,
@@ -450,109 +461,6 @@
 			}
 		},
 		"Zero" : {
-			"SeqOfInt" : {
-				"type" : "array",
-				"subType" : "record of",
-				"items" : {
-					"type" : "integer"
-				}
-			},
-			"SeqProduct" : {
-				"type" : "object",
-				"subType" : "record",
-				"properties" : {
-					"name" : {
-						"type" : "string",
-						"subType" : "universal charstring"
-					},
-					"price" : {
-						"anyOf" : [
-							{
-								"type" : "number"
-							},
-							{
-								"enum" : [
-									"not_a_number",
-									"infinity",
-									"-infinity"
-								]
-							}
-						]
-					},
-					"id" : {
-						"anyOf" : [
-							{
-								"type" : "null"
-							},
-							{
-								"type" : "string",
-								"subType" : "octetstring",
-								"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
-							}
-						],
-						"omitAsNull" : false
-					},
-					"available" : {
-						"type" : "boolean"
-					}
-				},
-				"additionalProperties" : false,
-				"fieldOrder" : [
-					"name",
-					"price",
-					"id",
-					"available"
-				],
-				"required" : [
-					"name",
-					"price",
-					"available"
-				]
-			},
-			"Number" : {
-				"anyOf" : [
-					{
-						"type" : "object",
-						"properties" : {
-							"decimal" : {
-								"type" : "integer"
-							}
-						},
-						"additionalProperties" : false,
-						"required" : [
-							"decimal"
-						]
-					},
-					{
-						"type" : "object",
-						"properties" : {
-							"binary" : {
-								"type" : "string",
-								"subType" : "bitstring",
-								"pattern" : "^[01]*$"
-							}
-						},
-						"additionalProperties" : false,
-						"required" : [
-							"binary"
-						]
-					},
-					{
-						"type" : "object",
-						"properties" : {
-							"hexadecimal" : {
-								"type" : "string",
-								"subType" : "octetstring",
-								"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
-							}
-						},
-						"additionalProperties" : false,
-						"required" : [
-							"hexadecimal"
-						]
-					}
-				]
-			},
 			"AnyString" : {
 				"anyOf" : [
 					{
@@ -700,12 +608,37 @@
 					}
 				]
 			},
-			"ManyStrings" : {
-				"type" : "array",
-				"subType" : "record of",
-				"items" : {
-					"$ref" : "#/definitions/Zero/AnyString"
-				}
+			"Big_Choice" : {
+				"anyOf" : [
+					{
+						"type" : "object",
+						"properties" : {
+							"numbers" : {
+								"type" : "array",
+								"subType" : "set of",
+								"items" : {
+									"$ref" : "#/definitions/Zero/Number"
+								}
+							}
+						},
+						"additionalProperties" : false,
+						"required" : [
+							"numbers"
+						]
+					},
+					{
+						"type" : "object",
+						"properties" : {
+							"strings" : {
+								"$ref" : "#/definitions/Zero/ManyStrings"
+							}
+						},
+						"additionalProperties" : false,
+						"required" : [
+							"strings"
+						]
+					}
+				]
 			},
 			"Big_Set" : {
 				"type" : "object",
@@ -753,37 +686,69 @@
 					"color"
 				]
 			},
-			"Big_Choice" : {
+			"ManyStrings" : {
+				"type" : "array",
+				"subType" : "record of",
+				"items" : {
+					"$ref" : "#/definitions/Zero/AnyString"
+				}
+			},
+			"NullType" : {
+				"type" : "null"
+			},
+			"Number" : {
 				"anyOf" : [
 					{
 						"type" : "object",
 						"properties" : {
-							"numbers" : {
-								"type" : "array",
-								"subType" : "set of",
-								"items" : {
-									"$ref" : "#/definitions/Zero/Number"
-								}
+							"decimal" : {
+								"type" : "integer"
 							}
 						},
 						"additionalProperties" : false,
 						"required" : [
-							"numbers"
+							"decimal"
 						]
 					},
 					{
 						"type" : "object",
 						"properties" : {
-							"strings" : {
-								"$ref" : "#/definitions/Zero/ManyStrings"
+							"binary" : {
+								"type" : "string",
+								"subType" : "bitstring",
+								"pattern" : "^[01]*$"
 							}
 						},
 						"additionalProperties" : false,
 						"required" : [
-							"strings"
+							"binary"
+						]
+					},
+					{
+						"type" : "object",
+						"properties" : {
+							"hexadecimal" : {
+								"type" : "string",
+								"subType" : "octetstring",
+								"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+							}
+						},
+						"additionalProperties" : false,
+						"required" : [
+							"hexadecimal"
 						]
 					}
 				]
+			},
+			"ObjIdType" : {
+				"type" : "string",
+				"subType" : "objid",
+				"pattern" : "^[0-2][.][1-3]?[0-9]([.][0-9]|([1-9][0-9]+))*$"
+			},
+			"RelObjIdType" : {
+				"type" : "string",
+				"subType" : "objid",
+				"pattern" : "^[0-2][.][1-3]?[0-9]([.][0-9]|([1-9][0-9]+))*$"
 			},
 			"Season" : {
 				"enum" : [
@@ -806,42 +771,68 @@
 					"$ref" : "#/definitions/Zero/Number"
 				}
 			},
-			"NullType" : {
-				"type" : "null"
+			"SeqOfInt" : {
+				"type" : "array",
+				"subType" : "record of",
+				"items" : {
+					"type" : "integer"
+				}
 			},
-			"ObjIdType" : {
-				"type" : "string",
-				"subType" : "objid",
-				"pattern" : "^[0-2][.][1-3]?[0-9]([.][0-9]|([1-9][0-9]+))*$"
-			},
-			"RelObjIdType" : {
-				"type" : "string",
-				"subType" : "objid",
-				"pattern" : "^[0-2][.][1-3]?[0-9]([.][0-9]|([1-9][0-9]+))*$"
+			"SeqProduct" : {
+				"type" : "object",
+				"subType" : "record",
+				"properties" : {
+					"name" : {
+						"type" : "string",
+						"subType" : "universal charstring"
+					},
+					"price" : {
+						"anyOf" : [
+							{
+								"type" : "number"
+							},
+							{
+								"enum" : [
+									"not_a_number",
+									"infinity",
+									"-infinity"
+								]
+							}
+						]
+					},
+					"id" : {
+						"anyOf" : [
+							{
+								"type" : "null"
+							},
+							{
+								"type" : "string",
+								"subType" : "octetstring",
+								"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+							}
+						],
+						"omitAsNull" : false
+					},
+					"available" : {
+						"type" : "boolean"
+					}
+				},
+				"additionalProperties" : false,
+				"fieldOrder" : [
+					"name",
+					"price",
+					"id",
+					"available"
+				],
+				"required" : [
+					"name",
+					"price",
+					"available"
+				]
 			}
 		}
 	},
 	"anyOf" : [
-		{
-			"$ref" : "#/definitions/two/Ints",
-			"decoding" : {
-				"prototype" : [
-					"fast",
-					"f_dec_ints",
-					"os",
-					"x"
-				]
-			},
-			"encoding" : {
-				"prototype" : [
-					"fast",
-					"f_enc_ints",
-					"eents",
-					"octus"
-				],
-				"printing" : "pretty"
-			}
-		},
 		{
 			"$ref" : "#/definitions/one/Rec",
 			"decoding" : {
@@ -861,6 +852,26 @@
 					"f_enc_rec",
 					"x"
 				]
+			}
+		},
+		{
+			"$ref" : "#/definitions/two/Ints",
+			"decoding" : {
+				"prototype" : [
+					"fast",
+					"f_dec_ints",
+					"os",
+					"x"
+				]
+			},
+			"encoding" : {
+				"prototype" : [
+					"fast",
+					"f_enc_ints",
+					"eents",
+					"octus"
+				],
+				"printing" : "pretty"
 			}
 		},
 		{

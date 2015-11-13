@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -620,8 +620,9 @@ static void generate_receive(char **def_ptr, char **src_ptr,
       failed_str, message_type->dispname);
   if (is_trigger) src = mputstr(src, "remove_msg_queue_head();\n");
   src = mputprintf(src, "return %s;\n"
-    "} else if (!value_template.match(*my_head->message_%lu)) {\n",
-    failed_status, (unsigned long) message_index);
+    "} else if (!value_template.match(*my_head->message_%lu%s)) {\n",
+    failed_status, (unsigned long) message_index,
+    (omit_in_value_list ? ", TRUE" : ""));
   src = mputprintf(src,
     "const TTCN_Logger::Severity log_sev = %s;\n"
     "if (TTCN_Logger::log_this_event(log_sev)) {\n"
@@ -629,7 +630,7 @@ static void generate_receive(char **def_ptr, char **src_ptr,
     "port_name, my_head->sender_component,\n"
     "TitanLoggerApiSimple::MatchingFailureType_reason::message__does__not__match__template,\n"
     "(TTCN_Logger::begin_event(log_sev, TRUE),"
-    " value_template.log_match(*my_head->message_%lu),\n"
+    " value_template.log_match(*my_head->message_%lu%s),\n"
     " TTCN_Logger::end_event_log2str())"
     ");\n"
     "}\n",
@@ -637,7 +638,8 @@ static void generate_receive(char **def_ptr, char **src_ptr,
       "TTCN_Logger::MATCHING_MMUNSUCC" :
       "my_head->sender_component==SYSTEM_COMPREF ? "
       "TTCN_Logger::MATCHING_MMUNSUCC : TTCN_Logger::MATCHING_MCUNSUCC"),
-      (unsigned long) message_index);
+      (unsigned long) message_index,
+      (omit_in_value_list ? ", TRUE" : ""));
   if (is_trigger) src = mputstr(src, "remove_msg_queue_head();\n");
   src = mputprintf(src, "return %s;\n"
     "} else {\n"
@@ -653,7 +655,7 @@ static void generate_receive(char **def_ptr, char **src_ptr,
       "TTCN_Logger::log_matching_success(TitanLoggerApiSimple::PortType::message__,\n"
       "port_name, SYSTEM_COMPREF,\n"
       "(TTCN_Logger::begin_event(TTCN_Logger::MATCHING_MMSUCCESS, TRUE),"
-      " value_template.log_match(*my_head->message_%lu),\n"
+      " value_template.log_match(*my_head->message_%lu%s),\n"
       " TTCN_Logger::end_event_log2str()));\n"
       "}\n"
       "if (TTCN_Logger::log_this_event(TTCN_Logger::PORTEVENT_MMRECV)) "
@@ -666,7 +668,8 @@ static void generate_receive(char **def_ptr, char **src_ptr,
       " TTCN_Logger::log_event_str(\": %s : \"),\n"
       "my_head->message_%lu->log(), TTCN_Logger::end_event_log2str()),\n"
       "msg_head_count+1);\n"
-      "}\n", (unsigned long) message_index, logger_operation,
+      "}\n", (unsigned long) message_index,
+      (omit_in_value_list ? ", TRUE" : ""), logger_operation,
       message_type->dispname, (unsigned long) message_index);
   } else {
     src = mputprintf(src,
@@ -677,7 +680,7 @@ static void generate_receive(char **def_ptr, char **src_ptr,
       "TTCN_Logger::log_matching_success(TitanLoggerApiSimple::PortType::message__,\n"
       "port_name, my_head->sender_component,\n"
       "(TTCN_Logger::begin_event(log_sev, TRUE),"
-      " value_template.log_match(*my_head->message_%lu),\n"
+      " value_template.log_match(*my_head->message_%lu%s),\n"
       " TTCN_Logger::end_event_log2str()));\n"
       "}\n"
       "log_sev = my_head->sender_component==SYSTEM_COMPREF?"
@@ -689,7 +692,8 @@ static void generate_receive(char **def_ptr, char **src_ptr,
       "(TTCN_Logger::begin_event(log_sev,TRUE), TTCN_Logger::log_event_str(\": %s : \"),\n"
       "my_head->message_%lu->log(), TTCN_Logger::end_event_log2str()),\n"
       "msg_head_count+1);\n"
-      "}\n", (unsigned long) message_index, logger_operation,
+      "}\n", (unsigned long) message_index,
+      (omit_in_value_list ? ", TRUE" : ""), logger_operation,
       message_type->dispname, (unsigned long) message_index);
   }
 
@@ -893,7 +897,7 @@ static void generate_proc_incoming_data_logging(char **src_ptr,
       "TTCN_Logger::log_matching_success(TitanLoggerApiSimple::PortType::procedure__,\n"
       "port_name, SYSTEM_COMPREF,\n"
       "(TTCN_Logger::begin_event(TTCN_Logger::MATCHING_PMSUCCESS, TRUE),"
-      " %s(*proc_queue_head->%s_%lu),\n"
+      " %s(*proc_queue_head->%s_%lu%s),\n"
       " TTCN_Logger::end_event_log2str()));\n"
       "}\n"
       "if (TTCN_Logger::log_this_event(TTCN_Logger::PORTEVENT_PMIN)) "
@@ -905,6 +909,7 @@ static void generate_proc_incoming_data_logging(char **src_ptr,
       " TTCN_Logger::end_event_log2str()),\n"
       "msg_head_count+1);\n"
       "}\n", match_str, op_str, (unsigned long) signature_index,
+      (omit_in_value_list ? ", TRUE" : ""),
       op_str, (is_check ? "TRUE" : "FALSE"), op_str, (unsigned long) signature_index);
   } else {
     *src_ptr = mputprintf(*src_ptr, "TTCN_Logger::Severity log_sev = "
@@ -1012,12 +1017,13 @@ static void generate_getcall(char **def_ptr, char **src_ptr,
     "signature %s.\", port_name);\n"
     "return ALT_NO;\n"
     "} else if (!getcall_template.match_call"
-    "(*proc_queue_head->call_%lu)) {\n",
+    "(*proc_queue_head->call_%lu%s)) {\n",
     (unsigned long) signature_index,
     is_address ? "TTCN_Logger::MATCHING_PMUNSUCC" :
       "proc_queue_head->sender_component==SYSTEM_COMPREF ? "
       "TTCN_Logger::MATCHING_PMUNSUCC:TTCN_Logger::MATCHING_PCUNSUCC",
-      signature->dispname, (unsigned long) signature_index);
+      signature->dispname, (unsigned long) signature_index,
+      (omit_in_value_list ? ", TRUE" : ""));
   src = mputprintf(src,
     "const TTCN_Logger::Severity log_sev = %s;\n"
     "if (TTCN_Logger::log_this_event(log_sev)) {\n"
@@ -1025,7 +1031,7 @@ static void generate_getcall(char **def_ptr, char **src_ptr,
     "port_name, proc_queue_head->sender_component,\n"
     "TitanLoggerApiSimple::MatchingFailureType_reason::parameters__of__call__do__not__match__template,\n"
     "(TTCN_Logger::begin_event(log_sev, TRUE),"
-    " getcall_template.log_match_call(*proc_queue_head->call_%lu),"
+    " getcall_template.log_match_call(*proc_queue_head->call_%lu%s),"
     " TTCN_Logger::end_event_log2str()));\n"
     "}\n"
     "return ALT_NO;\n"
@@ -1036,7 +1042,9 @@ static void generate_getcall(char **def_ptr, char **src_ptr,
       "TTCN_Logger::MATCHING_PMUNSUCC" :
       "proc_queue_head->sender_component==SYSTEM_COMPREF ? "
       "TTCN_Logger::MATCHING_PMUNSUCC : TTCN_Logger::MATCHING_PCUNSUCC"),
-    (unsigned long) signature_index, (unsigned long) signature_index);
+    (unsigned long) signature_index,
+    (omit_in_value_list ? ", TRUE" : ""),
+    (unsigned long) signature_index);
   if (is_address) src = mputstr(src, "*proc_queue_head->sender_address;\n");
   else src = mputstr(src, "proc_queue_head->sender_component;\n");
 
@@ -1131,11 +1139,12 @@ static void generate_getreply(char **def_ptr, char **src_ptr,
     "signature %s.\", port_name);\n"
     "return ALT_NO;\n"
     "} else if (!getreply_template.match_reply"
-    "(*proc_queue_head->reply_%lu)) {\n", (unsigned long) signature_index,
+    "(*proc_queue_head->reply_%lu%s)) {\n", (unsigned long) signature_index,
     is_address ? "TTCN_Logger::MATCHING_PMUNSUCC" :
       "proc_queue_head->sender_component==SYSTEM_COMPREF?"
       "TTCN_Logger::MATCHING_PMUNSUCC:TTCN_Logger::MATCHING_PCUNSUCC",
-      signature->dispname, (unsigned long) signature_index);
+      signature->dispname, (unsigned long) signature_index,
+      (omit_in_value_list ? ", TRUE" : ""));
 
   src = mputprintf(src,
     "const TTCN_Logger::Severity log_sev = %s;\n"
@@ -1144,7 +1153,7 @@ static void generate_getreply(char **def_ptr, char **src_ptr,
     "port_name, proc_queue_head->sender_component,\n"
     "TitanLoggerApiSimple::MatchingFailureType_reason::parameters__of__reply__do__not__match__template,\n"
     "(TTCN_Logger::begin_event(log_sev, TRUE),"
-    " getreply_template.log_match_reply(*proc_queue_head->reply_%lu), "
+    " getreply_template.log_match_reply(*proc_queue_head->reply_%lu%s), "
     " TTCN_Logger::end_event_log2str()));\n"
     "}\n"
     "return ALT_NO;\n"
@@ -1155,7 +1164,9 @@ static void generate_getreply(char **def_ptr, char **src_ptr,
       "TTCN_Logger::MATCHING_PMUNSUCC" :
       "proc_queue_head->sender_component==SYSTEM_COMPREF ? "
       "TTCN_Logger::MATCHING_PMUNSUCC : TTCN_Logger::MATCHING_PCUNSUCC"),
-      (unsigned long) signature_index, (unsigned long) signature_index);
+      (unsigned long) signature_index,
+      (omit_in_value_list ? ", TRUE" : ""),
+      (unsigned long) signature_index);
   if (is_address) src = mputstr(src, "*proc_queue_head->sender_address;\n");
   else src = mputstr(src, "proc_queue_head->sender_component;\n");
 
@@ -1252,10 +1263,11 @@ static void generate_catch(char **def_ptr, char **src_ptr,
     "CHARSTRING(\"%s\"));\n"
     "return ALT_NO;\n"
     "} else if (!catch_template.match"
-    "(*proc_queue_head->exception_%lu)) {\n",
+    "(*proc_queue_head->exception_%lu%s)) {\n",
     (unsigned long) signature_index,
     (is_address ? "SYSTEM_COMPREF": "proc_queue_head->sender_component"),
-    signature->dispname, (unsigned long) signature_index);
+    signature->dispname, (unsigned long) signature_index,
+    (omit_in_value_list ? ", TRUE" : ""));
   if (is_address) {
     src = mputstr(src, "if (TTCN_Logger::log_this_event("
       "TTCN_Logger::MATCHING_PMUNSUCC)) {\n");
@@ -1270,7 +1282,7 @@ static void generate_catch(char **def_ptr, char **src_ptr,
     "port_name, proc_queue_head->sender_component,\n"
     "TitanLoggerApiSimple::MatchingFailureType_reason::exception__does__not__match__template,\n"
     "(TTCN_Logger::begin_event(%s, TRUE),\n"
-    " catch_template.log_match(*proc_queue_head->exception_%lu),\n"
+    " catch_template.log_match(*proc_queue_head->exception_%lu%s),\n"
     " TTCN_Logger::end_event_log2str()));\n"
     "}\n"
     "return ALT_NO;\n"
@@ -1278,7 +1290,9 @@ static void generate_catch(char **def_ptr, char **src_ptr,
     "catch_template.set_value(*proc_queue_head->exception_%lu);\n"
     "if (sender_ptr != NULL) *sender_ptr = ",
     (is_address ? "TTCN_Logger::MATCHING_PMUNSUCC" : "log_sev"),
-    (unsigned long) signature_index, (unsigned long) signature_index);
+    (unsigned long) signature_index,
+    (omit_in_value_list ? ", TRUE" : ""),
+    (unsigned long) signature_index);
   if (is_address) src = mputstr(src, "*proc_queue_head->sender_address;\n");
   else src = mputstr(src, "proc_queue_head->sender_component;\n");
 

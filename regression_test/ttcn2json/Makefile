@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2000-2014 Ericsson Telecom AB
+# Copyright (c) 2000-2015 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
@@ -30,7 +30,7 @@ OBJECTS = $(GENERATED_SOURCES:.cc=.o) $(USER_SOURCES:.cc=.o)
 
 TARGET = ttcn2json$(EXESUFFIX)
 
-TEMP_FILES = General_Types.json one.json two.json three.json Main.json
+TEMP_FILES = General_Types.json one.json two.json three.json Main.json SubType.json
 
 all: $(TARGET)
 

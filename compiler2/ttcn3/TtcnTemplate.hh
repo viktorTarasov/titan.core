@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -360,9 +360,10 @@ namespace Ttcn {
   private:
     /** helper functions used by chk_restriction() */
     bool chk_restriction_named_list(const char* definition_name,
-      map<string, void>& checked_map, size_t needed_checked_cnt);
+      map<string, void>& checked_map, size_t needed_checked_cnt,
+      const Location* usage_loc);
     bool chk_restriction_refd(const char* definition_name,
-      template_restriction_t template_restriction);
+      template_restriction_t template_restriction, const Location* usage_loc);
   public:
     /** Checks if this template conforms to the restriction, return value:
      *  false = always satisfies restriction -> no runtime check needed or
@@ -371,9 +372,12 @@ namespace Ttcn {
      *          time -> runtime check needed and compiler warning given when
      *          inadequate restrictions are used, in other cases there's
      *          no warning
-     *  The return value is used by code generation to avoid useless checks */
+     *  The return value is used by code generation to avoid useless checks
+     *  @param usage_loc contains the location, where the template is used
+     *  (errors are issued here, instead of where the template is declared) */
     bool chk_restriction(const char* definition_name,
-                         template_restriction_t template_restriction);
+                         template_restriction_t template_restriction,
+                         const Location* usage_loc);
 
     /** Public entry points for code generation. */
     /** Generates the equivalent C++ code for the template. It is used
@@ -541,7 +545,7 @@ namespace Ttcn {
     bool is_string_type(Type::expected_value_t exp_val);
 
     bool chk_restriction(const char* definition_name,
-      template_restriction_t template_restriction);
+      template_restriction_t template_restriction, const Location* usage_loc);
 
     /** Returns whether the template instance can be represented by an in-line
      *  C++ expression. */

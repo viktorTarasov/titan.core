@@ -3,12 +3,14 @@
 ttcn3_makefilegen \- Makefile Generator
 .SH SYNOPSIS
 .B ttcn3_makefilegen
-.RB "[\| " \-acdfglpRsw " \|]"
+.RB "[\| " \-acdfglMpRsw " \|]"
 .RB "[\| " \-e
 .IR " ETS_name" " \|]"
 .RB "[\| " \-o
 .IR " dir|file" " \|]"
 .RB "[\| " \-O
+.IR " file" " \|]"
+.RB "[\| " \-z
 .IR " file" " \|] ..."
 TTCN3_module[.ttcn] ... ASN1_module[.asn] ... Testport_name[.cc] ...
 .br
@@ -89,6 +91,22 @@ objects. It can be used to speed up the linking phase, in the price of somewhat 
 performance and increased memory usage. It's recommended to use this flag only in the
 development phase of the project. This option is not supported on Windows.
 .TP
+.B \-M
+Allows the use of the value
+.B omit
+in template lists and complemented template lists (legacy behavior).
+If set, an omitted field will match a template list, if the value
+.B omit
+appears in the list, and it will match a complemented template list, if
+.B omit
+is not in the list (the
+.B ifpresent
+attribute can still be used for matching omitted fields). This also affects the
+.B ispresent
+operation and the
+.B present
+template restriction accordingly.
+.TP
 .B \-p
 Generate Makefile with
 .I TTCN-3 preprocessing.
@@ -115,6 +133,14 @@ and license key information and exits.
 Suppresses all
 .I warning
 messages.
+.TP
+.BI \-z " file"
+Enables code coverage and profiling in the TTCN-3 files listed in the
+.I file
+argument. The TTCN-3 files in the list must be separated by new lines and must
+also appear among the makefile generator's arguments (this switch is ignored if the
+.B \-t
+option is present).
 
 .SH ENVIRONMENT VARIABLES
 .TP
@@ -145,7 +171,7 @@ Ericsson document 2/198 17-CRL 113 200 Uen:
 .SH AUTHOR
 This manpage is written by Janos Zoltan Szabo, Ericsson Telecom AB
 .br
-Copyright (c) 2000-2014 Ericsson Telecom AB
+Copyright (c) 2000-2015 Ericsson Telecom AB
 .br
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0

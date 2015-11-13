@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -1205,14 +1205,14 @@ namespace Ttcn {
           case SingleWithAttrib::AT_VARIANT: {
             // Ignore JSON variants, these should not produce warnings
             const string& spec = act_single->get_attribSpec().get_spec();
-            size_t i = 0;
-            while (i < spec.size()) {
-              if (spec[i] != ' ' && spec[i] != '\t') {
+            size_t i2 = 0;
+            while (i2 < spec.size()) {
+              if (spec[i2] != ' ' && spec[i2] != '\t') {
                 break;
               }
-              ++i;
+              ++i2;
             }
-            if (i == spec.size() || spec.find("JSON", i) != i) {
+            if (i2 == spec.size() || spec.find("JSON", i2) != i2) {
               self_has_variant = true;
             }
             break; }

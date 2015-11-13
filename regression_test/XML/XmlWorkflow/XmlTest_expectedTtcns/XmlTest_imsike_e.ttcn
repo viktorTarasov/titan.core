@@ -128,7 +128,7 @@ variant (content.bornPlace_list[-]) "useNil";
 }
 with {
 encode "XML";
-variant "namespace as 'urn:XmlTest.imsike' prefix 'ns'";
+variant "namespace as 'urn:XmlTest.imsike' prefix 'ns50'";
 variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 variant "elementFormQualified";
 }

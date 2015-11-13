@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2000-2014 Ericsson Telecom AB
+# Copyright (c) 2000-2015 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
@@ -23,6 +23,10 @@
 # Set these variables...
 #
 
+TOP := ../../
+include   $(TOP)/Makefile.cfg
+
+
 # The path of your TTCN-3 Test Executor installation:
 # Uncomment this line to override the environment variable.
 # TTCN3_DIR =
@@ -35,7 +39,6 @@ endif
 # Your C++ compiler:
 CXX = g++
 
-XMLDIR = /mnt/TTCN/Tools/libxml2-2.7.1
 # Flags for the C++ preprocessor (and makedepend as well):
 CPPFLAGS = -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2
 ifdef RT2
@@ -95,6 +98,7 @@ OBJECTS = Temp.o TempA.o
 TARGET = Temp
 
 ifdef COVERAGE
+CPPFLAGS += -fprofile-arcs -ftest-coverage -g
 CXXFLAGS += -fprofile-arcs -ftest-coverage -g
 LDFLAGS += -fprofile-arcs -ftest-coverage -g -lgcov
 endif

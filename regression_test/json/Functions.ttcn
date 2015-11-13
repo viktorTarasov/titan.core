@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -62,7 +62,6 @@ external function f_enc_A(in A u) return octetstring
 external function f_enc_ER(in EmptyRec u) return octetstring
   with { extension "prototype(convert)"; extension "encode(JSON)"; }
   
-  
 external function f_enc_roi(in RoI u) return octetstring
   with { extension "prototype(convert)"; extension "encode(JSON)"; }
   
@@ -103,6 +102,18 @@ external function f_enc_stuff(in Stuff x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
 
 external function f_enc_hpt(in HasPardType x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+
+external function f_enc_asn_stuff(in AsnStuff x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_opt_uni(in OptionalUnions x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_meta_rec(in MetainfoRecord x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_meta_set(in MetainfoSet x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
 
 // for ASN.1 types
@@ -209,6 +220,18 @@ external function f_dec_def(in octetstring x) return RecDef
   with { extension "prototype(convert) decode(JSON)" }
 
 external function f_dec_hpt(in octetstring x) return HasPardType
+  with { extension "prototype(convert) decode(JSON)" }
+
+external function f_dec_asn_stuff(in octetstring x) return AsnStuff
+  with { extension "prototype(convert) decode(JSON)" }
+
+external function f_dec_opt_uni(in octetstring x) return OptionalUnions
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_meta_rec(in octetstring x) return MetainfoRecord
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_meta_set(in octetstring x) return MetainfoSet
   with { extension "prototype(convert) decode(JSON)" }
 
 // for ASN.1 types

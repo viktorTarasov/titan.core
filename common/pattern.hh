@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -20,8 +20,12 @@
  *  charstring pattern to a POSIX Extended Regular Expression (ERE).
  *  If error occurs, returns a NULL-pointer. It uses the
  *  TTCN_pattern_error() and TTCN_pattern_warning() functions to
- *  report errors/warnings. */
-extern char* TTCN_pattern_to_regexp(const char* p_pattern);
+ *  report errors/warnings. 
+ *
+ *  The function is also used on universal charstring patterns (in UTF-8 format)
+ *  during JSON schema generation. In this case the 2nd parameter must be set
+ *  to true, so no errors are reported for the extended ASCII characters. */
+extern char* TTCN_pattern_to_regexp(const char* p_pattern, bool utf8 = false);
 
 extern char* TTCN_pattern_to_regexp_uni(const char* p_pattern,
   int** groups = 0);

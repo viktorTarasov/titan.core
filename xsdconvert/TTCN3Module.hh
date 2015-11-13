@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -10,6 +10,8 @@
 
 #include "XMLParser.hh"
 #include "GeneralTypes.hh"
+#include "GeneralFunctions.hh"
+#include "TTCN3ModuleInventory.hh"
 
 class TTCN3ModuleInventory;
 class RootType;
@@ -21,8 +23,7 @@ class RootType;
  * Types defined in the module are stored in a list
  *
  */
-class TTCN3Module
-{
+class TTCN3Module {
   /**
    * this module is connected with this parser object
    */
@@ -59,6 +60,7 @@ class TTCN3Module
   List<NamespaceType> declaredNamespaces;
   FormValue elementFormDefault;
   FormValue attributeFormDefault;
+  BlockValue blockDefault;
 
   List<const TTCN3Module*> importedModules; // pointers not owned
 
@@ -67,68 +69,137 @@ class TTCN3Module
   bool moduleNotIntoFile;
   bool moduleNotIntoNameConversion;
 
-  TTCN3Module & operator = (const TTCN3Module &); // not implemented
-  TTCN3Module              (const TTCN3Module &); // not implemented
+  TTCN3Module & operator=(const TTCN3Module &); // not implemented
+  TTCN3Module(const TTCN3Module &); // not implemented
 public:
-  TTCN3Module (const char * a_filename, XMLParser * a_parser);
-  ~TTCN3Module ();
+  TTCN3Module(const char * a_filename, XMLParser * a_parser);
+  ~TTCN3Module();
 
-  void goodbyeParser () { parser = 0; }
+  void goodbyeParser() {
+    parser = 0;
+  }
 
-  void loadValuesFromXMLDeclaration (const char *a_version,
-    const char *a_encoding, int a_standalone);
-  void loadValuesFromSchemaTag (const Mstring& a_targetNamespace, List<NamespaceType> declaredNamespaces,
-    FormValue a_elementFormDefault,
-    FormValue a_attributeFormDefault);
+  void loadValuesFromXMLDeclaration(const char *a_version,
+      const char *a_encoding, int a_standalone);
+  void loadValuesFromSchemaTag(const Mstring& a_targetNamespace, List<NamespaceType> declaredNamespaces,
+      FormValue a_elementFormDefault,
+      FormValue a_attributeFormDefault,
+      BlockValue a_blockDefault);
 
-  void generate_TTCN3_header (FILE * file);
-  void generate_TTCN3_fileinfo (FILE * file);
-  void generate_TTCN3_modulestart (FILE * file);
-  void generate_TTCN3_included_types (FILE * file);
-  void generate_TTCN3_import_statements (FILE * file);
-  void generate_TTCN3_types (FILE * file);
-  void generate_with_statement (FILE * file, List<NamespaceType> used_namespaces);
+  void generate_TTCN3_header(FILE * file);
+  void generate_TTCN3_fileinfo(FILE * file);
+  void generate_TTCN3_modulestart(FILE * file);
+  void generate_TTCN3_included_types(FILE * file);
+  void generate_TTCN3_import_statements(FILE * file);
+  void generate_TTCN3_types(FILE * file);
+  void generate_with_statement(FILE * file, List<NamespaceType> used_namespaces);
 
-  const Mstring & getSchemaname () const {return schemaname;}
-  const Mstring & getTargetNamespace () const {return targetNamespace;}
-  const Mstring & getModulename () const {return modulename;}
-  void setSchemaname (const Mstring& name) {schemaname = name;}
-  void setTargetNamespace (const Mstring& tns) {targetNamespace = tns;}
+  const Mstring & getSchemaname() const {
+    return schemaname;
+  }
 
-  FormValue getElementFormDefault () const {return elementFormDefault;}
-  void setElementFormDefault (FormValue value) {elementFormDefault = value;}
-  FormValue getAttributeFormDefault () const {return attributeFormDefault;}
-  void setAttributeFormDefault (FormValue value) {attributeFormDefault = value;}
+  const Mstring & getTargetNamespace() const {
+    return targetNamespace;
+  }
 
-  ConstructType getActualXsdConstruct () const {return actualXsdConstruct;}
-  void setActualXsdConstruct (ConstructType c) {actualXsdConstruct = c;}
+  const Mstring & getTargetNamespaceConnector() const {
+    return targetNamespace_connectedPrefix;
+  }
 
-  void addMainType (ConstructType typeOfMainType);
-  bool hasDefinedMainType () const {return !definedTypes.empty();}
-  void replaceLastMainType (RootType * t);
-  const List<RootType*> & getDefinedTypes () const {return definedTypes;}
-  RootType & getLastMainType () {return *definedTypes.back();}
+  const Mstring & getModulename() const {
+    return modulename;
+  }
 
-  bool isnotIntoNameConversion () const {return moduleNotIntoNameConversion;}
-  void notIntoNameConversion () {moduleNotIntoNameConversion = true;}
-  bool isnotIntoFile () const {return moduleNotIntoFile;}
-  void notIntoFile () {moduleNotIntoFile = true;}
+  void setSchemaname(const Mstring& name) {
+    schemaname = name;
+  }
 
-  const List<NamespaceType> & getDeclaredNamespaces () const {return declaredNamespaces;}
+  void setTargetNamespace(const Mstring& tns) {
+    targetNamespace = tns;
+  }
 
-  void addImportedModule (const TTCN3Module *mod) {importedModules.push_back(mod);}
-  const List<const TTCN3Module*> & getImportedModules () const {return importedModules;}
+  FormValue getElementFormDefault() const {
+    return elementFormDefault;
+  }
+
+  void setElementFormDefault(FormValue value) {
+    elementFormDefault = value;
+  }
+
+  FormValue getAttributeFormDefault() const {
+    return attributeFormDefault;
+  }
+
+  void setAttributeFormDefault(FormValue value) {
+    attributeFormDefault = value;
+  }
+
+  BlockValue getBlockDefault() const {
+      return blockDefault;
+  }
+
+  ConstructType getActualXsdConstruct() const {
+    return actualXsdConstruct;
+  }
+
+  void setActualXsdConstruct(ConstructType c) {
+    actualXsdConstruct = c;
+  }
+
+  void addAnnotation();
+  void addMainType(const ConstructType typeOfMainType);
+  void addMainType(RootType * type){ definedTypes.push_back(type); }
+
+  bool hasDefinedMainType() const {
+    return !definedTypes.empty();
+  }
+  void replaceLastMainType(RootType * t);
+
+  const List<RootType*> & getDefinedTypes() const {
+    return definedTypes;
+  }
+
+  RootType & getLastMainType() {
+    return *definedTypes.back();
+  }
+
+  bool isnotIntoNameConversion() const {
+    return moduleNotIntoNameConversion;
+  }
+
+  void notIntoNameConversion() {
+    moduleNotIntoNameConversion = true;
+  }
+
+  bool isnotIntoFile() const {
+    return moduleNotIntoFile;
+  }
+
+  void notIntoFile() {
+    moduleNotIntoFile = true;
+  }
+
+  const List<NamespaceType> & getDeclaredNamespaces() const {
+    return declaredNamespaces;
+  }
+
+  void addImportedModule(const TTCN3Module *mod) {
+    importedModules.push_back(mod);
+  }
+
+  const List<const TTCN3Module*> & getImportedModules() const {
+    return importedModules;
+  }
 
   /// Compute the TTCN-3 module name
-  void TargetNamespace2ModuleName ();
+  void TargetNamespace2ModuleName();
 
-  friend bool compareModules (TTCN3Module * lhs, TTCN3Module * rhs);
+  friend bool compareModules(TTCN3Module * lhs, TTCN3Module * rhs);
 
-  void dump () const;
+  void dump() const;
 };
 
-inline bool compareModules (TTCN3Module * lhs, TTCN3Module * rhs)
-{
+inline bool compareModules(TTCN3Module * lhs, TTCN3Module * rhs) {
   return lhs->targetNamespace < rhs->targetNamespace;
 }
 

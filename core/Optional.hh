@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -254,6 +254,7 @@ public:
 
   void log() const;
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 
@@ -403,6 +404,9 @@ OPTIONAL<T_type>::OPTIONAL(template_sel other_value)
 template<typename T_type>
 OPTIONAL<T_type>::OPTIONAL(const OPTIONAL& other_value)
   : Base_Type(other_value)
+#ifdef TITAN_RUNTIME_2
+  , RefdIndexInterface(other_value)
+#endif     
   , optional_value(NULL)
   , optional_selection(other_value.optional_selection)
 #ifdef TITAN_RUNTIME_2
@@ -739,6 +743,23 @@ void OPTIONAL<T_type>::set_param(Module_Param& param) {
   optional_value->set_param(param);
 }
 
+template <typename T_type>
+Module_Param* OPTIONAL<T_type>::get_param(Module_Param_Name& param_name) const
+{
+#ifdef TITAN_RUNTIME_2
+  switch (get_selection()) {
+#else
+  switch (optional_selection) {
+#endif
+  case OPTIONAL_PRESENT:
+    return optional_value->get_param(param_name);
+  case OPTIONAL_OMIT:
+    return new Module_Param_Omit();
+  default:
+    return new Module_Param_Unbound();
+  }
+}
+
 template<typename T_type>
 void OPTIONAL<T_type>::encode_text(Text_Buf& text_buf) const
 {
@@ -1034,6 +1055,9 @@ OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
           set_to_present();
           //success = reader.Read(); // move to next thing TODO should it loop till an element ?
           optional_value->XER_decode(p_td, reader, flavor, emb_val);
+          if (!optional_value->is_bound()) {
+            set_to_omit();
+          }
         }
         else break; // it's not us, bail
 

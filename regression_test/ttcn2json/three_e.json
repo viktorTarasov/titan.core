@@ -1,4 +1,5 @@
 {
+	"$schema" : "http://json-schema.org/draft-04/schema#",
 	"definitions" : {
 		"one" : {
 			"HasAny" : {
@@ -56,7 +57,8 @@
 				"required" : [
 					"num",
 					"str"
-				]
+				],
+				"comment" : "abc"
 			},
 			"Set" : {
 				"type" : "object",
@@ -65,7 +67,8 @@
 					"os" : {
 						"type" : "string",
 						"subType" : "octetstring",
-						"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+						"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+						"MSB" : "first"
 					},
 					"buul" : {
 						"anyOf" : [
@@ -162,7 +165,8 @@
 							"bytes"
 						]
 					}
-				]
+				],
+				"defaultSelection" : "numbr"
 			},
 			"Width" : {
 				"enum" : [
@@ -227,8 +231,28 @@
 					"type" : "integer"
 				}
 			},
+			"Intses" : {
+				"type" : "array",
+				"subType" : "record of",
+				"items" : {
+					"$ref" : "#/definitions/two/Ints"
+				},
+				"alias" : "RoRoI"
+			},
+			"Octets" : {
+				"type" : "array",
+				"subType" : "set of",
+				"items" : {
+					"type" : "string",
+					"subType" : "octetstring",
+					"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				},
+				"comment" : "set of octetstrings"
+			},
 			"PosInt" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false
 			}
 		},
 		"three" : {
@@ -267,7 +291,9 @@
 						"required" : [
 							"size",
 							"filled"
-						]
+						],
+						"comment" : "first comment",
+						"comment" : "second comment"
 					}
 				},
 				"additionalProperties" : false,
@@ -733,24 +759,7 @@
 	},
 	"anyOf" : [
 		{
-			"$ref" : "#/definitions/two/Ints",
-			"decoding" : {
-				"prototype" : [
-					"fast",
-					"f_dec_ints",
-					"os",
-					"x"
-				]
-			},
-			"encoding" : {
-				"prototype" : [
-					"fast",
-					"f_enc_ints",
-					"eents",
-					"octus"
-				],
-				"printing" : "pretty"
-			}
+			"$ref" : "#/definitions/two/Intses"
 		},
 		{
 			"$ref" : "#/definitions/one/Rec",
@@ -771,6 +780,26 @@
 					"f_enc_rec",
 					"x"
 				]
+			}
+		},
+		{
+			"$ref" : "#/definitions/two/Ints",
+			"decoding" : {
+				"prototype" : [
+					"fast",
+					"f_dec_ints",
+					"os",
+					"x"
+				]
+			},
+			"encoding" : {
+				"prototype" : [
+					"fast",
+					"f_enc_ints",
+					"eents",
+					"octus"
+				],
+				"printing" : "pretty"
 			}
 		},
 		{
@@ -799,6 +828,9 @@
 		},
 		{
 			"$ref" : "#/definitions/three/Barrels"
+		},
+		{
+			"$ref" : "#/definitions/two/Octets"
 		},
 		{
 			"$ref" : "#/definitions/two/PosInt"

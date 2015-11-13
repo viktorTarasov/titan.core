@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,8 +130,8 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token <str_val> Identifier
 %token ASN1LowerIdentifier "ASN.1 identifier beginning with a lowercase letter"
 %token MacroRValue
-%token <int_val> Number
-%token <float_val> Float
+%token <int_val> Number MPNumber "integer value"
+%token <float_val> Float MPFloat "float value"
 %token BooleanValue "true or false"
 %token VerdictValue
 %token Bstring "bit string value"
@@ -141,6 +141,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token HstringMatch "hex string template"
 %token OstringMatch "octet string template"
 %token <str_val> Cstring "character string value"
+%token <str_val> MPCstring "charstring value"
 %token <str_val> DNSName "a host name"
 %token LoggingBit
 %token LoggingBitCollection
@@ -191,6 +192,7 @@ HostName
 ComponentName
 ComponentLocation
 Cstring
+MPCstring
 StringValue
 LogFileName
 
@@ -203,21 +205,22 @@ ExecuteItem
 %destructor { BN_free($$); }
 IntegerValue
 Number
+MPNumber
 
+%left '&' /* to avoid shift/reduce conflicts */
 %left '+' '-'
 %left '*' '/'
 %left UnarySign
 
-%expect 2
+%expect 1
 
 /*
-Source of conflicts (2 S/R):
+Source of conflicts (1 S/R):
 
-1.) 2 conflicts in two distinct states
-When seeing a '*' token after an integer or float value in section
-[MODULE_PARAMETERS] parser cannot decide whether the token is a multiplication
-operator (shift) or it refers to all modules in the next module parameter
-(reduce).
+1.) 1 conflict
+When seeing a '*' token after a module parameter expression the parser cannot
+decide whether the token is a multiplication operator (shift) or it refers to
+all modules in the next module parameter (reduce).
 
 The built-in Bison behavior always chooses the shift over the reduce
 (the * is interpreted as multiplication).
@@ -266,15 +269,15 @@ ParameterName:
 
 ParameterNameSegment:
   ParameterNameSegment '.' Identifier { Free($3); }
-| ParameterNameSegment '[' Number ']' { BN_free($3); }
+| ParameterNameSegment IndexItemIndex
 | Identifier                          { Free($1); }
 
 
 ParameterValue:
-  SimpleParameterValue
-| SimpleParameterValue LengthMatch
-| SimpleParameterValue IfpresentKeyword
-| SimpleParameterValue LengthMatch IfpresentKeyword
+  ParameterExpression
+| ParameterExpression LengthMatch
+| ParameterExpression IfpresentKeyword
+| ParameterExpression LengthMatch IfpresentKeyword
 ;
 
 LengthMatch:
@@ -284,21 +287,37 @@ LengthMatch:
 ;
 
 LengthBound:
-  IntegerValue { BN_free($1); }
+  ParameterExpression
+;
+
+ParameterExpression:
+  SimpleParameterValue
+| ParameterReference
+| '(' ParameterExpression ')'
+| '+' ParameterExpression %prec UnarySign
+| '-' ParameterExpression %prec UnarySign
+| ParameterExpression '+' ParameterExpression
+| ParameterExpression '-' ParameterExpression
+| ParameterExpression '*' ParameterExpression
+| ParameterExpression '/' ParameterExpression
+| ParameterExpression '&' ParameterExpression
+;
+
+ParameterReference:
+  ParameterNameSegment
 ;
 
 SimpleParameterValue:
-	IntegerValue { BN_free($1); }
-| FloatValue
+	MPNumber { BN_free($1); }
+| MPFloat
 | BooleanValue
 | ObjIdValue
 | VerdictValue
 | BitstringValue
 | HexstringValue
 | OctetstringValue
-| Cstring { Free($1); }
+| MPCstring { Free($1); }
 | UniversalCharstringValue
-| EnumeratedValue
 | OmitKeyword
 | NULLKeyword
 | nullKeyword
@@ -307,7 +326,7 @@ SimpleParameterValue:
 | IntegerRange
 | FloatRange
 | StringRange
-| PatternKeyword PatternChunkList
+| PatternKeyword PatternChunk
 | BstringMatch
 | HstringMatch
 | OstringMatch
@@ -316,26 +335,21 @@ SimpleParameterValue:
 | SystemKeyword
 ;
 
-PatternChunkList:
-  PatternChunk
-| PatternChunkList '&' PatternChunk
-;
-
 PatternChunk:
-  Cstring { Free($1); }
+  MPCstring { Free($1); }
 | Quadruple
 ;
 
 IntegerRange:
-  '(' '-' InfinityKeyword DotDot IntegerValue ')' { BN_free($5); }
-| '(' IntegerValue DotDot IntegerValue ')' { BN_free($2); BN_free($4); }
-| '(' IntegerValue DotDot InfinityKeyword ')' { BN_free($2); }
+  '(' '-' InfinityKeyword DotDot MPNumber ')' { BN_free($5); }
+| '(' MPNumber DotDot MPNumber ')' { BN_free($2); BN_free($4); }
+| '(' MPNumber DotDot InfinityKeyword ')' { BN_free($2); }
 ;
 
 FloatRange:
-  '(' '-' InfinityKeyword DotDot FloatValue ')'
-| '(' FloatValue DotDot FloatValue ')'
-| '(' FloatValue DotDot InfinityKeyword ')'
+  '(' '-' InfinityKeyword DotDot MPFloat ')'
+| '(' MPFloat DotDot MPFloat ')'
+| '(' MPFloat DotDot InfinityKeyword ')'
 ;
 
 StringRange:
@@ -426,103 +440,45 @@ ObjIdComponent:
 ;
 
 NumberForm:
-	Number { BN_free($1); }
+	MPNumber { BN_free($1); }
 ;
 
 NameAndNumberForm:
-	Identifier '(' Number ')' { Free($1); BN_free($3); }
+	Identifier '(' MPNumber ')' { Free($1); BN_free($3); }
 ;
 
 BitstringValue:
 	Bstring
-	| BitstringValue ConcatOp Bstring
 ;
 
 HexstringValue:
 	Hstring
-	| HexstringValue ConcatOp Hstring
 ;
 
 OctetstringValue:
 	Ostring
-	| OctetstringValue ConcatOp Ostring
 ;
 
 UniversalCharstringValue:
-	Cstring seqUniversalCharstringFragment { Free($1); }
-	| Quadruple
-	| Quadruple seqUniversalCharstringFragment
-;
-
-seqUniversalCharstringFragment:
-	ConcatOp UniversalCharstringFragment
-	| seqUniversalCharstringFragment ConcatOp UniversalCharstringFragment
+	Quadruple
 ;
 
 UniversalCharstringFragment:
-	Cstring { Free($1); }
+	MPCstring { Free($1); }
 	| Quadruple
 ;
 
 Quadruple:
-	CharKeyword '(' IntegerValue ',' IntegerValue ',' IntegerValue ','
-	IntegerValue ')'
-{
-  char *int_val_str_1 = BN_bn2dec($3);
-  char *int_val_str_2 = BN_bn2dec($5);
-  char *int_val_str_3 = BN_bn2dec($7);
-  char *int_val_str_4 = BN_bn2dec($9);
-  BIGNUM *BN_0 = BN_new();
-  BN_set_word(BN_0, 0);
-  BIGNUM *BN_127 = BN_new();
-  BN_set_word(BN_127, 127);
-  BIGNUM *BN_255 = BN_new();
-  BN_set_word(BN_255, 255);
-	if (BN_cmp($3, BN_0) < 0 || BN_cmp($3, BN_127) > 0)
-	  config_read_error("An integer value within range 0 .. 127 was expected "
-	                    "as first number of quadruple (group) instead of "
-	                    "%s.", int_val_str_1);
-	if (BN_cmp($5, BN_0) < 0 || BN_cmp($5, BN_255) > 0)
-	  config_read_error("An integer value within range 0 .. 255 was expected "
-	                    "as second number of quadruple (plane) instead of %s.",
-	                    int_val_str_2);
-	if (BN_cmp($7, BN_0) < 0 || BN_cmp($7, BN_255) > 0)
-	  config_read_error("An integer value within range 0 .. 255 was expected "
-	                    "as third number of quadruple (row) instead of %s.",
-	                    int_val_str_3);
-	if (BN_cmp($9, BN_0) < 0 || BN_cmp($9, BN_255) > 0)
-	  config_read_error("An integer value within range 0 .. 255 was expected "
-	                    "as fourth number of quadruple (cell) instead of %d.",
-	                    int_val_str_4);
-  BN_free(BN_0);
-  BN_free(BN_127);
-  BN_free(BN_255);
-  BN_free($3);
-  BN_free($5);
-  BN_free($7);
-  BN_free($9);
-  OPENSSL_free(int_val_str_1);
-  OPENSSL_free(int_val_str_2);
-  OPENSSL_free(int_val_str_3);
-  OPENSSL_free(int_val_str_4);
-}
-;
-
-ConcatOp:
-	'&'
+	CharKeyword '(' ParameterExpression ',' ParameterExpression ','
+  ParameterExpression ',' ParameterExpression ')'
 ;
 
 StringValue:
 	Cstring { $$ = $1; }
-	| StringValue ConcatOp Cstring {
+	| StringValue '&' Cstring {
 	  $$ = mputstr($1, $3);
 	  Free($3);
 	}
-;
-
-EnumeratedValue:
-	Identifier { Free($1); }
-	| ASN1LowerIdentifier
 ;
 
 CompoundValue:
@@ -530,7 +486,7 @@ CompoundValue:
 |	'{' FieldValueList '}'
 | '{' ArrayItemList '}'
 | '{' IndexItemList '}'
-| '(' ParameterValue ',' TemplateItemList ')' /* at least 2 elements to avoid shift/reduce conflicts with IntegerValue and FloatValue rules */
+| '(' ParameterValue ',' TemplateItemList ')' /* at least 2 elements to avoid shift/reduce conflicts with the ParameterExpression rule */
 | ComplementKeyword '(' TemplateItemList ')'
 | SupersetKeyword '(' TemplateItemList ')'
 | SubsetKeyword '(' TemplateItemList ')'
@@ -580,7 +536,7 @@ IndexItem:
 ;
 
 IndexItemIndex:
-	'[' IntegerValue ']' { BN_free($2); }
+	'[' ParameterExpression ']'
 ;
 
 /******************* [LOGGING] section *******************/

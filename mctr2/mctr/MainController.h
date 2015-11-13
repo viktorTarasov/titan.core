@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@
 // Author:                Janos Zoltan Szabo
 // mail:                  tmpjsz@eth.ericsson.se
 //
-// Copyright Ericsson Telecom AB 2000-2014
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 //
 #ifndef MCTR_MAINCONTROLLER_H
 #define MCTR_MAINCONTROLLER_H

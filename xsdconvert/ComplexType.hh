@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -9,64 +9,12 @@
 #define COMPLEXTYPE_H_
 
 #include "RootType.hh"
+#include "SimpleType.hh"
+#include "TTCN3Module.hh"
+#include "AttributeType.hh"
 
-class FieldType;
-class SimpleType;
 
-class EmbeddedType
-{
-public:
-  int depth;
-  bool valid;
-  bool strictValid;
-  unsigned long long int minOccurs;
-  unsigned long long int maxOccurs;
-  FieldType * order_attribute;
-
-  explicit EmbeddedType (int a_depth=0, unsigned long long int a_minOccurs=1, unsigned long long int a_maxOccurs=1,
-    FieldType * a_order_attribute=NULL)
-  : depth(a_depth)
-  , valid(true)
-  , strictValid(true)
-  , minOccurs(a_minOccurs)
-  , maxOccurs(a_maxOccurs)
-  , order_attribute(a_order_attribute)
-  {}
-};
-
-class GenerationType
-{
-public:
-  FieldType * field;
-  int depth;
-  FieldType * order_attribute;
-  FieldType * embed_values_attribute;
-  int max_alt;
-
-  explicit GenerationType (FieldType * a_field = NULL, int a_depth = 0,
-    FieldType * a_order_attribute = NULL, FieldType * a_embed_values_attribute = NULL, int a_max_alt = 0)
-  : field(a_field)
-  , depth(a_depth)
-  , order_attribute(a_order_attribute)
-  , embed_values_attribute(a_embed_values_attribute)
-  , max_alt(a_max_alt)
-  {}
-};
-
-class AttrBaseType
-{
-public:
-  FieldType * base;
-  int depth;
-  bool valid;
-
-  explicit AttrBaseType (FieldType * a_base = NULL, int a_depth = 0)
-  : base(a_base)
-  , depth(a_depth)
-  , valid(true)
-  {}
-};
-
+class AttributeType;
 
 /**
  * Type that contains information coming from XSD complexTypes, model group definitions
@@ -75,27 +23,29 @@ public:
  * Source in XSD:
  *
  * 	* <complexType>, <group> and <attributeGroup> element whose parent element is <schema>
+ *    * <element> if nillable, or is a child of <complexType>
  *
  * Result in TTCN-3:
  *
  * 	* TTCN-3 type
  *
  */
-class ComplexType : public RootType
-{
+class ComplexType : public SimpleType {
 public:
-  enum ComplexType_Mode
-  {
+
+  enum ComplexType_Mode {
     CT_simpletype_mode,
     CT_complextype_mode,
     CT_undefined_mode
   };
-  enum CT_fromST
-  {
+
+  enum CT_fromST {
     fromTagUnion,
     fromTagNillable,
-    fromTagComplexType
+    fromTagComplexType,
+    fromTagSubstition
   };
+
   enum Resolv_State {
     No,
     InProgress,
@@ -103,74 +53,103 @@ public:
   };
 
 private:
-  List<FieldType*> fields;
-  List<FieldType*> fields_final;
-
-  int actualLevel;
-  Mstring actualPath;
-
-  List<ComplexType_Mode> ctmode;
-  List<GenerationType> fieldGenInfo;
-  List<GenerationType> recGenInfo;
-  List<AttrBaseType> attributeBases;
-  List<EmbeddedType> embed_inSequence;
-  List<EmbeddedType> embed_inChoice;
-  List<EmbeddedType> embed_inAll;
+  //If the complextype is a top level component (child of schema)
+  bool top;
+  bool nillable;
+  bool enumerated;
+  bool embed;
   bool with_union;
+  bool first_child;
+  bool fromAll;
+  unsigned max_alt;
+  int skipback;
+  TagName lastType;
+  Mstring actualPath;
+  RootType * actfield;
+  SimpleType * nameDep;
+  RootType * nillable_field;
+  ComplexType * basefield;
+  ComplexType_Mode cmode;
   Resolv_State resolved;
 
-  FieldType * generateField ();
-  FieldType * generateAttribute ();
-  FieldType * generateRecord (unsigned long long int a_minOccurs, unsigned long long int a_maxOccurs);
-  FieldType * generateUnion (unsigned long long int a_minOccurs, unsigned long long int a_maxOccurs);
 
-  void initialSettings ();
+  void applyAttributeRestriction(ComplexType * found_CT);
+  void applyAttributeExtension(ComplexType * found_CT, AttributeType * anyAttr = NULL);
+  void nameConversion_names(const List<NamespaceType> & ns);
+  void nameConversion_types(const List<NamespaceType> & ns);
+  void nameConversion_fields(const List<NamespaceType> & ns);
+  void setFieldPaths(Mstring path);
+  void collectVariants(List<Mstring>& container);
+  void addNameSpaceAsVariant(RootType * type, RootType * other);
+  void setMinMaxOccurs(const unsigned long long min, const unsigned long long max, const bool generate_list_postfix = true);
+  void applyNamespaceAttribute(VariantMode varLabel, const Mstring& ns_list);
+  void applyReference(const SimpleType & other, const bool on_attributes = false);
+  void setParent(ComplexType * par, SimpleType * child);
+  void finalModification2();
+  Mstring findRoot(const BlockValue value, SimpleType * elem, const Mstring& head_type, const bool first);
 
-  void reference_resolving_funtion (List<FieldType*> & container);
-  void sortAttributes ();
-  void nameConversion_names (const List<NamespaceType> & ns);
-  void nameConversion_types (const List<NamespaceType> & ns);
-  void nameConversion_fields (const List<NamespaceType> & ns);
-  void indent (FILE * file, int x) { for (int l = 0; l < x; ++l) fprintf(file, "\t"); }
+  //Reference resolving functions
+  void reference_resolving_funtion();
+  void resolveAttribute(AttributeType *attr);
+  void resolveAttributeGroup(SimpleType *st);
+  void resolveGroup(SimpleType *st);
+  void resolveElement(SimpleType *st);
+  void resolveSimpleTypeExtension();
+  void resolveSimpleTypeRestriction();
+  void resolveComplexTypeExtension();
+  void resolveComplexTypeRestriction();
+  void resolveUnion(SimpleType *st);
 
-  void printVariant (FILE * file);
+  void printVariant(FILE * file);
 
 public:
-  ComplexType (XMLParser * a_parser, TTCN3Module * a_module, ConstructType a_construct);
-  ComplexType (const ComplexType & other);
-  ComplexType (const SimpleType & other, CT_fromST c);
-  ~ComplexType ();
+  List<ComplexType*> complexfields;
+  List<AttributeType*> attribfields;
+  List<Mstring> enumfields;
+  List<TagName> tagNames;
+
+  ComplexType(XMLParser * a_parser, TTCN3Module * a_module, ConstructType a_construct);
+  ComplexType(ComplexType & other);
+  ComplexType(const SimpleType & other, CT_fromST c);
+  ComplexType(ComplexType * other);
+  ~ComplexType();
+  
+  void modifyAttributeParent();
+  void addSubstitution(SimpleType* st);
 
   /** Virtual methods
    *  inherited from RootType
    */
-  void loadWithValues ();
-  void printToFile (FILE * file);
+  void loadWithValues();
+  void addComment(const Mstring& text);
+  void printToFile(FILE * file);
+  void printToFile(FILE * file, const unsigned level, const bool is_union);
 
-  void modifyValues ();
-  void referenceResolving ();
-  void nameConversion (NameConversionMode mode, const List<NamespaceType> & ns);
-  void finalModification ();
-  bool hasUnresolvedReference ();
-  void dump (unsigned int depth) const ;
+  void modifyValues();
+  void referenceResolving();
+  void nameConversion(NameConversionMode mode, const List<NamespaceType> & ns);
+  void finalModification();
+  bool hasUnresolvedReference(){ return resolved == No; }
 
-  void everything_into_fields_final ();
+  void dump(unsigned int depth) const;
 
-  void addToActualPath (const Mstring& text) {actualPath += text;}
-
-  void setWithUnion (bool b) {with_union = b;}
-
-  const List<EmbeddedType> & getEmbedInChoice () const {return embed_inChoice;}
-
-  const List<FieldType*> & getFields () const {return fields;}
-  const List<FieldType*> & getFieldsFinal () const {return fields_final;}
-  bool getWithUnion () const {return with_union;}
-
-  int getActualLevel () const {return actualLevel;}
-  const Mstring & getActualPath () const {return actualPath;}
-  ComplexType_Mode getMode() const {
-    return ctmode.empty() ? CT_undefined_mode : ctmode.front();
-  }
 };
+
+inline bool compareComplexTypeNameSpaces(ComplexType * lhs, ComplexType * rhs) {
+  if (lhs->getModule()->getTargetNamespace() == Mstring("NoTargetNamespace") && rhs->getModule()->getTargetNamespace() == Mstring("NoTargetNamespace")) {
+    return false;
+  } else if (lhs->getModule()->getTargetNamespace() == Mstring("NoTargetNamespace")) {
+    return true;
+  } else if (rhs->getModule()->getTargetNamespace() == Mstring("NoTargetNamespace")) {
+    return false;
+  } else {
+    return lhs->getModule()->getTargetNamespace() <= rhs->getModule()->getTargetNamespace();
+  }
+}
+
+inline bool compareTypes(ComplexType * lhs, ComplexType * rhs) {
+  return lhs->getName().convertedValue < rhs->getName().convertedValue;
+}
+
 
 #endif /* COMPLEXTYPE_H_ */

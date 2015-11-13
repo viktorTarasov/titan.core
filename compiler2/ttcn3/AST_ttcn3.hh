@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -209,6 +209,12 @@ namespace Ttcn {
     Value* get_val() const;
     /** Appends the string representation of the sub-reference to \a str. */
     void append_stringRepr(string& str) const;
+    /** Sets the first letter in the name of the field to lowercase if it's an
+      * uppercase letter.
+      * Used on open types (the name of their alternatives can be given with both
+      * an uppercase or a lowercase first letter, and the generated code will need
+      * to use the lowercase version). */
+    void set_field_name_to_lowercase();
   };
 
   /** A vector of FieldOrArrayRef objects */

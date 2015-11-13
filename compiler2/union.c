@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -352,11 +352,15 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
      "param.error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
      "  }\n"
      "  param.basic_check(Module_Param::BC_VALUE, \"union value\");\n"
-     "  if (param.get_type()==Module_Param::MP_Value_List && param.get_size()==0) return;\n"
-     "  if (param.get_type()!=Module_Param::MP_Assignment_List) {\n"
+     "  Module_Param_Ptr mp = &param;\n"
+     "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+     "    mp = param.get_referenced_param();\n"
+     "  }\n"
+     "  if (mp->get_type()==Module_Param::MP_Value_List && mp->get_size()==0) return;\n"
+     "  if (mp->get_type()!=Module_Param::MP_Assignment_List) {\n"
      "    param.error(\"union value with field name was expected\");\n"
      "  }\n"
-     "  Module_Param* mp_last = param.get_elem(param.get_size()-1);\n", dispname);
+     "  Module_Param* mp_last = mp->get_elem(mp->get_size()-1);\n", dispname);
 
     for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, 
@@ -368,6 +372,54 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   src = mputprintf(src,
     "  mp_last->error(\"Field %%s does not exist in type %s.\", mp_last->get_id()->get_name());\n"
     "}\n\n", dispname);
+  
+  /* get param function */
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf(src,
+    "Module_Param* %s::get_param(Module_Param_Name& param_name) const\n"
+    "{\n"
+    "  if (!is_bound()) {\n"
+    "    return new Module_Param_Unbound();\n"
+    "  }\n"
+    "  if (param_name.next_name()) {\n"
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the fields, not to the whole union
+    "    char* param_field = param_name.get_current_name();\n"
+    "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
+    "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
+    "        \"expected a valid field name for union type `%s'\");\n"
+    "    }\n"
+    "    ", name, dispname);
+  for (i = 0; i < sdef->nElements; i++) {
+    src = mputprintf(src,
+     "if (strcmp(\"%s\", param_field) == 0) {\n"
+     "      return %s%s().get_param(param_name);\n"
+     "    } else ",
+     sdef->elements[i].dispname, at_field, sdef->elements[i].name);
+  }
+  src = mputprintf(src,
+    "TTCN_error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
+    "  }\n"
+    "  Module_Param* mp_field = NULL;\n"
+    "  switch(union_selection) {\n"
+    , name);
+    for (i = 0; i < sdef->nElements; ++i) {
+      src = mputprintf(src, 
+        "  case %s_%s:\n"
+        "    mp_field = field_%s->get_param(param_name);\n"
+        "    mp_field->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
+        "    break;\n"
+        , selection_prefix, sdef->elements[i].name
+        , sdef->elements[i].name, sdef->elements[i].dispname);
+    }
+  src = mputstr(src,
+    "  default:\n"
+    "    break;\n"
+    "  }\n"
+    "  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();\n"
+    "  mp->add_elem(mp_field);\n"
+    "  return mp;\n"
+    "}\n\n");
 
   /* set implicit omit function, recursive */
   def = mputstr(def, "  void set_implicit_omit();\n");
@@ -1724,15 +1776,17 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           at_field, sdef->elements[i].name,    sdef->elements[i].typegen,
           at_field, sdef->elements[i].name);
       }
-      src = mputstr(src,
-        "    else {\n"
-        "      ec_1.set_msg(\" \");\n"
-        "      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, "
-        "\"'%s' does not match any alternative\", elem_name);\n"
-        "      if (xml_depth >= 0) for (; rd_ok == 1 "
-        "&& p_reader.Depth() > xml_depth; rd_ok = p_reader.Read()) ;\n"
-        "    }\n"
-        );
+      if (!sdef->isOptional) {
+        src = mputstr(src,
+          "    else {\n"
+          "      ec_1.set_msg(\" \");\n"
+          "      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, "
+          "\"'%s' does not match any alternative\", elem_name);\n"
+          "      if (xml_depth >= 0) for (; rd_ok == 1 "
+          "&& p_reader.Depth() > xml_depth; rd_ok = p_reader.Read()) ;\n"
+          "    }\n"
+          );
+      }
     }
 
     src = mputprintf(src,
@@ -1835,10 +1889,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "    return JSON_ERROR_FATAL;\n"
         "  }\n"
         "  case JSON_TOKEN_LITERAL_TRUE:\n"
-        "  case JSON_TOKEN_LITERAL_FALSE:\n"
-        "  case JSON_TOKEN_LITERAL_NULL: {\n");
+        "  case JSON_TOKEN_LITERAL_FALSE: {\n");
       for (i = 0; i < sdef->nElements; ++i) {
-        if (JSON_LITERAL & sdef->elements[i].jsonValueType) {
+        if (JSON_BOOLEAN & sdef->elements[i].jsonValueType) {
           src = mputprintf(src,
             "    p_tok.set_buf_pos(buf_pos);\n"
             "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, true);\n"
@@ -1850,8 +1903,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       }
       src = mputstr(src,
         "    char* literal_str = mprintf(\"literal (%s)\",\n"
-        "      (JSON_TOKEN_LITERAL_TRUE == j_token) ? \"true\" :\n"
-        "      ((JSON_TOKEN_LITERAL_FALSE == j_token) ? \"false\" : \"null\"));\n"
+        "      (JSON_TOKEN_LITERAL_TRUE == j_token) ? \"true\" : \"false\");\n"
         "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_AS_VALUE_ERROR, literal_str);\n"
         "    Free(literal_str);\n"
         "    clean_up();\n"
@@ -1890,6 +1942,24 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_AS_VALUE_ERROR, \"object\");\n"
         "    clean_up();\n"
         "    return JSON_ERROR_FATAL;\n"
+        "  }\n"
+        "  case JSON_TOKEN_LITERAL_NULL: {\n");
+      for (i = 0; i < sdef->nElements; ++i) {
+        if (JSON_NULL & sdef->elements[i].jsonValueType) {
+          src = mputprintf(src,
+            "    p_tok.set_buf_pos(buf_pos);\n"
+            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, true);\n"
+            "    if (0 <= ret_val) {\n"
+            "      return ret_val;\n"
+            "    }\n"
+            , at_field, sdef->elements[i].name, sdef->elements[i].typedescrname);
+        }
+      }
+      src = mputstr(src,
+        "    clean_up();\n"
+        // the caller might be able to decode the null value if it's an optional field
+        // only return an invalid token error, not a fatal error
+        "    return JSON_ERROR_INVALID_TOKEN;\n"
         "  }\n"
         "  case JSON_TOKEN_ERROR:\n"
         "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, \"\");\n"
@@ -2223,9 +2293,10 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "}\n\n", name, name, name);
 
   /* match function */
-  def = mputprintf(def, "boolean match(const %s& other_value) const;\n", name);
-  src = mputprintf(src, "boolean %s_template::match(const %s& other_value) "
-      "const\n"
+  def = mputprintf(def, "boolean match(const %s& other_value, boolean legacy "
+    "= FALSE) const;\n", name);
+  src = mputprintf(src, "boolean %s_template::match(const %s& other_value, "
+    "boolean legacy) const\n"
     "{\n"
     "if (!other_value.is_bound()) return FALSE;\n"
     "switch (template_selection) {\n"
@@ -2242,7 +2313,7 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "switch (value_selection) {\n", name, name, selection_type, unbound_value);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, "case %s_%s:\n"
-      "return single_value.field_%s->match(other_value.%s%s());\n",
+      "return single_value.field_%s->match(other_value.%s%s(), legacy);\n",
       selection_prefix, sdef->elements[i].name, sdef->elements[i].name,
       at_field, sdef->elements[i].name);
   }
@@ -2255,7 +2326,7 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "case COMPLEMENTED_LIST:\n"
     "for (unsigned int list_count = 0; list_count < value_list.n_values; "
       "list_count++)\n"
-    "if (value_list.list_value[list_count].match(other_value)) "
+    "if (value_list.list_value[list_count].match(other_value, legacy)) "
     "return template_selection == VALUE_LIST;\n"
     "return template_selection == COMPLEMENTED_LIST;\n"
     "default:\n"
@@ -2432,8 +2503,8 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
       "void copy_value(const Base_Type* other_value);\n"
       "Base_Template* clone() const;\n"
       "const TTCN_Typedescriptor_t* get_descriptor() const;\n"
-      "boolean matchv(const Base_Type* other_value) const;\n"
-      "void log_matchv(const Base_Type* match_value) const;\n");
+      "boolean matchv(const Base_Type* other_value, boolean legacy) const;\n"
+      "void log_matchv(const Base_Type* match_value, boolean legacy) const;\n");
     src = mputprintf(src,
       "void %s_template::valueofv(Base_Type* value) const "
         "{ *(static_cast<%s*>(value)) = valueof(); }\n"
@@ -2445,10 +2516,12 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
         "{ return new %s_template(*this); }\n"
       "const TTCN_Typedescriptor_t* %s_template::get_descriptor() const "
         "{ return &%s_descr_; }\n"
-      "boolean %s_template::matchv(const Base_Type* other_value) const "
-        "{ return match(*(static_cast<const %s*>(other_value))); }\n"
-      "void %s_template::log_matchv(const Base_Type* match_value) const "
-        " { log_match(*(static_cast<const %s*>(match_value))); }\n",
+      "boolean %s_template::matchv(const Base_Type* other_value, "
+        "boolean legacy) const "
+        "{ return match(*(static_cast<const %s*>(other_value)), legacy); }\n"
+      "void %s_template::log_matchv(const Base_Type* match_value, "
+        "boolean legacy) const "
+        " { log_match(*(static_cast<const %s*>(match_value)), legacy); }\n",
       name, name,
       name,
       name, name,
@@ -2498,12 +2571,13 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     src = mputstr(src, "}\n\n");
 
   /* log_match function */
-  def = mputprintf(def, "void log_match(const %s& match_value) "
-    "const;\n", name);
+  def = mputprintf(def, "void log_match(const %s& match_value, "
+    "boolean legacy = FALSE) const;\n", name);
   src = mputprintf(src,
-    "void %s_template::log_match(const %s& match_value) const\n"
+    "void %s_template::log_match(const %s& match_value, boolean legacy) const\n"
     "{\n"
-    "if(TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity() && match(match_value)){\n"
+    "if(TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity() "
+    "&& match(match_value, legacy)){\n"
     "TTCN_Logger::print_logmatch_buffer();\n"
     "TTCN_Logger::log_event_str(\" matched\");\n"
     "return;\n"
@@ -2515,10 +2589,10 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     src = mputprintf(src, "case %s_%s:\n"
     "if(TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()){\n"
     "TTCN_Logger::log_logmatch_info(\".%s\");\n"
-    "single_value.field_%s->log_match(match_value.%s%s());\n"
+    "single_value.field_%s->log_match(match_value.%s%s(), legacy);\n"
     "} else {\n"
       "TTCN_Logger::log_event_str(\"{ %s := \");\n"
-      "single_value.field_%s->log_match(match_value.%s%s());\n"
+      "single_value.field_%s->log_match(match_value.%s%s(), legacy);\n"
     "TTCN_Logger::log_event_str(\" }\");\n"
     "}\n"
     "break;\n", selection_prefix, sdef->elements[i].name,
@@ -2536,7 +2610,7 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "match_value.log();\n"
     "TTCN_Logger::log_event_str(\" with \");\n"
     "log();\n"
-    "if (match(match_value)) TTCN_Logger::log_event_str(\" matched\");\n"
+    "if (match(match_value, legacy)) TTCN_Logger::log_event_str(\" matched\");\n"
     "else TTCN_Logger::log_event_str(\" unmatched\");\n"
     "}\n"
     "}\n\n");
@@ -2623,18 +2697,18 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "}\n\n", dispname, name, dispname);
 
   /* TTCN-3 ispresent() function */
-  def = mputstr(def, "boolean is_present() const;\n");
+  def = mputstr(def, "boolean is_present(boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
-    "boolean %s_template::is_present() const\n"
+    "boolean %s_template::is_present(boolean legacy) const\n"
     "{\n"
     "if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;\n"
-    "return !match_omit();\n"
+    "return !match_omit(legacy);\n"
     "}\n\n", name);
 
   /* match_omit() */
-  def = mputstr(def, "boolean match_omit() const;\n");
+  def = mputstr(def, "boolean match_omit(boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
-    "boolean %s_template::match_omit() const\n"
+    "boolean %s_template::match_omit(boolean legacy) const\n"
     "{\n"
     "if (is_ifpresent) return TRUE;\n"
     "switch (template_selection) {\n"
@@ -2643,10 +2717,12 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "return TRUE;\n"
     "case VALUE_LIST:\n"
     "case COMPLEMENTED_LIST:\n"
+    "if (legacy) {\n"
     "for (unsigned int v_idx=0; v_idx<value_list.n_values; v_idx++)\n"
     "if (value_list.list_value[v_idx].match_omit())\n"
     "return template_selection==VALUE_LIST;\n"
     "return template_selection==COMPLEMENTED_LIST;\n"
+    "} // else fall through\n"
     "default:\n"
     "return FALSE;\n"
     "}\n"
@@ -2680,7 +2756,11 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "param.error(\"Field `%%s' not found in union template type `%s'\", param_field);\n"
     "  }\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"union template\");\n"
-    "  switch (param.get_type()) {\n"
+    "  Module_Param_Ptr mp = &param;\n"
+    "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+    "    mp = param.get_referenced_param();\n"
+    "  }\n"
+    "  switch (mp->get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
     "    break;\n"
@@ -2691,19 +2771,22 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "    *this = ANY_OR_OMIT;\n"
     "    break;\n"
     "  case Module_Param::MP_List_Template:\n"
-    "  case Module_Param::MP_ComplementList_Template:\n"
-    "    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());\n"
-    "    for (size_t p_i=0; p_i<param.get_size(); p_i++) {\n"
-    "      list_item(p_i).set_param(*param.get_elem(p_i));\n"
+    "  case Module_Param::MP_ComplementList_Template: {\n"
+    "    %s_template temp;\n"
+    "    temp.set_type(mp->get_type()==Module_Param::MP_List_Template ? "
+    "VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());\n"
+    "    for (size_t p_i=0; p_i<mp->get_size(); p_i++) {\n"
+    "      temp.list_item(p_i).set_param(*mp->get_elem(p_i));\n"
     "    }\n"
-    "    break;\n"
+    "    *this = temp;\n"
+    "    break; }\n"
     "  case Module_Param::MP_Value_List:\n"
-    "    if (param.get_size()==0) break;\n" /* for backward compatibility */
+    "    if (mp->get_size()==0) break;\n" /* for backward compatibility */
     "    param.type_error(\"union template\", \"%s\");\n"
     "    break;\n"
     "  case Module_Param::MP_Assignment_List: {\n"
-    "    Module_Param* mp_last = param.get_elem(param.get_size()-1);\n",
-    dispname, dispname);
+    "    Module_Param* mp_last = mp->get_elem(mp->get_size()-1);\n",
+    dispname, name, dispname);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, 
     "    if (!strcmp(mp_last->get_id()->get_name(), \"%s\")) {\n"
@@ -2717,15 +2800,94 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "  default:\n"
     "    param.type_error(\"union template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent();\n"
+    "  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();\n"
     "}\n\n", dispname, dispname);
+  
+  /* get_param() */
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf(src,
+    "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
+    "{\n"
+    "  if (param_name.next_name()) {\n"
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the fields, not to the whole union
+    "    char* param_field = param_name.get_current_name();\n"
+    "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
+    "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
+    "        \"expected a valid field name for union template type `%s'\");\n"
+    "    }\n"
+    "    ", name, dispname);
+  for (i = 0; i < sdef->nElements; i++) {
+    src = mputprintf(src,
+     "if (strcmp(\"%s\", param_field) == 0) {\n"
+     "      return %s%s().get_param(param_name);\n"
+     "    } else ",
+     sdef->elements[i].dispname, at_field, sdef->elements[i].name);
+  }
+  src = mputprintf(src,
+    "TTCN_error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
+    "  }\n"
+    "  Module_Param* mp = NULL;\n"
+    "  switch (template_selection) {\n"
+    "  case UNINITIALIZED_TEMPLATE:\n"
+    "    mp = new Module_Param_Unbound();\n"
+    "    break;\n"
+    "  case OMIT_VALUE:\n"
+    "    mp = new Module_Param_Omit();\n"
+    "    break;\n"
+    "  case ANY_VALUE:\n"
+    "    mp = new Module_Param_Any();\n"
+    "    break;\n"
+    "  case ANY_OR_OMIT:\n"
+    "    mp = new Module_Param_AnyOrNone();\n"
+    "    break;\n"
+    "  case SPECIFIC_VALUE: {\n"
+    "    Module_Param* mp_field = NULL;\n"
+    "    switch(single_value.union_selection) {\n"
+    , name);
+    for (i = 0; i < sdef->nElements; ++i) {
+      src = mputprintf(src, 
+        "    case %s_%s:\n"
+        "      mp_field = single_value.field_%s->get_param(param_name);\n"
+        "      mp_field->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
+        "      break;\n"
+        , selection_prefix, sdef->elements[i].name
+        , sdef->elements[i].name, sdef->elements[i].dispname);
+    }
+  src = mputstr(src,
+    "    default:\n"
+    "      break;\n"
+    "    }\n"
+    "    mp = new Module_Param_Assignment_List();\n"
+    "    mp->add_elem(mp_field);\n"
+    "    break; }\n"
+    "  case VALUE_LIST:\n"
+    "  case COMPLEMENTED_LIST: {\n"
+    "    if (template_selection == VALUE_LIST) {\n"
+    "      mp = new Module_Param_List_Template();\n"
+    "    }\n"
+    "    else {\n"
+    "      mp = new Module_Param_ComplementList_Template();\n"
+    "    }\n"
+    "    for (size_t i = 0; i < value_list.n_values; ++i) {\n"
+    "      mp->add_elem(value_list.list_value[i].get_param(param_name));\n"
+    "    }\n"
+    "    break; }\n"
+    "  default:\n"
+    "    break;\n"
+    "  }\n"
+    "  if (is_ifpresent) {\n"
+    "    mp->set_ifpresent();\n"
+    "  }\n"
+    "  return mp;\n"
+    "}\n\n");
 
   /* check template restriction */
   def = mputstr(def, "void check_restriction(template_res t_res, "
-    "const char* t_name=NULL) const;\n");
+    "const char* t_name=NULL, boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
     "void %s_template::check_restriction("
-      "template_res t_res, const char* t_name) const\n"
+      "template_res t_res, const char* t_name, boolean legacy) const\n"
     "{\n"
     "if (template_selection==UNINITIALIZED_TEMPLATE) return;\n"
     "switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {\n"
@@ -2748,7 +2910,7 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
       "performing check_restriction operation on a template of union type %s.\");\n"
     "}\n"
     "case TR_PRESENT:\n"
-    "if (!match_omit()) return;\n"
+    "if (!match_omit(legacy)) return;\n"
     "break;\n"
     "default:\n"
     "return;\n"

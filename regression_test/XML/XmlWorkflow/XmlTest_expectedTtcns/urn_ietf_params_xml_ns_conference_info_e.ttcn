@@ -57,7 +57,7 @@ type record Conference_type
 	XSD.UnsignedInt attr optional,
 	XSD.AnyURI entity,
 	State_type state optional,
-	record of XSD.String attr_1,
+	record of XSD.String attr_1 optional,
 	Conference_description_type conference_description optional,
 	Host_type host_info optional,
 	Conference_state_type conference_state optional,
@@ -72,8 +72,8 @@ variant (attr) "attribute";
 variant (entity) "attribute";
 variant (state) "defaultForEmpty as 'full'";
 variant (state) "attribute";
-variant (attr_1) "name as 'attr'";
 variant (attr_1) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:conference-info'";
+variant (attr_1) "name as 'attr'";
 variant (conference_description) "name as 'conference-description'";
 variant (host_info) "name as 'host-info'";
 variant (conference_state) "name as 'conference-state'";
@@ -103,7 +103,7 @@ variant "name as 'state-type'";
 
 type record Conference_description_type
 {
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.String display_text optional,
 	XSD.String subject optional,
 	XSD.String free_text optional,
@@ -133,7 +133,7 @@ variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:c
 
 type record Host_type
 {
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.String display_text optional,
 	XSD.AnyURI web_page optional,
 	Uris_type uris optional,
@@ -154,7 +154,7 @@ variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:c
 
 type record Conference_state_type
 {
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.UnsignedInt user_count optional,
 	XSD.Boolean active optional,
 	XSD.Boolean locked optional,
@@ -164,6 +164,10 @@ with {
 variant "name as 'conference-state-type'";
 variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:conference-info'";
 variant (user_count) "name as 'user-count'";
+//variant (active) "text 'true' as '1'";
+//variant (active) "text 'false' as '0'";
+//variant (locked) "text 'true' as '1'";
+//variant (locked) "text 'false' as '0'";
 variant (elem_list) "untagged";
 variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:conference-info'";
 };
@@ -174,7 +178,7 @@ variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:c
 
 type record Conference_media_type
 {
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	record length(1 .. infinity) of Conference_medium_type entry_list
 }
 with {
@@ -191,7 +195,7 @@ variant (entry_list[-]) "name as 'entry'";
 type record Conference_medium_type
 {
 	XSD.String label_,
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.String display_text optional,
 	XSD.String type_,
 	Media_status_type status optional,
@@ -215,7 +219,7 @@ variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:c
 type record Uris_type
 {
 	State_type state optional,
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	record length(1 .. infinity) of Uri_type entry_list
 }
 with {
@@ -233,7 +237,7 @@ variant (entry_list[-]) "name as 'entry'";
 
 type record Uri_type
 {
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.AnyURI uri,
 	XSD.String display_text optional,
 	XSD.String purpose optional,
@@ -265,7 +269,7 @@ variant "list";
 type record Users_type
 {
 	State_type state optional,
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	record of User_type user_list,
 	record of XSD.String elem_list
 }
@@ -288,7 +292,7 @@ type record User_type
 {
 	XSD.AnyURI entity optional,
 	State_type state optional,
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.String display_text optional,
 	Uris_type associated_aors optional,
 	User_roles_type roles optional,
@@ -318,7 +322,7 @@ variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:c
 
 type record User_roles_type
 {
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	record length(1 .. infinity) of XSD.String entry_list
 }
 with {
@@ -346,7 +350,7 @@ type record Endpoint_type
 {
 	XSD.String entity optional,
 	State_type state optional,
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.String display_text optional,
 	Execution_type referred optional,
 	Endpoint_status_type status optional,
@@ -438,7 +442,7 @@ variant "name as 'disconnection-type'";
 
 type record Execution_type
 {
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.DateTime when optional,
 	XSD.String reason optional,
 	XSD.AnyURI by optional
@@ -454,7 +458,7 @@ variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:confer
 
 type record Call_type
 {
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	union {
 		Sip_dialog_id_type sip,
 		record of XSD.String elem_list
@@ -474,7 +478,7 @@ variant (choice.elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:x
 
 type record Sip_dialog_id_type
 {
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.String display_text optional,
 	XSD.String call_id,
 	XSD.String from_tag,
@@ -499,7 +503,7 @@ variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:c
 type record Media_type
 {
 	XSD.String id,
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	XSD.String display_text optional,
 	XSD.String type_ optional,
 	XSD.String label_ optional,
@@ -541,7 +545,7 @@ variant "name as 'media-status-type'";
 type record Sidebars_by_val_type
 {
 	State_type state optional,
-	record of XSD.String attr,
+	record of XSD.String attr optional,
 	record of Conference_type entry_list
 }
 with {

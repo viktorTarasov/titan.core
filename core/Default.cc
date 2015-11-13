@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -139,8 +139,20 @@ void DEFAULT::log() const
 
 void DEFAULT::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "default reference (null) value");
-  if (param.get_type()!=Module_Param::MP_Ttcn_Null) param.type_error("default reference (null) value");
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  if (mp->get_type()!=Module_Param::MP_Ttcn_Null) param.type_error("default reference (null) value");
   default_ptr = NULL;
+}
+
+Module_Param* DEFAULT::get_param(Module_Param_Name& /* param_name */) const
+{
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
+  }
+  return new Module_Param_Ttcn_Null();
 }
 
 void DEFAULT::encode_text(Text_Buf&) const
@@ -328,13 +340,15 @@ DEFAULT_template& DEFAULT_template::operator=
   return *this;
 }
 
-boolean DEFAULT_template::match(component other_value) const
+boolean DEFAULT_template::match(component other_value,
+                                boolean /* legacy */) const
 {
   if (other_value == NULL_COMPREF) return FALSE;
   return match((Default_Base*)NULL);
 }
 
-boolean DEFAULT_template::match(Default_Base *other_value) const
+boolean DEFAULT_template::match(Default_Base *other_value,
+                                boolean /* legacy */) const
 {
   if (other_value == UNBOUND_DEFAULT) return FALSE;
   switch (template_selection) {
@@ -358,7 +372,8 @@ boolean DEFAULT_template::match(Default_Base *other_value) const
   return FALSE;
 }
 
-boolean DEFAULT_template::match(const DEFAULT& other_value) const
+boolean DEFAULT_template::match(const DEFAULT& other_value,
+                                boolean /* legacy */) const
 {
   if (!other_value.is_bound()) return FALSE;
   return match(other_value.default_ptr);
@@ -418,7 +433,8 @@ void DEFAULT_template::log() const
   log_ifpresent();
 }
 
-void DEFAULT_template::log_match(const DEFAULT& match_value) const
+void DEFAULT_template::log_match(const DEFAULT& match_value,
+                                 boolean /* legacy */) const
 {
   if (TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()
   &&  TTCN_Logger::get_logmatch_buffer_len() != 0) {
@@ -434,7 +450,11 @@ void DEFAULT_template::log_match(const DEFAULT& match_value) const
 
 void DEFAULT_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "default reference (null) template");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
     break;
@@ -445,19 +465,62 @@ void DEFAULT_template::set_param(Module_Param& param) {
     *this = ANY_OR_OMIT;
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t i=0; i<param.get_size(); i++) {
-      list_item(i).set_param(*param.get_elem(i));
+  case Module_Param::MP_ComplementList_Template: {
+    DEFAULT_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
     }
-    break;
+    *this = temp;
+    break; }
   case Module_Param::MP_Ttcn_Null:
     *this = DEFAULT(NULL_COMPREF);
     break;
   default:
     param.type_error("default reference (null) template");
   }
-  is_ifpresent = param.get_ifpresent();
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* DEFAULT_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE:
+    mp = new Module_Param_Ttcn_Null();
+    break;
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
 }
 
 void DEFAULT_template::encode_text(Text_Buf&) const
@@ -472,13 +535,13 @@ void DEFAULT_template::decode_text(Text_Buf&)
     "components.");
 }
 
-boolean DEFAULT_template::is_present() const
+boolean DEFAULT_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean DEFAULT_template::match_omit() const
+boolean DEFAULT_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -487,10 +550,14 @@ boolean DEFAULT_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -498,7 +565,8 @@ boolean DEFAULT_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void DEFAULT_template::check_restriction(template_res t_res, const char* t_name) const
+void DEFAULT_template::check_restriction(template_res t_res, const char* t_name,
+                                         boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -510,7 +578,7 @@ void DEFAULT_template::check_restriction(template_res t_res, const char* t_name)
       template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;

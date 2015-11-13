@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -39,6 +39,7 @@ namespace Common {
     output->functions.pre_init = NULL;
     output->functions.post_init = NULL;
     output->functions.set_param = NULL;
+    output->functions.get_param = NULL;
     output->functions.log_param = NULL;
     output->functions.init_comp = NULL;
     output->functions.start = NULL;
@@ -92,6 +93,8 @@ namespace Common {
       mputstr(dest->functions.post_init, src->functions.post_init);
     dest->functions.set_param =
       mputstr(dest->functions.set_param, src->functions.set_param);
+    dest->functions.get_param =
+      mputstr(dest->functions.get_param, src->functions.get_param);
     dest->functions.log_param =
       mputstr(dest->functions.log_param, src->functions.log_param);
     dest->functions.init_comp =
@@ -124,6 +127,7 @@ namespace Common {
     Free(output->functions.pre_init);
     Free(output->functions.post_init);
     Free(output->functions.set_param);
+    Free(output->functions.get_param);
     Free(output->functions.log_param);
     Free(output->functions.init_comp);
     Free(output->functions.start);

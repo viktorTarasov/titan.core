@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -303,11 +303,19 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
 
 {NUMBER}	{
 	yylval.int_val = new int_val_t(yytext);
+  if (YY_START == SC_MODULE_PARAMETERS) {
+    // return a different token for module parameters so it doesn't conflict with references
+    return MPNumber;
+  }
 	return Number;
 	}
 
 {FLOAT}		{
 	yylval.float_val = atof(yytext);
+  if (YY_START == SC_MODULE_PARAMETERS) {
+    // return a different token for module parameters so it doesn't conflict with references
+    return MPFloat;
+  }
 	return Float;
 	}
 
@@ -421,6 +429,10 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
     break;
   default:
     set_ret_val_cstr(cstring);
+    if (caller_state == SC_MODULE_PARAMETERS) {
+      // return a different token for module parameters so it doesn't conflict with references
+      return MPCstring;
+    }
     return Cstring;
   }
 
@@ -474,6 +486,10 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
   BEGIN(caller_state);
   if (caller_state!=SC_DEFINE) {
     set_ret_val_cstr(cstring);
+    if (caller_state == SC_MODULE_PARAMETERS) {
+      // return a different token for module parameters so it doesn't conflict with references
+      return MPCstring;
+    }
 	  return Cstring;
   } 
 
@@ -1000,155 +1016,155 @@ LOG_ALL	{
   
   /* statistics filters */
   [Nn]umber[Oo]f[Ll]ines {
-    yylval.uint_val = TTCN3_Profiler::STATS_NUMBER_OF_LINES;
+    yylval.uint_val = Profiler_Tools::STATS_NUMBER_OF_LINES;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Dd]ata[Rr]aw {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_DATA_RAW;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_DATA_RAW;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Dd]ata[Rr]aw {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_DATA_RAW;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_DATA_RAW;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Aa]vg[Rr]aw {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_AVG_RAW;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_AVG_RAW;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Aa]vg[Rr]aw {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_AVG_RAW;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_AVG_RAW;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Tt]imes[Ss]orted[Bb]y[Mm]od {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_TIMES_SORTED_BY_MOD;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_TIMES_SORTED_BY_MOD;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Tt]imes[Ss]orted[Bb]y[Mm]od {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_TIMES_SORTED_BY_MOD;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_TIMES_SORTED_BY_MOD;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Tt]imes[Ss]orted[Tt]otal {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_TIMES_SORTED_TOTAL;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_TIMES_SORTED_TOTAL;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Tt]imes[Ss]orted[Tt]otal {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_TIMES_SORTED_TOTAL;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_TIMES_SORTED_TOTAL;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Cc]ount[Ss]orted[Bb]y[Mm]od {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_COUNT_SORTED_BY_MOD;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_COUNT_SORTED_BY_MOD;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Cc]ount[Ss]orted[Bb]y[Mm]od {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_COUNT_SORTED_BY_MOD;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_COUNT_SORTED_BY_MOD;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Cc]ount[Ss]orted[Tt]otal {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_COUNT_SORTED_TOTAL;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_COUNT_SORTED_TOTAL;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Cc]ount[Ss]orted[Tt]otal {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_COUNT_SORTED_TOTAL;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_COUNT_SORTED_TOTAL;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Aa]vg[Ss]orted[Bb]y[Mm]od {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_AVG_SORTED_BY_MOD;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_AVG_SORTED_BY_MOD;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Aa]vg[Ss]orted[Bb]y[Mm]od {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_AVG_SORTED_BY_MOD;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_AVG_SORTED_BY_MOD;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Aa]vg[Ss]orted[Tt]otal {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_AVG_SORTED_TOTAL;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_AVG_SORTED_TOTAL;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Aa]vg[Ss]orted[Tt]otal {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_AVG_SORTED_TOTAL;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_AVG_SORTED_TOTAL;
     return ProfilerStatsFlag;
   }
   [Tt]op10[Ll]ine[Tt]imes {
-    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_LINE_TIMES;
+    yylval.uint_val = Profiler_Tools::STATS_TOP10_LINE_TIMES;
     return ProfilerStatsFlag;
   }
   [Tt]op10[Ff]unc[Tt]imes {
-    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_FUNC_TIMES;
+    yylval.uint_val = Profiler_Tools::STATS_TOP10_FUNC_TIMES;
     return ProfilerStatsFlag;
   }
   [Tt]op10[Ll]ine[Cc]ount {
-    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_LINE_COUNT;
+    yylval.uint_val = Profiler_Tools::STATS_TOP10_LINE_COUNT;
     return ProfilerStatsFlag;
   }
   [Tt]op10[Ff]unc[Cc]ount {
-    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_FUNC_COUNT;
+    yylval.uint_val = Profiler_Tools::STATS_TOP10_FUNC_COUNT;
     return ProfilerStatsFlag;
   }
   [Tt]op10[Ll]ine[Aa]vg {
-    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_LINE_AVG;
+    yylval.uint_val = Profiler_Tools::STATS_TOP10_LINE_AVG;
     return ProfilerStatsFlag;
   }
   [Tt]op10[Ff]unc[Aa]vg {
-    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_FUNC_AVG;
+    yylval.uint_val = Profiler_Tools::STATS_TOP10_FUNC_AVG;
     return ProfilerStatsFlag;
   }
   [Uu]nused[Ll]ines {
-    yylval.uint_val = TTCN3_Profiler::STATS_UNUSED_LINES;
+    yylval.uint_val = Profiler_Tools::STATS_UNUSED_LINES;
     return ProfilerStatsFlag;
   }
   [Uu]nused[Ff]unc {
-    yylval.uint_val = TTCN3_Profiler::STATS_UNUSED_FUNC;
+    yylval.uint_val = Profiler_Tools::STATS_UNUSED_FUNC;
     return ProfilerStatsFlag;
   }
   [Aa]ll[Rr]aw[Dd]ata {
-    yylval.uint_val = TTCN3_Profiler::STATS_ALL_RAW_DATA;
+    yylval.uint_val = Profiler_Tools::STATS_ALL_RAW_DATA;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Dd]ata[Ss]orted[Bb]y[Mm]od {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_DATA_SORTED_BY_MOD;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_DATA_SORTED_BY_MOD;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Dd]ata[Ss]orted[Bb]y[Mm]od {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_DATA_SORTED_BY_MOD;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_DATA_SORTED_BY_MOD;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Dd]ata[Ss]orted[Tt]otal {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_DATA_SORTED_TOTAL;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_DATA_SORTED_TOTAL;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Dd]ata[Ss]orted[Tt]otal {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_DATA_SORTED_TOTAL;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_DATA_SORTED_TOTAL;
     return ProfilerStatsFlag;
   }
   [Ll]ine[Dd]ata[Ss]orted {
-    yylval.uint_val = TTCN3_Profiler::STATS_LINE_DATA_SORTED;
+    yylval.uint_val = Profiler_Tools::STATS_LINE_DATA_SORTED;
     return ProfilerStatsFlag;
   }
   [Ff]unc[Dd]ata[Ss]orted {
-    yylval.uint_val = TTCN3_Profiler::STATS_FUNC_DATA_SORTED;
+    yylval.uint_val = Profiler_Tools::STATS_FUNC_DATA_SORTED;
     return ProfilerStatsFlag;
   }
   [Aa]ll[Dd]ata[Ss]orted {
-    yylval.uint_val = TTCN3_Profiler::STATS_ALL_DATA_SORTED;
+    yylval.uint_val = Profiler_Tools::STATS_ALL_DATA_SORTED;
     return ProfilerStatsFlag;
   }
   [Tt]op10[Ll]ine[Dd]ata {
-    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_LINE_DATA;
+    yylval.uint_val = Profiler_Tools::STATS_TOP10_LINE_DATA;
     return ProfilerStatsFlag;
   }
   [Tt]op10[Ff]unc[Dd]ata {
-    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_FUNC_DATA;
+    yylval.uint_val = Profiler_Tools::STATS_TOP10_FUNC_DATA;
     return ProfilerStatsFlag;
   }
   [Tt]op10[Aa]ll[Dd]ata {
-    yylval.uint_val = TTCN3_Profiler::STATS_TOP10_ALL_DATA;
+    yylval.uint_val = Profiler_Tools::STATS_TOP10_ALL_DATA;
     return ProfilerStatsFlag;
   }
   [Uu]nused[Dd]ata {
-    yylval.uint_val = TTCN3_Profiler::STATS_UNUSED_DATA;
+    yylval.uint_val = Profiler_Tools::STATS_UNUSED_DATA;
     return ProfilerStatsFlag;
   }
   [Aa]ll {
-    yylval.uint_val = TTCN3_Profiler::STATS_ALL;
+    yylval.uint_val = Profiler_Tools::STATS_ALL;
     return ProfilerStatsFlag;
   }
 }
@@ -1181,7 +1197,7 @@ LOG_ALL	{
 
 <SC_MODULE_PARAMETERS>{ASN1LOWERIDENTIFIER}	{
     yylval.str_val = mcopystr(yytext);
-    for (int i = 0; i < yyleng; i++) {
+    for (size_t i = 0; i < yyleng; i++) {
 	if (yylval.str_val[i] == '-') yylval.str_val[i] = '_';
     }
     TTCN_warning("In line %d of configuration file: `%s' is not a valid TTCN-3 "
@@ -1202,7 +1218,7 @@ LOG_ALL	{
   char* comp_num_str = mcopystrn(yytext + pos + 1, len - pos - 1);
   yylval.int_val = new int_val_t(comp_num_str);
   Free(comp_num_str);
-  return Number;
+  return MPNumber;
 }
 
 {MACRO_BOOL} {
@@ -1258,6 +1274,10 @@ LOG_ALL	{
       "this context.");
     yylval.int_val = new int_val_t((RInt)0);
   }
+  if (YY_START == SC_MODULE_PARAMETERS) {
+    // return a different token for module parameters so it doesn't conflict with references
+    return MPNumber;
+  }
   return Number;
 }
 
@@ -1285,6 +1305,10 @@ LOG_ALL	{
     config_process_error("Internal error: Macro reference cannot be used in "
       "this context.");
     yylval.float_val = 0.0;
+  }
+  if (YY_START == SC_MODULE_PARAMETERS) {
+    // return a different token for module parameters so it doesn't conflict with references
+    return MPFloat;
   }
   return Float;
 }
@@ -1335,6 +1359,10 @@ LOG_ALL	{
         "this context.");
     yylval.charstring_val.n_chars = 0;
     yylval.charstring_val.chars_ptr = memptystr();
+    if (YY_START == SC_MODULE_PARAMETERS) {
+      // return a different token for module parameters so it doesn't conflict with references
+      return MPCstring;
+    }
     return Cstring;
   }
 
@@ -1351,6 +1379,10 @@ LOG_ALL	{
     yylval.charstring_val.n_chars=0;
     yylval.charstring_val.chars_ptr=memptystr();
     Free(macroname);
+    if (YY_START == SC_MODULE_PARAMETERS) {
+      // return a different token for module parameters so it doesn't conflict with references
+      return MPCstring;
+    }
     return Cstring;
   }
 
@@ -1364,6 +1396,10 @@ LOG_ALL	{
     yylval.charstring_val.chars_ptr=(char*)Malloc(macrolen+1);
     memcpy(yylval.charstring_val.chars_ptr, macrovalue, macrolen+1);
     Free(macroname);
+    if (YY_START == SC_MODULE_PARAMETERS) {
+      // return a different token for module parameters so it doesn't conflict with references
+      return MPCstring;
+    }
     return Cstring;
   }
 }

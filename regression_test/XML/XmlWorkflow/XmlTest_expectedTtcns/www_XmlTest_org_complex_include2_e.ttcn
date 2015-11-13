@@ -88,7 +88,7 @@ variant (part_list[-].base) "untagged";
 }
 with {
 encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_include2' prefix 'r'";
+variant "namespace as 'www.XmlTest.org/complex_include2' prefix 'r2'";
 variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 variant "elementFormQualified";
 }

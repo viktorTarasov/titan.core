@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -1140,26 +1140,26 @@ const TTCN_Typedescriptor_t ObjectDescriptor_descr_={"ObjectDescriptor",
   &ObjectDescriptor_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING};
 
 const TTCN_Typedescriptor_t UTF8String_descr_={"UTF8String", &UTF8String_ber_,
-  NULL, NULL, &UTF8String_xer_, NULL, NULL, TTCN_Typedescriptor_t::UTF8STRING};
+  NULL, NULL, &UTF8String_xer_, &UTF8String_json_, NULL, TTCN_Typedescriptor_t::UTF8STRING};
 
 const TTCN_Typedescriptor_t ASN_ROID_descr_={"RELATIVE-OID", &ASN_ROID_ber_,
   NULL, NULL, &ASN_ROID_xer_, &ASN_ROID_json_, NULL, TTCN_Typedescriptor_t::ROID};
 
 const TTCN_Typedescriptor_t NumericString_descr_={"NumericString",
-  &NumericString_ber_, NULL, NULL, &NumericString_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  &NumericString_ber_, NULL, NULL, &NumericString_xer_, &NumericString_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t PrintableString_descr_={"PrintableString",
-  &PrintableString_ber_, NULL, NULL, &PrintableString_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  &PrintableString_ber_, NULL, NULL, &PrintableString_xer_, &PrintableString_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t TeletexString_descr_={"TeletexString",
-  &TeletexString_ber_, NULL, NULL, &TeletexString_xer_, NULL, NULL, TTCN_Typedescriptor_t::TELETEXSTRING};
+  &TeletexString_ber_, NULL, NULL, &TeletexString_xer_, &TeletexString_json_, NULL, TTCN_Typedescriptor_t::TELETEXSTRING};
 const TTCN_Typedescriptor_t& T61String_descr_=TeletexString_descr_;
 
 const TTCN_Typedescriptor_t VideotexString_descr_={"VideotexString",
-  &VideotexString_ber_, NULL, NULL, &VideotexString_xer_, NULL, NULL, TTCN_Typedescriptor_t::VIDEOTEXSTRING};
+  &VideotexString_ber_, NULL, NULL, &VideotexString_xer_, &VideotexString_json_, NULL, TTCN_Typedescriptor_t::VIDEOTEXSTRING};
 
 const TTCN_Typedescriptor_t IA5String_descr_={"IA5String", &IA5String_ber_,
-  NULL, NULL, &IA5String_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, NULL, &IA5String_xer_, &IA5String_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t ASN_GeneralizedTime_descr_={"GeneralizedTime",
   &ASN_GeneralizedTime_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
@@ -1168,19 +1168,19 @@ const TTCN_Typedescriptor_t ASN_UTCTime_descr_={"UTCTime", &ASN_UTCTime_ber_,
   NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t GraphicString_descr_={"GraphicString",
-  &GraphicString_ber_, NULL, NULL, &GraphicString_xer_, NULL, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING};
+  &GraphicString_ber_, NULL, NULL, &GraphicString_xer_, &GraphicString_json_, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING};
 
 const TTCN_Typedescriptor_t VisibleString_descr_={"VisibleString",
-  &VisibleString_ber_, NULL, NULL, &VisibleString_xer_, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  &VisibleString_ber_, NULL, NULL, &VisibleString_xer_, &VisibleString_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 const TTCN_Typedescriptor_t& ISO646String_descr_=VisibleString_descr_;
 
 const TTCN_Typedescriptor_t GeneralString_descr_={"GeneralString",
-  &GeneralString_ber_, NULL, NULL, &GeneralString_xer_, NULL, NULL, TTCN_Typedescriptor_t::GENERALSTRING};
+  &GeneralString_ber_, NULL, NULL, &GeneralString_xer_, &GeneralString_json_, NULL, TTCN_Typedescriptor_t::GENERALSTRING};
 
 const TTCN_Typedescriptor_t UniversalString_descr_={"UniversalString",
-  &UniversalString_ber_, NULL, NULL, &UniversalString_xer_, NULL, NULL, TTCN_Typedescriptor_t::UNIVERSALSTRING};
+  &UniversalString_ber_, NULL, NULL, &UniversalString_xer_, &UniversalString_json_, NULL, TTCN_Typedescriptor_t::UNIVERSALSTRING};
 
 const TTCN_Typedescriptor_t BMPString_descr_={"BMPString", &BMPString_ber_,
-  NULL, NULL, &BMPString_xer_, NULL, NULL, TTCN_Typedescriptor_t::BMPSTRING};
+  NULL, NULL, &BMPString_xer_, &BMPString_json_, NULL, TTCN_Typedescriptor_t::BMPSTRING};
 
 

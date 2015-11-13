@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -207,6 +207,7 @@ struct makefile_struct {
   char *code_splitting_mode;
   boolean coverage;
   char *tcov_file_name;
+  struct string_list* profiled_file_list; /* not owned */
   boolean library;
   boolean linkingStrategy;
   boolean hierarchical;
@@ -236,6 +237,7 @@ struct makefile_struct {
   boolean addsourcelineinfo;
   boolean suppresswarnings;
   boolean outparamboundness;
+  boolean omit_in_value_list;
   struct string_list* solspeclibraries; /* not owned */
   struct string_list* sol8speclibraries; /* not owned */
   struct string_list* linuxspeclibraries; /* not owned */
@@ -289,6 +291,7 @@ static void init_makefile_struct(struct makefile_struct *makefile)
   makefile->code_splitting_mode = NULL;
   makefile->coverage = FALSE;
   makefile->tcov_file_name = NULL;
+  makefile->profiled_file_list = NULL;
   makefile->library = FALSE;
   makefile->linkingStrategy = FALSE;
   makefile->hierarchical = FALSE;
@@ -297,6 +300,7 @@ static void init_makefile_struct(struct makefile_struct *makefile)
   makefile->prep_includes = NULL;
   makefile->prep_defines = NULL;
   makefile->outparamboundness = FALSE;
+  makefile->omit_in_value_list = FALSE;
   makefile->solspeclibraries = NULL;
   makefile->sol8speclibraries = NULL;
   makefile->linuxspeclibraries = NULL;
@@ -472,6 +476,16 @@ static void dump_makefile_struct(const struct makefile_struct *makefile,
   DEBUG(level + 1, "Code coverage file: %s",
     makefile->tcov_file_name != NULL ?
       makefile->tcov_file_name : "<unknown>");
+  if (makefile->profiled_file_list) {
+    char* lists = mcopystr(makefile->profiled_file_list->str);
+    struct string_list* iter = makefile->profiled_file_list->next;
+    while(iter != NULL) {
+      lists = mputprintf(lists, " %s", iter->str);
+      iter = iter->next;
+    }
+    DEBUG(level + 1, "Profiled file list(s): %s", lists);
+    Free(lists);
+  }
 #ifdef COVERAGE_BUILD
   DEBUG(level + 1, "Enable coverage: %s", makefile->coverage ? "yes" : "no");
 #endif
@@ -1961,7 +1975,7 @@ static void print_makefile(struct makefile_struct *makefile)
           "AR = ar\n"
           "ARFLAGS = \n\n"
           "# Flags for the TTCN-3 and ASN.1 compiler:\n"
-          "COMPILER_FLAGS =%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s\n\n"
+          "COMPILER_FLAGS =%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n\n"
           "# Execution mode: (either ttcn3 or ttcn3-parallel)\n"
           "TTCN3_LIB = ttcn3%s%s%s\n\n"
 #ifdef LICENSE
@@ -1997,7 +2011,9 @@ static void print_makefile(struct makefile_struct *makefile)
           /*(makefile->addsourcelineinfo ? " -L" : ""),*/
           (makefile->suppresswarnings ? " -w" : ""),
           (makefile->outparamboundness ? " -Y" : ""),
+          (makefile->omit_in_value_list ? " -M" : ""),
           (makefile->tcov_file_name ? makefile->tcov_file_name : ""),
+          (makefile->profiled_file_list ? " -z $(PROFILED_FILE_LIST)" : ""),
           /* end of COMPILER FLAGS */
           (makefile->use_runtime_2 ? "-rt2"    : ""), /* TTCN3_LIB */
           (makefile->single_mode   ? ""        : "-parallel"),
@@ -2167,6 +2183,29 @@ static void print_makefile(struct makefile_struct *makefile)
               print_preprocessed_file_name(fp, module);
           }
         }
+      }
+    }
+    if (makefile->profiled_file_list) {
+      if (makefile->profiled_file_list->next && !makefile->central_storage) {
+        // merge all profiled file lists into one list
+        fprintf(fp, "\n\n"
+                "# Text file containing the list of profiled TTCN-3 files of "
+                "this project:\n"
+                "PROFILED_FILE_LIST = %s.merged\n"
+                "PROFILED_FILE_LIST_SEGMENTS =",
+                makefile->profiled_file_list->str);
+        struct string_list* iter = makefile->profiled_file_list;
+        while(iter != NULL) {
+          fprintf(fp, " %s", iter->str);
+          iter = iter->next;
+        }
+      }
+      else {
+        // only one profiled file list is needed
+        fprintf(fp, "\n\n"
+                "# Text file containing the list of profiled TTCN-3 files of "
+                "this project:\n"
+                "PROFILED_FILE_LIST = %s", makefile->profiled_file_list->str);
       }
     }
     fputs("\n\n"
@@ -3040,7 +3079,7 @@ static void print_makefile(struct makefile_struct *makefile)
        }
        free_string2_list(head);
 
-       struct string_list* act_head = getExternalLibPathes(makefile->project_name);
+       struct string_list* act_head = getExternalLibPaths(makefile->project_name);
        struct string_list* act_ext_elem = act_head;
        while (act_ext_elem) {
          if (act_ext_elem->str) {
@@ -3099,7 +3138,7 @@ static void print_makefile(struct makefile_struct *makefile)
           act_elem = act_elem->next;
         }
         free_string2_list(head);
-        struct string_list* act_head = getExternalLibPathes(makefile->project_name);
+        struct string_list* act_head = getExternalLibPaths(makefile->project_name);
         struct string_list* act_ext_elem = act_head;
         while (act_ext_elem) {
           if (act_ext_elem->str) {
@@ -3210,6 +3249,8 @@ static void print_makefile(struct makefile_struct *makefile)
             "preprocess: $(PREPROCESSED_TTCN3_MODULES) ;\n\n", fp);
     }
 
+    boolean merge_profiled_file_lists = makefile->profiled_file_list
+      && makefile->profiled_file_list->next && !makefile->central_storage;
     if (makefile->central_storage) {
       boolean is_first = TRUE;
       fprintf(fp, "$(GENERATED_SOURCES) $(GENERATED_HEADERS):%s compile-all compile ",
@@ -3275,8 +3316,14 @@ static void print_makefile(struct makefile_struct *makefile)
           "endif\n"
           "endif",fp);
         }
+        if (makefile->profiled_file_list) {
+          fputs("\n\n"
+            "compile:: $(PROFILED_FILE_LIST)\n"
+            "\ttouch $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) "
+            "$(ASN1_MODULES)", fp);
+        }
         fprintf(fp, "\n\n"
-        "compile: $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) "
+        "compile:%s $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) "
         "$(ASN1_MODULES)\n"
         "\t@echo \"compiling \"'$(patsubst %%.tpd, %%, $(TPD))';\n"
         "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
@@ -3284,6 +3331,7 @@ static void print_makefile(struct makefile_struct *makefile)
         "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) %s\\\n"
         "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s - $?\n"
         "\ttouch $@\n\n",
+        makefile->profiled_file_list ? ":" : "",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES)":"");
@@ -3304,7 +3352,7 @@ static void print_makefile(struct makefile_struct *makefile)
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
-      } 
+      }
       else {
         fprintf(fp, "\n"
         "\t@if [ ! -f $@ ]; then %s compile-all; $(MAKE) compile-all; fi\n", rm_command);
@@ -3342,14 +3390,20 @@ static void print_makefile(struct makefile_struct *makefile)
           "endif",fp);
         }
 
+        if (makefile->profiled_file_list) {
+          fputs("\n\n"
+            "compile:: $(PROFILED_FILE_LIST)\n"
+            "\ttouch $(TTCN3_MODULES) $(ASN1_MODULES)", fp);
+        }
         fprintf(fp, "\n\n"
-        "compile: $(TTCN3_MODULES) $(ASN1_MODULES)\n"
+        "compile:%s $(TTCN3_MODULES) $(ASN1_MODULES)\n"
         "\t@echo \"compiling \"'$(patsubst %%.tpd, %%, $(TPD))';\n"
         "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
         "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
         "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\\\n"
         "\t- $?\n"
         "\ttouch $@\n\n",
+        makefile->profiled_file_list ? ":" : "",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) " : "",
         makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) " : "");
         fprintf(fp,
@@ -3393,11 +3447,14 @@ static void print_makefile(struct makefile_struct *makefile)
                     "\t@exit 2\n\n", base_dir->dir_name);
           }
         }
-    } 
+    }
     else { /* not central storage */
       fprintf(fp, "$(GENERATED_SOURCES) $(GENERATED_HEADERS): compile\n"
               "\t@if [ ! -f $@ ]; then %s compile; $(MAKE) compile; fi\n\n"
-              "check: $(TTCN3_MODULES) ", rm_command);
+              "%s"
+              "check:%s $(TTCN3_MODULES) ", rm_command,
+              merge_profiled_file_lists ? "check:: $(PROFILED_FILE_LIST)\n\n" : "",
+              merge_profiled_file_lists ? ":" : "");
       if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
       fputs("$(ASN1_MODULES)\n"
             "\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ", fp);
@@ -3407,8 +3464,14 @@ static void print_makefile(struct makefile_struct *makefile)
               "\t$(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) $(ASN1_MODULES)",
               fp);
       }
-      fputs("\n\n"
-            "compile: $(TTCN3_MODULES) ", fp);
+      if (makefile->profiled_file_list) {
+        fputs("\n\ncompile:: $(PROFILED_FILE_LIST)\n"
+              "\ttouch $(TTCN3_MODULES) ", fp);
+        if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
+        fputs("$(ASN1_MODULES)", fp);
+      }
+      fprintf(fp, "\n\n"
+            "compile:%s $(TTCN3_MODULES) ", makefile->profiled_file_list ? ":" : "");
       if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
       fputs("$(ASN1_MODULES)\n"
             "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) ", fp);
@@ -3422,6 +3485,10 @@ static void print_makefile(struct makefile_struct *makefile)
       fputs(" - $?\n"
             "\ttouch $@\n"
             "\n", fp);
+      if (merge_profiled_file_lists) {
+        fputs("$(PROFILED_FILE_LIST): $(PROFILED_FILE_LIST_SEGMENTS)\n"
+              "\tcat $(PROFILED_FILE_LIST_SEGMENTS) > $(PROFILED_FILE_LIST)\n\n", fp);
+      }
     }
 // clean:
     if (makefile->linkingStrategy) {
@@ -3438,6 +3505,9 @@ static void print_makefile(struct makefile_struct *makefile)
       fputs("compile", fp);
       if (makefile->central_storage) fputs(" compile-all", fp);
       if (makefile->gcc_dep) fputs(" $(DEPFILES)", fp);
+      if (merge_profiled_file_lists) {
+        fputs(" $(PROFILED_FILE_LIST)", fp);
+      }
       fprintf(fp, " \\\n"
         "\ttags *.log%s%s\n\n",
         add_refd_prjs?" referenced*":"",
@@ -3452,6 +3522,9 @@ static void print_makefile(struct makefile_struct *makefile)
       fputs("compile", fp);
       if (makefile->central_storage) fputs(" compile-all", fp);
       if (makefile->gcc_dep) fputs(" $(DEPFILES)", fp);
+      if (merge_profiled_file_lists) {
+        fputs(" $(PROFILED_FILE_LIST)", fp);
+      }
       fprintf(fp, " \\\n"
         "\ttags *.log%s",
         add_refd_prjs?" referenced*":"");
@@ -3639,14 +3712,14 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   boolean central_storage, boolean absolute_paths, boolean preprocess,
   boolean dump_makefile_data, boolean force_overwrite, boolean use_runtime_2,
   boolean dynamic, boolean makedepend, boolean coverage,
-  const char *code_splitting_mode, const char *tcov_file_name,
+  const char *code_splitting_mode, const char *tcov_file_name, struct string_list* profiled_file_list,
   boolean Lflag, boolean Zflag, boolean Hflag, struct string_list* sub_project_dirs, struct string_list* ttcn3_prep_includes,
   struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
   struct string_list* prep_defines, struct string_list* prep_undefines, boolean codesplittpd, boolean quietly, boolean disablesubtypecheck,
   const char* cxxcompiler, const char* optlevel, const char* optflags, boolean disableber, boolean disableraw, boolean disabletext,
   boolean disablexer, boolean disablejson, boolean forcexerinasn, boolean defaultasomit, boolean gccmsgformat,
   boolean linenumbersonlymsg, boolean includesourceinfo, boolean addsourcelineinfo, boolean suppresswarnings,
-  boolean outparamboundness, struct string_list* solspeclibraries, struct string_list* sol8speclibraries,
+  boolean outparamboundness, boolean omit_in_value_list, struct string_list* solspeclibraries, struct string_list* sol8speclibraries,
   struct string_list* linuxspeclibraries, struct string_list* freebsdspeclibraries,
   struct string_list* win32speclibraries, const char* ttcn3preprocessor, struct string_list* linkerlibraries,
   struct string_list* additionalObjects, struct string_list* linkerlibsearchpath, char* generatorCommandOutput,
@@ -3696,6 +3769,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   makefile.addsourcelineinfo = addsourcelineinfo;
   makefile.suppresswarnings = suppresswarnings;
   makefile.outparamboundness = outparamboundness;
+  makefile.omit_in_value_list = omit_in_value_list;
   makefile.solspeclibraries = solspeclibraries;
   makefile.sol8speclibraries = sol8speclibraries;
   makefile.linuxspeclibraries = linuxspeclibraries;
@@ -3773,7 +3847,11 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   }
 
   if (tcov_file_name != NULL) {
-    makefile.tcov_file_name = mputprintf(makefile.tcov_file_name, "-K %s", tcov_file_name);
+    makefile.tcov_file_name = mprintf(" -K %s", tcov_file_name);
+  }
+  
+  if (profiled_file_list != NULL) {
+    makefile.profiled_file_list = profiled_file_list;
   }
 
   if (makefile.nTTCN3Modules >= 1) {
@@ -3826,7 +3904,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
 static void usage(void)
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abc" C_flag "dDfFglLmprRstTVwWXZ] [-K file] [-P dir]"
+    "usage: %s [-abc" C_flag "dDfFglLmMprRstTVwWXZ] [-K file] [-z file ] [-P dir]"
     " [-U none|type] [-e ets_name] [-o dir|file]\n"
     "        [-t project_descriptor.tpd [-b buildconfig]]\n"
     "        [-O file] ... module_name ... testport_name ...\n"
@@ -3842,10 +3920,11 @@ static void usage(void)
     "	-e ets_name:	name of the target executable\n"
     "	-f:		force overwriting of the output Makefile\n"
     "	-g:		generate Makefile for use with GNU make\n"
+    "	-K file:	enable selective code coverage\n"
     "	-l:		use dynamic linking\n"
     "	-L:		create makefile with library archive as the default target\n"
     "	-m:		always use makedepend for dependencies\n"
-    "	-K file:	enable selective code coverage\n"
+    "	-M:		allow 'omit' in template value lists (legacy behavior)\n"
     "	-o dir|file:	write the Makefile to the given directory or file\n"
     "	-O file:	add the given file to the Makefile as other file\n"
     "	-p:		generate Makefile with TTCN-3 preprocessing\n"
@@ -3855,6 +3934,7 @@ static void usage(void)
     "	-v:		show version\n"
     "	-w:		suppress warnings\n"
     "	-Y:		Enforces legacy behaviour of the \"out\" function parameters (see refguide)\n"
+    "	-z file:	enable profiling and code coverage for the TTCN-3 files in the argument\n"
     "Options for processing the Titan Project Descriptor file(s):\n"
     "	-t tpd:		read project descriptor file\n"
     "	-b buildconfig:	use the specified build config instead of the default\n"
@@ -3911,7 +3991,8 @@ int main(int argc, char *argv[])
     dxflag = FALSE, fxflag = FALSE, doflag = FALSE,
     gfflag = FALSE, lnflag = FALSE, isflag = FALSE, asflag = FALSE,
     swflag = FALSE, Vflag = FALSE, Dflag = FALSE, Wflag = FALSE,
-    djflag = FALSE, Zflag = FALSE, Hflag = FALSE;
+    djflag = FALSE, Zflag = FALSE, Hflag = FALSE, Mflag = FALSE,
+    zflag = FALSE;
   boolean error_flag = FALSE;
   char *output_file = NULL;
   char *ets_name = NULL;
@@ -3922,6 +4003,8 @@ int main(int argc, char *argv[])
   const char *tpd_file_name = NULL;
   const char *tpd_build_config = NULL;
   const char *tcov_file_name = NULL;
+  struct string_list* profiled_file_list = NULL;
+  const char *profiled_file_list_zflag = NULL;
   const char *file_list_path = NULL;
   enum tpd_result tpd_processed = FALSE;
   struct string_list* sub_project_dirs = NULL;
@@ -3964,7 +4047,7 @@ int main(int argc, char *argv[])
   }
 
   for ( ; ; ) {
-    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:fFgK:o:lLmpP:rRst:TU:vVwWXYZH");
+    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:fFgK:o:lLmMpP:rRst:TU:vVwWXYz:ZH");
     if (c == -1) break;
     switch (c) {
     case 'O':
@@ -4027,6 +4110,9 @@ int main(int argc, char *argv[])
     case 'm':
       SET_FLAG(m);
       break;
+    case 'M':
+      SET_FLAG(M);
+      break;
     case 'p':
       SET_FLAG(p);
       break;
@@ -4084,6 +4170,10 @@ int main(int argc, char *argv[])
     case 'X':
       SET_FLAG(X);
       break;
+    case 'z':
+      SET_FLAG(z);
+      profiled_file_list_zflag = optarg;
+      break;
     case 'Z':
       SET_FLAG(Z);
       break;
@@ -4099,7 +4189,7 @@ int main(int argc, char *argv[])
     if ( aflag || bflag || cflag || Cflag || dflag || eflag || fflag || Fflag || gflag
       || mflag || oflag || lflag || pflag || Pflag || rflag || Rflag || sflag
       || tflag || Tflag || Vflag || wflag || Xflag || Kflag || Dflag || Wflag || Yflag
-      || Zflag || Hflag || n_other_files > 0)
+      || Zflag || Hflag || Mflag || zflag || n_other_files > 0)
       error_flag = TRUE;
   }
 
@@ -4261,9 +4351,9 @@ int main(int argc, char *argv[])
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
       create_symlink_list,ttcn3_prep_includes, ttcn3_prep_defines,ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csflag, 
       &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
-      &asflag, &swflag, &Yflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
+      &asflag, &swflag, &Yflag, &Mflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
       linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &Zflag, &Hflag,
-      &generatorCommandOutput, target_placement_list, Wflag, run_command_list, required_configs);
+      &generatorCommandOutput, target_placement_list, Wflag, run_command_list, required_configs, &profiled_file_list);
 
     Free(abs_work_dir);
     if (prj_graph_fp) {
@@ -4274,6 +4364,16 @@ int main(int argc, char *argv[])
       ERROR("Failed to process %s", tpd_file_name);
       exit(EXIT_FAILURE);
     }
+    if (zflag) {
+      WARNING("Compiler option '-z' and its argument will be overwritten by "
+        "the settings in the TPD");
+    }
+  }
+  else if (zflag) {
+    // use the argument given in the command line if there is no TPD
+    profiled_file_list = (struct string_list*)Malloc(sizeof(struct string_list));
+    profiled_file_list->str = mcopystr(profiled_file_list_zflag);
+    profiled_file_list->next = NULL;
   }
 
   if (!Pflag) {
@@ -4287,9 +4387,10 @@ int main(int argc, char *argv[])
     }
     generate_makefile(argc - optind, argv + optind, n_other_files, other_files,
       output_file, ets_name, project_name, gflag, sflag, cflag, aflag, pflag, dflag, fflag||Fflag,
-      Rflag, lflag, mflag, Cflag, code_splitting_mode, tcov_file_name, Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
+      Rflag, lflag, mflag, Cflag, code_splitting_mode, tcov_file_name, profiled_file_list,
+      Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
       ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, csflag, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
-      drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, swflag, Yflag, solspeclibraries,
+      drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, swflag, Yflag, Mflag, solspeclibraries,
       sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, ttcn3prep, linkerlibraries, additionalObjects,
       linkerlibsearchpath, generatorCommandOutput, target_placement_list);
   }
@@ -4309,6 +4410,7 @@ int main(int argc, char *argv[])
   free_string_list(linkerlibraries);
   free_string_list(additionalObjects);
   free_string_list(linkerlibsearchpath);
+  free_string_list(profiled_file_list);
 
   Free(generatorCommandOutput);
   free_string2_list(target_placement_list);

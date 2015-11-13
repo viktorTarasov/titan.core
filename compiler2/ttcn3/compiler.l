@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -256,10 +256,6 @@ TITAN "$#&&&(#TITANERRONEOUS$#&&^#% "
 }
 
 {LINECOMMENT} {
-  Location loc(infile, current_line, current_column, current_line,
-    current_column + yyleng);
-  loc.error("Unterminated line comment (missing newline character at the end "
-    "of file)");
   current_column += yyleng;
 }
 
@@ -523,6 +519,7 @@ hex2oct		RETURN(hex2octKeyword);
 hex2str		RETURN(hex2strKeyword);
 int2bit		RETURN(int2bitKeyword);
 int2char	RETURN(int2charKeyword);
+int2enum  RETURN(int2enumKeyword);
 int2float	RETURN(int2floatKeyword);
 int2hex		RETURN(int2hexKeyword);
 int2oct		RETURN(int2octKeyword);

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -181,8 +181,8 @@ string_map_t *config_defines;
 %token EndTestCase
 %token <str_val> Identifier
 %token <str_val> ASN1LowerIdentifier "ASN.1 identifier beginning with a lowercase letter"
-%token <int_val> Number
-%token <float_val> Float
+%token <int_val> Number MPNumber "integer value"
+%token <float_val> Float MPFloat "float value"
 %token <bool_val> BooleanValue "true or false"
 %token <verdict_val> VerdictValue
 %token <bitstring_val> Bstring "bit string value"
@@ -191,7 +191,7 @@ string_map_t *config_defines;
 %token <str_val> BstringMatch "bit string template"
 %token <str_val> HstringMatch "hex string template"
 %token <str_val> OstringMatch "octet string template"
-%token <charstring_val> Cstring "charstring value"
+%token <charstring_val> Cstring MPCstring "charstring value"
 %token DNSName "hostname"
 /* a single bit */
 %token <logseverity_val> LoggingBit
@@ -236,10 +236,8 @@ string_map_t *config_defines;
 %type <objid_val> ObjIdValue ObjIdComponentList
 %type <int_val> ObjIdComponent NumberForm NameAndNumberForm
 
-%type <universal_charstring_val> UniversalCharstringValue
-	seqUniversalCharstringFragment UniversalCharstringFragment
+%type <universal_charstring_val> UniversalCharstringValue UniversalCharstringFragment
 %type <universal_char_val> Quadruple
-%type <str_val> EnumeratedValue
 
 %type <str_val> LoggerPluginId
 %type <logging_plugins> LoggerPlugin LoggerPluginList
@@ -270,9 +268,10 @@ string_map_t *config_defines;
 %type <str_val> FieldName
 %type <module_param_val> ParameterValue SimpleParameterValue ParameterValueOrNotUsedSymbol
   FieldValue ArrayItem IndexItem IndexItemList FieldValueList ArrayItemList CompoundValue IntegerRange FloatRange StringRange
+  ParameterExpression ParameterReference
 %type <module_param_list> TemplateItemList
 %type <module_param_length_restriction> LengthMatch
-%type <str_val> PatternChunk PatternChunkList
+%type <str_val> PatternChunk
 %type <int_native> IndexItemIndex LengthBound
 %type <uint_val> ProfilerStatsFlags
 
@@ -280,7 +279,6 @@ string_map_t *config_defines;
 ArrayRef
 ASN1LowerIdentifier
 Command
-EnumeratedValue
 FieldName
 Identifier
 LogFileName
@@ -289,7 +287,6 @@ TestportName
 TestportParameterName
 TestportParameterValue
 PatternChunk
-PatternChunkList
 BstringMatch
 HstringMatch
 OstringMatch
@@ -312,9 +309,9 @@ OctetstringValue
 
 %destructor { Free($$.chars_ptr); }
 Cstring
+MPCstring
 
-%destructor { Free($$.uchars_ptr); Free($$.quad_positions); }
-seqUniversalCharstringFragment
+%destructor { Free($$.uchars_ptr); }
 UniversalCharstringFragment
 UniversalCharstringValue
 
@@ -328,6 +325,7 @@ ExecuteItem
 IntegerValue
 NameAndNumberForm
 Number
+MPNumber
 NumberForm
 ObjIdComponent
 ParameterValue
@@ -343,6 +341,8 @@ IndexItem
 IntegerRange
 FloatRange
 StringRange
+ParameterExpression
+ParameterReference
 
 %destructor { delete $$; }
 LengthMatch
@@ -354,18 +354,18 @@ TemplateItemList
 ParameterName
 ParameterNameSegment
 
+%left '&' /* to avoid shift/reduce conflicts */
 %left '+' '-'
 %left '*' '/'
 %left UnarySign
 
-%expect 2
+%expect 1
 
 /*
-2 conflicts in two distinct states.
-When seeing a '*' token after an integer or float value in section
-[MODULE_PARAMETERS] parser cannot decide whether the token is a multiplication
-operator (shift) or it refers to all modules in the next module parameter
-(reduce).
+1 conflict:
+When seeing a '*' token after a module parameter expression the parser cannot
+decide whether the token is a multiplication operator (shift) or it refers to 
+all modules in the next module parameter (reduce).
 */
 %%
 
@@ -433,11 +433,10 @@ ParameterNameSegment:
   $$ = $1;
   $$->push_back($3);
 }
-| ParameterNameSegment '[' Number ']'
+| ParameterNameSegment IndexItemIndex
 {
   $$ = $1;
-  $$->push_back($3->as_string());
-  delete $3;
+  $$->push_back(mprintf("%d", $2));
 }
 | Identifier
 {
@@ -447,21 +446,21 @@ ParameterNameSegment:
 ;
 
 ParameterValue:
-  SimpleParameterValue
+  ParameterExpression
   {
     $$ = $1;
   }
-| SimpleParameterValue LengthMatch
+| ParameterExpression LengthMatch
   {
     $$ = $1;
     $$->set_length_restriction($2);
   }
-| SimpleParameterValue IfpresentKeyword
+| ParameterExpression IfpresentKeyword
   {
     $$ = $1;
     $$->set_ifpresent();
   }
-| SimpleParameterValue LengthMatch IfpresentKeyword
+| ParameterExpression LengthMatch IfpresentKeyword
   {
     $$ = $1;
     $$->set_length_restriction($2);
@@ -492,27 +491,69 @@ LengthMatch:
 ;
 
 LengthBound:
-  IntegerValue
+  ParameterExpression
 {
-  if (!$1->is_native()) {
+  $1->set_id(new Module_Param_CustomName(mcopystr("length bound")));
+  INTEGER tmp;
+  tmp.set_param(*$1);
+  if (!tmp.get_val().is_native()) {
     config_process_error("bignum length restriction bound.");
     $$ = 0;
-  } else if ($1->is_negative()) {
+  } else if (tmp.get_val().is_negative()) {
     config_process_error("negative length restriction bound.");
     $$ = 0;
   } else {
-    $$ = $1->get_val();
+    $$ = tmp;
   }
   delete $1;
 }
 ;
 
+// one global rule for expressions in module parameters
+// the expression's result will be calculated by set_param()
+ParameterExpression:
+  SimpleParameterValue { $$ = $1; }
+| ParameterReference { $$ = $1; }
+| '(' ParameterExpression ')' { $$ = $2; }
+| '+' ParameterExpression %prec UnarySign { $$ = $2; }
+| '-' ParameterExpression %prec UnarySign { $$ = new Module_Param_Expression($2); }
+| ParameterExpression '+' ParameterExpression
+  {
+    $$ = new Module_Param_Expression(Module_Param::EXPR_ADD, $1, $3);
+  }
+| ParameterExpression '-' ParameterExpression
+  {
+    $$ = new Module_Param_Expression(Module_Param::EXPR_SUBTRACT, $1, $3);
+  }
+| ParameterExpression '*' ParameterExpression
+  {
+    $$ = new Module_Param_Expression(Module_Param::EXPR_MULTIPLY, $1, $3);
+  }
+| ParameterExpression '/' ParameterExpression
+  {
+    $$ = new Module_Param_Expression(Module_Param::EXPR_DIVIDE, $1, $3);
+  }
+| ParameterExpression '&' ParameterExpression
+  {
+    $$ = new Module_Param_Expression(Module_Param::EXPR_CONCATENATE, $1, $3);
+  }
+;
+
+ParameterReference:
+  // enumerated values are also treated as references by the parser,
+  // these will be sorted out later during set_param()
+  ParameterNameSegment
+  {
+    $$ = new Module_Param_Reference(new Module_Param_Name(*$1));
+  }
+;
+
 SimpleParameterValue:
-	IntegerValue
+	MPNumber
   {
     $$ = new Module_Param_Integer($1);
   }
-| FloatValue
+| MPFloat
   {
     $$ = new Module_Param_Float($1);
   }
@@ -540,17 +581,13 @@ SimpleParameterValue:
   {
     $$ = new Module_Param_Octetstring($1.n_octets, $1.octets_ptr);
   }
-| Cstring
+| MPCstring
   {
     $$ = new Module_Param_Charstring($1.n_chars, $1.chars_ptr);
   }
 | UniversalCharstringValue
   {
-    $$ = new Module_Param_Universal_Charstring($1.n_uchars, $1.uchars_ptr, $1.n_quads, $1.quad_positions);
-  }
-| EnumeratedValue
-  {
-    $$ = new Module_Param_Enumerated($1);
+    $$ = new Module_Param_Universal_Charstring($1.n_uchars, $1.uchars_ptr);
   }
 | OmitKeyword
   {
@@ -592,7 +629,7 @@ SimpleParameterValue:
   {
     $$ = $1;
   }
-| PatternKeyword PatternChunkList
+| PatternKeyword PatternChunk
   {
     $$ = new Module_Param_Pattern($2);
   }
@@ -665,21 +702,8 @@ SimpleParameterValue:
   }
 ;
 
-PatternChunkList:
-  PatternChunk
-  {
-    $$ = $1;
-  }
-| PatternChunkList '&' PatternChunk
-  {
-    $$ = $1;
-    $$ = mputstr($$, $3);
-    Free($3);
-  }
-;
-
 PatternChunk:
-  Cstring
+  MPCstring
   {
     $$ = mcopystr($1.chars_ptr);
     Free($1.chars_ptr);
@@ -691,30 +715,30 @@ PatternChunk:
 ;
 
 IntegerRange:
-  '(' '-' InfinityKeyword DotDot IntegerValue ')'
+  '(' '-' InfinityKeyword DotDot MPNumber ')'
   {
     $$ = new Module_Param_IntRange(NULL, $5);
   }
-| '(' IntegerValue DotDot IntegerValue ')'
+| '(' MPNumber DotDot MPNumber ')'
   {
     $$ = new Module_Param_IntRange($2, $4);
   }
-| '(' IntegerValue DotDot InfinityKeyword ')'
+| '(' MPNumber DotDot InfinityKeyword ')'
   {
     $$ = new Module_Param_IntRange($2, NULL);
   }
 ;
 
 FloatRange:
-  '(' '-' InfinityKeyword DotDot FloatValue ')'
+  '(' '-' InfinityKeyword DotDot MPFloat ')'
   {
     $$ = new Module_Param_FloatRange(0.0, false, $5, true);
   }
-| '(' FloatValue DotDot FloatValue ')'
+| '(' MPFloat DotDot MPFloat ')'
   {
     $$ = new Module_Param_FloatRange($2, true, $4, true);
   }
-| '(' FloatValue DotDot InfinityKeyword ')'
+| '(' MPFloat DotDot InfinityKeyword ')'
   {
     $$ = new Module_Param_FloatRange($2, true, 0.0, false);
   }
@@ -739,12 +763,11 @@ StringRange:
     }
     Free($2.uchars_ptr);
     Free($4.uchars_ptr);
-    Free($2.quad_positions);
-    Free($4.quad_positions);
     $$ = new Module_Param_StringRange(lower, upper);
   }
 ;
 
+// integers outside of the [MODULE_PARAMETERS] section
 IntegerValue:
 	Number { $$ = $1; }
 	| '(' IntegerValue ')' { $$ = $2; }
@@ -801,6 +824,7 @@ IntegerValue:
 }
 ;
 
+// floats outside of the [MODULE_PARAMETERS] section
 FloatValue:
 	Float { $$ = $1; }
 	| '(' FloatValue ')' { $$ = $2; }
@@ -846,11 +870,11 @@ ObjIdComponent:
 ;
 
 NumberForm:
-	Number { $$ = $1; }
+	MPNumber { $$ = $1; }
 ;
 
 NameAndNumberForm:
-	Identifier '(' Number ')'
+	Identifier '(' MPNumber ')'
 {
 	Free($1);
 	$$ = $3;
@@ -858,149 +882,28 @@ NameAndNumberForm:
 ;
 
 BitstringValue:
-	Bstring
-{
-	$$ = $1;
-}
-	| BitstringValue ConcatOp Bstring
-{
-	$$.n_bits = $1.n_bits + $3.n_bits;
-	int n_bytes_1 = ($1.n_bits+7)/8;
-        int n_bytes_3 = ($3.n_bits+7)/8;
-        int n_bytes   = ($$.n_bits+7)/8;
-	$$.bits_ptr = (unsigned char *)Realloc($1.bits_ptr, n_bytes);
-	int n_rem_1 = $1.n_bits % 8; // remainder bits
-	if (n_rem_1!=0) {
-          for (int i=n_bytes_1; i<n_bytes; i++) {
-            unsigned char S3_byte = $3.bits_ptr[i-n_bytes_1];
-            $$.bits_ptr[i-1] |= S3_byte << n_rem_1;
-            $$.bits_ptr[i] = S3_byte >> (8-n_rem_1);
-          }
-          if (n_bytes_1+n_bytes_3>n_bytes)
-            $$.bits_ptr[n_bytes-1] |= $3.bits_ptr[n_bytes_3-1] << n_rem_1;
-	} else {
-	  memcpy($$.bits_ptr + n_bytes_1, $3.bits_ptr, n_bytes_3);
-	}
-        Free($3.bits_ptr);
-}
+	Bstring { $$ = $1; }
 ;
 
 HexstringValue:
-	Hstring
-{
-	$$ = $1;
-}
-	| HexstringValue ConcatOp Hstring
-{
-	$$.n_nibbles = $1.n_nibbles + $3.n_nibbles;
-        int n_bytes = ($$.n_nibbles + 1) / 2;
-	$$.nibbles_ptr = (unsigned char *)Realloc($1.nibbles_ptr, n_bytes);
-	int n_bytes_1 = ($1.n_nibbles + 1) / 2;
-	int n_bytes_3 = ($3.n_nibbles + 1) / 2;
-	if ($1.n_nibbles % 2) {
-	  for (int i=n_bytes_1; i<n_bytes; i++) {
-	    unsigned char S3_byte = $3.nibbles_ptr[i - n_bytes_1];
-	    $$.nibbles_ptr[i - 1] |= S3_byte << 4;
-	    $$.nibbles_ptr[i] = S3_byte >> 4;
-	  }
-	  if ($3.n_nibbles % 2)
-	    $$.nibbles_ptr[n_bytes - 1] |= $3.nibbles_ptr[n_bytes_3 - 1] << 4;
-	} else {
-	  memcpy($$.nibbles_ptr + n_bytes_1, $3.nibbles_ptr, n_bytes_3);
-	}
-	Free($3.nibbles_ptr);
-}
+	Hstring { $$ = $1; }
 ;
 
 OctetstringValue:
-	Ostring
-{
-	$$ = $1;
-}
-	| OctetstringValue ConcatOp Ostring
-{
-	$$.n_octets = $1.n_octets + $3.n_octets;
-	$$.octets_ptr = (unsigned char *)Realloc($1.octets_ptr, $$.n_octets);
-	memcpy($$.octets_ptr + $1.n_octets, $3.octets_ptr, $3.n_octets);
-	Free($3.octets_ptr);
-}
+	Ostring { $$ = $1; }
 ;
 
 UniversalCharstringValue:
-	Cstring seqUniversalCharstringFragment
-{
-	$$.n_uchars = $1.n_chars + $2.n_uchars;
-	$$.uchars_ptr = (universal_char*)
-		Malloc($$.n_uchars * sizeof(universal_char));
-	for (int i = 0; i < $1.n_chars; i++) {
-		$$.uchars_ptr[i].uc_group = 0;
-		$$.uchars_ptr[i].uc_plane = 0;
-		$$.uchars_ptr[i].uc_row = 0;
-		$$.uchars_ptr[i].uc_cell = $1.chars_ptr[i];
-	}
-	memcpy($$.uchars_ptr + $1.n_chars, $2.uchars_ptr,
-		$2.n_uchars * sizeof(universal_char));
-  $$.n_quads = $2.n_quads;
-  $$.quad_positions = (int*)Malloc($$.n_quads * sizeof(int));
-  for (int i = 0; i < $$.n_quads; i++) {
-    $$.quad_positions[i] = $2.quad_positions[i] + $1.n_chars;
-  }
-	Free($1.chars_ptr);
-	Free($2.uchars_ptr);
-  Free($2.quad_positions);
-}
-	| Quadruple
+  Quadruple
 {
 	$$.n_uchars = 1;
 	$$.uchars_ptr = (universal_char*)Malloc(sizeof(universal_char));
 	$$.uchars_ptr[0] = $1;
-  $$.n_quads = 1;
-  $$.quad_positions = (int*)Malloc(sizeof(int));
-  $$.quad_positions[0] = 0;
-}
-	| Quadruple seqUniversalCharstringFragment
-{
-	$$.n_uchars = $2.n_uchars + 1;
-	$$.uchars_ptr = (universal_char*)
-		Malloc($$.n_uchars * sizeof(universal_char));
-	$$.uchars_ptr[0] = $1;
-	memcpy($$.uchars_ptr + 1, $2.uchars_ptr,
-		$2.n_uchars * sizeof(universal_char));
-  $$.n_quads = $2.n_quads + 1;
-  $$.quad_positions = (int*)Malloc($$.n_quads * sizeof(int));
-  $$.quad_positions[0] = 0;
-  for (int i = 0; i < $2.n_quads; i++) {
-    $$.quad_positions[i + 1] = $2.quad_positions[i] + 1; 
-  }
-	Free($2.uchars_ptr);
-  Free($2.quad_positions);
-}
-;
-
-seqUniversalCharstringFragment:
-	ConcatOp UniversalCharstringFragment
-{
-	$$ = $2;
-}
-	| seqUniversalCharstringFragment ConcatOp UniversalCharstringFragment
-{
-	$$.n_uchars = $1.n_uchars + $3.n_uchars;
-	$$.uchars_ptr = (universal_char*)
-		Realloc($1.uchars_ptr, $$.n_uchars * sizeof(universal_char));
-	memcpy($$.uchars_ptr + $1.n_uchars, $3.uchars_ptr,
-		$3.n_uchars * sizeof(universal_char));
-  $$.n_quads = $1.n_quads + $3.n_quads;
-  $$.quad_positions = (int*)Realloc($1.quad_positions, $$.n_quads * sizeof(int));
-  for (int i = 0; i < $3.n_quads; i++) {
-    $$.quad_positions[$1.n_quads + i] = $3.quad_positions[i] + $1.n_uchars;
-  }
-	Free($3.uchars_ptr);
-  Free($3.quad_positions);
 }
 ;
 
 UniversalCharstringFragment:
-	Cstring
+	MPCstring
 {
 	$$.n_uchars = $1.n_chars;
 	$$.uchars_ptr = (universal_char*)
@@ -1011,8 +914,6 @@ UniversalCharstringFragment:
 		$$.uchars_ptr[i].uc_row = 0;
 		$$.uchars_ptr[i].uc_cell = $1.chars_ptr[i];
 	}
-  $$.n_quads = 0;
-  $$.quad_positions = 0;
 	Free($1.chars_ptr);
 }
 	| Quadruple
@@ -1020,51 +921,57 @@ UniversalCharstringFragment:
 	$$.n_uchars = 1;
 	$$.uchars_ptr = (universal_char*)Malloc(sizeof(universal_char));
 	$$.uchars_ptr[0] = $1;
-  $$.n_quads = 1;
-  $$.quad_positions = (int*)Malloc(sizeof(int));
-  $$.quad_positions[0] = 0;
 }
 ;
 
 Quadruple:
-	CharKeyword '(' IntegerValue ',' IntegerValue ',' IntegerValue ','
-	IntegerValue ')'
+	CharKeyword '(' ParameterExpression ',' ParameterExpression ','
+  ParameterExpression ','	ParameterExpression ')'
 {
-  if (*$3 < 0 || *$3 > 127) {
-    char *s = $3->as_string();
+  $3->set_id(new Module_Param_CustomName(mcopystr("quadruple group")));
+  $5->set_id(new Module_Param_CustomName(mcopystr("quadruple plane")));
+  $7->set_id(new Module_Param_CustomName(mcopystr("quadruple row")));
+  $9->set_id(new Module_Param_CustomName(mcopystr("quadruple cell")));
+  INTEGER g, p, r, c;
+  g.set_param(*$3);
+  p.set_param(*$5);
+  r.set_param(*$7);
+  c.set_param(*$9);
+  if (g < 0 || g > 127) {
+    char *s = g.get_val().as_string();
     config_process_error_f("The first number of quadruple (group) must be "
       "within the range 0 .. 127 instead of %s.", s);
     Free(s);
-    $$.uc_group = *$3 < 0 ? 0 : 127;
+    $$.uc_group = g < 0 ? 0 : 127;
   } else {
-    $$.uc_group = $3->get_val();
+    $$.uc_group = g;
   }
-  if (*$5 < 0 || *$5 > 255) {
-    char *s = $5->as_string();
+  if (p < 0 || p > 255) {
+    char *s = p.get_val().as_string();
     config_process_error_f("The second number of quadruple (plane) must be "
       "within the range 0 .. 255 instead of %s.", s);
     Free(s);
-    $$.uc_plane = *$5 < 0 ? 0 : 255;
+    $$.uc_plane = p < 0 ? 0 : 255;
   } else {
-    $$.uc_plane = $5->get_val();
+    $$.uc_plane = p;
   }
-  if (*$7 < 0 || *$7 > 255) {
-    char *s = $7->as_string();
+  if (r < 0 || r > 255) {
+    char *s = r.get_val().as_string();
     config_process_error_f("The third number of quadruple (row) must be "
       "within the range 0 .. 255 instead of %s.", s);
     Free(s);
-    $$.uc_row = *$7 < 0 ? 0 : 255;
+    $$.uc_row = r < 0 ? 0 : 255;
   } else {
-    $$.uc_row = $7->get_val();
+    $$.uc_row = r;
   }
-  if (*$9 < 0 || *$9 > 255) {
-    char *s = $9->as_string();
+  if (c < 0 || c > 255) {
+    char *s = c.get_val().as_string();
     config_process_error_f("The fourth number of quadruple (cell) must be "
       "within the range 0 .. 255 instead of %s.", s);
     Free(s);
-    $$.uc_cell = *$9 < 0 ? 0 : 255;
+    $$.uc_cell = c < 0 ? 0 : 255;
   } else {
-    $$.uc_cell = $9->get_val();
+    $$.uc_cell = c;
   }
   delete $3;
   delete $5;
@@ -1073,26 +980,18 @@ Quadruple:
 }
 ;
 
-ConcatOp:
-	'&'
-;
-
+// character strings outside of the [MODULE_PARAMETERS] section
 StringValue:
 	Cstring
 {
     $$ = mcopystr($1.chars_ptr);
     Free($1.chars_ptr);
 }
-	| StringValue ConcatOp Cstring
+	| StringValue '&' Cstring
 {
     $$ = mputstr($1, $3.chars_ptr);
     Free($3.chars_ptr);
 }
-;
-
-EnumeratedValue:
-	Identifier { $$ = $1; }
-	| ASN1LowerIdentifier { $$ = $1; }
 ;
 
 CompoundValue:
@@ -1112,7 +1011,7 @@ CompoundValue:
   {
     $$ = $2;
   }
-| '(' ParameterValue ',' TemplateItemList ')' /* at least 2 elements to avoid shift/reduce conflicts with IntegerValue and FloatValue rules */
+| '(' ParameterValue ',' TemplateItemList ')' /* at least 2 elements to avoid shift/reduce conflicts with the ParameterExpression rule */
   {
     $$ = new Module_Param_List_Template();
     $2->set_id(new Module_Param_Index($$->get_size(),false));
@@ -1246,16 +1145,19 @@ IndexItem:
 ;
 
 IndexItemIndex:
-	'[' IntegerValue ']'
+	'[' ParameterExpression ']'
 {
-        if (!$2->is_native()) {
-          config_process_error("bignum index."); // todo
-        }
-        if ($2->is_negative()) {
-          config_process_error("negative index."); // todo
-        }
-        $$ = $2->get_val();
-        delete $2;
+  $2->set_id(new Module_Param_CustomName(mcopystr("array index")));
+  INTEGER tmp;
+  tmp.set_param(*$2);
+  if (!tmp.get_val().is_native()) {
+    config_process_error("bignum index."); // todo
+  }
+  if (tmp.get_val().is_negative()) {
+    config_process_error("negative index."); // todo
+  }
+  $$ = tmp;
+  delete $2;
 }
 ;
 

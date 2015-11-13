@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -91,6 +91,7 @@ namespace { /* anonymous namespace */
     inline union_selection_type get_selection() const { return union_selection; }
 #ifdef TITAN_RUNTIME_2
     void set_param(Module_Param& /*param*/) { TTCN_error("Internal error: EXTERNALtransfer_encoding::set_param() called."); }
+    Module_Param* get_param(Module_Param_Name& param_name) const { TTCN_error("Internal error: EXTERNALtransfer_encoding::get_param() called."); }
     void encode_text(Text_Buf& /*text_buf*/) const { TTCN_error("Internal error: EXTERNALtransfer_encoding::encode_text() called."); }
     void decode_text(Text_Buf& /*text_buf*/) { TTCN_error("Internal error: EXTERNALtransfer_encoding::decode_text() called."); }
     boolean is_bound() const { return union_selection!=UNBOUND_VALUE; }
@@ -146,6 +147,7 @@ namespace { /* anonymous namespace */
     {return field_encoding;}
 #ifdef TITAN_RUNTIME_2
     void set_param(Module_Param& /*param*/) { TTCN_error("Internal error: EXTERNALtransfer::set_param() called."); }
+    Module_Param* get_param(Module_Param_Name& param_name) const { TTCN_error("Internal error: EXTERNALtransfer::get_param() called."); }
     void encode_text(Text_Buf& /*text_buf*/) const { TTCN_error("Internal error: EXTERNALtransfer::encode_text() called."); }
     void decode_text(Text_Buf& /*text_buf*/) { TTCN_error("Internal error: EXTERNALtransfer::decode_text() called."); }
     boolean is_bound() const { TTCN_error("Internal error: EXTERNALtransfer::is_bound() called."); }
@@ -983,11 +985,15 @@ void EXTERNAL_identification::log() const
 
 void EXTERNAL_identification::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "union value");
-  if (param.get_type()==Module_Param::MP_Value_List && param.get_size()==0) return;
-  if (param.get_type()!=Module_Param::MP_Assignment_List) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  if (mp->get_type()==Module_Param::MP_Value_List && mp->get_size()==0) return;
+  if (mp->get_type()!=Module_Param::MP_Assignment_List) {
     param.error("union value with field name was expected");
   }
-  Module_Param* mp_last = param.get_elem(param.get_size()-1);
+  Module_Param* mp_last = mp->get_elem(mp->get_size()-1);
   if (!strcmp(mp_last->get_id()->get_name(), "syntaxes")) {
     syntaxes().set_param(*mp_last);
     return;
@@ -1015,10 +1021,54 @@ void EXTERNAL_identification::set_param(Module_Param& param) {
   mp_last->error("Field %s does not exist in type EXTERNAL.identification.", mp_last->get_id()->get_name());
 }
 
+Module_Param* EXTERNAL_identification::get_param(Module_Param_Name& param_name) const
+{
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
+  }
+  Module_Param* mp_field = NULL;
+  
+  switch(get_selection()) {
+  case ALT_syntaxes:
+    mp_field = field_syntaxes->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("syntaxes")));
+    break;
+  case ALT_syntax:
+    mp_field = field_syntax->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("syntax")));
+    break;
+  case ALT_presentation__context__id:
+    mp_field = field_presentation__context__id->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("presentation_context_id")));
+    break;
+  case ALT_context__negotiation:
+    mp_field = field_context__negotiation->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("context_negotiation")));
+    break;
+  case ALT_transfer__syntax:
+    mp_field = field_transfer__syntax->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("transfer_syntax")));
+    break;
+  case ALT_fixed:
+    mp_field = field_fixed->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("fixed")));
+    break;
+  default:
+    break;
+  }
+  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();
+  mp->add_elem(mp_field);
+  return mp;
+}
+
 void EXTERNAL_identification_template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "union template");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
     break;
@@ -1029,18 +1079,21 @@ void EXTERNAL_identification_template::set_param(Module_Param& param)
     *this = ANY_OR_OMIT;
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t p_i=0; p_i<param.get_size(); p_i++) {
-      list_item(p_i).set_param(*param.get_elem(p_i));
+  case Module_Param::MP_ComplementList_Template: {
+    EXTERNAL_identification_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
     }
-    break;
+    *this = temp;
+    break; }
   case Module_Param::MP_Value_List:
-    if (param.get_size()==0) break;
+    if (mp->get_size()==0) break;
     param.type_error("union template", "EXTERNAL.identification");
     break;
   case Module_Param::MP_Assignment_List: {
-    Module_Param* mp_last = param.get_elem(param.get_size()-1);
+    Module_Param* mp_last = mp->get_elem(mp->get_size()-1);
     if (!strcmp(mp_last->get_id()->get_name(), "syntaxes")) {
       syntaxes().set_param(*mp_last);
       break;
@@ -1070,7 +1123,77 @@ void EXTERNAL_identification_template::set_param(Module_Param& param)
   default:
     param.type_error("union template", "EXTERNAL.identification");
   }
-  is_ifpresent = param.get_ifpresent();
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* EXTERNAL_identification_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Module_Param* mp_field = NULL;
+    switch(single_value.union_selection) {
+    case EXTERNAL_identification::ALT_syntaxes:
+      mp_field = single_value.field_syntaxes->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("syntaxes")));
+      break;
+    case EXTERNAL_identification::ALT_syntax:
+      mp_field = single_value.field_syntax->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("syntax")));
+      break;
+    case EXTERNAL_identification::ALT_presentation__context__id:
+      mp_field = single_value.field_presentation__context__id->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("presentation_context_id")));
+      break;
+    case EXTERNAL_identification::ALT_context__negotiation:
+      mp_field = single_value.field_context__negotiation->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("context_negotiation")));
+      break;
+    case EXTERNAL_identification::ALT_transfer__syntax:
+      mp_field = single_value.field_transfer__syntax->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("transfer_syntax")));
+      break;
+    case EXTERNAL_identification::ALT_fixed:
+      mp_field = single_value.field_fixed->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("fixed")));
+      break;
+    default:
+      break;
+    }
+    mp = new Module_Param_Assignment_List();
+    mp->add_elem(mp_field);
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
 }
 
 void EXTERNAL_identification::encode_text(Text_Buf& text_buf) const
@@ -1317,7 +1440,8 @@ EXTERNAL_identification_template& EXTERNAL_identification_template::operator=(co
   return *this;
 }
 
-boolean EXTERNAL_identification_template::match(const EXTERNAL_identification& other_value) const
+boolean EXTERNAL_identification_template::match(const EXTERNAL_identification& other_value,
+                                                boolean /* legacy */) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -1615,7 +1739,8 @@ void EXTERNAL_identification_template::log() const
   log_ifpresent();
 }
 
-void EXTERNAL_identification_template::log_match(const EXTERNAL_identification& match_value) const
+void EXTERNAL_identification_template::log_match(const EXTERNAL_identification& match_value,
+                                                 boolean /* legacy */) const
 {
   if(TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()){
     if(match(match_value)){
@@ -1801,13 +1926,13 @@ void EXTERNAL_identification_template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean EXTERNAL_identification_template::is_present() const
+boolean EXTERNAL_identification_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean EXTERNAL_identification_template::match_omit() const
+boolean EXTERNAL_identification_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -1816,10 +1941,12 @@ boolean EXTERNAL_identification_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    } // else fall through
   default:
     return FALSE;
   }
@@ -1827,7 +1954,8 @@ boolean EXTERNAL_identification_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void EXTERNAL_identification_template::check_restriction(template_res t_res, const char* t_name) const
+void EXTERNAL_identification_template::check_restriction(template_res t_res, const char* t_name,
+                                                         boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -1839,7 +1967,7 @@ void EXTERNAL_identification_template::check_restriction(template_res t_res, con
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -1904,34 +2032,38 @@ void EXTERNAL_identification_syntaxes::clean_up()
 void EXTERNAL_identification_syntaxes::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
-    if (param.get_size()==0) return;
-    if (2!=param.get_size()) {
-      param.error("record value of type EXTERNAL.identification.syntaxes has 2 fields but list value has %d fields", (int)param.get_size());
+    if (mp->get_size()==0) return;
+    if (2!=mp->get_size()) {
+      param.error("record value of type EXTERNAL.identification.syntaxes has 2 fields but list value has %d fields", (int)mp->get_size());
     }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) abstract().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer().set_param(*param.get_elem(1));
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) abstract().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer().set_param(*mp->get_elem(1));
     break;
   case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
         abstract().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
         transfer().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type EXTERNAL.identification.syntaxes: %s", param.get_elem(val_idx)->get_id()->get_name());
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type EXTERNAL.identification.syntaxes: %s", mp->get_elem(val_idx)->get_id()->get_name());
       break;
     }
   } break;
@@ -1940,60 +2072,19 @@ void EXTERNAL_identification_syntaxes::set_param(Module_Param& param)
   }
 }
 
-void EXTERNAL_identification_syntaxes_template::set_param(Module_Param& param)
+Module_Param* EXTERNAL_identification_syntaxes::get_param(Module_Param_Name& param_name) const
 {
-  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
-  switch (param.get_type()) {
-  case Module_Param::MP_Omit:
-    *this = OMIT_VALUE;
-    break;
-  case Module_Param::MP_Any:
-    *this = ANY_VALUE;
-    break;
-  case Module_Param::MP_AnyOrNone:
-    *this = ANY_OR_OMIT;
-    break;
-  case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t p_i=0; p_i<param.get_size(); p_i++) {
-      list_item(p_i).set_param(*param.get_elem(p_i));
-    }
-    break;
-  case Module_Param::MP_Value_List:
-    if (param.get_size()==0) break;
-    if (2!=param.get_size()) {
-      param.error("record template of type EXTERNAL.identification.syntaxes has 2 fields but list value has %d fields", (int)param.get_size());
-    }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) abstract().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer().set_param(*param.get_elem(1));
-    break;
-  case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
-        abstract().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
-        transfer().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type EXTERNAL.identification.syntaxes: %s", param.get_elem(val_idx)->get_id()->get_name());
-      break;
-    }
-  } break;
-  default:
-    param.type_error("record template", "EXTERNAL.identification.syntaxes");
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
   }
-  is_ifpresent = param.get_ifpresent();
+  Module_Param* mp_field_abstract = field_abstract.get_param(param_name);
+  mp_field_abstract->set_id(new Module_Param_FieldName(mcopystr("abstract")));
+  Module_Param* mp_field_transfer = field_transfer.get_param(param_name);
+  mp_field_transfer->set_id(new Module_Param_FieldName(mcopystr("transfer")));
+  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();
+  mp->add_elem(mp_field_abstract);
+  mp->add_elem(mp_field_transfer);
+  return mp;
 }
 
 void EXTERNAL_identification_syntaxes::encode_text(Text_Buf& text_buf) const
@@ -2012,6 +2103,115 @@ struct EXTERNAL_identification_syntaxes_template::single_value_struct {
   OBJID_template field_abstract;
   OBJID_template field_transfer;
 };
+
+void EXTERNAL_identification_syntaxes_template::set_param(Module_Param& param)
+{
+  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
+  case Module_Param::MP_Omit:
+    *this = OMIT_VALUE;
+    break;
+  case Module_Param::MP_Any:
+    *this = ANY_VALUE;
+    break;
+  case Module_Param::MP_AnyOrNone:
+    *this = ANY_OR_OMIT;
+    break;
+  case Module_Param::MP_List_Template:
+  case Module_Param::MP_ComplementList_Template: {
+    EXTERNAL_identification_syntaxes_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
+    }
+    *this = temp;
+    break; }
+  case Module_Param::MP_Value_List:
+    if (mp->get_size()==0) break;
+    if (2!=mp->get_size()) {
+      param.error("record template of type EXTERNAL.identification.syntaxes has 2 fields but list value has %d fields", (int)mp->get_size());
+    }
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) abstract().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer().set_param(*mp->get_elem(1));
+    break;
+  case Module_Param::MP_Assignment_List: {
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
+        abstract().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
+        transfer().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type EXTERNAL.identification.syntaxes: %s", mp->get_elem(val_idx)->get_id()->get_name());
+      break;
+    }
+  } break;
+  default:
+    param.type_error("record template", "EXTERNAL.identification.syntaxes");
+  }
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* EXTERNAL_identification_syntaxes_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Module_Param* mp_field_abstract = single_value->field_abstract.get_param(param_name);
+    mp_field_abstract->set_id(new Module_Param_FieldName(mcopystr("abstract")));
+    Module_Param* mp_field_transfer = single_value->field_transfer.get_param(param_name);
+    mp_field_transfer->set_id(new Module_Param_FieldName(mcopystr("transfer")));
+    mp = new Module_Param_Assignment_List();
+    mp->add_elem(mp_field_abstract);
+    mp->add_elem(mp_field_transfer);
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
+}
 
 void EXTERNAL_identification_syntaxes_template::clean_up()
 {
@@ -2154,7 +2354,8 @@ EXTERNAL_identification_syntaxes_template& EXTERNAL_identification_syntaxes_temp
   return *this;
 }
 
-boolean EXTERNAL_identification_syntaxes_template::match(const EXTERNAL_identification_syntaxes& other_value) const
+boolean EXTERNAL_identification_syntaxes_template::match(const EXTERNAL_identification_syntaxes& other_value,
+                                                         boolean /* legacy */) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -2296,7 +2497,8 @@ void EXTERNAL_identification_syntaxes_template::log() const
   log_ifpresent();
 }
 
-void EXTERNAL_identification_syntaxes_template::log_match(const EXTERNAL_identification_syntaxes& match_value) const
+void EXTERNAL_identification_syntaxes_template::log_match(const EXTERNAL_identification_syntaxes& match_value,
+                                                          boolean /* legacy */) const
 {
   if (template_selection == SPECIFIC_VALUE) {
     TTCN_Logger::log_event_str("{ abstract := ");
@@ -2362,13 +2564,13 @@ void EXTERNAL_identification_syntaxes_template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean EXTERNAL_identification_syntaxes_template::is_present() const
+boolean EXTERNAL_identification_syntaxes_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean EXTERNAL_identification_syntaxes_template::match_omit() const
+boolean EXTERNAL_identification_syntaxes_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -2377,10 +2579,12 @@ boolean EXTERNAL_identification_syntaxes_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    } // else fall through
   default:
     return FALSE;
   }
@@ -2388,7 +2592,8 @@ boolean EXTERNAL_identification_syntaxes_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void EXTERNAL_identification_syntaxes_template::check_restriction(template_res t_res, const char* t_name) const
+void EXTERNAL_identification_syntaxes_template::check_restriction(template_res t_res, const char* t_name,
+                                                                  boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -2400,7 +2605,7 @@ void EXTERNAL_identification_syntaxes_template::check_restriction(template_res t
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -2465,34 +2670,38 @@ void EXTERNAL_identification_context__negotiation::clean_up()
 void EXTERNAL_identification_context__negotiation::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
-    if (param.get_size()==0) return;
-    if (2!=param.get_size()) {
-      param.error("record value of type EXTERNAL.identification.context-negotiation has 2 fields but list value has %d fields", (int)param.get_size());
+    if (mp->get_size()==0) return;
+    if (2!=mp->get_size()) {
+      param.error("record value of type EXTERNAL.identification.context-negotiation has 2 fields but list value has %d fields", (int)mp->get_size());
     }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) presentation__context__id().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer__syntax().set_param(*param.get_elem(1));
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) presentation__context__id().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer__syntax().set_param(*mp->get_elem(1));
     break;
   case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
         presentation__context__id().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
         transfer__syntax().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type EXTERNAL.identification.context-negotiation: %s", param.get_elem(val_idx)->get_id()->get_name());
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type EXTERNAL.identification.context-negotiation: %s", mp->get_elem(val_idx)->get_id()->get_name());
       break;
     }
   } break;
@@ -2501,60 +2710,19 @@ void EXTERNAL_identification_context__negotiation::set_param(Module_Param& param
   }
 }
 
-void EXTERNAL_identification_context__negotiation_template::set_param(Module_Param& param)
+Module_Param* EXTERNAL_identification_context__negotiation::get_param(Module_Param_Name& param_name) const
 {
-  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
-  switch (param.get_type()) {
-  case Module_Param::MP_Omit:
-    *this = OMIT_VALUE;
-    break;
-  case Module_Param::MP_Any:
-    *this = ANY_VALUE;
-    break;
-  case Module_Param::MP_AnyOrNone:
-    *this = ANY_OR_OMIT;
-    break;
-  case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t p_i=0; p_i<param.get_size(); p_i++) {
-      list_item(p_i).set_param(*param.get_elem(p_i));
-    }
-    break;
-  case Module_Param::MP_Value_List:
-    if (param.get_size()==0) break;
-    if (2!=param.get_size()) {
-      param.error("record template of type EXTERNAL.identification.context-negotiation has 2 fields but list value has %d fields", (int)param.get_size());
-    }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) presentation__context__id().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer__syntax().set_param(*param.get_elem(1));
-    break;
-  case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
-        presentation__context__id().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
-        transfer__syntax().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type EXTERNAL.identification.context-negotiation: %s", param.get_elem(val_idx)->get_id()->get_name());
-      break;
-    }
-  } break;
-  default:
-    param.type_error("record template", "EXTERNAL.identification.context-negotiation");
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
   }
-  is_ifpresent = param.get_ifpresent();
+  Module_Param* mp_field_presentation_context_id = field_presentation__context__id.get_param(param_name);
+  mp_field_presentation_context_id->set_id(new Module_Param_FieldName(mcopystr("presentation_context_id")));
+  Module_Param* mp_field_transfer_syntax = field_transfer__syntax.get_param(param_name);
+  mp_field_transfer_syntax->set_id(new Module_Param_FieldName(mcopystr("transfer_syntax")));
+  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();
+  mp->add_elem(mp_field_presentation_context_id);
+  mp->add_elem(mp_field_transfer_syntax);
+  return mp;
 }
 
 void EXTERNAL_identification_context__negotiation::encode_text(Text_Buf& text_buf) const
@@ -2573,6 +2741,115 @@ struct EXTERNAL_identification_context__negotiation_template::single_value_struc
   INTEGER_template field_presentation__context__id;
   OBJID_template field_transfer__syntax;
 };
+
+void EXTERNAL_identification_context__negotiation_template::set_param(Module_Param& param)
+{
+  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
+  case Module_Param::MP_Omit:
+    *this = OMIT_VALUE;
+    break;
+  case Module_Param::MP_Any:
+    *this = ANY_VALUE;
+    break;
+  case Module_Param::MP_AnyOrNone:
+    *this = ANY_OR_OMIT;
+    break;
+  case Module_Param::MP_List_Template:
+  case Module_Param::MP_ComplementList_Template: {
+    EXTERNAL_identification_context__negotiation_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
+    }
+    *this = temp;
+    break; }
+  case Module_Param::MP_Value_List:
+    if (mp->get_size()==0) break;
+    if (2!=mp->get_size()) {
+      param.error("record template of type EXTERNAL.identification.context-negotiation has 2 fields but list value has %d fields", (int)mp->get_size());
+    }
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) presentation__context__id().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer__syntax().set_param(*mp->get_elem(1));
+    break;
+  case Module_Param::MP_Assignment_List: {
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
+        presentation__context__id().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
+        transfer__syntax().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type EXTERNAL.identification.context-negotiation: %s", mp->get_elem(val_idx)->get_id()->get_name());
+      break;
+    }
+  } break;
+  default:
+    param.type_error("record template", "EXTERNAL.identification.context-negotiation");
+  }
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* EXTERNAL_identification_context__negotiation_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Module_Param* mp_field_presentation_context_id = single_value->field_presentation__context__id.get_param(param_name);
+    mp_field_presentation_context_id->set_id(new Module_Param_FieldName(mcopystr("presentation_context_id")));
+    Module_Param* mp_field_transfer_syntax = single_value->field_transfer__syntax.get_param(param_name);
+    mp_field_transfer_syntax->set_id(new Module_Param_FieldName(mcopystr("transfer_syntax")));
+    mp = new Module_Param_Assignment_List();
+    mp->add_elem(mp_field_presentation_context_id);
+    mp->add_elem(mp_field_transfer_syntax);
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
+}
 
 void EXTERNAL_identification_context__negotiation_template::clean_up()
 {
@@ -2715,7 +2992,8 @@ EXTERNAL_identification_context__negotiation_template& EXTERNAL_identification_c
   return *this;
 }
 
-boolean EXTERNAL_identification_context__negotiation_template::match(const EXTERNAL_identification_context__negotiation& other_value) const
+boolean EXTERNAL_identification_context__negotiation_template::match(const EXTERNAL_identification_context__negotiation& other_value,
+                                                                     boolean /* legacy */) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -2857,7 +3135,8 @@ void EXTERNAL_identification_context__negotiation_template::log() const
   log_ifpresent();
 }
 
-void EXTERNAL_identification_context__negotiation_template::log_match(const EXTERNAL_identification_context__negotiation& match_value) const
+void EXTERNAL_identification_context__negotiation_template::log_match(const EXTERNAL_identification_context__negotiation& match_value,
+                                                                      boolean /* legacy */) const
 {
   if (template_selection == SPECIFIC_VALUE) {
     TTCN_Logger::log_event_str("{ presentation_context_id := ");
@@ -2923,13 +3202,13 @@ void EXTERNAL_identification_context__negotiation_template::decode_text(Text_Buf
   }
 }
 
-boolean EXTERNAL_identification_context__negotiation_template::is_present() const
+boolean EXTERNAL_identification_context__negotiation_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean EXTERNAL_identification_context__negotiation_template::match_omit() const
+boolean EXTERNAL_identification_context__negotiation_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -2938,10 +3217,12 @@ boolean EXTERNAL_identification_context__negotiation_template::match_omit() cons
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    } // else fall through
   default:
     return FALSE;
   }
@@ -2949,7 +3230,8 @@ boolean EXTERNAL_identification_context__negotiation_template::match_omit() cons
 }
 
 #ifndef TITAN_RUNTIME_2
-void EXTERNAL_identification_context__negotiation_template::check_restriction(template_res t_res, const char* t_name) const
+void EXTERNAL_identification_context__negotiation_template::check_restriction(template_res t_res, const char* t_name,
+                                                                              boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -2961,7 +3243,7 @@ void EXTERNAL_identification_context__negotiation_template::check_restriction(te
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -3035,42 +3317,46 @@ void EXTERNAL::clean_up()
 void EXTERNAL::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
-    if (param.get_size()==0) return;
-    if (3!=param.get_size()) {
-      param.error("record value of type EXTERNAL has 3 fields but list value has %d fields", (int)param.get_size());
+    if (mp->get_size()==0) return;
+    if (3!=mp->get_size()) {
+      param.error("record value of type EXTERNAL has 3 fields but list value has %d fields", (int)mp->get_size());
     }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) identification().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) data__value__descriptor().set_param(*param.get_elem(1));
-    if (param.get_elem(2)->get_type()!=Module_Param::MP_NotUsed) data__value().set_param(*param.get_elem(2));
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) identification().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) data__value__descriptor().set_param(*mp->get_elem(1));
+    if (mp->get_elem(2)->get_type()!=Module_Param::MP_NotUsed) data__value().set_param(*mp->get_elem(2));
     break;
   case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
         identification().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
         data__value__descriptor().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "data_value")) {
         data__value().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type EXTERNAL: %s", param.get_elem(val_idx)->get_id()->get_name());
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type EXTERNAL: %s", mp->get_elem(val_idx)->get_id()->get_name());
       break;
     }
   } break;
@@ -3079,68 +3365,22 @@ void EXTERNAL::set_param(Module_Param& param)
   }
 }
 
-void EXTERNAL_template::set_param(Module_Param& param)
+Module_Param* EXTERNAL::get_param(Module_Param_Name& param_name) const
 {
-  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
-  switch (param.get_type()) {
-  case Module_Param::MP_Omit:
-    *this = OMIT_VALUE;
-    break;
-  case Module_Param::MP_Any:
-    *this = ANY_VALUE;
-    break;
-  case Module_Param::MP_AnyOrNone:
-    *this = ANY_OR_OMIT;
-    break;
-  case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t p_i=0; p_i<param.get_size(); p_i++) {
-      list_item(p_i).set_param(*param.get_elem(p_i));
-    }
-    break;
-  case Module_Param::MP_Value_List:
-    if (param.get_size()==0) break;
-    if (3!=param.get_size()) {
-      param.error("record template of type EXTERNAL has 3 fields but list value has %d fields", (int)param.get_size());
-    }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) identification().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) data__value__descriptor().set_param(*param.get_elem(1));
-    if (param.get_elem(2)->get_type()!=Module_Param::MP_NotUsed) data__value().set_param(*param.get_elem(2));
-    break;
-  case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
-        identification().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
-        data__value__descriptor().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "data_value")) {
-        data__value().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type EXTERNAL: %s", param.get_elem(val_idx)->get_id()->get_name());
-      break;
-    }
-  } break;
-  default:
-    param.type_error("record template", "EXTERNAL");
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
   }
-  is_ifpresent = param.get_ifpresent();
+  Module_Param* mp_field_identification = field_identification.get_param(param_name);
+  mp_field_identification->set_id(new Module_Param_FieldName(mcopystr("identification")));
+  Module_Param* mp_field_data_value_descriptor = field_data__value__descriptor.get_param(param_name);
+  mp_field_data_value_descriptor->set_id(new Module_Param_FieldName(mcopystr("data_value_descriptor")));
+  Module_Param* mp_field_data_value = field_data__value.get_param(param_name);
+  mp_field_data_value->set_id(new Module_Param_FieldName(mcopystr("data_value")));
+  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();
+  mp->add_elem(mp_field_identification);
+  mp->add_elem(mp_field_data_value_descriptor);
+  mp->add_elem(mp_field_data_value);
+  return mp;
 }
 
 void EXTERNAL::encode_text(Text_Buf& text_buf) const
@@ -3249,6 +3489,126 @@ struct EXTERNAL_template::single_value_struct {
   UNIVERSAL_CHARSTRING_template field_data__value__descriptor;
   OCTETSTRING_template field_data__value;
 };
+
+void EXTERNAL_template::set_param(Module_Param& param)
+{
+  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
+  case Module_Param::MP_Omit:
+    *this = OMIT_VALUE;
+    break;
+  case Module_Param::MP_Any:
+    *this = ANY_VALUE;
+    break;
+  case Module_Param::MP_AnyOrNone:
+    *this = ANY_OR_OMIT;
+    break;
+  case Module_Param::MP_List_Template:
+  case Module_Param::MP_ComplementList_Template: {
+    EXTERNAL_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
+    }
+    *this = temp;
+    break; }
+  case Module_Param::MP_Value_List:
+    if (mp->get_size()==0) break;
+    if (3!=mp->get_size()) {
+      param.error("record template of type EXTERNAL has 3 fields but list value has %d fields", (int)mp->get_size());
+    }
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) identification().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) data__value__descriptor().set_param(*mp->get_elem(1));
+    if (mp->get_elem(2)->get_type()!=Module_Param::MP_NotUsed) data__value().set_param(*mp->get_elem(2));
+    break;
+  case Module_Param::MP_Assignment_List: {
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
+        identification().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
+        data__value__descriptor().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "data_value")) {
+        data__value().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type EXTERNAL: %s", mp->get_elem(val_idx)->get_id()->get_name());
+      break;
+    }
+  } break;
+  default:
+    param.type_error("record template", "EXTERNAL");
+  }
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* EXTERNAL_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Module_Param* mp_field_identification = single_value->field_identification.get_param(param_name);
+    mp_field_identification->set_id(new Module_Param_FieldName(mcopystr("identification")));
+    Module_Param* mp_field_data_value_descriptor = single_value->field_data__value__descriptor.get_param(param_name);
+    mp_field_data_value_descriptor->set_id(new Module_Param_FieldName(mcopystr("data_value_descriptor")));
+    Module_Param* mp_field_string_value = single_value->field_data__value.get_param(param_name);
+    mp_field_string_value->set_id(new Module_Param_FieldName(mcopystr("data_value")));
+    mp = new Module_Param_Assignment_List();
+    mp->add_elem(mp_field_identification);
+    mp->add_elem(mp_field_data_value_descriptor);
+    mp->add_elem(mp_field_string_value);
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
+}
 
 void EXTERNAL_template::clean_up()
 {
@@ -3394,7 +3754,8 @@ EXTERNAL_template& EXTERNAL_template::operator=(const EXTERNAL_template& other_v
   return *this;
 }
 
-boolean EXTERNAL_template::match(const EXTERNAL& other_value) const
+boolean EXTERNAL_template::match(const EXTERNAL& other_value,
+                                 boolean /* legacy */) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -3556,7 +3917,8 @@ void EXTERNAL_template::log() const
   log_ifpresent();
 }
 
-void EXTERNAL_template::log_match(const EXTERNAL& match_value) const
+void EXTERNAL_template::log_match(const EXTERNAL& match_value,
+                                  boolean /* legacy */) const
 {
   if (template_selection == SPECIFIC_VALUE) {
     TTCN_Logger::log_event_str("{ identification := ");
@@ -3631,13 +3993,13 @@ void EXTERNAL_template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean EXTERNAL_template::is_present() const
+boolean EXTERNAL_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean EXTERNAL_template::match_omit() const
+boolean EXTERNAL_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -3646,10 +4008,14 @@ boolean EXTERNAL_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -3657,7 +4023,8 @@ boolean EXTERNAL_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void EXTERNAL_template::check_restriction(template_res t_res, const char* t_name) const
+void EXTERNAL_template::check_restriction(template_res t_res, const char* t_name,
+                                          boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -3669,7 +4036,7 @@ void EXTERNAL_template::check_restriction(template_res t_res, const char* t_name
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;

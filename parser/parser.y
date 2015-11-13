@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2961,7 +2961,7 @@ void parse_input()
 int main(int argc, char *argv[])
 {
 	puts("TTCN-3 parser. Complies with BNF v3.0.0\n"
-	"Copyright Ericsson Telecom AB 2000-2014");
+	"Copyright (c) 2000-2015 Ericsson Telecom AB");
 	if (argc > 1) {
 		int i;
 		for (i = 1; i < argc; i++) {

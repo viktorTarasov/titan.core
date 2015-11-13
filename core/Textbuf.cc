@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -200,8 +200,33 @@ boolean Text_Buf::safe_pull_int(int_val_t& value)
  */
 void Text_Buf::push_double(double value)
 {
-  Reallocate(buf_len + 32);
-  buf_len += sprintf((char*)data_ptr + buf_begin + buf_len, "%.16g ", value);
+  Reallocate(buf_len + 8);
+  union{
+    double d;
+    unsigned char c[8];
+  } m;
+  m.d=value;
+  unsigned char *st=(unsigned char *)data_ptr + buf_begin + buf_len;
+#if defined __sparc__ || defined __sparc
+    st[0]=m.c[0];
+    st[1]=m.c[1];
+    st[2]=m.c[2];
+    st[3]=m.c[3];
+    st[4]=m.c[4];
+    st[5]=m.c[5];
+    st[6]=m.c[6];
+    st[7]=m.c[7];
+#else
+    st[0]=m.c[7];
+    st[1]=m.c[6];
+    st[2]=m.c[5];
+    st[3]=m.c[4];
+    st[4]=m.c[3];
+    st[5]=m.c[2];
+    st[6]=m.c[1];
+    st[7]=m.c[0];
+#endif
+  buf_len += 8;
 }
 
 /** Extract a double precision floating point number
@@ -212,27 +237,35 @@ void Text_Buf::push_double(double value)
  */
 double Text_Buf::pull_double()
 {
-  int buf_end = buf_begin + buf_len;
-  const char *char_ptr = (const char*)data_ptr;
-  // check for the proper format (printed in ascii, followed by a space)
-  if (buf_pos >= buf_end) TTCN_error("Text decoder: Decoding of float failed. "
+  if (buf_pos + 8 > buf_begin + buf_len) TTCN_error("Text decoder: Decoding of float failed. "
     "(End of buffer reached)");
-  else if (char_ptr[buf_pos] == ' ') TTCN_error("Text decoder: Decoding of "
-    "float failed. (No data before the end marker)");
-  int end_pos = buf_pos + 1;
-  for ( ; ; end_pos++) {
-    if (end_pos >= buf_end) TTCN_error("Text decoder: Decoding of float "
-      "failed. (Missing end marker)");
-    else if (char_ptr[end_pos] == ' ') break;
-  }
-  // perform the decoding
-  errno = 0;
-  double ret_val = atof(char_ptr + buf_pos);
-  if (ret_val == 0.0 && errno != 0) TTCN_error("Text decoder: Decoding of "
-    "float failed.");
-  // increment the read pointer
-  buf_pos = end_pos + 1;
-  return ret_val;
+  const unsigned char *st = (unsigned char *)data_ptr+buf_pos;
+
+  union{
+    double d;
+    unsigned char c[8];
+  } m;
+#if defined __sparc__ || defined __sparc
+    m.c[0]=st[0];
+    m.c[1]=st[1];
+    m.c[2]=st[2];
+    m.c[3]=st[3];
+    m.c[4]=st[4];
+    m.c[5]=st[5];
+    m.c[6]=st[6];
+    m.c[7]=st[7];
+#else
+    m.c[0]=st[7];
+    m.c[1]=st[6];
+    m.c[2]=st[5];
+    m.c[3]=st[4];
+    m.c[4]=st[3];
+    m.c[5]=st[2];
+    m.c[6]=st[1];
+    m.c[7]=st[0];
+#endif
+buf_pos += 8;
+return m.d;
 }
 
 /** Write a fixed number of bytes in the buffer.

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -122,7 +122,7 @@ public:
   std::map<std::string, ProjectDescriptor>::const_iterator getEnd() const;
   size_t numOfLibs() const;
   void getExternalLibs(std::vector<const char*>& extLibs);
-  void getExternalLibSearchPathes(std::vector<const char*>& extLibPathes);
+  void getExternalLibSearchPaths(std::vector<const char*>& extLibPaths);
   bool hasReferencedProject();
   size_t numOfProjects() const { return projs.size();};
   bool isCPPSourceFile(const char* fileName) const;

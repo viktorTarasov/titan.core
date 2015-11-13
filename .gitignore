@@ -1,9 +1,12 @@
 doxygen
 Install
 Makefile.personal
-.cproject
+.project
 .TITAN*
 *.o
+*.so
+*.so.0
+*.so.0.0
 *.exe
 *.pdf
 META-INF

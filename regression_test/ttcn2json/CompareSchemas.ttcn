@@ -36,13 +36,15 @@ type record TypeSchemaElement {
 }
 
 type enumerated ElemKey {
-  Ref, Type, SubType, Pattern, OriginalName, UnusedAlias, MinItems, MaxItems, // strVal
-  AdditionalProperties, OmitAsNull, // boolVal
+  Ref, Type, SubType, Pattern, OriginalName, UnusedAlias, MinItems, MaxItems, MinLength, MaxLength, Minimum, Maximum, // strVal
+  AdditionalProperties, OmitAsNull, exclusiveMinimum, exclusiveMaximum, // boolVal
   Default, // strVal or boolVal
-  Enum, NumericValues, Required, FieldOrder, // strArrayVal
+  NumericValues, Required, FieldOrder, // strArrayVal
+  Enum, // arrayVal
   Items, // typeVal
-  AnyOf, // typeArrayVal
-  Properties // fieldSetVal
+  AnyOf, AllOf, // typeArrayVal
+  Properties, // fieldSetVal
+  Extension // extVal
 }
 
 type union ElemValue {
@@ -51,13 +53,36 @@ type union ElemValue {
   record of charstring strArrayVal,
   TypeSchema typeVal,
   record of TypeSchema typeArrayVal,
-  set of FieldValue fieldSetVal
+  set of FieldValue fieldSetVal,
+  ExtensionValue extVal,
+  ArrayValue arrayVal
 }
 
 type record FieldValue {
   charstring fieldName,
   TypeSchema schema
 }
+
+type record ExtensionValue {
+  charstring key,
+  charstring val
+}
+
+type union AnyValue {
+  charstring strVal, // number, string or null
+  boolean boolVal,
+  ObjectValue objectVal,
+  ArrayValue arrayVal
+}
+
+type record ObjectSegment {
+  charstring key,
+  AnyValue val
+}
+
+type set of ObjectSegment ObjectValue;
+
+type record of AnyValue ArrayValue;
 
 // references/functions section:
 type set of RefSchema RefSchemas;

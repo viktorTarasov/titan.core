@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -17,58 +17,50 @@
 const Mstring empty_string;
 
 Mstring::Mstring()
-: text(memptystr())
-{}
+: text(memptystr()) {
+}
 
 Mstring::Mstring(const Mstring & other)
-: text(mcopystr(other.text))
-{}
+: text(mcopystr(other.text)) {
+}
 
 Mstring::Mstring(const char * s)
-: text(mcopystr(s))
-{}
+: text(mcopystr(s)) {
+}
 
 Mstring::Mstring(size_t len, const char *s)
-: text((expstring_t)Malloc(len+1))
-{
+: text((expstring_t) Malloc(len + 1)) {
   memcpy(text, s, len);
   text[len] = 0;
 }
 
 Mstring::Mstring(char c)
-: text(memptystr())
-{
+: text(memptystr()) {
   text = mputc(text, c);
 }
 
-Mstring::~Mstring()
-{
+Mstring::~Mstring() {
   Free(text);
 }
 
-bool Mstring::empty() const
-{
+bool Mstring::empty() const {
   return mstrlen(text) == 0;
 }
 
-size_t Mstring::size() const
-{
+size_t Mstring::size() const {
   return mstrlen(text);
 }
 
-void Mstring::clear()
-{
+void Mstring::clear() {
   Free(text);
   text = memptystr();
 }
 
-const char * Mstring::c_str() const
-{
+const char * Mstring::c_str() const {
   return text;
 }
 
-void Mstring::eraseChar(size_t pos)
-{
+void Mstring::eraseChar(size_t pos) {
   Mstring temp;
   for (size_t i = 0; i != size(); ++i)
     if (i != pos) temp += text[i];
@@ -76,79 +68,71 @@ void Mstring::eraseChar(size_t pos)
   text = mcopystr(temp.text);
 }
 
-void Mstring::insertChar(size_t pos, char c)
-{
+void Mstring::insertChar(size_t pos, char c) {
   Mstring temp;
   for (size_t i = 0; i != size(); ++i)
     if (i == pos) {
       temp += c;
       temp += text[i];
-    }
-    else temp += text[i];
+    } else temp += text[i];
   Free(text);
   text = mcopystr(temp.text);
 }
 
-bool Mstring::isFound(const Mstring & s)
-{
+bool Mstring::isFound(const Mstring & s) {
   return strstr(text, s.text);
 }
 
-bool Mstring::isFound(const char * s)
-{
+bool Mstring::isFound(const char * s) {
   return strstr(text, s);
 }
 
-bool Mstring::isFound(char c)
-{
+bool Mstring::isFound(char c) {
   return strchr(text, c);
 }
 
-void Mstring::setCapitalized()
-{
+char * Mstring::foundAt(const char * s) {
+  return strstr(text, s);
+}
+
+void Mstring::setCapitalized() {
   text[0] = toupper(text[0]);
 }
 
-void Mstring::setUncapitalized()
-{
+void Mstring::setUncapitalized() {
   text[0] = tolower(text[0]);
 }
 
-Mstring Mstring::getPrefix(const char delimiter) const
-{
+Mstring Mstring::getPrefix(const char delimiter) const {
   Mstring result;
   char * pos = strchr(text, delimiter);
   if (pos != NULL) for (int i = 0; text + i != pos; ++i) result += text[i];
   return result;
 }
 
-Mstring Mstring::getValueWithoutPrefix(const char delimiter) const
-{
+Mstring Mstring::getValueWithoutPrefix(const char delimiter) const {
   char * pos = strrchr(text, delimiter);
-  if (pos != NULL) return Mstring(pos+1);
+  if (pos != NULL) return Mstring(pos + 1);
   else return *this;
 }
 
-void Mstring::removeWSfromBegin()
-{
+void Mstring::removeWSfromBegin() {
   size_t i = 0;
   size_t s = mstrlen(text);
-  for ( ; i < s; ++i)
-    if (!isspace((const unsigned char)text[i])) break;
-  memmove(text, text+i, s-i);
-  text = mtruncstr(text, s-i);
+  for (; i < s; ++i)
+    if (!isspace((const unsigned char) text[i])) break;
+  memmove(text, text + i, s - i);
+  text = mtruncstr(text, s - i);
 }
 
-void Mstring::removeWSfromEnd()
-{
+void Mstring::removeWSfromEnd() {
   int i = mstrlen(text);
-  for ( ; i > 0; --i)
-    if (!isspace((const unsigned char)text[i-1])) break;
+  for (; i > 0; --i)
+    if (!isspace((const unsigned char) text[i - 1])) break;
   text = mtruncstr(text, i);
 }
 
-char & Mstring::operator [](size_t pos)
-{
+char & Mstring::operator[](size_t pos) {
   size_t s = mstrlen(text);
   if (pos < s)
     return text[pos];
@@ -158,8 +142,7 @@ char & Mstring::operator [](size_t pos)
   }
 }
 
-const char & Mstring::operator [](size_t pos) const
-{
+const char & Mstring::operator[](size_t pos) const {
   size_t s = mstrlen(text);
   if (pos < s)
     return text[pos];
@@ -169,8 +152,7 @@ const char & Mstring::operator [](size_t pos) const
   }
 }
 
-Mstring & Mstring::operator =(const Mstring & other)
-{
+Mstring & Mstring::operator=(const Mstring & other) {
   if (&other != this) {
     Free(text);
     text = mcopystr(other.text);
@@ -178,202 +160,174 @@ Mstring & Mstring::operator =(const Mstring & other)
   return *this;
 }
 
-Mstring & Mstring::operator =(const char * s)
-{
+Mstring & Mstring::operator=(const char * s) {
   Free(text);
   text = mcopystr(s);
   return *this;
 }
 
-Mstring & Mstring::operator =(char c)
-{
+Mstring & Mstring::operator=(char c) {
   Free(text);
   text = memptystr();
   text = mputc(text, c);
   return *this;
 }
 
-Mstring & Mstring::operator +=(const Mstring & other)
-{
+Mstring & Mstring::operator+=(const Mstring & other) {
   text = mputstr(text, other.text);
   return *this;
 }
 
-Mstring & Mstring::operator +=(const char * s)
-{
+Mstring & Mstring::operator+=(const char * s) {
   text = mputstr(text, s);
   return *this;
 }
 
-Mstring & Mstring::operator +=(char c)
-{
+Mstring & Mstring::operator+=(char c) {
   text = mputc(text, c);
   return *this;
 }
 
-const Mstring operator +(const Mstring & lhs, const Mstring & rhs)
-{
+const Mstring operator+(const Mstring & lhs, const Mstring & rhs) {
   return Mstring(lhs) += rhs;
 }
 
-const Mstring operator +(const char * lhs, const Mstring & rhs)
-{
+const Mstring operator+(const char * lhs, const Mstring & rhs) {
   return Mstring(lhs) += rhs;
 }
 
-const Mstring operator +(char lhs, const Mstring & rhs)
-{
+const Mstring operator+(char lhs, const Mstring & rhs) {
   return Mstring(lhs) += rhs;
 }
 
-const Mstring operator +(const Mstring & lhs, const char * rhs)
-{
+const Mstring operator+(const Mstring & lhs, const char * rhs) {
   return Mstring(lhs) += rhs;
 }
 
-const Mstring operator +(const Mstring & lhs, char rhs)
-{
+const Mstring operator+(const Mstring & lhs, char rhs) {
   return Mstring(lhs) += rhs;
 }
 
-bool operator ==(const Mstring & lhs, const Mstring & rhs)
-{
+bool operator==(const Mstring & lhs, const Mstring & rhs) {
   if (strcmp(lhs.text, rhs.text) == 0) // they are equal
     return true;
   else
     return false;
 }
 
-bool operator ==(const char * lhs, const Mstring & rhs)
-{
+bool operator==(const char * lhs, const Mstring & rhs) {
   if (strcmp(lhs, rhs.text) == 0) // they are equal
     return true;
   else
     return false;
 }
 
-bool operator ==(const Mstring & lhs, const char * rhs)
-{
+bool operator==(const Mstring & lhs, const char * rhs) {
   if (strcmp(lhs.text, rhs) == 0) // they are equal
     return true;
   else
     return false;
 }
 
-bool operator !=(const Mstring & lhs, const Mstring & rhs)
-{
+bool operator!=(const Mstring & lhs, const Mstring & rhs) {
   if (strcmp(lhs.text, rhs.text) != 0) // they are NOT equal
     return true;
   else
     return false;
 }
 
-bool operator !=(const char * lhs, const Mstring & rhs)
-{
+bool operator!=(const char * lhs, const Mstring & rhs) {
   if (strcmp(lhs, rhs.text) != 0) // they are NOT equal
     return true;
   else
     return false;
 }
 
-bool operator !=(const Mstring & lhs, const char * rhs)
-{
+bool operator!=(const Mstring & lhs, const char * rhs) {
   if (strcmp(lhs.text, rhs) != 0) // they are NOT equal
     return true;
   else
     return false;
 }
 
-bool operator <(const Mstring & lhs, const Mstring & rhs)
-{
+bool operator<(const Mstring & lhs, const Mstring & rhs) {
   if (strcmp(lhs.text, rhs.text) < 0)
     return true;
   else
     return false;
 }
 
-bool operator <(const char * lhs, const Mstring & rhs)
-{
+bool operator<(const char * lhs, const Mstring & rhs) {
   if (strcmp(lhs, rhs.text) < 0)
     return true;
   else
     return false;
 }
 
-bool operator <(const Mstring & lhs, const char * rhs)
-{
+bool operator<(const Mstring & lhs, const char * rhs) {
   if (strcmp(lhs.text, rhs) < 0)
     return true;
   else
     return false;
 }
 
-bool operator >(const Mstring & lhs, const Mstring & rhs)
-{
+bool operator>(const Mstring & lhs, const Mstring & rhs) {
   if (strcmp(lhs.text, rhs.text) > 0)
     return true;
   else
     return false;
 }
 
-bool operator >(const char * lhs, const Mstring & rhs)
-{
+bool operator>(const char * lhs, const Mstring & rhs) {
   if (strcmp(lhs, rhs.text) > 0)
     return true;
   else
     return false;
 }
 
-bool operator >(const Mstring & lhs, const char * rhs)
-{
+bool operator>(const Mstring & lhs, const char * rhs) {
   if (strcmp(lhs.text, rhs) > 0)
     return true;
   else
     return false;
 }
 
-bool operator <=(const Mstring & lhs, const Mstring & rhs)
-{
+bool operator<=(const Mstring & lhs, const Mstring & rhs) {
   if (strcmp(lhs.text, rhs.text) <= 0)
     return true;
   else
     return false;
 }
 
-bool operator <=(const char * lhs, const Mstring & rhs)
-{
+bool operator<=(const char * lhs, const Mstring & rhs) {
   if (strcmp(lhs, rhs.text) <= 0)
     return true;
   else
     return false;
 }
 
-bool operator <=(const Mstring & lhs, const char * rhs)
-{
+bool operator<=(const Mstring & lhs, const char * rhs) {
   if (strcmp(lhs.text, rhs) <= 0)
     return true;
   else
     return false;
 }
 
-bool operator >=(const Mstring & lhs, const Mstring & rhs)
-{
+bool operator>=(const Mstring & lhs, const Mstring & rhs) {
   if (strcmp(lhs.text, rhs.text) >= 0)
     return true;
   else
     return false;
 }
 
-bool operator >=(const char * lhs, const Mstring & rhs)
-{
+bool operator>=(const char * lhs, const Mstring & rhs) {
   if (strcmp(lhs, rhs.text) >= 0)
     return true;
   else
     return false;
 }
 
-bool operator >=(const Mstring & lhs, const char * rhs)
-{
+bool operator>=(const Mstring & lhs, const char * rhs) {
   if (strcmp(lhs.text, rhs) >= 0)
     return true;
   else

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -187,6 +187,62 @@ void Module_List::set_param(Module_Param& param)
         second_name, first_name, first_name);
     }
   }
+}
+
+Module_Param* Module_List::get_param(Module_Param_Name& param_name)
+{
+  // The first segment in the parameter name can either be the module name,
+  // or the module parameter name - both must be checked
+  const char* const first_name = param_name.get_current_name();
+  const char* second_name = NULL;
+  Module_Param* param = NULL;
+
+  // Check if the first name segment is an existing module name 
+  TTCN_Module *module_ptr = lookup_module(first_name);
+  if (module_ptr != NULL && module_ptr->get_param_func != NULL && param_name.next_name()) {
+    param = module_ptr->get_param_func(param_name);
+    if (param == NULL) {
+      second_name = param_name.get_current_name(); // for error messages
+    }
+  }
+  
+  // If not found, check if the first name segment was the module parameter name
+  // (even if it matched a module name)
+  if (param == NULL) {
+    param_name.next_name(-1); // set the position back to the first segment
+    for (TTCN_Module *list_iter = list_head; list_iter != NULL;
+      list_iter = list_iter->list_next) {
+      if (list_iter->get_param_func != NULL) {
+        param = list_iter->get_param_func(param_name);
+        if (param != NULL) {
+          break;
+        }
+      }
+    }
+  }
+  
+  // Still not found -> error
+  if (param == NULL) {
+    if (module_ptr == NULL) {
+      TTCN_error("Referenced module parameter cannot be found. Module `%s' does not exist, "
+        "and no parameter with name `%s' exists in any module.", 
+        first_name, first_name);
+    } else if (module_ptr->get_param_func == NULL) {
+      TTCN_error("Referenced module parameter cannot be found. Module `%s' does not have "
+        "parameters, and no parameter with name `%s' exists in other modules.", 
+        first_name, first_name);
+    } else {
+      TTCN_error("Referenced module parameter cannot be found. No parameter with name `%s' "
+        "exists in module `%s', and no parameter with name `%s' exists in any module.",
+        second_name, first_name, first_name);
+    }
+  }
+  else if (param->get_type() == Module_Param::MP_Unbound) {
+    delete param;
+    TTCN_error("Referenced module parameter '%s' is unbound.", param_name.get_str());
+  }
+
+  return param;
 }
 
 void Module_List::log_param()
@@ -669,6 +725,7 @@ TTCN_Module::TTCN_Module(const char *par_module_name,
   const namespace_t *par_namespaces,
   init_func_t par_post_init_func,
   set_param_func_t par_set_param_func,
+  get_param_func_t par_get_param_func,
   log_param_func_t par_log_param_func,
   initialize_component_func_t par_initialize_component_func,
   start_func_t par_start_func,
@@ -692,6 +749,7 @@ TTCN_Module::TTCN_Module(const char *par_module_name,
 , pre_init_called(FALSE)
 , post_init_called(FALSE)
 , set_param_func(par_set_param_func)
+, get_param_func(par_get_param_func)
 , log_param_func(par_log_param_func)
 , initialize_component_func(par_initialize_component_func)
 , start_func(par_start_func)
@@ -731,6 +789,7 @@ TTCN_Module::TTCN_Module(const char *par_module_name,
 , pre_init_called(FALSE)
 , post_init_called(FALSE)
 , set_param_func(NULL)
+, get_param_func(NULL)
 , log_param_func(NULL)
 , initialize_component_func(NULL)
 , start_func(NULL)

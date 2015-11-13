@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@
 #include "../common/ttcn3float.hh"
 
 class ustring;
+class JSON_Tokenizer;
 
 namespace Asn {
   class Block;
@@ -686,6 +687,12 @@ namespace Common {
     bool is_indexed() const;
     const Identifier& get_alt_name();
     Value *get_alt_value();
+    /** Sets the first letter in the name of the alternative to lowercase
+      * if it's an uppercase letter.
+      * Used on open types (the name of their alternatives can be given with both
+      * an uppercase or a lowercase first letter, and the generated code will need
+      * to use the lowercase version). */
+    void set_alt_name_to_lowercase();
     /** Returns whether the embedded object identifier components
      *  contain any error. Applicable to OID/ROID values only. */
     bool has_oid_error();
@@ -904,6 +911,11 @@ namespace Common {
     char *generate_code_init_refd(char *str, const char *name);
 
   public:
+    /** Generates JSON code from this value. Used in JSON schema generation.
+      * No code is generated for special float values NaN, INF and -INF if the
+      * 2nd parameter is false. */
+    void generate_json_value(JSON_Tokenizer& json, bool allow_special_float = true);
+    
     /** Returns whether C++ explicit cast (type conversion) is necessary when
      * \a this is the argument of a send() or log() statement. True is returned
      * when the type of the C++ equivalent is ambiguous or is a built-in type
@@ -979,7 +991,7 @@ namespace Common {
     static void generate_code_ap_default_value(expression_struct *expr, Value* value, Scope* scope);
     static void generate_code_ap_default_ti(expression_struct *expr, TemplateInstance* ti, Scope* scope);
   };
-
+  
 } // namespace Common
 
 #endif // _Common_Value_HH

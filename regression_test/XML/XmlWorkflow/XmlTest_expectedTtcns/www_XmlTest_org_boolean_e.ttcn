@@ -49,9 +49,17 @@ import from XSD all;
 
 
 type XSD.Boolean Result;
+//with {
+//variant "text 'true' as '1'";
+//variant "text 'false' as '0'";
+//};
 
 
 type XSD.Boolean Result1;
+//with {
+//variant "text 'true' as '1'";
+//variant "text 'false' as '0'";
+//};
 
 
 }

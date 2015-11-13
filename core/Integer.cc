@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -641,16 +641,76 @@ void INTEGER::log() const
 void INTEGER::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "integer value");
-  if (param.get_type()!=Module_Param::MP_Integer) param.type_error("integer value");
-  clean_up();
-  bound_flag = TRUE;
-  const int_val_t* const int_val = param.get_integer();
-  native_flag = int_val->is_native();
-  if (likely(native_flag)){
-    val.native = int_val->get_val();
-  } else {
-    val.openssl = BN_dup(int_val->get_val_openssl());
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
   }
+  switch (mp->get_type()) {
+  case Module_Param::MP_Integer: {
+    clean_up();
+    bound_flag = TRUE;
+    const int_val_t* const int_val = mp->get_integer();
+    native_flag = int_val->is_native();
+    if (likely(native_flag)){
+      val.native = int_val->get_val();
+    } else {
+      val.openssl = BN_dup(int_val->get_val_openssl());
+    }
+    break; }
+  case Module_Param::MP_Expression:
+    switch (mp->get_expr_type()) {
+    case Module_Param::EXPR_NEGATE: {
+      INTEGER operand;
+      operand.set_param(*mp->get_operand1());
+      *this = - operand;
+      break; }
+    case Module_Param::EXPR_ADD: {
+      INTEGER operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 + operand2;
+      break; }
+    case Module_Param::EXPR_SUBTRACT: {
+      INTEGER operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 - operand2;
+      break; }
+    case Module_Param::EXPR_MULTIPLY: {
+      INTEGER operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 * operand2;
+      break; }
+    case Module_Param::EXPR_DIVIDE: {
+      INTEGER operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      if (operand2 == 0) {
+        param.error("Integer division by zero.");
+      }
+      *this = operand1 / operand2;
+      break; }
+    default:
+      param.expr_type_error("an integer");
+      break;
+    }
+    break;
+  default:
+    param.type_error("integer value");
+    break;
+  }
+}
+
+Module_Param* INTEGER::get_param(Module_Param_Name& /* param_name */) const
+{
+  if (!bound_flag) {
+    return new Module_Param_Unbound();
+  }
+  if (native_flag) {
+    return new Module_Param_Integer(new int_val_t(val.native));
+  }
+  return new Module_Param_Integer(new int_val_t(BN_dup(val.openssl)));
 }
 
 void INTEGER::encode_text(Text_Buf& text_buf) const
@@ -1029,11 +1089,14 @@ int INTEGER::TEXT_encode(const TTCN_Typedescriptor_t& p_td,
   return encoded_length;
 }
 
+unsigned char INTX_MASKS[] = { 0 /*dummy*/, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF };
+
 int INTEGER::RAW_encode(const TTCN_Typedescriptor_t& p_td, RAW_enc_tree& myleaf) const
 {
   if (!native_flag) return RAW_encode_openssl(p_td, myleaf);
   unsigned char *bc;
-  int length = (p_td.raw->fieldlength + 7) / 8; // in bytes
+  int length; // total length, in bytes
+  int val_bits = 0, len_bits = 0; // only for IntX
   int value = val.native;
   boolean neg_sgbit = (value < 0) && (p_td.raw->comp == SG_SG_BIT);
   if (!is_bound()) {
@@ -1047,11 +1110,6 @@ int INTEGER::RAW_encode(const TTCN_Typedescriptor_t& p_td, RAW_enc_tree& myleaf)
     INTEGER big_value(to_openssl(val.native)); // too big for native
     return big_value.RAW_encode_openssl(p_td, myleaf);
   }
-  if (min_bits(value) > p_td.raw->fieldlength) {
-    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
-      "There are insufficient bits to encode '%s' : ", p_td.name);
-    value = 0; // substitute with zero
-  }
   if ((value < 0) && (p_td.raw->comp == SG_NO)) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_SIGN_ERR,
       "Unsigned encoding of a negative number: %s", p_td.name);
@@ -1060,42 +1118,124 @@ int INTEGER::RAW_encode(const TTCN_Typedescriptor_t& p_td, RAW_enc_tree& myleaf)
   if (neg_sgbit) value = -value;
   //myleaf.ext_bit=EXT_BIT_NO;
   if (myleaf.must_free) Free(myleaf.body.leaf.data_ptr);
+  if (p_td.raw->fieldlength == RAW_INTX) { // IntX (variable length)
+    val_bits = (p_td.raw->comp != SG_NO); // bits needed to store the value
+    int v2 = value;
+    if (v2 < 0 && p_td.raw->comp == SG_2COMPL) {
+      v2 = ~v2;
+    }
+    do {
+      v2 >>= 1;
+      ++val_bits;
+    }
+    while (v2 != 0);
+    len_bits = 1 + val_bits / 8; // bits needed to store the length
+    if (val_bits % 8 + len_bits % 8 > 8) {
+      // the remainder of the value bits and the length bits do not fit into
+      // an octet => an extra octet is needed and the length must be increased
+      ++len_bits;
+    }
+    length = (len_bits + val_bits + 7) / 8;
+    if (len_bits % 8 == 0 && val_bits % 8 != 0) {
+      // special case: the value can be stored on 8k - 1 octets plus the partial octet
+      // - len_bits = 8k is not enough, since there's no partial octet in that case
+      // and the length would then be followed by 8k octets (and it only indicates
+      // 8k - 1 further octets)
+      // - len_bits = 8k + 1 is too much, since there are only 8k - 1 octets
+      // following the partial octet (and 8k are indicated)
+      // solution: len_bits = 8k + 1 and insert an extra empty octet
+      ++len_bits;
+      ++length;
+    }
+  }
+  else { // not IntX, use the field length
+    length = (p_td.raw->fieldlength + 7) / 8;
+    if (min_bits(value) > p_td.raw->fieldlength) {
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
+        "There are insufficient bits to encode '%s' : ", p_td.name);
+      value = 0; // substitute with zero
+    }
+  }
   if (length > RAW_INT_ENC_LENGTH) { // does not fit in the small buffer
     myleaf.body.leaf.data_ptr = bc = (unsigned char*)Malloc(length * sizeof(*bc));
     myleaf.must_free = TRUE;
     myleaf.data_ptr_used = TRUE;
   }
   else bc = myleaf.body.leaf.data_array;
-  for (int a = 0; a < length; a++) {
-    bc[a] = value & 0xFF;
-    value >>= 8;
+  if (p_td.raw->fieldlength == RAW_INTX) {
+    int i = 0;
+    // treat the empty space between the value and the length as if it was part
+    // of the value, too
+    val_bits = length * 8 - len_bits;
+    // first, encode the value
+    do {
+      bc[i] = value & INTX_MASKS[val_bits > 8 ? 8 : val_bits];
+      ++i;
+      value >>= 8;
+      val_bits -= 8;
+    }
+    while (val_bits > 0);
+    if (neg_sgbit) {
+      // the sign bit is the first bit after the length
+      unsigned char mask = 0x80 >> len_bits % 8;
+      bc[i - 1] |= mask;
+    }
+    // second, encode the length (ignore the last zero)
+    --len_bits;
+    if (val_bits != 0) {
+      // the remainder of the length is in the same octet as the remainder of the
+      // value => step back onto it
+      --i;
+    }
+    else {
+      // the remainder of the length is in a separate octet
+      bc[i] = 0;
+    }
+    // insert the length's partial octet
+    unsigned char mask = 0x80;
+    for (int j = 0; j < len_bits % 8; ++j) {
+      bc[i] |= mask;
+      mask >>= 1;
+    }
+    if (len_bits % 8 > 0 || val_bits != 0) {
+      // there was a partial octet => step onto the first full octet
+      ++i;
+    }
+    // insert the length's full octets
+    while (len_bits >= 8) {
+      // octets containing only ones in the length
+      bc[i] = 0xFF;
+      ++i;
+      len_bits -= 8;
+    }
+    myleaf.length = length * 8;
   }
-  if (neg_sgbit) {
-    unsigned char mask = 0x01 << (p_td.raw->fieldlength - 1) % 8;
-    bc[length - 1] |= mask;
+  else {
+    for (int a = 0; a < length; a++) {
+      bc[a] = value & 0xFF;
+      value >>= 8;
+    }
+    if (neg_sgbit) {
+      unsigned char mask = 0x01 << (p_td.raw->fieldlength - 1) % 8;
+      bc[length - 1] |= mask;
+    }
+    myleaf.length = p_td.raw->fieldlength;
   }
-  return myleaf.length = p_td.raw->fieldlength;
+  return myleaf.length;
 }
 
 int INTEGER::RAW_encode_openssl(const TTCN_Typedescriptor_t& p_td,
   RAW_enc_tree& myleaf) const
 {
   unsigned char *bc = NULL;
-  int length = (p_td.raw->fieldlength + 7) / 8;
+  int length; // total length, in bytes
+  int val_bits = 0, len_bits = 0; // only for IntX
   BIGNUM *D = BN_new();
   BN_copy(D, val.openssl);
   boolean neg_sgbit = (D->neg) && (p_td.raw->comp == SG_SG_BIT);
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound value.");
-    BN_clear(D);
-    neg_sgbit = FALSE;
-  }
-  if (min_bits(D) > p_td.raw->fieldlength) {
-    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
-      "There are insufficient bits to encode '%s': ", p_td.name);
-    // `tmp = -((-tmp) & BitMaskTable[min_bits(tmp)]);' doesn't make any sense
-    // at all for negative values.  Just simply clear the value.
     BN_clear(D);
     neg_sgbit = FALSE;
   }
@@ -1109,6 +1249,38 @@ int INTEGER::RAW_encode_openssl(const TTCN_Typedescriptor_t& p_td,
   // sign is stored separately from the number.  Default encoding of negative
   // values in 2's complement form.
   if (myleaf.must_free) Free(myleaf.body.leaf.data_ptr);
+  if (p_td.raw->fieldlength == RAW_INTX) {
+    val_bits = BN_num_bits(D) + (p_td.raw->comp != SG_NO); // bits needed to store the value
+    len_bits = 1 + val_bits / 8; // bits needed to store the length
+    if (val_bits % 8 + len_bits % 8 > 8) {
+      // the remainder of the value bits and the length bits do not fit into
+      // an octet => an extra octet is needed and the length must be increased
+      ++len_bits;
+    }
+    length = (len_bits + val_bits + 7) / 8;
+    if (len_bits % 8 == 0 && val_bits % 8 != 0) {
+      // special case: the value can be stored on 8k - 1 octets plus the partial octet
+      // - len_bits = 8k is not enough, since there's no partial octet in that case
+      // and the length would then be followed by 8k octets (and it only indicates
+      // 8k - 1 further octets)
+      // - len_bits = 8k + 1 is too much, since there are only 8k - 1 octets
+      // following the partial octet (and 8k are indicated)
+      // solution: len_bits = 8k + 1 and insert an extra empty octet
+      ++len_bits;
+      ++length;
+    }
+  }
+  else {
+    length = (p_td.raw->fieldlength + 7) / 8;
+    if (min_bits(D) > p_td.raw->fieldlength) {
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
+        "There are insufficient bits to encode '%s': ", p_td.name);
+      // `tmp = -((-tmp) & BitMaskTable[min_bits(tmp)]);' doesn't make any sense
+      // at all for negative values.  Just simply clear the value.
+      BN_clear(D);
+      neg_sgbit = FALSE;
+    }
+  }
   if (length > RAW_INT_ENC_LENGTH) {
     myleaf.body.leaf.data_ptr = bc =
       (unsigned char *)Malloc(length * sizeof(*bc));
@@ -1124,18 +1296,69 @@ int INTEGER::RAW_encode_openssl(const TTCN_Typedescriptor_t& p_td,
     for (int a = 0; a < D->dmax; a++) D->d[a] = ~D->d[a];
     BN_add_word(D, 1);
   }
-  int num_bytes = BN_num_bytes(D);
-  for (int a = 0; a < length; a++) {
-    if (twos_compl && num_bytes - 1 < a) bc[a] = 0xff;
-    else bc[a] = (D->top ? D->d[0] : 0) & 0xff;
-    BN_rshift(D, D, 8);
+  if (p_td.raw->fieldlength == RAW_INTX) {
+    int i = 0;
+    // treat the empty space between the value and the length as if it was part
+    // of the value, too
+    val_bits = length * 8 - len_bits;
+    // first, encode the value
+    do {
+      bc[i] = (D->top ? D->d[0] : (twos_compl ? 0xFF : 0)) & INTX_MASKS[val_bits > 8 ? 8 : val_bits];
+      ++i;
+      BN_rshift(D, D, 8);
+      val_bits -= 8;
+    }
+    while (val_bits > 0);
+    if (neg_sgbit) {
+      // the sign bit is the first bit after the length
+      unsigned char mask = 0x80 >> len_bits % 8;
+      bc[i - 1] |= mask;
+    }
+    // second, encode the length (ignore the last zero)
+    --len_bits;
+    if (val_bits != 0) {
+      // the remainder of the length is in the same octet as the remainder of the
+      // value => step back onto it
+      --i;
+    }
+    else {
+      // the remainder of the length is in a separate octet
+      bc[i] = 0;
+    }
+    // insert the length's partial octet
+    unsigned char mask = 0x80;
+    for (int j = 0; j < len_bits % 8; ++j) {
+      bc[i] |= mask;
+      mask >>= 1;
+    }
+    if (len_bits % 8 > 0 || val_bits != 0) {
+      // there was a partial octet => step onto the first full octet
+      ++i;
+    }
+    // insert the length's full octets
+    while (len_bits >= 8) {
+      // octets containing only ones in the length
+      bc[i] = 0xFF;
+      ++i;
+      len_bits -= 8;
+    }
+    myleaf.length = length * 8;
   }
-  if (neg_sgbit) {
-    unsigned char mask = 0x01 << (p_td.raw->fieldlength - 1) % 8;
-    bc[length - 1] |= mask;
+  else {
+    int num_bytes = BN_num_bytes(D);
+    for (int a = 0; a < length; a++) {
+      if (twos_compl && num_bytes - 1 < a) bc[a] = 0xff;
+      else bc[a] = (D->top ? D->d[0] : 0) & 0xff;
+      BN_rshift(D, D, 8);
+    }
+    if (neg_sgbit) {
+      unsigned char mask = 0x01 << (p_td.raw->fieldlength - 1) % 8;
+      bc[length - 1] |= mask;
+    }
+    BN_free(D);
+    myleaf.length = p_td.raw->fieldlength;
   }
-  BN_free(D);
-  return myleaf.length = p_td.raw->fieldlength;
+  return myleaf.length;
 }
 
 int INTEGER::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
@@ -1145,44 +1368,118 @@ int INTEGER::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   bound_flag = FALSE;
   int prepaddlength = buff.increase_pos_padd(p_td.raw->prepadding);
   limit -= prepaddlength;
-  int decode_length = p_td.raw->fieldlength;
+  RAW_coding_par cp;
+  boolean orders = FALSE;
+  if (p_td.raw->bitorderinoctet == ORDER_MSB) orders = TRUE;
+  if (p_td.raw->bitorderinfield == ORDER_MSB) orders = !orders;
+  cp.bitorder = orders ? ORDER_MSB : ORDER_LSB;
+  orders = FALSE;
+  if (p_td.raw->byteorder == ORDER_MSB) orders = TRUE;
+  if (p_td.raw->bitorderinfield == ORDER_MSB) orders = !orders;
+  cp.byteorder = orders ? ORDER_MSB : ORDER_LSB;
+  cp.fieldorder = p_td.raw->fieldorder;
+  cp.hexorder = ORDER_LSB;
+  int decode_length = 0;
+  int len_bits = 0; // only for IntX (amount of bits used to store the length)
+  unsigned char len_data = 0; // only for IntX (an octet used to store the length)
+  int partial_octet_bits = 0; // only for IntX (amount of value bits in the partial octet)
+  if (p_td.raw->fieldlength == RAW_INTX) {
+    // extract the length
+    do {
+      // check if at least 8 bits are available in the buffer
+      if (8 > limit) {
+        if (!no_err) {
+          TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
+            "There are not enough bits in the buffer to decode the length of IntX "
+            "type %s (needed: %d, found: %d).", p_td.name, len_bits + 8,
+            len_bits + limit);
+        }
+        return -TTCN_EncDec::ET_LEN_ERR; 
+      }
+      else {
+        limit -= 8;
+      }
+      int nof_unread_bits = buff.unread_len_bit();
+      if (nof_unread_bits < 8) {
+        if (!no_err) {
+          TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INCOMPL_MSG,
+            "There are not enough bits in the buffer to decode the length of IntX "
+            "type %s (needed: %d, found: %d).", p_td.name, len_bits + 8,
+            len_bits + nof_unread_bits);
+        }
+        return -TTCN_EncDec::ET_INCOMPL_MSG;
+      }
+      
+      // extract the next length octet (or partial length octet)
+      buff.get_b(8, &len_data, cp, top_bit_ord);
+      unsigned char mask = 0x80;
+      do {
+        ++len_bits;
+        if (len_data & mask) {
+          mask >>= 1;
+        }
+        else {
+          // the first zero signals the end of the length
+          // the rest of the bits in the octet are part of the value
+          partial_octet_bits = (8 - len_bits % 8) % 8;
+          
+          // decode_length only stores the amount of bits in full octets needed
+          // by the value, the bits in the partial octet are stored by len_data
+          decode_length = 8 * (len_bits - 1);
+          break;
+        }
+      }
+      while (len_bits % 8 != 0);
+    }
+    while (decode_length == 0 && partial_octet_bits == 0);
+  }
+  else {
+    // not IntX, use the static field length
+    decode_length = p_td.raw->fieldlength;
+  }
   if (decode_length > limit) {
-    if (no_err) return -TTCN_EncDec::ET_LEN_ERR;
-    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
-      "There are not enough bits in the buffer to decode type %s (needed: %d, "
-      "found: %d).", p_td.name, decode_length, limit);
+    if (!no_err) {
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
+        "There are not enough bits in the buffer to decode%s type %s (needed: %d, "
+        "found: %d).", p_td.raw->fieldlength == RAW_INTX ? " the value of IntX" : "",
+        p_td.name, decode_length, limit);
+    }
+    if (no_err || p_td.raw->fieldlength == RAW_INTX) {
+      return -TTCN_EncDec::ET_LEN_ERR;
+    }
     decode_length = limit;
   }
   int nof_unread_bits = buff.unread_len_bit();
   if (decode_length > nof_unread_bits) {
-    if (no_err) return -TTCN_EncDec::ET_INCOMPL_MSG;
-    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INCOMPL_MSG,
-      "There are not enough bits in the buffer to decode type %s (needed: %d, "
-      "found: %d).", p_td.name, decode_length, nof_unread_bits);
+    if (!no_err) {
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INCOMPL_MSG,
+        "There are not enough bits in the buffer to decode%s type %s (needed: %d, "
+        "found: %d).", p_td.raw->fieldlength == RAW_INTX ? " the value of IntX" : "",
+        p_td.name, decode_length, nof_unread_bits);
+    }
+    if (no_err || p_td.raw->fieldlength == RAW_INTX) {
+      return -TTCN_EncDec::ET_INCOMPL_MSG;
+    }
     decode_length = nof_unread_bits;
   }
   clean_up();
   if (decode_length < 0) return -1;
-  else if (decode_length == 0) {
+  else if (decode_length == 0 && partial_octet_bits == 0) {
     native_flag = TRUE;
     val.native = 0;
   }
   else {
     int tmp = 0;
     int twos_compl = 0;
-    unsigned char *data = (unsigned char *) Malloc((decode_length + 7) / 8);
-    RAW_coding_par cp;
-    boolean orders = FALSE;
-    if (p_td.raw->bitorderinoctet == ORDER_MSB) orders = TRUE;
-    if (p_td.raw->bitorderinfield == ORDER_MSB) orders = !orders;
-    cp.bitorder = orders ? ORDER_MSB : ORDER_LSB;
-    orders = FALSE;
-    if (p_td.raw->byteorder == ORDER_MSB) orders = TRUE;
-    if (p_td.raw->bitorderinfield == ORDER_MSB) orders = !orders;
-    cp.byteorder = orders ? ORDER_MSB : ORDER_LSB;
-    cp.fieldorder = p_td.raw->fieldorder;
-    cp.hexorder = ORDER_LSB;
+    unsigned char *data = (unsigned char *) Malloc(
+      (decode_length + partial_octet_bits + 7) / 8);
     buff.get_b((size_t) decode_length, data, cp, top_bit_ord);
+    if (partial_octet_bits != 0) {
+      // in case there are value bits in the last length octet (only for IntX),
+      // these need to be appended to the extracted data
+      data[decode_length / 8] = len_data;
+      decode_length += partial_octet_bits;
+    }
     int end_pos = decode_length;
     int idx = (end_pos - 1) / 8;
     boolean negativ_num = FALSE;
@@ -1261,7 +1558,7 @@ int INTEGER::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   }
   end: decode_length += buff.increase_pos_padd(p_td.raw->padding);
   bound_flag = TRUE;
-  return decode_length + prepaddlength;
+  return decode_length + prepaddlength + len_bits;
 }
 
 int INTEGER::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
@@ -1747,7 +2044,7 @@ INTEGER_template& INTEGER_template::operator=
   return *this;
 }
 
-boolean INTEGER_template::match(int other_value) const
+boolean INTEGER_template::match(int other_value, boolean /* legacy */) const
 {
   switch (template_selection) {
   case SPECIFIC_VALUE:
@@ -1787,7 +2084,8 @@ boolean INTEGER_template::match(int other_value) const
   return FALSE;
 }
 
-boolean INTEGER_template::match(const INTEGER& other_value) const
+boolean INTEGER_template::match(const INTEGER& other_value,
+                                boolean /* legacy */) const
 {
   if (!other_value.is_bound()) return FALSE;
   switch (template_selection) {
@@ -2001,7 +2299,8 @@ void INTEGER_template::log() const
   log_ifpresent();
 }
 
-void INTEGER_template::log_match(const INTEGER& match_value) const
+void INTEGER_template::log_match(const INTEGER& match_value,
+                                 boolean /* legacy */) const
 {
   if (TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()
   &&  TTCN_Logger::get_logmatch_buffer_len() != 0) {
@@ -2017,7 +2316,11 @@ void INTEGER_template::log_match(const INTEGER& match_value) const
 
 void INTEGER_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "integer template");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
     break;
@@ -2028,34 +2331,142 @@ void INTEGER_template::set_param(Module_Param& param) {
     *this = ANY_OR_OMIT;
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t i=0; i<param.get_size(); i++) {
-      list_item(i).set_param(*param.get_elem(i));
+  case Module_Param::MP_ComplementList_Template: {
+    INTEGER_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
     }
-    break;
+    *this = temp;
+    break; }
   case Module_Param::MP_Integer: {
     INTEGER tmp;
-    tmp.set_val(*param.get_integer());
+    tmp.set_val(*mp->get_integer());
     *this = tmp;
   } break;
   case Module_Param::MP_IntRange: {
     set_type(VALUE_RANGE);
-    if (param.get_lower_int()!=NULL) {
+    if (mp->get_lower_int()!=NULL) {
       INTEGER tmp;
-      tmp.set_val(*param.get_lower_int());
+      tmp.set_val(*mp->get_lower_int());
       set_min(tmp);
     }
-    if (param.get_upper_int()!=NULL) {
+    if (mp->get_upper_int()!=NULL) {
       INTEGER tmp;
-      tmp.set_val(*param.get_upper_int());
+      tmp.set_val(*mp->get_upper_int());
       set_max(tmp);
     }
   } break;
+  case Module_Param::MP_Expression:
+    switch (mp->get_expr_type()) {
+    case Module_Param::EXPR_NEGATE: {
+      INTEGER operand;
+      operand.set_param(*mp->get_operand1());
+      *this = - operand;
+      break; }
+    case Module_Param::EXPR_ADD: {
+      INTEGER operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 + operand2;
+      break; }
+    case Module_Param::EXPR_SUBTRACT: {
+      INTEGER operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 - operand2;
+      break; }
+    case Module_Param::EXPR_MULTIPLY: {
+      INTEGER operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 * operand2;
+      break; }
+    case Module_Param::EXPR_DIVIDE: {
+      INTEGER operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      if (operand2 == 0) {
+        param.error("Integer division by zero.");
+      }
+      *this = operand1 / operand2;
+      break; }
+    default:
+      param.expr_type_error("an integer");
+      break;
+    }
+    break;    
   default:
     param.type_error("integer template");
   }
-  is_ifpresent = param.get_ifpresent();
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* INTEGER_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE:
+    if (likely(int_val.native_flag)) {
+      mp = new Module_Param_Integer(new int_val_t(int_val.val.native));
+    }
+    else {
+      mp = new Module_Param_Integer(new int_val_t(BN_dup(int_val.val.openssl)));
+    }
+    break;
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  case VALUE_RANGE: {
+    int_val_t* lower_bound = NULL;
+    int_val_t* upper_bound = NULL;
+    if (value_range.min_is_present) {
+      if (value_range.min_value.native_flag) {
+        lower_bound = new int_val_t(value_range.min_value.val.native);
+      }
+      else {
+        lower_bound = new int_val_t(BN_dup(value_range.min_value.val.openssl));
+      }
+    }
+    if (value_range.max_is_present) {
+      if (value_range.max_value.native_flag) {
+        upper_bound = new int_val_t(value_range.max_value.val.native);
+      }
+      else {
+        upper_bound = new int_val_t(BN_dup(value_range.max_value.val.openssl));
+      }
+    }
+    mp = new Module_Param_IntRange(lower_bound, upper_bound);
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
 }
 
 void INTEGER_template::encode_text(Text_Buf& text_buf) const
@@ -2140,13 +2551,13 @@ void INTEGER_template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean INTEGER_template::is_present() const
+boolean INTEGER_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean INTEGER_template::match_omit() const
+boolean INTEGER_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -2155,10 +2566,14 @@ boolean INTEGER_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -2166,7 +2581,8 @@ boolean INTEGER_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void INTEGER_template::check_restriction(template_res t_res, const char* t_name) const
+void INTEGER_template::check_restriction(template_res t_res, const char* t_name,
+                                         boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -2178,7 +2594,7 @@ void INTEGER_template::check_restriction(template_res t_res, const char* t_name)
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;

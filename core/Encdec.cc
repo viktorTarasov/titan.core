@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -797,6 +797,7 @@ local_fieldorder==ORDER_MSB?"M":"L"
           if(local_fieldorder==ORDER_MSB){
             unsigned int num_bytes = (len+7) / 8;
             unsigned int active_bits_in_last = len % 8;
+            if(!active_bits_in_last) active_bits_in_last=8;
             for(unsigned int a=0; a < num_bytes; a++){
               prt[a]&=REVERSE_BITS(mask1);
               unsigned char sa = s[a];
@@ -820,6 +821,10 @@ local_fieldorder==ORDER_MSB?"M":"L"
         }
         else{  // start from octet boundary
           memcpy(data_ptr+buf_len, s, (len+7)/8*sizeof(unsigned char));
+          if(local_fieldorder==ORDER_MSB  && new_bit_pos){
+              data_ptr[new_size-1]<<=(8-new_bit_pos);
+            
+          }
         }
       }
       else{ // bitorder==ORDER_MSB

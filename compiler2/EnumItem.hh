@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -33,8 +33,6 @@ public:
   virtual EnumItem *clone() const;
   virtual void set_fullname(const string& p_fullname);
   const Identifier& get_name() const { return *name; }
-  /// Return the name for the "enum hack"
-  string get_name_hacked(Type *p_type) const;
   Value *get_value() const { return value; }
   void set_value(Value *p_value);
   const string& get_text() const { return text; }

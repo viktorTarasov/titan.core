@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -135,9 +135,18 @@ MACRO_REFERENCE_INT \$"{"{WS}{TTCN3IDENTIFIER}{WS}(","{WS}integer{WS})?"}"
 "["{WS}MODULE_PARAMETERS{WS}"]"   BEGIN(SC_module_parameters);
 "["{WS}TESTPORT_PARAMETERS{WS}"]" BEGIN(SC_testport_parameters);
 
-<SC_module_parameters,SC_testport_parameters>
+<SC_testport_parameters>
 {
   "["{NUMBER}"]" ;
+}
+
+<SC_module_parameters>
+{
+  "["[ \t0-9a-zA-Z+*/&-]*"]" ;
+}
+
+<SC_module_parameters,SC_testport_parameters>
+{
   "["[^\r\n\[\]]*{MACRO_REFERENCE_INT}{WS}[^\r\n\[\]]*"]" ;
 }
 
@@ -192,7 +201,7 @@ MACRO_REFERENCE_INT \$"{"{WS}{TTCN3IDENTIFIER}{WS}(","{WS}integer{WS})?"}"
         BEGIN(INITIAL);
       } else {
         preproc_error_flag = 1; 
-        config_preproc_error(error_msg.c_str());
+        config_preproc_error("%s", error_msg.c_str());
       }
     }
     /* no break */

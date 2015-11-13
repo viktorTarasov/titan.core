@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -45,6 +45,7 @@ extern "C" {
       char *pre_init;  /**< Code for pre_init_module() */
       char *post_init; /**< Code for post_init_module() */
       char *set_param; /**< Code for set_module_param() */
+      char *get_param; /**< Code for get_module_param() */
       char *log_param; /**< Code for log_module_param() */
       char *init_comp; /**< Code for init_comp_type() */
       char *start;     /**< Code for start_ptc_function() */

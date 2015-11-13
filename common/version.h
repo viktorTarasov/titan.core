@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@
 
 /* Version numbers */
 #define TTCN3_MAJOR 5
-#define TTCN3_MINOR 3
+#define TTCN3_MINOR 4
 #define TTCN3_PATCHLEVEL 0
 //#define TTCN3_BUILDNUMBER 0
 
@@ -22,7 +22,7 @@
  * TTCN3_VERSION = TTCN3_MAJOR * 1000000 + TTCN3_MINOR * 10000 +
  *                 TTCN3_PATCHLEVEL * 100 + TTCN3_BUILDNUMBER
  */
-#define TTCN3_VERSION 50300
+#define TTCN3_VERSION 50400
 
 /* A monotonically increasing version number.
  * An official release is deemed to have the highest possible build number (99)

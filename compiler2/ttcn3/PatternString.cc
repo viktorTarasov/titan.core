@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
 #include "../../common/pattern.hh"
 #include "../CompilerError.hh"
 #include "../Code.hh"
+#include "../../common/JSON_Tokenizer.hh"
 
 #include "TtcnTemplate.hh"
 
@@ -490,6 +491,55 @@ namespace Ttcn {
       cstr_value = new Common::Value(Common::Value::V_CSTR,
         new string(get_full_str()));
     return cstr_value;
+  }
+  
+  char* PatternString::convert_to_json()
+  {
+    string pstr = get_value()->get_val_str();
+    
+    // convert the pattern into an extended regular expression
+    char* regex_str = NULL;
+    if (CSTR_PATTERN == pattern_type) {
+      regex_str = TTCN_pattern_to_regexp(pstr.c_str());
+    }
+    else { // USTR_PATTERN
+      // handle the unicode characters in \q{g,p,r,c} format
+      string utf8str;
+      for (size_t i = 0; i < pstr.size(); ++i) {
+        if ('\\' == pstr[i]) {
+          if ('q' == pstr[i + 1]) {
+            // extract the unicode character
+            unsigned int group, plane, row, cell;
+            i = pstr.find('{', i + 1);
+            sscanf(pstr.c_str() + i + 1, "%u", &group);
+            i = pstr.find(',', i + 1);
+            sscanf(pstr.c_str() + i + 1, "%u", &plane);
+            i = pstr.find(',', i + 1);
+            sscanf(pstr.c_str() + i + 1, "%u", &row);
+            i = pstr.find(',', i + 1);
+            sscanf(pstr.c_str() + i + 1, "%u", &cell);
+            i = pstr.find('}', i + 1);
+            
+            // convert the character to UTF-8 format
+            utf8str += ustring_to_uft8(ustring(group, plane, row, cell));
+            continue;
+          }
+          else if ('\\' == pstr[i + 1]) {
+            // must be handled separately, so we don't confuse \\q with \q
+            ++i;
+            utf8str += '\\';
+          }
+        }
+        utf8str += pstr[i];
+      }
+      
+      // use the pattern converter for charstrings, the pattern should be in UTF-8
+      // format now (setting the 2nd parameter will make sure that no error
+      // messages are displayed for extended ASCII characters)
+      regex_str = TTCN_pattern_to_regexp(utf8str.c_str(), true);
+    }
+    
+    return convert_to_json_string(regex_str);
   }
 
 } // namespace Ttcn

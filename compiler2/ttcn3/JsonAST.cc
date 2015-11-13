@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -10,12 +10,25 @@
 #include <cstddef>
 #include <cstdio>
 
+void JsonSchemaExtension::init(const char* p_key, const char* p_value)
+{
+  key = mcopystr(p_key);
+  value = mcopystr(p_value);
+}
+
+JsonSchemaExtension::~JsonSchemaExtension()
+{
+  Free(key);
+  Free(value);
+}
+
 void JsonAST::init_JsonAST()
 {
   omit_as_null = false;
   alias = NULL;
   as_value = false;
   default_value = NULL;
+  metainfo_unbound = false;
 }
 
 JsonAST::JsonAST(const JsonAST *other_val)
@@ -26,6 +39,10 @@ JsonAST::JsonAST(const JsonAST *other_val)
     alias = (NULL != other_val->alias) ? mcopystr(other_val->alias) : NULL;
     as_value = other_val->as_value;
     default_value = (NULL != other_val->default_value) ? mcopystr(other_val->default_value) : NULL;
+    for (size_t i = 0; i < other_val->schema_extensions.size(); ++i) {
+      schema_extensions.add(new JsonSchemaExtension(*other_val->schema_extensions[i]));
+    }
+    metainfo_unbound = other_val->metainfo_unbound;
   }
 }
 
@@ -33,6 +50,10 @@ JsonAST::~JsonAST()
 {
   Free(alias);
   Free(default_value);
+  for (size_t i = 0; i < schema_extensions.size(); ++i) {
+    delete schema_extensions[i];
+  }
+  schema_extensions.clear();
 }
 
 void JsonAST::print_JsonAST() const
@@ -51,5 +72,14 @@ void JsonAST::print_JsonAST() const
   }
   if (default_value) {
     printf("Default value: %s\n\r", default_value);
+  }
+  if (0 != schema_extensions.size()) {
+    printf("Extensions:");
+    for (size_t i = 0; i < schema_extensions.size(); ++i) {
+      printf(" \"%s\" : \"%s\"", schema_extensions[i]->key, schema_extensions[i]->value);
+    }
+  }
+  if (metainfo_unbound) {
+    printf("Metainfo for unbound field(s)\n\r");
   }
 }

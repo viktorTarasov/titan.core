@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -59,21 +59,6 @@ void EnumItem::set_value(Value *p_value)
 void EnumItem::set_text(const string& p_text)
 {
   text = p_text;
-}
-
-string EnumItem::get_name_hacked(Type *p_type) const
-{
-  if (p_type->is_asn1()) {
-    string hack_asnname(Identifier::name_2_asn(p_type->get_genname_own()));
-    hack_asnname += "-enum-";
-    hack_asnname += name->get_asnname();
-    return Identifier::asn_2_name(hack_asnname);
-  } else {
-    string hack_ttcnname(Identifier::name_2_ttcn(p_type->get_genname_own()));
-    hack_ttcnname += "_enum_";
-    hack_ttcnname += name->get_ttcnname();
-    return Identifier::ttcn_2_name(hack_ttcnname);
-  }
 }
 
 void EnumItem::dump(unsigned level) const

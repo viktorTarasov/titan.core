@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -78,7 +78,8 @@ public:
 #else
   inline boolean is_present() const { return is_bound(); }
 #endif
-  void set_param(Module_Param& param); 
+  void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 };
@@ -119,7 +120,7 @@ public:
   EXTERNAL_identification_template& operator=(const EXTERNAL_identification& other_value);
   EXTERNAL_identification_template& operator=(const OPTIONAL<EXTERNAL_identification>& other_value);
   EXTERNAL_identification_template& operator=(const EXTERNAL_identification_template& other_value);
-  boolean match(const EXTERNAL_identification& other_value) const;
+  boolean match(const EXTERNAL_identification& other_value, boolean legacy = FALSE) const;
   EXTERNAL_identification valueof() const;
   EXTERNAL_identification_template& list_item(unsigned int list_index) const;
   void set_type(template_sel template_type, unsigned int list_length);
@@ -137,23 +138,24 @@ public:
   const ASN_NULL_template& fixed() const;
   boolean ischosen(EXTERNAL_identification::union_selection_type checked_selection) const;
   void log() const;
-  void log_match(const EXTERNAL_identification& match_value) const;
+  void log_match(const EXTERNAL_identification& match_value, boolean legacy = FALSE) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 #ifdef TITAN_RUNTIME_2
   void valueofv(Base_Type* value) const { *(static_cast<EXTERNAL_identification*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL_identification*>(other_value)); }
   Base_Template* clone() const { return new EXTERNAL_identification_template(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &EXTERNAL_descr_; }
-  boolean matchv(const Base_Type* other_value) const { return match(*(static_cast<const EXTERNAL_identification*>(other_value))); }
-  void log_matchv(const Base_Type* match_value) const  { log_match(*(static_cast<const EXTERNAL_identification*>(match_value))); }
+  boolean matchv(const Base_Type* other_value, boolean legacy) const { return match(*(static_cast<const EXTERNAL_identification*>(other_value)), legacy); }
+  void log_matchv(const Base_Type* match_value, boolean legacy) const  { log_match(*(static_cast<const EXTERNAL_identification*>(match_value)), legacy); }
 #else
-  void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
 #endif
 };
 
@@ -190,6 +192,7 @@ public:
   inline boolean is_present() const { return is_bound(); }
 #endif
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 };
@@ -226,7 +229,7 @@ public:
   EXTERNAL_identification_syntaxes_template& operator=(const EXTERNAL_identification_syntaxes& other_value);
   EXTERNAL_identification_syntaxes_template& operator=(const OPTIONAL<EXTERNAL_identification_syntaxes>& other_value);
   EXTERNAL_identification_syntaxes_template& operator=(const EXTERNAL_identification_syntaxes_template& other_value);
-  boolean match(const EXTERNAL_identification_syntaxes& other_value) const;
+  boolean match(const EXTERNAL_identification_syntaxes& other_value, boolean legacy = FALSE) const;
   EXTERNAL_identification_syntaxes valueof() const;
   void set_type(template_sel template_type, unsigned int list_length);
   EXTERNAL_identification_syntaxes_template& list_item(unsigned int list_index) const;
@@ -236,23 +239,24 @@ public:
   const OBJID_template& transfer() const;
   int size_of() const;
   void log() const;
-  void log_match(const EXTERNAL_identification_syntaxes& match_value) const;
+  void log_match(const EXTERNAL_identification_syntaxes& match_value, boolean legacy = FALSE) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 #ifdef TITAN_RUNTIME_2
   void valueofv(Base_Type* value) const { *(static_cast<EXTERNAL_identification_syntaxes*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL_identification_syntaxes*>(other_value)); }
   Base_Template* clone() const { return new EXTERNAL_identification_syntaxes_template(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &EXTERNAL_descr_; }
-  boolean matchv(const Base_Type* other_value) const { return match(*(static_cast<const EXTERNAL_identification_syntaxes*>(other_value))); }
-  void log_matchv(const Base_Type* match_value) const  { log_match(*(static_cast<const EXTERNAL_identification_syntaxes*>(match_value))); }
+  boolean matchv(const Base_Type* other_value, boolean legacy) const { return match(*(static_cast<const EXTERNAL_identification_syntaxes*>(other_value)), legacy); }
+  void log_matchv(const Base_Type* match_value, boolean legacy) const  { log_match(*(static_cast<const EXTERNAL_identification_syntaxes*>(match_value)), legacy); }
 #else
-  void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
 #endif
 };
 
@@ -289,6 +293,7 @@ public:
   inline boolean is_present() const { return is_bound(); }
 #endif
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 };
@@ -325,7 +330,7 @@ public:
   EXTERNAL_identification_context__negotiation_template& operator=(const EXTERNAL_identification_context__negotiation& other_value);
   EXTERNAL_identification_context__negotiation_template& operator=(const OPTIONAL<EXTERNAL_identification_context__negotiation>& other_value);
   EXTERNAL_identification_context__negotiation_template& operator=(const EXTERNAL_identification_context__negotiation_template& other_value);
-  boolean match(const EXTERNAL_identification_context__negotiation& other_value) const;
+  boolean match(const EXTERNAL_identification_context__negotiation& other_value, boolean legacy = FALSE) const;
   EXTERNAL_identification_context__negotiation valueof() const;
   void set_type(template_sel template_type, unsigned int list_length);
   EXTERNAL_identification_context__negotiation_template& list_item(unsigned int list_index) const;
@@ -335,23 +340,24 @@ public:
   const OBJID_template& transfer__syntax() const;
   int size_of() const;
   void log() const;
-  void log_match(const EXTERNAL_identification_context__negotiation& match_value) const;
+  void log_match(const EXTERNAL_identification_context__negotiation& match_value, boolean legacy = FALSE) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 #ifdef TITAN_RUNTIME_2
   void valueofv(Base_Type* value) const { *(static_cast<EXTERNAL_identification_context__negotiation*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL_identification_context__negotiation*>(other_value)); }
   Base_Template* clone() const { return new EXTERNAL_identification_context__negotiation_template(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &EXTERNAL_descr_; }
-  boolean matchv(const Base_Type* other_value) const { return match(*(static_cast<const EXTERNAL_identification_context__negotiation*>(other_value))); }
-  void log_matchv(const Base_Type* match_value) const  { log_match(*(static_cast<const EXTERNAL_identification_context__negotiation*>(match_value))); }
+  boolean matchv(const Base_Type* other_value, boolean legacy) const { return match(*(static_cast<const EXTERNAL_identification_context__negotiation*>(other_value)), legacy); }
+  void log_matchv(const Base_Type* match_value, boolean legacy) const  { log_match(*(static_cast<const EXTERNAL_identification_context__negotiation*>(match_value)), legacy); }
 #else
-  void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
 #endif
 };
 
@@ -396,6 +402,7 @@ public:
   inline boolean is_present() const { return is_bound(); }
 #endif
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
   void encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTCN_EncDec::coding_t p_coding, ...) const;
@@ -440,7 +447,7 @@ public:
   EXTERNAL_template& operator=(const EXTERNAL& other_value);
   EXTERNAL_template& operator=(const OPTIONAL<EXTERNAL>& other_value);
   EXTERNAL_template& operator=(const EXTERNAL_template& other_value);
-  boolean match(const EXTERNAL& other_value) const;
+  boolean match(const EXTERNAL& other_value, boolean legacy = FALSE) const;
   EXTERNAL valueof() const;
   void set_type(template_sel template_type, unsigned int list_length);
   EXTERNAL_template& list_item(unsigned int list_index) const;
@@ -452,23 +459,24 @@ public:
   const OCTETSTRING_template& data__value() const;
   int size_of() const;
   void log() const;
-  void log_match(const EXTERNAL& match_value) const;
+  void log_match(const EXTERNAL& match_value, boolean legacy = FALSE) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 #ifdef TITAN_RUNTIME_2
   void valueofv(Base_Type* value) const { *(static_cast<EXTERNAL*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL*>(other_value)); }
   Base_Template* clone() const { return new EXTERNAL_template(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &EXTERNAL_descr_; }
-  boolean matchv(const Base_Type* other_value) const { return match(*(static_cast<const EXTERNAL*>(other_value))); }
-  void log_matchv(const Base_Type* match_value) const  { log_match(*(static_cast<const EXTERNAL*>(match_value))); }
+  boolean matchv(const Base_Type* other_value, boolean legacy) const { return match(*(static_cast<const EXTERNAL*>(other_value)), legacy); }
+  void log_matchv(const Base_Type* match_value, boolean legacy) const  { log_match(*(static_cast<const EXTERNAL*>(match_value)), legacy); }
 #else
-  void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
 #endif
 };
 

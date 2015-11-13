@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -54,6 +54,8 @@
 
   /** The converted regexp. */
   static char *ret_val;
+  /** Turns error messages for extended ASCII characters on or off */
+  static bool allow_ext_ascii = false;
   /** The parser error reporting function. */
   static void pattern_yyerror(const char *error_str);
   /** Creates the POSIX equivalent of literal character \a c using the
@@ -406,8 +408,8 @@ RE_OneCharPos:
 | TOK_Char
   {
     unsigned char c = $1;
-    if (c == 0 || c > 127) TTCN_pattern_error("Character with code %u "
-      "(0x%02x) cannot be used in a pattern for type charstring.", c, c);
+    if (c == 0 || (c > 127 && !allow_ext_ascii)) TTCN_pattern_error("Character "
+      "with code %u (0x%02x) cannot be used in a pattern for type charstring.", c, c);
     $$ = translate_character($1);
   }
 | RE_Quadruple
@@ -551,8 +553,8 @@ RE_Set_Range_Char:
 | TOK_Char
   {
     unsigned char c = $1;
-    if (c == 0 || c > 127) TTCN_pattern_error("Character with code %u "
-      "(0x%02x) cannot be used in a pattern for type charstring.", c, c);
+    if (c == 0 || (c > 127 && !allow_ext_ascii)) TTCN_pattern_error("Character "
+      "with code %u (0x%02x) cannot be used in a pattern for type charstring.", c, c);
     $$ = $1;
   }
 | RE_Quadruple { $$ = $1; }
@@ -621,12 +623,15 @@ RE_Quadruple:
  * Interface
  *********************************************************************/
 
-char* TTCN_pattern_to_regexp(const char* p_pattern)
+char* TTCN_pattern_to_regexp(const char* p_pattern, bool utf8)
 {
   /* if you want to debug */
   //pattern_yydebug=1;
 
   ret_val=NULL;
+
+  /* allow extended ASCII characters if the pattern is in UTF-8 format */
+  allow_ext_ascii = utf8;
 
   yy_buffer_state *flex_buffer = pattern_yy_scan_string(p_pattern);
   if(flex_buffer == NULL) {

@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2000-2014 Ericsson Telecom AB
+# Copyright (c) 2000-2015 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ SHADOWED := XER* TTCNandXML* EXER-whitepaper* XMLqualif*
 endif
 
 XDIRS := $(wildcard $(SHADOWED)) xsdConverter \
-HM60295 HN15589 HQ30408 HR49727 $(RT2_ONLY) \
+HM60295 HN15589 HQ30408 HR49727 HU13380 $(RT2_ONLY) \
 XmlWorkflow tpdValidTest
 
 # List of fake targets:

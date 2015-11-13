@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -1169,6 +1169,8 @@ namespace Common {
     /** Generates a reference to this type's schema segment and inserts it into
       * the given schema. */
     void generate_json_schema_ref(JSON_Tokenizer& json);
+    
+    JsonAST* get_json_attributes() const { return jsonattrib; }
   };
 
   /** @} end of AST_Type group */

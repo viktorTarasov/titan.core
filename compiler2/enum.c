@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -298,6 +298,16 @@ void defEnumClass(const enum_def *edef, output_struct *output)
   def = mputstr(def,
     "int as_int() const { return enum2int(enum_value); }\n"
     "void from_int(int p_val) { *this = p_val; }\n");
+  
+  /* TTCN-3 predefined function int2enum() */
+  def = mputstr(def, "void int2enum(int int_val);\n");
+  src = mputprintf(src, "void %s::int2enum(int int_val)\n"
+    "{\n"
+    "if (!is_valid_enum(int_val)) "
+    "TTCN_error(\"Assigning invalid numeric value %%d to a variable of "
+    "enumerated type %s.\", int_val);\n"
+    "enum_value = (%s)int_val;\n"
+    "}\n\n", name, dispname, enum_type);
 
   /* miscellaneous members */
   def = mputprintf(def, "operator %s() const;\n", enum_type);
@@ -354,12 +364,36 @@ void defEnumClass(const enum_def *edef, output_struct *output)
      "void %s::set_param(Module_Param& param)\n"
      "{\n"
      "  param.basic_check(Module_Param::BC_VALUE, \"enumerated value\");\n"
-     "  if (param.get_type()!=Module_Param::MP_Enumerated) param.type_error(\"enumerated value\", \"%s\");\n"
-     "  enum_value = str_to_enum(param.get_enumerated());\n"
-     "  if (!is_valid_enum(enum_value)) {\n "
+     "  Module_Param_Ptr mp = &param;\n"
+     "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+     /* enumerated values are also treated as references (containing only 1 name) by the parser;
+        first check if the reference name is a valid enumerated value */
+     "    char* enum_name = param.get_enumerated();\n"
+     /* get_enumerated() returns NULL if the reference contained more than one name */
+     "    enum_value = (enum_name != NULL) ? str_to_enum(enum_name) : %s;\n"
+     "    if (is_valid_enum(enum_value)) {\n"
+     "      return;\n"
+     "    }\n"
+     /* it's not a valid enum value => dereference it! */
+     "    mp = param.get_referenced_param();\n"
+     "  }\n"
+     "  if (mp->get_type()!=Module_Param::MP_Enumerated) param.type_error(\"enumerated value\", \"%s\");\n"
+     "  enum_value = str_to_enum(mp->get_enumerated());\n"
+     "  if (!is_valid_enum(enum_value)) {\n"
      "    param.error(\"Invalid enumerated value for type %s.\");\n"
      "  }\n"
-     "}\n\n", name, dispname, dispname);
+     "}\n\n", name, unknown_value, dispname, dispname);
+  
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf
+    (src,
+    "Module_Param* %s::get_param(Module_Param_Name& /* param_name */) const\n"
+    "{\n"
+    "  if (!is_bound()) {\n"
+    "    return new Module_Param_Unbound();\n"
+    "  }\n"
+    "  return new Module_Param_Enumerated(mcopystr(enum_to_str(enum_value)));\n"
+    "}\n\n", name);
 
   /* encoders/decoders */
   def = mputstr(def, "void encode_text(Text_Buf& text_buf) const;\n");
@@ -808,9 +842,10 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
   char *def = NULL, *src = NULL;
   const char *name = edef->name, *dispname = edef->dispname;
 
-  char *enum_type, *unbound_value;
+  char *enum_type, *unbound_value, *unknown_value;
   enum_type = mprintf("%s::enum_type", name);
   unbound_value = mprintf("%s::UNBOUND_VALUE", name);
+  unknown_value = mprintf("%s::UNKNOWN_VALUE", name);
 
   /* Class declaration */
   output->header.class_decls = mputprintf(output->header.class_decls,
@@ -1054,10 +1089,10 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "}\n\n", name, name, name);
 
   /* match operators */
-  def = mputprintf(def, "boolean match(%s other_value) const;\n", enum_type);
+  def = mputprintf(def, "boolean match(%s other_value, boolean legacy = FALSE) "
+    "const;\n", enum_type);
   src = mputprintf(src,
-    "boolean %s_template::match(%s other_value) "
-    "const\n"
+    "boolean %s_template::match(%s other_value, boolean) const\n"
     "{\n"
     "switch (template_selection) {\n"
     "case SPECIFIC_VALUE:\n"
@@ -1081,10 +1116,10 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "return FALSE;\n"
     "}\n\n", name, enum_type, dispname);
 
-  def = mputprintf(def, "boolean match(const %s& other_value) const;\n",
-                   name);
+  def = mputprintf(def, "boolean match(const %s& other_value, boolean legacy "
+    "= FALSE) const;\n", name);
   src = mputprintf(src,
-    "boolean %s_template::match(const %s& other_value) const\n"
+    "boolean %s_template::match(const %s& other_value, boolean) const\n"
     "{\n"
     "if (other_value.enum_value == %s) "
     "TTCN_error(\"Matching a template of enumerated type %s with an unbound "
@@ -1143,8 +1178,8 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
       "void copy_value(const Base_Type* other_value);\n"
       "Base_Template* clone() const;\n"
       "const TTCN_Typedescriptor_t* get_descriptor() const;\n"
-      "boolean matchv(const Base_Type* other_value) const;\n"
-      "void log_matchv(const Base_Type* match_value) const;\n");
+      "boolean matchv(const Base_Type* other_value, boolean legacy) const;\n"
+      "void log_matchv(const Base_Type* match_value, boolean legacy) const;\n");
     src = mputprintf(src,
       "void %s_template::valueofv(Base_Type* value) const "
         "{ *(static_cast<%s*>(value)) = valueof(); }\n"
@@ -1156,10 +1191,12 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
         "{ return new %s_template(*this); }\n"
       "const TTCN_Typedescriptor_t* %s_template::get_descriptor() const "
         "{ return &%s_descr_; }\n"
-      "boolean %s_template::matchv(const Base_Type* other_value) const "
-        "{ return match(*(static_cast<const %s*>(other_value))); }\n"
-      "void %s_template::log_matchv(const Base_Type* match_value) const "
-        " { log_match(*(static_cast<const %s*>(match_value))); }\n",
+      "boolean %s_template::matchv(const Base_Type* other_value, "
+        "boolean legacy) const "
+        "{ return match(*(static_cast<const %s*>(other_value)), legacy); }\n"
+      "void %s_template::log_matchv(const Base_Type* match_value, "
+        "boolean legacy) const "
+        " { log_match(*(static_cast<const %s*>(match_value)), legacy); }\n",
       name, name,
       name,
       name, name,
@@ -1196,11 +1233,10 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
      "log_ifpresent();\n"
      "}\n\n", name, name);
 
-  def = mputprintf(def, "void log_match(const %s& match_value) const;\n",
-                   name);
+  def = mputprintf(def, "void log_match(const %s& match_value, "
+    "boolean legacy = FALSE) const;\n", name);
   src = mputprintf(src,
-    "void %s_template::log_match(const %s& match_value) "
-    "const\n"
+    "void %s_template::log_match(const %s& match_value, boolean) const\n"
     "{\n"
     "match_value.log();\n"
     "TTCN_Logger::log_event_str(\" with \");\n"
@@ -1267,18 +1303,18 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "}\n\n", name, enum_type, name, dispname, name, dispname);
 
   /* TTCN-3 ispresent() function */
-  def = mputstr(def, "boolean is_present() const;\n");
+  def = mputstr(def, "boolean is_present(boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
-    "boolean %s_template::is_present() const\n"
+    "boolean %s_template::is_present(boolean legacy) const\n"
     "{\n"
     "if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;\n"
-    "return !match_omit();\n"
+    "return !match_omit(legacy);\n"
     "}\n\n", name);
 
   /* match_omit() */
-  def = mputstr(def, "boolean match_omit() const;\n");
+  def = mputstr(def, "boolean match_omit(boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
-    "boolean %s_template::match_omit() const\n"
+    "boolean %s_template::match_omit(boolean legacy) const\n"
     "{\n"
     "if (is_ifpresent) return TRUE;\n"
     "switch (template_selection) {\n"
@@ -1287,10 +1323,12 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "return TRUE;\n"
     "case VALUE_LIST:\n"
     "case COMPLEMENTED_LIST:\n"
+    "if (legacy) {\n"
     "for (unsigned int i=0; i<value_list.n_values; i++)\n"
     "if (value_list.list_value[i].match_omit())\n"
     "return template_selection==VALUE_LIST;\n"
     "return template_selection==COMPLEMENTED_LIST;\n"
+    "} // else fall through\n"
     "default:\n"
     "return FALSE;\n"
     "}\n"
@@ -1303,7 +1341,22 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "void %s_template::set_param(Module_Param& param)\n"
     "{\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"enumerated template\");\n"
-    "  switch (param.get_type()) {\n"
+    "  Module_Param_Ptr mp = &param;\n"
+    "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+    /* enumerated values are also treated as references (containing only 1 name) by the parser;
+       first check if the reference name is a valid enumerated value */
+    "    char* enum_name = param.get_enumerated();\n"
+    /* get_enumerated() returns NULL if the reference contained more than one name */
+    "    %s enum_val = (enum_name != NULL) ? %s::str_to_enum(enum_name) : %s;\n"
+    "    if (%s::is_valid_enum(enum_val)) {\n"
+    "      *this = enum_val;\n"
+    "      is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();\n"
+    "      return;\n"
+    "    }\n"
+    /* it's not a valid enum value => dereference it! */
+    "    mp = param.get_referenced_param();\n"
+    "  }\n"
+    "  switch (mp->get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
     "    break;\n"
@@ -1314,14 +1367,17 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "    *this = ANY_OR_OMIT;\n"
     "    break;\n"
     "  case Module_Param::MP_List_Template:\n"
-    "  case Module_Param::MP_ComplementList_Template:\n"
-    "    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());\n"
-    "    for (size_t p_i=0; p_i<param.get_size(); p_i++) {\n"
-    "      list_item(p_i).set_param(*param.get_elem(p_i));\n"
+    "  case Module_Param::MP_ComplementList_Template: {\n"
+    "    %s_template temp;\n"
+    "    temp.set_type(mp->get_type()==Module_Param::MP_List_Template ? "
+    "VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());\n"
+    "    for (size_t p_i=0; p_i<mp->get_size(); p_i++) {\n"
+    "      temp.list_item(p_i).set_param(*mp->get_elem(p_i));\n"
     "    }\n"
-    "    break;\n"
+    "    *this = temp;\n"
+    "    break; }\n"
     "  case Module_Param::MP_Enumerated: {\n"
-    "    %s enum_val = %s::str_to_enum(param.get_enumerated());\n"
+    "    %s enum_val = %s::str_to_enum(mp->get_enumerated());\n"
     "    if (!%s::is_valid_enum(enum_val)) {\n"
     "      param.error(\"Invalid enumerated value for type %s.\");\n"
     "    }\n"
@@ -1330,15 +1386,61 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "  default:\n"
     "    param.type_error(\"enumerated template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent();\n"
-    "}\n\n", name, enum_type, name, name, dispname, dispname);
+    "  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();\n"
+    "}\n\n", name, enum_type, name, unknown_value, name
+    , name, enum_type, name, name, dispname, dispname);
+
+  /* get_param() */
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf
+    (src,
+    "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
+    "{\n"
+    "  Module_Param* mp = NULL;\n"
+    "  switch (template_selection) {\n"
+    "  case UNINITIALIZED_TEMPLATE:\n"
+    "    mp = new Module_Param_Unbound();\n"
+    "    break;\n"
+    "  case OMIT_VALUE:\n"
+    "    mp = new Module_Param_Omit();\n"
+    "    break;\n"
+    "  case ANY_VALUE:\n"
+    "    mp = new Module_Param_Any();\n"
+    "    break;\n"
+    "  case ANY_OR_OMIT:\n"
+    "    mp = new Module_Param_AnyOrNone();\n"
+    "    break;\n"
+    "  case SPECIFIC_VALUE:\n"
+    "    mp = new Module_Param_Enumerated(mcopystr(%s::enum_to_str(single_value)));\n"
+    "    break;\n"
+    "  case VALUE_LIST:\n"
+    "  case COMPLEMENTED_LIST: {\n"
+    "    if (template_selection == VALUE_LIST) {\n"
+    "      mp = new Module_Param_List_Template();\n"
+    "    }\n"
+    "    else {\n"
+    "      mp = new Module_Param_ComplementList_Template();\n"
+    "    }\n"
+    "    for (size_t i = 0; i < value_list.n_values; ++i) {\n"
+    "      mp->add_elem(value_list.list_value[i].get_param(param_name));\n"
+    "    }\n"
+    "    break; }\n"
+    "  default:\n"
+    "    break;\n"
+    "  }\n"
+    "  if (is_ifpresent) {\n"
+    "    mp->set_ifpresent();\n"
+    "  }\n"
+    "  return mp;\n"
+    "}\n\n", name, name);
 
   if (!use_runtime_2) {
     /* check template restriction */
     def = mputstr(def, "void check_restriction(template_res t_res, "
-      "const char* t_name=NULL) const;\n");
+      "const char* t_name=NULL, boolean legacy = FALSE) const;\n");
     src = mputprintf(src,
-      "void %s_template::check_restriction(template_res t_res, const char* t_name) const\n"
+      "void %s_template::check_restriction(template_res t_res, const char* t_name,\n"
+      "boolean legacy) const\n"
       "{\n"
       "if (template_selection==UNINITIALIZED_TEMPLATE) return;\n"
       "switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {\n"
@@ -1350,7 +1452,7 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
         "template_selection==SPECIFIC_VALUE)) return;\n"
       "break;\n"
       "case TR_PRESENT:\n"
-      "if (!match_omit()) return;\n"
+      "if (!match_omit(legacy)) return;\n"
       "break;\n"
       "default:\n"
       "return;\n"
@@ -1370,4 +1472,5 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
 
   Free(enum_type);
   Free(unbound_value);
+  Free(unknown_value);
 }

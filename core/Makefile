@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2000-2014 Ericsson Telecom AB
+# Copyright (c) 2000-2015 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
@@ -85,12 +85,12 @@ Module_list.cc Objid.cc Octetstring.cc Parallel_main.cc Port.cc RAW.cc \
 Runtime.cc Single_main.cc Snapshot.cc Struct_of.cc Template.cc TEXT.cc \
 Textbuf.cc Timer.cc Param_Types.cc Universal_charstring.cc \
 Verdicttype.cc XER.cc XmlReader.cc TitanLoggerControlImpl.cc TCov.cc JSON.cc \
-Profiler.cc $(RT2_SOURCES)
+Profiler.cc ProfilerTools.cc ProfMerge_main.cc $(RT2_SOURCES)
 
 # Keep GENERATED_SOURCES at the beginning. This may speed up parallel builds
 # by starting early the compilation of the largest files.
 SOURCES := $(GENERATED_SOURCES) $(STATIC_SOURCES)
-
+	
 
 ifeq ($(FUNCTION_TEST_RUNTIME), yes)
   RT2_SUFFIX := -rt2
@@ -124,6 +124,9 @@ endif
 
 
 OBJECTS := $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(SOURCES)))
+	
+PROFMERGE_OBJECTS := ProfMerge_main.o ProfilerTools.profmerge.o \
+	../common/JSON_Tokenizer.o ../common/memory.o
 
 COMMON_OBJECTS := $(addprefix ../common/, memory.o pattern_la.o pattern_p.o \
 	            config_preproc.o config_preproc_la.o config_preproc_p.tab.o \
@@ -136,6 +139,7 @@ endif
 
 ifeq ($(LICENSING), yes)
   COMMON_OBJECTS += ../common/license.o
+  PROFMERGE_OBJECTS += ../common/license.o
 endif
 
 ifdef REGEX_DIR
@@ -146,10 +150,10 @@ ifeq ($(USAGE_STATS), yes)
   COMMON_OBJECTS += ../common/usage_stats.o
 endif
 
-LIBRARY_OBJECTS_NOMAIN := $(filter-out Single_main.o Parallel_main.o, \
+LIBRARY_OBJECTS_NOMAIN := $(filter-out Single_main.o Parallel_main.o ProfMerge_main.o, \
   $(OBJECTS)) $(COMMON_OBJECTS)
 
-TOBECLEANED := LoggerPlugin_static.o LoggerPlugin_dynamic.o
+TOBECLEANED := LoggerPlugin_static.o LoggerPlugin_dynamic.o ProfilerTools.profmerge.o
 
 DEPFILES := $(patsubst %.cc,%.d,$(patsubst %.c,%.d,$(SOURCES)))
 
@@ -163,7 +167,7 @@ Port.hh Event_Handler.hh Struct_of.hh Array.hh Optional.hh Textbuf.hh Encdec.hh 
 Module_list.hh Parameters.h Addfunc.hh RAW.hh BER.hh TEXT.hh ASN_Null.hh \
 ASN_Any.hh ASN_External.hh ASN_EmbeddedPDV.hh ASN_CharacterString.hh XER.hh \
 XmlReader.hh cversion.h TitanLoggerControl.ttcn TitanLoggerApi.xsd Vector.hh \
-JSON.hh Profiler.hh RefdIndex.hh
+JSON.hh Profiler.hh RefdIndex.hh ProfilerTools.hh
 # Copied during "make install"
 
 ifdef REGEX_DIR
@@ -175,6 +179,9 @@ LIBRARY := libttcn3$(RT2_SUFFIX).a
 PARALLEL_LIBRARY := libttcn3$(RT2_SUFFIX)-parallel.a
 SHAREDLIB := libttcn3$(RT2_SUFFIX)-dynamic.so
 PARALLEL_SHAREDLIB := libttcn3$(RT2_SUFFIX)-parallel-dynamic.so
+	
+# Executables
+PROGRAMS := ttcn3_profmerge$(EXESUFFIX)
 
 TARGETS := $(LIBRARY) $(PARALLEL_LIBRARY)
 
@@ -200,18 +207,16 @@ ifneq ($(FUNCTION_TEST_RUNTIME), yes)
 endif
 
 # Only for testing the consistency of libraries:
-#PROGRAMS :=
-
-PROGRAMS := single$(RT2_SUFFIX)$(EXESUFFIX) parallel$(RT2_SUFFIX)$(EXESUFFIX)
+TEST_PROGRAMS := single$(RT2_SUFFIX)$(EXESUFFIX) parallel$(RT2_SUFFIX)$(EXESUFFIX)
 ifeq ($(DYNAMIC_LINKING), yes)
-PROGRAMS += single$(RT2_SUFFIX)-dynamic$(EXESUFFIX) parallel$(RT2_SUFFIX)-dynamic$(EXESUFFIX)
+TEST_PROGRAMS += single$(RT2_SUFFIX)-dynamic$(EXESUFFIX) parallel$(RT2_SUFFIX)-dynamic$(EXESUFFIX)
 endif
 ifneq ($(FUNCTION_TEST_RUNTIME), yes)
-PROGRAMS += gccversion$(EXESUFFIX)
+TEST_PROGRAMS += gccversion$(EXESUFFIX)
 endif
 
 
-TOBECLEANED += $(PROGRAMS) cversion.h $(GENERATED_MODULES)
+TOBECLEANED += $(TEST_PROGRAMS) cversion.h $(GENERATED_MODULES)
 
 ifdef REGEX_DIR
   CPPFLAGS += -I$(REGEX_DIR)/include
@@ -226,12 +231,14 @@ endif
 
 CPPFLAGS += -I$(COMMON_DIR)
 
+MANPAGES := ttcn3_profmerge.1
+
 # # # # # # # # # targets
-all: $(TARGETS) $(PROGRAMS)
+all: $(TARGETS) $(PROGRAMS) $(TEST_PROGRAMS)
 
 run: all
 # Verify that the executables are runnable.
-	for p in $(filter-out gccversion%,$(PROGRAMS)); do echo $$p; LD_LIBRARY_PATH=.:$$LD_LIBRARY_PATH ./$$p -l; if [ $$? -ne 0 ] ; then exit $$?; fi done
+	for p in $(filter-out gccversion%,$(TEST_PROGRAMS)); do echo $$p; LD_LIBRARY_PATH=.:$$LD_LIBRARY_PATH ./$$p -l; if [ $$? -ne 0 ] ; then exit $$?; fi done
 
 # xsd -> ttcn
 $(GENERATED_MODULES): $(SCHEMAS) ../xsdconvert/xsd2ttcn$(EXESUFFIX)
@@ -239,7 +246,7 @@ $(GENERATED_MODULES): $(SCHEMAS) ../xsdconvert/xsd2ttcn$(EXESUFFIX)
 	sed -e 's/XSD.String/charstring/g;s/XSD.AnySimpleType/charstring/g;s/XSD.Integer/integer/g;s/XSD.Float/float/g;s/XSD.Double/float/g;s/XSD.Boolean/boolean/g;s/import from XSD all;//g' TitanLoggerApi.ttcn >TitanLoggerApi.ttcn_
 	mv TitanLoggerApi.ttcn_ TitanLoggerApi.ttcn
 
-install: $(TARGETS)
+install: $(TARGETS) $(PROGRAMS)
 ifeq ($(DYNAMIC_LINKING), yes)
   ifeq ($(DEBUG), no)
 	$(STRIP) $(SHAREDLIB) $(PARALLEL_SHAREDLIB)
@@ -250,6 +257,10 @@ endif
 ifneq ($(FUNCTION_TEST_RUNTIME), yes)
 	mkdir -p $(INCDIR)
 	cp $(HEADERS) $(INCDIR)
+	mkdir -p $(BINDIR)
+	cp $(PROGRAMS) $(BINDIR)
+	mkdir -p $(MANDIR)/man1
+	cp $(MANPAGES) $(MANDIR)/man1
 ifeq ($(DYNAMIC_LINKING), yes)
 ifneq ($(OPENSSL_DIR), default)
 	(cd $(OPENSSL_DIR)/lib && tar -cf - libcrypto.so*) |\
@@ -277,6 +288,9 @@ parallel$(RT2_SUFFIX)$(EXESUFFIX): $(PARALLEL_LIBRARY)
 
 parallel$(RT2_SUFFIX)-dynamic$(EXESUFFIX): Parallel_main.o $(PARALLEL_SHAREDLIB)
 	$(CXX) $(LDFLAGS) -o $@ $^ -lcrypto $($(PLATFORM)_LIBS)
+	
+ttcn3_profmerge$(EXESUFFIX): $(PROFMERGE_OBJECTS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LICENSE_LIBS) $($(PLATFORM)_LIBS)
 
 # # # # static link libraries
 $(LIBRARY): $(LIBRARY_OBJECTS_NOMAIN) LoggerPlugin_static.o Single_main.o
@@ -368,7 +382,7 @@ $(PREGENERATED_SOURCES).compiled:: $(PREGENERATOR_MODULES)
 	mkdir -p $(APIDIR)
 	../compiler2/compiler$(EXESUFFIX) -F $(TTCN_COMPILER_FLAGS) $^ - $?
 	touch $@
-
+	
 include ../Makefile.genrules
 
 # These are not in STATIC_SOURCES, so vpath is not created for them

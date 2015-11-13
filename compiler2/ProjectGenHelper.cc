@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -226,7 +226,7 @@ std::string ProjectDescriptor::setRelativePathTo(const std::string& absPathTo)
   }
   if (length == i) {  // got subdirectory
     if (projectAbsWorkingDir == absPathTo) {
-      return std::string("."); // the same pathes were given 
+      return std::string("."); // the same paths were given 
     }
     else if ((projectAbsWorkingDir.size() > absPathTo.size() && projectAbsWorkingDir.at(length) == SEPARATOR) ||
        (projectAbsWorkingDir.size() < absPathTo.size() && absPathTo.at(length) == SEPARATOR))
@@ -495,22 +495,22 @@ void ProjectGenHelper::getExternalLibs(std::vector<const char*>& extLibs)
   }
 }
 
-void ProjectGenHelper::getExternalLibSearchPathes(std::vector<const char*>& extLibPathes)
+void ProjectGenHelper::getExternalLibSearchPaths(std::vector<const char*>& extLibPaths)
 {
   if (!Zflag) return;
-  std::map<const char*, const char*, CompareStr> libPathes;
+  std::map<const char*, const char*, CompareStr> libPaths;
   for (std::map<std::string, ProjectDescriptor>::iterator it = projs.begin(); it != projs.end(); ++it) {
     if ((it->second).numOfLibSearchPaths() > 0) {
       for (size_t i = 0; i < (it->second).numOfLibSearchPaths(); ++i) {
         const char* key = (it->second).getLibSearchPath(i);
         const char* value = (it->second).getProjectName().c_str();
-        libPathes.insert(std::pair<const char*,const char*>(key,value)); // filter duplicates
+        libPaths.insert(std::pair<const char*,const char*>(key,value)); // filter duplicates
       }
     }
   }
   std::map<const char*, const char*>::iterator it;
-  for (it = libPathes.begin(); it != libPathes.end(); ++it) {
-    extLibPathes.push_back(it->first);
+  for (it = libPaths.begin(); it != libPaths.end(); ++it) {
+    extLibPaths.push_back(it->first);
   }
 }
 

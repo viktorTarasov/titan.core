@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -334,11 +334,17 @@ IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
 {NUMBER} {
 	yylval.int_val = NULL;
   BN_dec2bn(&yylval.int_val, *yytext == '+' ? yytext + 1 : yytext);
+  if (YY_START == SC_MODULE_PARAMETERS) {
+    RETURN(MPNumber);
+  }
 	RETURN(Number);
 }
 
 {FLOAT}	{
 	yylval.float_val = atof(yytext);
+  if (YY_START == SC_MODULE_PARAMETERS) {
+    RETURN(MPFloat);
+  }
 	RETURN(Float);
 }
 
@@ -375,6 +381,9 @@ IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
 
 {CHARSTRING}	{
   yylval.str_val = mcopystrn(yytext, yyleng);
+  if (YY_START == SC_MODULE_PARAMETERS) {
+    RETURN(MPCstring);
+  }
   RETURN(Cstring);
 }
 
@@ -656,7 +665,7 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
 
 <SC_MODULE_PARAMETERS>{ASN1LOWERIDENTIFIER} {
   char *ttcn3_id = (char*)Malloc(yyleng + 1);
-  for (int i = 0; i < yyleng; i++) {
+  for (size_t i = 0; i < yyleng; i++) {
     if (yytext[i] == '-') ttcn3_id[i] = '_';
     else ttcn3_id[i] = yytext[i];
   }
@@ -670,7 +679,7 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
 
 <SC_GROUPS,SC_COMPONENTS,SC_MAIN_CONTROLLER>{DNSNAME}|{IPV6} {
   yylval.str_val = (char*)Malloc(yyleng + 1);
-  for (int i = 0; i < yyleng; i++) yylval.str_val[i] = tolower(yytext[i]);
+  for (size_t i = 0; i < yyleng; i++) yylval.str_val[i] = tolower(yytext[i]);
   yylval.str_val[yyleng] = '\0';
   RETURN(DNSName);
 }
@@ -728,6 +737,9 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
   if (whether_update_buffer())
     cfg->config_read_buffer = mputprintf(cfg->config_read_buffer, "%s ", int_val_str);
   OPENSSL_free(int_val_str);
+  if (YY_START == SC_MODULE_PARAMETERS) {
+    return MPNumber;
+  }
   return Number;
 }
 
@@ -752,6 +764,9 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
   Free(macroname);
   if (whether_update_buffer()) cfg->config_read_buffer =
     mputprintf(cfg->config_read_buffer, "%f ", yylval.float_val);
+  if (YY_START == SC_MODULE_PARAMETERS) {
+    return MPFloat;
+  }
   return Float;
 }
 
@@ -800,6 +815,9 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
         "name `%s'", macroname);
     yylval.str_val = memptystr();
     Free(macroname);
+    if (YY_START == SC_MODULE_PARAMETERS) {
+      return MPCstring;
+    }
     return Cstring;
   }
 
@@ -830,6 +848,9 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
     }
     Free(macroname);
     yylval.str_val = mcopystr(macrovalue);
+    if (YY_START == SC_MODULE_PARAMETERS) {
+      return MPCstring;
+    }
     return Cstring;
   }
 }

@@ -1,3 +1,11 @@
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2000-2015 Ericsson Telecom AB
+// All rights reserved. This program and the accompanying materials
+// are made available under the terms of the Eclipse Public License v1.0
+// which accompanies this distribution, and is available at
+// http://www.eclipse.org/legal/epl-v10.html
+///////////////////////////////////////////////////////////////////////////////
+
 #include <cstring>
 
 #include "JSON_Tokenizer.hh"
@@ -371,3 +379,50 @@ int JSON_Tokenizer::put_next_token(json_token_t p_token, const char* p_token_str
   return buf_len - start_len;
 }
 
+
+char* convert_to_json_string(const char* str)
+{
+  char* ret_val = mcopystrn("\"", 1);
+  // control characters (like \n) cannot be placed in a JSON string, replace
+  // them with JSON metacharacters
+  // double quotes and backslashes need to be escaped, too
+  size_t str_len = strlen(str);
+  for (size_t i = 0; i < str_len; ++i) {
+    switch (str[i]) {
+    case '\n':
+      ret_val = mputstrn(ret_val, "\\n", 2);
+      break;
+    case '\r':
+      ret_val = mputstrn(ret_val, "\\r", 2);
+      break;
+    case '\t':
+      ret_val = mputstrn(ret_val, "\\t", 2);
+      break;
+    case '\f':
+      ret_val = mputstrn(ret_val, "\\f", 2);
+      break;
+    case '\b':
+      ret_val = mputstrn(ret_val, "\\b", 2);
+      break;
+    case '\"':
+      ret_val = mputstrn(ret_val, "\\\"", 2);
+      break;
+    case '\\':
+      ret_val = mputstrn(ret_val, "\\\\", 2);
+      break;
+    default:
+      if (str[i] < 32 && str[i] > 0) {
+        // use the JSON \uHHHH notation for other control characters
+        // (this is just for esthetic reasons, these wouldn't break the JSON 
+        // string format)
+        ret_val = mputprintf(ret_val, "\\u00%d%c", str[i] / 16,
+          (str[i] % 16 < 10) ? (str[i] % 16 + '0') : (str[i] % 16 - 10 + 'A'));
+      }
+      else {
+        ret_val = mputc(ret_val, str[i]);
+      }
+      break;
+    }
+  }
+  return mputstrn(ret_val, "\"", 1);
+}

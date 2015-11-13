@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,7 +39,7 @@ DECLARE_EXER_ENCODERS(ProductA, prodA);
 // Decoder function which treats ET_INVAL_MSG as a warning.
 // Everything else is still a dynamic testcase error.
 external function exer_dec_prodA_expect_inval(in octetstring o, out ProductA pa) return integer
-with { extension "prototype(backtrack) decode(XER:XER_EXTENDED) errorbehavior(INVAL_MSG:WARNING)" }
+with { extension "prototype(backtrack) decode(XER:XER_EXTENDED) errorbehavior(INVAL_MSG:WARNING,INCOMPL_MSG:WARNING)" }
 
 
 const ProductA shoes := {

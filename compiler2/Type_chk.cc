@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -1522,7 +1522,7 @@ void Type::chk_xer_untagged()
         // found the component
         if (cf->get_is_optional() || cf->get_defval() != 0) {
           error("Type with final encoding attribute UNTAGGED"
-            " shall not have OPIONAL or DEFAULT");
+            " shall not have OPTIONAL or DEFAULT");
         }
         break;
       }
@@ -3938,6 +3938,10 @@ bool Type::chk_this_value_Choice(Value *value, Common::Assignment *lhs,
     }
     // no break
   case Value::V_CHOICE: {
+    if (!value->is_asn1() && typetype == T_OPENTYPE) {
+      // allow the alternatives of open types as both lower and upper identifiers
+      value->set_alt_name_to_lowercase();
+    }
     const Identifier& alt_name = value->get_alt_name();
     if(!has_comp_withName(alt_name)) {
       if (value->is_asn1()) {
@@ -5354,7 +5358,8 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
       t_comp->set_my_governor(this);
       chk_this_template_ref(t_comp);
       self_ref |= chk_this_template_generic(t_comp, INCOMPLETE_NOT_ALLOWED,
-        allow_omit, ANY_OR_OMIT_ALLOWED, sub_chk, implicit_omit, lhs);
+        omit_in_value_list ? OMIT_ALLOWED : OMIT_NOT_ALLOWED,
+        ANY_OR_OMIT_ALLOWED, sub_chk, implicit_omit, lhs);
       if(temptype==Ttcn::Template::COMPLEMENTED_LIST &&
          t_comp->get_template_refd_last()->get_templatetype() ==
          Ttcn::Template::ANY_OR_OMIT)
@@ -5724,10 +5729,10 @@ void Type::chk_this_template_Int_Real(Template *t)
         FATAL_ERROR("Type::chk_this_template_Int_Real()");
       }
     }
-    if (v_lower && !v_upper) {
+    if (v_lower && !vr->get_max_v()) {
       chk_range_boundary_infinity(v_lower, true);
     }
-    if (!v_lower && v_upper) {
+    if (!vr->get_min_v() && v_upper) {
       chk_range_boundary_infinity(v_upper, false);
     }
     break;}
@@ -5761,6 +5766,10 @@ bool Type::chk_this_template_Choice(Template *t, namedbool is_modified,
     // to have more than one here.
     for (size_t i = 0; i < nof_nts; i++) {
       Ttcn::NamedTemplate *nt = t->get_namedtemp_byIndex(i);
+      if (typetype == T_OPENTYPE) {
+        // allow the alternatives of open types as both lower and upper identifiers
+        nt->set_name_to_lowercase();
+      }
       const Identifier& nt_name = nt->get_name();
 
       if (!has_comp_withName(nt_name)) {

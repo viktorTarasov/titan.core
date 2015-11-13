@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -2260,6 +2260,9 @@ void TTCN_Runtime::process_create_mtc()
       "state.");
     return;
   }
+  
+  // let the HC's TTCN-3 Profiler know of the MTC
+  ttcn3_prof.add_component(MTC_COMPREF);
 
   // clean Emergency log buffer before fork, to avoid duplication
   TTCN_Logger::ring_buffer_dump(false);
@@ -2307,7 +2310,7 @@ void TTCN_Runtime::process_create_ptc(component component_reference,
   }
   
   // let the HC's TTCN-3 Profiler know of this new PTC
-  ttcn3_prof.add_ptc(component_reference);
+  ttcn3_prof.add_component(component_reference);
 
   // clean Emergency log buffer before fork, to avoid duplication
   TTCN_Logger::ring_buffer_dump(false);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -176,6 +176,25 @@ namespace Ttcn {
       break;
     default:
       str += "<unknown sub-reference>";
+    }
+  }
+  
+  void FieldOrArrayRef::set_field_name_to_lowercase()
+  {
+    if (ref_type != FIELD_REF) FATAL_ERROR("FieldOrArrayRef::set_field_name_to_lowercase()");
+    string new_name = u.id->get_name();
+    if (isupper(new_name[0])) {
+      new_name[0] = tolower(new_name[0]);
+      if (new_name[new_name.size() - 1] == '_') {
+        // an underscore is inserted at the end of the field name if it's
+        // a basic type's name (since it would conflict with the class generated
+        // for that type)
+        // remove the underscore, it won't conflict with anything if its name
+        // starts with a lowercase letter
+        new_name.replace(new_name.size() - 1, 1, "");
+      }
+      delete u.id;
+      u.id = new Identifier(Identifier::ID_NAME, new_name);
     }
   }
 
@@ -706,7 +725,9 @@ namespace Ttcn {
 
       expr->expr = mputprintf(expr->expr, "%s", tmp_generalid_str);
     } else {
-      expr->expr = mputprintf(expr->expr, "%s.%s()", ass_id_str, isbound ? "is_bound":"is_present");
+      expr->expr = mputprintf(expr->expr, "%s.%s(%s)", ass_id_str,
+        isbound ? "is_bound":"is_present",
+        (!isbound && is_template && omit_in_value_list) ? "TRUE" : "");
     }
   }
 
@@ -942,28 +963,34 @@ namespace Ttcn {
 
     bool is_template;
     switch (ass->get_asstype()) {
+    case Common::Assignment::A_TEMPLATE:
+      if (NULL == ass->get_FormalParList()) {
+        // not a parameterized template
+        is_template = true;
+        break;
+      }
+      // else fall through
     case Common::Assignment::A_CONST:
     case Common::Assignment::A_EXT_CONST:
     case Common::Assignment::A_ALTSTEP:
     case Common::Assignment::A_TESTCASE:
     case Common::Assignment::A_FUNCTION:
     case Common::Assignment::A_EXT_FUNCTION:
+    case Common::Assignment::A_FUNCTION_RVAL:
+    case Common::Assignment::A_EXT_FUNCTION_RVAL:
+    case Common::Assignment::A_FUNCTION_RTEMP:
+    case Common::Assignment::A_EXT_FUNCTION_RTEMP:
       generate_code(expr);
       return;
     case Common::Assignment::A_MODULEPAR:
     case Common::Assignment::A_VAR:
-    case Common::Assignment::A_FUNCTION_RVAL:
-    case Common::Assignment::A_EXT_FUNCTION_RVAL:
     case Common::Assignment::A_PAR_VAL_IN:
     case Common::Assignment::A_PAR_VAL_OUT:
     case Common::Assignment::A_PAR_VAL_INOUT: {
       is_template = false;
       break; }
     case Common::Assignment::A_MODULEPAR_TEMP:
-    case Common::Assignment::A_TEMPLATE:
     case Common::Assignment::A_VAR_TEMPLATE:
-    case Common::Assignment::A_FUNCTION_RTEMP:
-    case Common::Assignment::A_EXT_FUNCTION_RTEMP:
     case Common::Assignment::A_PAR_TEMPL_IN:
     case Common::Assignment::A_PAR_TEMPL_OUT:
     case Common::Assignment::A_PAR_TEMPL_INOUT: {
@@ -1632,10 +1659,12 @@ namespace Ttcn {
       if (!covered) im->generate_code(target);
     }
     if (base_lib_needed) {
-      // if no real import was found the base library definitions has to be
-      // #include'd
-      target->header.includes = mputstr(target->header.includes,
-        "#include <TTCN3.hh>\n");
+      // if no real import was found the base library definitions have to be
+      // #include'd (also, make sure this is the first include)
+      char* temp = target->header.includes;
+      target->header.includes = mcopystr("#include <TTCN3.hh>\n");
+      target->header.includes = mputstr(target->header.includes, temp);
+      Free(temp);
     }
   }
 
@@ -3585,6 +3614,10 @@ namespace Ttcn {
       "modulepar_%s.set_param(param);\n"
       "return TRUE;\n"
       "} else ", dispname, name);
+    target->functions.get_param = mputprintf(target->functions.get_param,
+      "if (!strcmp(par_name, \"%s\")) {\n"
+      "return modulepar_%s.get_param(param_name);\n"
+      "} else ", dispname, name);
 
     if (target->functions.log_param) {
       // this is not the first modulepar
@@ -3752,6 +3785,10 @@ namespace Ttcn {
       "if (!strcmp(par_name, \"%s\")) {\n"
       "modulepar_%s.set_param(param);\n"
       "return TRUE;\n"
+      "} else ", dispname, name);
+    target->functions.get_param = mputprintf(target->functions.get_param,
+      "if (!strcmp(par_name, \"%s\")) {\n"
+      "return modulepar_%s.get_param(param_name);\n"
       "} else ", dispname, name);
 
     if (target->functions.log_param) {
@@ -3922,7 +3959,7 @@ namespace Ttcn {
       Error_Context ec(this, "While checking template restriction `%s'",
                        Template::get_restriction_name(template_restriction));
       gen_restriction_check =
-        body->chk_restriction("template definition", template_restriction);
+        body->chk_restriction("template definition", template_restriction, body);
       if (fp_list && template_restriction!=TR_PRESENT) {
         size_t nof_fps = fp_list->get_nof_fps();
         for (size_t i=0; i<nof_fps; i++) {
@@ -4656,7 +4693,7 @@ namespace Ttcn {
         OMIT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, IMPLICIT_OMIT, 0);
       gen_restriction_check =
         initial_value->chk_restriction("template variable definition",
-                                       template_restriction);
+                                       template_restriction, initial_value);
       if (!semantic_check_only) {
         initial_value->set_genname_recursive(get_genname());
         initial_value->set_code_section(GovernedSimple::CS_INLINE);
@@ -7787,7 +7824,8 @@ namespace Ttcn {
     if (template_restriction!=TR_NONE) {
       bool needs_runtime_check =
         ret_val->get_TemplateInstance()->chk_restriction(
-          "template formal parameter", template_restriction);
+          "template formal parameter", template_restriction,
+          ret_val->get_TemplateInstance());
       if (needs_runtime_check)
         ret_val->set_gen_restriction_check(template_restriction);
     }
@@ -7887,7 +7925,7 @@ namespace Ttcn {
         case A_PAR_TEMPL_OUT:
         case A_PAR_TEMPL_INOUT: {
           FormalPar* fp = dynamic_cast<FormalPar*>(ass);
-          if (!fp) FATAL_ERROR("Template::chk_restriction_refd()");
+          if (!fp) FATAL_ERROR("FormalPar::chk_actual_par_by_ref()");
           refd_tr = fp->get_template_restriction();
         } break;
         default:

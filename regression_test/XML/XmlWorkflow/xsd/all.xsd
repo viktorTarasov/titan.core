@@ -1,69 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <!--
- Copyright (c) 2000-2014 Ericsson Telecom AB
+ Copyright (c) 2000-2015 Ericsson Telecom AB
 
  All rights reserved. This program and the accompanying materials
  are made available under the terms of the Eclipse Public License v1.0
  which accompanies this distribution, and is available at
  http://www.eclipse.org/legal/epl-v10.html
  -->
-<schema xmlns="http://www.w3.org/2001/XMLSchema"
-xmlns:ns="www.example.org"
-targetNamespace="www.example.org">
+<xsd:schema xmlns="http://www.w3.org/2001/XMLSchema"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:this="www.example.org/all"
+targetNamespace="www.example.org/all">
 
-<attribute name="attrGlobal" type="token"/>
+<xsd:attribute name="attrGlobal" type="token"/>
 
-<attributeGroup name="attrGroup">
-	<attribute name="attrInGroup2" type="token"/>
-	<attribute name="attrInGroup1" type="token"/>
-</attributeGroup>
+<xsd:attributeGroup name="attrGroup">
+	<xsd:attribute name="attrInGroup2" type="token"/>
+	<xsd:attribute name="attrInGroup1" type="token"/>
+</xsd:attributeGroup>
 
 
-<annotation><documentation xml:lang="EN">All, mandatory</documentation></annotation>
+<xsd:annotation><xsd:documentation xml:lang="EN">All, mandatory</xsd:documentation></xsd:annotation>
 
-<complexType name="e29a"> 
-	<all>
-		<element name="foo" type="integer"/>
-		<element name="bar" type="float"/>
-		<element name="ding" type="string"/>
-	</all>
-</complexType>
+<xsd:complexType name="e29a"> 
+	<xsd:all>
+		<xsd:element name="foo" type="integer"/>
+		<xsd:element name="bar" type="float"/>
+		<xsd:element name="ding" type="string"/>
+	</xsd:all>
+</xsd:complexType>
 
-<complexType name="e29aAndAttributes"> 
-	<all>
-		<element name="foo" type="integer"/>
-		<element name="bar" type="float"/>
-		<element name="ding" type="string"/>
-	</all>
-	<attribute name="attrLocal" type="integer"/>
-	<attribute ref="ns:attrGlobal"/>
-	<attributeGroup ref="ns:attrGroup"/>
-</complexType>
+<xsd:complexType name="e29aAndAttributes"> 
+	<xsd:all>
+		<xsd:element name="foo" type="integer"/>
+		<xsd:element name="bar" type="float"/>
+		<xsd:element name="ding" type="string"/>
+	</xsd:all>
+	<xsd:attribute name="attrLocal" type="integer"/>
+	<xsd:attribute ref="this:attrGlobal"/>
+	<xsd:attributeGroup ref="this:attrGroup"/>
+</xsd:complexType>
 
-<annotation><documentation xml:lang="EN">All, optional</documentation></annotation>
+<xsd:annotation><xsd:documentation xml:lang="EN">All, optional</xsd:documentation></xsd:annotation>
 
-<complexType name="e29bAndAttributes"> 
-	<all minOccurs="0">
-		<element name="foo" type="integer"/>
-		<element name="bar" type="float"/>
-		<element name="ding" type="string"/>
-	</all>
-	<attribute name="attrLocal" type="integer"/>
-	<attribute ref="ns:attrGlobal"/>
-	<attributeGroup ref="ns:attrGroup"/>
-</complexType>
+<xsd:complexType name="e29bAndAttributes"> 
+	<xsd:all minOccurs="0">
+		<xsd:element name="foo" type="integer"/>
+		<xsd:element name="bar" type="float"/>
+		<xsd:element name="ding" type="string"/>
+	</xsd:all>
+	<xsd:attribute name="attrLocal" type="integer"/>
+	<xsd:attribute ref="this:attrGlobal"/>
+	<xsd:attributeGroup ref="this:attrGroup"/>
+</xsd:complexType>
 
-<annotation><documentation xml:lang="EN">All, some elements are optional</documentation></annotation>
+<xsd:annotation><xsd:documentation xml:lang="EN">All, some elements are optional</xsd:documentation></xsd:annotation>
 
-<complexType name="e29cAndAttributes"> 
-	<all>
-		<element name="foo" type="integer"/>
-		<element name="bar" type="float" minOccurs="0"/>
-		<element name="ding" type="string"/>
-	</all>
-	<attribute name="attrLocal" type="integer"/>
-	<attribute ref="ns:attrGlobal"/>
-	<attributeGroup ref="ns:attrGroup"/>
-</complexType>
+<xsd:complexType name="e29cAndAttributes"> 
+	<xsd:all>
+		<xsd:element name="foo" type="integer"/>
+		<xsd:element name="bar" type="float" minOccurs="0"/>
+		<xsd:element name="ding" type="string"/>
+	</xsd:all>
+	<xsd:attribute name="attrLocal" type="integer"/>
+	<xsd:attribute ref="this:attrGlobal"/>
+	<xsd:attributeGroup ref="this:attrGroup"/>
+</xsd:complexType>
 
-</schema>
+<xsd:element name="e29cAndAttributesReferenceOptional">
+	<xsd:complexType>
+		<xsd:group ref="this:e29a" minOccurs="0"/>
+		<xsd:attribute name="attr" type="string" />
+	</xsd:complexType>
+</xsd:element>  
+
+</xsd:schema>

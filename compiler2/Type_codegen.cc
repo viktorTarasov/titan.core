@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -650,7 +650,12 @@ void Type::generate_code_rawdescriptor(output_struct *target)
     "extern const TTCN_RAWdescriptor_t %s_raw_;\n", gennameown_str);
   char *str = mprintf("const TTCN_RAWdescriptor_t %s_raw_ = {",
     gennameown_str);
-  str = mputprintf(str, "%d,", rawattrib->fieldlength);
+  if (rawattrib->intx) {
+    str = mputstr(str, "RAW_INTX,");
+  }
+  else {
+    str = mputprintf(str, "%d,", rawattrib->fieldlength);
+  }
   if (rawattrib->comp == XDEFCOMPL) str = mputstr(str, "SG_2COMPL,");
   else if (rawattrib->comp == XDEFSIGNBIT) str = mputstr(str, "SG_SG_BIT,");
   else str = mputstr(str, "SG_NO,");
@@ -967,19 +972,20 @@ void Type::generate_code_jsondescriptor(output_struct *target)
   
   if (NULL == jsonattrib) {
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "const TTCN_JSONdescriptor_t %s_json_ = { false, NULL, false, NULL };\n"
+      "const TTCN_JSONdescriptor_t %s_json_ = { false, NULL, false, NULL, false };\n"
       , get_genname_own().c_str());
   } else {
     char* alias = jsonattrib->alias ? mputprintf(NULL, "\"%s\"", jsonattrib->alias) : NULL;
     char* def_val = jsonattrib->default_value ?
       mputprintf(NULL, "\"%s\"", jsonattrib->default_value) : NULL;
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "const TTCN_JSONdescriptor_t %s_json_ = { %s, %s, %s, %s };\n"
+      "const TTCN_JSONdescriptor_t %s_json_ = { %s, %s, %s, %s, %s };\n"
       , get_genname_own().c_str() 
       , jsonattrib->omit_as_null ? "true" : "false"
       , alias ? alias : "NULL"
       , jsonattrib->as_value ? "true" : "false"
-      , def_val ? def_val : "NULL");
+      , def_val ? def_val : "NULL"
+      , jsonattrib->metainfo_unbound ? "true" : "false");
     Free(alias);
     Free(def_val);
   }
@@ -1098,6 +1104,25 @@ void Type::generate_code_Choice(output_struct *target)
   sdef.opentype_outermost = get_is_opentype_outermost();
   sdef.ot = generate_code_ot(pool);
   sdef.nElements = get_nof_comps();
+  sdef.isOptional = false;
+  if (parent_type != NULL) {
+    switch (parent_type->typetype) {
+    case T_SEQ_T:
+    case T_SEQ_A:
+    case T_SET_T:
+    case T_SET_A:
+      for (size_t x = 0; x < parent_type->get_nof_comps(); ++x) {
+        CompField * cf = parent_type->get_comp_byIndex(x);
+        if (cf->get_type() == this && cf->get_is_optional()) {
+          sdef.isOptional = true;
+          break; // from the for loop
+        }
+      }
+      break;
+    default:
+      break;
+    }
+  }
   sdef.elements = (struct_field*)
     Malloc(sdef.nElements*sizeof(*sdef.elements));
   memset(sdef.elements, 0, sdef.nElements*sizeof(*sdef.elements));
@@ -1124,30 +1149,56 @@ void Type::generate_code_Choice(output_struct *target)
       typetype_t tt = cftype->get_type_refd_last()->typetype;
       switch(tt) {
       case T_INT:
+      case T_INT_A:
         sdef.elements[i].jsonValueType = JSON_NUMBER;
         break;
       case T_REAL:
         sdef.elements[i].jsonValueType = JSON_NUMBER | JSON_STRING;
         break;
       case T_BOOL:
-        sdef.elements[i].jsonValueType = JSON_LITERAL;
+        sdef.elements[i].jsonValueType = JSON_BOOLEAN;
+        break;
+      case T_NULL:
+        sdef.elements[i].jsonValueType = JSON_NULL;
         break;
       case T_BSTR:
+      case T_BSTR_A:
       case T_HSTR:
       case T_OSTR:
       case T_CSTR:
       case T_USTR:
+      case T_UTF8STRING:
+      case T_NUMERICSTRING:
+      case T_PRINTABLESTRING:
+      case T_TELETEXSTRING:
+      case T_VIDEOTEXSTRING:
+      case T_IA5STRING:
+      case T_GRAPHICSTRING:
+      case T_VISIBLESTRING:
+      case T_GENERALSTRING:  
+      case T_UNIVERSALSTRING:
+      case T_BMPSTRING:
       case T_VERDICT:
       case T_ENUM_T:
+      case T_ENUM_A:
+      case T_OID:
+      case T_ROID:
+      case T_ANY:
         sdef.elements[i].jsonValueType = JSON_STRING;
         break;
       case T_SEQ_T:
+      case T_SEQ_A:
       case T_SET_T:
+      case T_SET_A:
       case T_CHOICE_T:
+      case T_CHOICE_A:
+      case T_ANYTYPE:
+      case T_OPENTYPE:
         sdef.elements[i].jsonValueType = JSON_OBJECT;
         break;
       case T_SEQOF:
       case T_SETOF:
+      case T_ARRAY:
         sdef.elements[i].jsonValueType = JSON_ARRAY;
         break;
       default:
@@ -1531,6 +1582,7 @@ void Type::generate_code_Se(output_struct *target)
       cur.jsonOmitAsNull = type->jsonattrib->omit_as_null;
       cur.jsonAlias = type->jsonattrib->alias;
       cur.jsonDefaultValue = type->jsonattrib->default_value;
+      cur.jsonMetainfoUnbound = type->jsonattrib->metainfo_unbound;
     } // if jsonattrib
   } // next element
 
@@ -1845,7 +1897,7 @@ void Type::generate_code_SeOf(output_struct *target)
     case T_UNIVERSALSTRING:
     case T_BMPSTRING:
     case T_OBJECTDESCRIPTOR:
-      target->header.typedefs = mputprintf(target->header.typedefs,
+      target->header.class_decls = mputprintf(target->header.class_decls,
         "typedef PreGenRecordOf::PREGEN__%s__OF__UNIVERSAL__CHARSTRING%s %s;\n"
         "typedef PreGenRecordOf::PREGEN__%s__OF__UNIVERSAL__CHARSTRING%s_template %s_template;\n",
         (typetype == T_SEQOF) ? "RECORD" : "SET",
@@ -1854,7 +1906,9 @@ void Type::generate_code_SeOf(output_struct *target)
         optimized_memalloc ? "__OPTIMIZED" : "", get_genname_own().c_str());
       return;
     default:
-      target->header.typedefs = mputprintf(target->header.typedefs,
+      // generate these in the class declarations part, they need to be
+      // outside of the include guard in case of circular imports
+      target->header.class_decls = mputprintf(target->header.class_decls,
         "typedef PreGenRecordOf::PREGEN__%s__OF__%s%s %s;\n"
         "typedef PreGenRecordOf::PREGEN__%s__OF__%s%s_template %s_template;\n",
         (typetype == T_SEQOF) ? "RECORD" : "SET", oftypename.c_str(), 
@@ -2172,7 +2226,7 @@ void Type::generate_code_done(output_struct *target)
      "component_reference.log();\n"
      "TTCN_Logger::log_event_str(\" failed: Return value does not match "
      "the template: \");\n"
-     "value_template.log_match(return_value);\n"
+     "value_template.log_match(return_value%s);\n"
      "TTCN_Logger::end_event();\n"
      "}\n"
      "return ALT_NO;\n"
@@ -2180,7 +2234,7 @@ void Type::generate_code_done(output_struct *target)
      "} else return ret_val;\n"
      "}\n\n",
      genname_str, genname_str, dispname_str, genname_str, dispname_str,
-     dispname_str);
+     dispname_str, omit_in_value_list ? ", TRUE" : "");
 }
 
 bool Type::ispresent_anyvalue_embedded_field(Type* t,
@@ -2352,8 +2406,9 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
             is_template?"_template":"", tmp_id_str);
 
           expr->expr = mputprintf(expr->expr,
-            "%s = %s.%s();\n", global_id.c_str(),
-            tmp_id2_str, isbound ? "is_bound" : "is_present");
+            "%s = %s.%s(%s);\n", global_id.c_str(),
+            tmp_id2_str, isbound ? "is_bound" : "is_present",
+            (!isbound && is_template && omit_in_value_list) ? "TRUE" : "");
           Free(tmp_generalid_str);
           tmp_generalid_str = mcopystr(tmp_id2_str);
 
@@ -2409,8 +2464,9 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
           id.get_name().c_str());
 
         expr->expr = mputprintf(expr->expr,
-          "%s = %s.%s();\n", global_id.c_str(),
-          tmp_id_str, isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present");
+          "%s = %s.%s(%s);\n", global_id.c_str(),
+          tmp_id_str, isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
+          (!(isbound||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
         Free(tmp_generalid_str);
         tmp_generalid_str = mcopystr(tmp_id_str);
       }
@@ -2496,9 +2552,10 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
 
       if (is_string_element) {
         expr->expr = mputprintf(expr->expr,
-          "%s = %s[%s].%s();\n", global_id.c_str(),
+          "%s = %s[%s].%s(%s);\n", global_id.c_str(),
           tmp_generalid_str, tmp_index_id_str,
-          isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present");
+          isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
+          (!(isbound||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
       } else {
         if (is_template) {
             expr->expr = mputprintf(expr->expr,
@@ -2515,8 +2572,9 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
         }
         
         expr->expr = mputprintf(expr->expr,
-          "%s = %s.%s();\n", global_id.c_str(), tmp_id_str, 
-          isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present");
+          "%s = %s.%s(%s);\n", global_id.c_str(), tmp_id_str, 
+          isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
+          (!(isbound||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
       }
 
       Free(tmp_generalid_str);
@@ -2689,22 +2747,56 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
       Free(alias_str);
     }
   }
-  
+
   // get the type at the end of the reference chain
   Type* last = get_type_refd_last();
   
-  // if the type has its own definition and it's embedded in another type, then
-  // its schema already exists, only add a reference to it
+  // check if this is a reference to another type that has its own definition
+  Type* refd_type = NULL;
+  if (is_ref()) {
+    Type* iter = this;
+    while (iter->is_ref()) {
+      iter = iter->get_type_refd();
+      if (iter->ownertype == OT_TYPE_DEF || /* TTCN-3 type definition */
+          iter->ownertype == OT_TYPE_ASS) { /* ASN.1 type assignment */
+        refd_type = iter;
+        break;
+      }
+    }
+  }
+  
+  // check if there are any type restrictions
+  boolean has_restrictions = sub_type != NULL && sub_type->has_json_schema();
+
+  // if it's a referenced type, then its schema already exists, only add a pointer to it
   // exception: instances of ASN.1 parameterized types, always embed their schemas
-  if (embedded && (!is_ref() || !get_type_refd()->pard_type_instance) &&
-      (last->ownertype == OT_TYPE_DEF /* TTCN-3 type definition */
-      || last->ownertype == OT_TYPE_ASS /* ASN.1 type assignment */ )) {
+  if (refd_type != NULL && !get_type_refd()->pard_type_instance) {
+    if (has_restrictions) {
+      // an 'allOf' structure is needed if this is a subtype,
+      // insert the pointer in the first part
+      json.put_next_token(JSON_TOKEN_NAME, "allOf");
+      json.put_next_token(JSON_TOKEN_ARRAY_START);
+      json.put_next_token(JSON_TOKEN_OBJECT_START);
+    }
     json.put_next_token(JSON_TOKEN_NAME, "$ref");
     char* ref_str = mprintf("\"#/definitions/%s/%s\"",
-      last->my_scope->get_scope_mod()->get_modid().get_ttcnname().c_str(),
-      (is_ref() && last->pard_type_instance) ? get_type_refd()->get_dispname().c_str() : last->get_dispname().c_str());
+      refd_type->my_scope->get_scope_mod()->get_modid().get_ttcnname().c_str(),
+      refd_type->get_dispname().c_str());
     json.put_next_token(JSON_TOKEN_STRING, ref_str);
     Free(ref_str);
+    if (has_restrictions) {
+      // close the first part of the 'allOf' and insert the type restrictions
+      // in the second part
+      json.put_next_token(JSON_TOKEN_OBJECT_END);
+      json.put_next_token(JSON_TOKEN_OBJECT_START);
+      
+      // pass the tokenizer to the subtype to insert the type restrictions' schema
+      sub_type->generate_json_schema(json);
+      
+      // close the second part and the 'allOf' structure itself
+      json.put_next_token(JSON_TOKEN_OBJECT_END);
+      json.put_next_token(JSON_TOKEN_ARRAY_END);
+    }
   } else {
     // generate the schema for the referenced type
     switch (last->typetype) {
@@ -2720,22 +2812,32 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
       json.put_next_token(JSON_TOKEN_STRING, "\"integer\"");
       break;
     case T_REAL:
-      // any of: JSON number or the special values as strings (in an enum)
-      json.put_next_token(JSON_TOKEN_NAME, "anyOf");
-      json.put_next_token(JSON_TOKEN_ARRAY_START);
-      json.put_next_token(JSON_TOKEN_OBJECT_START);
-      json.put_next_token(JSON_TOKEN_NAME, "type");
-      json.put_next_token(JSON_TOKEN_STRING, "\"number\"");
-      json.put_next_token(JSON_TOKEN_OBJECT_END);
-      json.put_next_token(JSON_TOKEN_OBJECT_START);
-      json.put_next_token(JSON_TOKEN_NAME, "enum");
-      json.put_next_token(JSON_TOKEN_ARRAY_START);
-      json.put_next_token(JSON_TOKEN_STRING, "\"not_a_number\"");
-      json.put_next_token(JSON_TOKEN_STRING, "\"infinity\"");
-      json.put_next_token(JSON_TOKEN_STRING, "\"-infinity\"");
-      json.put_next_token(JSON_TOKEN_ARRAY_END);
-      json.put_next_token(JSON_TOKEN_OBJECT_END);
-      json.put_next_token(JSON_TOKEN_ARRAY_END);
+      if (has_restrictions) {
+        // adding restrictions after the type's schema wouldn't work here
+        // if the restrictions affect the special values
+        // use a special function that generates the schema segment for both
+        // the float type and its restrictions
+        sub_type->generate_json_schema_float(json);
+        has_restrictions = false; // so they aren't generated twice
+      }
+      else {
+        // any of: JSON number or the special values as strings (in an enum)
+        json.put_next_token(JSON_TOKEN_NAME, "anyOf");
+        json.put_next_token(JSON_TOKEN_ARRAY_START);
+        json.put_next_token(JSON_TOKEN_OBJECT_START);
+        json.put_next_token(JSON_TOKEN_NAME, "type");
+        json.put_next_token(JSON_TOKEN_STRING, "\"number\"");
+        json.put_next_token(JSON_TOKEN_OBJECT_END);
+        json.put_next_token(JSON_TOKEN_OBJECT_START);
+        json.put_next_token(JSON_TOKEN_NAME, "enum");
+        json.put_next_token(JSON_TOKEN_ARRAY_START);
+        json.put_next_token(JSON_TOKEN_STRING, "\"not_a_number\"");
+        json.put_next_token(JSON_TOKEN_STRING, "\"infinity\"");
+        json.put_next_token(JSON_TOKEN_STRING, "\"-infinity\"");
+        json.put_next_token(JSON_TOKEN_ARRAY_END);
+        json.put_next_token(JSON_TOKEN_OBJECT_END);
+        json.put_next_token(JSON_TOKEN_ARRAY_END);
+      }
       break;
     case T_BSTR:
     case T_BSTR_A:
@@ -2791,15 +2893,23 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
       json.put_next_token(JSON_TOKEN_STRING, "\"^[0-2][.][1-3]?[0-9]([.][0-9]|([1-9][0-9]+))*$\"");
       break;
     case T_VERDICT:
-      // enumerate the possible values
-      json.put_next_token(JSON_TOKEN_NAME, "enum");
-      json.put_next_token(JSON_TOKEN_ARRAY_START);
-      json.put_next_token(JSON_TOKEN_STRING, "\"none\"");
-      json.put_next_token(JSON_TOKEN_STRING, "\"pass\"");
-      json.put_next_token(JSON_TOKEN_STRING, "\"inconc\"");
-      json.put_next_token(JSON_TOKEN_STRING, "\"fail\"");
-      json.put_next_token(JSON_TOKEN_STRING, "\"error\"");
-      json.put_next_token(JSON_TOKEN_ARRAY_END);
+      if (has_restrictions) {
+        // the restrictions would only add another JSON enum (after the one
+        /// generated below), instead just insert the one with the restrictions
+        sub_type->generate_json_schema(json);
+        has_restrictions = false; // so they aren't generated twice
+      }
+      else {
+        // enumerate the possible values
+        json.put_next_token(JSON_TOKEN_NAME, "enum");
+        json.put_next_token(JSON_TOKEN_ARRAY_START);
+        json.put_next_token(JSON_TOKEN_STRING, "\"none\"");
+        json.put_next_token(JSON_TOKEN_STRING, "\"pass\"");
+        json.put_next_token(JSON_TOKEN_STRING, "\"inconc\"");
+        json.put_next_token(JSON_TOKEN_STRING, "\"fail\"");
+        json.put_next_token(JSON_TOKEN_STRING, "\"error\"");
+        json.put_next_token(JSON_TOKEN_ARRAY_END);
+      }
       break;
     case T_ENUM_T:
     case T_ENUM_A:
@@ -2847,6 +2957,11 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
     default:
       FATAL_ERROR("Type::generate_json_schema");
     }
+    
+    if (has_restrictions) {
+      // pass the tokenizer to the subtype to insert the type restrictions' schema
+      sub_type->generate_json_schema(json);
+    }
   }
   
   // insert default value (if any)
@@ -2878,6 +2993,16 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
       break; }
     default:
       FATAL_ERROR("Type::generate_json_schema");
+    }
+  }
+  
+  // insert schema extensions (if any)
+  if (jsonattrib != NULL) {
+    for (size_t i = 0; i < jsonattrib->schema_extensions.size(); ++i) {
+      json.put_next_token(JSON_TOKEN_NAME, jsonattrib->schema_extensions[i]->key);
+      char* value_str = mprintf("\"%s\"", jsonattrib->schema_extensions[i]->value);
+      json.put_next_token(JSON_TOKEN_STRING, value_str);
+      Free(value_str);
     }
   }
 

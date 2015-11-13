@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -249,14 +249,14 @@ extern "C" string_list* getExternalLibs(const char* projName)
   return head;
 }
 
-extern "C" string_list* getExternalLibPathes(const char* projName)
+extern "C" string_list* getExternalLibPaths(const char* projName)
 {
   if (!projGenHelper.getZflag()) return NULL;
   ProjectDescriptor* proj = projGenHelper.getTargetOfProject(projName);
   if (!proj) return NULL;
 
   std::vector<const char*> externalLibs;
-  projGenHelper.getExternalLibSearchPathes(externalLibs);
+  projGenHelper.getExternalLibSearchPaths(externalLibs);
 
   if (0 == externalLibs.size()) return NULL;
 
@@ -617,11 +617,11 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
-  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
+  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   struct string_list* linkerlibs, struct string_list* additionalObjects, struct string_list* linkerlibsearchp, boolean Vflag, boolean Dflag,
   boolean *p_Zflag, boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, 
-  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs);
+  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list);
 
 extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
@@ -635,11 +635,11 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag, 
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
-  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
+  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
   boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir,
-  struct string2_list* run_command_list, struct string2_list* required_configs) {
+  struct string2_list* run_command_list, struct string2_list* required_configs, struct string_list** profiled_file_list) {
 
   map<cstring, int> seen_tpd_files;
   projGenHelper.setZflag(*p_Zflag);
@@ -657,11 +657,11 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
       prep_undefines, p_csflag, p_quflag, p_dsflag, cxxcompiler,
       optlevel, optflags, p_dbflag, p_drflag, p_dtflag, p_dxflag, p_djflag,
       p_fxflag, p_doflag, p_gfflag, p_lnflag, p_isflag,
-      p_asflag, p_swflag, p_Yflag, solspeclibs, sol8speclibs,
+      p_asflag, p_swflag, p_Yflag, p_Mflag, solspeclibs, sol8speclibs,
       linuxspeclibs, freebsdspeclibs, win32speclibs, ttcn3prep,
       linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag, p_Zflag,
       p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
-      run_command_list, seen_tpd_files, required_configs);
+      run_command_list, seen_tpd_files, required_configs, profiled_file_list);
 
   if (TPD_FAILED == success) exit(EXIT_FAILURE);
 
@@ -705,11 +705,11 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
-  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
+  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
   boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir,
-  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs)
+  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list)
 {
   tpd_result result = TPD_SUCCESS;
   // read-only non-pointer aliases
@@ -1170,6 +1170,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   xsdbool2boolean(xpathCtx, actcfg, "addSourceLineInfo", p_asflag);
   xsdbool2boolean(xpathCtx, actcfg, "suppressWarnings", p_swflag);
   xsdbool2boolean(xpathCtx, actcfg, "outParamBoundness", p_Yflag);
+  xsdbool2boolean(xpathCtx, actcfg, "omitInValueList", p_Mflag);
 
   projDesc = projGenHelper.getTargetOfProject(*p_project_name);
   if (projDesc) projDesc->setLinkingStrategy(*p_lflag);
@@ -1815,6 +1816,70 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
       }
     }
   }
+  
+  {
+    // profiler file name
+    char* profilerXpath = mprintf(
+      "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
+      "/ProjectProperties/MakefileSettings/profiledFileList", actcfg);
+    XPathObject profiledFilesNameObj(run_xpath(xpathCtx, profilerXpath));
+    Free(profilerXpath);
+    xmlNodeSetPtr nodes = profiledFilesNameObj->nodesetval;
+    if (nodes && nodes->nodeNr > 0) {
+      const char *uri = 0, *path = 0, *raw = 0;
+      for (xmlAttrPtr attr = nodes->nodeTab[0]->properties; attr; attr = attr->next) {
+        if (!strcmp((const char*)attr->name, "projectRelativePath")) {
+          path = (const char*)attr->children->content;
+        }
+        else if (!strcmp((const char*)attr->name, "relativeURI")) {
+          uri = (const char*)attr->children->content;
+        }
+        else if (!strcmp((const char*)attr->name, "rawURI")) {
+          raw = (const char*)attr->children->content;
+        }
+        else {
+          WARNING("Unknown attribute %s", (const char*)nodes->nodeTab[0]->name);
+        }
+      } // next attribute
+      
+      if (path == NULL) {
+        ERROR("A profiledFileList must have a projectRelativePath");
+      }
+      else {
+        if (uri == NULL && raw == NULL) {
+          ERROR("A profiledFileList must have either relativeURI or rawURI");
+        }
+        else {
+          cstring cpath(path);
+          if (files.has_key(cpath)) {
+            ERROR("profiledFileLists and FileResources must be unique!");
+          }
+          else {
+            // add the file to the end of the list
+            struct string_list* new_item = NULL;
+            if (*profiled_file_list == NULL) {
+              *profiled_file_list = (struct string_list*)Malloc(sizeof(struct string_list));
+              new_item = *profiled_file_list;
+            }
+            else {
+              new_item = *profiled_file_list;
+              while(new_item->next != NULL) {
+                new_item = new_item->next;
+              }
+              new_item->next = (struct string_list*)Malloc(sizeof(struct string_list));
+              new_item = new_item->next;
+            }
+            new_item->str = mcopystr(path);
+            new_item->next = NULL;
+            
+            // add the file to the map of files to be copied to the working directory
+            char *ruri = uri ? mcopystr(uri) : cook(raw, path_vars);
+            files.add(cpath, ruri);
+          }
+        }
+      }
+    }
+  }
 
 // collect the required configurations
   {
@@ -1912,7 +1977,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
           my_quflag = 0, my_dsflag = 0, my_dbflag = 0, my_drflag = 0,
           my_dtflag = 0, my_dxflag = 0, my_djflag = 0, my_fxflag = 0, my_doflag = 0, 
           my_gfflag = 0, my_lnflag = 0, my_isflag = 0, my_asflag = 0, 
-          my_swflag = 0, my_Yflag = 0;
+          my_swflag = 0, my_Yflag = 0, my_Mflag = *p_Mflag;
 
         char *my_ets = NULL;
         char *my_proj_name = NULL;
@@ -1920,7 +1985,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
           compose_path_name(abs_tpd_dir, projectLocationURI));
 
         char* sub_proj_abs_work_dir = NULL;
-
+        
         tpd_result success = process_tpd_internal((const char*)abs_projectLocationURI,
           my_actcfg, file_list_path, &my_argc, &my_argv, &my_optind, &my_ets, &my_proj_name,
           &my_gflag, &my_sflag, &my_cflag, &my_aflag, preprocess, &my_Rflag, &my_lflag,
@@ -1929,9 +1994,10 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
           prep_includes, prep_defines, prep_undefines, &my_csflag,
           &my_quflag, &my_dsflag, cxxcompiler, optlevel, optflags, &my_dbflag, &my_drflag,
           &my_dtflag, &my_dxflag, &my_djflag, &my_fxflag, &my_doflag,
-          &my_gfflag, &my_lnflag, &my_isflag, &my_asflag, &my_swflag, &my_Yflag, solspeclibs, sol8speclibs, linuxspeclibs, freebsdspeclibs, win32speclibs,
+          &my_gfflag, &my_lnflag, &my_isflag, &my_asflag, &my_swflag, &my_Yflag, &my_Mflag,
+          solspeclibs, sol8speclibs, linuxspeclibs, freebsdspeclibs, win32speclibs,
           ttcn3prep, linkerlibs, additionalObjects, linkerlibsearchp, Vflag, FALSE, &my_Zflag, 
-          &my_Hflag, NULL, NULL, prefix_workdir, run_command_list, seen_tpd_files, required_configs);
+          &my_Hflag, NULL, NULL, prefix_workdir, run_command_list, seen_tpd_files, required_configs, profiled_file_list);
 
         autostring sub_proj_abs_work_dir_as(sub_proj_abs_work_dir); // ?!
 

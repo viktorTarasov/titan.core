@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -40,7 +40,6 @@ const char * stored_argv = "Unidentified program";
 
 void signal_handler(int signum)
 {
-  int retval;
   time_t now=time(0);
   char ts[60];
   ts[0]='\0';
@@ -49,12 +48,6 @@ void signal_handler(int signum)
   if(tmp==NULL){
     fprintf(stderr,"<Unknown> %s: %s\n",stored_argv, signum==SIGABRT?"Abort was called":"Segmentation fault occurred");
   } else {
-/*  retval = write(STDERR_FILENO, stored_argv, strlen(stored_argv));
-  retval = write(STDERR_FILENO, segfault , sizeof(segfault)-1); // sizeof includes \0
-  fflush(stderr);
-  (void)retval;
-*/
-    retval=strftime(ts,60,"%F %T",tmp);
     fprintf(stderr,"%s %s: %s\n",ts,stored_argv,signum==SIGABRT?"Abort was called":"Segmentation fault occurred");
   }
   fflush(stderr);

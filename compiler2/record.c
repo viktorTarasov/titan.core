@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -2689,6 +2689,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     src = mputprintf(src,
       "    {\n"
       "    field_%s.set_size(0);\n"
+      "    if (!tag_closed) {\n" /* Nothing to order if there are no child elements */
       "    int e_val, num_seen = 0, *seen_f = new int[%lu];\n"
       , sdef->elements[uo].name
       , (unsigned long)(n_embed)
@@ -2700,6 +2701,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputstr(src, "    int last_embval_index = 0;\n");
     }
     src = mputprintf(src,
+      "    bool early_exit = false;\n"
       "    for (int i=0; i < %lu; ++i) {\n"
       "      for (rd_ok=p_reader.Ok(); rd_ok==1; rd_ok=p_reader.Read()) {\n"
       , (unsigned long)(n_embed));
@@ -2717,8 +2719,12 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     src = mputstr(src,
       "        type = p_reader.NodeType();\n"
       "        if (type==XML_READER_TYPE_ELEMENT) break;\n"
+      "        if (type == XML_READER_TYPE_END_ELEMENT) {\n"
+      "          early_exit = true;\n"
+      "          break;\n"
+      "        }\n"
       "      }\n"
-      "      if (rd_ok != 1) break;\n"
+      "      if (rd_ok != 1 || early_exit) break;\n"
       "      const char * x_name = (const char*)p_reader.LocalName();\n" /* Name or LocalName ? */);
     
     if (sdef->xerEmbedValuesPossible) {
@@ -2793,7 +2799,11 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     }
 
     src = mputstr(src,
-      "        continue; \n" /* take care of the dangling else */
+      " {\n" /* take care of the dangling else */
+      "          TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
+      "            \"Bad XML tag '%s' instead of a valid field\", x_name);\n"
+      "          break;\n"
+      "        }\n"
       "      }\n"
       "      for (int d_f = 0; d_f < num_seen; ++d_f)\n"
       "        if (e_val == seen_f[d_f])\n"
@@ -2828,6 +2838,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_CONSTRAINT, \"Wrong number of elements\");\n"
       "      }\n"
       "    }\n"
+      "  } // !tag_closed\n"
       "  } else { // !uo\n"
       , sdef->elements[uo].dispname
       , min_ordered, max_ordered
@@ -2959,7 +2970,20 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   }
   
   src = mputstr(src,
-    "  } // errorcontext\n" /* End scope for error context objects */
+    "  } // errorcontext\n"); /* End scope for error context objects */
+
+  /* Check if every non-optional field has been set */
+  for (i = 0; i < sdef->nElements; ++i) {
+    if (!sdef->elements[i].isOptional) {
+      src = mputprintf(src,
+        "  if (!field_%s.is_bound()) {\n"
+        "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INCOMPL_MSG,\n"
+        "      \"No data found for non-optional field '%s'\");\n"
+        "  }\n"
+        , sdef->elements[i].name, sdef->elements[i].dispname);
+    }
+  }
+  src = mputstr(src,
     "  if (!omit_tag) {\n"
     "    int current_depth;\n"
     "    for (rd_ok = p_reader.Ok(); rd_ok == 1; rd_ok = p_reader.Read()) {\n"
@@ -3307,27 +3331,31 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
      "param.error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
      "  }\n"
      "  param.basic_check(Module_Param::BC_VALUE, \"%s value\");\n"
-     "  switch (param.get_type()) {\n"
+     "  Module_Param_Ptr mp = &param;\n"
+     "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+     "    mp = param.get_referenced_param();\n"
+     "  }\n"
+     "  switch (mp->get_type()) {\n"
      "  case Module_Param::MP_Value_List:\n"
-     "    if (%lu<param.get_size()) {\n"
-     "      param.error(\"%s value of type %s has %lu fields but list value has %%d fields\", (int)param.get_size());\n"
+     "    if (%lu<mp->get_size()) {\n"
+     "      param.error(\"%s value of type %s has %lu fields but list value has %%d fields\", (int)mp->get_size());\n"
      "    }\n",
      kind_str, dispname, kind_str, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
 
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    if (param.get_size()>%lu && param.get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*param.get_elem(%lu));\n",
+      "    if (mp->get_size()>%lu && mp->get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*mp->get_elem(%lu));\n",
       (unsigned long)i, (unsigned long)i, sdef->elements[i].name, (unsigned long)i);
   } 
   src = mputstr(src,
       "    break;\n"
       "  case Module_Param::MP_Assignment_List: {\n"
-      "    Vector<bool> value_used(param.get_size());\n"
-      "    value_used.resize(param.get_size(), false);\n");
+      "    Vector<bool> value_used(mp->get_size());\n"
+      "    value_used.resize(mp->get_size(), false);\n");
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {\n"
-      "      Module_Param* const curr_param = param.get_elem(val_idx);\n"
+      "    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {\n"
+      "      Module_Param* const curr_param = mp->get_elem(val_idx);\n"
       "      if (!strcmp(curr_param->get_id()->get_name(), \"%s\")) {\n"
       "        if (curr_param->get_type()!=Module_Param::MP_NotUsed) {\n"
       "          %s().set_param(*curr_param);\n"
@@ -3338,8 +3366,8 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       , sdef->elements[i].dispname, sdef->elements[i].name);
   }
   src = mputprintf(src,
-      "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {\n"
-      "      param.get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", param.get_elem(val_idx)->get_id()->get_name());\n"
+      "    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {\n"
+      "      mp->get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", mp->get_elem(val_idx)->get_id()->get_name());\n"
       "      break;\n"
       "    }\n"
       "  } break;\n"
@@ -3347,6 +3375,48 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "    param.type_error(\"%s value\", \"%s\");\n"
       "  }\n"
       "}\n\n", dispname, kind_str, dispname);
+  
+  /* get param function */
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf(src,
+    "Module_Param* %s::get_param(Module_Param_Name& param_name) const\n"
+    "{\n"
+    "  if (!is_bound()) {\n"
+    "    return new Module_Param_Unbound();\n"
+    "  }\n"
+    "  if (param_name.next_name()) {\n"
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the fields, not to the whole record
+    "    char* param_field = param_name.get_current_name();\n"
+    "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
+    "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
+    "        \"expected a valid field name for %s type `%s'\");\n"
+    "    }\n"
+    "    ", name, kind_str, dispname);
+  for (i = 0; i < sdef->nElements; i++) {
+    src = mputprintf(src,
+      "if (strcmp(\"%s\", param_field) == 0) {\n"
+      "      return %s().get_param(param_name);\n"
+      "    } else ",
+      sdef->elements[i].dispname, sdef->elements[i].name);
+  }
+  src = mputprintf(src,
+    "TTCN_error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
+    "  }\n"
+    "  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();\n"
+    , kind_str, dispname);
+  for (i = 0; i < sdef->nElements; i++) {
+    src = mputprintf(src,
+      "  Module_Param* mp_field_%s = field_%s.get_param(param_name);\n"
+      "  mp_field_%s->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
+      "  mp->add_elem(mp_field_%s);\n"
+      , sdef->elements[i].name, sdef->elements[i].name
+      , sdef->elements[i].name, sdef->elements[i].dispname
+      , sdef->elements[i].name);
+  }
+  src = mputstr(src,
+    "  return mp;\n"
+    "  }\n\n");
 
   /* set implicit omit function, recursive */
   def = mputstr(def, "  void set_implicit_omit();\n");
@@ -4250,17 +4320,30 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "  int enc_len = p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);\n\n"
       , name, dispname);
     for (i = 0; i < sdef->nElements; ++i) {
-      if (sdef->elements[i].isOptional && !sdef->elements[i].jsonOmitAsNull) {
+      if (sdef->elements[i].isOptional && !sdef->elements[i].jsonOmitAsNull &&
+          !sdef->elements[i].jsonMetainfoUnbound) {
         src = mputprintf(src,
           "  if (field_%s.is_present())\n"
           , sdef->elements[i].name);
       }
-      src=mputprintf(src,
+      src = mputprintf(src,
         "  {\n"
-        "    enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, \"%s\");\n"
-        "    enc_len += field_%s.JSON_encode(%s_descr_, p_tok);\n"
+        "    enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, \"%s\");\n    "
+        , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname);
+      if (sdef->elements[i].jsonMetainfoUnbound) {
+        src = mputprintf(src,
+          "if (!field_%s.is_bound()) {\n"
+          "      enc_len += p_tok.put_next_token(JSON_TOKEN_LITERAL_NULL);\n"
+          "      enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, \"metainfo %s\");\n"
+          "      enc_len += p_tok.put_next_token(JSON_TOKEN_STRING, \"\\\"unbound\\\"\");\n"
+          "    }\n"
+          "    else "
+          , sdef->elements[i].name
+          , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname);
+      }
+      src = mputprintf(src,
+        "enc_len += field_%s.JSON_encode(%s_descr_, p_tok);\n"
         "  }\n\n"
-        , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname
         , sdef->elements[i].name, sdef->elements[i].typedescrname);
     }
     src = mputstr(src, 
@@ -4282,8 +4365,20 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "    return JSON_ERROR_INVALID_TOKEN;\n"
       "  }\n"
       "  bound_flag = TRUE;\n\n"
-         // Read name - value token pairs until we reach some other token
-      "  while (true) {\n"
+      , name);
+    boolean has_metainfo_enabled = FALSE;
+    for (i = 0; i < sdef->nElements; ++i) {
+      if (sdef->elements[i].jsonMetainfoUnbound) {
+        // initialize meta info states
+        src = mputprintf(src, 
+          "  int metainfo_%s = JSON_METAINFO_NONE;\n"
+          , sdef->elements[i].name);
+        has_metainfo_enabled = TRUE;
+      }
+    }
+    src = mputstr(src,
+      // Read name - value token pairs until we reach some other token
+      "\n  while (true) {\n"
       "    char* fld_name = 0;\n"
       "    size_t name_len = 0;\n"
       "    size_t buf_pos = p_tok.get_buf_pos();\n"
@@ -4297,31 +4392,96 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "      p_tok.set_buf_pos(buf_pos);\n"
       "      break;\n"
       "    }\n"
-      "    else {\n      "
-      , name);
+      "    else {\n      ");
+    if (has_metainfo_enabled) {
+      // check for meta info
+      src = mputstr(src,
+        "boolean is_metainfo = FALSE;\n"
+        "      if (name_len > 9 && 0 == strncmp(fld_name, \"metainfo \", 9)) {\n"
+        "        fld_name += 9;\n"
+        "        name_len -= 9;\n"
+        "        is_metainfo = TRUE;\n"
+        "      }\n      ");
+    }
     for (i = 0; i < sdef->nElements; ++i) {
       src = mputprintf(src,
         // check field name
         "if (%d == name_len && 0 == strncmp(fld_name, \"%s\", name_len)) {\n"
-        "        int ret_val = field_%s.JSON_decode(%s_descr_, p_tok, p_silent);\n"        
-        "        if (0 > ret_val) {\n"
-        "          if (JSON_ERROR_INVALID_TOKEN) {\n"
-        "            JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, \"%s\");\n"
-        "          }\n"
-        "          return JSON_ERROR_FATAL;\n"
-        "        }\n"
-        "        dec_len += ret_val;\n"
-        "      } else "
         , (int)strlen(sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname)
-        , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname
-        , sdef->elements[i].name, sdef->elements[i].typedescrname
+        , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname);
+      if (has_metainfo_enabled) {
+        src = mputstr(src, "        if (is_metainfo) {\n");
+        if (sdef->elements[i].jsonMetainfoUnbound) {
+          src = mputprintf(src,
+            // check meta info
+            "          char* info_value = 0;\n"
+            "          size_t info_len = 0;\n"
+            "          dec_len += p_tok.get_next_token(&j_token, &info_value, &info_len);\n"
+            "          if (JSON_TOKEN_STRING == j_token && 9 == info_len &&\n"
+            "              0 == strncmp(info_value, \"\\\"unbound\\\"\", 9)) {\n"
+            "            metainfo_%s = JSON_METAINFO_UNBOUND;\n"
+            "          }\n"
+            "          else {\n"
+            "            JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_METAINFO_VALUE_ERROR, \"%s\");\n"
+            "            return JSON_ERROR_FATAL;\n"
+            "          }\n"
+            , sdef->elements[i].name, sdef->elements[i].dispname);
+        }
+        else {
+          src = mputprintf(src,
+            "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_METAINFO_NOT_APPLICABLE, \"%s\");\n"
+            "          return JSON_ERROR_FATAL;\n"
+            , sdef->elements[i].dispname);
+        }
+        src = mputstr(src,
+          "        }\n"
+          "        else {\n");
+        if (sdef->elements[i].jsonMetainfoUnbound) {
+          src = mputstr(src, "         buf_pos = p_tok.get_buf_pos();\n");
+        }
+      }
+      src = mputprintf(src,
+        "         int ret_val = field_%s.JSON_decode(%s_descr_, p_tok, p_silent);\n"
+        "         if (0 > ret_val) {\n"
+        "           if (JSON_ERROR_INVALID_TOKEN == ret_val) {\n"
+        , sdef->elements[i].name, sdef->elements[i].typedescrname);
+      if (sdef->elements[i].jsonMetainfoUnbound) {
+        src = mputprintf(src,
+          // undo the last action on the buffer, check if the invalid token was a null token 
+          "             p_tok.set_buf_pos(buf_pos);\n"
+          "             p_tok.get_next_token(&j_token, NULL, NULL);\n"
+          "             if (JSON_TOKEN_LITERAL_NULL == j_token) {\n"
+          "               if (JSON_METAINFO_NONE == metainfo_%s) {\n"
+          // delay reporting an error for now, there might be meta info later
+          "                 metainfo_%s = JSON_METAINFO_NEEDED;\n"
+          "                 continue;\n"
+          "               }\n"
+          "               else if (JSON_METAINFO_UNBOUND == metainfo_%s) {\n"
+          // meta info already found
+          "                 continue;\n"
+          "               }\n"
+          "             }\n"
+          , sdef->elements[i].name, sdef->elements[i].name, sdef->elements[i].name);
+      }
+      src = mputprintf(src,
+        "             JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, \"%s\");\n"
+        "           }\n"
+        "           return JSON_ERROR_FATAL;\n"
+        "         }\n"
+        "         dec_len += ret_val;\n"
         , sdef->elements[i].dispname);
+      if (has_metainfo_enabled) {
+        src = mputstr(src, "        }\n");
+      }
+      src = mputstr(src,
+        "      }\n"
+        "      else ");
     }
-    src = mputstr(src,
+    src = mputprintf(src,
       "{\n"
                // invalid field name
       "        char* fld_name2 = mcopystrn(fld_name, name_len);\n"
-      "        JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_INVALID_NAME_ERROR, fld_name2);\n"
+      "        JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, %sJSON_DEC_INVALID_NAME_ERROR, fld_name2);\n"
                // if this is set to a warning, skip the value of the field
       "        dec_len += p_tok.get_next_token(&j_token, NULL, NULL);\n"
       "        if (JSON_TOKEN_NUMBER != j_token && JSON_TOKEN_STRING != j_token &&\n"
@@ -4339,11 +4499,25 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "  if (JSON_TOKEN_OBJECT_END != j_token) {\n"
       "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_OBJECT_END_TOKEN_ERROR, \"\");\n"
       "    return JSON_ERROR_FATAL;\n"
-      "  }\n\n");
-    // Check if every field has been set
+      "  }\n\n  "
+      , has_metainfo_enabled ? "is_metainfo ?\n          JSON_DEC_METAINFO_NAME_ERROR : " : "");
+    // Check if every field has been set and handle meta info
     for (i = 0; i < sdef->nElements; ++i) {
+      if (sdef->elements[i].jsonMetainfoUnbound) {
+        src = mputprintf(src,
+          "if (JSON_METAINFO_UNBOUND == metainfo_%s) {\n"
+          "    field_%s.clean_up();\n"
+          "  }\n"
+          "  else if (JSON_METAINFO_NEEDED == metainfo_%s) {\n"
+          // no meta info was found for this field, report the delayed error
+          "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, \"%s\");\n"
+          "  }\n"
+          "  else "
+          , sdef->elements[i].name, sdef->elements[i].name
+          , sdef->elements[i].name, sdef->elements[i].dispname);
+      }
       src = mputprintf(src,
-        "  if (!field_%s.is_bound()) {\n"
+        "if (!field_%s.is_bound()) {\n"
         , sdef->elements[i].name);
       if (sdef->elements[i].jsonDefaultValue) {
         src = mputprintf(src,
@@ -4952,11 +5126,11 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
 	"}\n\n", name, name, name);
 
     /* match operation (template matching) */
-    def = mputprintf(def, "boolean match(const %s& other_value) const;\n",
-	name);
+    def = mputprintf(def, "boolean match(const %s& other_value, boolean legacy "
+      "= FALSE) const;\n", name);
 
     src = mputprintf(src,
-	"boolean %s_template::match(const %s& other_value) const\n"
+	"boolean %s_template::match(const %s& other_value, boolean legacy) const\n"
 	"{\n"
     "if (!other_value.is_bound()) return FALSE;\n"
 	"switch (template_selection) {\n"
@@ -4970,13 +5144,13 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
       src = mputprintf(src,"if(!other_value.%s().is_bound()) return FALSE;\n", sdef->elements[i].name);
 	if (sdef->elements[i].isOptional) src = mputprintf(src,
 	    "if((other_value.%s().ispresent() ? "
-	    "!single_value->field_%s.match((const %s&)other_value.%s()) : "
-	    "!single_value->field_%s.match_omit()))",
+	    "!single_value->field_%s.match((const %s&)other_value.%s(), legacy) : "
+	    "!single_value->field_%s.match_omit(legacy)))",
 	    sdef->elements[i].name, sdef->elements[i].name,
 	    sdef->elements[i].type, sdef->elements[i].name,
 	    sdef->elements[i].name);
 	else src = mputprintf(src,
-	    "if(!single_value->field_%s.match(other_value.%s()))",
+	    "if(!single_value->field_%s.match(other_value.%s(), legacy))",
 	    sdef->elements[i].name, sdef->elements[i].name);
 	  src = mputstr(src, "return FALSE;\n");
     }
@@ -4986,7 +5160,7 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
 	"case COMPLEMENTED_LIST:\n"
 	"for (unsigned int list_count = 0; list_count < value_list.n_values; "
 	    "list_count++)\n"
-	"if (value_list.list_value[list_count].match(other_value)) "
+	"if (value_list.list_value[list_count].match(other_value, legacy)) "
 	    "return template_selection == VALUE_LIST;\n"
 	"return template_selection == COMPLEMENTED_LIST;\n"
 	"default:\n"
@@ -5244,14 +5418,14 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
 	"}\n\n");
 
     /* log_match function */
-    def = mputprintf(def, "void log_match(const %s& match_value) "
-	"const;\n", name);
+    def = mputprintf(def, "void log_match(const %s& match_value, "
+      "boolean legacy = FALSE) const;\n", name);
     src = mputprintf(src,
-	"void %s_template::log_match(const %s& match_value) const\n"
-	"{\n"
+    "void %s_template::log_match(const %s& match_value, boolean legacy) const\n"
+    "{\n"
     "if(TTCN_Logger::VERBOSITY_COMPACT"
       " == TTCN_Logger::get_matching_verbosity()){\n"
-    "if(match(match_value)){\n"
+    "if(match(match_value, legacy)){\n"
     "TTCN_Logger::print_logmatch_buffer();\n"
     "TTCN_Logger::log_event_str(\" matched\");\n"
     "} else{\n"
@@ -5262,13 +5436,13 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
       if (sdef->elements[i].isOptional){
         src = mputprintf(src,
         "if (match_value.%s().ispresent()){\n"
-        "if(!single_value->field_%s.match(match_value.%s())){\n"
+        "if(!single_value->field_%s.match(match_value.%s(), legacy)){\n"
         "TTCN_Logger::log_logmatch_info(\".%s\");\n"
-        "single_value->field_%s.log_match(match_value.%s());\n"
+        "single_value->field_%s.log_match(match_value.%s(), legacy);\n"
         "TTCN_Logger::set_logmatch_buffer_len(previous_size);\n"
         "}\n"
         "} else {\n"
-        "if (!single_value->field_%s.match_omit()){\n "
+        "if (!single_value->field_%s.match_omit(legacy)){\n "
         "TTCN_Logger::log_logmatch_info(\".%s := omit with \");\n"
         "TTCN_Logger::print_logmatch_buffer();\n"
         "single_value->field_%s.log();\n"
@@ -5283,9 +5457,9 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
         sdef->elements[i].name);
       }else{
         src = mputprintf(src,
-        "if(!single_value->field_%s.match(match_value.%s())){\n"
+        "if(!single_value->field_%s.match(match_value.%s(), legacy)){\n"
         "TTCN_Logger::log_logmatch_info(\".%s\");\n"
-        "single_value->field_%s.log_match(match_value.%s());\n"
+        "single_value->field_%s.log_match(match_value.%s(), legacy);\n"
         "TTCN_Logger::set_logmatch_buffer_len(previous_size);\n"
         "}\n",sdef->elements[i].name, sdef->elements[i].name,
         sdef->elements[i].dispname, sdef->elements[i].name,
@@ -5311,11 +5485,11 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
 	src = mputprintf(src, " %s := \");\n", sdef->elements[i].dispname);
 	if (sdef->elements[i].isOptional) src = mputprintf(src,
 	    "if (match_value.%s().ispresent()) "
-	    "single_value->field_%s.log_match(match_value.%s());\n"
+	    "single_value->field_%s.log_match(match_value.%s(), legacy);\n"
 	    "else {\n"
 	    "TTCN_Logger::log_event_str(\"omit with \");\n"
 	    "single_value->field_%s.log();\n"
-            "if (single_value->field_%s.match_omit()) "
+            "if (single_value->field_%s.match_omit(legacy)) "
               "TTCN_Logger::log_event_str(\" matched\");\n"
             "else TTCN_Logger::log_event_str(\" unmatched\");\n"
 	    "}\n",
@@ -5323,7 +5497,7 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
 	    sdef->elements[i].name, sdef->elements[i].name,
 	    sdef->elements[i].name);
 	else src = mputprintf(src,
-	    "single_value->field_%s.log_match(match_value.%s());\n",
+	    "single_value->field_%s.log_match(match_value.%s(), legacy);\n",
 	    sdef->elements[i].name, sdef->elements[i].name);
     }
     src = mputstr(src,
@@ -5332,7 +5506,7 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
 	"match_value.log();\n"
 	"TTCN_Logger::log_event_str(\" with \");\n"
 	"log();\n"
-	"if (match(match_value)) TTCN_Logger::log_event_str(\" matched\");\n"
+	"if (match(match_value, legacy)) TTCN_Logger::log_event_str(\" matched\");\n"
 	"else TTCN_Logger::log_event_str(\" unmatched\");\n"
 	"}\n"
 	"}\n\n");
@@ -5427,7 +5601,11 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     "param.error(\"Field `%%s' not found in %s template type `%s'\", param_field);\n"
     "  }\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"%s template\");\n"
-    "  switch (param.get_type()) {\n"
+    "  Module_Param_Ptr mp = &param;\n"
+    "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+    "    mp = param.get_referenced_param();\n"
+    "  }\n"
+    "  switch (mp->get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
     "    break;\n"
@@ -5438,31 +5616,34 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     "    *this = ANY_OR_OMIT;\n"
     "    break;\n"
     "  case Module_Param::MP_List_Template:\n"
-    "  case Module_Param::MP_ComplementList_Template:\n"
-    "    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());\n"
-    "    for (size_t p_i=0; p_i<param.get_size(); p_i++) {\n"
-    "      list_item(p_i).set_param(*param.get_elem(p_i));\n"
+    "  case Module_Param::MP_ComplementList_Template: {\n"
+    "    %s_template temp;\n"
+    "    temp.set_type(mp->get_type()==Module_Param::MP_List_Template ? "
+    "VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());\n"
+    "    for (size_t p_i=0; p_i<mp->get_size(); p_i++) {\n"
+    "      temp.list_item(p_i).set_param(*mp->get_elem(p_i));\n"
     "    }\n"
-    "    break;\n"
+    "    *this = temp;\n"
+    "    break; }\n"
     "  case Module_Param::MP_Value_List:\n"
-    "    if (%lu<param.get_size()) {\n"
-    "      param.error(\"%s template of type %s has %lu fields but list value has %%d fields\", (int)param.get_size());\n"
+    "    if (%lu<mp->get_size()) {\n"
+    "      param.error(\"%s template of type %s has %lu fields but list value has %%d fields\", (int)mp->get_size());\n"
     "    }\n",
-    kind_str, dispname, kind_str, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
+    kind_str, dispname, kind_str, name, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    if (param.get_size()>%lu && param.get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*param.get_elem(%lu));\n",
+      "    if (mp->get_size()>%lu && mp->get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*mp->get_elem(%lu));\n",
       (unsigned long)i, (unsigned long)i, sdef->elements[i].name, (unsigned long)i);
   }
   src = mputstr(src,
     "    break;\n"
     "  case Module_Param::MP_Assignment_List: {\n"
-    "    Vector<bool> value_used(param.get_size());\n"
-    "    value_used.resize(param.get_size(), false);\n");
+    "    Vector<bool> value_used(mp->get_size());\n"
+    "    value_used.resize(mp->get_size(), false);\n");
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {\n"
-      "      Module_Param* const curr_param = param.get_elem(val_idx);\n"
+      "    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {\n"
+      "      Module_Param* const curr_param = mp->get_elem(val_idx);\n"
       "      if (!strcmp(curr_param->get_id()->get_name(), \"%s\")) {\n"
       "        if (curr_param->get_type()!=Module_Param::MP_NotUsed) {\n"
       "          %s().set_param(*curr_param);\n"
@@ -5473,23 +5654,96 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
       , sdef->elements[i].dispname, sdef->elements[i].name);
   }
   src = mputprintf(src,
-    "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {\n"
-    "      param.get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", param.get_elem(val_idx)->get_id()->get_name());\n"
+    "    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {\n"
+    "      mp->get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", mp->get_elem(val_idx)->get_id()->get_name());\n"
     "      break;\n"
     "    }\n"
     "  } break;\n"
     "  default:\n"
     "    param.type_error(\"%s template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent();\n"
+    "  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();\n"
     "}\n\n", dispname, kind_str, dispname);
+  
+  /* get_param() */
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf(src,
+    "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
+    "{\n"
+    "  if (param_name.next_name()) {\n"
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the fields, not to the whole record
+    "    char* param_field = param_name.get_current_name();\n"
+    "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
+    "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
+    "        \"expected a valid field name for %s template type `%s'\");\n"
+    "    }\n"
+    "    ", name, kind_str, dispname);
+  for (i = 0; i < sdef->nElements; i++) {
+    src = mputprintf(src,
+      "if (strcmp(\"%s\", param_field) == 0) {\n"
+      "      return %s().get_param(param_name);\n"
+      "    } else ",
+      sdef->elements[i].dispname, sdef->elements[i].name);
+  }
+  src = mputprintf(src,
+    "TTCN_error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
+    "  }\n"
+    "  Module_Param* mp = NULL;\n"
+    "  switch (template_selection) {\n"
+    "  case UNINITIALIZED_TEMPLATE:\n"
+    "    mp = new Module_Param_Unbound();\n"
+    "    break;\n"
+    "  case OMIT_VALUE:\n"
+    "    mp = new Module_Param_Omit();\n"
+    "    break;\n"
+    "  case ANY_VALUE:\n"
+    "    mp = new Module_Param_Any();\n"
+    "    break;\n"
+    "  case ANY_OR_OMIT:\n"
+    "    mp = new Module_Param_AnyOrNone();\n"
+    "    break;\n"
+    "  case SPECIFIC_VALUE: {\n"
+    "    mp = new Module_Param_Assignment_List();\n"
+    , kind_str, dispname);
+  for (i = 0; i < sdef->nElements; i++) {
+    src = mputprintf(src,
+      "    Module_Param* mp_field_%s = single_value->field_%s.get_param(param_name);\n"
+      "    mp_field_%s->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
+      "    mp->add_elem(mp_field_%s);\n"
+      , sdef->elements[i].name, sdef->elements[i].name
+      , sdef->elements[i].name, sdef->elements[i].dispname
+      , sdef->elements[i].name);
+  }
+  src = mputstr(src,
+    "    break; }\n"
+    "  case VALUE_LIST:\n"
+    "  case COMPLEMENTED_LIST: {\n"
+    "    if (template_selection == VALUE_LIST) {\n"
+    "      mp = new Module_Param_List_Template();\n"
+    "    }\n"
+    "    else {\n"
+    "      mp = new Module_Param_ComplementList_Template();\n"
+    "    }\n"
+    "    for (size_t i = 0; i < value_list.n_values; ++i) {\n"
+    "      mp->add_elem(value_list.list_value[i].get_param(param_name));\n"
+    "    }\n"
+    "    break; }\n"
+    "  default:\n"
+    "    break;\n"
+    "  }\n"
+    "  if (is_ifpresent) {\n"
+    "    mp->set_ifpresent();\n"
+    "  }\n"
+    "  return mp;\n"
+    "}\n\n");
 
     /* check template restriction */
     def = mputstr(def, "void check_restriction(template_res t_res, "
-        "const char* t_name=NULL) const;\n");
+        "const char* t_name=NULL, boolean legacy = FALSE) const;\n");
     src = mputprintf(src,
         "void %s_template::check_restriction("
-          "template_res t_res, const char* t_name) const\n"
+          "template_res t_res, const char* t_name, boolean legacy) const\n"
         "{\n"
         "if (template_selection==UNINITIALIZED_TEMPLATE) return;\n"
         "switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {\n"
@@ -5506,7 +5760,7 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     src = mputprintf(src,
         "return;\n"
         "case TR_PRESENT:\n"
-        "if (!match_omit()) return;\n"
+        "if (!match_omit(legacy)) return;\n"
         "break;\n"
         "default:\n"
         "return;\n"
@@ -5649,15 +5903,30 @@ static void defEmptyRecordClass(const struct_def *sdef,
 	"}\n\n", name);
 
     /* set_param function */
-    def = mputstr(def, "void set_param(const Module_Param& param);\n");
-    src = mputprintf(src, "void %s::set_param(const Module_Param& param)\n"
+    def = mputstr(def, "void set_param(Module_Param& param);\n");
+    src = mputprintf(src, "void %s::set_param(Module_Param& param)\n"
       "{\n"
       "  param.basic_check(Module_Param::BC_VALUE, \"empty record/set value (i.e. { })\");\n"
-      "  if (param.get_type()!=Module_Param::MP_Value_List || param.get_size()>0) {\n"
+      "  Module_Param_Ptr mp = &param;\n"
+      "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+      "    mp = param.get_referenced_param();\n"
+      "  }\n"
+      "  if (mp->get_type()!=Module_Param::MP_Value_List || mp->get_size()>0) {\n"
       "    param.type_error(\"empty record/set value (i.e. { })\", \"%s\");\n"
       "  }\n"
       "  bound_flag = TRUE;\n"
       "}\n\n", name, dispname);
+    
+    /* get param function */
+    def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+    src = mputprintf(src,
+      "Module_Param* %s::get_param(Module_Param_Name& /* param_name */) const\n"
+      "{\n"
+      "  if (!is_bound()) {\n"
+      "    return new Module_Param_Unbound();\n"
+      "  }\n"
+      "  return new Module_Param_Value_List();\n"
+      "}\n\n", name);
 
     /* encode_text function */
     def = mputstr(def, "void encode_text(Text_Buf& text_buf) const;\n");
@@ -6108,9 +6377,10 @@ static void defEmptyRecordTemplate(const char *name, const char *dispname,
 	"}\n\n", name, name, name);
 
     /* match operation with {} */
-    def = mputstr(def, "boolean match(null_type other_value) const;\n");
-    src = mputprintf(src, "boolean %s_template::match(null_type other_value) "
-	"const\n"
+    def = mputstr(def, "boolean match(null_type other_value, boolean legacy "
+      "= FALSE) const;\n");
+    src = mputprintf(src, "boolean %s_template::match(null_type other_value,"
+      "boolean) const\n"
 	"{\n"
 	"switch (template_selection) {\n"
 	"case ANY_VALUE:\n"
@@ -6134,10 +6404,10 @@ static void defEmptyRecordTemplate(const char *name, const char *dispname,
 	"}\n\n", name, dispname);
 
     /* match operation with specific value */
-    def = mputprintf(def, "boolean match(const %s& other_value) const;\n",
-	name);
-    src = mputprintf(src, "boolean %s_template::match(const %s& other_value) "
-	"const\n"
+    def = mputprintf(def, "boolean match(const %s& other_value, boolean legacy "
+      "= FALSE) const;\n", name);
+    src = mputprintf(src, "boolean %s_template::match(const %s& other_value, "
+      "boolean) const\n"
 	"{\n"
     "if (!other_value.is_bound()) return FALSE;"
 	"return match(NULL_VALUE);\n"
@@ -6215,10 +6485,10 @@ static void defEmptyRecordTemplate(const char *name, const char *dispname,
 	"}\n\n", name);
 
     /* log_match function */
-    def = mputprintf(def, "void log_match(const %s& match_value) const;\n",
-	name);
-    src = mputprintf(src, "void %s_template::log_match(const %s& match_value) "
-	    "const\n"
+    def = mputprintf(def, "void log_match(const %s& match_value, "
+      "boolean legacy = FALSE) const;\n", name);
+    src = mputprintf(src, "void %s_template::log_match(const %s& match_value, "
+      "boolean) const\n"
 	"{\n"
 	"match_value.log();\n"
 	"TTCN_Logger::log_event_str(\" with \");\n"
@@ -6279,12 +6549,16 @@ static void defEmptyRecordTemplate(const char *name, const char *dispname,
 	"}\n\n", name, name, dispname);
 
   /* set_param() */
-  def = mputstr(def, "void set_param(const Module_Param& param);\n");
+  def = mputstr(def, "void set_param(Module_Param& param);\n");
   src = mputprintf(src,
-    "void %s_template::set_param(const Module_Param& param)\n"
+    "void %s_template::set_param(Module_Param& param)\n"
     "{\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"empty record/set template\");\n"
-    "  switch (param.get_type()) {\n"
+    "  Module_Param_Ptr mp = &param;\n"
+    "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+    "    mp = param.get_referenced_param();\n"
+    "  }\n"
+    "  switch (mp->get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
     "    break;\n"
@@ -6295,28 +6569,74 @@ static void defEmptyRecordTemplate(const char *name, const char *dispname,
     "    *this = ANY_OR_OMIT;\n"
     "    break;\n"
     "  case Module_Param::MP_List_Template:\n"
-    "  case Module_Param::MP_ComplementList_Template:\n"
-    "    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());\n"
-    "    for (size_t p_i=0; p_i<param.get_size(); p_i++) {\n"
-    "      list_item(p_i).set_param(*param.get_elem(p_i));\n"
+    "  case Module_Param::MP_ComplementList_Template: {\n"
+    "    %s_template temp;\n"
+    "    temp.set_type(mp->get_type()==Module_Param::MP_List_Template ? "
+    "VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());\n"
+    "    for (size_t p_i=0; p_i<mp->get_size(); p_i++) {\n"
+    "      temp.list_item(p_i).set_param(*mp->get_elem(p_i));\n"
     "    }\n"
-    "    break;\n"
+    "    *this = temp;\n"
+    "    break; }\n"
     "  case Module_Param::MP_Value_List:\n"
-    "    if (param.get_size()>0) param.type_error(\"empty record/set template\", \"%s\");\n"
+    "    if (mp->get_size()>0) param.type_error(\"empty record/set template\", \"%s\");\n"
     "    *this = NULL_VALUE;\n"
     "    break;\n"
     "  default:\n"
     "    param.type_error(\"empty record/set template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent();\n"
-    "}\n\n", name, dispname, dispname);
+    "  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();\n"
+    "}\n\n", name, name, dispname, dispname);
+  
+  /* get_param() */
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf(src,
+    "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
+    "{\n"
+    "  Module_Param* mp = NULL;\n"
+    "  switch (template_selection) {\n"
+    "  case UNINITIALIZED_TEMPLATE:\n"
+    "    mp = new Module_Param_Unbound();\n"
+    "    break;\n"
+    "  case OMIT_VALUE:\n"
+    "    mp = new Module_Param_Omit();\n"
+    "    break;\n"
+    "  case ANY_VALUE:\n"
+    "    mp = new Module_Param_Any();\n"
+    "    break;\n"
+    "  case ANY_OR_OMIT:\n"
+    "    mp = new Module_Param_AnyOrNone();\n"
+    "    break;\n"
+    "  case SPECIFIC_VALUE:\n"
+    "    mp = new Module_Param_Value_List();\n"
+    "    break;\n"
+    "  case VALUE_LIST:\n"
+    "  case COMPLEMENTED_LIST: {\n"
+    "    if (template_selection == VALUE_LIST) {\n"
+    "      mp = new Module_Param_List_Template();\n"
+    "    }\n"
+    "    else {\n"
+    "      mp = new Module_Param_ComplementList_Template();\n"
+    "    }\n"
+    "    for (size_t i = 0; i < value_list.n_values; ++i) {\n"
+    "      mp->add_elem(value_list.list_value[i].get_param(param_name));\n"
+    "    }\n"
+    "    break; }\n"
+    "  default:\n"
+    "    break;\n"
+    "  }\n"
+    "  if (is_ifpresent) {\n"
+    "    mp->set_ifpresent();\n"
+    "  }\n"
+    "  return mp;\n"
+    "}\n\n", name);
 
     /* check template restriction */
     def = mputstr(def, "void check_restriction(template_res t_res, "
-        "const char* t_name=NULL) const;\n");
+        "const char* t_name=NULL, boolean legacy = FALSE) const;\n");
     src = mputprintf(src,
         "void %s_template::check_restriction("
-          "template_res t_res, const char* t_name) const\n"
+          "template_res t_res, const char* t_name, boolean legacy) const\n"
         "{\n"
         "if (template_selection==UNINITIALIZED_TEMPLATE) return;\n"
         "switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {\n"
@@ -6326,7 +6646,7 @@ static void defEmptyRecordTemplate(const char *name, const char *dispname,
         "if (template_selection!=SPECIFIC_VALUE || is_ifpresent) break;\n"
         "return;\n"
         "case TR_PRESENT:\n"
-        "if (!match_omit()) return;\n"
+        "if (!match_omit(legacy)) return;\n"
         "break;\n"
         "default:\n"
         "return;\n"
@@ -6350,18 +6670,18 @@ static void defCommonRecordTemplate(const char *name,
   char **def, char **src)
 {
     /* TTCN-3 ispresent() function */
-    *def = mputstr(*def, "boolean is_present() const;\n");
+    *def = mputstr(*def, "boolean is_present(boolean legacy = FALSE) const;\n");
     *src = mputprintf(*src,
-        "boolean %s_template::is_present() const\n"
+        "boolean %s_template::is_present(boolean legacy) const\n"
         "{\n"
         "if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;\n"
-        "return !match_omit();\n"
+        "return !match_omit(legacy);\n"
         "}\n\n", name);
 
     /* match_omit() */
-    *def = mputstr(*def, "boolean match_omit() const;\n");
+    *def = mputstr(*def, "boolean match_omit(boolean legacy = FALSE) const;\n");
     *src = mputprintf(*src,
-        "boolean %s_template::match_omit() const\n"
+        "boolean %s_template::match_omit(boolean legacy) const\n"
         "{\n"
         "if (is_ifpresent) return TRUE;\n"
         "switch (template_selection) {\n"
@@ -6370,10 +6690,12 @@ static void defCommonRecordTemplate(const char *name,
         "return TRUE;\n"
         "case VALUE_LIST:\n"
         "case COMPLEMENTED_LIST:\n"
+        "if (legacy) {\n"
         "for (unsigned int l_idx=0; l_idx<value_list.n_values; l_idx++)\n"
         "if (value_list.list_value[l_idx].match_omit())\n"
         "return template_selection==VALUE_LIST;\n"
         "return template_selection==COMPLEMENTED_LIST;\n"
+        "} // else fall through\n"
         "default:\n"
         "return FALSE;\n"
         "}\n"
@@ -6922,12 +7244,14 @@ void defRecordTemplate2(const struct_def *sdef, output_struct *output)
     }
 
     /* match operation (template matching) */
-    def = mputprintf(def, "inline boolean match(const %s& other_value) const "
-      "{ return matchv(&other_value); }\n", name);
+    def = mputprintf(def, "inline boolean match(const %s& other_value, "
+      "boolean legacy = FALSE) const "
+      "{ return matchv(&other_value, legacy); }\n", name);
 
     /* log_match */
-    def = mputprintf(def, "inline void log_match(const %s& match_value) const "
-      "{ log_matchv(&match_value); }\n", name);
+    def = mputprintf(def, "inline void log_match(const %s& match_value, "
+      "boolean legacy = FALSE) const "
+      "{ log_matchv(&match_value, legacy); }\n", name);
 
     /* valueof operation */
     def = mputprintf(def, "%s valueof() const;\n", name);

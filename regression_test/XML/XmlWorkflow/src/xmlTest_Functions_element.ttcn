@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -604,9 +604,9 @@ function f_encDecTest_IndividualTrigger1() {
   },vl_decodedPdu;
   //  var octetstring vl_expectedEncodedPdu:=char2oct("<ns:individualTrigger xmlns:ns='urn:XmlTest.imsike' triggerDescriptionA='myTriggerDescriptionAttr'>\n\t<triggerDescription>TriggerDescription</triggerDescription>\n</ns:individualTrigger>\n\n");
   var octetstring vl_expectedEncodedPdu:=char2oct(
-    "<ns:individualTrigger xmlns:ns='urn:XmlTest.imsike' triggerDescriptionA='myTriggerDescriptionAttr'>\n\t" &
-    "<ns:triggerDescription>TriggerDescription</ns:triggerDescription>\n" &
-    "</ns:individualTrigger>\n\n");
+    "<ns50:individualTrigger xmlns:ns50='urn:XmlTest.imsike' triggerDescriptionA='myTriggerDescriptionAttr'>\n\t" &
+    "<ns50:triggerDescription>TriggerDescription</ns50:triggerDescription>\n" &
+    "</ns50:individualTrigger>\n\n");
   var octetstring vl_stream:=''O;
   f_enc_IndividualTrigger(vl_pdu,vl_stream);
 
@@ -658,7 +658,7 @@ function f_encDecTest_IndividualTrigger2() {
     content:=omit
   },vl_decodedPdu;
   var octetstring vl_expectedEncodedPdu:=char2oct(
-    "<ns:individualTrigger xmlns:ns='urn:XmlTest.imsike' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' triggerDescriptionA='myTriggerDescriptionAttr' xsi:nil='true'/>\n\n");
+    "<ns50:individualTrigger xmlns:ns50='urn:XmlTest.imsike' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' triggerDescriptionA='myTriggerDescriptionAttr' xsi:nil='true'/>\n\n");
   var octetstring vl_stream:=''O;
   f_enc_IndividualTrigger(vl_pdu,vl_stream);
 
@@ -714,11 +714,11 @@ function f_encDecTest_Isp1() {
   },
   vl_decodedPdu;
   var octetstring vl_expectedEncodedPdu:=char2oct(
-    "<ns:isp xmlns:ns='urn:XmlTest.imsike'>\n\t"&
-    "<ns:individualTrigger triggerDescriptionA='myTriggerDescriptionAttr'>\n\t\t" &
-    "<ns:triggerDescription>MyTriggerDescription</ns:triggerDescription>\n\t"&
-    "</ns:individualTrigger>\n"&
-    "</ns:isp>\n\n");
+    "<ns50:isp xmlns:ns50='urn:XmlTest.imsike'>\n\t"&
+    "<ns50:individualTrigger triggerDescriptionA='myTriggerDescriptionAttr'>\n\t\t" &
+    "<ns50:triggerDescription>MyTriggerDescription</ns50:triggerDescription>\n\t"&
+    "</ns50:individualTrigger>\n"&
+    "</ns50:isp>\n\n");
 
   var octetstring vl_stream:=''O;
   f_enc_Isp(vl_pdu,vl_stream);
@@ -776,9 +776,9 @@ function f_encDecTest_Isp2() {
   },
   vl_decodedPdu;
   var octetstring vl_expectedEncodedPdu:=char2oct(
-    "<ns:isp xmlns:ns='urn:XmlTest.imsike' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>\n\t"&
-    "<ns:individualTrigger triggerDescriptionA='myTriggerDescriptionAttr' xsi:nil='true'/>\n"&
-    "</ns:isp>\n\n");
+    "<ns50:isp xmlns:ns50='urn:XmlTest.imsike' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>\n\t"&
+    "<ns50:individualTrigger triggerDescriptionA='myTriggerDescriptionAttr' xsi:nil='true'/>\n"&
+    "</ns50:isp>\n\n");
   var octetstring vl_stream:=''O;
   f_enc_Isp(vl_pdu,vl_stream);
 
@@ -831,9 +831,9 @@ function f_encDecTest_RemarkNillable1() {
   },
   vl_decodedPdu;
   var octetstring vl_expectedEncodedPdu:=char2oct(
-    "<ns:remarkNillable xmlns:ns='urn:XmlTest.imsike'>"&
+    "<ns50:remarkNillable xmlns:ns50='urn:XmlTest.imsike'>"&
     "MyRemarkNillable" &
-    "</ns:remarkNillable>\n\n");
+    "</ns50:remarkNillable>\n\n");
   var octetstring vl_stream:=''O;
   f_enc_RemarkNillable(vl_pdu,vl_stream);
 
@@ -885,7 +885,7 @@ function f_encDecTest_RemarkNillable2() {
   },
   vl_decodedPdu;
   var octetstring vl_expectedEncodedPdu:=char2oct(
-    "<ns:remarkNillable xmlns:ns='urn:XmlTest.imsike' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:nil='true'/>\n\n");
+    "<ns50:remarkNillable xmlns:ns50='urn:XmlTest.imsike' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:nil='true'/>\n\n");
   var octetstring vl_stream:=''O;
   f_enc_RemarkNillable(vl_pdu,vl_stream);
 

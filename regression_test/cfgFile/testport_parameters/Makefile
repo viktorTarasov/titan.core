@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2000-2014 Ericsson Telecom AB
+# Copyright (c) 2000-2015 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
@@ -17,6 +17,11 @@ DIR_SINGLE := dir_single_mode
 DIR_PARALLEL := dir_parallel_mode
 GENERATED_DIRS := $(DIR_SINGLE) $(DIR_PARALLEL)
 
+COVERAGE_FLAG := 
+ifeq ($(COVERAGE), yes)
+  COVERAGE_FLAG += -C
+endif
+
 MAKE_PROG := $(MAKE)
 
 # List of fake targets:
@@ -27,12 +32,12 @@ all: $(GENERATED_DIRS)
 dir_single_mode:
 	mkdir $@
 	cd $@ && for file in $(FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen -s $(TTCN_MODULE) $(PORT) && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) -s $(TTCN_MODULE) $(PORT) && $(MAKE_PROG)
 	
 dir_parallel_mode:
 	mkdir $@
 	cd $@ && for file in $(FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(TTCN_MODULE) $(PORT) && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(TTCN_MODULE) $(PORT) && $(MAKE_PROG)
 
 run: $(GENERATED_DIRS)
 	cd $(DIR_SINGLE) && ./$(RUNNABLE) $(CFG) 

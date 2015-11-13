@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -25,6 +25,7 @@
 #include "Charstring.hh"
 #include "Universal_charstring.hh"
 #include "Logger.hh"
+#include "Module_list.hh"
 
 
 size_t Module_Param_Id::get_index() const {
@@ -71,6 +72,10 @@ char* Module_Param_FieldName::get_str() const {
 
 char* Module_Param_Index::get_str() const {
   return mprintf("[%lu]", (unsigned long)index);
+}
+
+char* Module_Param_CustomName::get_str() const {
+  return mcopystr(name);
 }
 
 void Module_Param_Length_Restriction::log() const {
@@ -239,6 +244,164 @@ verdicttype Module_Param::get_verdict() const {
 char* Module_Param::get_enumerated() const {
   TTCN_error("Internal error: Module_Param::get_enumerated()");
   return NULL;
+}
+
+Module_Param_Ptr Module_Param::get_referenced_param() const {
+  TTCN_error("Internal error: Module_Param::get_referenced_param()");
+  return NULL;
+}
+
+Module_Param::expression_operand_t Module_Param::get_expr_type() const { 
+  TTCN_error("Internal error: Module_Param::get_expr_type()");
+  return EXPR_ERROR;
+}
+
+const char* Module_Param::get_expr_type_str() const {
+  TTCN_error("Internal error: Module_Param::get_expr_type_str()");
+  return NULL;
+}
+
+Module_Param* Module_Param::get_operand1() const {
+  TTCN_error("Internal error: Module_Param::get_operand1()");
+  return NULL;
+}
+
+Module_Param* Module_Param::get_operand2() const {
+  TTCN_error("Internal error: Module_Param::get_operand2()");
+  return NULL;
+}
+
+Module_Param_Ptr::Module_Param_Ptr(Module_Param* p) {
+  ptr = new module_param_ptr_struct;
+  ptr->mp_ptr = p;
+  ptr->temporary = FALSE;
+  ptr->ref_count = 1;
+}
+
+
+Module_Param_Ptr::Module_Param_Ptr(const Module_Param_Ptr& r)
+: ptr(r.ptr) {
+  ++ptr->ref_count;
+}
+
+void Module_Param_Ptr::clean_up() {
+  if (ptr->ref_count == 1) {
+    if (ptr->temporary) {
+      delete ptr->mp_ptr;
+    }
+    delete ptr;
+  }
+  else {
+    --ptr->ref_count;
+  }
+}
+
+Module_Param_Ptr& Module_Param_Ptr::operator=(const Module_Param_Ptr& r) {
+  clean_up();
+  ptr = r.ptr;
+  ++ptr->ref_count;
+  return *this;
+}
+
+Module_Param_Reference::Module_Param_Reference(Module_Param_Name* p): mp_ref(p) {
+  if (mp_ref == NULL) {
+    TTCN_error("Internal error: Module_Param_Reference::Module_Param_Reference()");
+  }
+}
+
+Module_Param_Ptr Module_Param_Reference::get_referenced_param() const {
+  mp_ref->reset();
+  Module_Param_Ptr ptr = Module_List::get_param(*mp_ref);
+  ptr.set_temporary();
+  return ptr;
+}
+
+char* Module_Param_Reference::get_enumerated() const {
+  if (mp_ref->is_single_name()) {
+    return mp_ref->get_current_name();
+  }
+  return NULL;
+}
+
+void Module_Param_Reference::log_value() const {
+  TTCN_Logger::log_event_str(mp_ref->get_str());
+}
+
+void Module_Param_Unbound::log_value() const {
+  TTCN_Logger::log_event_str("<unbound>");
+}
+
+Module_Param_Expression::Module_Param_Expression(expression_operand_t p_type,
+  Module_Param* p_op1, Module_Param* p_op2)
+: expr_type(p_type), operand1(p_op1), operand2(p_op2) {
+  if (operand1 == NULL || operand2 == NULL) {
+    TTCN_error("Internal error: Module_Param_Expression::Module_Param_Expression()");
+  }
+  operand1->set_parent(this);
+  operand2->set_parent(this);
+}
+
+Module_Param_Expression::Module_Param_Expression(Module_Param* p_op)
+: expr_type(EXPR_NEGATE), operand1(p_op), operand2(NULL) {
+  if (operand1 == NULL) {
+    TTCN_error("Internal error: Module_Param_Expression::Module_Param_Expression()");
+  }
+  operand1->set_parent(this);
+}
+
+Module_Param_Expression::~Module_Param_Expression() {
+  delete operand1;
+  if (operand2 != NULL) {
+    delete operand2;
+  }
+}
+
+const char* Module_Param_Expression::get_expr_type_str() const {
+  switch (expr_type) {
+  case EXPR_ADD:
+    return "Adding (+)";
+  case EXPR_SUBTRACT:
+    return "Subtracting (-)";
+  case EXPR_MULTIPLY:
+    return "Multiplying (*)";
+  case EXPR_DIVIDE:
+    return "Dividing (/)";
+  case EXPR_NEGATE:
+    return "Negating (-)";
+  case EXPR_CONCATENATE:
+    return "Concatenating (&)";
+  default:
+    return NULL;
+  }
+}
+
+void Module_Param_Expression::log_value() const {
+  if (expr_type == EXPR_NEGATE) {
+    TTCN_Logger::log_event_str("- ");
+  }
+  operand1->log_value();
+  switch (expr_type) {
+  case EXPR_ADD:
+    TTCN_Logger::log_event_str(" + ");
+    break;
+  case EXPR_SUBTRACT:
+    TTCN_Logger::log_event_str(" - ");
+    break;
+  case EXPR_MULTIPLY:
+    TTCN_Logger::log_event_str(" * ");
+    break;
+  case EXPR_DIVIDE:
+    TTCN_Logger::log_event_str(" / ");
+    break;
+  case EXPR_CONCATENATE:
+    TTCN_Logger::log_event_str(" & ");
+    break;
+  default:
+    break;
+  }
+  if (expr_type != EXPR_NEGATE) {
+    operand2->log_value();
+  }
 }
 
 void Module_Param_NotUsed::log_value() const {
@@ -442,11 +605,19 @@ char* Module_Param::get_param_context() const {
 
 void Module_Param::error(const char* err_msg, ...) const {
   if (Ttcn_String_Parsing::happening()) {
-    char* exception_str = mcopystr("Error while setting parameter field '");
-    char* param_ctx = get_param_context();
+    char* exception_str = mcopystr("Error while setting ");
+    char* param_ctx;
+    if (id && id->is_custom()) {
+      param_ctx = mputstr(id->get_str(), " in module parameter");
+    }
+    else {
+      char* tmp = get_param_context();
+      param_ctx = mprintf("parameter field '%s'", tmp ? tmp : "<NULL pointer>");
+      Free(tmp);
+    }
     exception_str = mputstr(exception_str, param_ctx);
     Free(param_ctx);
-    exception_str = mputstr(exception_str, "': ");
+    exception_str = mputstr(exception_str, ": ");
     va_list p_var;
     va_start(p_var, err_msg);
     char* error_msg_str = mprintf_va_list(err_msg, p_var);
@@ -464,13 +635,23 @@ void Module_Param::error(const char* err_msg, ...) const {
   case OT_CONCAT: TTCN_Logger::log_event_str("concatenating"); break;
   default: TTCN_Logger::log_event_str("???");
   }
-  TTCN_Logger::log_event_str(" parameter field '");
-  char* param_ctx = get_param_context();
-  TTCN_Logger::log_event_str(param_ctx);
-  Free(param_ctx);
+  TTCN_Logger::log_event_str(" ");
+  if (id && id->is_custom()) {
+    char* custom_ctx = id->get_str();
+    TTCN_Logger::log_event_str(custom_ctx);
+    Free(custom_ctx);
+    TTCN_Logger::log_event_str(" in module parameter");
+  }
+  else {
+    TTCN_Logger::log_event_str("parameter field '");
+    char* param_ctx = get_param_context();
+    TTCN_Logger::log_event_str(param_ctx);
+    Free(param_ctx);
+    TTCN_Logger::log_event_str("'");
+  }
   switch (operation_type) {
-  case OT_ASSIGN: TTCN_Logger::log_event_str("' to '"); break;
-  case OT_CONCAT: TTCN_Logger::log_event_str("' and '"); break;
+  case OT_ASSIGN: TTCN_Logger::log_event_str(" to '"); break;
+  case OT_CONCAT: TTCN_Logger::log_event_str(" and '"); break;
   default: TTCN_Logger::log_event_str("' ??? '");
   }
   log(false);
@@ -482,6 +663,22 @@ void Module_Param::error(const char* err_msg, ...) const {
   TTCN_Logger::send_event_as_error();
   TTCN_Logger::end_event();
   throw TC_Error();
+}
+
+void Module_Param::type_error(const char* expected, const char* type_name /* = NULL */) const {
+  const Module_Param* reporter = this;
+  // if it's an expression, find its head and use that to report the error
+  // (since that's the only parameter with a valid name)
+  while (reporter->parent != NULL && reporter->parent->get_type() == MP_Expression) {
+    reporter = reporter->parent;
+  }
+  // either use this parameter's or the referenced parameter's type string
+  // (but never the head's type string)
+  reporter->error("Type mismatch: %s or reference to %s was expected%s%s instead of %s%s.",
+    expected, expected,
+    (type_name != NULL) ? " for type " : "", (type_name != NULL) ? type_name : "",
+    (get_type() == MP_Reference) ? "reference to " : "",
+    (get_type() == MP_Reference) ? get_referenced_param()->get_type_str() : get_type_str());
 }
 
 bool Ttcn_String_Parsing::string_parsing = false;

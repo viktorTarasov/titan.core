@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -19,6 +19,8 @@ struct Erroneous_descriptor_t;
 
 class Text_Buf;
 class Module_Param;
+class Module_Param_Name;
+class Module_Param_Length_Restriction;
 
 enum template_sel {
   UNINITIALIZED_TEMPLATE = -1,
@@ -83,7 +85,22 @@ public:
   /** return the name of template restriction \a tr */
   static const char* get_res_name(template_res tr);
 
+  /** Initialize this object (or one of its fields/elements) with a 
+    * module parameter value. The module parameter may contain references to
+    * other module parameters or module parameter expressions, which are processed
+    * by this method to calculated the final result.
+    * @note Sets the 'ifpresent' flag if either the reference (if any) or the
+    * (referenced) module parameter value have their 'ifpresent' flag
+    * @note If both the reference (if any) and the (referenced) module parameter
+    * have a length restriction, then the reference's length restriction is used.
+    * @note A temporary object is used when setting VALUE_LIST or COMPLEMENT_LIST
+    * templates, as the list of templates might contain a reference to this object.
+    * @param param module parameter value (its ID specifies which object is to be set) */
   VIRTUAL_IF_RUNTIME_2 void set_param(Module_Param& param);
+  /** Create a module parameter value equivalent to this object (or one of its
+    * fields/elements)
+    * @param param_name module parameter ID, specifies which object to convert */
+  VIRTUAL_IF_RUNTIME_2 Module_Param* get_param(Module_Param_Name& param_name) const;
   
   /** not a component by default (component templates will return true) */
   inline boolean is_component() { return FALSE; }
@@ -100,15 +117,16 @@ public:
   virtual void log() const = 0;
 
   // virtual functions for match and log_match
-  virtual boolean matchv(const Base_Type* other_value) const = 0;
-  virtual void log_matchv(const Base_Type* match_value) const = 0;
+  virtual boolean matchv(const Base_Type* other_value, boolean legacy) const = 0;
+  virtual void log_matchv(const Base_Type* match_value, boolean legacy) const = 0;
 
   virtual void encode_text(Text_Buf& text_buf) const = 0;
   virtual void decode_text(Text_Buf& text_buf) = 0;
-  virtual boolean is_present() const = 0;
-  virtual boolean match_omit() const = 0;
+  virtual boolean is_present(boolean legacy = FALSE) const = 0;
+  virtual boolean match_omit(boolean legacy = FALSE) const = 0;
 
-  virtual void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  virtual void check_restriction(template_res t_res, const char* t_name=NULL,
+    boolean legacy = FALSE) const;
 
   virtual ~Base_Template() { }
 #endif
@@ -156,6 +174,7 @@ protected:
   void decode_text_restricted(Text_Buf& text_buf);
 
   void set_length_range(const Module_Param& param);
+  Module_Param_Length_Restriction* get_length_range() const;
 
 public:
 
@@ -264,8 +283,8 @@ protected:
 public:
   void log() const;
 
-  boolean matchv(const Base_Type* other_value) const;
-  void log_matchv(const Base_Type* match_value) const;
+  boolean matchv(const Base_Type* other_value, boolean legacy) const;
+  void log_matchv(const Base_Type* match_value, boolean legacy) const;
   /** create an instance of this */
   virtual Set_Of_Template* create() const = 0;
   /** create an instance of the element class */
@@ -274,23 +293,26 @@ public:
   // used for both set of and record of types
   static boolean match_function_specific(
     const Base_Type *value_ptr, int value_index,
-    const Restricted_Length_Template *template_ptr, int template_index);
+    const Restricted_Length_Template *template_ptr, int template_index,
+    boolean legacy);
   // 2 static functions only for set of types
   static boolean match_function_set(
     const Base_Type *value_ptr, int value_index,
-    const Restricted_Length_Template *template_ptr, int template_index);
+    const Restricted_Length_Template *template_ptr, int template_index,
+    boolean legacy);
   static void log_function(const Base_Type *value_ptr,
     const Restricted_Length_Template *template_ptr,
-    int index_value, int index_template);
+    int index_value, int index_template, boolean legacy);
 
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
 
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   
-  void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
   void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }
 };
 
@@ -373,8 +395,8 @@ public:
   int n_elem() const;
   void log() const;
 
-  boolean matchv(const Base_Type* other_value) const;
-  void log_matchv(const Base_Type* match_value) const;
+  boolean matchv(const Base_Type* other_value, boolean legacy) const;
+  void log_matchv(const Base_Type* match_value, boolean legacy) const;
   /** create an instance of this */
   virtual Record_Of_Template* create() const = 0;
   /** create an instance of the element class */
@@ -383,16 +405,17 @@ public:
   // used for both set of and record of types
   static boolean match_function_specific(
     const Base_Type *value_ptr, int value_index,
-    const Restricted_Length_Template *template_ptr, int template_index);
+    const Restricted_Length_Template *template_ptr, int template_index, boolean legacy);
 
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
 
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 
-  void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
   void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }
 };
 
@@ -452,17 +475,18 @@ public:
 
   void log() const;
 
-  boolean matchv(const Base_Type* other_value) const;
-  void log_matchv(const Base_Type* match_value) const;
+  boolean matchv(const Base_Type* other_value, boolean legacy) const;
+  void log_matchv(const Base_Type* match_value, boolean legacy) const;
 
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
 
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 
-  void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
   void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }
 };
 
@@ -507,15 +531,16 @@ public:
 
   void log() const;
 
-  boolean matchv(const Base_Type* other_value) const;
-  void log_matchv(const Base_Type* match_value) const;
+  boolean matchv(const Base_Type* other_value, boolean legacy) const;
+  void log_matchv(const Base_Type* match_value, boolean legacy) const;
 
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
 
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 };
 
 #undef VIRTUAL_IF_RUNTIME_2

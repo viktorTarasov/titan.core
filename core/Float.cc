@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -244,9 +244,67 @@ void FLOAT::log() const
 
 void FLOAT::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "float value");
-  if (param.get_type()!=Module_Param::MP_Float) param.type_error("float value");
-  bound_flag = TRUE;
-  float_value = param.get_float();
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
+  case Module_Param::MP_Float: {
+    clean_up();
+    bound_flag = TRUE;
+    float_value = mp->get_float();
+    break; }
+  case Module_Param::MP_Expression:
+    switch (mp->get_expr_type()) {
+    case Module_Param::EXPR_NEGATE: {
+      FLOAT operand;
+      operand.set_param(*mp->get_operand1());
+      *this = - operand;
+      break; }
+    case Module_Param::EXPR_ADD: {
+      FLOAT operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 + operand2;
+      break; }
+    case Module_Param::EXPR_SUBTRACT: {
+      FLOAT operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 - operand2;
+      break; }
+    case Module_Param::EXPR_MULTIPLY: {
+      FLOAT operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 * operand2;
+      break; }
+    case Module_Param::EXPR_DIVIDE: {
+      FLOAT operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      if (operand2 == 0.0) {
+        param.error("Floating point division by zero.");
+      }
+      *this = operand1 / operand2;
+      break; }
+    default:
+      param.expr_type_error("a float");
+      break;
+    }
+    break;
+  default:
+    param.type_error("float value");
+    break;
+  }
+}
+
+Module_Param* FLOAT::get_param(Module_Param_Name& /* param_name */) const
+{
+  if (!bound_flag) {
+    return new Module_Param_Unbound();
+  }
+  return new Module_Param_Float(float_value);
 }
 
 void FLOAT::encode_text(Text_Buf& text_buf) const
@@ -1195,11 +1253,12 @@ FLOAT_template& FLOAT_template::operator=(const FLOAT_template& other_value)
   return *this;
 }
 
-boolean FLOAT_template::match(double other_value) const
+boolean FLOAT_template::match(double other_value, boolean /* legacy */) const
 {
   switch (template_selection) {
   case SPECIFIC_VALUE:
-    return single_value == other_value;
+    return single_value == other_value || // check if they're both NaN
+      (single_value != single_value && other_value != other_value);
   case OMIT_VALUE:
     return FALSE;
   case ANY_VALUE:
@@ -1222,7 +1281,7 @@ boolean FLOAT_template::match(double other_value) const
   return FALSE;
 }
 
-boolean FLOAT_template::match(const FLOAT& other_value) const
+boolean FLOAT_template::match(const FLOAT& other_value, boolean /* legacy */) const
 {
   if (!other_value.is_bound()) return FALSE;
   return match(other_value.float_value);
@@ -1337,7 +1396,8 @@ void FLOAT_template::log() const
   log_ifpresent();
 }
 
-void FLOAT_template::log_match(const FLOAT& match_value) const
+void FLOAT_template::log_match(const FLOAT& match_value,
+                               boolean /* legacy */) const
 {
   if (TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()
   &&  TTCN_Logger::get_logmatch_buffer_len() != 0) {
@@ -1353,7 +1413,11 @@ void FLOAT_template::log_match(const FLOAT& match_value) const
 
 void FLOAT_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "float template");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
     break;
@@ -1364,24 +1428,111 @@ void FLOAT_template::set_param(Module_Param& param) {
     *this = ANY_OR_OMIT;
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t i=0; i<param.get_size(); i++) {
-      list_item(i).set_param(*param.get_elem(i));
+  case Module_Param::MP_ComplementList_Template: {
+    FLOAT_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
     }
-    break;
+    *this = temp;
+    break; }
   case Module_Param::MP_Float:
-    *this = param.get_float();
+    *this = mp->get_float();
     break;
   case Module_Param::MP_FloatRange:
     set_type(VALUE_RANGE);
-    if (param.has_lower_float()) set_min(param.get_lower_float());
-    if (param.has_upper_float()) set_max(param.get_upper_float());
+    if (mp->has_lower_float()) set_min(mp->get_lower_float());
+    if (mp->has_upper_float()) set_max(mp->get_upper_float());
+    break;
+  case Module_Param::MP_Expression:
+    switch (mp->get_expr_type()) {
+    case Module_Param::EXPR_NEGATE: {
+      FLOAT operand;
+      operand.set_param(*mp->get_operand1());
+      *this = - operand;
+      break; }
+    case Module_Param::EXPR_ADD: {
+      FLOAT operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 + operand2;
+      break; }
+    case Module_Param::EXPR_SUBTRACT: {
+      FLOAT operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 - operand2;
+      break; }
+    case Module_Param::EXPR_MULTIPLY: {
+      FLOAT operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 * operand2;
+      break; }
+    case Module_Param::EXPR_DIVIDE: {
+      FLOAT operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      if (operand2 == 0.0) {
+        param.error("Floating point division by zero.");
+      }
+      *this = operand1 / operand2;
+      break; }
+    default:
+      param.expr_type_error("a float");
+      break;
+    }
     break;
   default:
     param.type_error("float template");
   }
-  is_ifpresent = param.get_ifpresent();
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* FLOAT_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE:
+    mp = new Module_Param_Float(single_value);
+    break;
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  case VALUE_RANGE:
+    mp = new Module_Param_FloatRange(
+      value_range.min_value, value_range.min_is_present,
+      value_range.max_value, value_range.max_is_present);
+    break;
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
 }
 
 void FLOAT_template::encode_text(Text_Buf& text_buf) const
@@ -1448,13 +1599,13 @@ void FLOAT_template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean FLOAT_template::is_present() const
+boolean FLOAT_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean FLOAT_template::match_omit() const
+boolean FLOAT_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -1463,10 +1614,14 @@ boolean FLOAT_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -1474,7 +1629,8 @@ boolean FLOAT_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void FLOAT_template::check_restriction(template_res t_res, const char* t_name) const
+void FLOAT_template::check_restriction(template_res t_res, const char* t_name,
+                                       boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -1486,7 +1642,7 @@ void FLOAT_template::check_restriction(template_res t_res, const char* t_name) c
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -675,8 +675,9 @@ namespace Ttcn {
       delete fau_refd.ap_list2;
       break;
     case S_STRING2TTCN:
-      delete str2ttcn.val;
-      delete str2ttcn.ref;
+    case S_INT2ENUM:
+      delete convert_op.val;
+      delete convert_op.ref;
       break;
     default:
       FATAL_ERROR("Statement::clean_up()");
@@ -1324,11 +1325,21 @@ namespace Ttcn {
     }
   }
 
-  Statement::Statement(statementtype_t p_st, Value* p_val, Reference* p_ref): statementtype(p_st), my_sb(0)
+  Statement::Statement(statementtype_t p_st, Value* p_val, Reference* p_ref)
+    : statementtype(p_st), my_sb(0)
   {
-    if (p_st!=S_STRING2TTCN || p_val==NULL || p_ref==NULL) FATAL_ERROR("Statement::Statement()");
-    str2ttcn.val = p_val;
-    str2ttcn.ref = p_ref;
+    switch (statementtype) {
+    case S_STRING2TTCN:
+    case S_INT2ENUM:
+      if (p_val==NULL || p_ref==NULL) {
+        FATAL_ERROR("Statement::Statement()");
+      }
+      convert_op.val = p_val;
+      convert_op.ref = p_ref;
+      break;
+    default:
+      FATAL_ERROR("Statement::Statement()");
+    }
   }
 
   Statement::~Statement()
@@ -1455,6 +1466,7 @@ namespace Ttcn {
     case S_TESTCASE_INSTANCE_REFD:
       return "execute";
     case S_STRING2TTCN: return "string2ttcn";
+    case S_INT2ENUM: return "int2enum";
     case S_START_PROFILER: return "@profiler.start";
     case S_STOP_PROFILER: return "@profiler.stop";
     default:
@@ -1745,8 +1757,9 @@ namespace Ttcn {
       fau_refd.t_list1->set_my_scope(p_scope);
       break;
     case S_STRING2TTCN:
-      str2ttcn.val->set_my_scope(p_scope);
-      str2ttcn.ref->set_my_scope(p_scope);
+    case S_INT2ENUM:
+      convert_op.val->set_my_scope(p_scope);
+      convert_op.ref->set_my_scope(p_scope);
       break;
     default:
       FATAL_ERROR("Statement::set_my_scope()");
@@ -1991,8 +2004,9 @@ namespace Ttcn {
       fau_refd.t_list1->set_fullname(p_fullname+".<parameters>");
       break;
     case S_STRING2TTCN:
-      str2ttcn.val->set_fullname(p_fullname+".ti");
-      str2ttcn.ref->set_fullname(p_fullname+".ref");
+    case S_INT2ENUM:
+      convert_op.val->set_fullname(p_fullname+".ti");
+      convert_op.ref->set_fullname(p_fullname+".ref");
       break;
     default:
       FATAL_ERROR("Statement::set_fullname()");
@@ -2268,6 +2282,7 @@ namespace Ttcn {
     case S_TESTCASE_INSTANCE_REFD:
     case S_START_PROFILER:
     case S_STOP_PROFILER:
+    case S_INT2ENUM:
       return false;
     case S_ALT:
     case S_INTERLEAVE:
@@ -2508,6 +2523,9 @@ namespace Ttcn {
     case S_STRING2TTCN:
       chk_string2ttcn();
       break;
+    case S_INT2ENUM:
+      chk_int2enum();
+      break;
     case S_START_PROFILER:
     case S_STOP_PROFILER:
       // do nothing
@@ -2520,9 +2538,9 @@ namespace Ttcn {
   void Statement::chk_string2ttcn()
   {
     Error_Context cntxt(this, "In string2ttcn() statement");
-    str2ttcn.val->chk_expr_type(Type::T_CSTR, "charstring", Type::EXPECTED_DYNAMIC_VALUE);
+    convert_op.val->chk_expr_type(Type::T_CSTR, "charstring", Type::EXPECTED_DYNAMIC_VALUE);
     ///
-    Common::Assignment* refd_ass = str2ttcn.ref->get_refd_assignment();
+    Common::Assignment* refd_ass = convert_op.ref->get_refd_assignment();
     if (refd_ass==NULL) {
       error("Could not determine the assignment for second parameter");
       goto error;
@@ -2530,7 +2548,7 @@ namespace Ttcn {
     switch (refd_ass->get_asstype()) {
     case Definition::A_PAR_VAL_IN:
     case Definition::A_PAR_TEMPL_IN:
-      refd_ass->use_as_lvalue(*str2ttcn.ref);
+      refd_ass->use_as_lvalue(*convert_op.ref);
     case Definition::A_VAR:
     case Definition::A_VAR_TEMPLATE:
     case Definition::A_PAR_VAL_OUT:
@@ -2540,16 +2558,38 @@ namespace Ttcn {
       // valid assignment types
       break;
     default:
-      str2ttcn.ref->error("Reference to '%s' cannot be used as the second parameter", refd_ass->get_assname());
+      convert_op.ref->error("Reference to '%s' cannot be used as the second parameter", refd_ass->get_assname());
       goto error;
     }
     return;
   error:
-    delete str2ttcn.val;
-    delete str2ttcn.ref;
+    delete convert_op.val;
+    delete convert_op.ref;
     statementtype = S_ERROR;
   }
-
+  
+  void Statement::chk_int2enum()
+  {
+    Error_Context cntxt(this, "In int2enum() statement");
+    convert_op.val->chk_expr_type(Type::T_INT, "integer", Type::EXPECTED_DYNAMIC_VALUE);
+    ///
+    Common::Assignment* refd_ass = convert_op.ref->get_refd_assignment();
+    if (refd_ass==NULL) {
+      error("Could not determine the assignment for second parameter");
+      goto error;
+    }
+    if (Type::T_ENUM_T != convert_op.ref->chk_variable_ref()->get_type_refd_last()->get_typetype_ttcn3()) {
+      convert_op.ref->error("A reference to variable or value parameter of "
+        "type enumerated was expected");
+      goto error;
+    }
+    return;
+  error:
+    delete convert_op.val;
+    delete convert_op.ref;
+    statementtype = S_ERROR;
+  }
+  
   void Statement::chk_allowed_interleave()
   {
     switch (statementtype) {
@@ -3073,7 +3113,7 @@ error:
         if (!dfb) FATAL_ERROR("Statement::chk_return()");
         returnexpr.gen_restriction_check =
           returnexpr.t->chk_restriction("return template",
-            dfb->get_template_restriction());
+            dfb->get_template_restriction(), this);
       }
       break;
     case Definition::A_ALTSTEP:
@@ -5302,8 +5342,9 @@ error:
             fau_refd.ap_list2->get_par(i)->set_code_section(p_code_section);
       break;
     case S_STRING2TTCN:
-      str2ttcn.val->set_code_section(p_code_section);
-      str2ttcn.ref->set_code_section(p_code_section);
+    case S_INT2ENUM:
+      convert_op.val->set_code_section(p_code_section);
+      convert_op.ref->set_code_section(p_code_section);
       break;
     default:
       FATAL_ERROR("Statement::set_code_section()");
@@ -5485,6 +5526,9 @@ error:
     case S_STRING2TTCN:
       str=generate_code_string2ttcn(str);
       break;
+    case S_INT2ENUM:
+      str = generate_code_int2enum(str);
+      break;
     case S_START_PROFILER:
       str = mputstr(str, "ttcn3_prof.start();\n");
       break;
@@ -5501,11 +5545,11 @@ error:
   {
     expression_struct val_expr;
     Code::init_expr(&val_expr);
-    str2ttcn.val->generate_code_expr(&val_expr);
+    convert_op.val->generate_code_expr(&val_expr);
 
     expression_struct ref_expr;
     Code::init_expr(&ref_expr);
-    str2ttcn.ref->generate_code(&ref_expr);
+    convert_op.ref->generate_code(&ref_expr);
 
     str = mputstr(str, val_expr.preamble);
     str = mputstr(str, ref_expr.preamble);
@@ -5520,7 +5564,52 @@ error:
 
     return str;
   }
+  
+  char* Statement::generate_code_int2enum(char* str)
+  {
+    expression_struct val_expr;
+    Code::init_expr(&val_expr);
+    convert_op.val->generate_code_expr(&val_expr);
 
+    expression_struct ref_expr;
+    Code::init_expr(&ref_expr);
+    convert_op.ref->generate_code(&ref_expr);
+    
+    // check if the reference is an optional field
+    bool is_optional = false;
+    FieldOrArrayRefs* subrefs = convert_op.ref->get_subrefs();
+    if (NULL != subrefs) {
+      Type* ref_type = convert_op.ref->get_refd_assignment()->get_Type()->get_type_refd_last();
+      for (size_t i = 0; i < subrefs->get_nof_refs(); ++i) {
+        FieldOrArrayRef* subref = subrefs->get_ref(i);
+        if (FieldOrArrayRef::ARRAY_REF == subref->get_type()) {
+          ref_type = ref_type->get_ofType()->get_type_refd_last();
+        }
+        else { // FIELD_REF
+          CompField* cf = ref_type->get_comp_byName(*subref->get_id());
+          if (i == subrefs->get_nof_refs() - 1 && cf->get_is_optional()) {
+            is_optional = true;
+          }
+          ref_type = cf->get_type()->get_type_refd_last();
+        }
+      }
+    }
+
+    str = mputstr(str, val_expr.preamble);
+    str = mputstr(str, ref_expr.preamble);
+
+    str = mputprintf(str, "%s%s.int2enum(%s);\n", ref_expr.expr,
+      is_optional ? "()" : "", val_expr.expr);
+
+    str = mputstr(str, val_expr.postamble);
+    str = mputstr(str, ref_expr.postamble);
+
+    Code::free_expr(&val_expr);
+    Code::free_expr(&ref_expr);
+
+    return str;
+  }
+  
   void Statement::generate_code_expr(expression_struct *expr)
   {
     switch (statementtype) {
@@ -7150,6 +7239,7 @@ error:
         case S_STRING2TTCN:
         case S_START_PROFILER:
         case S_STOP_PROFILER:
+        case S_INT2ENUM:
           break;
         default:
           FATAL_ERROR("Statement::set_parent_path()");
@@ -7548,7 +7638,7 @@ error:
     template_restriction = Template::get_sub_restriction(template_restriction, ref);
     // check the template restriction
     gen_restriction_check =
-      templ->chk_restriction("template", template_restriction);
+      templ->chk_restriction("template", template_restriction, this);
   }
 
   char *Assignment::generate_code(char *str)
@@ -9138,7 +9228,8 @@ error:
         if(!exprs.preamble && !exprs.postamble) {
           str=mputstr(str, "if(");
           if(!is_value)
-            str=mputprintf(str, "%s.match(%s)", exprs.expr, expr_name);
+            str=mputprintf(str, "%s.match(%s%s)", exprs.expr, expr_name,
+              omit_in_value_list ? ", TRUE" : "");
           else str=mputprintf(str, "%s == %s", expr_name, exprs.expr);
           str=mputprintf(str, ") goto %s_%lu;\n", tmp_prefix,
             (unsigned long) idx);
@@ -9150,7 +9241,8 @@ error:
           char *s=exprs.expr;
           exprs.expr=mprintf("%s_%lub = ", tmp_prefix, (unsigned long) idx);
           if(!is_value)
-            exprs.expr=mputprintf(exprs.expr, "%s.match(%s)", s, expr_name);
+            exprs.expr=mputprintf(exprs.expr, "%s.match(%s%s)", s, expr_name,
+              omit_in_value_list ? ", TRUE" : "");
           else exprs.expr=mputprintf(exprs.expr, "(%s == %s)", expr_name, s);
           Free(s);
           str=Code::merge_free_expr(str, &exprs);

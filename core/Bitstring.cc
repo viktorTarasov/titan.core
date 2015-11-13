@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -542,24 +542,61 @@ void BITSTRING::log() const
 
 void BITSTRING::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, "bitstring value");
-  if (param.get_type()!=Module_Param::MP_Bitstring) param.type_error("bitstring value");
-  switch (param.get_operation_type()) {
-  case Module_Param::OT_ASSIGN:
-    clean_up();
-    init_struct(param.get_string_size());
-    memcpy(val_ptr->bits_ptr, param.get_string_data(), (val_ptr->n_bits + 7) / 8);
-    clear_unused_bits();
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
+  case Module_Param::MP_Bitstring:
+    switch (param.get_operation_type()) {
+    case Module_Param::OT_ASSIGN:
+      clean_up();
+      init_struct(mp->get_string_size());
+      memcpy(val_ptr->bits_ptr, mp->get_string_data(), (val_ptr->n_bits + 7) / 8);
+      clear_unused_bits();
+      break;
+    case Module_Param::OT_CONCAT:
+      if (is_bound()) {
+        *this = *this + BITSTRING(mp->get_string_size(), (unsigned char*)mp->get_string_data());
+      } else {
+        *this = BITSTRING(mp->get_string_size(), (unsigned char*)mp->get_string_data());
+      }
+      break;
+    default:
+      TTCN_error("Internal error: BITSTRING::set_param()");
+    }
     break;
-  case Module_Param::OT_CONCAT:
-    if (is_bound()) {
-      *this = *this + BITSTRING(param.get_string_size(), (unsigned char*)param.get_string_data());
-    } else {
-      *this = BITSTRING(param.get_string_size(), (unsigned char*)param.get_string_data());
+  case Module_Param::MP_Expression:
+    if (mp->get_expr_type() == Module_Param::EXPR_CONCATENATE) {
+      BITSTRING operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      if (param.get_operation_type() == Module_Param::OT_CONCAT) {
+        *this = *this + operand1 + operand2;
+      }
+      else {
+        *this = operand1 + operand2;
+      }
+    }
+    else {
+      param.expr_type_error("a bitstring");
     }
     break;
   default:
-    TTCN_error("Internal error: BITSTRING::set_param()");
+    param.type_error("bitstring value");
+    break;
   }
+}
+
+Module_Param* BITSTRING::get_param(Module_Param_Name& /* param_name */) const
+{
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
+  }
+  int n_bytes = (val_ptr->n_bits + 7) / 8;
+  unsigned char* val_cpy = (unsigned char *)Malloc(n_bytes);
+  memcpy(val_cpy, val_ptr->bits_ptr, n_bytes);
+  return new Module_Param_Bitstring(val_ptr->n_bits, val_cpy);
 }
 
 void BITSTRING::encode_text(Text_Buf& text_buf) const
@@ -1619,7 +1656,8 @@ const BITSTRING_ELEMENT BITSTRING_template::operator[](const INTEGER& index_valu
   return (*this)[(int)index_value];
 }
 
-boolean BITSTRING_template::match(const BITSTRING& other_value) const
+boolean BITSTRING_template::match(const BITSTRING& other_value,
+                                  boolean /* legacy */) const
 {
   if (!other_value.is_bound()) return FALSE;
   if (!match_length(other_value.val_ptr->n_bits)) return FALSE;
@@ -1768,7 +1806,8 @@ void BITSTRING_template::log() const
   log_ifpresent();
 }
 
-void BITSTRING_template::log_match(const BITSTRING& match_value) const
+void BITSTRING_template::log_match(const BITSTRING& match_value,
+                                   boolean /* legacy */) const
 {
   if (TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()
   &&  TTCN_Logger::get_logmatch_buffer_len() != 0) {
@@ -1784,7 +1823,11 @@ void BITSTRING_template::log_match(const BITSTRING& match_value) const
 
 void BITSTRING_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE|Module_Param::BC_LIST, "bitstring template");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
     break;
@@ -1795,23 +1838,88 @@ void BITSTRING_template::set_param(Module_Param& param) {
     *this = ANY_OR_OMIT;
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t i=0; i<param.get_size(); i++) {
-      list_item(i).set_param(*param.get_elem(i));
+  case Module_Param::MP_ComplementList_Template: {
+    BITSTRING_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
     }
-    break;
+    *this = temp;
+    break; }
   case Module_Param::MP_Bitstring:
-    *this = BITSTRING(param.get_string_size(), (unsigned char*)param.get_string_data());
+    *this = BITSTRING(mp->get_string_size(), (unsigned char*)mp->get_string_data());
     break;
   case Module_Param::MP_Bitstring_Template:
-    *this = BITSTRING_template(param.get_string_size(), (unsigned char*)param.get_string_data());
+    *this = BITSTRING_template(mp->get_string_size(), (unsigned char*)mp->get_string_data());
+    break;
+  case Module_Param::MP_Expression:
+    if (mp->get_expr_type() == Module_Param::EXPR_CONCATENATE) {
+      BITSTRING operand1, operand2;
+      operand1.set_param(*mp->get_operand1());
+      operand2.set_param(*mp->get_operand2());
+      *this = operand1 + operand2;
+    }
+    else {
+      param.expr_type_error("a bitstring");
+    }
     break;
   default:
     param.type_error("bitstring template");
   }
-  is_ifpresent = param.get_ifpresent();
-  set_length_range(param);
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+  if (param.get_length_restriction() != NULL) {
+    set_length_range(param);
+  }
+  else {
+    set_length_range(*mp);
+  }
+}
+
+Module_Param* BITSTRING_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE:
+    mp = single_value.get_param(param_name);
+    break;
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  case STRING_PATTERN: {
+    unsigned char* val_cpy = (unsigned char*)Malloc(pattern_value->n_elements);
+    memcpy(val_cpy, pattern_value->elements_ptr, pattern_value->n_elements);
+    mp = new Module_Param_Bitstring_Template(pattern_value->n_elements, val_cpy);
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  mp->set_length_restriction(get_length_range());
+  return mp;
 }
 
 void BITSTRING_template::encode_text(Text_Buf& text_buf) const
@@ -1874,13 +1982,13 @@ void BITSTRING_template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean BITSTRING_template::is_present() const
+boolean BITSTRING_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean BITSTRING_template::match_omit() const
+boolean BITSTRING_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -1889,10 +1997,14 @@ boolean BITSTRING_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -1900,7 +2012,8 @@ boolean BITSTRING_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void BITSTRING_template::check_restriction(template_res t_res, const char* t_name) const
+void BITSTRING_template::check_restriction(template_res t_res, const char* t_name,
+                                           boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -1912,7 +2025,7 @@ void BITSTRING_template::check_restriction(template_res t_res, const char* t_nam
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;

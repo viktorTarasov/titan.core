@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -603,25 +603,29 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "    return;\n"
     "  }\n"
     "  param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, \"%s value\");\n"
+    "  Module_Param_Ptr mp = &param;\n"
+    "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+    "    mp = param.get_referenced_param();\n"
+    "  }\n"
     "  switch (param.get_operation_type()) {\n"
     "  case Module_Param::OT_ASSIGN:\n"
-    "    if (param.get_type()==Module_Param::MP_Value_List && param.get_size()==0) {\n"
+    "    if (mp->get_type()==Module_Param::MP_Value_List && mp->get_size()==0) {\n"
     "      *this = NULL_VALUE;\n"
     "      return;\n"
     "    }\n"
-    "    switch (param.get_type()) {\n"
+    "    switch (mp->get_type()) {\n"
     "    case Module_Param::MP_Value_List:\n"
-    "      set_size(param.get_size());\n"
-    "      for (size_t i=0; i<param.get_size(); ++i) {\n"
-    "        Module_Param* const curr = param.get_elem(i);\n"
+    "      set_size(mp->get_size());\n"
+    "      for (size_t i=0; i<mp->get_size(); ++i) {\n"
+    "        Module_Param* const curr = mp->get_elem(i);\n"
     "        if (curr->get_type()!=Module_Param::MP_NotUsed) {\n"
     "          (*this)[i].set_param(*curr);\n"
     "        }\n"
     "      }\n"
     "      break;\n"
     "    case Module_Param::MP_Indexed_List:\n"
-    "      for (size_t i=0; i<param.get_size(); ++i) {\n"
-    "        Module_Param* const curr = param.get_elem(i);\n"
+    "      for (size_t i=0; i<mp->get_size(); ++i) {\n"
+    "        Module_Param* const curr = mp->get_elem(i);\n"
     "        (*this)[curr->get_id()->get_index()].set_param(*curr);\n"
     "      }\n"
     "      break;\n"
@@ -630,12 +634,12 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "    }\n"
     "    break;\n"
     "  case Module_Param::OT_CONCAT:\n"
-    "    switch (param.get_type()) {\n"
+    "    switch (mp->get_type()) {\n"
     "    case Module_Param::MP_Value_List: {\n"
     "      if (!is_bound()) *this = NULL_VALUE;\n"
     "      int start_idx = lengthof();\n"
-    "      for (size_t i=0; i<param.get_size(); ++i) {\n"
-    "        Module_Param* const curr = param.get_elem(i);\n"
+    "      for (size_t i=0; i<mp->get_size(); ++i) {\n"
+    "        Module_Param* const curr = mp->get_elem(i);\n"
     "        if ((curr->get_type()!=Module_Param::MP_NotUsed)) {\n"
     "          (*this)[start_idx+(int)i].set_param(*curr);\n"
     "        }\n"
@@ -651,10 +655,41 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "  default:\n"
     "    TTCN_error(\"Internal error: Unknown operation type.\");\n"
     "  }\n"
-    "}\n", name, sdef->kind == RECORD_OF ? "record of" : "set of",
+    "}\n\n", name, sdef->kind == RECORD_OF ? "record of" : "set of",
     dispname, sdef->kind == RECORD_OF ? "record of" : "set of",
     sdef->kind == RECORD_OF ? "record of" : "set of", dispname,
     sdef->kind == RECORD_OF ? "record of" : "set of", dispname);
+  
+  /* get param function */
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf
+    (src,
+    "Module_Param* %s::get_param(Module_Param_Name& param_name) const\n"
+    "{\n"
+    "  if (!is_bound()) {\n"
+    "    return new Module_Param_Unbound();\n"
+    "  }\n"
+    "  if (param_name.next_name()) {\n"
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the elements, not to the whole record of
+    "    char* param_field = param_name.get_current_name();\n"
+    "    if (param_field[0] < '0' || param_field[0] > '9') {\n"
+    "      TTCN_error(\"Unexpected record field name in module parameter reference, \"\n"
+    "        \"expected a valid index for %s type `%s'\");\n"
+    "    }\n"
+    "    int param_index = -1;\n"
+    "    sscanf(param_field, \"%%d\", &param_index);\n"
+    "    return (*this)[param_index].get_param(param_name);\n"
+    "  }\n"
+    "  Vector<Module_Param*> values;\n"
+    "  for (int i = 0; i < val_ptr->n_elements; ++i) {\n"
+    "    values.push_back((*this)[i].get_param(param_name));\n"
+    "  }\n"
+    "  Module_Param_Value_List* mp = new Module_Param_Value_List();\n"
+    "  mp->add_list_with_implicit_ids(&values);\n"
+    "  values.clear();\n"
+    "  return mp;\n"
+    "}\n\n", name, sdef->kind == RECORD_OF ? "record of" : "set of", dispname);
 
   /* set implicit omit function, recursive */
   def = mputstr(def, "  void set_implicit_omit();\n");
@@ -2083,25 +2118,29 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
     "    return;\n"
     "  }\n"
     "  param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, \"%s value\");\n"
+    "  Module_Param_Ptr mp = &param;\n"
+    "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+    "    mp = param.get_referenced_param();\n"
+    "  }\n"
     "  switch (param.get_operation_type()) {\n"
     "  case Module_Param::OT_ASSIGN:\n"
-    "    if (param.get_type()==Module_Param::MP_Value_List && param.get_size()==0) {\n"
+    "    if (mp->get_type()==Module_Param::MP_Value_List && mp->get_size()==0) {\n"
     "      *this = NULL_VALUE;\n"
     "      return;\n"
     "    }\n"
-    "    switch (param.get_type()) {\n"
+    "    switch (mp->get_type()) {\n"
     "    case Module_Param::MP_Value_List:\n"
-    "      set_size(param.get_size());\n"
-    "      for (size_t i=0; i<param.get_size(); ++i) {\n"
-    "        Module_Param* const curr = param.get_elem(i);\n"
+    "      set_size(mp->get_size());\n"
+    "      for (size_t i=0; i<mp->get_size(); ++i) {\n"
+    "        Module_Param* const curr = mp->get_elem(i);\n"
     "        if (curr->get_type()!=Module_Param::MP_NotUsed) {\n"
     "          (*this)[i].set_param(*curr);\n"
     "        }\n"
     "      }\n"
     "      break;\n"
     "    case Module_Param::MP_Indexed_List:\n"
-    "      for (size_t i=0; i<param.get_size(); ++i) {\n"
-    "        Module_Param* const curr = param.get_elem(i);\n"
+    "      for (size_t i=0; i<mp->get_size(); ++i) {\n"
+    "        Module_Param* const curr = mp->get_elem(i);\n"
     "        (*this)[curr->get_id()->get_index()].set_param(*curr);\n"
     "      }\n"
     "      break;\n"
@@ -2110,12 +2149,12 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
     "    }\n"
     "    break;\n"
     "  case Module_Param::OT_CONCAT:\n"
-    "    switch (param.get_type()) {\n"
+    "    switch (mp->get_type()) {\n"
     "    case Module_Param::MP_Value_List: {\n"
     "      if (!is_bound()) *this = NULL_VALUE;\n"
     "      int start_idx = lengthof();\n"
-    "      for (size_t i=0; i<param.get_size(); ++i) {\n"
-    "        Module_Param* const curr = param.get_elem(i);\n"
+    "      for (size_t i=0; i<mp->get_size(); ++i) {\n"
+    "        Module_Param* const curr = mp->get_elem(i);\n"
     "        if ((curr->get_type()!=Module_Param::MP_NotUsed)) {\n"
     "          (*this)[start_idx+(int)i].set_param(*curr);\n"
     "        }\n"
@@ -2135,6 +2174,37 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
     sdef->kind == RECORD_OF ? "record of" : "set of",
     sdef->kind == RECORD_OF ? "record of" : "set of", dispname,
     sdef->kind == RECORD_OF ? "record of" : "set of", dispname);
+  
+  /* get param function */
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf
+    (src,
+    "Module_Param* %s::get_param(Module_Param_Name& param_name) const\n"
+    "{\n"
+    "  if (!is_bound()) {\n"
+    "    return new Module_Param_Unbound();\n"
+    "  }\n"
+    "  if (param_name.next_name()) {\n"
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the elements, not to the whole record of
+    "    char* param_field = param_name.get_current_name();\n"
+    "    if (param_field[0] < '0' || param_field[0] > '9') {\n"
+    "      TTCN_error(\"Unexpected record field name in module parameter reference, \"\n"
+    "        \"expected a valid index for %s type `%s'\");\n"
+    "    }\n"
+    "    int param_index = -1;\n"
+    "    sscanf(param_field, \"%%d\", &param_index);\n"
+    "    return (*this)[param_index].get_param(param_name);\n"
+    "  }\n"
+    "  Vector<Module_Param*> values;\n"
+    "  for (int i = 0; i < n_elements; ++i) {\n"
+    "    values.push_back((*this)[i].get_param(param_name));\n"
+    "  }\n"
+    "  Module_Param_Value_List* mp = new Module_Param_Value_List();\n"
+    "  mp->add_list_with_implicit_ids(&values);\n"
+    "  values.clear();\n"
+    "  return mp;\n"
+    "}\n\n", name, sdef->kind == RECORD_OF ? "record of" : "set of", dispname);
 
   /* encoding / decoding functions */
   def = mputstr(def, "void encode_text(Text_Buf& text_buf) const;\n");
@@ -3388,15 +3458,15 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
   def = mputstr(def,
     "static boolean match_function_specific(const Base_Type *value_ptr, "
       "int value_index, const Restricted_Length_Template *template_ptr, "
-      "int template_index);\n");
+      "int template_index, boolean legacy);\n");
   src = mputprintf(src,
     "boolean %s_template::match_function_specific(const Base_Type *value_ptr, "
       "int value_index, const Restricted_Length_Template *template_ptr, "
-      "int template_index)\n"
+      "int template_index, boolean legacy)\n"
     "{\n"
     "if (value_index >= 0) return ((const %s_template*)template_ptr)->"
       "single_value.value_elements[template_index]->"
-      "match((*(const %s*)value_ptr)[value_index]);\n"
+      "match((*(const %s*)value_ptr)[value_index], legacy);\n"
     "else return ((const %s_template*)template_ptr)->"
       "single_value.value_elements[template_index]->is_any_or_omit();\n"
     "}\n\n", name, name, name, name);
@@ -3406,15 +3476,15 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     def = mputstr(def,
       "static boolean match_function_set(const Base_Type *value_ptr, "
 	"int value_index, const Restricted_Length_Template *template_ptr, "
-	"int template_index);\n");
+	"int template_index, boolean legacy);\n");
     src = mputprintf(src,
       "boolean %s_template::match_function_set(const Base_Type *value_ptr, "
 	"int value_index, const Restricted_Length_Template *template_ptr, "
-	"int template_index)\n"
+	"int template_index, boolean legacy)\n"
       "{\n"
       "if (value_index >= 0) return ((const %s_template*)template_ptr)->"
 	"value_set.set_items[template_index].match("
-	"(*(const %s*)value_ptr)[value_index]);\n"
+	"(*(const %s*)value_ptr)[value_index], legacy);\n"
       "else return ((const %s_template*)template_ptr)->"
 	"value_set.set_items[template_index].is_any_or_omit();\n"
       "}\n\n", name, name, name, name);
@@ -3423,16 +3493,16 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     def = mputstr(def,
       "static void log_function(const Base_Type *value_ptr, "
 	"const Restricted_Length_Template *template_ptr,"
-    " int index_value, int index_template);\n");
+    " int index_value, int index_template, boolean legacy);\n");
     src = mputprintf(src,
       "void %s_template::log_function(const Base_Type *value_ptr, "
 	"const Restricted_Length_Template *template_ptr,"
-    " int index_value, int index_template)\n"
+    " int index_value, int index_template, boolean legacy)\n"
       "{\n"
       "if (value_ptr != NULL && template_ptr != NULL)"
       "((const %s_template*)template_ptr)"
       "->single_value.value_elements[index_template]"
-      "->log_match((*(const %s*)value_ptr)[index_value]);\n"
+      "->log_match((*(const %s*)value_ptr)[index_value], legacy);\n"
       "else if (value_ptr != NULL) (*(const %s*)value_ptr)[index_value].log();\n"
       "else if (template_ptr != NULL) ((const %s_template*)template_ptr)"
 	"->single_value.value_elements[index_template]->log();\n"
@@ -3860,10 +3930,10 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     dispname, dispname, dispname, dispname, dispname, dispname);
 
   /* match operation */
-  def = mputprintf(def, "boolean match(const %s& other_value) const;\n",
-                   name);
+  def = mputprintf(def, "boolean match(const %s& other_value, boolean legacy "
+    "= FALSE) const;\n", name);
   src = mputprintf(src,
-    "boolean %s_template::match(const %s& other_value) const\n"
+    "boolean %s_template::match(const %s& other_value, boolean legacy) const\n"
     "{\n"
     "if (!other_value.is_bound()) return FALSE;\n"
     "int value_length = other_value.size_of();\n"
@@ -3871,7 +3941,7 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "switch (template_selection) {\n"
     "case SPECIFIC_VALUE:\n"
     "return match_%s_of(&other_value, value_length, this, "
-      "single_value.n_elements, match_function_specific);\n"
+      "single_value.n_elements, match_function_specific, legacy);\n"
     "case OMIT_VALUE:\n"
     "return FALSE;\n"
     "case ANY_VALUE:\n"
@@ -3881,7 +3951,7 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "case COMPLEMENTED_LIST:\n"
     "for (unsigned int list_count = 0; list_count < value_list.n_values; "
       "list_count++)\n"
-    "if (value_list.list_value[list_count].match(other_value)) "
+    "if (value_list.list_value[list_count].match(other_value, legacy)) "
       "return template_selection == VALUE_LIST;\n"
     "return template_selection == COMPLEMENTED_LIST;\n",
     name, name, sdef->kind == RECORD_OF ? "record" : "set");
@@ -3890,7 +3960,7 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
       "case SUPERSET_MATCH:\n"
       "case SUBSET_MATCH:\n"
       "return match_set_of(&other_value, value_length, this, "
-	"value_set.n_items, match_function_set);\n");
+	"value_set.n_items, match_function_set, legacy);\n");
   }
   src = mputprintf(src,
     "default:\n"
@@ -4091,13 +4161,13 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
      "log_ifpresent();\n"
      "}\n\n");
 
-  def = mputprintf(def, "void log_match(const %s& match_value) const;\n",
-                   name);
-  src = mputprintf(src, "void %s_template::log_match(const %s& match_value) "
-                   "const\n"
+  def = mputprintf(def, "void log_match(const %s& match_value, "
+    "boolean legacy = FALSE) const;\n", name);
+  src = mputprintf(src, "void %s_template::log_match(const %s& match_value, "
+    "boolean legacy) const\n"
     "{\n"
     "if(TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()){\n"
-    "if(match(match_value)){\n"
+    "if(match(match_value, legacy)){\n"
     "TTCN_Logger::print_logmatch_buffer();\n"
     "TTCN_Logger::log_event_str(\" matched\");\n"
     "}else{\n", name, name);
@@ -4110,9 +4180,9 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "size_t previous_size = TTCN_Logger::get_logmatch_buffer_len();\n"
     "for (int elem_count = 0; elem_count < single_value.n_elements; "
     "elem_count++) {\n"
-    "if(!single_value.value_elements[elem_count]->match(match_value[elem_count])){\n"
+    "if(!single_value.value_elements[elem_count]->match(match_value[elem_count], legacy)){\n"
     "TTCN_Logger::log_logmatch_info(\"[%d]\", elem_count);\n"
-    "single_value.value_elements[elem_count]->log_match(match_value[elem_count]);\n"
+    "single_value.value_elements[elem_count]->log_match(match_value[elem_count], legacy);\n"
     "TTCN_Logger::set_logmatch_buffer_len(previous_size);\n"
     "}\n"
     "}\n"
@@ -4130,7 +4200,7 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "size_t previous_size = TTCN_Logger::get_logmatch_buffer_len();\n"
     "if (template_selection == SPECIFIC_VALUE)\n"
     "  log_match_heuristics(&match_value, match_value.size_of(), this, "
-    "single_value.n_elements, match_function_specific, log_function);\n"
+    "single_value.n_elements, match_function_specific, log_function, legacy);\n"
     "else{\n"
     "if(previous_size != 0){\n"
     "TTCN_Logger::print_logmatch_buffer();\n"
@@ -4159,7 +4229,7 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
 	"elem_count++) {\n"
       "if (elem_count > 0) TTCN_Logger::log_event_str(\", \");\n"
       "single_value.value_elements[elem_count]->log_match"
-      "(match_value[elem_count]);\n"
+      "(match_value[elem_count], legacy);\n"
       "}\n"
       "TTCN_Logger::log_event_str(\" }\");\n"
       "log_match_length(single_value.n_elements);\n"
@@ -4169,13 +4239,13 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "match_value.log();\n"
     "TTCN_Logger::log_event_str(\" with \");\n"
     "log();\n"
-    "if (match(match_value)) TTCN_Logger::log_event_str(\" matched\");\n");
+    "if (match(match_value, legacy)) TTCN_Logger::log_event_str(\" matched\");\n");
   if (sdef->kind == SET_OF) {
     src = mputstr(src, "else {\n"
       "TTCN_Logger::log_event_str(\" unmatched\");\n"
       "if (template_selection == SPECIFIC_VALUE) log_match_heuristics("
 	"&match_value, match_value.size_of(), this, single_value.n_elements, "
-	"match_function_specific, log_function);\n"
+	"match_function_specific, log_function, legacy);\n"
       "}\n");
   } else {
     src = mputstr(src, "else TTCN_Logger::log_event_str(\" unmatched\");\n"
@@ -4273,18 +4343,18 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "}\n\n", dispname);
 
   /* TTCN-3 ispresent() function */
-  def = mputstr(def, "boolean is_present() const;\n");
+  def = mputstr(def, "boolean is_present(boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
-    "boolean %s_template::is_present() const\n"
+    "boolean %s_template::is_present(boolean legacy) const\n"
     "{\n"
     "if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;\n"
-    "return !match_omit();\n"
+    "return !match_omit(legacy);\n"
     "}\n\n", name);
 
   /* match_omit() */
-  def = mputstr(def, "boolean match_omit() const;\n");
+  def = mputstr(def, "boolean match_omit(boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
-    "boolean %s_template::match_omit() const\n"
+    "boolean %s_template::match_omit(boolean legacy) const\n"
     "{\n"
     "if (is_ifpresent) return TRUE;\n"
     "switch (template_selection) {\n"
@@ -4293,10 +4363,12 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "return TRUE;\n"
     "case VALUE_LIST:\n"
     "case COMPLEMENTED_LIST:\n"
+    "if (legacy) {\n"
     "for (unsigned int i=0; i<value_list.n_values; i++)\n"
     "if (value_list.list_value[i].match_omit())\n"
     "return template_selection==VALUE_LIST;\n"
     "return template_selection==COMPLEMENTED_LIST;\n"
+    "} // else fall through\n"
     "default:\n"
     "return FALSE;\n"
     "}\n"
@@ -4323,7 +4395,11 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "    return;\n"
     "  }\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE|Module_Param::BC_LIST, \"%s of template\");\n"
-    "  switch (param.get_type()) {\n"
+    "  Module_Param_Ptr mp = &param;\n"
+    "  if (param.get_type() == Module_Param::MP_Reference) {\n"
+    "    mp = param.get_referenced_param();\n"
+    "  }\n"
+    "  switch (mp->get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
     "    break;\n"
@@ -4334,40 +4410,43 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "    *this = ANY_OR_OMIT;\n"
     "    break;\n"
     "  case Module_Param::MP_List_Template:\n"
-    "  case Module_Param::MP_ComplementList_Template:\n"
-    "    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());\n"
-    "    for (size_t p_i=0; p_i<param.get_size(); p_i++) {\n"
-    "      list_item(p_i).set_param(*param.get_elem(p_i));\n"
+    "  case Module_Param::MP_ComplementList_Template: {\n"
+    "    %s_template temp;\n"
+    "    temp.set_type(mp->get_type()==Module_Param::MP_List_Template ? "
+    "VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());\n"
+    "    for (size_t p_i=0; p_i<mp->get_size(); p_i++) {\n"
+    "      temp.list_item(p_i).set_param(*mp->get_elem(p_i));\n"
     "    }\n"
-    "    break;\n"
+    "    *this = temp;\n"
+    "    break; }\n"
     "  case Module_Param::MP_Indexed_List:\n"
     "    if (template_selection!=SPECIFIC_VALUE) set_size(0);\n"
-    "    for (size_t p_i=0; p_i<param.get_size(); ++p_i) {\n"
-    "      (*this)[(int)(param.get_elem(p_i)->get_id()->get_index())].set_param(*param.get_elem(p_i));\n"
+    "    for (size_t p_i=0; p_i<mp->get_size(); ++p_i) {\n"
+    "      (*this)[(int)(mp->get_elem(p_i)->get_id()->get_index())].set_param(*mp->get_elem(p_i));\n"
     "    }\n"
     "    break;\n",
-    name, sdef->kind==RECORD_OF?"record":"set", dispname, sdef->kind==RECORD_OF?"record":"set");
+    name, sdef->kind==RECORD_OF?"record":"set", dispname, sdef->kind==RECORD_OF?"record":"set", name);
   if (sdef->kind == RECORD_OF) {
     src = mputstr(src,
     "  case Module_Param::MP_Value_List: {\n"
-    "    set_size(param.get_size());\n"
+    "    set_size(mp->get_size());\n"
     "    int curr_idx = 0;\n"
-    "    for (size_t p_i=0; p_i<param.get_size(); ++p_i) {\n"
-    "      switch (param.get_elem(p_i)->get_type()) {\n"
+    "    for (size_t p_i=0; p_i<mp->get_size(); ++p_i) {\n"
+    "      switch (mp->get_elem(p_i)->get_type()) {\n"
     "      case Module_Param::MP_NotUsed:\n"
     "        curr_idx++;\n"
     "        break;\n"
     "      case Module_Param::MP_Permutation_Template: {\n"
     "        int perm_start_idx = curr_idx;\n"
-    "        for (size_t perm_i=0; perm_i<param.get_elem(p_i)->get_size(); perm_i++) {\n"
-    "          (*this)[curr_idx].set_param(*(param.get_elem(p_i)->get_elem(perm_i)));\n"
+    "        for (size_t perm_i=0; perm_i<mp->get_elem(p_i)->get_size(); perm_i++) {\n"
+    "          (*this)[curr_idx].set_param(*(mp->get_elem(p_i)->get_elem(perm_i)));\n"
     "          curr_idx++;\n"
     "        }\n"
     "        int perm_end_idx = curr_idx - 1;\n"
     "        add_permutation(perm_start_idx, perm_end_idx);\n"
     "      } break;\n"
     "      default:\n"
-    "        (*this)[curr_idx].set_param(*param.get_elem(p_i));\n"
+    "        (*this)[curr_idx].set_param(*mp->get_elem(p_i));\n"
     "        curr_idx++;\n"
     "      }\n"
     "    }\n"
@@ -4375,18 +4454,18 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
   } else {
     src = mputstr(src,
     "  case Module_Param::MP_Value_List:\n"
-    "    set_size(param.get_size());\n"
-    "    for (size_t p_i=0; p_i<param.get_size(); ++p_i) {\n"
-    "      if (param.get_elem(p_i)->get_type()!=Module_Param::MP_NotUsed) {\n"
-    "        (*this)[p_i].set_param(*param.get_elem(p_i));\n"
+    "    set_size(mp->get_size());\n"
+    "    for (size_t p_i=0; p_i<mp->get_size(); ++p_i) {\n"
+    "      if (mp->get_elem(p_i)->get_type()!=Module_Param::MP_NotUsed) {\n"
+    "        (*this)[p_i].set_param(*mp->get_elem(p_i));\n"
     "      }\n"
     "    }\n"
     "    break;\n"
     "  case Module_Param::MP_Superset_Template:\n"
     "  case Module_Param::MP_Subset_Template:\n"
-    "    set_type(param.get_type()==Module_Param::MP_Superset_Template ? SUPERSET_MATCH : SUBSET_MATCH, param.get_size());\n"
-    "    for (size_t p_i=0; p_i<param.get_size(); p_i++) {\n"
-    "      set_item(p_i).set_param(*param.get_elem(p_i));\n"
+    "    set_type(mp->get_type()==Module_Param::MP_Superset_Template ? SUPERSET_MATCH : SUBSET_MATCH, mp->get_size());\n"
+    "    for (size_t p_i=0; p_i<mp->get_size(); p_i++) {\n"
+    "      set_item(p_i).set_param(*mp->get_elem(p_i));\n"
     "    }\n"
     "    break;\n");
   }
@@ -4394,16 +4473,84 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "  default:\n"
     "    param.type_error(\"%s of template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent();\n"
-    "  set_length_range(param);\n"
+    "  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();\n"
+    "  if (param.get_length_restriction() != NULL) {\n"
+    "    set_length_range(param);\n"
+    "  }\n"
+    "  else {\n"
+    "    set_length_range(*mp);\n"
+    "  };\n"
     "}\n\n", sdef->kind==RECORD_OF?"record":"set", dispname);
+  
+  /* get_param() */
+  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf
+    (src,
+    "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
+    "{\n"
+    "  if (param_name.next_name()) {\n"
+    // Haven't reached the end of the module parameter name
+    // => the name refers to one of the elements, not to the whole record of
+    "    char* param_field = param_name.get_current_name();\n"
+    "    if (param_field[0] < '0' || param_field[0] > '9') {\n"
+    "      TTCN_error(\"Unexpected record field name in module parameter reference, \"\n"
+    "        \"expected a valid index for %s template type `%s'\");\n"
+    "    }\n"
+    "    int param_index = -1;\n"
+    "    sscanf(param_field, \"%%d\", &param_index);\n"
+    "    return (*this)[param_index].get_param(param_name);\n"
+    "  }\n"
+    "  Module_Param* mp = NULL;\n"
+    "  switch (template_selection) {\n"
+    "  case UNINITIALIZED_TEMPLATE:\n"
+    "    mp = new Module_Param_Unbound();\n"
+    "    break;\n"
+    "  case OMIT_VALUE:\n"
+    "    mp = new Module_Param_Omit();\n"
+    "    break;\n"
+    "  case ANY_VALUE:\n"
+    "    mp = new Module_Param_Any();\n"
+    "    break;\n"
+    "  case ANY_OR_OMIT:\n"
+    "    mp = new Module_Param_AnyOrNone();\n"
+    "    break;\n"
+    "  case SPECIFIC_VALUE: {\n"
+    "    Vector<Module_Param*> values;\n"
+    "    for (int i = 0; i < single_value.n_elements; ++i) {\n"
+    "      values.push_back((*this)[i].get_param(param_name));\n"
+    "    }\n"
+    "    mp = new Module_Param_Value_List();\n"
+    "    mp->add_list_with_implicit_ids(&values);\n"
+    "    values.clear();\n"
+    "    break; }\n"
+    "  case VALUE_LIST:\n"
+    "  case COMPLEMENTED_LIST: {\n"
+    "    if (template_selection == VALUE_LIST) {\n"
+    "      mp = new Module_Param_List_Template();\n"
+    "    }\n"
+    "    else {\n"
+    "      mp = new Module_Param_ComplementList_Template();\n"
+    "    }\n"
+    "    for (size_t i = 0; i < value_list.n_values; ++i) {\n"
+    "      mp->add_elem(value_list.list_value[i].get_param(param_name));\n"
+    "    }\n"
+    "    break; }\n"
+    "  default:\n"
+    "    break;\n"
+    "  }\n"
+    "  if (is_ifpresent) {\n"
+    "    mp->set_ifpresent();\n"
+    "  }\n"
+    "  mp->set_length_restriction(get_length_range());\n"
+    "  return mp;\n"
+    "}\n\n", name, sdef->kind==RECORD_OF ? "record of" : "set of", dispname);
 
   /* check template restriction */
   def = mputstr(def, "void check_restriction(template_res t_res, "
-    "const char* t_name=NULL) const;\n");
+    "const char* t_name=NULL, boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
     "void %s_template::check_restriction("
-      "template_res t_res, const char* t_name) const\n"
+      "template_res t_res, const char* t_name, boolean legacy) const\n"
     "{\n"
     "if (template_selection==UNINITIALIZED_TEMPLATE) return;\n"
     "switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {\n"
@@ -4416,7 +4563,7 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
       "t_res, t_name ? t_name : \"%s\");\n"
     "return;\n"
     "case TR_PRESENT:\n"
-    "if (!match_omit()) return;\n"
+    "if (!match_omit(legacy)) return;\n"
     "break;\n"
     "default:\n"
     "return;\n"
@@ -4552,8 +4699,9 @@ void defRecordOfTemplate2(const struct_of_def *sdef, output_struct *output)
     type, name, type);
 
   /* match operation */
-  def = mputprintf(def, "inline boolean match(const %s& match_value) const "
-    "{ return matchv(&match_value); }\n", name);
+  def = mputprintf(def, "inline boolean match(const %s& match_value, "
+    "boolean legacy = FALSE) const "
+    "{ return matchv(&match_value, legacy); }\n", name);
 
   /* valueof operation */
   def = mputprintf(def, "%s valueof() const;\n", name);
@@ -4611,8 +4759,9 @@ void defRecordOfTemplate2(const struct_of_def *sdef, output_struct *output)
   }
 
   /* logging functions */
-  def = mputprintf(def, "inline void log_match(const %s& match_value) const "
-    "{ log_matchv(&match_value); }\n", name);
+  def = mputprintf(def, "inline void log_match(const %s& match_value, "
+    "boolean legacy = FALSE) const "
+    "{ log_matchv(&match_value, legacy); }\n", name);
 
   /* virtual helper functions */
   def = mputprintf(def,

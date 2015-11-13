@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,8 @@ static const char *program_name = NULL;
 static size_t indent_depth = 4;
 static FILE *output_file = NULL;
 static int separate_files = 0;
+static int format_tab_newline = 1;
+static int replaced_tab_newline = 0;
 
 static size_t indent_level = 0;
 static enum { OPEN_BRACE, CLOSE_BRACE, COMMA, OTHER, OTHER_WS }
@@ -117,14 +119,58 @@ static void write_failure(void)
   exit(EXIT_FAILURE);
 }
 
+
+char *
+str_replace ( const char *string, const char *substr, const char *replacement ){
+  char *tok = NULL;
+  char *newstr = NULL;
+  char *oldstr = NULL;
+  char *head = NULL;
+  int length_diff = strlen(substr) - strlen(replacement);
+ 
+  /* if either substr or replacement is NULL, duplicate string a let caller handle it */
+  if ( substr == NULL || replacement == NULL ) return strdup (string);
+  newstr = strdup (string);
+  head = newstr;
+  while ( (tok = strstr ( head, substr ))){
+    oldstr = newstr;
+    newstr = malloc ( strlen ( oldstr ) - strlen ( substr ) + strlen ( replacement ) + 1 );
+    /*failed to alloc mem, free old string and return NULL */
+    if ( newstr == NULL ){
+      free (oldstr);
+      fprintf(stderr, "Failed to allocate memory.\n");
+      exit(EXIT_FAILURE);
+    }
+    //We have to count how many characters we replaced
+    replaced_tab_newline += length_diff;
+    memcpy ( newstr, oldstr, tok - oldstr );
+    memcpy ( newstr + (tok - oldstr), replacement, strlen ( replacement ) );
+    memcpy ( newstr + (tok - oldstr) + strlen( replacement ), tok + strlen ( substr ), strlen ( oldstr ) - strlen ( substr ) - ( tok - oldstr ) );
+    memset ( newstr + strlen ( oldstr ) - strlen ( substr ) + strlen ( replacement ) , 0, 1 );
+    /* move back head right after the last replacement */
+    head = newstr + (tok - oldstr) + strlen( replacement );
+    free (oldstr);
+  }
+  return newstr;
+}
+
+
 static void write_line_buf(void)
 {
   if (buf_len > 0) {
-    if (fwrite(line_buf, buf_len, 1, yyout) != 1) write_failure();
+    if(format_tab_newline){
+      char * temp = str_replace(line_buf, "\\n", "\n");
+      temp = str_replace(temp, "\\t", "\t");
+      strcpy(line_buf, temp);
+      free(temp);
+    }
+    if (fwrite(line_buf, buf_len-replaced_tab_newline, 1, yyout) != 1) write_failure();
     /* append a newline character if it is missing from the end
      * (e.g. because of EOF) */
-    if (line_buf[buf_len - 1] != '\n')
+    if (line_buf[buf_len - replaced_tab_newline - 1] != '\n'){
       if (putc('\n', yyout) == EOF) write_failure();
+    }
+    replaced_tab_newline = 0;
   }
   if (buf_size > MIN_BUFSIZE && buf_size > 2 * buf_len) {
     /* reset the buffer size if a shorter one is enough */
@@ -376,7 +422,7 @@ TIMESTAMP {TIMESTAMP1}|{TIMESTAMP2}|{TIMESTAMP3}
 static void usage(void)
 {
   fprintf(stderr,
-    "usage: %s [-i n] [-o outfile] [-s] [file.log] ...\n"
+    "usage: %s [-i n] [-o outfile] [-s] [-n] [file.log] ...\n"
     "   or  %s -v\n"
     "\n"
     "OPTIONS:\n"
@@ -385,6 +431,7 @@ static void usage(void)
     "        -o outfile:     write the formatted log into file outfile\n"
     "        -s:             place the logs of each test case into separate "
       "files\n"
+    "        -n              newline and tab control characters are not modified\n"
     "        -v:             print version\n",
     program_name, program_name);
 }
@@ -392,13 +439,16 @@ static void usage(void)
 int main(int argc, char *argv[])
 {
     int c;
-    int iflag = 0, oflag = 0, sflag = 0, vflag = 0, errflag = 0;
+    int iflag = 0, oflag = 0, sflag = 0, vflag = 0, errflag = 0, nflag = 0;
 #ifdef LICENSE
     license_struct lstr;
 #endif
     program_name = argv[0];
     output_file = stdout;
-    while ((c = getopt(argc, argv, "i:o:sv")) != -1) {
+    if(argc == 1){
+       errflag = 1;
+    }
+    while ((c = getopt(argc, argv, "i:o:snv")) != -1 && !errflag) {
 	switch (c) {
 	case 'i': {
 	    unsigned int int_arg;
@@ -420,8 +470,13 @@ int main(int argc, char *argv[])
 	    if (sflag || vflag) errflag = 1;
 	    sflag = 1;
 	    break;
+        case 'n':
+            if(vflag) errflag = 1;
+            format_tab_newline = 0;
+            nflag = 1;
+            break;
 	case 'v':
-	    if (iflag || oflag || sflag) errflag = 1;
+	    if (iflag || oflag || sflag || nflag) errflag = 1;
 	    vflag = 1;
 	    break;
 	default:

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -374,11 +374,15 @@ void CHARACTER_STRING_identification::log() const
 void CHARACTER_STRING_identification::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "union value");
-  if (param.get_type()==Module_Param::MP_Value_List && param.get_size()==0) return;
-  if (param.get_type()!=Module_Param::MP_Assignment_List) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  if (mp->get_type()==Module_Param::MP_Value_List && mp->get_size()==0) return;
+  if (mp->get_type()!=Module_Param::MP_Assignment_List) {
     param.error("union value with field name was expected");
   }
-  Module_Param* mp_last = param.get_elem(param.get_size()-1);
+  Module_Param* mp_last = mp->get_elem(mp->get_size()-1);
   if (!strcmp(mp_last->get_id()->get_name(), "syntaxes")) {
     syntaxes().set_param(*mp_last);
     return;
@@ -406,10 +410,53 @@ void CHARACTER_STRING_identification::set_param(Module_Param& param)
   mp_last->error("Field %s does not exist in type CHARACTER STRING.identification.", mp_last->get_id()->get_name());
 }
 
+Module_Param* CHARACTER_STRING_identification::get_param(Module_Param_Name& param_name) const
+{
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
+  }
+  Module_Param* mp_field = NULL;
+  switch(get_selection()) {
+  case ALT_syntaxes:
+    mp_field = field_syntaxes->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("syntaxes")));
+    break;
+  case ALT_syntax:
+    mp_field = field_syntax->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("syntax")));
+    break;
+  case ALT_presentation__context__id:
+    mp_field = field_presentation__context__id->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("presentation_context_id")));
+    break;
+  case ALT_context__negotiation:
+    mp_field = field_context__negotiation->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("context_negotiation")));
+    break;
+  case ALT_transfer__syntax:
+    mp_field = field_transfer__syntax->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("transfer_syntax")));
+    break;
+  case ALT_fixed:
+    mp_field = field_fixed->get_param(param_name);
+    mp_field->set_id(new Module_Param_FieldName(mcopystr("fixed")));
+    break;
+  default:
+    break;
+  }
+  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();
+  mp->add_elem(mp_field);
+  return mp;
+}
+
 void CHARACTER_STRING_identification_template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "union template");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
     break;
@@ -420,18 +467,21 @@ void CHARACTER_STRING_identification_template::set_param(Module_Param& param)
     *this = ANY_OR_OMIT;
     break;
   case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t p_i=0; p_i<param.get_size(); p_i++) {
-      list_item(p_i).set_param(*param.get_elem(p_i));
+  case Module_Param::MP_ComplementList_Template: {
+    CHARACTER_STRING_identification_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
     }
-    break;
+    *this = temp;
+    break; }
   case Module_Param::MP_Value_List:
-    if (param.get_size()==0) break;
+    if (mp->get_size()==0) break;
     param.type_error("union template", "CHARACTER STRING.identification");
     break;
   case Module_Param::MP_Assignment_List: {
-    Module_Param* mp_last = param.get_elem(param.get_size()-1);
+    Module_Param* mp_last = mp->get_elem(mp->get_size()-1);
     if (!strcmp(mp_last->get_id()->get_name(), "syntaxes")) {
       syntaxes().set_param(*mp_last);
       break;
@@ -461,7 +511,77 @@ void CHARACTER_STRING_identification_template::set_param(Module_Param& param)
   default:
     param.type_error("union template", "CHARACTER STRING.identification");
   }
-  is_ifpresent = param.get_ifpresent();
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* CHARACTER_STRING_identification_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Module_Param* mp_field = NULL;
+    switch(single_value.union_selection) {
+    case CHARACTER_STRING_identification::ALT_syntaxes:
+      mp_field = single_value.field_syntaxes->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("syntaxes")));
+      break;
+    case CHARACTER_STRING_identification::ALT_syntax:
+      mp_field = single_value.field_syntax->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("syntax")));
+      break;
+    case CHARACTER_STRING_identification::ALT_presentation__context__id:
+      mp_field = single_value.field_presentation__context__id->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("presentation_context_id")));
+      break;
+    case CHARACTER_STRING_identification::ALT_context__negotiation:
+      mp_field = single_value.field_context__negotiation->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("context_negotiation")));
+      break;
+    case CHARACTER_STRING_identification::ALT_transfer__syntax:
+      mp_field = single_value.field_transfer__syntax->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("transfer_syntax")));
+      break;
+    case CHARACTER_STRING_identification::ALT_fixed:
+      mp_field = single_value.field_fixed->get_param(param_name);
+      mp_field->set_id(new Module_Param_FieldName(mcopystr("fixed")));
+      break;
+    default:
+      break;
+    }
+    mp = new Module_Param_Assignment_List();
+    mp->add_elem(mp_field);
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
 }
 
 void CHARACTER_STRING_identification::encode_text(Text_Buf& text_buf) const
@@ -935,7 +1055,8 @@ CHARACTER_STRING_identification_template& CHARACTER_STRING_identification_templa
   return *this;
 }
 
-boolean CHARACTER_STRING_identification_template::match(const CHARACTER_STRING_identification& other_value) const
+boolean CHARACTER_STRING_identification_template::match(const CHARACTER_STRING_identification& other_value,
+                                                        boolean /* legacy */) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -1232,7 +1353,8 @@ void CHARACTER_STRING_identification_template::log() const
   log_ifpresent();
 }
 
-void CHARACTER_STRING_identification_template::log_match(const CHARACTER_STRING_identification& match_value) const
+void CHARACTER_STRING_identification_template::log_match(const CHARACTER_STRING_identification& match_value,
+                                                         boolean /* legacy */) const
 {
   if(TTCN_Logger::VERBOSITY_COMPACT == TTCN_Logger::get_matching_verbosity()){
     if(match(match_value)){
@@ -1418,13 +1540,13 @@ void CHARACTER_STRING_identification_template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean CHARACTER_STRING_identification_template::is_present() const
+boolean CHARACTER_STRING_identification_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean CHARACTER_STRING_identification_template::match_omit() const
+boolean CHARACTER_STRING_identification_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -1433,10 +1555,12 @@ boolean CHARACTER_STRING_identification_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    } // else fall through
   default:
     return FALSE;
   }
@@ -1444,7 +1568,8 @@ boolean CHARACTER_STRING_identification_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void CHARACTER_STRING_identification_template::check_restriction(template_res t_res, const char* t_name) const
+void CHARACTER_STRING_identification_template::check_restriction(template_res t_res, const char* t_name,
+                                                                 boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -1456,7 +1581,7 @@ void CHARACTER_STRING_identification_template::check_restriction(template_res t_
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -1521,34 +1646,38 @@ void CHARACTER_STRING_identification_syntaxes::clean_up()
 void CHARACTER_STRING_identification_syntaxes::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
-    if (param.get_size()==0) return;
-    if (2!=param.get_size()) {
-      param.error("record value of type CHARACTER STRING.identification.syntaxes has 2 fields but list value has %d fields", (int)param.get_size());
+    if (mp->get_size()==0) return;
+    if (2!=mp->get_size()) {
+      param.error("record value of type CHARACTER STRING.identification.syntaxes has 2 fields but list value has %d fields", (int)mp->get_size());
     }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) abstract().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer().set_param(*param.get_elem(1));
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) abstract().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer().set_param(*mp->get_elem(1));
     break;
   case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
         abstract().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
         transfer().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING.identification.syntaxes: %s", param.get_elem(val_idx)->get_id()->get_name());
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING.identification.syntaxes: %s", mp->get_elem(val_idx)->get_id()->get_name());
       break;
     }
   } break;
@@ -1557,60 +1686,19 @@ void CHARACTER_STRING_identification_syntaxes::set_param(Module_Param& param)
   }
 }
 
-void CHARACTER_STRING_identification_syntaxes_template::set_param(Module_Param& param)
+Module_Param* CHARACTER_STRING_identification_syntaxes::get_param(Module_Param_Name& param_name) const
 {
-  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
-  switch (param.get_type()) {
-  case Module_Param::MP_Omit:
-    *this = OMIT_VALUE;
-    break;
-  case Module_Param::MP_Any:
-    *this = ANY_VALUE;
-    break;
-  case Module_Param::MP_AnyOrNone:
-    *this = ANY_OR_OMIT;
-    break;
-  case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t p_i=0; p_i<param.get_size(); p_i++) {
-      list_item(p_i).set_param(*param.get_elem(p_i));
-    }
-    break;
-  case Module_Param::MP_Value_List:
-    if (param.get_size()==0) break;
-    if (2!=param.get_size()) {
-      param.error("record template of type CHARACTER STRING.identification.syntaxes has 2 fields but list value has %d fields", (int)param.get_size());
-    }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) abstract().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer().set_param(*param.get_elem(1));
-    break;
-  case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
-        abstract().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
-        transfer().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING.identification.syntaxes: %s", param.get_elem(val_idx)->get_id()->get_name());
-      break;
-    }
-  } break;
-  default:
-    param.type_error("record template", "CHARACTER STRING.identification.syntaxes");
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
   }
-  is_ifpresent = param.get_ifpresent();
+  Module_Param* mp_field_abstract = field_abstract.get_param(param_name);
+  mp_field_abstract->set_id(new Module_Param_FieldName(mcopystr("abstract")));
+  Module_Param* mp_field_transfer = field_transfer.get_param(param_name);
+  mp_field_transfer->set_id(new Module_Param_FieldName(mcopystr("transfer")));
+  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();
+  mp->add_elem(mp_field_abstract);
+  mp->add_elem(mp_field_transfer);
+  return mp;
 }
 
 void CHARACTER_STRING_identification_syntaxes::encode_text(Text_Buf& text_buf) const
@@ -1714,6 +1802,115 @@ struct CHARACTER_STRING_identification_syntaxes_template::single_value_struct {
   OBJID_template field_abstract;
   OBJID_template field_transfer;
 };
+
+void CHARACTER_STRING_identification_syntaxes_template::set_param(Module_Param& param)
+{
+  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
+  case Module_Param::MP_Omit:
+    *this = OMIT_VALUE;
+    break;
+  case Module_Param::MP_Any:
+    *this = ANY_VALUE;
+    break;
+  case Module_Param::MP_AnyOrNone:
+    *this = ANY_OR_OMIT;
+    break;
+  case Module_Param::MP_List_Template:
+  case Module_Param::MP_ComplementList_Template: {
+    CHARACTER_STRING_identification_syntaxes_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
+    }
+    *this = temp;
+    break; }
+  case Module_Param::MP_Value_List:
+    if (mp->get_size()==0) break;
+    if (2!=mp->get_size()) {
+      param.error("record template of type CHARACTER STRING.identification.syntaxes has 2 fields but list value has %d fields", (int)mp->get_size());
+    }
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) abstract().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer().set_param(*mp->get_elem(1));
+    break;
+  case Module_Param::MP_Assignment_List: {
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
+        abstract().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
+        transfer().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING.identification.syntaxes: %s", mp->get_elem(val_idx)->get_id()->get_name());
+      break;
+    }
+  } break;
+  default:
+    param.type_error("record template", "CHARACTER STRING.identification.syntaxes");
+  }
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* CHARACTER_STRING_identification_syntaxes_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Module_Param* mp_field_abstract = single_value->field_abstract.get_param(param_name);
+    mp_field_abstract->set_id(new Module_Param_FieldName(mcopystr("abstract")));
+    Module_Param* mp_field_transfer = single_value->field_transfer.get_param(param_name);
+    mp_field_transfer->set_id(new Module_Param_FieldName(mcopystr("transfer")));
+    mp = new Module_Param_Assignment_List();
+    mp->add_elem(mp_field_abstract);
+    mp->add_elem(mp_field_transfer);
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
+}
 
 void CHARACTER_STRING_identification_syntaxes_template::clean_up()
 {
@@ -1856,7 +2053,8 @@ CHARACTER_STRING_identification_syntaxes_template& CHARACTER_STRING_identificati
   return *this;
 }
 
-boolean CHARACTER_STRING_identification_syntaxes_template::match(const CHARACTER_STRING_identification_syntaxes& other_value) const
+boolean CHARACTER_STRING_identification_syntaxes_template::match(const CHARACTER_STRING_identification_syntaxes& other_value,
+                                                                 boolean /* legacy */) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -1998,7 +2196,8 @@ void CHARACTER_STRING_identification_syntaxes_template::log() const
   log_ifpresent();
 }
 
-void CHARACTER_STRING_identification_syntaxes_template::log_match(const CHARACTER_STRING_identification_syntaxes& match_value) const
+void CHARACTER_STRING_identification_syntaxes_template::log_match(const CHARACTER_STRING_identification_syntaxes& match_value,
+                                                                  boolean /* legacy */) const
 {
   if (template_selection == SPECIFIC_VALUE) {
     TTCN_Logger::log_event_str("{ abstract := ");
@@ -2064,13 +2263,13 @@ void CHARACTER_STRING_identification_syntaxes_template::decode_text(Text_Buf& te
   }
 }
 
-boolean CHARACTER_STRING_identification_syntaxes_template::is_present() const
+boolean CHARACTER_STRING_identification_syntaxes_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean CHARACTER_STRING_identification_syntaxes_template::match_omit() const
+boolean CHARACTER_STRING_identification_syntaxes_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -2079,10 +2278,12 @@ boolean CHARACTER_STRING_identification_syntaxes_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    } // else fall through
   default:
     return FALSE;
   }
@@ -2090,7 +2291,8 @@ boolean CHARACTER_STRING_identification_syntaxes_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void CHARACTER_STRING_identification_syntaxes_template::check_restriction(template_res t_res, const char* t_name) const
+void CHARACTER_STRING_identification_syntaxes_template::check_restriction(template_res t_res, const char* t_name,
+                                                                          boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -2102,7 +2304,7 @@ void CHARACTER_STRING_identification_syntaxes_template::check_restriction(templa
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -2167,34 +2369,38 @@ void CHARACTER_STRING_identification_context__negotiation::clean_up()
 void CHARACTER_STRING_identification_context__negotiation::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
-    if (param.get_size()==0) return;
-    if (2!=param.get_size()) {
-      param.error("record value of type CHARACTER STRING.identification.context-negotiation has 2 fields but list value has %d fields", (int)param.get_size());
+    if (mp->get_size()==0) return;
+    if (2!=mp->get_size()) {
+      param.error("record value of type CHARACTER STRING.identification.context-negotiation has 2 fields but list value has %d fields", (int)mp->get_size());
     }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) presentation__context__id().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer__syntax().set_param(*param.get_elem(1));
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) presentation__context__id().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer__syntax().set_param(*mp->get_elem(1));
     break;
   case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
         presentation__context__id().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
         transfer__syntax().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING.identification.context-negotiation: %s", param.get_elem(val_idx)->get_id()->get_name());
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING.identification.context-negotiation: %s", mp->get_elem(val_idx)->get_id()->get_name());
       break;
     }
   } break;
@@ -2203,60 +2409,19 @@ void CHARACTER_STRING_identification_context__negotiation::set_param(Module_Para
   }
 }
 
-void CHARACTER_STRING_identification_context__negotiation_template::set_param(Module_Param& param)
+Module_Param* CHARACTER_STRING_identification_context__negotiation::get_param(Module_Param_Name& param_name) const
 {
-  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
-  switch (param.get_type()) {
-  case Module_Param::MP_Omit:
-    *this = OMIT_VALUE;
-    break;
-  case Module_Param::MP_Any:
-    *this = ANY_VALUE;
-    break;
-  case Module_Param::MP_AnyOrNone:
-    *this = ANY_OR_OMIT;
-    break;
-  case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t p_i=0; p_i<param.get_size(); p_i++) {
-      list_item(p_i).set_param(*param.get_elem(p_i));
-    }
-    break;
-  case Module_Param::MP_Value_List:
-    if (param.get_size()==0) break;
-    if (2!=param.get_size()) {
-      param.error("record template of type CHARACTER STRING.identification.context-negotiation has 2 fields but list value has %d fields", (int)param.get_size());
-    }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) presentation__context__id().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer__syntax().set_param(*param.get_elem(1));
-    break;
-  case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
-        presentation__context__id().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
-        transfer__syntax().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING.identification.context-negotiation: %s", param.get_elem(val_idx)->get_id()->get_name());
-      break;
-    }
-  } break;
-  default:
-    param.type_error("record template", "CHARACTER STRING.identification.context-negotiation");
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
   }
-  is_ifpresent = param.get_ifpresent();
+  Module_Param* mp_field_presentation_context_id = field_presentation__context__id.get_param(param_name);
+  mp_field_presentation_context_id->set_id(new Module_Param_FieldName(mcopystr("presentation_context_id")));
+  Module_Param* mp_field_transfer_syntax = field_transfer__syntax.get_param(param_name);
+  mp_field_transfer_syntax->set_id(new Module_Param_FieldName(mcopystr("transfer_syntax")));
+  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();
+  mp->add_elem(mp_field_presentation_context_id);
+  mp->add_elem(mp_field_transfer_syntax);
+  return mp;
 }
 
 void CHARACTER_STRING_identification_context__negotiation::encode_text(Text_Buf& text_buf) const
@@ -2362,6 +2527,115 @@ struct CHARACTER_STRING_identification_context__negotiation_template::single_val
   INTEGER_template field_presentation__context__id;
   OBJID_template field_transfer__syntax;
 };
+
+void CHARACTER_STRING_identification_context__negotiation_template::set_param(Module_Param& param)
+{
+  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
+  case Module_Param::MP_Omit:
+    *this = OMIT_VALUE;
+    break;
+  case Module_Param::MP_Any:
+    *this = ANY_VALUE;
+    break;
+  case Module_Param::MP_AnyOrNone:
+    *this = ANY_OR_OMIT;
+    break;
+  case Module_Param::MP_List_Template:
+  case Module_Param::MP_ComplementList_Template: {
+    CHARACTER_STRING_identification_context__negotiation_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
+    }
+    *this = temp;
+    break; }
+  case Module_Param::MP_Value_List:
+    if (mp->get_size()==0) break;
+    if (2!=mp->get_size()) {
+      param.error("record template of type CHARACTER STRING.identification.context-negotiation has 2 fields but list value has %d fields", (int)mp->get_size());
+    }
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) presentation__context__id().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) transfer__syntax().set_param(*mp->get_elem(1));
+    break;
+  case Module_Param::MP_Assignment_List: {
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
+        presentation__context__id().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
+        transfer__syntax().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING.identification.context-negotiation: %s", mp->get_elem(val_idx)->get_id()->get_name());
+      break;
+    }
+  } break;
+  default:
+    param.type_error("record template", "CHARACTER STRING.identification.context-negotiation");
+  }
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* CHARACTER_STRING_identification_context__negotiation_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Module_Param* mp_field_presentation_context_id = single_value->field_presentation__context__id.get_param(param_name);
+    mp_field_presentation_context_id->set_id(new Module_Param_FieldName(mcopystr("presentation_context_id")));
+    Module_Param* mp_field_transfer_syntax = single_value->field_transfer__syntax.get_param(param_name);
+    mp_field_transfer_syntax->set_id(new Module_Param_FieldName(mcopystr("transfer_syntax")));
+    mp = new Module_Param_Assignment_List();
+    mp->add_elem(mp_field_presentation_context_id);
+    mp->add_elem(mp_field_transfer_syntax);
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
+}
 
 void CHARACTER_STRING_identification_context__negotiation_template::clean_up()
 {
@@ -2504,7 +2778,8 @@ CHARACTER_STRING_identification_context__negotiation_template& CHARACTER_STRING_
   return *this;
 }
 
-boolean CHARACTER_STRING_identification_context__negotiation_template::match(const CHARACTER_STRING_identification_context__negotiation& other_value) const
+boolean CHARACTER_STRING_identification_context__negotiation_template::match(const CHARACTER_STRING_identification_context__negotiation& other_value,
+                                                                             boolean /* legacy */) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -2646,7 +2921,8 @@ void CHARACTER_STRING_identification_context__negotiation_template::log() const
   log_ifpresent();
 }
 
-void CHARACTER_STRING_identification_context__negotiation_template::log_match(const CHARACTER_STRING_identification_context__negotiation& match_value) const
+void CHARACTER_STRING_identification_context__negotiation_template::log_match(const CHARACTER_STRING_identification_context__negotiation& match_value,
+                                                                              boolean /* legacy */) const
 {
   if (template_selection == SPECIFIC_VALUE) {
     TTCN_Logger::log_event_str("{ presentation_context_id := ");
@@ -2712,13 +2988,13 @@ void CHARACTER_STRING_identification_context__negotiation_template::decode_text(
   }
 }
 
-boolean CHARACTER_STRING_identification_context__negotiation_template::is_present() const
+boolean CHARACTER_STRING_identification_context__negotiation_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean CHARACTER_STRING_identification_context__negotiation_template::match_omit() const
+boolean CHARACTER_STRING_identification_context__negotiation_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -2727,10 +3003,12 @@ boolean CHARACTER_STRING_identification_context__negotiation_template::match_omi
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    } // else fall through
   default:
     return FALSE;
   }
@@ -2738,7 +3016,8 @@ boolean CHARACTER_STRING_identification_context__negotiation_template::match_omi
 }
 
 #ifndef TITAN_RUNTIME_2
-void CHARACTER_STRING_identification_context__negotiation_template::check_restriction(template_res t_res, const char* t_name) const
+void CHARACTER_STRING_identification_context__negotiation_template::check_restriction(template_res t_res, const char* t_name,
+                                                                                      boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -2750,7 +3029,7 @@ void CHARACTER_STRING_identification_context__negotiation_template::check_restri
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;
@@ -2824,42 +3103,46 @@ void CHARACTER_STRING::log() const
 void CHARACTER_STRING::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
-  switch (param.get_type()) {
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
-    if (param.get_size()==0) return;
-    if (3!=param.get_size()) {
-      param.error("record value of type CHARACTER STRING has 3 fields but list value has %d fields", (int)param.get_size());
+    if (mp->get_size()==0) return;
+    if (3!=mp->get_size()) {
+      param.error("record value of type CHARACTER STRING has 3 fields but list value has %d fields", (int)mp->get_size());
     }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) identification().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) data__value__descriptor().set_param(*param.get_elem(1));
-    if (param.get_elem(2)->get_type()!=Module_Param::MP_NotUsed) string__value().set_param(*param.get_elem(2));
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) identification().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) data__value__descriptor().set_param(*mp->get_elem(1));
+    if (mp->get_elem(2)->get_type()!=Module_Param::MP_NotUsed) string__value().set_param(*mp->get_elem(2));
     break;
   case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
         identification().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
         data__value__descriptor().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "string_value")) {
         string__value().set_param(*curr_param);
         value_used[val_idx]=true;
       }
     }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING: %s", param.get_elem(val_idx)->get_id()->get_name());
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING: %s", mp->get_elem(val_idx)->get_id()->get_name());
       break;
     }
   } break;
@@ -2868,68 +3151,22 @@ void CHARACTER_STRING::set_param(Module_Param& param)
   }
 }
 
-void CHARACTER_STRING_template::set_param(Module_Param& param)
+Module_Param* CHARACTER_STRING::get_param(Module_Param_Name& param_name) const
 {
-  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
-  switch (param.get_type()) {
-  case Module_Param::MP_Omit:
-    *this = OMIT_VALUE;
-    break;
-  case Module_Param::MP_Any:
-    *this = ANY_VALUE;
-    break;
-  case Module_Param::MP_AnyOrNone:
-    *this = ANY_OR_OMIT;
-    break;
-  case Module_Param::MP_List_Template:
-  case Module_Param::MP_ComplementList_Template:
-    set_type(param.get_type()==Module_Param::MP_List_Template ? VALUE_LIST : COMPLEMENTED_LIST, param.get_size());
-    for (size_t p_i=0; p_i<param.get_size(); p_i++) {
-      list_item(p_i).set_param(*param.get_elem(p_i));
-    }
-    break;
-  case Module_Param::MP_Value_List:
-    if (param.get_size()==0) break;
-    if (3!=param.get_size()) {
-      param.error("record template of type CHARACTER STRING has 3 fields but list value has %d fields", (int)param.get_size());
-    }
-    if (param.get_elem(0)->get_type()!=Module_Param::MP_NotUsed) identification().set_param(*param.get_elem(0));
-    if (param.get_elem(1)->get_type()!=Module_Param::MP_NotUsed) data__value__descriptor().set_param(*param.get_elem(1));
-    if (param.get_elem(2)->get_type()!=Module_Param::MP_NotUsed) string__value().set_param(*param.get_elem(2));
-    break;
-  case Module_Param::MP_Assignment_List: {
-    Vector<bool> value_used(param.get_size());
-    value_used.resize(param.get_size(), false);
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
-        identification().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
-        data__value__descriptor().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {
-      Module_Param* const curr_param = param.get_elem(val_idx);
-      if (!strcmp(curr_param->get_id()->get_name(), "string_value")) {
-        string__value().set_param(*curr_param);
-        value_used[val_idx]=true;
-      }
-    }
-    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {
-      param.get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING: %s", param.get_elem(val_idx)->get_id()->get_name());
-      break;
-    }
-  } break;
-  default:
-    param.type_error("record template", "CHARACTER STRING");
+  if (!is_bound()) {
+    return new Module_Param_Unbound();
   }
-  is_ifpresent = param.get_ifpresent();
+  Module_Param* mp_field_identification = field_identification.get_param(param_name);
+  mp_field_identification->set_id(new Module_Param_FieldName(mcopystr("identification")));
+  Module_Param* mp_field_data_value_descriptor = field_data__value__descriptor.get_param(param_name);
+  mp_field_data_value_descriptor->set_id(new Module_Param_FieldName(mcopystr("data_value_descriptor")));
+  Module_Param* mp_field_string_value = field_string__value.get_param(param_name);
+  mp_field_string_value->set_id(new Module_Param_FieldName(mcopystr("string_value")));
+  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();
+  mp->add_elem(mp_field_identification);
+  mp->add_elem(mp_field_data_value_descriptor);
+  mp->add_elem(mp_field_string_value);
+  return mp;
 }
 
 void CHARACTER_STRING::encode_text(Text_Buf& text_buf) const
@@ -3147,6 +3384,126 @@ struct CHARACTER_STRING_template::single_value_struct {
   OCTETSTRING_template field_string__value;
 };
 
+void CHARACTER_STRING_template::set_param(Module_Param& param)
+{
+  param.basic_check(Module_Param::BC_TEMPLATE, "record template");
+  Module_Param_Ptr mp = &param;
+  if (param.get_type() == Module_Param::MP_Reference) {
+    mp = param.get_referenced_param();
+  }
+  switch (mp->get_type()) {
+  case Module_Param::MP_Omit:
+    *this = OMIT_VALUE;
+    break;
+  case Module_Param::MP_Any:
+    *this = ANY_VALUE;
+    break;
+  case Module_Param::MP_AnyOrNone:
+    *this = ANY_OR_OMIT;
+    break;
+  case Module_Param::MP_List_Template:
+  case Module_Param::MP_ComplementList_Template: {
+    CHARACTER_STRING_template temp;
+    temp.set_type(mp->get_type() == Module_Param::MP_List_Template ?
+      VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());
+    for (size_t i=0; i<mp->get_size(); i++) {
+      temp.list_item(i).set_param(*mp->get_elem(i));
+    }
+    *this = temp;
+    break; }
+  case Module_Param::MP_Value_List:
+    if (mp->get_size()==0) break;
+    if (3!=mp->get_size()) {
+      param.error("record template of type CHARACTER STRING has 3 fields but list value has %d fields", (int)mp->get_size());
+    }
+    if (mp->get_elem(0)->get_type()!=Module_Param::MP_NotUsed) identification().set_param(*mp->get_elem(0));
+    if (mp->get_elem(1)->get_type()!=Module_Param::MP_NotUsed) data__value__descriptor().set_param(*mp->get_elem(1));
+    if (mp->get_elem(2)->get_type()!=Module_Param::MP_NotUsed) string__value().set_param(*mp->get_elem(2));
+    break;
+  case Module_Param::MP_Assignment_List: {
+    Vector<bool> value_used(mp->get_size());
+    value_used.resize(mp->get_size(), false);
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
+        identification().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
+        data__value__descriptor().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
+      Module_Param* const curr_param = mp->get_elem(val_idx);
+      if (!strcmp(curr_param->get_id()->get_name(), "string_value")) {
+        string__value().set_param(*curr_param);
+        value_used[val_idx]=true;
+      }
+    }
+    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
+      mp->get_elem(val_idx)->error("Non existent field name in type CHARACTER STRING: %s", mp->get_elem(val_idx)->get_id()->get_name());
+      break;
+    }
+  } break;
+  default:
+    param.type_error("record template", "CHARACTER STRING");
+  }
+  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
+}
+
+Module_Param* CHARACTER_STRING_template::get_param(Module_Param_Name& param_name) const
+{
+  Module_Param* mp = NULL;
+  switch (template_selection) {
+  case UNINITIALIZED_TEMPLATE:
+    mp = new Module_Param_Unbound();
+    break;
+  case OMIT_VALUE:
+    mp = new Module_Param_Omit();
+    break;
+  case ANY_VALUE:
+    mp = new Module_Param_Any();
+    break;
+  case ANY_OR_OMIT:
+    mp = new Module_Param_AnyOrNone();
+    break;
+  case SPECIFIC_VALUE: {
+    Module_Param* mp_field_identification = single_value->field_identification.get_param(param_name);
+    mp_field_identification->set_id(new Module_Param_FieldName(mcopystr("identification")));
+    Module_Param* mp_field_data_value_descriptor = single_value->field_data__value__descriptor.get_param(param_name);
+    mp_field_data_value_descriptor->set_id(new Module_Param_FieldName(mcopystr("data_value_descriptor")));
+    Module_Param* mp_field_string_value = single_value->field_string__value.get_param(param_name);
+    mp_field_string_value->set_id(new Module_Param_FieldName(mcopystr("string_value")));
+    mp = new Module_Param_Assignment_List();
+    mp->add_elem(mp_field_identification);
+    mp->add_elem(mp_field_data_value_descriptor);
+    mp->add_elem(mp_field_string_value);
+    break; }
+  case VALUE_LIST:
+  case COMPLEMENTED_LIST: {
+    if (template_selection == VALUE_LIST) {
+      mp = new Module_Param_List_Template();
+    }
+    else {
+      mp = new Module_Param_ComplementList_Template();
+    }
+    for (size_t i = 0; i < value_list.n_values; ++i) {
+      mp->add_elem(value_list.list_value[i].get_param(param_name));
+    }
+    break; }
+  default:
+    break;
+  }
+  if (is_ifpresent) {
+    mp->set_ifpresent();
+  }
+  return mp;
+}
+
 void CHARACTER_STRING_template::clean_up()
 {
   switch (template_selection) {
@@ -3291,7 +3648,8 @@ CHARACTER_STRING_template& CHARACTER_STRING_template::operator=(const CHARACTER_
   return *this;
 }
 
-boolean CHARACTER_STRING_template::match(const CHARACTER_STRING& other_value) const
+boolean CHARACTER_STRING_template::match(const CHARACTER_STRING& other_value,
+                                         boolean /* legacy */) const
 {
   switch (template_selection) {
   case ANY_VALUE:
@@ -3453,7 +3811,8 @@ void CHARACTER_STRING_template::log() const
   log_ifpresent();
 }
 
-void CHARACTER_STRING_template::log_match(const CHARACTER_STRING& match_value) const
+void CHARACTER_STRING_template::log_match(const CHARACTER_STRING& match_value,
+                                          boolean /* legacy */) const
 {
   if (template_selection == SPECIFIC_VALUE) {
     TTCN_Logger::log_event_str("{ identification := ");
@@ -3528,13 +3887,13 @@ void CHARACTER_STRING_template::decode_text(Text_Buf& text_buf)
   }
 }
 
-boolean CHARACTER_STRING_template::is_present() const
+boolean CHARACTER_STRING_template::is_present(boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;
-  return !match_omit();
+  return !match_omit(legacy);
 }
 
-boolean CHARACTER_STRING_template::match_omit() const
+boolean CHARACTER_STRING_template::match_omit(boolean legacy /* = FALSE */) const
 {
   if (is_ifpresent) return TRUE;
   switch (template_selection) {
@@ -3543,10 +3902,14 @@ boolean CHARACTER_STRING_template::match_omit() const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }
@@ -3554,7 +3917,8 @@ boolean CHARACTER_STRING_template::match_omit() const
 }
 
 #ifndef TITAN_RUNTIME_2
-void CHARACTER_STRING_template::check_restriction(template_res t_res, const char* t_name) const
+void CHARACTER_STRING_template::check_restriction(template_res t_res, const char* t_name,
+                                                  boolean legacy /* = FALSE */) const
 {
   if (template_selection==UNINITIALIZED_TEMPLATE) return;
   switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {
@@ -3566,7 +3930,7 @@ void CHARACTER_STRING_template::check_restriction(template_res t_res, const char
         template_selection==SPECIFIC_VALUE)) return;
     break;
   case TR_PRESENT:
-    if (!match_omit()) return;
+    if (!match_omit(legacy)) return;
     break;
   default:
     return;

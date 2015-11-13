@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2000-2014 Ericsson Telecom AB
+# Copyright (c) 2000-2015 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
@@ -70,6 +70,7 @@ dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES) extfunc.cc
 
 run: $(TARGET)
+	./logfilter.sh
 	$(TTCN3_DIR)/bin/ttcn3_start $(TARGET) LogFiles.cfg
 	$(TTCN3_DIR)/bin/ttcn3_start $(TARGET) LogFiles2.cfg
 	$(TTCN3_DIR)/bin/ttcn3_start $(TARGET) LogFilesProc.cfg

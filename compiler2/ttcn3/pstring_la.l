@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -37,10 +37,10 @@ using namespace Common;
  * @param [in,out] current_line
  * @param [in,out] current_column
  * */
-static void update_location(int start_index, int end_index,
-  int& current_line, int& current_column)
+static void update_location(size_t start_index, size_t end_index,
+  size_t& current_line, size_t& current_column)
 {
-  for (int i = start_index; i < yyleng && i < end_index; i++) {
+  for (size_t i = start_index; i < yyleng && i < end_index; i++) {
     // count CR, count LF, but count CR + LF as one
     switch (yytext[i]) {
     case '\r':
@@ -64,7 +64,7 @@ static void update_location(int start_index, int end_index,
   update_location(start_index, end_index, current_line, current_column)
 
 #define YY_DECL static PatternString *yylex(const char *current_file, \
-  int current_line, int current_column)
+  size_t current_line, size_t current_column)
 
 %} /* ***************** definitions ***************** */
 
@@ -110,12 +110,12 @@ if (in_set) {
   size_t num_id = identifiers.size();
   bool error = false;
   Ttcn::Reference *ref = 0;
-  int last = 0; // last "consumed" index into yytext
+  size_t last = 0; // last "consumed" index into yytext
   int old_column = 0, old_line = 0; // the beginning of the entire reference
 
   for (size_t i = 0; i < num_id; ++i) {
     const string & id_str = *identifiers[i];
-    const int    & id_beg = *beginnings [i];
+    const size_t    & id_beg = *beginnings [i];
     if (Identifier::is_reserved_word(id_str, Identifier::ID_TTCN)) {
       UPDATE_LOCATION(last, id_beg); // consume before identifier
       int first_line = current_line, first_column = current_column;
@@ -233,10 +233,10 @@ if (in_set) {
 }
 
 "\\q"{WS}"{"{WS}{NUMBER}{WS}","{WS}{NUMBER}{WS}","{WS}{NUMBER}{WS}","{WS}{NUMBER}{WS}"}" {
-  int group_begin = 3;
+  size_t group_begin = 3;
   while (!isdigit(yytext[group_begin])) group_begin++;
   UPDATE_LOCATION(0, group_begin);
-  int group_len = 1;
+  size_t group_len = 1;
   while (isdigit(yytext[group_begin + group_len])) group_len++;
   string group_str(group_len, yytext + group_begin);
   Location group_loc(current_file, current_line, current_column, current_line,
@@ -247,7 +247,7 @@ if (in_set) {
       "the range 0 .. 127 instead of %s", Int2string(group).c_str());
     group = group < 0 ? 0 : 127;
   }
-  int plane_begin = group_begin + group_len + 1;
+  size_t plane_begin = group_begin + group_len + 1;
   while (!isdigit(yytext[plane_begin])) plane_begin++;
   UPDATE_LOCATION(group_begin, plane_begin);
   int plane_len = 1;
@@ -261,10 +261,10 @@ if (in_set) {
       "the range 0 .. 255 instead of %s", Int2string(plane).c_str());
     plane = plane < 0 ? 0 : 255;
   }
-  int row_begin = plane_begin + plane_len + 1;
+  size_t row_begin = plane_begin + plane_len + 1;
   while (!isdigit(yytext[row_begin])) row_begin++;
   UPDATE_LOCATION(plane_begin, row_begin);
-  int row_len = 1;
+  size_t row_len = 1;
   while (isdigit(yytext[row_begin + row_len])) row_len++;
   string row_str(row_len, yytext + row_begin);
   Location row_loc(current_file, current_line, current_column, current_line,
@@ -275,10 +275,10 @@ if (in_set) {
       "the range 0 .. 255 instead of %s", Int2string(row).c_str());
     row = row < 0 ? 0 : 255;
   }
-  int cell_begin = row_begin + row_len + 1;
+  size_t cell_begin = row_begin + row_len + 1;
   while (!isdigit(yytext[cell_begin])) cell_begin++;
   UPDATE_LOCATION(row_begin, cell_begin);
-  int cell_len = 1;
+  size_t cell_len = 1;
   while (isdigit(yytext[cell_begin + cell_len])) cell_len++;
   string cell_str(cell_len, yytext + cell_begin);
   Location cell_loc(current_file, current_line, current_column, current_line,
@@ -441,7 +441,7 @@ if (in_set) {
     loc.error("Number of repetitions `#(n)' cannot be given inside a set "
       "expression");
   } else {
-    int number_begin = 2;
+    size_t number_begin = 2;
     while (!isdigit(yytext[number_begin])) number_begin++;
     UPDATE_LOCATION(0, number_begin);
     int number_len = 1;
@@ -467,7 +467,7 @@ if (in_set) {
     loc.error("Number of repetitions `#(n,m)' cannot be given inside a set "
       "expression");
   } else {
-    int lower_begin = 2;
+    size_t lower_begin = 2;
     while (!isdigit(yytext[lower_begin])) lower_begin++;
     UPDATE_LOCATION(0, lower_begin);
     int lower_len = 1;
@@ -482,7 +482,7 @@ if (in_set) {
 	Int2string(lower).c_str());
       lower = 0;
     }
-    int upper_begin = lower_begin + lower_len + 1;
+    size_t upper_begin = lower_begin + lower_len + 1;
     while (!isdigit(yytext[upper_begin])) upper_begin++;
     UPDATE_LOCATION(lower_begin, upper_begin);
     int upper_len = 1;
@@ -521,7 +521,7 @@ if (in_set) {
     loc.error("Number of repetitions `#(n,)' cannot be given inside a set "
       "expression");
   } else {
-    int lower_begin = 2;
+    size_t lower_begin = 2;
     while (!isdigit(yytext[lower_begin])) lower_begin++;
     UPDATE_LOCATION(0, lower_begin);
     int lower_len = 1;
@@ -549,7 +549,7 @@ if (in_set) {
     loc.error("Number of repetitions `#(,m)' cannot be given inside a set "
       "expression");
   } else {
-    int upper_begin = 3;
+    size_t upper_begin = 3;
     while (!isdigit(yytext[upper_begin])) upper_begin++;
     UPDATE_LOCATION(0, upper_begin);
     int upper_len = 1;

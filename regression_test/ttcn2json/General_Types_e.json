@@ -1,374 +1,593 @@
 {
+	"$schema" : "http://json-schema.org/draft-04/schema#",
 	"definitions" : {
 		"General_Types" : {
 			"BIT1" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 1,
+				"maxLength" : 1
 			},
 			"BIT10" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 10,
+				"maxLength" : 10
 			},
 			"BIT11" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 11,
+				"maxLength" : 11
 			},
 			"BIT12" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 12,
+				"maxLength" : 12
 			},
 			"BIT12n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 12,
+				"maxLength" : 12
 			},
 			"BIT14" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 14,
+				"maxLength" : 14
 			},
 			"BIT14_24n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 14,
+				"maxLength" : 24
 			},
 			"BIT14n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 14,
+				"maxLength" : 14
 			},
 			"BIT15" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 15,
+				"maxLength" : 15
 			},
 			"BIT15n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 15,
+				"maxLength" : 15
 			},
 			"BIT15np" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 15,
+				"maxLength" : 15
 			},
 			"BIT16" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 16,
+				"maxLength" : 16
 			},
 			"BIT16_BO_LAST" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 16,
+				"maxLength" : 16
 			},
 			"BIT16n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 16,
+				"maxLength" : 16
 			},
 			"BIT1n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 1,
+				"maxLength" : 1
 			},
 			"BIT1np" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 1,
+				"maxLength" : 1
 			},
 			"BIT2" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 2,
+				"maxLength" : 2
 			},
 			"BIT24" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 24,
+				"maxLength" : 24
 			},
 			"BIT2n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 2,
+				"maxLength" : 2
 			},
 			"BIT2np" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 2,
+				"maxLength" : 2
 			},
 			"BIT3" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 3,
+				"maxLength" : 3
 			},
 			"BIT31" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 31,
+				"maxLength" : 31
 			},
 			"BIT32_BO_LAST" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 32,
+				"maxLength" : 32
 			},
 			"BIT3n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 3,
+				"maxLength" : 3
 			},
 			"BIT3np" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 3,
+				"maxLength" : 3
 			},
 			"BIT4" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 4,
+				"maxLength" : 4
 			},
 			"BIT4n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 4,
+				"maxLength" : 4
 			},
 			"BIT4np" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 4,
+				"maxLength" : 4
 			},
 			"BIT5" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 5,
+				"maxLength" : 5
 			},
 			"BIT56" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 56,
+				"maxLength" : 56
 			},
 			"BIT56n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 56,
+				"maxLength" : 56
 			},
 			"BIT5n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 5,
+				"maxLength" : 5
 			},
 			"BIT5np" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 5,
+				"maxLength" : 5
 			},
 			"BIT6" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 6,
+				"maxLength" : 6
 			},
 			"BIT6_BO_LAST" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 6,
+				"maxLength" : 6
 			},
 			"BIT6n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 6,
+				"maxLength" : 6
 			},
 			"BIT6np" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 6,
+				"maxLength" : 6
 			},
 			"BIT7" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 7,
+				"maxLength" : 7
 			},
 			"BIT7n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 7,
+				"maxLength" : 7
 			},
 			"BIT7np" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 7,
+				"maxLength" : 7
 			},
 			"BIT8" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 8,
+				"maxLength" : 8
 			},
 			"BIT8n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 8,
+				"maxLength" : 8
 			},
 			"BIT9" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 9,
+				"maxLength" : 9
 			},
 			"BIT9n" : {
 				"type" : "string",
 				"subType" : "bitstring",
-				"pattern" : "^[01]*$"
+				"pattern" : "^[01]*$",
+				"minLength" : 9,
+				"maxLength" : 9
 			},
 			"CHAR4" : {
 				"type" : "string",
-				"subType" : "charstring"
+				"subType" : "charstring",
+				"minLength" : 4,
+				"maxLength" : 4
 			},
 			"Dummy" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 0,
+				"maxLength" : 0
 			},
 			"HEX0_16" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 0,
+				"maxLength" : 16
 			},
 			"HEX0_18n" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 0,
+				"maxLength" : 18
 			},
 			"HEX1" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 1,
+				"maxLength" : 1
 			},
 			"HEX15n" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 15,
+				"maxLength" : 15
 			},
 			"HEX16n" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 16,
+				"maxLength" : 16
 			},
 			"HEX1_20n" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 1,
+				"maxLength" : 20
 			},
 			"HEX1_32" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 1,
+				"maxLength" : 32
 			},
 			"HEX1_34n" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 1,
+				"maxLength" : 34
 			},
 			"HEX24n" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 24,
+				"maxLength" : 24
 			},
 			"HEX4n" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 4,
+				"maxLength" : 4
 			},
 			"HEX5_16" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 5,
+				"maxLength" : 16
 			},
 			"HEX6n" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 6,
+				"maxLength" : 6
 			},
 			"HEX8n" : {
 				"type" : "string",
 				"subType" : "hexstring",
-				"pattern" : "^[0-9A-Fa-f]*$"
+				"pattern" : "^[0-9A-Fa-f]*$",
+				"minLength" : 8,
+				"maxLength" : 8
 			},
 			"INT1" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 255,
+				"exclusiveMaximum" : false
 			},
 			"INT11b_BO_LAST" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 2047,
+				"exclusiveMaximum" : false
 			},
 			"INT12b_BO_LAST" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 4095,
+				"exclusiveMaximum" : false
 			},
 			"INT13b_BO_LAST" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 8191,
+				"exclusiveMaximum" : false
 			},
 			"INT13nbp" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 8191,
+				"exclusiveMaximum" : false
 			},
 			"INT14b_BO_LAST" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 16383,
+				"exclusiveMaximum" : false
 			},
 			"INT15nbp" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 32767,
+				"exclusiveMaximum" : false
 			},
 			"INT1b" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 1,
+				"exclusiveMaximum" : false
 			},
 			"INT1nbp" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 1,
+				"exclusiveMaximum" : false
 			},
 			"INT20b_BO_LAST" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 1048575,
+				"exclusiveMaximum" : false
 			},
 			"INT2b" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 3,
+				"exclusiveMaximum" : false
 			},
 			"INT2nbp" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 3,
+				"exclusiveMaximum" : false
 			},
 			"INT31b_BO_LAST" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 2147483647,
+				"exclusiveMaximum" : false
 			},
 			"INT3b" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 7,
+				"exclusiveMaximum" : false
 			},
 			"INT3nb" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 7,
+				"exclusiveMaximum" : false
 			},
 			"INT3nbp" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 7,
+				"exclusiveMaximum" : false
 			},
 			"INT4b" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 15,
+				"exclusiveMaximum" : false
 			},
 			"INT4nb" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 15,
+				"exclusiveMaximum" : false
 			},
 			"INT5b" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 31,
+				"exclusiveMaximum" : false
 			},
 			"INT5nb" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 31,
+				"exclusiveMaximum" : false
 			},
 			"INT5nbp" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 31,
+				"exclusiveMaximum" : false
 			},
 			"INT6b" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 63,
+				"exclusiveMaximum" : false
 			},
 			"INT7b" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 127,
+				"exclusiveMaximum" : false
 			},
 			"INT8nb" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 255,
+				"exclusiveMaximum" : false
 			},
 			"INT9nbp" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 511,
+				"exclusiveMaximum" : false
 			},
 			"Integer_array" : {
 				"type" : "array",
@@ -385,144 +604,214 @@
 				}
 			},
 			"LIN1" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 255,
+				"exclusiveMaximum" : false
 			},
 			"LIN2" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 65535,
+				"exclusiveMaximum" : false
 			},
 			"LIN2_BO_LAST" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 65535,
+				"exclusiveMaximum" : false
 			},
 			"LIN3_BO_LAST" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 16777215,
+				"exclusiveMaximum" : false
 			},
 			"LIN4_BO_LAST" : {
-				"type" : "integer"
+				"type" : "integer",
+				"minimum" : 0,
+				"exclusiveMinimum" : false,
+				"maximum" : 4294967295,
+				"exclusiveMaximum" : false
 			},
 			"OCT0" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 0,
+				"maxLength" : 0
 			},
 			"OCT0n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 0,
+				"maxLength" : 0
 			},
 			"OCT1" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 1
 			},
 			"OCT10" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 10,
+				"maxLength" : 10
 			},
 			"OCT100n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 100,
+				"maxLength" : 100
 			},
 			"OCT10n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 10,
+				"maxLength" : 10
 			},
 			"OCT11" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 11,
+				"maxLength" : 11
 			},
 			"OCT11n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 11,
+				"maxLength" : 11
 			},
 			"OCT12" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 12,
+				"maxLength" : 12
 			},
 			"OCT128n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 128,
+				"maxLength" : 128
 			},
 			"OCT12n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 12,
+				"maxLength" : 12
 			},
 			"OCT13" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 13,
+				"maxLength" : 13
 			},
 			"OCT13n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 13,
+				"maxLength" : 13
 			},
 			"OCT14" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 14,
+				"maxLength" : 14
 			},
 			"OCT14n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 14,
+				"maxLength" : 14
 			},
 			"OCT15" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 15,
+				"maxLength" : 15
 			},
 			"OCT15n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 15,
+				"maxLength" : 15
 			},
 			"OCT16" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 16,
+				"maxLength" : 16
 			},
 			"OCT16n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 16,
+				"maxLength" : 16
 			},
 			"OCT17" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 17,
+				"maxLength" : 17
 			},
 			"OCT17n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 17,
+				"maxLength" : 17
 			},
 			"OCT18" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 18,
+				"maxLength" : 18
 			},
 			"OCT18n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 18,
+				"maxLength" : 18
 			},
 			"OCT19" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 19,
+				"maxLength" : 19
 			},
 			"OCT19n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 19,
+				"maxLength" : 19
 			},
 			"OCT1List" : {
 				"type" : "array",
@@ -534,152 +823,212 @@
 			"OCT1_112n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 112
 			},
 			"OCT1_12" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 12
 			},
 			"OCT1_127n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 127
 			},
 			"OCT1_128n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 128
 			},
 			"OCT1_12n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 12
 			},
 			"OCT1_15n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 15
 			},
 			"OCT1_16n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 16
 			},
 			"OCT1_172n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 172
 			},
 			"OCT1_18n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 18
 			},
 			"OCT1_20n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 20
 			},
 			"OCT1_24n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 24
 			},
 			"OCT1_260" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 260
 			},
 			"OCT1_32" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 32
 			},
 			"OCT1_32n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 32
 			},
 			"OCT1_34n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 34
 			},
 			"OCT1_3n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 3
 			},
 			"OCT1_46n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 46
 			},
 			"OCT1_4n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 4
 			},
 			"OCT1_50" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 50
 			},
 			"OCT1_50n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 50
 			},
 			"OCT1_5n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 5
 			},
 			"OCT1_6n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 6
 			},
 			"OCT1_7n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 7
 			},
 			"OCT1_8" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 8
 			},
 			"OCT1_8n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 8
 			},
 			"OCT1n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 1,
+				"maxLength" : 1
 			},
 			"OCT2" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 2,
+				"maxLength" : 2
 			},
 			"OCT20" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 20,
+				"maxLength" : 20
 			},
 			"OCT20n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 20,
+				"maxLength" : 20
 			},
 			"OCT28n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 28,
+				"maxLength" : 28
 			},
 			"OCT2List" : {
 				"type" : "array",
@@ -691,32 +1040,44 @@
 			"OCT2n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 2,
+				"maxLength" : 2
 			},
 			"OCT3" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 3,
+				"maxLength" : 3
 			},
 			"OCT32" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 32,
+				"maxLength" : 32
 			},
 			"OCT32n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 32,
+				"maxLength" : 32
 			},
 			"OCT34" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 34,
+				"maxLength" : 34
 			},
 			"OCT34n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 34,
+				"maxLength" : 34
 			},
 			"OCT3List" : {
 				"type" : "array",
@@ -728,52 +1089,72 @@
 			"OCT3_14n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 3,
+				"maxLength" : 14
 			},
 			"OCT3_17n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 3,
+				"maxLength" : 17
 			},
 			"OCT3_5n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 3,
+				"maxLength" : 5
 			},
 			"OCT3_7n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 3,
+				"maxLength" : 7
 			},
 			"OCT3_8" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 3,
+				"maxLength" : 8
 			},
 			"OCT3_8n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 3,
+				"maxLength" : 8
 			},
 			"OCT3n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 3,
+				"maxLength" : 3
 			},
 			"OCT4" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 4,
+				"maxLength" : 4
 			},
 			"OCT46" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 46,
+				"maxLength" : 46
 			},
 			"OCT46n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 46,
+				"maxLength" : 46
 			},
 			"OCT4List" : {
 				"type" : "array",
@@ -785,27 +1166,37 @@
 			"OCT4_8n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 4,
+				"maxLength" : 8
 			},
 			"OCT4n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 4,
+				"maxLength" : 4
 			},
 			"OCT5" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 5,
+				"maxLength" : 5
 			},
 			"OCT500n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 500,
+				"maxLength" : 500
 			},
 			"OCT50n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 50,
+				"maxLength" : 50
 			},
 			"OCT5List" : {
 				"type" : "array",
@@ -817,17 +1208,23 @@
 			"OCT5n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 5,
+				"maxLength" : 5
 			},
 			"OCT6" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 6,
+				"maxLength" : 6
 			},
 			"OCT69n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 69,
+				"maxLength" : 69
 			},
 			"OCT6List" : {
 				"type" : "array",
@@ -839,12 +1236,16 @@
 			"OCT6n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 6,
+				"maxLength" : 6
 			},
 			"OCT7" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 7,
+				"maxLength" : 7
 			},
 			"OCT7List" : {
 				"type" : "array",
@@ -856,27 +1257,37 @@
 			"OCT7n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 7,
+				"maxLength" : 7
 			},
 			"OCT8" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 8,
+				"maxLength" : 8
 			},
 			"OCT8n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 8,
+				"maxLength" : 8
 			},
 			"OCT9" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 9,
+				"maxLength" : 9
 			},
 			"OCT9n" : {
 				"type" : "string",
 				"subType" : "octetstring",
-				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$"
+				"pattern" : "^([0-9A-Fa-f][0-9A-Fa-f])*$",
+				"minLength" : 9,
+				"maxLength" : 9
 			},
 			"OCTN" : {
 				"type" : "string",
@@ -931,7 +1342,7 @@
 			"$ref" : "#/definitions/General_Types/OCT8n"
 		},
 		{
-			"$ref" : "#/definitions/General_Types/OCT9n"
+			"$ref" : "#/definitions/General_Types/BIT1n"
 		},
 		{
 			"$ref" : "#/definitions/General_Types/BIT2n"
@@ -1015,9 +1426,6 @@
 			"$ref" : "#/definitions/General_Types/BIT4"
 		},
 		{
-			"$ref" : "#/definitions/General_Types/BIT1n"
-		},
-		{
 			"$ref" : "#/definitions/General_Types/BIT5"
 		},
 		{
@@ -1079,6 +1487,9 @@
 		},
 		{
 			"$ref" : "#/definitions/General_Types/OCT6n"
+		},
+		{
+			"$ref" : "#/definitions/General_Types/OCT9n"
 		},
 		{
 			"$ref" : "#/definitions/General_Types/OCT10n"

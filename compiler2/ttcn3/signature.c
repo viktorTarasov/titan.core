@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -370,8 +370,7 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
     /* otherwise constructor is not needed */
 
     /* set_parameters function (used for param redirect in getreply) */
-    if ((sdef->parameters.nElements - num_in) > 0
-      || sdef->return_type != NULL) {
+    if (num_out > 0 || sdef->return_type != NULL) {
       /* if there are "out" or "inout" parameters or a "return" ... */
       def = mputprintf(def, "void set_parameters(const %s_reply& reply_par) "
         "const;\n", name);
@@ -692,17 +691,17 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
     }
 
     /* match function */
-    def = mputprintf(def, "boolean match(const %s_exception& other_value) "
-      "const;\n", name);
+    def = mputprintf(def, "boolean match(const %s_exception& other_value,"
+      "boolean legacy = FALSE) const;\n", name);
     src = mputprintf(src, "boolean %s_exception_template::match(const "
-      "%s_exception& other_value) const\n"
+      "%s_exception& other_value, boolean legacy) const\n"
       "{\n"
       "if (exception_selection != other_value.get_selection()) "
       "return FALSE;\n"
       "switch (exception_selection) {\n", name, name);
     for (i = 0; i < sdef->exceptions.nElements; i++) {
       src = mputprintf(src, "case %s_%s:\n"
-        "return field_%s->match(other_value.%s_field());\n",
+        "return field_%s->match(other_value.%s_field(), legacy);\n",
         selection_prefix, sdef->exceptions.elements[i].altname,
         sdef->exceptions.elements[i].altname,
         sdef->exceptions.elements[i].altname);
@@ -715,10 +714,10 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
       "}\n\n", dispname);
 
     /* log_match function */
-    def = mputprintf(def, "void log_match(const %s_exception& other_value) "
-      "const;\n", name);
+    def = mputprintf(def, "void log_match(const %s_exception& other_value, "
+      "boolean legacy = FALSE) const;\n", name);
     src = mputprintf(src, "void %s_exception_template::log_match(const "
-      "%s_exception& other_value) const\n"
+      "%s_exception& other_value, boolean legacy) const\n"
       "{\n"
       "TTCN_Logger::log_event_str(\"%s, \");\n"
       "if (exception_selection == other_value.get_selection()) {\n"
@@ -726,7 +725,7 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
     for (i = 0; i < sdef->exceptions.nElements; i++) {
       src = mputprintf(src, "case %s_%s:\n"
         "TTCN_Logger::log_event_str(\"%s : \");\n"
-        "field_%s->log_match(other_value.%s_field());\n"
+        "field_%s->log_match(other_value.%s_field(), legacy);\n"
         "break;\n", selection_prefix,
         sdef->exceptions.elements[i].altname,
         sdef->exceptions.elements[i].dispname,
@@ -752,7 +751,7 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
     src = mputstr(src, "default:\n"
       "TTCN_Logger::log_event_str(\"<invalid selector>\");\n"
       "}\n"
-      "if (match(other_value)) "
+      "if (match(other_value, legacy)) "
       "TTCN_Logger::log_event_str(\" matched\");\n"
       "else TTCN_Logger::log_event_str(\" unmatched\");\n"
       "}\n"
@@ -919,17 +918,17 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
   /* match_call function for matching with xxx_call signature-value */
   if (num_in > 0) {
     boolean first_param = TRUE;
-    def = mputprintf(def, "boolean match_call(const %s_call& match_value) "
-      "const;\n", name);
+    def = mputprintf(def, "boolean match_call(const %s_call& match_value, "
+      "boolean legacy = FALSE) const;\n", name);
     src = mputprintf(src, "boolean %s_template::match_call(const %s_call& "
-      "match_value) const\n"
+      "match_value, boolean legacy) const\n"
       "{\n"
       "return ", name, name);
     for (i = 0; i < sdef->parameters.nElements; i++) {
       if (sdef->parameters.elements[i].direction != PAR_OUT) {
         if (first_param) first_param = FALSE;
         else src = mputstr(src, " &&\n");
-        src = mputprintf(src, "param_%s.match(match_value.%s())",
+        src = mputprintf(src, "param_%s.match(match_value.%s(), legacy)",
           sdef->parameters.elements[i].name,
           sdef->parameters.elements[i].name);
       }
@@ -938,7 +937,7 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
       "}\n\n");
   } else {
     def = mputprintf(def, "inline boolean match_call(const %s_call&"
-      ") const { return TRUE; }\n", name);
+      ", boolean legacy = FALSE) const { return TRUE; }\n", name);
   }
 
   if (!sdef->is_noblock) {
@@ -946,16 +945,16 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
       boolean first_param = TRUE;
       /* match_reply function for matching with xxx_reply value */
       def = mputprintf(def, "boolean match_reply(const %s_reply& "
-        "match_value) const;\n", name);
+        "match_value, boolean legacy = FALSE) const;\n", name);
       src = mputprintf(src, "boolean %s_template::match_reply(const "
-        "%s_reply& match_value) const\n"
+        "%s_reply& match_value, boolean legacy) const\n"
         "{\n"
         "return ", name, name);
       for (i = 0; i < sdef->parameters.nElements; i++) {
         if(sdef->parameters.elements[i].direction != PAR_IN) {
           if (first_param) first_param = FALSE;
           else src = mputstr(src, " &&\n");
-          src = mputprintf(src, "param_%s.match(match_value.%s())",
+          src = mputprintf(src, "param_%s.match(match_value.%s(), legacy)",
             sdef->parameters.elements[i].name,
             sdef->parameters.elements[i].name);
         }
@@ -964,13 +963,13 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
         if (first_param) /*first_param = FALSE*/;
         else src = mputstr(src, " &&\n");
         src = mputstr(src,
-          "reply_value.match(match_value.return_value())");
+          "reply_value.match(match_value.return_value(), legacy)");
       }
       src = mputstr(src, ";\n"
         "}\n\n");
     } else {
       def = mputprintf(def, "inline boolean match_reply(const %s_reply&"
-        ") const { return TRUE; }\n", name);
+        ", boolean legacy = FALSE) const { return TRUE; }\n", name);
     }
   }
 
@@ -1007,13 +1006,13 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
   src = mputstr(src, "}\n\n");
 
   /* log_match_call function */
-  def = mputprintf(def, "void log_match_call(const %s_call& match_value) "
-    "const;\n", name);
+  def = mputprintf(def, "void log_match_call(const %s_call& match_value, "
+    "boolean legacy = FALSE) const;\n", name);
   src = mputprintf(src, "void %s_template::log_match_call(const %s_call& "
     , name, name);
   if (num_in > 0) {
     boolean first_param = TRUE;
-    src = mputstr(src, "match_value) const\n{\n");
+    src = mputstr(src, "match_value, boolean legacy) const\n{\n");
     for (i = 0; i < sdef->parameters.nElements; i++) {
       if (sdef->parameters.elements[i].direction != PAR_OUT) {
         src = mputstr(src, "TTCN_Logger::log_event_str(\"");
@@ -1022,7 +1021,7 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
           first_param = FALSE;
         } else src = mputc(src, ',');
         src = mputprintf(src, " %s := \");\n"
-          "param_%s.log_match(match_value.%s());\n",
+          "param_%s.log_match(match_value.%s(), legacy);\n",
           sdef->parameters.elements[i].dispname,
           sdef->parameters.elements[i].name,
           sdef->parameters.elements[i].name);
@@ -1030,20 +1029,20 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
     }
     src = mputstr(src, "TTCN_Logger::log_event_str(\" }\");\n");
   } else {
-    src = mputstr(src, ") const\n{\n"
+    src = mputstr(src, ", boolean) const\n{\n"
       "TTCN_Logger::log_event_str(\"{ } with { } matched\");\n");
   }
   src = mputstr(src, "}\n\n");
 
   if (!sdef->is_noblock) {
     /* log_match_reply function */
-    def = mputprintf(def, "void log_match_reply(const %s_reply& match_value) "
-      "const;\n", name);
+    def = mputprintf(def, "void log_match_reply(const %s_reply& match_value, "
+      "boolean legacy = FALSE) const;\n", name);
     src = mputprintf(src, "void %s_template::log_match_reply(const %s_reply& "
       , name, name);
     if (num_out > 0) {
       boolean first_param = TRUE;
-      src = mputstr(src, "match_value) const\n{\n");
+      src = mputstr(src, "match_value, boolean legacy) const\n{\n");
       for (i = 0; i < sdef->parameters.nElements; i++) {
         if (sdef->parameters.elements[i].direction != PAR_IN) {
           src = mputstr(src, "TTCN_Logger::log_event_str(\"");
@@ -1052,7 +1051,7 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
             first_param = FALSE;
           } else src = mputc(src, ',');
           src = mputprintf(src, " %s := \");\n"
-            "param_%s.log_match(match_value.%s());\n",
+            "param_%s.log_match(match_value.%s(), legacy);\n",
             sdef->parameters.elements[i].dispname,
             sdef->parameters.elements[i].name,
             sdef->parameters.elements[i].name);
@@ -1061,18 +1060,18 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
       if (sdef->return_type != NULL) {
         src = mputstr(src, "TTCN_Logger::log_event_str(\" } value "
           "\");\n"
-          "reply_value.log_match(match_value.return_value());\n");
+          "reply_value.log_match(match_value.return_value(), legacy);\n");
       } else {
         src = mputstr(src, "TTCN_Logger::log_event_str(\" }\");\n");
       }
     } else {
       if (sdef->return_type != NULL) {
-        src = mputstr(src, "match_value) const\n{\n"
+        src = mputstr(src, "match_value, boolean legacy) const\n{\n"
           "TTCN_Logger::log_event_str(\"{ } with { } "
           "matched value \");\n"
-          "reply_value.log_match(match_value.return_value());\n");
+          "reply_value.log_match(match_value.return_value(), legacy);\n");
       } else {
-        src = mputstr(src, ") const\n{\n"
+        src = mputstr(src, ", boolean) const\n{\n"
           "TTCN_Logger::log_event_str(\"{ } with { } "
           "matched\");\n");
       }

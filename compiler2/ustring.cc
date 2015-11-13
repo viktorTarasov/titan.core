@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -436,4 +436,59 @@ bool operator<(const ustring::universal_char& uc1,
   else if (uc1.row < uc2.row) return true;
   else if (uc1.row > uc2.row) return false;
   else return uc1.cell < uc2.cell;
+}
+
+string ustring_to_uft8(const ustring& ustr)
+{
+  string ret_val;
+  for(size_t i = 0; i < ustr.size(); i++) {
+    unsigned char g = ustr[i].group;
+    unsigned char p = ustr[i].plane;
+    unsigned char r = ustr[i].row;
+    unsigned char c = ustr[i].cell;
+    if(g == 0x00 && p <= 0x1F) {
+      if(p == 0x00) {
+        if(r == 0x00 && c <= 0x7F) {
+          // 1 octet
+          ret_val += c;
+        } // r
+        // 2 octets
+        else if(r <= 0x07) {
+          ret_val += (0xC0 | r << 2 | c >> 6);
+          ret_val += (0x80 | (c & 0x3F));
+        } // r
+        // 3 octets
+        else {
+          ret_val += (0xE0 | r >> 4);
+          ret_val += (0x80 | (r << 2 & 0x3C) | c >> 6);
+          ret_val += (0x80 | (c & 0x3F));
+        } // r
+      } // p
+      // 4 octets
+      else {
+        ret_val += (0xF0 | p >> 2);
+        ret_val += (0x80 | (p << 4 & 0x30) | r >> 4);
+        ret_val += (0x80 | (r << 2 & 0x3C) | c >> 6);
+        ret_val += (0x80 | (c & 0x3F));
+      } // p
+    } //g
+    // 5 octets
+    else if(g <= 0x03) {
+      ret_val += (0xF8 | g);
+      ret_val += (0x80 | p >> 2);
+      ret_val += (0x80 | (p << 4 & 0x30) | r >> 4);
+      ret_val += (0x80 | (r << 2 & 0x3C) | c >> 6);
+      ret_val += (0x80 | (c & 0x3F));
+    } // g
+    // 6 octets
+    else {
+      ret_val += (0xFC | g >> 6);
+      ret_val += (0x80 | (g & 0x3F));
+      ret_val += (0x80 | p >> 2);
+      ret_val += (0x80 | (p << 4 & 0x30) | r >> 4);
+      ret_val += (0x80 | (r << 2 & 0x3C) | c >> 6);
+      ret_val += (0x80 | (c & 0x3F));
+    }
+  } // for i
+  return ret_val;
 }

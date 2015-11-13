@@ -178,6 +178,8 @@ variant "list";
 type record of XSD.Boolean BooleanList
 with {
 variant "list";
+//variant "text 'true' as '1'";
+//variant "text 'false' as '0'";
 };
 
 

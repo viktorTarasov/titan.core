@@ -9,88 +9,13 @@
 #ifndef PROFILER_HH
 #define PROFILER_HH
 
-#include "Vector.hh"
-#include "Types.h"
-#include <sys/time.h>
+#include "ProfilerTools.hh"
 
 /** This class performs profiling and code coverage on lines and functions in
   * TTCN-3 code (requires the -z compiler option).
   * Customizable through the configuration file's [PROFILER] section. */
 class TTCN3_Profiler {
 public:
-  
-  /** Database entry for one file */
-  struct profiler_db_item_t {
-    /** Database entry for one line */
-    struct profiler_line_data_t {
-      /** Line number */
-      int lineno;
-      /** The line's total execution time */
-      timeval total_time;
-      /** The number of times this line was executed */
-      int exec_count;
-    };
-    /** Database entry for one function (including test cases, alt steps, the control part, etc.) */
-    struct profiler_function_data_t {
-      /** Function name (owned) */
-      char* name;
-      /** Function starting line */
-      int lineno;
-      /** The function's total execution time */
-      timeval total_time;
-      /** The number of times this function was executed */
-      int exec_count;
-    };
-    /** TTCN-3 File name (relative path, owned) */
-    char* filename;
-    /** Contains database entries for all the lines in this file */
-    Vector<profiler_line_data_t> lines;
-    /** Contains database entries for all the functions in this file */
-    Vector<profiler_function_data_t> functions;
-  };
-  
-  enum profiler_stats_flag_t {
-    // flags for each statistics entry
-    STATS_NUMBER_OF_LINES          = 0x0000001,
-    STATS_LINE_DATA_RAW            = 0x0000002,
-    STATS_FUNC_DATA_RAW            = 0x0000004,
-    STATS_LINE_AVG_RAW             = 0x0000008,
-    STATS_FUNC_AVG_RAW             = 0x0000010,
-    STATS_LINE_TIMES_SORTED_BY_MOD = 0x0000020,
-    STATS_FUNC_TIMES_SORTED_BY_MOD = 0x0000040,
-    STATS_LINE_TIMES_SORTED_TOTAL  = 0x0000080,
-    STATS_FUNC_TIMES_SORTED_TOTAL  = 0x0000100,
-    STATS_LINE_COUNT_SORTED_BY_MOD = 0x0000200,
-    STATS_FUNC_COUNT_SORTED_BY_MOD = 0x0000400,
-    STATS_LINE_COUNT_SORTED_TOTAL  = 0x0000800,
-    STATS_FUNC_COUNT_SORTED_TOTAL  = 0x0001000,
-    STATS_LINE_AVG_SORTED_BY_MOD   = 0x0002000,
-    STATS_FUNC_AVG_SORTED_BY_MOD   = 0x0004000,
-    STATS_LINE_AVG_SORTED_TOTAL    = 0x0008000,
-    STATS_FUNC_AVG_SORTED_TOTAL    = 0x0010000,
-    STATS_TOP10_LINE_TIMES         = 0x0020000,
-    STATS_TOP10_FUNC_TIMES         = 0x0040000,
-    STATS_TOP10_LINE_COUNT         = 0x0080000,
-    STATS_TOP10_FUNC_COUNT         = 0x0100000,
-    STATS_TOP10_LINE_AVG           = 0x0200000,
-    STATS_TOP10_FUNC_AVG           = 0x0400000,
-    STATS_UNUSED_LINES             = 0x0800000,
-    STATS_UNUSED_FUNC              = 0x1000000,
-    // grouped entries
-    STATS_ALL_RAW_DATA             = 0x000001E,
-    STATS_LINE_DATA_SORTED_BY_MOD  = 0x0002220,
-    STATS_FUNC_DATA_SORTED_BY_MOD  = 0x0004440,
-    STATS_LINE_DATA_SORTED_TOTAL   = 0x0008880,
-    STATS_FUNC_DATA_SORTED_TOTAL   = 0x0011100,
-    STATS_LINE_DATA_SORTED         = 0x000AAA0,
-    STATS_FUNC_DATA_SORTED         = 0x0015540,
-    STATS_ALL_DATA_SORTED          = 0x001FFE0,
-    STATS_TOP10_LINE_DATA          = 0x02A0000,
-    STATS_TOP10_FUNC_DATA          = 0x0540000,
-    STATS_TOP10_ALL_DATA           = 0x07E0000,
-    STATS_UNUSED_DATA              = 0x1800000,
-    STATS_ALL                      = 0x1FFFFFF
-  };
   
   /** Constructor */
   TTCN3_Profiler();
@@ -131,8 +56,8 @@ public:
   /** Returns true if the profiler is currently running (not stopped) */
   boolean is_running() const;
   
-  /** Stores the component reference of a newly created PTC (in parallel mode only) */
-  void add_ptc(component p_comp_ref);
+  /** Stores the component reference of a newly created PTC or MTC (in parallel mode only) */
+  void add_component(component p_comp_ref);
 
   /** Adds the data from the database file to the local database */
   void import_data(component p_comp_ref = NULL_COMPREF);
@@ -167,7 +92,7 @@ public:
   void create_line(int element, int lineno);
   /** Adds elapsed time to the specified TTCN-3 code line's total time */
   void add_line_time(timeval elapsed, int element, int lineno);
-  /** Adds elapsed time to the specified TTCN-3 function's total time*/
+  /** Adds elapsed time to the specified TTCN-3 function's total time */
   void add_function_time(timeval elapsed, int element, int lineno);
   /** Called when a TTCN-3 function's execution ends - stores data */
   void update_last();
@@ -199,12 +124,12 @@ private:
   /** The number of the previously executed line */
   int prev_line;
   /** The local database */
-  Vector<profiler_db_item_t> profiler_db;
+  Profiler_Tools::profiler_db_t profiler_db;
   /** The stack length at the previously executed line */
   int prev_stack_len;
-  /** Contains the component references of all PTCs (only relevant in the Host
+  /** Contains the component references of the other processes (only relevant in the Host
     * Controller's process, in parallel mode) */
-  Vector<component> ptc_list;
+  Vector<component> component_list;
 };
 
 /** The global TTCN3_Profiler object

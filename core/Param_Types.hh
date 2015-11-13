@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -40,8 +40,6 @@ struct param_charstring_t {
 struct param_universal_charstring_t {
   int n_uchars;
   universal_char *uchars_ptr;
-  int n_quads;
-  int *quad_positions;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,6 +52,7 @@ public:
   virtual ~Module_Param_Id() {}
   virtual bool is_explicit() const = 0;
   virtual bool is_index() const { return false; }
+  virtual bool is_custom() const { return false; }
   virtual size_t get_index() const;
   virtual char* get_name() const;
   virtual char* get_current_name() const;
@@ -79,6 +78,8 @@ public:
     pos += offset;
     return true;
   }
+  void reset() { pos = 0; }
+  boolean is_single_name() const { return names.size() == 1; }
   char* get_str() const;
 };
 
@@ -103,6 +104,23 @@ public:
   char* get_str() const;
 };
 
+/** Custom module parameter name class, used in Module_Param instances that aren't
+  * actual module parameters (length boundaries, array indexes and character codes in
+  * quadruples use temporary Module_Param instances to allow the use of expressions
+  * and references to module parameters).
+  * Errors reported in these cases will contain the custom text set in this class,
+  * instead of the regular error message header. */
+class Module_Param_CustomName : public Module_Param_Id {
+  char* name; // owned expstring_t
+public:
+  Module_Param_CustomName(char* p): name(p) {}
+  ~Module_Param_CustomName() { Free(name); }
+  char* get_name() const { return name; }
+  bool is_explicit() const { return true; }
+  char* get_str() const;
+  bool is_custom() const { return true; }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 
 class Module_Param_Length_Restriction {
@@ -124,6 +142,9 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// forward declaration
+class Module_Param_Ptr;
 
 class Module_Param {
   Module_Param(const Module_Param& p); // copy constructor disabled
@@ -164,13 +185,25 @@ public:
   MP_ComplementList_Template,
   MP_Superset_Template,
   MP_Subset_Template,
-  MP_Permutation_Template
+  MP_Permutation_Template,
+  MP_Reference,
+  MP_Unbound,
+  MP_Expression
   };
   enum operation_type_t { OT_ASSIGN, OT_CONCAT };
   enum basic_check_bits_t { // used to parametrize basic_check()
     BC_VALUE =    0x00, // non-list values
     BC_LIST =     0x01, // list values and templates
     BC_TEMPLATE = 0x02  // templates
+  };
+  enum expression_operand_t { // expression types for MP_Expression
+    EXPR_ERROR, // for reporting errors
+    EXPR_ADD,
+    EXPR_SUBTRACT,
+    EXPR_MULTIPLY,
+    EXPR_DIVIDE,
+    EXPR_CONCATENATE,
+    EXPR_NEGATE // only operand1 is used
   };
 
 protected:
@@ -207,13 +240,13 @@ public:
   void error(const char* err, ...) const
     __attribute__ ((__format__ (__printf__, 2, 3), __noreturn__));
 
-  inline void type_error(const char* expected) const
+  void type_error(const char* expected, const char* type_name = NULL) const
+    __attribute__ ((__noreturn__));
+
+  inline void expr_type_error(const char* type_name) const
     __attribute__ ((__noreturn__)) {
-    error("Type mismatch: %s was expected instead of %s.", expected, get_type_str());
-  }
-  inline void type_error(const char* cfg_type, const char* real_type) const
-    __attribute__ ((__noreturn__)) {
-    error("Type mismatch: %s was expected for type %s instead of %s.", cfg_type, real_type, get_type_str());
+    error("%s is not allowed in %s expression.",
+      get_expr_type_str(), type_name);
   }
 
   // check and error report function for operation type, ifpresent and length restriction
@@ -242,6 +275,81 @@ public:
   virtual char* get_pattern() const;
   virtual verdicttype get_verdict() const;
   virtual char* get_enumerated() const;
+  virtual Module_Param_Ptr get_referenced_param() const;
+  virtual expression_operand_t get_expr_type() const;
+  virtual const char* get_expr_type_str() const;
+  virtual Module_Param* get_operand1() const;
+  virtual Module_Param* get_operand2() const;
+};
+
+/** Smart pointer class for Module_Param instances
+  * Uses a reference counter so the Module_Param object is never copied.
+  * Deletes the object (if it's temporary), when the reference counter reaches zero. */
+class Module_Param_Ptr {
+  struct module_param_ptr_struct {
+    Module_Param* mp_ptr;
+    boolean temporary;
+    int ref_count;
+  } *ptr;
+  void clean_up();
+public:
+  Module_Param_Ptr(Module_Param* p);
+  Module_Param_Ptr(const Module_Param_Ptr& r);
+  ~Module_Param_Ptr() { clean_up(); }
+  Module_Param_Ptr& operator=(const Module_Param_Ptr& r);
+  void set_temporary() { ptr->temporary = TRUE; }
+  Module_Param& operator*() { return *ptr->mp_ptr; }
+  Module_Param* operator->() { return ptr->mp_ptr; }
+};
+
+/** Module parameter reference (and enumerated value)
+  * Stores a reference to another module parameter, that can be retrieved with the
+  * method get_referenced_param().
+  * @note Enumerated values are stored as references (with only 1 name segment),
+  * since the parser cannot distinguish them. */
+class Module_Param_Reference : public Module_Param {
+  Module_Param_Name* mp_ref;
+public:
+  type_t get_type() const { return MP_Reference; }
+  Module_Param_Reference(Module_Param_Name* p);
+  ~Module_Param_Reference() { delete mp_ref; }
+  Module_Param_Ptr get_referenced_param() const;
+  char* get_enumerated() const;
+  const char* get_type_str() const { return "module parameter reference"; }
+  void log_value() const;
+};
+
+/** Unbound module parameter
+  * This cannot be created by the parser, only by get_referenced_param(), when
+  * the referenced module parameter is unbound. */
+class Module_Param_Unbound : public Module_Param {
+  type_t get_type() const { return MP_Unbound; }
+  const char* get_type_str() const { return "<unbound>"; }
+  void log_value() const;
+};
+
+/** Module parameter expression
+  * Contains an unprocessed module parameter expression with one or two operands.
+  * Expression types:
+  * with 2 operands: +, -, *, /, &
+  * with 1 operand: - (unary + is handled by the parser). */
+class Module_Param_Expression : public Module_Param {
+private:
+  expression_operand_t expr_type;
+  Module_Param* operand1;
+  Module_Param* operand2;
+public:
+  Module_Param_Expression(expression_operand_t p_type, Module_Param* p_op1,
+    Module_Param* p_op2);
+  Module_Param_Expression(Module_Param* p_op);
+  ~Module_Param_Expression();
+  expression_operand_t get_expr_type() const { return expr_type; }
+  const char* get_expr_type_str() const;
+  Module_Param* get_operand1() const { return operand1; }
+  Module_Param* get_operand2() const { return operand2; }
+  type_t get_type() const { return MP_Expression; }
+  const char* get_type_str() const { return "expression"; }
+  void log_value() const;
 };
 
 class Module_Param_NotUsed : public Module_Param {
@@ -352,19 +460,12 @@ public:
 };
 
 class Module_Param_Universal_Charstring : public Module_Param_String<universal_char> {
-  /** Number of characters in this string that were added with the quadruple notation */
-  int n_quads;
-  /** Positions of quadruple characters in the string */
-  int* quad_positions;
 public:
   type_t get_type() const { return MP_Universal_Charstring; }
-  Module_Param_Universal_Charstring(int p_n, universal_char* p_c, int p_nq, int* p_qp)
-  : Module_Param_String<universal_char>(p_n, p_c), n_quads(p_nq), quad_positions(p_qp) {}
-  ~Module_Param_Universal_Charstring() { Free(quad_positions); }
+  Module_Param_Universal_Charstring(int p_n, universal_char* p_c)
+  : Module_Param_String<universal_char>(p_n, p_c) {}
   const char* get_type_str() const { return "universal charstring"; }
   void log_value() const;
-  int get_nof_quads() const { return n_quads; }
-  int get_quad_pos(int p_idx) const { return quad_positions[p_idx]; }
 };
 
 class Module_Param_Enumerated : public Module_Param {

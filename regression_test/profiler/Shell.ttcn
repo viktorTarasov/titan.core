@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,7 +47,8 @@ type component mtc_CT {}
 
 const integer c_shell_successWithoutWarningAndError:=0;
 const integer c_shell_success := 0;
-const integer c_shell_successWithWarning:=1; //temp until licence is solved
+const integer c_shell_successWithWarning:=1;
+const integer c_shell_successWithoutError:=2;
 const integer c_shell_error:=256;
 const integer c_shell_error_noSuchFileOrDirectory:=512;
 
@@ -156,7 +157,8 @@ runs on Shell_CT
 
   var integer vl_expectedCode:=-1;
   if(pl_expected_result==c_shell_successWithoutWarningAndError or
-    pl_expected_result==c_shell_successWithWarning) {
+    pl_expected_result==c_shell_successWithWarning or
+    pl_expected_result==c_shell_successWithoutError) {
     vl_expectedCode:=0
   } else {
     vl_expectedCode:= pl_expected_result;
@@ -205,6 +207,16 @@ runs on Shell_CT
                 pl_success:=true;
               }
             }//case
+            case(c_shell_successWithoutError) {
+              vl_pattern:="*(Error|ERROR|error)*";
+              if(regexp(v_ASP_PResult.stderr,vl_pattern,0)!=""){
+                log("That is an unexpected Error!")
+                pl_success:=false;
+              } else {
+                log("No Error in the stderr string");
+                pl_success:=true;
+              }
+            }
             case(c_shell_error) {
               log("Command returned with ERROR as expected");
               pl_success:=true;

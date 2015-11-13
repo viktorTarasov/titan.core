@@ -71,13 +71,29 @@ variant (chemistry) "name as capitalized";
 
 type record MySubjects2
 {
+	record of enumerated {
+		english,
+		math,
+		physics,
+		chemistry,
+		history
+	} order,
 	XSD.GYear year optional,
-	Subject subject
+	XSD.String english,
+	XSD.String math,
+	XSD.String physics,
+	XSD.String chemistry,
+	XSD.String history
 }
 with {
+variant "useOrder";
 variant (year) "name as capitalized";
 variant (year) "attribute";
-variant (subject) "name as capitalized";
+variant (english) "name as capitalized";
+variant (math) "name as capitalized";
+variant (physics) "name as capitalized";
+variant (chemistry) "name as capitalized";
+variant (history) "name as capitalized";
 };
 
 

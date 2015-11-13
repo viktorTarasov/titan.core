@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -13,7 +13,6 @@
 #include "TTCN3Module.hh"
 #include "SimpleType.hh"
 #include "ComplexType.hh"
-#include "FieldType.hh"
 
 extern bool h_flag_used;
 extern bool q_flag_used;
@@ -23,56 +22,45 @@ extern bool q_flag_used;
 unsigned int TTCN3ModuleInventory::num_errors = 0;
 unsigned int TTCN3ModuleInventory::num_warnings = 0;
 
-
-
 TTCN3ModuleInventory::TTCN3ModuleInventory()
 : definedModules()
 , writtenImports()
-, typenames()
-{}
+, typenames() {
+}
 
-TTCN3ModuleInventory::~TTCN3ModuleInventory()
-{
+TTCN3ModuleInventory::~TTCN3ModuleInventory() {
   for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
     delete(module->Data);
   }
 }
 
-TTCN3ModuleInventory& TTCN3ModuleInventory::getInstance()
-{
+TTCN3ModuleInventory& TTCN3ModuleInventory::getInstance() {
   // Singleton, see Meyers, More Effective C++, Item 26 (page 131)
   static TTCN3ModuleInventory instance;
   return instance;
 }
 
-TTCN3Module * TTCN3ModuleInventory::addModule(const char * xsd_filename, XMLParser * a_parser)
-{
+TTCN3Module * TTCN3ModuleInventory::addModule(const char * xsd_filename, XMLParser * a_parser) {
   TTCN3Module * module = new TTCN3Module(xsd_filename, a_parser);
   definedModules.push_back(module);
   return definedModules.back();
 }
 
-void TTCN3ModuleInventory::modulenameConversion()
-{
+void TTCN3ModuleInventory::modulenameConversion() {
   definedModules.sort(compareModules);
 
-  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-  {
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
     module->Data->TargetNamespace2ModuleName();
   }
 }
 
-void TTCN3ModuleInventory::referenceResolving()
-{
+void TTCN3ModuleInventory::referenceResolving() {
   /**
    * Reference resolving for include and import statements
    */
-  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-  {
-    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next)
-    {
-      if (type->Data->getName().convertedValue == "import" || type->Data->getName().convertedValue == "include")
-      {
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next) {
+      if (type->Data->getName().convertedValue == "import" || type->Data->getName().convertedValue == "include") {
         type->Data->referenceResolving();
       }
     }
@@ -82,66 +70,40 @@ void TTCN3ModuleInventory::referenceResolving()
    * Reference resolving for all others
    */
   bool there_is_unresolved_reference_somewhere = false;
-  do
-  {
+  do {
     there_is_unresolved_reference_somewhere = false;
 
-    for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-    {
-      for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next)
-      {
-        if (type->Data->getName().convertedValue != "import" && type->Data->getName().convertedValue != "include")
-        {
+    for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+      for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next) {
+        if (type->Data->getName().convertedValue != "import" && type->Data->getName().convertedValue != "include") {
           type->Data->referenceResolving();
-          if (type->Data->hasUnresolvedReference())
-          {
+          if (type->Data->hasUnresolvedReference()) {
             there_is_unresolved_reference_somewhere = true;
           }
         }
       }
     }
-  } while(there_is_unresolved_reference_somewhere);
+  } while (there_is_unresolved_reference_somewhere);
 }
 
-void TTCN3ModuleInventory::finalModification()
-{
-  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-  {
-    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next)
-    {
+void TTCN3ModuleInventory::finalModification() {
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next) {
       type->Data->finalModification();
     }
   }
 }
 
-void TTCN3ModuleInventory::nameConversion()
-{
+void TTCN3ModuleInventory::nameConversion() {
   /**
    * Sort of types and fields
    */
-  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-  {
-    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next)
-    {
-      switch (type->Data->getConstruct())
-      {
-      case c_complexType:
-      case c_attributeGroup:
-      case c_group:
-        ((ComplexType*)type->Data)->everything_into_fields_final();
-        break;
-      default:
-        break;
-      }
-    }
-  }
 
   definedModules.sort(compareModules);
   /********************************************************
    * Conversion of the name of types
    * ******************************************************/
-  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-  {
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
     if (module->Data->isnotIntoNameConversion()) continue;
 
     List<RootType*> definedElements_inABC;
@@ -151,34 +113,31 @@ void TTCN3ModuleInventory::nameConversion()
     List<RootType*> definedAttributeGroups_inABC;
     List<RootType*> definedGroups_inABC;
 
-    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next)
-    {
+    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next) {
       if (module2->Data->getModulename() != module->Data->getModulename()) continue;
 
-      for (List<RootType*>::iterator type = module2->Data->getDefinedTypes().begin(); type; type = type->Next)
-      {
-        switch (type->Data->getConstruct())
-        {
-        case c_simpleType:
-          definedSimpleTypes_inABC.push_back(type->Data);
-          break;
-        case c_element:
-          definedElements_inABC.push_back(type->Data);
-          break;
-        case c_attribute:
-          definedAttributes_inABC.push_back(type->Data);
-          break;
-        case c_complexType:
-          definedComplexTypes_inABC.push_back(type->Data);
-          break;
-        case c_group:
-          definedGroups_inABC.push_back(type->Data);
-          break;
-        case c_attributeGroup:
-          definedAttributeGroups_inABC.push_back(type->Data);
-          break;
-        default:
-          break;
+      for (List<RootType*>::iterator type = module2->Data->getDefinedTypes().begin(); type; type = type->Next) {
+        switch (type->Data->getConstruct()) {
+          case c_simpleType:
+            definedSimpleTypes_inABC.push_back(type->Data);
+            break;
+          case c_element:
+            definedElements_inABC.push_back(type->Data);
+            break;
+          case c_attribute:
+            definedAttributes_inABC.push_back(type->Data);
+            break;
+          case c_complexType:
+            definedComplexTypes_inABC.push_back(type->Data);
+            break;
+          case c_group:
+            definedGroups_inABC.push_back(type->Data);
+            break;
+          case c_attributeGroup:
+            definedAttributeGroups_inABC.push_back(type->Data);
+            break;
+          default:
+            break;
         }
       }
       module2->Data->notIntoNameConversion();
@@ -191,58 +150,54 @@ void TTCN3ModuleInventory::nameConversion()
     definedAttributeGroups_inABC.sort(compareTypes);
     definedGroups_inABC.sort(compareTypes);
 
-    for (List<RootType*>::iterator type = definedElements_inABC.begin(); type; type = type->Next)
-    {
+    typenames.push_back(QualifiedName(module->Data->getTargetNamespace(), module->Data->getModulename()));
+    for(List<const TTCN3Module*>::iterator mod = module->Data->getImportedModules().begin(); mod; mod = mod->Next){
+      typenames.push_back(QualifiedName(module->Data->getTargetNamespace(), mod->Data->getModulename()));
+    }
+
+    for (List<RootType*>::iterator type = definedElements_inABC.begin(); type; type = type->Next) {
       type->Data->nameConversion(nameMode, module->Data->getDeclaredNamespaces());
     }
-    for (List<RootType*>::iterator type = definedAttributes_inABC.begin(); type; type = type->Next)
-    {
+    for (List<RootType*>::iterator type = definedAttributes_inABC.begin(); type; type = type->Next) {
       type->Data->nameConversion(nameMode, module->Data->getDeclaredNamespaces());
     }
-    for (List<RootType*>::iterator type = definedSimpleTypes_inABC.begin(); type; type = type->Next)
-    {
+    for (List<RootType*>::iterator type = definedSimpleTypes_inABC.begin(); type; type = type->Next) {
       type->Data->nameConversion(nameMode, module->Data->getDeclaredNamespaces());
     }
-    for (List<RootType*>::iterator type = definedComplexTypes_inABC.begin(); type; type = type->Next)
-    {
+    for (List<RootType*>::iterator type = definedComplexTypes_inABC.begin(); type; type = type->Next) {
       type->Data->nameConversion(nameMode, module->Data->getDeclaredNamespaces());
     }
-    for (List<RootType*>::iterator type = definedAttributeGroups_inABC.begin(); type; type = type->Next)
-    {
+    for (List<RootType*>::iterator type = definedAttributeGroups_inABC.begin(); type; type = type->Next) {
       type->Data->nameConversion(nameMode, module->Data->getDeclaredNamespaces());
     }
-    for (List<RootType*>::iterator type = definedGroups_inABC.begin(); type; type = type->Next)
-    {
+    for (List<RootType*>::iterator type = definedGroups_inABC.begin(); type; type = type->Next) {
       type->Data->nameConversion(nameMode, module->Data->getDeclaredNamespaces());
     }
+    typenames.clear();
   }
   /********************************************************
    * Conversion of the type of types
    * ******************************************************/
-  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-  {
-    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next)
-    {
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next) {
       type->Data->nameConversion(typeMode, module->Data->getDeclaredNamespaces());
     }
   }
   /********************************************************
    * Conversion of the names and the types of the fields
    * ******************************************************/
-  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-  {
-    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next)
-    {
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next) {
       type->Data->nameConversion(fieldMode, module->Data->getDeclaredNamespaces());
     }
   }
 }
 
-void TTCN3ModuleInventory::moduleGeneration()
-{
-  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-  {
-    if (module->Data->isnotIntoFile()) continue;
+void TTCN3ModuleInventory::moduleGeneration() {
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+    if (module->Data->isnotIntoFile()) {
+      continue;
+    }
 
     List<NamespaceType> used_namespaces;
     NamespaceType targetns;
@@ -251,12 +206,12 @@ void TTCN3ModuleInventory::moduleGeneration()
 
     // Now search for other modules with the same module name.
     // They must have had the same targetNamespace.
-    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next)
-    {
-      if (module2->Data->getModulename() != module->Data->getModulename()) continue;
+    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next) {
+      if (module2->Data->getModulename() != module->Data->getModulename()) {
+        continue;
+      }
 
-      for (List<NamespaceType>::iterator declNS = module2->Data->getDeclaredNamespaces().begin(); declNS; declNS = declNS->Next)
-      {
+      for (List<NamespaceType>::iterator declNS = module2->Data->getDeclaredNamespaces().begin(); declNS; declNS = declNS->Next) {
         used_namespaces.push_back(declNS->Data);
       }
       module2->Data->notIntoFile(); // first module gets the TTCN-3 file
@@ -280,10 +235,8 @@ void TTCN3ModuleInventory::moduleGeneration()
 
     fprintf(file, "//\tGenerated from file(s):\n");
 
-    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next)
-    {
-      if (module2->Data->getModulename() == module->Data->getModulename())
-      {
+    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next) {
+      if (module2->Data->getModulename() == module->Data->getModulename()) {
         module2->Data->generate_TTCN3_fileinfo(file);
       }
     }
@@ -303,20 +256,16 @@ void TTCN3ModuleInventory::moduleGeneration()
 
     module->Data->generate_TTCN3_modulestart(file);
 
-    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next)
-    {
-      if (module2->Data->getModulename() == module->Data->getModulename())
-      {
+    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next) {
+      if (module2->Data->getModulename() == module->Data->getModulename()) {
         module2->Data->generate_TTCN3_import_statements(file);
       }
     }
 
     writtenImports.clear();
 
-    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next)
-    {
-      if (module2->Data->getModulename() == module->Data->getModulename())
-      {
+    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next) {
+      if (module2->Data->getModulename() == module->Data->getModulename()) {
         module2->Data->generate_TTCN3_included_types(file);
         module2->Data->generate_TTCN3_types(file);
       }
@@ -332,8 +281,30 @@ void TTCN3ModuleInventory::moduleGeneration()
   }
 }
 
-RootType * TTCN3ModuleInventory::lookup(const SimpleType * reference, wanted w) const
-{
+RootType * TTCN3ModuleInventory::lookup(const RootType* ref, const Mstring& reference, wanted w) const {
+  Mstring uri = reference.getPrefix(':');
+  const Mstring& name = reference.getValueWithoutPrefix(':');
+  if(uri.empty()){
+    for(List<NamespaceType>::iterator qname = ref->getModule()->getDeclaredNamespaces().begin(); qname; qname = qname->Next){
+      if(qname->Data.prefix.empty()){
+        uri = qname->Data.uri;
+        break;
+      }
+    }
+  }else {
+    uri = getNameSpaceByPrefix(ref, uri);
+  }
+  return lookup(name, uri, NULL, w);
+}
+
+RootType * TTCN3ModuleInventory::lookup(const SimpleType * reference, wanted w) const {
+  const Mstring& uri = reference->getReference().get_uri();
+  const Mstring& name = reference->getReference().get_val();
+
+  return lookup(name, uri, reference, w);
+}
+
+RootType * TTCN3ModuleInventory::lookup(const ComplexType * reference, wanted w) const {
   const Mstring& uri = reference->getReference().get_uri();
   const Mstring& name = reference->getReference().get_val();
 
@@ -341,23 +312,20 @@ RootType * TTCN3ModuleInventory::lookup(const SimpleType * reference, wanted w) 
 }
 
 RootType * TTCN3ModuleInventory::lookup(const Mstring& name, const Mstring& nsuri,
-  const RootType *reference, wanted w) const
-{
+  const RootType *reference, wanted w) const {
   return ::lookup(definedModules, name, nsuri, reference, w);
 }
 
-void TTCN3ModuleInventory::dump() const
-{
-  fprintf(stderr, "Dumping %lu modules.\n", (unsigned long)definedModules.size());
-  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next)
-  {
+void TTCN3ModuleInventory::dump() const {
+  fprintf(stderr, "Dumping %lu modules.\n", (unsigned long) definedModules.size());
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
     module->Data->dump();
   }
 
-  fprintf(stderr, "Dumping %lu types\n", (unsigned long)typenames.size());
+  fprintf(stderr, "Dumping %lu types\n", (unsigned long) typenames.size());
 
   Item<QualifiedName> *o = typenames.begin();
-  for( ; o != NULL; o = o->Next) {
+  for (; o != NULL; o = o->Next) {
     fprintf(stderr, "{%s}%s,\n",
       o->Data.nsuri.c_str(), o->Data.name.c_str());
   }

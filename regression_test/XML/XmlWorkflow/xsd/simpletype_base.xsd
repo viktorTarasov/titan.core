@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+    xmlns:this="www.example.org/simpletype/base"
+    targetNamespace="www.example.org/simpletype/base">
+
+<xsd:complexType name="SimpleTypebase">
+	<xsd:simpleContent>
+		<xsd:restriction base="string">
+			<xsd:enumeration value="unknown" />
+		</xsd:restriction>
+	</xsd:simpleContent>
+</xsd:complexType>
+
+</xsd:schema>
+

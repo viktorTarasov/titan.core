@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -36,11 +36,12 @@ typedef enum {
 typedef enum {
   JSON_NONE       = 0x00, // no value type set (default)
   JSON_NUMBER     = 0x01, // integer and float
-  JSON_STRING     = 0x02, // all string types, the verdict type and enumerated values
-  JSON_LITERAL    = 0x04, // boolean (true or false)
-  JSON_OBJECT     = 0x08, // records, sets and unions
-  JSON_ARRAY      = 0x10, // record of and set of
-  JSON_ANY_VALUE  = 0x1F  // unions with the "as value" coding instruction
+  JSON_STRING     = 0x02, // all string types, the objid type, the verdict type and enumerated values
+  JSON_BOOLEAN    = 0x04, // boolean (true or false)
+  JSON_OBJECT     = 0x08, // records, sets, unions and the anytype
+  JSON_ARRAY      = 0x10, // record of, set of and array
+  JSON_NULL       = 0x20, // ASN.1 null type
+  JSON_ANY_VALUE  = 0x3F  // unions with the "as value" coding instruction
 } json_value_t;
 
 /* Compound type definitions */
@@ -68,6 +69,7 @@ typedef struct {
   unsigned short jsonValueType;
   boolean xerAttribute;
   boolean jsonOmitAsNull;
+  boolean jsonMetainfoUnbound;
   const char* jsonAlias;
   const char* jsonDefaultValue;
   /** true if the field is a record-of or set-of with optimized memory allocation */
@@ -105,6 +107,7 @@ typedef struct {
   boolean has_opentypes;
   boolean opentype_outermost;
   Opentype_t *ot;
+  boolean isOptional; /**< this structure is an optional field in a record/set */
 } struct_def;
 
 /** record of, set of descriptor for code generation */

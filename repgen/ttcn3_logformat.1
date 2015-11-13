@@ -49,6 +49,9 @@ If this option is omitted, the formatted log will be printed to standard output.
 .B \-s
 If this option is set, the entries that were recorded during the execution of a 
 particular test case will be saved in a separate file in
+.I \-n
+If this option is set, newline and tab characters are not modified, they are
+printed as \n and \t
 .I ttcn3_logformat
 working directory. The name of this file will be identical to the name of the
 test case. If the same test case is executed several times after each other, the
@@ -104,7 +107,7 @@ The
 .SH AUTHOR
 This manpage is written by Csaba Koppany, Ericsson Telecom AB
 .br
-Copyright (c) 2000-2014 Ericsson Telecom AB
+Copyright (c) 2000-2015 Ericsson Telecom AB
 .br
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0

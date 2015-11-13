@@ -13,6 +13,12 @@
 				"start line" : 19,
 				"execution count" : 1,
 				"total time" : 0.000000
+			},
+			{
+				"name" : "control",
+				"start line" : 26,
+				"execution count" : 0,
+				"total time" : 0.000000
 			}
 		],
 		"lines" : [
@@ -55,6 +61,16 @@
 				"number" : 23,
 				"execution count" : 1,
 				"total time" : 0.000000
+			},
+			{
+				"number" : 26,
+				"execution count" : 0,
+				"total time" : 0.000000
+			},
+			{
+				"number" : 27,
+				"execution count" : 0,
+				"total time" : 0.000000
 			}
 		]
 	},
@@ -78,6 +94,12 @@
 				"start line" : 24,
 				"execution count" : 1,
 				"total time" : 0.000000
+			},
+			{
+				"name" : "control",
+				"start line" : 32,
+				"execution count" : 0,
+				"total time" : 0.000000
 			}
 		],
 		"lines" : [
@@ -89,6 +111,11 @@
 			{
 				"number" : 14,
 				"execution count" : 2,
+				"total time" : 0.000000
+			},
+			{
+				"number" : 15,
+				"execution count" : 0,
 				"total time" : 0.000000
 			},
 			{
@@ -129,6 +156,16 @@
 			{
 				"number" : 29,
 				"execution count" : 1,
+				"total time" : 0.000000
+			},
+			{
+				"number" : 32,
+				"execution count" : 0,
+				"total time" : 0.000000
+			},
+			{
+				"number" : 33,
+				"execution count" : 0,
 				"total time" : 0.000000
 			}
 		]

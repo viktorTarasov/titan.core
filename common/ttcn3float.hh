@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -9,6 +9,13 @@
 #define TTCN3FLOAT_HH_
 
 #include <math.h>
+
+/* TTCN-3 float values that have absolute value smaller than this
+   are displayed in exponential notation. */
+#define MIN_DECIMAL_FLOAT		1.0E-4
+/* TTCN-3 float values that have absolute value larger or equal than this
+   are displayed in exponential notation. */
+#define MAX_DECIMAL_FLOAT		1.0E+10
 
 #ifndef signbit
 // Probably Solaris.

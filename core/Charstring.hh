@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -50,6 +50,7 @@ class CHARSTRING : public Base_Type {
   friend class UNIVERSAL_CHARSTRING;
   friend class UNIVERSAL_CHARSTRING_ELEMENT;
   friend class TTCN_Buffer;
+  friend class CHARSTRING_template;
 
   friend boolean operator==(const char* string_value,
                             const CHARSTRING& other_value);
@@ -83,6 +84,12 @@ class CHARSTRING : public Base_Type {
   void init_struct(int n_chars);
   void copy_value();
   CHARSTRING(int n_chars);
+  
+  /** An extended version of set_param(), which also accepts string patterns if
+    * the second parameter is set (needed by CHARSTRING_template to concatenate
+    * string patterns). 
+    * @return TRUE, if the module parameter was a string pattern, otherwise FALSE */
+  boolean set_param_internal(Module_Param& param, boolean allow_pattern);
   
 public:
   /** Construct an unbound CHARSTRING object */
@@ -174,6 +181,7 @@ public:
     * @note UFT-8 strings will be decoded. If the decoding results in multi-octet
     * characters an error will be thrown. */
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
@@ -386,7 +394,7 @@ public:
   const CHARSTRING_ELEMENT operator[](int index_value) const;
   const CHARSTRING_ELEMENT operator[](const INTEGER& index_value) const;
 
-  boolean match(const CHARSTRING& other_value) const;
+  boolean match(const CHARSTRING& other_value, boolean legacy = FALSE) const;
   const CHARSTRING& valueof() const;
 
   int lengthof() const;
@@ -398,25 +406,26 @@ public:
   void set_max(const CHARSTRING& max_value);
 
   void log() const;
-  void log_match(const CHARSTRING& match_value) const;
+  void log_match(const CHARSTRING& match_value, boolean legacy = FALSE) const;
 
   void set_param(Module_Param& param);
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 
-  boolean is_present() const;
-  boolean match_omit() const;
+  boolean is_present(boolean legacy = FALSE) const;
+  boolean match_omit(boolean legacy = FALSE) const;
 #ifdef TITAN_RUNTIME_2
   void valueofv(Base_Type* value) const { *(static_cast<CHARSTRING*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const CHARSTRING*>(other_value)); }
   Base_Template* clone() const { return new CHARSTRING_template(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &CHARSTRING_descr_; }
-  boolean matchv(const Base_Type* other_value) const { return match(*(static_cast<const CHARSTRING*>(other_value))); }
-  void log_matchv(const Base_Type* match_value) const  { log_match(*(static_cast<const CHARSTRING*>(match_value))); }
+  boolean matchv(const Base_Type* other_value, boolean legacy) const { return match(*(static_cast<const CHARSTRING*>(other_value)), legacy); }
+  void log_matchv(const Base_Type* match_value, boolean legacy) const  { log_match(*(static_cast<const CHARSTRING*>(match_value)), legacy); }
 #else
-  void check_restriction(template_res t_res, const char* t_name=NULL) const;
+  void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
 #endif
 
   /** Returns the single_value member

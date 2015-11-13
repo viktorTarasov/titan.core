@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -11,7 +11,23 @@
 
 #include <stddef.h>
 
+#ifndef PROF_MERGE
 #include "Error.hh"
+#else
+// there's no point in including Error.hh and all the includes that come with it
+// when building the profiler merge tool, just use this simple error function
+#include <stdio.h>
+#include <stdarg.h>
+void TTCN_error(const char *fmt, ...)
+{
+  va_list parameters;
+  va_start(parameters, fmt);
+  vfprintf(stderr, fmt, parameters);
+  va_end(parameters);
+  putc('\n', stderr);
+  fflush(stderr);
+}
+#endif
 
 // Not invented here 
 template<typename T>

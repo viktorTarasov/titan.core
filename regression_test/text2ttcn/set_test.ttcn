@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -218,6 +218,7 @@ testcase tc_set_mod4o_emb() runs on MC {
   } 
   f_checkMatchingValues_rset(t_rset(tspt_set_mod4o),vl_good_values,vl_wrong_values);
 }
+// Note: this tests legacy behavior and requires the -M compiler option!
 //tspt_set_mod4c1 := complement({ b:=true, cs:= "sth", f:=0.0, bs:=omit, os:=?,hs:=?,i:=99})
 testcase tc_set_mod4c1_emb() runs on MC {
   log(t_rset(tspt_set_mod4c1));

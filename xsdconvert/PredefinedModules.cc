@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -12,8 +12,7 @@
  * Modules are generated always when conversion is called
  *
  */
-const char * moduleUsefulTtcn3Types =
-{
+const char * moduleUsefulTtcn3Types = {
   "module UsefulTtcn3Types {\n\n\n"
 
 
@@ -92,8 +91,7 @@ const char * moduleUsefulTtcn3Types =
 
 };
 
-const char * moduleXSD =
-{
+const char * moduleXSD = {
 
   "module XSD {\n\n"
 
@@ -103,7 +101,7 @@ const char * moduleXSD =
   "const charstring\n"
   "  dash := \"-\",\n"
   "  cln  := \":\",\n"
-  "  year := \"(0(0(0[1-9]|[1-9][0-9])|[1-9][0-9][0-9])|[1-9][0-9][0-9][0-9])\",\n"
+  "  year := \"[0-9]#4\",\n"
   "  yearExpansion := \"(-([1-9][0-9]#(0,))#(,1))#(,1)\",\n"
   "  month := \"(0[1-9]|1[0-2])\",\n"
   "  dayOfMonth := \"(0[1-9]|[12][0-9]|3[01])\",\n"

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -181,8 +181,126 @@ testcase tc_attribute_default() runs on MTC {
   f_bool2verdict( match(f_dec_def(os), d) );
 }
 
+// Encoding a few values of ASN.1 types with the coding instruction "as value"
+// Results are the same as with the TTCN-3 types
+testcase tc_attribute_as_value_asn() runs on MTC {
+  var AsnStuff stuff := { { nval := NULL }, { ival := -10 }, { anyval := 'DCBA'O }, { vsval := "something" }, { pardval := { id := 0, priority := low, val := { iNTEGER := -10 } } } };
+  var octetstring os := char2oct("[null,-10,\"DCBA\",\"something\",{\"id\":0,\"priority\":\"low\",\"val\":{\"iNTEGER\":-10}}]");
+  f_check_encoding(encoded := f_enc_asn_stuff(stuff), expected := os);
+  f_bool2verdict( match(f_dec_asn_stuff(f_enc_asn_stuff(stuff)), stuff) );
+}
 
-//set
+// Encoding a record with 2 optional union fields encoded as JSON values (attribute 'as value')
+// and as the 'null' value when omitted (attribute 'omit as null').
+// One of the unions ('uniAsn') can decode the JSON value 'null' (field 'nval'), thus omitting
+// the union and setting this field have the same encoding, and decoding 'null' always sets the
+// field instead of omitting the union.
+// The other union ('uniTtcn') cannot decode the JSON value 'null', thus decoding 'null' omits
+// the union.
+testcase tc_attribute_optional_as_value() runs on MTC {
+  var OptionalUnions val1 := { dummy := "nothing", uniTtcn := omit, uniAsn := omit };
+  var OptionalUnions val2 := { dummy := "nothing", uniTtcn := omit, uniAsn := { nval := NULL } };
+  var octetstring os := char2oct("{\"dummy\":\"nothing\",\"uniTtcn\":null,\"uniAsn\":null}");
+  f_check_encoding(encoded := f_enc_opt_uni(val1), expected := os);
+  f_check_encoding(encoded := f_enc_opt_uni(val2), expected := os);
+  f_bool2verdict( match(f_dec_opt_uni(os), val2) );
+}
+
+// Encoding records and sets with unbound fields with meta info (attribute 'metainfo for unbound')
+// The unbound fields will have the 'null' value and an extra (meta info) field will be inserted
+// into the JSON document (after the current field) to specify that the field is unbound.
+testcase tc_attribute_metainfo_for_unbound() runs on MTC {
+  // regular encoding and decoding tests
+  var MetainfoRecord r := { num := 6 };
+  var octetstring os := char2oct("{\"num\":6,\"str\":null,\"metainfo str\":\"unbound\"}");
+  f_check_encoding(encoded := f_enc_meta_rec(r), expected := os);
+  f_bool2verdict( log2str(f_dec_meta_rec(os)) == log2str(r) );
+  
+  var MetainfoSet s := { str := "abc" };
+  os := char2oct("{\"int\":null,\"metainfo int\":\"unbound\",\"str\":\"abc\",\"octets\":null,\"metainfo octets\":\"unbound\"}");
+  f_check_encoding(encoded := f_enc_meta_set(s), expected := os);
+  f_bool2verdict( log2str(f_dec_meta_set(os)) == log2str(s) );
+  
+  // positive decoding tests (these cannot be produced by the encoder, but are still accepted by the decoder)
+  os := char2oct("{ \"int\" : 3, \"str\" : \"abc\", \"octets\" : \"1234\", \"metainfo int\" : \"unbound\" }");
+  var MetainfoSet res := { str := "abc", octets := '1234'O };
+  f_bool2verdict( log2str(f_dec_meta_set(os)) == log2str(res) );
+  
+  os := char2oct("{ \"metainfo int\" : \"unbound\", \"int\" : null, \"str\" : \"abc\", \"octets\" : \"1234\" }");
+  f_bool2verdict( log2str(f_dec_meta_set(os)) == log2str(res) ); // same expected result
+}
+
+// Negative tests for decoding with the unbound meta info attribute
+testcase tc_attribute_metainfo_for_unbound_negtest() runs on MTC {
+  var octetstring os := char2oct("{ \"metainfo num\" : \"unbound\", \"num\" : 6, \"str\" : \"qwe\" }");
+  var MetainfoRecord dummyRec;
+  @try {
+    dummyRec := f_dec_meta_rec(os);
+    setverdict(fail, "Expected error when decoding ", os);
+  }
+  @catch (msg) {
+    if (not match (msg, pattern "*Meta info not applicable to field 'num'")) {
+      setverdict(fail, "Unexpected error message when decoding ", os, " (msg: ", msg, ")");
+    }
+  }
+  
+  os := char2oct("{ \"metainfo dummy\" : \"unbound\", \"num\" : 6, \"str\" : \"qwe\" }");
+  @try {
+    dummyRec := f_dec_meta_rec(os);
+    setverdict(fail, "Expected error when decoding ", os);
+  }
+  @catch (msg) {
+    if (not match (msg, pattern "*Meta info provided for non-existent field 'dummy'")) {
+      setverdict(fail, "Unexpected error message when decoding ", os, " (msg: ", msg, ")");
+    }
+  }
+  
+  os := char2oct("{ \"int\" : 3, \"str\" : \"abc\", \"octets\" : \"1234\", \"metainfo int\" : \"bound\" }");
+  var MetainfoSet dummySet;
+  @try {
+    dummySet := f_dec_meta_set(os);
+    setverdict(fail, "Expected error when decoding ", os);
+  }
+  @catch (msg) {
+    if (not match (msg, pattern "*Invalid meta info for field 'num'")) {
+      setverdict(fail, "Unexpected error message when decoding ", os, " (msg: ", msg, ")");
+    }
+  }
+  
+  os := char2oct("{ \"int\" : 3, \"str\" : \"abc\", \"octets\" : \"1234\", \"metainfo int\" : 88 }");
+  @try {
+    dummySet := f_dec_meta_set(os);
+    setverdict(fail, "Expected error when decoding ", os);
+  }
+  @catch (msg) {
+    if (not match (msg, pattern "*Invalid meta info for field 'num'")) {
+      setverdict(fail, "Unexpected error message when decoding ", os, " (msg: ", msg, ")");
+    }
+  }
+  
+  os := char2oct("{ \"int\" : null, \"str\" : \"abc\", \"octets\" : \"1234\" }");
+  @try {
+    dummySet := f_dec_meta_set(os);
+    setverdict(fail, "Expected error when decoding ", os);
+  }
+  @catch (msg) {
+    if (not match (msg, pattern "*Invalid JSON token found while decoding field 'num'")) {
+      setverdict(fail, "Unexpected error message when decoding ", os, " (msg: ", msg, ")");
+    }
+  }
+  
+  os := char2oct("{ \"metainfo int\" : \"unbound\", \"int\" : [ 1, 3 ], \"str\" : \"abc\", \"octets\" : \"1234\" }");
+  @try {
+    dummySet := f_dec_meta_set(os);
+    setverdict(fail, "Expected error when decoding ", os);
+  }
+  @catch (msg) {
+    if (not match (msg, pattern "*Invalid JSON token found while decoding field 'num'")) {
+      setverdict(fail, "Unexpected error message when decoding ", os, " (msg: ", msg, ")");
+    }
+  }
+  setverdict(pass);
+}
 
 
 control {
@@ -197,5 +315,9 @@ control {
   execute(tc_attribute_union());
   execute(tc_attribute_as_value());
   //execute(tc_attribute_default());
+  execute(tc_attribute_as_value_asn());
+  execute(tc_attribute_optional_as_value());
+  execute(tc_attribute_metainfo_for_unbound());
+  execute(tc_attribute_metainfo_for_unbound_negtest());
 }
 }

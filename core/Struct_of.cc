@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -149,7 +149,7 @@ boolean compare_set_of(const Base_Type *left_ptr, int left_size,
 
 boolean match_array(const Base_Type *value_ptr, int value_size,
   const Restricted_Length_Template *template_ptr, int template_size,
-  match_function_t match_function)
+  match_function_t match_function, boolean legacy)
 {
   if (value_ptr == NULL || value_size < 0 || template_ptr == NULL ||
     template_size < 0)
@@ -164,7 +164,7 @@ boolean match_array(const Base_Type *value_ptr, int value_size,
     //We matched if the remaining templates are
     // asterisks
     while(template_index < template_size &&
-          match_function(value_ptr, -1, template_ptr, template_index))
+          match_function(value_ptr, -1, template_ptr, template_index, legacy))
       template_index++;
 
     return template_index == template_size;
@@ -182,12 +182,14 @@ boolean match_array(const Base_Type *value_ptr, int value_size,
   // and there are limited number of templates and values
   for(;;)
   {
-    if(match_function(value_ptr, -1, template_ptr, template_index))
+    if(match_function(value_ptr, -1, template_ptr, template_index, legacy))
     {
       //if we found an asterisk we administer it, and step in the template
       last_asterisk = template_index++;
       last_value_to_asterisk = value_index;
-    }else if(match_function(value_ptr,value_index,template_ptr,template_index))
+    }
+    else if(match_function(value_ptr, value_index, template_ptr, template_index,
+      legacy))
     {
       //if we found a matching pair we step in both
       value_index++;
@@ -210,7 +212,7 @@ boolean match_array(const Base_Type *value_ptr, int value_size,
       //value_index != value_size at this point so it is pointless
       // to check it in the if statement
       //At the end of the template
-      if(match_function(value_ptr, -1, template_ptr, template_index-1)) {
+      if(match_function(value_ptr, -1, template_ptr, template_index-1, legacy)) {
         //if the templates last element is an asterisk it eats up the values
         return TRUE;
       } else if (last_asterisk == -1){
@@ -228,7 +230,7 @@ boolean match_array(const Base_Type *value_ptr, int value_size,
       //At the end of the value we matched if the remaining templates are
       // asterisks
       while(template_index < template_size &&
-            match_function(value_ptr, -1, template_ptr, template_index))
+            match_function(value_ptr, -1, template_ptr, template_index, legacy))
         template_index++;
 
       return template_index == template_size;
@@ -264,6 +266,7 @@ class Matching_Table {
   int *template_index_table;
   edge_status **edge_matrix;
   boolean *covered_vector; //tells if a value is covered
+  boolean legacy;
 
   //if the value is covered, then tells by whom it is covered
   int *covered_index_vector;
@@ -282,7 +285,7 @@ public:
   Matching_Table(const Base_Type *par_value_ptr, int par_value_start,
     int par_value_size,const Restricted_Length_Template *par_template_ptr,
     int par_template_start, int par_template_size,
-    match_function_t par_match_function)
+    match_function_t par_match_function, boolean par_legacy)
   {
     match_function = par_match_function;
     value_size = par_value_size;
@@ -290,6 +293,7 @@ public:
     template_start = par_template_start;
     value_ptr = par_value_ptr;
     template_ptr = par_template_ptr;
+    legacy = par_legacy;
     n_asterisks = 0;
     nof_covered = 0;//to get rid of the linear summing
 
@@ -299,7 +303,7 @@ public:
     // locating the asterisks in the template
     for (int i = 0; i < par_template_size; i++)
     {
-      if(match_function(value_ptr, -1,template_ptr, par_template_start+i))
+      if(match_function(value_ptr, -1,template_ptr, par_template_start+i, legacy))
         n_asterisks++;
       else template_index_table[i - n_asterisks] = i;
     }
@@ -352,7 +356,7 @@ public:
     {
       if (match_function(value_ptr, value_start + value_index,
         template_ptr,
-        template_start + template_index_table[template_index]))
+        template_start + template_index_table[template_index], legacy))
       {
         edge_matrix[template_index][value_index] = EDGE;
       }else{
@@ -589,11 +593,11 @@ boolean match_set_of_internal(const Base_Type *value_ptr,
   match_function_t match_function,
   type_of_matching match_type,
   int* number_of_uncovered, int* pair_list,
-  unsigned int number_of_checked)
+  unsigned int number_of_checked, boolean legacy)
 {
   Matching_Table table(value_ptr, value_start, value_size,
     template_ptr, template_start, template_size,
-    match_function);
+    match_function, legacy);
 
   // we have to use the reduced length of the template
   // (not counting the asterisks)
@@ -863,7 +867,8 @@ static answer recursive_permutation_match(const Base_Type *value_ptr,
   unsigned int template_size,
   unsigned int permutation_index,
   match_function_t match_function,
-  unsigned int& shift_size)
+  unsigned int& shift_size,
+  boolean legacy)
 {
   unsigned int nof_permutations = template_ptr->get_number_of_permutations();
   if (permutation_index > nof_permutations)
@@ -898,7 +903,7 @@ static answer recursive_permutation_match(const Base_Type *value_ptr,
       template_ptr->get_permutation_start(permutation_index);
 
   if (permutation_begins ||
-    match_function(value_ptr, -1, template_ptr, template_start_index))
+    match_function(value_ptr, -1, template_ptr, template_start_index, legacy))
   {
     unsigned int smallest_possible_size;
     unsigned int largest_possible_size;
@@ -920,7 +925,7 @@ static answer recursive_permutation_match(const Base_Type *value_ptr,
       for(unsigned int i = 0; i < permutation_size; i++)
       {
         if(match_function(value_ptr, -1, template_ptr,
-          i + template_start_index))
+          i + template_start_index, legacy))
         {
           has_asterisk = TRUE;
         }else{
@@ -992,7 +997,7 @@ static answer recursive_permutation_match(const Base_Type *value_ptr,
         boolean found = match_set_of_internal(value_ptr, value_start_index,
           temp_size, template_ptr,
           template_start_index, permutation_size,
-          match_function, SUPERSET, &x, pair_list,old_temp_size);
+          match_function, SUPERSET, &x, pair_list,old_temp_size, legacy);
 
         if(found)
         {
@@ -1048,7 +1053,7 @@ static answer recursive_permutation_match(const Base_Type *value_ptr,
           template_size -
           permutation_size,
           permutation_index,
-          match_function, shift_size);
+          match_function, shift_size, legacy);
       }else{
         //try with the next permutation
         result = recursive_permutation_match(value_ptr,value_start_index+i,
@@ -1057,7 +1062,7 @@ static answer recursive_permutation_match(const Base_Type *value_ptr,
           permutation_size,
           template_size - permutation_size,
           permutation_index + 1,
-          match_function, shift_size);
+          match_function, shift_size, legacy);
       }
 
       if(result == SUCCESS)
@@ -1106,19 +1111,19 @@ static answer recursive_permutation_match(const Base_Type *value_ptr,
     unsigned int i = 0;
     do{
       good = match_function(value_ptr, value_start_index + i,
-        template_ptr, template_start_index + i);
+        template_ptr, template_start_index + i, legacy);
       i++;
       //bad stop: something can't be matched
       //half bad half good stop: the end of values is reached
       //good stop: matching on the full distance or till an asterisk
     }while(good && i < value_size && i < distance &&
       !match_function(value_ptr, -1, template_ptr,
-        template_start_index + i));
+        template_start_index + i, legacy));
 
     //if we matched on the full distance or till an asterisk
     if(good && (i == distance ||
       match_function(value_ptr, -1, template_ptr,
-        template_start_index + i)))
+        template_start_index + i, legacy)))
     {
       //reached the end of the templates
       if(i == template_size)
@@ -1140,7 +1145,7 @@ static answer recursive_permutation_match(const Base_Type *value_ptr,
           template_start_index + i,
           template_size - i,
           permutation_index,
-          match_function, shift_size);
+          match_function, shift_size, legacy);
       }
     }else{
       //something bad happened, so we have to check how bad the situation is
@@ -1159,7 +1164,7 @@ static answer recursive_permutation_match(const Base_Type *value_ptr,
         do{
           good = match_function(value_ptr,
             value_start_index + i + shift_size,
-            template_ptr, template_start_index + i);
+            template_ptr, template_start_index + i, legacy);
           shift_size++;
         }while(!good && i + shift_size < value_size);
 
@@ -1186,7 +1191,7 @@ instead of slower recursive_permutation_match.
 */
 boolean match_record_of(const Base_Type *value_ptr, int value_size,
   const Record_Of_Template *template_ptr,
-  int template_size, match_function_t match_function)
+  int template_size, match_function_t match_function, boolean legacy)
 {
   if (value_ptr == NULL || value_size < 0 ||
     template_ptr == NULL || template_size < 0 ||
@@ -1197,23 +1202,23 @@ boolean match_record_of(const Base_Type *value_ptr, int value_size,
   // use the simplified algorithm if the template does not contain permutation
   if (nof_permutations == 0)
     return match_array(value_ptr, value_size,
-      template_ptr, template_size, match_function);
+      template_ptr, template_size, match_function, legacy);
   // use 'set of' matching if all template elements are grouped into one
   // permutation
   if (nof_permutations == 1 && template_ptr->get_permutation_start(0) == 0 &&
     template_ptr->get_permutation_end(0) ==
       (unsigned int)(template_size - 1))
     return match_set_of(value_ptr, value_size, template_ptr, template_size,
-      match_function);
+      match_function, legacy);
 
   unsigned int shift_size = 0;
   return recursive_permutation_match(value_ptr, 0, value_size, template_ptr,
-    0, template_size, 0, match_function, shift_size) == SUCCESS;
+    0, template_size, 0, match_function, shift_size, legacy) == SUCCESS;
 }
 
 boolean match_set_of(const Base_Type *value_ptr, int value_size,
   const Restricted_Length_Template *template_ptr,
-  int template_size, match_function_t match_function)
+  int template_size, match_function_t match_function, boolean legacy)
 {
   if (value_ptr == NULL || value_size < 0 ||
     template_ptr == NULL || template_size < 0)
@@ -1233,14 +1238,14 @@ boolean match_set_of(const Base_Type *value_ptr, int value_size,
     TTCN_error("Internal error: match_set_of: invalid matching type.");
   }
   return match_set_of_internal(value_ptr, 0, value_size, template_ptr, 0,
-    template_size, match_function, match_type, NULL, NULL, 0);
+    template_size, match_function, match_type, NULL, NULL, 0, legacy);
 }
 
 void log_match_heuristics(const Base_Type *value_ptr, int value_size,
   const Restricted_Length_Template *template_ptr,
   int template_size,
   match_function_t match_function,
-  log_function_t log_function)
+  log_function_t log_function, boolean legacy)
 {
   if (value_ptr == NULL || value_size < 0 ||
     template_ptr == NULL || template_size < 0 ||
@@ -1259,7 +1264,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
   {
     // If j == -1, check whether the template element is an asterisk.
     // There is no problem if an asterisk has no matching pair.
-    if (match_function(value_ptr, -1, template_ptr, i))
+    if (match_function(value_ptr, -1, template_ptr, i, legacy))
     {
       asterisks_found++;
     }
@@ -1294,7 +1299,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
     boolean pair_found = FALSE;
     for (int j = 0; j < template_size; j++)
     {
-      if (match_function(value_ptr, i, template_ptr, j))
+      if (match_function(value_ptr, i, template_ptr, j, legacy))
       {
         pair_found = TRUE;
         break;
@@ -1310,7 +1315,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
         else
           value_found = TRUE;
 
-        log_function(value_ptr, NULL, i, 0);
+        log_function(value_ptr, NULL, i, 0, legacy);
         TTCN_Logger::log_event(" at index %d", i);
       }
       nof_unmatched_values++;
@@ -1334,7 +1339,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
     // pair
     for (int j = -1; j < value_size; j++)
     {
-      if (match_function(value_ptr, j, template_ptr, i))
+      if (match_function(value_ptr, j, template_ptr, i, legacy))
       {
         pair_found = TRUE;
         break;
@@ -1349,7 +1354,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
         else
           template_found = TRUE;
 
-        log_function(NULL, template_ptr, 0, i);
+        log_function(NULL, template_ptr, 0, i, legacy);
         TTCN_Logger::log_event(" at index %d", i);
       }
       nof_unmatched_templates++;
@@ -1365,7 +1370,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
     {
       for (int j = 0; j < template_size; j++)
       {
-        if (match_function(value_ptr, i, template_ptr, j))
+        if (match_function(value_ptr, i, template_ptr, j, legacy))
         {
           if (pair_found)
             TTCN_Logger::log_char(',');
@@ -1391,7 +1396,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
           {
             if(unmatched_templates[j]){
               TTCN_Logger::log_logmatch_info("[%d <-> %d]", i, j);
-              log_function(value_ptr, template_ptr, i, j);
+              log_function(value_ptr, template_ptr, i, j, legacy);
 
               TTCN_Logger::set_logmatch_buffer_len(previous_size);
             }
@@ -1411,7 +1416,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
               if('{' == sep){
                 sep = ',';
               }
-              log_function(value_ptr, template_ptr, i, j);
+              log_function(value_ptr, template_ptr, i, j, legacy);
               TTCN_Logger::log_event_str(" }");
             }
           }

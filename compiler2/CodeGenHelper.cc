@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -210,6 +210,7 @@ void CodeGenHelper::finalize_generation(Type* type) {
   transfer_value(dst.functions.post_init, src.functions.post_init);
 
   transfer_value(dst.functions.set_param, src.functions.set_param);
+  transfer_value(dst.functions.get_param, src.functions.get_param);
   transfer_value(dst.functions.log_param, src.functions.log_param);
   transfer_value(dst.functions.init_comp, src.functions.init_comp);
   transfer_value(dst.functions.start,     src.functions.start);

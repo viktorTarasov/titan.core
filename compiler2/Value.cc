@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -30,6 +30,7 @@
 #include "ttcn3/Statement.hh"
 
 #include "ttcn3/Attributes.hh"
+#include "../common/JSON_Tokenizer.hh"
 
 #include <math.h>
 #include <regex.h>
@@ -9082,6 +9083,25 @@ error:
     if (valuetype != V_CHOICE) FATAL_ERROR("Value::get_alt_value()");
     return u.choice.alt_value;
   }
+  
+  void Value::set_alt_name_to_lowercase()
+  {
+    if (valuetype != V_CHOICE) FATAL_ERROR("Value::set_alt_name_to_lowercase()");
+    string new_name = u.choice.alt_name->get_name();
+    if (isupper(new_name[0])) {
+      new_name[0] = tolower(new_name[0]);
+      if (new_name[new_name.size() - 1] == '_') {
+        // an underscore is inserted at the end of the alternative name if it's
+        // a basic type's name (since it would conflict with the class generated
+        // for that type)
+        // remove the underscore, it won't conflict with anything if its name
+        // starts with a lowercase letter
+        new_name.replace(new_name.size() - 1, 1, "");
+      }
+      delete u.choice.alt_name;
+      u.choice.alt_name = new Identifier(Identifier::ID_NAME, new_name);
+    }
+  }
 
   bool Value::has_oid_error()
   {
@@ -11343,7 +11363,7 @@ error:
     }
     expr->expr = mputstr(expr->expr, ".log_match(");
     u.expr.v1->generate_code_expr(expr);
-    expr->expr = mputc(expr->expr, ')');
+    expr->expr = mputprintf(expr->expr, "%s)", omit_in_value_list ? ", TRUE" : "");
   }
 
   void Value::generate_code_expr_expr(expression_struct *expr)
@@ -11657,7 +11677,8 @@ error:
         expr->expr=mputstr(expr->expr, ".is_bound()");
         break;
       case OPTYPE_ISPRESENT:
-        expr->expr=mputstr(expr->expr, ".is_present()");
+        expr->expr=mputprintf(expr->expr, ".is_present(%s)",
+          omit_in_value_list ? "TRUE" : "");
         break;
       case OPTYPE_SIZEOF:
         expr->expr=mputstr(expr->expr, ".size_of()");
@@ -11680,7 +11701,7 @@ error:
       u.expr.t2->generate_code(expr);
       expr->expr = mputstr(expr->expr, ".match(");
       u.expr.v1->generate_code_expr(expr);
-      expr->expr = mputc(expr->expr, ')');
+      expr->expr = mputprintf(expr->expr, "%s)", omit_in_value_list ? ", TRUE" : "");
       break;
     case OPTYPE_UNDEF_RUNNING:
       // it is resolved during semantic check
@@ -12046,7 +12067,7 @@ error:
       Value* v4_last = v4->get_value_refd_last();
       if ((v4_last->valuetype == V_SEQOF || v4_last->valuetype == V_SETOF)
           && !v4_last->u.val_vs->is_indexed() && v4_last->u.val_vs->get_nof_vs() == 0) {
-        expr->expr = mputprintf(expr->expr, "(%s)", v4->my_governor->get_stringRepr().c_str());
+        expr->expr = mputprintf(expr->expr, "(%s)", v4->my_governor->get_genname_value(my_scope).c_str());
       }
       v4->generate_code_expr_mandatory(expr);
     }
@@ -12609,6 +12630,205 @@ error:
       }
     }
     return str;
+  }
+  
+  /** This type contains the JSON encoding type of an omitted optional field */
+  enum omitted_json_value_t {
+    NOT_OMITTED,     // the field is not omitted
+    OMITTED_ABSENT,  // the omitted field is not present in the JSON object
+    OMITTED_NULL     // the omitted field is set to 'null' in the JSON object
+  };
+  
+  /** JSON code for omitted optional fields of can be generated in 2 ways:
+    * - the field is not present in the JSON object or
+    * - the field is present and its value is 'null'.
+    * Because of this all record/set values containing omitted fields have 2^N
+    * possible JSON encodings, where N is the number of omitted fields.
+    * 
+    * This function helps go through all the possible encodings, by generating
+    * the next combination from a previous one.
+    * 
+    * The algorithm is basically adding 1 to a binary number (where OMITTED_ABSENT
+    * is zero, OMITTED_NULL is one, all NOT_OMITTEDs are ignored and the first bit
+    * is the least significant bit).
+    *
+    * Usage: generate the first combination, where all omitted fields are absent
+    * (=all zeros), and keep calling this function until the last combination 
+    * (where all omitted fields are 'null', = all ones) is reached.
+    * 
+    * @return true, if the next combination was successfully generated, or
+    * false, when called with the last combination */
+  static bool next_omitted_json_combo(int* omitted_fields, size_t len)
+  {
+    for (size_t i = 0; i < len; ++i) {
+      if (omitted_fields[i] == OMITTED_ABSENT) {
+        omitted_fields[i] = OMITTED_NULL;
+        for (size_t j = 0; j < i; ++j) {
+          if (omitted_fields[j] == OMITTED_NULL) {
+            omitted_fields[j] = OMITTED_ABSENT;
+          }
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  void Value::generate_json_value(JSON_Tokenizer& json, bool allow_special_float /* = true */)
+  {
+    switch (valuetype) {
+    case V_INT:
+      json.put_next_token(JSON_TOKEN_NUMBER, get_val_Int()->t_str().c_str());
+      break;
+    case V_REAL: {
+      Real r = get_val_Real();
+      if (r == REAL_INFINITY) {
+        if (allow_special_float) {
+          json.put_next_token(JSON_TOKEN_STRING, "\"infinity\"");
+        }
+      }
+      else if (r == -REAL_INFINITY) {
+        if (allow_special_float) {
+          json.put_next_token(JSON_TOKEN_STRING, "\"-infinity\"");
+        }
+      }
+      else if (r != r) {
+        if (allow_special_float) {
+          json.put_next_token(JSON_TOKEN_STRING, "\"not_a_number\"");
+        }
+      }
+      else {
+        // true if decimal representation possible (use %f format)
+        bool decimal_repr = (r == 0.0)
+          || (r > -MAX_DECIMAL_FLOAT && r <= -MIN_DECIMAL_FLOAT)
+          || (r >= MIN_DECIMAL_FLOAT && r < MAX_DECIMAL_FLOAT);
+        char* number_str = mprintf(decimal_repr ? "%f" : "%e", r);
+        json.put_next_token(JSON_TOKEN_NUMBER, number_str);
+        Free(number_str);
+      }
+      break; }
+    case V_BOOL:
+      json.put_next_token(get_val_bool() ? JSON_TOKEN_LITERAL_TRUE : JSON_TOKEN_LITERAL_FALSE);
+      break;
+    case V_BSTR:
+    case V_HSTR:
+    case V_OSTR:
+    case V_CSTR: {
+      char* str = convert_to_json_string(get_val_str().c_str());
+      json.put_next_token(JSON_TOKEN_STRING, str);
+      Free(str);
+      break; }
+    case V_USTR: {
+      char* str = convert_to_json_string(ustring_to_uft8(get_val_ustr()).c_str());
+      json.put_next_token(JSON_TOKEN_STRING, str);
+      Free(str);
+      break; }
+    case V_VERDICT:
+    case V_ENUM:
+      json.put_next_token(JSON_TOKEN_STRING,
+        (string('\"') + create_stringRepr() + string('\"')).c_str());
+      break;
+    case V_SEQOF:
+    case V_SETOF:
+      json.put_next_token(JSON_TOKEN_ARRAY_START);
+      if (!u.val_vs->is_indexed()) {
+        for (size_t i = 0; i < u.val_vs->get_nof_vs(); ++i) {
+          u.val_vs->get_v_byIndex(i)->generate_json_value(json);
+        }
+      }
+      else {
+        for (size_t i = 0; i < u.val_vs->get_nof_ivs(); ++i) {
+          // look for the entry with index equal to i
+          for (size_t j = 0; j < u.val_vs->get_nof_ivs(); ++j) {
+            if (u.val_vs->get_iv_byIndex(j)->get_index()->get_val_Int()->get_val() == (Int)i) {
+              u.val_vs->get_iv_byIndex(j)->get_value()->generate_json_value(json);
+              break;
+            }
+          }
+        }
+      }
+      json.put_next_token(JSON_TOKEN_ARRAY_END);
+      break;
+    case V_SEQ:
+    case V_SET: {
+      // omitted fields have 2 possible JSON values (the field is absent, or it's
+      // present with value 'null'), each combination of omitted values must be
+      // generated
+      size_t len = get_nof_comps();
+      int* omitted_fields = new int[len]; // stores one combination
+      for (size_t i = 0; i < len; ++i) {
+        if (get_se_comp_byIndex(i)->get_value()->valuetype == V_OMIT) {
+          // all omitted fields are absent in the first combination
+          omitted_fields[i] = OMITTED_ABSENT;
+        }
+        else {
+          omitted_fields[i] = NOT_OMITTED;
+        }
+      }
+      do {
+        // generate the JSON object from the present combination
+        json.put_next_token(JSON_TOKEN_OBJECT_START);
+        for (size_t i = 0; i < len; ++i) {
+          if (omitted_fields[i] == OMITTED_ABSENT) {
+            // the field is absent, don't insert anything
+            continue;
+          }
+          // use the field's alias, if it has one
+          const char* alias = NULL;
+          if (my_governor != NULL) {
+            JsonAST* field_attrib = my_governor->get_comp_byName(
+              get_se_comp_byIndex(i)->get_name())->get_type()->get_json_attributes();
+            if (field_attrib != NULL) {
+              alias = field_attrib->alias;
+            }
+          }
+          json.put_next_token(JSON_TOKEN_NAME, (alias != NULL) ? alias :
+            get_se_comp_byIndex(i)->get_name().get_ttcnname().c_str());
+          if (omitted_fields[i] == OMITTED_NULL) {
+            json.put_next_token(JSON_TOKEN_LITERAL_NULL);
+          }
+          else {
+            get_se_comp_byIndex(i)->get_value()->generate_json_value(json);
+          }
+        }
+        json.put_next_token(JSON_TOKEN_OBJECT_END);
+      } // generate the next combination, until all combinations have been processed
+      while (next_omitted_json_combo(omitted_fields, len));
+      break; }
+    case V_CHOICE: {
+      bool as_value = my_governor != NULL && 
+        my_governor->get_type_refd_last()->get_json_attributes() != NULL &&
+        my_governor->get_type_refd_last()->get_json_attributes()->as_value;
+      if (!as_value) {
+        // no 'as value' coding instruction, insert an object with one field
+        json.put_next_token(JSON_TOKEN_OBJECT_START);
+        // use the field's alias, if it has one
+        const char* alias = NULL;
+        if (my_governor != NULL) {
+          JsonAST* field_attrib = my_governor->get_comp_byName(
+            get_alt_name())->get_type()->get_json_attributes();
+          if (field_attrib != NULL) {
+            alias = field_attrib->alias;
+          }
+        }
+        json.put_next_token(JSON_TOKEN_NAME, (alias != NULL) ? alias :
+          get_alt_name().get_ttcnname().c_str());
+      }
+      get_alt_value()->generate_json_value(json);
+      if (!as_value) {
+        json.put_next_token(JSON_TOKEN_OBJECT_END);
+      }
+      break; }
+    case V_REFD: {
+      Value* v = get_value_refd_last();
+      if (this != v) {
+        v->generate_json_value(json);
+        return;
+      }
+    } // no break
+    default:
+      FATAL_ERROR("Value::generate_json_value - %d", valuetype);
+    }
   }
 
   bool Value::explicit_cast_needed(bool forIsValue)

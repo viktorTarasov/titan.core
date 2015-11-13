@@ -17,13 +17,13 @@ sudo apt-get install xutils-dev
 The following packages may be needed for titan_eclipse/automatic_build:
 sudo apt-get install ant xsltproc
 
-2.Clone the titan directory from git  into /home/<user_id>/titan
+2.Clone the titan directory from git  into /home/<user_id>/titan.core
 
-git clone https://github.com/eclipse/titan.core  titan
+git clone https://github.com/eclipse/titan.core  titan.core
 
 3. Configure the build 
 
-cd titan
+cd titan.core
 check  that MakefileFOSS.cfg is present   and  has the following content:
 cat MakefileFOSS.cfg
 
@@ -37,15 +37,15 @@ Options can be overridden by the content of  a file named Makefile.personal whic
 adapt to local installation directories, change config options etc.
 Below, a small number of typical scenarios are presented.
 
-1) JNI  disabled
+a) JNI  disabled
 
 The JNI interface is used by the Eclipse Titan Executor or by the Java Executor API.
 If you don't need them , Titan can be compiled without JNI. 
 
-Create ~/titan/Makefile.personal to override settings in Makefile.cfg with the following content:
+Create ~/titan.core/Makefile.personal to override settings in Makefile.cfg with the following content:
 (replace paths with values relevant to your installation)
 
-TTCN3_DIR := /home/<user id>/titan/Install
+TTCN3_DIR := /home/<user id>/titan.core/Install
 OPENSSL_DIR := /usr
 #JDKDIR := /usr/lib/jvm/java-7-openjdk-amd64
 XMLDIR := /usr
@@ -55,14 +55,14 @@ GEN_PDF := no
 
 
 
-2) JNI  enabled
+b) JNI  enabled
 
 install JDK   into /home/<user id>/jdk
 
-Create ~/titan/Makefile.personal to override settings in Makefile.cfg with the following content:
+Create ~/titan.core/Makefile.personal to override settings in Makefile.cfg with the following content:
 (replace paths with values relevant to your installation)
 
-TTCN3_DIR := /home/<user id>/titan/Install
+TTCN3_DIR := /home/<user id>/titan.core/Install
 OPENSSL_DIR := /usr
 JDKDIR := /usr/lib/jvm/java-7-openjdk-amd64
 XMLDIR := /usr
@@ -77,7 +77,7 @@ make
 
 5. Set environment variables
 
-setenv TTCN3_DIR /home/<user id>/titan/Install
+setenv TTCN3_DIR /home/<user id>/titan.core/Install
 setenv PATH /home/<userid>/titan.core/Install/bin/:${PATH}
 setenv LD_LIBRARY_PATH /home/<userid>/titan.core/Install/lib:${LD_LIBRARY_PATH}
 
@@ -85,7 +85,7 @@ for csh
 
 or 
 
-export TTCN3_DIR=/home/<user id>/titan/Install
+export TTCN3_DIR=/home/<user id>/titan.core/Install
 export PATH=/home/<userid>/titan.core/Install/bin/:${PATH}
 export LD_LIBRARY_PATH=/home/<userid>/titan.core/Install/lib:${LD_LIBRARY_PATH}
 
@@ -95,15 +95,16 @@ for bash
 
 make install
 
-This will install Titan into  /home/<user id>/titan/Install
+This will install Titan into  /home/<user id>/titan.core/Install
 
 
 7. Optionally , run function/regression tests
 
-cd /home/<user id>/titan/function_test
+cd /home/<user id>/titan.core/function_test
 
 in the following Makefiles 
 
+BER_EncDec/Makefile
 XER_EncDec/Makefile
 Text_EncDec/Makefile
 RAW_EncDec/Makefile
@@ -116,7 +117,7 @@ make
 
 ( or make |& tee outputfile if you want to save the output for verification)
 
-cd /home/<user id>/titan/regression_test
+cd /home/<user id>/titan.core/regression_test
 make run
 
 ( or make run |& tee outputfile if you want to save the output for verification)

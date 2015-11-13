@@ -195,6 +195,18 @@ variant (sequence_list[-]) "untagged";
 };
 
 
+type record MyType
+{
+	record of XSD.String attr optional,
+	XSD.String base
+}
+with {
+variant "element";
+variant (attr) "anyAttributes from 'http://www.example.org/ttcn/wildcards'";
+variant (base) "untagged";
+};
+
+
 }
 with {
 encode "XML";

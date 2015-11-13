@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -427,7 +427,6 @@ testcase bitstrXor_str_el() runs on bitstrOper_comptype
      else {setverdict(fail);}
   if (x5=='1'B) {setverdict(pass);}	//"1" xor "0"
      else {setverdict(fail);}
-     log(x6);
   if (x6=='0'B) {setverdict(pass);}	//"1" xor "1"
      else {setverdict(fail);}
 }

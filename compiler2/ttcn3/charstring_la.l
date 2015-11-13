@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -112,7 +112,7 @@ HEXDIGIT [0-9A-Fa-f]
   Location loc(current_file, current_line, current_column, current_line,
     current_column + yyleng);
   loc.warning("Unknown escape sequence `%s' was treated literally", yytext);
-  for (int i = 0; i < yyleng; i++) ADD_CHAR(yytext[i]);
+  for (size_t i = 0; i < yyleng; i++) ADD_CHAR(yytext[i]);
   current_column += 2;
 }
 
@@ -126,7 +126,7 @@ HEXDIGIT [0-9A-Fa-f]
 {NEWLINE}   {
   Location loc(current_file, current_line, current_column, current_line + 1, 0);
   loc.warning("Unescaped newline character");
-  for (int i = 0; i < yyleng; i++) ADD_CHAR(yytext[i]);
+  for (size_t i = 0; i < yyleng; i++) ADD_CHAR(yytext[i]);
   current_line++;
   current_column = 0;
 }

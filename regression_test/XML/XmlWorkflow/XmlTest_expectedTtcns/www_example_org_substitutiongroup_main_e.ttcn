@@ -1,0 +1,78 @@
+/*******************************************************************************
+* Copyright (c) 2000-2015 Ericsson Telecom AB
+*
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R2A                       
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*******************************************************************************/
+//
+//  File:          www_example_org_substitutiongroup_main_e.ttcn
+//  Description:
+//  References:
+//  Rev:
+//  Prodnr:
+//  Updated:       Thu Oct 29 10:58:19 2014
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//	Generated from file(s):
+//	- substitutiongroup_main_e.xsd
+//			/* xml version = "1.0" */
+//			/* targetnamespace = "www.example.org/substitutiongroup/main/e" */
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+
+module www_example_org_substitutiongroup_main {
+
+
+import from XSD all;
+
+
+import from www_example_org_substitutiongroup_ref all;
+
+
+type Subsgroup_group Refgroup
+with {
+variant "name as uncapitalized";
+variant "element";
+};
+
+
+type record ComplexGroup
+{
+	Subsgroup_group subsgroup
+}
+with {
+variant "name as uncapitalized";
+};
+
+
+type union Subsgroup_group
+{
+	XSD.String subsgroup,
+	Replace replace_
+}
+with {
+variant "untagged";
+//variant (subsgroup) "abstract";
+variant (replace_) "name as 'replace'";
+};
+
+
+}
+with {
+encode "XML";
+variant "namespace as 'www.example.org/substitutiongroup/main' prefix 'A'";
+variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+}

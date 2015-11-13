@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -1549,6 +1549,9 @@ namespace Ttcn {
       Template *t = u.templates->get_t_byIndex(i);
       switch (t->templatetype) {
       case ANY_OR_OMIT:
+      case ALL_FROM:
+        // 'all from' clauses not known at compile time are also considered
+        // as 'AnyOrNone'
         return true;
       case PERMUTATION_MATCH:
         // walk recursively
@@ -1578,13 +1581,14 @@ namespace Ttcn {
       Template *t = u.templates->get_t_byIndex(i);
       switch (t->templatetype) {
       case ANY_OR_OMIT:
+      case ALL_FROM:
         // do not count it
         break;
       case PERMUTATION_MATCH:
         // walk recursively
         ret_val += t->get_nof_comps_not_anyornone();
         break;
-      default:
+     default:
         // other types are counted as 1
         ret_val++;
         break;
@@ -1968,8 +1972,6 @@ end:
       // check for subreferences in the 'all from' target
       FieldOrArrayRefs* subrefs = ref->get_subrefs();
       if (NULL != subrefs) {
-        // flattening values/templates with subreferences is not implemented yet
-        can_flatten = false;
         for (size_t i = 0; i < subrefs->get_nof_refs(); ++i) {
           FieldOrArrayRef* subref = subrefs->get_ref(i);
           if (FieldOrArrayRef::ARRAY_REF == subref->get_type()) {
@@ -1986,97 +1988,219 @@ end:
 
       Common::Assignment::asstype_t asst = ass->get_asstype();
       switch (asst) {
-      case Common::Assignment::A_MODULEPAR_TEMP:
-      case Common::Assignment::A_VAR_TEMPLATE: 
-      case Common::Assignment::A_FUNCTION_RTEMP: 
-      case Common::Assignment::A_EXT_FUNCTION_RTEMP: {
-        // Cannot flatten at compile time
-        delete new_templates;
-        new_templates = 0;
-        break; }
-
       case Common::Assignment::A_TEMPLATE: {
         Template *tpl = ass->get_Template();
         // tpl is the template whose name appears after the "all from"
-         Template::templatetype_t tpltt = tpl->get_templatetype();
-        switch (tpltt) {
-        case TEMPLATE_REFD: {
-          delete new_templates;
-          new_templates = 0;
-          killer = false;
-        break; }
-        case TEMPLATE_LIST:
-        // ALL_FROM ?
-        case VALUE_LIST: {
-          size_t nvl = tpl->get_nof_comps();
-          for (size_t ti = 0; ti < nvl; ++ti) {
-            Template *orig = tpl->get_temp_byIndex(ti);
-            switch (orig->templatetype) {
-            case SPECIFIC_VALUE: {
-              if (can_flatten) {
-                Value *val = orig->get_specific_value();
-                if (val->get_valuetype() == Value::V_REFD) {
-                  if (dynamic_cast<Ttcn::Ref_pard*>(val->get_reference())) {
-                    // Cannot flatten at compile time if one of the values or templates has parameters.
-                    can_flatten = false;
+        Common::Type *type = ass->get_Type()->get_type_refd_last();
+        if (NULL != subrefs) {
+          // walk through the subreferences to determine the type and value of the 'all from' target
+          // Note: the templates referenced by the array indexes and field names
+          // have not been checked yet
+          for (size_t i = 0; i < subrefs->get_nof_refs(); ++i) {
+            FieldOrArrayRef* subref = subrefs->get_ref(i);
+            if (FieldOrArrayRef::ARRAY_REF == subref->get_type()) {
+              // check if the type can be indexed
+              Common::Type::typetype_t tt = type->get_typetype();
+              if (Common::Type::T_SEQOF != tt && Common::Type::T_SETOF != tt &&
+                  Common::Type::T_ARRAY != tt) {
+                subref->error("Cannot apply an array index to type '%s'",
+                  type->get_typename().c_str());
+                i = subrefs->get_nof_refs(); // quit from the cycle, too
+                tpl = NULL;
+                break;
+              }
+              if (can_flatten && !subref->get_val()->is_unfoldable()) {
+                switch(tpl->get_templatetype()) {
+                case TEMPLATE_LIST:
+                case VALUE_LIST: {
+                  Int index = subref->get_val()->get_val_Int()->get_val();
+                  // check for index overflow
+                  if (index >= static_cast<Int>(tpl->get_nof_comps())) {
+                    subref->error("Index overflow in a template %s type `%s':"
+                      " the index is %s, but the template has only %lu elements",
+                      Common::Type::T_ARRAY == tt ? "array of" : 
+                      (Common::Type::T_SEQOF == tt ? "of 'record of'" : "of 'set of'"),
+                      type->get_typename().c_str(), Int2string(index).c_str(),
+                      (unsigned long)tpl->get_nof_comps());
+                    i = subrefs->get_nof_refs(); // quit from the cycle, too
+                    tpl = NULL;
+                    break;
                   }
+                  tpl = tpl->get_temp_byIndex(index);
+                  // check if the element is initialized
+                  if (TEMPLATE_NOTUSED == tpl->get_templatetype()) {
+                    subref->error("An uninitialized list element can not be used as target of 'all from'");
+                    i = subrefs->get_nof_refs(); // quit from the cycle, too
+                    tpl = NULL;
+                    break;
+                  }
+                  break; }
+                case INDEXED_TEMPLATE_LIST:
+                  can_flatten = false; // currently not supported
+                  break;
+                default:
+                  subref->error("Expected a specific value of type '%s' instead of %s",
+                    type->get_typename().c_str(), tpl->get_templatetype_str());
+                  i = subrefs->get_nof_refs(); // quit from the cycle, too
+                  tpl = NULL;
+                  break;
                 }
               }
-              break; }
-            case ANY_OR_OMIT:
-              if (from_permutation) {
-                break; // AnyElementOrNone allowed in "all from" now
+              else {
+                // one of the array indexes is a reference => cannot flatten
+                can_flatten = false;
               }
-              // no break
-            case PERMUTATION_MATCH:
-              t->error("'all from' can not refer to permutation or AnyElementsOrNone");
-              t->set_templatetype(TEMPLATE_ERROR);
+              type = type->get_ofType()->get_type_refd_last();
+            }
+            else { // FIELD_REF
+              // check if the type can have fields
+              Common::Type::typetype_t tt = type->get_typetype();
+              if (Common::Type::T_SEQ_T != tt && Common::Type::T_SEQ_A != tt &&
+                  Common::Type::T_SET_T != tt && Common::Type::T_SET_A != tt &&
+                  Common::Type::T_CHOICE_T != tt && Common::Type::T_CHOICE_A != tt) {
+                subref->error("Cannot apply a field name to type '%s'",
+                  type->get_typename().c_str());
+                tpl = NULL;
+                break;
+              }
+              // check if the field name is valid
+              if (!type->has_comp_withName(*subref->get_id())) {
+                subref->error("Type '%s' does not have a field with name '%s'",
+                  type->get_typename().c_str(), subref->get_id()->get_dispname().c_str());
+                tpl = NULL;
+                break;
+              }
+              if (can_flatten) {
+                switch(tpl->get_templatetype()) {
+                case NAMED_TEMPLATE_LIST: {
+                  // check if there is any data in the template for this field
+                  // (no data means it's uninitialized)
+                  if (!tpl->u.named_templates->has_nt_withName(*subref->get_id())) {
+                    subref->error("An uninitialized field can not be used as target of 'all from'");
+                    i = subrefs->get_nof_refs(); // quit from the cycle, too
+                    tpl = NULL;
+                    break;
+                  }
+                  tpl = tpl->u.named_templates->get_nt_byName(*subref->get_id())->get_template();
+                  // check if the field is initialized and present (not omitted)
+                  if (OMIT_VALUE == tpl->get_templatetype() || TEMPLATE_NOTUSED == tpl->get_templatetype()) {
+                    subref->error("An %s field can not be used as target of 'all from'",
+                      OMIT_VALUE == tpl->get_templatetype() ? "omitted" : "uninitialized");
+                    i = subrefs->get_nof_refs(); // quit from the cycle, too
+                    tpl = NULL;
+                    break;
+                  }
+                  break; }
+                default:
+                  subref->error("Expected a specific value of type '%s' instead of %s",
+                    type->get_typename().c_str(), tpl->get_templatetype_str());
+                  i = subrefs->get_nof_refs(); // quit from the cycle, too
+                  tpl = NULL;
+                  break;
+                }
+              }
+              type = type->get_comp_byName(*subref->get_id())->get_type()->get_type_refd_last();
+            }
+          }
+        }
+        if (NULL != tpl) { // tpl is set to null if an error occurs
+          if (can_flatten) {
+            Template::templatetype_t tpltt = tpl->get_templatetype();
+            switch (tpltt) {
+            case INDEXED_TEMPLATE_LIST: // currently not supported
+            case TEMPLATE_REFD: {
+              delete new_templates;
+              new_templates = 0;
+              killer = false;
+            break; }
+
+            case TEMPLATE_LIST:
+          // ALL_FROM ?
+            case VALUE_LIST: {
+              size_t nvl = tpl->get_nof_comps();
+              for (size_t ti = 0; ti < nvl; ++ti) {
+              Template *orig = tpl->get_temp_byIndex(ti);
+                switch (orig->templatetype) {
+                case SPECIFIC_VALUE: {
+                  Value *val = orig->get_specific_value();
+                  if (val->get_valuetype() == Value::V_REFD) {
+                    if (dynamic_cast<Ttcn::Ref_pard*>(val->get_reference())) {
+                      // Cannot flatten at compile time if one of the values or templates has parameters.
+                      can_flatten = false;
+                    }
+                  }
+                  break; }
+                case ANY_OR_OMIT:
+                  if (from_permutation) {
+                    break; // AnyElementOrNone allowed in "all from" now
+                  }
+                  // no break
+                case PERMUTATION_MATCH:
+                  t->error("'all from' can not refer to permutation or AnyElementsOrNone");
+                  t->set_templatetype(TEMPLATE_ERROR);
+                default:
+                  break;
+                }
+              }
+              if (can_flatten) {
+                for (size_t ti = 0; ti < nvl; ++ti) {
+                Template *orig = tpl->get_temp_byIndex(ti);
+                  Template *copy = orig->clone();
+                  copy->set_my_scope(orig->get_my_scope());
+                  new_templates->add_t(copy);
+                }
+              }
+              else {
+                // Cannot flatten at compile time
+                delete new_templates;
+                new_templates = 0;
+                killer = false;
+              }
+              break; }
+
+            case NAMED_TEMPLATE_LIST: {
+              size_t nvl = tpl->get_nof_comps();
+              for (size_t ti = 0; ti < nvl; ++ti) {
+                NamedTemplate *orig = tpl->get_namedtemp_byIndex(ti);
+                switch (orig->get_template()->get_templatetype()) {
+                  case ANY_OR_OMIT:
+                    break;
+                  case PERMUTATION_MATCH:
+                    t->error("'all from' can not refer to permutation or AnyElementsOrNone");
+                    t->set_templatetype(TEMPLATE_ERROR);
+                  default:
+                    break;
+                }
+              }
+              delete new_templates;
+              new_templates = 0;
+              killer = false;
+              break; }
+
+            case ANY_VALUE:
+            case ANY_OR_OMIT:
+              tpl->error("Matching mechanism can not be used as target of 'all from'");
+              break;
             default:
+              tpl->error("A template of type '%s' can not be used as target of 'all from'",
+                type->get_typename().c_str());
               break;
             }
           }
-          if (can_flatten) {
-            for (size_t ti = 0; ti < nvl; ++ti) {
-              Template *orig = tpl->get_temp_byIndex(ti);
-              Template *copy = orig->clone();
-              copy->set_my_scope(orig->get_my_scope());
-              new_templates->add_t(copy);
-            }
+          else { // cannot flatten
+            switch (type->get_typetype()) {
+            case Common::Type::T_SEQOF: case Common::Type::T_SETOF:
+            case Common::Type::T_ARRAY:
+              delete new_templates;
+              new_templates = 0;
+              killer = false;
+              break;
+            default:
+              type->error("A template of type `%s' can not be used as target of 'all from'",
+                type->get_typename().c_str());
+              break;
+            } // switch(typetype)
           }
-          else {
-            // Cannot flatten at compile time
-            delete new_templates;
-            new_templates = 0;
-            killer = false;
-          }
-          break; }
-
-        case NAMED_TEMPLATE_LIST: {
-          size_t nvl = tpl->get_nof_comps();
-          for (size_t ti = 0; ti < nvl; ++ti) {
-            NamedTemplate *orig = tpl->get_namedtemp_byIndex(ti);
-            switch (orig->get_template()->get_templatetype()) {
-              case ANY_OR_OMIT:
-                break;
-              case PERMUTATION_MATCH:
-                t->error("'all from' can not refer to permutation or AnyElementsOrNone");
-                t->set_templatetype(TEMPLATE_ERROR);
-              default:
-                break;
-            }
-          }
-          delete new_templates;
-          new_templates = 0;
-          killer = false;
-          break; }
-
-        case ANY_VALUE:
-        case ANY_OR_OMIT:
-          tpl->error("Matching mechanism can not be used as target of 'all from'");
-          break;
-        default:
-          FATAL_ERROR("harbinger");
-          break;
         }
 
         if (killer) delete t;
@@ -2085,43 +2209,218 @@ end:
 
       case Common::Assignment::A_CONST: { // all from a constant definition
         Common::Value *val = ass->get_Value();
-        switch (val->get_valuetype()) {
-        case Common::Value::V_SEQOF: case Common::Value::V_SETOF:
-        case Common::Value::V_ARRAY: {
-          if (can_flatten) {
-            const size_t ncomp = val->get_nof_comps();
-            for (size_t i = 0; i < ncomp; ++i) {
-              Value *v = val->get_comp_byIndex(i);
-              Template *newt = new Template(v->clone());
-              new_templates->add_t(newt);
+        Common::Type *type = ass->get_Type()->get_type_refd_last();
+        if (NULL != subrefs) {
+          // walk through the subreferences to determine the type and value of the 'all from' target
+          for (size_t i = 0; i < subrefs->get_nof_refs(); ++i) {
+            FieldOrArrayRef* subref = subrefs->get_ref(i);
+            if (FieldOrArrayRef::ARRAY_REF == subref->get_type()) {
+              // check if the type can be indexed
+              Common::Type::typetype_t tt = type->get_typetype();
+              if (Common::Type::T_SEQOF != tt && Common::Type::T_SETOF != tt &&
+                  Common::Type::T_ARRAY != tt) {
+                subref->error("Cannot apply an array index to type '%s'",
+                  type->get_typename().c_str());
+                val = NULL;
+                break;
+              }
+              if (can_flatten && !subref->get_val()->is_unfoldable()) {
+                Int index = subref->get_val()->get_val_Int()->get_val();
+                // check for index overflow
+                if (index >= static_cast<Int>(val->get_nof_comps())) {
+                  subref->error("Index overflow in a value %s type `%s':"
+                    " the index is %s, but the template has only %lu elements",
+                    Common::Type::T_ARRAY == tt ? "array of" : 
+                    (Common::Type::T_SEQOF == tt ? "of 'record of'" : "of 'set of'"),
+                    type->get_typename().c_str(), Int2string(index).c_str(),
+                    (unsigned long)val->get_nof_comps());
+                  val = NULL;
+                  break;
+                }
+                val = val->get_comp_byIndex(index);
+                // check if the element is initialized
+                if (Common::Value::V_NOTUSED == val->get_valuetype()) {
+                  subref->error("An unbound list element can not be used as target of 'all from'");
+                  val = NULL;
+                  break;
+                }
+              }
+              else {
+                // one of the array indexes is a reference => cannot flatten
+                can_flatten = false;
+              }
+              type = type->get_ofType()->get_type_refd_last();
+            }
+            else { // FIELD_REF
+              // check if the type can have fields
+              Common::Type::typetype_t tt = type->get_typetype();
+              if (Common::Type::T_SEQ_T != tt && Common::Type::T_SEQ_A != tt &&
+                  Common::Type::T_SET_T != tt && Common::Type::T_SET_A != tt &&
+                  Common::Type::T_CHOICE_T != tt && Common::Type::T_CHOICE_A != tt) {
+                subref->error("Cannot apply a field name to type '%s'",
+                  type->get_typename().c_str());
+                val = NULL;
+                break;
+              }
+              // check if the field name is valid
+              if (!type->has_comp_withName(*subref->get_id())) {
+                subref->error("Type '%s' does not have a field with name '%s'",
+                  type->get_typename().c_str(), subref->get_id()->get_dispname().c_str());
+                val = NULL;
+                break;
+              }
+              type = type->get_comp_byName(*subref->get_id())->get_type()->get_type_refd_last();
+              if (can_flatten) {
+                // check if the value has any data for this field (no data = unbound)
+                if (!val->has_comp_withName(*subref->get_id())) {
+                  subref->error("An unbound field can not be used as target of 'all from'");
+                  val = NULL;
+                  break;
+                }
+                val = val->get_comp_value_byName(*subref->get_id());
+                // check if the field is bound and present (not omitted)
+                if (Common::Value::V_OMIT == val->get_valuetype() ||
+                    Common::Value::V_NOTUSED == val->get_valuetype()) {
+                  subref->error("An %s field can not be used as target of 'all from'",
+                    Common::Value::V_OMIT == val->get_valuetype() ? "omitted" : "unbound");
+                  val = NULL;
+                  break;
+                }
+              }
             }
           }
-          else {
-            delete new_templates;
-            new_templates = 0;
-            killer = false;
-          }
-          break; }
+        }
+        if (NULL != val) { // val is set to null if an error occurs
+          switch (type->get_typetype()) {
+          case Common::Type::T_SEQOF: case Common::Type::T_SETOF:
+          case Common::Type::T_ARRAY: {
+            if (can_flatten) {
+              const size_t ncomp = val->get_nof_comps();
+              for (size_t i = 0; i < ncomp; ++i) {
+                Value *v = val->get_comp_byIndex(i);
+                Template *newt = new Template(v->clone());
+                new_templates->add_t(newt);
+              }
+            }
+            else {
+              delete new_templates;
+              new_templates = 0;
+              killer = false;
+            }
+            break; }
 
-        default:
-          val->error("A constant of type `%s' can not be used as target of 'all from'",
-            val->get_my_governor()->get_typename().c_str());
-          break;
-        } // switch(valuetype)
+          default:
+            type->error("A constant of type `%s' can not be used as target of 'all from'",
+              type->get_typename().c_str());
+            break;
+          } // switch(typetype)
+        }
         if (killer) delete t;
         break; }
 
+      case Common::Assignment::A_MODULEPAR_TEMP:
+      case Common::Assignment::A_VAR_TEMPLATE: 
+      case Common::Assignment::A_FUNCTION_RTEMP: 
+      case Common::Assignment::A_EXT_FUNCTION_RTEMP:
       case Common::Assignment::A_PAR_TEMPL_IN:
       case Common::Assignment::A_PAR_TEMPL_INOUT:
+      case Common::Assignment::A_PAR_TEMPL_OUT:
 //TODO: flatten if the actual par is const template
       case Common::Assignment::A_MODULEPAR: // all from a module parameter
       case Common::Assignment::A_VAR: // all from a variable
       case Common::Assignment::A_PAR_VAL_IN:
-      case Common::Assignment::A_PAR_VAL_INOUT: 
+      case Common::Assignment::A_PAR_VAL_INOUT:
+      case Common::Assignment::A_PAR_VAL_OUT:
       case Common::Assignment::A_FUNCTION_RVAL:
       case Common::Assignment::A_EXT_FUNCTION_RVAL: {
-        delete new_templates; // cannot flatten at compile time
-        new_templates = 0;
+        Common::Type *type = ass->get_Type()->get_type_refd_last();
+        if (NULL != subrefs) {
+          // walk through the subreferences to determine the type of the 'all from' target
+          for (size_t i = 0; i < subrefs->get_nof_refs(); ++i) {
+            FieldOrArrayRef* subref = subrefs->get_ref(i);
+            if (FieldOrArrayRef::ARRAY_REF == subref->get_type()) {
+              // check if the type can be indexed
+              Common::Type::typetype_t tt = type->get_typetype();
+              if (Common::Type::T_SEQOF != tt && Common::Type::T_SETOF != tt &&
+                  Common::Type::T_ARRAY != tt) {
+                subref->error("Cannot apply an array index to type '%s'",
+                  type->get_typename().c_str());
+                type = NULL;
+                break;
+              }
+              type = type->get_ofType()->get_type_refd_last();
+            }
+            else { // FIELD_REF
+              // check if the type can have fields
+              Common::Type::typetype_t tt = type->get_typetype();
+              if (Common::Type::T_SEQ_T != tt && Common::Type::T_SEQ_A != tt &&
+                  Common::Type::T_SET_T != tt && Common::Type::T_SET_A != tt &&
+                  Common::Type::T_CHOICE_T != tt && Common::Type::T_CHOICE_A != tt) {
+                subref->error("Cannot apply a field name to type '%s'",
+                  type->get_typename().c_str());
+                type = NULL;
+                break;
+              }
+              // check if the field name is valid
+              if (!type->has_comp_withName(*subref->get_id())) {
+                subref->error("Type '%s' does not have a field with name '%s'",
+                  type->get_typename().c_str(), subref->get_id()->get_dispname().c_str());
+                type = NULL;
+                break;
+              }
+              type = type->get_comp_byName(*subref->get_id())->get_type()->get_type_refd_last();
+            }
+          }
+        }
+        if (NULL != type) {
+          switch (type->get_typetype()) {
+          case Common::Type::T_SEQOF: case Common::Type::T_SETOF:
+          case Common::Type::T_ARRAY:
+            delete new_templates; // cannot flatten at compile time
+            new_templates = 0;
+            break;
+          default: {
+            // not an array type => error
+            const char* ass_name = ass->get_assname();
+            string descr;
+            switch(asst) {
+            case Common::Assignment::A_MODULEPAR_TEMP:
+            case Common::Assignment::A_VAR_TEMPLATE:
+            case Common::Assignment::A_MODULEPAR:
+            case Common::Assignment::A_VAR:
+            case Common::Assignment::A_PAR_TEMPL_IN:
+            case Common::Assignment::A_PAR_VAL_IN:
+              descr = "A ";
+              descr += ass_name;
+              break;
+            case Common::Assignment::A_PAR_TEMPL_INOUT:
+            case Common::Assignment::A_PAR_TEMPL_OUT:
+            case Common::Assignment::A_PAR_VAL_INOUT:
+            case Common::Assignment::A_PAR_VAL_OUT:
+              descr = "An ";
+              descr += ass_name;
+              break;
+            // the assignment name string for functions is no good here
+            case Common::Assignment::A_FUNCTION_RTEMP:
+              descr = "A function returning a template";
+              break;
+            case Common::Assignment::A_FUNCTION_RVAL:
+              descr = "A function returning a value";
+              break;
+            case Common::Assignment::A_EXT_FUNCTION_RTEMP:
+              descr = "An external function returning a template";
+              break;
+            case Common::Assignment::A_EXT_FUNCTION_RVAL:
+              descr = "An external function returning a value";
+              break;
+            default:
+              break;
+            }
+            type->error("%s of type `%s' can not be used as target of 'all from'",
+              descr.c_str(), type->get_typename().c_str());
+            break; }
+          }
+        } // switch(typetype)
         break; }
 
       default:
@@ -2333,12 +2632,14 @@ end:
     default:
       FATAL_ERROR("Template::generate_restriction_check_code()");
     }
-    return mputprintf(str, "%s.check_restriction(%s);\n", name, tr_name);
+    return mputprintf(str, "%s.check_restriction(%s%s);\n", name, tr_name,
+      (omit_in_value_list ? ", NULL, TRUE" : ""));
   }
 
   // embedded templates -> check needed only for case of TR_OMIT
   bool Template::chk_restriction_named_list(const char* definition_name,
-    map<string, void>& checked_map, size_t needed_checked_cnt)
+    map<string, void>& checked_map, size_t needed_checked_cnt,
+    const Location* usage_loc)
   {
     bool needs_runtime_check = false;
     if (checked_map.size()>=needed_checked_cnt) return needs_runtime_check;
@@ -2349,14 +2650,14 @@ end:
         const string& name =
           u.named_templates->get_nt_byIndex(i)->get_name().get_name();
         if (!checked_map.has_key(name)) {
-          bool nrc = tmpl->chk_restriction(definition_name, TR_OMIT);
+          bool nrc = tmpl->chk_restriction(definition_name, TR_OMIT, usage_loc);
           needs_runtime_check = needs_runtime_check || nrc;
           checked_map.add(name, 0);
         }
       }
       if (base_template) {
         bool nrc = base_template->chk_restriction_named_list(definition_name,
-                     checked_map, needed_checked_cnt);
+                     checked_map, needed_checked_cnt, usage_loc);
         needs_runtime_check = needs_runtime_check || nrc;
       }
       break;
@@ -2373,7 +2674,7 @@ end:
   }
 
   bool Template::chk_restriction_refd(const char* definition_name,
-    template_restriction_t template_restriction)
+    template_restriction_t template_restriction, const Location* usage_loc)
   {
     bool needs_runtime_check = false;
     Common::Assignment* ass = u.ref.ref->get_refd_assignment();
@@ -2386,7 +2687,7 @@ end:
       Template* t_last = get_template_refd_last();
       if (t_last!=this) {
         bool nrc = t_last->chk_restriction(definition_name,
-                                           template_restriction);
+          template_restriction, usage_loc);
         needs_runtime_check = needs_runtime_check || nrc;
       }
       break; }
@@ -2438,27 +2739,33 @@ end:
   }
 
   bool Template::chk_restriction(const char* definition_name,
-                                 template_restriction_t template_restriction)
+                                 template_restriction_t template_restriction,
+                                 const Location* usage_loc)
   {
     bool needs_runtime_check = false;
+    bool erroneous = false;
     switch (template_restriction) {
     case TR_NONE:
       break;
     case TR_OMIT:
     case TR_VALUE:
-      if (length_restriction)
-        error("Restriction on %s does not allow usage of length restriction",
-              definition_name);
-      if (is_ifpresent)
-        error("Restriction on %s does not allow usage of `ifpresent'",
-              definition_name);
+      if (length_restriction) {
+        usage_loc->error("Restriction on %s does not allow usage of length "
+          "restriction", definition_name);
+        erroneous = true;
+      }
+      if (is_ifpresent) {
+        usage_loc->error("Restriction on %s does not allow usage of `ifpresent'",
+          definition_name);
+        erroneous = true;
+      }
       switch(templatetype) {
       case TEMPLATE_ERROR:
         break;
       case TEMPLATE_NOTUSED:
         if (base_template) {
           bool nrc = base_template->chk_restriction(definition_name,
-                                                    template_restriction);
+            template_restriction, usage_loc);
           needs_runtime_check = needs_runtime_check || nrc;
         }
         else needs_runtime_check = true;
@@ -2467,13 +2774,14 @@ end:
       case TEMPLATE_INVOKE:
         break;
       case TEMPLATE_REFD: {
-        bool nrc = chk_restriction_refd(definition_name, template_restriction);
+        bool nrc = chk_restriction_refd(definition_name, template_restriction,
+          usage_loc);
         needs_runtime_check = needs_runtime_check || nrc;
       } break;
       case TEMPLATE_LIST:
         for (size_t i = 0; i < u.templates->get_nof_ts(); i++) {
           bool nrc = u.templates->get_t_byIndex(i)->
-                       chk_restriction(definition_name, TR_OMIT);
+                       chk_restriction(definition_name, TR_OMIT, usage_loc);
           needs_runtime_check = needs_runtime_check || nrc;
         }
         break;
@@ -2495,7 +2803,7 @@ end:
         }
         for (size_t i = 0;i < u.named_templates->get_nof_nts(); i++) {
           bool nrc = u.named_templates->get_nt_byIndex(i)->get_template()->
-                       chk_restriction(definition_name, TR_OMIT);
+                       chk_restriction(definition_name, TR_OMIT, usage_loc);
           needs_runtime_check = needs_runtime_check || nrc;
           if (needed_checked_cnt)
             checked_map.add(
@@ -2503,7 +2811,7 @@ end:
         }
         if (needed_checked_cnt) {
           bool nrc = base_template->chk_restriction_named_list(definition_name,
-                       checked_map, needed_checked_cnt);
+                       checked_map, needed_checked_cnt, usage_loc);
           needs_runtime_check = needs_runtime_check || nrc;
           checked_map.clear();
         }
@@ -2511,7 +2819,7 @@ end:
       case INDEXED_TEMPLATE_LIST:
         for (size_t i = 0; i < u.indexed_templates->get_nof_its(); i++) {
           bool nrc = u.indexed_templates->get_it_byIndex(i)->get_template()->
-                       chk_restriction(definition_name, TR_OMIT);
+                       chk_restriction(definition_name, TR_OMIT, usage_loc);
           needs_runtime_check = needs_runtime_check || nrc;
         }
         needs_runtime_check = true; // only basic check, needs runtime check
@@ -2521,46 +2829,57 @@ end:
         // Else restriction is TR_VALUE, but template type is OMIT:
         // fall through to error.
       default:
-        error("Restriction on %s does not allow usage of %s",
-              definition_name, get_templatetype_str());
+        usage_loc->error("Restriction on %s does not allow usage of %s",
+          definition_name, get_templatetype_str());
+        erroneous = true;
         break;
       }
       break;
     case TR_PRESENT:
-      if (is_ifpresent)
-        error("Restriction on %s does not allow usage of `ifpresent'",
-              definition_name);
+      if (is_ifpresent) {
+        usage_loc->error("Restriction on %s does not allow usage of `ifpresent'",
+          definition_name);
+        erroneous = true;
+      }
       switch(templatetype) {
       case TEMPLATE_REFD: {
-        bool nrc = chk_restriction_refd(definition_name, template_restriction);
+        bool nrc = chk_restriction_refd(definition_name, template_restriction,
+          usage_loc);
         needs_runtime_check = needs_runtime_check || nrc;
       } break;
       case VALUE_LIST:
         for (size_t i = 0; i < u.templates->get_nof_ts(); i++) {
           bool nrc = u.templates->get_t_byIndex(i)->
-                       chk_restriction(definition_name, template_restriction);
+            chk_restriction(definition_name, template_restriction, usage_loc);
           needs_runtime_check = needs_runtime_check || nrc;
         }
         break;
-      case COMPLEMENTED_LIST: {
+      case COMPLEMENTED_LIST:
         // some basic check, always needs runtime check
         needs_runtime_check = true;
-        bool has_any_or_omit = false;
-        for (size_t i = 0; i < u.templates->get_nof_ts(); i++) {
-          templatetype_t item_templatetype =
-            u.templates->get_t_byIndex(i)->templatetype;
-          if (item_templatetype==OMIT_VALUE || item_templatetype==ANY_OR_OMIT) {
-            has_any_or_omit = true;
-            break;
+        if (omit_in_value_list) {
+          bool has_any_or_omit = false;
+          for (size_t i = 0; i < u.templates->get_nof_ts(); i++) {   
+            templatetype_t item_templatetype =   
+            u.templates->get_t_byIndex(i)->templatetype;   
+            if (item_templatetype==OMIT_VALUE || item_templatetype==ANY_OR_OMIT) {   
+              has_any_or_omit = true;   
+              break;   
+            }   
+          }   
+          if (!has_any_or_omit) {
+            usage_loc->error("Restriction on %s does not allow usage of %s without "
+              "omit or AnyValueOrNone in the list", definition_name,
+              get_templatetype_str());
+            erroneous = true;
           }
         }
-        if (has_any_or_omit) break;
-      }
-      // FIXME really no break?
+        break;
       case OMIT_VALUE:
       case ANY_OR_OMIT:
-        error("Restriction on %s does not allow usage of %s",
-              definition_name, get_templatetype_str());
+        usage_loc->error("Restriction on %s does not allow usage of %s",
+          definition_name, get_templatetype_str());
+        erroneous = true;
         break;
       default:
         break; // all others are ok
@@ -2568,6 +2887,10 @@ end:
       break;
     default:
       FATAL_ERROR("Template::chk_restriction()");
+    }
+    if (erroneous && usage_loc != this) {
+      // display the template's location, too
+      note("Referenced template is here");
     }
     return needs_runtime_check;
   }
@@ -3143,6 +3466,25 @@ end:
                     Code::free_expr(&expr);
                   }
                 }
+
+                switch(ass->get_asstype()) {
+                case Common::Assignment::A_CONST:
+                case Common::Assignment::A_EXT_CONST:
+                case Common::Assignment::A_MODULEPAR:
+                case Common::Assignment::A_VAR:
+                case Common::Assignment::A_PAR_VAL_IN:
+                case Common::Assignment::A_PAR_VAL_OUT:
+                case Common::Assignment::A_PAR_VAL_INOUT:
+                case Common::Assignment::A_FUNCTION_RVAL:
+                case Common::Assignment::A_EXT_FUNCTION_RVAL:
+                  if (ass->get_Type()->field_is_optional(subrefs)) {
+                    str_set_size = mputstrn(str_set_size, "()", 2);
+                  }
+                  break;
+                default:
+                  break;
+                }
+
                 str_set_size = mputstr(str_set_size, ".n_elem()");
               }
             }
@@ -3155,7 +3497,7 @@ end:
           Free(str_set_size);
 
           str = mputstrn(str, ");\n", 3); // finally done set_size
-
+          
           size_t index = 0;
           string skipper, hopper;
           for (size_t i = 0; i < nof_ts; i++) {
@@ -3183,6 +3525,25 @@ end:
                         ref_pard->generate_code_cached(&expr);
                       else
                         ref->generate_code(&expr);
+
+                      Common::Assignment* ass = ref->get_refd_assignment();
+                      switch(ass->get_asstype()) {
+                      case Common::Assignment::A_CONST:
+                      case Common::Assignment::A_EXT_CONST:
+                      case Common::Assignment::A_MODULEPAR:
+                      case Common::Assignment::A_VAR:
+                      case Common::Assignment::A_PAR_VAL_IN:
+                      case Common::Assignment::A_PAR_VAL_OUT:
+                      case Common::Assignment::A_PAR_VAL_INOUT:
+                      case Common::Assignment::A_FUNCTION_RVAL:
+                      case Common::Assignment::A_EXT_FUNCTION_RVAL:
+                        if (ass->get_Type()->field_is_optional(ref->get_subrefs())) {
+                          expr.expr = mputstrn(expr.expr, "()", 2);
+                        }
+                        break;
+                      default:
+                        break;
+                      }
                       
                       break; }
                     default:
@@ -3289,6 +3650,25 @@ end:
                   Code::free_expr(&expr);
                 }
               }
+
+              switch(ass->get_asstype()) {
+              case Common::Assignment::A_CONST:
+              case Common::Assignment::A_EXT_CONST:
+              case Common::Assignment::A_MODULEPAR:
+              case Common::Assignment::A_VAR:
+              case Common::Assignment::A_PAR_VAL_IN:
+              case Common::Assignment::A_PAR_VAL_OUT:
+              case Common::Assignment::A_PAR_VAL_INOUT:
+              case Common::Assignment::A_FUNCTION_RVAL:
+              case Common::Assignment::A_EXT_FUNCTION_RVAL:
+                if (ass->get_Type()->field_is_optional(subrefs)) {
+                  str_set_size = mputstrn(str_set_size, "()", 2);
+                }
+                break;
+              default:
+                break;
+              }
+
               str_set_size = mputstr(str_set_size, ".n_elem()");
             }
           }
@@ -3298,7 +3678,7 @@ end:
         Free(str_preamble);
         Free(str_set_size);
         str = mputstrn(str, ");\n", 3); // finally done set_size
-
+        
         size_t index = 0;
         string skipper;
         for (size_t i = 0; i < nof_ts; i++) {
@@ -3319,6 +3699,26 @@ end:
                       ref_pard->generate_code_cached(&expr);
                     else
                       ref->generate_code(&expr);
+
+                    Common::Assignment* ass = ref->get_refd_assignment();
+                    switch(ass->get_asstype()) {
+                    case Common::Assignment::A_CONST:
+                    case Common::Assignment::A_EXT_CONST:
+                    case Common::Assignment::A_MODULEPAR:
+                    case Common::Assignment::A_VAR:
+                    case Common::Assignment::A_PAR_VAL_IN:
+                    case Common::Assignment::A_PAR_VAL_OUT:
+                    case Common::Assignment::A_PAR_VAL_INOUT:
+                    case Common::Assignment::A_FUNCTION_RVAL:
+                    case Common::Assignment::A_EXT_FUNCTION_RVAL:
+                      if (ass->get_Type()->field_is_optional(ref->get_subrefs())) {
+                        expr.expr = mputstrn(expr.expr, "()", 2);
+                      }
+                      break;
+                    default:
+                      break;
+                    }
+
                     break; }
                   default:
                     FATAL_ERROR("vtype %d", spec->get_valuetype());
@@ -3344,8 +3744,6 @@ end:
               ++index;
               break; }
             default: {
-              printf("generate_code_init_seof allfrom default:  %s\n", 
-                (Int2string(index_offset + index) + skipper).c_str());
                str = t->generate_code_init_seof_element(str, name,
                  (Int2string(index_offset + index) + skipper).c_str(), oftype_name_str);
                // no break
@@ -3468,6 +3866,26 @@ compile_time:
           ref_pard->generate_code_cached(&expr);
         else
           ref->generate_code(&expr);
+
+        Common::Assignment* ass = ref->get_refd_assignment();
+        switch(ass->get_asstype()) {
+        case Common::Assignment::A_CONST:
+        case Common::Assignment::A_EXT_CONST:
+        case Common::Assignment::A_MODULEPAR:
+        case Common::Assignment::A_VAR:
+        case Common::Assignment::A_PAR_VAL_IN:
+        case Common::Assignment::A_PAR_VAL_OUT:
+        case Common::Assignment::A_PAR_VAL_INOUT:
+        case Common::Assignment::A_FUNCTION_RVAL:
+        case Common::Assignment::A_EXT_FUNCTION_RVAL:
+          if (ass->get_Type()->field_is_optional(ref->get_subrefs())) {
+            expr.expr = mputstrn(expr.expr, "()", 2);
+          }
+          break;
+        default:
+          break;
+        }
+        
         str = mputprintf(str, "%s = %s[i_i];\n", name, expr.expr);
         // The caller will have to provide the for cycle with this variable
         Code::free_expr(&expr);
@@ -3593,7 +4011,7 @@ compile_time:
 
     if (variables.size() > 0) {
       char* str_preamble = 0;
-      char* str_set_type = mputprintf(0, "%s.set_type(%s, %lu", name,
+      char* str_set_type = mprintf("%s.set_type(%s, %lu", name,
         (is_complemented ? "COMPLEMENTED_LIST" : "VALUE_LIST"),
         (unsigned long)fixed_part);
       // The code to compute the number of elements at run time (the variable part).
@@ -3633,11 +4051,30 @@ compile_time:
             Code::init_expr(&expr);
 
             subrefs->generate_code(&expr, ass);
-            str_set_type = mputprintf(str, "%s", expr.expr);
+            str_set_type = mputprintf(str_set_type, "%s", expr.expr);
 
             Code::free_expr(&expr);
           }
         }
+        
+        switch(ass->get_asstype()) {
+        case Common::Assignment::A_CONST:
+        case Common::Assignment::A_EXT_CONST:
+        case Common::Assignment::A_MODULEPAR:
+        case Common::Assignment::A_VAR:
+        case Common::Assignment::A_PAR_VAL_IN:
+        case Common::Assignment::A_PAR_VAL_OUT:
+        case Common::Assignment::A_PAR_VAL_INOUT:
+        case Common::Assignment::A_FUNCTION_RVAL:
+        case Common::Assignment::A_EXT_FUNCTION_RVAL:
+          if (ass->get_Type()->field_is_optional(subrefs)) {
+            str_set_type = mputstrn(str_set_type, "()", 2);
+          }
+          break;
+        default:
+          break;
+        }
+        
         str_set_type = mputstr(str_set_type, ".n_elem()");
       }
       
@@ -3648,7 +4085,7 @@ compile_time:
       Free(str_set_type);
       
       str = mputstrn(str, ");\n", 3);
-
+      
       string shifty; // contains the expression used to calculate
       // the size increase due to the runtime expansion of "all from".
       // In nof_ts, each "all from" appears as 1, but actually contributes
@@ -3674,7 +4111,27 @@ compile_time:
               if (ref_pard)
                 ref_pard->generate_code_cached(&expr);
               else
-                ref->generate_code(&expr);             
+                ref->generate_code(&expr);
+
+              Common::Assignment* ass = ref->get_refd_assignment();
+              switch(ass->get_asstype()) {
+              case Common::Assignment::A_CONST:
+              case Common::Assignment::A_EXT_CONST:
+              case Common::Assignment::A_MODULEPAR:
+              case Common::Assignment::A_VAR:
+              case Common::Assignment::A_PAR_VAL_IN:
+              case Common::Assignment::A_PAR_VAL_OUT:
+              case Common::Assignment::A_PAR_VAL_INOUT:
+              case Common::Assignment::A_FUNCTION_RVAL:
+              case Common::Assignment::A_EXT_FUNCTION_RVAL:
+                if (ass->get_Type()->field_is_optional(ref->get_subrefs())) {
+                  expr.expr = mputstrn(expr.expr, "()", 2);
+                }
+                break;
+              default:
+                break;
+              }
+
               break; }
 
             default:
@@ -3818,6 +4275,25 @@ compile_time:
             Code::free_expr(&expr);
           }
         }
+
+        switch(ass->get_asstype()) {
+        case Common::Assignment::A_CONST:
+        case Common::Assignment::A_EXT_CONST:
+        case Common::Assignment::A_MODULEPAR:
+        case Common::Assignment::A_VAR:
+        case Common::Assignment::A_PAR_VAL_IN:
+        case Common::Assignment::A_PAR_VAL_OUT:
+        case Common::Assignment::A_PAR_VAL_INOUT:
+        case Common::Assignment::A_FUNCTION_RVAL:
+        case Common::Assignment::A_EXT_FUNCTION_RVAL:
+          if (ass->get_Type()->field_is_optional(subrefs)) {
+            str_set_type = mputstrn(str_set_type, "()", 2);
+          }
+          break;
+        default:
+          break;
+        }
+        
         str_set_type = mputstr(str_set_type, ".n_elem()");
       }
       
@@ -3848,6 +4324,26 @@ compile_time:
                 ref_pard->generate_code_cached(&expr);
               else
                 ref->generate_code(&expr);
+
+              Common::Assignment* ass = ref->get_refd_assignment();
+              switch(ass->get_asstype()) {
+              case Common::Assignment::A_CONST:
+              case Common::Assignment::A_EXT_CONST:
+              case Common::Assignment::A_MODULEPAR:
+              case Common::Assignment::A_VAR:
+              case Common::Assignment::A_PAR_VAL_IN:
+              case Common::Assignment::A_PAR_VAL_OUT:
+              case Common::Assignment::A_PAR_VAL_INOUT:
+              case Common::Assignment::A_FUNCTION_RVAL:
+              case Common::Assignment::A_EXT_FUNCTION_RVAL:
+                if (ass->get_Type()->field_is_optional(ref->get_subrefs())) {
+                  expr.expr = mputstrn(expr.expr, "()", 2);
+                }
+                break;
+              default:
+                break;
+              }
+
               break; }
 
             default:
@@ -4468,7 +4964,7 @@ compile_time:
   }
 
   bool TemplateInstance::chk_restriction(const char* definition_name,
-    template_restriction_t template_restriction)
+    template_restriction_t template_restriction, const Location* usage_loc)
   {
     bool needs_runtime_check = false;
     if (derived_reference) // if modified
@@ -4478,7 +4974,7 @@ compile_time:
       case Common::Assignment::A_TEMPLATE:
         // already added to template_body as base template by chk_DerivedRef()
         needs_runtime_check = template_body->chk_restriction(
-          definition_name, template_restriction);
+          definition_name, template_restriction, usage_loc);
         break;
       case Common::Assignment::A_MODULEPAR_TEMP:
       case Common::Assignment::A_VAR_TEMPLATE:
@@ -4493,7 +4989,7 @@ compile_time:
           FATAL_ERROR("TemplateInstance::chk_restriction()");
         template_body->set_base_template(new Template(derived_reference));
         needs_runtime_check = template_body->chk_restriction(
-          definition_name, template_restriction);
+          definition_name, template_restriction, usage_loc);
         delete template_body->get_base_template();
         template_body->set_base_template(0);
       } break;
@@ -4502,7 +4998,7 @@ compile_time:
       }
     } else { // simple
       needs_runtime_check = template_body->chk_restriction(definition_name,
-                              template_restriction);
+                              template_restriction, usage_loc);
     }
     return needs_runtime_check;
   }

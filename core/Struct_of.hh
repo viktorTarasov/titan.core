@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -34,10 +34,11 @@ typedef boolean (*compare_function_t)(const Base_Type *left_ptr, int left_index,
 #endif
 
 typedef boolean (*match_function_t)(const Base_Type *value_ptr, int value_index,
-  const Restricted_Length_Template *template_ptr, int template_index);
+  const Restricted_Length_Template *template_ptr, int template_index, boolean legacy);
 
 typedef void (*log_function_t)(const Base_Type *value_ptr,
-  const Restricted_Length_Template *template_ptr, int index_value, int index_template);
+  const Restricted_Length_Template *template_ptr, int index_value,
+  int index_template, boolean legacy);
 
 #ifdef TITAN_RUNTIME_2
 extern boolean compare_set_of(const Record_Of_Type *left_ptr, int left_size,
@@ -51,19 +52,19 @@ extern boolean compare_set_of(const Base_Type *left_ptr, int left_size,
 
 extern boolean match_array(const Base_Type *value_ptr, int value_size,
   const Restricted_Length_Template *template_ptr, int template_size,
-  match_function_t match_function);
+  match_function_t match_function, boolean legacy);
 
 extern boolean match_record_of(const Base_Type *value_ptr, int value_size,
   const Record_Of_Template *template_ptr, int template_size,
-  match_function_t match_function);
+  match_function_t match_function, boolean legacy);
 
 extern boolean match_set_of(const Base_Type *value_ptr, int value_size,
   const Restricted_Length_Template *template_ptr, int template_size,
-  match_function_t match_function);
+  match_function_t match_function, boolean legacy);
 
 extern void log_match_heuristics(const Base_Type *value_ptr, int value_size,
   const Restricted_Length_Template *template_ptr, int template_size,
-  match_function_t match_function, log_function_t log_function);
+  match_function_t match_function, log_function_t log_function, boolean legacy);
 
 boolean match_set_of_internal(const Base_Type *value_ptr,
   int value_start, int value_size,
@@ -72,6 +73,6 @@ boolean match_set_of_internal(const Base_Type *value_ptr,
   match_function_t match_function,
   type_of_matching match_type,
   int* number_of_uncovered, int* pair_list,
-  unsigned int number_of_checked);
+  unsigned int number_of_checked, boolean legacy);
 
 #endif

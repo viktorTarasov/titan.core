@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -92,13 +92,13 @@ x2:={ x1:={f1:=1,f2:=1.2},  x2:={f1:=7,f2:=1.2},  x3:=temp };
 x3:={ x1:={f1:=8,f2:=1.2},  x2:={f1:=6,f2:=1.2},  x3:=temp };
 //match
 if (match(x1,templateRec_tList)) {setverdict(pass);}
- else {setverdict(fail);}
+ else {setverdict(fail, 1);}
 //no match: out of list
 if (not(match(x2,templateRec_tList))) {setverdict(pass);}
- else {setverdict(fail);}
+ else {setverdict(fail, 2);}
 //no match: other field
 if (not(match(x3,templateRec_tList))) {setverdict(pass);}
- else {setverdict(fail);}
+ else {setverdict(fail, 3);}
 }
 
 testcase templateRecComp() runs on templateRec_mycomp {
@@ -109,13 +109,13 @@ x2:={ x1:={f1:=1,f2:=1.2},  x2:={f1:=6,f2:=1.2},  x3:=temp };
 x3:={ x1:={f1:=2,f2:=1.2},  x2:={f1:=7,f2:=1.2},  x3:=temp };
 //match
 if (match(x1,templateRec_tComp)) {setverdict(pass);}
- else {setverdict(fail);}
+ else {setverdict(fail, 1);}
 //no match: in the list
 if (not(match(x2,templateRec_tComp))) {setverdict(pass);}
- else {setverdict(fail);}
+ else {setverdict(fail, 2);}
 //no match: other field
 if (not(match(x3,templateRec_tComp))) {setverdict(pass);}
- else {setverdict(fail);}
+ else {setverdict(fail, 3);}
 }
 
 testcase templateRecOmit() runs on templateRec_mycomp {
@@ -205,6 +205,7 @@ template R tr := { i := 1, str := ( omit , omit ) }
 template R tr2 := { i := 1, str := complement( omit , omit ) }
 template R trc := cr; // HQ46602
 
+// Note: this tests legacy behavior and requires the -M compiler option!
 testcase MTTSM00015947() runs on templateRec_mycomp
 {
   if (not match(cr, tRrec1)) { setverdict(fail); }

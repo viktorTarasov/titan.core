@@ -21,3 +21,5 @@ gccversion.exe
 cversion.h
 RT1
 TitanLoggerApi.ttcn
+ttcn3_profmerge
+ttcn3_profmerge.exe

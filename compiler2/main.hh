@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -35,7 +35,8 @@ extern boolean generate_skeleton, force_overwrite, include_line_info,
   include_location_info, duplicate_underscores, parse_only, semantic_check_only,
   output_only_linenum, default_as_optional, use_runtime_2, gcc_compat, asn1_xer,
   check_subtype, suppress_context, enable_set_bound_out_param, display_up_to_date,
-  implicit_json_encoding, json_refs_for_all_types, force_gen_seof;
+  implicit_json_encoding, json_refs_for_all_types, force_gen_seof,
+  omit_in_value_list;
 
 extern const char *expected_platform;
 

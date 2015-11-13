@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -311,6 +311,7 @@ static void check_memory_address(memory_block *block_ptr, int oper)
 #define MALLOC_INTERNAL(f,l,s) Malloc_dbg(f,l,s)
 #define MEMPTYSTR_INTERNAL(f,l) memptystr_dbg(f,l)
 #define MCOPYSTR_INTERNAL(f,l,s) mcopystr_dbg(f,l,s)
+#define MCOPYSTRN_INTERNAL(f,l,s,l2) mcopystrn_dbg(f,l,s,l2)
 #define REALLOC_INTERNAL(f,l,p,s) Realloc_dbg(f,l,p,s)
 #define FREE_INTERNAL(f,l,p) Free_dbg(f,l,p)
 #define MPRINTF_VA_LIST_INTERNAL(f,l,s,p) mprintf_va_list_dbg(f,l,s,p)
@@ -333,6 +334,7 @@ static void extract_location(void *p, const char **fn, int *ln)
 #define MALLOC_INTERNAL(f,l,s) Malloc(s)
 #define MEMPTYSTR_INTERNAL(f,l) memptystr()
 #define MCOPYSTR_INTERNAL(f,l,s) mcopystr(s)
+#define MCOPYSTRN_INTERNAL(f,l,s,l2) mcopystrn(s,l2)
 #define REALLOC_INTERNAL(f,l,p,s) Realloc(p,s)
 #define FREE_INTERNAL(f,l,p) Free(p)
 #define MPRINTF_VA_LIST_INTERNAL(f,l,s,p) mprintf_va_list(s,p)
@@ -861,7 +863,7 @@ expstring_t mputstrn(expstring_t str, const char *str2, size_t len2)
                 memset(str + newlen, '\0', newsize - newlen);
             }
             memcpy(str + len, str2, len2);
-        } else str = MCOPYSTR_INTERNAL(filename, line, str2);
+        } else str = MCOPYSTRN_INTERNAL(filename, line, str2, len2);
     }
     return str;
 }

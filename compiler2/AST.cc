@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -878,6 +878,24 @@ namespace Common {
       output->functions.set_param = NULL;
       has_set_param = true;
     } else has_set_param = false;
+    // get_param function
+    bool has_get_param;
+    if (output->functions.get_param) {
+      output->source.static_function_prototypes = mputstr(output->source.static_function_prototypes,
+        "static Module_Param* get_module_param(Module_Param_Name& param_name);\n");
+      output->source.static_function_bodies = mputstr(output->source.static_function_bodies,
+        "static Module_Param* get_module_param(Module_Param_Name& param_name)\n"
+        "{\n"
+           "const char* const par_name = param_name.get_current_name();\n");
+      output->source.static_function_bodies =
+        mputstr(output->source.static_function_bodies, output->functions.get_param);
+      output->source.static_function_bodies =
+	mputstr(output->source.static_function_bodies, "return NULL;\n"
+	  "}\n\n");
+      Free(output->functions.get_param);
+      output->functions.get_param = NULL;
+      has_get_param = true;
+    } else has_get_param = false;
     // log_param function
     bool has_log_param;
     if (output->functions.log_param) {
@@ -1029,12 +1047,13 @@ namespace Common {
       }
       string extra_str = extra ? ( string('"') + extra + string('"') ) : string("NULL");
       output->source.global_vars = mputprintf(output->source.global_vars,
-	", %uU, %uU, %uU, %uU, %s, %luLU, %s, %s, %s, %s, %s, %s, %s",
+	", %uU, %uU, %uU, %uU, %s, %luLU, %s, %s, %s, %s, %s, %s, %s, %s",
         suffix, release, patch, build, extra_str.c_str(),
         (unsigned long)num_xml_namespaces,
         ((num_xml_namespaces || (control_ns && control_ns_prefix)) ? "xml_namespaces" : "0"),
 	has_post_init ? "post_init_module" : "NULL",
 	has_set_param ? "set_module_param" : "NULL",
+  has_get_param ? "get_module_param" : "NULL",
 	has_log_param ? "log_module_param" : "NULL",
 	has_init_comp ? "init_comp_type" : "NULL",
 	has_start ? "start_ptc_function" : "NULL",
@@ -1045,6 +1064,8 @@ namespace Common {
 	FATAL_ERROR("Module::generate_functions(): post_init function in ASN.1 module");
       if (has_set_param)
 	FATAL_ERROR("Module::generate_functions(): set_param function in ASN.1 module");
+      if (has_get_param)
+	FATAL_ERROR("Module::generate_functions(): get_param function in ASN.1 module");
       if (has_log_param)
 	FATAL_ERROR("Module::generate_functions(): log_param function in ASN.1 module");
       if (has_init_comp)

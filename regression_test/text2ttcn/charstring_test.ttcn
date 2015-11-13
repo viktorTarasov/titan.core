@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -517,18 +517,21 @@ testcase tc_cs_vl3_emb() runs on MC {
   var RoRCS vl_wrong_values := {{omit},{"AB"},{"ab"},{"ba"},{"12"},{"A1"},{"  "},{""},{"A"},{"ABB"},{"ABBAB"},{"abba"},{"anything"},{"XXXX"},{"ABCDE"},{"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}
   f_checkMatchingValues_rcs(t_rcs(t_cs_vl3), vl_good_values,vl_wrong_values);
 }
+// Note: this tests legacy behavior and requires the -M compiler option!
 //complement("ABBA")
 testcase tc_cs_c1_emb() runs on MC {
   var RoRCS vl_good_values := {{omit},{"AB"},{"ab"},{"ba"},{"12"},{"A1"},{"  """},{"A"},{"ABB"},{"ABBAB"},{"abba"},{"anything"},{"XXXX"},{"ABCDE"},{"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}
   var RoRCS vl_wrong_values := {{"ABBA"}}
   f_checkMatchingValues_rcs(t_rcs(t_cs_c1), vl_good_values,vl_wrong_values);
 }
+// Note: this tests legacy behavior and requires the -M compiler option!
 //complement("ABBA","baba");
 testcase tc_cs_c2_emb() runs on MC {
   var RoRCS vl_good_values :={{omit},{"AB"},{"ab"},{"ba"},{"12"},{"A1"},{"  "},{""},{"A"},{"ABB"},{"ABBAB"},{"abba"},{"anything"},{"XXXX"},{"ABCDE"},{"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}
   var RoRCS vl_wrong_values :=  {{"ABBA"},{"baba"}}
   f_checkMatchingValues_rcs(t_rcs(t_cs_c2), vl_good_values,vl_wrong_values);
 }
+// Note: this tests legacy behavior and requires the -M compiler option!
 //complement("ABBA","baba","Bye");
 testcase tc_cs_c3_emb() runs on MC {
   var RoRCS vl_good_values := {{omit},{"AB"},{ "ab"},{"ba"},{"12"},{"A1"},{"  "},{""},{"A"},{"ABB"},{"ABBAB"},{"abba"},{"anything"},{"XXXX"},{"ABCDE"},{"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}
@@ -827,18 +830,21 @@ testcase tc_cs_mod4vl3_emb() runs on MC {
   var RoRCS vl_wrong_values := {{omit},{"AB"},{"ab"},{"ba"},{"12"},{"A1"},{"  "},{""},{"A"},{"ABB"},{"ABBAB"},{"abba"},{"anything"},{"XXXX"},{"ABCDE"},{"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}
   f_checkMatchingValues_rcs(t_rcs(tspt_cs_mod4vl3), vl_good_values,vl_wrong_values);
 }
+// Note: this tests legacy behavior and requires the -M compiler option!
 //complement("ABBA")
 testcase tc_cs_mod4c1_emb() runs on MC {
   var RoRCS vl_good_values := {{omit},{"AB"},{"ab"},{"ba"},{"12"},{"A1"},{"  """},{"A"},{"ABB"},{"ABBAB"},{"abba"},{"anything"},{"XXXX"},{"ABCDE"},{"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}
   var RoRCS vl_wrong_values := {{"ABBA"}}
   f_checkMatchingValues_rcs(t_rcs(tspt_cs_mod4c1), vl_good_values,vl_wrong_values);
 }
+// Note: this tests legacy behavior and requires the -M compiler option!
 //complement("ABBA","baba");
 testcase tc_cs_mod4c2_emb() runs on MC {
   var RoRCS vl_good_values :={{omit},{"AB"},{"ab"},{"ba"},{"12"},{"A1"},{"  "},{""},{"A"},{"ABB"},{"ABBAB"},{"abba"},{"anything"},{"XXXX"},{"ABCDE"},{"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}
   var RoRCS vl_wrong_values :=  {{"ABBA"},{"baba"}}
   f_checkMatchingValues_rcs(t_rcs(tspt_cs_mod4c2), vl_good_values,vl_wrong_values);
 }
+// Note: this tests legacy behavior and requires the -M compiler option!
 //complement("ABBA","baba","Bye");
 testcase tc_cs_mod4c3_emb() runs on MC {
   var RoRCS vl_good_values := {{omit},{"AB"},{ "ab"},{"ba"},{"12"},{"A1"},{"  "},{""},{"A"},{"ABB"},{"ABBAB"},{"abba"},{"anything"},{"XXXX"},{"ABCDE"},{"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"}}

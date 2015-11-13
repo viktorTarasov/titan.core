@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -606,68 +606,68 @@ testcase bigIntLogicalOps() runs on bigIntOper_comptype
   {
   // Only Cond2/Cond4/Cond6/Cond7/Cond10/Cond11/Cond15/Cond17/Cond18 should
   // stay.  Test for conditional operators and CP on big integers.
-  if (12345678910111213141516 < 0)  { log("Cond1"); setverdict(fail) }  // Removed by CP.
-  if (12345678910111213141516 > 0)  { log("Cond2"); setverdict(pass) }
-  if (12345678910111213141516 == 0) { log("Cond3"); setverdict(fail) }  // Removed by CP.
-  if (12345678910111213141516 != 0) { log("Cond4"); setverdict(pass) }
-  if (12345678910111213141516 <= 0) { log("Cond5"); setverdict(fail) }  // Removed by CP.
-  if (12345678910111213141516 >= 0) { log("Cond6"); setverdict(pass) }
-  if (0 < 12345678910111213141516)  { log("Cond7"); setverdict(pass) }
-  if (0 > 12345678910111213141516)  { log("Cond8"); setverdict(fail) }  // Removed by CP.
-  if (0 == 12345678910111213141516) { log("Cond9"); setverdict(fail) }  // Removed by CP.
-  if (0 != 12345678910111213141516) { log("Cond10"); setverdict(pass) }
-  if (0 <= 12345678910111213141516) { log("Cond11"); setverdict(pass) }
-  if (0 >= 12345678910111213141516) { log("Cond12"); setverdict(fail) }  // Removed by CP.
-  if (12345678910111213141516 < 12345678910111213141516)  { log("Cond13"); setverdict(fail) }  // Removed by CP.
-  if (12345678910111213141516 > 12345678910111213141516)  { log("Cond14"); setverdict(fail) }  // Removed by CP.
-  if (12345678910111213141516 == 12345678910111213141516) { log("Cond15"); setverdict(pass) }
-  if (12345678910111213141516 != 12345678910111213141516) { log("Cond16"); setverdict(fail) }  // Removed by CP.
-  if (12345678910111213141516 <= 12345678910111213141516) { log("Cond17"); setverdict(pass) }
-  if (12345678910111213141516 >= 12345678910111213141516) { log("Cond18"); setverdict(pass) }
+  if (12345678910111213141516 < 0)  { setverdict(fail) }  // Removed by CP.
+  if (12345678910111213141516 > 0)  { setverdict(pass) }
+  if (12345678910111213141516 == 0) { setverdict(fail) }  // Removed by CP.
+  if (12345678910111213141516 != 0) { setverdict(pass) }
+  if (12345678910111213141516 <= 0) { setverdict(fail) }  // Removed by CP.
+  if (12345678910111213141516 >= 0) { setverdict(pass) }
+  if (0 < 12345678910111213141516)  { setverdict(pass) }
+  if (0 > 12345678910111213141516)  { setverdict(fail) }  // Removed by CP.
+  if (0 == 12345678910111213141516) { setverdict(fail) }  // Removed by CP.
+  if (0 != 12345678910111213141516) { setverdict(pass) }
+  if (0 <= 12345678910111213141516) { setverdict(pass) }
+  if (0 >= 12345678910111213141516) { setverdict(fail) }  // Removed by CP.
+  if (12345678910111213141516 < 12345678910111213141516)  { setverdict(fail) }  // Removed by CP.
+  if (12345678910111213141516 > 12345678910111213141516)  { setverdict(fail) }  // Removed by CP.
+  if (12345678910111213141516 == 12345678910111213141516) { setverdict(pass) }
+  if (12345678910111213141516 != 12345678910111213141516) { setverdict(fail) }  // Removed by CP.
+  if (12345678910111213141516 <= 12345678910111213141516) { setverdict(pass) }
+  if (12345678910111213141516 >= 12345678910111213141516) { setverdict(pass) }
   }
   {
   // With a constant.  Same as the previous.
   const integer i := 0, j := 12345678910111213141516
-  if (j < i)  { log("Cond19"); setverdict(fail) }  // Removed by CP.
-  if (j > i)  { log("Cond20"); setverdict(pass) }
-  if (j == i) { log("Cond21"); setverdict(fail) }  // Removed by CP.
-  if (j != i) { log("Cond22"); setverdict(pass) }
-  if (j <= i) { log("Cond23"); setverdict(fail) }  // Removed by CP.
-  if (j >= i) { log("Cond24"); setverdict(pass) }
-  if (i < j)  { log("Cond25"); setverdict(pass) }
-  if (i > j)  { log("Cond26"); setverdict(fail) }  // Removed by CP.
-  if (i == j) { log("Cond27"); setverdict(fail) }  // Removed by CP.
-  if (i != j) { log("Cond28"); setverdict(pass) }
-  if (i <= j) { log("Cond29"); setverdict(pass) }
-  if (i >= j) { log("Cond30"); setverdict(fail) }  // Removed by CP.
-  if (j < j)  { log("Cond31"); setverdict(fail) }  // Removed by CP.
-  if (j > j)  { log("Cond32"); setverdict(fail) }  // Removed by CP.
-  if (j == j) { log("Cond33"); setverdict(pass) }
-  if (j != j) { log("Cond34"); setverdict(fail) }  // Removed by CP.
-  if (j <= j) { log("Cond35"); setverdict(pass) }
-  if (j >= j) { log("Cond36"); setverdict(pass) }
+  if (j < i)  { setverdict(fail) }  // Removed by CP.
+  if (j > i)  { setverdict(pass) }
+  if (j == i) { setverdict(fail) }  // Removed by CP.
+  if (j != i) { setverdict(pass) }
+  if (j <= i) { setverdict(fail) }  // Removed by CP.
+  if (j >= i) { setverdict(pass) }
+  if (i < j)  { setverdict(pass) }
+  if (i > j)  { setverdict(fail) }  // Removed by CP.
+  if (i == j) { setverdict(fail) }  // Removed by CP.
+  if (i != j) { setverdict(pass) }
+  if (i <= j) { setverdict(pass) }
+  if (i >= j) { setverdict(fail) }  // Removed by CP.
+  if (j < j)  { setverdict(fail) }  // Removed by CP.
+  if (j > j)  { setverdict(fail) }  // Removed by CP.
+  if (j == j) { setverdict(pass) }
+  if (j != j) { setverdict(fail) }  // Removed by CP.
+  if (j <= j) { setverdict(pass) }
+  if (j >= j) { setverdict(pass) }
   }
   {
   // With variable operands.  No CP.
   var integer i := 0, j := 12345678910111213141516, result := 0
-  if (12345678910111213141516 < i)  { log("Cond37"); result := result + 1 }
-  if (12345678910111213141516 > i)  { log("Cond38"); result := result + 1 }
-  if (12345678910111213141516 == i) { log("Cond39"); result := result + 1 }
-  if (12345678910111213141516 != i) { log("Cond40"); result := result + 1 }
-  if (12345678910111213141516 <= i) { log("Cond41"); result := result + 1 }
-  if (12345678910111213141516 >= i) { log("Cond42"); result := result + 1 }
-  if (i < 12345678910111213141516)  { log("Cond43"); result := result + 1 }
-  if (i > 12345678910111213141516)  { log("Cond44"); result := result + 1 }
-  if (i == 12345678910111213141516) { log("Cond45"); result := result + 1 }
-  if (i != 12345678910111213141516) { log("Cond46"); result := result + 1 }
-  if (i <= 12345678910111213141516) { log("Cond47"); result := result + 1 }
-  if (i >= 12345678910111213141516) { log("Cond48"); result := result + 1 }
-  if (12345678910111213141516 < j)  { log("Cond49"); result := result + 1 }
-  if (j > 12345678910111213141516)  { log("Cond50"); result := result + 1 }
-  if (12345678910111213141516 == j) { log("Cond51"); result := result + 1 }
-  if (j != 12345678910111213141516) { log("Cond52"); result := result + 1 }
-  if (12345678910111213141516 <= j) { log("Cond53"); result := result + 1 }
-  if (j >= 12345678910111213141516) { log("Cond54"); result := result + 1 }
+  if (12345678910111213141516 < i)  { result := result + 1 }
+  if (12345678910111213141516 > i)  { result := result + 1 }
+  if (12345678910111213141516 == i) { result := result + 1 }
+  if (12345678910111213141516 != i) { result := result + 1 }
+  if (12345678910111213141516 <= i) { result := result + 1 }
+  if (12345678910111213141516 >= i) { result := result + 1 }
+  if (i < 12345678910111213141516)  { result := result + 1 }
+  if (i > 12345678910111213141516)  { result := result + 1 }
+  if (i == 12345678910111213141516) { result := result + 1 }
+  if (i != 12345678910111213141516) { result := result + 1 }
+  if (i <= 12345678910111213141516) { result := result + 1 }
+  if (i >= 12345678910111213141516) { result := result + 1 }
+  if (12345678910111213141516 < j)  { result := result + 1 }
+  if (j > 12345678910111213141516)  { result := result + 1 }
+  if (12345678910111213141516 == j) { result := result + 1 }
+  if (j != 12345678910111213141516) { result := result + 1 }
+  if (12345678910111213141516 <= j) { result := result + 1 }
+  if (j >= 12345678910111213141516) { result := result + 1 }
   if (result == 9) { setverdict(pass) }  // Number of branches executed.
   else { setverdict(fail) }
   }

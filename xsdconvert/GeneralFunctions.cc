@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cmath>
+#include <regex.h>
 
 extern bool w_flag_used;
 
@@ -24,11 +25,10 @@ extern bool w_flag_used;
 //				res - generated result
 // 				variant - generated variant string for TTCN-3
 //
+
 void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType type_of_the_name,
-  Mstring & res, Mstring & variant)
-{
-  static const char* TTCN3_reserved_words[] =
-  {
+  Mstring & res, Mstring & variant, bool no_replace) {
+  static const char* TTCN3_reserved_words[] = {
     "action", "activate", "address", "alive", "all", "alt", "altstep", "and", "and4b", "any", "anytype", "apply",
     "bitstring", "boolean", "break",
     "call", "case", "catch", "char", "charstring", "check", "clear", "complement", "component", "connect",
@@ -56,15 +56,14 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
     "xor", "xor4b",
     NULL
   };
-  static const char* TTCN3_predefined_functions[] =
-  {
+  static const char* TTCN3_predefined_functions[] = {
     "bit2int", "bit2hex", "bit2oct", "bit2str",
     "char2int", "char2oct",
     "decomp", "decvalue",
     "encvalue", "enum2int",
     "float2int", "float2str",
     "hex2bit", "hex2int", "hex2oct", "hex2str",
-    "int2bit", "int2char", "int2float", "int2hex", "int2oct", "int2str", "int2unichar",
+    "int2bit", "int2char", "int2enum", "int2float", "int2hex", "int2oct", "int2str", "int2unichar",
     "isvalue", "ischosen", "ispresent",
     "lengthof", "log2str",
     "oct2bit", "oct2char", "oct2hex", "oct2int", "oct2str", "oct2unichar"
@@ -74,8 +73,7 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
     "unichar2int", "unichar2char", "unichar2oct",
     NULL
   };
-  static const char* ASN1_reserved_words[] =
-  {
+  static const char* ASN1_reserved_words[] = {
     "ABSENT", "ABSTRACT-SYNTAX", "ALL", "APPLICATION", "AUTOMATIC",
     "BEGIN", "BIT", "BMPString", "BOOLEAN", "BY",
     "CHARACTER", "CHOICE", "CLASS", "COMPONENT", "COMPONENTS", "CONSTRAINED", "CONTAINING",
@@ -113,8 +111,7 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
     // If the type or field reference name is an XSD built-in type then it will be capitalized and get a prefix "XSD."
     // if (type_of_the_name == type_reference_name || type_of_the_name == field_reference_name) {
 
-    if (type_of_the_name == type_reference_name)
-    {
+    if (type_of_the_name == type_reference_name) {
       if (isBuiltInType(res)) {
         res[0] = toupper(res[0]);
         res = "XSD." + res;
@@ -122,19 +119,16 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
       }
       if (res == "record" ||
         res == "union" ||
-        res == "set" )
-      {
+        res == "set") {
         return;
       }
     }
 
-    if (type_of_the_name == enum_id_name)
-    {
+    if (type_of_the_name == enum_id_name) {
       bool found = false;
-      for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next)
-      {
+      for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next) {
         QualifiedName tmp(empty_string, res);
-        if (tmp == used->Data) {
+        if (tmp.nsuri == used->Data.nsuri && tmp.orig_name == used->Data.orig_name) {
           found = true;
           break;
         }
@@ -150,52 +144,59 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
     // the characters ' '(SPACE), '.'(FULL STOP) and '-'(HYPEN-MINUS)shall all be replaced by a "_" (LOW LINE)
     for (size_t i = 0; i != res.size(); ++i) {
       if ((res[i] == ' ') ||
-        (res[i] == '.') ||
-        (res[i] == '-'))
-      {
+        (res[i] == '.' && !no_replace) ||
+        (res[i] == '-')) {
         res[i] = '_';
       }
     }
     // any character except "A" to "Z", "a" to "z" or "0" to "9" and "_" shall be removed
     for (size_t i = 0; i != res.size(); ++i) {
-      if (!isalpha((const unsigned char)res[i]) && !isdigit((const unsigned char)res[i]) && (res[i] != '_')) {
-        res.eraseChar(i);
+      if (!isalpha((const unsigned char) res[i]) && !isdigit((const unsigned char) res[i]) && (res[i] != '_')) {
+        if (!no_replace && res[i] != '.') {
+          res.eraseChar(i);
+          i--;
+        }
       }
     }
     // a sequence of two of more "_" (LOW LINE) shall be replaced with a single "_" (LOW LINE)
     for (size_t i = 1; i < res.size(); ++i) {
-      if (res[i] == '_' && res[i-1] == '_') {
-        res.eraseChar(i--);
+      if (res[i] == '_' && res[i - 1] == '_') {
+        res.eraseChar(i);
+        i--;
       }
     }
     // "_" (LOW LINE) characters occurring at the end of the name shall be removed
-    if (!res.empty() && res[res.size()-1] == '_') res.eraseChar(res.size()-1);
+    if (!res.empty() && res[res.size() - 1] == '_') {
+      res.eraseChar(res.size() - 1);
+    }
     // "_" (LOW LINE) characters occurring at the beginning of the name shall be removed
-    if (!res.empty() && res[0] == '_') res.eraseChar(0);
+    if (!res.empty() && res[0] == '_') {
+      res.eraseChar(0);
+    }
   }
 
-  switch (type_of_the_name)
-  {
-  case type_reference_name:
-  case type_name:
-    if (res.empty()) {
-      res = "X";
-    }
-    else {
-      if (islower((const unsigned char)res[0])) res.setCapitalized();
-      else if (isdigit((const unsigned char)res[0])) res.insertChar(0, 'X');
-    }
-    break;
-  case field_name:
-  case enum_id_name:
-    if (res.empty()) {
-      res = "x";
-    }
-    else {
-      if (isupper((const unsigned char)res[0])) res.setUncapitalized();
-      else if (isdigit((const unsigned char)res[0])) res.insertChar(0, 'x');
-    }
-    break;
+  switch (type_of_the_name) {
+    case type_reference_name:
+    case type_name:
+      if (res.empty()) {
+        res = "X";
+      } else {
+        if (islower((const unsigned char) res[0])) {
+          res.setCapitalized();
+        } else if (isdigit((const unsigned char) res[0])) {
+          res.insertChar(0, 'X');
+        }
+      }
+      break;
+    case field_name:
+    case enum_id_name:
+      if (res.empty()) {
+        res = "x";
+      } else {
+        if (isupper((const unsigned char) res[0])) res.setUncapitalized();
+        else if (isdigit((const unsigned char) res[0])) res.insertChar(0, 'x');
+      }
+      break;
   }
   /********************************************************
    * STEP 2 - process if the generated name is
@@ -210,100 +211,93 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
    * according to paragraph a)
    * ******************************************************/
   bool postfixing = false;
-  QualifiedName qual_name(ns_uri, res);
+  QualifiedName qual_name(ns_uri, res, in);
 
-  switch (type_of_the_name)
-  {
-  // Do not use "res" in this switch; only qual_name
-  case type_name: {
-    for (int k = 0; ASN1_reserved_words[k]; k++) {
-      if (qual_name.name == ASN1_reserved_words[k]) {
-        postfixing = true;
-        break;
-      }
-    }
 
-    for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next)
+  switch (type_of_the_name) {
+      // Do not use "res" in this switch; only qual_name
+    case type_name:
     {
-      if (qual_name == used->Data) {
-        postfixing = true;
-        break;
-      }
-    }
-
-    if (postfixing)
-    {
-      bool found = false;
-      int counter = 1;
-      expstring_t tmpname = NULL;
-      do {
-        found = false;
-        Free(tmpname);
-        tmpname = mprintf("%s_%d", qual_name.name.c_str(), counter);
-        for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next)
-        {
-          if (QualifiedName(/* empty_string ? */ ns_uri, Mstring(tmpname)) == used->Data) {
-            found = true;
-            break;
-          }
+      for (int k = 0; ASN1_reserved_words[k]; k++) {
+        if (qual_name.name == ASN1_reserved_words[k]) {
+          postfixing = true;
+          break;
         }
-        counter++;
-      } while (found);
-      qual_name.name = tmpname; // NULL will result in an empty string
-      Free(tmpname);
-      postfixing = false;
-    }
-    break; }
-  case field_name:
-  case enum_id_name:
-    for (int k = 0; TTCN3_reserved_words[k]; k++) {
-      if (qual_name.name == TTCN3_reserved_words[k]) postfixing = true;
-    }
-    for (int k = 0; TTCN3_predefined_functions[k]; k++) {
-      if (qual_name.name == TTCN3_predefined_functions[k]) postfixing = true;
-    }
-    if (postfixing)
-    {
-      qual_name.name += "_";
-      postfixing = false;
-    }
+      }
 
-    for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next)
-    {
-      if (qual_name == used->Data) postfixing = true;
-    }
+      for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next) {
+        if (qual_name == used->Data) {
+          postfixing = true;
+          break;
+        }
+      }
 
-    if (postfixing)
-    {
-      bool found = false;
-      int counter = 0;
-      if (type_of_the_name == field_name) counter = 1;
-      else if (type_of_the_name == enum_id_name) counter = 0;
-      if (qual_name.name[qual_name.name.size()-1] == '_')
-        qual_name.name.eraseChar(qual_name.name.size()-1);
-      expstring_t tmpname = mprintf("%s_%d", qual_name.name.c_str(), counter);
-      do {
-        found = false;
-        if (counter > 0) {
+      if (postfixing) {
+        bool found = false;
+        int counter = 1;
+        expstring_t tmpname = NULL;
+        do {
+          found = false;
           Free(tmpname);
           tmpname = mprintf("%s_%d", qual_name.name.c_str(), counter);
-        }
-        for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next)
-        {
-          if (QualifiedName(/* empty_string ? */ns_uri, Mstring(tmpname)) == used->Data) {
-            found = true;
-            break;
+          for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next) {
+            if (QualifiedName(/* empty_string ? */ ns_uri, Mstring(tmpname)) == used->Data) {
+              found = true;
+              break;
+            }
           }
-        }
-        counter++;
-      } while (found);
-      qual_name.name = tmpname;
-      Free(tmpname);
-      postfixing = false;
+          counter++;
+        } while (found);
+        qual_name.name = tmpname; // NULL will result in an empty string
+        Free(tmpname);
+        postfixing = false;
+      }
+      break;
     }
-    break;
-  default:
-    break;
+    case field_name:
+    case enum_id_name:
+      for (int k = 0; TTCN3_reserved_words[k]; k++) {
+        if (qual_name.name == TTCN3_reserved_words[k]) postfixing = true;
+      }
+      for (int k = 0; TTCN3_predefined_functions[k]; k++) {
+        if (qual_name.name == TTCN3_predefined_functions[k]) postfixing = true;
+      }
+      if (postfixing) {
+        qual_name.name += "_";
+        postfixing = false;
+      }
+
+      for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next) {
+        if (qual_name == used->Data) postfixing = true;
+      }
+
+      if (postfixing) {
+        bool found = false;
+        int counter = 1;
+        if (qual_name.name[qual_name.name.size() - 1] == '_')
+          qual_name.name.eraseChar(qual_name.name.size() - 1);
+        expstring_t tmpname = mprintf("%s_%d", qual_name.name.c_str(), counter);
+        do {
+          found = false;
+          if (counter > 0) {
+            Free(tmpname);
+            tmpname = mprintf("%s_%d", qual_name.name.c_str(), counter);
+          }
+          for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next) {
+            if (QualifiedName(/* empty_string ? */ns_uri, Mstring(tmpname)) == used->Data) {
+              found = true;
+              break;
+            }
+          }
+          counter++;
+        } while (found);
+        qual_name.name = tmpname;
+        Free(tmpname);
+        postfixing = false;
+      }
+      break;
+    default:
+      break;
   }
 
   res = qual_name.name;
@@ -312,11 +306,9 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
    * STEP 3 - the defined name is put into the set of "not_av_names"
    * ******************************************************/
   // Finally recently defined name will be put into the set of "set<string> not_av_names"
-  if (type_of_the_name != type_reference_name)
-  {
+  if (type_of_the_name != type_reference_name) {
     bool found = false;
-    for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next)
-    {
+    for (QualifiedNames::iterator used = used_names.begin(); used; used = used->Next) {
       if (qual_name == used->Data) {
         found = true;
         break;
@@ -334,8 +326,7 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
   if (in == "sequence" ||
     in == "choice" ||
     in == "sequence_list" ||
-    in == "choice_list")
-  {
+    in == "choice_list") {
     return;
   }
   /********************************************************
@@ -349,135 +340,143 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
     Mstring tmp2 = res;
     tmp1.setUncapitalized();
     tmp2.setUncapitalized();
-    switch (type_of_the_name)
-    {
-    case type_name:
-      if (tmp1 == tmp2) {				// If the only difference is the case of the first letter
-        if (isupper(in[0])) variant += "\"name as capitalized\"";
-        else 				variant += "\"name as uncapitalized\"";
-      } else {						// Otherwise if other letters have changed too
-        variant += "\"name as '" + in + "'\"";
-      }
-      break;
-    case field_name:
-      // Creating a variant string from a field of a complex type needs to write out the path of the fieldname
-      if (tmp1 == tmp2) {				// If the only difference is the case of the first letter
-        if (isupper(in[0])) variant += "\"name as capitalized\"";
-        else				variant += "\"name as uncapitalized\"";
-      } else {						// Otherwise if other letters have changed too
-        variant += "\"name as '" + in + "'\"";
-      }
-      break;
-    case enum_id_name:
-      if (tmp1 == tmp2) {				// If the only difference is the case of the first letter
-        if ( isupper(in[0]) ) {
-          variant += "\"text \'" + res + "\' as capitalized\"";
-        } else {
-          variant += "\"text \'" + res + "\' as uncapitalized\"";
+    switch (type_of_the_name) {
+      case type_name:
+        if (tmp1 == tmp2) { // If the only difference is the case of the first letter
+          if (isupper(in[0])) {
+            variant += "\"name as capitalized\"";
+          } else {
+            variant += "\"name as uncapitalized\"";
+          }
+        } else { // Otherwise if other letters have changed too
+          variant += "\"name as '" + in + "'\"";
         }
-      } else {						// Otherwise if other letters have changed too
-        variant += "\"text \'" + res + "\' as '" + in + "'\"";
-      }
-      break;
-    default:
-      break;
+        break;
+      case field_name:
+        // Creating a variant string from a field of a complex type needs to write out the path of the fieldname
+        if (tmp1 == tmp2) { // If the only difference is the case of the first letter
+          if (isupper(in[0])) {
+            variant += "\"name as capitalized\"";
+          } else {
+            variant += "\"name as uncapitalized\"";
+          }
+        } else { // Otherwise if other letters have changed too
+          variant += "\"name as '" + in + "'\"";
+        }
+        break;
+      case enum_id_name:
+        if (tmp1 == tmp2) { // If the only difference is the case of the first letter
+          if (isupper(in[0])) {
+            variant += "\"text \'" + res + "\' as capitalized\"";
+          } else {
+            variant += "\"text \'" + res + "\' as uncapitalized\"";
+          }
+        } else { // Otherwise if other letters have changed too
+          variant += "\"text \'" + res + "\' as '" + in + "'\"";
+        }
+        break;
+      default:
+        break;
     }
   }
 }
 
-bool isBuiltInType(const Mstring& in)
-{
+bool isBuiltInType(const Mstring& in) {
   static const char* XSD_built_in_types[] = {
     "string", "normalizedString", "token", "Name", "NMTOKEN", "NCName", "ID", "IDREF", "ENTITY",
     "hexBinary", "base64Binary", "anyURI", "language", "integer", "positiveInteger", "nonPositiveInteger",
     "negativeInteger", "nonNegativeInteger", "long", "unsignedLong", "int", "unsignedInt", "short",
     "unsignedShort", "byte", "unsignedByte", "decimal", "float", "double", "duration", "dateTime", "time",
     "date", "gYearMonth", "gYear", "gMonthDay", "gDay", "gMonth", "NMTOKENS", "IDREFS", "ENTITIES",
-    "QName", "boolean",	"anyType", "anySimpleType",	NULL
+    "QName", "boolean", "anyType", "anySimpleType", NULL
   };
   const Mstring& name = in.getValueWithoutPrefix(':');
   for (int i = 0; XSD_built_in_types[i]; ++i) {
-    if (name  ==  XSD_built_in_types[i]) return true;
+    if (name == XSD_built_in_types[i]) {
+      return true;
+    }
   }
   return false;
 }
 
-bool isStringType(const Mstring& in)
-{
+bool isStringType(const Mstring& in) {
   static const char* string_types[] = {
     "string", "normalizedString", "token", "Name", "NMTOKEN", "NCName", "ID", "IDREF", "ENTITY",
-    "hexBinary", "base64Binary", "anyURI", "language",	NULL
+    "hexBinary", "base64Binary", "anyURI", "language", NULL
   };
   const Mstring& name = in.getValueWithoutPrefix(':');
   for (int i = 0; string_types[i]; ++i) {
-    if (name == string_types[i]) return true;
+    if (name == string_types[i]) {
+      return true;
+    }
   }
   return false;
 }
 
-bool isIntegerType(const Mstring& in)
-{
+bool isIntegerType(const Mstring& in) {
   static const char* integer_types[] = {
     "integer", "positiveInteger", "nonPositiveInteger", "negativeInteger", "nonNegativeInteger", "long",
-    "unsignedLong", "int", "unsignedInt", "short", "unsignedShort", "byte", "unsignedByte",	NULL
+    "unsignedLong", "int", "unsignedInt", "short", "unsignedShort", "byte", "unsignedByte", NULL
   };
   const Mstring& name = in.getValueWithoutPrefix(':');
   for (int i = 0; integer_types[i]; ++i) {
-    if (name == integer_types[i]) return true;
+    if (name == integer_types[i]) {
+      return true;
+    }
   }
   return false;
 }
 
-bool isFloatType(const Mstring& in)
-{
+bool isFloatType(const Mstring& in) {
   static const char* float_types[] = {
     "decimal", "float", "double", NULL
   };
   const Mstring& name = in.getValueWithoutPrefix(':');
   for (int i = 0; float_types[i]; ++i) {
-    if (name == float_types[i]) return true;
+    if (name == float_types[i]) {
+      return true;
+    }
   }
   return false;
 }
 
-bool isTimeType(const Mstring& in)
-{
+bool isTimeType(const Mstring& in) {
   static const char* time_types[] = {
     "duration", "dateTime", "time", "date", "gYearMonth", "gYear", "gMonthDay", "gDay", "gMonth", NULL
   };
   const Mstring& name = in.getValueWithoutPrefix(':');
   for (int i = 0; time_types[i]; ++i) {
-    if (name == time_types[i]) return true;
+    if (name == time_types[i]) {
+      return true;
+    }
   }
   return false;
 }
 
-bool isSequenceType(const Mstring& in)
-{
+bool isSequenceType(const Mstring& in) {
   static const char* sequence_types[] = {
     "NMTOKENS", "IDREFS", "ENTITIES", "QName", NULL
   };
   const Mstring& name = in.getValueWithoutPrefix(':');
   for (int i = 0; sequence_types[i]; ++i) {
-    if (name == sequence_types[i]) return true;
+    if (name == sequence_types[i]) {
+      return true;
+    }
   }
   return false;
 }
 
-bool isBooleanType(const Mstring& in)
-{
+bool isBooleanType(const Mstring& in) {
   static const Mstring booltype("boolean");
   return booltype == in.getValueWithoutPrefix(':');
 }
 
-bool isQNameType(const Mstring& in)
-{
+bool isQNameType(const Mstring& in) {
   static const Mstring qntype("QName");
   return qntype == in.getValueWithoutPrefix(':');
 }
 
-bool isAnyType(const Mstring& in)
-{
+bool isAnyType(const Mstring& in) {
   static const char* any_types[] = {
     "anyType", "anySimpleType", NULL
   };
@@ -488,8 +487,71 @@ bool isAnyType(const Mstring& in)
   return false;
 }
 
-void printError(const Mstring& filename, int lineNumber, const Mstring& text)
-{
+bool matchDates(const char * string, const char * type) {
+  const Mstring day("(0[1-9]|[12][0-9]|3[01])");
+  const Mstring month("(0[1-9]|1[0-2])");
+  const Mstring year("([0-9][0-9][0-9][0-9])");
+  const Mstring hour("([01][0-9]|2[0-3])");
+  const Mstring minute("([0-5][0-9])");
+  const Mstring second("([0-5][0-9])");
+  const Mstring endofdayext("24:00:00(.0?)?");
+  const Mstring yearext("((-)([1-9][0-9]*)?)?");
+  const Mstring timezone("(Z|[+-]((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?");
+  const Mstring fraction("(.[0-9]+)?");
+  const Mstring nums("[0-9]+");
+  const Mstring durtime("(T[0-9]+"
+    "(H([0-9]+(M([0-9]+(S|.[0-9]+S))?|.[0-9]+S|S))?|"
+    "M([0-9]+(S|.[0-9]+S)|.[0-9]+M)?|S|.[0-9]+S))");
+
+  Mstring pattern;
+  if (strcmp(type, "gDay") == 0) {
+    pattern = Mstring("(---)") + day + timezone;
+  } else if (strcmp(type, "gMonth") == 0) {
+    pattern = Mstring("(--)") + month + timezone;
+  } else if (strcmp(type, "gYear") == 0) {
+    pattern = yearext + year + timezone;
+  } else if (strcmp(type, "gYearMonth") == 0) {
+    pattern = yearext + year + Mstring("(-)") + month + timezone;
+  } else if (strcmp(type, "gMonthDay") == 0) {
+    pattern = Mstring("(--)") + month + Mstring("(-)") + day + timezone;
+  } else if (strcmp(type, "date") == 0) {
+    pattern = yearext + year + Mstring("(-)") + month + Mstring("(-)") + day + timezone;
+  } else if (strcmp(type, "time") == 0) {
+    pattern = Mstring("(") + hour + Mstring(":") + minute + Mstring(":") + second +
+      fraction + Mstring("|") + endofdayext + Mstring(")") + timezone;
+  } else if (strcmp(type, "dateTime") == 0) {
+    pattern = yearext + year + Mstring("(-)") + month + Mstring("(-)") + day +
+      Mstring("T(") + hour + Mstring(":") + minute + Mstring(":") + second +
+      fraction + Mstring("|") + endofdayext + Mstring(")") + timezone;
+  } else if (strcmp(type, "duration") == 0) {
+    pattern = Mstring("(-)?P(") + nums + Mstring("(Y(") + nums + Mstring("(M(") +
+      nums + Mstring("D") + durtime + Mstring("?|") + durtime + Mstring("?|D") +
+      durtime + Mstring("?)|") + durtime + Mstring("?)|M") + nums + Mstring("D") +
+      durtime + Mstring("?|") + durtime + Mstring("?)|D") + durtime +
+      Mstring("?)|") + durtime + Mstring(")");
+  } else {
+    return false;
+  }
+
+  pattern = Mstring("^") + pattern + Mstring("$");
+  return matchRegexp(string, pattern.c_str());
+}
+
+bool matchRegexp(const char * string, const char * pattern) {
+  int status;
+  regex_t re;
+  if (regcomp(&re, pattern, REG_EXTENDED | REG_NOSUB) != 0) {
+    return (false); /* report error */
+  }
+  status = regexec(&re, string, (size_t) 0, NULL, 0);
+  regfree(&re);
+  if (status != 0) {
+    return (false); /* report error */
+  }
+  return (true);
+}
+
+void printError(const Mstring& filename, int lineNumber, const Mstring& text) {
   fprintf(stderr,
     "ERROR:\n"
     "%s (in line %d): "
@@ -499,8 +561,7 @@ void printError(const Mstring& filename, int lineNumber, const Mstring& text)
     text.c_str());
 }
 
-void printError(const Mstring& filename, const Mstring& typeName, const Mstring& text)
-{
+void printError(const Mstring& filename, const Mstring& typeName, const Mstring& text) {
   fprintf(stderr,
     "ERROR:\n"
     "%s (in type %s): "
@@ -510,8 +571,7 @@ void printError(const Mstring& filename, const Mstring& typeName, const Mstring&
     text.c_str());
 }
 
-void printWarning(const Mstring& filename, int lineNumber, const Mstring& text)
-{
+void printWarning(const Mstring& filename, int lineNumber, const Mstring& text) {
   if (w_flag_used) return;
   fprintf(stderr,
     "WARNING:\n"
@@ -522,8 +582,7 @@ void printWarning(const Mstring& filename, int lineNumber, const Mstring& text)
     text.c_str());
 }
 
-void printWarning(const Mstring& filename, const Mstring& typeName, const Mstring& text)
-{
+void printWarning(const Mstring& filename, const Mstring& typeName, const Mstring& text) {
   if (w_flag_used) return;
   fprintf(stderr,
     "WARNING:\n"
@@ -534,45 +593,59 @@ void printWarning(const Mstring& filename, const Mstring& typeName, const Mstrin
     text.c_str());
 }
 
-long double stringToLongDouble(const char *input)
-{
+void indent(FILE* file, const int x) {
+  for (int l = 0; l < x; ++l) {
+    fprintf(file, "\t");
+  }
+}
+
+long double stringToLongDouble(const char *input) {
   long double result = 0.0;
   // `strtold()' is not available on older platforms.
   sscanf(input, "%Lf", &result);
   return result;
 }
 
-Mstring truncatePathWithOneElement(const Mstring& path)
-{
-  Mstring result;
-  size_t pathlen = path.size();
-  if (pathlen > 1) {
-    expstring_t temp = mcopystr(path.c_str()); // modifiable copy
-    temp[pathlen - 1] = '\0'; // ignore last character
-    char * point = strrchr(temp, '.');
-    if (point != NULL) {
-      point[1] = '\0'; // truncate just past the dot
-      result = Mstring(temp);
+const Mstring& getNameSpaceByPrefix(const RootType * root, const Mstring& prefix){
+  for(List<NamespaceType>::iterator mod = root->getModule()->getDeclaredNamespaces().begin(); mod; mod = mod->Next){
+    if(mod->Data.prefix == prefix){
+      return mod->Data.uri;
     }
-    Free(temp);
   }
-  return result;
+  return empty_string;
 }
 
-RootType * lookup (const List<TTCN3Module*> mods,  const SimpleType * reference, wanted w)
-{
+const Mstring& getPrefixByNameSpace(const RootType * root, const Mstring& namespace_){
+  for(List<NamespaceType>::iterator mod = root->getModule()->getDeclaredNamespaces().begin(); mod; mod = mod->Next){
+    if(mod->Data.uri == namespace_){
+      return mod->Data.prefix;
+    }
+  }
+  return empty_string;
+}
+
+const Mstring findBuiltInType(const RootType* ref, Mstring type){
+  RootType * root = TTCN3ModuleInventory::getInstance().lookup(ref, type, want_BOTH);
+  if(root != NULL && isBuiltInType(root->getType().originalValueWoPrefix)){
+    return root->getType().originalValueWoPrefix;
+  }else if(root != NULL){
+    return findBuiltInType(root, root->getType().originalValueWoPrefix);
+  }else {
+    return type;
+  }
+}
+
+RootType * lookup(const List<TTCN3Module*> mods, const SimpleType * reference, wanted w) {
   const Mstring& uri = reference->getReference().get_uri();
   const Mstring& name = reference->getReference().get_val();
 
   return lookup(mods, name, uri, reference, w);
 }
 
-RootType * lookup (const List<TTCN3Module*> mods,
-  const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w)
-{
+RootType * lookup(const List<TTCN3Module*> mods,
+  const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w) {
   RootType *ret = NULL;
-  for (List<TTCN3Module*>::iterator module = mods.begin(); module; module = module->Next)
-  {
+  for (List<TTCN3Module*>::iterator module = mods.begin(); module; module = module->Next) {
     ret = lookup1(module->Data, name, nsuri, reference, w);
     if (ret != NULL) break;
   } // next doc
@@ -581,38 +654,35 @@ RootType * lookup (const List<TTCN3Module*> mods,
 }
 
 RootType *lookup1(const TTCN3Module *module,
-  const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w)
-{
+  const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w) {
   if (nsuri != module->getTargetNamespace()) return NULL;
 
-  for (List<RootType*>::iterator type = module->getDefinedTypes().begin(); type; type = type->Next)
-  {
-    switch (type->Data->getConstruct())
-    {
-    case c_simpleType:
-    case c_element:
-    case c_attribute:
-      if (w == want_ST) {
-        if ((const RootType*)reference != type->Data
-          && name == type->Data->getName().convertedValue) {
-          return type->Data;
+  for (List<RootType*>::iterator type = module->getDefinedTypes().begin(); type; type = type->Next) {
+    switch (type->Data->getConstruct()) {
+      case c_simpleType:
+      case c_element:
+      case c_attribute:
+        if (w == want_ST || w == want_BOTH) {
+          if ((const RootType*) reference != type->Data
+            && name == type->Data->getName().originalValueWoPrefix) {
+            return type->Data;
+          }
         }
-      }
-      break;
+        break;
 
-    case c_complexType:
-    case c_group:
-    case c_attributeGroup:
-      if (w == want_CT) {
-        if ((const RootType*)reference != type->Data
-          && name == type->Data->getName().convertedValue) {
-          return type->Data;
+      case c_complexType:
+      case c_group:
+      case c_attributeGroup:
+        if (w == want_CT || w == want_BOTH) {
+          if ((const RootType*) reference != type->Data
+            && name == type->Data->getName().originalValueWoPrefix) {
+            return type->Data;
+          }
         }
-      }
-      break;
+        break;
 
-    default:
-      break;
+      default:
+        break;
     }
   }
 
@@ -620,23 +690,20 @@ RootType *lookup1(const TTCN3Module *module,
 }
 
 int multi(const TTCN3Module *module, ReferenceData const& outside_reference,
-  const RootType *obj)
-{
+  const RootType *obj) {
   int multiplicity = 0;
 
   RootType * st = ::lookup1(module, outside_reference.get_val(), outside_reference.get_uri(), obj, want_ST);
   RootType * ct = ::lookup1(module, outside_reference.get_val(), outside_reference.get_uri(), obj, want_CT);
   if (st || ct) {
     multiplicity = 1; // locally defined, no qualif needed
-  }
-  else for (List<const TTCN3Module*>::iterator it = module->getImportedModules().begin(); it; it = it->Next) {
-    // Artificial lookup
-    st = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_ST);
-    ct = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_CT);
-    if (st || ct) {
-      ++multiplicity;
+  } else for (List<const TTCN3Module*>::iterator it = module->getImportedModules().begin(); it; it = it->Next) {
+      // Artificial lookup
+      st = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_ST);
+      ct = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_CT);
+      if (st || ct) {
+        ++multiplicity;
+      }
     }
-  }
   return multiplicity;
 }
-

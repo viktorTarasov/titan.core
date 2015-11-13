@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -56,6 +56,7 @@ RawAST::RawAST(RawAST *other,bool int_type){
     topleveleind=other->topleveleind;
     toplevel.bitorder=other->toplevel.bitorder;
     length_restrition=other->length_restrition;
+    intx = other->intx;
     }
     else init_rawast(int_type);
 }
@@ -94,7 +95,7 @@ void RawAST::init_rawast(bool int_type){
     presence.nElements=0;
     presence.keyList=NULL;
     topleveleind=0;
-
+    intx = false;
 }
 
 RawAST::~RawAST(){
@@ -183,7 +184,7 @@ void RawAST::print_RawAST(){
         printf("\n\r");
       }
     }
-
+    printf("%sIntX encoding\n\r", intx ? "" : "not ");
 }
 
 void copy_rawAST_to_struct(RawAST *from, raw_attrib_struct *to){
@@ -291,5 +292,6 @@ int compare_raw_attrib(RawAST *a, RawAST *b){
            a->padding!=b->padding ||
            a->ptroffset!=b->ptroffset ||
            a->repeatable!=b->repeatable ||
-           a->unit!=b->unit;
+           a->unit!=b->unit ||
+           a->intx != b->intx;
 }

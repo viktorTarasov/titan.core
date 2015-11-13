@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -71,7 +71,7 @@ boolean generate_skeleton = FALSE, force_overwrite = FALSE,
   use_runtime_2 = FALSE, gcc_compat = FALSE, asn1_xer = FALSE,
   check_subtype = TRUE, suppress_context = FALSE, display_up_to_date = FALSE,
   implicit_json_encoding = FALSE, json_refs_for_all_types = TRUE,
-  force_gen_seof = FALSE;
+  force_gen_seof = FALSE, omit_in_value_list = FALSE;
 
 // Default code splitting mode is set to 'no splitting'.
 CodeGenHelper::split_type code_splitting_mode = CodeGenHelper::SPLIT_NONE;
@@ -349,7 +349,9 @@ static bool check_file_list(const char *file_name, module_struct *module_list,
 
 static boolean is_valid_asn1_filename(const char* file_name)
 {
-  if (0 == strchr(file_name, '-' )) {
+  // only check the actual file name, not the whole path
+  const char* file_name_start = strrchr(file_name, '/');
+  if (0 == strchr(file_name_start != NULL ? file_name_start : file_name, '-' )) {
     return TRUE;
   }
   return FALSE;
@@ -373,9 +375,10 @@ static void usage()
     "	-g:		emulate GCC error/warning message format\n"
     "	-i:		use only line numbers in error/warning messages\n"
     "	-j:		disable JSON encoder/decoder functions\n"
+    "	-K file:	enable selective code coverage\n"
     "	-l:		include source line info in C++ code\n"
     "	-L:		add source line info for logging\n"
-    "	-K file:	enable selective code coverage\n"
+    "	-M:		allow 'omit' in template value lists (legacy behavior)\n"
     "	-o dir:		output files will be placed into dir\n"
     "	-p:		parse only (no semantic check or code generation)\n"
     "	-P pduname:	define top-level pdu\n"
@@ -393,7 +396,7 @@ static void usage()
     "	-x:		disable TEXT encoder/decoder functions\n"
     "	-X:		disable XER encoder/decoder functions\n"
     "	-y:		disable subtype checking\n"
-    "	-Y:		Enforces legacy behaviour of the \"out\" function parameters (see refguide)\n"
+    "	-Y:		enforce legacy behaviour for \"out\" function parameters (see refguide)\n"
     "	-z file:	enable profiling and code coverage for the TTCN-3 files in the argument\n"
     "	-T file:	force interpretation of file as TTCN-3 module\n"
     "	-A file:	force interpretation of file as ASN.1 module\n"
@@ -452,7 +455,7 @@ int main(int argc, char *argv[])
     dflag = false, Xflag = false, Rflag = false, gflag = false, aflag = false,
     s0flag = false, Cflag = false, yflag = false, Uflag = false, Qflag = false,
     Sflag = false, Kflag = false, jflag = false, zflag = false, Fflag = false,
-    errflag = false, print_usage = false, ttcn2json = false;
+    Mflag = false, errflag = false, print_usage = false, ttcn2json = false;
 
   CodeGenHelper cgh;
 
@@ -544,7 +547,7 @@ int main(int argc, char *argv[])
 
   if (!ttcn2json) {
     for ( ; ; ) {
-      int c = getopt(argc, argv, "aA:C:K:LP:T:V:bcdfFgilo:YpqQ:rRs0StuU:vwxXjyz:-");
+      int c = getopt(argc, argv, "aA:C:K:LP:T:V:bcdfFgilMo:YpqQ:rRs0StuU:vwxXjyz:-");
       if (c == -1) break;
       switch (c) {
       case 'a':
@@ -707,6 +710,10 @@ int main(int argc, char *argv[])
         SET_FLAG(F);
         force_gen_seof = TRUE;
         break;
+      case 'M':
+        SET_FLAG(M);
+        omit_in_value_list = TRUE;
+        break;
 
       case 'Q': {
         long max_errs;
@@ -751,7 +758,7 @@ int main(int argc, char *argv[])
       if (Aflag || Lflag || Pflag || Tflag || Vflag || Yflag ||
         bflag || fflag || iflag || lflag || oflag || pflag || qflag ||
         rflag || sflag || tflag || uflag || wflag || xflag || Xflag || Rflag ||
-        Uflag || yflag || Kflag || jflag || zflag || Fflag) {
+        Uflag || yflag || Kflag || jflag || zflag || Fflag || Mflag) {
         errflag = true;
         print_usage = true;
       }

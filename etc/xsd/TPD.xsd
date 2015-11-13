@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-XML Schema for JunitLogger plugin
+XML Schema for TITAN_Project_File_Information
 
- Copyright (c) 2000-2014 Ericsson Telecom AB
+ Copyright (c) 2000-2015 Ericsson Telecom AB
 
   All rights reserved. This program and the accompanying materials
   are made available under the terms of the Eclipse Public License v1.0
@@ -104,12 +104,14 @@ XML Schema for JunitLogger plugin
                     <xs:element name="addSourceLineInfo" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="suppressWarnings" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="outParamBoundness" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+                    <xs:element name="omitInValueList" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="quietly" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="namingRules" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
                     <xs:element name="disableSubtypeChecking" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="CxxCompiler" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
                     <xs:element name="optimizationLevel" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
-                    <xs:element name="otherOptimizationFlags" minOccurs="0" maxOccurs="1" type="xs:string" />	
+                    <xs:element name="otherOptimizationFlags" minOccurs="0" maxOccurs="1" type="xs:string" />
+                    <xs:element name="profiledFileList" minOccurs="0" maxOccurs="1" type="ResourceType" />
 
                     <xs:element name="SolarisSpecificLibraries" minOccurs="0" maxOccurs="1">
                       <xs:complexType>
@@ -168,6 +170,8 @@ XML Schema for JunitLogger plugin
                       </xs:complexType>
                     </xs:element>
                     <xs:element name="disablePredefinedExternalFolder" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+                    <xs:element name="useGoldLinker" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+                    <xs:element name="freeTextLinkerOptions" minOccurs="0" maxOccurs="1" type="xs:normalizedString" /> 
                     <xs:element name="buildLevel" minOccurs="0" maxOccurs="1" type="xs:string" />
                     <xs:element name="ProjectSpecificRulesGenerator" minOccurs="0" maxOccurs="1">
                       <xs:complexType>

@@ -43,7 +43,8 @@ PROF_OBJECTS = $(PROF_GENERATED_SOURCES:.cc=.o)
 
 PROF_TARGET = prof.exe
 
-TEMP_FILES = $(PROF_GENERATED_SOURCES) $(PROF_GENERATED_HEADERS) $(PROF_OBJECTS) $(PROF_TARGET) data.json prof1.stats empty.stats
+TEMP_FILES = $(PROF_GENERATED_SOURCES) $(PROF_GENERATED_HEADERS) $(PROF_OBJECTS) $(PROF_TARGET) \
+data.json data2.json data3.json prof1.stats empty.stats double.json double.stats merged.json merged.stats
 
 # Rules for tester modules
 all: $(TARGET)

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
 #include "TitanLoggerApi.hh"
 
 #include <stdarg.h>
+#include <stdint.h>
 
 #include "../common/memory.h"
 #include "Logger.hh"
@@ -232,16 +233,18 @@ int print_address(void *pc, void * usrarg)
   if (status == 0) func = demangled;
 
   if (TTCN_Logger::is_logger_up()) {
-    TTCN_Logger::log_event("%s:%s+0x%x\n",
+    TTCN_Logger::log_event("%s:%s+%p\n",
       lib,
       func,
-      (unsigned int)pc - (unsigned int)info.dli_saddr);
+      (void *)((uintptr_t)pc - (uintptr_t)info.dli_saddr)
+      );
   }
   else {
-    fprintf(stderr, "%s:%s+0x%x\n",
+    fprintf(stderr, "%s:%s+%p\n",
       lib,
       func,
-      (unsigned int)pc - (unsigned int)info.dli_saddr);
+      (void *)((uintptr_t)pc - (uintptr_t)info.dli_saddr)
+      );
   }
 
   if (status == 0) free(demangled);

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -172,9 +172,7 @@ testcase encdec() runs on objidOper_comptype
   else { setverdict(fail, match(oi, c_0_1_infinity)); }
 
   os := enco(c_bits);
-  log(os);
   oi := deco(os);
-  log(oi);
 
   if (sizeof(oi) != sizeof(c_bits)) {
     setverdict(fail, "Number of objid components: ",
@@ -192,9 +190,7 @@ testcase encdec() runs on objidOper_comptype
   }
 
   os := enco(c_pow2);
-  log(os);
   oi := deco(os);
-  log(oi);
 
   if (sizeof(oi) != sizeof(c_pow2)) {
     setverdict(fail, "Number of objid components: ",
@@ -221,7 +217,6 @@ testcase objidWithVars() runs on objidOper_comptype
   var integer v4 := -87;
   const integer c1 := 0;
   var objid o1 := objid { c1 v1 };
-  log(o1);
 
   if (o1 == objid { 0 1 }) { setverdict(pass); }
   else { setverdict(fail, o1, " != ", objid { 0 1 }); }
@@ -246,8 +241,6 @@ testcase objidWithVars() runs on objidOper_comptype
   }
 
   var template objid to1 := (objid { 0 1 6 }, objid { v1 6 v3 });
-  log(to1);
-  log(sizeof(to1));
 
   if (match(objid { 1 6 v3 }, to1)) { setverdict(pass); }
   else { setverdict(fail, objid { 1 6 v3 }, " doesn't match ", to1); }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -108,6 +108,7 @@ const integer c_shell_error_noSuchFileOrDirectory:=512;
 // Script counts the strings "\n" thus N different lines mean N-1 numOfDiff
 //Possible values: 19,21,23,25 but 21 and 25 should be eliminated!
 
+const integer c_numOfDiff_header := 11;
 const integer c_numOfDiff_headerAndModuleName := 19;
 const integer c_numOfDiff_headerModNameAndNamespace := 23;
 const integer c_numOfDiff_headerModNameAndImport := 23;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@
 class Text_Buf;
 class TTCN_Module;
 class Module_Param;
+class Module_Param_Name;
 class ModuleVersion;
 struct namespace_t;
 
@@ -38,6 +39,7 @@ public:
     const char *component_type, boolean init_base_comps);
 
   static void set_param(Module_Param& param);
+  static Module_Param* get_param(Module_Param_Name& param_name);
   static void log_param();
 
   static void execute_control(const char *module_name);
@@ -90,6 +92,7 @@ public:
   enum module_type_enum { TTCN3_MODULE, ASN1_MODULE, CPLUSPLUS_MODULE };
   typedef void (*init_func_t)();
   typedef boolean (*set_param_func_t)(Module_Param& param);
+  typedef Module_Param* (*get_param_func_t)(Module_Param_Name& param_name);
   typedef void (*log_param_func_t)();
   typedef boolean (*initialize_component_func_t)(const char *component_type,
     boolean init_base_comps);
@@ -120,6 +123,7 @@ private:
   init_func_t pre_init_func, post_init_func;
   boolean pre_init_called, post_init_called;
   set_param_func_t set_param_func;
+  get_param_func_t get_param_func;
   log_param_func_t log_param_func;
   initialize_component_func_t initialize_component_func;
   start_func_t start_func;
@@ -151,6 +155,7 @@ public:
     const namespace_t *par_namespaces,
     init_func_t par_post_init_func,
     set_param_func_t par_set_param_func,
+    get_param_func_t par_get_param_func,
     log_param_func_t par_log_param_func,
     initialize_component_func_t par_initialize_component_func,
     start_func_t par_start_func,

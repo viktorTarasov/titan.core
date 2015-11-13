@@ -73,8 +73,114 @@ ElemKey get_elem_key(const char* value, size_t value_len, const char* file_name)
   if (10 == value_len && 0 == strncmp(value, "properties", value_len)) {
     return ElemKey::Properties;
   }
-  // throw the DTE if it didn't return until now
-  IMPORT_FORMAT_ERROR(true, "unknown type element key");
+  if (9 == value_len && 0 == strncmp(value, "minLength", value_len)) {
+    return ElemKey::MinLength;
+  }
+  if (9 == value_len && 0 == strncmp(value, "maxLength", value_len)) {
+    return ElemKey::MaxLength;
+  }
+  if (7 == value_len && 0 == strncmp(value, "minimum", value_len)) {
+    return ElemKey::Minimum;
+  }
+  if (7 == value_len && 0 == strncmp(value, "maximum", value_len)) {
+    return ElemKey::Maximum;
+  }
+  if (16 == value_len && 0 == strncmp(value, "exclusiveMinimum", value_len)) {
+    return ElemKey::Maximum;
+  }
+  if (16 == value_len && 0 == strncmp(value, "exclusiveMaximum", value_len)) {
+    return ElemKey::Maximum;
+  }
+  if (5 == value_len && 0 == strncmp(value, "allOf", value_len)) {
+    return ElemKey::AllOf;
+  }
+  // it's an extension if none of them matched
+  return ElemKey::Extension;
+}
+
+// just a forward declaration
+AnyValue extract_any_value(JSON_Tokenizer& json, const char* file_name);
+
+ObjectValue extract_object_value(JSON_Tokenizer& json, const char* file_name)
+{
+  json_token_t token = JSON_TOKEN_NONE;
+  char* value = NULL;
+  size_t value_len = 0;
+  ObjectValue object_value;
+  
+  int field_index = 0;
+  json.get_next_token(&token, &value, &value_len);
+  while(JSON_TOKEN_NAME == token) {
+    // extract fields until an object end token is found
+    CHARSTRING field_name(value_len, value);
+    object_value[field_index].key() = field_name;
+    object_value[field_index].val() = extract_any_value(json, file_name);
+    
+    // next field
+    ++field_index;
+    json.get_next_token(&token, &value, &value_len);
+  }
+
+  // object end
+  IMPORT_FORMAT_ERROR(JSON_TOKEN_OBJECT_END != token, "missing object value end");
+  return object_value;
+}
+
+ArrayValue extract_array_value(JSON_Tokenizer& json, const char* file_name)
+{
+  ArrayValue array_value;
+  size_t nof_values = 0;
+  while(true) {
+    // extract values until the array's end is reached
+    AnyValue val = extract_any_value(json, file_name);
+    if (val.is_bound()) {
+      array_value[nof_values] = val;
+      ++nof_values;
+    }
+    else {
+      // array end token reached (signalled by the unbound value)
+      break;
+    }
+  }
+  return array_value;
+}
+
+AnyValue extract_any_value(JSON_Tokenizer& json, const char* file_name)
+{
+  json_token_t token = JSON_TOKEN_NONE;
+  char* value = NULL;
+  size_t value_len = 0;
+  AnyValue any_value;
+  
+  json.get_next_token(&token, &value, &value_len);
+  switch (token) {
+  case JSON_TOKEN_NUMBER:
+  case JSON_TOKEN_STRING: {
+    CHARSTRING str_val(value_len, value);
+    any_value.strVal() = str_val;
+    break; }
+  case JSON_TOKEN_LITERAL_NULL:
+    any_value.strVal() = "null";
+    break;
+  case JSON_TOKEN_LITERAL_TRUE:
+    any_value.boolVal() = TRUE;
+    break;
+  case JSON_TOKEN_LITERAL_FALSE:
+    any_value.boolVal() = FALSE;
+    break;
+  case JSON_TOKEN_OBJECT_START:
+    any_value.objectVal() = extract_object_value(json, file_name);
+    break;
+  case JSON_TOKEN_ARRAY_START:
+    any_value.arrayVal() = extract_array_value(json, file_name);
+    break;
+  case JSON_TOKEN_ARRAY_END:
+    // signal the end of an array by returning an unbound AnyValue
+    break;
+  default:
+    IMPORT_FORMAT_ERROR(TRUE, "missing JSON value");
+  }
+  return any_value;
 }
 
 TypeSchema extract_type_schema(JSON_Tokenizer& json, const char* file_name)
@@ -104,7 +210,11 @@ TypeSchema extract_type_schema(JSON_Tokenizer& json, const char* file_name)
     case ElemKey::MaxItems:
     case ElemKey::AdditionalProperties:
     case ElemKey::OmitAsNull:
-    case ElemKey::Default: {
+    case ElemKey::Default:
+    case ElemKey::MinLength:
+    case ElemKey::MaxLength:
+    case ElemKey::Minimum:
+    case ElemKey::Maximum: {
       // string or boolean value
       json.get_next_token(&token, &value, &value_len);
       switch (token) {
@@ -120,11 +230,10 @@ TypeSchema extract_type_schema(JSON_Tokenizer& json, const char* file_name)
           type_schema[elem_index].val().boolVal() = TRUE;
           break;
         default:
-          IMPORT_FORMAT_ERROR(JSON_TOKEN_LITERAL_FALSE != token, "string or boolean value expected");
+          IMPORT_FORMAT_ERROR(JSON_TOKEN_LITERAL_FALSE != token, "string, number or boolean value expected");
       }
       break; }
 
-    case ElemKey::Enum:
     case ElemKey::NumericValues:
     case ElemKey::Required:
     case ElemKey::FieldOrder: {
@@ -151,7 +260,8 @@ TypeSchema extract_type_schema(JSON_Tokenizer& json, const char* file_name)
       type_schema[elem_index].val().typeVal() = extract_type_schema(json, file_name);
       break; }
 
-    case ElemKey::AnyOf: {
+    case ElemKey::AnyOf:
+    case ElemKey::AllOf: {
       // type schema array value
       json.get_next_token(&token, NULL, NULL);
 	    IMPORT_FORMAT_ERROR(JSON_TOKEN_ARRAY_START != token, "missing type array start");
@@ -192,6 +302,24 @@ TypeSchema extract_type_schema(JSON_Tokenizer& json, const char* file_name)
 
         // field set value end
 	      IMPORT_FORMAT_ERROR(JSON_TOKEN_OBJECT_END != token, "missing field set end");
+        break; }
+      case ElemKey::Extension: {
+        // extension value
+        // store the field name (already extracted)
+        CHARSTRING str_key(value_len, value);
+        type_schema[elem_index].val().extVal().key() = str_key;
+        // store the string value
+        json.get_next_token(&token, &value, &value_len);
+        IMPORT_FORMAT_ERROR(JSON_TOKEN_STRING != token, "string value expected");
+        CHARSTRING str_val(value_len, value);
+        type_schema[elem_index].val().extVal().val() = str_key;
+        break; }
+
+      case ElemKey::Enum: {
+        // array value
+        json.get_next_token(&token, NULL, NULL);
+        IMPORT_FORMAT_ERROR(JSON_TOKEN_ARRAY_START != token, "missing array value start");
+        type_schema[elem_index].val().arrayVal() = extract_array_value(json, file_name);
         break; }
       default:
         break;
@@ -358,6 +486,15 @@ void f__ext__import__schema(const CHARSTRING& file, JsonSchema& schema)
     // top level object
     json.get_next_token(&token, NULL, NULL);
 	  IMPORT_FORMAT_ERROR(JSON_TOKEN_OBJECT_START != token, "missing top level object start");
+	  
+	  // schema header
+	  json.get_next_token(&token, &value, &value_len);
+	  IMPORT_FORMAT_ERROR(JSON_TOKEN_NAME != token || value_len != 7 ||
+      0 != strncmp(value, "$schema", value_len), "missing $schema key");
+    json.get_next_token(&token, &value, &value_len);
+    IMPORT_FORMAT_ERROR(JSON_TOKEN_STRING != token || value_len != 41 ||
+      0 != strncmp(value, "\"http://json-schema.org/draft-04/schema#\"", value_len),
+      "missing $schema value");
 
     // definitions
     json.get_next_token(&token, &value, &value_len);

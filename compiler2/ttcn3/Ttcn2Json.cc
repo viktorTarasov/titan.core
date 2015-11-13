@@ -1,3 +1,11 @@
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2000-2015 Ericsson Telecom AB
+// All rights reserved. This program and the accompanying materials
+// are made available under the terms of the Eclipse Public License v1.0
+// which accompanies this distribution, and is available at
+// http://www.eclipse.org/legal/epl-v10.html
+///////////////////////////////////////////////////////////////////////////////
+
 #include "Ttcn2Json.hh"
 
 #include "compiler.h"
@@ -31,6 +39,10 @@ void Ttcn2Json::create_schema(JSON_Tokenizer& json)
 {
   // top-level object start
   json.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+  
+  // insert the schema header
+  json.put_next_token(JSON_TOKEN_NAME, "$schema");
+  json.put_next_token(JSON_TOKEN_STRING, "\"http://json-schema.org/draft-04/schema#\"");
   
   // start of type definitions
   json.put_next_token(JSON_TOKEN_NAME, "definitions");

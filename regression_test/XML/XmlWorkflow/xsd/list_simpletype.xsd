@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://www.w3.org/2001/XMLSchema"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:this="www.example.org/list/simpletype"
+ targetNamespace="www.example.org/list/simpletype">
+
+<xsd:element name="SimpleListEnumeration">
+	<xsd:simpleType>
+		<xsd:list>
+			<xsd:simpleType>
+				<xsd:restriction base="string">
+					<xsd:enumeration value="Red"/>
+					<xsd:enumeration value="Orange"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:list>
+	</xsd:simpleType>
+</xsd:element>
+
+<xsd:element name="SimpleListUnion">
+	<xsd:simpleType>
+		<xsd:list>
+			<xsd:simpleType>
+				<xsd:union>
+					<xsd:simpleType>
+						<xsd:restriction base="boolean" />
+					</xsd:simpleType>
+					<xsd:simpleType>
+						<xsd:restriction base="float" />
+					</xsd:simpleType>
+				</xsd:union>
+			</xsd:simpleType>
+		</xsd:list>
+	</xsd:simpleType>
+</xsd:element>
+
+<xsd:element name="SimpleListEnumerationNumber">
+	<xsd:simpleType>
+		<xsd:list>
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:integer">
+				<xsd:enumeration value="0"/>
+				<xsd:enumeration value="5"/>
+				<xsd:enumeration value="-5"/>
+				<xsd:enumeration value="10"/>
+				</xsd:restriction>
+			</xsd:simpleType> 
+		</xsd:list>
+	</xsd:simpleType>
+</xsd:element>
+
+<xsd:element name="ComplexListUnionEnumeration">
+	<xsd:complexType>
+		<xsd:sequence>
+			<xsd:element name="ListEnumeration">
+				<xsd:simpleType>
+					<xsd:list>
+						<xsd:simpleType>
+							<xsd:restriction base="string">
+								<xsd:enumeration value="Red"/>
+								<xsd:enumeration value="Orange"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:list>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="ListUnion">
+				<xsd:simpleType>
+					<xsd:list>
+						<xsd:simpleType>
+							<xsd:union>
+								<xsd:simpleType>
+									<xsd:restriction base="boolean" />
+								</xsd:simpleType>
+								<xsd:simpleType>
+									<xsd:restriction base="float" />
+								</xsd:simpleType>
+							</xsd:union>
+						</xsd:simpleType>
+					</xsd:list>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:element>
+
+
+
+
+</xsd:schema>

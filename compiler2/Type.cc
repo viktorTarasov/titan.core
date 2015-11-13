@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -1591,6 +1591,10 @@ namespace Common {
       Ttcn::FieldOrArrayRef *ref = subrefs->get_ref(i);
       switch (ref->get_type()) {
       case Ttcn::FieldOrArrayRef::FIELD_REF: {
+        if (t->typetype == T_OPENTYPE) {
+          // allow the alternatives of open types as both lower and upper identifiers
+          ref->set_field_name_to_lowercase();
+        }
         const Identifier& id = *ref->get_id();
         switch (t->typetype) {
         case T_CHOICE_A:
@@ -2006,7 +2010,7 @@ namespace Common {
       }
       break;
     case T_SEQ_T:
-    case T_SET_T:
+    case T_SET_T: {
       if(rawattrib){
         size_t fieldnum;
         for(int c=0;c<rawattrib->taglist.nElements;c++) { // check TAG
@@ -2175,6 +2179,7 @@ namespace Common {
           }
         }
       }
+      int used_bits = 0; // number of bits used to store all previous fields
       for(size_t i = 0; i < get_nof_comps(); i++) { // field attributes
         CompField *cf = get_comp_byIndex(i);
         const Identifier& field_id = cf->get_name();
@@ -2183,6 +2188,27 @@ namespace Common {
         field_type->force_raw();
         RawAST *rawpar = field_type->rawattrib;
         if (rawpar) {
+          if (rawpar->prepadding != 0) {
+            used_bits = (used_bits + rawpar->prepadding - 1) / rawpar->prepadding *
+              rawpar->prepadding;
+          }
+          if (rawpar->intx && field_type_last->get_typetype() == T_INT) { // IntX
+            if (used_bits % 8 != 0 &&
+                (!rawattrib || rawattrib->fieldorder != XDEFMSB)) {
+              error("Using RAW parameter IntX in a record/set with FIELDORDER "
+                "set to 'lsb' is only supported if the IntX field starts at "
+                "the beginning of a new octet. There are %d unused bits in the "
+                "last octet before field %s.", 8 - (used_bits % 8),
+                field_id.get_dispname().c_str());
+            }
+          }
+          else {
+            used_bits += rawpar->fieldlength;
+          }
+          if (rawpar->padding != 0) {
+            used_bits = (used_bits + rawpar->padding - 1) / rawpar->padding *
+              rawpar->padding;
+          }
           for (int j = 0; j < rawpar->lengthto_num; j++) { // LENGTHTO
             Identifier *idf = rawpar->lengthto[j];
             if (!has_comp_withName(*idf)) {
@@ -2400,7 +2426,7 @@ namespace Common {
           }
         }
       }
-      break;
+      break; }
       case T_BSTR:
         if(rawattrib->fieldlength==0 && rawattrib->length_restrition!=-1){
           rawattrib->fieldlength=rawattrib->length_restrition;
@@ -2447,8 +2473,14 @@ namespace Common {
             "(64)", rawattrib->fieldlength, get_fullname().c_str());
         }
         break;
-      case T_ENUM_T:
       case T_INT:
+        if (rawattrib->intx) {
+          rawattrib->bitorderinfield = XDEFMSB;
+          rawattrib->bitorderinoctet = XDEFMSB;
+          rawattrib->byteorder = XDEFMSB;
+        }
+        break;
+      case T_ENUM_T:
       case T_BOOL:
     default:
       // nothing to do, ASN1 types or types without defined raw attribute
@@ -2617,6 +2649,17 @@ namespace Common {
       chk_text();
   }
   
+  static const char* JSON_SCHEMA_KEYWORDS[] = {
+    // built-in JSON schema keywords
+    "$ref", "type", "properties", "items", "anyOf", "enum", "pattern",
+    "default", "minItems", "maxItems", "additionalProperties", "fieldOrder",
+    "required", "$schema", "minLength", "maxLength", "minimum", "maximum",
+    "excludeMinimum", "excludeMaximum", "allOf"
+    // TITAN-specific keywords
+    "originalName", "unusedAlias", "subType", "numericValues", "omitAsNull",
+    "encoding", "decoding"
+  };
+  
   void Type::chk_json()
   {
     if (json_checked) return;
@@ -2637,6 +2680,7 @@ namespace Common {
       break; }
     case T_SEQOF:
     case T_SETOF:
+    case T_ARRAY:
       get_ofType()->force_json();
       break;
     default:
@@ -2670,6 +2714,71 @@ namespace Common {
 
       if (NULL != jsonattrib->default_value) {
         chk_json_default();
+      }
+      
+      const size_t nof_extensions = jsonattrib->schema_extensions.size();
+      if (0 != nof_extensions) {
+        const size_t nof_keywords = sizeof(JSON_SCHEMA_KEYWORDS) / sizeof(char*);
+        
+        // these keep track of erroneous extensions so each warning is only
+        // displayed once
+        char* checked_extensions = new char[nof_extensions];
+        char* checked_keywords = new char[nof_keywords];
+        memset(checked_extensions, 0, nof_extensions);
+        memset(checked_keywords, 0, nof_keywords);
+
+        for (size_t i = 0; i < nof_extensions; ++i) {
+          for (size_t j = 0; j < nof_keywords; ++j) {
+            if (0 == checked_extensions[i] && 0 == checked_keywords[j] &&
+                0 == strcmp(jsonattrib->schema_extensions[i]->key,
+                JSON_SCHEMA_KEYWORDS[j])) {
+              // only report the warning once for each keyword
+              warning("JSON schema keyword '%s' should not be used as the key of "
+                "attribute 'extend'", JSON_SCHEMA_KEYWORDS[j]);
+              checked_keywords[j] = 1;
+              checked_extensions[i] = 1;
+              break;
+            }
+          }
+          if (0 == checked_extensions[i]) {
+            for (size_t k = i + 1; k < nof_extensions; ++k) {
+              if (0 == strcmp(jsonattrib->schema_extensions[i]->key,
+                  jsonattrib->schema_extensions[k]->key)) {
+                if (0 == checked_extensions[i]) {
+                  // only report the warning once for each unique key
+                  warning("Key '%s' is used multiple times in 'extend' attributes "
+                    "of type '%s'", jsonattrib->schema_extensions[i]->key,
+                    get_typename().c_str());
+                  checked_extensions[i] = 1;
+                }
+                checked_extensions[k] = 1;
+              }
+            }
+          }
+        }
+        delete[] checked_extensions;
+        delete[] checked_keywords;
+      }
+      if (jsonattrib->metainfo_unbound) {
+        Type* parent = get_parent_type();
+        if (T_SEQ_T == get_type_refd_last()->typetype ||
+            T_SET_T == get_type_refd_last()->typetype) {
+          // if it's set for the record/set, pass it onto its fields
+          size_t nof_comps = get_nof_comps();
+          for (size_t i = 0; i < nof_comps; i++) {
+            Type* comp_type = get_comp_byIndex(i)->get_type();
+            if (NULL == comp_type->jsonattrib) {
+              comp_type->jsonattrib = new JsonAST;
+            }
+            comp_type->jsonattrib->metainfo_unbound = true;
+          }
+        }
+        else if (NULL == parent || (T_SEQ_T != parent->typetype &&
+          T_SET_T != parent->typetype)) {
+          // only allowed if it's a field of a record/set
+          error("Invalid attribute 'metainfo for unbound', requires record, set, "
+            "or field of a record or set");
+        }
       }
     }
   }
@@ -5258,9 +5367,6 @@ end_ext:
           const string& spec = s.get_attribSpec().get_spec();
           if (spec == get_encoding_name(encoding_type)) {
             return true;
-          } else {
-            // if it has an encode other than the one we're looking for, quit now
-            return false;
           }
         } // if ENCODE
       } // for
@@ -5512,8 +5618,6 @@ end_ext:
                 if (spec == ex_emm_ell // the right answer
                   ||spec == ex_ee_arr) // the acceptable answer
                   return memory.remember(t, ANSWER_YES);
-                else // if it has an encode other than XER, quit now
-                  return memory.remember(t, ANSWER_NO);
               } // if ENCODE
             } // for
           } // next a

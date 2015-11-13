@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -162,6 +162,45 @@ type record HasPardType {
   ProtocolElem_Field1 pard,
   boolean buul,
   Price price
+}
+
+type union AsnThing {
+  AsnNull nval,
+  AsnInt ival,
+  AsnAny anyval,
+  AsnVisibleString vsval,
+  ProtocolElem_Field1 pardval
+} with {
+  variant "JSON: as value";
+}
+
+type record of AsnThing AsnStuff;
+
+type record OptionalUnions {
+  charstring dummy,
+  Thing uniTtcn optional,
+  AsnThing uniAsn optional
+} with {
+  variant(uniTtcn) "JSON: omit as null";
+  variant(uniAsn) " JSON: omit as null ";
+}
+
+type record MetainfoRecord {
+  integer num,
+  charstring str
+}
+with {
+  variant(str) "JSON: metainfo for unbound";
+}
+
+type set MetainfoSet {
+  integer num,
+  charstring str,
+  octetstring octets optional
+}
+with {
+  variant " JSON : metainfo for unbound ";
+  variant (num) " JSON : name as int ";
 }
 
 } with {

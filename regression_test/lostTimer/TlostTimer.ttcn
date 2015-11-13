@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,14 +13,11 @@ type component CT {
 
 testcase tc1() runs on CT
 {
-  log(T1);
   T1.start;
   T2.start;
-  log(T2);
   T2.timeout;
   if (T1.read != 0.0) { setverdict(fail); }
   if (T1.running) { setverdict(fail); }
-  log(T1);
   alt {
     [] any timer.timeout { setverdict(pass); }
     [else] { setverdict(fail); }

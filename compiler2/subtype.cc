@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -17,6 +17,7 @@
 #include "ttcn3/Templatestuff.hh"
 #include "ttcn3/PatternString.hh"
 #include "Constraint.hh"
+#include "../common/JSON_Tokenizer.hh"
 
 #include <limits.h>
 
@@ -3038,6 +3039,269 @@ string SubType::to_string() const
 void SubType::generate_code(output_struct &)
 {
   if (checked!=STC_YES) FATAL_ERROR("SubType::generate_code()");
+}
+
+void SubType::generate_json_schema(JSON_Tokenizer& json, bool allow_special_float /* = true */)
+{
+  bool has_value_list = false;
+  size_t nof_ranges = 0;
+  for (size_t i = 0; i < parsed->size(); ++i) {
+    SubTypeParse *parse = (*parsed)[i];
+    switch (parse->get_selection()) {
+    case SubTypeParse::STP_SINGLE:
+      // single values will be added later, all at once
+      has_value_list = true;
+      break;
+    case SubTypeParse::STP_RANGE:
+      ++nof_ranges;
+      break;
+    case SubTypeParse::STP_LENGTH: {
+      Ttcn::LengthRestriction* len_res = parse->Length();
+      Value* min_val = len_res->get_is_range() ? len_res->get_lower_value() :
+        len_res->get_single_value();
+      Value* max_val = len_res->get_is_range() ? len_res->get_upper_value() :
+        len_res->get_single_value();
+      const char* json_min = NULL;
+      const char* json_max = NULL;
+      switch (subtype) {
+      case ST_RECORDOF:
+      case ST_SETOF:
+        // use minItems and maxItems for record of/set of
+        json_min = "minItems";
+        json_max = "maxItems";
+        break;
+      case ST_BITSTRING:
+      case ST_HEXSTRING:
+      case ST_OCTETSTRING:
+      case ST_CHARSTRING:
+      case ST_UNIVERSAL_CHARSTRING:
+        // use minLength and maxLength for string types
+        json_min = "minLength";
+        json_max = "maxLength";
+        break;
+      default:
+        FATAL_ERROR("SubType::generate_json_schema - length %d", subtype);
+      }
+      json.put_next_token(JSON_TOKEN_NAME, json_min);
+      min_val->generate_json_value(json);
+      if (max_val != NULL) {
+        json.put_next_token(JSON_TOKEN_NAME, json_max);
+        max_val->generate_json_value(json);
+      }
+      break; }
+    case SubTypeParse::STP_PATTERN: {
+      json.put_next_token(JSON_TOKEN_NAME, "pattern");
+      char* json_pattern = parse->Pattern()->convert_to_json();
+      json.put_next_token(JSON_TOKEN_STRING, json_pattern);
+      Free(json_pattern);
+      break; }
+    default:
+      break;
+    }
+  }
+
+  bool need_anyOf = (subtype == ST_INTEGER || subtype == ST_FLOAT) &&
+    (nof_ranges + (has_value_list ? 1 : 0) > 1);
+  if (need_anyOf) {
+    // there are multiple value range/value list restrictions,
+    // they need to be grouped in an 'anyOf' structure
+    json.put_next_token(JSON_TOKEN_NAME, "anyOf");
+    json.put_next_token(JSON_TOKEN_ARRAY_START);
+    json.put_next_token(JSON_TOKEN_OBJECT_START);
+  }
+  if (has_value_list) {
+    // generate the value list into an enum
+    json.put_next_token(JSON_TOKEN_NAME, "enum");
+    json.put_next_token(JSON_TOKEN_ARRAY_START);
+    generate_json_schema_value_list(json, allow_special_float);
+    json.put_next_token(JSON_TOKEN_ARRAY_END);
+  }
+  if (need_anyOf && has_value_list) {
+    // end of the value list and beginning of the first value range
+    json.put_next_token(JSON_TOKEN_OBJECT_END);
+    json.put_next_token(JSON_TOKEN_OBJECT_START);
+  }
+  if (nof_ranges > 0) {
+    switch (subtype) {
+    case ST_INTEGER:
+    case ST_FLOAT:
+      generate_json_schema_number_ranges(json);
+      break;
+    case ST_CHARSTRING:
+    case ST_UNIVERSAL_CHARSTRING: {
+      // merge all string range restrictions into one JSON schema pattern
+      char* pattern_str = mcopystrn("\"^[", 3);
+      pattern_str = generate_json_schema_string_ranges(pattern_str);
+      pattern_str = mputstrn(pattern_str, "]*$\"", 4);
+      json.put_next_token(JSON_TOKEN_NAME, "pattern");
+      json.put_next_token(JSON_TOKEN_STRING, pattern_str);
+      Free(pattern_str);
+      break; }
+    default:
+      FATAL_ERROR("SubType::generate_json_schema - range %d", subtype);
+    }
+  }
+  if (need_anyOf) {
+    // end of the 'anyOf' structure
+    json.put_next_token(JSON_TOKEN_OBJECT_END);
+    json.put_next_token(JSON_TOKEN_ARRAY_END);
+  }
+}
+
+void SubType::generate_json_schema_value_list(JSON_Tokenizer& json, bool allow_special_float)
+{
+  for (size_t i = 0; i < parsed->size(); ++i) {
+    SubTypeParse *parse = (*parsed)[i];
+    if (parse->get_selection() == SubTypeParse::STP_SINGLE) {
+      if (parse->Single()->get_valuetype() == Value::V_REFD) {
+        Common::Assignment* ass = parse->Single()->get_reference()->get_refd_assignment();
+        if (ass->get_asstype() == Common::Assignment::A_TYPE) {
+          // it's a reference to another subtype, insert its value list here
+          ass->get_Type()->get_sub_type()->generate_json_schema_value_list(json, allow_special_float);
+        }
+      }
+      else {
+        parse->Single()->generate_json_value(json, allow_special_float);
+      }
+    }
+  }
+}
+
+bool SubType::generate_json_schema_number_ranges(JSON_Tokenizer& json, bool first /* = true */)
+{
+  for (size_t i = 0; i < parsed->size(); ++i) {
+    SubTypeParse *parse = (*parsed)[i];
+    if (parse->get_selection() == SubTypeParse::STP_SINGLE) {
+      if (parse->Single()->get_valuetype() == Value::V_REFD) {
+        Common::Assignment* ass = parse->Single()->get_reference()->get_refd_assignment();
+        if (ass->get_asstype() == Common::Assignment::A_TYPE) {
+          // it's a reference to another subtype, insert its value ranges here
+          first = ass->get_Type()->get_sub_type()->generate_json_schema_number_ranges(json, first);
+        }
+      }
+    }
+    else if (parse->get_selection() == SubTypeParse::STP_RANGE) {
+      if (!first) {
+        // the ranges are in an 'anyOf' structure, they need to be placed in an object
+        json.put_next_token(JSON_TOKEN_OBJECT_END);
+        json.put_next_token(JSON_TOKEN_OBJECT_START);
+      }
+      else {
+        first = false;
+      }
+      // add the minimum and/or maximum values as numbers
+      if (parse->Min() != NULL) {
+        json.put_next_token(JSON_TOKEN_NAME, "minimum");
+        parse->Min()->generate_json_value(json);
+        json.put_next_token(JSON_TOKEN_NAME, "exclusiveMinimum");
+        json.put_next_token(parse->MinExclusive() ? JSON_TOKEN_LITERAL_TRUE : JSON_TOKEN_LITERAL_FALSE);
+      }
+      if (parse->Max() != NULL) {
+        json.put_next_token(JSON_TOKEN_NAME, "maximum");
+        parse->Max()->generate_json_value(json);
+        json.put_next_token(JSON_TOKEN_NAME, "exclusiveMaximum");
+        json.put_next_token(parse->MaxExclusive() ? JSON_TOKEN_LITERAL_TRUE : JSON_TOKEN_LITERAL_FALSE);
+      }
+    }
+  }
+  return first;
+}
+
+char* SubType::generate_json_schema_string_ranges(char* pattern_str)
+{
+  for (size_t i = 0; i < parsed->size(); ++i) {
+    SubTypeParse *parse = (*parsed)[i];
+    if (parse->get_selection() == SubTypeParse::STP_SINGLE) {
+      if (parse->Single()->get_valuetype() == Value::V_REFD) {
+        Common::Assignment* ass = parse->Single()->get_reference()->get_refd_assignment();
+        if (ass->get_asstype() == Common::Assignment::A_TYPE) {
+          // it's a reference to another subtype, insert its string ranges here
+          pattern_str = ass->get_Type()->get_sub_type()->generate_json_schema_string_ranges(pattern_str);
+        }
+      }
+    }
+    else if (parse->get_selection() == SubTypeParse::STP_RANGE) {
+      // insert the string range into the pattern string
+      string lower_str = (subtype == ST_CHARSTRING) ? parse->Min()->get_val_str() :
+        ustring_to_uft8(parse->Min()->get_val_ustr());
+      string upper_str = (subtype == ST_CHARSTRING) ? parse->Max()->get_val_str() :
+        ustring_to_uft8(parse->Max()->get_val_ustr());
+      pattern_str = mputprintf(pattern_str, "%s-%s", lower_str.c_str(), upper_str.c_str());
+    }
+  }
+  return pattern_str;
+}
+
+void SubType::generate_json_schema_float(JSON_Tokenizer& json)
+{
+  bool has_nan = float_st->is_element(make_ttcn3float(REAL_NAN));
+  bool has_pos_inf = float_st->is_element(make_ttcn3float(REAL_INFINITY));
+  bool has_neg_inf = float_st->is_element(make_ttcn3float(-REAL_INFINITY));
+  bool has_special = has_nan || has_pos_inf || has_neg_inf;
+  bool has_number = false;
+  for (size_t i = 0; i < parsed->size() && !has_number; ++i) {
+    // go through the restrictions and check if at least one number is allowed
+    SubTypeParse *parse = (*parsed)[i];
+    switch (parse->get_selection()) {
+    case SubTypeParse::STP_SINGLE: {
+      Real r = parse->Single()->get_val_Real();
+      if (r == r && r != REAL_INFINITY && r != -REAL_INFINITY) {
+        // a single value other than NaN, INF and -INF is a number
+        has_number = true;
+      }
+      break; }
+    case SubTypeParse::STP_RANGE: {
+      if (parse->Min() != NULL) {
+        if (parse->Min()->get_val_Real() != REAL_INFINITY) {
+          // a minimum value other than INF means a number is allowed
+          has_number = true;
+        }
+      }
+      if (parse->Max() != NULL) {
+        // a maximum value other than -INF means a number is allowed
+        if (parse->Max()->get_val_Real() != -REAL_INFINITY) {
+          has_number = true;
+        }
+      }
+      break; }
+    default:
+      break;
+    }
+  }
+  if (has_number && has_special) {
+    json.put_next_token(JSON_TOKEN_NAME, "anyOf");
+    json.put_next_token(JSON_TOKEN_ARRAY_START);
+    json.put_next_token(JSON_TOKEN_OBJECT_START);
+  }
+  if (has_number) {
+    json.put_next_token(JSON_TOKEN_NAME, "type");
+    json.put_next_token(JSON_TOKEN_STRING, "\"number\"");
+    // generate the restrictions' schema elements here
+    // (the 2nd parameter makes sure that NaN, INF and -INF are ignored)
+    generate_json_schema(json, false);
+  }
+  if (has_number && has_special) {
+    json.put_next_token(JSON_TOKEN_OBJECT_END);
+    json.put_next_token(JSON_TOKEN_OBJECT_START);
+  }
+  if (has_special) {
+    json.put_next_token(JSON_TOKEN_NAME, "enum");
+    json.put_next_token(JSON_TOKEN_ARRAY_START);
+    if (has_nan) {
+      json.put_next_token(JSON_TOKEN_STRING, "\"not_a_number\"");
+    }
+    if (has_pos_inf) {
+      json.put_next_token(JSON_TOKEN_STRING, "\"infinity\"");
+    }
+    if (has_neg_inf) {
+      json.put_next_token(JSON_TOKEN_STRING, "\"-infinity\"");
+    }
+    json.put_next_token(JSON_TOKEN_ARRAY_END);
+  }
+  if (has_number && has_special) {
+    json.put_next_token(JSON_TOKEN_OBJECT_END);
+    json.put_next_token(JSON_TOKEN_ARRAY_END);
+  }
 }
 
 } // namespace Common

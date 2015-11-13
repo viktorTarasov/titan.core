@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -275,6 +275,13 @@ void defFunctionrefClass(const funcref_def *fdef, output_struct *output)
     "{\n"
     "  param.error(\"Not supported.\");\n"
     "}\n\n", name);
+  
+  /* get_param */
+  def = mputstr(def,"Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf(src,"Module_Param* %s::get_param(Module_Param_Name& /* param_name */) const\n"
+    "{\n"
+    "  return NULL;\n"
+    "}\n\n", name);
 
   /* encode_text / decode_text */
   def = mputstr(def,"void encode_text(Text_Buf& text_buf) const;\n");
@@ -508,9 +515,9 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
 
   /* match functions */
   def = mputprintf(def,"boolean match(%s::function_pointer "
-      "other_value) const;\n", name);
+      "other_value, boolean legacy = FALSE) const;\n", name);
   src = mputprintf(src,"boolean %s_template::match(%s::function_pointer "
-      "other_value) const\n"
+      "other_value, boolean) const\n"
     "{\n"
     "switch(template_selection) {\n"
     "case SPECIFIC_VALUE:\n"
@@ -532,11 +539,12 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
     "};\n"
     "return FALSE;\n"
     "}\n\n", name, name, dispname);
-  def = mputprintf(def,"boolean match(const %s& other_value) const;\n", name);
-  src = mputprintf(src,"boolean %s_template::match(const %s& other_value) "
-      "const\n"
+  def = mputprintf(def,"boolean match(const %s& other_value, boolean legacy "
+    "= FALSE) const;\n", name);
+  src = mputprintf(src,"boolean %s_template::match(const %s& other_value, "
+    "boolean) const\n"
     "{\n"
-	"  if (!other_value.is_bound()) return FALSE;\n"
+    "  if (!other_value.is_bound()) return FALSE;\n"
     "return match(other_value.referred_function);\n"
     "}\n\n", name, name);
 
@@ -588,8 +596,8 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
       "void copy_value(const Base_Type* other_value);\n"
       "Base_Template* clone() const;\n"
       "const TTCN_Typedescriptor_t* get_descriptor() const;\n"
-      "boolean matchv(const Base_Type* other_value) const;\n"
-      "void log_matchv(const Base_Type* match_value) const;\n");
+      "boolean matchv(const Base_Type* other_value, boolean legacy) const;\n"
+      "void log_matchv(const Base_Type* match_value, boolean legacy) const;\n");
     src = mputprintf(src,
       "void %s_template::valueofv(Base_Type* value) const "
         "{ *(static_cast<%s*>(value)) = valueof(); }\n"
@@ -601,10 +609,12 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
         "{ return new %s_template(*this); }\n"
       "const TTCN_Typedescriptor_t* %s_template::get_descriptor() const "
         "{ return &%s_descr_; }\n"
-      "boolean %s_template::matchv(const Base_Type* other_value) const "
-        "{ return match(*(static_cast<const %s*>(other_value))); }\n"
-      "void %s_template::log_matchv(const Base_Type* match_value) const "
-        " { log_match(*(static_cast<const %s*>(match_value))); }\n",
+      "boolean %s_template::matchv(const Base_Type* other_value, "
+        "boolean legacy) const "
+        "{ return match(*(static_cast<const %s*>(other_value)), legacy); }\n"
+      "void %s_template::log_matchv(const Base_Type* match_value, "
+        "boolean legacy) const "
+        " { log_match(*(static_cast<const %s*>(match_value)), legacy); }\n",
       name, name,
       name,
       name, name,
@@ -639,14 +649,15 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
     "}\n\n", name, fat_string);
 
   /* log_match function */
-  def = mputprintf(def,"void log_match(const %s& match_value) const;\n", name);
-  src = mputprintf(src,"void %s_template::log_match(const %s& match_value) "
-      "const\n"
+  def = mputprintf(def,"void log_match(const %s& match_value, "
+    "boolean legacy = FALSE) const;\n", name);
+  src = mputprintf(src,"void %s_template::log_match(const %s& match_value, "
+    "boolean legacy) const\n"
     "{\n"
     "log();\n"
     "TTCN_Logger::log_event_str(\" with \");\n"
     "match_value.log();\n"
-    "if(match(match_value)) TTCN_Logger::log_event_str(\" matched\");\n"
+    "if(match(match_value, legacy)) TTCN_Logger::log_event_str(\" matched\");\n"
     "else TTCN_Logger::log_event_str(\" unmatched\");\n"
     "}\n\n", name, name);
 
@@ -716,18 +727,18 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
   src = mputstr(src,"}\n\n");
 
   /* TTCN-3 ispresent() function */
-  def = mputstr(def, "boolean is_present() const;\n");
+  def = mputstr(def, "boolean is_present(boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
-    "boolean %s_template::is_present() const\n"
+    "boolean %s_template::is_present(boolean legacy) const\n"
     "{\n"
     "if (template_selection==UNINITIALIZED_TEMPLATE) return FALSE;\n"
-    "return !match_omit();\n"
+    "return !match_omit(legacy);\n"
     "}\n\n", name);
 
   /* match_omit() */
-  def = mputstr(def, "boolean match_omit() const;\n");
+  def = mputstr(def, "boolean match_omit(boolean legacy = FALSE) const;\n");
   src = mputprintf(src,
-    "boolean %s_template::match_omit() const\n"
+    "boolean %s_template::match_omit(boolean legacy) const\n"
     "{\n"
     "if (is_ifpresent) return TRUE;\n"
     "switch (template_selection) {\n"
@@ -736,10 +747,12 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
     "return TRUE;\n"
     "case VALUE_LIST:\n"
     "case COMPLEMENTED_LIST:\n"
+    "if (legacy) {\n"
     "for (unsigned int i=0; i<value_list.n_values; i++)\n"
     "if (value_list.list_value[i].match_omit())\n"
     "return template_selection==VALUE_LIST;\n"
     "return template_selection==COMPLEMENTED_LIST;\n"
+    "} // else fall through\n"
     "default:\n"
     "return FALSE;\n"
     "}\n"
@@ -752,14 +765,21 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
     "{\n"
     "  param.error(\"Not supported.\");\n"
     "}\n\n", name);
+  
+  /* get_param */
+  def = mputstr(def,"Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+  src = mputprintf(src,"Module_Param* %s_template::get_param(Module_Param_Name& /* param_name */) const\n"
+    "{\n"
+    "  return NULL;\n"
+    "}\n\n", name);
 
   if (!use_runtime_2) {
     /* check template restriction */
     def = mputstr(def, "void check_restriction(template_res t_res, "
-      "const char* t_name=NULL) const;\n");
+      "const char* t_name=NULL, boolean legacy = FALSE) const;\n");
     src = mputprintf(src,
       "void %s_template::check_restriction"
-        "(template_res t_res, const char* t_name) const\n"
+        "(template_res t_res, const char* t_name, boolean legacy) const\n"
       "{\n"
       "if (template_selection==UNINITIALIZED_TEMPLATE) return;\n"
       "switch ((t_name&&(t_res==TR_VALUE))?TR_OMIT:t_res) {\n"
@@ -771,7 +791,7 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
         "template_selection==SPECIFIC_VALUE)) return;\n"
       "break;\n"
       "case TR_PRESENT:\n"
-      "if (!match_omit()) return;\n"
+      "if (!match_omit(legacy)) return;\n"
       "break;\n"
       "default:\n"
       "return;\n"

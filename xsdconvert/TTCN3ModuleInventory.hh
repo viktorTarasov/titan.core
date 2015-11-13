@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@
 class TTCN3Module;
 class RootType;
 class SimpleType;
+class ComplexType;
 
 /**
  * Type that contains generated TTCN-3 modules in a list
@@ -26,8 +27,7 @@ class SimpleType;
  * 	- and starting generation of TTCN-3 modules
  *
  */
-class TTCN3ModuleInventory
-{
+class TTCN3ModuleInventory {
   /**
    * contains all defined TTCN-3 modules
    */
@@ -52,10 +52,10 @@ class TTCN3ModuleInventory
   static unsigned int num_errors;
   static unsigned int num_warnings;
 
-  TTCN3ModuleInventory (const TTCN3ModuleInventory &); // not implemented
-  TTCN3ModuleInventory & operator = (const TTCN3ModuleInventory &); // not implemented
-  TTCN3ModuleInventory (); // private due to singleton
-  ~TTCN3ModuleInventory (); // private due to singleton
+  TTCN3ModuleInventory(const TTCN3ModuleInventory &); // not implemented
+  TTCN3ModuleInventory & operator=(const TTCN3ModuleInventory &); // not implemented
+  TTCN3ModuleInventory(); // private due to singleton
+  ~TTCN3ModuleInventory(); // private due to singleton
 public:
 
   static TTCN3ModuleInventory& getInstance(); // singleton access
@@ -68,36 +68,56 @@ public:
   /**
    * Steps after all xsd files are parsed
    */
-  void modulenameConversion ();
-  void referenceResolving ();
-  void nameConversion ();
-  void finalModification ();
+  void modulenameConversion();
+  void referenceResolving();
+  void nameConversion();
+  void finalModification();
 
   /**
    * TTCN-3 module generating method
    * Generate TTCN-3 files
    */
-  void moduleGeneration ();
+  void moduleGeneration();
 
-  List<TTCN3Module*> & getModules () {return definedModules;}
-  List<TTCN3Module*> & getWrittenImports () {return writtenImports;}
+  List<TTCN3Module*> & getModules() {
+    return definedModules;
+  }
 
-  List<QualifiedName> & getTypenames() { return typenames; }
+  List<TTCN3Module*> & getWrittenImports() {
+    return writtenImports;
+  }
+
+  List<QualifiedName> & getTypenames() {
+    return typenames;
+  }
 
   /**
    * Searching methods
    * Look for a simpleType (or element or attribute) or a complexType (or attributeGroup or group)
    */
-  RootType * lookup (const SimpleType * reference, wanted w) const;
-  RootType * lookup (const Mstring& name, const Mstring& nsuri,
-    const RootType *reference, wanted w) const;
+  RootType * lookup(const RootType * ref, const Mstring& reference, wanted w) const;
+  RootType * lookup(const SimpleType * reference, wanted w) const;
+  RootType * lookup(const ComplexType * reference, wanted w) const;
+  RootType * lookup(const Mstring& name, const Mstring& nsuri,
+      const RootType *reference, wanted w) const;
 
-  static unsigned int getNumErrors () {return num_errors;}
-  static unsigned int getNumWarnings () {return num_warnings;}
-  static void incrNumErrors () {++num_errors;}
-  static void incrNumWarnings () {++num_warnings;}
+  static unsigned int getNumErrors() {
+    return num_errors;
+  }
 
-  void dump () const;
+  static unsigned int getNumWarnings() {
+    return num_warnings;
+  }
+
+  static void incrNumErrors() {
+    ++num_errors;
+  }
+
+  static void incrNumWarnings() {
+    ++num_warnings;
+  }
+
+  void dump() const;
 };
 
 #endif /* TTCN3MODULEINVENTORY_HH_ */

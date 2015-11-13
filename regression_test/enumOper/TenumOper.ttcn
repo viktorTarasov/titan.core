@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,14 @@ type enumerated myenum4 {xx9,xx10(3),xx11};	// partly with numbers
 
 type myenum1 myenumSubtype1 (xx1)
 type myenum1 myenumSubtype2
+
+type record myrecord {
+  myenum1 e1 optional,
+  myenum3 e3
+}
+
+type record of myenum4 myrecordof;
+
 // *************** Constanst ***********************
 const myenum1 cg_1:= xx2;
 const myenumSubtype1 cg_mye1 := xx1
@@ -259,6 +267,33 @@ testcase tc_enumIsvalue() runs on emptyComponent
   if ( isvalue(modifies subenum := xx2) ) { setverdict(pass); } else { setverdict(fail); };
 }
 
+testcase tc_int2enum() runs on emptyComponent
+{
+  var myenum1 e1 := xx1;
+  var myenum2 e2;
+  var integer i := 2;
+  var myrecord rec1 := { e1 := omit, e3 := xx7 };
+  var myrecord rec2;
+  var myrecordof recof1 := { xx10, xx11 };
+  var myrecordof recof2 := { xx9 };
+  
+  int2enum(1, e1);
+  int2enum(i, e2);
+  int2enum(5 - 3, rec1.e3);
+  int2enum(lengthof(recof1), rec1.e1);
+  int2enum(enum2int(cg_1), rec2.e3);
+  int2enum(1 + str2int("2"), recof1[1]);
+  int2enum(2 / 2, recof2[2]);
+  
+  if (e1 != xx2) { setverdict(fail, "e1 = ", e1); }
+  if (e2 != xx5) { setverdict(fail, "e2 = ", e2); }
+  if (rec1 != { e1 := xx3, e3 := xx6 }) { setverdict(fail, "rec1 = ", rec1) };
+  if (log2str(rec2) != "{ e1 := <unbound>, e3 := xx8 (1) }") { setverdict(fail, "rec2 = ", rec2); }
+  if (recof1 != { xx10, xx10 }) { setverdict(fail, "recof1 = ", recof1); }
+  if (log2str(recof2) != "{ xx9 (0), <unbound>, xx11 (1) }") { setverdict(fail, "recof2 = ", recof2); }
+  setverdict(pass);
+}
+
 control {
     const myenum1 cl_1 := xx1; // can constants be declared in the control part
     const myenum2 cl_2 := xx3;
@@ -282,5 +317,6 @@ control {
     execute(tc_enumNumb3());
     execute(tc_enumSubtypes());
     execute(tc_enumIsvalue());
+    execute(tc_int2enum());
 }
 }

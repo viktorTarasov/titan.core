@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -11,804 +11,742 @@
 #include "XMLParser.hh"
 #include "TTCN3Module.hh"
 #include "TTCN3ModuleInventory.hh"
-#include "SimpleType.hh"
-#include "FieldType.hh"
+#include "Annotation.hh"
 
 #include <assert.h>
 
 ComplexType::ComplexType(XMLParser * a_parser, TTCN3Module * a_module, ConstructType a_construct)
-: RootType(a_parser, a_module, a_construct)
-, fields()
-, fields_final()
-, actualLevel(1)
-, actualPath()
-, ctmode()
-, fieldGenInfo()
-, recGenInfo()
-, attributeBases()
-, embed_inSequence()
-, embed_inChoice()
-, embed_inAll()
+: SimpleType(a_parser, a_module, a_construct)
+, top(true)
+, nillable(false)
+, enumerated(false)
+, embed(false)
 , with_union(false)
+, first_child(false)
+, fromAll(false)
+, max_alt(0)
+, skipback(0)
+, lastType()
+, actualPath(empty_string)
+, actfield(this)
+, nameDep(NULL)
+, nillable_field(NULL)
+, basefield(NULL)
+, cmode(CT_undefined_mode)
 , resolved(No)
-{
-  initialSettings();
-  ctmode.push_back(CT_undefined_mode);
+, complexfields()
+, attribfields()
+, enumfields()
+, tagNames() {
+  xsdtype = n_complexType;
 }
 
-ComplexType::ComplexType(const ComplexType & other)
-: RootType(other)
-, fields()
-, fields_final()
-, actualLevel(other.actualLevel)
-, actualPath(other.actualPath)
-, ctmode(other.ctmode)
-, fieldGenInfo(other.fieldGenInfo)
-, recGenInfo(other.recGenInfo)
-, attributeBases(other.attributeBases)
-, embed_inSequence(other.embed_inSequence)
-, embed_inChoice(other.embed_inChoice)
-, embed_inAll(other.embed_inAll)
+ComplexType::ComplexType(ComplexType & other)
+: SimpleType(other)
+, top(other.top)
+, nillable(other.nillable)
+, enumerated(other.enumerated)
+, embed(other.embed)
 , with_union(other.with_union)
-, resolved(other.resolved)
-{
-  for (List<FieldType*>::iterator field = other.fields.begin(); field; field = field->Next) {
-    fields.push_back(new FieldType(*(field->Data)));
+, first_child(other.first_child)
+, fromAll(other.fromAll)
+, max_alt(other.max_alt)
+, skipback(other.skipback)
+, lastType(other.lastType)
+, actualPath(other.actualPath)
+, actfield(this)
+, nameDep(other.nameDep)
+, nillable_field(NULL)
+, basefield(NULL)
+, cmode(other.cmode)
+, resolved(other.resolved) {
+  type.originalValueWoPrefix = other.type.originalValueWoPrefix;
+  for (List<AttributeType*>::iterator attr = other.attribfields.begin(); attr; attr = attr->Next) {
+    attribfields.push_back(new AttributeType(*attr->Data));
+    attribfields.back()->parent = this;
   }
-  for (List<FieldType*>::iterator field = other.fields_final.begin(); field; field = field->Next) {
-    fields_final.push_back(new FieldType(*(field->Data)));
+
+  for (List<ComplexType*>::iterator field = other.complexfields.begin(); field; field = field->Next) {
+    complexfields.push_back(new ComplexType(*field->Data));
+    complexfields.back()->parent = this;
+    if(field->Data == other.basefield){
+      basefield = complexfields.back();
+    }else if(field->Data == other.nillable_field){
+      nillable_field = complexfields.back();
+    }
   }
+
+  if (other.nameDep != NULL) {
+    SimpleType* dep = other.nameDep;
+    if(dep->getSubstitution() != NULL){
+      dep->getSubstitution()->addToNameDepList(this);
+      nameDep = dep->getSubstitution();
+    }else {
+      other.nameDep->addToNameDepList(this);
+    }
+  }
+}
+
+ComplexType::ComplexType(ComplexType * other)
+: SimpleType(other->getParser(), other->getModule(), c_unknown)
+, top(false)
+, nillable(false)
+, enumerated(false)
+, embed(false)
+, with_union(false)
+, first_child(false)
+, fromAll(false)
+, max_alt(0)
+, skipback(0)
+, lastType()
+, actualPath(empty_string)
+, actfield(this)
+, nameDep(NULL)
+, nillable_field(NULL)
+, basefield(NULL)
+, cmode(CT_undefined_mode)
+, resolved(No)
+, complexfields()
+, attribfields()
+, enumfields()
+, tagNames() {
+  xsdtype = n_complexType;
+  parent = other;
+  outside_reference = ReferenceData();
 }
 
 ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
-: RootType(other)
-, fields()
-, fields_final()
-, actualLevel(1)
-, actualPath()
-, ctmode()
-, fieldGenInfo()
-, recGenInfo()
-, attributeBases()
-, embed_inSequence()
-, embed_inChoice()
-, embed_inAll()
+: SimpleType(other)
+, top(true)
+, nillable(false)
+, enumerated(false)
+, embed(false)
 , with_union(false)
+, first_child(false)
+, fromAll(false)
+, max_alt(0)
+, skipback(0)
+, lastType()
+, actualPath(empty_string)
+, actfield(this)
+, nameDep(NULL)
+, nillable_field(NULL)
+, basefield(NULL)
+, cmode(CT_simpletype_mode)
 , resolved(No)
-{
-  initialSettings();
+, complexfields()
+, attribfields()
+, enumfields()
+, tagNames() {
 
-  module->replaceLastMainType(this);
-  module->setActualXsdConstruct(c_complexType);
+  if(c != fromTagSubstition){
+    module->replaceLastMainType(this);
+    module->setActualXsdConstruct(c_complexType);
+  }
   construct = c_complexType;
-  ctmode.push_back(CT_simpletype_mode);
 
-  switch (c)
-  {
-  case fromTagUnion:
-    type.upload(Mstring("union"));
-    with_union = true;
-    break;
-  case fromTagNillable:
-    addVariant(V_useNil);
-    type.upload(Mstring("record"));
-    break;
-  case fromTagComplexType:
-    type.upload(Mstring("record"));
-    break;
-  }
-}
-
-ComplexType::~ComplexType()
-{
-  for (List<FieldType*>::iterator field = fields.begin(); field; field = field->Next) {
-    delete(field->Data);
-  }
-}
-
-void ComplexType::initialSettings()
-{
-  FieldType * invisibleField = new FieldType(this);
-  fields.push_back(invisibleField);
-
-  invisibleField->setNameOfField(Mstring("onlyForStoringAttributes"), false);
-  invisibleField->setInvisible();
-
-  attributeBases.push_back(AttrBaseType(invisibleField));
-  recGenInfo.push_back(GenerationType(NULL, 2));
-}
-
-void ComplexType::loadWithValues()
-{
-  const XMLParser::TagAttributes & atts = parser->getActualTagAttributes();
-
-  switch (parser->getActualTagName())
-  {
-  case XMLParser::n_sequence:
-    if (!embed_inChoice.empty() && embed_inChoice.back().valid) {
-      generateRecord(atts.minOccurs, atts.maxOccurs);
-      embed_inChoice.back().strictValid = false;
-    }
-    else if (atts.minOccurs != 1 || atts.maxOccurs != 1) {
-      generateRecord(atts.minOccurs, atts.maxOccurs);
-    }
-
-    embed_inSequence.push_back(EmbeddedType(parser->getActualDepth(), atts.minOccurs, atts.maxOccurs));
-    break;
-
-  case XMLParser::n_choice: {
-    if (module->getActualXsdConstruct() == c_group) {
+  switch (c) {
+    case fromTagUnion:
       type.upload(Mstring("union"));
+      with_union = true;
+      xsdtype = n_union;
+      break;
+    case fromTagNillable:
+      addVariant(V_useNil);
+      type.upload(Mstring("record"));
+      break;
+    case fromTagComplexType:
+      type.upload(Mstring("record"));
+      xsdtype = n_complexType;
+      break;
+    case fromTagSubstition:
+      type.upload(Mstring("union"));
+      name.upload(getName().originalValueWoPrefix + Mstring("_group"));
+      xsdtype = n_union;
+      subsGroup = this;
+      variant.clear();
+      enumeration.modified = false;
+      value.modified = false;
+      pattern.modified = false;
+      length.modified = false;
+      whitespace.modified = false;
+      break;
+  }
+}
+
+ComplexType::~ComplexType() {
+  for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+    delete field->Data;
+    field->Data = NULL;
+  }
+  complexfields.clear();
+
+  for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+    delete field->Data;
+    field->Data = NULL;
+  }
+  attribfields.clear();
+}
+
+void ComplexType::loadWithValues() {
+  //Find the last field where the tag is found
+  if (this != actfield) {
+    actfield->loadWithValues();
+    return;
+  }
+  
+  const XMLParser::TagAttributes & atts = parser->getActualTagAttributes();
+  
+  switch (parser->getActualTagName()) {
+    case n_sequence:
+      if (!top && xsdtype != n_sequence && xsdtype != n_complexType && xsdtype != n_extension && xsdtype != n_restriction && xsdtype != n_element) {
+        //Create new record
+        ComplexType * rec = new ComplexType(this);
+        rec->type.upload(Mstring("record"));
+        rec->name.upload(Mstring("sequence"));
+        rec->addVariant(V_untagged);
+        rec->setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
+        rec->setXsdtype(n_sequence);
+        complexfields.push_back(rec);
+        actfield = rec;
+      } else {
+        //Do not create new record, it is an embedded sequence
+        if (xsdtype == n_sequence && atts.minOccurs == 1 && atts.maxOccurs == 1) {
+          skipback += 1;
+        }
+        type.upload(Mstring("record"));
+        xsdtype = n_sequence;
+        setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
+      }
+      break;
+    case n_choice:
+      if (!top || xsdtype != n_group) {
+        //Create new union field
+        ComplexType * choice = new ComplexType(this);
+        choice->type.upload(Mstring("union"));
+        choice->name.upload(Mstring("choice"));
+        choice->setXsdtype(n_choice);
+        choice->addVariant(V_untagged);
+        choice->setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
+        actfield = choice;
+        complexfields.push_back(choice);
+      } else {
+        xsdtype = n_choice;
+        type.upload(Mstring("union"));
+      }
+      break;
+    case n_all:
+    {
+      //Create the record of enumerated field
+      xsdtype = n_all;
+      ComplexType * enumField = new ComplexType(this);
+      enumField->setTypeValue(Mstring("enumerated"));
+      enumField->setNameValue(Mstring("order"));
+      enumField->setBuiltInBase(Mstring("string"));
+      enumField->enumerated = true;
+      enumField->setMinMaxOccurs(0, ULLONG_MAX, false);
+      setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
+      addVariant(V_useOrder);
+      complexfields.push_back(enumField);
+      if (atts.minOccurs == 0) {
+        isOptional = true;
+      }
       break;
     }
-    generateUnion(atts.minOccurs, atts.maxOccurs);
-
-    embed_inChoice.push_back(EmbeddedType(parser->getActualDepth()));
-    break; }
-
-  case XMLParser::n_all: {
-    FieldType * new_attribute = generateAttribute();
-    new_attribute->setTypeOfField(Mstring("enumerated"));
-    new_attribute->setNameOfField(Mstring("order"), false);
-    new_attribute->setBuiltInBase(Mstring("string"));
-    new_attribute->getEnumeration().modified = true;
-    new_attribute->applyMinMaxOccursAttribute(0, ULLONG_MAX);
-
-    if (recGenInfo.size() == 1) {
-      addVariant(V_useOrder); // use the default false - from TR HL10354
-    }
-    else {
-      recGenInfo.back().field->addVariant(V_useOrder); // use the default false - from TR HL10354
-    }
-
-    embed_inAll.push_back(EmbeddedType(parser->getActualDepth(), atts.minOccurs, atts.maxOccurs, new_attribute));
-    break; }
-
-  case XMLParser::n_restriction:
-  case XMLParser::n_extension:
-    if (atts.base.getValueWithoutPrefix(':') == name.convertedValue) // TODO recusivity
+    case n_restriction:
+      mode = restrictionMode;
+      //If it is an xsd:union then call SimpleType::loadWithValues
+      if (parent != NULL && parent->with_union) {
+        SimpleType::loadWithValues();
+        break;
+      }
+      if (cmode == CT_simpletype_mode) {
+        //if it is from a SimpleType, then create a base field
+        ComplexType * f = new ComplexType(this);
+        f->name.upload(Mstring("base"));
+        f->type.upload(atts.base);
+        f->setReference(atts.base);
+        f->addVariant(V_untagged);
+        complexfields.push_back(f);
+        basefield = f;
+        actfield = f;
+      } else if (cmode == CT_complextype_mode) {
+        setReference(atts.base);
+        xsdtype = n_restriction;
+      }
+      break;
+    case n_extension:
+      mode = extensionMode;
+      if (cmode == CT_simpletype_mode) {
+        //if it is from a SimpleType, then create a base field
+        ComplexType * f = new ComplexType(this);
+        f->name.upload(Mstring("base"));
+        f->type.upload(atts.base);
+        f->setReference(atts.base);
+        f->addVariant(V_untagged);
+        complexfields.push_back(f);
+        basefield = f;
+        actfield = f;
+      } else if (cmode == CT_complextype_mode) {
+        setReference(atts.base);
+        xsdtype = n_extension;
+      }
+      break;
+    case n_element:
     {
-      /*			fields_for_restriction.back()->setTypeOfField(name.value + "_anonymus_extension");
-			ComplexType * new_CT = new ComplexType(*this);
-			module->addMainType(new_CT);
-			new_CT->setNameOfMainType(name.value + "_anonymus_extension", doc->getSchemaname(), doc->getTargetNamespace());
-       */		}
-    else if (ctmode.back() == CT_simpletype_mode) {
-      if (!fieldGenInfo.empty()) {
-        fieldGenInfo.back().field->setTypeOfField(atts.base);
-        fieldGenInfo.back().field->setReference(atts.base);
-        if (parser->getActualTagName() == XMLParser::n_restriction)
-          fieldGenInfo.back().field->setMode(SimpleType::restrictionMode);
-        else
-          fieldGenInfo.back().field->setMode(SimpleType::extensionMode);
-        attributeBases.push_back(AttrBaseType(fieldGenInfo.back().field, parser->getActualDepth()));
-      }
-    }
-    else if (ctmode.back() == CT_complextype_mode){
-      FieldType * new_field = generateField();
-      new_field->setTypeOfField(atts.base);
-      new_field->setNameOfField(Mstring("base"), false);
-      new_field->setReference(atts.base);
-      if (parser->getActualTagName() == XMLParser::n_restriction)
-        fieldGenInfo.back().field->setMode(SimpleType::restrictionMode);
-      else
-        fieldGenInfo.back().field->setMode(SimpleType::extensionMode);
-      new_field->addVariant(V_untagged);
-      attributeBases.push_back(AttrBaseType(new_field, parser->getActualDepth()));
-      if (atts.base.getValueWithoutPrefix(':') == "anyType") new_field->setInvisible();
-    }
-    break;
+      if (atts.nillable) {
+        if(cmode == CT_simpletype_mode){
+          //If a simple top level element is nillable
+          ComplexType * nilrec = new ComplexType(this);
+          if (atts.type.empty()) {
+            nilrec->type.upload(Mstring("record"));
+          } else {
+            nilrec->type.upload(atts.type);
+          }
+          nilrec->name.upload(Mstring("content"));
+          nilrec->isOptional = true;
+          nilrec->nillable = true;
+          setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
+          complexfields.push_back(nilrec);
+          type.upload(Mstring("record"));
+          name.upload(atts.name);
+          actfield = nilrec;
+          nillable_field = nilrec;
+        } else {
+          //From a complexType element is nillable
+          ComplexType * record = new ComplexType(this);
+          ComplexType * nilrec = new ComplexType(record);
+          if (atts.type.empty()) {
+            nilrec->type.upload(Mstring("record"));
+          } else {
+            nilrec->type.upload(atts.type);
+          }
+          record->name.upload(atts.name);
+          record->type.upload(Mstring("record"));
+          record->complexfields.push_back(nilrec);
+          record->addVariant(V_useNil);
+          record->nillable_field = nilrec;
+          record->setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
 
-  case XMLParser::n_element: {
-    if (atts.nillable)
-    {
-      FieldType * new_field = generateField();
-      if (ctmode.back() == CT_simpletype_mode) {
-        if (atts.type.empty()) {
-          new_field->setTypeOfField(Mstring("record"));
-          new_field->setNameOfField(Mstring("content"), true);
-          actualLevel++;
-          recGenInfo.push_back(GenerationType(new_field, parser->getActualDepth() + 2));
+          nilrec->name.upload(Mstring("content"));
+          nilrec->nillable = true;
+          nilrec->isOptional = true;
+          nilrec->tagNames.push_back(parser->getActualTagName());
+          complexfields.push_back(record);
+          actfield = nilrec;
         }
-        else {
-          new_field->setTypeOfField(atts.type);
-          new_field->setNameOfField(Mstring("content"), false);
-          new_field->setReference(atts.type, true);
+      }else {
+        //It is a simple element
+        ComplexType* c = new ComplexType(this);
+        c->setXsdtype(n_element);
+        c->type.upload(atts.type);
+        c->name.upload(atts.name);
+        c->setReference(atts.type);
+        c->setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
+        c->applyDefaultAttribute(atts.default_);
+        c->applyFixedAttribute(atts.fixed);
+        c->setElementFormAs(atts.form);
+        if (atts.ref.empty()) {
+          c->setReference(atts.type);
+        } else {
+          c->applyRefAttribute(atts.ref);
+          c->name.upload(atts.ref.getValueWithoutPrefix(':'));
+          c->type.upload(atts.ref);
         }
-        new_field->applyMinMaxOccursAttribute(0, 1);
-      }
-      else {
-        new_field->setTypeOfField(Mstring("record"));
-        new_field->setNameOfField(atts.name, true);
-        new_field->addVariant(V_useNil, empty_string, true);
-        new_field->applyMinMaxOccursAttribute(atts.minOccurs, atts.maxOccurs, true);
-        actualLevel++;
-        recGenInfo.push_back(GenerationType(new_field, parser->getActualDepth()));
-        attributeBases.push_back(AttrBaseType(new_field, parser->getActualDepth()));
+        c->applySubstitionGroupAttribute(atts.substitionGroup);
+        c->applyBlockAttribute(atts.block);
+        actfield = c;
 
-        FieldType * new_field2 = generateField();
-        if (atts.type.empty()) {
-          new_field2->setTypeOfField(Mstring("record"));
-          new_field2->setNameOfField(Mstring("content"), true);
-          actualLevel++;
-          recGenInfo.push_back(GenerationType(new_field2, parser->getActualDepth() + 2));
-        }
-        else {
-          new_field2->setTypeOfField(atts.type);
-          new_field2->setNameOfField(Mstring("content"), false);
-          new_field2->setReference(atts.type, true);
-        }
-        new_field2->applyMinMaxOccursAttribute(0, 1);
-     }
-     ctmode.push_back(CT_simpletype_mode);
-     return;
-    }
-
-    FieldType * new_field = generateField();
-    unsigned long long int temp_minOccurs = atts.minOccurs;
-    unsigned long long int temp_maxOccurs = atts.maxOccurs;
-
-    if (!embed_inAll.empty() && embed_inAll.back().valid) {
-      assert((embed_inAll.back().minOccurs | 1ULL) == 1ULL); // 0 or 1
-      temp_minOccurs = llmin(atts.minOccurs, embed_inAll.back().minOccurs);
-      assert(embed_inAll.back().maxOccurs == 1ULL); // which makes the following somewhat redundant
-      temp_maxOccurs = llmax(atts.maxOccurs, embed_inAll.back().maxOccurs);
-
-      if (embed_inAll.back().depth + 1 == parser->getActualDepth()) {
-        // we are inside an <xs:all>
-        if ((temp_minOccurs | 1ULL) != 1ULL) {
-          printError(getModule()->getSchemaname(), name.convertedValue,
-            Mstring("Inside <all>, minOccurs must be 0 or 1"));
-          TTCN3ModuleInventory::incrNumErrors();
-        }
-
-        if (temp_maxOccurs != 1ULL) {
-          printError(getModule()->getSchemaname(), name.convertedValue,
-            Mstring("Inside <all>, maxOccurs must be 1"));
-          TTCN3ModuleInventory::incrNumErrors();
+        //Inside all have some special conditions
+        if (xsdtype == n_all) {
+          if (atts.minOccurs > 1) {
+            printError(getModule()->getSchemaname(), name.convertedValue,
+              Mstring("Inside <all>, minOccurs must be 0 or 1"));
+            TTCN3ModuleInventory::incrNumErrors();
+          }
+          if (atts.maxOccurs != 1) {
+            printError(getModule()->getSchemaname(), name.convertedValue,
+              Mstring("Inside <all>, maxOccurs must be 1"));
+            TTCN3ModuleInventory::incrNumErrors();
+          }
+          c->fromAll = true;
+          complexfields.push_back(c);
+          if (isOptional) {
+            c->isOptional = true;
+          }
+        } else {
+          complexfields.push_back(c);
         }
       }
-
-      Mstring res, var;
-      XSDName2TTCN3Name(atts.name, embed_inAll.back().order_attribute->getEnumeration().items_string,
-        enum_id_name, res, var);
-      embed_inAll.back().valid = false;
-      // We now throw away the result of the name transformation above.
-      // The only lasting effect is the addition to the enumeration items.
-    }
-    if (!embed_inSequence.empty() && embed_inSequence.back().valid) {
-      if (embed_inSequence.back().maxOccurs == 0) {
-        temp_minOccurs = 0;
-        temp_maxOccurs = 0;
-      }
-    }
-
-    if (atts.ref.empty()) {
-      new_field->setReference(atts.type, true);
-    }
-    else {
-      new_field->applyRefAttribute(atts.ref);
-    }
-    new_field->setTypeOfField(atts.type);
-    new_field->setNameOfField(atts.name, false);
-    new_field->applyDefaultAttribute(atts.default_);
-    new_field->applyFixedAttribute(atts.fixed);
-    new_field->applyMinMaxOccursAttribute(temp_minOccurs, temp_maxOccurs, true);
-    attributeBases.push_back(AttrBaseType(new_field, parser->getActualDepth()));
-
-    ctmode.push_back(CT_simpletype_mode);
-    break; }
-
-  case XMLParser::n_attribute: {
-    FieldType * new_attribute = generateAttribute();
-    if (module->getActualXsdConstruct() != c_attributeGroup) {
-      new_attribute->addVariant(V_attribute);
-    }
-    unsigned long long int temp_minOccurs = atts.minOccurs;
-    unsigned long long int temp_maxOccurs = atts.maxOccurs;
-    if (atts.ref.empty()) {
-      new_attribute->setReference(atts.type, true);
-    }
-    else {
-      new_attribute->applyRefAttribute(atts.ref);
-    }
-    new_attribute->setTypeOfField(atts.type);
-    new_attribute->setNameOfField(atts.name, false);
-    new_attribute->applyDefaultAttribute(atts.default_);
-    new_attribute->applyFixedAttribute(atts.fixed);
-    new_attribute->applyUseAttribute(atts.use, temp_minOccurs, temp_maxOccurs);
-    new_attribute->applyMinMaxOccursAttribute(temp_minOccurs, temp_maxOccurs, true);
-    ctmode.push_back(CT_simpletype_mode);
-    break; }
-
-  case XMLParser::n_any: {
-    FieldType * new_field = generateField();
-    new_field->setTypeOfField(Mstring("xsd:string"));
-    new_field->setNameOfField(Mstring("elem"), false);
-    new_field->applyMinMaxOccursAttribute(atts.minOccurs, atts.maxOccurs, true);
-    new_field->applyNamespaceAttribute(V_anyElement, atts.namespace_);
-    break; }
-
-  case XMLParser::n_anyAttribute: {
-    FieldType * new_field = generateAttribute();
-    new_field->setTypeOfField(Mstring("xsd:string"));
-    new_field->setNameOfField(Mstring("attr"), false);
-    new_field->setToAnyAttribute();
-    new_field->applyMinMaxOccursAttribute(0, ULLONG_MAX);
-    new_field->applyNamespaceAttribute(V_anyAttributes, atts.namespace_);
-    break; }
-
-  case XMLParser::n_attributeGroup:
-    name.upload(atts.name);
-    if (!atts.ref.empty()) {
-      FieldType * new_attribute = generateAttribute();
-      new_attribute->applyRefAttribute(atts.ref);
-    }
-    ctmode.push_back(CT_complextype_mode);
-    break;
-
-  case XMLParser::n_group: {
-    if (parser->getActualDepth() == 1) {
-      name.upload(atts.name);
       break;
     }
-
-    FieldType * new_field = generateField();
-    new_field->applyRefAttribute(atts.ref);
-    if (atts.minOccurs != 1 || atts.maxOccurs != 1) {
-      new_field->applyMinMaxOccursAttribute(atts.minOccurs, atts.maxOccurs, true);
+    case n_attribute:
+    {
+      AttributeType * attribute = new AttributeType(this);
+      attribute->addVariant(V_attribute);
+      attribute->applyMinMaxOccursAttribute(0, 1);
+      attribute->setXsdtype(n_attribute);
+      attribute->applyDefaultAttribute(atts.default_);
+      attribute->applyFixedAttribute(atts.fixed);
+      attribute->setUseVal(atts.use);
+      attribute->setAttributeFormAs(atts.form);
+      lastType = n_attribute;
+      if (atts.ref.empty()) {
+        attribute->setNameOfField(atts.name);
+        attribute->setTypeOfField(atts.type);
+        attribute->setReference(atts.type, true);
+      } else {
+        attribute->applyRefAttribute(atts.ref);
+      }
+      actfield = attribute;
+      
+      //In case of nillable parent it is difficult...
+      if (nillable && parent != NULL) {
+        parent->attribfields.push_back(attribute);
+        attribute->parent = parent;
+      } else if (nillable && !complexfields.empty() && parent == NULL) {
+        complexfields.back()->attribfields.push_back(attribute);
+      } else if (parent != NULL && (parent->mode == extensionMode || parent->mode == restrictionMode) && name.convertedValue == Mstring("base")) {
+        parent->attribfields.push_back(attribute);
+        attribute->parent = parent;
+      } else {
+        attribfields.push_back(attribute);
+      }
+      break;
     }
-    ctmode.push_back(CT_complextype_mode);
-    break; }
+    case n_any:
+    {
+      ComplexType * any = new ComplexType(this);
+      any->name.upload(Mstring("elem"));
+      any->type.upload(Mstring("xsd:string"));
+      any->applyNamespaceAttribute(V_anyElement, atts.namespace_);
+      any->setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
+      any->setXsdtype(n_any);
+      complexfields.push_back(any);
+      break;
+    }
+    case n_anyAttribute:
+    {
+      AttributeType * anyattr = new AttributeType(this);
+      anyattr->setXsdtype(n_anyAttribute);
+      anyattr->setNameOfField(Mstring("attr"));
+      anyattr->setTypeValue(Mstring("xsd:string"));
+      anyattr->setToAnyAttribute();
+      anyattr->applyMinMaxOccursAttribute(0, ULLONG_MAX);
+      anyattr->addNameSpaceAttribute(atts.namespace_);
+      actfield = anyattr;
 
-  case XMLParser::n_union: {
-    if (fieldGenInfo.empty()) {
+      //In case of nillable parent it is difficult...
+      if (nillable && parent != NULL) {
+        parent->attribfields.push_back(anyattr);
+        anyattr->parent = parent;
+      } else if (nillable && !complexfields.empty() && parent == NULL) {
+        complexfields.back()->attribfields.push_back(anyattr);
+      } else if (parent != NULL && (parent->mode == extensionMode || parent->mode == restrictionMode) && name.convertedValue == Mstring("base")) {
+        parent->attribfields.push_back(anyattr);
+        anyattr->parent = parent;
+      } else {
+        attribfields.push_back(anyattr);
+      }
+      break;
+    }
+    case n_attributeGroup:
+      if (!atts.ref.empty()) {
+        ComplexType * g = new ComplexType(this);
+        g->setXsdtype(n_attributeGroup);
+        g->setReference(atts.ref);
+        complexfields.push_back(g);
+        actfield = g;
+      } else {
+        xsdtype = n_attributeGroup;
+        name.upload(Mstring(atts.name));
+        setInvisible();
+      }
+      break;
+    case n_group:
+      if (atts.ref.empty()) {
+        //It is a definition
+        xsdtype = n_group;
+        name.upload(atts.name);
+      } else {
+        //It is a reference
+        ComplexType* group = new ComplexType(this);
+        group->setXsdtype(n_group);
+        group->name.upload(atts.name);
+        group->setReference(Mstring(atts.ref));
+        group->setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
+        complexfields.push_back(group);
+        actfield = group;
+      }
+      break;
+    case n_union:
+    {
+      with_union = true;
+      xsdtype = n_union;
       type.upload(Mstring("union"));
       addVariant(V_useUnion);
-    }
-    else {
-      fieldGenInfo.back().field->setTypeValue(Mstring("union"));
-      fieldGenInfo.back().field->addVariant(V_useUnion);
-      fieldGenInfo.push_back(GenerationType(fieldGenInfo.back().field, parser->getActualDepth()));
-      recGenInfo.push_back(GenerationType(fieldGenInfo.back().field, parser->getActualDepth()));
-      actualLevel++;
-      addToActualPath(fieldGenInfo.back().field->getVariantId() + ".");
-    }
-    with_union = true;
-    List<Mstring> types;
-    if (!atts.memberTypes.empty()) {
-      expstring_t valueToSplitIntoTokens = mcopystr(atts.memberTypes.c_str());
-      char * token;
-      token = strtok (valueToSplitIntoTokens," ");
-      while (token != NULL)
-      {
-        types.push_back(Mstring(token));
-        token = strtok (NULL, " ");
+      if (!atts.memberTypes.empty()) {
+        List<Mstring> types;
+        //Get the union values
+        expstring_t valueToSplitIntoTokens = mcopystr(atts.memberTypes.c_str());
+        char * token;
+        token = strtok(valueToSplitIntoTokens, " ");
+        while (token != NULL) {
+          types.push_back(Mstring(token));
+          token = strtok(NULL, " ");
+        }
+        Free(valueToSplitIntoTokens);
+        
+        //Create the union elements and push into the container
+        for (List<Mstring>::iterator memberType = types.begin(); memberType; memberType = memberType->Next) {
+          Mstring tmp_name = memberType->Data.getValueWithoutPrefix(':');
+          ComplexType * f = new ComplexType(this);
+          f->name.upload(tmp_name);
+          f->type.upload(memberType->Data);
+          f->setXsdtype(n_simpleType);
+          f->setReference(memberType->Data);
+          complexfields.push_back(f);
+        }
       }
-      Free(valueToSplitIntoTokens);
-      for (List<Mstring>::iterator memberType = types.begin(); memberType; memberType = memberType->Next)
-      {
-        Mstring tmp_name = memberType->Data.getValueWithoutPrefix(':');
-        FieldType * new_field = generateField();
-        new_field->setNameOfField(tmp_name, false);
-        new_field->setTypeOfField(memberType->Data);
-        new_field->setReference(memberType->Data);
-      }
+      break;
     }
-    break; }
-
-  case XMLParser::n_simpleType:
-  case XMLParser::n_simpleContent: {
-    Mstring base;
-    if (with_union)
+    case n_simpleType:
+    case n_simpleContent:
     {
-      expstring_t tmp_string = NULL;
-      if (recGenInfo.back().max_alt == 0) {
-        tmp_string = mcopystr("alt_");
+      xsdtype = parser->getActualTagName();
+      cmode = CT_simpletype_mode;
+      Mstring fieldname;
+      if (with_union) {
+        if (max_alt == 0) {
+          fieldname = Mstring("alt_");
+        } else {
+          fieldname = mprintf("alt_%d", max_alt);
+        }
+        max_alt++;
+        ComplexType * field = new ComplexType(this);
+        field->name.upload(fieldname);
+        field->setXsdtype(n_simpleType);
+        field->addVariant(V_nameAs, empty_string, true);
+        complexfields.push_back(field);
+        actfield = field;
       }
-      else
-      {
-        tmp_string = mprintf("alt_%d", recGenInfo.back().max_alt);
-      }
-      base = tmp_string; // NULL is OK
-      Free(tmp_string);
-      recGenInfo.back().max_alt++;
+      break;
     }
-    else {
-      base = "base";
-    }
-    if (parser->getParentTagName() != XMLParser::n_element &&
-      parser->getParentTagName() != XMLParser::n_attribute)
-    {
-      FieldType * new_field = generateField();
-      new_field->setNameOfField(base, false);
-      if (new_field->getName().convertedValue == "base")
-      {
-        new_field->addVariant(V_untagged); // name = base
-      }
-      else
-      {
-        new_field->addVariant(V_nameAs, empty_string, true); // name = alt_x
-      }
-      if (!embed_inChoice.empty()) embed_inChoice.back().valid = false;
-    }
-    if (!embed_inChoice.empty()) embed_inChoice.back().strictValid = false;
-
-    ctmode.push_back(CT_simpletype_mode);
-    break; }
-
-  case XMLParser::n_complexType:
-    name.upload(atts.name);
-    // fall through
-  case XMLParser::n_complexContent:
-    if (!fieldGenInfo.empty())
-    {
-      if (fieldGenInfo.back().field->getType().convertedValue != "record") {
-        fieldGenInfo.back().field->setTypeOfField(Mstring("record"));
-        fieldGenInfo.back().field->setNameOfField(empty_string, true);
-        actualLevel++;
-        recGenInfo.push_back(GenerationType(fieldGenInfo.back().field, parser->getActualDepth()));
-      }
-    }
-    if (atts.mixed)
-    {
-      FieldType * new_attribute = generateAttribute();
-      new_attribute->setTypeOfField(Mstring("string"));
-      new_attribute->setNameOfField(Mstring("embed_values"), false);
-      new_attribute->applyMinMaxOccursAttribute(0, ULLONG_MAX);
-      if (attributeBases.size() == 1) {
+    case n_complexType:
+      name.upload(atts.name);
+      type.upload(Mstring("record"));
+      applyAbstractAttribute(atts.abstract);
+      applySubstitionGroupAttribute(atts.substitionGroup);
+      applyBlockAttribute(atts.block);
+      // fall through
+    case n_complexContent:
+      tagNames.push_back(parser->getActualTagName());
+      cmode = CT_complextype_mode;
+      if (atts.mixed) {
+        ComplexType * mixed = new ComplexType(this);
+        mixed->name.upload(Mstring("embed_values"));
+        mixed->type.upload(Mstring("xsd:string"));
+        mixed->setMinMaxOccurs(0, ULLONG_MAX, false);
+        mixed->embed = true;
+        complexfields.push_back(mixed);
         addVariant(V_embedValues);
       }
-      else {
-        attributeBases.back().base->addVariant(V_embedValues); // TR HL14121
-      }
-      recGenInfo.back().embed_values_attribute = new_attribute;
-    }
-    ctmode.push_back(CT_complextype_mode);
-    if (!embed_inChoice.empty()) {
-      embed_inChoice.back().valid = false;
-      embed_inChoice.back().strictValid = false;
-    }
-    break;
-
-  case XMLParser::n_length:
-  case XMLParser::n_minLength:
-  case XMLParser::n_maxLength:
-  case XMLParser::n_pattern:
-  case XMLParser::n_enumeration:
-  case XMLParser::n_whiteSpace:
-  case XMLParser::n_minInclusive:
-  case XMLParser::n_maxInclusive:
-  case XMLParser::n_minExclusive:
-  case XMLParser::n_maxExclusive:
-  case XMLParser::n_totalDigits:
-    if (!fieldGenInfo.empty())
-      fieldGenInfo.back().field->loadWithValues();
-    break;
-
-  case XMLParser::n_annotation:
-  case XMLParser::n_documentation:
-    break;
-
-  case XMLParser::n_label:
-    addComment(Mstring("LABEL:"));
-    break;
-
-  case XMLParser::n_definition:
-    addComment(Mstring("DEFINITION:"));
-    break;
-
-  default:
-    break;
+      break;
+    case n_list:
+    case n_length:
+    case n_minLength:
+    case n_maxLength:
+    case n_pattern:
+    case n_enumeration:
+    case n_whiteSpace:
+    case n_minInclusive:
+    case n_maxInclusive:
+    case n_minExclusive:
+    case n_maxExclusive:
+    case n_totalDigits:
+    case n_fractionDigits:
+      SimpleType::loadWithValues();
+      break;
+    case n_label:
+      addComment(Mstring("LABEL:"));
+      break;
+    case n_definition:
+      addComment(Mstring("DEFINITION:"));
+      break;
+    default:
+      break;
   }
 }
 
 // called from endelementHandler
-void ComplexType::modifyValues()
-{
-  if (!fieldGenInfo.empty() && parser->getActualDepth() == fieldGenInfo.back().depth) {
-    fieldGenInfo.pop_back();
+void ComplexType::modifyValues() {
+  if (this != actfield) {
+    actfield->modifyValues();
+    return;
   }
-  if (!recGenInfo.empty() && parser->getActualDepth() == recGenInfo.back().depth && recGenInfo.size() != 1) {
-    actualLevel--;
+  if (xsdtype == n_sequence) {
+    skipback = skipback - 1;
+  }
 
-    actualPath = truncatePathWithOneElement(actualPath);
-
-    if (recGenInfo.size() > 1) {
-      recGenInfo.pop_back();
+  if ((xsdtype == n_element || 
+       xsdtype == n_complexType || 
+       xsdtype == n_complexContent || 
+       xsdtype == n_all || 
+       xsdtype == n_attribute || 
+       xsdtype == n_anyAttribute ||
+       xsdtype == n_choice || 
+       xsdtype == n_group || 
+       xsdtype == n_attributeGroup || 
+       xsdtype == n_extension || 
+       xsdtype == n_restriction || 
+       xsdtype == n_simpleType || 
+       xsdtype == n_simpleContent ||
+       (xsdtype == n_sequence && skipback < 0)
+      ) 
+      && parent != NULL) {
+    if (!tagNames.empty() && tagNames.back() == parser->getParentTagName()) {
+      if (nillable && tagNames.back() == n_element) {
+        parent->modifyValues();
+      }
+      tagNames.pop_back();
+    } else if (tagNames.empty()) {
+      parent->actfield = parent;
+      parent->lastType = xsdtype;
     }
   }
-  if (!embed_inSequence.empty() && parser->getActualDepth() == embed_inSequence.back().depth + 1) {
-    embed_inSequence.back().valid = true;
-  }
-  if (!embed_inSequence.empty() && parser->getActualDepth() == embed_inSequence.back().depth) {
-    embed_inSequence.pop_back();
-  }
-  if (!embed_inChoice.empty() && parser->getActualDepth() == embed_inChoice.back().depth + 1) {
-    embed_inChoice.back().valid = true;
-    embed_inChoice.back().strictValid = true;
-  }
-  if (!embed_inChoice.empty() && parser->getActualDepth() == embed_inChoice.back().depth) {
-    embed_inChoice.pop_back();
-  }
-  if (!embed_inAll.empty() && parser->getActualDepth() == embed_inAll.back().depth + 1) {
-    embed_inAll.back().valid = true;
-  }
-  if (!embed_inAll.empty() && parser->getActualDepth() == embed_inAll.back().depth) {
-    embed_inAll.pop_back();
-  }
-  // why is there no "valid = true" for attributeBases?
-  if (!attributeBases.empty() && parser->getActualDepth() == attributeBases.back().depth) {
-    attributeBases.pop_back();
-  }
-
-  switch (parser->getActualTagName())
-  {
-  case XMLParser::n_simpleType:
-  case XMLParser::n_simpleContent:
-  case XMLParser::n_complexType:
-  case XMLParser::n_complexContent:
-  case XMLParser::n_element:
-  case XMLParser::n_attribute:
-  case XMLParser::n_group:
-  case XMLParser::n_attributeGroup:
-    if (ctmode.size() == 3 && ctmode.front() == CT_undefined_mode
-      && ctmode.begin()->Next->Data == CT_complextype_mode) {
-      // the first two are always: 1."undefined", 2."complex"
-      ctmode.front() = ctmode.back();
-    }
-    ctmode.pop_back();
-    break;
-  default:
-    break;
-  }
-  return;
 }
 
-FieldType * ComplexType::generateField()
-{
-  FieldType * new_field = new FieldType(this);
-  fields.push_back(new_field);
-
-  new_field->setLevel(actualLevel);
-  new_field->setElementFormAs(module->getElementFormDefault());
-
-  fieldGenInfo.push_back(GenerationType(new_field, parser->getActualDepth()));
-
-  return new_field;
-}
-
-FieldType * ComplexType::generateAttribute()
-{
-  FieldType * theBase = attributeBases.back().base;
-  FieldType * new_attribute = new FieldType(this);
-  theBase->addAttribute(new_attribute);
-
-  new_attribute->setLevel(theBase->getLevel());
-  if (theBase->getType().convertedValue == "record" || theBase->getType().convertedValue == "union") {
-    new_attribute->incrLevel();
-  }
-  new_attribute->setAttributeFormAs(module->getAttributeFormDefault());
-
-  fieldGenInfo.push_back(GenerationType(new_attribute, parser->getActualDepth()));
-
-  return new_attribute;
-}
-
-FieldType * ComplexType::generateRecord(unsigned long long int a_minOccurs, unsigned long long int a_maxOccurs)
-{
-  FieldType * new_record = new FieldType(this);
-  fields.push_back(new_record);
-
-  new_record->setTypeOfField(Mstring("record"));
-  new_record->setNameOfField(Mstring("sequence"), true);
-  new_record->addVariant(V_untagged, empty_string, true);
-  new_record->setLevel(actualLevel++);
-  new_record->setElementFormAs(module->getElementFormDefault());
-  new_record->applyMinMaxOccursAttribute(a_minOccurs, a_maxOccurs, true);
-
-  fieldGenInfo.push_back(GenerationType(new_record, parser->getActualDepth()));
-  recGenInfo.push_back(GenerationType(new_record, parser->getActualDepth()));
-
-  return new_record;
-}
-
-FieldType * ComplexType::generateUnion(unsigned long long int a_minOccurs, unsigned long long int a_maxOccurs)
-{
-  FieldType * new_union = new FieldType(this);
-
-  fields.push_back(new_union);
-
-  new_union->setTypeOfField(Mstring("union"));
-  new_union->setNameOfField(Mstring("choice"), true);
-  new_union->addVariant(V_untagged, empty_string, true);
-  new_union->setLevel(actualLevel++);
-  new_union->setElementFormAs(module->getElementFormDefault());
-  new_union->applyMinMaxOccursAttribute(a_minOccurs, a_maxOccurs, true);
-
-  fieldGenInfo.push_back(GenerationType(new_union, parser->getActualDepth()));
-  recGenInfo.push_back(GenerationType(new_union, parser->getActualDepth()));
-
-  return new_union;
-}
-
-bool ComplexType::hasUnresolvedReference()
-{
-  for (List<FieldType*>::iterator field = fields.begin(); field; field = field->Next)
-  {
-    if (!field->Data->getReference().empty() && !field->Data->getReference().is_resolved()) return true;
-
-    for (List<FieldType*>::iterator attr = field->Data->getAttributes().begin(); attr; attr = attr->Next)
-    {
-      if (!attr->Data->getReference().empty() && !attr->Data->getReference().is_resolved()) return true;
-    }
-  }
-  return false;
-}
-
-void ComplexType::referenceResolving()
-{
+void ComplexType::referenceResolving() {
   if (resolved != No) return; // nothing to do
-  resolved = InProgress;
-  for (List<FieldType*>::iterator field = fields.begin(); field; field = field->Next) {
-    reference_resolving_funtion(field->Data->getAttributes());
+  if(this == subsGroup){
+    resolved = Yes;
+    return;
   }
-  reference_resolving_funtion(fields);
-  for (List<FieldType*>::iterator field = fields.begin(); field; field = field->Next) {
-    field->Data->sortAttributes();
+  resolved = InProgress;
+  for (List<ComplexType*>::iterator ct = complexfields.begin(); ct; ct = ct->Next) {
+    // Referenece resolving of ComplexTypes
+    ct->Data->referenceResolving();
+  }
+  for (List<AttributeType*>::iterator attr = attribfields.begin(); attr; attr = attr->Next) {
+    //Reference resolving for Attributes
+    resolveAttribute(attr->Data);
+  }
+  
+  reference_resolving_funtion();
+  
+  if(!substitionGroup.empty()){
+    addToSubstitutions();
   }
   resolved = Yes;
 }
 
-void ComplexType::reference_resolving_funtion(List<FieldType*> & container)
-{
-  if (container.empty()) return; // take a quick exit
-
-  List<FieldType*> temp_container;
-  List<ImportedField> temp_container_imported;
-
-  for (List<FieldType*>::iterator field = container.begin(), nextField; field; field = nextField)
-  {
-    nextField = field->Next;
-    if (field->Data->getReference().empty() || field->Data->getReference().is_resolved()) {
-      temp_container.push_back(field->Data);
-      continue;
-    }
-
-    SimpleType  * found_ST = static_cast<SimpleType*>(
-      TTCN3ModuleInventory::getInstance().lookup(field->Data, want_ST));
-    ComplexType * found_CT = static_cast<ComplexType*>(
-      TTCN3ModuleInventory::getInstance().lookup(field->Data, want_CT));
-    // It _is_ possible to find both, in which case the simpleType is selected
-    // for no apparent reason.
-
-    if (found_ST != NULL) {
-      field->Data->referenceForST(found_ST, temp_container); // does not affect temp_container_imported
-      found_ST->addToNameDepList(field->Data);
-    }
-    else if (found_CT != NULL) {
-      // HACK the function returns 0 if the field has been added to one of the containers
-      //        returns the field if a copy has been added to to one of the containers
-      //        in this case the field can be safely deleted
-      FieldType* ft = field->Data->referenceForCT(*found_CT, temp_container, temp_container_imported);
-      if (!ft) {
-        found_CT->addToNameDepList(field->Data);
-      }
-      delete ft;
-    }
-    else {
-      printError(module->getSchemaname(), name.convertedValue,
-        "Reference for a non-defined type: " + field->Data->getReference().repr());
-      TTCN3ModuleInventory::getInstance().incrNumErrors();
-
-      delete field->Data; // this field will not be restored
-    }
+void ComplexType::reference_resolving_funtion() {
+  //Every child element references are resolved here.
+  if (outside_reference.empty() && basefield == NULL) {
+    return;
   }
 
-  container.clear();
+  SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, want_BOTH);
+  if (st == NULL && basefield == NULL) {
+    printError(module->getSchemaname(), name.convertedValue,
+      "Reference for a non-defined type: " + getReference().repr());
+    TTCN3ModuleInventory::getInstance().incrNumErrors();
+    outside_reference.set_resolved(NULL);
+    return;
+  }
 
-  for (List<FieldType*>::iterator field = temp_container.begin(), nextField; field; field = nextField)
-  {
-    nextField = field->Next;
+  resolveAttributeGroup(st);
 
-    for (List<ImportedField>::iterator field_imp = temp_container_imported.begin(),
-      nextField_imp; field_imp; field_imp = nextField_imp)
-    {
-      nextField_imp = field_imp->Next;
+  resolveGroup(st);
 
-      if (field_imp->Data.field->getType().convertedValue == "record" ||
-        field_imp->Data.field->getType().convertedValue == "union")
-        continue;
+  resolveElement(st);
 
-      if (field->Data->getName().convertedValue == field_imp->Data.field->getName().convertedValue)
-      {
-        field->Data->applyReference(*(field_imp->Data.field));
-        if (field->Data->getName().convertedValue == "onlyForStoringAttributes") {
-          container.push_back(field->Data);
-          temp_container.remove(field); // backwards remove cheap
-        }
-        delete field_imp->Data.field;
-        temp_container_imported.remove(field_imp); // backwards remove cheap
+  resolveSimpleTypeExtension();
+
+  resolveSimpleTypeRestriction();
+
+  resolveComplexTypeExtension();
+
+  resolveComplexTypeRestriction();
+
+  resolveUnion(st);
+
+}
+
+void ComplexType::setParent(ComplexType * par, SimpleType * child) {
+  child->parent = par;
+}
+
+void ComplexType::applyReference(const SimpleType & other, const bool on_attributes) {
+  type.convertedValue = other.getType().convertedValue;
+  type.originalValueWoPrefix = other.getType().convertedValue;
+
+  if (other.getMinOccurs() > minOccurs || other.getMaxOccurs() < maxOccurs) {
+    if (!on_attributes) {
+      expstring_t temp = memptystr();
+      temp = mputprintf(
+        temp,
+        "The occurrence range (%llu .. %llu) of the element (%s) is not compatible "
+        "with the occurrence range (%llu .. %llu) of the referenced element.",
+        minOccurs,
+        maxOccurs,
+        name.originalValueWoPrefix.c_str(),
+        other.getMinOccurs(),
+        other.getMaxOccurs());
+      printError(module->getSchemaname(), parent->getName().originalValueWoPrefix,
+        Mstring(temp));
+      Free(temp);
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+    }
+  } else {
+    minOccurs = llmax(minOccurs, other.getMinOccurs());
+    maxOccurs = llmin(maxOccurs, other.getMaxOccurs());
+  }
+
+  for (List<Mstring>::iterator var = other.getVariantRef().begin(); var; var = var->Next) {
+    bool found = false;
+    for (List<Mstring>::iterator var1 = variant.begin(); var1; var1 = var1->Next) {
+      if (var->Data == var1->Data) {
+        found = true;
         break;
       }
     }
-  }
-
-  // Restore the fields
-
-  List<ImportedField>::iterator it_imp = temp_container_imported.begin();
-  if (!container.empty()) {
-    // Restore the imported fields which we pretend to belong
-    // to "onlyForStoringAttributes" or any other field transferred above.
-    const FieldType * const last = container.back();
-    while (it_imp != NULL && it_imp->Data.orig == last) {
-      container.push_back(it_imp->Data.field);
-      it_imp = it_imp->Next;
+    if (!found) {
+      variant.push_back(var->Data);
+      variant_ref.push_back(var->Data);
     }
   }
 
-  for (List<FieldType*>::iterator it = temp_container.begin(); it; it = it->Next) {
-    // Restore an original field
-    container.push_back(it->Data);
-    // Merge in all imported fields which "belong" to the original field
-    while (it_imp != NULL && it_imp->Data.orig == it->Data) {
-      container.push_back(it_imp->Data.field);
-      it_imp = it_imp->Next;
-    }
-  }
+  builtInBase = other.getBuiltInBase();
 
-  // Handle leftovers
-  for (; it_imp; it_imp = it_imp->Next) {
-    container.push_back(it_imp->Data.field);
+  length.applyReference(other.getLength());
+  pattern.applyReference(other.getPattern());
+  enumeration.applyReference(other.getEnumeration());
+  whitespace.applyReference(other.getWhitespace());
+  value.applyReference(other.getValue());
+}
+
+void ComplexType::nameConversion(NameConversionMode conversion_mode, const List<NamespaceType> & ns) {
+  if(!visible) return;
+  switch (conversion_mode) {
+    case nameMode:
+      nameConversion_names(ns);
+      break;
+    case typeMode:
+      nameConversion_types(ns);
+      break;
+    case fieldMode:
+      nameConversion_fields(ns);
+      break;
   }
 }
 
-void ComplexType::everything_into_fields_final() // putting everything into 'fields_for_final' container
-{
-  for (List<FieldType*>::iterator field = fields.begin(); field; field = field->Next)
-  {
-    if (field->Data->getType().convertedValue == "record" || field->Data->getType().convertedValue == "union")
-    {
-      fields_final.push_back(field->Data);
-      for (List<FieldType*>::iterator attr = field->Data->getAttributes().begin(); attr; attr = attr->Next)
-      {
-        fields_final.push_back(attr->Data);
-      }
-    }
-    else {
-      for (List<FieldType*>::iterator attr = field->Data->getAttributes().begin(); attr; attr = attr->Next)
-      {
-        fields_final.push_back(attr->Data);
-      }
-      fields_final.push_back(field->Data);
-    }
-  }
-}
-
-void ComplexType::nameConversion(NameConversionMode conversion_mode, const List<NamespaceType> & ns)
-{
-  switch (conversion_mode)
-  {
-  case nameMode:
-    nameConversion_names(ns);
-    break;
-  case typeMode:
-    nameConversion_types(ns);
-    break;
-  case fieldMode:
-    nameConversion_fields(ns);
-    break;
-  }
-}
-
-void ComplexType::nameConversion_names(const List<NamespaceType> & )
-{
+void ComplexType::nameConversion_names(const List<NamespaceType> &) {
   Mstring res, var(module->getTargetNamespace());
   XSDName2TTCN3Name(name.convertedValue, TTCN3ModuleInventory::getInstance().getTypenames(), type_name, res, var);
   name.convertedValue = res;
   bool found = false;
-  for (List<Mstring>::iterator vari = variant.begin(); vari; vari = vari->Next)
-  {
+  for (List<Mstring>::iterator vari = variant.begin(); vari; vari = vari->Next) {
     if (vari->Data == "\"untagged\"") {
       found = true;
       break;
@@ -817,472 +755,1240 @@ void ComplexType::nameConversion_names(const List<NamespaceType> & )
   if (!found) {
     addVariant(V_onlyValue, var);
   }
-  for (List<SimpleType*>::iterator st = nameDepList.begin(); st; st = st->Next) {
-    st->Data->setTypeValue(res); // FIXME: is this still needed ?
+  for (List<SimpleType*>::iterator dep = nameDepList.begin(); dep; dep = dep->Next) {
+    dep->Data->setTypeValue(res);
   }
 }
 
-void ComplexType::nameConversion_types(const List<NamespaceType> & ns)
-{
-  Mstring prefix, uri, value;
+void ComplexType::nameConversion_types(const List<NamespaceType> & ns) {
+  attribfields.sort(compareAttributeNameSpaces);
+  attribfields.sort(compareAttributeTypes);
+  for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+    field->Data->nameConversion(typeMode, ns);
+  }
+
+  for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+    field->Data->nameConversion_types(ns);
+  }
+
+  Mstring prefix, uri, typeValue;
 
   if (type.convertedValue == "record" ||
     type.convertedValue == "set" ||
     type.convertedValue == "union" ||
-    type.convertedValue == "enumerated")
+    type.convertedValue == "enumerated") {
     return;
+  }
 
   prefix = type.convertedValue.getPrefix(':');
-  value  = type.convertedValue.getValueWithoutPrefix(':');
+  typeValue = type.convertedValue.getValueWithoutPrefix(':');
 
-  for (List<NamespaceType>::iterator namesp = ns.begin(); namesp; namesp = namesp->Next)
-  {
+  for (List<NamespaceType>::iterator namesp = ns.begin(); namesp; namesp = namesp->Next) {
     if (prefix == namesp->Data.prefix) {
       uri = namesp->Data.uri;
       break;
     }
   }
 
-  QualifiedName in(uri, value); // ns uri + original name
+  QualifiedName in(uri, typeValue); // ns uri + original name
 
   // Check all known types
   QualifiedNames::iterator origTN = TTCN3ModuleInventory::getInstance().getTypenames().begin();
-  for ( ; origTN; origTN = origTN->Next)
-  {
+  for (; origTN; origTN = origTN->Next) {
     if (origTN->Data == in) {
       QualifiedName tmp_name(module->getTargetNamespace(), name.convertedValue);
-      if (origTN->Data == tmp_name)
-        continue;
-      else
+      if (origTN->Data != tmp_name){
         break;
+      }
     }
   }
 
   if (origTN != NULL) {
     setTypeValue(origTN->Data.name);
-  }
-  else {
+  } else {
     Mstring res, var;
-    XSDName2TTCN3Name(value, TTCN3ModuleInventory::getInstance().getTypenames(), type_reference_name, res, var);
+    XSDName2TTCN3Name(typeValue, TTCN3ModuleInventory::getInstance().getTypenames(), type_reference_name, res, var, type.no_replace);
     setTypeValue(res);
   }
 }
 
-void ComplexType::nameConversion_fields(const List<NamespaceType> & ns)
-{
-  List< QualifiedNames > used_field_names_in_different_level;
+void ComplexType::nameConversion_fields(const List<NamespaceType> & ns) {
+  QualifiedNames used_field_names;
+  
+  for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+    field->Data->nameConversion_names(used_field_names);
+  }
 
-  for (List<FieldType*>::iterator field = fields_final.begin(); field; field = field->Next)
-  {
+  for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+    if (field->Data->getMinOccurs() == 0 && field->Data->getMaxOccurs() == 0) {
+      continue;
+    }
+    if (!field->Data->isVisible()) {
+      continue;
+    }
+    
+    field->Data->nameConversion_fields(ns);
+
     Mstring prefix = field->Data->getType().convertedValue.getPrefix(':');
-    Mstring value = field->Data->getType().convertedValue.getValueWithoutPrefix(':');
-    Mstring uri;
-    for (List<NamespaceType>::iterator namesp = ns.begin(); namesp; namesp = namesp->Next)
-    {
-      if (prefix == namesp->Data.prefix) {
-        uri = namesp->Data.uri;
-        break;
-      }
-    }
+    Mstring typeValue = field->Data->getType().convertedValue.getValueWithoutPrefix(':');
 
-    if (field == fields_final.begin()) {
-      QualifiedNames first_set_of_used_field_names;
-      used_field_names_in_different_level.push_back(first_set_of_used_field_names);
-    }
-    else {
-      if (field->Data->getLevel() < field->Prev->Data->getLevel()) {
-        for (int k = 0; k != field->Prev->Data->getLevel() - field->Data->getLevel(); ++k) {
-          used_field_names_in_different_level.pop_back();
-        }
-      }
-      else if (field->Data->getLevel() > field->Prev->Data->getLevel()) {
-        QualifiedNames set_of_used_field_names;
-        used_field_names_in_different_level.push_back(set_of_used_field_names);
-      }
-    }
+    Mstring res, var;
+    var = getModule()->getTargetNamespace();
+    XSDName2TTCN3Name(typeValue, TTCN3ModuleInventory::getInstance().getTypenames(), type_reference_name, res, var);
 
-    if (field->Data->getMinOccurs() == 0 && field->Data->getMaxOccurs() == 0)
-      continue;
-    if (!field->Data->isVisible())
-      continue;
-
-    Mstring in, res, var;
-
-    XSDName2TTCN3Name(value, TTCN3ModuleInventory::getInstance().getTypenames(), type_reference_name, res, var);
-    if (field->Data->getType().convertedValue != "enumerated") {
-      field->Data->setTypeValue(res);
-    }
     field->Data->addVariant(V_onlyValue, var);
+    var = getModule()->getTargetNamespace();
 
-    if (field->Data->getName().list_extension)
-    {
+    if (field->Data->getName().list_extension) {
       field->Data->useNameListProperty();
-
-      if (!used_field_names_in_different_level.empty()) {
-        XSDName2TTCN3Name(field->Data->getName().convertedValue,
-          used_field_names_in_different_level.back(), field_name, res, var);
-        field->Data->setNameValue(res);
-        if (!field->Data->getName().originalValueWoPrefix.empty() &&
-          field->Data->getName().originalValueWoPrefix != "sequence" &&
-          field->Data->getName().originalValueWoPrefix != "choice" &&
-          field->Data->getName().originalValueWoPrefix != "elem")
-        {
-          field->Data->addVariant(V_nameAs, field->Data->getName().originalValueWoPrefix);
-        }
-      }
-
+      XSDName2TTCN3Name(field->Data->getName().convertedValue,
+        used_field_names, field_name, res, var);
+      field->Data->setNameValue(res);
       bool found_in_variant = false;
-      for (List<Mstring>::iterator vari = field->Data->getVariant().begin(); vari; vari = vari->Next)
-      {
-        if (vari->Data == "untagged") {
+      for (List<Mstring>::iterator vari = field->Data->getVariant().begin(); vari; vari = vari->Next) {
+        if (vari->Data == Mstring("\"untagged\"")) {
           found_in_variant = true;
           break;
         }
       }
+      if (!field->Data->getName().originalValueWoPrefix.empty() &&
+        field->Data->getName().originalValueWoPrefix != "sequence" &&
+        field->Data->getName().originalValueWoPrefix != "choice" &&
+        field->Data->getName().originalValueWoPrefix != "elem" &&
+        !found_in_variant) {
+        field->Data->addVariant(V_nameAs, field->Data->getName().originalValueWoPrefix);
+      }
+
+
       if (!found_in_variant) {
         field->Data->addVariant(V_untagged, empty_string, true);
       }
-    }
-    else {
-      if (!used_field_names_in_different_level.empty()) {
-        XSDName2TTCN3Name(field->Data->getName().convertedValue,
-          used_field_names_in_different_level.back(), field_name, res, var);
-        field->Data->setNameValue(res);
-        field->Data->addVariant(V_onlyValue, var);
-      }
+    } else {
+      XSDName2TTCN3Name(field->Data->getName().convertedValue,
+        used_field_names, field_name, res, var);
+      field->Data->setNameValue(res);
+      field->Data->addVariant(V_onlyValue, var);
     }
 
-    for (List<FieldType*>::iterator inner = fields_final.begin(); inner; inner = inner->Next)
-    {
-      if (field->Data->getName().list_extension) {
-        inner->Data->variantIdReplaceInPath(field->Data->getVariantId(),
-          field->Data->getName().convertedValue + "[-]");
-      }
-      else {
-        inner->Data->variantIdReplaceInPath(field->Data->getVariantId(),
-          field->Data->getName().convertedValue);
-      }
-    }
   }
 }
 
-void ComplexType::finalModification()
-{
-  for (List<FieldType*>::iterator field = fields_final.begin(), nextField; field; field = nextField)
-  {
+void ComplexType::setFieldPaths(Mstring path) {
+  if (path.empty()) {
+    if (!top) {
+      Mstring field_prefix = empty_string;
+      if(parent->minOccurs == 0 && parent->maxOccurs == ULLONG_MAX){
+        field_prefix = "[-].";
+      }
+      path = field_prefix + getName().convertedValue;
+      actualPath = field_prefix + getName().convertedValue;
+    }else {
+      actualPath = getName().convertedValue;
+    }
+  } else if (parent != NULL && (parent->getMinOccurs() != 1 || parent->getMaxOccurs() != 1) &&
+             (parent->getName().list_extension || parent->mode == listMode)) {
+    path = path + Mstring("[-].") + getName().convertedValue;
+    actualPath = path;
+  } else {
+    path = path + Mstring(".") + getName().convertedValue;
+    actualPath = path;
+  }
+
+  for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+    field->Data->setFieldPaths(path);
+  }
+  for (List<AttributeType*>::iterator attr = attribfields.begin(); attr; attr = attr->Next) {
+    attr->Data->setFieldPath(path);
+  }
+}
+
+void ComplexType::finalModification2() {  
+  //Call SimpleType finalModification
+  SimpleType::finalModification();
+
+  //Set isOptional field
+  isOptional = isOptional || (minOccurs == 0 && maxOccurs == 1);
+  
+  //
+  List<Mstring> enumNames;
+  for (List<ComplexType*>::iterator field = complexfields.begin(), nextField; field; field = nextField) {
     nextField = field->Next;
-    if (!field->Data->isVisible()) {
-      fields_final.remove(field); // backwards remove cheap
-      continue;
+    //Remove invisible fields
+    if ((field->Data->minOccurs == 0 && field->Data->maxOccurs == 0) || !field->Data->isVisible()) {
+      delete field->Data;
+      field->Data = NULL;
+      complexfields.remove(field);
+    } else {
+      //Recursive call
+      field->Data->finalModification2();
+      //collect <xsd:all> elements
+      if (field->Data->fromAll) {
+        enumNames.push_back(field->Data->getName().convertedValue);
+      }
     }
-    if (field->Data->getMinOccurs() == 0 && field->Data->getMaxOccurs() == 0) {
-      fields_final.remove(field); // backwards remove cheap
-      continue;
-    }
+  }
 
-    field->Data->finalModification();
+  ComplexType * embedField = NULL;
+  ComplexType * enumField = NULL;
 
-    if (module->getElementFormDefault() == qualified &&
-      field->Data->getElementFormAs() == unqualified)
-    {
-      field->Data->addVariant(V_formAs, Mstring("unqualified"));
+  //Find the embed and order fields, and remove them
+  for (List<ComplexType*>::iterator field = complexfields.begin(), nextField; field; field = nextField) {
+    nextField = field->Next;
+    if (field->Data->embed) {
+      embedField = new ComplexType(*field->Data);
+      embedField->parent = this;
+      delete field->Data;
+      field->Data = NULL;
+      complexfields.remove(field);
+    } else if (field->Data->enumerated) {
+      enumField = new ComplexType(*field->Data);
+      enumField->parent = this;
+      delete field->Data;
+      field->Data = NULL;
+      complexfields.remove(field);
     }
-    if (module->getAttributeFormDefault() == qualified &&
-      field->Data->getAttributeFormAs() == unqualified)
-    {
-      field->Data->addVariant(V_formAs, Mstring("unqualified"));
+  }
+
+  if (enumField != NULL) {
+    //Insert the order field in the front
+    complexfields.push_front(enumField);
+    //Push the field names into the order field
+    for (List<Mstring>::iterator field = enumNames.begin(); field; field = field->Next) {
+      enumField->enumfields.push_back(field->Data);
     }
+  }
+
+  if (embedField != NULL) {
+    //Insert the embed field to the front
+    complexfields.push_front(embedField);
+  }
+
+  if (with_union) {
+    unsigned number = 0;
+    for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+      if (field->Data->name.convertedValue.foundAt("alt_") == field->Data->name.convertedValue.c_str()) {
+        if (number == 0) {
+          field->Data->name.upload(Mstring("alt_"));
+        } else {
+          field->Data->name.upload(Mstring(mprintf("alt_%d", number)));
+        }
+        number++;
+      }
+    }
+  }
+
+  AttributeType * anyAttr = NULL;
+  for (List<AttributeType*>::iterator field = attribfields.begin(), nextField; field; field = nextField) {
+    nextField = field->Next;
+    field->Data->applyUseAttribute();
+    //Find anyattribute, and remove it
+    if (field->Data->isAnyAttribute()) {
+      anyAttr = new AttributeType(*field->Data);
+      setParent(this, anyAttr);
+      delete field->Data;
+      field->Data = NULL;
+      attribfields.remove(field);
+    } else if (field->Data->getUseVal() == prohibited || !field->Data->isVisible()) {
+      //Not visible attribute removed
+      delete field->Data;
+      field->Data = NULL;
+      attribfields.remove(field);
+    } else {
+      field->Data->SimpleType::finalModification();
+    }
+  }
+  
+  //Push anyattribute to the front
+  if (anyAttr != NULL) {
+    anyAttr->applyNamespaceAttribute(V_anyAttributes);
+    attribfields.push_back(anyAttr);
+  }
+
+  //Substitution group ordering
+  if(subsGroup == this){ //We are a generated substitution group
+    //Substitution group never empty
+    ComplexType * front = complexfields.front();
+    List<ComplexType*>::iterator it = complexfields.begin();
+    complexfields.remove(it);
+    complexfields.sort(compareComplexTypeNameSpaces);
+    complexfields.sort(compareTypes);
+    complexfields.push_front(front);
   }
 }
 
-void ComplexType::printToFile(FILE * file)
-{
-  if (!isVisible()) return;
-  const bool ct_is_union  = type.convertedValue == "union";
+void ComplexType::finalModification() {
+  finalModification2();
+  setFieldPaths(empty_string);
+  List<Mstring> container;
+  collectVariants(container);
+  variant.clear();
+  variant = container;
+}
 
-  List<Mstring> rec_names;
-  List<FieldType*> choices;
+void ComplexType::printToFile(FILE * file) {
+  printToFile(file, 0, false);
+}
 
-  printComment(file);
-
-  fprintf(file, "type ");
-  printMinOccursMaxOccurs(file, false);
-  fprintf(file, "%s ", type.convertedValue.c_str());
-  if (minOccurs == 1 && maxOccurs == 1) { // if it is not a record of
-    fprintf(file, "%s", name.convertedValue.c_str());
+void ComplexType::printToFile(FILE * file, const unsigned level, const bool is_union) {
+  if (!isVisible()) {
+    return;
   }
-  fprintf(file, "\n{\n");
-
-  for (List<FieldType*>::iterator fit = fields_final.begin(); fit; fit = fit->Next)
-  {
-    FieldType& field = *(fit->Data); // alas, cannot be const
-    const bool field_is_record = field.getType().convertedValue == "record";
-    const bool field_is_union  = field.getType().convertedValue == "union";
-    if (field_is_union) {
-      choices.push_back(&field);
+  printComment(file, level);
+  if (top) {
+    fprintf(file, "type ");
+    if(mode == listMode){
+      printMinOccursMaxOccurs(file, is_union);
+      fprintf(file, "%s", type.convertedValue.c_str());
+    }else {
+      fprintf(file, "%s %s", type.convertedValue.c_str(), name.convertedValue.c_str());
     }
+    fprintf(file, "\n{\n");
 
-    bool last = false;
-    if (fit->Next == NULL)
-    {
-      /* A field of type record or union is normally followed by its subfields
-       * at level N+1. Therefore if a record or union is the last field,
-       * it is an empty record/union. */
-      if (field_is_record)
-      {
-        indent(file, field.getLevel());
-        field.printMinOccursMaxOccurs(file, ct_is_union);
-        fprintf(file, "%s {\n", field.getType().convertedValue.c_str());
-        indent(file, field.getLevel());
-        fprintf(file, "} %s", field.getName().convertedValue.c_str());
-        if (field.isOptional()) fprintf(file, " optional");
-        break;
-      }
-      else if (field_is_union)
-      {
-        indent(file, field.getLevel());
-        field.printMinOccursMaxOccurs(file, ct_is_union);
-        fprintf(file, "%s {\n", field.getType().convertedValue.c_str());
-        indent(file, field.getLevel()+1);
-        fprintf(file, "record length(0 .. 1) of enumerated { NULL_ } choice\n");
-        indent(file, field.getLevel());
-        fprintf(file, "} %s", field.getName().convertedValue.c_str());
-        if (field.isOptional()) fprintf(file, " optional");
-        break;
-      }
-      last = true;
-    }
-
-    bool empty_allowed = true;
-
-    for (List<FieldType*>::iterator p = fit->Prev; p; p = p->Prev) {
-      const int prevlevel = p->Data->getLevel();
-      if (prevlevel < field.getLevel()) break; // probably our parent, quit
-      if (prevlevel == field.getLevel()) { // same level
-        // If the earlier field can be empty, and our parent is a choice,
-        // then this field's minOccurs needs to be adjusted to 1
-        // so it's not a candidate for the empty list.
-        if (p->Data->getMinOccurs() == 0ULL
-          && !choices.empty()
-          &&  choices.back()->getLevel()+1 == field.getLevel()) {
-          empty_allowed = false;
-          break;
-        }
-      }
-      // Do not quit the loop if finding a prev. field with minOccurs > 0
-      // There may be a field with minOccurs == 0 before it.
-    }
-
-    indent(file, field.getLevel());
-
-    field.printMinOccursMaxOccurs(file, ct_is_union, empty_allowed);
-
-    if (field_is_record)
-    {
-      fprintf(file, "%s {\n", field.getType().convertedValue.c_str());
-      if (field.getLevel() >= fit->Next->Data->getLevel()) // the record is empty
-      {
-        indent(file, field.getLevel());
-        fprintf(file, "} %s", field.getName().convertedValue.c_str());
-        if (field.isOptional()) fprintf(file, " optional");
-      }
-      else // the record is not empty
-      {
-        if (field.isOptional()) {
-          rec_names.push_back(field.getName().convertedValue + " optional");
-        }
-        else {
-          rec_names.push_back(field.getName().convertedValue);
-        }
-      }
-    }
-    else if (field_is_union)
-    {
-      fprintf(file, "%s {\n", field.getType().convertedValue.c_str());
-      if (field.getLevel() >= fit->Next->Data->getLevel()) // the union is empty
-      {
-        indent(file, field.getLevel()+1);
-        fprintf(file, "record length(0 .. 1) of enumerated { NULL_ } choice\n");
-        indent(file, field.getLevel());
-        fprintf(file, "} %s", field.getName().convertedValue.c_str());
-        if (field.isOptional()) fprintf(file, " optional");
-      }
-      else // the union is not empty
-      {
-        if (field.isOptional()) {
-          rec_names.push_back(field.getName().convertedValue + " optional");
-        }
-        else {
-          rec_names.push_back(field.getName().convertedValue);
-        }
-      }
-
-    }
-    else
-    {
-      if (field.getEnumeration().modified)
-      {
-        if (isFloatType(field.getBuiltInBase())) {
-          fprintf(file, "%s (", type.convertedValue.c_str());
-          field.getEnumeration().sortFacets();
-          field.getEnumeration().printToFile(file);
-          fprintf(file, ")");
-        }
-        else {
-          fprintf(file, "enumerated {\n");
-          if (!rec_names.empty() && rec_names.back() != "order") {
-            field.getEnumeration().sortFacets();
-          }
-          field.getEnumeration().printToFile(file, field.getLevel());
-          fprintf(file, "\n");
-          indent(file, field.getLevel());
-          fprintf(file, "} ");
-        }
-      }
-      else
-      {
-        int multiplicity = multi(module, field.getReference(), &field);
-        if ((multiplicity > 1) && field.getReference().get_ref()) {
-          fprintf(file, "%s.", field.getReference().get_ref()->getModule()->getModulename().c_str());
-        }
-        fprintf(file, "%s ", field.getType().convertedValue.c_str());
-      }
-      fprintf(file, "%s", field.getName().convertedValue.c_str());
-      field.getValue().printToFile(file);
-      field.getLength().printToFile(file);
-      if (!ct_is_union && field.isOptional()) fprintf(file, " optional");
-    }
-    /* *******************************************************
-     * FINAL
-     * *******************************************************/
-    if (last) break;
-    /* *******************************************************/
-    if (field.getLevel() > fit->Next->Data->getLevel()) {
-      int diff = field.getLevel() - fit->Next->Data->getLevel();
+    if (attribfields.empty() && complexfields.empty()) {
       fprintf(file, "\n");
-      for (int k = 0; k != diff; ++k)
-      {
-        indent(file, field.getLevel() - (k+1));
-        if (!rec_names.empty()) {
-          fprintf(file, "} %s", rec_names.back().c_str());
-          rec_names.pop_back();
+    }
+
+    for (List<ComplexType*>::iterator c = complexfields.begin(), nextField; c; c = nextField) {
+      nextField = c->Next;
+      if (c->Data->embed || c->Data->enumerated) {
+        c->Data->printToFile(file, level + 1, is_union);
+        if (c->Next != NULL || !attribfields.empty()) {
+          fprintf(file, ",\n");
+        } else {
+          fprintf(file, "\n");
         }
-        if (k + 1 == diff) {
-          fprintf(file, ",");
-        }
+        delete c->Data;
+        c->Data = NULL;
+        complexfields.remove(c);
+      }
+    }
+
+    for (List<AttributeType*>::iterator f = attribfields.begin(); f; f = f->Next) {
+      f->Data->printToFile(file, level + 1);
+      if (f->Next != NULL || !complexfields.empty()) {
+        fprintf(file, ",\n");
+      } else {
         fprintf(file, "\n");
       }
     }
-    else if (field.getLevel() == fit->Next->Data->getLevel()) {
-      fprintf(file, ",\n");
-    }
-  }
-  /* *******************************************************/
-  for (size_t j = 0; j < rec_names.size(); ) {
-    fprintf(file, "\n");
-    indent(file, rec_names.size());
-    fprintf(file, "} %s", rec_names.back().c_str());
-    rec_names.pop_back();
-  }
-  /* *******************************************************/
-  fprintf(file, "\n}");
-  if (minOccurs != 1 || maxOccurs != 1) { // if it is a record of
-    fprintf(file, " %s", name.convertedValue.c_str());
-  }
 
-  printVariant(file);
-
-  fprintf(file, ";\n\n\n");
-}
-
-void ComplexType::printVariant(FILE * file)
-{
-  if (e_flag_used) return;
-
-  bool foundAtLeastOneVariant = false;
-  if (!variant.empty())
-    foundAtLeastOneVariant = true;
-  for (List<FieldType*>::iterator field = fields_final.begin(); field; field = field->Next)
-  {
-    if (!field->Data->getVariant().empty()) {
-      foundAtLeastOneVariant = true;
-      break;
-    }
-  }
-  if (!foundAtLeastOneVariant) return;
-
-
-  fprintf(file, "\nwith {\n");
-
-  bool useUnionVariantWhenMainTypeIsRecordOf = false;
-  for (List<Mstring>::iterator var = variant.end(); var; var = var->Prev)
-  {
-    if ((minOccurs != 1 || maxOccurs != 1) && (var->Data == "\"useUnion\"")) { // main type is a record of
-      useUnionVariantWhenMainTypeIsRecordOf = true;          // TR HL15893
-    }
-    else {
-      fprintf(file, "variant %s;\n", var->Data.c_str());
-    }
-  }
-  if (useUnionVariantWhenMainTypeIsRecordOf) {
-    fprintf(file, "variant ([-]) \"useUnion\";\n");
-  }
-
-  for (List<FieldType*>::iterator field = fields_final.begin(); field; field = field->Next)
-  {
-    if (field->Data->getVariant().empty()) continue;
-
-    expstring_t localPath = mcopystr(field->Data->getPath().c_str());
-    localPath = mtruncstr(localPath, mstrlen(localPath)-1);
-    size_t loclen = mstrlen(localPath);
-    if (loclen >= 3) {
-      char * pointer = localPath + loclen - 3;
-      if (pointer[0]=='[' && pointer[1]=='-' && pointer[2]==']') {
-        localPath = mtruncstr(localPath, loclen - 3);
+    for (List<ComplexType*>::iterator c = complexfields.begin(); c; c = c->Next) {
+      c->Data->printToFile(file, level + 1, is_union);
+      if (c->Next != NULL) {
+        fprintf(file, ",\n");
+      } else {
+        fprintf(file, "\n");
       }
     }
-    if (minOccurs != 1 || maxOccurs != 1) { // main type is a record of
-      expstring_t temp = mcopystr(localPath);
-      Free(localPath);
-      localPath = mprintf("[-].%s", temp);
-      Free(temp);
+  } else {
+    const bool field_is_record = getType().convertedValue == Mstring("record");
+    const bool field_is_union = getType().convertedValue == "union";
+    if (complexfields.empty() && attribfields.empty() && (field_is_record || field_is_union)) {
+      if (field_is_record) {
+        indent(file, level);
+        printMinOccursMaxOccurs(file, is_union);
+        fprintf(file, "%s {\n", getType().convertedValue.c_str());
+        indent(file, level);
+        fprintf(file, "} %s", getName().convertedValue.c_str());
+        if (isOptional) {
+          fprintf(file, " optional");
+        }
+      } else if (field_is_union) {
+        indent(file, level);
+        printMinOccursMaxOccurs(file, is_union);
+        fprintf(file, "%s {\n", getType().convertedValue.c_str());
+        indent(file, level + 1);
+        fprintf(file, "record length(0 .. 1) of enumerated { NULL_ } choice\n");
+        indent(file, level);
+        fprintf(file, "} %s", getName().convertedValue.c_str());
+        if (isOptional) {
+          fprintf(file, " optional");
+        }
+      }
+    } else {
+      indent(file, level);
+      if (getEnumeration().modified) {
+        if (isFloatType(getBuiltInBase())) {
+          fprintf(file, "%s (", type.convertedValue.c_str());
+          getEnumeration().sortFacets();
+          getEnumeration().printToFile(file);
+          fprintf(file, ")");
+        } else {
+          printMinOccursMaxOccurs(file, with_union);
+          fprintf(file, "enumerated {\n");
+          //getEnumeration().sortFacets();
+          getEnumeration().printToFile(file, level);
+          fprintf(file, "\n");
+          indent(file, level);
+          fprintf(file, "} ");
+        }
+      } else {
+        int multiplicity = multi(module, getReference(), this);
+        if ((multiplicity > 1) && getReference().get_ref()) {
+          fprintf(file, "%s.", getReference().get_ref()->getModule()->getModulename().c_str());
+        }
+        if (field_is_record || field_is_union) {
+          printMinOccursMaxOccurs(file, with_union, !first_child || parent->getXsdtype() != n_choice);
+          fprintf(file, "%s {\n", getType().convertedValue.c_str());
+          for (List<AttributeType*>::iterator f = attribfields.begin(); f; f = f->Next) {
+            f->Data->printToFile(file, level + 1);
+            if (f->Next != NULL || !complexfields.empty()) {
+              fprintf(file, ",\n");
+            } else {
+              fprintf(file, "\n");
+            }
+          }
+
+          for (List<ComplexType*>::iterator c = complexfields.begin(); c; c = c->Next) {
+            c->Data->printToFile(file, level + 1, is_union);
+            if (c->Next != NULL) {
+              fprintf(file, ",\n");
+            } else {
+              fprintf(file, "\n");
+            }
+          }
+        } else {
+          printMinOccursMaxOccurs(file, with_union, !first_child);
+          fprintf(file, "%s ", getType().convertedValue.c_str());
+          if (getName().convertedValue == Mstring("order") && getType().convertedValue == Mstring("enumerated")) {
+            fprintf(file, "{\n");
+            for (List<Mstring>::iterator e = enumfields.begin(); e; e = e->Next) {
+              indent(file, level + 1);
+              fprintf(file, "%s", e->Data.c_str());
+              if (e->Next != NULL) {
+                fprintf(file, ",\n");
+              } else {
+                fprintf(file, "\n");
+              }
+            }
+            indent(file, level);
+            fprintf(file, "} ");
+          }
+        }
+      }
+      if (field_is_record || field_is_union) {
+        indent(file, level);
+        fprintf(file, "} ");
+      }
+
+      fprintf(file, "%s", getName().convertedValue.c_str());
+      getPattern().printToFile(file);
+      getValue().printToFile(file);
+      getLength().printToFile(file);
+      if (!with_union && isOptional) {
+        fprintf(file, " optional");
+      }
+    }
+  }
+
+  if (top) {
+    fprintf(file, "}");
+    if(mode == listMode){
+      fprintf(file, " %s", name.convertedValue.c_str());
+    }
+    printVariant(file);
+    fprintf(file, ";\n\n\n");
+  }
+}
+
+void ComplexType::collectVariants(List<Mstring>& container) {
+
+  if (e_flag_used || !isVisible()) {
+    return;
+  }
+
+  if (top) {
+    bool useUnionVariantWhenMainTypeIsRecordOf = false;
+    for (List<Mstring>::iterator var = variant.end(); var; var = var->Prev) {
+      if ((minOccurs != 1 || maxOccurs != 1) && (var->Data == "\"useUnion\"")) { // main type is a record of
+        useUnionVariantWhenMainTypeIsRecordOf = true; // TR HL15893
+      } else {
+        container.push_back(Mstring("variant ") + Mstring(var->Data.c_str()) + Mstring(";\n"));
+      }
+    }
+    if (useUnionVariantWhenMainTypeIsRecordOf) {
+      container.push_back(Mstring("variant ([-]) \"useUnion\";\n"));
+    }
+  }
+
+  //Collect variants of attributes
+  for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+    field->Data->collectVariants(container);
+  }
+
+  for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+
+    if (!field->Data->isVisible()) {
+      continue;
+    }
+
+    if (field->Data->getVariant().empty() && field->Data->getHiddenVariant().empty() &&
+        field->Data->complexfields.empty() && field->Data->attribfields.empty() &&
+        field->Data->enumeration.variants.empty()) {
+      continue;
     }
 
     bool already_used = false;
 
-    for (List<Mstring>::iterator var2 = field->Data->getVariant().end(); var2; var2 = var2->Prev)
-    {
-      if (var2->Data == "\"untagged\"" && !already_used)
-      {
-        fprintf(file, "variant (%s) %s;\n", localPath, var2->Data.c_str());
+    for (List<Mstring>::iterator var2 = field->Data->getVariant().end(); var2; var2 = var2->Prev) {
+      if (var2->Data == "\"untagged\"" && !already_used) {
+        container.push_back(Mstring("variant (") + field->Data->actualPath + Mstring(") ") + Mstring(var2->Data.c_str()) + Mstring(";\n"));
         already_used = true;
-      }
-      else
-      {
+      } else {
         if ((field->Data->getMinOccurs() != 1 || field->Data->getMaxOccurs() != 1) &&
-          field->Data->getName().list_extension) {
-          fprintf(file, "variant (%s[-]) %s;\n", localPath, var2->Data.c_str());
-        }
-        else {
-          fprintf(file, "variant (%s) %s;\n", localPath, var2->Data.c_str());
+          (field->Data->getName().list_extension || var2->Data == "\"useUnion\"")) {
+          container.push_back(Mstring("variant (") + field->Data->actualPath + Mstring("[-]) ") + Mstring(var2->Data.c_str()) + Mstring(";\n"));
+        } else if (var2->Data != "\"untagged\"") {
+          container.push_back(Mstring("variant (") + field->Data->actualPath + Mstring(") ") + Mstring(var2->Data.c_str()) + Mstring(";\n"));
         }
       }
     }
-    Free(localPath);
+    for (List<Mstring>::iterator hidden_var = field->Data->getHiddenVariant().end();
+      hidden_var; hidden_var = hidden_var->Prev) {
+      if ((field->Data->getMinOccurs() != 1 || field->Data->getMaxOccurs() != 1) &&
+        field->Data->getName().list_extension) {
+        container.push_back(Mstring("//variant (") + field->Data->actualPath + Mstring("[-]) ") + Mstring(hidden_var->Data.c_str()) + Mstring(";\n"));
+      } else {
+        container.push_back(Mstring("//variant (") + field->Data->actualPath + Mstring(") ") + Mstring(hidden_var->Data.c_str()) + Mstring(";\n"));
+      }
+    }
+
+    if(field->Data->enumeration.modified){
+      Mstring path = empty_string;
+      if(field->Data->getMinOccurs() != 1 && field->Data->getMaxOccurs() != 1){
+        path = field->Data->actualPath + Mstring("[-]");
+      }else {
+        path = field->Data->actualPath;
+      }
+      for(List<Mstring>::iterator var = field->Data->enumeration.variants.end(); var; var = var->Prev){
+        if(var->Data.empty()) continue;
+        container.push_back("variant (" + path + ") " + var->Data + ";\n");
+      }
+    }
+    //Recursive call
+    field->Data->collectVariants(container);
+  }
+}
+
+void ComplexType::printVariant(FILE * file) {
+  if (e_flag_used) {
+    return;
+  }
+
+  bool foundAtLeastOneVariant = false;
+  bool foundAtLeastOneHiddenVariant = false;
+
+  if (!variant.empty()) {
+    for (List<Mstring>::iterator var = variant.begin(); var; var = var->Next) {
+      if (foundAtLeastOneVariant && foundAtLeastOneHiddenVariant) {
+        break;
+      }
+      if (var->Data[0] != '/') {
+        foundAtLeastOneVariant = true;
+      } else {
+        foundAtLeastOneHiddenVariant = true;
+      }
+    }
+  }
+
+  if (!foundAtLeastOneVariant && !foundAtLeastOneHiddenVariant) {
+    return;
+  }
+
+  if (!foundAtLeastOneVariant) {
+    //No other variants, only commented, so the 'with' must be commented also.
+    fprintf(file, ";\n//with {\n");
+  } else {
+    fprintf(file, "\nwith {\n");
+  }
+
+  for (List<Mstring>::iterator var = variant.begin(); var; var = var->Next) {
+    fprintf(file, "%s", var->Data.c_str());
+  }
+
+  if (!foundAtLeastOneVariant) {
+    fprintf(file, "//");
   }
   fprintf(file, "}");
 }
 
-void ComplexType::dump(unsigned int depth) const
-{
-  fprintf(stderr, "%*s %sComplexType at %p\n", depth * 2, "", isVisible() ? "" : "(hidden)", (const void*)this);
-  fprintf(stderr, "%*s name='%s' -> '%s', %d fields\n", depth * 2, "",
-    name.originalValueWoPrefix.c_str(), name.convertedValue.c_str(), (int)fields.size());
-  for (List<FieldType*>::iterator field = fields.begin(); field; field = field->Next) {
-    field->Data->dump(depth+1);
+void ComplexType::dump(unsigned int depth) const {
+  fprintf(stderr, "%*s %sComplexType at %p | Top:%s\n", depth * 2, "", isVisible() ? "" : "(hidden)", (const void*) this, top ? "true" : "false");
+  if (parent != NULL) {
+    fprintf(stderr, "%*s parent: %p | parent xsdtype: %i | my xsdtype: %i\n", depth * 2, "", (const void*) parent, parent->getXsdtype(), xsdtype);
+  } else {
+    fprintf(stderr, "%*s parent: %p | parent xsdtype: %s | my xsdtype: %i\n", depth * 2, "", "NULL", "NULL", xsdtype);
   }
-  fprintf(stderr, "%*s %d final fields\n", depth * 2, "", (int)fields_final.size());
-  for (List<FieldType*>::iterator field = fields_final.begin(); field; field = field->Next) {
-    field->Data->dump(depth+1);
+  fprintf(stderr, "%*s name='%s' -> '%s', type='%s' %d complexfields | %s | %s | %s\n", depth * 2, "",
+    name.originalValueWoPrefix.c_str(), name.convertedValue.c_str(), type.convertedValue.c_str(), (int) complexfields.size(),
+    outside_reference.empty() ? "" : outside_reference.get_val().c_str(), mode == restrictionMode ? "restriction" : "",
+    mode == extensionMode ? "extension" : "");
+  for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+    field->Data->dump(depth + 1);
+  }
+  fprintf(stderr, "%*s %d attribields\n", depth * 2, "", (int) attribfields.size());
+  for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+    field->Data->dump(depth + 1);
+  }
+  fprintf(stderr, "%*s %d enumfields\n", depth * 2, "", (int) enumfields.size());
+  for (List<Mstring>::iterator field = enumfields.begin(); field; field = field->Next) {
+    fprintf(stderr, "%*s enum: %s\n", depth * 2 + depth, "", field->Data.c_str());
+  }
+  fprintf(stderr, "%*s (%llu .. %llu) | Optional:%s | List:%s\n", (depth + 1) * 2, "", minOccurs, maxOccurs, isOptional ? "true" : "false", name.list_extension ? "true" : "false");
+  fprintf(stderr, "%*s %d variants: ", (depth + 1) * 2, "", (int) variant.size());
+  for (List<Mstring>::iterator var = variant.begin(); var; var = var->Next) {
+    fprintf(stderr, "%s, ", var->Data.c_str());
+  }
+  fprintf(stderr, "%*s pattern:%s | length:%i \n ", (depth + 1) * 2, "", this->pattern.facet.c_str(), (int) (this->length.facet_maxLength));
+  fprintf(stderr, "%*s enum: %i \n", (depth + 1)*2, "", (int) this->enumeration.facets.size());
+  fprintf(stderr, "\n");
+}
+
+void ComplexType::setMinMaxOccurs(const unsigned long long min, const unsigned long long max, const bool generate_list_postfix) {
+
+  if (min != 1 || max != 1) {
+    if (xsdtype == n_choice) {
+      minOccurs = min;
+      maxOccurs = max;
+      addVariant(V_untagged);
+      first_child = false;
+    } else if (xsdtype == n_sequence) {
+      ComplexType * rec = new ComplexType(this);
+      rec->type.upload(Mstring("record"));
+      rec->name.upload(Mstring("sequence"));
+      rec->setXsdtype(n_sequence);
+      rec->addVariant(V_untagged);
+      rec->addVariant(V_untagged);
+      rec->minOccurs = min;
+      rec->maxOccurs = max;
+      complexfields.push_back(rec);
+      actfield = rec;
+      if ((rec->minOccurs == 0 && rec->maxOccurs > 1) || rec->minOccurs > 0) {
+        rec->name.list_extension = true;
+      }
+    } else {
+      minOccurs = min;
+      maxOccurs = max;
+      if ((minOccurs == 0 && maxOccurs > 1) || minOccurs > 0) {
+        if (generate_list_postfix) {
+          name.list_extension = true;
+        }
+      }
+      if (parent != NULL && parent->getXsdtype() == n_choice) {
+        name.list_extension = true;
+        if ((parent != NULL && parent->getXsdtype() == n_choice)) {
+          if (parent->first_child == false && minOccurs == 0) {
+            parent->first_child = true;
+            with_union = true;
+            first_child = false;
+          } else {
+            with_union = true;
+            first_child = true;
+          }
+        }
+      }
+    }
+  }
+
+  if (maxOccurs > 1 && generate_list_postfix) {
+    name.list_extension = true;
+  }
+}
+
+void ComplexType::applyNamespaceAttribute(VariantMode varLabel, const Mstring& ns_list) {
+  List<Mstring> namespaces;
+  if (!ns_list.empty()) {
+    expstring_t valueToSplitIntoTokens = mcopystr(ns_list.c_str());
+    char * token;
+    token = strtok(valueToSplitIntoTokens, " ");
+    while (token != NULL) {
+      namespaces.push_back(Mstring(token));
+      token = strtok(NULL, " ");
+    }
+    Free(valueToSplitIntoTokens);
+  }
+
+  Mstring any_ns;
+  bool first = true;
+  // Note: libxml2 will verify the namespace list according to the schema
+  // of XML Schema. It is either ##any, ##other, ##local, ##targetNamespace,
+  // or a list of (namespace reference | ##local | ##targetNamespace).
+  for (List<Mstring>::iterator ns = namespaces.begin(); ns; ns = ns->Next) {
+    static const Mstring xxany("##any"), xxother("##other"), xxlocal("##local"),
+      xxtargetNamespace("##targetNamespace");
+    if (!first) any_ns += ',';
+
+    if (ns->Data == xxany) {
+    }// this must be the only element, nothing to add
+    else if (ns->Data == xxother) { // this must be the only element
+      any_ns += " except unqualified";
+      if (module->getTargetNamespace() != "NoTargetNamespace") {
+        any_ns += ", \'";
+        any_ns += parent->getModule()->getTargetNamespace();
+        any_ns += '\'';
+      }
+    }// The three cases below can happen multiple times
+    else {
+      if (first) any_ns += " from ";
+      // else a comma was already added
+      if (ns->Data == xxtargetNamespace) {
+        any_ns += '\'';
+        any_ns += parent->getModule()->getTargetNamespace();
+        any_ns += '\'';
+      } else if (ns->Data == xxlocal) {
+        any_ns += "unqualified";
+      } else {
+        any_ns += '\'';
+        any_ns += ns->Data;
+        any_ns += '\'';
+      }
+    }
+
+    first = false;
+  }
+
+  addVariant(varLabel, any_ns, true);
+}
+
+void ComplexType::addComment(const Mstring& text) {
+  if (this == actfield) {
+    if (lastType == n_attribute) { // ez nem teljesen jo, stb, tobb lehetoseg, es rossy sorrend
+      if (!attribfields.empty()) {
+        attribfields.back()->addComment(text);
+      }
+    } else {
+      if (actfield->getName().convertedValue == Mstring("base") && parent != NULL) {
+        parent->getComment().push_back(Mstring("/* " + text + " */\n"));
+      } else {
+        comment.push_back(Mstring("/* " + text + " */\n"));
+      }
+    }
+  } else {
+    actfield->addComment(text);
+    return;
+  }
+}
+
+//Attribute extension logic when extending complextypes
+void ComplexType::applyAttributeExtension(ComplexType * found_CT, AttributeType * anyAttrib /* = NULL */) {
+  for (List<AttributeType*>::iterator attr = found_CT->attribfields.begin(); attr; attr = attr->Next) {
+    bool l = false;
+    if (anyAttrib != NULL && attr->Data->isAnyAttribute()) {
+      anyAttrib->addNameSpaceAttribute(attr->Data->getNameSpaceAttribute());
+      l = true;
+    } else {
+      for (List<AttributeType*>::iterator attr2 = attribfields.begin(); attr2; attr2 = attr2->Next) {
+        if (attr->Data->getName().convertedValue == attr2->Data->getName().convertedValue &&
+          attr->Data->getType().convertedValue == attr2->Data->getType().convertedValue) {
+          if (attr->Data->getUseVal() == optional) {
+            attr2->Data->setUseVal(optional);
+          }
+          l = true;
+          break;
+        }
+      }
+    }
+    if (!l) {
+      AttributeType * newAttrib = new AttributeType(*attr->Data);
+      attribfields.push_back(newAttrib);
+      setParent(this, newAttrib);
+    }
+  }
+}
+
+//Attribute restriction logic when restricting complextypes
+void ComplexType::applyAttributeRestriction(ComplexType * found_CT) {
+  for (List<AttributeType*>::iterator attr = attribfields.begin(), nextAttr; attr; attr = nextAttr) {
+    nextAttr = attr->Next;
+    bool l = false;
+    for (List<AttributeType*>::iterator attr2 = found_CT->attribfields.begin(); attr2; attr2 = attr2->Next) {
+      if (attr->Data->getName().convertedValue == attr2->Data->getName().convertedValue &&
+        attr->Data->getType().convertedValue == attr2->Data->getType().convertedValue) {
+        l = true;
+        break;
+      }
+    }
+    if (!l) {
+      delete attr->Data;
+      attr->Data = NULL;
+      attribfields.remove(attr);
+    }
+  }
+  size_t size = found_CT->attribfields.size();
+  size_t size2 = attribfields.size();
+  size_t i = 0;
+  List<AttributeType*>::iterator attr = found_CT->attribfields.begin();
+  for (; i < size; attr = attr->Next, i = i + 1) {
+    bool l = false;
+    size_t j = 0;
+    List<AttributeType*>::iterator attr2 = attribfields.begin();
+    for (; j < size2; attr2 = attr2->Next, j = j + 1) {
+      if (attr->Data->getName().convertedValue == attr2->Data->getName().convertedValue &&
+        attr->Data->getType().convertedValue == attr2->Data->getType().convertedValue && !attr2->Data->getUsed()) {
+        l = true;
+        attr2->Data->setUsed(true);
+        break;
+      }
+    }
+    if (!l) {
+      AttributeType * newAttrib = new AttributeType(*attr->Data);
+      attribfields.push_back(newAttrib);
+      setParent(this, newAttrib);
+    }
+  }
+}
+
+void ComplexType::addNameSpaceAsVariant(RootType * root, RootType * other) {
+  if (other->getModule()->getTargetNamespace() != root->getModule()->getTargetNamespace() &&
+    other->getModule()->getTargetNamespace() != "NoTargetNamespace") {
+    root->addVariant(V_namespaceAs, other->getModule()->getTargetNamespace());
+  }
+}
+
+void ComplexType::resolveAttribute(AttributeType* attr) {
+  if (attr->getXsdtype() == n_attribute && !attr->getReference().empty()) {
+    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(attr, want_BOTH);
+    if (st != NULL) {
+      if (attr->isFromRef()) {
+        addNameSpaceAsVariant(attr, st);
+        attr->setTypeOfField(st->getName().convertedValue);
+        attr->setNameOfField(st->getName().originalValueWoPrefix);
+        attr->setOrigModule(st->getModule());
+      } else {
+        attr->setTypeOfField(st->getName().convertedValue);
+        if (st->getType().convertedValue == "record" || st->getType().convertedValue == "union") {
+          st->addToNameDepList(attr);
+        }
+      }
+    } else {
+      printError(module->getSchemaname(), name.convertedValue,
+        "Reference for a non-defined type: " + attr->getReference().repr());
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+    }
+  }
+}
+
+void ComplexType::resolveAttributeGroup(SimpleType * st) {
+  if (xsdtype == n_attributeGroup && !outside_reference.empty()) {
+    ComplexType * ct = (ComplexType*) st;
+    if(ct->resolved == No){
+      ct->referenceResolving();
+    }
+    outside_reference.set_resolved(ct);
+    setInvisible();
+    bool addNameSpaceas = false;
+    if (ct->getModule()->getTargetNamespace() != module->getTargetNamespace() &&
+      ct->getModule()->getTargetNamespace() != "NoTargetNamespace") {
+      addNameSpaceas = true;
+    }
+    ComplexType * par;
+    if(parent->nillable && parent->parent != NULL){
+      par = parent->parent;
+    }else {
+      par = parent;
+    }
+    List<AttributeType*>::iterator anyAttrib = par->attribfields.begin();
+    for (; anyAttrib; anyAttrib = anyAttrib->Next) {
+      if (anyAttrib->Data->isAnyAttribute()) {
+        break;
+      }
+    }
+    for (List<AttributeType*>::iterator attr = ct->attribfields.begin(); attr; attr = attr->Next) {
+      AttributeType * attrib = new AttributeType(*attr->Data);
+      attr->Data->setOrigModule(ct->getModule());
+      if (addNameSpaceas) {
+        attrib->addVariant(V_namespaceAs, ct->getModule()->getTargetNamespace());
+      }
+      if (anyAttrib != NULL && attr->Data->isAnyAttribute()) {
+        anyAttrib->Data->addNameSpaceAttribute(attr->Data->getNameSpaceAttribute());
+      } else {
+        //Nillable attribute placement is hard...
+        if (parent->nillable && parent->parent != NULL) {
+          parent->parent->attribfields.push_back(attrib);
+          attrib->parent = parent->parent;
+          setParent(parent->parent, attrib);
+        } else if (parent->nillable && !parent->complexfields.empty()) {
+          parent->complexfields.back()->attribfields.push_back(attrib);
+          attrib->parent = parent->complexfields.back();
+        } else if (parent->parent != NULL && (parent->parent->mode == extensionMode || parent->parent->mode == restrictionMode)) {
+          parent->parent->attribfields.push_back(attrib);
+          setParent(parent->parent, attrib);
+        } else {
+          parent->attribfields.push_back(attrib);
+          setParent(parent, attrib);
+        }
+      }
+    }
+  }
+}
+
+void ComplexType::resolveGroup(SimpleType *st) {
+  if (xsdtype == n_group && !outside_reference.empty()) {
+    ComplexType * ct = (ComplexType*) st;
+    outside_reference.set_resolved(ct);
+    setInvisible();
+    if(ct->resolved == No){
+      ct->referenceResolving();
+    }
+    //Decide if namespaceas variant needs to be added
+    bool addNameSpaceas = false;
+    if (ct->getModule()->getTargetNamespace() != module->getTargetNamespace() &&
+      ct->getModule()->getTargetNamespace() != "NoTargetNamespace") {
+      addNameSpaceas = true;
+    }
+    if (ct->getXsdtype() == n_sequence && minOccurs == 1 && maxOccurs == 1 && (parent->getXsdtype() == n_complexType || parent->getXsdtype() == n_sequence)) {
+      for (List<ComplexType*>::iterator c = ct->complexfields.begin(); c; c = c->Next) {
+        ComplexType * newField = new ComplexType(*c->Data);
+        parent->complexfields.push_back(newField);
+        setParent(parent, newField);
+        parent->complexfields.back()->setModule(getModule());
+        if (addNameSpaceas) {
+          parent->complexfields.back()->addVariant(V_namespaceAs, ct->getModule()->getTargetNamespace());
+        }
+      }
+    } else if (ct->getXsdtype() == n_all) {
+      //If the parent optional, then every field is optional
+      for (List<ComplexType*>::iterator c = ct->complexfields.begin(); c; c = c->Next) {
+        ComplexType* f = new ComplexType(*c->Data);
+        if (minOccurs == 0 && !f->enumerated) {
+          f->isOptional = true;
+        }
+        ((ComplexType*) parent)->complexfields.push_back(f);
+        setParent(parent, f);
+        f->setModule(getModule());
+        if (addNameSpaceas) {
+          f->addVariant(V_namespaceAs, ct->getModule()->getTargetNamespace());
+        }
+      }
+      parent->addVariant(V_useOrder);
+    } else {
+      if (name.list_extension) {
+        addVariant(V_untagged);
+      }
+      type.upload(ct->getName().convertedValue);
+      name.upload(ct->getName().convertedValue);
+      ct->addToNameDepList(this);
+      nameDep = ct;
+      visible = true;
+      if (addNameSpaceas) {
+        addVariant(V_namespaceAs, ct->getModule()->getTargetNamespace());
+      }
+    }
+  }
+}
+
+void ComplexType::resolveElement(SimpleType *st) {
+  if (xsdtype == n_element && !outside_reference.empty()) {
+    outside_reference.set_resolved(st);
+    type.upload(st->getModule()->getTargetNamespaceConnector() + Mstring(":") + st->getName().convertedValue);
+    st->addToNameDepList(this);
+    nameDep = st;
+    if (name.originalValueWoPrefix.empty()) {
+      name.upload(st->getName().convertedValue);
+    }
+    if (fromRef) {
+      addNameSpaceAsVariant(this, st);
+    }
+    if(st->getSubstitution() != NULL){
+      st->getSubstitution()->addToNameDepList(this);
+      nameDep = st->getSubstitution();
+    }
+  }
+}
+
+void ComplexType::resolveSimpleTypeExtension() {
+  if (mode == extensionMode && cmode == CT_simpletype_mode && basefield != NULL) {
+    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(basefield, want_BOTH);
+    if (st != NULL) {
+      if (st->getXsdtype() != n_NOTSET && ((ComplexType*) st)->basefield != NULL) { // if the xsdtype != simpletype
+        ComplexType * ct = (ComplexType*) st;
+        if (ct->resolved == No) {
+          ct->referenceResolving();
+        }
+        basefield->outside_reference.set_resolved(ct);
+        ct->basefield->addToNameDepList(basefield);
+        basefield->nameDep = ct->basefield;
+        basefield->mode = extensionMode;
+        basefield->applyReference(*ct->basefield, true);
+        addNameSpaceAsVariant(basefield, ct->basefield);
+        applyAttributeExtension(ct);
+      } else {
+        if (!st->getReference().empty() && !st->getReference().is_resolved()) {
+          st->referenceResolving();
+        }
+        st->addToNameDepList(basefield);
+        addNameSpaceAsVariant(basefield, st);
+        basefield->nameDep = st;
+      }
+    } else if(!isBuiltInType(basefield->getType().convertedValue)){
+         printError(module->getSchemaname(), name.convertedValue,
+          "Reference for a non-defined type: " + basefield->getReference().repr());
+       TTCN3ModuleInventory::getInstance().incrNumErrors();
+       return;
+    }
+
+  }
+}
+
+void ComplexType::resolveSimpleTypeRestriction() {
+  if (mode == restrictionMode && cmode == CT_simpletype_mode && basefield != NULL && !basefield->outside_reference.empty()) {
+    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(basefield, want_BOTH);
+    if (st == NULL) {
+      printError(module->getSchemaname(), name.convertedValue,
+        "Reference for a non-defined type: " + basefield->getReference().repr());
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+      return;
+    }
+    basefield->outside_reference.set_resolved(st);
+    if (st->getXsdtype() != n_NOTSET) {
+      ComplexType * ct = (ComplexType*) st;
+      if (ct->resolved == No) {
+        ct->referenceResolving();
+      }
+      applyAttributeRestriction(ct);
+      basefield->mode = restrictionMode;
+      if (ct->cmode == CT_complextype_mode) {
+        applyReference(*ct, true);
+        type.upload(ct->getName().convertedValue);
+        basefield->setInvisible();
+      } else if (ct->basefield != NULL) {
+        basefield->applyReference(*ct->basefield);
+        addNameSpaceAsVariant(basefield, ct->basefield);
+      } else if (ct->basefield == NULL) {
+        basefield->applyReference(*ct);
+        addNameSpaceAsVariant(basefield, ct);
+      }
+    } else {
+      if (!st->getReference().empty() && !st->getReference().is_resolved()) {
+        st->referenceResolving();
+      }
+      if(xsdtype == n_simpleContent){
+        basefield->applyReference(*st, true);
+        addNameSpaceAsVariant(basefield, st);
+        basefield->mode = restrictionMode;
+      }else if(xsdtype == n_simpleType){
+        basefield->setInvisible();
+        applyReference(*basefield, true);
+        applyReference(*st, true);
+        addNameSpaceAsVariant(this, st);
+        basefield->mode = restrictionMode;
+        }
+    }
+  } else if (mode == restrictionMode && cmode == CT_simpletype_mode && basefield != NULL) {
+    ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(basefield, want_CT);
+    if (ct == NULL && !isBuiltInType(basefield->getType().convertedValue)) {
+      printError(module->getSchemaname(), name.convertedValue,
+        "Reference for a non-defined type: " + basefield->getReference().repr());
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+      return;
+    }
+    
+    basefield->outside_reference.set_resolved(ct);
+    if (ct != NULL) {
+      if (ct->resolved == No) {
+        ct->referenceResolving();
+      }
+      for (List<AttributeType*>::iterator f = ct->attribfields.begin(); f; f = f->Next) {
+        AttributeType * attr = new AttributeType(*f->Data);
+        attribfields.push_back(attr);
+        setParent(this, attr);
+      }
+      addNameSpaceAsVariant(this, ct);
+    }
+    if(!basefield->parent->top){
+      applyReference(*basefield, true);
+      basefield->setInvisible();
+    }
+  }
+}
+
+void ComplexType::resolveComplexTypeExtension() {
+  if (mode == extensionMode && cmode == CT_complextype_mode && !outside_reference.empty()) {
+    ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(this, want_CT);
+    if (ct == NULL) {
+      printError(module->getSchemaname(), name.convertedValue,
+        "Reference for a non-defined type: " + getReference().repr());
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+      return;
+    }
+    if(ct->getXsdtype() != n_NOTSET){
+      outside_reference.set_resolved(ct);
+      if (ct->resolved == No) {
+        ct->referenceResolving();
+      }
+      List<AttributeType*>::iterator anyAttr = attribfields.begin();
+      for (; anyAttr; anyAttr = anyAttr->Next) {
+        if (anyAttr->Data->isAnyAttribute()) {
+          break;
+        }
+      }
+
+      if (anyAttr != NULL) {
+        applyAttributeExtension(ct, anyAttr->Data);
+      } else {
+        applyAttributeExtension(ct);
+      }
+
+      if (ct->getName().convertedValue == outside_reference.get_val() && ct->getModule()->getTargetNamespace() == outside_reference.get_uri()) {
+        //Self recursion
+        outside_reference.set_resolved(ct);
+        for (List<ComplexType*>::iterator f = ct->complexfields.end(); f; f = f->Prev) {
+          if (f->Data != this) { //not a self recursive field
+            ComplexType * newField = new ComplexType(*f->Data);
+            complexfields.push_front(newField);
+            setParent(this, newField);
+          } else {
+            //Self recursive field
+            ComplexType * field = new ComplexType(this);
+            field->name.upload(f->Data->getName().convertedValue);
+            field->applyReference(*f->Data);
+            field->type.upload(ct->getName().convertedValue + Mstring(".") + f->Data->getName().convertedValue);
+            field->type.no_replace = true;
+            field->minOccurs = f->Data->minOccurs;
+            field->maxOccurs = f->Data->maxOccurs;
+            complexfields.push_front(field);
+            setParent(this, field);
+          }
+        }
+      } else {
+        //Normal extension
+        for (List<ComplexType*>::iterator f = ct->complexfields.end(); f; f = f->Prev) {
+          ComplexType * newField = new ComplexType(*f->Data);
+          complexfields.push_front(newField);
+          setParent(this, newField);
+        }
+      }
+    }
+  }
+}
+
+void ComplexType::resolveComplexTypeRestriction() {
+  if (mode == restrictionMode && cmode == CT_complextype_mode && !outside_reference.empty()) {
+    ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(this, want_CT);
+    if(ct->getXsdtype() != n_NOTSET){
+      if (ct->resolved == No) {
+        ct->referenceResolving();
+      }
+      outside_reference.set_resolved(ct);
+      applyAttributeRestriction(ct);
+
+      size_t size = complexfields.size();
+      size_t i = 0;
+      List<ComplexType*>::iterator field = complexfields.begin();
+      for (; i < size; field = field->Next, i = i + 1){
+        List<ComplexType*>::iterator field2 = ct->complexfields.begin();
+        for (; field2; field2 = field2->Next) {
+          if (field->Data->getName().convertedValue == field2->Data->getName().convertedValue &&
+            field->Data->getType().convertedValue == field2->Data->getType().convertedValue) {
+            field->Data->applyReference(*field2->Data, false);
+            break;
+          }
+        }
+        if(field2 == NULL){
+          field->Data->setInvisible();
+        }
+      }
+    }
+  }
+}
+
+void ComplexType::resolveUnion(SimpleType *st) {
+  if (parent != NULL && parent->with_union && xsdtype == n_simpleType && !outside_reference.empty()) {
+    if (st->getXsdtype() != n_NOTSET) {
+      ComplexType * ct = (ComplexType*) st;
+      outside_reference.set_resolved(ct);
+      for (List<ComplexType*>::iterator field = ct->complexfields.begin(); field; field = field->Next) {
+        ComplexType * newField = new ComplexType(*field->Data);
+        parent->complexfields.push_back(newField);
+        setParent(parent, newField);
+      }
+      setInvisible();
+    }
+  }
+}
+
+void ComplexType::modifyAttributeParent() {
+  if (nillable_field != NULL) {
+    ((ComplexType*) nillable_field)->actfield = nillable_field;
+  } else {
+    actfield = this;
+  }
+}
+
+void ComplexType::addSubstitution(SimpleType* st){
+  ComplexType * element;
+  if(st->getXsdtype() == n_NOTSET || !complexfields.empty()){
+    element = new ComplexType(*st, fromTagSubstition);
+  }else {
+    element = new ComplexType(*(ComplexType*)st);
+    element->variant.clear();
+  }
+  element->subsGroup = this;
+  element->parent = this;
+  if(complexfields.empty()){ //The first element(head)
+    element->setTypeValue(st->getType().convertedValue);
+    if(st->hasVariant(Mstring("\"abstract\""))){
+      element->addVariant(V_onlyValueHidden, Mstring("\"abstract\""));
+    }
+  }else {
+    Mstring newType;
+    if(st->getType().convertedValue == "anyType"){
+      newType = complexfields.front()->getType().convertedValue;
+    }else {
+      newType = st->getName().convertedValue;
+      st->addToNameDepList(element);
+    }
+    element->setTypeValue(newType);
+    BlockValue front_block = complexfields.front()->getBlock();
+    if(front_block == all || front_block == substitution){
+      element->addVariant(V_onlyValueHidden, Mstring("\"block\""));
+    }else if(front_block == restriction || front_block == extension){
+      const Mstring& head_type = complexfields.front()->getType().convertedValue.getValueWithoutPrefix(':');
+      Mstring elem_type = findRoot(front_block, st, head_type, true);
+      if(head_type == elem_type){
+        element->addVariant(V_onlyValueHidden, Mstring("\"block\""));
+      }
+    }
+  }
+
+  element->setNameValue(st->getName().convertedValue);
+  element->top = false;
+  complexfields.push_back(element);
+}
+
+Mstring ComplexType::findRoot(const BlockValue block_value, SimpleType* elem, const Mstring& head_type, const bool first){
+  if(!first && elem->getType().convertedValue.getValueWithoutPrefix(':') == head_type && !isFromRef()){
+    return elem->getType().convertedValue.getValueWithoutPrefix(':');
+  }else if(elem->getType().convertedValue.getValueWithoutPrefix(':') == head_type && (isFromRef() && ((elem->getMode() == restrictionMode && block_value == restriction) || (elem->getMode() == extensionMode && block_value == extension)))){
+    return elem->getType().convertedValue.getValueWithoutPrefix(':');
+  }else {
+    SimpleType * st = NULL;
+    if((elem->getMode() == restrictionMode && block_value == restriction) ||
+       (elem->getMode() == extensionMode && block_value == extension)){
+      if(!elem->getReference().is_resolved()){
+        elem->referenceResolving();
+      }
+      if(elem->getXsdtype() != n_NOTSET){
+        ComplexType * ct = (ComplexType*)elem;
+        if(ct->basefield != NULL && ct->basefield->getType().convertedValue.getValueWithoutPrefix(':') == head_type){
+          return head_type;
+        }else if(ct->basefield != NULL){
+          st = (SimpleType*)TTCN3ModuleInventory::getInstance().lookup(ct->basefield, want_BOTH);
+        }
+      }
+      if(st == NULL){
+        st = (SimpleType*)(elem->getReference().get_ref());
+      }
+    }else if(elem->getMode() == noMode && (block_value == restriction || block_value == extension)){
+      st = (SimpleType*)TTCN3ModuleInventory::getInstance().lookup(this, elem->getType().convertedValue, want_BOTH);
+    }
+    if(st != NULL && elem != st){
+      return findRoot(block_value, st, head_type, false);
+    }
+  }
+  if(elem->getMode() == noMode && !first){
+    return elem->getType().convertedValue.getValueWithoutPrefix(':');
+  }else {
+    return empty_string;
   }
 }

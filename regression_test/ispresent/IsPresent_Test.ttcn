@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -181,7 +181,6 @@ type record of MyRec2 MyRecOf
   };
 
   function f_empty() runs on MTC_CT {
-    log("f_empty called");
   }
 
   testcase tc_special_default_value_unbound() runs on MTC_CT {
@@ -195,23 +194,19 @@ type record of MyRec2 MyRecOf
   }
   testcase tc_special_default_value_isvalue() runs on MTC_CT {
     var default vl_default := activate(as_empty());
-    //log("default altstep after activate:", vl_default);
     if(ispresent(vl_default)){setverdict(pass)}else {setverdict(fail)};
 
     deactivate(vl_default);
-    //log("default altstep after deactivate:", vl_default);
     if(ispresent(vl_default)){setverdict(pass)}else {setverdict(fail)};
   }
 
   testcase tc_special_compref_unbound() runs on MTC_CT {
     var MTC_CT vc_myComp;
-    log("vc_myComp before create:", vc_myComp);
     if(ispresent(vc_myComp)){setverdict(fail)}else {setverdict(pass)};
   }
 
   testcase tc_special_compref_isvalue() runs on MTC_CT {
     var MTC_CT vc_myComp:= MTC_CT.create("hali");
-    log("vc_myComp after create:", vc_myComp);
     if(ispresent(vc_myComp)){setverdict(pass)}else {setverdict(fail)};
 
     vc_myComp.start(f_empty());
@@ -238,7 +233,6 @@ type record of MyRec2 MyRecOf
     if(ispresent(vl_u.roi)){setverdict(fail)}else {setverdict(pass)}
     if(ispresent(vl_u.roi[0])){setverdict(fail)}else {setverdict(pass)}
     if(ispresent(vl_u.roi[1])){setverdict(fail)} else {setverdict(pass)}
-    log(vl_u.roc);
   }
 
   testcase tc_unionOfRecordOfs2() runs on MTC_CT {
@@ -291,7 +285,6 @@ type record of MyRec2 MyRecOf
     if(ispresent(vl_u.roi)){setverdict(fail)}
     if(ispresent(vl_u.roi[0])){setverdict(fail)}
     if(ispresent(vl_u.roi[1])){setverdict(fail)} else {setverdict(pass)}
-    log(vl_u.roc);
   }
   //expected:error
   testcase tc_sideeffect1() runs on MTC_CT {
@@ -314,7 +307,6 @@ type record of MyRec2 MyRecOf
     if(ispresent(vl_u.roc[4])) {setverdict(fail)}else {setverdict(pass)}
     vl_newsize:=sizeof(vl_u.roc);
     if(vl_newsize == vl_oldsize) {setverdict(pass)}else {setverdict(fail)}
-    //log(vl_u.i);
   }
 
   //====== DEEP 2-3 ===============
@@ -464,7 +456,6 @@ type record of MyRec2 MyRecOf
   testcase tc_union_OneOption_WithWildcard() runs on MTC_CT {
     var template MyRec4 vtl_rec:=?
     if(ispresent(vtl_rec)){setverdict(pass)}else {setverdict(fail)};
-    //log(vtl_rec.u);
     log("DTE is expected in the next line")
     if(ispresent(vtl_rec.u.i)){setverdict(fail)};
   }
@@ -667,7 +658,7 @@ type record of MyRec2 MyRecOf
     vtl_rec2:={
       u := ?
     }
-    //log("The value of the record:",vtl_rec2.u);
+
     if(ispresent(vtl_rec2.u.i)){setverdict(fail)}else{setverdict(pass)}; //pass
   }
 
@@ -676,8 +667,7 @@ type record of MyRec2 MyRecOf
     vtl_rec2:={
       u := ?
     }
-    //log("The value of the record:",vtl_rec2.u.i); <== This line would modify the verdict for "pass", see next testcase
-    log("The value of the record:",vtl_rec2.u);
+
     if(ispresent(vtl_rec2.u.i)){setverdict(fail)}else{setverdict(pass)}; //pass
   }
 
@@ -686,7 +676,6 @@ type record of MyRec2 MyRecOf
     vtl_rec2:={
       u := ?
     }
-    log("The value of the record:",vtl_rec2.u.i);
 
     if(ispresent(vtl_rec2.u.i)){setverdict(fail)}else {setverdict(pass)}; //fail
   }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -318,6 +318,24 @@ namespace Ttcn {
   {
     Node::set_my_scope(p_scope);
     temp->set_my_scope(p_scope);
+  }
+  
+  void NamedTemplate::set_name_to_lowercase()
+  {
+    string new_name = name->get_name();
+    if (isupper(new_name[0])) {
+      new_name[0] = tolower(new_name[0]);
+      if (new_name[new_name.size() - 1] == '_') {
+        // an underscore is inserted at the end of the alternative name if it's
+        // a basic type's name (since it would conflict with the class generated
+        // for that type)
+        // remove the underscore, it won't conflict with anything if its name
+        // starts with a lowercase letter
+        new_name.replace(new_name.size() - 1, 1, "");
+      }
+      delete name;
+      name = new Identifier(Identifier::ID_NAME, new_name);
+    }
   }
 
   Template* NamedTemplate::extract_template()

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -64,6 +64,12 @@ testcase tc_t2j_mini_ranap() runs on Shell_CT
     c_shell_successWithoutWarningAndError);
 }
 
+testcase tc_t2j_subtype() runs on Shell_CT
+{
+  f_test_ttcn2json("SubType.ttcn", "SubType.json", "SubType_e.json", 
+    c_shell_successWithoutWarningAndError);
+}
+
 control {
   execute(tc_t2j_one());
   execute(tc_t2j_two());
@@ -71,6 +77,7 @@ control {
   execute(tc_t2j_general_types());
   execute(tc_t2j_main_asn());
   execute(tc_t2j_mini_ranap());
+  execute(tc_t2j_subtype());
 }
 
 }

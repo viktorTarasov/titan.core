@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2014 Ericsson Telecom AB
+// Copyright (c) 2000-2015 Ericsson Telecom AB
 // All rights reserved. This program and the accompanying materials
 // are made available under the terms of the Eclipse Public License v1.0
 // which accompanies this distribution, and is available at
@@ -27,6 +27,7 @@ struct XERdescriptor_t;
 struct TTCN_JSONdescriptor_t;
 class  XmlReaderWrap;
 class Module_Param;
+class Module_Param_Name;
 struct embed_values_enc_struct_t;
 struct embed_values_dec_struct_t;
 
@@ -152,7 +153,16 @@ public:
     XERdescriptor_t const& xd, unsigned int flavor);
 
 #ifdef TITAN_RUNTIME_2
+  /** Initialize this object (or one of its fields/elements) with a 
+    * module parameter value. The module parameter may contain references to
+    * other module parameters or module parameter expressions, which are processed
+    * by this method to calculated the final result.
+    * @param param module parameter value (its ID specifies which object is to be set) */
   virtual void set_param(Module_Param& param) = 0;
+  /** Create a module parameter value equivalent to this object (or one of its
+    * fields/elements)
+    * @param param_name module parameter ID, specifies which object to convert */
+  virtual Module_Param* get_param(Module_Param_Name& param_name) const = 0;
   /** Whether the type is a sequence-of.
    * @return \c FALSE */
   virtual boolean is_seof() const { return FALSE; }
@@ -737,6 +747,7 @@ public:
   int lengthof() const;
   virtual void log() const;
   virtual void set_param(Module_Param& param);
+  virtual Module_Param* get_param(Module_Param_Name& param_name) const;
   virtual void set_implicit_omit();
   virtual void encode_text(Text_Buf& text_buf) const;
   virtual void decode_text(Text_Buf& text_buf);
@@ -886,6 +897,7 @@ public:
   virtual void clean_up();
   virtual void log() const;
   virtual void set_param(Module_Param& param);
+  virtual Module_Param* get_param(Module_Param_Name& param_name) const;
   virtual void set_implicit_omit();
 
   int size_of() const;
@@ -967,7 +979,8 @@ public:
   virtual boolean is_bound() const { return bound_flag; }
   virtual void clean_up() { bound_flag = FALSE; }
   virtual void log() const;
-  virtual void set_param(Module_Param& param); 
+  virtual void set_param(Module_Param& param);
+  virtual Module_Param* get_param(Module_Param_Name& param_name) const;
 
   int size_of() const { return 0; }
   virtual void encode_text(Text_Buf& text_buf) const;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2014 Ericsson Telecom AB
+ * Copyright (c) 2000-2015 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -55,6 +55,10 @@ template templateFloat_rec templateFloat_tIfpresent :={ //specific value and ifp
  x1:=1.1,
  x2:=2.1,
  x3:=3.1 ifpresent };
+ 
+template float templateFloat_tNaN := not_a_number;
+template float templateFloat_tPosInf := infinity;
+template float templateFloat_tNegInf := -infinity;
 
 testcase templateFloatSpec() runs on templateFloat_mycomp {
 var templateFloat_rec x1,x2;		//specific value
@@ -232,6 +236,21 @@ if (not(match(x4,templateFloat_tIfpresent))) {setverdict(pass);}
  else {setverdict(fail);}
 }
 
+testcase templateFloatSpecialValues() runs on templateFloat_mycomp {
+  var float v_nan := not_a_number;
+  var float v_pos_inf := infinity;
+  var float v_neg_inf := -infinity;
+  
+  if (match(v_nan, templateFloat_tNaN)) { setverdict(pass); }
+  else { setverdict(fail, "not_a_number should match itself"); }
+  
+  if (match(v_pos_inf, templateFloat_tPosInf)) { setverdict(pass); }
+  else { setverdict(fail, "infinity should match itself"); }
+  
+  if (match(v_neg_inf, templateFloat_tNegInf)) { setverdict(pass); }
+  else { setverdict(fail, "-infinity should match itself"); }
+}
+
 control {
  execute(templateFloatSpec());
  execute(templateFloatList());
@@ -244,5 +263,6 @@ control {
  execute(templateFloatRange3());
  execute(templateFloatRange4());
  execute(templateFloatIfpresent());
+ execute(templateFloatSpecialValues());
 }
 }

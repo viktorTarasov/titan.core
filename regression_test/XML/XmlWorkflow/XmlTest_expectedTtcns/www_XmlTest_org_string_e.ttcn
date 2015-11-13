@@ -97,7 +97,7 @@ variant "name as 'Longer-string'";
 };
 
 
-type Longer_string Longer_stringChild length(5)
+type XSD.String Longer_stringChild length(5)
 with {
 variant "name as 'Longer-stringChild'";
 };

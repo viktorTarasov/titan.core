@@ -1,3 +1,11 @@
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2000-2015 Ericsson Telecom AB
+// All rights reserved. This program and the accompanying materials
+// are made available under the terms of the Eclipse Public License v1.0
+// which accompanies this distribution, and is available at
+// http://www.eclipse.org/legal/epl-v10.html
+///////////////////////////////////////////////////////////////////////////////
+
 #ifndef JSON_TOKENIZER_HH
 #define	JSON_TOKENIZER_HH
 
@@ -154,6 +162,14 @@ public:
 
 // A dummy JSON tokenizer, use when there is no actual JSON document
 static JSON_Tokenizer DUMMY_BUFFER;
+
+/** Converts a string into a JSON string by replacing all control characters
+  * with JSON escape sequences, if available, or with the \uHHHH escape sequence.
+  * The string is also wrapped inside a set of double quotes and all double quotes
+  * and backslash characters are double-escaped.
+  *
+  * Returns an expstring, that needs to be freed. */
+extern char* convert_to_json_string(const char* str);
 
 
 #endif	/* JSON_TOKENIZER_HH */
