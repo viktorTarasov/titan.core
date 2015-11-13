@@ -19,10 +19,10 @@ ASN.1 (Abstract Syntax Notation One).
 http://polarsys.org/sites/default/files/custom_uploads/TITAN%20Datasheet%20A4%202.1.pdf
 
 ## Ericsson TTCN-3 Course, Presentation material
-https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_User_P.pdf
+http://www.ttcn-3.org/files/TTCN3_P.pdf
 
 ## Ericsson TTCN-3 Course, Presentation material, part II (Titan specifics)
-http://www.ttcn-3.org/files/TTCN3_P.pdf
+https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_User_P.pdf
 
 ##Binaries and SHA512 checksums for a number of Linux platforms can be downloaded from:
 
