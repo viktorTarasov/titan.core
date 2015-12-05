@@ -129,6 +129,19 @@ void write_ns_prefix(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf)
   }
 }
 
+const char* get_ns_uri_from_prefix(const char *prefix, const XERdescriptor_t& p_td)
+{
+  if (p_td.my_module != 0 && prefix != NULL && prefix[0] != 0) {
+    for (size_t i = 0; i < p_td.my_module->get_num_ns(); ++i) {
+      const namespace_t *ns = p_td.my_module->get_ns(i);
+      if (ns->px != NULL && strcmp(ns->px, prefix) == 0) {
+        return ns->ns;
+      }
+    }
+  }
+  return NULL;
+}
+
 void check_namespace_restrictions(const XERdescriptor_t& p_td, const char* p_xmlns)
 {
   // In case of "anyElement from ..." matching namespaces is good

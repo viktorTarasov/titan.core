@@ -1536,7 +1536,7 @@ group ComplexType {
   }//tc_
 
  testcase tc_no_ns_connector() runs on xmlTest_CT {
-    f_shellCommandWithVerdict("xsd2ttcn no_ns_connector.xsd","",c_shell_successWithWarning)
+    f_shellCommandWithVerdict("xsd2ttcn no_ns_connector.xsd","",c_shell_successWithoutWarningAndError)
 
     if(getverdict==pass) {
       f_compareFiles(
@@ -2009,9 +2009,20 @@ group Elements{
 
   }//tc_
 
+  testcase tc_substitutiongroup_name_as() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_name_as.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_name_as_e.ttcn","www_example_org_substitutiongroup_name_as.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
   testcase tc_substitutiongroup_abstract_block_rest() runs on xmlTest_CT {
 
-    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_abstract_block_1.xsd","",c_shell_successWithWarning)
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_abstract_block_1.xsd","",c_shell_successWithoutWarningAndError)
 
     if(getverdict==pass) {
       f_compareFiles(
@@ -2023,7 +2034,7 @@ group Elements{
 
   testcase tc_substitutiongroup_abstract_block_ext() runs on xmlTest_CT {
 
-    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_abstract_block_2.xsd","",c_shell_successWithWarning)
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_abstract_block_2.xsd","",c_shell_successWithoutWarningAndError)
 
     if(getverdict==pass) {
       f_compareFiles(
@@ -2035,7 +2046,7 @@ group Elements{
 
   testcase tc_substitutiongroup_complex_without_element() runs on xmlTest_CT {
 
-    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_complex_without_element.xsd","",c_shell_successWithWarning)
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_complex_without_element.xsd","",c_shell_successWithoutWarningAndError)
 
     if(getverdict==pass) {
       f_compareFiles(
@@ -2047,13 +2058,33 @@ group Elements{
 
   testcase tc_substitutiongroup_long_extension() runs on xmlTest_CT {
 
-    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_complex_without_element.xsd","",c_shell_successWithWarning)
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_complex_without_element.xsd","",c_shell_successWithoutWarningAndError)
 
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_substitutiongroup_complex_without_element_e.ttcn",
         "www_example_org_substitutiongroup_complex_without_element.ttcn", c_numOfDiff_headerModNameAndNamespace);
     }
+
+  }//tc_
+
+  testcase tc_substitutiongroup_complextype_block() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_complextype_block.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_complextype_block_e.ttcn",
+        "www_example_org_substitutiongroup_complextype_block.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  //Test if we find the substitutiongroup references in notargetnamespace
+  testcase tc_substitutiongroup_notargetnamespace() runs on xmlTest_CT {
+
+    //f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_notargetnamespace.xsd","",c_shell_successWithoutWarningAndError)
+    setverdict(pass);
 
   }//tc_
 
@@ -2065,7 +2096,7 @@ group Elements{
 
   testcase tc_substitutiongroup_diff_module() runs on xmlTest_CT {
 
-    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_main.xsd substitutiongroup_ref.xsd","",c_shell_successWithWarning)
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_main.xsd substitutiongroup_ref.xsd","",c_shell_successWithoutWarningAndError)
 
     if(getverdict==pass) {
       f_compareFiles(
@@ -2077,6 +2108,161 @@ group Elements{
       f_compareFiles(
         "www_example_org_substitutiongroup_main_e.ttcn",
         "www_example_org_substitutiongroup_main.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_substitutiongroup_rename() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn substitutiongroup_rename.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_substitutiongroup_rename_e.ttcn",
+        "www_example_org_substitutiongroup_rename.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_substitutiongroup_endDec() runs on xmlTest_CT {
+
+    f_encDecTest_ize_subs();
+  }
+
+  testcase tc_type_substitution() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h type_substitution.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_e.ttcn",
+        "www_example_org_type_substitution.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_type_substitution_encDec() runs on xmlTest_CT {
+
+    f_encDecTest_type_subs();
+
+  }//tc_
+
+  testcase tc_type_substitution_chain() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h type_substitution_chain.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_chain_e.ttcn",
+        "www_example_org_type_substitution_chain.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_type_substitution_abstract_block() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h type_substitution_abstract_block.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_abstract_block_e.ttcn",
+        "www_example_org_type_substitution_abstract_block.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_type_substitution_diff_module() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h type_substitution_mod1.xsd type_substitution_mod2.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_mod1_e.ttcn",
+        "www_example_org_type_substitution_mod1.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_mod2_e.ttcn",
+        "www_example_org_type_substitution_mod2.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_type_substitution_simpletype() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h type_substitution_simpletype.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_simpletype_e.ttcn",
+        "www_example_org_type_substitution_simpletype.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_type_substitution_with_elem_substitution() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h type_subs_with_elem_subs.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_subs_with_elem_subs_e.ttcn",
+        "www_example_org_type_subs_with_elem_subs.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_type_substitution_element_in_ct() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h type_substitution_elem_in_ct_mod1.xsd type_substitution_elem_in_ct_mod2.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_elem_in_ct_mod1_e.ttcn",
+        "www_example_org_type_substitution_elem_in_ct_mod1.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_elem_in_ct_mod2_e.ttcn",
+        "www_example_org_type_substitution_elem_in_ct_mod2.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_only_element_substitution() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h only_element_substitution.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_only_element_substitution_e.ttcn",
+        "www_example_org_only_element_substitution.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_type_substitution_builtintype() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h type_substitution_builtintype.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_builtintype_e.ttcn",
+        "www_example_org_type_substitution_builtintype.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+
+  }//tc_
+
+  testcase tc_type_substitution_rename() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn -h type_substitution_rename.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_type_substitution_rename_e.ttcn",
+        "www_example_org_type_substitution_rename.ttcn", c_numOfDiff_headerModNameAndNamespace);
     }
 
   }//tc_
@@ -2111,7 +2297,7 @@ group Elements{
 
   //"Abstract" are not supported. Therefore converter sends WARNINGs
   testcase tc_element_abstract_conv() runs on xmlTest_CT {
-    f_shellCommandWithVerdict("xsd2ttcn XmlTest_element_abstract.xsd","",c_shell_successWithWarning);
+    f_shellCommandWithVerdict("xsd2ttcn XmlTest_element_abstract.xsd","",c_shell_successWithoutWarningAndError);
   }//tc_
 
   testcase tc_element_nillable_converter() runs on xmlTest_CT {
@@ -2396,12 +2582,30 @@ control {
 
   //===substitutiongroup===
   execute(tc_substitutiongroup());
+  execute(tc_substitutiongroup_name_as());
   execute(tc_substitutiongroup_abstract_block_rest());
   execute(tc_substitutiongroup_abstract_block_ext());
   execute(tc_substitutiongroup_complex_without_element());
   execute(tc_substitutiongroup_long_extension());
+  execute(tc_substitutiongroup_complextype_block());
+  execute(tc_substitutiongroup_notargetnamespace());
   execute(tc_substitutiongroup_neg());
   execute(tc_substitutiongroup_diff_module());
+  execute(tc_substitutiongroup_rename());
+  execute(tc_substitutiongroup_endDec());
+
+  //===type substitution===
+  execute(tc_type_substitution());
+  execute(tc_type_substitution_encDec());
+  execute(tc_type_substitution_chain());
+  execute(tc_type_substitution_abstract_block());
+  execute(tc_type_substitution_diff_module());
+  execute(tc_type_substitution_simpletype());
+  execute(tc_type_substitution_with_elem_substitution());
+  execute(tc_type_substitution_element_in_ct());
+  execute(tc_only_element_substitution());
+  execute(tc_type_substitution_builtintype());
+  execute(tc_type_substitution_rename());
 
 
 

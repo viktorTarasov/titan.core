@@ -3002,7 +3002,7 @@ end:
       break;
     case TEMPLATE_INVOKE:
       if (get_code_section() == CS_POST_INIT)
-        str = rearrange_init_code_invoke(str);
+        str = rearrange_init_code_invoke(str, my_scope->get_scope_mod_gen());
       str = generate_code_init_invoke(str, name);
       break;
     case TEMPLATE_LIST:
@@ -3056,17 +3056,17 @@ end:
     return str;
   }
 
-  char *Template::rearrange_init_code(char *str)
+  char *Template::rearrange_init_code(char *str, Common::Module* usage_mod)
   {
     switch (templatetype) {
     case SPECIFIC_VALUE:
       str = u.specific_value->rearrange_init_code(str);
       break;
     case TEMPLATE_REFD:
-      str = rearrange_init_code_refd(str);
+      str = rearrange_init_code_refd(str, usage_mod);
       break;
     case TEMPLATE_INVOKE:
-      str = rearrange_init_code_invoke(str);
+      str = rearrange_init_code_invoke(str, usage_mod);
       break;
     case TEMPLATE_LIST:
     case VALUE_LIST:
@@ -3075,17 +3075,17 @@ end:
     case SUBSET_MATCH:
     case PERMUTATION_MATCH:
       for (size_t i = 0; i < u.templates->get_nof_ts(); i++)
-        str = u.templates->get_t_byIndex(i)->rearrange_init_code(str);
+        str = u.templates->get_t_byIndex(i)->rearrange_init_code(str, usage_mod);
       break;
     case NAMED_TEMPLATE_LIST:
       for (size_t i = 0; i < u.named_templates->get_nof_nts(); i++)
         str = u.named_templates->get_nt_byIndex(i)->get_template()
-        ->rearrange_init_code(str);
+        ->rearrange_init_code(str, usage_mod);
       break;
     case INDEXED_TEMPLATE_LIST:
       for (size_t i = 0; i < u.indexed_templates->get_nof_its(); i++)
         str = u.indexed_templates->get_it_byIndex(i)->get_template()
-          ->rearrange_init_code(str);
+          ->rearrange_init_code(str, usage_mod);
       break;
     case VALUE_RANGE:
       str = u.value_range->rearrange_init_code(str);
@@ -3147,17 +3147,15 @@ end:
       if (get_code_section() == CS_POST_INIT) {
         // the referencing template is a part of a non-parameterized template
         Common::Assignment *ass = u.ref.ref->get_refd_assignment();
-        if (ass->get_asstype() == Common::Assignment::A_TEMPLATE &&
-            ass->get_my_scope()->get_scope_mod_gen() ==
-            my_scope->get_scope_mod_gen()) {
+        if (ass->get_asstype() == Common::Assignment::A_TEMPLATE) {
           // the reference points to (a field of) a template
-          // within the local module
           if (ass->get_FormalParList()) {
             // the referred template is parameterized
             // generate the initialization sequence first for all dependent
             // non-parameterized templates
-            str = rearrange_init_code_refd(str);
-          } else {
+            str = rearrange_init_code_refd(str, my_scope->get_scope_mod_gen());
+          } else if (ass->get_my_scope()->get_scope_mod_gen() ==
+                     my_scope->get_scope_mod_gen()) {
             // the referred template is non-parameterized
             // use a different algorithm for code generation
             str = generate_rearrange_init_code_refd(str, &expr);
@@ -4440,29 +4438,31 @@ compile_time:
     expr->expr = mputc(expr->expr, ')');
   }
 
-  char *Template::rearrange_init_code_refd(char *str)
+  char *Template::rearrange_init_code_refd(char *str, Common::Module* usage_mod)
   {
     if (templatetype != TEMPLATE_REFD)
       FATAL_ERROR("Template::rearrange_init_code_refd()");
-    ActualParList *parlist = u.ref.ref->get_parlist();
+    ActualParList *actual_parlist = u.ref.ref->get_parlist();
     // generate code for the templates that are used in the actual parameter
     // list of the reference
     Common::Assignment *ass = u.ref.ref->get_refd_assignment();
-    bool rearrange = (ass->get_my_scope()->get_scope_mod_gen() ==
-        my_scope->get_scope_mod_gen());
-    if (parlist) str = parlist->rearrange_init_code(str, rearrange);
+    if (actual_parlist) str = actual_parlist->rearrange_init_code(str, usage_mod);
     // do nothing if the reference does not point to a template definition
     if (ass->get_asstype() != Common::Assignment::A_TEMPLATE) return str;
-    // do nothing if the referenced template is in another module
-    if (ass->get_my_scope()->get_scope_mod_gen() !=
-        my_scope->get_scope_mod_gen()) return str;
     Template *t = ass->get_Template();
-    if (parlist) {
+    FormalParList *formal_parlist = ass->get_FormalParList();
+    if (formal_parlist) {
       // the reference points to a parameterized template
       // we must perform the rearrangement for all non-parameterized templates
-      // that are referred by the parameterized template regardless the
+      // that are referred by the parameterized template regardless of the
       // sub-references of u.ref.ref
-      str = t->rearrange_init_code(str);
+      str = t->rearrange_init_code(str, usage_mod);
+      // the parameterized template's default values must also be generated
+      // (this only generates their value assignments, their declarations will
+      // be generated when the template's definition is reached)
+      if (ass->get_my_scope()->get_scope_mod_gen() == usage_mod) {
+        str = formal_parlist->generate_code_defval(str);
+      }
     } else {
       // the reference points to a non-parameterized template
       FieldOrArrayRefs *subrefs = u.ref.ref->get_subrefs();
@@ -4494,17 +4494,17 @@ compile_time:
       }
       // otherwise if the reference points to a top-level template
       // we should initialize its entire body
-      str = t->generate_code_init(str, t->get_lhs_name().c_str());
+      if (ass->get_my_scope()->get_scope_mod_gen() == usage_mod) {
+        str = t->generate_code_init(str, t->get_lhs_name().c_str());
+      }
     }
     return str;
   }
 
-  char *Template::rearrange_init_code_invoke(char *str)
+  char *Template::rearrange_init_code_invoke(char *str, Common::Module* usage_mod)
   {
     str = u.invoke.v->rearrange_init_code(str);
-    bool type_is_local = u.invoke.v->get_expr_governor_last()->get_my_scope()
-      ->get_scope_mod_gen() == my_scope->get_scope_mod_gen();
-    str = u.invoke.ap_list->rearrange_init_code(str, type_is_local);
+    str = u.invoke.ap_list->rearrange_init_code(str, usage_mod);
     return str;
   }
 
@@ -5070,31 +5070,34 @@ compile_time:
     } else template_body->generate_code_expr(expr, template_restriction);
   }
 
-  char *TemplateInstance::rearrange_init_code(char *str)
+  char *TemplateInstance::rearrange_init_code(char *str, Common::Module* usage_mod)
   {
     if (derived_reference) {
-      ActualParList *parlist = derived_reference->get_parlist();
+      ActualParList *actual_parlist = derived_reference->get_parlist();
       Common::Assignment *ass = derived_reference->get_refd_assignment();
       if (!ass) FATAL_ERROR("TemplateInstance::rearrange_init_code()");
-      bool is_local = (ass->get_my_scope()->get_scope_mod_gen() ==
-        derived_reference->get_my_scope()->get_scope_mod_gen());
-      if (parlist) str = parlist->rearrange_init_code(str, is_local);
-      if (is_local && ass->get_asstype() == Common::Assignment::A_TEMPLATE) {
-        // the base template reference refers to a template within the local
-        // module
+      if (actual_parlist) str = actual_parlist->rearrange_init_code(str, usage_mod);
+      if (ass->get_asstype() == Common::Assignment::A_TEMPLATE) {
         Template *t = ass->get_Template();
-        if (parlist) {
+        FormalParList *formal_parlist = ass->get_FormalParList();
+        if (formal_parlist) {
           // the referred template is parameterized
           // the embedded referenced templates shall be visited
-          str = t->rearrange_init_code(str);
+          str = t->rearrange_init_code(str, usage_mod);
+          // the constants used for default values have to be initialized now
+          if (ass->get_my_scope()->get_scope_mod_gen() == usage_mod) {
+            str = formal_parlist->generate_code_defval(str);
+          }
         } else {
           // the referred template is not parameterized
           // its entire body has to be initialized now
-          str = t->generate_code_init(str, t->get_lhs_name().c_str());
+          if (ass->get_my_scope()->get_scope_mod_gen() == usage_mod) {
+            str = t->generate_code_init(str, t->get_lhs_name().c_str());
+          }
         }
       }
     }
-    str = template_body->rearrange_init_code(str);
+    str = template_body->rearrange_init_code(str, usage_mod);
     return str;
   }
 

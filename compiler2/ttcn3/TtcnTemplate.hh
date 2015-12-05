@@ -394,10 +394,10 @@ namespace Ttcn {
     char *generate_code_init(char *str, const char *name);
     /** Walks through the template recursively and appends the C++
      *  initialization sequence of all (directly or indirectly)
-     *  referenced non-parameterized templates to \a str and returns
-     *  the resulting string.  Templates imported from other modules
-     *  are not visited. */
-    char *rearrange_init_code(char *str);
+     *  referenced non-parameterized templates and the default values of all
+     *  parameterized templates to \a str and returns the resulting string. 
+     *  Only objects belonging to module \a usage_mod are initialized. */
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
 
   private:
     /** Private helper functions for code generation. */
@@ -461,8 +461,8 @@ namespace Ttcn {
 
     /** Helper function for \a rearrange_init_code(). It handles the
      *  referenced templates (i.e. it does the real work). */
-    char *rearrange_init_code_refd(char *str);
-    char *rearrange_init_code_invoke(char *str);
+    char *rearrange_init_code_refd(char *str, Common::Module* usage_mod);
+    char *rearrange_init_code_invoke(char *str, Common::Module* usage_mod);
 
     /** Returns whether the C++ initialization sequence requires a
      *  temporary variable reference to be introduced for efficiency
@@ -555,9 +555,9 @@ namespace Ttcn {
     void generate_code(expression_struct *expr,
                        template_restriction_t template_restriction = TR_NONE);
     /** Appends the initialization sequence of the referred templates
-     *  to \a str.  Only those templates are considered that are in
-     *  the same module as \a this. */
-    char *rearrange_init_code(char *str);
+     *  and their default values to \a str.  Only templates from module
+     *  \a usage_mod are considered. */
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
 
     /** Appends the string representation of the template instance to
      *  \a str. */

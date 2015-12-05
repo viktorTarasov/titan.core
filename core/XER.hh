@@ -89,8 +89,10 @@ enum XER_flavor {
   as empty elements in BXER only. This also influences them in record-of */
   ANY_FROM       = 1U << 27, // 0x8000000 anyElement from ... or anyAttributes from ...
   ANY_EXCEPT     = 1U << 28, // 0x10000000 anyElement except ... or anyAttributes except ...
-  EXIT_ON_ERROR  = 1U << 29  /* 0x20000000 clean up and exit instead of throwing
+  EXIT_ON_ERROR  = 1U << 29, /* 0x20000000 clean up and exit instead of throwing
   a decoding error, used on alternatives of a union with USE-UNION */
+  XER_OPTIONAL   = 1U << 30, // 0x40000000 is an optional field of a record or set
+  BLOCKED        = 1U << 31  // 0x80000000 either ABSTRACT or BLOCK
 };
 
 /** WHITESPACE actions.
@@ -374,6 +376,16 @@ class TTCN_Buffer;
  * @pre the caller should check that E-XER encoding is in effect.
  */
 void write_ns_prefix(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf);
+
+/** Return the namespace referred to by a prefix
+ *
+ * Finds the namespace specified by \a prefix in the module's namespace table
+ * and returns its URI. Returns NULL if the namespace is not found.
+ *
+ * @param prefix namespace prefix to be found
+ * @param p_td XER descriptor (contains the module to search in)
+ */
+const char* get_ns_uri_from_prefix(const char *prefix, const XERdescriptor_t& p_td);
 
 /** Output the beginning of an XML attribute.
  *

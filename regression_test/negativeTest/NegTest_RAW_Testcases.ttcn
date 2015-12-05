@@ -2734,7 +2734,7 @@ group SetOf {  //====set of related templates====
     var RawSetOfRawUnionBT32 vl_expected :={ {r:="\x01\x01\xFF"}, {i:=2}, {b:=true}}; // oct2char('0101FF'O)
     f_compareAndVerdict(
       encode_rawSetOfInt32(valueof(t_msetofiValueDiffTypeRaw(1,2,3))),
-      '0101FF02000000FF'O);
+      '0101FF0200000001'O);
     f_compareAndVerdict(
       encode_rawSetOfInt32(valueof(t_msetofiValueDiffTypeRaw(1,2,3))),
       encode_rawSetOfRawUnionBT32( vl_expected ));
@@ -2836,8 +2836,8 @@ group SetOf {  //====set of related templates====
     f_compareAndVerdict(
       actual,
       '0101FF'O // first raw value
-      & 'FE'O); // bottom 2 bits: '10'B for second; top 6 bits '111111'B for true
-      //'FE'O = bit2oct('111111'B & '10'B)
+      & '06'O); // bottom 2 bits: '10'B for second, 3rd bit is '1'B for true, top 5 bits are '00000'B (filler zeros)
+      //'06'O = bit2oct('00000'B & '1'B & '10'B)
     var RawSetOfRawUnionBT vl_expected :={ {os:='0101FF'O}, {e:=second}, {b:=true}};
     var octetstring expected := encode_rawSetOfRawUnionBT(vl_expected);
     f_compareAndVerdict(actual, expected);
@@ -2921,7 +2921,7 @@ group SetOf {  //====set of related templates====
     //var RawSetOfRawUnionBT vl_expected :={ {b:=true}, {r:="Two"}, {b:=true}};
     f_compareAndVerdict(
       encode_rawSetOfCharstring(valueof(t_msetofrValueDiffTypeRaw("One", "Two", "Three"))),
-      '0101FF'O & char2oct("Two") & 'FF'O
+      '0101FF'O & char2oct("Two") & '01'O
       ); //'0101FF'O
     //encode_rawSetOfRawUnionBT( vl_expected ));
   }
@@ -3003,7 +3003,7 @@ group Union {
   testcase tc_rawUnionBasicTypes_boolean3() runs on RawComp {
     //0. just for fun:
     var RawUnionBasicTypesT vl_mubt:={b:=true};
-    f_compareAndVerdict(encode_rawUnionBasicTypesT(vl_mubt), 'FF'O);
+    f_compareAndVerdict(encode_rawUnionBasicTypesT(vl_mubt), '01'O);
     //1.
     vl_mubt:={b:=false};
     f_compareAndVerdict(

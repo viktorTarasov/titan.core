@@ -35,9 +35,11 @@ myIo2 MY-CLASS ::= { ID 2 TYPE MyEnum }
 
 myIo3 MY-CLASS ::= { ID 3 TYPE INTEGER }
 
+myIo4 MY-CLASS ::= { ID 4 TYPE NULL }
+
 -- Defining IO set to be used in message contraction
 
-MyIOSet MY-CLASS ::= { myIo1 | myIo2 | myIo3 }
+MyIOSet MY-CLASS ::= { myIo1 | myIo2 | myIo3 | myIo4 }
 
 -- and now finally constructing the type
 
@@ -66,6 +68,11 @@ a-message-id3-lower MyMessage ::= {
   id 3,
   content iNTEGER : 7
 }
+
+a-message-id4-lower MyMessage ::= {
+  id 4,
+  content nULL : NULL
+}
 /*
 -- Not supported values
 a-message-id1-upper MyMessage ::= {
@@ -81,6 +88,11 @@ a-message-id2-upper MyMessage ::= {
 a-message-id3-upper MyMessage ::= {
   id 3,
   content INTEGER : 7
+}
+
+a-message-id4-lower MyMessage ::= {
+  id 4,
+  content NULL : NULL
 }
 */
 END

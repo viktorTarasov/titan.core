@@ -53,6 +53,7 @@ enum VariantMode {
   V_useNil,
   V_useNumber,
   V_useOrder,
+  V_useType,
   V_useUnion,
   V_whiteSpace,
   V_fractionDigits
@@ -165,6 +166,10 @@ public:
     visible = false;
   }
 
+  void setVisible() {
+    visible = true;
+  }
+
   const NameType & getName() const {
     return name;
   }
@@ -207,6 +212,10 @@ public:
 
   List<Mstring> & getComment() {
     return comment;
+  }
+
+  List<SimpleType*> & getNameDepList() {
+      return nameDepList;
   }
 
   XMLParser * getParser() const {

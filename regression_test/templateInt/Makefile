@@ -13,7 +13,7 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = TtemplateInt.ttcn
+TTCN3_MODULES = TtemplateInt.ttcn ImportedTemplates.ttcn
 
 GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc)
 GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)
@@ -30,8 +30,8 @@ all: $(TARGET)
 $(TARGET): $(GENERATED_SOURCES) $(USER_SOURCES)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ -L$(TTCN3_DIR)/lib -l$(TTCN3_LIB) -L$(OPENSSL_DIR)/lib -lcrypto $($(PLATFORM)_LIBS)
 
-.ttcn.cc .ttcn.hh:
-	$(TTCN3_COMPILER) $<
+$(GENERATED_SOURCES) $(GENERATED_HEADERS): $(TTCN3_MODULES)
+	$(TTCN3_COMPILER) $^
 
 clean distclean:
 	-rm -f $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \

@@ -53,6 +53,7 @@ type record Java_attribute_1
 }
 with {
 variant "name as 'java-attribute'";
+variant "abstract";
 variant (java_attribute) "name as 'java-attribute'";
 variant (java_attribute) "attribute";
 variant (xml_accessor_type) "name as 'xml-accessor-type'";

@@ -14,6 +14,8 @@ import from www_XmlTest_org_element_recordOfElements4_e all;
 import from www_XmlTest_org_element_recordOfElements5_e all;
 import from www_XmlTest_org_element_nameInheritance_e all;
 import from www_ericsson_com_is_isco_Tgc_R6A48_R6H01  all;
+import from www_example_org_substitutiongroup all;
+import from www_example_org_type_substitution all;
 import from XmlTest_imsike_e all;
 import from xmlTest_Shell all;
 //==============================================================================
@@ -83,6 +85,18 @@ external function f_enc_Tgc(in Tgc pdu, out octetstring stream)
 with { extension "prototype(fast) encode(XER:XER_EXTENDED)" }
 
 external function f_dec_Tgc(in octetstring stream, out Tgc pdu) return integer
+with { extension "prototype(backtrack) decode(XER:XER_EXTENDED)" }
+
+external function f_enc_ize_subs(in Ize pdu, out octetstring stream)
+with { extension "prototype(fast) encode(XER:XER_EXTENDED)" }
+
+external function f_dec_ize_subs(in octetstring stream, out Ize pdu) return integer
+with { extension "prototype(backtrack) decode(XER:XER_EXTENDED)" }
+
+external function f_enc_type_subs(in Submit pdu, out octetstring stream)
+with { extension "prototype(fast) encode(XER:XER_EXTENDED)" }
+
+external function f_dec_type_subs(in octetstring stream, out Submit pdu) return integer
 with { extension "prototype(backtrack) decode(XER:XER_EXTENDED)" }
 
 //==============================================================================
@@ -1103,6 +1117,174 @@ function f_encDecTest_Tgc() runs on Shell_CT {
 
   //log("===Checking value decoded from the expected value vs original value===");
   if( f_dec_Tgc(vl_expectedEncodedPdu, vl_decodedPdu)==0) {
+    //log("The decoded pdu: ", vl_decodedPdu);
+    if(match(vl_pdu,vl_decodedPdu)) {
+      setverdict(pass);
+    } else {
+      log("Pdu could not decoded from the expected value");
+      log(match(vl_pdu,vl_decodedPdu));
+      setverdict(fail);
+    }
+  } else {
+    log("Pdu could not decoded from the expected value");
+    setverdict(fail);
+  }
+}//f_
+
+
+//==========================================
+//f_encDecTest_Ize
+//==========================================
+function f_encDecTest_ize_subs() runs on Shell_CT {
+
+  var Ize vl_pdu := { head_list := {
+     { head := "anything" },
+     { member1 := "any thing" },
+     { member2 := something },
+     { member3 := { bar:= 5, foo := omit, base := "anything else" } } }
+  },
+  vl_decodedPdu;
+
+  var octetstring vl_expectedEncodedPdu:=char2oct(
+ "<subs:ize "&
+ "xmlns:subs='www.example.org/substitutiongroup'>\n"&
+ "\t<subs:head>anything</subs:head>\n"&
+ "\t<subs:member1>any thing</subs:member1>\n"&
+ "\t<subs:member2>something</subs:member2>\n"&
+ "\t<subs:member3 bar='5'>anything else</subs:member3>\n"&
+ "</subs:ize>\n\n");
+
+  var octetstring vl_stream:=''O;
+  f_enc_ize_subs(vl_pdu,vl_stream);
+
+  if( match(vl_stream,vl_expectedEncodedPdu)) {
+    setverdict(pass);
+  } else {
+    log("Expected encoded value: ",vl_expectedEncodedPdu);
+    log("Actual encoded value:   ", vl_stream);
+    setverdict(fail);
+  }
+
+  //log("===Checking encoded value (xml) against the xsd file by xmllint ===");
+  var boolean vl_success:=false;
+  f_shell_validateXml(vl_stream,"substitutiongroup.xsd", c_shell_successWithoutWarningAndError, vl_success);
+  if(vl_success) {
+    setverdict(pass);
+  }else{
+    log("Xml validation against xsd failed");
+    setverdict(fail);
+  }
+
+  //log("===Checking value decoded from the encoded value vs original value===");
+  var integer vl_retval:=f_dec_ize_subs(vl_stream, vl_decodedPdu);
+  //log("retval:",vl_retval);
+  if(f_dec_ize_subs(vl_stream, vl_decodedPdu)==0) {
+    //log("The decoded pdu: ", vl_decodedPdu);
+    if(match(vl_pdu,vl_decodedPdu)) {
+      setverdict(pass);
+    } else {
+      log("Pdu differs from the expected value");
+      log(match(vl_pdu,vl_decodedPdu));
+      setverdict(fail);
+    }
+  }else{
+    log("Pdu could not decoded");
+    setverdict(fail);
+  }
+
+  //log("===Checking value decoded from the expected value vs original value===");
+  if( f_dec_ize_subs(vl_expectedEncodedPdu, vl_decodedPdu)==0) {
+    //log("The decoded pdu: ", vl_decodedPdu);
+    if(match(vl_pdu,vl_decodedPdu)) {
+      setverdict(pass);
+    } else {
+      log("Pdu could not decoded from the expected value");
+      log(match(vl_pdu,vl_decodedPdu));
+      setverdict(fail);
+    }
+  } else {
+    log("Pdu could not decoded from the expected value");
+    setverdict(fail);
+  }
+}//f_
+
+
+//==========================================
+//f_encDecTest_type_subs
+//==========================================
+function f_encDecTest_type_subs() runs on Shell_CT {
+
+  var Submit vl_pdu := { 
+    request1 := {
+      restrictedType := {
+        foo_list := { "string1", "string2", "string3" },
+        bar := "bar"
+      }
+    },
+    request2 := {
+      parentType := {
+        foo_list := { "parentstring1", "parentstring2", "parentstring3" },
+        bar := "parentbar"
+      }
+    }
+  },
+  vl_decodedPdu;
+  var octetstring vl_expectedEncodedPdu:=char2oct(
+    "<tysub:Submit xmlns:tysub='www.example.org/type/substitution' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>\n"&
+    "\t<request1 xsi:type='tysub:restrictedType'>\n"&
+    "\t\t<foo>string1</foo>\n"&
+    "\t\t<foo>string2</foo>\n"&
+    "\t\t<foo>string3</foo>\n"&
+    "\t\t<bar>bar</bar>\n"&
+    "\t</request1>\n"&
+    "\t<request2>\n"&
+    "\t\t<foo>parentstring1</foo>\n"&
+    "\t\t<foo>parentstring2</foo>\n"&
+    "\t\t<foo>parentstring3</foo>\n"&
+    "\t\t<bar>parentbar</bar>\n"&
+    "\t</request2>\n"&
+    "</tysub:Submit>\n\n");
+
+  var octetstring vl_stream:=''O;
+  f_enc_type_subs(vl_pdu,vl_stream);
+
+  if( match(vl_stream,vl_expectedEncodedPdu)) {
+    setverdict(pass);
+  } else {
+    log("Expected encoded value: ",vl_expectedEncodedPdu);
+    log("Actual encoded value:   ", vl_stream);
+    setverdict(fail);
+  }
+
+  //log("===Checking encoded value (xml) against the xsd file by xmllint ===");
+  var boolean vl_success:=false;
+  f_shell_validateXml(vl_stream,"type_substitution.xsd", c_shell_successWithoutWarningAndError, vl_success);
+  if(vl_success) {
+    setverdict(pass);
+  }else{
+    log("Xml validation against xsd failed");
+    setverdict(fail);
+  }
+
+  //log("===Checking value decoded from the encoded value vs original value===");
+  var integer vl_retval:=f_dec_type_subs(vl_stream, vl_decodedPdu);
+  //log("retval:",vl_retval);
+  if(f_dec_type_subs(vl_stream, vl_decodedPdu)==0) {
+    //log("The decoded pdu: ", vl_decodedPdu);
+    if(match(vl_pdu,vl_decodedPdu)) {
+      setverdict(pass);
+    } else {
+      log("Pdu differs from the expected value");
+      log(match(vl_pdu,vl_decodedPdu));
+      setverdict(fail);
+    }
+  }else{
+    log("Pdu could not decoded");
+    setverdict(fail);
+  }
+
+  //log("===Checking value decoded from the expected value vs original value===");
+  if( f_dec_type_subs(vl_expectedEncodedPdu, vl_decodedPdu)==0) {
     //log("The decoded pdu: ", vl_decodedPdu);
     if(match(vl_pdu,vl_decodedPdu)) {
       setverdict(pass);

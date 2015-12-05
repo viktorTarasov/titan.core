@@ -139,7 +139,7 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
 , enumfields()
 , tagNames() {
 
-  if(c != fromTagSubstition){
+  if(c != fromTagSubstitution && c != fromTypeSubstitution){
     module->replaceLastMainType(this);
     module->setActualXsdConstruct(c_complexType);
   }
@@ -159,18 +159,32 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
       type.upload(Mstring("record"));
       xsdtype = n_complexType;
       break;
-    case fromTagSubstition:
+    case fromTagSubstitution:
       type.upload(Mstring("union"));
       name.upload(getName().originalValueWoPrefix + Mstring("_group"));
       xsdtype = n_union;
       subsGroup = this;
       variant.clear();
+      hidden_variant.clear();
       enumeration.modified = false;
       value.modified = false;
       pattern.modified = false;
       length.modified = false;
       whitespace.modified = false;
       break;
+    case fromTypeSubstitution:
+      type.upload(Mstring("union"));
+      name.upload(getName().originalValueWoPrefix + Mstring("_derivations"));
+      xsdtype = n_union;
+      substitutionGroup = empty_string;
+      typeSubsGroup = this;
+      variant.clear();
+      hidden_variant.clear();
+      enumeration.modified = false;
+      value.modified = false;
+      pattern.modified = false;
+      length.modified = false;
+      whitespace.modified = false;
   }
 }
 
@@ -634,7 +648,7 @@ void ComplexType::referenceResolving() {
   
   reference_resolving_funtion();
   
-  if(!substitionGroup.empty()){
+  if(!substitutionGroup.empty()){
     addToSubstitutions();
   }
   resolved = Yes;
@@ -643,6 +657,11 @@ void ComplexType::referenceResolving() {
 void ComplexType::reference_resolving_funtion() {
   //Every child element references are resolved here.
   if (outside_reference.empty() && basefield == NULL) {
+    //Its not in the resolveElement function because we need the built in type
+    //reference too, and then the outside_reference is empty.
+    if(xsdtype == n_element){
+      collectElementTypes(NULL, NULL);
+    }
     return;
   }
 
@@ -671,6 +690,8 @@ void ComplexType::reference_resolving_funtion() {
 
   resolveUnion(st);
 
+  addToTypeSubstitutions();
+
 }
 
 void ComplexType::setParent(ComplexType * par, SimpleType * child) {
@@ -679,7 +700,7 @@ void ComplexType::setParent(ComplexType * par, SimpleType * child) {
 
 void ComplexType::applyReference(const SimpleType & other, const bool on_attributes) {
   type.convertedValue = other.getType().convertedValue;
-  type.originalValueWoPrefix = other.getType().convertedValue;
+  type.originalValueWoPrefix = other.getType().convertedValue.getValueWithoutPrefix(':');
 
   if (other.getMinOccurs() > minOccurs || other.getMaxOccurs() < maxOccurs) {
     if (!on_attributes) {
@@ -1005,7 +1026,7 @@ void ComplexType::finalModification2() {
   }
 
   //Substitution group ordering
-  if(subsGroup == this){ //We are a generated substitution group
+  if(subsGroup == this || typeSubsGroup == this){ //We are a generated substitution group
     //Substitution group never empty
     ComplexType * front = complexfields.front();
     List<ComplexType*>::iterator it = complexfields.begin();
@@ -1208,6 +1229,9 @@ void ComplexType::collectVariants(List<Mstring>& container) {
     }
     if (useUnionVariantWhenMainTypeIsRecordOf) {
       container.push_back(Mstring("variant ([-]) \"useUnion\";\n"));
+    }
+    for (List<Mstring>::iterator var = hidden_variant.end(); var; var = var->Prev) {
+      container.push_back(Mstring("//variant ") + Mstring(var->Data.c_str()) + Mstring(";\n"));
     }
   }
 
@@ -1557,9 +1581,9 @@ void ComplexType::resolveAttribute(AttributeType* attr) {
       } else {
         attr->setTypeOfField(st->getName().convertedValue);
         if (st->getType().convertedValue == "record" || st->getType().convertedValue == "union") {
-          st->addToNameDepList(attr);
+            st->addToNameDepList(attr);
+          }
         }
-      }
     } else {
       printError(module->getSchemaname(), name.convertedValue,
         "Reference for a non-defined type: " + attr->getReference().repr());
@@ -1681,17 +1705,25 @@ void ComplexType::resolveElement(SimpleType *st) {
   if (xsdtype == n_element && !outside_reference.empty()) {
     outside_reference.set_resolved(st);
     type.upload(st->getModule()->getTargetNamespaceConnector() + Mstring(":") + st->getName().convertedValue);
-    st->addToNameDepList(this);
-    nameDep = st;
     if (name.originalValueWoPrefix.empty()) {
       name.upload(st->getName().convertedValue);
     }
     if (fromRef) {
       addNameSpaceAsVariant(this, st);
     }
+
+    collectElementTypes(st, NULL);
+
+    //Namedep is added to the substitutions, if any
     if(st->getSubstitution() != NULL){
       st->getSubstitution()->addToNameDepList(this);
       nameDep = st->getSubstitution();
+    }if(st->getTypeSubstitution() != NULL){
+      st->getTypeSubstitution()->addToNameDepList(this);
+      nameDep = st->getTypeSubstitution();
+    }else {
+      st->addToNameDepList(this);
+      nameDep = st;
     }
   }
 }
@@ -1717,8 +1749,8 @@ void ComplexType::resolveSimpleTypeExtension() {
           st->referenceResolving();
         }
         st->addToNameDepList(basefield);
-        addNameSpaceAsVariant(basefield, st);
         basefield->nameDep = st;
+        addNameSpaceAsVariant(basefield, st);
       }
     } else if(!isBuiltInType(basefield->getType().convertedValue)){
          printError(module->getSchemaname(), name.convertedValue,
@@ -1915,21 +1947,28 @@ void ComplexType::modifyAttributeParent() {
   }
 }
 
-void ComplexType::addSubstitution(SimpleType* st){
+//Element substitution
+void ComplexType::addSubstitution(SimpleType * st){
   ComplexType * element;
   if(st->getXsdtype() == n_NOTSET || !complexfields.empty()){
-    element = new ComplexType(*st, fromTagSubstition);
+    element = new ComplexType(*st, fromTagSubstitution);
   }else {
     element = new ComplexType(*(ComplexType*)st);
     element->variant.clear();
   }
   element->subsGroup = this;
   element->parent = this;
-  if(complexfields.empty()){ //The first element(head)
+  if(complexfields.empty()){ //The first element(head) is the st
     element->setTypeValue(st->getType().convertedValue);
     if(st->hasVariant(Mstring("\"abstract\""))){
-      element->addVariant(V_onlyValueHidden, Mstring("\"abstract\""));
+      element->addVariant(V_abstract);
     }
+    if(st->getReference().get_ref() != NULL){
+      ((SimpleType*)st->getReference().get_ref())->addToNameDepList(element);
+      nameDep = ((SimpleType*)st->getReference().get_ref());
+    }
+    module->addElementType(element->getType().convertedValue, element);
+    element->addVariant(V_formAs, Mstring("qualified"));
   }else {
     Mstring newType;
     if(st->getType().convertedValue == "anyType"){
@@ -1937,16 +1976,18 @@ void ComplexType::addSubstitution(SimpleType* st){
     }else {
       newType = st->getName().convertedValue;
       st->addToNameDepList(element);
+      element->nameDep = st;
     }
     element->setTypeValue(newType);
     BlockValue front_block = complexfields.front()->getBlock();
     if(front_block == all || front_block == substitution){
-      element->addVariant(V_onlyValueHidden, Mstring("\"block\""));
+      element->addVariant(V_block);
     }else if(front_block == restriction || front_block == extension){
       const Mstring& head_type = complexfields.front()->getType().convertedValue.getValueWithoutPrefix(':');
+      //To decide if they came from a common ancestor
       Mstring elem_type = findRoot(front_block, st, head_type, true);
       if(head_type == elem_type){
-        element->addVariant(V_onlyValueHidden, Mstring("\"block\""));
+        element->addVariant(V_block);
       }
     }
   }
@@ -1956,11 +1997,56 @@ void ComplexType::addSubstitution(SimpleType* st){
   complexfields.push_back(element);
 }
 
+void ComplexType::addTypeSubstitution(SimpleType * st){
+  ComplexType * element;
+  if(st->getXsdtype() == n_NOTSET || !complexfields.empty()){
+    element = new ComplexType(*st, fromTypeSubstitution);
+  }else {
+    //Only need a plain complextype
+    //Head element
+    element = new ComplexType(this);
+    //Just the block needed from st
+    element->block = st->getBlock();
+  }
+  st->addToNameDepList(element);
+  element->nameDep = st;
+  element->typeSubsGroup = this;
+  element->parent = this;
+  if(complexfields.empty()){ //The first element(head) is the st
+    if(st->hasVariant(Mstring("\"abstract\""))){
+      element->addVariant(V_abstract);
+    }
+  }else {
+    BlockValue front_block = complexfields.front()->getBlock();
+    if(front_block == all){
+      element->addVariant(V_block);
+    }else if(front_block == restriction || front_block == extension){
+      const Mstring& head_type = complexfields.front()->getType().convertedValue.getValueWithoutPrefix(':');
+      //To decide if they came from a common ancestor
+      Mstring elem_type = findRoot(front_block, st, head_type, true);
+      if(head_type == elem_type){
+        element->addVariant(V_block);
+      }
+    }
+  }
+  element->top = false;
+  complexfields.push_back(element);
+  element->setTypeValue(st->getName().convertedValue.getValueWithoutPrefix(':'));
+  element->setNameValue(st->getName().convertedValue.getValueWithoutPrefix(':'));
+}
+
 Mstring ComplexType::findRoot(const BlockValue block_value, SimpleType* elem, const Mstring& head_type, const bool first){
-  if(!first && elem->getType().convertedValue.getValueWithoutPrefix(':') == head_type && !isFromRef()){
-    return elem->getType().convertedValue.getValueWithoutPrefix(':');
-  }else if(elem->getType().convertedValue.getValueWithoutPrefix(':') == head_type && (isFromRef() && ((elem->getMode() == restrictionMode && block_value == restriction) || (elem->getMode() == extensionMode && block_value == extension)))){
-    return elem->getType().convertedValue.getValueWithoutPrefix(':');
+  const Mstring elemName = elem->getName().convertedValue.getValueWithoutPrefix(':');
+  const Mstring elemType = elem->getType().convertedValue.getValueWithoutPrefix(':');
+
+  if(!first && !isFromRef() && elemType == head_type){
+    return elemType;
+  }else if((isFromRef() &&
+          ((elem->getMode() == restrictionMode && block_value == restriction) ||
+           (elem->getMode() == extensionMode && block_value == extension))) && elemType == head_type){
+    return elemType;
+  }else if(!first && elemName == head_type){
+    return elemName;
   }else {
     SimpleType * st = NULL;
     if((elem->getMode() == restrictionMode && block_value == restriction) ||
@@ -1987,7 +2073,7 @@ Mstring ComplexType::findRoot(const BlockValue block_value, SimpleType* elem, co
     }
   }
   if(elem->getMode() == noMode && !first){
-    return elem->getType().convertedValue.getValueWithoutPrefix(':');
+    return elemType;
   }else {
     return empty_string;
   }

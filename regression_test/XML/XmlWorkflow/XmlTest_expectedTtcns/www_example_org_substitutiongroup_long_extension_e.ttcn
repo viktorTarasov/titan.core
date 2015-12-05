@@ -138,9 +138,9 @@ type union Head_group
 }
 with {
 variant "untagged";
-//variant (complexEnum) "block";
-//variant (member2) "block";
-//variant (member3) "block";
+variant (complexEnum) "block";
+variant (member2) "block";
+variant (member3) "block";
 };
 
 

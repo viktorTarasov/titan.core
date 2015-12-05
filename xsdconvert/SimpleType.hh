@@ -218,12 +218,27 @@ protected:
   // XSD Type of the type
   TagName xsdtype;
   bool isOptional;
-  Mstring substitionGroup;
+  Mstring substitutionGroup;
+  //Pointer to the generated element substitution group
   ComplexType * subsGroup;
+  //Pointer to the generated type substitution group
+  ComplexType * typeSubsGroup;
+  //To determine if already added to type substitution
+  bool addedToTypeSubstitution;
   BlockValue block;
-
-
+  
+  //Element substitution
   void addToSubstitutions();
+
+  //Type substitution
+  void addToTypeSubstitutions();
+  //Returns the type substitution which the builtInType belongs
+  ComplexType * findBuiltInTypeInStoredTypeSubstitutions(const Mstring& builtInType);
+
+  //Only used when type substitution is enabled
+  //If an element reference is found then it is put to a container
+  //to know if type substitution is possible
+  void collectElementTypes(SimpleType * found_ST = NULL, ComplexType * found_CT = NULL);
   void nameConversion_names();
   virtual void nameConversion_types(const List<NamespaceType> & ns);
 
@@ -338,13 +353,21 @@ public:
       return subsGroup;
   }
 
+  ComplexType * getTypeSubstitution() const {
+      return typeSubsGroup;
+  }
+
   BlockValue getBlock() const {
       return block;
   }
   
   void addToNameDepList(SimpleType * t) {
+      //If the type has a substitution, we add the namedep to the substitution
       if(subsGroup != NULL && this != (SimpleType*)subsGroup){
           SimpleType * substitution = (SimpleType*)subsGroup;
+          substitution->addToNameDepList(t);
+      }else if(typeSubsGroup != NULL && this != (SimpleType*)typeSubsGroup){
+          SimpleType * substitution = (SimpleType*)typeSubsGroup;
           substitution->addToNameDepList(t);
       }else {
           nameDepList.push_back(t);

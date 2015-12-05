@@ -291,6 +291,10 @@ RootType * TTCN3ModuleInventory::lookup(const RootType* ref, const Mstring& refe
         break;
       }
     }
+    if(uri.empty()){
+      //If the targetnamespace is NoTargetNamespace therefore no prefix connector used
+      uri = ref->getModule()->getTargetNamespace();
+    }
   }else {
     uri = getNameSpaceByPrefix(ref, uri);
   }

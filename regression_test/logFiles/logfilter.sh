@@ -11,7 +11,7 @@ LOGFILE="lfilter.log2"
 FILTERED_LOG_FILE="filtered.log"
 EXPECTED_LOG_FILE="filtered_e.log2"
 
-ttcn3_logfilter -o $FILTERED_LOG_FILE $LOGFILE MATCHING+ PARALLEL+
+../../Install/bin/ttcn3_logfilter -o $FILTERED_LOG_FILE $LOGFILE MATCHING+ PARALLEL+
 diff $FILTERED_LOG_FILE $EXPECTED_LOG_FILE
 if [ $? -ne 0 ]; then
   echo "Logfilter test failed! Overall verdict: fail"

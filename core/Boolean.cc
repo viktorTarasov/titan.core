@@ -530,6 +530,10 @@ int BOOLEAN::RAW_encode(const TTCN_Typedescriptor_t& p_td, RAW_enc_tree& myleaf)
   else bc = myleaf.body.leaf.data_array;
 
   memset(bc, tmp, length * sizeof(*bc));
+  if (boolean_value && loc_length % 8 != 0) {
+    // remove the extra ones from the last octet
+    bc[length - 1] &= BitMaskTable[loc_length % 8];
+  }
   return myleaf.length = loc_length;
 }
 

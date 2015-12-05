@@ -556,18 +556,12 @@ void XMLParser::fillUpActualTagAttributes(const char ** attributes, const int at
     att_name_e[i] = a_NOTSET;
     if (att_name_s[i] == "abstract") {
       att_name_e[i] = a_abstract;
-      printWarning(filename, xmlSAX2GetLineNumber(context),
-        Mstring("The 'abstract' attribute is currently not supported."));
-      ++num_warnings;
     } else if (att_name_s[i] == "attributeFormDefault")
       att_name_e[i] = a_attributeFormDefault;
     else if (att_name_s[i] == "base")
       att_name_e[i] = a_base;
     else if (att_name_s[i] == "block") {
       att_name_e[i] = a_block;
-      printWarning(filename, xmlSAX2GetLineNumber(context),
-        Mstring("The 'block' attribute is currently not supported."));
-      ++num_warnings;
     } else if (att_name_s[i] == "blockDefault"){
       att_name_e[i] = a_blockDefault;
     } else if (att_name_s[i] == "default")
@@ -611,9 +605,6 @@ void XMLParser::fillUpActualTagAttributes(const char ** attributes, const int at
       att_name_e[i] = a_schemaLocation;
     else if (att_name_s[i] == "substitutionGroup") {
       att_name_e[i] = a_substitutionGroup;
-      //printWarning(filename, xmlSAX2GetLineNumber(context),
-        //Mstring("The 'substitutionGroup' attribute is currently not supported."));
-      //++num_warnings;
     } else if (att_name_s[i] == "targetNamespace")
       att_name_e[i] = a_targetNamespace;
     else if (att_name_s[i] == "type")

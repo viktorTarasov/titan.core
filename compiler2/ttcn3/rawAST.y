@@ -152,6 +152,8 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token XToplevelKeyword
 %token XRepeatableKeyword
 %token XIntXKeyword
+%token XBitKeyword
+%token XUnsignedKeyword
 
        /* XER attributes */
 %token XKWall           "all"
@@ -171,10 +173,12 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token XKWprefix        "prefix"
 
 
+%token XKWabstract         "abstact"
 %token XKWanyAttributes    "anyAttributes"
 %token XKWanyElement       "anyElement"
 %token XKWattribute        "attribute"
 %token XKWattributeFormQualified   "attributeFormQualified"
+%token XKWblock            "block"
 %token XKWcontrolNamespace "controlNamespace"
 %token XKWdefaultForEmpty  "defaultForEmpty"
 %token XKWelement          "element"
@@ -462,6 +466,8 @@ XSingleEncodingDef : XPaddingDef
         { rawstruct->topleveleind=1; raw_f=true;}
     | XIntXKeyword
         { rawstruct->intx = true; raw_f = true; }
+    | XBitDef
+        { raw_f = true; }
     /* TEXT encoder keywords */
     | XBeginDef
         { text_f=true; }
@@ -836,6 +842,22 @@ XRvalue: XIdentifier{
 	$$.v_value = new Common::Value(Common::Value::V_OMIT);
 	$$.v_value->set_location(infile, @$);
       }
+;
+
+/* Alternative RAW attributes for types defined in annex E of the TTCN-3 standard */
+XBitDef:
+  XNumber XBitKeyword
+  {
+    rawstruct->fieldlength = $1;
+    rawstruct->comp = XDEFSIGNBIT;
+    rawstruct->byteorder = XDEFLAST;
+  }
+| XUnsignedKeyword XNumber XBitKeyword
+  {
+    rawstruct->fieldlength = $2;
+    rawstruct->comp = XDEFUNSIGNED;
+    rawstruct->byteorder = XDEFLAST;
+  }
 ;
 
 /* Text encoder */
@@ -1265,10 +1287,12 @@ XERattributes: /* a non-empty list */
     ;
 
 XERattribute:
-    anyAttributes { FreeNamespaceRestriction(xerstruct->anyAttributes_); xerstruct->anyAttributes_ = $1; }
+    XKWabstract { xerstruct->abstract_ = true; }
+    | anyAttributes { FreeNamespaceRestriction(xerstruct->anyAttributes_); xerstruct->anyAttributes_ = $1; }
     | anyElement  { FreeNamespaceRestriction(xerstruct->anyElement_); xerstruct->anyElement_ = $1; }
     | XKWattribute  { xerstruct->attribute_ = true; }
     | XKWattributeFormQualified { xerstruct->form_ |= XerAttributes::ATTRIBUTE_DEFAULT_QUALIFIED; }
+    | XKWblock { xerstruct->block_ = true; }
     | controlNamespace /* directly on the module */
       {
         mymod->set_controlns($1.uri, $1.prefix);

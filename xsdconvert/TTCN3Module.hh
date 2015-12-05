@@ -16,6 +16,15 @@
 class TTCN3ModuleInventory;
 class RootType;
 
+//Used only in type substitution, when we have to change the type or a builtintype
+//due to type substitution
+struct typeNameDepList {
+  Mstring type;
+  List<SimpleType*> nameDepList;
+  //Used only with builtInTypes
+  ComplexType* typeSubsGroup;
+};
+
 /**
  * Type that contains information about one TTCN-3 module
  * and performs the generation of that module
@@ -63,6 +72,12 @@ class TTCN3Module {
   BlockValue blockDefault;
 
   List<const TTCN3Module*> importedModules; // pointers not owned
+
+  //Used only in type substitution, stores every possibly substituted type definitions
+  List<ComplexType*> storedTypeSubstitutions; //pointers not owned
+
+  //Used only in type substitution, stores every element that references a type
+  List<typeNameDepList> element_types;
 
   List<Mstring> variant;
 
@@ -189,6 +204,38 @@ public:
 
   const List<const TTCN3Module*> & getImportedModules() const {
     return importedModules;
+  }
+
+  List<ComplexType*> & getStoredTypeSubstitutions() {
+    return storedTypeSubstitutions;
+  }
+
+  void addStoredTypeSubstitution(ComplexType * type){
+    storedTypeSubstitutions.push_back(type);
+  }
+
+  List<typeNameDepList> & getElementTypes() {
+    return element_types;
+  }
+
+  void addElementType(const Mstring& type, SimpleType* st) {
+    List<typeNameDepList>::iterator it = element_types.begin();
+    for(; it; it = it->Next){
+        if(it->Data.type == type && st != NULL){
+            it->Data.nameDepList.push_back(st);
+            break;
+        }
+    }
+    //New type that has not been in the element_types before
+    if(it == NULL){
+      typeNameDepList list;
+      list.type = type;
+      list.typeSubsGroup = NULL;
+      if(st != NULL){
+        list.nameDepList.push_back(st);
+      }
+      element_types.push_back(list);
+    }
   }
 
   /// Compute the TTCN-3 module name

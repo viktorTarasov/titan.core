@@ -119,11 +119,17 @@ with {
 DECLARE_XER_ENCODERS(anys_and_only_anys, aaoa);
 DECLARE_EXER_ENCODERS(anys_and_only_anys, aaoa);
 
-const anys_and_only_anys noanys := { elements := {} }
+const anys_and_only_anys noanys_empty := { elements := {} }
+const anys_and_only_anys noanys_omit := { elements := omit }
+
+// the empty array is encoded into this in basic XER
 const universal charstring bstr_noanys :=
 "<anys_and_only_anys>\n" &
 "\t<elements/>\n" &
 "</anys_and_only_anys>\n\n";
+
+// both the empty array and the omitted field are encoded into this in extended XER
+// this is always decoded into an omitted field
 const universal charstring estr_noanys :=
 "<anys_and_only_anys/>\n\n";
 
@@ -153,8 +159,9 @@ const anys_and_only_anys marx_dec := {
 
 testcase encode_only_opt() runs on AE
 {
-  CHECK_METHOD(bxer_enc_aaoa, noanys, bstr_noanys);
-  CHECK_METHOD(exer_enc_aaoa, noanys, estr_noanys);
+  CHECK_METHOD(bxer_enc_aaoa, noanys_empty, bstr_noanys);
+  CHECK_METHOD(exer_enc_aaoa, noanys_empty, estr_noanys);
+  CHECK_METHOD(exer_enc_aaoa, noanys_omit, estr_noanys);
 
   CHECK_METHOD(bxer_enc_aaoa, marx, bstr_marx);
   CHECK_METHOD(exer_enc_aaoa, marx, estr_marx);
@@ -162,8 +169,8 @@ testcase encode_only_opt() runs on AE
 
 testcase decode_only_opt() runs on AE
 {
-  CHECK_DECODE(bxer_dec_aaoa, bstr_noanys, anys_and_only_anys, noanys);
-  CHECK_DECODE(exer_dec_aaoa, estr_noanys, anys_and_only_anys, noanys);
+  CHECK_DECODE(bxer_dec_aaoa, bstr_noanys, anys_and_only_anys, noanys_empty);
+  CHECK_DECODE(exer_dec_aaoa, estr_noanys, anys_and_only_anys, noanys_omit);
 
   CHECK_DECODE(bxer_dec_aaoa, bstr_marx, anys_and_only_anys, marx);
   CHECK_DECODE(exer_dec_aaoa, estr_marx, anys_and_only_anys, marx_dec);

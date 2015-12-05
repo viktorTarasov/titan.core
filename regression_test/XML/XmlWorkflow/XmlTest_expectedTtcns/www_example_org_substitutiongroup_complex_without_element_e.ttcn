@@ -110,12 +110,13 @@ type union Head_group_1
 }
 with {
 variant "untagged";
-//variant (head) "abstract";
+variant (head) "form as qualified";
+variant (head) "abstract";
 variant (head.headAttrib) "attribute";
 variant (head.something) "name as capitalized";
-//variant (member) "block";
-//variant (member2) "block";
-//variant (stringEnum) "block";
+variant (member) "block";
+variant (member2) "block";
+variant (stringEnum) "block";
 };
 
 

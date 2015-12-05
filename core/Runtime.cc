@@ -278,7 +278,7 @@ CHARSTRING TTCN_Runtime::get_testcase_id_macro()
 
 CHARSTRING TTCN_Runtime::get_testcasename()
 {
-  if (in_controlpart()) return CHARSTRING("");  // No error here.
+  if (in_controlpart() || is_hc()) return CHARSTRING("");  // No error here.
 
   if (!testcase_name.definition_name || testcase_name.definition_name[0] == 0)
     TTCN_error("Internal error: Evaluating predefined function testcasename()"
@@ -2459,8 +2459,11 @@ void TTCN_Runtime::process_ptc_verdict(Text_Buf& text_buf)
         TTCN_error("Internal error: Invalid PTC verdict was "
           "received from MC: %d.", ptc_verdict);
       }
-      verdicttype new_verdict =
-        local_verdict < ptc_verdict ? ptc_verdict : local_verdict;
+      verdicttype new_verdict = local_verdict;
+      if (ptc_verdict > local_verdict) {
+        new_verdict = ptc_verdict;
+        verdict_reason = CHARSTRING(ptc_verdict_reason);
+      }
       TTCN_Logger::log_final_verdict(true, ptc_verdict, local_verdict,
         new_verdict, ptc_verdict_reason, -1, ptc_compref, ptc_name);
       delete [] ptc_name;

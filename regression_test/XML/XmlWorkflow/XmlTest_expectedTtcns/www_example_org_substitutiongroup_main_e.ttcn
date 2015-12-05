@@ -65,7 +65,8 @@ type union Subsgroup_group
 }
 with {
 variant "untagged";
-//variant (subsgroup) "abstract";
+variant (subsgroup) "form as qualified";
+variant (subsgroup) "abstract";
 variant (replace_) "name as 'replace'";
 };
 

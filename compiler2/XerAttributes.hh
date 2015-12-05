@@ -136,11 +136,13 @@ public:
   /// If the NamespaceSpecification contains a string, free it.
   static void FreeNamespace(NamespaceSpecification& ns);
 public:
+  bool abstract_;
   bool attribute_;
   NamespaceRestriction anyAttributes_;
   NamespaceRestriction anyElement_;
   /// Base64 encoding for string-like types (XSD:base64Binary)
   bool base64_;
+  bool block_;
   /// No scientific notation for float
   bool decimal_;
   /// String parsed out from the encoding attribute

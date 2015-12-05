@@ -121,12 +121,13 @@ type union Head_group
 }
 with {
 variant "untagged";
+variant (head) "form as qualified";
 };
 
 
 }
 with {
 encode "XML";
-variant "namespace as 'www.example.org/substitutiongroup' prefix 'this'";
+variant "namespace as 'www.example.org/substitutiongroup' prefix 'subs'";
 variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

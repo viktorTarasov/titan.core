@@ -181,7 +181,9 @@ SHAREDLIB := libttcn3$(RT2_SUFFIX)-dynamic.so
 PARALLEL_SHAREDLIB := libttcn3$(RT2_SUFFIX)-parallel-dynamic.so
 	
 # Executables
+ifneq ($(FUNCTION_TEST_RUNTIME), yes)
 PROGRAMS := ttcn3_profmerge$(EXESUFFIX)
+endif
 
 TARGETS := $(LIBRARY) $(PARALLEL_LIBRARY)
 

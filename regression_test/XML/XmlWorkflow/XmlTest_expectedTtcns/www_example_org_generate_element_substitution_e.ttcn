@@ -90,7 +90,8 @@ type union Head_group
 }
 with {
 variant "untagged";
-//variant (member2) "block";
+variant (head) "form as qualified";
+variant (member2) "block";
 };
 
 

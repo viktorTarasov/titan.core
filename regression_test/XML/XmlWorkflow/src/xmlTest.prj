@@ -121,10 +121,14 @@
                 <File path="../xsd/module_typename_conversion.xsd" />
                 <File path="../xsd/module_typename_conversion_1.xsd" />
                 <File path="../xsd/substitutiongroup.xsd" />
+                <File path="../xsd/substitutiongroup_name_as.xsd" />
                 <File path="../xsd/substitutiongroup_abstract_block_1.xsd" />
                 <File path="../xsd/substitutiongroup_abstract_block_2.xsd" />
                 <File path="../xsd/substitutiongroup_complex_without_element.xsd" />
                 <File path="../xsd/substitutiongroup_long_extension.xsd" />
+                <File path="../xsd/substitutiongroup_complextype_block.xsd" />
+                <File path="../xsd/substitutiongroup_notargetnamespace.xsd" />
+                <File path="../xsd/substitutiongroup_rename.xsd" />
                 <File path="../xsd/generate_element_substitution.xsd" />
                 <File path="../xsd/dont_generate_element_substitution.xsd" />
                 <File path="../xsd/substitutiongroup_neg.xsd" />
@@ -136,6 +140,18 @@
                 <File path="../xsd/substitutiongroup_main.xsd" />
                 <File path="../xsd/substitutiongroup_ref.xsd" />
 		<File path="../xsd/simpletype_base.xsd" />
+		<File path="../xsd/type_substitution.xsd" />
+		<File path="../xsd/type_substitution_chain.xsd" />
+		<File path="../xsd/type_substitution_abstract_block.xsd" />
+		<File path="../xsd/type_substitution_mod1.xsd" />
+		<File path="../xsd/type_substitution_mod2.xsd" />
+		<File path="../xsd/type_subs_with_elem_subs.xsd" />
+		<File path="../xsd/type_substitution_simpletype.xsd" />
+		<File path="../xsd/type_substitution_elem_in_ct_mod1.xsd" />
+		<File path="../xsd/type_substitution_elem_in_ct_mod2.xsd" />
+		<File path="../xsd/only_element_substitution.xsd" />
+		<File path="../xsd/type_substitution_builtintype.xsd" />
+		<File path="../xsd/type_substitution_rename.xsd" />
             </File_Group>
             <File_Group name="XmlTest_xsds" >
                 <File path="../XmlTest_xsds/XmlTest_boolean.xsd" />
@@ -313,7 +329,7 @@
 		<File path="../XmlTest_expectedTtcns/www_example_org_anyattrib_single_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_attrib_order_a_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_attrib_order_b_e.ttcn" />
-		<File path="../XmlTest_expectedTtcns/NoTargetNamespace.ttcn" />
+		<File path="../XmlTest_expectedTtcns/NoTargetNamespace2_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_fixed_value_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_self_recursion_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_enumeration_remove_dup_e.ttcn" />
@@ -329,12 +345,15 @@
 		<File path="../XmlTest_expectedTtcns/module_typename_conversion_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_all_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_e.ttcn" />
+		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_name_as_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_abstract_block_1_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_abstract_block_2_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_complex_without_element_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_long_extension_e.ttcn" />
+		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_complextype_block_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_generate_element_substitution_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_dont_generate_element_substitution_e.ttcn" />
+		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_rename_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_list_simpletype_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_no_ns_connector_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_anyattr_in_complex_e.ttcn" />
@@ -343,6 +362,18 @@
 		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_ref_e.ttcn" />
 		<File path="../XmlTest_expectedTtcns/www_example_org_substitutiongroup_main_e.ttcn" />
 	        <File path="../XmlTest_expectedTtcns/www_example_org_simpletype_base_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_chain_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_abstract_block_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_mod1_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_mod2_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_subs_with_elem_subs_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_simpletype_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_elem_in_ct_mod1_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_elem_in_ct_mod2_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_only_element_substitution_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_builtintype_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_rename_e.ttcn" />
             </File_Group>
             <File_Group name="XmlTest_src" >
                 <File path="xmlTest_Shell.ttcn" />

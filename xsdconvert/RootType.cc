@@ -149,6 +149,9 @@ void RootType::addVariant(const VariantMode var, const Mstring& var_value, const
     case V_useOrder:
       variantstring = "\"useOrder\"";
       break;
+    case V_useType:
+      variantstring = "\"useType\"";
+      break;
     case V_useUnion:
       variantstring = "\"useUnion\"";
       break;
@@ -238,6 +241,11 @@ void RootType::printMinOccursMaxOccurs(FILE * file, const bool inside_union,
 
 bool RootType::hasVariant(const Mstring& var) const{
   for(List<Mstring>::iterator vars = variant.begin(); vars; vars = vars->Next){
+    if(vars->Data.isFound(var)){
+      return true;
+    }
+  }
+  for(List<Mstring>::iterator vars = hidden_variant.begin(); vars; vars = vars->Next){
     if(vars->Data.isFound(var)){
       return true;
     }

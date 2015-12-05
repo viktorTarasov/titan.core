@@ -2270,6 +2270,10 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
       } /* next read */
     } /* if not empty element */
   } /* if not LIST */
+  if (!own_tag && exer && (p_td.xer_bits & XER_OPTIONAL) && get_nof_elements() == 0) {
+    // set it to unbound, so the OPTIONAL class sets it to omit
+    clean_up();
+  }
   return 1; // decode successful
 }
 

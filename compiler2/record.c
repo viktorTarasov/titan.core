@@ -1942,7 +1942,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "    && *p_td.my_module->get_ns(p_td.ns_index)->px == '\\0';\n"
     );
 
-    src = mputstr(src, "  const boolean delay_close = e_xer");
+    src = mputstr(src, "  boolean delay_close = e_xer");
     if (!(num_attributes | sdef->xerUseQName)) {
       src = mputprintf(src, " && (need_control_ns%s || empty_ns_hack)",
         (start_at < sdef->nElements) ? " || num_collected" : "");
@@ -1973,9 +1973,11 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "    if (chopped_chars) {\n"
       "      p_buf.increase_length(-chopped_chars);\n"
       "    }\n"
+      "%s"
       "  }\n"
       , (want_namespaces ?   "-(delay_close || (e_xer && (p_td.xer_bits & HAS_1UNTAGGED)))" : "")
-      , (want_namespaces ? " || delay_close" : ""));
+      , (want_namespaces ? " || delay_close" : "")
+      , (want_namespaces ? "    delay_close = TRUE;\n" : ""));
   }
 
   src = mputprintf(src,

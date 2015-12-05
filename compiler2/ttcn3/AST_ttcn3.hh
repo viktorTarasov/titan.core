@@ -119,12 +119,11 @@ namespace Ttcn {
      * aliasing problems with other out/inout parameters. */
     void generate_code(expression_struct *expr, bool copy_needed, bool lazy_param=false, bool used_as_lvalue=false) const;
     /** Appends the initialization sequence of all (directly or indirectly)
-     * referred non-parameterized templates to \a str and returns the resulting
-     * string. Flag \a is_local indicates whether the respective formal
-     * parameter is in the same module as \a this. It is considered only if
-     * \a selection is AP_DEFAULT. */
-    char *rearrange_init_code(char *str, bool is_local);
-    char *rearrange_init_code_defval(char *str);
+     * referred non-parameterized templates and the default values of all
+     *  parameterized templates to \a str and returns the resulting string. 
+     *  Only objects belonging to module \a usage_mod are initialized. */
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
+    char *rearrange_init_code_defval(char *str, Common::Module* usage_mod);
     /** Appends the string representation of the actual parameter to \a str. */
     void append_stringRepr(string& str) const;
     virtual void dump(unsigned level) const;
@@ -171,10 +170,10 @@ namespace Ttcn {
       Type *p_comptype, bool p_compself);
     /** Walks through the parameter list and appends the initialization
      * sequence of all (directly or indirectly) referred non-parameterized
-     * templates to \a str and returns the resulting string. Flag \a is_local
-     * indicates whether the respective formal parameter list is in the same
-     * module as \a this. */
-    char *rearrange_init_code(char *str, bool is_local);
+     * templates and the default values of all parameterized templates to
+     * \a str and returns the resulting string. 
+     * Only objects belonging to module \a usage_mod are initialized. */
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
     virtual void dump(unsigned level) const;
   };
 
@@ -1588,6 +1587,9 @@ namespace Ttcn {
     template_restriction_t template_restriction;
     /** normal or lazy evaluation parametrization should be used */
     bool lazy_eval;
+    /** Flag that indicates whether the C++ code for the parameter's default
+      * value has been generated or not. */
+    bool defval_generated;
 
     /// Copy constructor disabled
     FormalPar(const FormalPar& p);
@@ -1642,7 +1644,11 @@ namespace Ttcn {
      * reporting. */
     virtual void use_as_lvalue(const Location& p_loc);
     bool get_used_as_lvalue() const { return used_as_lvalue; }
-    /** Generates the C++ objects that represent the default value for the
+    /** Partially generates the C++ object that represents the default value for
+      * the parameter (if present). The object's declaration is not generated,
+      * only its value assignment. */
+    char* generate_code_defval(char* str);
+    /** Generates the C++ object that represents the default value for the
      * parameter (if present). */
     virtual void generate_code_defval(output_struct *target, bool clean_up = false);
     /** Generates the C++ equivalent of the formal parameter, appends it to
@@ -1750,6 +1756,10 @@ namespace Ttcn {
     /** Generates the C++ equivalent of the formal parameter list, appends it
      * to \a str and returns the resulting string. */
     char *generate_code(char *str);
+    /** Partially generates the C++ objects that represent the default value for
+      * the parameters (if present). The objects' declarations are not generated,
+      * only their value assignments. */
+    char* generate_code_defval(char* str);
     /** Generates the C++ objects that represent the default values for the
      * parameters (if present). */
     void generate_code_defval(output_struct *target);

@@ -7382,7 +7382,7 @@ namespace Ttcn {
     TemplateInstance *p_defval, bool p_lazy_eval)
     : Definition(p_asstype, p_name), type(p_type), my_parlist(0),
     used_as_lvalue(false), template_restriction(TR_NONE),
-    lazy_eval(p_lazy_eval)
+    lazy_eval(p_lazy_eval), defval_generated(false)
   {
     switch (p_asstype) {
     case A_PAR_VAL:
@@ -7408,7 +7408,7 @@ namespace Ttcn {
     Identifier* p_name, TemplateInstance *p_defval, bool p_lazy_eval)
     : Definition(p_asstype, p_name), type(p_type), my_parlist(0),
     used_as_lvalue(false), template_restriction(p_template_restriction),
-    lazy_eval(p_lazy_eval)
+    lazy_eval(p_lazy_eval), defval_generated(false)
   {
     switch (p_asstype) {
     case A_PAR_TEMPL_IN:
@@ -7427,7 +7427,8 @@ namespace Ttcn {
   FormalPar::FormalPar(asstype_t p_asstype, Identifier* p_name,
     TemplateInstance *p_defval)
     : Definition(p_asstype, p_name), type(0), my_parlist(0),
-    used_as_lvalue(false), template_restriction(TR_NONE), lazy_eval(false)
+    used_as_lvalue(false), template_restriction(TR_NONE), lazy_eval(false),
+    defval_generated(false)
   {
     if (p_asstype != A_PAR_TIMER)
       FATAL_ERROR("Ttcn::FormalPar::FormalPar(): invalid parameter type");
@@ -8100,6 +8101,49 @@ namespace Ttcn {
       }
     }
   }
+  
+  char* FormalPar::generate_code_defval(char* str)
+  {
+    if (!defval.ap || defval_generated) return str;
+    defval_generated = true;
+    switch (defval.ap->get_selection()) {
+    case ActualPar::AP_VALUE: {
+      Value *val = defval.ap->get_Value();
+      if (use_runtime_2 && TypeConv::needs_conv_refd(val)) {
+        str = TypeConv::gen_conv_code_refd(str, val->get_lhs_name().c_str(), val);
+      } else {
+        str = val->generate_code_init(str, val->get_lhs_name().c_str());
+      }
+      break; }
+    case ActualPar::AP_TEMPLATE: {
+      TemplateInstance *ti = defval.ap->get_TemplateInstance();
+      Template *temp = ti->get_Template();
+      Ref_base *dref = ti->get_DerivedRef();
+      if (dref) {
+        expression_struct expr;
+        Code::init_expr(&expr);
+        expr.expr = mputprintf(expr.expr, "%s = ",
+                               temp->get_lhs_name().c_str());
+        dref->generate_code(&expr);
+        str = Code::merge_free_expr(str, &expr, false);
+      }
+      if (use_runtime_2 && TypeConv::needs_conv_refd(temp)) {
+        str = TypeConv::gen_conv_code_refd(str, temp->get_lhs_name().c_str(), temp);
+      } else {
+        str = temp->generate_code_init(str, temp->get_lhs_name().c_str());
+      }
+      if (defval.ap->get_gen_restriction_check() != TR_NONE) {
+        str = Template::generate_restriction_check_code(str,
+          temp->get_lhs_name().c_str(), defval.ap->get_gen_restriction_check());
+      }
+      break; }
+    case ActualPar::AP_REF:
+      break;
+    default:
+      FATAL_ERROR("FormalPar::generate_code()");
+    }
+    return str;
+  }
 
   void FormalPar::generate_code_defval(output_struct *target, bool)
   {
@@ -8112,13 +8156,6 @@ namespace Ttcn {
       type->generate_code_object(&cdef, val);
       Code::merge_cdef(target, &cdef);
       Code::free_cdef(&cdef);
-      if (use_runtime_2 && TypeConv::needs_conv_refd(val)) {
-        target->functions.post_init = TypeConv::gen_conv_code_refd(target->
-          functions.post_init, val->get_lhs_name().c_str(), val);
-      } else {
-        target->functions.post_init = val->generate_code_init(
-          target->functions.post_init, val->get_lhs_name().c_str());
-      }
       break; }
     case ActualPar::AP_TEMPLATE: {
       TemplateInstance *ti = defval.ap->get_TemplateInstance();
@@ -8128,36 +8165,13 @@ namespace Ttcn {
       type->generate_code_object(&cdef, temp);
       Code::merge_cdef(target, &cdef);
       Code::free_cdef(&cdef);
-      Ref_base *dref = ti->get_DerivedRef();
-      if (dref) {
-        expression_struct expr;
-        Code::init_expr(&expr);
-        expr.expr = mputprintf(expr.expr, "%s = ",
-                               temp->get_lhs_name().c_str());
-        dref->generate_code(&expr);
-        target->functions.post_init =
-          Code::merge_free_expr(target->functions.post_init, &expr, false);
-      }
-      if (use_runtime_2 && TypeConv::needs_conv_refd(temp)) {
-        target->functions.post_init = TypeConv::gen_conv_code_refd(target->
-          functions.post_init, temp->get_lhs_name().c_str(), temp);
-      } else {
-        target->functions.post_init =
-          temp->generate_code_init(target->functions.post_init,
-                                   temp->get_lhs_name().c_str());
-      }
-      if (defval.ap->get_gen_restriction_check() != TR_NONE) {
-        target->functions.post_init =
-          Template::generate_restriction_check_code(
-            target->functions.post_init, temp->get_lhs_name().c_str(),
-            defval.ap->get_gen_restriction_check());
-      }
       break; }
     case ActualPar::AP_REF:
       break;
     default:
       FATAL_ERROR("FormalPar::generate_code()");
     }
+    target->functions.post_init = generate_code_defval(target->functions.post_init);
   }
 
   char *FormalPar::generate_code_fpar(char *str)
@@ -8900,11 +8914,20 @@ namespace Ttcn {
     }
     return str;
   }
+  
+  char* FormalParList::generate_code_defval(char* str)
+  {
+    for (size_t i = 0; i < pars_v.size(); i++) {
+      str = pars_v[i]->generate_code_defval(str);
+    }
+    return str;
+  }
 
   void FormalParList::generate_code_defval(output_struct *target)
   {
-    for (size_t i = 0; i < pars_v.size(); i++)
+    for (size_t i = 0; i < pars_v.size(); i++) {
       pars_v[i]->generate_code_defval(target);
+    }
   }
 
   char *FormalParList::generate_code_actual_parlist(char *str,
@@ -9288,18 +9311,18 @@ namespace Ttcn {
     }
   }
 
-  char *ActualPar::rearrange_init_code(char *str, bool is_local)
+  char *ActualPar::rearrange_init_code(char *str, Common::Module* usage_mod)
   {
     switch (selection) {
     case AP_VALUE:
       str = val->rearrange_init_code(str);
       break;
     case AP_TEMPLATE:
-      str = temp->rearrange_init_code(str);
+      str = temp->rearrange_init_code(str, usage_mod);
     case AP_REF:
       break;
     case AP_DEFAULT:
-      if (is_local) str = act->rearrange_init_code_defval(str);
+      str = act->rearrange_init_code_defval(str, usage_mod);
       break;
     default:
       FATAL_ERROR("ActualPar::rearrange_init_code()");
@@ -9307,24 +9330,28 @@ namespace Ttcn {
     return str;
   }
 
-  char *ActualPar::rearrange_init_code_defval(char *str)
+  char *ActualPar::rearrange_init_code_defval(char *str, Common::Module* usage_mod)
   {
     switch (selection) {
     case AP_VALUE:
-      str = val->generate_code_init(str, val->get_lhs_name().c_str());
+      if (val->get_my_scope()->get_scope_mod_gen() == usage_mod) {
+        str = val->generate_code_init(str, val->get_lhs_name().c_str());
+      }
       break;
     case AP_TEMPLATE: {
-      str = temp->rearrange_init_code(str);
-      Ref_base *dref = temp->get_DerivedRef();
+      str = temp->rearrange_init_code(str, usage_mod);
       Template *t = temp->get_Template();
-      if (dref) {
-        expression_struct expr;
-        Code::init_expr(&expr);
-        expr.expr = mputprintf(expr.expr, "%s = ", t->get_lhs_name().c_str());
-        dref->generate_code(&expr);
-        str = Code::merge_free_expr(str, &expr, false);
+      if (t->get_my_scope()->get_scope_mod_gen() == usage_mod) {
+        Ref_base *dref = temp->get_DerivedRef();
+        if (dref) {
+          expression_struct expr;
+          Code::init_expr(&expr);
+          expr.expr = mputprintf(expr.expr, "%s = ", t->get_lhs_name().c_str());
+          dref->generate_code(&expr);
+          str = Code::merge_free_expr(str, &expr, false);
+        }
+        str = t->generate_code_init(str, t->get_lhs_name().c_str());
       }
-      str = t->generate_code_init(str, t->get_lhs_name().c_str());
       break; }
     default:
       FATAL_ERROR("ActualPar::rearrange_init_code_defval()");
@@ -9602,10 +9629,10 @@ namespace Ttcn {
     template_refs.clear();
   }
 
-  char *ActualParList::rearrange_init_code(char *str, bool is_local)
+  char *ActualParList::rearrange_init_code(char *str, Common::Module* usage_mod)
   {
     for (size_t i = 0; i < params.size(); i++)
-      str = params[i]->rearrange_init_code(str, is_local);
+      str = params[i]->rearrange_init_code(str, usage_mod);
     return str;
   }
 

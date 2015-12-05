@@ -42,7 +42,7 @@ import from XSD all;
 import from www_example_org_attrib_order_b all;
 
 
-import from NoTargetNamespace all;
+import from NoTargetNamespace2_e all;
 
 
 type XSD.String Local1 ("fixed")

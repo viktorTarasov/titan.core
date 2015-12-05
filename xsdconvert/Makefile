@@ -64,6 +64,10 @@ endif
 # libraries for the linker
 LDLIBS += -lxml2 -lcrypto
 
+ifdef MINGW
+LDLIBS += -lregex
+endif
+
 all run: $(TARGETS) $(PROGRAMS)
 
 xsd2ttcn$(EXESUFFIX): $(OBJECTS)

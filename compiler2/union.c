@@ -1378,9 +1378,8 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       src = mputstr(src,
         "  const boolean e_xer = is_exer(p_flavor);\n"
         "  char *type_atr = NULL;\n"
-        "  unsigned short name_len = 0;\n"
         "  if (e_xer && (p_td.xer_bits & USE_TYPE_ATTR)) {\n"
-        "    const char *type_name = 0;\n"
+        "    char *type_name = 0;\n"
         "    const namespace_t *control_ns;\n"
         "    switch (union_selection) {\n");
       /* In case of USE-TYPE the first field won't need the type attribute */
@@ -1388,24 +1387,34 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       for (i = start_at; i < sdef->nElements; i++) {
         src = mputprintf(src,
           "    case %s_%s:\n"
-          "      type_name = %s_xer_.names[1];\n"
-          "      name_len  = %s_xer_.namelens[1] - 2;\n"
+          "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
+          "          %s_xer_.namelens[1] > 2) {\n"
+          /* add the namespace prefix to the type attribute (if the name is not empty) */
+          "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
+          "        if (my_ns->px[0] != 0) {\n"
+          "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
+          "        }\n"
+          "      }\n"
+          "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
           "      %s\n"
           , selection_prefix, sdef->elements[i].name
-          , sdef->elements[i].typegen
+          , sdef->elements[i].typegen, sdef->elements[i].typegen
+          , sdef->elements[i].typegen, sdef->elements[i].typegen
+          , sdef->elements[i].typegen, sdef->elements[i].typegen
           , sdef->elements[i].typegen
           , i < sdef->nElements - 1 ? "goto write_atr;" : "" /* no break */
         );
       }
       src = mputprintf(src,
         "%s" /* label only if more than two elements total */
-        "      if (name_len > 0) {\n" /* 38.3.8, no atr if NAME AS "" */
+        "      if (mstrlen(type_name) > 0) {\n" /* 38.3.8, no atr if NAME AS "" */
         "        control_ns = p_td.my_module->get_controlns();\n"
         "        type_atr = mcopystr(\" \");\n"
-        "        type_atr = mputstr (type_atr, control_ns->px);\n"
-        "        type_atr = mputstr (type_atr, \":type='\");\n"
-        "        type_atr = mputstrn(type_atr, type_name, name_len);\n"
-        "        type_atr = mputc   (type_atr, '\\'');\n"
+        "        type_atr = mputstr(type_atr, control_ns->px);\n"
+        "        type_atr = mputstr(type_atr, \":type='\");\n"
+        "        type_atr = mputstr(type_atr, type_name);\n"
+        "        type_atr = mputc  (type_atr, '\\'');\n"
+        "        Free(type_name);\n"
         "      }\n"
         "      break;\n"
         "    default: break;\n"
@@ -1475,33 +1484,42 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         src = mputstr(src,
           "  const boolean e_xer = is_exer(p_flavor);\n"
           "  char *type_atr = NULL;\n"
-          "  unsigned short name_len = 0;\n"
           "  if (e_xer && (p_td.xer_bits & USE_TYPE_ATTR)) {\n"
-          "    const char *type_name = 0;\n"
+          "    char *type_name = 0;\n"
           "    const namespace_t *control_ns;\n"
           "    switch (union_selection) {\n");
         int start_at = sdef->xerUseUnion ? 0 : 1;
         for (i = start_at; i < sdef->nElements; i++) {
           src = mputprintf(src,
             "    case %s_%s:\n"
-            "      type_name = %s_xer_.names[1];\n"
-            "      name_len  = %s_xer_.namelens[1] - 2;\n"
+            "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
+            "          %s_xer_.namelens[1] > 2) {\n"
+            /* add the namespace prefix to the type attribute (if the name is not empty) */
+            "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
+            "        if (my_ns->px[0] != 0) {\n"
+            "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
+            "        }\n"
+            "      }\n"
+            "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
             "      %s\n"
             , selection_prefix, sdef->elements[i].name
-            , sdef->elements[i].typegen
+            , sdef->elements[i].typegen, sdef->elements[i].typegen
+            , sdef->elements[i].typegen, sdef->elements[i].typegen
+            , sdef->elements[i].typegen, sdef->elements[i].typegen
             , sdef->elements[i].typegen
             , i < sdef->nElements - 1 ? "goto write_atr;" : "" /* no break */
           );
         }
         src = mputprintf(src,
           "%s" /* label only if more than two elements total */
-          "      if (name_len > 0) {\n" /* 38.3.8, no atr if NAME AS "" */
+          "      if (mstrlen(type_name) > 0) {\n" /* 38.3.8, no atr if NAME AS "" */
           "        control_ns = p_td.my_module->get_controlns();\n"
           "        type_atr = mcopystr(\" \");\n"
-          "        type_atr = mputstr (type_atr, control_ns->px);\n"
-          "        type_atr = mputstr (type_atr, \":type='\");\n"
-          "        type_atr = mputstrn(type_atr, type_name, name_len);\n"
-          "        type_atr = mputc   (type_atr, '\\'');\n"
+          "        type_atr = mputstr(type_atr, control_ns->px);\n"
+          "        type_atr = mputstr(type_atr, \":type='\");\n"
+          "        type_atr = mputstr(type_atr, type_name);\n"
+          "        type_atr = mputc  (type_atr, '\\'');\n"
+          "        Free(type_name);\n"
           "      }\n"
           "      break;\n"
           "    default: break;\n"
@@ -1628,8 +1646,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         /* USE-TYPE: No type attribute means the first alternative */
         src = mputprintf(src,
           "        if (typeatr == NULL) {\n"
-          "          typeatr = mcopystr(%s_xer_.names[1]);\n"
-          "          typeatr = mtruncstr(typeatr, %s_xer_.namelens[1] - 2);\n"
+          "          typeatr = mcopystrn(%s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
           "        }\n"
           , sdef->elements[0].typegen
           , sdef->elements[0].typegen);
@@ -1668,7 +1685,15 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     if (sdef->xerUseTypeAttr) {
       src = mputstr(src,
         "    if (e_xer) {\n" /* USE-TYPE => no XML element, use typeatr */
-        "      elem_name = typeatr;\n"
+        "      char *token_1 = strtok(typeatr, \":\");\n" /* extract the namespace (if any) */
+        "      char *token_2 = strtok(NULL, \":\");\n"
+        "      if (token_2) {\n" /* namespace found */
+        "        elem_name = token_2;\n"
+        "        ns_uri = get_ns_uri_from_prefix(token_1, p_td);\n"
+        "      }\n"
+        "      else {\n" /* no namespace */
+        "        elem_name = token_1;\n"
+        "      }\n"
         "      flavor_1 |= USE_TYPE_ATTR;\n"
         "    }\n"
         "    else" /* no newline, gobbles up the next {} */);
@@ -1748,6 +1773,10 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           src = mputprintf(src,
             "    %sif (%s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT)) {\n"
             "      ec_2.set_msg(\"%s': \");\n"
+            "      if (e_xer && (%s_xer_.xer_bits & BLOCKED)) {\n"
+            "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
+            "          \"Attempting to decode blocked or abstract field.\");\n"
+            "      }\n"
             "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, 0);\n"
             "      if (!%s%s().is_bound()) {\n"
             "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, \"Failed to decode field.\");\n"
@@ -1756,6 +1785,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
             i && !(i==1 && sdef->exerMaybeEmptyIndex==0) ? "else " : "",  /*  print "if(" if generate code for the first field or if the first field is the MaybeEmpty field and we generate the code for the second one*/
             sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typegen,
             sdef->elements[i].dispname,
+            sdef->elements[i].typegen,
             at_field, sdef->elements[i].name,    sdef->elements[i].typegen,
             at_field, sdef->elements[i].name);
           }
@@ -1765,6 +1795,10 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         src = mputprintf(src,
           "    %sif ((e_xer && (type==XML_READER_TYPE_END_ELEMENT || !own_tag)) || %s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT)) {\n"
           "empty_xml:  ec_2.set_msg(\"%s': \");\n"
+          "      if (e_xer && (%s_xer_.xer_bits & BLOCKED)) {\n"
+          "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
+          "          \"Attempting to decode blocked or abstract field.\");\n"
+          "      }\n"
           "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, 0);\n"
           "      if (!%s%s().is_bound()) {\n"
           "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, \"Failed to decode field.\");\n"
@@ -1773,6 +1807,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           sdef->nElements>0 ? "else " : "",
           sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typegen,
           sdef->elements[i].dispname,
+          sdef->elements[i].typegen,
           at_field, sdef->elements[i].name,    sdef->elements[i].typegen,
           at_field, sdef->elements[i].name);
       }

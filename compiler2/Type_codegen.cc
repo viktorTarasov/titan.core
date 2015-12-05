@@ -490,7 +490,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
   int atrib=0, any_atr=0, any_elem=0, base64=0, decimal=0, embed=0, list=0,
   text=0, untagged=0, use_nil=0, use_number=0, use_order=0, use_qname=0,
   use_type_attr=0, ws=0, has_1untag=0, form_qualified=0, any_from=0, 
-  any_except=0, nof_ns_uris=0;
+  any_except=0, nof_ns_uris=0, blocked=0;
   const char* dfe_str = 0;
   char** ns_uris = 0;
   char* oftype_descr_name = 0;
@@ -507,6 +507,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     any_elem= has_ae(xerattrib);
     atrib   = xerattrib->attribute_;
     base64  = xerattrib->base64_;
+    blocked = xerattrib->abstract_ || xerattrib->block_;
     decimal = xerattrib->decimal_;
     embed   = xerattrib->embedValues_;
     form_qualified = (xerattrib->form_ & XerAttributes::QUALIFIED)
@@ -607,7 +608,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
   // Generate the XER descriptor itself
   target->source.global_vars = mputprintf(target->source.global_vars,
     "const XERdescriptor_t       %s_xer_ = { {\"%s>\\n\", \"%s>\\n\"},"
-    " {%lu, %lu}, %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s, WHITESPACE_%s, %c%s, "
+    " {%lu, %lu}, %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s, WHITESPACE_%s, %c%s, "
     "&%s, %ld, %u, %s, %s };\n",
     gennameown_str,
     bxer_name.c_str(), last_s.c_str(), // names
@@ -616,6 +617,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     (any_elem ? " |ANY_ELEMENT" : ""),
     (atrib    ? " |XER_ATTRIBUTE" : ""),
     (base64   ? " |BASE_64" : ""),
+    (blocked  ? " |BLOCKED" : ""),
     (decimal  ? " |XER_DECIMAL" : ""),
     (embed    ? " |EMBED_VALUES" : ""),
     (list     ? " |XER_LIST" : ""),
@@ -630,6 +632,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     (form_qualified ? "" : " |FORM_UNQUALIFIED"),
     (any_from   ? " |ANY_FROM" : ""),
     (any_except ? " |ANY_EXCEPT" : ""),
+    (is_optional_field() ? " |XER_OPTIONAL" : ""),
     whitespace_action[ws],
     (dfe_str ? '&' : ' '), (dfe_str ? dfe_str : "NULL"),
     "module_object",

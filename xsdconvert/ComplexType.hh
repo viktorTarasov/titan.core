@@ -43,7 +43,8 @@ public:
     fromTagUnion,
     fromTagNillable,
     fromTagComplexType,
-    fromTagSubstition
+    fromTagSubstitution,
+    fromTypeSubstitution
   };
 
   enum Resolv_State {
@@ -115,7 +116,8 @@ public:
   ~ComplexType();
   
   void modifyAttributeParent();
-  void addSubstitution(SimpleType* st);
+  void addSubstitution(SimpleType * st);
+  void addTypeSubstitution(SimpleType * st);
 
   /** Virtual methods
    *  inherited from RootType
@@ -130,6 +132,7 @@ public:
   void nameConversion(NameConversionMode mode, const List<NamespaceType> & ns);
   void finalModification();
   bool hasUnresolvedReference(){ return resolved == No; }
+  void setNameDep(SimpleType * dep) { nameDep = dep; }
 
   void dump(unsigned int depth) const;
 

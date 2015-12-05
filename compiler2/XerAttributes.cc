@@ -25,10 +25,12 @@ static const NamespaceRestriction empty_nsr = {
 static const XerAttributes::NameChange nochange= { NamespaceSpecification::NO_MANGLING };
 
 XerAttributes::XerAttributes()
-: attribute_(false)
+: abstract_(false)
+, attribute_(false)
 , anyAttributes_(empty_nsr)
 , anyElement_(empty_nsr)
 , base64_(false)
+, block_(false)
 , decimal_(false)
 , defaultForEmpty_(0)
 , defaultValue_(0)
@@ -127,6 +129,7 @@ void XerAttributes::print(const char *type_name) const {
   fprintf(stderr, "XER attributes(%p) for %s:\n", (const void*)this, type_name);
   if (empty()) fputs("...Empty...\n", stderr);
   else {
+    fputs(abstract_ ? "ABSTRACT\n" : "", stderr);
     fputs(attribute_ ? "ATTRIBUTE\n" : "", stderr);
 
     if (has_aa(this)) {
@@ -153,6 +156,7 @@ void XerAttributes::print(const char *type_name) const {
       }
     }
     fputs(base64_ ? "BASE64\n" : "", stderr);
+    fputs(block_ ? "BLOCK\n" : "", stderr);
     fputs(decimal_ ? "DECIMAL\n" : "", stderr);
 
     if (defaultForEmpty_)  fprintf(stderr, "DEFAULT-FOR-EMPTY '%s'\n", defaultForEmpty_);
@@ -238,6 +242,7 @@ fprintf(stderr, "@@@ replacing:\n");
 print("orig.");
 other.print("other");
 */
+  abstract_ |= other.abstract_;
   attribute_ |= other.attribute_;
   if (has_aa(&other)) {
     FreeNamespaceRestriction(anyAttributes_);
@@ -260,6 +265,7 @@ other.print("other");
     }
   }
   base64_ |= other.base64_;
+  block_ |= other.block_;
   decimal_ |= other.decimal_;
 
   if (other.defaultForEmpty_ != 0) {
@@ -362,10 +368,12 @@ other.print("other");
 
 bool XerAttributes::empty() const
 {
-  return !attribute_
+  return !abstract_
+  && !attribute_
   && !has_aa(this)
   && !has_ae(this)
   && !base64_
+  && !block_
   && !decimal_
   && defaultForEmpty_ == 0
   && !element_

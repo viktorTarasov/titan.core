@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright Ericsson Telecom AB 2015
+* Copyright (c) 2000-2015 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R3A                       
 *
@@ -9,19 +9,19 @@
 * http://www.eclipse.org/legal/epl-v10.html
 *******************************************************************************/
 //
-//  File:          NoTargetNamespace.ttcn
+//  File:          www_example_org_type_substitution_e.ttcn
 //  Description:
 //  References:
 //  Rev:
 //  Prodnr:
-//  Updated:       Wed Oct 28 13:59:18 2015
+//  Updated:       Mon Nov 16 10:01:25 2014
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- attrib_order_c.xsd
+//	- type_substitution_e.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "NoTargetNamespace" */
+//			/* targetnamespace = "www.example.org/type/substitution/e" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -33,26 +33,81 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace {
+module www_example_org_type_substitution {
 
 
 import from XSD all;
 
 
-type XSD.String AttrNoTargetNamespace
+type ParentType_derivations Head
 with {
-variant "attribute";
+variant "name as uncapitalized";
+variant "element";
 };
 
 
-type XSD.String AttrNoTargetNamespace2
+/* SUBSTITUTABLE PARENT TYPE */
+
+
+type record ParentType
+{
+	record of XSD.String foo_list,
+	XSD.String bar
+}
 with {
-variant "attribute";
+variant (foo_list) "untagged";
+variant (foo_list[-]) "name as 'foo'";
+};
+
+
+type RestrictedType RestrictedTypeElem
+with {
+variant "element";
+};
+
+
+/* The restricting type is: */
+
+
+type record RestrictedType
+{
+	record length(1 .. infinity) of XSD.String foo_list,
+	XSD.String bar
+}
+with {
+variant "name as uncapitalized";
+variant (foo_list) "untagged";
+variant (foo_list[-]) "name as 'foo'";
+};
+
+
+type SubmitRequestType Submit
+with {
+variant "element";
+};
+
+
+type record SubmitRequestType
+{
+	ParentType_derivations request1,
+	ParentType_derivations request2
+};
+
+
+type union ParentType_derivations
+{
+	ParentType parentType,
+	RestrictedType restrictedType
+}
+with {
+variant "useType";
+variant (parentType) "name as capitalized";
 };
 
 
 }
 with {
 encode "XML";
+variant "namespace as 'www.example.org/type/substitution' prefix 'tysub'";
 variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

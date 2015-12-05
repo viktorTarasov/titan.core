@@ -4032,7 +4032,7 @@ type charstring myCharType length( float2int(rnd()) );
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)error.+?evaluatable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
+(?im)error.+?evaluable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?im)\bNotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
@@ -4094,7 +4094,7 @@ type charstring myCharType length( float2int(rnd()) .. 5 );
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)error.+?evaluatable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
+(?im)error.+?evaluable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?im)\bNotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
@@ -4160,7 +4160,7 @@ type charstring myCharType length( float2int(rnd()) .. myFunct());
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)error.+?evaluatable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
+(?im)error.+?evaluable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?im)error.+?Reference.+?constant.+?expected.+?instead
@@ -4192,7 +4192,7 @@ type integer myIntType ( float2int(rnd()) .. 255 );
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)error.+?evaluatable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
+(?im)error.+?evaluable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?im)\bNotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
@@ -4258,7 +4258,7 @@ type float myIntType ( rnd() .. myFunct() );
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)error.+?evaluatable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
+(?im)error.+?evaluable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?im)error.+?Reference.+?constant.+?expected.+?instead
@@ -4290,7 +4290,7 @@ type integer myIntType ( float2int(rnd()), 255 );
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)error.+?evaluatable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
+(?im)error.+?evaluable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?im)\bNotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
@@ -4356,7 +4356,7 @@ type float myIntType ( rnd(), 255.0, myFunct() );
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)error.+?evaluatable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
+(?im)error.+?evaluable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?im)error.+?Reference.+?constant.+?expected.+?instead
@@ -6900,7 +6900,7 @@ module x {
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)error.+?evaluatable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
+(?im)error.+?evaluable.+?constant.+?value.+?expected.+?instead.+?of.+?operation
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?is)\berror:

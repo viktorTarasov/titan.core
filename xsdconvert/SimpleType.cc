@@ -14,6 +14,7 @@
 #include "ComplexType.hh"
 
 extern bool g_flag_used;
+extern bool h_flag_used;
 
 SimpleType::SimpleType(XMLParser * a_parser, TTCN3Module * a_module, ConstructType a_construct)
 : RootType(a_parser, a_module, a_construct)
@@ -31,8 +32,10 @@ SimpleType::SimpleType(XMLParser * a_parser, TTCN3Module * a_module, ConstructTy
 , fromRef(false)
 , xsdtype(n_NOTSET)
 , isOptional(false)
-, substitionGroup(empty_string)
+, substitutionGroup(empty_string)
 , subsGroup(NULL)
+, typeSubsGroup(NULL)
+, addedToTypeSubstitution(false)
 , block(not_set)
 , parent(NULL) {
 }
@@ -53,8 +56,10 @@ SimpleType::SimpleType(const SimpleType& other)
 , fromRef(other.fromRef)
 , xsdtype(other.xsdtype)
 , isOptional(other.isOptional)
-, substitionGroup(other.substitionGroup)
+, substitutionGroup(other.substitutionGroup)
 , subsGroup(other.subsGroup)
+, typeSubsGroup(other.typeSubsGroup)
+, addedToTypeSubstitution(other.addedToTypeSubstitution)
 , block(other.block)
 , parent(NULL) {
   length.parent = this;
@@ -255,13 +260,13 @@ void SimpleType::applyNillableAttribute(const bool nillable) {
 
 void SimpleType::applyAbstractAttribute(const bool abstract_value) {
   if (abstract_value) {
-    addVariant(V_onlyValueHidden, Mstring("\"abstract\""));
+    addVariant(V_abstract);
   }
 }
 
-void SimpleType::applySubstitionGroupAttribute(const Mstring& substition_group){
-  if(!substition_group.empty()){
-    substitionGroup = substition_group;
+void SimpleType::applySubstitionGroupAttribute(const Mstring& substitution_group){
+  if(!substitution_group.empty()){
+    substitutionGroup = substitution_group;
   }
 }
 
@@ -274,15 +279,14 @@ void SimpleType::applyBlockAttribute(const BlockValue block_){
 }
 
 void SimpleType::addToSubstitutions(){
-  if(!g_flag_used){
+  if(!g_flag_used || substitutionGroup.empty()){
     return;
   }
-  SimpleType * st_ = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, substitionGroup, want_BOTH);
+  SimpleType * st_ = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, substitutionGroup, want_BOTH);
   if(st_ == NULL){
     printError(module->getSchemaname(), name.convertedValue,
-        "Reference for a non-defined type: " + substitionGroup);
+        "Reference for a non-defined type: " + substitutionGroup);
       TTCN3ModuleInventory::getInstance().incrNumErrors();
-      return;
     return;
   }
   SimpleType * st = (SimpleType*)st_;
@@ -291,12 +295,12 @@ void SimpleType::addToSubstitutions(){
   }
 
   st->referenceResolving();
-  substitionGroup = empty_string;
+  substitutionGroup = empty_string;
   //Simpletype
   if(st->subsGroup == NULL){
-    ComplexType * head_element = new ComplexType(*st, ComplexType::fromTagSubstition);
+    ComplexType * head_element = new ComplexType(*st, ComplexType::fromTagSubstitution);
     for(List<SimpleType*>::iterator simpletype = st->nameDepList.begin(); simpletype; simpletype = simpletype->Next){
-      head_element->nameDepList.push_back(simpletype->Data);
+      head_element->getNameDepList().push_back(simpletype->Data);
     }
     st->nameDepList.clear();
     st->getModule()->addMainType(head_element);
@@ -310,6 +314,145 @@ void SimpleType::addToSubstitutions(){
     st->subsGroup->addSubstitution(this);
   }
 }
+
+void SimpleType::addToTypeSubstitutions() {
+  //If the user did not request type substitution generation or
+  //the type is already added to type substitution
+  if(!h_flag_used || addedToTypeSubstitution){
+    return;
+  }
+  //Only available if it is a restricion or extension
+  if(mode != extensionMode && mode != restrictionMode){
+    return;
+  }
+  //Only top level complexTypes or simpleTypes, ergo no elements
+  if(parent != NULL || hasVariant(Mstring("\"element\""))){
+    return;
+  }
+
+  //It would be nice if here outside_reference.resolved to everything
+  SimpleType * st = (SimpleType*)outside_reference.get_ref();
+  bool newST = false;
+  if(st == NULL && !isBuiltInType(type.convertedValue)){
+    //Not even a reference, and not a built in type
+    return;
+  }else if(st == NULL && isBuiltInType(type.convertedValue)){
+    st = new SimpleType(parser, module, construct);
+    st->type.upload(type.convertedValue);
+    st->name.upload(type.convertedValue);
+    st->typeSubsGroup = findBuiltInTypeInStoredTypeSubstitutions(type.convertedValue);
+    newST = true;
+  }
+
+  addedToTypeSubstitution = true;
+
+  //If type substitution is NULL then we need to create the union
+  if(st->getTypeSubstitution() == NULL){
+    ComplexType * head_element = new ComplexType(*st, ComplexType::fromTypeSubstitution);
+    for(List<SimpleType*>::iterator simpletype = st->nameDepList.begin(); simpletype; simpletype = simpletype->Next){
+      head_element->getNameDepList().push_back(simpletype->Data);
+    }
+    st->nameDepList.clear();
+    st->getModule()->addMainType(head_element);
+    head_element->addVariant(V_useType);
+    head_element->addTypeSubstitution(st);
+    head_element->addTypeSubstitution(this);
+    bool found = false;
+    //Check to find if there was already an element reference with this type
+    for(List<typeNameDepList>::iterator str = module->getElementTypes().begin(); str; str = str->Next){
+      Mstring prefix = str->Data.type.getPrefix(':');
+      Mstring value = str->Data.type.getValueWithoutPrefix(':');
+
+      if((value == st->getName().convertedValue.getValueWithoutPrefix(':') && prefix == module->getTargetNamespaceConnector()) ||
+         (isBuiltInType(value) && !isBuiltInType(st->getType().convertedValue) && value == st->getType().convertedValue && prefix == module->getTargetNamespaceConnector())){
+        //Push the namedeplist
+        for(List<SimpleType*>::iterator simpletype = str->Data.nameDepList.begin(); simpletype; simpletype = simpletype->Next){
+          head_element->getNameDepList().push_back(simpletype->Data);
+        }
+        found = true;
+        str->Data.typeSubsGroup = head_element;
+        break;
+      }
+    }
+    if(!found){
+      head_element->setInvisible();
+    }
+    st->typeSubsGroup = head_element;
+    st->getModule()->addStoredTypeSubstitution(head_element);
+  }else {
+    st->getTypeSubstitution()->addTypeSubstitution(this);
+  }
+
+  //Free pointer
+  if(newST){
+    delete st;
+    st = NULL;
+  }
+}
+
+void SimpleType::collectElementTypes(SimpleType* found_ST, ComplexType* found_CT){
+  //Only if type substitution is enabled and it is a top level(simpletype) element or
+  //it is a not top level element(complextype)
+  if(h_flag_used && (hasVariant(Mstring("\"element\"")) || xsdtype == n_element)){
+    SimpleType * st =  NULL, *nameDep = NULL;
+    Mstring uri, value, type_;
+    if(found_ST != NULL || found_CT != NULL){
+      // st := found_ST or found_CT, which is not null
+      st = found_ST != NULL ? found_ST : found_CT;
+      uri = outside_reference.get_uri();
+      value = outside_reference.get_val();
+      type_ = value;
+    }else if(isBuiltInType(type.convertedValue)){
+      st = this;
+      uri = module->getTargetNamespace();
+      value = type.convertedValue;
+      if(outside_reference.empty()){
+        type_ = value;
+        nameDep = this;
+      }else {
+        type_ = outside_reference.get_val();
+      }
+    }else {
+      //It is not possible to reach here (should be)
+      return;
+    }
+    type_ = type_.getValueWithoutPrefix(':');
+    bool found = false;
+    const Mstring typeSubsName = value + Mstring("_derivations");
+    //Find if we already have a substitution type to this element reference
+    for(List<ComplexType*>::iterator complex = st->getModule()->getStoredTypeSubstitutions().begin(); complex; complex = complex->Next){
+
+      if(uri == st->getModule()->getTargetNamespace() && typeSubsName == complex->Data->getName().convertedValue){
+        complex->Data->setVisible();
+        if(st->getXsdtype() != n_NOTSET && this == st){ //otherwise records would be renamed too
+          complex->Data->addToNameDepList(st);
+          ((ComplexType*)st)->setNameDep(nameDep);
+        }
+        found = true;
+        break;
+      }
+    }
+    //Add the reference, to future possible type substitution
+    if(!found){
+      Mstring prefix = st->getModule()->getTargetNamespaceConnector();
+      if(prefix != empty_string){
+        prefix += ":";
+      }
+      st->getModule()->addElementType(prefix + type_, nameDep);
+    }
+  }
+}
+
+ComplexType * SimpleType::findBuiltInTypeInStoredTypeSubstitutions(const Mstring& builtInType){
+  const Mstring typeSubsName = builtInType.getValueWithoutPrefix(':') + Mstring("_derivations");
+  for(List<ComplexType*>::iterator complex = module->getStoredTypeSubstitutions().begin(); complex; complex = complex->Next){
+    if(typeSubsName == complex->Data->getName().convertedValue){
+      return complex->Data;
+    }
+  }
+  return NULL;
+}
+
 
 void SimpleType::setReference(const Mstring& ref, bool only_name_dependency) {
   if (ref.empty()) {
@@ -374,7 +517,11 @@ void SimpleType::setReference(const Mstring& ref, bool only_name_dependency) {
 }
 
 void SimpleType::referenceResolving() {
-  if (outside_reference.empty() && substitionGroup.empty()) return;
+  if (outside_reference.empty()){
+    addToTypeSubstitutions();
+    collectElementTypes();
+  }
+  if(outside_reference.empty() && substitutionGroup.empty()) return;
   if (outside_reference.is_resolved()) return;
 
   if(!outside_reference.empty()){
@@ -383,18 +530,20 @@ void SimpleType::referenceResolving() {
     ComplexType * found_CT = static_cast<ComplexType*> (
       TTCN3ModuleInventory::getInstance().lookup(this, want_CT));
     // It _is_ possible to find both
-
+    collectElementTypes(found_ST, found_CT);
     if (found_ST != NULL) {
       if (!found_ST->outside_reference.empty() && !found_ST->outside_reference.is_resolved() && found_ST != this) {
         found_ST->outside_reference.set_resolved(NULL);
         found_ST->referenceResolving();
       }
       referenceForST(found_ST);
+      addToTypeSubstitutions();
       if (!isBuiltInType(type.convertedValue)) {
         found_ST->addToNameDepList(this);
       }
     } else if (found_CT != NULL) {
       referenceForCT(found_CT);
+      addToTypeSubstitutions();
       if (!isBuiltInType(type.convertedValue)) {
         found_CT->addToNameDepList(this);
       }
@@ -404,10 +553,8 @@ void SimpleType::referenceResolving() {
       TTCN3ModuleInventory::getInstance().incrNumErrors();
       outside_reference.set_resolved(NULL);
     }
-    if(!substitionGroup.empty()){
-      addToSubstitutions();
-    }
-  }else if(!substitionGroup.empty()){
+    addToSubstitutions();
+  }else {
     addToSubstitutions();
   }
 }

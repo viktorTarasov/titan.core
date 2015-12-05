@@ -8670,6 +8670,10 @@ PredefOrIdentifier:
 
     $$ = new Identifier(Identifier::ID_TTCN, at_field);
   }
+| NullValue
+  {
+    $$ = new Identifier(Identifier::ID_NAME, string("NULL"));
+  }
 
 IschosenArg: /* see also Reference... */
   IDentifier '.' PredefOrIdentifier

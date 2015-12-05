@@ -1390,7 +1390,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "      if ((XML_READER_TYPE_ELEMENT   == type && p_reader.MoveToFirstAttribute() == 1)\n"
       "        || XML_READER_TYPE_ATTRIBUTE == type) {\n"
       "        verify_name(p_reader, p_td, e_xer);\n"
-      "        break;"
+      "        break;\n"
       "      }\n"
       "    }\n"
       "    if (e_xer && (p_td.xer_bits & XER_LIST)) {\n"
@@ -1545,6 +1545,9 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "      }\n" /* next read */
       "    }\n" /* if not empty element */
       "  }\n" /* if not LIST */
+      "  if (!own_tag && e_xer && (p_td.xer_bits & XER_OPTIONAL) && val_ptr->n_elements == 0) {\n"
+      "    clean_up();\n" /* set it to unbound, so the OPTIONAL class sets it to omit */
+      "  }\n"
       "  return 1;\n"
       "}\n\n"
     );

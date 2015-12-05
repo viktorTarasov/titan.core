@@ -22,6 +22,7 @@ int  d_flag_used = 0;
 bool e_flag_used = false;
 bool f_flag_used = false;
 bool g_flag_used = true;
+bool h_flag_used = false;
 bool p_flag_used = false;
 bool s_flag_used = false;
 bool t_flag_used = false;
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
   char c;
   opterr = 0;
 
-  while ((c = getopt(argc, argv, "cdef:gpqstvwxz")) != -1) {
+  while ((c = getopt(argc, argv, "cdef:ghpqstvwxz")) != -1) {
     switch (c) {
       case 'c':
         c_flag_used = true;
@@ -73,6 +74,9 @@ int main(int argc, char **argv) {
         break;
       case 'g':
         g_flag_used = false;
+        break;
+      case 'h':
+        h_flag_used = true;
         break;
       case 'p':
         p_flag_used = true;
@@ -207,6 +211,7 @@ static void printUsage(const char * argv0) {
     "	-e:		disable the generation of encoding instructions in TTCN-3 modules\n"
     "	-f file:	the names of XSD files are taken from file instead of the command line\n"
     "	-g:		generate TTCN-3 code disallowing element substitution\n"
+    "	-h:		generate TTCN-3 code allowing type substitution\n"
     "	-p:		do not generate the UsefulTtcn3Types and XSD predefined modules\n"
     "	-q:		quiet mode - disable the issue of status messages\n"
     "	-s:		parse and validate only - no TTCN-3 module generation\n"

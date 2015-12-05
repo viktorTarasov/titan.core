@@ -658,6 +658,40 @@ testcase decode_ut_ustr() runs on UTA
 
 
 
+// ------- optional record of
+type record length (1 .. infinity) of charstring RoCS
+with {
+  variant ([-]) "name as 'str'";
+}
+
+type record r_recof {
+  record length (1 .. infinity) of integer num_list optional,
+  RoCS str_list optional
+}
+with {
+  variant(num_list) "untagged";
+  variant(num_list[-]) "name as 'num'";
+  variant(str_list) "untagged";
+}
+
+DECLARE_EXER_ENCODERS(r_recof, recof);
+
+const r_recof c_recof := { num_list := omit, str_list := omit };
+
+const universal charstring s_recof := "<r_recof/>\n\n";
+
+testcase encode_ut_recof() runs on UTA
+{
+  CHECK_METHOD(exer_enc_recof, c_recof, s_recof);
+}
+
+testcase decode_ut_recof() runs on UTA
+{
+  CHECK_DECODE(exer_dec_recof, s_recof, r_recof, c_recof);
+}
+
+
+
 /* * * * * * * * * * * Run it! * * * * * * * * * * */
 
 control {
@@ -694,6 +728,8 @@ control {
   execute(encode_ut_ustr());
   execute(decode_ut_ustr());
 
+  execute(encode_ut_recof());
+  execute(decode_ut_recof());
 }
 
 }

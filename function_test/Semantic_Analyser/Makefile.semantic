@@ -5,7 +5,7 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 ###############################################################################
-SADIRS := ver xer encode param template_restrictions
+SADIRS := ver xer encode param template
 #$(wildcard TTCN3_[a0-9]* ASN_[a0-9]*) ver xer
 
 all run check clean distclean:

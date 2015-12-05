@@ -285,6 +285,8 @@ BITORDERINOCTET    { BEGIN(rawcodec); RETURN(XBitOrderInOctetKeyword); }
 HEXORDER    { BEGIN(rawcodec); RETURN(XHexOrderKeyword); }
 TOPLEVEL    { BEGIN(rawcodec); RETURN(XToplevelKeyword); }
 IntX        { RETURN(XIntXKeyword); }
+bit         { RETURN(XBitKeyword); }
+unsigned    { RETURN(XUnsignedKeyword); }
 
 <rawcodec>{
 yes         { yylval.enumval = XDEFYES; RETURN(XYes); }
@@ -331,10 +333,12 @@ TEXT_CODING { BEGIN(textcodec);RETURN(XCodingKeyword); }
          * when to return to INITIAL) */
 
 	/* First, the "starter" attributes */
+abstract RETURN(XKWabstract);
 anyAttributes	RETURN(XKWanyAttributes);
 anyElement	RETURN(XKWanyElement);
 attribute	RETURN(XKWattribute);
 attributeFormQualified RETURN(XKWattributeFormQualified);
+block RETURN(XKWblock);
 controlNamespace RETURN(XKWcontrolNamespace);
 defaultForEmpty	RETURN(XKWdefaultForEmpty);
 element 	RETURN(XKWelement);

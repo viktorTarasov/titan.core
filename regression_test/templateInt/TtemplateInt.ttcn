@@ -7,6 +7,8 @@
  ******************************************************************************/
 module TtemplateInt {
 
+import from ImportedTemplates all;
+
 type component templateInt_mycomp {};
 type record templateInt_rec {
  integer x1,
@@ -288,6 +290,53 @@ testcase templateIntSubtype() runs on templateInt_mycomp {
   setverdict(pass);
 }
 
+// test case: using a parameterized template with no actual parameters (using default values)
+// before its declaration
+template integer tReverse := tPard;
+
+template integer tPard(integer p := 6) := p;
+
+testcase templateIntReverseOrder() runs on templateInt_mycomp {
+  var template integer vtExpected := 6;
+  if (log2str(tReverse) == log2str(vtExpected)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", vtExpected, ", got: ", tReverse);
+  }
+}
+
+// same test, but the parameterized template is passed as a parameter to
+// an imported parameterized template
+template integer tReverse2 := tImported(tPard2);
+
+template integer tPard2(integer p := 4) := p;
+
+testcase templateIntReverseOrderImported() runs on templateInt_mycomp {
+  var template integer vtExpected := 4;
+  if (log2str(tReverse2) == log2str(vtExpected)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", vtExpected, ", got: ", tReverse2);
+  }
+}
+
+// same as the previous test, but with a non-parameterized template
+template integer tReverse3 := tImported(tNonPard);
+
+template integer tNonPard := (1, 2);
+
+testcase templateIntReverseOrderImported2() runs on templateInt_mycomp {
+  var template integer vtExpected := (1, 2);
+  if (log2str(tReverse3) == log2str(vtExpected)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", vtExpected, ", got: ", tReverse3);
+  }
+}
+
 control {
  execute(templateIntSpec());
  execute(templateIntList());
@@ -302,5 +351,8 @@ control {
  execute(templateIntIfpresent());
  execute(TR_HJ94652());
  execute(templateIntSubtype());
+ execute(templateIntReverseOrder());
+ execute(templateIntReverseOrderImported());
+ execute(templateIntReverseOrderImported2());
 }
 }

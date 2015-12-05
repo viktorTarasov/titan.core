@@ -2301,6 +2301,27 @@ void Type::chk_xer() { // XERSTUFF semantic check
     }
     empties.clear();
   } // if secho
+  
+  if (xerattrib->abstract_ || xerattrib->block_) {
+    switch (ownertype) {
+    case OT_COMP_FIELD:
+      if (parent_type->typetype == T_CHOICE_A ||
+          parent_type->typetype == T_CHOICE_T) {
+        if (parent_type->xerattrib != NULL && parent_type->xerattrib->useUnion_) {
+          error("ABSTRACT and BLOCK cannot be used on fields of a union with "
+            "attribute USE-UNION.");
+        }
+        break;
+      }
+      // else fall through
+    case OT_RECORD_OF:
+    case OT_TYPE_DEF:
+      warning("ABSTRACT and BLOCK only affects union fields.");
+      break;
+    default:
+      break;
+    }
+  }
 
 }
 
@@ -3215,7 +3236,7 @@ bool Type::chk_this_refd_value(Value *value, Common::Assignment *lhs, expected_v
 #endif
   case Assignment::A_EXT_CONST:
     if (expected_value == EXPECTED_CONSTANT) {
-      value->error("Reference to an (evaluatable) constant value was "
+      value->error("Reference to an (evaluable) constant value was "
                    "expected instead of %s",
                    ass->get_description().c_str());
       error_flag = true;

@@ -4376,7 +4376,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     }
     switch (exp_val) {
     case Type::EXPECTED_CONSTANT:
-      error("An evaluatable constant value was expected instead of operation "
+      error("An evaluable constant value was expected instead of operation "
         "`apply()'");
       set_valuetype(V_ERROR);
       break;
@@ -5637,7 +5637,7 @@ error:
     case Assignment::A_MODULEPAR:
     case Assignment::A_MODULEPAR_TEMP:
       if(exp_val==Type::EXPECTED_CONSTANT) {
-        u.expr.ti1->error("Reference to an (evaluatable) constant value was "
+        u.expr.ti1->error("Reference to an (evaluable) constant value was "
                    "expected instead of %s", t_ass->get_description().c_str());
         goto error;
       }
@@ -5980,7 +5980,7 @@ error:
     Ttcn::StatementBlock *my_sb;
     switch (exp_val) {
     case Type::EXPECTED_CONSTANT:
-      error("An evaluatable constant value was expected instead of operation "
+      error("An evaluable constant value was expected instead of operation "
 	"`%s'", get_opname());
       goto error;
     case Type::EXPECTED_STATIC_VALUE:
@@ -11113,15 +11113,13 @@ error:
       Ttcn::ActualParList *parlist = u.ref.ref->get_parlist();
       if (parlist) {
 	str = parlist->rearrange_init_code(str,
-	  u.ref.ref->get_refd_assignment()->get_my_scope()->get_scope_mod_gen()
-	  == my_scope->get_scope_mod_gen());
+	  u.ref.ref->get_refd_assignment()->get_my_scope()->get_scope_mod_gen());
       }
       break; }
     case V_INVOKE: {
       str = u.invoke.v->rearrange_init_code(str);
-      bool type_is_local = u.invoke.v->get_expr_governor_last()->get_my_scope()
-	->get_scope_mod_gen() == my_scope->get_scope_mod_gen();
-      str = u.invoke.ap_list->rearrange_init_code(str, type_is_local);
+      str = u.invoke.ap_list->rearrange_init_code(str,
+        u.invoke.v->get_expr_governor_last()->get_my_scope()->get_scope_mod_gen());
       break; }
     case V_EXPR:
       switch (u.expr.v_optype) {
@@ -11167,15 +11165,11 @@ error:
       case OPTYPE_DECODE: {
         Ttcn::ActualParList *parlist = u.expr.r1->get_parlist();
         Common::Assignment *ass = u.expr.r1->get_refd_assignment();
-        bool rearrange = (ass->get_my_scope()->get_scope_mod_gen() ==
-          my_scope->get_scope_mod_gen());
-        if (parlist) str = parlist->rearrange_init_code(str, rearrange);
+        if (parlist) str = parlist->rearrange_init_code(str, ass->get_my_scope()->get_scope_mod_gen());
 
         parlist = u.expr.r2->get_parlist();
         ass = u.expr.r2->get_refd_assignment();
-        rearrange = (ass->get_my_scope()->get_scope_mod_gen() ==
-          my_scope->get_scope_mod_gen());
-        if (parlist) str = parlist->rearrange_init_code(str, rearrange);
+        if (parlist) str = parlist->rearrange_init_code(str, ass->get_my_scope()->get_scope_mod_gen());
         break; }
       case OPTYPE_ADD:
       case OPTYPE_SUBTRACT:
@@ -11214,13 +11208,13 @@ error:
         if (u.expr.v2) str = u.expr.v2->rearrange_init_code(str);
         break;
       case OPTYPE_SUBSTR:
-        str = u.expr.ti1->rearrange_init_code(str);
+        str = u.expr.ti1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
         str = u.expr.v2->rearrange_init_code(str);
         str = u.expr.v3->rearrange_init_code(str);
         break;
       case OPTYPE_REGEXP:
-        str = u.expr.ti1->rearrange_init_code(str);
-        str = u.expr.t2->rearrange_init_code(str);
+        str = u.expr.ti1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
+        str = u.expr.t2->rearrange_init_code(str, my_scope->get_scope_mod_gen());
         str = u.expr.v3->rearrange_init_code(str);
         break;
       case OPTYPE_DECOMP:
@@ -11229,10 +11223,10 @@ error:
         str = u.expr.v3->rearrange_init_code(str);
         break;
       case OPTYPE_REPLACE:
-        str = u.expr.ti1->rearrange_init_code(str);
+        str = u.expr.ti1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
         str = u.expr.v2->rearrange_init_code(str);
         str = u.expr.v3->rearrange_init_code(str);
-        str = u.expr.ti4->rearrange_init_code(str);
+        str = u.expr.ti4->rearrange_init_code(str, my_scope->get_scope_mod_gen());
         break;
       case OPTYPE_LENGTHOF:
       case OPTYPE_SIZEOF:
@@ -11240,14 +11234,14 @@ error:
       case OPTYPE_ENCODE:
       case OPTYPE_ISPRESENT:
       case OPTYPE_TTCN2STRING:
-        str = u.expr.ti1->rearrange_init_code(str);
+        str = u.expr.ti1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
         break;
       case OPTYPE_ISCHOSEN_T:
-        str = u.expr.t1->rearrange_init_code(str);
+        str = u.expr.t1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
         break;
       case OPTYPE_MATCH:
         str = u.expr.v1->rearrange_init_code(str);
-        str = u.expr.t2->rearrange_init_code(str);
+        str = u.expr.t2->rearrange_init_code(str, my_scope->get_scope_mod_gen());
         break;
       default:
         // other kinds of expressions cannot appear within templates

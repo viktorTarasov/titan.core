@@ -121,6 +121,7 @@ INTEGER::INTEGER(BIGNUM *other_value)
 
 INTEGER::~INTEGER()
 {
+  if (!bound_flag) return;
   if (unlikely(!native_flag)) BN_free(val.openssl);
 }
 
