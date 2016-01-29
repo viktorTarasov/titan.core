@@ -46,19 +46,19 @@ type record PersonInfo4
 	record length(0 .. 10) of Degree degree_list
 }
 with {
-variant (degree_list) "untagged";
+  variant (degree_list) "untagged";
 };
 
 
 type XSD.String Degree
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/element_recordOfElements4_e' prefix 'ns29'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/element_recordOfElements4_e' prefix 'ns29'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

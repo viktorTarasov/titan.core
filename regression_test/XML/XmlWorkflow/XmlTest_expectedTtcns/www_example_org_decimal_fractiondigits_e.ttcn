@@ -41,7 +41,7 @@ import from XSD all;
 
 type XSD.Decimal CelsiusBodyTemp (-9999.0 .. 9999.0)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -52,18 +52,18 @@ type union Union_with_fraction
 	XSD.Integer alt_2
 }
 with {
-variant "name as uncapitalized";
-variant "useUnion";
-variant "element";
-variant (alt_) "name as ''";
-variant (alt_1) "name as ''";
-variant (alt_2) "name as ''";
+  variant "name as uncapitalized";
+  variant "useUnion";
+  variant "element";
+  variant (alt_) "name as ''";
+  variant (alt_1) "name as ''";
+  variant (alt_2) "name as ''";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/decimal/fractiondigits'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/decimal/fractiondigits'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

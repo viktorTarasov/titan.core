@@ -30,6 +30,7 @@ namespace Ttcn {
   class ActualPar;
   class ParsedActualParameters;
   class LogArguments;
+  class JsonOmitCombination;
 }
 
 namespace Common {
@@ -914,7 +915,9 @@ namespace Common {
     /** Generates JSON code from this value. Used in JSON schema generation.
       * No code is generated for special float values NaN, INF and -INF if the
       * 2nd parameter is false. */
-    void generate_json_value(JSON_Tokenizer& json, bool allow_special_float = true);
+    void generate_json_value(JSON_Tokenizer& json,
+      bool allow_special_float = true, bool union_value_list = false,
+      Ttcn::JsonOmitCombination* omit_combo = NULL);
     
     /** Returns whether C++ explicit cast (type conversion) is necessary when
      * \a this is the argument of a send() or log() statement. True is returned

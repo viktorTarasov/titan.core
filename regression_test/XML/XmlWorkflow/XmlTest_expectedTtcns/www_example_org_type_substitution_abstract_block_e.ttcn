@@ -41,8 +41,8 @@ import from XSD all;
 
 type ParentType_derivations Head
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -58,15 +58,15 @@ type record ParentType
 	XSD.String bar
 }
 with {
-variant "abstract";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "abstract";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
 type RestrictedType_derivations RestrictedTypeElem
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -79,9 +79,9 @@ type record RestrictedType
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as uncapitalized";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
@@ -94,9 +94,9 @@ type record RestrictedType2
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as uncapitalized";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
@@ -109,9 +109,9 @@ type record RestrictedType2_1
 	XSD.String bar
 }
 with {
-variant "name as 'restrictedType2.1'";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as 'restrictedType2.1'";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
@@ -124,16 +124,16 @@ type record RestrictedType3
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as uncapitalized";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
 type ExtendedType_derivations ExtendedElement
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -144,10 +144,10 @@ type record ExtendedType
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (attr1) "attribute";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as uncapitalized";
+  variant (attr1) "attribute";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
@@ -157,23 +157,28 @@ type record RestrictedExtendedType
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as uncapitalized";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
 type union ParentType_derivations
 {
 	ParentType parentType,
-	ExtendedType_derivations extendedType,
-	RestrictedType_derivations restrictedType
+	ExtendedType extendedType,
+	RestrictedExtendedType restrictedExtendedType,
+	RestrictedType restrictedType,
+	RestrictedType2 restrictedType2,
+	RestrictedType2_1 restrictedType2_1,
+	RestrictedType3 restrictedType3
 }
 with {
-variant "useType";
-variant (parentType) "name as capitalized";
-variant (parentType) "abstract";
-variant (extendedType) "block";
+  variant "useType";
+  variant (parentType) "name as capitalized";
+  variant (parentType) "abstract";
+  variant (extendedType) "block";
+  variant (restrictedType2_1) "name as 'restrictedType2.1'";
 };
 
 
@@ -181,12 +186,13 @@ type union RestrictedType_derivations
 {
 	RestrictedType restrictedType,
 	RestrictedType2 restrictedType2,
-	RestrictedType2_1 restrictedType2_1
+	RestrictedType2_1 restrictedType2_1,
+	RestrictedType3 restrictedType3
 }
 with {
-variant "name as uncapitalized";
-variant "useType";
-variant (restrictedType2_1) "name as 'restrictedType2.1'";
+  variant "name as uncapitalized";
+  variant "useType";
+  variant (restrictedType2_1) "name as 'restrictedType2.1'";
 };
 
 
@@ -196,15 +202,15 @@ type union ExtendedType_derivations
 	RestrictedExtendedType restrictedExtendedType
 }
 with {
-variant "name as uncapitalized";
-variant "useType";
-variant (restrictedExtendedType) "block";
+  variant "name as uncapitalized";
+  variant "useType";
+  variant (restrictedExtendedType) "block";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/type/substitution/abstract/block' prefix 'tys'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/type/substitution/abstract/block' prefix 'tys'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

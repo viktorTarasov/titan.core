@@ -119,9 +119,16 @@ static void write_failure(void)
   exit(EXIT_FAILURE);
 }
 
+//Solaris does not have strndup
+char * my_strndup(const char *string, const int len){
+  char* dup = (char*)malloc(len + 1);
+  strncpy(dup, string, len);
+  dup[len] = '\0';
+  return dup;
+}
 
 char *
-str_replace ( const char *string, const char *substr, const char *replacement ){
+str_replace ( const char *string, const int len, const char *substr, const char *replacement ){
   char *tok = NULL;
   char *newstr = NULL;
   char *oldstr = NULL;
@@ -129,8 +136,8 @@ str_replace ( const char *string, const char *substr, const char *replacement ){
   int length_diff = strlen(substr) - strlen(replacement);
  
   /* if either substr or replacement is NULL, duplicate string a let caller handle it */
-  if ( substr == NULL || replacement == NULL ) return strdup (string);
-  newstr = strdup (string);
+  if ( substr == NULL || replacement == NULL ) return my_strndup (string, len);
+  newstr = my_strndup (string, len);
   head = newstr;
   while ( (tok = strstr ( head, substr ))){
     oldstr = newstr;
@@ -159,8 +166,8 @@ static void write_line_buf(void)
 {
   if (buf_len > 0) {
     if(format_tab_newline){
-      char * temp = str_replace(line_buf, "\\n", "\n");
-      temp = str_replace(temp, "\\t", "\t");
+      char * temp = str_replace(line_buf, buf_len, "\\n", "\n");
+      temp = str_replace(temp, buf_len-replaced_tab_newline, "\\t", "\t");
       strcpy(line_buf, temp);
       free(temp);
     }

@@ -21,6 +21,7 @@
 #include "Charstring.hh"
 #include "Universal_charstring.hh"
 #include "Addfunc.hh"
+#include "PreGenRecordOf.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -175,6 +176,13 @@ int Base_Type::RAW_encode_negtest_raw(RAW_enc_tree&) const
   return 0;
 }
 
+int Base_Type::JSON_encode_negtest_raw(JSON_Tokenizer&) const
+{
+  TTCN_error("A value of type %s cannot be used as erroneous raw value for JSON encoding.",
+             get_descriptor()->name);
+  return 0;
+}
+
 int Base_Type::XER_encode_negtest(const Erroneous_descriptor_t* /*p_err_descr*/,
   const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
@@ -185,6 +193,13 @@ int Base_Type::RAW_encode_negtest(const Erroneous_descriptor_t *,
   const TTCN_Typedescriptor_t&, RAW_enc_tree&) const
 {
   TTCN_error("Internal error: calling Base_Type::RAW_encode_negtest().");
+  return 0;
+}
+
+int Base_Type::JSON_encode_negtest(const Erroneous_descriptor_t* /*p_err_descr*/,
+  const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokenizer& /*p_tok*/) const
+{
+  TTCN_error("Internal error: calling Base_Type::JSON_encode_negtest().");
   return 0;
 }
 
@@ -1422,6 +1437,10 @@ int Record_Of_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr
 
 int Record_Of_Type::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok) const
 {
+  if (err_descr) {
+	  return JSON_encode_negtest(err_descr, p_td, p_tok);
+  }
+  
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound %s of value.", is_set() ? "set" : "record");
@@ -1430,10 +1449,92 @@ int Record_Of_Type::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
   
   int enc_len = p_tok.put_next_token(JSON_TOKEN_ARRAY_START, NULL);
   
-  for(int i = 0; i < get_nof_elements(); ++i) {
+  for (int i = 0; i < get_nof_elements(); ++i) {
     int ret_val = get_at(i)->JSON_encode(*p_td.oftype_descr, p_tok);
     if (0 > ret_val) break;
     enc_len += ret_val;
+  }
+  
+  enc_len += p_tok.put_next_token(JSON_TOKEN_ARRAY_END, NULL);
+  return enc_len;
+}
+
+int Record_Of_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
+                                        const TTCN_Typedescriptor_t& p_td,
+                                        JSON_Tokenizer& p_tok) const 
+{
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound %s of value.", is_set() ? "set" : "record");
+    return -1;
+  }
+  
+  int enc_len = p_tok.put_next_token(JSON_TOKEN_ARRAY_START, NULL);
+  
+  int values_idx = 0;
+  int edescr_idx = 0;
+  
+  for (int i = 0; i < get_nof_elements(); ++i) {
+    if (-1 != p_err_descr->omit_before && p_err_descr->omit_before > i) {
+      continue;
+    }
+    
+    const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(i, values_idx);
+    const Erroneous_descriptor_t* emb_descr = p_err_descr->next_field_emb_descr(i, edescr_idx);
+    
+    if (NULL != err_vals && NULL != err_vals->before) {
+      if (NULL == err_vals->before->errval) {
+        TTCN_error("internal error: erroneous before value missing");
+      }
+      if (err_vals->before->raw) {
+        enc_len += err_vals->before->errval->JSON_encode_negtest_raw(p_tok);
+      } else {
+        if (NULL == err_vals->before->type_descr) {
+          TTCN_error("internal error: erroneous before typedescriptor missing");
+        }
+        enc_len += err_vals->before->errval->JSON_encode(*(err_vals->before->type_descr), p_tok);
+      }
+    }
+    
+    if (NULL != err_vals && NULL != err_vals->value) {
+      if (NULL != err_vals->value->errval) {
+        if (err_vals->value->raw) {
+          enc_len += err_vals->value->errval->JSON_encode_negtest_raw(p_tok);
+        } else {
+          if (NULL == err_vals->value->type_descr) {
+            TTCN_error("internal error: erroneous before typedescriptor missing");
+          }
+          enc_len += err_vals->value->errval->JSON_encode(*(err_vals->value->type_descr), p_tok);
+        }
+      }
+    } else {
+      int ret_val;
+      if (NULL != emb_descr) {
+        ret_val = get_at(i)->JSON_encode_negtest(emb_descr, *p_td.oftype_descr, p_tok);
+      } else {
+        ret_val = get_at(i)->JSON_encode(*p_td.oftype_descr, p_tok);
+      }
+      if (0 > ret_val) break;
+      enc_len += ret_val;
+    }
+    
+    if (NULL != err_vals && NULL != err_vals->after) {
+      if (NULL == err_vals->after->errval) {
+        TTCN_error("internal error: erroneous after value missing");
+      }
+      if (err_vals->after->raw) {
+        enc_len += err_vals->after->errval->JSON_encode_negtest_raw(p_tok);
+      } else {
+        if (NULL == err_vals->after->type_descr) {
+          TTCN_error("internal error: erroneous before typedescriptor missing");
+        }
+        enc_len += err_vals->after->errval->JSON_encode(*(err_vals->after->type_descr), p_tok);
+      }
+    }
+    
+    if (-1 != p_err_descr->omit_after && p_err_descr->omit_after <= i) {
+      break;
+    }
   }
   
   enc_len += p_tok.put_next_token(JSON_TOKEN_ARRAY_END, NULL);
@@ -3996,8 +4097,16 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   // start tag, i.e. the ">\n". This is used later to "back up" over it.
   int start_tag_len = 1 + indenting;
   // The EMBED-VALUES member, if applicable
-  const Record_Of_Type* const embed_values = (p_td.xer_bits & EMBED_VALUES)
-  ? static_cast<const Record_Of_Type*>(get_at(0)) : 0;
+  const Record_Of_Type* embed_values = 0;
+  if (p_td.xer_bits & EMBED_VALUES) {
+    embed_values = dynamic_cast<const Record_Of_Type*>(get_at(0));
+    if (NULL == embed_values) {
+      const OPTIONAL<Record_Of_Type>* const embed_opt = static_cast<const OPTIONAL<Record_Of_Type>*>(get_at(0));
+      if(embed_opt->is_present()) {
+        embed_values = &(*embed_opt)();
+      }
+    }
+  }
   // The USE-ORDER member, if applicable
   const Record_Of_Type* const use_order = (p_td.xer_bits & USE_ORDER)
   ? static_cast<const Record_Of_Type*>(get_at(uo_index)) : 0;
@@ -4094,7 +4203,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     if (p_td.xer_bits & XER_ATTRIBUTE) p_buf.put_c('\'');
   }
   else { // not USE-QNAME
-    if (!exer && (p_td.xer_bits & EMBED_VALUES)) {
+    if (!exer && (p_td.xer_bits & EMBED_VALUES) && embed_values != NULL) {
       // The EMBED-VALUES member as an ordinary record of string
       sub_len += embed_values->XER_encode(*xer_descr(0), p_buf, flavor, indent+1, 0);
     }
@@ -4162,7 +4271,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 
     if (exer && (p_td.xer_bits & EMBED_VALUES)) {
       /* write the first string */
-      if (embed_values->size_of() > 0) {
+      if (embed_values != NULL && embed_values->size_of() > 0) {
         sub_len += embed_values->get_at(0)->XER_encode(UNIVERSAL_CHARSTRING_xer_,
           p_buf, flavor | EMBED_VALUES, indent+1, 0);
       }
@@ -4190,9 +4299,8 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
         ++n_optionals;
       }
 
-      int expected_min = field_cnt - first_nonattr - n_optionals;
       int expected_max = field_cnt - first_nonattr;
-
+      int expected_min = expected_max - n_optionals;
 
       if ((p_td.xer_bits & USE_NIL) && get_at(field_cnt-1)->ispresent()) {
         // The special case when USE_ORDER refers to the fields of a field,
@@ -4246,7 +4354,8 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     // early_to_bed can only be true if exer is true (transitive through nil_attribute)
     if (!early_to_bed) {
       embed_values_enc_struct_t* emb_val = 0;
-      if (exer && (p_td.xer_bits & EMBED_VALUES) && embed_values->size_of() > 1) {
+      if (exer && (p_td.xer_bits & EMBED_VALUES) && 
+          embed_values != NULL && embed_values->size_of() > 1) {
         emb_val = new embed_values_enc_struct_t;
         emb_val->embval_array = embed_values;
         emb_val->embval_index = 1;
@@ -4276,7 +4385,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 
         // Now the next embed-values string (NOT affected by USE-ORDER!)
         if (exer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&
-            emb_val->embval_index < embed_values->size_of()) {
+            embed_values != NULL && emb_val->embval_index < embed_values->size_of()) {
           embed_values->get_at(emb_val->embval_index)->XER_encode(UNIVERSAL_CHARSTRING_xer_
             , p_buf, flavor | EMBED_VALUES, indent+1, 0);
           ++emb_val->embval_index;
@@ -4284,7 +4393,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       } //for
       
       if (0 != emb_val) {
-        if (emb_val->embval_index < embed_values->size_of()) {
+        if (embed_values != NULL && emb_val->embval_index < embed_values->size_of()) {
           ec_1.set_msg("%s': ", fld_name(0));
           TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_CONSTRAINT,
             "Too many EMBED-VALUEs specified: %d (expected %d or less)",
@@ -5227,9 +5336,16 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
 
     /* * * * * * * * Non-attributes (elements) * * * * * * * * * * * */
     embed_values_dec_struct_t* emb_val = 0;
+    bool emb_val_optional = false;
     if (exer && (p_td.xer_bits & EMBED_VALUES)) {
       emb_val = new embed_values_dec_struct_t;
-      emb_val->embval_array = static_cast<Record_Of_Type*>(get_at(0));
+      emb_val->embval_array = dynamic_cast<Record_Of_Type*>(get_at(0));
+      if (NULL == emb_val->embval_array) {
+        OPTIONAL<PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING>* embed_value = static_cast<OPTIONAL<PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING>*>(get_at(0));
+        embed_value->set_to_present();
+        emb_val->embval_array = static_cast<Record_Of_Type*>((*embed_value).get_opt_value());
+        emb_val_optional = true;
+      }
       emb_val->embval_array->set_size(0);
       emb_val->embval_index = 0;
     }
@@ -5472,11 +5588,17 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     } // if use-order
 
     if (0 != emb_val) {
+      bool all_unbound = true;
       static const UNIVERSAL_CHARSTRING emptystring(0, (const char*)NULL);
       for (int j = 0; j < emb_val->embval_index; ++j) {
         if (!emb_val->embval_array->get_at(j)->is_bound()) {
           emb_val->embval_array->get_at(j)->set_value(&emptystring);
+        }else if((static_cast<const UNIVERSAL_CHARSTRING*>(emb_val->embval_array->get_at(j)))->lengthof() !=0) {
+          all_unbound = false;
         }
+      }
+      if(emb_val_optional && all_unbound){
+        static_cast<OPTIONAL<PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING>*>(get_at(0))->set_to_omit();
       }
       delete emb_val;
     } // if embed-values
@@ -5537,8 +5659,12 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   return 1; // decode successful
 }
 
-int Record_Type::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) const
+int Record_Type::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok) const
 {
+  if (err_descr) {		
+    return JSON_encode_negtest(err_descr, p_td, p_tok);		
+  }
+
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound %s value.", is_set() ? "set" : "record");
@@ -5548,7 +5674,7 @@ int Record_Type::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok
   int enc_len = p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
   
   int field_count = get_count();
-  for(int i = 0; i < field_count; ++i) {
+  for (int i = 0; i < field_count; ++i) {
     boolean metainfo_unbound = NULL != fld_descr(i)->json && fld_descr(i)->json->metainfo_unbound;
     if ((NULL != fld_descr(i)->json && fld_descr(i)->json->omit_as_null) || 
         get_at(i)->is_present() || metainfo_unbound) {
@@ -5565,6 +5691,106 @@ int Record_Type::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok
       else {
         enc_len += get_at(i)->JSON_encode(*fld_descr(i), p_tok);
       }
+    }
+  }
+  
+  enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+  return enc_len;
+}
+
+int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
+                                     const TTCN_Typedescriptor_t& p_td,
+                                     JSON_Tokenizer& p_tok) const 
+{
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound %s value.", is_set() ? "set" : "record");
+    return -1;
+  }
+  
+  int enc_len = p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+  
+  int values_idx = 0;
+  int edescr_idx = 0;
+  
+  int field_count = get_count();
+  for (int i = 0; i < field_count; ++i) {
+    if (-1 != p_err_descr->omit_before && p_err_descr->omit_before > i) {
+      continue;
+    }
+    
+    const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(i, values_idx);
+    const Erroneous_descriptor_t* emb_descr = p_err_descr->next_field_emb_descr(i, edescr_idx);
+    
+    if (NULL != err_vals && NULL != err_vals->before) {
+      if (NULL == err_vals->before->errval) {
+        TTCN_error("internal error: erroneous before value missing");
+      }
+      if (err_vals->before->raw) {
+        enc_len += err_vals->before->errval->JSON_encode_negtest_raw(p_tok);
+      } else {
+        if (NULL == err_vals->before->type_descr) {
+          TTCN_error("internal error: erroneous before typedescriptor missing");
+        }
+        // it's an extra field, so use the erroneous type's name as the field name
+        enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, err_vals->before->type_descr->name);
+        enc_len += err_vals->before->errval->JSON_encode(*(err_vals->before->type_descr), p_tok);
+      }
+    }
+    
+    const char* field_name = (NULL != fld_descr(i)->json && NULL != fld_descr(i)->json->alias) ?
+      fld_descr(i)->json->alias : fld_name(i);
+    if (NULL != err_vals && NULL != err_vals->value) {
+      if (NULL != err_vals->value->errval) {
+        if (err_vals->value->raw) {
+          enc_len += err_vals->value->errval->JSON_encode_negtest_raw(p_tok);
+        } else {
+          if (NULL == err_vals->value->type_descr) {
+            TTCN_error("internal error: erroneous before typedescriptor missing");
+          }
+          // only replace the field's value, keep the field name
+          enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, field_name);
+          enc_len += err_vals->value->errval->JSON_encode(*(err_vals->value->type_descr), p_tok);
+        }
+      }
+    } else {
+      boolean metainfo_unbound = NULL != fld_descr(i)->json && fld_descr(i)->json->metainfo_unbound;
+      if ((NULL != fld_descr(i)->json && fld_descr(i)->json->omit_as_null) || 
+          get_at(i)->is_present() || metainfo_unbound) {
+        enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, field_name);
+        if (metainfo_unbound && !get_at(i)->is_bound()) {
+          enc_len += p_tok.put_next_token(JSON_TOKEN_LITERAL_NULL);
+          char* metainfo_str = mprintf("metainfo %s", field_name);
+          enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, metainfo_str);
+          Free(metainfo_str);
+          enc_len += p_tok.put_next_token(JSON_TOKEN_STRING, "\"unbound\"");
+        }
+        else if (NULL != emb_descr) {
+          enc_len += get_at(i)->JSON_encode_negtest(emb_descr, *fld_descr(i), p_tok);
+        } else {
+          enc_len += get_at(i)->JSON_encode(*fld_descr(i), p_tok);
+        }
+      }
+    }
+    
+    if (NULL != err_vals && NULL != err_vals->after) {
+      if (NULL == err_vals->after->errval) {
+        TTCN_error("internal error: erroneous after value missing");
+      }
+      if (err_vals->after->raw) {
+        enc_len += err_vals->after->errval->JSON_encode_negtest_raw(p_tok);
+      } else {
+        if (NULL == err_vals->after->type_descr) {
+          TTCN_error("internal error: erroneous before typedescriptor missing");
+        }
+        // it's an extra field, so use the erroneous type's name as the field name
+        enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, err_vals->after->type_descr->name);
+        enc_len += err_vals->after->errval->JSON_encode(*(err_vals->after->type_descr), p_tok);
+      }
+    }
+    
+    if (-1 != p_err_descr->omit_after && p_err_descr->omit_after <= i) {
+      break;
     }
   }
   

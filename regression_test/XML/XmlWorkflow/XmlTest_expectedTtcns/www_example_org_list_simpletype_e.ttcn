@@ -45,10 +45,10 @@ type record of enumerated
 	red
 } SimpleListEnumeration
 with {
-variant ([-]) "text 'orange' as capitalized";
-variant ([-]) "text 'red' as capitalized";
-variant "list";
-variant "element";
+  variant ([-]) "text 'orange' as capitalized";
+  variant ([-]) "text 'red' as capitalized";
+  variant "list";
+  variant "element";
 };
 
 
@@ -58,13 +58,13 @@ type record of union
 	XSD.Float alt_1
 } SimpleListUnion
 with {
-variant "list";
-variant "element";
-variant ([-]) "useUnion";
-variant ([-].alt_) "name as ''";
-//variant ([-].alt_) "text 'true' as '1'";
-//variant ([-].alt_) "text 'false' as '0'";
-variant ([-].alt_1) "name as ''";
+  variant "list";
+  variant "element";
+  variant ([-]) "useUnion";
+  variant ([-].alt_) "name as ''";
+  //variant ([-].alt_) "text 'true' as '1'";
+  //variant ([-].alt_) "text 'false' as '0'";
+  variant ([-].alt_1) "name as ''";
 };
 
 
@@ -76,9 +76,9 @@ type record of enumerated
 	int10(10)
 } SimpleListEnumerationNumber
 with {
-variant ([-]) "useNumber";
-variant "list";
-variant "element";
+  variant ([-]) "useNumber";
+  variant "list";
+  variant "element";
 };
 
 
@@ -94,24 +94,24 @@ type record ComplexListUnionEnumeration
 	} listUnion
 }
 with {
-variant "element";
-variant (listEnumeration) "name as capitalized";
-variant (listEnumeration) "list";
-variant (listEnumeration[-]) "text 'orange' as capitalized";
-variant (listEnumeration[-]) "text 'red' as capitalized";
-variant (listUnion) "name as capitalized";
-variant (listUnion[-]) "useUnion";
-variant (listUnion) "list";
-variant (listUnion[-].alt_) "name as ''";
-//variant (listUnion[-].alt_) "text 'true' as '1'";
-//variant (listUnion[-].alt_) "text 'false' as '0'";
-variant (listUnion[-].alt_1) "name as ''";
+  variant "element";
+  variant (listEnumeration) "name as capitalized";
+  variant (listEnumeration) "list";
+  variant (listEnumeration[-]) "text 'orange' as capitalized";
+  variant (listEnumeration[-]) "text 'red' as capitalized";
+  variant (listUnion) "name as capitalized";
+  variant (listUnion[-]) "useUnion";
+  variant (listUnion) "list";
+  variant (listUnion[-].alt_) "name as ''";
+  //variant (listUnion[-].alt_) "text 'true' as '1'";
+  //variant (listUnion[-].alt_) "text 'false' as '0'";
+  variant (listUnion[-].alt_1) "name as ''";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/list/simpletype' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/list/simpletype' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

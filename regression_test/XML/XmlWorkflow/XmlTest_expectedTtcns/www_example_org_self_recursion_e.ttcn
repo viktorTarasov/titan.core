@@ -52,15 +52,15 @@ type record X
 	} y optional
 }
 with {
-variant (attr2) "attribute";
-variant (y.attr1) "attribute";
-variant (y.attr2) "attribute";
+  variant (attr2) "attribute";
+  variant (y.attr1) "attribute";
+  variant (y.attr2) "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/self/recursion' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/self/recursion' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

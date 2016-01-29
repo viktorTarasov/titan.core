@@ -48,16 +48,16 @@ type record DependentLocalityType
 	} dependentLocalityNumber optional
 }
 with {
-variant (dependentLocalityName_list) "untagged";
-variant (dependentLocalityName_list[-]) "name as 'DependentLocalityName'";
-variant (dependentLocalityName_list[-].attr) "anyAttributes except unqualified, 'www.example.org/anyattr/in/complex'";
-variant (dependentLocalityNumber) "name as capitalized";
+  variant (dependentLocalityName_list) "untagged";
+  variant (dependentLocalityName_list[-]) "name as 'DependentLocalityName'";
+  variant (dependentLocalityName_list[-].attr) "anyAttributes except unqualified, 'www.example.org/anyattr/in/complex'";
+  variant (dependentLocalityNumber) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/anyattr/in/complex' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/anyattr/in/complex' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

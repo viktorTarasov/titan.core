@@ -318,16 +318,16 @@ char *genRawTagChecker(char *src, const rawAST_coding_taglist *taglist)
   for (temp_tag = 0; temp_tag < taglist->nElements; temp_tag++) {
     temp_field = taglist->fields[temp_tag];
     src = mputprintf(src, "  {\n"
-      "  RAW_enc_tr_pos pr_pos;\n"
-      "  pr_pos.level=myleaf.curr_pos.level+%d;\n"
-      "  int new_pos[]={", temp_field.nElements);
+      "  RAW_enc_tr_pos pr_pos%d;\n"
+      "  pr_pos%d.level=myleaf.curr_pos.level+%d;\n"
+      "  int new_pos%d[]={", temp_tag, temp_tag, temp_field.nElements, temp_tag);
     for (l = 0; l < temp_field.nElements; l++) {
       src= mputprintf(src, "%s%d", l ? "," : "", temp_field.fields[l].nthfield);
     }
     src = mputprintf(src, "};\n"
-      "  pr_pos.pos=init_new_tree_pos(myleaf.curr_pos,%d,new_pos);\n"
-      "  temp_leaf = myleaf.get_node(pr_pos);\n"
-      "  if(temp_leaf != NULL){\n", temp_field.nElements);
+      "  pr_pos%d.pos=init_new_tree_pos(myleaf.curr_pos,%d,new_pos%d);\n"
+      "  temp_leaf = myleaf.get_node(pr_pos%d);\n"
+      "  if(temp_leaf != NULL){\n", temp_tag, temp_field.nElements, temp_tag, temp_tag);
     if (temp_field.value[0] != ' ') {
       src = mputprintf(src, "  %s new_val = %s;\n"
         "  new_val.RAW_encode(%s_descr_,*temp_leaf);\n",
@@ -345,9 +345,9 @@ char *genRawTagChecker(char *src, const rawAST_coding_taglist *taglist)
     "      (TTCN_EncDec::ET_OMITTED_TAG, \"Encoding a tagged, but omitted"
     " value.\");\n"
     "  }\n");
-  for (temp_tag = 0; temp_tag < taglist->nElements; temp_tag++) {
-    src = mputstr(src, "  free_tree_pos(pr_pos.pos);\n"
-      "  }\n");
+  for (temp_tag = taglist->nElements - 1; temp_tag >= 0 ; temp_tag--) {
+    src = mputprintf(src, "  free_tree_pos(pr_pos%d.pos);\n"
+      "  }\n", temp_tag);
   }
   return src;
 }

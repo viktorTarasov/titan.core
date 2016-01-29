@@ -51,15 +51,15 @@ type record ListType
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
-variant (name) "attribute";
-variant (display_name) "name as 'display-name'";
-variant (sequence_list) "untagged";
-variant (sequence_list[-]) "untagged";
-variant (sequence_list[-].choice) "untagged";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant (name) "attribute";
+  variant (display_name) "name as 'display-name'";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
+  variant (sequence_list[-].choice) "untagged";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
 };
 
 
@@ -70,10 +70,10 @@ type record Resource_lists
 	} sequence_list
 }
 with {
-variant "name as 'resource-lists'";
-variant "element";
-variant (sequence_list) "untagged";
-variant (sequence_list[-]) "untagged";
+  variant "name as 'resource-lists'";
+  variant "element";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
 };
 
 
@@ -83,23 +83,23 @@ type record Display_nameType
 	XSD.String base
 }
 with {
-variant "name as 'display-nameType'";
-variant (lang) "attribute";
-variant (base) "untagged";
+  variant "name as 'display-nameType'";
+  variant (lang) "attribute";
+  variant (base) "untagged";
 };
 
 
 type XSD.AnySimpleType Lang
 with {
-variant "name as uncapitalized";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'urn:ietf:params:xml:ns:resource-lists'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'urn:ietf:params:xml:ns:resource-lists'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

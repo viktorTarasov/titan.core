@@ -56,7 +56,7 @@ type XSD.Decimal DecimalMinMaxIncl (-3.45 .. 100.47);
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/decimal_withMinMaxInclusive' prefix 'ns32'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/decimal_withMinMaxInclusive' prefix 'ns32'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -152,6 +152,9 @@
 		<File path="../xsd/only_element_substitution.xsd" />
 		<File path="../xsd/type_substitution_builtintype.xsd" />
 		<File path="../xsd/type_substitution_rename.xsd" />
+		<File path="../xsd/type_substitution_complex_cascade.xsd" />
+		<File path="../xsd/type_substitution_simple_cascade.xsd" />
+		<File path="../xsd/attribute_enumeration_variant.xsd" />
             </File_Group>
             <File_Group name="XmlTest_xsds" >
                 <File path="../XmlTest_xsds/XmlTest_boolean.xsd" />
@@ -374,6 +377,15 @@
 	        <File path="../XmlTest_expectedTtcns/www_example_org_only_element_substitution_e.ttcn" />
 	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_builtintype_e.ttcn" />
 	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_rename_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_complex_cascade_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_type_substitution_simple_cascade_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/http_www_example_org_ttcn_wildcards_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/http_www_XmlTest_org_po_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_attributegroup_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_elements_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_XmlTest_org_complex_unique_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_XmlTest_org_element_nameInheritance_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_attribute_enumeration_variant_e.ttcn" />
             </File_Group>
             <File_Group name="XmlTest_src" >
                 <File path="xmlTest_Shell.ttcn" />

@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Copyright Ericsson Telecom AB
 *
-* XSD to TTCN-3 Translator
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R3B
 *
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
@@ -46,21 +46,21 @@ import from XSD all;
 
 type XSD.AnyType Anything1
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.AnyType Anything2
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/element_anyType' prefix 'ns31'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/element_anyType' prefix 'ns31'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

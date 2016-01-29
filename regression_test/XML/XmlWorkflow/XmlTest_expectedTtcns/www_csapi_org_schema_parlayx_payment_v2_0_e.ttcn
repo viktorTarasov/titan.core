@@ -40,13 +40,13 @@ type record Property
 	XSD.String value_
 }
 with {
-variant (value_) "name as 'value'";
+  variant (value_) "name as 'value'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.csapi.org/schema/parlayx/payment/v2_0' prefix 'parlayx_payment_xsd'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.csapi.org/schema/parlayx/payment/v2_0' prefix 'parlayx_payment_xsd'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

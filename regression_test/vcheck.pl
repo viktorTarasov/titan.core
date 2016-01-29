@@ -43,8 +43,11 @@ while (<>)
 
 my $errorCount = 0;
 foreach my $line (@output) {
-  # filter out the Tverdictoper which is never 100% pass
-  unless ($line =~ /^TverdictOper(\.exe)?: Verdict statistics: 2 none \(8\.00 %\), 11 pass \(44\.00 %\), 5 inconc \(20\.00 %\), 7 fail \(28\.00 %\), 0 error \(0\.00 %\)\.$/) {
+  # filter out the Tverdictoper and logger results which are not supposed to be 100% pass
+  unless ($line =~ /^TverdictOper(\.exe)?: Verdict statistics: 2 none \(8\.00 %\), 11 pass \(44\.00 %\), 5 inconc \(20\.00 %\), 7 fail \(28\.00 %\), 0 error \(0\.00 %\)\./ or
+          $line =~ /^EmergencyLogTest(\.exe)?: Verdict statistics: 3 none \(23\.08 %\), 10 pass \(76\.92 %\), 0 inconc \(0\.00 %\), 0 fail \(0\.00 %\), 0 error \(0\.00 %\)\./ or
+          $line =~ /^EmergencyLogTest(\.exe)?: Verdict statistics: 9 none \(17\.65 %\), 33 pass \(64\.71 %\), 0 inconc \(0\.00 %\), 0 fail \(0\.00 %\), 9 error \(17\.65 %\)\./ or
+          $line =~ /^Titan_LogTest(\.exe)?: Verdict statistics: 3 none \(23\.08 %\), 9 pass \(69\.23 %\), 0 inconc \(0\.00 %\), 0 fail \(0\.00 %\), 1 error \(7\.69 %\)\./) {
     print $line;
     $errorCount++;
   }

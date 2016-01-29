@@ -1915,7 +1915,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   if (want_namespaces && !(num_attributes|sdef->xerUseQName)) src = mputstr(src,
     "  const boolean need_control_ns = (p_td.xer_bits & (USE_NIL));\n");
 
-  if (start_at < sdef->nElements) { /* there _are_ non-special members */
+  if (want_namespaces && (start_at < sdef->nElements)) { /* there _are_ non-special members */
     src = mputstr(src,
       "  size_t num_collected = 0;\n"
       "  char **collected_ns = NULL;\n"
@@ -2009,8 +2009,8 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     );
   }
   src = mputstr(src, "  { // !QN\n");
-
-  /* First, the EMBED-VALUES member as an ordinary member if not doing EXER */
+ 
+ /* First, the EMBED-VALUES member as an ordinary member if not doing EXER */
   if (sdef->xerEmbedValuesPossible) {
     src = mputprintf(src,
       "  if (!e_xer && (p_td.xer_bits & EMBED_VALUES)) {\n"
@@ -2065,7 +2065,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  %ssub_len += tmp_len;\n" /* do not add if attribute and EXER */
       , sdef->elements[i].dispname
       , sdef->elements[i].name, sdef->elements[i].typegen
-      , sdef->elements[i].xerAttribute ? "if (!e_xer) " : ""
+      , sdef->elements[i].xerAttribute || (sdef->elements[i].xerAnyKind & ANY_ATTRIB_BIT) ? "if (!e_xer) " : ""
     );
   }
 
@@ -2096,11 +2096,17 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  ec_1.set_msg(\"%s': \");\n"
       "  if (e_xer && (p_td.xer_bits & EMBED_VALUES)) {\n"
     /* write the first string (must come AFTER the attributes) */
-      "    if (field_%s.size_of() > 0) {\n"
-      "      sub_len += field_%s[0].XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+      "    if (%s%s%s field_%s%s.size_of() > 0) {\n"
+      "      sub_len += field_%s%s[0].XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
       "    }\n"
       "  }\n"
-      , sdef->elements[0].dispname, sdef->elements[0].name, sdef->elements[0].name);
+      , sdef->elements[0].dispname
+      , sdef->elements[0].isOptional ? "field_" : ""
+      , sdef->elements[0].isOptional ? sdef->elements[0].name : ""
+      , sdef->elements[0].isOptional ? ".ispresent() &&" : ""
+      , sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : "", sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : "");
     if (want_namespaces) { /* here's another chance */
       src = mputprintf(src,
         "  else if ( !(p_td.xer_bits & EMBED_VALUES)) {\n"
@@ -2118,18 +2124,24 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   if (sdef->xerEmbedValuesPossible) {
     src = mputprintf(src,
       "  embed_values_enc_struct_t* emb_val = 0;\n"
-      "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && field_%s.size_of() > 1) {\n"
+      "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && "
+      "    %s%s%s field_%s%s.size_of() > 1) {\n"
       "    emb_val = new embed_values_enc_struct_t;\n"
       /* If the first field is a record of ANY-ELEMENTs, then it won't be a pre-generated
        * record of universal charstring, so it needs a cast to avoid a compilation error */
-      "    emb_val->embval_array%s = (const PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING%s*)&field_%s;\n"
+      "    emb_val->embval_array%s = (const PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING%s*)&field_%s%s;\n"
       "    emb_val->embval_array%s = NULL;\n"
       "    emb_val->embval_index = 1;\n"
       "  }\n"
+      , sdef->elements[0].isOptional ? "field_" : ""
+      , sdef->elements[0].isOptional ? sdef->elements[0].name : ""
+      , sdef->elements[0].isOptional ? ".ispresent() &&" : ""
       , sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : ""
       , sdef->elements[0].optimizedMemAlloc ? "_opt" : "_reg"
       , sdef->elements[0].optimizedMemAlloc ? "__OPTIMIZED" : ""
       , sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : ""
       , sdef->elements[0].optimizedMemAlloc ? "_reg" : "_opt");
   }
   
@@ -2232,12 +2244,17 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     if (sdef->xerEmbedValuesPossible) {
       src = mputprintf(src,
         "    if (e_xer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&\n"
-        "        emb_val->embval_index < field_%s.size_of()) { // embed-val\n"
-        "      field_%s[emb_val->embval_index].XER_encode(\n"
+        "        %s%s%s emb_val->embval_index < field_%s%s.size_of()) { // embed-val\n"
+        "      field_%s%s[emb_val->embval_index].XER_encode(\n"
         "        UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
         "      ++emb_val->embval_index;\n"
         "    }\n"
-        , sdef->elements[0].name, sdef->elements[0].name);
+        , sdef->elements[0].isOptional ? "field_" : ""
+        , sdef->elements[0].isOptional ? sdef->elements[0].name : ""
+        , sdef->elements[0].isOptional ? ".ispresent() &&" : ""
+        , sdef->elements[0].name
+        , sdef->elements[0].isOptional ? "()" : "", sdef->elements[0].name
+        , sdef->elements[0].isOptional ? "()" : "");
     }
 
 
@@ -2264,27 +2281,37 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       if (sdef->xerEmbedValuesPossible) {
         src = mputprintf(src,
           "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&\n"
-          "      emb_val->embval_index < field_%s.size_of()) {\n"
-          "    field_%s[emb_val->embval_index].XER_encode(\n"
+          "      %s%s%s emb_val->embval_index < field_%s%s.size_of()) {\n"
+          "    field_%s%s[emb_val->embval_index].XER_encode(\n"
           "      UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
           "    ++emb_val->embval_index;\n"
           "  }\n"
-          , sdef->elements[0].name, sdef->elements[0].name);
+          , sdef->elements[0].isOptional ? "field_" : ""
+          , sdef->elements[0].isOptional ? sdef->elements[0].name : ""
+          , sdef->elements[0].isOptional ? ".ispresent() &&" : ""
+          , sdef->elements[0].name
+          , sdef->elements[0].isOptional ? "()" : "", sdef->elements[0].name
+          , sdef->elements[0].isOptional ? "()" : "");
       }
     } /* next field when not USE-ORDER */
 
   if (sdef->xerEmbedValuesPossible) {
     src = mputprintf(src,
       "  if (0 != emb_val) {\n"
-      "    if (emb_val->embval_index < field_%s.size_of()) {\n"
+      "    if (%s%s%s emb_val->embval_index < field_%s%s.size_of()) {\n"
       "      ec_1.set_msg(\"%s': \");\n"
       "      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_CONSTRAINT,\n"
       "        \"Too many EMBED-VALUEs specified: %%d (expected %%d or less)\",\n"
-      "        field_%s.size_of(), emb_val->embval_index);\n"
+      "        field_%s%s.size_of(), emb_val->embval_index);\n"
       "    }\n"
       "    delete emb_val;\n"
       "  }\n"
-      , sdef->elements[0].name, sdef->elements[0].name, sdef->elements[0].name);
+      , sdef->elements[0].isOptional ? "field_" : ""
+      , sdef->elements[0].isOptional ? sdef->elements[0].name : ""
+      , sdef->elements[0].isOptional ? ".ispresent() &&" : ""
+      , sdef->elements[0].name, sdef->elements[0].isOptional ? "()" : ""
+      , sdef->elements[0].name, sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : "");
   }
 
   src = mputstr(src, "  } // QN?\n");
@@ -2590,7 +2617,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  if (!(p_td.xer_bits & EMBED_VALUES)) {\n"
       "    ec_1.set_msg(\"%s': \");\n"
       "    field_%s.XER_decode(%s_xer_, p_reader, "
-      "p_flavor | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : 0), 0);\n"
+      "p_flavor | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : XER_NONE), 0);\n"
       "  }\n"
       , sdef->elements[0].dispname
       , sdef->elements[0].name, sdef->elements[0].typegen
@@ -2647,16 +2674,18 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "    emb_val = new embed_values_dec_struct_t;\n"
       /* If the first field is a record of ANY-ELEMENTs, then it won't be a pre-generated
        * record of universal charstring, so it needs a cast to avoid a compilation error */
-      "    emb_val->embval_array%s = (PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING%s*)&field_%s;\n"
+      "    emb_val->embval_array%s = (PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING%s*)&field_%s%s;\n"
       "    emb_val->embval_array%s = NULL;\n"
       "    emb_val->embval_index = 0;\n"
-      "    field_%s.set_size(0);\n"
+      "    field_%s%s.set_size(0);\n"
       "  }\n"
       , sdef->elements[0].optimizedMemAlloc ? "_opt" : "_reg"
       , sdef->elements[0].optimizedMemAlloc ? "__OPTIMIZED" : ""
       , sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : ""
       , sdef->elements[0].optimizedMemAlloc ? "_reg" : "_opt"
-      , sdef->elements[0].name);
+      , sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : "");
   }
 
   if (sdef->xerUseOrderPossible) {
@@ -2713,9 +2742,10 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputprintf(src,
         "        if (0 != emb_val && p_reader.NodeType()==XML_READER_TYPE_TEXT) {\n"
         "          UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
-        "          field_%s[emb_val->embval_index] = emb_ustr;\n"
+        "          field_%s%s[emb_val->embval_index] = emb_ustr;\n"
         "        }\n"
-        , sdef->elements[0].name);
+        , sdef->elements[0].name
+        , sdef->elements[0].isOptional ? "()" : "");
     }
 
     src = mputstr(src,
@@ -2819,13 +2849,14 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         "    if (0 != emb_val) {\n"
         "      if (p_reader.NodeType()==XML_READER_TYPE_TEXT) {\n"
         "        UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
-        "        field_%s[emb_val->embval_index] = emb_ustr;\n"
+        "        field_%s%s[emb_val->embval_index] = emb_ustr;\n"
         "      }\n"
         "      if (last_embval_index == emb_val->embval_index) {\n"
         "        ++emb_val->embval_index;\n"
         "      }\n"
         "    }\n"
-        , sdef->elements[0].name);
+        , sdef->elements[0].name
+        , sdef->elements[0].isOptional ? "()" : "");
     }
 
     src = mputprintf(src,
@@ -2872,14 +2903,15 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         "  if (0 != emb_val) {\n"
         "    if (p_reader.NodeType()==XML_READER_TYPE_TEXT) {\n"
         "      UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
-        "      field_%s[emb_val->embval_index] = emb_ustr;\n"
+        "      field_%s%s[emb_val->embval_index] = emb_ustr;\n"
         "    }\n"
         "    if (last_embval_index == emb_val->embval_index) {\n"
         "      ++emb_val->embval_index;\n"
         "    }\n"
         "    last_embval_index = emb_val->embval_index;\n"
         "  }\n"
-        , sdef->elements[0].name);
+        , sdef->elements[0].name
+        , sdef->elements[0].isOptional ? "()" : "");
     }
     /* The DEFAULT-FOR-EMPTY member can not be involved with EMBED-VALUES,
      * so we can use the same pattern: optional "if(...) else" before {}
@@ -2914,7 +2946,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     
     src = mputprintf(src, 
       "    field_%s.XER_decode(%s_xer_, p_reader, p_flavor"
-      " | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : 0), %s);\n"
+      " | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : XER_NONE), %s);\n"
       "  }\n"
       , sdef->elements[i].name, sdef->elements[i].typegen
       , sdef->xerEmbedValuesPossible ? "emb_val" : "0");
@@ -2935,13 +2967,14 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  if (0 != emb_val) {\n"
       "    if (p_reader.NodeType()==XML_READER_TYPE_TEXT) {\n"
       "      UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
-      "      field_%s[emb_val->embval_index] = emb_ustr;\n"
+      "      field_%s%s[emb_val->embval_index] = emb_ustr;\n"
       "    }\n"
       "    if (last_embval_index == emb_val->embval_index) {\n"
       "      ++emb_val->embval_index;\n"
       "    }\n"
       "  }\n"
-      , sdef->elements[0].name);
+      , sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : "");
   }
   
   if (sdef->xerUseNilPossible) {
@@ -2954,17 +2987,36 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   
   if (sdef->xerEmbedValuesPossible) {
     src = mputprintf(src,
+      "%s"
       "  if (0 != emb_val) {\n"
       "    %s::of_type empty_string(\"\");\n"
       "    for (int j_j = 0; j_j < emb_val->embval_index; ++j_j) {\n"
-      "      if (!field_%s[j_j].is_bound()) field_%s[j_j] = empty_string;\n"
+      "      if (!field_%s%s[j_j].is_bound()) {\n"
+      "        field_%s%s[j_j] = empty_string;\n"
+      "      }%s%s%s%s"
       "    }\n"
       "    delete emb_val;\n"
       "  }\n"
+      , sdef->elements[0].isOptional ? "  bool all_unbound = true;\n" : ""
       , sdef->elements[0].type
       , sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : ""
       , sdef->elements[0].name
+      , sdef->elements[0].isOptional ? "()" : ""
+      , sdef->elements[0].isOptional ? " else if(field_" : "\n"
+      , sdef->elements[0].isOptional ? sdef->elements[0].name : ""
+      , sdef->elements[0].isOptional ? "()" : ""
+      , sdef->elements[0].isOptional ? "[j_j] != empty_string) {\n        all_unbound = false;\n      }\n" : ""
     );
+    
+    if(sdef->elements[0].isOptional) {
+      src = mputprintf(src,
+        "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && all_unbound) {\n"
+        "    field_%s = OMIT_VALUE;\n"
+        "  }\n"
+        , sdef->elements[0].name
+      );
+    }
   }
 
   if (sdef->xerUseQName) {
@@ -3333,31 +3385,31 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
      "param.error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
      "  }\n"
      "  param.basic_check(Module_Param::BC_VALUE, \"%s value\");\n"
-     "  Module_Param_Ptr mp = &param;\n"
+     "  Module_Param_Ptr m_p = &param;\n"
      "  if (param.get_type() == Module_Param::MP_Reference) {\n"
-     "    mp = param.get_referenced_param();\n"
+     "    m_p = param.get_referenced_param();\n"
      "  }\n"
-     "  switch (mp->get_type()) {\n"
+     "  switch (m_p->get_type()) {\n"
      "  case Module_Param::MP_Value_List:\n"
-     "    if (%lu<mp->get_size()) {\n"
-     "      param.error(\"%s value of type %s has %lu fields but list value has %%d fields\", (int)mp->get_size());\n"
+     "    if (%lu<m_p->get_size()) {\n"
+     "      param.error(\"%s value of type %s has %lu fields but list value has %%d fields\", (int)m_p->get_size());\n"
      "    }\n",
      kind_str, dispname, kind_str, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
 
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    if (mp->get_size()>%lu && mp->get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*mp->get_elem(%lu));\n",
+      "    if (m_p->get_size()>%lu && m_p->get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*m_p->get_elem(%lu));\n",
       (unsigned long)i, (unsigned long)i, sdef->elements[i].name, (unsigned long)i);
   } 
   src = mputstr(src,
       "    break;\n"
       "  case Module_Param::MP_Assignment_List: {\n"
-      "    Vector<bool> value_used(mp->get_size());\n"
-      "    value_used.resize(mp->get_size(), false);\n");
+      "    Vector<bool> value_used(m_p->get_size());\n"
+      "    value_used.resize(m_p->get_size(), false);\n");
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {\n"
-      "      Module_Param* const curr_param = mp->get_elem(val_idx);\n"
+      "    for (size_t val_idx=0; val_idx<m_p->get_size(); val_idx++) {\n"
+      "      Module_Param* const curr_param = m_p->get_elem(val_idx);\n"
       "      if (!strcmp(curr_param->get_id()->get_name(), \"%s\")) {\n"
       "        if (curr_param->get_type()!=Module_Param::MP_NotUsed) {\n"
       "          %s().set_param(*curr_param);\n"
@@ -3368,8 +3420,8 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       , sdef->elements[i].dispname, sdef->elements[i].name);
   }
   src = mputprintf(src,
-      "    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {\n"
-      "      mp->get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", mp->get_elem(val_idx)->get_id()->get_name());\n"
+      "    for (size_t val_idx=0; val_idx<m_p->get_size(); val_idx++) if (!value_used[val_idx]) {\n"
+      "      m_p->get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", m_p->get_elem(val_idx)->get_id()->get_name());\n"
       "      break;\n"
       "    }\n"
       "  } break;\n"
@@ -3405,19 +3457,19 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   src = mputprintf(src,
     "TTCN_error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
     "  }\n"
-    "  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();\n"
+    "  Module_Param_Assignment_List* m_p = new Module_Param_Assignment_List();\n"
     , kind_str, dispname);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src,
       "  Module_Param* mp_field_%s = field_%s.get_param(param_name);\n"
       "  mp_field_%s->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
-      "  mp->add_elem(mp_field_%s);\n"
+      "  m_p->add_elem(mp_field_%s);\n"
       , sdef->elements[i].name, sdef->elements[i].name
       , sdef->elements[i].name, sdef->elements[i].dispname
       , sdef->elements[i].name);
   }
   src = mputstr(src,
-    "  return mp;\n"
+    "  return m_p;\n"
     "  }\n\n");
 
   /* set implicit omit function, recursive */
@@ -5603,11 +5655,11 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     "param.error(\"Field `%%s' not found in %s template type `%s'\", param_field);\n"
     "  }\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"%s template\");\n"
-    "  Module_Param_Ptr mp = &param;\n"
+    "  Module_Param_Ptr m_p = &param;\n"
     "  if (param.get_type() == Module_Param::MP_Reference) {\n"
-    "    mp = param.get_referenced_param();\n"
+    "    m_p = param.get_referenced_param();\n"
     "  }\n"
-    "  switch (mp->get_type()) {\n"
+    "  switch (m_p->get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
     "    break;\n"
@@ -5619,33 +5671,33 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     "    break;\n"
     "  case Module_Param::MP_List_Template:\n"
     "  case Module_Param::MP_ComplementList_Template: {\n"
-    "    %s_template temp;\n"
-    "    temp.set_type(mp->get_type()==Module_Param::MP_List_Template ? "
-    "VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());\n"
-    "    for (size_t p_i=0; p_i<mp->get_size(); p_i++) {\n"
-    "      temp.list_item(p_i).set_param(*mp->get_elem(p_i));\n"
+    "    %s_template new_temp;\n"
+    "    new_temp.set_type(m_p->get_type()==Module_Param::MP_List_Template ? "
+    "VALUE_LIST : COMPLEMENTED_LIST, m_p->get_size());\n"
+    "    for (size_t p_i=0; p_i<m_p->get_size(); p_i++) {\n"
+    "      new_temp.list_item(p_i).set_param(*m_p->get_elem(p_i));\n"
     "    }\n"
-    "    *this = temp;\n"
+    "    *this = new_temp;\n"
     "    break; }\n"
     "  case Module_Param::MP_Value_List:\n"
-    "    if (%lu<mp->get_size()) {\n"
-    "      param.error(\"%s template of type %s has %lu fields but list value has %%d fields\", (int)mp->get_size());\n"
+    "    if (%lu<m_p->get_size()) {\n"
+    "      param.error(\"%s template of type %s has %lu fields but list value has %%d fields\", (int)m_p->get_size());\n"
     "    }\n",
     kind_str, dispname, kind_str, name, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    if (mp->get_size()>%lu && mp->get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*mp->get_elem(%lu));\n",
+      "    if (m_p->get_size()>%lu && m_p->get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*m_p->get_elem(%lu));\n",
       (unsigned long)i, (unsigned long)i, sdef->elements[i].name, (unsigned long)i);
   }
   src = mputstr(src,
     "    break;\n"
     "  case Module_Param::MP_Assignment_List: {\n"
-    "    Vector<bool> value_used(mp->get_size());\n"
-    "    value_used.resize(mp->get_size(), false);\n");
+    "    Vector<bool> value_used(m_p->get_size());\n"
+    "    value_used.resize(m_p->get_size(), false);\n");
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {\n"
-      "      Module_Param* const curr_param = mp->get_elem(val_idx);\n"
+      "    for (size_t val_idx=0; val_idx<m_p->get_size(); val_idx++) {\n"
+      "      Module_Param* const curr_param = m_p->get_elem(val_idx);\n"
       "      if (!strcmp(curr_param->get_id()->get_name(), \"%s\")) {\n"
       "        if (curr_param->get_type()!=Module_Param::MP_NotUsed) {\n"
       "          %s().set_param(*curr_param);\n"
@@ -5656,15 +5708,15 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
       , sdef->elements[i].dispname, sdef->elements[i].name);
   }
   src = mputprintf(src,
-    "    for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {\n"
-    "      mp->get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", mp->get_elem(val_idx)->get_id()->get_name());\n"
+    "    for (size_t val_idx=0; val_idx<m_p->get_size(); val_idx++) if (!value_used[val_idx]) {\n"
+    "      m_p->get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", m_p->get_elem(val_idx)->get_id()->get_name());\n"
     "      break;\n"
     "    }\n"
     "  } break;\n"
     "  default:\n"
     "    param.type_error(\"%s template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();\n"
+    "  is_ifpresent = param.get_ifpresent() || m_p->get_ifpresent();\n"
     "}\n\n", dispname, kind_str, dispname);
   
   /* get_param() */
@@ -5691,28 +5743,28 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
   src = mputprintf(src,
     "TTCN_error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
     "  }\n"
-    "  Module_Param* mp = NULL;\n"
+    "  Module_Param* m_p = NULL;\n"
     "  switch (template_selection) {\n"
     "  case UNINITIALIZED_TEMPLATE:\n"
-    "    mp = new Module_Param_Unbound();\n"
+    "    m_p = new Module_Param_Unbound();\n"
     "    break;\n"
     "  case OMIT_VALUE:\n"
-    "    mp = new Module_Param_Omit();\n"
+    "    m_p = new Module_Param_Omit();\n"
     "    break;\n"
     "  case ANY_VALUE:\n"
-    "    mp = new Module_Param_Any();\n"
+    "    m_p = new Module_Param_Any();\n"
     "    break;\n"
     "  case ANY_OR_OMIT:\n"
-    "    mp = new Module_Param_AnyOrNone();\n"
+    "    m_p = new Module_Param_AnyOrNone();\n"
     "    break;\n"
     "  case SPECIFIC_VALUE: {\n"
-    "    mp = new Module_Param_Assignment_List();\n"
+    "    m_p = new Module_Param_Assignment_List();\n"
     , kind_str, dispname);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src,
       "    Module_Param* mp_field_%s = single_value->field_%s.get_param(param_name);\n"
       "    mp_field_%s->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
-      "    mp->add_elem(mp_field_%s);\n"
+      "    m_p->add_elem(mp_field_%s);\n"
       , sdef->elements[i].name, sdef->elements[i].name
       , sdef->elements[i].name, sdef->elements[i].dispname
       , sdef->elements[i].name);
@@ -5722,22 +5774,22 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     "  case VALUE_LIST:\n"
     "  case COMPLEMENTED_LIST: {\n"
     "    if (template_selection == VALUE_LIST) {\n"
-    "      mp = new Module_Param_List_Template();\n"
+    "      m_p = new Module_Param_List_Template();\n"
     "    }\n"
     "    else {\n"
-    "      mp = new Module_Param_ComplementList_Template();\n"
+    "      m_p = new Module_Param_ComplementList_Template();\n"
     "    }\n"
-    "    for (size_t i = 0; i < value_list.n_values; ++i) {\n"
-    "      mp->add_elem(value_list.list_value[i].get_param(param_name));\n"
+    "    for (size_t i_i = 0; i_i < value_list.n_values; ++i_i) {\n"
+    "      m_p->add_elem(value_list.list_value[i_i].get_param(param_name));\n"
     "    }\n"
     "    break; }\n"
     "  default:\n"
     "    break;\n"
     "  }\n"
     "  if (is_ifpresent) {\n"
-    "    mp->set_ifpresent();\n"
+    "    m_p->set_ifpresent();\n"
     "  }\n"
-    "  return mp;\n"
+    "  return m_p;\n"
     "}\n\n");
 
     /* check template restriction */

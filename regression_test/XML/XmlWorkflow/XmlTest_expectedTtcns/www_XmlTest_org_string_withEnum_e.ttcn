@@ -63,17 +63,17 @@ type enumerated StringEnum
 	uK
 }
 with {
-variant "text 'a' as capitalized";
-variant "text 'd' as capitalized";
-variant "text 'hU' as capitalized";
-variant "text 's' as capitalized";
-variant "text 'uK' as capitalized";
+  variant "text 'a' as capitalized";
+  variant "text 'd' as capitalized";
+  variant "text 'hU' as capitalized";
+  variant "text 's' as capitalized";
+  variant "text 'uK' as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.XmlTest.org/string_withEnum' prefix 'swe'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.XmlTest.org/string_withEnum' prefix 'swe'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

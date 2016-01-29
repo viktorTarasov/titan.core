@@ -41,15 +41,15 @@ import from XSD all;
 
 type XSD.String MyTypes_2
 with {
-variant "name as 'MyTypes__'";
-variant "attribute";
+  variant "name as 'MyTypes__'";
+  variant "attribute";
 };
 
 
 type XSD.String MyTypes_1
 with {
-variant "name as 'MyTypes_'";
-variant "element";
+  variant "name as 'MyTypes_'";
+  variant "element";
 };
 
 
@@ -58,15 +58,15 @@ type record MyTypes_3
 	XSD.String myTypes
 }
 with {
-variant "name as 'MyTypes'";
-variant "element";
-variant (myTypes) "name as capitalized";
+  variant "name as 'MyTypes'";
+  variant "element";
+  variant (myTypes) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'MyTypes'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'MyTypes'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

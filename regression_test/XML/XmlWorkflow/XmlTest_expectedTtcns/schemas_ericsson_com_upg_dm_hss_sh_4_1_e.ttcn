@@ -36,19 +36,19 @@ import from XSD all;
 
 type XSD.AnyURI TSIP_URL
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.AnyURI TTEL_URL
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.AnyURI TDiameterURI
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -71,8 +71,8 @@ type enumerated TIdentityType
 	int2(2)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
@@ -82,8 +82,8 @@ type union TIMSPublicIdentity
 	TTEL_URL tTEL_URL
 }
 with {
-variant "name as uncapitalized";
-variant "useUnion";
+  variant "name as uncapitalized";
+  variant "useUnion";
 };
 
 
@@ -101,26 +101,26 @@ type enumerated TProfilePartIndicator
 	int1(1)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TServiceInfo length(0 .. infinity)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TString length(0 .. infinity)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TMSISDN length(0 .. infinity)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -148,8 +148,8 @@ type enumerated TIMSUserState
 	int3(3)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
@@ -169,8 +169,8 @@ type enumerated TCSUserState
 	int3(3)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
@@ -199,8 +199,8 @@ type enumerated TPSUserState
 	int6(6)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
@@ -218,74 +218,74 @@ type enumerated TPSIActivation
 	int1(1)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TLocationNumber length(4 .. 16)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TCellGlobalId length(12)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TServiceAreaId length(12)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TLocationAreaId length(8)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TRoutingAreaId length(8)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TGeographicalInformation length(12)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TGeodeticInformation length(16)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TAddressString length(4 .. 28)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String TSelectedLSAIdentity length(4)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Int TPriority (0 .. 2147483647)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Int TGroupID (0 .. 2147483647)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -308,14 +308,14 @@ type enumerated TRegistrationType
 	int2(2)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Int TID (0 .. 2147483647)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -338,8 +338,8 @@ type enumerated TDirectionOfRequest
 	int2(2)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
@@ -357,26 +357,26 @@ type enumerated TDefaultHandling
 	int1(1)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Int TAgeOfLocationInformation (0 .. 32767)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Boolean TBool
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Int TSequenceNumber (0 .. 65535)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -385,9 +385,9 @@ type record TExtension
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement";
+  variant "name as uncapitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement";
 };
 
 
@@ -397,9 +397,9 @@ type record TShIMSDataExtension
 	TExtension extension_ optional
 }
 with {
-variant "name as uncapitalized";
-variant (pSIActivation) "name as capitalized";
-variant (extension_) "name as 'Extension'";
+  variant "name as uncapitalized";
+  variant (pSIActivation) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
 };
 
 
@@ -409,10 +409,10 @@ type record TSePoTriExtension
 	TExtension extension_ optional
 }
 with {
-variant "name as uncapitalized";
-variant (registrationType_list) "untagged";
-variant (registrationType_list[-]) "name as 'RegistrationType'";
-variant (extension_) "name as 'Extension'";
+  variant "name as uncapitalized";
+  variant (registrationType_list) "untagged";
+  variant (registrationType_list[-]) "name as 'RegistrationType'";
+  variant (extension_) "name as 'Extension'";
 };
 
 
@@ -423,10 +423,10 @@ type record TPublicIdentityExtension
 	TExtension extension_ optional
 }
 with {
-variant "name as uncapitalized";
-variant (identityType) "name as capitalized";
-variant (wildcardedPSI) "name as capitalized";
-variant (extension_) "name as 'Extension'";
+  variant "name as uncapitalized";
+  variant (identityType) "name as capitalized";
+  variant (wildcardedPSI) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
 };
 
 
@@ -443,17 +443,17 @@ type record TSh_Data
 	record of XSD.String elem_list
 }
 with {
-variant "name as 'tSh-Data'";
-variant (publicIdentifiers) "name as capitalized";
-variant (repositoryData) "name as capitalized";
-variant (sh_IMS_Data) "name as 'Sh-IMS-Data'";
-variant (cSLocationInformation) "name as capitalized";
-variant (pSLocationInformation) "name as capitalized";
-variant (cSUserState) "name as capitalized";
-variant (pSUserState) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as 'tSh-Data'";
+  variant (publicIdentifiers) "name as capitalized";
+  variant (repositoryData) "name as capitalized";
+  variant (sh_IMS_Data) "name as 'Sh-IMS-Data'";
+  variant (cSLocationInformation) "name as capitalized";
+  variant (pSLocationInformation) "name as capitalized";
+  variant (cSUserState) "name as capitalized";
+  variant (pSUserState) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -466,13 +466,13 @@ type record TTransparentData
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (serviceIndication) "name as capitalized";
-variant (sequenceNumber) "name as capitalized";
-variant (serviceData) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (serviceIndication) "name as capitalized";
+  variant (sequenceNumber) "name as capitalized";
+  variant (serviceData) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -481,8 +481,8 @@ type record TServiceData
 	XSD.String elem
 }
 with {
-variant "name as uncapitalized";
-variant (elem) "anyElement";
+  variant "name as uncapitalized";
+  variant (elem) "anyElement";
 };
 
 
@@ -497,15 +497,15 @@ type record TShIMSData
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (sCSCFName) "name as capitalized";
-variant (iFCs) "name as capitalized";
-variant (iMSUserState) "name as capitalized";
-variant (chargingInformation) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (ericssonUserBarringInfo) "name as capitalized";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (sCSCFName) "name as capitalized";
+  variant (iFCs) "name as capitalized";
+  variant (iMSUserState) "name as capitalized";
+  variant (chargingInformation) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (ericssonUserBarringInfo) "name as capitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -516,12 +516,12 @@ type record TIFCs
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (initialFilterCriteria_list) "untagged";
-variant (initialFilterCriteria_list[-]) "name as 'InitialFilterCriteria'";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (initialFilterCriteria_list) "untagged";
+  variant (initialFilterCriteria_list[-]) "name as 'InitialFilterCriteria'";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -543,24 +543,24 @@ type record TCSLocationInformation
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (locationNumber) "name as capitalized";
-variant (choice) "untagged";
-variant (choice.cellGlobalId_list) "untagged";
-variant (choice.cellGlobalId_list[-]) "name as 'CellGlobalId'";
-variant (choice.serviceAreaId_list) "untagged";
-variant (choice.serviceAreaId_list[-]) "name as 'ServiceAreaId'";
-variant (choice.locationAreaId_list) "untagged";
-variant (choice.locationAreaId_list[-]) "name as 'LocationAreaId'";
-variant (geographicalInformation) "name as capitalized";
-variant (geodeticInformation) "name as capitalized";
-variant (vLRNumber) "name as capitalized";
-variant (mSCNumber) "name as capitalized";
-variant (currentLocationRetrieved) "name as capitalized";
-variant (ageOfLocationInformation) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (locationNumber) "name as capitalized";
+  variant (choice) "untagged";
+  variant (choice.cellGlobalId_list) "untagged";
+  variant (choice.cellGlobalId_list[-]) "name as 'CellGlobalId'";
+  variant (choice.serviceAreaId_list) "untagged";
+  variant (choice.serviceAreaId_list[-]) "name as 'ServiceAreaId'";
+  variant (choice.locationAreaId_list) "untagged";
+  variant (choice.locationAreaId_list[-]) "name as 'LocationAreaId'";
+  variant (geographicalInformation) "name as capitalized";
+  variant (geodeticInformation) "name as capitalized";
+  variant (vLRNumber) "name as capitalized";
+  variant (mSCNumber) "name as capitalized";
+  variant (currentLocationRetrieved) "name as capitalized";
+  variant (ageOfLocationInformation) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -581,23 +581,23 @@ type record TPSLocationInformation
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (choice) "untagged";
-variant (choice.cellGlobalId_list) "untagged";
-variant (choice.cellGlobalId_list[-]) "name as 'CellGlobalId'";
-variant (choice.serviceAreaId_list) "untagged";
-variant (choice.serviceAreaId_list[-]) "name as 'ServiceAreaId'";
-variant (choice.locationAreaId_list) "untagged";
-variant (choice.locationAreaId_list[-]) "name as 'LocationAreaId'";
-variant (routingAreaId) "name as capitalized";
-variant (geographicalInformation) "name as capitalized";
-variant (geodeticInformation) "name as capitalized";
-variant (sGSNNumber) "name as capitalized";
-variant (currentLocationRetrieved) "name as capitalized";
-variant (ageOfLocationInformation) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (choice) "untagged";
+  variant (choice.cellGlobalId_list) "untagged";
+  variant (choice.cellGlobalId_list[-]) "name as 'CellGlobalId'";
+  variant (choice.serviceAreaId_list) "untagged";
+  variant (choice.serviceAreaId_list[-]) "name as 'ServiceAreaId'";
+  variant (choice.locationAreaId_list) "untagged";
+  variant (choice.locationAreaId_list[-]) "name as 'LocationAreaId'";
+  variant (routingAreaId) "name as capitalized";
+  variant (geographicalInformation) "name as capitalized";
+  variant (geodeticInformation) "name as capitalized";
+  variant (sGSNNumber) "name as capitalized";
+  variant (currentLocationRetrieved) "name as capitalized";
+  variant (ageOfLocationInformation) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -608,12 +608,12 @@ type record TISDNAddress
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (address_list) "untagged";
-variant (address_list[-]) "name as 'Address'";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (address_list) "untagged";
+  variant (address_list[-]) "name as 'Address'";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -622,9 +622,9 @@ type record TIdentitySet
 	record of TIMSPublicIdentity iMSPublicIdentity_list
 }
 with {
-variant "name as uncapitalized";
-variant (iMSPublicIdentity_list) "untagged";
-variant (iMSPublicIdentity_list[-]) "name as 'IMSPublicIdentity'";
+  variant "name as uncapitalized";
+  variant (iMSPublicIdentity_list) "untagged";
+  variant (iMSPublicIdentity_list[-]) "name as 'IMSPublicIdentity'";
 };
 
 
@@ -641,21 +641,21 @@ type record TPublicIdentity
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (choice) "untagged";
-variant (choice.allIdentities_list) "untagged";
-variant (choice.allIdentities_list[-]) "name as 'AllIdentities'";
-variant (choice.registeredIdentities_list) "untagged";
-variant (choice.registeredIdentities_list[-]) "name as 'RegisteredIdentities'";
-variant (choice.implicitIdentities_list) "untagged";
-variant (choice.implicitIdentities_list[-]) "name as 'ImplicitIdentities'";
-variant (choice.aliasIdentities_list) "untagged";
-variant (choice.aliasIdentities_list[-]) "name as 'AliasIdentities'";
-variant (mSISDN_list) "untagged";
-variant (mSISDN_list[-]) "name as 'MSISDN'";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (choice) "untagged";
+  variant (choice.allIdentities_list) "untagged";
+  variant (choice.allIdentities_list[-]) "name as 'AllIdentities'";
+  variant (choice.registeredIdentities_list) "untagged";
+  variant (choice.registeredIdentities_list[-]) "name as 'RegisteredIdentities'";
+  variant (choice.implicitIdentities_list) "untagged";
+  variant (choice.implicitIdentities_list[-]) "name as 'ImplicitIdentities'";
+  variant (choice.aliasIdentities_list) "untagged";
+  variant (choice.aliasIdentities_list[-]) "name as 'AliasIdentities'";
+  variant (mSISDN_list) "untagged";
+  variant (mSISDN_list[-]) "name as 'MSISDN'";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -669,14 +669,14 @@ type record TInitialFilterCriteria
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (priority) "name as capitalized";
-variant (triggerPoint) "name as capitalized";
-variant (applicationServer) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (applicationServerName) "name as capitalized";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (priority) "name as capitalized";
+  variant (triggerPoint) "name as capitalized";
+  variant (applicationServer) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (applicationServerName) "name as capitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -688,13 +688,13 @@ type record TTrigger
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (conditionTypeCNF) "name as capitalized";
-variant (sPT_list) "untagged";
-variant (sPT_list[-]) "name as 'SPT'";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (conditionTypeCNF) "name as capitalized";
+  variant (sPT_list) "untagged";
+  variant (sPT_list[-]) "name as 'SPT'";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -713,19 +713,19 @@ type record TSePoTri
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (conditionNegated) "name as capitalized";
-variant (group_list) "untagged";
-variant (group_list[-]) "name as 'Group'";
-variant (choice) "untagged";
-variant (choice.requestURI) "name as capitalized";
-variant (choice.method) "name as capitalized";
-variant (choice.sIPHeader) "name as capitalized";
-variant (choice.sessionCase) "name as capitalized";
-variant (choice.sessionDescription) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (conditionNegated) "name as capitalized";
+  variant (group_list) "untagged";
+  variant (group_list[-]) "name as 'Group'";
+  variant (choice) "untagged";
+  variant (choice.requestURI) "name as capitalized";
+  variant (choice.method) "name as capitalized";
+  variant (choice.sIPHeader) "name as capitalized";
+  variant (choice.sessionCase) "name as capitalized";
+  variant (choice.sessionDescription) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -737,12 +737,12 @@ type record TSessionDescription
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (line) "name as capitalized";
-variant (content) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (line) "name as capitalized";
+  variant (content) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -754,12 +754,12 @@ type record THeader
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (header) "name as capitalized";
-variant (content) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (header) "name as capitalized";
+  variant (content) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -772,13 +772,13 @@ type record TApplicationServer
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (serverName) "name as capitalized";
-variant (defaultHandling) "name as capitalized";
-variant (serviceInfo) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (serverName) "name as capitalized";
+  variant (defaultHandling) "name as capitalized";
+  variant (serviceInfo) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
@@ -792,28 +792,28 @@ type record TChargingInformation
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (primaryEventChargingFunctionName) "name as capitalized";
-variant (secondaryEventChargingFunctionName) "name as capitalized";
-variant (primaryChargingCollectionFunctionName) "name as capitalized";
-variant (secondaryChargingCollectionFunctionName) "name as capitalized";
-variant (extension_) "name as 'Extension'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "name as uncapitalized";
+  variant (primaryEventChargingFunctionName) "name as capitalized";
+  variant (secondaryEventChargingFunctionName) "name as capitalized";
+  variant (primaryChargingCollectionFunctionName) "name as capitalized";
+  variant (secondaryChargingCollectionFunctionName) "name as capitalized";
+  variant (extension_) "name as 'Extension'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
 };
 
 
 type TSh_Data Sh_Data
 with {
-variant "name as 'Sh-Data'";
-variant "element";
+  variant "name as 'Sh-Data'";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://schemas.ericsson.com/upg/dm/hss-sh/4.1'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

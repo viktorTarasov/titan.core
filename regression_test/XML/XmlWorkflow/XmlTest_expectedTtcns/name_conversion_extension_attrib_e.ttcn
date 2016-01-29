@@ -44,9 +44,9 @@ type record Ol_name_type
 	XSD.Integer allow_true_action
 }
 with {
-variant "name as 'Ol-name-type'";
-variant "element";
-variant (allow_true_action) "name as 'allow-true-action'";
+  variant "name as 'Ol-name-type'";
+  variant "element";
+  variant (allow_true_action) "name as 'allow-true-action'";
 };
 
 
@@ -61,21 +61,21 @@ type record Ol_actions_type
 	} play_segmented_announcement
 }
 with {
-variant "name as 'Ol-actions-type'";
-variant "element";
-variant (do_not_disturb) "name as 'do-not-disturb'";
-variant (play_segmented_announcement) "name as 'play-segmented-announcement'";
-variant (play_segmented_announcement) "useNil";
-variant (play_segmented_announcement.announcement_name) "name as 'announcement-name'";
-variant (play_segmented_announcement.announcement_name) "attribute";
-variant (play_segmented_announcement.content.allow_true_action) "name as 'allow-true-action'";
+  variant "name as 'Ol-actions-type'";
+  variant "element";
+  variant (do_not_disturb) "name as 'do-not-disturb'";
+  variant (play_segmented_announcement) "name as 'play-segmented-announcement'";
+  variant (play_segmented_announcement) "useNil";
+  variant (play_segmented_announcement.announcement_name) "name as 'announcement-name'";
+  variant (play_segmented_announcement.announcement_name) "attribute";
+  variant (play_segmented_announcement.content.allow_true_action) "name as 'allow-true-action'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'name_conversion_extension_attrib'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'name_conversion_extension_attrib'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

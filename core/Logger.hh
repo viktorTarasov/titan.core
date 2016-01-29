@@ -145,7 +145,9 @@ public:
 
     DEBUG_ENCDEC,
     DEBUG_TESTPORT,
-    DEBUG_UNQUALIFIED, //64
+    DEBUG_USER,
+    DEBUG_FRAMEWORK,
+    DEBUG_UNQUALIFIED, //66
 
     NUMBER_OF_LOGSEVERITIES, // must follow the last individual severity
     LOG_ALL_IMPORTANT

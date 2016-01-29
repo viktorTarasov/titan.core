@@ -40,7 +40,7 @@ type enumerated ElemKey {
   AdditionalProperties, OmitAsNull, exclusiveMinimum, exclusiveMaximum, // boolVal
   Default, // strVal or boolVal
   NumericValues, Required, FieldOrder, // strArrayVal
-  Enum, // arrayVal
+  Enum, ValueList, // arrayVal
   Items, // typeVal
   AnyOf, AllOf, // typeArrayVal
   Properties, // fieldSetVal

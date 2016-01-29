@@ -34,6 +34,7 @@ ComplexType::ComplexType(XMLParser * a_parser, TTCN3Module * a_module, Construct
 , basefield(NULL)
 , cmode(CT_undefined_mode)
 , resolved(No)
+, parentTypeSubsGroup(NULL)
 , complexfields()
 , attribfields()
 , enumfields()
@@ -59,7 +60,8 @@ ComplexType::ComplexType(ComplexType & other)
 , nillable_field(NULL)
 , basefield(NULL)
 , cmode(other.cmode)
-, resolved(other.resolved) {
+, resolved(other.resolved)
+, parentTypeSubsGroup(other.parentTypeSubsGroup) {
   type.originalValueWoPrefix = other.type.originalValueWoPrefix;
   for (List<AttributeType*>::iterator attr = other.attribfields.begin(); attr; attr = attr->Next) {
     attribfields.push_back(new AttributeType(*attr->Data));
@@ -106,6 +108,7 @@ ComplexType::ComplexType(ComplexType * other)
 , basefield(NULL)
 , cmode(CT_undefined_mode)
 , resolved(No)
+, parentTypeSubsGroup(NULL)
 , complexfields()
 , attribfields()
 , enumfields()
@@ -134,6 +137,7 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
 , basefield(NULL)
 , cmode(CT_simpletype_mode)
 , resolved(No)
+, parentTypeSubsGroup(NULL)
 , complexfields()
 , attribfields()
 , enumfields()
@@ -1327,7 +1331,7 @@ void ComplexType::printVariant(FILE * file) {
   }
 
   for (List<Mstring>::iterator var = variant.begin(); var; var = var->Next) {
-    fprintf(file, "%s", var->Data.c_str());
+    fprintf(file, "  %s", var->Data.c_str());
   }
 
   if (!foundAtLeastOneVariant) {
@@ -2028,6 +2032,10 @@ void ComplexType::addTypeSubstitution(SimpleType * st){
         element->addVariant(V_block);
       }
     }
+  }
+  //Cascading to parent type substitution
+  if(parentTypeSubsGroup != NULL && !complexfields.empty()){
+    parentTypeSubsGroup->addTypeSubstitution(st);
   }
   element->top = false;
   complexfields.push_back(element);

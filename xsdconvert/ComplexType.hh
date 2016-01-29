@@ -72,6 +72,7 @@ private:
   ComplexType * basefield;
   ComplexType_Mode cmode;
   Resolv_State resolved;
+  ComplexType * parentTypeSubsGroup;
 
 
   void applyAttributeRestriction(ComplexType * found_CT);
@@ -133,6 +134,7 @@ public:
   void finalModification();
   bool hasUnresolvedReference(){ return resolved == No; }
   void setNameDep(SimpleType * dep) { nameDep = dep; }
+  void setParentTypeSubsGroup(ComplexType * dep) { parentTypeSubsGroup = dep; }
 
   void dump(unsigned int depth) const;
 

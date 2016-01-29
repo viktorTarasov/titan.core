@@ -57,10 +57,10 @@ type enumerated DateTimeWithEnum
 	x2009_10_10T163200_00_0500
 }
 with {
-variant "text 'x2009_10_10T113300_000_0500' as '2009-10-10T11:33:00.000-05:00'";
-variant "text 'x2009_10_10T143000_0500' as '2009-10-10T14:30:00-05:00'";
-variant "text 'x2009_10_10T153100_0_0500' as '2009-10-10T15:31:00.0-05:00'";
-variant "text 'x2009_10_10T163200_00_0500' as '2009-10-10T16:32:00.00-05:00'";
+  variant "text 'x2009_10_10T113300_000_0500' as '2009-10-10T11:33:00.000-05:00'";
+  variant "text 'x2009_10_10T143000_0500' as '2009-10-10T14:30:00-05:00'";
+  variant "text 'x2009_10_10T153100_0_0500' as '2009-10-10T15:31:00.0-05:00'";
+  variant "text 'x2009_10_10T163200_00_0500' as '2009-10-10T16:32:00.00-05:00'";
 };
 
 
@@ -69,7 +69,7 @@ type enumerated MyDate
 	x2009_10_10
 }
 with {
-variant "text 'x2009_10_10' as '2009-10-10'";
+  variant "text 'x2009_10_10' as '2009-10-10'";
 };
 
 
@@ -79,8 +79,8 @@ type enumerated MyTime
 	x143501_000
 }
 with {
-variant "text 'x143401_000' as '14:34:01.000'";
-variant "text 'x143501_000' as '14:35:01.000'";
+  variant "text 'x143401_000' as '14:34:01.000'";
+  variant "text 'x143501_000' as '14:35:01.000'";
 };
 
 
@@ -91,9 +91,9 @@ type enumerated MyGYear
 	x2009
 }
 with {
-variant "text 'x1914' as '1914'";
-variant "text 'x1956' as '1956'";
-variant "text 'x2009' as '2009'";
+  variant "text 'x1914' as '1914'";
+  variant "text 'x1956' as '1956'";
+  variant "text 'x2009' as '2009'";
 };
 
 
@@ -104,9 +104,9 @@ type enumerated MyGYearMonth
 	x2009_10
 }
 with {
-variant "text 'x1914_05' as '1914-05'";
-variant "text 'x1956_12' as '1956-12'";
-variant "text 'x2009_10' as '2009-10'";
+  variant "text 'x1914_05' as '1914-05'";
+  variant "text 'x1956_12' as '1956-12'";
+  variant "text 'x2009_10' as '2009-10'";
 };
 
 
@@ -117,9 +117,9 @@ type enumerated MyGMonth
 	x12
 }
 with {
-variant "text 'x05' as '--05'";
-variant "text 'x10' as '--10'";
-variant "text 'x12' as '--12'";
+  variant "text 'x05' as '--05'";
+  variant "text 'x10' as '--10'";
+  variant "text 'x12' as '--12'";
 };
 
 
@@ -130,9 +130,9 @@ type enumerated MyGMonthDay
 	x12_21
 }
 with {
-variant "text 'x05_01' as '--05-01'";
-variant "text 'x10_30' as '--10-30'";
-variant "text 'x12_21' as '--12-21'";
+  variant "text 'x05_01' as '--05-01'";
+  variant "text 'x10_30' as '--10-30'";
+  variant "text 'x12_21' as '--12-21'";
 };
 
 
@@ -143,15 +143,15 @@ type enumerated MyDay
 	x12
 }
 with {
-variant "text 'x05' as '---05'";
-variant "text 'x10' as '---10'";
-variant "text 'x12' as '---12'";
+  variant "text 'x05' as '---05'";
+  variant "text 'x10' as '---10'";
+  variant "text 'x12' as '---12'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/time_withEnum' prefix 'ns3'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/time_withEnum' prefix 'ns3'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

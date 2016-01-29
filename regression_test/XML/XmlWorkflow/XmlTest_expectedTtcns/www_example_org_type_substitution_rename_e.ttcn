@@ -45,14 +45,14 @@ type record Complex
 	ParentType_derivations sd
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
 type ParentType_derivations ParentType
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -61,15 +61,15 @@ type record ParentType_1
 	record of XSD.String foo_list
 }
 with {
-variant "name as 'ParentType'";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as 'ParentType'";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
 type RestrictedType_1 RestrictedType
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -78,9 +78,9 @@ type record RestrictedType_1
 	record length(1 .. infinity) of XSD.String foo_list
 }
 with {
-variant "name as 'restrictedType'";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as 'restrictedType'";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
@@ -90,14 +90,14 @@ type union ParentType_derivations
 	RestrictedType_1 restrictedType
 }
 with {
-variant "useType";
-variant (parentType) "name as capitalized";
+  variant "useType";
+  variant (parentType) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/type/substitution/rename' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/type/substitution/rename' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

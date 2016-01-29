@@ -49,14 +49,14 @@ import from XSD all;
 
 type XSD.String MyType
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_import_A' prefix 'A'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_import_A' prefix 'A'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

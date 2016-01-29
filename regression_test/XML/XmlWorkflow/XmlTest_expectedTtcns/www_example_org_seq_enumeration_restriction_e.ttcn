@@ -52,12 +52,12 @@ type record MatchingProblemType
 	} operation
 }
 with {
-variant (operation) "text 'catch_' as 'catch'";
-variant (operation) "text 'check_' as 'check'";
-variant (operation) "text 'getcall_' as 'getcall'";
-variant (operation) "text 'getreply_' as 'getreply'";
-variant (operation) "text 'receive_' as 'receive'";
-variant (operation) "text 'trigger_' as 'trigger'";
+  variant (operation) "text 'catch_' as 'catch'";
+  variant (operation) "text 'check_' as 'check'";
+  variant (operation) "text 'getcall_' as 'getcall'";
+  variant (operation) "text 'getreply_' as 'getreply'";
+  variant (operation) "text 'receive_' as 'receive'";
+  variant (operation) "text 'trigger_' as 'trigger'";
 };
 
 
@@ -71,7 +71,7 @@ type record MatchingProblemTypeRestricted
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/seq/enumeration/restriction' prefix 'ns2'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/seq/enumeration/restriction' prefix 'ns2'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

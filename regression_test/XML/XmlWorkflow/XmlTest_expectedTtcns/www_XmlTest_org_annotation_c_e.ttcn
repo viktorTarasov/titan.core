@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_annotation_c_e {
+module www_XmlTest_org_annotation_c {
 
 
 import from XSD all;
@@ -41,20 +41,20 @@ import from XSD all;
 
 type XSD.PositiveInteger MyInteger1
 with {
-variant "element";
+  variant "element";
 };
 
 
 type XSD.PositiveInteger MyInteger2
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/annotation'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "attributeFormQualified";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/annotation'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "attributeFormQualified";
 }

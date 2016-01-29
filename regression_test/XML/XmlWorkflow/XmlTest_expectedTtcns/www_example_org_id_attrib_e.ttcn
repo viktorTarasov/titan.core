@@ -44,7 +44,7 @@ type XSD.Float TypeName;
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/id_attrib'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/id_attrib'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

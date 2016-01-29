@@ -55,12 +55,12 @@ Typical error situations during test running and their solutions
 Error:
 java.lang.UnsatisfiedLinkError: org.eclipse.titan.executor.jni.JNIMiddleWare.init(I)J
 Reason:
-The Titan release you use is built on 2014-07-01, and since then the project became open source and that’s why all the java packages were renamed from com.ericsson.titan.* to org.eclipse.titan.*
+The Titan binaries you use are old (before 2014-12-11 or release before CRL 113 200/5 R1A), and since then the project became open source and that’s why all the java packages were renamed from com.ericsson.titan.* to org.eclipse.titan.*
 Solution:
 So you should use the latest release.
 You can download a new package from
 ttcn.ericsson.se/download/
-Search for TITAN packages, latest version is CRL 113 200/5 R2A (5.2.pl0), this is done in 2015 Q1
+Search for "TITAN packages", download the latest version
 You can extract it locally in your home directory, just make sure, that
 TTCN3_DIR is set properly
 PATH contains its bin directory

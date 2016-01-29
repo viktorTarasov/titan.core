@@ -42,8 +42,8 @@ import from www_csapi_org_schema_parlayx_common_v2_0_e all;
 
 type ChargeVolume_1 ChargeVolume
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -55,14 +55,14 @@ type record ChargeVolume_1
 	XSD.String referenceCode
 }
 with {
-variant "name as 'chargeVolume'";
+  variant "name as 'chargeVolume'";
 };
 
 
 type ChargeVolumeResponse_1 ChargeVolumeResponse
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -71,14 +71,14 @@ type record ChargeVolumeResponse_1
 
 }
 with {
-variant "name as 'chargeVolumeResponse'";
+  variant "name as 'chargeVolumeResponse'";
 };
 
 
 type GetAmount_1 GetAmount
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -89,16 +89,16 @@ type record GetAmount_1
 	record of Property parameters_list
 }
 with {
-variant "name as 'getAmount'";
-variant (parameters_list) "untagged";
-variant (parameters_list[-]) "name as 'parameters'";
+  variant "name as 'getAmount'";
+  variant (parameters_list) "untagged";
+  variant (parameters_list[-]) "name as 'parameters'";
 };
 
 
 type GetAmountResponse_1 GetAmountResponse
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -107,14 +107,14 @@ type record GetAmountResponse_1
 	XSD.Decimal result
 }
 with {
-variant "name as 'getAmountResponse'";
+  variant "name as 'getAmountResponse'";
 };
 
 
 type RefundVolume_1 RefundVolume
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -126,14 +126,14 @@ type record RefundVolume_1
 	XSD.String referenceCode
 }
 with {
-variant "name as 'refundVolume'";
+  variant "name as 'refundVolume'";
 };
 
 
 type RefundVolumeResponse_1 RefundVolumeResponse
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -142,14 +142,14 @@ type record RefundVolumeResponse_1
 
 }
 with {
-variant "name as 'refundVolumeResponse'";
+  variant "name as 'refundVolumeResponse'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.csapi.org/schema/parlayx/payment/volume_charging/v2_0/local' prefix 'parlayx_payment_volume_charging_local_xsd'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.csapi.org/schema/parlayx/payment/volume_charging/v2_0/local' prefix 'parlayx_payment_volume_charging_local_xsd'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

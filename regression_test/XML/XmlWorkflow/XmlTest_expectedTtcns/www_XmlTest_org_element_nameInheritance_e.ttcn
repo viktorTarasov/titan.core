@@ -48,20 +48,20 @@ type record NameInheritance
 	XSD.String second
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.UnsignedShort CodeType_15 (0 .. 65535)
 with {
-variant "name as 'codeType-15'";
+  variant "name as 'codeType-15'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/element_nameInheritance' prefix 'xs'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/element_nameInheritance' prefix 'xs'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

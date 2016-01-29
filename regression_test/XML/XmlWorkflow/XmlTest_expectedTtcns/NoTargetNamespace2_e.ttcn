@@ -41,18 +41,18 @@ import from XSD all;
 
 type XSD.String AttrNoTargetNamespace
 with {
-variant "attribute";
+  variant "attribute";
 };
 
 
 type XSD.String AttrNoTargetNamespace2
 with {
-variant "attribute";
+  variant "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

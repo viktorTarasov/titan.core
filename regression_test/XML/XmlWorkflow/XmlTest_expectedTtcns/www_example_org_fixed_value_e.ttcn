@@ -41,121 +41,121 @@ import from XSD all;
 
 type XSD.String StringType ("a")
 with {
-variant "defaultForEmpty as 'a'";
-variant "element";
+  variant "defaultForEmpty as 'a'";
+  variant "element";
 };
 
 
 type XSD.Integer IntegerType (7)
 with {
-variant "defaultForEmpty as '7'";
-variant "element";
+  variant "defaultForEmpty as '7'";
+  variant "element";
 };
 
 
 type XSD.Float FloatType (7.0)
 with {
-variant "defaultForEmpty as '7.0'";
-variant "element";
+  variant "defaultForEmpty as '7.0'";
+  variant "element";
 };
 
 
 type XSD.Double DoubleType (7.0)
 with {
-variant "defaultForEmpty as '7.0'";
-variant "element";
+  variant "defaultForEmpty as '7.0'";
+  variant "element";
 };
 
 
 type XSD.Boolean BooleanType (true)
 with {
-variant "defaultForEmpty as 'true'";
-variant "element";
-//variant "text 'true' as '1'";
-//variant "text 'false' as '0'";
+  variant "defaultForEmpty as 'true'";
+  variant "element";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 };
 
 
 type XSD.Boolean BooleanType2 (false)
 with {
-variant "defaultForEmpty as '0'";
-variant "element";
-//variant "text 'true' as '1'";
-//variant "text 'false' as '0'";
+  variant "defaultForEmpty as '0'";
+  variant "element";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 };
 
 
 type XSD.Date DateType ("2011-11-11")
 with {
-variant "defaultForEmpty as '2011-11-11'";
-variant "element";
+  variant "defaultForEmpty as '2011-11-11'";
+  variant "element";
 };
 
 
 type XSD.Time TimeType ("11:11:11")
 with {
-variant "defaultForEmpty as '11:11:11'";
-variant "element";
+  variant "defaultForEmpty as '11:11:11'";
+  variant "element";
 };
 
 
 type XSD.DateTime DateTimeType ("2002-05-30T09:00:00")
 with {
-variant "defaultForEmpty as '2002-05-30T09:00:00'";
-variant "element";
+  variant "defaultForEmpty as '2002-05-30T09:00:00'";
+  variant "element";
 };
 
 
 type XSD.GDay DayType ("---13")
 with {
-variant "defaultForEmpty as '---13'";
-variant "element";
+  variant "defaultForEmpty as '---13'";
+  variant "element";
 };
 
 
 type XSD.GMonth MonthType ("--11")
 with {
-variant "defaultForEmpty as '--11'";
-variant "element";
+  variant "defaultForEmpty as '--11'";
+  variant "element";
 };
 
 
 type XSD.GMonthDay MonthDayType ("--11-30")
 with {
-variant "defaultForEmpty as '--11-30'";
-variant "element";
+  variant "defaultForEmpty as '--11-30'";
+  variant "element";
 };
 
 
 type XSD.GYear YearType ("1999")
 with {
-variant "defaultForEmpty as '1999'";
-variant "element";
+  variant "defaultForEmpty as '1999'";
+  variant "element";
 };
 
 
 type XSD.GYearMonth YearMonthType ("1999-11")
 with {
-variant "defaultForEmpty as '1999-11'";
-variant "element";
+  variant "defaultForEmpty as '1999-11'";
+  variant "element";
 };
 
 
 type XSD.HexBinary HexType
 with {
-variant "element";
+  variant "element";
 };
 
 
 type XSD.Base64Binary Base64Type
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/fixed/value'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/fixed/value'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

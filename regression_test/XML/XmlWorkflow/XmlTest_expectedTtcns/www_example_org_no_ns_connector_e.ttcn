@@ -41,8 +41,8 @@ import from XSD all;
 
 type Java_attribute_1 Java_attribute
 with {
-variant "name as 'java-attribute'";
-variant "element";
+  variant "name as 'java-attribute'";
+  variant "element";
 };
 
 
@@ -52,18 +52,18 @@ type record Java_attribute_1
 	XSD.String xml_accessor_type optional
 }
 with {
-variant "name as 'java-attribute'";
-variant "abstract";
-variant (java_attribute) "name as 'java-attribute'";
-variant (java_attribute) "attribute";
-variant (xml_accessor_type) "name as 'xml-accessor-type'";
-variant (xml_accessor_type) "attribute";
+  variant "name as 'java-attribute'";
+  variant "abstract";
+  variant (java_attribute) "name as 'java-attribute'";
+  variant (java_attribute) "attribute";
+  variant (xml_accessor_type) "name as 'xml-accessor-type'";
+  variant (xml_accessor_type) "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/no/ns/connector'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/no/ns/connector'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

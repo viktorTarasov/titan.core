@@ -64,10 +64,10 @@ type record IntegratedSite
 	} bladeSystems
 }
 with {
-variant "element";
-variant (bladeSystems) "name as capitalized";
-variant (bladeSystems.bladeSystem_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-]) "name as 'BladeSystem'";
+  variant "element";
+  variant (bladeSystems) "name as capitalized";
+  variant (bladeSystems.bladeSystem_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-]) "name as 'BladeSystem'";
 };
 
 
@@ -82,10 +82,10 @@ type record IntegratedSite2
 	} bladeSystems2
 }
 with {
-variant "element";
-variant (bladeSystems2) "name as capitalized";
-variant (bladeSystems2.bladeSystem2_list) "untagged";
-variant (bladeSystems2.bladeSystem2_list[-]) "name as 'BladeSystem2'";
+  variant "element";
+  variant (bladeSystems2) "name as capitalized";
+  variant (bladeSystems2.bladeSystem2_list) "untagged";
+  variant (bladeSystems2.bladeSystem2_list[-]) "name as 'BladeSystem2'";
 };
 
 
@@ -97,8 +97,8 @@ type record BladeSystem2
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.ericsson.com/is/isco/IntegratedSite/R4L06/R4AB_1.02' prefix 'IntegratedSite'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.ericsson.com/is/isco/IntegratedSite/R4L06/R4AB_1.02' prefix 'IntegratedSite'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

@@ -203,7 +203,7 @@ static void printProductinfo() {
 
 static void printUsage(const char * argv0) {
   fprintf(stderr, "\n"
-    "usage: %s [-cepstVwx] [-f file] schema.xsd ...\n"
+    "usage: %s [-ceghpstVwx] [-f file] schema.xsd ...\n"
     "	or %s -v\n"
     "\n"
     "OPTIONS:\n"
@@ -285,7 +285,8 @@ static bool generatePredefinedModules() {
     fclose(fileUsefulTtcn3Types);
   }
 
-  if (stat("XSD.ttcn", &stFileInfo) != 0) {
+  //XSD.ttcn changed
+  //if (stat("XSD.ttcn", &stFileInfo) != 0) {
     extern const char *moduleXSD;
     FILE *fileXsd = fopen("XSD.ttcn", "w");
     if (fileXsd == NULL) {
@@ -297,7 +298,7 @@ static bool generatePredefinedModules() {
       fprintf(stderr, "Notify: File \'XSD.ttcn\' was generated.\n");
     }
     fclose(fileXsd);
-  }
+  //}
   return true;
 }
 

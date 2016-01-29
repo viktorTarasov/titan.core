@@ -47,13 +47,13 @@ type XSD.String Mystring length(4 .. infinity);
 
 type XSD.String Mystring_1 length(4 .. infinity)
 with {
-variant "name as 'Mystring'";
+  variant "name as 'Mystring'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/string_withOverDefinition' prefix 'ns7'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/string_withOverDefinition' prefix 'ns7'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

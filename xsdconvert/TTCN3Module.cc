@@ -334,7 +334,7 @@ void TTCN3Module::generate_with_statement(FILE * file, List<NamespaceType> used_
 
   fprintf(file,
     "with {\n"
-    "encode \"XML\";\n"
+    "  encode \"XML\";\n"
     );
 
   bool xsi = false;
@@ -359,7 +359,7 @@ void TTCN3Module::generate_with_statement(FILE * file, List<NamespaceType> used_
   }
 
   if (targetNamespace != "NoTargetNamespace") {
-    fprintf(file, "variant \"namespace as \'%s\'", targetNamespace.c_str());
+    fprintf(file, "  variant \"namespace as \'%s\'", targetNamespace.c_str());
     if (!targetNamespace_connectedPrefix.empty()) {
       fprintf(file, " prefix \'%s\'", targetNamespace_connectedPrefix.c_str());
     }
@@ -369,15 +369,15 @@ void TTCN3Module::generate_with_statement(FILE * file, List<NamespaceType> used_
 
   if (xsi) {
     fprintf(file,
-      "variant \"controlNamespace \'http://www.w3.org/2001/XMLSchema-instance\' prefix \'xsi\'\";\n");
+      "  variant \"controlNamespace \'http://www.w3.org/2001/XMLSchema-instance\' prefix \'xsi\'\";\n");
   }
   if (attributeFormDefault == qualified) {
     fprintf(file,
-      "variant \"attributeFormQualified\";\n");
+      "  variant \"attributeFormQualified\";\n");
   }
   if (elementFormDefault == qualified) {
     fprintf(file,
-      "variant \"elementFormQualified\";\n");
+      "  variant \"elementFormQualified\";\n");
   }
   fprintf(file,
     "}\n");

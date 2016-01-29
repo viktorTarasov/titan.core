@@ -119,6 +119,61 @@ type charstring CharstringPatternRef (pattern "x{ConstRef}x");
 
 type universal charstring UnicodePattern (pattern "abc?\q{ 0, 0, 1, 113}z\\q1\q{0,0,0,2}");
 
+type union U {
+  integer i,
+  charstring c,
+  integer j
+}
+with {
+  variant "JSON: as value";
+}
+
+type U Uwithvalue (
+  { i := 1 },
+  { c := "zssfss" },
+  { j := 2 }
+);
+
+type union U2 {
+  integer i,
+  Rec r
+}
+with {
+  variant "JSON: as value";
+}
+
+type U2 U2Values (
+  { i := 8 },
+  { r := { 7, 1, omit, true } }
+);
+
+type set ComplexSet {
+  Rec r,
+  record of Rec ro,
+  integer i optional
+}
+
+type ComplexSet ComplexSetValues (
+  { r := { omit, 0, omit, false }, ro := { { 7, 1, omit, true }, { omit, 2, '1001'O, true } }, i := omit }
+);
+
+type record of U2 U2List;
+
+type U2List U2ListValues (
+  { { r := { 7, 1, omit, false } }, { i := 8 } },
+  { { r := { 5, 0, '1001'O, true } }, { i := 2 } }
+);
+
+type set SetWithAsValues {
+  integer num,
+  U2List u2s
+}
+
+type SetWithAsValues RestrictedSetWithAsValues (
+  { num := 6, u2s := { { r := { 7, 1, omit, false } }, { i := 8 } } },
+  { num := 1, u2s := { { r := { 5, 0, '1001'O, true } }, { i := 2 } } }
+);
+
 }
 with {
   extension "anytype integer, boolean, bitstring, charstring"

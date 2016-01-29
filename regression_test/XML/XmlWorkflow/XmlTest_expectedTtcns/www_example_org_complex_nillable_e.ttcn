@@ -65,20 +65,20 @@ type record Conditions_type
 	} request_list
 }
 with {
-variant "name as 'conditions-type'";
-variant (caller_identity) "name as 'caller-identity'";
-variant (caller_identity) "useNil";
-variant (caller_identity.content.choice) "untagged";
-variant (media_list) "untagged";
-variant (media_list[-]) "name as 'media'";
-variant (media_list[-]) "useNil";
-variant (status_list) "untagged";
-variant (status_list[-]) "name as 'status'";
-variant (status_list[-]) "useNil";
-variant (identity) "useNil";
-variant (request_list) "untagged";
-variant (request_list[-]) "name as 'request'";
-variant (request_list[-]) "useNil";
+  variant "name as 'conditions-type'";
+  variant (caller_identity) "name as 'caller-identity'";
+  variant (caller_identity) "useNil";
+  variant (caller_identity.content.choice) "untagged";
+  variant (media_list) "untagged";
+  variant (media_list[-]) "name as 'media'";
+  variant (media_list[-]) "useNil";
+  variant (status_list) "untagged";
+  variant (status_list[-]) "name as 'status'";
+  variant (status_list[-]) "useNil";
+  variant (identity) "useNil";
+  variant (request_list) "untagged";
+  variant (request_list[-]) "name as 'request'";
+  variant (request_list[-]) "useNil";
 };
 
 
@@ -88,9 +88,9 @@ type record Anything_nil
 	} content optional
 }
 with {
-variant "name as 'anything-nil'";
-variant "useNil";
-variant "element";
+  variant "name as 'anything-nil'";
+  variant "useNil";
+  variant "element";
 };
 
 
@@ -99,9 +99,9 @@ type record Anything_nil2
 	XSD.AnyType content optional
 }
 with {
-variant "name as 'anything-nil2'";
-variant "useNil";
-variant "element";
+  variant "name as 'anything-nil2'";
+  variant "useNil";
+  variant "element";
 };
 
 
@@ -124,23 +124,23 @@ type record Common
 	} integration_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (integration_list) "untagged";
-variant (integration_list[-]) "name as 'integration'";
-variant (integration_list[-]) "useNil";
-variant (integration_list[-].bar) "attribute";
-variant (integration_list[-].foo) "attribute";
-variant (integration_list[-].goo) "attribute";
-variant (integration_list[-].attr) "anyAttributes from 'www.example.org/complex/nillable'";
-variant (integration_list[-].content.forename) "useNil";
-variant (integration_list[-].content.surname) "useNil";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (integration_list) "untagged";
+  variant (integration_list[-]) "name as 'integration'";
+  variant (integration_list[-]) "useNil";
+  variant (integration_list[-].bar) "attribute";
+  variant (integration_list[-].foo) "attribute";
+  variant (integration_list[-].goo) "attribute";
+  variant (integration_list[-].attr) "anyAttributes from 'www.example.org/complex/nillable'";
+  variant (integration_list[-].content.forename) "useNil";
+  variant (integration_list[-].content.surname) "useNil";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/complex/nillable'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/complex/nillable'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

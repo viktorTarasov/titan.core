@@ -44,8 +44,8 @@ import from www_example_org_substitutiongroup_ref all;
 
 type Subsgroup_group Refgroup
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -54,7 +54,7 @@ type record ComplexGroup
 	Subsgroup_group subsgroup
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -64,16 +64,16 @@ type union Subsgroup_group
 	Replace replace_
 }
 with {
-variant "untagged";
-variant (subsgroup) "form as qualified";
-variant (subsgroup) "abstract";
-variant (replace_) "name as 'replace'";
+  variant "untagged";
+  variant (subsgroup) "form as qualified";
+  variant (subsgroup) "abstract";
+  variant (replace_) "name as 'replace'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/substitutiongroup/main' prefix 'A'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/substitutiongroup/main' prefix 'A'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

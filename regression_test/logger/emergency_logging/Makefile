@@ -104,11 +104,11 @@ TARGET = EmergencyLogTest
 # Do not modify these unless you know what you are doing...
 # Platform specific additional libraries:
 #
-SOLARIS_LIBS = -lsocket -lnsl -lxml2
-SOLARIS8_LIBS = -lsocket -lnsl -lxml2
-LINUX_LIBS = -lxml2
-FREEBSD_LIBS = -lxml2
-WIN32_LIBS = -lxml2
+SOLARIS_LIBS += -lsocket -lnsl -lxml2
+SOLARIS8_LIBS += -lsocket -lnsl -lxml2
+LINUX_LIBS += -lxml2
+FREEBSD_LIBS += -lxml2
+WIN32_LIBS += -lxml2
 
 #
 # Rules for building the executable...

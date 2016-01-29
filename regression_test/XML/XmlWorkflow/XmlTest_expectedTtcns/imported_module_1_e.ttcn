@@ -41,13 +41,13 @@ import from XSD all;
 
 type XSD.Integer MyType
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'imported_module_'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'imported_module_'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

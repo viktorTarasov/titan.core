@@ -379,6 +379,11 @@ int JSON_Tokenizer::put_next_token(json_token_t p_token, const char* p_token_str
   return buf_len - start_len;
 }
 
+void JSON_Tokenizer::put_raw_data(const char* p_data, size_t p_len)
+{
+  buf_ptr = mputstrn(buf_ptr, p_data, p_len);
+  buf_len += p_len;
+}
 
 char* convert_to_json_string(const char* str)
 {

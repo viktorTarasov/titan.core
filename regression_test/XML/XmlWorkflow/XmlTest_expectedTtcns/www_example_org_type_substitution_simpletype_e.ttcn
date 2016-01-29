@@ -41,47 +41,47 @@ import from XSD all;
 
 type String_derivations Head
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type String_derivations Head_1
 with {
-variant "name as 'head_'";
-variant "element";
+  variant "name as 'head_'";
+  variant "element";
 };
 
 
 type Stringtype_derivations Head2
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.String Stringtype
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String Stringtype2 length(5)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type Integer_derivations Int
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.Integer ExtInt
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -90,8 +90,8 @@ variant "name as uncapitalized";
 
 type Base64Binary_derivations Elem
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -100,7 +100,7 @@ type XSD.Base64Binary CrypBinary;
 
 type Signature SignatureValue
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -110,15 +110,15 @@ type record Signature
 	XSD.Base64Binary base
 }
 with {
-variant (id) "name as capitalized";
-variant (id) "attribute";
-variant (base) "untagged";
+  variant (id) "name as capitalized";
+  variant (id) "attribute";
+  variant (base) "untagged";
 };
 
 
 type DataType Data
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -130,20 +130,21 @@ type record DataType
 	} choice
 }
 with {
-variant (choice) "untagged";
-variant (choice.sKI) "name as capitalized";
-variant (choice.cert) "name as capitalized";
+  variant (choice) "untagged";
+  variant (choice.sKI) "name as capitalized";
+  variant (choice.cert) "name as capitalized";
 };
 
 
 type union String_derivations
 {
 	XSD.String string,
-	Stringtype_derivations stringtype
+	Stringtype stringtype,
+	Stringtype2 stringtype2
 }
 with {
-variant "name as uncapitalized";
-variant "useType";
+  variant "name as uncapitalized";
+  variant "useType";
 };
 
 
@@ -153,8 +154,8 @@ type union Stringtype_derivations
 	Stringtype2 stringtype2
 }
 with {
-variant "name as uncapitalized";
-variant "useType";
+  variant "name as uncapitalized";
+  variant "useType";
 };
 
 
@@ -164,9 +165,9 @@ type union Integer_derivations
 	ExtInt extInt
 }
 with {
-variant "name as uncapitalized";
-variant "useType";
-variant (integer_) "name as 'integer'";
+  variant "name as uncapitalized";
+  variant "useType";
+  variant (integer_) "name as 'integer'";
 };
 
 
@@ -176,15 +177,15 @@ type union Base64Binary_derivations
 	CrypBinary crypBinary
 }
 with {
-variant "name as uncapitalized";
-variant "useType";
-variant (crypBinary) "name as capitalized";
+  variant "name as uncapitalized";
+  variant "useType";
+  variant (crypBinary) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/type/substitution/simpletype' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/type/substitution/simpletype' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

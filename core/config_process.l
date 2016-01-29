@@ -628,6 +628,14 @@ DEBUG_TESTPORT	{
 	yylval.logseverity_val = TTCN_Logger::DEBUG_TESTPORT;
 	return LoggingBit;
 	}
+DEBUG_USER	{
+	yylval.logseverity_val = TTCN_Logger::DEBUG_USER;
+	return LoggingBit;
+	}
+DEBUG_FRAMEWORK	{
+	yylval.logseverity_val = TTCN_Logger::DEBUG_FRAMEWORK;
+	return LoggingBit;
+	}
 DEBUG_UNQUALIFIED		{
 	yylval.logseverity_val = TTCN_Logger::DEBUG_UNQUALIFIED;
 	return LoggingBit;

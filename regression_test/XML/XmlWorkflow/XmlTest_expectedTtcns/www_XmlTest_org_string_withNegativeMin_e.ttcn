@@ -42,13 +42,13 @@ import from XSD all;
 
 type XSD.String StringNegativeMin
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/string_withNegativeMin' prefix 'ns8'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/string_withNegativeMin' prefix 'ns8'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

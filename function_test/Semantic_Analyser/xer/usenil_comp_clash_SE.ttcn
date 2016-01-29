@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  ******************************************************************************/
 module usenil_comp_clash_SE {	//^In TTCN-3 module `usenil_comp_clash_SE'://
-// 33.2.3 The OPTIONAL component shall not have any of: ANY-ELEMENT, ANY-ATTRIBUTES, DEFAULT-FOR-EMPTY, EMBED-VALUES, PI-OR-COMMENT, UNTAGGED, USE-NIL, USE-ORDER or USETYPE
+// 33.2.3 The OPTIONAL component shall not have any of: ANY-ELEMENT, ANY-ATTRIBUTES, DEFAULT-FOR-EMPTY, PI-OR-COMMENT, UNTAGGED, USE-NIL, USE-ORDER or USETYPE
 /*
 ANY-ATTRIBUTES member can't be optional
 Last member for USE-NIL must be optional
@@ -22,7 +22,7 @@ with {
 
 
 type record U2 {	                //^In type definition//
-  universal charstring ae optional	//^error: The OPTIONAL component of USE-NIL cannot have any of the following encoding instructions: ANY-ATTRIBUTES, ANY-ELEMENT, DEFAULT-FOR-EMPTY, EMBED-VALUES, PI-OR-COMMENT, UNTAGGED, USE-NIL, USE-ORDER, USE-TYPE//
+  universal charstring ae optional	//^error: The OPTIONAL component of USE-NIL cannot have any of the following encoding instructions: ANY-ATTRIBUTES, ANY-ELEMENT, DEFAULT-FOR-EMPTY, PI-OR-COMMENT, UNTAGGED, USE-NIL, USE-ORDER, USE-TYPE//
 }
 with {
   variant "useNil";
@@ -31,7 +31,7 @@ with {
 
 
 type record U3 {	  //^In type definition//
-  integer s optional  //^error: The OPTIONAL component of USE-NIL cannot have any of the following encoding instructions: ANY-ATTRIBUTES, ANY-ELEMENT, DEFAULT-FOR-EMPTY, EMBED-VALUES, PI-OR-COMMENT, UNTAGGED, USE-NIL, USE-ORDER, USE-TYPE//
+  integer s optional  //^error: The OPTIONAL component of USE-NIL cannot have any of the following encoding instructions: ANY-ATTRIBUTES, ANY-ELEMENT, DEFAULT-FOR-EMPTY, PI-OR-COMMENT, UNTAGGED, USE-NIL, USE-ORDER, USE-TYPE//
 }
 with {
   variant "useNil";
@@ -39,9 +39,9 @@ with {
 }
 
 
-type record U4 {	//^In type definition//
+type record U4 {
   integer first,
-  record { //^error: The OPTIONAL component of USE-NIL cannot have any of the following encoding instructions: ANY-ATTRIBUTES, ANY-ELEMENT, DEFAULT-FOR-EMPTY, EMBED-VALUES, PI-OR-COMMENT, UNTAGGED, USE-NIL, USE-ORDER, USE-TYPE//
+  record {
     record of universal charstring emb
   } last optional
 }
@@ -53,7 +53,7 @@ with {
 
 
 type record U5 {//^In type definition//	
-  integer last	//^error: The OPTIONAL component of USE-NIL cannot have any of the following encoding instructions: ANY-ATTRIBUTES, ANY-ELEMENT, DEFAULT-FOR-EMPTY, EMBED-VALUES, PI-OR-COMMENT, UNTAGGED, USE-NIL, USE-ORDER, USE-TYPE//
+  integer last	//^error: The OPTIONAL component of USE-NIL cannot have any of the following encoding instructions: ANY-ATTRIBUTES, ANY-ELEMENT, DEFAULT-FOR-EMPTY, PI-OR-COMMENT, UNTAGGED, USE-NIL, USE-ORDER, USE-TYPE//
 }
 with {
   variant "useNil";

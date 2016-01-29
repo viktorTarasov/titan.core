@@ -1530,6 +1530,8 @@ LoggingBitOrCollection:
     case TTCN_Logger::DEBUG_UNQUALIFIED:
 	$$.add_sev(TTCN_Logger::DEBUG_ENCDEC);
 	$$.add_sev(TTCN_Logger::DEBUG_TESTPORT);
+	$$.add_sev(TTCN_Logger::DEBUG_USER);
+	$$.add_sev(TTCN_Logger::DEBUG_FRAMEWORK);
 	$$.add_sev(TTCN_Logger::DEBUG_UNQUALIFIED);
 	break;
     case TTCN_Logger::LOG_ALL_IMPORTANT:

@@ -46,37 +46,37 @@ import from www_ericsson_com_is_isco_IsTypes_R4L06_R4AB_1_02_e all;
 
 type XSD.UnsignedShort LevelBComp1Type_30 (0 .. 63)
 with {
-variant "name as 'levelBComp1Type-30'";
+  variant "name as 'levelBComp1Type-30'";
 };
 
 
 type XSD.UnsignedShort MtuType_71 (256 .. 9180)
 with {
-variant "name as 'mtuType-71'";
+  variant "name as 'mtuType-71'";
 };
 
 
 type XSD.UnsignedShort FrequencyAComp4Type_51 (1 .. 4000)
 with {
-variant "name as 'frequencyAComp4Type-51'";
+  variant "name as 'frequencyAComp4Type-51'";
 };
 
 
 type XSD.Token EchoDelayType_163 (pattern "0|64|128")
 with {
-variant "name as 'echoDelayType-163'";
+  variant "name as 'echoDelayType-163'";
 };
 
 
 type XSD.Token EncodingNameType_103 length(1 .. 16)
 with {
-variant "name as 'encodingNameType-103'";
+  variant "name as 'encodingNameType-103'";
 };
 
 
 type XSD.UnsignedShort FrequencyBComp4Type_53 (1 .. 4000)
 with {
-variant "name as 'frequencyBComp4Type-53'";
+  variant "name as 'frequencyBComp4Type-53'";
 };
 
 
@@ -86,13 +86,13 @@ type XSD.UnsignedShort NibsIpPort (4096 .. 65535);
 
 type XSD.UnsignedShort DownSupIntervalType_75 (1 .. 18000)
 with {
-variant "name as 'downSupIntervalType-75'";
+  variant "name as 'downSupIntervalType-75'";
 };
 
 
 type XSD.UnsignedShort FrequencyAComp2Type_35 (1 .. 4000)
 with {
-variant "name as 'frequencyAComp2Type-35'";
+  variant "name as 'frequencyAComp2Type-35'";
 };
 
 
@@ -153,43 +153,43 @@ type XSD.UnsignedShort IntfImageType (1 .. 6);
 
 type XSD.UnsignedShort NetsyncTxClockSrcType_86 (1 .. 4)
 with {
-variant "name as 'netsyncTxClockSrcType-86'";
+  variant "name as 'netsyncTxClockSrcType-86'";
 };
 
 
 type XSD.Token DataLinkStatusType_197 (pattern "notAvailable|established|remoteReleased|localReleased|localEstablishing")
 with {
-variant "name as 'dataLinkStatusType-197'";
+  variant "name as 'dataLinkStatusType-197'";
 };
 
 
 type XSD.UnsignedShort FrequencyBComp2Type_37 (1 .. 4000)
 with {
-variant "name as 'frequencyBComp2Type-37'";
+  variant "name as 'frequencyBComp2Type-37'";
 };
 
 
 type XSD.UnsignedShort To3g324mDegVideoCallThrType_19 (0 .. 100)
 with {
-variant "name as 'to3g324mDegVideoCallThrType-19'";
+  variant "name as 'to3g324mDegVideoCallThrType-19'";
 };
 
 
 type XSD.UnsignedShort PathType_90 (1 .. 3)
 with {
-variant "name as 'pathType-90'";
+  variant "name as 'pathType-90'";
 };
 
 
 type XSD.UnsignedInt TrafficSupervisionExcessiveBandwidthThrType_80 (0 .. 2000000)
 with {
-variant "name as 'trafficSupervisionExcessiveBandwidthThrType-80'";
+  variant "name as 'trafficSupervisionExcessiveBandwidthThrType-80'";
 };
 
 
 type XSD.UnsignedShort MaxShutdownRetransType_70 (1 .. 16)
 with {
-variant "name as 'maxShutdownRetransType-70'";
+  variant "name as 'maxShutdownRetransType-70'";
 };
 
 
@@ -203,19 +203,19 @@ type XSD.UnsignedShort IntfLinkUpDownTrap (1 .. 2);
 
 type XSD.UnsignedShort UdpInactTimerType_152 (1 .. 10)
 with {
-variant "name as 'udpInactTimerType-152'";
+  variant "name as 'udpInactTimerType-152'";
 };
 
 
 type XSD.UnsignedShort LevelAComp4Type_52 (0 .. 63)
 with {
-variant "name as 'levelAComp4Type-52'";
+  variant "name as 'levelAComp4Type-52'";
 };
 
 
 type XSD.UnsignedShort DefaultLocalPrefixMaskLengthType_2 (0 .. 32)
 with {
-variant "name as 'defaultLocalPrefixMaskLengthType-2'";
+  variant "name as 'defaultLocalPrefixMaskLengthType-2'";
 };
 
 
@@ -227,31 +227,31 @@ type XSD.UnsignedInt GwmCounter32 (0 .. 4294967295);
 
 type XSD.UnsignedShort MaskLengthType_183 (1 .. 32)
 with {
-variant "name as 'maskLengthType-183'";
+  variant "name as 'maskLengthType-183'";
 };
 
 
 type XSD.Token EchoDelayType_154 (pattern "0|64|128")
 with {
-variant "name as 'echoDelayType-154'";
+  variant "name as 'echoDelayType-154'";
 };
 
 
 type XSD.UnsignedShort MaxNumberOfRetransmissionsType_144 (0 .. 10)
 with {
-variant "name as 'maxNumberOfRetransmissionsType-144'";
+  variant "name as 'maxNumberOfRetransmissionsType-144'";
 };
 
 
 type XSD.UnsignedShort LocalPortType_124 (1024 .. 65535)
 with {
-variant "name as 'localPortType-124'";
+  variant "name as 'localPortType-124'";
 };
 
 
 type XSD.UnsignedShort LevelBComp4Type_54 (0 .. 63)
 with {
-variant "name as 'levelBComp4Type-54'";
+  variant "name as 'levelBComp4Type-54'";
 };
 
 
@@ -292,19 +292,19 @@ type XSD.UnsignedShort IntfUasMode (1 .. 2);
 
 type XSD.UnsignedShort LevelAComp2Type_36 (0 .. 63)
 with {
-variant "name as 'levelAComp2Type-36'";
+  variant "name as 'levelAComp2Type-36'";
 };
 
 
 type XSD.UnsignedShort LevelBComp2Type_38 (0 .. 63)
 with {
-variant "name as 'levelBComp2Type-38'";
+  variant "name as 'levelBComp2Type-38'";
 };
 
 
 type XSD.UnsignedShort MaxInitRetransType_69 (1 .. 16)
 with {
-variant "name as 'maxInitRetransType-69'";
+  variant "name as 'maxInitRetransType-69'";
 };
 
 
@@ -341,13 +341,13 @@ type XSD.UnsignedShort DspcpToneModulation (0 .. 2);
 
 type XSD.UnsignedShort FrequencyBComp5Type_61 (1 .. 4000)
 with {
-variant "name as 'frequencyBComp5Type-61'";
+  variant "name as 'frequencyBComp5Type-61'";
 };
 
 
 type XSD.UnsignedShort ToIpDegVideoBitrateThrH263v1Type_12 (0 .. 52)
 with {
-variant "name as 'toIpDegVideoBitrateThrH263v1Type-12'";
+  variant "name as 'toIpDegVideoBitrateThrH263v1Type-12'";
 };
 
 
@@ -358,85 +358,85 @@ type XSD.Token IntfIfAlias length(0 .. 64);
 
 type XSD.Token H248IdType_104 (pattern "busy|dial|ringing|congestion|number-unobtainable|progress|busy-operator|second-dial|time-limit|line-lockout|special-dial|acceptance|refusal|special-recall-dial|distinctive-dial|message-wait|call-waiting|call-waiting-alert-pattern-1|call-waiting-alert-pattern-2|call-waiting-alert-pattern-3|trunk-queue|subscriber-trunk-dial|warning|onhold")
 with {
-variant "name as 'h248IdType-104'";
+  variant "name as 'h248IdType-104'";
 };
 
 
 type XSD.Token SrcAddressFilteringType_116 (pattern "off|address|addressAndPort")
 with {
-variant "name as 'srcAddressFilteringType-116'";
+  variant "name as 'srcAddressFilteringType-116'";
 };
 
 
 type Restricted_confd_objectRef_209 BladesType_96 length(2)
 with {
-variant "name as 'bladesType-96'";
+  variant "name as 'bladesType-96'";
 };
 
 
 type XSD.UnsignedShort SendQueueLengthType_207 (1 .. 300)
 with {
-variant "name as 'sendQueueLengthType-207'";
+  variant "name as 'sendQueueLengthType-207'";
 };
 
 
 type XSD.UnsignedShort PortType_87 (0 .. 15)
 with {
-variant "name as 'portType-87'";
+  variant "name as 'portType-87'";
 };
 
 
 type XSD.UnsignedShort FrequencyAComp1Type_27 (1 .. 4000)
 with {
-variant "name as 'frequencyAComp1Type-27'";
+  variant "name as 'frequencyAComp1Type-27'";
 };
 
 
 type XSD.UnsignedShort PortType_88 (0 .. 1)
 with {
-variant "name as 'portType-88'";
+  variant "name as 'portType-88'";
 };
 
 
 type XSD.UnsignedShort FrequencyBComp1Type_29 (1 .. 4000)
 with {
-variant "name as 'frequencyBComp1Type-29'";
+  variant "name as 'frequencyBComp1Type-29'";
 };
 
 
 type XSD.Token OpStateType_190 (pattern "down|up|noAssociation|inactive")
 with {
-variant "name as 'opStateType-190'";
+  variant "name as 'opStateType-190'";
 };
 
 
 type XSD.UnsignedShort EstDataStatJitBufType_110 (5 .. 100)
 with {
-variant "name as 'estDataStatJitBufType-110'";
+  variant "name as 'estDataStatJitBufType-110'";
 };
 
 
 type XSD.UnsignedShort LevelAComp5Type_60 (0 .. 63)
 with {
-variant "name as 'levelAComp5Type-60'";
+  variant "name as 'levelAComp5Type-60'";
 };
 
 
 type XSD.UnsignedShort LocalPortType_141 (1024 .. 65535)
 with {
-variant "name as 'localPortType-141'";
+  variant "name as 'localPortType-141'";
 };
 
 
 type XSD.Token IpEphTermNameType_111 length(1 .. 53)
 with {
-variant "name as 'ipEphTermNameType-111'";
+  variant "name as 'ipEphTermNameType-111'";
 };
 
 
 type XSD.UnsignedShort LevelBComp5Type_62 (0 .. 63)
 with {
-variant "name as 'levelBComp5Type-62'";
+  variant "name as 'levelBComp5Type-62'";
 };
 
 
@@ -446,7 +446,7 @@ type XSD.Int GwmInteger32 (-2147483648 .. 2147483647);
 
 type XSD.UnsignedShort ToIpDegVideoBitrateThrH263v2Type_14 (0 .. 52)
 with {
-variant "name as 'toIpDegVideoBitrateThrH263v2Type-14'";
+  variant "name as 'toIpDegVideoBitrateThrH263v2Type-14'";
 };
 
 
@@ -457,19 +457,19 @@ type XSD.UnsignedShort IntfE1DegBerThreshold (5 .. 9);
 
 type XSD.UnsignedInt DefaultTimeoutType_105 (0 .. 120000)
 with {
-variant "name as 'defaultTimeoutType-105'";
+  variant "name as 'defaultTimeoutType-105'";
 };
 
 
 type XSD.UnsignedShort RtoMaxType_65 (80 .. 50000)
 with {
-variant "name as 'rtoMaxType-65'";
+  variant "name as 'rtoMaxType-65'";
 };
 
 
 type XSD.UnsignedShort VideoBufferSizeType_5 (1000 .. 10000)
 with {
-variant "name as 'videoBufferSizeType-5'";
+  variant "name as 'videoBufferSizeType-5'";
 };
 
 
@@ -489,31 +489,31 @@ type XSD.Token GwmDevAdmState (pattern "unlocked|force_lock|locked");
 
 type XSD.UnsignedShort MaxNumberOfRetransmissionsType_127 (0 .. 10)
 with {
-variant "name as 'maxNumberOfRetransmissionsType-127'";
+  variant "name as 'maxNumberOfRetransmissionsType-127'";
 };
 
 
 type XSD.UnsignedShort IterateComp4Type_47 (1 .. 100)
 with {
-variant "name as 'iterateComp4Type-47'";
+  variant "name as 'iterateComp4Type-47'";
 };
 
 
 type XSD.UnsignedShort LevelAComp1Type_28 (0 .. 63)
 with {
-variant "name as 'levelAComp1Type-28'";
+  variant "name as 'levelAComp1Type-28'";
 };
 
 
 type XSD.UnsignedShort FrequencyAComp5Type_59 (1 .. 4000)
 with {
-variant "name as 'frequencyAComp5Type-59'";
+  variant "name as 'frequencyAComp5Type-59'";
 };
 
 
 type XSD.UnsignedShort IterateComp3Type_39 (1 .. 100)
 with {
-variant "name as 'iterateComp3Type-39'";
+  variant "name as 'iterateComp3Type-39'";
 };
 
 
@@ -532,37 +532,37 @@ type XSD.UnsignedShort NibsVlan (2 .. 3999);
 
 type XSD.UnsignedShort T95Type_150 (100 .. 10000)
 with {
-variant "name as 't95Type-150'";
+  variant "name as 't95Type-150'";
 };
 
 
 type XSD.UnsignedShort ForcedVideoSegmType_10 (0 .. 13)
 with {
-variant "name as 'forcedVideoSegmType-10'";
+  variant "name as 'forcedVideoSegmType-10'";
 };
 
 
 type XSD.UnsignedShort ChannelIdType_181 (1 .. 31)
 with {
-variant "name as 'channelIdType-181'";
+  variant "name as 'channelIdType-181'";
 };
 
 
 type XSD.Token CodecType_172 (pattern "noOverride|g711ulaw|g711alaw|g723|g726|amr|g729a|g729ab|clearchannel")
 with {
-variant "name as 'codecType-172'";
+  variant "name as 'codecType-172'";
 };
 
 
 type XSD.UnsignedShort MGCOriginatedPendingLimitType_142 (1 .. 65535)
 with {
-variant "name as 'mGCOriginatedPendingLimitType-142'";
+  variant "name as 'mGCOriginatedPendingLimitType-142'";
 };
 
 
 type XSD.UnsignedShort RemotePortType_132 (1024 .. 65535)
 with {
-variant "name as 'remotePortType-132'";
+  variant "name as 'remotePortType-132'";
 };
 
 
@@ -572,19 +572,19 @@ type XSD.Token IntfKlmNumber;
 
 type XSD.UnsignedShort To3g324mDegVideoBitrateThrH263v2Type_13 (0 .. 52)
 with {
-variant "name as 'to3g324mDegVideoBitrateThrH263v2Type-13'";
+  variant "name as 'to3g324mDegVideoBitrateThrH263v2Type-13'";
 };
 
 
 type XSD.UnsignedShort DefaultRemotePrefixMaskLengthType_3 (0 .. 32)
 with {
-variant "name as 'defaultRemotePrefixMaskLengthType-3'";
+  variant "name as 'defaultRemotePrefixMaskLengthType-3'";
 };
 
 
 type XSD.UnsignedShort FastSupIntervalType_74 (1 .. 255)
 with {
-variant "name as 'fastSupIntervalType-74'";
+  variant "name as 'fastSupIntervalType-74'";
 };
 
 
@@ -596,19 +596,19 @@ type XSD.UnsignedLong DspcpCounter64 (0 .. 18446744073709551615);
 
 type XSD.Token InterfaceNameType_195 length(0 .. 64)
 with {
-variant "name as 'interfaceNameType-195'";
+  variant "name as 'interfaceNameType-195'";
 };
 
 
 type XSD.Token OpStateType_185 (pattern "down|active|inactive|pending")
 with {
-variant "name as 'opStateType-185'";
+  variant "name as 'opStateType-185'";
 };
 
 
 type XSD.UnsignedShort To3g324mDegVideoBitrateThrMPEG4Type_15 (0 .. 52)
 with {
-variant "name as 'to3g324mDegVideoBitrateThrMPEG4Type-15'";
+  variant "name as 'to3g324mDegVideoBitrateThrMPEG4Type-15'";
 };
 
 
@@ -621,37 +621,37 @@ type XSD.UnsignedShort IntfE1LineType (1 .. 3);
 
 type XSD.UnsignedShort RtoAlphaType_66 (1 .. 4)
 with {
-variant "name as 'rtoAlphaType-66'";
+  variant "name as 'rtoAlphaType-66'";
 };
 
 
 type XSD.UnsignedInt NormalMGExecutionTimeType_147 (0 .. 600000)
 with {
-variant "name as 'normalMGExecutionTimeType-147'";
+  variant "name as 'normalMGExecutionTimeType-147'";
 };
 
 
 type XSD.UnsignedShort ActiveGcPortType_137 (1024 .. 65535)
 with {
-variant "name as 'activeGcPortType-137'";
+  variant "name as 'activeGcPortType-137'";
 };
 
 
 type XSD.Token SpcTypeType_178 (pattern "phy-eph|phy-phy|phy-vip")
 with {
-variant "name as 'spcTypeType-178'";
+  variant "name as 'spcTypeType-178'";
 };
 
 
 type XSD.Token PayloadTypeType_158 (pattern "g711ulaw|g711alaw|clearchannel")
 with {
-variant "name as 'payloadTypeType-158'";
+  variant "name as 'payloadTypeType-158'";
 };
 
 
 type XSD.Token EncodingType_139 (pattern "prettytext|compacttext")
 with {
-variant "name as 'encodingType-139'";
+  variant "name as 'encodingType-139'";
 };
 
 
@@ -663,31 +663,31 @@ type XSD.UnsignedShort DspcpVfuGeneration (0 .. 1);
 
 type XSD.UnsignedInt NormalMGExecutionTimeType_130 (0 .. 600000)
 with {
-variant "name as 'normalMGExecutionTimeType-130'";
+  variant "name as 'normalMGExecutionTimeType-130'";
 };
 
 
 type XSD.UnsignedShort ChannelIdType_171 (1 .. 31)
 with {
-variant "name as 'channelIdType-171'";
+  variant "name as 'channelIdType-171'";
 };
 
 
 type XSD.Token IdType_161 length(1 .. 61)
 with {
-variant "name as 'idType-161'";
+  variant "name as 'idType-161'";
 };
 
 
 type XSD.UnsignedShort To3g324mDegVideoBitrateThrH263v1Type_11 (0 .. 52)
 with {
-variant "name as 'to3g324mDegVideoBitrateThrH263v1Type-11'";
+  variant "name as 'to3g324mDegVideoBitrateThrH263v1Type-11'";
 };
 
 
 type XSD.UnsignedShort ModulationRatioABComp3Type_42 (1 .. 99)
 with {
-variant "name as 'modulationRatioABComp3Type-42'";
+  variant "name as 'modulationRatioABComp3Type-42'";
 };
 
 
@@ -699,49 +699,49 @@ type XSD.UnsignedInt MbqmCounter32 (0 .. 4294967295);
 
 type XSD.Token CodecCNType_173 (pattern "on|off|noOverride")
 with {
-variant "name as 'codecCNType-173'";
+  variant "name as 'codecCNType-173'";
 };
 
 
 type XSD.UnsignedShort PortType_93 (0 .. 15)
 with {
-variant "name as 'portType-93'";
+  variant "name as 'portType-93'";
 };
 
 
 type XSD.UnsignedShort EventFilterType_73 (1 .. 255)
 with {
-variant "name as 'eventFilterType-73'";
+  variant "name as 'eventFilterType-73'";
 };
 
 
 type XSD.Token TypeType_164 (pattern "e1-stm1|t1-oc3|e1|t1")
 with {
-variant "name as 'typeType-164'";
+  variant "name as 'typeType-164'";
 };
 
 
 type XSD.UnsignedShort AddressGroupType_94 (0 .. 2)
 with {
-variant "name as 'addressGroupType-94'";
+  variant "name as 'addressGroupType-94'";
 };
 
 
 type XSD.UnsignedShort NpgNoType_4 (1 .. 65535)
 with {
-variant "name as 'npgNoType-4'";
+  variant "name as 'npgNoType-4'";
 };
 
 
 type XSD.Token CodecTRType_175 (pattern "on|off|noOverride")
 with {
-variant "name as 'codecTRType-175'";
+  variant "name as 'codecTRType-175'";
 };
 
 
 type XSD.Token V52Type_165 (pattern "enabled|disabled|true|false")
 with {
-variant "name as 'v52Type-165'";
+  variant "name as 'v52Type-165'";
 };
 
 
@@ -773,39 +773,39 @@ type XSD.UnsignedShort DspcpToneMode (1 .. 2);
 
 type XSD.Token PTimeType_157 (pattern "Ptime-5|Ptime-10|Ptime-20|Ptime-30|Ptime-40")
 with {
-variant "name as 'pTimeType-157'";
+  variant "name as 'pTimeType-157'";
 };
 
 
 type XSD.UnsignedShort AudioVideoDefaultSkewType_7 (0 .. 300)
 with {
-variant "name as 'audioVideoDefaultSkewType-7'";
+  variant "name as 'audioVideoDefaultSkewType-7'";
 };
 
 
 type record of ObjectRef Restricted_confd_objectRef_208
 with {
-variant "name as 'Restricted-confd_objectRef-208'";
-variant "list";
+  variant "name as 'Restricted-confd_objectRef-208'";
+  variant "list";
 };
 
 
 type XSD.UnsignedShort LipSyncFineTuningInteractiveType_8 (0 .. 300)
 with {
-variant "name as 'lipSyncFineTuningInteractiveType-8'";
+  variant "name as 'lipSyncFineTuningInteractiveType-8'";
 };
 
 
 type XSD.UnsignedShort RemotePortType_149 (1024 .. 65535)
 with {
-variant "name as 'remotePortType-149'";
+  variant "name as 'remotePortType-149'";
 };
 
 
 type record of ObjectRef Restricted_confd_objectRef_209
 with {
-variant "name as 'Restricted-confd_objectRef-209'";
-variant "list";
+  variant "name as 'Restricted-confd_objectRef-209'";
+  variant "list";
 };
 
 
@@ -820,25 +820,25 @@ type XSD.UnsignedShort IntfLinkRdiInsertion (1 .. 4);
 
 type XSD.UnsignedShort AddressOffsetType_100 (0 .. 255)
 with {
-variant "name as 'addressOffsetType-100'";
+  variant "name as 'addressOffsetType-100'";
 };
 
 
 type XSD.UnsignedShort PulseComp3Type_40 (1 .. 60000)
 with {
-variant "name as 'pulseComp3Type-40'";
+  variant "name as 'pulseComp3Type-40'";
 };
 
 
 type XSD.UnsignedShort PauseComp3Type_41 (0 .. 60000)
 with {
-variant "name as 'pauseComp3Type-41'";
+  variant "name as 'pauseComp3Type-41'";
 };
 
 
 type XSD.Token TypeType_92 (pattern "normal|fast")
 with {
-variant "name as 'typeType-92'";
+  variant "name as 'typeType-92'";
 };
 
 
@@ -855,61 +855,61 @@ type XSD.UnsignedShort NibsOperationalState (1 .. 2);
 
 type XSD.UnsignedShort MGCOriginatedPendingLimitType_125 (1 .. 65535)
 with {
-variant "name as 'mGCOriginatedPendingLimitType-125'";
+  variant "name as 'mGCOriginatedPendingLimitType-125'";
 };
 
 
 type XSD.Short TrTimerType_186 (-1 .. 3600)
 with {
-variant "name as 'trTimerType-186'";
+  variant "name as 'trTimerType-186'";
 };
 
 
 type XSD.UnsignedShort ChannelIdType_166 (1 .. 31)
 with {
-variant "name as 'channelIdType-166'";
+  variant "name as 'channelIdType-166'";
 };
 
 
 type XSD.UnsignedShort ToIpDegVideoBitrateThrMPEG4Type_16 (0 .. 52)
 with {
-variant "name as 'toIpDegVideoBitrateThrMPEG4Type-16'";
+  variant "name as 'toIpDegVideoBitrateThrMPEG4Type-16'";
 };
 
 
 type XSD.UnsignedShort HbTimerType_187 (10 .. 300)
 with {
-variant "name as 'hbTimerType-187'";
+  variant "name as 'hbTimerType-187'";
 };
 
 
 type XSD.UnsignedInt IdType_177 (0 .. 4294967295)
 with {
-variant "name as 'idType-177'";
+  variant "name as 'idType-177'";
 };
 
 
 type XSD.Token RtcpNplrType_117 (pattern "enabled|disabled")
 with {
-variant "name as 'rtcpNplrType-117'";
+  variant "name as 'rtcpNplrType-117'";
 };
 
 
 type XSD.Token TypeType_97 (pattern "block|deblock")
 with {
-variant "name as 'typeType-97'";
+  variant "name as 'typeType-97'";
 };
 
 
 type XSD.UnsignedShort RtoBetaType_67 (1 .. 4)
 with {
-variant "name as 'rtoBetaType-67'";
+  variant "name as 'rtoBetaType-67'";
 };
 
 
 type XSD.Token RtcpJdrType_118 (pattern "enabled|disabled")
 with {
-variant "name as 'rtcpJdrType-118'";
+  variant "name as 'rtcpJdrType-118'";
 };
 
 
@@ -924,19 +924,19 @@ type XSD.UnsignedShort IntfTraceLength (2 .. 3);
 
 type XSD.UnsignedInt IdType_179 (0 .. 4294967295)
 with {
-variant "name as 'idType-179'";
+  variant "name as 'idType-179'";
 };
 
 
 type XSD.Token RtcpRtdType_119 (pattern "enabled|disabled")
 with {
-variant "name as 'rtcpRtdType-119'";
+  variant "name as 'rtcpRtdType-119'";
 };
 
 
 type XSD.UnsignedInt TrafficSupervisionMaliciousPacketsHysType_79 (0 .. 59999999)
 with {
-variant "name as 'trafficSupervisionMaliciousPacketsHysType-79'";
+  variant "name as 'trafficSupervisionMaliciousPacketsHysType-79'";
 };
 
 
@@ -953,31 +953,31 @@ type XSD.Token MbqmRatio length(1 .. 6);
 
 type XSD.UnsignedShort MaxAckDelayType_200 (0 .. 2000)
 with {
-variant "name as 'maxAckDelayType-200'";
+  variant "name as 'maxAckDelayType-200'";
 };
 
 
 type XSD.Token IdType_180 length(1 .. 16)
 with {
-variant "name as 'idType-180'";
+  variant "name as 'idType-180'";
 };
 
 
 type XSD.Token InactivityMonType_140 (pattern "true|false")
 with {
-variant "name as 'inactivityMonType-140'";
+  variant "name as 'inactivityMonType-140'";
 };
 
 
 type XSD.UnsignedShort ActiveGcPortType_121 (1024 .. 65535)
 with {
-variant "name as 'activeGcPortType-121'";
+  variant "name as 'activeGcPortType-121'";
 };
 
 
 type XSD.Token IdType_182 length(1 .. 16)
 with {
-variant "name as 'idType-182'";
+  variant "name as 'idType-182'";
 };
 
 
@@ -993,7 +993,7 @@ type XSD.UnsignedInt MbqmGauge32 (0 .. 4294967295);
 
 type XSD.Token EncodingType_123 (pattern "prettytext|compacttext")
 with {
-variant "name as 'encodingType-123'";
+  variant "name as 'encodingType-123'";
 };
 
 
@@ -1008,13 +1008,13 @@ type XSD.UnsignedShort IntfLoopbackStatus (1 .. 5);
 
 type XSD.Token SubnetSegmentType_184 (pattern "GW_H248_sns1|GW_H248_sns2|GW_H248_sns3|GW_H248_sns4")
 with {
-variant "name as 'subnetSegmentType-184'";
+  variant "name as 'subnetSegmentType-184'";
 };
 
 
 type XSD.UnsignedShort TrafficSupervisionExcessiveTrafficLogType_84 (1 .. 2)
 with {
-variant "name as 'trafficSupervisionExcessiveTrafficLogType-84'";
+  variant "name as 'trafficSupervisionExcessiveTrafficLogType-84'";
 };
 
 
@@ -1026,13 +1026,13 @@ type XSD.UnsignedShort IntfBerThreshold (3 .. 9);
 
 type XSD.UnsignedInt TransactionRetentionTimerType_135 (0 .. 600000)
 with {
-variant "name as 'transactionRetentionTimerType-135'";
+  variant "name as 'transactionRetentionTimerType-135'";
 };
 
 
 type XSD.Token RtcpOnType_115 (pattern "true|false")
 with {
-variant "name as 'rtcpOnType-115'";
+  variant "name as 'rtcpOnType-115'";
 };
 
 
@@ -1044,49 +1044,49 @@ type XSD.UnsignedShort IntfLockLine (1 .. 2);
 
 type XSD.Token StateType_176 (pattern "active|idle")
 with {
-variant "name as 'stateType-176'";
+  variant "name as 'stateType-176'";
 };
 
 
 type XSD.UnsignedShort PulseComp4Type_48 (1 .. 60000)
 with {
-variant "name as 'pulseComp4Type-48'";
+  variant "name as 'pulseComp4Type-48'";
 };
 
 
 type XSD.UnsignedShort PayloadTypeNumberType_159 (96 .. 127)
 with {
-variant "name as 'payloadTypeNumberType-159'";
+  variant "name as 'payloadTypeNumberType-159'";
 };
 
 
 type XSD.UnsignedShort PauseComp4Type_49 (0 .. 60000)
 with {
-variant "name as 'pauseComp4Type-49'";
+  variant "name as 'pauseComp4Type-49'";
 };
 
 
 type XSD.UnsignedShort NsrpInitialDelayType_21 (0 .. 400)
 with {
-variant "name as 'nsrpInitialDelayType-21'";
+  variant "name as 'nsrpInitialDelayType-21'";
 };
 
 
 type XSD.UnsignedShort PulseComp2Type_32 (1 .. 60000)
 with {
-variant "name as 'pulseComp2Type-32'";
+  variant "name as 'pulseComp2Type-32'";
 };
 
 
 type XSD.UnsignedShort RtoInitialType_63 (80 .. 49000)
 with {
-variant "name as 'rtoInitialType-63'";
+  variant "name as 'rtoInitialType-63'";
 };
 
 
 type XSD.UnsignedShort PauseComp2Type_33 (0 .. 60000)
 with {
-variant "name as 'pauseComp2Type-33'";
+  variant "name as 'pauseComp2Type-33'";
 };
 
 
@@ -1125,7 +1125,7 @@ type XSD.Token GwmOpState (pattern "enabled|disabled|pending");
 
 type XSD.UnsignedShort AddrCollSupIntervalType_76 (1 .. 255)
 with {
-variant "name as 'addrCollSupIntervalType-76'";
+  variant "name as 'addrCollSupIntervalType-76'";
 };
 
 
@@ -1135,37 +1135,37 @@ type XSD.Token GwmEncoding (pattern "a-law|u-law");
 
 type XSD.UnsignedShort ModulationRatioABComp5Type_58 (1 .. 99)
 with {
-variant "name as 'modulationRatioABComp5Type-58'";
+  variant "name as 'modulationRatioABComp5Type-58'";
 };
 
 
 type XSD.UnsignedShort SubportType_89 (0 .. 63)
 with {
-variant "name as 'subportType-89'";
+  variant "name as 'subportType-89'";
 };
 
 
 type XSD.Token StartTimeType_170 length(0 .. 20)
 with {
-variant "name as 'startTimeType-170'";
+  variant "name as 'startTimeType-170'";
 };
 
 
 type XSD.Token NameType_120 length(1 .. 35)
 with {
-variant "name as 'nameType-120'";
+  variant "name as 'nameType-120'";
 };
 
 
 type XSD.UnsignedInt TransactionRetentionTimerType_151 (0 .. 600000)
 with {
-variant "name as 'transactionRetentionTimerType-151'";
+  variant "name as 'transactionRetentionTimerType-151'";
 };
 
 
 type XSD.Token DomainNameType_122 length(1 .. 32)
 with {
-variant "name as 'domainNameType-122'";
+  variant "name as 'domainNameType-122'";
 };
 
 
@@ -1180,13 +1180,13 @@ type enumerated DummyEmptyType
 	x
 }
 with {
-variant "text 'x' as ''";
+  variant "text 'x' as ''";
 };
 
 
 type XSD.UnsignedShort ModulationRatioABComp1Type_26 (1 .. 99)
 with {
-variant "name as 'modulationRatioABComp1Type-26'";
+  variant "name as 'modulationRatioABComp1Type-26'";
 };
 
 
@@ -1196,31 +1196,31 @@ type XSD.UnsignedShort GwmUnsigned16 (0 .. 65535);
 
 type XSD.Token DetailedTermInfoPackageType_107 (pattern "enabled|disabled")
 with {
-variant "name as 'detailedTermInfoPackageType-107'";
+  variant "name as 'detailedTermInfoPackageType-107'";
 };
 
 
 type XSD.UnsignedShort To3g324mDegVideoBitrateThrH264Type_17 (0 .. 52)
 with {
-variant "name as 'to3g324mDegVideoBitrateThrH264Type-17'";
+  variant "name as 'to3g324mDegVideoBitrateThrH264Type-17'";
 };
 
 
 type XSD.Token EchoDisablingModeType_108 (pattern "g164|g165|g168")
 with {
-variant "name as 'echoDisablingModeType-108'";
+  variant "name as 'echoDisablingModeType-108'";
 };
 
 
 type XSD.UnsignedInt TrafficSupervisionMaliciousPacketsThrType_78 (0 .. 60000000)
 with {
-variant "name as 'trafficSupervisionMaliciousPacketsThrType-78'";
+  variant "name as 'trafficSupervisionMaliciousPacketsThrType-78'";
 };
 
 
 type XSD.Token DeviceNameType_153 length(1 .. 61)
 with {
-variant "name as 'deviceNameType-153'";
+  variant "name as 'deviceNameType-153'";
 };
 
 
@@ -1244,13 +1244,13 @@ type XSD.UnsignedShort IntfIfAdminStatus (1 .. 2);
 
 type XSD.UnsignedShort T95Type_134 (100 .. 10000)
 with {
-variant "name as 't95Type-134'";
+  variant "name as 't95Type-134'";
 };
 
 
 type XSD.UnsignedShort PulseComp1Type_24 (1 .. 60000)
 with {
-variant "name as 'pulseComp1Type-24'";
+  variant "name as 'pulseComp1Type-24'";
 };
 
 
@@ -1268,13 +1268,13 @@ type XSD.UnsignedLong MbqmCounter64 (0 .. 18446744073709551615);
 
 type XSD.Token ProtocolSideType_205 (pattern "A|B|network|user")
 with {
-variant "name as 'protocolSideType-205'";
+  variant "name as 'protocolSideType-205'";
 };
 
 
 type XSD.UnsignedShort PauseComp1Type_25 (0 .. 60000)
 with {
-variant "name as 'pauseComp1Type-25'";
+  variant "name as 'pauseComp1Type-25'";
 };
 
 
@@ -1293,55 +1293,55 @@ type XSD.UnsignedShort IntfTxClockSource (1 .. 2);
 
 type XSD.UnsignedShort RetransmissionTimerType_206 (100 .. 10000)
 with {
-variant "name as 'retransmissionTimerType-206'";
+  variant "name as 'retransmissionTimerType-206'";
 };
 
 
 type XSD.Token NameType_136 length(1 .. 35)
 with {
-variant "name as 'nameType-136'";
+  variant "name as 'nameType-136'";
 };
 
 
 type XSD.UnsignedShort AdapJitBufSizeType_106 (20 .. 200)
 with {
-variant "name as 'adapJitBufSizeType-106'";
+  variant "name as 'adapJitBufSizeType-106'";
 };
 
 
 type XSD.UnsignedShort VideoBufferCongThrType_6 (0 .. 10000)
 with {
-variant "name as 'videoBufferCongThrType-6'";
+  variant "name as 'videoBufferCongThrType-6'";
 };
 
 
 type XSD.UnsignedShort InStreamsType_188 (2 .. 400)
 with {
-variant "name as 'inStreamsType-188'";
+  variant "name as 'inStreamsType-188'";
 };
 
 
 type XSD.Token EchoCancelType_168 (pattern "true|false")
 with {
-variant "name as 'echoCancelType-168'";
+  variant "name as 'echoCancelType-168'";
 };
 
 
 type XSD.Token OverloadNotificationsType_148 (pattern "enabled|disabled")
 with {
-variant "name as 'overloadNotificationsType-148'";
+  variant "name as 'overloadNotificationsType-148'";
 };
 
 
 type XSD.Token DomainNameType_138 length(1 .. 32)
 with {
-variant "name as 'domainNameType-138'";
+  variant "name as 'domainNameType-138'";
 };
 
 
 type XSD.Token ResourceType_98 (pattern "voice|videoStreaming|videoInteractive")
 with {
-variant "name as 'resourceType-98'";
+  variant "name as 'resourceType-98'";
 };
 
 
@@ -1351,7 +1351,7 @@ type XSD.UnsignedShort NibsIpMaskLength (0 .. 32);
 
 type XSD.Token SpeechConvType_169 (pattern "true|false")
 with {
-variant "name as 'speechConvType-169'";
+  variant "name as 'speechConvType-169'";
 };
 
 
@@ -1401,61 +1401,61 @@ type XSD.UnsignedShort IntfPathRdiInsertion (1 .. 4);
 
 type XSD.UnsignedShort RemotePortType_160 (1024 .. 65534)
 with {
-variant "name as 'remotePortType-160'";
+  variant "name as 'remotePortType-160'";
 };
 
 
 type XSD.UnsignedShort ModulationRatioABComp4Type_50 (1 .. 99)
 with {
-variant "name as 'modulationRatioABComp4Type-50'";
+  variant "name as 'modulationRatioABComp4Type-50'";
 };
 
 
 type XSD.Token OverloadNotificationsType_131 (pattern "enabled|disabled")
 with {
-variant "name as 'overloadNotificationsType-131'";
+  variant "name as 'overloadNotificationsType-131'";
 };
 
 
 type XSD.Token ProfileNameType_112 (pattern "ericsson_mgw|etsi_agw|etsi_tgw|ericsson_mgc_tgw|tispan-tgw|eri3-1|vig-3g324m")
 with {
-variant "name as 'profileNameType-112'";
+  variant "name as 'profileNameType-112'";
 };
 
 
 type XSD.Token PacketizationTimeType_102 (pattern "Ptime-60|Ptime-40|Ptime-30|Ptime-20|Ptime-10|Ptime-5|noValue")
 with {
-variant "name as 'packetizationTimeType-102'";
+  variant "name as 'packetizationTimeType-102'";
 };
 
 
 type XSD.UnsignedShort ModulationRatioABComp2Type_34 (1 .. 99)
 with {
-variant "name as 'modulationRatioABComp2Type-34'";
+  variant "name as 'modulationRatioABComp2Type-34'";
 };
 
 
 type XSD.Token IpTermNameType_155 length(1 .. 61)
 with {
-variant "name as 'ipTermNameType-155'";
+  variant "name as 'ipTermNameType-155'";
 };
 
 
 type XSD.UnsignedShort PulseComp5Type_56 (1 .. 60000)
 with {
-variant "name as 'pulseComp5Type-56'";
+  variant "name as 'pulseComp5Type-56'";
 };
 
 
 type XSD.UnsignedInt ContextIdType_167 (0 .. 4294967295)
 with {
-variant "name as 'contextIdType-167'";
+  variant "name as 'contextIdType-167'";
 };
 
 
 type XSD.UnsignedShort PauseComp5Type_57 (0 .. 60000)
 with {
-variant "name as 'pauseComp5Type-57'";
+  variant "name as 'pauseComp5Type-57'";
 };
 
 
@@ -1472,7 +1472,7 @@ type XSD.UnsignedShort IntfAlarmActivation (1 .. 2);
 
 type XSD.UnsignedShort IterateComp2Type_31 (1 .. 100)
 with {
-variant "name as 'iterateComp2Type-31'";
+  variant "name as 'iterateComp2Type-31'";
 };
 
 
@@ -1483,97 +1483,97 @@ type XSD.UnsignedInt IntfGauge32 (0 .. 4294967295);
 
 type XSD.UnsignedShort TimingOutletSrcType_85 (0 .. 15)
 with {
-variant "name as 'timingOutletSrcType-85'";
+  variant "name as 'timingOutletSrcType-85'";
 };
 
 
 type XSD.UnsignedShort LocalPortType_156 (1024 .. 4095)
 with {
-variant "name as 'localPortType-156'";
+  variant "name as 'localPortType-156'";
 };
 
 
 type XSD.UnsignedShort MGOriginatedPendingLimitType_126 (1 .. 65535)
 with {
-variant "name as 'mGOriginatedPendingLimitType-126'";
+  variant "name as 'mGOriginatedPendingLimitType-126'";
 };
 
 
 type XSD.Token LineTypeType_199 (pattern "public|private")
 with {
-variant "name as 'lineTypeType-199'";
+  variant "name as 'lineTypeType-199'";
 };
 
 
 type XSD.UnsignedShort EstAudioStatJitBufType_109 (5 .. 100)
 with {
-variant "name as 'estAudioStatJitBufType-109'";
+  variant "name as 'estAudioStatJitBufType-109'";
 };
 
 
 type XSD.UnsignedShort ToIpDegVideoCallThrType_20 (0 .. 100)
 with {
-variant "name as 'toIpDegVideoCallThrType-20'";
+  variant "name as 'toIpDegVideoCallThrType-20'";
 };
 
 
 type XSD.UnsignedShort MaxOutstandingFramesType_201 (1 .. 127)
 with {
-variant "name as 'maxOutstandingFramesType-201'";
+  variant "name as 'maxOutstandingFramesType-201'";
 };
 
 
 type XSD.UnsignedShort OutStreamsType_191 (2 .. 400)
 with {
-variant "name as 'outStreamsType-191'";
+  variant "name as 'outStreamsType-191'";
 };
 
 
 type XSD.UnsignedShort ValCookieLifeType_72 (120 .. 60000)
 with {
-variant "name as 'valCookieLifeType-72'";
+  variant "name as 'valCookieLifeType-72'";
 };
 
 
 type XSD.UnsignedShort MaxRetransmissionsType_202 (1 .. 128)
 with {
-variant "name as 'maxRetransmissionsType-202'";
+  variant "name as 'maxRetransmissionsType-202'";
 };
 
 
 type XSD.Token SctpModeType_193 (pattern "client|server")
 with {
-variant "name as 'sctpModeType-193'";
+  variant "name as 'sctpModeType-193'";
 };
 
 
 type XSD.UnsignedShort SctpHbIntervalType_133 (1 .. 10)
 with {
-variant "name as 'sctpHbIntervalType-133'";
+  variant "name as 'sctpHbIntervalType-133'";
 };
 
 
 type XSD.Token ProfileStringType_113 length(1 .. 32)
 with {
-variant "name as 'profileStringType-113'";
+  variant "name as 'profileStringType-113'";
 };
 
 
 type XSD.Token ProtocolType_204 (pattern "ISDN|DPNSS|DASS2")
 with {
-variant "name as 'protocolType-204'";
+  variant "name as 'protocolType-204'";
 };
 
 
 type XSD.UnsignedShort InterfaceIdType_194 (0 .. 65535)
 with {
-variant "name as 'interfaceIdType-194'";
+  variant "name as 'interfaceIdType-194'";
 };
 
 
 type XSD.UnsignedShort RtoMinType_64 (40 .. 5000)
 with {
-variant "name as 'rtoMinType-64'";
+  variant "name as 'rtoMinType-64'";
 };
 
 
@@ -1585,7 +1585,7 @@ type XSD.Integer NibsCounter64;
 
 type Restricted_confd_objectRef_208 NexthopType_95 length(1 .. 77)
 with {
-variant "name as 'nexthopType-95'";
+  variant "name as 'nexthopType-95'";
 };
 
 
@@ -1610,7 +1610,7 @@ type XSD.UnsignedShort NibsAdministrativeState (1 .. 3);
 
 type XSD.UnsignedShort AddrCollEventFilterlType_77 (1 .. 255)
 with {
-variant "name as 'addrCollEventFilterlType-77'";
+  variant "name as 'addrCollEventFilterlType-77'";
 };
 
 
@@ -1620,67 +1620,67 @@ type XSD.Token GwmDisplayString length(0 .. 255);
 
 type XSD.UnsignedInt MaximumWaitDelayType_128 (0 .. 600000)
 with {
-variant "name as 'maximumWaitDelayType-128'";
+  variant "name as 'maximumWaitDelayType-128'";
 };
 
 
 type XSD.Token MsgIdFormatType_129 (pattern "domain-address|domain-name|device-name")
 with {
-variant "name as 'msgIdFormatType-129'";
+  variant "name as 'msgIdFormatType-129'";
 };
 
 
 type XSD.UnsignedInt TrafficSupervisionExcessiveBandwidthHysType_81 (0 .. 1999999)
 with {
-variant "name as 'trafficSupervisionExcessiveBandwidthHysType-81'";
+  variant "name as 'trafficSupervisionExcessiveBandwidthHysType-81'";
 };
 
 
 type XSD.UnsignedShort AdminStateType_1 (0 .. 1)
 with {
-variant "name as 'adminStateType-1'";
+  variant "name as 'adminStateType-1'";
 };
 
 
 type XSD.UnsignedShort RemotePortType_192 (0 .. 65535)
 with {
-variant "name as 'remotePortType-192'";
+  variant "name as 'remotePortType-192'";
 };
 
 
 type XSD.UnsignedShort TrafficSupervisionMediaStopSupervisionType_82 (0 .. 1440)
 with {
-variant "name as 'trafficSupervisionMediaStopSupervisionType-82'";
+  variant "name as 'trafficSupervisionMediaStopSupervisionType-82'";
 };
 
 
 type XSD.Token MgcLinkStatusType_203 (pattern "unknown|locked|unlocked")
 with {
-variant "name as 'mgcLinkStatusType-203'";
+  variant "name as 'mgcLinkStatusType-203'";
 };
 
 
 type XSD.UnsignedShort MGOriginatedPendingLimitType_143 (1 .. 65535)
 with {
-variant "name as 'mGOriginatedPendingLimitType-143'";
+  variant "name as 'mGOriginatedPendingLimitType-143'";
 };
 
 
 type XSD.UnsignedShort TrafficSupervisionMaliciousTrafficLogType_83 (1 .. 2)
 with {
-variant "name as 'trafficSupervisionMaliciousTrafficLogType-83'";
+  variant "name as 'trafficSupervisionMaliciousTrafficLogType-83'";
 };
 
 
 type XSD.UnsignedShort FrequencyAComp3Type_43 (1 .. 4000)
 with {
-variant "name as 'frequencyAComp3Type-43'";
+  variant "name as 'frequencyAComp3Type-43'";
 };
 
 
 type XSD.UnsignedShort IterateComp1Type_23 (1 .. 100)
 with {
-variant "name as 'iterateComp1Type-23'";
+  variant "name as 'iterateComp1Type-23'";
 };
 
 
@@ -1690,19 +1690,19 @@ type XSD.Token GwmAlphaNumericString_l53 (pattern "[a-zA-Z0-9]*") length(1 .. 53
 
 type XSD.Token CodecPtimeType_174 (pattern "Ptime-10|Ptime-20|Ptime-30|Ptime-40|Ptime-60|noOverride")
 with {
-variant "name as 'codecPtimeType-174'";
+  variant "name as 'codecPtimeType-174'";
 };
 
 
 type XSD.Token RtcpForwardingType_114 (pattern "drop|on")
 with {
-variant "name as 'rtcpForwardingType-114'";
+  variant "name as 'rtcpForwardingType-114'";
 };
 
 
 type XSD.UnsignedShort FrequencyBComp3Type_45 (1 .. 4000)
 with {
-variant "name as 'frequencyBComp3Type-45'";
+  variant "name as 'frequencyBComp3Type-45'";
 };
 
 
@@ -1717,97 +1717,97 @@ type XSD.Token GwmAlphaNumericFsUs_beginAlpha_l35 (pattern "[a-z][a-z0-9/_]*") l
 
 type XSD.UnsignedShort IdlePollTimerType_198 (5 .. 600)
 with {
-variant "name as 'idlePollTimerType-198'";
+  variant "name as 'idlePollTimerType-198'";
 };
 
 
 type XSD.Token LicenseKeyType_99 length(1 .. 35)
 with {
-variant "name as 'licenseKeyType-99'";
+  variant "name as 'licenseKeyType-99'";
 };
 
 
 type XSD.Token PayloadTypeType_101 (pattern "amr|clearchannel|cn|evrc|g711alaw|g711ulaw|g723|g726|g729|g729a|g729ab|h263v1|h263v2|h263vx|h264|mpeg4|t38|tr")
 with {
-variant "name as 'payloadTypeType-101'";
+  variant "name as 'payloadTypeType-101'";
 };
 
 
 type XSD.UnsignedShort SubportType_91 (0 .. 28)
 with {
-variant "name as 'subportType-91'";
+  variant "name as 'subportType-91'";
 };
 
 
 type XSD.Token DefaultEchoCancellationType_162 (pattern "on|off")
 with {
-variant "name as 'defaultEchoCancellationType-162'";
+  variant "name as 'defaultEchoCancellationType-162'";
 };
 
 
 type XSD.Token NameType_22 length(0 .. 64)
 with {
-variant "name as 'nameType-22'";
+  variant "name as 'nameType-22'";
 };
 
 
 type XSD.UnsignedShort LevelAComp3Type_44 (0 .. 63)
 with {
-variant "name as 'levelAComp3Type-44'";
+  variant "name as 'levelAComp3Type-44'";
 };
 
 
 type XSD.UnsignedInt MaximumWaitDelayType_145 (0 .. 600000)
 with {
-variant "name as 'maximumWaitDelayType-145'";
+  variant "name as 'maximumWaitDelayType-145'";
 };
 
 
 type XSD.UnsignedShort IterateComp5Type_55 (1 .. 100)
 with {
-variant "name as 'iterateComp5Type-55'";
+  variant "name as 'iterateComp5Type-55'";
 };
 
 
 type XSD.HexBinary BitmapType_196 length(4)
 with {
-variant "name as 'bitmapType-196'";
+  variant "name as 'bitmapType-196'";
 };
 
 
 type XSD.Token MsgIdFormatType_146 (pattern "domain-address|domain-name|device-name")
 with {
-variant "name as 'msgIdFormatType-146'";
+  variant "name as 'msgIdFormatType-146'";
 };
 
 
 type XSD.UnsignedShort LevelBComp3Type_46 (0 .. 63)
 with {
-variant "name as 'levelBComp3Type-46'";
+  variant "name as 'levelBComp3Type-46'";
 };
 
 
 type XSD.UnsignedShort AssociationMaxRetransType_68 (1 .. 20)
 with {
-variant "name as 'associationMaxRetransType-68'";
+  variant "name as 'associationMaxRetransType-68'";
 };
 
 
 type XSD.UnsignedShort ToIpDegVideoBitrateThrH264Type_18 (0 .. 52)
 with {
-variant "name as 'toIpDegVideoBitrateThrH264Type-18'";
+  variant "name as 'toIpDegVideoBitrateThrH264Type-18'";
 };
 
 
 type XSD.UnsignedShort LocalPortType_189 (1024 .. 65535)
 with {
-variant "name as 'localPortType-189'";
+  variant "name as 'localPortType-189'";
 };
 
 
 type XSD.UnsignedShort LipSyncFineTuningStreamingType_9 (0 .. 300)
 with {
-variant "name as 'lipSyncFineTuningStreamingType-9'";
+  variant "name as 'lipSyncFineTuningStreamingType-9'";
 };
 
 
@@ -4968,210 +4968,210 @@ type record Mgw
 	} mgwApplication
 }
 with {
-variant "element";
-variant (blade_list) "untagged";
-variant (blade_list[-]) "name as 'Blade'";
-variant (blade_list[-].timingOutletSrc) "defaultForEmpty as '0'";
-variant (blade_list[-].cp) "name as capitalized";
-variant (blade_list[-].e1Interface_list) "untagged";
-variant (blade_list[-].e1Interface_list[-]) "name as 'E1Interface'";
-variant (blade_list[-].e1Interface_list[-].port_) "name as 'port'";
-variant (blade_list[-].internalEthernetInterface_list) "untagged";
-variant (blade_list[-].internalEthernetInterface_list[-]) "name as 'InternalEthernetInterface'";
-variant (blade_list[-].internalEthernetInterface_list[-].port_) "name as 'port'";
-variant (blade_list[-].license_list) "untagged";
-variant (blade_list[-].license_list[-]) "name as 'License'";
-variant (blade_list[-].sdhInterface) "name as capitalized";
-variant (blade_list[-].sdhInterface.sdhSubLink_list) "untagged";
-variant (blade_list[-].sdhInterface.sdhSubLink_list[-]) "name as 'SdhSubLink'";
-variant (blade_list[-].signalingInterface) "name as capitalized";
-variant (blade_list[-].sonetInterface) "name as capitalized";
-variant (blade_list[-].sonetInterface.sonetPathLink_list) "untagged";
-variant (blade_list[-].sonetInterface.sonetPathLink_list[-]) "name as 'SonetPathLink'";
-variant (blade_list[-].sonetInterface.sonetPathLink_list[-].sonetSubLink_list) "untagged";
-variant (blade_list[-].sonetInterface.sonetPathLink_list[-].sonetSubLink_list[-]) "name as 'SonetSubLink'";
-variant (blade_list[-].t1Interface_list) "untagged";
-variant (blade_list[-].t1Interface_list[-]) "name as 'T1Interface'";
-variant (blade_list[-].t1Interface_list[-].port_) "name as 'port'";
-variant (system_) "name as 'System'";
-variant (system_.sctpParameters) "name as capitalized";
-variant (system_.sctpParameters.rtoInitial) "defaultForEmpty as '1000'";
-variant (system_.sctpParameters.rtoMin) "defaultForEmpty as '500'";
-variant (system_.sctpParameters.rtoMax) "defaultForEmpty as '10000'";
-variant (system_.sctpParameters.rtoAlpha) "defaultForEmpty as '3'";
-variant (system_.sctpParameters.rtoBeta) "defaultForEmpty as '2'";
-variant (system_.sctpParameters.associationMaxRetrans) "defaultForEmpty as '10'";
-variant (system_.sctpParameters.maxInitRetrans) "defaultForEmpty as '8'";
-variant (system_.sctpParameters.maxShutdownRetrans) "defaultForEmpty as '5'";
-variant (system_.sctpParameters.mtu) "defaultForEmpty as '1428'";
-variant (system_.sctpParameters.valCookieLife) "defaultForEmpty as '400'";
-variant (system_.arpParameters) "name as capitalized";
-variant (system_.arpParameters.eventFilter) "defaultForEmpty as '3'";
-variant (system_.arpParameters.fastSupInterval) "defaultForEmpty as '10'";
-variant (system_.arpParameters.downSupInterval) "defaultForEmpty as '100'";
-variant (system_.arpParameters.addrCollSupInterval) "defaultForEmpty as '10'";
-variant (system_.arpParameters.addrCollEventFilterl) "defaultForEmpty as '3'";
-variant (system_.bladePair_list) "untagged";
-variant (system_.bladePair_list[-]) "name as 'BladePair'";
-variant (system_.physicalTone_list) "untagged";
-variant (system_.physicalTone_list[-]) "name as 'PhysicalTone'";
-variant (system_.trafficSupervision) "name as capitalized";
-variant (system_.trafficSupervision.trafficSupervisionMaliciousPacketsThr) "defaultForEmpty as '0'";
-variant (system_.trafficSupervision.trafficSupervisionMaliciousPacketsHys) "defaultForEmpty as '0'";
-variant (system_.trafficSupervision.trafficSupervisionExcessiveBandwidthThr) "defaultForEmpty as '0'";
-variant (system_.trafficSupervision.trafficSupervisionExcessiveBandwidthHys) "defaultForEmpty as '0'";
-variant (system_.trafficSupervision.trafficSupervisionMediaStopSupervision) "defaultForEmpty as '1'";
-variant (system_.trafficSupervision.trafficSupervisionMaliciousTrafficLog) "defaultForEmpty as '1'";
-variant (system_.trafficSupervision.trafficSupervisionExcessiveTrafficLog) "defaultForEmpty as '1'";
-variant (network) "name as capitalized";
-variant (network.h248Route_list) "untagged";
-variant (network.h248Route_list[-]) "name as 'H248Route'";
-variant (network.virtualRouter) "name as capitalized";
-variant (network.virtualRouter.ipInterface_list) "untagged";
-variant (network.virtualRouter.ipInterface_list[-]) "name as 'IpInterface'";
-variant (network.virtualRouter.ipInterface_list[-].address_) "name as 'address'";
-variant (network.virtualRouter.ipInterface_list[-].addressGroup) "defaultForEmpty as '0'";
-variant (network.virtualRouter.nextHop_list) "untagged";
-variant (network.virtualRouter.nextHop_list[-]) "name as 'NextHop'";
-variant (network.virtualRouter.nextHop_list[-].address_) "name as 'address'";
-variant (network.virtualRouter.route_list) "untagged";
-variant (network.virtualRouter.route_list[-]) "name as 'Route'";
-variant (network.virtualRouter.route_list[-].type_) "name as 'type'";
-variant (mgwApplication) "name as capitalized";
-variant (mgwApplication.addressOffset) "defaultForEmpty as '0'";
-variant (mgwApplication.payloadProfile_list) "untagged";
-variant (mgwApplication.payloadProfile_list[-]) "name as 'PayloadProfile'";
-variant (mgwApplication.payloadMapping_list) "untagged";
-variant (mgwApplication.payloadMapping_list[-]) "name as 'PayloadMapping'";
-variant (mgwApplication.signalingDevice_list) "untagged";
-variant (mgwApplication.signalingDevice_list[-]) "name as 'SignalingDevice'";
-variant (mgwApplication.signalingDevice_list[-].admState) "defaultForEmpty as 'unlocked'";
-variant (mgwApplication.signalingDevice_list[-].signalingChannel_list) "untagged";
-variant (mgwApplication.signalingDevice_list[-].signalingChannel_list[-]) "name as 'SignalingChannel'";
-variant (mgwApplication.toneProfile_list) "untagged";
-variant (mgwApplication.toneProfile_list[-]) "name as 'ToneProfile'";
-variant (mgwApplication.toneProfile_list[-].h248Tone_list) "untagged";
-variant (mgwApplication.toneProfile_list[-].h248Tone_list[-]) "name as 'H248Tone'";
-variant (mgwApplication.toneProfile_list[-].h248Tone_list[-].defaultTimeout) "defaultForEmpty as '0'";
-variant (mgwApplication.virtualSgw_list) "untagged";
-variant (mgwApplication.virtualSgw_list[-]) "name as 'VirtualSgw'";
-variant (mgwApplication.virtualSgw_list[-].trTimer) "defaultForEmpty as '5'";
-variant (mgwApplication.virtualSgw_list[-].asp_list) "untagged";
-variant (mgwApplication.virtualSgw_list[-].asp_list[-]) "name as 'Asp'";
-variant (mgwApplication.virtualSgw_list[-].asp_list[-].admState) "defaultForEmpty as 'unlocked'";
-variant (mgwApplication.virtualSgw_list[-].asp_list[-].hbTimer) "defaultForEmpty as '60'";
-variant (mgwApplication.virtualSgw_list[-].asp_list[-].localPort) "defaultForEmpty as '9900'";
-variant (mgwApplication.virtualSgw_list[-].asp_list[-].outStreams) "defaultForEmpty as '20'";
-variant (mgwApplication.virtualSgw_list[-].asp_list[-].remotePort) "defaultForEmpty as '9900'";
-variant (mgwApplication.virtualSgw_list[-].asp_list[-].sctpMode) "defaultForEmpty as 'server'";
-variant (mgwApplication.virtualSgw_list[-].sgwInterface_list) "untagged";
-variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-]) "name as 'SgwInterface'";
-variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].admState) "defaultForEmpty as 'unlocked'";
-variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].idlePollTimer) "defaultForEmpty as '10'";
-variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].maxRetransmissions) "defaultForEmpty as '3'";
-variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].retransmissionTimer) "defaultForEmpty as '3000'";
-variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].sendQueueLength) "defaultForEmpty as '30'";
-variant (mgwApplication.virtualMgw_list) "untagged";
-variant (mgwApplication.virtualMgw_list[-]) "name as 'VirtualMgw'";
-variant (mgwApplication.virtualMgw_list[-].adapJitBufSize) "defaultForEmpty as '200'";
-variant (mgwApplication.virtualMgw_list[-].detailedTermInfoPackage) "defaultForEmpty as 'enabled'";
-variant (mgwApplication.virtualMgw_list[-].echoDisablingMode) "defaultForEmpty as 'g168'";
-variant (mgwApplication.virtualMgw_list[-].estAudioStatJitBuf) "defaultForEmpty as '50'";
-variant (mgwApplication.virtualMgw_list[-].estDataStatJitBuf) "defaultForEmpty as '50'";
-variant (mgwApplication.virtualMgw_list[-].profileName) "defaultForEmpty as 'ericsson_mgw'";
-variant (mgwApplication.virtualMgw_list[-].rtcpForwarding) "defaultForEmpty as 'on'";
-variant (mgwApplication.virtualMgw_list[-].rtcpOn) "defaultForEmpty as 'true'";
-variant (mgwApplication.virtualMgw_list[-].srcAddressFiltering) "defaultForEmpty as 'off'";
-variant (mgwApplication.virtualMgw_list[-].rtcpNplr) "defaultForEmpty as 'disabled'";
-variant (mgwApplication.virtualMgw_list[-].rtcpJdr) "defaultForEmpty as 'disabled'";
-variant (mgwApplication.virtualMgw_list[-].rtcpRtd) "defaultForEmpty as 'disabled'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list) "untagged";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-]) "name as 'PhysicalDevice'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].admState) "defaultForEmpty as 'unlocked'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].defaultEchoCancellation) "defaultForEmpty as 'on'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].defaultEncoding) "defaultForEmpty as 'a-law'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].echoDelay) "defaultForEmpty as '0'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].type_) "name as 'type'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].v52) "defaultForEmpty as 'disabled'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list) "untagged";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-]) "name as 'PhysicalTermination'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination) "name as capitalized";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination.codec) "defaultForEmpty as 'noOverride'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination.codecCN) "defaultForEmpty as 'on'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination.codecPtime) "defaultForEmpty as 'Ptime-10'";
-variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination.codecTR) "defaultForEmpty as 'on'";
-variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list) "untagged";
-variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-]) "name as 'VirtualIpDevice'";
-variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-].admState) "defaultForEmpty as 'unlocked'";
-variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-].echoDelay) "defaultForEmpty as '0'";
-variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-].virtualIpTermination_list) "untagged";
-variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-].virtualIpTermination_list[-]) "name as 'VirtualIpTermination'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink) "name as capitalized";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.admState) "defaultForEmpty as 'unlocked'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.encoding) "defaultForEmpty as 'compacttext'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.localPort) "defaultForEmpty as '2944'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.mGCOriginatedPendingLimit) "defaultForEmpty as '2'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.mGOriginatedPendingLimit) "defaultForEmpty as '3'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.maxNumberOfRetransmissions) "defaultForEmpty as '2'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.maximumWaitDelay) "defaultForEmpty as '1000'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.msgIdFormat) "defaultForEmpty as 'device-name'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.normalMGExecutionTime) "defaultForEmpty as '2000'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.remotePort) "defaultForEmpty as '2944'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.sctpHbInterval) "defaultForEmpty as '5'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.t95) "defaultForEmpty as '500'";
-variant (mgwApplication.virtualMgw_list[-].h248SctpLink.transactionRetentionTimer) "defaultForEmpty as '16000'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink) "name as capitalized";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.admState) "defaultForEmpty as 'unlocked'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.encoding) "defaultForEmpty as 'compacttext'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.localPort) "defaultForEmpty as '2944'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.mGCOriginatedPendingLimit) "defaultForEmpty as '2'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.mGOriginatedPendingLimit) "defaultForEmpty as '3'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.maxNumberOfRetransmissions) "defaultForEmpty as '2'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.maximumWaitDelay) "defaultForEmpty as '1000'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.msgIdFormat) "defaultForEmpty as 'device-name'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.normalMGExecutionTime) "defaultForEmpty as '2000'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.remotePort) "defaultForEmpty as '2944'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.t95) "defaultForEmpty as '500'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.transactionRetentionTimer) "defaultForEmpty as '16000'";
-variant (mgwApplication.virtualMgw_list[-].h248UdpLink.udpInactTimer) "defaultForEmpty as '5'";
-variant (mgwApplication.virtualMgw_list[-].signaledSpc_list) "untagged";
-variant (mgwApplication.virtualMgw_list[-].signaledSpc_list[-]) "name as 'SignaledSpc'";
-variant (mgwApplication.virtualMgw_list[-].signaledSpc_list[-].ephemeralSpcTermination) "name as capitalized";
-variant (mgwApplication.virtualMgw_list[-].provisionedSpc_list) "untagged";
-variant (mgwApplication.virtualMgw_list[-].provisionedSpc_list[-]) "name as 'ProvisionedSpc'";
-variant (mgwApplication.qosMonitoring) "name as capitalized";
-variant (mgwApplication.qosMonitoring.adminState) "defaultForEmpty as '0'";
-variant (mgwApplication.qosMonitoring.defaultLocalPrefixMaskLength) "defaultForEmpty as '32'";
-variant (mgwApplication.qosMonitoring.defaultRemotePrefixMaskLength) "defaultForEmpty as '0'";
-variant (mgwApplication.qosMonitoring.ipAddressPrefix_list) "untagged";
-variant (mgwApplication.qosMonitoring.ipAddressPrefix_list[-]) "name as 'IpAddressPrefix'";
-variant (mgwApplication.qosMonitoring.networkPathGroup_list) "untagged";
-variant (mgwApplication.qosMonitoring.networkPathGroup_list[-]) "name as 'NetworkPathGroup'";
-variant (mgwApplication.video3g324m) "name as capitalized";
-variant (mgwApplication.video3g324m.videoBufferSize) "defaultForEmpty as '10000'";
-variant (mgwApplication.video3g324m.videoBufferCongThr) "defaultForEmpty as '7000'";
-variant (mgwApplication.video3g324m.audioVideoDefaultSkew) "defaultForEmpty as '100'";
-variant (mgwApplication.video3g324m.lipSyncFineTuningInteractive) "defaultForEmpty as '100'";
-variant (mgwApplication.video3g324m.lipSyncFineTuningStreaming) "defaultForEmpty as '100'";
-variant (mgwApplication.video3g324m.forcedVideoSegm) "defaultForEmpty as '2'";
-variant (mgwApplication.video3g324m.to3g324mDegVideoBitrateThrH263v1) "defaultForEmpty as '30'";
-variant (mgwApplication.video3g324m.toIpDegVideoBitrateThrH263v1) "defaultForEmpty as '30'";
-variant (mgwApplication.video3g324m.to3g324mDegVideoBitrateThrH263v2) "defaultForEmpty as '30'";
-variant (mgwApplication.video3g324m.toIpDegVideoBitrateThrH263v2) "defaultForEmpty as '30'";
-variant (mgwApplication.video3g324m.to3g324mDegVideoBitrateThrMPEG4) "defaultForEmpty as '30'";
-variant (mgwApplication.video3g324m.toIpDegVideoBitrateThrMPEG4) "defaultForEmpty as '30'";
-variant (mgwApplication.video3g324m.to3g324mDegVideoBitrateThrH264) "defaultForEmpty as '30'";
-variant (mgwApplication.video3g324m.toIpDegVideoBitrateThrH264) "defaultForEmpty as '30'";
-variant (mgwApplication.video3g324m.to3g324mDegVideoCallThr) "defaultForEmpty as '20'";
-variant (mgwApplication.video3g324m.toIpDegVideoCallThr) "defaultForEmpty as '20'";
-variant (mgwApplication.video3g324m.nsrpInitialDelay) "defaultForEmpty as '0'";
+  variant "element";
+  variant (blade_list) "untagged";
+  variant (blade_list[-]) "name as 'Blade'";
+  variant (blade_list[-].timingOutletSrc) "defaultForEmpty as '0'";
+  variant (blade_list[-].cp) "name as capitalized";
+  variant (blade_list[-].e1Interface_list) "untagged";
+  variant (blade_list[-].e1Interface_list[-]) "name as 'E1Interface'";
+  variant (blade_list[-].e1Interface_list[-].port_) "name as 'port'";
+  variant (blade_list[-].internalEthernetInterface_list) "untagged";
+  variant (blade_list[-].internalEthernetInterface_list[-]) "name as 'InternalEthernetInterface'";
+  variant (blade_list[-].internalEthernetInterface_list[-].port_) "name as 'port'";
+  variant (blade_list[-].license_list) "untagged";
+  variant (blade_list[-].license_list[-]) "name as 'License'";
+  variant (blade_list[-].sdhInterface) "name as capitalized";
+  variant (blade_list[-].sdhInterface.sdhSubLink_list) "untagged";
+  variant (blade_list[-].sdhInterface.sdhSubLink_list[-]) "name as 'SdhSubLink'";
+  variant (blade_list[-].signalingInterface) "name as capitalized";
+  variant (blade_list[-].sonetInterface) "name as capitalized";
+  variant (blade_list[-].sonetInterface.sonetPathLink_list) "untagged";
+  variant (blade_list[-].sonetInterface.sonetPathLink_list[-]) "name as 'SonetPathLink'";
+  variant (blade_list[-].sonetInterface.sonetPathLink_list[-].sonetSubLink_list) "untagged";
+  variant (blade_list[-].sonetInterface.sonetPathLink_list[-].sonetSubLink_list[-]) "name as 'SonetSubLink'";
+  variant (blade_list[-].t1Interface_list) "untagged";
+  variant (blade_list[-].t1Interface_list[-]) "name as 'T1Interface'";
+  variant (blade_list[-].t1Interface_list[-].port_) "name as 'port'";
+  variant (system_) "name as 'System'";
+  variant (system_.sctpParameters) "name as capitalized";
+  variant (system_.sctpParameters.rtoInitial) "defaultForEmpty as '1000'";
+  variant (system_.sctpParameters.rtoMin) "defaultForEmpty as '500'";
+  variant (system_.sctpParameters.rtoMax) "defaultForEmpty as '10000'";
+  variant (system_.sctpParameters.rtoAlpha) "defaultForEmpty as '3'";
+  variant (system_.sctpParameters.rtoBeta) "defaultForEmpty as '2'";
+  variant (system_.sctpParameters.associationMaxRetrans) "defaultForEmpty as '10'";
+  variant (system_.sctpParameters.maxInitRetrans) "defaultForEmpty as '8'";
+  variant (system_.sctpParameters.maxShutdownRetrans) "defaultForEmpty as '5'";
+  variant (system_.sctpParameters.mtu) "defaultForEmpty as '1428'";
+  variant (system_.sctpParameters.valCookieLife) "defaultForEmpty as '400'";
+  variant (system_.arpParameters) "name as capitalized";
+  variant (system_.arpParameters.eventFilter) "defaultForEmpty as '3'";
+  variant (system_.arpParameters.fastSupInterval) "defaultForEmpty as '10'";
+  variant (system_.arpParameters.downSupInterval) "defaultForEmpty as '100'";
+  variant (system_.arpParameters.addrCollSupInterval) "defaultForEmpty as '10'";
+  variant (system_.arpParameters.addrCollEventFilterl) "defaultForEmpty as '3'";
+  variant (system_.bladePair_list) "untagged";
+  variant (system_.bladePair_list[-]) "name as 'BladePair'";
+  variant (system_.physicalTone_list) "untagged";
+  variant (system_.physicalTone_list[-]) "name as 'PhysicalTone'";
+  variant (system_.trafficSupervision) "name as capitalized";
+  variant (system_.trafficSupervision.trafficSupervisionMaliciousPacketsThr) "defaultForEmpty as '0'";
+  variant (system_.trafficSupervision.trafficSupervisionMaliciousPacketsHys) "defaultForEmpty as '0'";
+  variant (system_.trafficSupervision.trafficSupervisionExcessiveBandwidthThr) "defaultForEmpty as '0'";
+  variant (system_.trafficSupervision.trafficSupervisionExcessiveBandwidthHys) "defaultForEmpty as '0'";
+  variant (system_.trafficSupervision.trafficSupervisionMediaStopSupervision) "defaultForEmpty as '1'";
+  variant (system_.trafficSupervision.trafficSupervisionMaliciousTrafficLog) "defaultForEmpty as '1'";
+  variant (system_.trafficSupervision.trafficSupervisionExcessiveTrafficLog) "defaultForEmpty as '1'";
+  variant (network) "name as capitalized";
+  variant (network.h248Route_list) "untagged";
+  variant (network.h248Route_list[-]) "name as 'H248Route'";
+  variant (network.virtualRouter) "name as capitalized";
+  variant (network.virtualRouter.ipInterface_list) "untagged";
+  variant (network.virtualRouter.ipInterface_list[-]) "name as 'IpInterface'";
+  variant (network.virtualRouter.ipInterface_list[-].address_) "name as 'address'";
+  variant (network.virtualRouter.ipInterface_list[-].addressGroup) "defaultForEmpty as '0'";
+  variant (network.virtualRouter.nextHop_list) "untagged";
+  variant (network.virtualRouter.nextHop_list[-]) "name as 'NextHop'";
+  variant (network.virtualRouter.nextHop_list[-].address_) "name as 'address'";
+  variant (network.virtualRouter.route_list) "untagged";
+  variant (network.virtualRouter.route_list[-]) "name as 'Route'";
+  variant (network.virtualRouter.route_list[-].type_) "name as 'type'";
+  variant (mgwApplication) "name as capitalized";
+  variant (mgwApplication.addressOffset) "defaultForEmpty as '0'";
+  variant (mgwApplication.payloadProfile_list) "untagged";
+  variant (mgwApplication.payloadProfile_list[-]) "name as 'PayloadProfile'";
+  variant (mgwApplication.payloadMapping_list) "untagged";
+  variant (mgwApplication.payloadMapping_list[-]) "name as 'PayloadMapping'";
+  variant (mgwApplication.signalingDevice_list) "untagged";
+  variant (mgwApplication.signalingDevice_list[-]) "name as 'SignalingDevice'";
+  variant (mgwApplication.signalingDevice_list[-].admState) "defaultForEmpty as 'unlocked'";
+  variant (mgwApplication.signalingDevice_list[-].signalingChannel_list) "untagged";
+  variant (mgwApplication.signalingDevice_list[-].signalingChannel_list[-]) "name as 'SignalingChannel'";
+  variant (mgwApplication.toneProfile_list) "untagged";
+  variant (mgwApplication.toneProfile_list[-]) "name as 'ToneProfile'";
+  variant (mgwApplication.toneProfile_list[-].h248Tone_list) "untagged";
+  variant (mgwApplication.toneProfile_list[-].h248Tone_list[-]) "name as 'H248Tone'";
+  variant (mgwApplication.toneProfile_list[-].h248Tone_list[-].defaultTimeout) "defaultForEmpty as '0'";
+  variant (mgwApplication.virtualSgw_list) "untagged";
+  variant (mgwApplication.virtualSgw_list[-]) "name as 'VirtualSgw'";
+  variant (mgwApplication.virtualSgw_list[-].trTimer) "defaultForEmpty as '5'";
+  variant (mgwApplication.virtualSgw_list[-].asp_list) "untagged";
+  variant (mgwApplication.virtualSgw_list[-].asp_list[-]) "name as 'Asp'";
+  variant (mgwApplication.virtualSgw_list[-].asp_list[-].admState) "defaultForEmpty as 'unlocked'";
+  variant (mgwApplication.virtualSgw_list[-].asp_list[-].hbTimer) "defaultForEmpty as '60'";
+  variant (mgwApplication.virtualSgw_list[-].asp_list[-].localPort) "defaultForEmpty as '9900'";
+  variant (mgwApplication.virtualSgw_list[-].asp_list[-].outStreams) "defaultForEmpty as '20'";
+  variant (mgwApplication.virtualSgw_list[-].asp_list[-].remotePort) "defaultForEmpty as '9900'";
+  variant (mgwApplication.virtualSgw_list[-].asp_list[-].sctpMode) "defaultForEmpty as 'server'";
+  variant (mgwApplication.virtualSgw_list[-].sgwInterface_list) "untagged";
+  variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-]) "name as 'SgwInterface'";
+  variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].admState) "defaultForEmpty as 'unlocked'";
+  variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].idlePollTimer) "defaultForEmpty as '10'";
+  variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].maxRetransmissions) "defaultForEmpty as '3'";
+  variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].retransmissionTimer) "defaultForEmpty as '3000'";
+  variant (mgwApplication.virtualSgw_list[-].sgwInterface_list[-].sendQueueLength) "defaultForEmpty as '30'";
+  variant (mgwApplication.virtualMgw_list) "untagged";
+  variant (mgwApplication.virtualMgw_list[-]) "name as 'VirtualMgw'";
+  variant (mgwApplication.virtualMgw_list[-].adapJitBufSize) "defaultForEmpty as '200'";
+  variant (mgwApplication.virtualMgw_list[-].detailedTermInfoPackage) "defaultForEmpty as 'enabled'";
+  variant (mgwApplication.virtualMgw_list[-].echoDisablingMode) "defaultForEmpty as 'g168'";
+  variant (mgwApplication.virtualMgw_list[-].estAudioStatJitBuf) "defaultForEmpty as '50'";
+  variant (mgwApplication.virtualMgw_list[-].estDataStatJitBuf) "defaultForEmpty as '50'";
+  variant (mgwApplication.virtualMgw_list[-].profileName) "defaultForEmpty as 'ericsson_mgw'";
+  variant (mgwApplication.virtualMgw_list[-].rtcpForwarding) "defaultForEmpty as 'on'";
+  variant (mgwApplication.virtualMgw_list[-].rtcpOn) "defaultForEmpty as 'true'";
+  variant (mgwApplication.virtualMgw_list[-].srcAddressFiltering) "defaultForEmpty as 'off'";
+  variant (mgwApplication.virtualMgw_list[-].rtcpNplr) "defaultForEmpty as 'disabled'";
+  variant (mgwApplication.virtualMgw_list[-].rtcpJdr) "defaultForEmpty as 'disabled'";
+  variant (mgwApplication.virtualMgw_list[-].rtcpRtd) "defaultForEmpty as 'disabled'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list) "untagged";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-]) "name as 'PhysicalDevice'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].admState) "defaultForEmpty as 'unlocked'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].defaultEchoCancellation) "defaultForEmpty as 'on'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].defaultEncoding) "defaultForEmpty as 'a-law'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].echoDelay) "defaultForEmpty as '0'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].type_) "name as 'type'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].v52) "defaultForEmpty as 'disabled'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list) "untagged";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-]) "name as 'PhysicalTermination'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination) "name as capitalized";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination.codec) "defaultForEmpty as 'noOverride'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination.codecCN) "defaultForEmpty as 'on'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination.codecPtime) "defaultForEmpty as 'Ptime-10'";
+  variant (mgwApplication.virtualMgw_list[-].physicalDevice_list[-].physicalTermination_list[-].testTermination.codecTR) "defaultForEmpty as 'on'";
+  variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list) "untagged";
+  variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-]) "name as 'VirtualIpDevice'";
+  variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-].admState) "defaultForEmpty as 'unlocked'";
+  variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-].echoDelay) "defaultForEmpty as '0'";
+  variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-].virtualIpTermination_list) "untagged";
+  variant (mgwApplication.virtualMgw_list[-].virtualIpDevice_list[-].virtualIpTermination_list[-]) "name as 'VirtualIpTermination'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink) "name as capitalized";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.admState) "defaultForEmpty as 'unlocked'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.encoding) "defaultForEmpty as 'compacttext'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.localPort) "defaultForEmpty as '2944'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.mGCOriginatedPendingLimit) "defaultForEmpty as '2'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.mGOriginatedPendingLimit) "defaultForEmpty as '3'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.maxNumberOfRetransmissions) "defaultForEmpty as '2'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.maximumWaitDelay) "defaultForEmpty as '1000'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.msgIdFormat) "defaultForEmpty as 'device-name'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.normalMGExecutionTime) "defaultForEmpty as '2000'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.remotePort) "defaultForEmpty as '2944'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.sctpHbInterval) "defaultForEmpty as '5'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.t95) "defaultForEmpty as '500'";
+  variant (mgwApplication.virtualMgw_list[-].h248SctpLink.transactionRetentionTimer) "defaultForEmpty as '16000'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink) "name as capitalized";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.admState) "defaultForEmpty as 'unlocked'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.encoding) "defaultForEmpty as 'compacttext'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.localPort) "defaultForEmpty as '2944'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.mGCOriginatedPendingLimit) "defaultForEmpty as '2'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.mGOriginatedPendingLimit) "defaultForEmpty as '3'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.maxNumberOfRetransmissions) "defaultForEmpty as '2'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.maximumWaitDelay) "defaultForEmpty as '1000'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.msgIdFormat) "defaultForEmpty as 'device-name'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.normalMGExecutionTime) "defaultForEmpty as '2000'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.remotePort) "defaultForEmpty as '2944'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.t95) "defaultForEmpty as '500'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.transactionRetentionTimer) "defaultForEmpty as '16000'";
+  variant (mgwApplication.virtualMgw_list[-].h248UdpLink.udpInactTimer) "defaultForEmpty as '5'";
+  variant (mgwApplication.virtualMgw_list[-].signaledSpc_list) "untagged";
+  variant (mgwApplication.virtualMgw_list[-].signaledSpc_list[-]) "name as 'SignaledSpc'";
+  variant (mgwApplication.virtualMgw_list[-].signaledSpc_list[-].ephemeralSpcTermination) "name as capitalized";
+  variant (mgwApplication.virtualMgw_list[-].provisionedSpc_list) "untagged";
+  variant (mgwApplication.virtualMgw_list[-].provisionedSpc_list[-]) "name as 'ProvisionedSpc'";
+  variant (mgwApplication.qosMonitoring) "name as capitalized";
+  variant (mgwApplication.qosMonitoring.adminState) "defaultForEmpty as '0'";
+  variant (mgwApplication.qosMonitoring.defaultLocalPrefixMaskLength) "defaultForEmpty as '32'";
+  variant (mgwApplication.qosMonitoring.defaultRemotePrefixMaskLength) "defaultForEmpty as '0'";
+  variant (mgwApplication.qosMonitoring.ipAddressPrefix_list) "untagged";
+  variant (mgwApplication.qosMonitoring.ipAddressPrefix_list[-]) "name as 'IpAddressPrefix'";
+  variant (mgwApplication.qosMonitoring.networkPathGroup_list) "untagged";
+  variant (mgwApplication.qosMonitoring.networkPathGroup_list[-]) "name as 'NetworkPathGroup'";
+  variant (mgwApplication.video3g324m) "name as capitalized";
+  variant (mgwApplication.video3g324m.videoBufferSize) "defaultForEmpty as '10000'";
+  variant (mgwApplication.video3g324m.videoBufferCongThr) "defaultForEmpty as '7000'";
+  variant (mgwApplication.video3g324m.audioVideoDefaultSkew) "defaultForEmpty as '100'";
+  variant (mgwApplication.video3g324m.lipSyncFineTuningInteractive) "defaultForEmpty as '100'";
+  variant (mgwApplication.video3g324m.lipSyncFineTuningStreaming) "defaultForEmpty as '100'";
+  variant (mgwApplication.video3g324m.forcedVideoSegm) "defaultForEmpty as '2'";
+  variant (mgwApplication.video3g324m.to3g324mDegVideoBitrateThrH263v1) "defaultForEmpty as '30'";
+  variant (mgwApplication.video3g324m.toIpDegVideoBitrateThrH263v1) "defaultForEmpty as '30'";
+  variant (mgwApplication.video3g324m.to3g324mDegVideoBitrateThrH263v2) "defaultForEmpty as '30'";
+  variant (mgwApplication.video3g324m.toIpDegVideoBitrateThrH263v2) "defaultForEmpty as '30'";
+  variant (mgwApplication.video3g324m.to3g324mDegVideoBitrateThrMPEG4) "defaultForEmpty as '30'";
+  variant (mgwApplication.video3g324m.toIpDegVideoBitrateThrMPEG4) "defaultForEmpty as '30'";
+  variant (mgwApplication.video3g324m.to3g324mDegVideoBitrateThrH264) "defaultForEmpty as '30'";
+  variant (mgwApplication.video3g324m.toIpDegVideoBitrateThrH264) "defaultForEmpty as '30'";
+  variant (mgwApplication.video3g324m.to3g324mDegVideoCallThr) "defaultForEmpty as '20'";
+  variant (mgwApplication.video3g324m.toIpDegVideoCallThr) "defaultForEmpty as '20'";
+  variant (mgwApplication.video3g324m.nsrpInitialDelay) "defaultForEmpty as '0'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.ericsson.com/is/isco/Mgw/R9B27'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.ericsson.com/is/isco/Mgw/R9B27'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

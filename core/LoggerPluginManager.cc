@@ -616,13 +616,10 @@ void LoggerPluginManager::log(const API::TitanLogEvent& event)
   if (TTCN_Logger::get_emergency_logging_behaviour() == TTCN_Logger::BUFFER_MASKED) {
     //ToDo: do it nicer
     //if(TTCN_Logger::log_this_event((TTCN_Logger::Severity)(int)event.severity())){
-    if (TTCN_Logger::should_log_to_file((TTCN_Logger::Severity)(int)event.severity()) ||
-        TTCN_Logger::should_log_to_console((TTCN_Logger::Severity)(int)event.severity())) {
-      internal_log_to_all(event, true, false, false);
-    } else {
-      // check emergency logging mask
-      if (TTCN_Logger::should_log_to_emergency((TTCN_Logger::Severity)(int)event.severity()))
-        ring_buffer.put(event);
+    internal_log_to_all(event, true, false, false);
+    if (!TTCN_Logger::should_log_to_file((TTCN_Logger::Severity)(int)event.severity()) &&
+        TTCN_Logger::should_log_to_emergency((TTCN_Logger::Severity)(int)event.severity())) {
+      ring_buffer.put(event);
     }
   } else if (TTCN_Logger::get_emergency_logging_behaviour() == TTCN_Logger::BUFFER_ALL) {
     if (ring_buffer.isFull()) {

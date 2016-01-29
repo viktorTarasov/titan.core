@@ -5,4 +5,16 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 ###############################################################################
-Failed tests:
+TOPDIR := ..
+include $(TOPDIR)/Makefile.regression
+
+.PHONY: all clean dep run
+
+all: $(TARGET)
+
+run: $(TARGET)
+	./makefilegen_envvar_test.sh
+
+clean distclean:
+
+dep:

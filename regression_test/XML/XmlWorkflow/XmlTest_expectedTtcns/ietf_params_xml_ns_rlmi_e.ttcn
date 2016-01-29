@@ -48,15 +48,15 @@ type record List
 	record of Resource resource_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (attr) "anyAttributes";
-variant (cid) "attribute";
-variant (fullState) "attribute";
-variant (uri) "attribute";
-variant (version) "attribute";
-variant (name_list) "untagged";
-variant (resource_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (attr) "anyAttributes";
+  variant (cid) "attribute";
+  variant (fullState) "attribute";
+  variant (uri) "attribute";
+  variant (version) "attribute";
+  variant (name_list) "untagged";
+  variant (resource_list) "untagged";
 };
 
 
@@ -68,12 +68,12 @@ type record Resource
 	record of Instance instance_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (attr) "anyAttributes";
-variant (uri) "attribute";
-variant (name_list) "untagged";
-variant (instance_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (attr) "anyAttributes";
+  variant (uri) "attribute";
+  variant (name_list) "untagged";
+  variant (instance_list) "untagged";
 };
 
 
@@ -91,15 +91,15 @@ type record Instance
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (attr) "anyAttributes";
-variant (cid) "attribute";
-variant (id) "attribute";
-variant (reason) "attribute";
-variant (state) "attribute";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (attr) "anyAttributes";
+  variant (cid) "attribute";
+  variant (id) "attribute";
+  variant (reason) "attribute";
+  variant (state) "attribute";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement";
 };
 
 
@@ -109,17 +109,17 @@ type record Name
 	XSD.String base
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (lang) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (lang) "attribute";
+  variant (base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'urn:ietf:params:xml:ns:rlmi'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'urn:ietf:params:xml:ns:rlmi'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

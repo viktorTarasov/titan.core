@@ -44,7 +44,7 @@ type record BaseType
 	XSD.Integer base_variable
 }
 with {
-variant (base_variable) "name as 'Base-variable'";
+  variant (base_variable) "name as 'Base-variable'";
 };
 
 
@@ -56,17 +56,17 @@ type record Extending_type
 	} ext
 }
 with {
-variant "name as 'Extending-type'";
-variant (ext.extension_) "name as 'extension'";
-variant (ext.extension_) "attribute";
-variant (ext.base_variable) "name as 'Base-variable'";
+  variant "name as 'Extending-type'";
+  variant (ext.extension_) "name as 'extension'";
+  variant (ext.extension_) "attribute";
+  variant (ext.base_variable) "name as 'Base-variable'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'attribute_in_extension' prefix 'ns45'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'attribute_in_extension' prefix 'ns45'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

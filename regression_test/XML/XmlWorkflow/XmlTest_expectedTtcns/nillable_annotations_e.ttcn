@@ -56,20 +56,20 @@ type record Abbreviated_dialing
 	} content optional
 }
 with {
-variant "name as 'abbreviated-dialing'";
-variant "useNil";
-variant "element";
-variant (content.abbreviated_dialing_operator_configuration) "name as 'abbreviated-dialing-operator-configuration'";
-variant (content.abbreviated_dialing_operator_configuration) "useNil";
-variant (content.abbreviated_dialing_user_configuration) "name as 'abbreviated-dialing-user-configuration'";
-variant (content.abbreviated_dialing_user_configuration) "useNil";
+  variant "name as 'abbreviated-dialing'";
+  variant "useNil";
+  variant "element";
+  variant (content.abbreviated_dialing_operator_configuration) "name as 'abbreviated-dialing-operator-configuration'";
+  variant (content.abbreviated_dialing_operator_configuration) "useNil";
+  variant (content.abbreviated_dialing_user_configuration) "name as 'abbreviated-dialing-user-configuration'";
+  variant (content.abbreviated_dialing_user_configuration) "useNil";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'nillable_annotations'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'nillable_annotations'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

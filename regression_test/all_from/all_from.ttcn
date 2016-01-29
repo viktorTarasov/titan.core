@@ -1318,6 +1318,41 @@ testcase tc_functionRef_rof_eq() runs on A {
   f_checkMyFunctionRefTemplateEquivalence( t_fref_int2int,t_fref_int2int_eq);
 }
 
+// all from with length restriction
+// 1. the target of 'all from' is foldable (known at compile-time)
+testcase tc_varTemplate_len_res_foldable() runs on A
+{
+  template RoI tl_foldable := { 6, 9 };
+  var template RoI tl_len_res := { 2, all from tl_foldable } length (3);
+  var template RoI tl_len_res_eq := { 2, 6, 9 } length (3);
+  f_checkRoITemplateEquivalence(tl_len_res, tl_len_res_eq);
+}
+
+// 2. the target of 'all from' is unfoldable (not known at compile-time)
+testcase tc_varTemplate_len_res_unfoldable() runs on A
+{
+  var template RoI tl_unfoldable := { 6, 9 };
+  var template RoI tl_len_res := { 2, all from tl_unfoldable } length (3);
+  var template RoI tl_len_res_eq := { 2, 6, 9 } length (3);
+  f_checkRoITemplateEquivalence(tl_len_res, tl_len_res_eq);
+}
+
+// HU21359 Length of record of template containing 'all from' is invalid
+template RoI t_ints_1 := { 1 };
+template RoI t_ints_2 := { 2, 3 };
+
+function modify (template RoI p1, template RoI p2)
+return template RoI
+{    
+  return { all from p1, all from p2 };
+}
+
+testcase tc_HU21359() runs on A {
+  var template RoI vt_res := modify(t_ints_1, t_ints_2);
+  var template RoI vt_exp := { 1, 2, 3 };
+  f_checkRoITemplateEquivalence(vt_res, vt_exp);
+}
+
 
 // control part is NOT used during the test!
 control {

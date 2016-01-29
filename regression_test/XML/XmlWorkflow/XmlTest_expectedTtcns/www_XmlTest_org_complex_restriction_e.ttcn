@@ -55,13 +55,13 @@ type record MySubjects4
 	XSD.String chemistry optional
 }
 with {
-variant (year) "name as capitalized";
-variant (year) "attribute";
-variant (english) "name as capitalized";
-variant (math) "name as capitalized";
-variant (physics_list) "untagged";
-variant (physics_list[-]) "name as 'Physics'";
-variant (chemistry) "name as capitalized";
+  variant (year) "name as capitalized";
+  variant (year) "attribute";
+  variant (english) "name as capitalized";
+  variant (math) "name as capitalized";
+  variant (physics_list) "untagged";
+  variant (physics_list[-]) "name as 'Physics'";
+  variant (chemistry) "name as capitalized";
 };
 
 
@@ -73,18 +73,18 @@ type record MySubjects4Restriction
 	record length(1 .. 2) of XSD.String physics_list
 }
 with {
-variant (year) "name as capitalized";
-variant (year) "attribute";
-variant (english) "name as capitalized";
-variant (math) "name as capitalized";
-variant (physics_list) "untagged";
-variant (physics_list[-]) "name as 'Physics'";
+  variant (year) "name as capitalized";
+  variant (year) "attribute";
+  variant (english) "name as capitalized";
+  variant (math) "name as capitalized";
+  variant (physics_list) "untagged";
+  variant (physics_list[-]) "name as 'Physics'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_restriction' prefix 'ns36'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_restriction' prefix 'ns36'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

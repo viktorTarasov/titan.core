@@ -94,6 +94,9 @@ ElemKey get_elem_key(const char* value, size_t value_len, const char* file_name)
   if (5 == value_len && 0 == strncmp(value, "allOf", value_len)) {
     return ElemKey::AllOf;
   }
+  if (9 == value_len && 0 == strncmp(value, "valueList", value_len)) {
+    return ElemKey::ValueList;
+  }
   // it's an extension if none of them matched
   return ElemKey::Extension;
 }
@@ -315,7 +318,8 @@ TypeSchema extract_type_schema(JSON_Tokenizer& json, const char* file_name)
         type_schema[elem_index].val().extVal().val() = str_key;
         break; }
 
-      case ElemKey::Enum: {
+      case ElemKey::Enum:
+      case ElemKey::ValueList: {
         // array value
         json.get_next_token(&token, NULL, NULL);
         IMPORT_FORMAT_ERROR(JSON_TOKEN_ARRAY_START != token, "missing array value start");

@@ -113,7 +113,7 @@ void Type::chk()
       textattrib = new TextAST;
     if(!xerattrib && hasVariantAttrs() &&  hasNeedofXerAttrs())
       xerattrib = new XerAttributes;
-    if (!jsonattrib && (hasVariantAttrs() || hasEncodeAttr(CT_JSON) || hasNeedofJsonAttrs())) {
+    if (!jsonattrib && (hasVariantAttrs() || hasEncodeAttr(get_encoding_name(CT_JSON)) || hasNeedofJsonAttrs())) {
       jsonattrib = new JsonAST;
     }
     break;
@@ -1034,7 +1034,7 @@ void Type::chk_xer_embed_values(int num_attributes)
 {
   Type * const last = get_type_refd_last();
 
-  enum complaint_type { ALL_GOOD, OPTIONAL_OR_DEFAULT, UNTAGGED_EMBEDVAL,
+  enum complaint_type { ALL_GOOD, HAVE_DEFAULT, UNTAGGED_EMBEDVAL,
     NOT_SEQUENCE, EMPTY_SEQUENCE, FIRST_NOT_SEQOF, SEQOF_NOT_STRING,
     SEQOF_BAD_LENGTH, UNTAGGED_OTHER } ;
   complaint_type complaint = ALL_GOOD;
@@ -1050,9 +1050,9 @@ void Type::chk_xer_embed_values(int num_attributes)
     }
     CompField *cf0 = last->get_comp_byIndex(0);
     cf0t = cf0->get_type()->get_type_refd_last();
-    if (cf0->get_is_optional() || cf0->has_default()) {
-      complaint = OPTIONAL_OR_DEFAULT;
-      break; // 25.2.1 first component cannot be optional or have default
+    if (cf0->has_default()) {
+      complaint = HAVE_DEFAULT;
+      break; // 25.2.1 first component cannot have default
     }
 
     switch (cf0t->get_typetype()) { // check the first component
@@ -1119,10 +1119,10 @@ void Type::chk_xer_embed_values(int num_attributes)
     case EMPTY_SEQUENCE:
     case FIRST_NOT_SEQOF:
     case SEQOF_NOT_STRING:
-    case OPTIONAL_OR_DEFAULT:
+    case HAVE_DEFAULT:
       error("A type with EMBED-VALUES must be a sequence type. "
         "The first component of the sequence shall be SEQUENCE OF UTF8String "
-        "and shall not be marked OPTIONAL or DEFAULT");
+        "and shall not be marked DEFAULT");
       break;
     case SEQOF_BAD_LENGTH:
       cf0t->error("Wrong length of SEQUENCE-OF for EMBED-VALUES, should be %lu",
@@ -1139,7 +1139,6 @@ void Type::chk_xer_embed_values(int num_attributes)
     } // switch(complaint)
   } // if complaint and embedValues
 }
-
 /** Wraps a C string but compares by contents, not by pointer */
 class stringval {
   const char * str;
@@ -1559,11 +1558,14 @@ void Type::chk_xer_use_nil()
 
   enum complaint_type { ALL_GOOD, NO_CONTROLNS, NOT_SEQUENCE, EMPTY_SEQUENCE,
     UNTAGGED_USENIL, COMPONENT_NOT_ATTRIBUTE, LAST_IS_ATTRIBUTE,
-    LAST_NOT_OPTIONAL, INCOMPATIBLE, WRONG_OPTIONAL_TYPE, EMBED_CHARENC };
+    LAST_NOT_OPTIONAL, INCOMPATIBLE, WRONG_OPTIONAL_TYPE, EMBED_CHARENC,
+    NOT_COMPATIBLE_WITH_USEORDER, BAD_ENUM, FIRST_OPTIONAL, NOTHING_TO_ORDER,
+    FIRST_NOT_RECORD_OF_ENUM, ENUM_GAP };
   complaint_type complaint = ALL_GOOD;
   CompField *cf = 0;
   CompField *cf_last = 0;
   const char *ns, *prefix;
+  Type *the_enum = 0;
   my_scope->get_scope_mod()->get_controlns(ns, prefix);
 
   if (!prefix) complaint = NO_CONTROLNS; // don't bother checking further
@@ -1605,6 +1607,57 @@ void Type::chk_xer_use_nil()
     if (!cf_last->get_is_optional()) {
       complaint = LAST_NOT_OPTIONAL;
     }
+    
+    if(xerattrib->useOrder_ && cft->get_type_refd_last()->get_typetype() != T_SEQ_A
+       && cft->get_type_refd_last()->get_typetype() != T_SEQ_T){
+      complaint = NOT_COMPATIBLE_WITH_USEORDER;
+    }else if(xerattrib->useOrder_) {
+      //This check needed, because if the record that has useOrder only
+      //has one field that is a sequence type, then the useNilPossible
+      //would be always true, that would lead to incorrect code generation.
+      Type * inner = cft->get_type_refd_last();
+      size_t useorder_index = xerattrib->embedValues_;
+      CompField *uo_field = last->get_comp_byIndex(useorder_index);
+      Type *uot = uo_field->get_type();
+      if (uot->get_type_refd_last()->typetype == T_SEQOF) {
+        the_enum = uot->get_ofType()->get_type_refd_last();
+        if(the_enum->typetype != T_ENUM_A && the_enum->typetype != T_ENUM_T){
+          complaint = FIRST_NOT_RECORD_OF_ENUM;
+          break;
+        }else if (uo_field->get_is_optional() || uo_field->get_defval() != 0) {
+          complaint = FIRST_OPTIONAL;
+          break;
+        }
+
+        size_t expected_enum_items = inner->get_nof_comps();
+        size_t enum_index = 0;
+        if (expected_enum_items == 0)
+          complaint = NOTHING_TO_ORDER;
+        else if (the_enum->u.enums.eis->get_nof_eis() != expected_enum_items)
+          complaint = BAD_ENUM;
+        else for (size_t i = 0; i < expected_enum_items; ++i) {
+          CompField *inner_cf = inner->get_comp_byIndex(i);
+          Type *inner_cft = inner_cf->get_type();
+          if (inner_cft->xerattrib && inner_cft->xerattrib->attribute_) continue;
+          // Found a non-attribute component. Its name must match an enumval
+          const Identifier& field_name = inner_cf->get_name();
+          const EnumItem *ei = the_enum->get_ei_byIndex(enum_index);
+          const Identifier& enum_name  = ei->get_name();
+          if (field_name != enum_name) {// X.693amd1 35.2.2.1 and 35.2.2.2
+            complaint = BAD_ENUM;
+            break;
+          }
+          Value *v = ei->get_value();
+          const int_val_t *ival = v->get_val_Int();
+          const Int enumval = ival->get_val();
+          if ((size_t)enumval != enum_index) {
+            complaint = ENUM_GAP; // 35.2.2.3
+            break;
+          }
+          ++enum_index;
+        }
+      }
+    }
 
     if (cft->xerattrib) {
       if ( cft->xerattrib->attribute_
@@ -1615,9 +1668,10 @@ void Type::chk_xer_use_nil()
 
       if (has_ae(cft->xerattrib)
         ||has_aa(cft->xerattrib)
-        ||cft->xerattrib->defaultForEmpty_     != 0
-        ||cft->xerattrib->embedValues_ ||cft->xerattrib->untagged_
-        ||cft->xerattrib->useNil_      ||cft->xerattrib->useOrder_
+        ||cft->xerattrib->defaultForEmpty_ != 0
+        ||cft->xerattrib->untagged_
+        ||cft->xerattrib->useNil_
+        ||cft->xerattrib->useOrder_
         ||cft->xerattrib->useType_) { // or PI-OR-COMMENT
         complaint = INCOMPATIBLE; // 33.2.3
       }
@@ -1683,7 +1737,7 @@ void Type::chk_xer_use_nil()
     case INCOMPATIBLE:
       cf_last->error("The OPTIONAL component of USE-NIL cannot have any of the "
         "following encoding instructions: ANY-ATTRIBUTES, ANY-ELEMENT, "
-        "DEFAULT-FOR-EMPTY, EMBED-VALUES, PI-OR-COMMENT, UNTAGGED, "
+        "DEFAULT-FOR-EMPTY, PI-OR-COMMENT, UNTAGGED, "
         "USE-NIL, USE-ORDER, USE-TYPE.");
       break;
     case WRONG_OPTIONAL_TYPE:
@@ -1695,6 +1749,33 @@ void Type::chk_xer_use_nil()
       cf_last->error("In a sequence type with EMBED-VALUES and USE-NIL, "
         "the optional component supporting USE-NIL shall not be "
         "a character-encodable type.");
+      break;
+    case NOT_COMPATIBLE_WITH_USEORDER:
+      cf_last->error("The OTIONAL component of USE-NIL must be "
+        "a SEQUENCE/record when USE-ORDER is set for the parent type.");
+      break;
+    case BAD_ENUM:
+      if (!the_enum) FATAL_ERROR("Type::chk_xer_use_order()");
+      the_enum->error("Enumeration items should match the"
+        " non-attribute components of the field %s",
+        cf_last->get_name().get_dispname().c_str());
+      break;
+    case FIRST_OPTIONAL:
+      error("The record-of for USE-ORDER shall not be marked"
+        " OPTIONAL or DEFAULT"); // X.693amd1 35.2.3
+      break;
+    case NOTHING_TO_ORDER:
+      error("The component (%s) should have at least one non-attribute"
+        " component if USE-ORDER is present",
+        cf_last->get_name().get_dispname().c_str());
+      break;
+    case FIRST_NOT_RECORD_OF_ENUM:
+      error("The type with USE-ORDER should have a component "
+        "which is a record-of enumerated");
+      break;
+    case ENUM_GAP:
+      if (!the_enum) FATAL_ERROR("Type::chk_xer_use_order()");
+      the_enum->error("Enumeration values must start at 0 and have no gaps");
       break;
     } // switch
   } // if USE-NIL
@@ -1740,7 +1821,7 @@ void Type::chk_xer_use_order(int num_attributes)
       if (xerattrib->useNil_) { // useNil in addition to useOrder
         // This is an additional complication because USE-ORDER
         // will affect the optional component, rather than the type itself
-        CompField *cf = get_comp_byIndex(ncomps-1);
+        CompField *cf = last->get_comp_byIndex(ncomps-1);
         sequence_type = cf->get_type()->get_type_refd_last();
         if (sequence_type->typetype == T_SEQ_T
           ||sequence_type->typetype == T_SEQ_A) {

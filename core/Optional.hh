@@ -309,6 +309,8 @@ public:
     const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
   int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, Limit_Token_List&,
                   boolean no_err=FALSE, boolean first_call=TRUE);
+  int JSON_encode_negtest(const Erroneous_descriptor_t*,
+                          const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;
 #endif
   
   /** Encodes accordingly to the JSON encoding rules.
@@ -807,6 +809,25 @@ int OPTIONAL<T_type>::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokeni
     return -1;
   }
 }
+
+#ifdef TITAN_RUNTIME_2
+template<typename T_type>
+int OPTIONAL<T_type>::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
+                                        const TTCN_Typedescriptor_t& p_td,
+                                        JSON_Tokenizer& p_tok) const 
+{
+  switch (get_selection()) {
+  case OPTIONAL_PRESENT:
+    return optional_value->JSON_encode_negtest(p_err_descr, p_td, p_tok);
+  case OPTIONAL_OMIT:
+    return p_tok.put_next_token(JSON_TOKEN_LITERAL_NULL, NULL);
+  default:
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound optional value.");
+    return -1;
+  }
+}
+#endif
 
 template<typename T_type>
 int OPTIONAL<T_type>::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)

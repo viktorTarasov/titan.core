@@ -56,19 +56,19 @@ type enumerated IntegerWithEnum
 	int1000(1000)
 }
 with {
-variant "useNumber";
+  variant "useNumber";
 };
 
 
 type IntegerWithEnum IntegerWithEnumElement
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/integer_withEnum' prefix 'ns24'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/integer_withEnum' prefix 'ns24'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

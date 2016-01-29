@@ -44,12 +44,12 @@ type record Create
 	AnySequenceType extension_ optional
 }
 with {
-variant "element";
-variant (mOType) "name as capitalized";
-variant (mOId) "name as capitalized";
-variant (mOAttributes) "name as capitalized";
-variant (mOAttributes.createMODefinition) "name as capitalized";
-variant (extension_) "name as 'extension'";
+  variant "element";
+  variant (mOType) "name as capitalized";
+  variant (mOId) "name as capitalized";
+  variant (mOAttributes) "name as capitalized";
+  variant (mOAttributes.createMODefinition) "name as capitalized";
+  variant (extension_) "name as 'extension'";
 };
 
 
@@ -59,9 +59,9 @@ type record CreateResponse
 	GetResponseMOAttributesType mOAttributes optional
 }
 with {
-variant "element";
-variant (mOId) "name as capitalized";
-variant (mOAttributes) "name as capitalized";
+  variant "element";
+  variant (mOId) "name as capitalized";
+  variant (mOAttributes) "name as capitalized";
 };
 
 
@@ -72,10 +72,10 @@ type record Get
 	AnySequenceType extension_ optional
 }
 with {
-variant "element";
-variant (mOType) "name as capitalized";
-variant (mOId) "name as capitalized";
-variant (extension_) "name as 'extension'";
+  variant "element";
+  variant (mOType) "name as capitalized";
+  variant (mOId) "name as capitalized";
+  variant (extension_) "name as 'extension'";
 };
 
 
@@ -85,10 +85,10 @@ type record GetResponse
 	GetResponseMOAttributesType mOAttributes optional
 }
 with {
-variant "element";
-variant (mOId_list) "untagged";
-variant (mOId_list[-]) "name as 'MOId'";
-variant (mOAttributes) "name as capitalized";
+  variant "element";
+  variant (mOId_list) "untagged";
+  variant (mOId_list[-]) "name as 'MOId'";
+  variant (mOAttributes) "name as capitalized";
 };
 
 
@@ -102,12 +102,12 @@ type record Set
 	AnySequenceType extension_ optional
 }
 with {
-variant "element";
-variant (mOType) "name as capitalized";
-variant (mOId) "name as capitalized";
-variant (mOAttributes) "name as capitalized";
-variant (mOAttributes.setMODefinition) "name as capitalized";
-variant (extension_) "name as 'extension'";
+  variant "element";
+  variant (mOType) "name as capitalized";
+  variant (mOId) "name as capitalized";
+  variant (mOAttributes) "name as capitalized";
+  variant (mOAttributes.setMODefinition) "name as capitalized";
+  variant (extension_) "name as 'extension'";
 };
 
 
@@ -116,8 +116,8 @@ type record SetResponse
 	GetResponseMOAttributesType mOAttributes optional
 }
 with {
-variant "element";
-variant (mOAttributes) "name as capitalized";
+  variant "element";
+  variant (mOAttributes) "name as capitalized";
 };
 
 
@@ -128,10 +128,10 @@ type record Delete
 	AnySequenceType extension_ optional
 }
 with {
-variant "element";
-variant (mOType) "name as capitalized";
-variant (mOId) "name as capitalized";
-variant (extension_) "name as 'extension'";
+  variant "element";
+  variant (mOType) "name as capitalized";
+  variant (mOId) "name as capitalized";
+  variant (extension_) "name as 'extension'";
 };
 
 
@@ -141,9 +141,9 @@ type record DeleteResponse
 	GetResponseMOAttributesType mOAttributes optional
 }
 with {
-variant "element";
-variant (mOId) "name as capitalized";
-variant (mOAttributes) "name as capitalized";
+  variant "element";
+  variant (mOId) "name as capitalized";
+  variant (mOAttributes) "name as capitalized";
 };
 
 
@@ -154,9 +154,9 @@ type record Search
 	AnySequenceType extension_ optional
 }
 with {
-variant "element";
-variant (mOType) "name as capitalized";
-variant (extension_) "name as 'extension'";
+  variant "element";
+  variant (mOType) "name as capitalized";
+  variant (extension_) "name as 'extension'";
 };
 
 
@@ -165,9 +165,9 @@ type record SearchResponse
 	record of AnyMOIdType mOId_list
 }
 with {
-variant "element";
-variant (mOId_list) "untagged";
-variant (mOId_list[-]) "name as 'MOId'";
+  variant "element";
+  variant (mOId_list) "untagged";
+  variant (mOId_list[-]) "name as 'MOId'";
 };
 
 
@@ -177,7 +177,7 @@ type record Login
 	XSD.String pwd
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -187,7 +187,7 @@ type record LoginResponse
 	XSD.UnsignedLong baseSequenceId
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -196,7 +196,7 @@ type record Logout
 	SessionIdType sessionId
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -205,7 +205,7 @@ type record LogoutResponse
 
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -215,7 +215,7 @@ type record Subscribe
 	NotificationFiltersType filters
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -224,7 +224,7 @@ type record SubscribeResponse
 	XSD.String subscriptionId
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -234,7 +234,7 @@ type record Unsubscribe
 	XSD.String subscriptionId optional
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -243,7 +243,7 @@ type record UnsubscribeResponse
 
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -258,11 +258,11 @@ type record Notify
 	} notificationData
 }
 with {
-variant "element";
-variant (correlatedNotifications_list) "untagged";
-variant (correlatedNotifications_list[-]) "name as 'correlatedNotifications'";
-variant (notificationData.elem_list) "untagged";
-variant (notificationData.elem_list[-]) "anyElement";
+  variant "element";
+  variant (correlatedNotifications_list) "untagged";
+  variant (correlatedNotifications_list[-]) "name as 'correlatedNotifications'";
+  variant (notificationData.elem_list) "untagged";
+  variant (notificationData.elem_list[-]) "anyElement";
 };
 
 
@@ -271,7 +271,7 @@ type record NotifyResponse
 
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -280,7 +280,7 @@ type record GetResponseMOAttributesType
 	GetMODefinition getMODefinition
 }
 with {
-variant (getMODefinition) "name as capitalized";
+  variant (getMODefinition) "name as capitalized";
 };
 
 
@@ -304,37 +304,37 @@ type record AbstractGetAttributeType
 
 type XSD.AnySimpleType CreateMODefinition
 with {
-variant "element";
+  variant "element";
 };
 
 
 type XSD.AnySimpleType GetMODefinition
 with {
-variant "element";
+  variant "element";
 };
 
 
 type XSD.AnySimpleType SetMODefinition
 with {
-variant "element";
+  variant "element";
 };
 
 
 type AbstractCreateAttributeType CreateMODef
 with {
-variant "element";
+  variant "element";
 };
 
 
 type AbstractSetAttributeType SetMODef
 with {
-variant "element";
+  variant "element";
 };
 
 
 type AbstractGetAttributeType GetMODef
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -343,8 +343,8 @@ type record AnyMOIdType
 	record length(1 .. infinity) of XSD.String elem_list
 }
 with {
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement";
 };
 
 
@@ -353,8 +353,8 @@ type record AnySequenceType
 	record length(1 .. infinity) of XSD.String elem_list
 }
 with {
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement";
 };
 
 
@@ -363,19 +363,19 @@ type XSD.String MoType (pattern "[A-Za-z][_A-Za-z0-9]*@?*");
 
 type SessionIdType SessionId
 with {
-variant "element";
+  variant "element";
 };
 
 
 type XSD.UnsignedLong TransactionId
 with {
-variant "element";
+  variant "element";
 };
 
 
 type XSD.UnsignedLong SequenceId
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -387,8 +387,8 @@ type record SearchFiltersType
 	record length(1 .. infinity) of SearchFilterType filter_list
 }
 with {
-variant (filter_list) "untagged";
-variant (filter_list[-]) "name as 'filter'";
+  variant (filter_list) "untagged";
+  variant (filter_list[-]) "name as 'filter'";
 };
 
 
@@ -397,8 +397,8 @@ type record SearchFilterType
 	record length(1 .. infinity) of XSD.String mOAttributes_list
 }
 with {
-variant (mOAttributes_list) "untagged";
-variant (mOAttributes_list[-]) "name as 'MOAttributes'";
+  variant (mOAttributes_list) "untagged";
+  variant (mOAttributes_list[-]) "name as 'MOAttributes'";
 };
 
 
@@ -414,8 +414,8 @@ type record NotificationHeaderType
 	XSD.String subscriptionId
 }
 with {
-variant (mOType) "name as capitalized";
-variant (mOId) "name as capitalized";
+  variant (mOType) "name as capitalized";
+  variant (mOId) "name as capitalized";
 };
 
 
@@ -429,16 +429,16 @@ type record NotificationFilterType
 	record of XSD.String mOAttributes_list
 }
 with {
-variant (cai3gUser_list) "untagged";
-variant (cai3gUser_list[-]) "name as 'cai3gUser'";
-variant (mOType_list) "untagged";
-variant (mOType_list[-]) "name as 'MOType'";
-variant (operation_list) "untagged";
-variant (operation_list[-]) "name as 'operation'";
-variant (mOId_list) "untagged";
-variant (mOId_list[-]) "name as 'MOId'";
-variant (mOAttributes_list) "untagged";
-variant (mOAttributes_list[-]) "name as 'MOAttributes'";
+  variant (cai3gUser_list) "untagged";
+  variant (cai3gUser_list[-]) "name as 'cai3gUser'";
+  variant (mOType_list) "untagged";
+  variant (mOType_list[-]) "name as 'MOType'";
+  variant (operation_list) "untagged";
+  variant (operation_list[-]) "name as 'operation'";
+  variant (mOId_list) "untagged";
+  variant (mOId_list[-]) "name as 'MOId'";
+  variant (mOAttributes_list) "untagged";
+  variant (mOAttributes_list[-]) "name as 'MOAttributes'";
 };
 
 
@@ -447,8 +447,8 @@ type record NotificationFiltersType
 	record length(1 .. infinity) of NotificationFilterType filter_list
 }
 with {
-variant (filter_list) "untagged";
-variant (filter_list[-]) "name as 'filter'";
+  variant (filter_list) "untagged";
+  variant (filter_list[-]) "name as 'filter'";
 };
 
 
@@ -459,9 +459,9 @@ type enumerated NotificationOperationType
 	set_
 }
 with {
-variant "text 'create_' as 'Create'";
-variant "text 'delete' as capitalized";
-variant "text 'set_' as 'Set'";
+  variant "text 'create_' as 'Create'";
+  variant "text 'delete' as capitalized";
+  variant "text 'set_' as 'Set'";
 };
 
 
@@ -477,10 +477,10 @@ type record Cai3gFault
 	} details optional
 }
 with {
-variant "element";
-variant (faultreason.reasonText_list) "untagged";
-variant (faultreason.reasonText_list[-]) "name as 'reasonText'";
-variant (details.elem) "anyElement";
+  variant "element";
+  variant (faultreason.reasonText_list) "untagged";
+  variant (faultreason.reasonText_list[-]) "name as 'reasonText'";
+  variant (details.elem) "anyElement";
 };
 
 
@@ -502,9 +502,9 @@ type record SessionIdFault
 	} faultcode
 }
 with {
-variant (faultcode) "text 'invalid_SessionId' as 'Invalid SessionId'";
-variant (faultcode) "text 'sessionId_Syntax_Error' as 'SessionId Syntax Error'";
-variant (faultcode) "text 'session_Timeout' as 'Session Timeout'";
+  variant (faultcode) "text 'invalid_SessionId' as 'Invalid SessionId'";
+  variant (faultcode) "text 'sessionId_Syntax_Error' as 'SessionId Syntax Error'";
+  variant (faultcode) "text 'session_Timeout' as 'Session Timeout'";
 };
 
 
@@ -517,7 +517,7 @@ type record SequenceIdFault
 	} faultcode
 }
 with {
-variant (faultcode) "text 'invalid_SequenceId' as 'Invalid SequenceId'";
+  variant (faultcode) "text 'invalid_SequenceId' as 'Invalid SequenceId'";
 };
 
 
@@ -530,14 +530,14 @@ type record TransactionIdFault
 	} faultcode
 }
 with {
-variant (faultcode) "text 'invalid_TransactionId' as 'Invalid TransactionId'";
+  variant (faultcode) "text 'invalid_TransactionId' as 'Invalid TransactionId'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://schemas.ericsson.com/cai3g1.1/'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://schemas.ericsson.com/cai3g1.1/'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

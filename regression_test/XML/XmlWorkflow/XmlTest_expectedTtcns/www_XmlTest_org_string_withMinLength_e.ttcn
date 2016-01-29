@@ -52,7 +52,7 @@ type XSD.String NameMinLength4 length(4 .. infinity);
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/string_withMinLength' prefix 'ns10'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/string_withMinLength' prefix 'ns10'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

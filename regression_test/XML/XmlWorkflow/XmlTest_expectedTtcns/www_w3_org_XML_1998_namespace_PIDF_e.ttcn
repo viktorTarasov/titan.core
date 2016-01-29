@@ -118,8 +118,8 @@ import from XSD all;
          codes as the enumerated possible values . . . */
 type XSD.Language Lang
 with {
-variant "name as uncapitalized";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
@@ -129,10 +129,10 @@ type enumerated Space
 	preserve
 }
 with {
-variant "text 'default_' as 'default'";
-variant "name as uncapitalized";
-variant "defaultForEmpty as 'preserve'";
-variant "attribute";
+  variant "text 'default_' as 'default'";
+  variant "name as uncapitalized";
+  variant "defaultForEmpty as 'preserve'";
+  variant "attribute";
 };
 
 
@@ -140,21 +140,21 @@ variant "attribute";
                      information about this attribute. */
 type XSD.AnyURI Base
 with {
-variant "name as uncapitalized";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
 type XSD.ID Id
 with {
-variant "name as uncapitalized";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.w3.org/XML/1998/namespace'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.w3.org/XML/1998/namespace'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

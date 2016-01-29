@@ -51,12 +51,12 @@ type enumerated State
 	x7
 }
 with {
-variant "text 'x0' as '0'";
-variant "text 'x1' as '1'";
-variant "text 'x2' as '2'";
-variant "text 'x3' as '3'";
-variant "text 'x7' as '7'";
-variant "name as uncapitalized";
+  variant "text 'x0' as '0'";
+  variant "text 'x1' as '1'";
+  variant "text 'x2' as '2'";
+  variant "text 'x3' as '3'";
+  variant "text 'x7' as '7'";
+  variant "name as uncapitalized";
 };
 
 
@@ -69,8 +69,8 @@ type enumerated State2
 	int7(7)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
@@ -79,8 +79,8 @@ type enumerated State3
 	int7(7)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
@@ -89,8 +89,8 @@ type enumerated State4
 	int7(7)
 }
 with {
-variant "useNumber";
-variant "name as uncapitalized";
+  variant "useNumber";
+  variant "name as uncapitalized";
 };
 
 
@@ -107,17 +107,17 @@ type record State5
 	} ent_type
 }
 with {
-variant "name as uncapitalized";
-variant (ent_type) "text 'altstep_' as 'altstep'";
-variant (ent_type) "text 'function_' as 'function'";
-variant (ent_type) "text 'template_' as 'template'";
-variant (ent_type) "text 'testcase_' as 'testcase'";
+  variant "name as uncapitalized";
+  variant (ent_type) "text 'altstep_' as 'altstep'";
+  variant (ent_type) "text 'function_' as 'function'";
+  variant (ent_type) "text 'template_' as 'template'";
+  variant (ent_type) "text 'testcase_' as 'testcase'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/enumeration/remove/dup'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/enumeration/remove/dup'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

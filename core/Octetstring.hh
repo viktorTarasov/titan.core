@@ -131,6 +131,10 @@ public:
   ASN_BER_TLV_t* BER_encode_negtest_raw() const;
   virtual int encode_raw(TTCN_Buffer& p_buf) const;
   virtual int RAW_encode_negtest_raw(RAW_enc_tree& p_myleaf) const;
+  /** Adds this octetstring to the end of a JSON buffer as raw data.
+    * Used during the negative testing of the JSON encoder.
+    * @return The number of bytes added. */
+  int JSON_encode_negtest_raw(JSON_Tokenizer&) const;
 #endif
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
                          const ASN_BER_TLV_t& p_tlv, unsigned L_form);

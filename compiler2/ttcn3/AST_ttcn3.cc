@@ -601,9 +601,33 @@ namespace Ttcn {
     }
     return true;
   }
+  
+  void Reference::refd_param_usage_found()
+  {
+    Common::Assignment *ass = get_refd_assignment();
+    if (!ass) FATAL_ERROR("Reference::refd_param_usage_found()");
+    switch (ass->get_asstype()) {
+    case Common::Assignment::A_PAR_VAL_OUT:
+    case Common::Assignment::A_PAR_TEMPL_OUT:
+    case Common::Assignment::A_PAR_VAL:
+    case Common::Assignment::A_PAR_VAL_IN:
+    case Common::Assignment::A_PAR_VAL_INOUT:
+    case Common::Assignment::A_PAR_TEMPL_IN:
+    case Common::Assignment::A_PAR_TEMPL_INOUT:
+    case Common::Assignment::A_PAR_PORT:
+    case Common::Assignment::A_PAR_TIMER: {
+      FormalPar *fpar = dynamic_cast<FormalPar*>(ass);
+      if (!fpar) FATAL_ERROR("Reference::refd_param_usage_found()");
+      fpar->set_usage_found();
+      break; }
+    default:
+      break;
+    }
+  }
 
   void Reference::generate_code(expression_struct_t *expr)
   {
+    refd_param_usage_found();
     Common::Assignment *ass = get_refd_assignment();
     if (!ass) FATAL_ERROR("Reference::generate_code()");
     if (parlist) {
@@ -630,7 +654,8 @@ namespace Ttcn {
       generate_code(expr);
       return;
     }
-
+    
+    refd_param_usage_found();
     Common::Assignment *ass = get_refd_assignment();
     if (!ass) FATAL_ERROR("Reference::generate_code_const_ref()");
 
@@ -691,6 +716,7 @@ namespace Ttcn {
   void Reference::generate_code_portref(expression_struct_t *expr,
     Scope *p_scope)
   {
+    refd_param_usage_found();
     Common::Assignment *ass = get_refd_assignment();
     if (!ass) FATAL_ERROR("Reference::generate_code_portref()");
     expr->expr = mputstr(expr->expr,
@@ -702,6 +728,7 @@ namespace Ttcn {
   void Reference::generate_code_ispresentbound(expression_struct_t *expr,
     bool is_template, const bool isbound)
   {
+    refd_param_usage_found();
     Common::Assignment *ass = get_refd_assignment();
     const string& ass_id = ass->get_genname_from_scope(my_scope);
     const char *ass_id_str = ass_id.c_str();
@@ -1413,7 +1440,7 @@ namespace Ttcn {
                     result = NULL;
                   } else {
                   loc->error(
-                  "It is not possible to resolve the reference unambigously"
+                  "It is not possible to resolve the reference unambiguously"
                   ", as it can be resolved to `%s' and to `%s'",
                        result->get_fullname().c_str(), t_ass->get_fullname().c_str());
                   }
@@ -1605,7 +1632,7 @@ namespace Ttcn {
             result = NULL;
           } else {
           loc->error(
-          "It is not possible to resolve the reference unambigously"
+          "It is not possible to resolve the reference unambiguously"
           ", as it can be resolved to `%s' and to `%s'",
             result->get_fullname().c_str(), ass->get_fullname().c_str());
         }
@@ -1630,13 +1657,11 @@ namespace Ttcn {
 
   void Imports::generate_code(output_struct *target)
   {
-    bool base_lib_needed = true;
+    target->header.includes = mputstr(target->header.includes,
+      "#include <TTCN3.hh>\n");
     for (size_t i = 0; i < impmods_v.size(); i++) {
       ImpMod *im = impmods_v[i];
       Common::Module *m = im->get_mod();
-      // do not include the header file of the base library if a real
-      // (not circular) imported module is found
-      if (base_lib_needed && !m->is_visible(my_mod)) base_lib_needed = false;
       // inclusion of m's header file can be eliminated if we find another
       // imported module that imports m
       bool covered = false;
@@ -1657,14 +1682,6 @@ namespace Ttcn {
       }
       // do not generate the #include if a covering module is found
       if (!covered) im->generate_code(target);
-    }
-    if (base_lib_needed) {
-      // if no real import was found the base library definitions have to be
-      // #include'd (also, make sure this is the first include)
-      char* temp = target->header.includes;
-      target->header.includes = mcopystr("#include <TTCN3.hh>\n");
-      target->header.includes = mputstr(target->header.includes, temp);
-      Free(temp);
     }
   }
 
@@ -2232,7 +2249,7 @@ namespace Ttcn {
                   result_ass = t_ass;
                 } else if(result_ass != t_ass) {
                   p_ref->error(
-                  "It is not possible to resolve the reference unambigously"
+                  "It is not possible to resolve the reference unambiguously"
                   ", as it can be resolved to `%s' and to `%s'",
                     result_ass->get_fullname().c_str(), t_ass->get_fullname().c_str());
                 }
@@ -2302,7 +2319,7 @@ namespace Ttcn {
                 t_result = t_ass;
               } else if(t_result != t_ass) {
                 p_ref->error(
-                "It is not possible to resolve the reference unambigously"
+                "It is not possible to resolve the reference unambiguously"
                 ", as it can be resolved to `%s' and to `%s'",
                   t_result->get_fullname().c_str(), t_ass->get_fullname().c_str());
               }
@@ -4193,15 +4210,11 @@ namespace Ttcn {
       const char *template_dispname = id->get_dispname().c_str();
       const string& type_genname = type->get_genname_template(my_scope);
       const char *type_genname_str = type_genname.c_str();
-      char *formal_par_list = fp_list->generate_code(memptystr());
-      fp_list->generate_code_defval(target);
-      target->header.function_prototypes =
-        mputprintf(target->header.function_prototypes,
-          "extern %s %s(%s);\n",
-          type_genname_str, template_name, formal_par_list);
-      char *function_body = mprintf("%s %s(%s)\n"
-        "{\n", type_genname_str, template_name, formal_par_list);
-      function_body = create_location_object(function_body, "TEMPLATE",
+      
+      // assemble the function body first (this also determines which parameters
+      // are never used)
+      size_t nof_base_pars = 0;
+      char* function_body = create_location_object(memptystr(), "TEMPLATE",
         template_dispname);
       if (base_template) {
         // modified template
@@ -4211,7 +4224,7 @@ namespace Ttcn {
         if (base_template->fp_list) {
           // the base template is also parameterized
           function_body = mputc(function_body, '(');
-          size_t nof_base_pars = base_template->fp_list->get_nof_fps();
+          nof_base_pars = base_template->fp_list->get_nof_fps();
           for (size_t i = 0; i < nof_base_pars; i++) {
             if (i > 0) function_body = mputstr(function_body, ", ");
             function_body = mputstr(function_body,
@@ -4233,10 +4246,22 @@ namespace Ttcn {
       if (template_restriction!=TR_NONE && gen_restriction_check)
         function_body = Template::generate_restriction_check_code(function_body,
                           "ret_val", template_restriction);
-      function_body = mputstr(function_body, "return ret_val;\n"
-        "}\n\n");
-      target->source.function_bodies =
-        mputstr(target->source.function_bodies, function_body);
+      function_body = mputstr(function_body, "return ret_val;\n");
+      // if the template modifies a parameterized template, then the inherited
+      // formal parameters must always be displayed, otherwise generate a smart
+      // formal parameter list (where the names of unused parameters are omitted)
+      char *formal_par_list = fp_list->generate_code(memptystr(), nof_base_pars);
+      fp_list->generate_code_defval(target);
+      
+      target->header.function_prototypes =
+        mputprintf(target->header.function_prototypes,
+          "extern %s %s(%s);\n",
+          type_genname_str, template_name, formal_par_list);
+      target->source.function_bodies = mputprintf(target->source.function_bodies,
+        "%s %s(%s)\n"
+        "{\n"
+        "%s"
+        "}\n\n", type_genname_str, template_name, formal_par_list, function_body);
       Free(formal_par_list);
       Free(function_body);
     } else {
@@ -6024,6 +6049,15 @@ namespace Ttcn {
       FATAL_ERROR("Def_Function::generate_code()");
     }
     const char *return_type_str = return_type_name.c_str();
+    
+    // assemble the function body first (this also determines which parameters
+    // are never used)
+    char* body = create_location_object(memptystr(), "FUNCTION", dispname_str);
+    if (!enable_set_bound_out_param)
+      body = fp_list->generate_code_set_unbound(body); // conform the standard out parameter is unbound
+    body = fp_list->generate_shadow_objects(body);
+    body = block->generate_code(body);
+    // smart formal parameter list (names of unused parameters are omitted)
     char *formal_par_list = fp_list->generate_code(memptystr());
     fp_list->generate_code_defval(target);
     // function prototype
@@ -6031,34 +6065,32 @@ namespace Ttcn {
       mputprintf(target->header.function_prototypes, "extern %s %s(%s);\n",
         return_type_str, genname_str, formal_par_list);
 
-    // function body
-    char *body = mprintf("%s %s(%s)\n"
-      "{\n", return_type_str, genname_str, formal_par_list);
-    body = create_location_object(body, "FUNCTION", dispname_str);
-    if (!enable_set_bound_out_param)
-      body = fp_list->generate_code_set_unbound(body); // conform the standard out parameter is unbound
-    body = fp_list->generate_shadow_objects(body);
-    body = block->generate_code(body);
-    body = mputstr(body, "}\n\n");
-    target->source.function_bodies = mputstr(target->source.function_bodies,
-      body);
+    // function body    
+    target->source.function_bodies = mputprintf(target->source.function_bodies,
+      "%s %s(%s)\n"
+      "{\n"
+      "%s"
+      "}\n\n", return_type_str, genname_str, formal_par_list, body);
+    Free(formal_par_list);
     Free(body);
 
     if (is_startable) {
       size_t nof_fps = fp_list->get_nof_fps();
+      // use the full list of formal parameters here (since they are all logged)
+      char *full_formal_par_list = fp_list->generate_code(memptystr(), nof_fps);
       // starter function (stub)
         // function prototype
         target->header.function_prototypes =
           mputprintf(target->header.function_prototypes,
             "extern void start_%s(const COMPONENT& component_reference%s%s);\n",
-            genname_str, nof_fps>0?", ":"", formal_par_list);
+            genname_str, nof_fps>0?", ":"", full_formal_par_list);
         // function body
         body = mprintf("void start_%s(const COMPONENT& component_reference%s"
             "%s)\n"
           "{\n"
           "TTCN_Logger::begin_event(TTCN_Logger::PARALLEL_PTC);\n"
           "TTCN_Logger::log_event_str(\"Starting function %s(\");\n",
-          genname_str, nof_fps>0?", ":"", formal_par_list, dispname_str);
+          genname_str, nof_fps>0?", ":"", full_formal_par_list, dispname_str);
         for (size_t i = 0; i < nof_fps; i++) {
           if (i > 0) body = mputstr(body,
              "TTCN_Logger::log_event_str(\", \");\n");
@@ -6150,8 +6182,8 @@ namespace Ttcn {
         "} else ");
       target->functions.start = mputstr(target->functions.start, body);
       Free(body);
+      Free(full_formal_par_list);
     }
-    Free(formal_par_list);
 
     target->functions.pre_init = mputprintf(target->functions.pre_init,
       "%s.add_function(\"%s\", (genericfunc_t)&%s, ", get_module_object_name(),
@@ -6271,35 +6303,55 @@ namespace Ttcn {
       }
 
       if (input_type) {
-        if (!input_type->has_encoding(encoding_type)) {
-          input_type->error("Input type `%s' does not support %s encoding",
-            input_type->get_typename().c_str(),
-            Type::get_encoding_name(encoding_type));
+        if (!input_type->has_encoding(encoding_type, encoding_options)) {
+          if (Common::Type::CT_CUSTOM == encoding_type) {
+            input_type->error("Input type `%s' does not support custom encoding '%s'",
+              input_type->get_typename().c_str(), encoding_options->c_str());
+          }
+          else {
+            input_type->error("Input type `%s' does not support %s encoding",
+              input_type->get_typename().c_str(),
+              Type::get_encoding_name(encoding_type));
+          }
         }
-        if (Common::Type::CT_XER == encoding_type
-          && input_type->get_type_refd_last()->is_untagged()) {
-          // "untagged" on the (toplevel) input type will have no effect.
-          warning("UNTAGGED encoding attribute is ignored on top-level type");
+        else {
+          if (Common::Type::CT_XER == encoding_type
+            && input_type->get_type_refd_last()->is_untagged()) {
+            // "untagged" on the (toplevel) input type will have no effect.
+            warning("UNTAGGED encoding attribute is ignored on top-level type");
+          }
+          if (Common::Type::CT_CUSTOM == encoding_type) {
+            if (PROTOTYPE_CONVERT != prototype) {
+              error("Only `prototype(convert)' is allowed for custom encoding functions");
+            }
+            else {
+              // let the input type know that this is its encoding function
+              input_type->get_type_refd()->set_coding_function(true,
+                get_genname_from_scope(input_type->get_type_refd()->get_my_scope()));
+              // treat this as a manual external function during code generation
+              function_type = EXTFUNC_MANUAL;
+            }
+          }
         }
       }
       if (output_type) {
-        if(encoding_type == Common::Type::CT_TEXT){  // the TEXT encoding support both octetstring ans charstring stream type
+        if(encoding_type == Common::Type::CT_TEXT) { // TEXT encoding supports both octetstring and charstring stream types
           Type *stream_type = Type::get_stream_type(encoding_type,0);
           Type *stream_type2 = Type::get_stream_type(encoding_type,1);
           if ( (!stream_type->is_identical(output_type)) && (!stream_type2->is_identical(output_type)) ) {
-            input_type->error("The output type of %s encoding should be `%s' or `%s' "
+            output_type->error("The output type of %s encoding should be `%s' or `%s' "
               "instead of `%s'", Type::get_encoding_name(encoding_type),
               stream_type->get_typename().c_str(),
               stream_type2->get_typename().c_str(),
-              input_type->get_typename().c_str());
+              output_type->get_typename().c_str());
           }
         } else {
           Type *stream_type = Type::get_stream_type(encoding_type);
           if (!stream_type->is_identical(output_type)) {
-            input_type->error("The output type of %s encoding should be `%s' "
+            output_type->error("The output type of %s encoding should be `%s' "
               "instead of `%s'", Type::get_encoding_name(encoding_type),
               stream_type->get_typename().c_str(),
-              input_type->get_typename().c_str());
+              output_type->get_typename().c_str());
           }
         }
       }
@@ -6311,11 +6363,11 @@ namespace Ttcn {
         error("Attribute `decode' cannot be used without `prototype'");
       }
       if (input_type) {
-        if(encoding_type == Common::Type::CT_TEXT){  // the TEXT encoding support both octetstring ans charstring stream type
+        if(encoding_type == Common::Type::CT_TEXT) { // TEXT encoding supports both octetstring and charstring stream types
           Type *stream_type = Type::get_stream_type(encoding_type,0);
           Type *stream_type2 = Type::get_stream_type(encoding_type,1);
           if ( (!stream_type->is_identical(input_type)) && (!stream_type2->is_identical(input_type)) ) {
-            input_type->error("The input type of %s encoding should be `%s' or `%s' "
+            input_type->error("The input type of %s decoding should be `%s' or `%s' "
               "instead of `%s'", Type::get_encoding_name(encoding_type),
               stream_type->get_typename().c_str(),
               stream_type2->get_typename().c_str(),
@@ -6324,7 +6376,7 @@ namespace Ttcn {
         } else {
           Type *stream_type = Type::get_stream_type(encoding_type);
           if (!stream_type->is_identical(input_type)) {
-            input_type->error("The input type of %s encoding should be `%s' "
+            input_type->error("The input type of %s decoding should be `%s' "
               "instead of `%s'", Type::get_encoding_name(encoding_type),
               stream_type->get_typename().c_str(),
               input_type->get_typename().c_str());
@@ -6332,10 +6384,30 @@ namespace Ttcn {
         }
         
       }
-      if (output_type && !output_type->has_encoding(encoding_type)) {
-        output_type->error("Output type `%s' does not support %s encoding",
-          output_type->get_typename().c_str(),
-          Type::get_encoding_name(encoding_type));
+      if (output_type && !output_type->has_encoding(encoding_type, encoding_options)) {
+        if (Common::Type::CT_CUSTOM == encoding_type) {
+          output_type->error("Output type `%s' does not support custom encoding '%s'",
+            output_type->get_typename().c_str(), encoding_options->c_str());
+        }
+        else {
+          output_type->error("Output type `%s' does not support %s encoding",
+            output_type->get_typename().c_str(),
+            Type::get_encoding_name(encoding_type));
+        }
+      }
+      else {
+        if (Common::Type::CT_CUSTOM == encoding_type) {
+          if (PROTOTYPE_SLIDING != prototype) {
+            error("Only `prototype(sliding)' is allowed for custom decoding functions");
+          }
+          else if (output_type) {
+            // let the output type know that this is its decoding function
+            output_type->get_type_refd()->set_coding_function(false,
+              get_genname_from_scope(output_type->get_type_refd()->get_my_scope()));
+            // treat this as a manual external function during code generation
+            function_type = EXTFUNC_MANUAL;
+          }
+        }
       }
       if (eb_list) eb_list->chk();
       chk_allowed_encode();
@@ -6366,6 +6438,8 @@ namespace Ttcn {
     case Type::CT_JSON:
       if (enable_json()) return;
       break;
+    case Type::CT_CUSTOM:
+      return; // cannot be disabled
     default:
       FATAL_ERROR("Def_ExtFunction::chk_allowed_encode");
       break;
@@ -6678,7 +6752,7 @@ namespace Ttcn {
       FATAL_ERROR("Def_ExtFunction::generate_code()");
     }
     const char *return_type_str = return_type_name.c_str();
-    char *formal_par_list = fp_list->generate_code(memptystr());
+    char *formal_par_list = fp_list->generate_code(memptystr(), fp_list->get_nof_fps());
     fp_list->generate_code_defval(target);
     // function prototype
     target->header.function_prototypes =
@@ -6971,6 +7045,15 @@ namespace Ttcn {
     const string& t_genname = get_genname();
     const char *genname_str = t_genname.c_str();
     const char *dispname_str = id->get_dispname().c_str();
+
+    // function for altstep instance:
+    // assemble the function body first (this also determines which parameters
+    // are never used)
+    char* body = create_location_object(memptystr(), "ALTSTEP", dispname_str);
+    body = fp_list->generate_shadow_objects(body);
+    body = sb->generate_code(body);
+    body = ags->generate_code_altstep(body);
+    // generate a smart formal parameter list (omits unused parameter names)
     char *formal_par_list = fp_list->generate_code(memptystr());
     fp_list->generate_code_defval(target);
 
@@ -6980,24 +7063,25 @@ namespace Ttcn {
         "extern alt_status %s_instance(%s);\n", genname_str, formal_par_list);
 
     // function for altstep instance: body
-    char *str = mprintf("alt_status %s_instance(%s)\n"
-      "{\n", genname_str, formal_par_list);
-    str = create_location_object(str, "ALTSTEP", dispname_str);
-    str = fp_list->generate_shadow_objects(str);
-    str = sb->generate_code(str);
-    str = ags->generate_code_altstep(str);
-    str = mputstr(str, "}\n\n");
-    target->source.function_bodies = mputstr(target->source.function_bodies,
-      str);
-    Free(str);
+    target->source.function_bodies = mputprintf(target->source.function_bodies,
+      "alt_status %s_instance(%s)\n"
+      "{\n"
+      "%s"
+      "}\n\n", genname_str, formal_par_list, body);
+    Free(formal_par_list);
+    Free(body);
 
     char *actual_par_list =
       fp_list->generate_code_actual_parlist(memptystr(), "");
+    
+    // use a full formal parameter list for the rest of the functions
+    char *full_formal_par_list = fp_list->generate_code(memptystr(),
+      fp_list->get_nof_fps());
 
     // wrapper function for stand-alone instantiation: prototype
     target->header.function_prototypes =
       mputprintf(target->header.function_prototypes,
-        "extern void %s(%s);\n", genname_str, formal_par_list);
+        "extern void %s(%s);\n", genname_str, full_formal_par_list);
 
     // wrapper function for stand-alone instantiation: body
     target->source.function_bodies =
@@ -7023,23 +7107,23 @@ namespace Ttcn {
         "TTCN_error(\"None of the branches can be chosen in altstep %s.\");\n"
         "else block_flag = TRUE;\n"
         "}\n"
-        "}\n\n", genname_str, formal_par_list, genname_str, actual_par_list,
+        "}\n\n", genname_str, full_formal_par_list, genname_str, actual_par_list,
         dispname_str);
 
     // class for keeping the altstep in the default context
     // the class is for internal use, we do not need to publish it in the
     // header file
-    str = mprintf("class %s_Default : public Default_Base {\n", genname_str);
+    char* str = mprintf("class %s_Default : public Default_Base {\n", genname_str);
     str = fp_list->generate_code_object(str, "par_");
     str = mputprintf(str, "public:\n"
       "%s_Default(%s);\n"
       "alt_status call_altstep();\n"
-      "};\n\n", genname_str, formal_par_list);
+      "};\n\n", genname_str, full_formal_par_list);
     target->source.class_defs = mputstr(target->source.class_defs, str);
     Free(str);
     // member functions of the class
     str = mprintf("%s_Default::%s_Default(%s)\n"
-        " : Default_Base(\"%s\")", genname_str, genname_str, formal_par_list,
+        " : Default_Base(\"%s\")", genname_str, genname_str, full_formal_par_list,
         dispname_str);
     for (size_t i = 0; i < fp_list->get_nof_fps(); i++) {
       const char *fp_name_str =
@@ -7061,18 +7145,18 @@ namespace Ttcn {
     target->header.function_prototypes =
       mputprintf(target->header.function_prototypes,
         "extern Default_Base *activate_%s(%s);\n", genname_str,
-        formal_par_list);
+        full_formal_par_list);
 
     // function for default activation: body
     str = mprintf("Default_Base *activate_%s(%s)\n"
-      "{\n", genname_str, formal_par_list);
+      "{\n", genname_str, full_formal_par_list);
     str = mputprintf(str, "return new %s_Default(%s);\n"
       "}\n\n", genname_str, actual_par_list);
     target->source.function_bodies = mputstr(target->source.function_bodies,
       str);
     Free(str);
 
-    Free(formal_par_list);
+    Free(full_formal_par_list);
     Free(actual_par_list);
 
     target->functions.pre_init = mputprintf(target->functions.pre_init,
@@ -7220,27 +7304,14 @@ namespace Ttcn {
     const string& t_genname = get_genname();
     const char *genname_str = t_genname.c_str();
     const char *dispname_str = id->get_dispname().c_str();
-    // formal parameter list
-    char *formal_par_list = fp_list->generate_code(memptystr());
-    fp_list->generate_code_defval(target);
-    if (fp_list->get_nof_fps() > 0)
-      formal_par_list = mputstr(formal_par_list, ", ");
-    formal_par_list = mputstr(formal_par_list,
-      "boolean has_timer, double timer_value");
-
-    // function prototype
-    target->header.function_prototypes =
-      mputprintf(target->header.function_prototypes,
-        "extern verdicttype testcase_%s(%s);\n", genname_str, formal_par_list);
-
-    // function body
-    char *body = mprintf("verdicttype testcase_%s(%s)\n"
-      "{\n", genname_str, formal_par_list);
-    Free(formal_par_list);
+    
+    // assemble the function body first (this also determines which parameters
+    // are never used)
+    
     // Checking whether the testcase was invoked from another one.
     // At this point the location information should refer to the execute()
     // statement rather than this testcase.
-    body = mputstr(body, "TTCN_Runtime::check_begin_testcase(has_timer, "
+    char* body = mputstr(memptystr(), "TTCN_Runtime::check_begin_testcase(has_timer, "
         "timer_value);\n");
     body = create_location_object(body, "TESTCASE", dispname_str);
     body = fp_list->generate_shadow_objects(body);
@@ -7261,10 +7332,28 @@ namespace Ttcn {
       "} catch (const TC_End& tc_end) {\n"
       "TTCN_Logger::log_str(TTCN_FUNCTION, \"Test case %s was stopped.\");\n"
       "}\n", dispname_str);
-    body = mputstr(body, "return TTCN_Runtime::end_testcase();\n"
-      "}\n\n");
-    target->source.function_bodies = mputstr(target->source.function_bodies,
-      body);
+    body = mputstr(body, "return TTCN_Runtime::end_testcase();\n");
+    
+    // smart formal parameter list (names of unused parameters are omitted)
+    char *formal_par_list = fp_list->generate_code(memptystr());
+    fp_list->generate_code_defval(target);
+    if (fp_list->get_nof_fps() > 0)
+      formal_par_list = mputstr(formal_par_list, ", ");
+    formal_par_list = mputstr(formal_par_list,
+      "boolean has_timer, double timer_value");
+
+    // function prototype
+    target->header.function_prototypes =
+      mputprintf(target->header.function_prototypes,
+        "extern verdicttype testcase_%s(%s);\n", genname_str, formal_par_list);
+
+    // function body
+    target->source.function_bodies = mputprintf(target->source.function_bodies,
+      "verdicttype testcase_%s(%s)\n"
+      "{\n"
+      "%s"
+      "}\n\n", genname_str, formal_par_list, body);
+    Free(formal_par_list);
     Free(body);
 
     if (fp_list->get_nof_fps() == 0) {
@@ -7382,7 +7471,7 @@ namespace Ttcn {
     TemplateInstance *p_defval, bool p_lazy_eval)
     : Definition(p_asstype, p_name), type(p_type), my_parlist(0),
     used_as_lvalue(false), template_restriction(TR_NONE),
-    lazy_eval(p_lazy_eval), defval_generated(false)
+    lazy_eval(p_lazy_eval), defval_generated(false), usage_found(false)
   {
     switch (p_asstype) {
     case A_PAR_VAL:
@@ -7408,7 +7497,7 @@ namespace Ttcn {
     Identifier* p_name, TemplateInstance *p_defval, bool p_lazy_eval)
     : Definition(p_asstype, p_name), type(p_type), my_parlist(0),
     used_as_lvalue(false), template_restriction(p_template_restriction),
-    lazy_eval(p_lazy_eval), defval_generated(false)
+    lazy_eval(p_lazy_eval), defval_generated(false), usage_found(false)
   {
     switch (p_asstype) {
     case A_PAR_TEMPL_IN:
@@ -7428,7 +7517,7 @@ namespace Ttcn {
     TemplateInstance *p_defval)
     : Definition(p_asstype, p_name), type(0), my_parlist(0),
     used_as_lvalue(false), template_restriction(TR_NONE), lazy_eval(false),
-    defval_generated(false)
+    defval_generated(false), usage_found(false)
   {
     if (p_asstype != A_PAR_TIMER)
       FATAL_ERROR("Ttcn::FormalPar::FormalPar(): invalid parameter type");
@@ -8174,9 +8263,13 @@ namespace Ttcn {
     target->functions.post_init = generate_code_defval(target->functions.post_init);
   }
 
-  char *FormalPar::generate_code_fpar(char *str)
+  char *FormalPar::generate_code_fpar(char *str, bool display_unused /* = false */)
   {
-    const char *name_str = id->get_name().c_str();
+    // the name of the parameter should not be displayed if the parameter is not
+    // used (to avoid a compiler warning)
+    bool display_name = (usage_found || display_unused || (!enable_set_bound_out_param &&
+      (asstype == A_PAR_VAL_OUT || asstype == A_PAR_TEMPL_OUT)));
+    const char *name_str = display_name ? id->get_name().c_str() : "";
     switch (asstype) {
     case A_PAR_VAL_IN:
       if (lazy_eval) {
@@ -8906,11 +8999,11 @@ namespace Ttcn {
     return ret_val;
   }
 
-  char *FormalParList::generate_code(char *str)
+  char *FormalParList::generate_code(char *str, size_t display_unused /* = 0 */)
   {
     for (size_t i = 0; i < pars_v.size(); i++) {
       if (i > 0) str = mputstr(str, ", ");
-      str = pars_v[i]->generate_code_fpar(str);
+      str = pars_v[i]->generate_code_fpar(str, i < display_unused);
     }
     return str;
   }
@@ -9201,6 +9294,13 @@ namespace Ttcn {
         LazyParamData::init(used_as_lvalue);
         LazyParamData::generate_code(expr, val, my_scope);
         LazyParamData::clean();
+        if (val->get_valuetype() == Value::V_REFD) {
+          // check if the reference is a parameter, mark it as used if it is
+          Reference* ref = dynamic_cast<Reference*>(val->get_reference());
+          if (ref != NULL) {
+            ref->refd_param_usage_found();
+          }
+        }
       } else {
         if (copy_needed) expr->expr = mputprintf(expr->expr, "%s(",
           val->get_my_governor()->get_genname_value(my_scope).c_str());
@@ -9224,6 +9324,15 @@ namespace Ttcn {
         LazyParamData::init(used_as_lvalue);
         LazyParamData::generate_code(expr, temp, gen_restriction_check, my_scope);
         LazyParamData::clean();
+        if (temp->get_DerivedRef() != NULL ||
+            temp->get_Template()->get_templatetype() == Template::TEMPLATE_REFD) {
+          // check if the reference is a parameter, mark it as used if it is
+          Reference* ref = dynamic_cast<Reference*>(temp->get_DerivedRef() != NULL ?
+            temp->get_DerivedRef() : temp->get_Template()->get_reference());
+          if (ref != NULL) {
+            ref->refd_param_usage_found();
+          }
+        }
       } else {
         if (copy_needed)
           expr->expr = mputprintf(expr->expr, "%s(", temp->get_Template()

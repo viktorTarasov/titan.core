@@ -43,7 +43,7 @@ import from XSD all;
 /* The boolean datatype value "true" maps to bit value "1" and the value "false" to bit value "0" */
 type XSD.Boolean BitType
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -108,8 +108,8 @@ type record TariffPulseFormatType
 	EightBitType callSetupChargePulse
 }
 with {
-variant (communicationChargeSequencePulse_list) "untagged";
-variant (communicationChargeSequencePulse_list[-]) "name as 'communicationChargeSequencePulse'";
+  variant (communicationChargeSequencePulse_list) "untagged";
+  variant (communicationChargeSequencePulse_list[-]) "name as 'communicationChargeSequencePulse'";
 };
 
 
@@ -136,8 +136,8 @@ type record TariffCurrencyFormatType
 	CurrencyFactorScaleType callSetupChargeCurrency
 }
 with {
-variant (communicationChargeSequenceCurrency_list) "untagged";
-variant (communicationChargeSequenceCurrency_list[-]) "name as 'communicationChargeSequenceCurrency'";
+  variant (communicationChargeSequenceCurrency_list) "untagged";
+  variant (communicationChargeSequenceCurrency_list[-]) "name as 'communicationChargeSequenceCurrency'";
 };
 
 
@@ -191,7 +191,7 @@ type record ChargingTariffInformationType
 	CurrencyType currency
 }
 with {
-variant (chargingTariff.choice) "untagged";
+  variant (chargingTariff.choice) "untagged";
 };
 
 
@@ -209,7 +209,7 @@ type record AddOnChargingInformationType
 	CurrencyType currency
 }
 with {
-variant (addOnCharge.choice) "untagged";
+  variant (addOnCharge.choice) "untagged";
 };
 
 
@@ -224,16 +224,16 @@ type record MessageType
 	} choice
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://uri.etsi.org/ngn/params/xml/simservs/sci' prefix 'sci'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://uri.etsi.org/ngn/params/xml/simservs/sci' prefix 'sci'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

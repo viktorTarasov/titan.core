@@ -69,6 +69,8 @@ void AttributeType::collectVariants(List<Mstring>& container) {
   if (!isVisible()) {
     return;
   }
+  
+  enumeration.insertVariants();
 
   for (List<Mstring>::iterator var2 = variant.end(); var2; var2 = var2->Prev) {
     container.push_back(Mstring("variant (") + actualPath + Mstring(") ") + Mstring(var2->Data.c_str()) + Mstring(";\n"));

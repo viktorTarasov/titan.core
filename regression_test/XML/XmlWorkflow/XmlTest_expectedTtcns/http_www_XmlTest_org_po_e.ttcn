@@ -21,7 +21,7 @@
 //	Generated from file(s):
 //	- po.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "http://www.XmlTest.org/po" */
+//			/* targetnamespace = "http://www.XmlTest.org/po/e" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module http_www_XmlTest_org_po_e {
+module http_www_XmlTest_org_po {
 
 
 import from XSD all;
@@ -45,15 +45,15 @@ import from XSD all;
 
 type PurchaseOrderType PurchaseOrder
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.String Comment
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -66,13 +66,13 @@ type record PurchaseOrderType
 	Items items
 }
 with {
-variant (orderDate) "attribute";
+  variant (orderDate) "attribute";
 };
 
 
 type record USAddress
 {
-	XSD.NMTOKEN country optional,
+	XSD.NMTOKEN country ("US") optional,
 	XSD.String name,
 	XSD.String street,
 	XSD.String city,
@@ -80,8 +80,8 @@ type record USAddress
 	XSD.Decimal zip
 }
 with {
-variant (country) "defaultForEmpty as 'US'";
-variant (country) "attribute";
+  variant (country) "defaultForEmpty as 'US'";
+  variant (country) "attribute";
 };
 
 
@@ -97,22 +97,22 @@ type record Items
 	} item_list
 }
 with {
-variant (item_list) "untagged";
-variant (item_list[-]) "name as 'item'";
-variant (item_list[-].partNum) "attribute";
-variant (item_list[-].uSPrice) "name as capitalized";
+  variant (item_list) "untagged";
+  variant (item_list[-]) "name as 'item'";
+  variant (item_list[-].partNum) "attribute";
+  variant (item_list[-].uSPrice) "name as capitalized";
 };
 
 
 /* Stock Keeping Unit, a code for identifying products */
 
 
-type XSD.String SKU (pattern "\d#3-[A-Z]#2");
+type XSD.String SKU (pattern "\d#(3)-[A-Z]#(2)");
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.XmlTest.org/po'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.XmlTest.org/po'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Copyright (c) 2000-2015 Ericsson Telecom AB
 *
-* XSD to TTCN-3 Translator version: CRL 113 200/7 R3b                       
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R3b                       
 *
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_attrib_order_a_e {
+module www_example_org_attrib_order_a {
 
 
 import from XSD all;
@@ -47,16 +47,16 @@ import from NoTargetNamespace2_e all;
 
 type XSD.String Local1 ("fixed")
 with {
-variant "name as uncapitalized";
-variant "defaultForEmpty as 'fixed'";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "defaultForEmpty as 'fixed'";
+  variant "attribute";
 };
 
 
 type XSD.String Local2
 with {
-variant "name as uncapitalized";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
@@ -72,21 +72,21 @@ type record E17A
 	XSD.Float fooInAgroup optional
 }
 with {
-variant "name as uncapitalized";
-variant (attrNoTargetNamespace) "name as capitalized";
-variant (attrNoTargetNamespace) "attribute";
-variant (attrNoTargetNamespace2) "name as capitalized";
-variant (attrNoTargetNamespace2) "attribute";
-variant (lang) "attribute";
-variant (local1) "attribute";
-variant (local2) "attribute";
-variant (attr1) "name as capitalized";
-variant (attr1) "namespace as 'www.example.org/attrib/order/b' prefix 'A'";
-variant (attr1) "attribute";
-variant (barInAgroup) "namespace as 'www.example.org/attrib/order/b' prefix 'A'";
-variant (barInAgroup) "attribute";
-variant (fooInAgroup) "namespace as 'www.example.org/attrib/order/b' prefix 'A'";
-variant (fooInAgroup) "attribute";
+  variant "name as uncapitalized";
+  variant (attrNoTargetNamespace) "name as capitalized";
+  variant (attrNoTargetNamespace) "attribute";
+  variant (attrNoTargetNamespace2) "name as capitalized";
+  variant (attrNoTargetNamespace2) "attribute";
+  variant (lang) "attribute";
+  variant (local1) "attribute";
+  variant (local2) "attribute";
+  variant (attr1) "name as capitalized";
+  variant (attr1) "namespace as 'www.example.org/attrib/order/b' prefix 'A'";
+  variant (attr1) "attribute";
+  variant (barInAgroup) "namespace as 'www.example.org/attrib/order/b' prefix 'A'";
+  variant (barInAgroup) "attribute";
+  variant (fooInAgroup) "namespace as 'www.example.org/attrib/order/b' prefix 'A'";
+  variant (fooInAgroup) "attribute";
 };
 
 
@@ -98,18 +98,18 @@ type union Lang
 	} alt_
 }
 with {
-variant "name as uncapitalized";
-variant "useUnion";
-variant "attribute";
-variant (language_) "name as 'language'";
-variant (alt_) "name as ''";
-variant (alt_) "text 'x' as ''";
+  variant "name as uncapitalized";
+  variant "useUnion";
+  variant "attribute";
+  variant (language_) "name as 'language'";
+  variant (alt_) "name as ''";
+  variant (alt_) "text 'x' as ''";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/attrib/order/a' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/attrib/order/a' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

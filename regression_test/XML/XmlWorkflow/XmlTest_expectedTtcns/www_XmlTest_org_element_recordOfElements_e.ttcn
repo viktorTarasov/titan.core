@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Copyright Ericsson Telecom AB
 *
-* XSD to TTCN-3 Translator
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R3B 
 *
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
@@ -51,7 +51,7 @@ type record PersonInfo1
 	XSD.String degree optional
 }
 with {
-variant (degree) "defaultForEmpty as 'Msc'";
+  variant (degree) "defaultForEmpty as 'Msc'";
 };
 
 
@@ -64,21 +64,21 @@ type record PersonInfo2
 	XSD.Integer age optional
 }
 with {
-variant (nationality) "defaultForEmpty as 'American'";
-variant (nationality) "attribute";
-variant (title) "attribute";
+  variant (nationality) "defaultForEmpty as 'American'";
+  variant (nationality) "attribute";
+  variant (title) "attribute";
 };
 
 
 type PersonInfo2 PI
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/element_recordOfElements' prefix 'ns27'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/element_recordOfElements' prefix 'ns27'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

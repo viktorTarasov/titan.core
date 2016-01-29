@@ -55,11 +55,11 @@ type record ElementContainingXhtml_1
 	XSD.String thirdField
 }
 with {
-variant "element";
-variant (firstField) "name as capitalized";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement from 'http://www.w3.org/1999/xhtml'";
-variant (thirdField) "name as capitalized";
+  variant "element";
+  variant (firstField) "name as capitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement from 'http://www.w3.org/1999/xhtml'";
+  variant (thirdField) "name as capitalized";
 };
 
 
@@ -68,16 +68,16 @@ type record ElementContainingXhtml_2
 	record length(1 .. infinity) of XSD.String elem_list
 }
 with {
-variant "element";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement from 'http://www.w3.org/1999/xhtml'";
+  variant "element";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement from 'http://www.w3.org/1999/xhtml'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_any' prefix 'r1'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_any' prefix 'r1'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

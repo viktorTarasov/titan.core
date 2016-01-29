@@ -42,14 +42,14 @@ type XSD.Token FtpResult (pattern "ok|ehost|epath|euser|enospc");
 
 type XSD.AnySimpleType Miscellaneous
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.ericsson.com/is/isco/Misc/R4L06/R4AB_1.02'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.ericsson.com/is/isco/Misc/R4L06/R4AB_1.02'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

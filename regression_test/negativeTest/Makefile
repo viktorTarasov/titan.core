@@ -32,7 +32,8 @@ TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 TTCN3_MODULES = negtest.ttcn NegTestTestcases.ttcn \
 NegTest_TEXT_Types.ttcn NegTest_TEXT_Testcases.ttcn \
 NegTest_RAW_Types.ttcn NegTest_RAW_Testcases.ttcn \
-www_XmlTest_org_negativeTest_XML_Types.ttcn NegTest_XML_Testcases.ttcn XSD.ttcn UsefulTtcn3Types.ttcn
+www_XmlTest_org_negativeTest_XML_Types.ttcn NegTest_XML_Testcases.ttcn XSD.ttcn UsefulTtcn3Types.ttcn \
+NegTest_JSON.ttcn
 
 ASN1_MODULES = Types.asn NegTestTypes.asn
 
@@ -98,6 +99,9 @@ run4: $(TARGET)
 run5: $(TARGET)
 	./$(TARGET) NegTest_RAW.cfg || perl -nwle 'if (/->(\w+\.ttcn:\d+)->.*? (.*fail.*)/) { print STDERR "$$1: note: $$2" }' NegTest_RAW.log
 	perl -i -pwle 's/!/\n/g' NegTest_RAW.log
+
+run6: $(TARGET)
+	./$(TARGET) NegTest_JSON.cfg
 
 
 ifeq ($(findstring n,$(MAKEFLAGS)),)

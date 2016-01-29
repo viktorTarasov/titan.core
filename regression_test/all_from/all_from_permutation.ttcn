@@ -1767,6 +1767,24 @@ testcase tc_functionRef_rof_p_eq() runs on A {
   f_checkMyRoFRefTemplateEquivalence( t_fref_int2int_p,t_fref_int2int_p_eq);
 }
 
+// permutation all from with length restriction
+// 1. the target of 'all from' is foldable (known at compile-time)
+testcase tc_perm_varTemplate_len_res_foldable() runs on A
+{
+  template RoI tl_foldable := { 6, 9 };
+  var template RoI tl_len_res := { permutation ( 2, all from tl_foldable ) } length (3);
+  var template RoI tl_len_res_eq := { permutation ( 2, 6, 9 ) } length (3);
+  f_checkRoITemplateEquivalence(tl_len_res, tl_len_res_eq);
+}
+
+// 2. the target of 'all from' is unfoldable (not known at compile-time)
+testcase tc_perm_varTemplate_len_res_unfoldable() runs on A
+{
+  var template RoI tl_unfoldable := { 6, 9 };
+  var template RoI tl_len_res := { permutation ( 2, all from tl_unfoldable ) } length (3);
+  var template RoI tl_len_res_eq := { permutation ( 2, 6, 9 ) } length (3);
+  f_checkRoITemplateEquivalence(tl_len_res, tl_len_res_eq);
+}
 
 
 }  // end of module

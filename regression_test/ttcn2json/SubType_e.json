@@ -52,6 +52,14 @@
 						"enum" : [
 							3,
 							"abc"
+						],
+						"valueList" : [
+							{
+								"i" : 3
+							},
+							{
+								"str" : "abc"
+							}
 						]
 					}
 				]
@@ -86,6 +94,710 @@
 				"type" : "string",
 				"subType" : "charstring",
 				"pattern" : "^xab.cx$"
+			},
+			"ComplexSet" : {
+				"type" : "object",
+				"subType" : "set",
+				"properties" : {
+					"r" : {
+						"$ref" : "#/definitions/SubType/Rec"
+					},
+					"ro" : {
+						"type" : "array",
+						"subType" : "record of",
+						"items" : {
+							"$ref" : "#/definitions/SubType/Rec"
+						}
+					},
+					"i" : {
+						"anyOf" : [
+							{
+								"type" : "null"
+							},
+							{
+								"type" : "integer"
+							}
+						],
+						"omitAsNull" : false
+					}
+				},
+				"additionalProperties" : false,
+				"fieldOrder" : [
+					"r",
+					"ro",
+					"i"
+				],
+				"required" : [
+					"r",
+					"ro"
+				]
+			},
+			"ComplexSetValues" : {
+				"allOf" : [
+					{
+						"$ref" : "#/definitions/SubType/ComplexSet"
+					},
+					{
+						"enum" : [
+							{
+								"r" : {
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								]
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							},
+							{
+								"r" : {
+									"posInt" : null,
+									"int" : 0,
+									"os" : null,
+									"b" : false
+								},
+								"ro" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : true
+									},
+									{
+										"posInt" : null,
+										"int" : 2,
+										"os" : "1001",
+										"b" : true
+									}
+								],
+								"i" : null
+							}
+						]
+					}
+				]
 			},
 			"Int" : {
 				"type" : "integer"
@@ -139,6 +851,17 @@
 							3,
 							"abc",
 							6
+						],
+						"valueList" : [
+							{
+								"i" : 3
+							},
+							{
+								"str" : "abc"
+							},
+							{
+								"i" : 6
+							}
 						]
 					}
 				]
@@ -426,6 +1149,106 @@
 					}
 				]
 			},
+			"RestrictedSetWithAsValues" : {
+				"allOf" : [
+					{
+						"$ref" : "#/definitions/SubType/SetWithAsValues"
+					},
+					{
+						"enum" : [
+							{
+								"num" : 6,
+								"u2s" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"b" : false
+									},
+									8
+								]
+							},
+							{
+								"num" : 6,
+								"u2s" : [
+									{
+										"posInt" : 7,
+										"int" : 1,
+										"os" : null,
+										"b" : false
+									},
+									8
+								]
+							},
+							{
+								"num" : 1,
+								"u2s" : [
+									{
+										"posInt" : 5,
+										"int" : 0,
+										"os" : "1001",
+										"b" : true
+									},
+									2
+								]
+							}
+						],
+						"valueList" : [
+							{
+								"num" : 6,
+								"u2s" : [
+									{
+										"r" : {
+											"posInt" : 7,
+											"int" : 1,
+											"b" : false
+										}
+									},
+									{
+										"i" : 8
+									}
+								]
+							},
+							{
+								"num" : 1,
+								"u2s" : [
+									{
+										"r" : {
+											"posInt" : 5,
+											"int" : 0,
+											"os" : "1001",
+											"b" : true
+										}
+									},
+									{
+										"i" : 2
+									}
+								]
+							}
+						]
+					}
+				]
+			},
+			"SetWithAsValues" : {
+				"type" : "object",
+				"subType" : "set",
+				"properties" : {
+					"num" : {
+						"type" : "integer"
+					},
+					"u2s" : {
+						"$ref" : "#/definitions/SubType/U2List"
+					}
+				},
+				"additionalProperties" : false,
+				"fieldOrder" : [
+					"num",
+					"u2s"
+				],
+				"required" : [
+					"num",
+					"u2s"
+				]
+			},
 			"SimpleVerdict" : {
 				"enum" : [
 					"pass",
@@ -461,6 +1284,141 @@
 					"űrhajó"
 				]
 			},
+			"U" : {
+				"anyOf" : [
+					{
+						"originalName" : "i",
+						"type" : "integer"
+					},
+					{
+						"originalName" : "c",
+						"type" : "string",
+						"subType" : "charstring"
+					},
+					{
+						"originalName" : "j",
+						"type" : "integer"
+					}
+				]
+			},
+			"U2" : {
+				"anyOf" : [
+					{
+						"originalName" : "i",
+						"type" : "integer"
+					},
+					{
+						"originalName" : "r",
+						"$ref" : "#/definitions/SubType/Rec"
+					}
+				]
+			},
+			"U2List" : {
+				"type" : "array",
+				"subType" : "record of",
+				"items" : {
+					"$ref" : "#/definitions/SubType/U2"
+				}
+			},
+			"U2ListValues" : {
+				"allOf" : [
+					{
+						"$ref" : "#/definitions/SubType/U2List"
+					},
+					{
+						"enum" : [
+							[
+								{
+									"posInt" : 7,
+									"int" : 1,
+									"b" : false
+								},
+								8
+							],
+							[
+								{
+									"posInt" : 7,
+									"int" : 1,
+									"os" : null,
+									"b" : false
+								},
+								8
+							],
+							[
+								{
+									"posInt" : 5,
+									"int" : 0,
+									"os" : "1001",
+									"b" : true
+								},
+								2
+							]
+						],
+						"valueList" : [
+							[
+								{
+									"r" : {
+										"posInt" : 7,
+										"int" : 1,
+										"b" : false
+									}
+								},
+								{
+									"i" : 8
+								}
+							],
+							[
+								{
+									"r" : {
+										"posInt" : 5,
+										"int" : 0,
+										"os" : "1001",
+										"b" : true
+									}
+								},
+								{
+									"i" : 2
+								}
+							]
+						]
+					}
+				]
+			},
+			"U2Values" : {
+				"allOf" : [
+					{
+						"$ref" : "#/definitions/SubType/U2"
+					},
+					{
+						"enum" : [
+							8,
+							{
+								"posInt" : 7,
+								"int" : 1,
+								"b" : true
+							},
+							{
+								"posInt" : 7,
+								"int" : 1,
+								"os" : null,
+								"b" : true
+							}
+						],
+						"valueList" : [
+							{
+								"i" : 8
+							},
+							{
+								"r" : {
+									"posInt" : 7,
+									"int" : 1,
+									"b" : true
+								}
+							}
+						]
+					}
+				]
+			},
 			"UnicodePattern" : {
 				"type" : "string",
 				"subType" : "universal charstring",
@@ -470,6 +1428,31 @@
 				"type" : "string",
 				"subType" : "universal charstring",
 				"pattern" : "^[ő-űł-š]*$"
+			},
+			"Uwithvalue" : {
+				"allOf" : [
+					{
+						"$ref" : "#/definitions/SubType/U"
+					},
+					{
+						"enum" : [
+							1,
+							"zssfss",
+							2
+						],
+						"valueList" : [
+							{
+								"i" : 1
+							},
+							{
+								"c" : "zssfss"
+							},
+							{
+								"j" : 2
+							}
+						]
+					}
+				]
 			},
 			"anytype" : {
 				"anyOf" : [
@@ -529,6 +1512,9 @@
 		}
 	},
 	"anyOf" : [
+		{
+			"$ref" : "#/definitions/SubType/U2Values"
+		},
 		{
 			"$ref" : "#/definitions/SubType/PosInt"
 		},
@@ -624,6 +1610,33 @@
 		},
 		{
 			"$ref" : "#/definitions/SubType/UnicodePattern"
+		},
+		{
+			"$ref" : "#/definitions/SubType/U"
+		},
+		{
+			"$ref" : "#/definitions/SubType/Uwithvalue"
+		},
+		{
+			"$ref" : "#/definitions/SubType/U2"
+		},
+		{
+			"$ref" : "#/definitions/SubType/ComplexSet"
+		},
+		{
+			"$ref" : "#/definitions/SubType/ComplexSetValues"
+		},
+		{
+			"$ref" : "#/definitions/SubType/U2List"
+		},
+		{
+			"$ref" : "#/definitions/SubType/U2ListValues"
+		},
+		{
+			"$ref" : "#/definitions/SubType/SetWithAsValues"
+		},
+		{
+			"$ref" : "#/definitions/SubType/RestrictedSetWithAsValues"
 		},
 		{
 			"$ref" : "#/definitions/SubType/anytype"

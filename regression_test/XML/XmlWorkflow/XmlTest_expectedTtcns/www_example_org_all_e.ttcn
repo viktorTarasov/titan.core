@@ -41,8 +41,8 @@ import from XSD all;
 
 type XSD.Token AttrGlobal
 with {
-variant "name as uncapitalized";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
@@ -61,8 +61,8 @@ type record E29a
 	XSD.String ding
 }
 with {
-variant "name as uncapitalized";
-variant "useOrder";
+  variant "name as uncapitalized";
+  variant "useOrder";
 };
 
 
@@ -82,12 +82,12 @@ type record E29aAndAttributes
 	XSD.String ding
 }
 with {
-variant "name as uncapitalized";
-variant "useOrder";
-variant (attrGlobal) "attribute";
-variant (attrInGroup1) "attribute";
-variant (attrInGroup2) "attribute";
-variant (attrLocal) "attribute";
+  variant "name as uncapitalized";
+  variant "useOrder";
+  variant (attrGlobal) "attribute";
+  variant (attrInGroup1) "attribute";
+  variant (attrInGroup2) "attribute";
+  variant (attrLocal) "attribute";
 };
 
 
@@ -110,12 +110,12 @@ type record E29bAndAttributes
 	XSD.String ding optional
 }
 with {
-variant "name as uncapitalized";
-variant "useOrder";
-variant (attrGlobal) "attribute";
-variant (attrInGroup1) "attribute";
-variant (attrInGroup2) "attribute";
-variant (attrLocal) "attribute";
+  variant "name as uncapitalized";
+  variant "useOrder";
+  variant (attrGlobal) "attribute";
+  variant (attrInGroup1) "attribute";
+  variant (attrInGroup2) "attribute";
+  variant (attrLocal) "attribute";
 };
 
 
@@ -138,12 +138,12 @@ type record E29cAndAttributes
 	XSD.String ding
 }
 with {
-variant "name as uncapitalized";
-variant "useOrder";
-variant (attrGlobal) "attribute";
-variant (attrInGroup1) "attribute";
-variant (attrInGroup2) "attribute";
-variant (attrLocal) "attribute";
+  variant "name as uncapitalized";
+  variant "useOrder";
+  variant (attrGlobal) "attribute";
+  variant (attrInGroup1) "attribute";
+  variant (attrInGroup2) "attribute";
+  variant (attrLocal) "attribute";
 };
 
 
@@ -160,16 +160,16 @@ type record E29cAndAttributesReferenceOptional
 	XSD.String ding optional
 }
 with {
-variant "name as uncapitalized";
-variant "useOrder";
-variant "element";
-variant (attr) "attribute";
+  variant "name as uncapitalized";
+  variant "useOrder";
+  variant "element";
+  variant (attr) "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/all' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/all' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

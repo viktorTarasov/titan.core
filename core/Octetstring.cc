@@ -752,6 +752,15 @@ int OCTETSTRING::RAW_encode_negtest_raw(RAW_enc_tree& p_myleaf) const
   p_myleaf.body.leaf.data_ptr = val_ptr->octets_ptr;
   return p_myleaf.length = val_ptr->n_octets * 8;
 }
+
+int OCTETSTRING::JSON_encode_negtest_raw(JSON_Tokenizer& p_tok) const
+{
+  if (val_ptr != NULL) {
+    p_tok.put_raw_data((const char*)val_ptr->octets_ptr, val_ptr->n_octets);
+    return val_ptr->n_octets;
+  }
+  return 0;
+}
 #endif
 
 boolean OCTETSTRING::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,

@@ -55,16 +55,16 @@ type record ChoiceChildMinMax {
 	} choice
 }
 with {
-variant "element";
-variant (choice) "untagged";
-variant (choice.elem0_list) "untagged";
-variant (choice.elem0_list[-]) "name as 'elem0'";
-variant (choice.elem1_list) "untagged";
-variant (choice.elem1_list[-]) "name as 'elem1'";
-variant (choice.elem2_list) "untagged";
-variant (choice.elem2_list[-]) "name as 'elem2'";
-variant (choice.elem3_list) "untagged";
-variant (choice.elem3_list[-]) "name as 'elem3'";
+  variant "element";
+  variant (choice) "untagged";
+  variant (choice.elem0_list) "untagged";
+  variant (choice.elem0_list[-]) "name as 'elem0'";
+  variant (choice.elem1_list) "untagged";
+  variant (choice.elem1_list[-]) "name as 'elem1'";
+  variant (choice.elem2_list) "untagged";
+  variant (choice.elem2_list[-]) "name as 'elem2'";
+  variant (choice.elem3_list) "untagged";
+  variant (choice.elem3_list[-]) "name as 'elem3'";
 }; */
 
 
@@ -78,16 +78,16 @@ type record ChoiceChildMinMax
 	} choice
 }
 with {
-variant "element";
-variant (choice) "untagged";
-variant (choice.elem0_list) "untagged";
-variant (choice.elem0_list[-]) "name as 'elem0'";
-variant (choice.elem1_list) "untagged";
-variant (choice.elem1_list[-]) "name as 'elem1'";
-variant (choice.elem2_list) "untagged";
-variant (choice.elem2_list[-]) "name as 'elem2'";
-variant (choice.elem3_list) "untagged";
-variant (choice.elem3_list[-]) "name as 'elem3'";
+  variant "element";
+  variant (choice) "untagged";
+  variant (choice.elem0_list) "untagged";
+  variant (choice.elem0_list[-]) "name as 'elem0'";
+  variant (choice.elem1_list) "untagged";
+  variant (choice.elem1_list[-]) "name as 'elem1'";
+  variant (choice.elem2_list) "untagged";
+  variant (choice.elem2_list[-]) "name as 'elem2'";
+  variant (choice.elem3_list) "untagged";
+  variant (choice.elem3_list[-]) "name as 'elem3'";
 };
 
 
@@ -101,17 +101,17 @@ type record MinOccurs_maxOccurs_frame
 	} choice_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice_list) "untagged";
-variant (choice_list[-]) "untagged";
-variant (choice_list[-].choiceChildMinMax) "name as capitalized";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice_list) "untagged";
+  variant (choice_list[-]) "untagged";
+  variant (choice_list[-].choiceChildMinMax) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'ETSI_CR5852_union' prefix 'etsiu'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'ETSI_CR5852_union' prefix 'etsiu'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -57,27 +57,27 @@ type record DedicatedAccount
 	record of XSD.String elem_list
 }
 with {
-variant "element";
-variant (dAID) "name as capitalized";
-variant (dABalance) "name as capitalized";
-variant (dABalance1) "name as capitalized";
-variant (dAAmount1) "name as capitalized";
-variant (dAAmount2) "name as capitalized";
-variant (dAExpiryDate) "name as capitalized";
-variant (dARefillAmount1) "name as capitalized";
-variant (dARefillAmount2) "name as capitalized";
-variant (dAExpiryDateExtended) "name as capitalized";
-variant (dAClearedValue1) "name as capitalized";
-variant (dAClearedValue2) "name as capitalized";
-variant (dADescription) "name as capitalized";
-variant (dAMaxValue) "name as capitalized";
-variant (dAAmount) "name as capitalized";
-variant (dAEndDateOld) "name as capitalized";
-variant (dAEndDateNew) "name as capitalized";
-variant (dAAmountAdded) "name as capitalized";
-variant (dABalanceCleared) "name as capitalized";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified";
+  variant "element";
+  variant (dAID) "name as capitalized";
+  variant (dABalance) "name as capitalized";
+  variant (dABalance1) "name as capitalized";
+  variant (dAAmount1) "name as capitalized";
+  variant (dAAmount2) "name as capitalized";
+  variant (dAExpiryDate) "name as capitalized";
+  variant (dARefillAmount1) "name as capitalized";
+  variant (dARefillAmount2) "name as capitalized";
+  variant (dAExpiryDateExtended) "name as capitalized";
+  variant (dAClearedValue1) "name as capitalized";
+  variant (dAClearedValue2) "name as capitalized";
+  variant (dADescription) "name as capitalized";
+  variant (dAMaxValue) "name as capitalized";
+  variant (dAAmount) "name as capitalized";
+  variant (dAEndDateOld) "name as capitalized";
+  variant (dAEndDateNew) "name as capitalized";
+  variant (dAAmountAdded) "name as capitalized";
+  variant (dABalanceCleared) "name as capitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified";
 };
 
 
@@ -86,8 +86,8 @@ type record DedicatedAccounts
 	record length(1 .. 255) of DedicatedAccount dedicatedAccount_list
 }
 with {
-variant "element";
-variant (dedicatedAccount_list) "untagged";
+  variant "element";
+  variant (dedicatedAccount_list) "untagged";
 };
 
 
@@ -101,14 +101,14 @@ type record UsageAccumulator
 	record of XSD.String elem_list
 }
 with {
-variant "element";
-variant (uAID) "name as capitalized";
-variant (uAValue) "name as capitalized";
-variant (uAStartDate) "name as capitalized";
-variant (uAResetDate) "name as capitalized";
-variant (uADescription) "name as capitalized";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified";
+  variant "element";
+  variant (uAID) "name as capitalized";
+  variant (uAValue) "name as capitalized";
+  variant (uAStartDate) "name as capitalized";
+  variant (uAResetDate) "name as capitalized";
+  variant (uADescription) "name as capitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified";
 };
 
 
@@ -117,13 +117,13 @@ type record UsageAccumulators
 	record length(1 .. 255) of UsageAccumulator usageAccumulator_list
 }
 with {
-variant "element";
-variant (usageAccumulator_list) "untagged";
+  variant "element";
+  variant (usageAccumulator_list) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -44,9 +44,9 @@ type record Remark
 	XSD.String content optional
 }
 with {
-variant "name as uncapitalized";
-variant "useNil";
-variant "element";
+  variant "name as uncapitalized";
+  variant "useNil";
+  variant "element";
 };
 
 
@@ -71,24 +71,24 @@ type record SeqNillable
 	} content optional
 }
 with {
-variant "useNil";
-variant "element";
-variant (bar) "attribute";
-variant (birthDateAttrGroup) "attribute";
-variant (birthPlaceAttrGroup) "attribute";
-variant (foo) "attribute";
-variant (attr) "anyAttributes from 'www.example.org/type/attributegroup/nillable'";
-variant (content.forename) "useNil";
-variant (content.surname) "useNil";
-variant (content.livingAddress_list) "untagged";
-variant (content.livingAddress_list[-]) "name as 'livingAddress'";
-variant (content.livingAddress_list[-]) "useNil";
+  variant "useNil";
+  variant "element";
+  variant (bar) "attribute";
+  variant (birthDateAttrGroup) "attribute";
+  variant (birthPlaceAttrGroup) "attribute";
+  variant (foo) "attribute";
+  variant (attr) "anyAttributes from 'www.example.org/type/attributegroup/nillable'";
+  variant (content.forename) "useNil";
+  variant (content.surname) "useNil";
+  variant (content.livingAddress_list) "untagged";
+  variant (content.livingAddress_list[-]) "name as 'livingAddress'";
+  variant (content.livingAddress_list[-]) "useNil";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/type/attributegroup/nillable' prefix 'ns7'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/type/attributegroup/nillable' prefix 'ns7'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -9,7 +9,7 @@
 * http://www.eclipse.org/legal/epl-v10.html
 *******************************************************************************/
 //
-//  File:          www_XmlTest_org_complex_import.ttcn
+//  File:          www_XmlTest_org_complex_import_e.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -60,17 +60,17 @@ type record PurchaseReportImport
 	PartsType parts
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (period) "attribute";
-variant (periodEnding) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (period) "attribute";
+  variant (periodEnding) "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_import' prefix 'imp'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_import' prefix 'imp'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

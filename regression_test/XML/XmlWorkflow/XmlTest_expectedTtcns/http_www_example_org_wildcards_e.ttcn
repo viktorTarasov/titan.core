@@ -41,15 +41,15 @@ import from XSD all;
 
 type E45 AnyAttrAnyNamespace
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type E45b AnyAttrThisNamespace
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -61,12 +61,12 @@ type record E45
 	record of XSD.String attr_1 optional
 }
 with {
-variant "name as uncapitalized";
-variant (aa) "attribute";
-variant (attr) "attribute";
-variant (bb) "attribute";
-variant (attr_1) "anyAttributes";
-variant (attr_1) "name as 'attr'";
+  variant "name as uncapitalized";
+  variant (aa) "attribute";
+  variant (attr) "attribute";
+  variant (bb) "attribute";
+  variant (attr_1) "anyAttributes";
+  variant (attr_1) "name as 'attr'";
 };
 
 
@@ -75,8 +75,8 @@ type record E45a
 	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes except unqualified, 'http://www.example.org/wildcards'";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes except unqualified, 'http://www.example.org/wildcards'";
 };
 
 
@@ -85,8 +85,8 @@ type record E45b
 	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes from 'http://www.example.org/wildcards'";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes from 'http://www.example.org/wildcards'";
 };
 
 
@@ -95,8 +95,8 @@ type record E45c
 	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes from unqualified,'http://www.example.org/attribute'";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes from unqualified, 'http://www.example.org/attribute'";
 };
 
 
@@ -105,14 +105,14 @@ type record E45d
 	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes from 'http://www.example.org/wildcards',unqualified,'http://www.example.org/attribute'";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes from 'http://www.example.org/wildcards', unqualified, 'http://www.example.org/attribute'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.example.org/wildcards' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.example.org/wildcards' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

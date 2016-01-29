@@ -368,6 +368,11 @@ public:
 private:
 #ifdef TITAN_RUNTIME_2
   virtual int encode_raw(TTCN_Buffer& p_buf) const;
+  /** Encodes this universal charstring with UTF-8 and adds the result to the end
+    * of a JSON buffer as raw data.
+    * Used during the negative testing of the JSON encoder.
+    * @return The number of bytes added. */
+  int JSON_encode_negtest_raw(JSON_Tokenizer&) const;
 #endif
 };
 

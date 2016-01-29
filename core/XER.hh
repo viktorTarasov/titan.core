@@ -44,6 +44,7 @@ class TTCN_Module;
  * change the encoding of all components).
  */
 enum XER_flavor {
+  XER_NONE            = 0,
   XER_BASIC           = 1U << 0, /**< Basic XER with indentation */
   XER_CANONICAL       = 1U << 1, /**< Canonical XER, no indentation */
   XER_EXTENDED        = 1U << 2, /**< Extended XER */

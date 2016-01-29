@@ -5,22 +5,22 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  ******************************************************************************/
-module encode_SE { //^In TTCN-3 module//
+module encode_SE {
 
-type integer AnInt with { encode "nonexistent" }; //^error\: Unknown encoding \'nonexistent\'$//
+type integer AnInt with { encode "nonexistent" }; //^error\: No custom decoding function found for type//
 
-type record ARecord { //^error\: Unknown encoding \'whatever\'$//
+type record ARecord { //^error\: No custom decoding function found for type//
   integer i,
   octetstring os
 }
 
-control { //^In control part//
+control {
   var ARecord x;
   var AnInt y;
   var bitstring bs := '110'B;
 
-  if (decvalue(bs, y) != 0) {} //^In if statement// //^In the left operand of operation// //^In the parameters of decvalue()//
-  if (decvalue(bs, x) != 0) {} //^In if statement// //^In the left operand of operation// //^In the parameters of decvalue()//  
+  if (decvalue(bs, y) != 0) {}
+  if (decvalue(bs, x) != 0) {} 
 }
 
 } with {

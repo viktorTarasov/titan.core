@@ -65,8 +65,8 @@ type record ServiceError
 	record of XSD.String variables_list
 }
 with {
-variant (variables_list) "untagged";
-variant (variables_list[-]) "name as 'variables'";
+  variant (variables_list) "untagged";
+  variant (variables_list[-]) "name as 'variables'";
 };
 
 
@@ -82,20 +82,20 @@ type enumerated TimeMetrics
 	year
 }
 with {
-variant "text 'day' as capitalized";
-variant "text 'hour' as capitalized";
-variant "text 'millisecond' as capitalized";
-variant "text 'minute' as capitalized";
-variant "text 'month' as capitalized";
-variant "text 'second' as capitalized";
-variant "text 'week' as capitalized";
-variant "text 'year' as capitalized";
+  variant "text 'day' as capitalized";
+  variant "text 'hour' as capitalized";
+  variant "text 'millisecond' as capitalized";
+  variant "text 'minute' as capitalized";
+  variant "text 'month' as capitalized";
+  variant "text 'second' as capitalized";
+  variant "text 'week' as capitalized";
+  variant "text 'year' as capitalized";
 };
 
 
 type ServiceException_1 ServiceException
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -106,15 +106,15 @@ type record ServiceException_1
 	record of XSD.String variables_list
 }
 with {
-variant "name as 'ServiceException'";
-variant (variables_list) "untagged";
-variant (variables_list[-]) "name as 'variables'";
+  variant "name as 'ServiceException'";
+  variant (variables_list) "untagged";
+  variant (variables_list[-]) "name as 'variables'";
 };
 
 
 type PolicyException_1 PolicyException
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -125,15 +125,15 @@ type record PolicyException_1
 	record of XSD.String variables_list
 }
 with {
-variant "name as 'PolicyException'";
-variant (variables_list) "untagged";
-variant (variables_list[-]) "name as 'variables'";
+  variant "name as 'PolicyException'";
+  variant (variables_list) "untagged";
+  variant (variables_list[-]) "name as 'variables'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.csapi.org/schema/parlayx/common/v2_0' prefix 'parlayx_common_xsd'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.csapi.org/schema/parlayx/common/v2_0' prefix 'parlayx_common_xsd'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

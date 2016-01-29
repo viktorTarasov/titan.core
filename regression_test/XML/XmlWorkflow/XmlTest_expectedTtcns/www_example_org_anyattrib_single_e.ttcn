@@ -49,10 +49,10 @@ type record E25seq
 	XSD.String surnameElemBase
 }
 with {
-variant "name as uncapitalized";
-variant (attrInGroup1) "attribute";
-variant (attrInGroup2) "attribute";
-variant (attr) "anyAttributes from 'http://www.w3.org/1999/xhtml','www.example.org/anyattrib/single','www.example.org/anyattrib/single'";
+  variant "name as uncapitalized";
+  variant (attrInGroup1) "attribute";
+  variant (attrInGroup2) "attribute";
+  variant (attr) "anyAttributes from 'http://www.w3.org/1999/xhtml','www.example.org/anyattrib/single','www.example.org/anyattrib/single'";
 };
 
 
@@ -61,9 +61,9 @@ type record E45c
 	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (attr) "anyAttributes from unqualified,'http://www.example.org/attribute'";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (attr) "anyAttributes from unqualified,'http://www.example.org/attribute'";
 };
 
 
@@ -72,9 +72,9 @@ type record E45d
 	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (attr) "anyAttributes from 'www.example.org/anyattrib/single',unqualified,'http://www.example.org/attribute'";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (attr) "anyAttributes from 'www.example.org/anyattrib/single',unqualified,'http://www.example.org/attribute'";
 };
 
 
@@ -84,7 +84,7 @@ type record ExtBase
 	XSD.String field
 }
 with {
-variant (attr) "anyAttributes from 'www.example.org/anyattrib/single'";
+  variant (attr) "anyAttributes from 'www.example.org/anyattrib/single'";
 };
 
 
@@ -95,9 +95,9 @@ type record MyType
 	XSD.String field
 }
 with {
-variant "element";
-variant (ding) "attribute";
-variant (attr) "anyAttributes from 'www.example.org/anyattrib/single'";
+  variant "element";
+  variant (ding) "attribute";
+  variant (attr) "anyAttributes from 'www.example.org/anyattrib/single'";
 };
 
 
@@ -107,7 +107,7 @@ type record ExtBase2
 	XSD.String field
 }
 with {
-variant (attr) "anyAttributes except unqualified, 'www.example.org/anyattrib/single'";
+  variant (attr) "anyAttributes except unqualified, 'www.example.org/anyattrib/single'";
 };
 
 
@@ -118,15 +118,15 @@ type record MyType2
 	XSD.String field
 }
 with {
-variant "element";
-variant (ding) "attribute";
-variant (attr) "anyAttributes from 'www.example.org/anyattrib/single',unqualified, 'www.example.org/anyattrib/single'";
+  variant "element";
+  variant (ding) "attribute";
+  variant (attr) "anyAttributes from 'www.example.org/anyattrib/single',unqualified, 'www.example.org/anyattrib/single'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/anyattrib/single' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/anyattrib/single' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

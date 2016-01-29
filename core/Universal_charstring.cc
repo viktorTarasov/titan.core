@@ -1638,6 +1638,14 @@ int UNIVERSAL_CHARSTRING::encode_raw(TTCN_Buffer& p_buf) const
   encode_utf8(p_buf);
   return p_buf.get_len() - len_before;
 }
+
+int UNIVERSAL_CHARSTRING::JSON_encode_negtest_raw(JSON_Tokenizer& p_tok) const
+{
+  TTCN_Buffer tmp_buf;
+  encode_utf8(tmp_buf);
+  p_tok.put_raw_data((const char*)tmp_buf.get_data(), tmp_buf.get_len());
+  return tmp_buf.get_len();
+}
 #endif
 
 

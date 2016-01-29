@@ -32,6 +32,8 @@ namespace Common {
   // =================================
   // ===== Modules
   // =================================
+  
+  vector<Modules::type_enc_t> Modules::delayed_type_enc_v;
 
   Modules::Modules()
     : Node(), mods_v(), mods_m()
@@ -150,6 +152,14 @@ namespace Common {
 	mods_v[i]->chk_recursive(checked_modules);
     }
     checked_modules.clear();
+    // run delayed Type::chk_coding() calls
+    if (!delayed_type_enc_v.empty()) {
+      for (size_t i = 0; i < delayed_type_enc_v.size(); ++i) {
+        delayed_type_enc_v[i]->t->chk_coding(delayed_type_enc_v[i]->enc, true);
+        delete delayed_type_enc_v[i];
+      }
+      delayed_type_enc_v.clear();
+    }
   }
 
   void Modules::chk_top_level_pdus()
@@ -269,6 +279,14 @@ namespace Common {
     for(size_t i = 0; i < mods_v.size(); ++i) {
       mods_v[i]->generate_json_schema(json, json_refs);
     }
+  }
+  
+  void Modules::delay_type_encode_check(Type* p_type, bool p_encode)
+  {
+    type_enc_t* elem = new type_enc_t;
+    elem->t = p_type;
+    elem->enc = p_encode;
+    delayed_type_enc_v.add(elem);
   }
 
 

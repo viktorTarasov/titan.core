@@ -45,24 +45,24 @@ type record AttrGroupinGroup
 	XSD.String type_ ("simple") optional
 }
 with {
-variant (remoteSchema) "attribute";
-variant (type_) "form as qualified";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as 'simple'";
-variant (type_) "attribute";
+  variant (remoteSchema) "attribute";
+  variant (type_) "form as qualified";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as 'simple'";
+  variant (type_) "attribute";
 };
 
 
 type XSD.AnyURI RemoteSchema
 with {
-variant "name as uncapitalized";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/attribgroup/ingroup' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/attribgroup/ingroup' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

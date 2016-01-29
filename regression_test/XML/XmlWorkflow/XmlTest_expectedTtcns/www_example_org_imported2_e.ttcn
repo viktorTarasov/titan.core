@@ -41,13 +41,13 @@ import from XSD all;
 
 type XSD.Integer Foobar
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Integer Ding
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -56,14 +56,14 @@ type record Bar
 	XSD.String something optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/imported2'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/imported2'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

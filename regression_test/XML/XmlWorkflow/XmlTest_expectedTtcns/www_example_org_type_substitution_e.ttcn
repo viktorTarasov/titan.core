@@ -41,8 +41,8 @@ import from XSD all;
 
 type ParentType_derivations Head
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -55,14 +55,14 @@ type record ParentType
 	XSD.String bar
 }
 with {
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
 type RestrictedType RestrictedTypeElem
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -75,15 +75,15 @@ type record RestrictedType
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as uncapitalized";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
 type SubmitRequestType Submit
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -100,14 +100,14 @@ type union ParentType_derivations
 	RestrictedType restrictedType
 }
 with {
-variant "useType";
-variant (parentType) "name as capitalized";
+  variant "useType";
+  variant (parentType) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/type/substitution' prefix 'tysub'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/type/substitution' prefix 'tysub'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

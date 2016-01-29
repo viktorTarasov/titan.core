@@ -44,7 +44,7 @@ type record BaseElement_1
 
 }
 with {
-variant "name as 'BaseElement_'";
+  variant "name as 'BaseElement_'";
 };
 
 
@@ -53,29 +53,29 @@ type record Audit
 	BaseElement_group baseElement optional
 }
 with {
-variant (baseElement) "name as capitalized";
+  variant (baseElement) "name as capitalized";
 };
 
 
 type XSD.Integer Case
 with {
-variant "abstract";
-variant "element";
+  variant "abstract";
+  variant "element";
 };
 
 
 type XSD.String BaseElement
 with {
-variant "name as 'BaseElement__'";
-variant "abstract";
-variant "element";
+  variant "name as 'BaseElement__'";
+  variant "abstract";
+  variant "element";
 };
 
 
 type Audit Case_1
 with {
-variant "name as 'Case_'";
-variant "element";
+  variant "name as 'Case_'";
+  variant "element";
 };
 
 
@@ -85,17 +85,17 @@ type union BaseElement_group
 	Case_1 case_
 }
 with {
-variant "untagged";
-variant (baseElement) "name as capitalized";
-variant (baseElement) "form as qualified";
-variant (baseElement) "abstract";
-variant (case_) "name as capitalized";
+  variant "untagged";
+  variant (baseElement) "name as capitalized";
+  variant (baseElement) "form as qualified";
+  variant (baseElement) "abstract";
+  variant (case_) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/substitutiongroup/rename' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/substitutiongroup/rename' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

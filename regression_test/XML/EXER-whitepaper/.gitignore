@@ -34,6 +34,11 @@ EmbedValues_se[qt].cc
 EmbedValues_se[qt]of.cc
 EmbedValues_union.cc
 EmbedValues.ttcn
+EmbedValuesOptional.??
+EmbedValuesOptional_se[qt].cc
+EmbedValuesOptional_se[qt]of.cc
+EmbedValuesOptional_union.cc
+EmbedValuesOptional.ttcn
 List.??
 List_se[qt].cc
 List_se[qt]of.cc

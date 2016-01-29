@@ -21,7 +21,7 @@
 //	Generated from file(s):
 //	- any_anyAttribute.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "http://www.example.org/ttcn/wildcards" */
+//			/* targetnamespace = "http://www.example.org/ttcn/wildcards/e" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module http_www_example_org_ttcn_wildcards_e {
+module http_www_example_org_ttcn_wildcards {
 
 
 import from XSD all;
@@ -44,8 +44,8 @@ type record Mygroup
 	XSD.String elem
 }
 with {
-variant "untagged";
-variant (elem) "anyElement from 'http://www.example.org/ttcn/wildcards'";
+  variant "untagged";
+  variant (elem) "anyElement from 'http://www.example.org/ttcn/wildcards'";
 };
 
 
@@ -54,53 +54,52 @@ variant (elem) "anyElement from 'http://www.example.org/ttcn/wildcards'";
 
 type record E45
 {
-	record of XSD.String attr
+	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes";
 };
 
 
 type record E45a
 {
-	record of XSD.String attr
+	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes except unqualified, 'http://www.example.org/ttcn/wildcards'";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes except unqualified, 'http://www.example.org/ttcn/wildcards'";
 };
 
 
 type record E45b
 {
-	record of XSD.String attr
+	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes from 'http://www.example.org/ttcn/wildcards'";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes from 'http://www.example.org/ttcn/wildcards'";
 };
 
 
 type record E45c
 {
-	record of XSD.String attr
+	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes from unqualified,'http://www.organization.org/ttcn/attribute'";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes from unqualified, 'http://www.organization.org/ttcn/attribute'";
 };
 
 
 /* <xs:element name="attr" type="xs:integer"/> */
 type record E45d
 {
-	record of XSD.String attr
+	record of XSD.String attr optional
 }
 with {
-variant "name as uncapitalized";
-variant (attr) "anyAttributes from 'http://www.example.org/ttcn/wildcards'";
-variant (attr) "anyAttributes from unqualified,'http://www.organization.org/ttcn/attribute'";
+  variant "name as uncapitalized";
+  variant (attr) "anyAttributes from 'http://www.example.org/ttcn/wildcards', unqualified, 'http://www.organization.org/ttcn/attribute'";
 };
 
 
@@ -112,8 +111,8 @@ type record E46
 	XSD.String elem
 }
 with {
-variant "name as uncapitalized";
-variant (elem) "anyElement";
+  variant "name as uncapitalized";
+  variant (elem) "anyElement";
 };
 
 
@@ -122,8 +121,8 @@ type record E46ab
 	XSD.String elem optional
 }
 with {
-variant "name as uncapitalized";
-variant (elem) "anyElement except unqualified, 'http://www.example.org/ttcn/wildcards'";
+  variant "name as uncapitalized";
+  variant (elem) "anyElement except unqualified, 'http://www.example.org/ttcn/wildcards'";
 };
 
 
@@ -132,9 +131,9 @@ type record E46bc
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement from unqualified";
+  variant "name as uncapitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement from unqualified";
 };
 
 
@@ -149,9 +148,9 @@ type record E15
 	} sequence_list
 }
 with {
-variant "name as uncapitalized";
-variant (sequence_list) "untagged";
-variant (sequence_list[-]) "untagged";
+  variant "name as uncapitalized";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
 };
 
 
@@ -163,8 +162,8 @@ type record E15a
 	} sequence optional
 }
 with {
-variant "name as uncapitalized";
-variant (sequence) "untagged";
+  variant "name as uncapitalized";
+  variant (sequence) "untagged";
 };
 
 
@@ -176,8 +175,8 @@ type record E15b
 	} sequence optional
 }
 with {
-variant "name as uncapitalized";
-variant (sequence) "untagged";
+  variant "name as uncapitalized";
+  variant (sequence) "untagged";
 };
 
 
@@ -189,9 +188,9 @@ type record E15c
 	} sequence_list
 }
 with {
-variant "name as uncapitalized";
-variant (sequence_list) "untagged";
-variant (sequence_list[-]) "untagged";
+  variant "name as uncapitalized";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
 };
 
 
@@ -201,15 +200,15 @@ type record MyType
 	XSD.String base
 }
 with {
-variant "element";
-variant (attr) "anyAttributes from 'http://www.example.org/ttcn/wildcards'";
-variant (base) "untagged";
+  variant "element";
+  variant (attr) "anyAttributes from 'http://www.example.org/ttcn/wildcards'";
+  variant (base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.example.org/ttcn/wildcards' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.example.org/ttcn/wildcards' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

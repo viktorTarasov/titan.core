@@ -42,15 +42,15 @@ type union Lang
 	} alt_
 }
 with {
-variant "name as uncapitalized";
-variant "useUnion";
-variant "attribute";
-variant (language_) "name as 'language'";
-variant (alt_) "text 'x' as ''";
-variant (alt_) "text 'x' as ''";
-variant (alt_) "text 'x' as ''";
-variant (alt_) "text 'x' as ''";
-variant (alt_) "name as ''";
+  variant "name as uncapitalized";
+  variant "useUnion";
+  variant "attribute";
+  variant (language_) "name as 'language'";
+  variant (alt_) "text 'x' as ''";
+  variant (alt_) "text 'x' as ''";
+  variant (alt_) "text 'x' as ''";
+  variant (alt_) "text 'x' as ''";
+  variant (alt_) "name as ''";
 };
 
 
@@ -60,30 +60,30 @@ type enumerated Space
 	preserve
 }
 with {
-variant "text 'default_' as 'default'";
-variant "name as uncapitalized";
-variant "attribute";
+  variant "text 'default_' as 'default'";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
 type XSD.AnyURI Base
 with {
-variant "name as uncapitalized";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
 type ID Id
 with {
-variant "name as uncapitalized";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.w3.org/XML/1998/namespace' prefix 'exemel'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.w3.org/XML/1998/namespace' prefix 'exemel'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

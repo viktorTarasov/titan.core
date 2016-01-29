@@ -64,10 +64,10 @@ type record CreateAVGMultiSC
 	AvgAmfType avgAmf optional
 }
 with {
-variant "element";
-variant (impi) "attribute";
-variant (imsi) "attribute";
-variant (choice) "untagged";
+  variant "element";
+  variant (impi) "attribute";
+  variant (imsi) "attribute";
+  variant (choice) "untagged";
 };
 
 
@@ -90,9 +90,9 @@ type record SetAVGMultiSC
 	AvgAmfType avgAmf optional
 }
 with {
-variant "element";
-variant (impi) "attribute";
-variant (imsi) "attribute";
+  variant "element";
+  variant (impi) "attribute";
+  variant (imsi) "attribute";
 };
 
 
@@ -116,8 +116,8 @@ type record GetResponseAVGMultiSC
 	AvgAmfType avgAmf
 }
 with {
-variant "element";
-variant (choice) "untagged";
+  variant "element";
+  variant (choice) "untagged";
 };
 
 
@@ -137,9 +137,9 @@ type record CreateEPSMultiSC
 	EpsRoamingAllowedType epsRoamingAllowed optional
 }
 with {
-variant "element";
-variant (imsi) "attribute";
-variant (imsi_1) "name as 'imsi'";
+  variant "element";
+  variant (imsi) "attribute";
+  variant (imsi_1) "name as 'imsi'";
 };
 
 
@@ -163,8 +163,8 @@ type record SetEPSMultiSC
 	EpsLocationStateType epsLocationState optional
 }
 with {
-variant "element";
-variant (imsi) "attribute";
+  variant "element";
+  variant (imsi) "attribute";
 };
 
 
@@ -190,7 +190,7 @@ type record GetResponseEPSMultiSC
 	EpsLocationStateType epsLocationState
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -199,25 +199,25 @@ variant "element";
 
 type XSD.String MsisdnType (pattern "[0-9]*") length(5 .. 15)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String ImsiType (pattern "[0-9]*") length(6 .. 15)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String ImpiType length(5 .. 256)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String AssociationIdType
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -226,7 +226,7 @@ variant "name as uncapitalized";
 
 type XSD.String EpsProfileIdType
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -238,17 +238,17 @@ type enumerated EpsOdbType
 	oDB_VPLMN_APN
 }
 with {
-variant "text 'nONE' as capitalized";
-variant "text 'oDB_ALL' as 'ODB-ALL'";
-variant "text 'oDB_HPLMN_APN' as 'ODB-HPLMN-APN'";
-variant "text 'oDB_VPLMN_APN' as 'ODB-VPLMN-APN'";
-variant "name as uncapitalized";
+  variant "text 'nONE' as capitalized";
+  variant "text 'oDB_ALL' as 'ODB-ALL'";
+  variant "text 'oDB_HPLMN_APN' as 'ODB-HPLMN-APN'";
+  variant "text 'oDB_VPLMN_APN' as 'ODB-VPLMN-APN'";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Boolean EpsRoamingAllowedType
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -259,16 +259,16 @@ type enumerated EpsLocationStateType
 	uNKNOWN
 }
 with {
-variant "text 'lOCATED' as capitalized";
-variant "text 'pURGED' as capitalized";
-variant "text 'uNKNOWN' as capitalized";
-variant "name as uncapitalized";
+  variant "text 'lOCATED' as capitalized";
+  variant "text 'pURGED' as capitalized";
+  variant "text 'uNKNOWN' as capitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String MmeAddressType
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -277,32 +277,32 @@ variant "name as uncapitalized";
 
 type XSD.String AvgEncryptedKType (pattern "[0-9A-F]#32")
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Integer AvgA4KeyIndType (1 .. 512)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Integer AvgFSetIndType (0 .. 15)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String AvgAmfType (pattern "[0-9A-F]#4")
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://schemas.ericsson.com/ma/HSS/'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://schemas.ericsson.com/ma/HSS/'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

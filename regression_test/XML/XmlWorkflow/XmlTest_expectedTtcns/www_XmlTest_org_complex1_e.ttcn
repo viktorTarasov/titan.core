@@ -21,7 +21,7 @@
 //	Generated from file(s):
 //	- XmlTest_complex1.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.XmlTest.org/complex1" */
+//			/* targetnamespace = "www.XmlTest.org/complex1/e" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -52,14 +52,14 @@ type record InternationalPrice
 	XSD.Decimal base
 }
 with {
-variant (currency) "attribute";
-variant (base) "untagged";
+  variant (currency) "attribute";
+  variant (base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex1' prefix 'ns44'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex1' prefix 'ns44'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

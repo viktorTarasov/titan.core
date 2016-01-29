@@ -7,7 +7,7 @@
  ******************************************************************************/
 module emb_wrong_first_SE {	//^In TTCN-3 module `emb_wrong_first_SE'://
 
-type record e1 { //^In type definition//  //^error: A type with EMBED-VALUES must be a sequence type\. The first component of the sequence shall be SEQUENCE OF UTF8String and shall not be marked OPTIONAL or DEFAULT//
+type record e1 { //^In type definition//  //^error: A type with EMBED-VALUES must be a sequence type\. The first component of the sequence shall be SEQUENCE OF UTF8String and shall not be marked DEFAULT//
   charstring field_1
 }
 with {

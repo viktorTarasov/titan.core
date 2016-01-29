@@ -47,14 +47,14 @@ type record InternationalPrice
 	XSD.Decimal base
 }
 with {
-variant (currency) "attribute";
-variant (base) "untagged";
+  variant (currency) "attribute";
+  variant (base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex1_e' prefix 'ns'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex1_e' prefix 'ns'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

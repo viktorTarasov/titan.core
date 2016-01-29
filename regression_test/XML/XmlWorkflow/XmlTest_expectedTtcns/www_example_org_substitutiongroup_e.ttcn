@@ -47,8 +47,8 @@ import from XSD all;
 
 type XSD.String Member1
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -61,15 +61,15 @@ type enumerated StringEnum
 	something
 }
 with {
-variant "text 'else_' as 'else'";
-variant "name as uncapitalized";
+  variant "text 'else_' as 'else'";
+  variant "name as uncapitalized";
 };
 
 
 type StringEnum Member2
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -83,17 +83,17 @@ type record ComplexEnum
 	XSD.String base
 }
 with {
-variant "name as uncapitalized";
-variant (bar) "attribute";
-variant (foo) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant (bar) "attribute";
+  variant (foo) "attribute";
+  variant (base) "untagged";
 };
 
 
 type ComplexEnum Member3
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -105,10 +105,10 @@ type record Ize
 	record of Head_group head_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (head_list) "untagged";
-variant (head_list[-]) "name as 'head'";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (head_list) "untagged";
+  variant (head_list[-]) "name as 'head'";
 };
 
 
@@ -120,14 +120,14 @@ type union Head_group
 	Member3 member3
 }
 with {
-variant "untagged";
-variant (head) "form as qualified";
+  variant "untagged";
+  variant (head) "form as qualified";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/substitutiongroup' prefix 'subs'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/substitutiongroup' prefix 'subs'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

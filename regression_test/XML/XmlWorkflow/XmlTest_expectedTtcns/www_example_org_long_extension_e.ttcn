@@ -58,23 +58,23 @@ type record Top
 	record of XSD.String subelem_list
 }
 with {
-variant "element";
-variant (subAttrib) "name as capitalized";
-variant (subAttrib) "attribute";
-variant (xsdstring) "name as 'xsd:string'";
-variant (xsdstring) "attribute";
-variant (label_) "name as 'label'";
-variant (action_list) "untagged";
-variant (action_list[-]) "name as 'action'";
-variant (action_list[-].name) "attribute";
-variant (action_list[-].label_) "name as 'label'";
-variant (action_list[-].parameter_list) "untagged";
-variant (action_list[-].parameter_list[-]) "name as 'parameter'";
-variant (event_list) "untagged";
-variant (event_list[-]) "name as 'event'";
-variant (event_list[-].name) "attribute";
-variant (subelem_list) "untagged";
-variant (subelem_list[-]) "name as 'Subelem'";
+  variant "element";
+  variant (subAttrib) "name as capitalized";
+  variant (subAttrib) "attribute";
+  variant (xsdstring) "name as 'xsd:string'";
+  variant (xsdstring) "attribute";
+  variant (label_) "name as 'label'";
+  variant (action_list) "untagged";
+  variant (action_list[-]) "name as 'action'";
+  variant (action_list[-].name) "attribute";
+  variant (action_list[-].label_) "name as 'label'";
+  variant (action_list[-].parameter_list) "untagged";
+  variant (action_list[-].parameter_list[-]) "name as 'parameter'";
+  variant (event_list) "untagged";
+  variant (event_list[-]) "name as 'event'";
+  variant (event_list[-].name) "attribute";
+  variant (subelem_list) "untagged";
+  variant (subelem_list[-]) "name as 'Subelem'";
 };
 
 
@@ -95,18 +95,18 @@ type record TopBase1
 	} event_list
 }
 with {
-variant (xsdstring) "name as 'xsd:string'";
-variant (xsdstring) "attribute";
-variant (label_) "name as 'label'";
-variant (action_list) "untagged";
-variant (action_list[-]) "name as 'action'";
-variant (action_list[-].name) "attribute";
-variant (action_list[-].label_) "name as 'label'";
-variant (action_list[-].parameter_list) "untagged";
-variant (action_list[-].parameter_list[-]) "name as 'parameter'";
-variant (event_list) "untagged";
-variant (event_list[-]) "name as 'event'";
-variant (event_list[-].name) "attribute";
+  variant (xsdstring) "name as 'xsd:string'";
+  variant (xsdstring) "attribute";
+  variant (label_) "name as 'label'";
+  variant (action_list) "untagged";
+  variant (action_list[-]) "name as 'action'";
+  variant (action_list[-].name) "attribute";
+  variant (action_list[-].label_) "name as 'label'";
+  variant (action_list[-].parameter_list) "untagged";
+  variant (action_list[-].parameter_list[-]) "name as 'parameter'";
+  variant (event_list) "untagged";
+  variant (event_list[-]) "name as 'event'";
+  variant (event_list[-].name) "attribute";
 };
 
 
@@ -116,9 +116,9 @@ type record NamedBaseElement
 	XSD.String label_
 }
 with {
-variant "name as uncapitalized";
-variant (name) "attribute";
-variant (label_) "name as 'label'";
+  variant "name as uncapitalized";
+  variant (name) "attribute";
+  variant (label_) "name as 'label'";
 };
 
 
@@ -127,8 +127,8 @@ type record BaseElement
 	XSD.String label_
 }
 with {
-variant "name as uncapitalized";
-variant (label_) "name as 'label'";
+  variant "name as uncapitalized";
+  variant (label_) "name as 'label'";
 };
 
 
@@ -137,13 +137,13 @@ type record Response
 	XSD.String item optional
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/long/extension' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/long/extension' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

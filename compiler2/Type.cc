@@ -144,6 +144,8 @@ namespace Common {
       return "TEXT";
     case CT_JSON:
       return "JSON";
+    case CT_CUSTOM:
+      return "custom";
     default:
       return "<unknown encoding>";
     }
@@ -164,6 +166,8 @@ namespace Common {
       } else {
         return get_pooltype(T_OSTR);
       }
+    case CT_CUSTOM:
+      return get_pooltype(T_BSTR);
     default:
       FATAL_ERROR("Type::get_stream_type()");
       return 0;
@@ -2657,14 +2661,14 @@ namespace Common {
     "excludeMinimum", "excludeMaximum", "allOf"
     // TITAN-specific keywords
     "originalName", "unusedAlias", "subType", "numericValues", "omitAsNull",
-    "encoding", "decoding"
+    "encoding", "decoding", "valueList"
   };
   
   void Type::chk_json()
   {
     if (json_checked) return;
     json_checked = true;
-    if ((NULL == jsonattrib && !hasEncodeAttr(CT_JSON)) || !enable_json()) return;
+    if ((NULL == jsonattrib && !hasEncodeAttr(get_encoding_name(CT_JSON))) || !enable_json()) return;
 
     switch (typetype) {
     case T_ANYTYPE:
@@ -3194,7 +3198,8 @@ namespace Common {
   }
 
   bool Type::is_compatible(Type *p_type, TypeCompatInfo *p_info,
-                           TypeChain *p_left_chain, TypeChain *p_right_chain)
+                           TypeChain *p_left_chain, TypeChain *p_right_chain,
+                           bool p_is_inline_template)
   {
     chk();
     p_type->chk();
@@ -3338,25 +3343,25 @@ namespace Common {
       break;
     case T_SEQ_A:
     case T_SEQ_T:
-      is_type_comp = t1->is_compatible_record(t2, p_info, p_left_chain, p_right_chain);
+      is_type_comp = t1->is_compatible_record(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_SEQOF:
-      is_type_comp = t1->is_compatible_record_of(t2, p_info, p_left_chain, p_right_chain);
+      is_type_comp = t1->is_compatible_record_of(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_SET_A:
     case T_SET_T:
-      is_type_comp = t1->is_compatible_set(t2, p_info, p_left_chain, p_right_chain);
+      is_type_comp = t1->is_compatible_set(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_SETOF:
-      is_type_comp = t1->is_compatible_set_of(t2, p_info, p_left_chain, p_right_chain);
+      is_type_comp = t1->is_compatible_set_of(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_ARRAY:
-      is_type_comp = t1->is_compatible_array(t2, p_info, p_left_chain, p_right_chain);
+      is_type_comp = t1->is_compatible_array(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_CHOICE_T:
     case T_CHOICE_A:
     case T_ANYTYPE:
-      is_type_comp = t1->is_compatible_choice_anytype(t2, p_info, p_left_chain, p_right_chain);
+      is_type_comp = t1->is_compatible_choice_anytype(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_ENUM_A:
     case T_ENUM_T:
@@ -3481,7 +3486,8 @@ namespace Common {
   // simple decision here.
   bool Type::is_compatible_record(Type *p_type, TypeCompatInfo *p_info,
                                   TypeChain *p_left_chain,
-                                  TypeChain *p_right_chain)
+                                  TypeChain *p_right_chain,
+                                  bool p_is_inline_template)
   {
     if (typetype != T_SEQ_A && typetype != T_SEQ_T)
       FATAL_ERROR("Type::is_compatible_record()");
@@ -3530,7 +3536,7 @@ namespace Common {
         if (cf_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
             && !cf_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
-                                       p_right_chain)) {
+                                       p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "." + cf_name + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf_name + info_tmp.get_ref_str(1));
           p_info->set_is_erroneous(info_tmp.get_type(0), info_tmp.get_type(1),
@@ -3542,8 +3548,10 @@ namespace Common {
         p_left_chain->previous_state();
         p_right_chain->previous_state();
       }
-      p_info->set_needs_conversion(true);
-      p_info->add_type_conversion(p_type, this);
+      if (!p_is_inline_template) {
+        p_info->set_needs_conversion(true);
+        p_info->add_type_conversion(p_type, this);
+      }
       return true; }
     case T_SEQOF:
       if (!p_type->is_subtype_length_compatible(this)) {
@@ -3585,7 +3593,7 @@ namespace Common {
         if (cf_type != p_of_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
             && !cf_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
-                                       p_right_chain)) {
+                                       p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "." + get_comp_byIndex(i)
             ->get_name().get_dispname() + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "[]" + info_tmp.get_ref_str(1));
@@ -3598,8 +3606,10 @@ namespace Common {
         p_left_chain->previous_state();
         p_right_chain->previous_state();
       }
-      p_info->set_needs_conversion(true);
-      p_info->add_type_conversion(p_type, this);
+      if (!p_is_inline_template) {
+        p_info->set_needs_conversion(true);
+        p_info->add_type_conversion(p_type, this);
+      }
       return true; }
     case T_CHOICE_A:
     case T_CHOICE_T:
@@ -3638,7 +3648,8 @@ namespace Common {
 
   bool Type::is_compatible_record_of(Type *p_type, TypeCompatInfo *p_info,
                                      TypeChain *p_left_chain,
-                                     TypeChain *p_right_chain)
+                                     TypeChain *p_right_chain,
+                                     bool p_is_inline_template)
   {
     if (typetype != T_SEQOF) FATAL_ERROR("Type::is_compatible_record_of()");
     if (this == p_type) return true;
@@ -3681,7 +3692,7 @@ namespace Common {
         if (of_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
             && !of_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
-                                       p_right_chain)) {
+                                       p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "[]" + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf->get_name().get_dispname() +
                                  info_tmp.get_ref_str(1));
@@ -3695,8 +3706,10 @@ namespace Common {
         p_left_chain->previous_state();
         p_right_chain->previous_state();
       }
-      p_info->set_needs_conversion(true);
-      p_info->add_type_conversion(p_type, this);
+      if (!p_is_inline_template) {
+        p_info->set_needs_conversion(true);
+        p_info->add_type_conversion(p_type, this);
+      }
       return true; }
     case T_SEQOF:
     case T_ARRAY: {
@@ -3718,9 +3731,11 @@ namespace Common {
       if (of_type == p_of_type
           || (p_left_chain->has_recursion() && p_right_chain->has_recursion())
           || of_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
-                                    p_right_chain)) {
-        p_info->set_needs_conversion(true);
-        p_info->add_type_conversion(p_type, this);
+                                    p_right_chain, p_is_inline_template)) {
+        if (!p_is_inline_template) {
+          p_info->set_needs_conversion(true);
+          p_info->add_type_conversion(p_type, this);
+        }
         p_left_chain->previous_state();
         p_right_chain->previous_state();
         return true;
@@ -3755,14 +3770,15 @@ namespace Common {
 
   bool Type::is_compatible_array(Type *p_type, TypeCompatInfo *p_info,
                                  TypeChain *p_left_chain,
-                                 TypeChain *p_right_chain)
+                                 TypeChain *p_right_chain,
+                                 bool p_is_inline_template)
   {
     if (typetype != T_ARRAY) FATAL_ERROR("Type::is_compatible_array()");
     // Copied from the original checker code.  The type of the elements and
     // the dimension of the array must be the same.
     if (this == p_type) return true;
     if (p_type->typetype == T_ARRAY && u.array.element_type
-        ->is_compatible(p_type->u.array.element_type, NULL)
+        ->is_compatible(p_type->u.array.element_type, NULL, NULL, NULL, p_is_inline_template)
         && u.array.dimension->is_identical(p_type->u.array.dimension))
       return true;
     else if (!use_runtime_2 || !p_info
@@ -3803,7 +3819,7 @@ namespace Common {
         if (of_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
             && !of_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
-                                       p_right_chain)) {
+                                       p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf->get_name().get_dispname() +
                                  info_tmp.get_ref_str(1));
@@ -3817,8 +3833,10 @@ namespace Common {
         p_left_chain->previous_state();
         p_right_chain->previous_state();
       }
-      p_info->set_needs_conversion(true);
-      p_info->add_type_conversion(p_type, this);
+      if (!p_is_inline_template) {
+        p_info->set_needs_conversion(true);
+        p_info->add_type_conversion(p_type, this);
+      }
       return true; }
     case T_SEQOF:
       if (!p_type->is_subtype_length_compatible(this)) {
@@ -3845,9 +3863,11 @@ namespace Common {
       if (of_type == p_of_type
           || (p_left_chain->has_recursion() && p_right_chain->has_recursion())
           || of_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
-                                    p_right_chain)) {
-        p_info->set_needs_conversion(true);
-        p_info->add_type_conversion(p_type, this);
+                                    p_right_chain, p_is_inline_template)) {
+        if (!p_is_inline_template) {
+          p_info->set_needs_conversion(true);
+          p_info->add_type_conversion(p_type, this);
+        }
         p_left_chain->previous_state();
         p_right_chain->previous_state();
         return true;
@@ -3881,7 +3901,8 @@ namespace Common {
 
   bool Type::is_compatible_set(Type *p_type, TypeCompatInfo *p_info,
                                TypeChain *p_left_chain,
-                               TypeChain *p_right_chain)
+                               TypeChain *p_right_chain,
+                               bool p_is_inline_template)
   {
     if (typetype != T_SET_A && typetype != T_SET_T)
       FATAL_ERROR("Type::is_compatible_set()");
@@ -3928,7 +3949,7 @@ namespace Common {
         if (cf_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
             && !cf_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
-                                       p_right_chain)) {
+                                       p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "." + cf_name + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf_name + info_tmp.get_ref_str(1));
           p_info->set_is_erroneous(info_tmp.get_type(0), info_tmp.get_type(1),
@@ -3940,8 +3961,10 @@ namespace Common {
         p_left_chain->previous_state();
         p_right_chain->previous_state();
       }
-      p_info->set_needs_conversion(true);
-      p_info->add_type_conversion(p_type, this);
+      if (!p_is_inline_template) {
+        p_info->set_needs_conversion(true);
+        p_info->add_type_conversion(p_type, this);
+      }
       return true; }
     case T_SETOF: {
       if (!p_type->is_subtype_length_compatible(this)) {
@@ -3963,7 +3986,7 @@ namespace Common {
         if (cf_type != p_of_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
             && !cf_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
-                                       p_right_chain)) {
+                                       p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "." + get_comp_byIndex(i)
             ->get_name().get_dispname() + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "[]" + info_tmp.get_ref_str(1));
@@ -3976,8 +3999,10 @@ namespace Common {
         p_left_chain->previous_state();
         p_right_chain->previous_state();
       }
-      p_info->set_needs_conversion(true);
-      p_info->add_type_conversion(p_type, this);
+      if (!p_is_inline_template) {
+        p_info->set_needs_conversion(true);
+        p_info->add_type_conversion(p_type, this);
+      }
       return true; }
     case T_CHOICE_A:
     case T_CHOICE_T:
@@ -4001,7 +4026,8 @@ namespace Common {
 
   bool Type::is_compatible_set_of(Type *p_type, TypeCompatInfo *p_info,
                                   TypeChain *p_left_chain,
-                                  TypeChain *p_right_chain)
+                                  TypeChain *p_right_chain,
+                                  bool p_is_inline_template)
   {
     if (typetype != T_SETOF) FATAL_ERROR("Type::is_compatible_set_of()");
     if (this == p_type) return true;
@@ -4044,7 +4070,7 @@ namespace Common {
         if (of_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
             && !of_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
-                                       p_right_chain)) {
+                                       p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "[]" + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf->get_name().get_dispname() +
                                  info_tmp.get_ref_str(1));
@@ -4057,8 +4083,10 @@ namespace Common {
         p_left_chain->previous_state();
         p_right_chain->previous_state();
       }
-      p_info->set_needs_conversion(true);
-      p_info->add_type_conversion(p_type, this);
+      if (!p_is_inline_template) {
+        p_info->set_needs_conversion(true);
+        p_info->add_type_conversion(p_type, this);
+      }
       return true; }
     case T_SETOF: {
       if (!is_subtype_length_compatible(p_type)) {
@@ -4078,9 +4106,11 @@ namespace Common {
       if (of_type == p_of_type
           || (p_left_chain->has_recursion() && p_right_chain->has_recursion())
           || of_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
-                                    p_right_chain)) {
-        p_info->set_needs_conversion(true);
-        p_info->add_type_conversion(p_type, this);
+                                    p_right_chain, p_is_inline_template)) {
+        if (!p_is_inline_template) {
+          p_info->set_needs_conversion(true);
+          p_info->add_type_conversion(p_type, this);
+        }
         p_left_chain->previous_state();
         p_right_chain->previous_state();
         return true;
@@ -4115,7 +4145,8 @@ namespace Common {
   bool Type::is_compatible_choice_anytype(Type *p_type,
                                           TypeCompatInfo *p_info,
                                           TypeChain *p_left_chain,
-                                          TypeChain *p_right_chain)
+                                          TypeChain *p_right_chain,
+                                          bool p_is_inline_template)
   {
     if (typetype != T_ANYTYPE && typetype != T_CHOICE_A
         && typetype != T_CHOICE_T)
@@ -4178,7 +4209,7 @@ namespace Common {
           if (cf_type == p_cf_type
               || (p_left_chain->has_recursion() && p_right_chain->has_recursion())
               || cf_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
-                                        p_right_chain)) {
+                                        p_right_chain, p_is_inline_template)) {
             if (cf_type != p_cf_type && cf_type->is_structured_type()
                 && p_cf_type->is_structured_type()) {
               if (typetype == T_ANYTYPE && cf_type->get_my_scope()
@@ -4196,7 +4227,7 @@ namespace Common {
           p_right_chain->previous_state();
         }
       }
-      if (alles_okay) {
+      if (alles_okay && !p_is_inline_template) {
         p_info->set_needs_conversion(true);
         p_info->add_type_conversion(p_type, this);
         return true;
@@ -4303,8 +4334,21 @@ namespace Common {
       return false;
     }
   }
+  
+  void Type::set_coding_function(bool encode, const string& function_name)
+  {
+    string& coding_str = encode ? encoding_str : decoding_str;
+    if (!coding_str.empty()) {
+      error("Multiple custom %s functions declared for type '%s' (function `%s' "
+        "is already set)", encode ? "encoding" : "decoding",
+        get_typename().c_str(), coding_str.c_str());
+      return;
+    }
+    coding_str = function_name;
+    coding_by_function = true;
+  }
 
-  void Type::chk_coding(bool encode) {
+  void Type::chk_coding(bool encode, bool delayed /* = false */) {
     string& coding_str = encode ? encoding_str : decoding_str;
     if (!coding_str.empty())
       return;
@@ -4389,11 +4433,6 @@ end_ext:
                                               == SingleWithAttrib::AT_ENCODE) {
         found = true;
         coding = get_enc_type(*real_attribs[i-1]);
-        if (coding == CT_UNDEF) {
-          // "encode" attribute found, but the spec didn't match any known encodings
-          error("Unknown encoding '%s'", real_attribs[i-1]->get_attribSpec().get_spec().c_str());
-          return;
-        }
       }
     }
     if (coding == CT_UNDEF) {
@@ -4401,7 +4440,7 @@ end_ext:
       error("No coding rule specified for type '%s'", get_typename().c_str());
       return;
     }
-    if (!has_encoding(coding)) {
+    if (coding != CT_CUSTOM && !has_encoding(coding)) {
       error("Type '%s' cannot be coded with the selected method '%s'",
             get_typename().c_str(),
             get_encoding_name(coding));
@@ -4435,6 +4474,20 @@ end_ext:
         if (!berattrib)
           delete ber;
         break; }
+      case CT_CUSTOM:
+        if (!delayed) {
+          // coding_str is set by the coding function's checker in this case;
+          // it's possible, that the function exists, but has not been reached yet;
+          // delay this function until everything else has been checked
+          Modules::delay_type_encode_check(this, encode);
+        }        
+        else if (coding_str.empty()) {
+          // this is the delayed call, and the custom coding function has still
+          // not been found
+          error("No custom %s function found for type `%s'",
+            encode ? "encoding" : "decoding", get_typename().c_str());
+        }
+        return;
       default:
         error("Unknown coding selected for type '%s'", get_typename().c_str());
         break;
@@ -4476,7 +4529,7 @@ end_ext:
     else if (enc == "PER")
       return CT_PER;
     else
-      return CT_UNDEF;
+      return CT_CUSTOM;
   }
   bool Type::has_ei_withName(const Identifier& p_id) const
   {
@@ -5344,9 +5397,9 @@ end_ext:
     return false;
   }
   
-  bool Type::hasEncodeAttr(const MessageEncodingType_t encoding_type)
+  bool Type::hasEncodeAttr(const char* encoding_name)
   {
-    if (CT_JSON == encoding_type && (implicit_json_encoding
+    if (0 == strcmp(encoding_name, "JSON") && (implicit_json_encoding
         || is_asn1() || (is_ref() && get_type_refd()->is_asn1()))) {
       // ASN.1 types automatically support JSON encoding
       return true;
@@ -5365,7 +5418,7 @@ end_ext:
         const SingleWithAttrib& s = *real[i];
         if (s.get_attribKeyword() == SingleWithAttrib::AT_ENCODE) {
           const string& spec = s.get_attribSpec().get_spec();
-          if (spec == get_encoding_name(encoding_type)) {
+          if (spec == encoding_name) {
             return true;
           }
         } // if ENCODE
@@ -5409,7 +5462,7 @@ end_ext:
 
   }
 
-  bool Type::has_encoding(MessageEncodingType_t encoding_type)
+  bool Type::has_encoding(MessageEncodingType_t encoding_type, const string* custom_encoding /* = NULL */)
   {
     static memoizer memory;
     static memoizer json_mem;
@@ -5791,9 +5844,14 @@ end_ext:
           default:
             return json_mem.remember(t, ANSWER_NO);
           } // switch
-          return json_mem.remember(t, hasEncodeAttr(CT_JSON) ? ANSWER_YES : ANSWER_NO);
+          return json_mem.remember(t, hasEncodeAttr(get_encoding_name(CT_JSON)) ? ANSWER_YES : ANSWER_NO);
         } // else
       } // while
+      
+    case CT_CUSTOM:
+      // the encoding name parameter has to be the same as the encoding name
+      // specified for the type
+      return custom_encoding ? hasEncodeAttr(custom_encoding->c_str()) : false;
 
     default:
       FATAL_ERROR("Type::has_encoding()");
@@ -7013,6 +7071,34 @@ end_ext:
       }
     }
     return false;
+  }
+  
+  bool Type::has_as_value_union()
+  {
+    if (jsonattrib != NULL && jsonattrib->as_value) {
+      return true;
+    }
+    Type* t = get_type_refd_last();
+    switch (t->get_typetype_ttcn3()) {
+    case T_CHOICE_T:
+      if (t->jsonattrib != NULL && t->jsonattrib->as_value) {
+        return true;
+      }
+      // no break, check alternatives
+    case T_SEQ_T:
+    case T_SET_T:
+      for (size_t i = 0; i < t->get_nof_comps(); ++i) {
+        if (t->get_comp_byIndex(i)->get_type()->has_as_value_union()) {
+          return true;
+        }
+      }
+      return false;
+    case T_SEQOF:
+    case T_ARRAY:
+      return t->get_ofType()->has_as_value_union();
+    default:
+      return false;
+    }
   }
 
 } // namespace Common

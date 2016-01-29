@@ -375,6 +375,7 @@ public:
   virtual ASN_BER_TLV_t* BER_encode_negtest_raw() const;
   virtual int encode_raw(TTCN_Buffer& p_buf) const;
   virtual int RAW_encode_negtest_raw(RAW_enc_tree& p_myleaf) const;
+  virtual int JSON_encode_negtest_raw(JSON_Tokenizer&) const;
 #endif
 
   /** Examines whether this message corresponds the tags in the
@@ -574,6 +575,17 @@ public:
    * @return encoded length
    * @note Basetype::JSON_encode throws an error. */
   VIRTUAL_IF_RUNTIME_2 int JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer&) const;
+  
+#ifdef TITAN_RUNTIME_2
+  /** Encode with JSON encoding negative test.
+    * @return the length of the encoding
+    * @param p_err_descr erroneous type descriptor
+    * @param p_td type descriptor
+    * @param p_tok JSON tokenizer for the encoded data
+    * @note Basetype::JSON_encode_negtest throws an error. */
+  virtual int JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td,
+          JSON_Tokenizer& p_tok) const;
+#endif
   
   /** Decode JSON.
    * @return decoded length
@@ -800,6 +812,11 @@ public:
     * Returns the length of the encoded data. */
   int JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;
   
+  /** Negative testing for the JSON encoder
+    * Encodes this value according to the JSON encoding rules, but with the
+    * modifications (errors) specified in the erroneous descriptor parameter. */
+  int JSON_encode_negtest(const Erroneous_descriptor_t*, const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;
+  
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
@@ -942,6 +959,11 @@ public:
   /** Encodes accordingly to the JSON encoding rules.
     * Returns the length of the encoded data. */
   int JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;
+  
+  /** Negative testing for the JSON encoder
+    * Encodes this value according to the JSON encoding rules, but with the
+    * modifications (errors) specified in the erroneous descriptor parameter. */
+  int JSON_encode_negtest(const Erroneous_descriptor_t*, const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;
   
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */

@@ -42,7 +42,7 @@ type enumerated DummyEmptyType
 	x
 }
 with {
-variant "text 'x' as ''";
+  variant "text 'x' as ''";
 };
 
 
@@ -65,8 +65,8 @@ type XSD.Integer Unsigned32 (0 .. 4294967295);
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.ericsson.com/is/isco/IsTypes/R4L06/R4AF11' prefix 'ist'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.ericsson.com/is/isco/IsTypes/R4L06/R4AF11' prefix 'ist'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

@@ -46,7 +46,7 @@ import from XSD all;
 
 type record of XSD.Integer IntegerList
 with {
-variant "list";
+  variant "list";
 };
 
 
@@ -58,7 +58,7 @@ type IntegerList IntegerListLength length(3);
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/list_integer' prefix 'ns18'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/list_integer' prefix 'ns18'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

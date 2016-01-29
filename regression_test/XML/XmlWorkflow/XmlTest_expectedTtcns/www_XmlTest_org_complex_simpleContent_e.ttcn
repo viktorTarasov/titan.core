@@ -9,7 +9,7 @@
 * http://www.eclipse.org/legal/epl-v10.html
 *******************************************************************************/
 //
-//  File:          www_XmlTest_org_complex_simpleContent.ttcn
+//  File:          www_XmlTest_org_complex_simpleContent_e.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -50,11 +50,11 @@ type record ComplexTypeWithSimpleContent1
 	XSD.String base
 }
 with {
-variant (idCard) "name as capitalized";
-variant (idCard) "attribute";
-variant (passportId) "name as capitalized";
-variant (passportId) "attribute";
-variant (base) "untagged";
+  variant (idCard) "name as capitalized";
+  variant (idCard) "attribute";
+  variant (passportId) "name as capitalized";
+  variant (passportId) "attribute";
+  variant (base) "untagged";
 };
 
 
@@ -65,17 +65,17 @@ type record ComplexTypeWithSimpleContent2
 	XSD.String base length(4)
 }
 with {
-variant (idCard) "name as capitalized";
-variant (idCard) "attribute";
-variant (passportId) "name as capitalized";
-variant (passportId) "attribute";
-variant (base) "untagged";
+  variant (idCard) "name as capitalized";
+  variant (idCard) "attribute";
+  variant (passportId) "name as capitalized";
+  variant (passportId) "attribute";
+  variant (base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_simpleContent_e' prefix 'ns35'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_simpleContent_e' prefix 'ns35'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

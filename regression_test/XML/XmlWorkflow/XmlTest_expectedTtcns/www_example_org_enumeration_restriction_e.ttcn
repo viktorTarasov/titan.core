@@ -46,12 +46,12 @@ type union E21unnamed
 	XSD.String alt_2
 }
 with {
-variant "name as uncapitalized";
-variant "useUnion";
-variant "element";
-variant (alt_) "name as ''";
-variant (alt_1) "name as ''";
-variant (alt_2) "name as ''";
+  variant "name as uncapitalized";
+  variant "useUnion";
+  variant "element";
+  variant (alt_) "name as ''";
+  variant (alt_1) "name as ''";
+  variant (alt_2) "name as ''";
 };
 
 
@@ -61,7 +61,7 @@ type E21unnamed E22 (
 	{alt_:=50}
 )
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -71,10 +71,10 @@ type union String_int
 	XSD.Integer alt_1
 }
 with {
-variant "useUnion";
-variant "element";
-variant (alt_) "name as ''";
-variant (alt_1) "name as ''";
+  variant "useUnion";
+  variant "element";
+  variant (alt_) "name as ''";
+  variant (alt_1) "name as ''";
 };
 
 
@@ -100,19 +100,19 @@ type union Mixed_Types
 	XSD.String alt_10
 }
 with {
-variant "useUnion";
-variant "element";
-variant (alt_) "name as ''";
-variant (alt_1) "name as ''";
-variant (alt_2) "name as ''";
-variant (alt_3) "name as ''";
-variant (alt_4) "name as ''";
-variant (alt_5) "name as ''";
-variant (alt_6) "name as ''";
-variant (alt_7) "name as ''";
-variant (alt_8) "name as ''";
-variant (alt_9) "name as ''";
-variant (alt_10) "name as ''";
+  variant "useUnion";
+  variant "element";
+  variant (alt_) "name as ''";
+  variant (alt_1) "name as ''";
+  variant (alt_2) "name as ''";
+  variant (alt_3) "name as ''";
+  variant (alt_4) "name as ''";
+  variant (alt_5) "name as ''";
+  variant (alt_6) "name as ''";
+  variant (alt_7) "name as ''";
+  variant (alt_8) "name as ''";
+  variant (alt_9) "name as ''";
+  variant (alt_10) "name as ''";
 };
 
 
@@ -138,9 +138,9 @@ type union Only_int
 	XSD.Integer alt_
 }
 with {
-variant "useUnion";
-variant "element";
-variant (alt_) "name as ''";
+  variant "useUnion";
+  variant "element";
+  variant (alt_) "name as ''";
 };
 
 
@@ -151,7 +151,7 @@ type Only_int Ints (
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/enumeration/restriction' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/enumeration/restriction' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

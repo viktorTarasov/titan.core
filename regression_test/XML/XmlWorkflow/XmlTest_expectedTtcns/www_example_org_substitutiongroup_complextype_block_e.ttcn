@@ -48,14 +48,14 @@ type record ParentType
 	XSD.String bar
 }
 with {
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
 type RestrictedType RestrictedTypeElem
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -68,9 +68,9 @@ type record RestrictedType
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as uncapitalized";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
@@ -80,16 +80,16 @@ type union Head_group
 	RestrictedTypeElem restrictedTypeElem
 }
 with {
-variant "untagged";
-variant (head) "form as qualified";
-variant (restrictedTypeElem) "name as capitalized";
-variant (restrictedTypeElem) "block";
+  variant "untagged";
+  variant (head) "form as qualified";
+  variant (restrictedTypeElem) "name as capitalized";
+  variant (restrictedTypeElem) "block";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/substitutiongroup/complextype/block' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/substitutiongroup/complextype/block' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

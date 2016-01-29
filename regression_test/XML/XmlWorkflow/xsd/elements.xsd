@@ -8,8 +8,8 @@
  http://www.eclipse.org/legal/epl-v10.html
  -->
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
-xmlns:ns="www.example.org"
-targetNamespace="www.example.org">
+xmlns:ns="www.example.org/elements"
+targetNamespace="www.example.org/elements">
 
 <annotation>
   <documentation xml:lang="EN">

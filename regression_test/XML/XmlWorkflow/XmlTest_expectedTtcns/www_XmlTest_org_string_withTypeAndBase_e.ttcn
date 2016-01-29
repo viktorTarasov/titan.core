@@ -48,7 +48,7 @@ type XSD.String Mystring length(4 .. infinity);
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/string_withTypeAndBase' prefix 'ns5'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/string_withTypeAndBase' prefix 'ns5'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

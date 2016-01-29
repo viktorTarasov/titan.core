@@ -298,13 +298,11 @@ namespace Asn {
 
   void Imports::generate_code(output_struct *target)
   {
-    bool base_lib_needed = true;
+    target->header.includes = mputstr(target->header.includes,
+      "#include <TTCN3.hh>\n");
     for (size_t i = 0; i < impmods_v.size(); i++) {
       ImpMod *im = impmods_v[i];
       Common::Module *m = im->get_mod();
-      // do not include the header file of the base library if a real
-      // (not circular) imported module is found
-      if (base_lib_needed && !m->is_visible(my_mod)) base_lib_needed = false;
       // inclusion of m's header file can be eliminated if we find another
       // imported module that imports m
       bool covered = false;
@@ -324,12 +322,6 @@ namespace Asn {
       }
       // do not generate the #include if a covering module is found
       if (!covered) im->generate_code(target);
-    }
-    if (base_lib_needed) {
-      // if no real import was found the base library definitions has to be
-      // #include'd
-      target->header.includes = mputstr(target->header.includes,
-        "#include <TTCN3.hh>\n");
     }
   }
 

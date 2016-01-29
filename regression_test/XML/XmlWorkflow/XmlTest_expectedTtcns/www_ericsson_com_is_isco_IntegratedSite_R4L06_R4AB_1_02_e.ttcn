@@ -46,7 +46,7 @@ type record DataModelVersionType_10
 	XSD.Integer minor
 }
 with {
-variant "name as 'dataModelVersionType-10'";
+  variant "name as 'dataModelVersionType-10'";
 };
 
 
@@ -72,7 +72,7 @@ type record BsProdFilterType_1
 	XSD.Token prodRev
 }
 with {
-variant "name as 'bsProdFilterType-1'";
+  variant "name as 'bsProdFilterType-1'";
 };
 
 
@@ -110,7 +110,7 @@ type record JobData
 
 type XSD.Token DnsDomainType_14 (pattern "[a-zA-Z]+(.[a-zA-Z]*)*")
 with {
-variant "name as 'dnsDomainType-14'";
+  variant "name as 'dnsDomainType-14'";
 };
 
 
@@ -128,7 +128,7 @@ type XSD.Token HwmKnockOutPreference (pattern "normal|protected");
 
 type XSD.Token UpdateModeType_9 (pattern "unsafe|readOnly|safe|preliminary")
 with {
-variant "name as 'updateModeType-9'";
+  variant "name as 'updateModeType-9'";
 };
 
 
@@ -145,56 +145,56 @@ type XSD.Token Slot_HwmSlotState (pattern "unusedEmpty|usedEmpty|unusedOccupied|
 
 type record of ObjectRef RelatedSDPsType_32
 with {
-variant "name as 'relatedSDPsType-32'";
-variant "list";
+  variant "name as 'relatedSDPsType-32'";
+  variant "list";
 };
 
 
 type XSD.Integer Subrack1IdType_22 (0 .. 31)
 with {
-variant "name as 'subrack1IdType-22'";
+  variant "name as 'subrack1IdType-22'";
 };
 
 
 type XSD.Integer RlspLinkDownThresholdType_12 (0 .. 65535)
 with {
-variant "name as 'rlspLinkDownThresholdType-12'";
+  variant "name as 'rlspLinkDownThresholdType-12'";
 };
 
 
 type XSD.Integer SubrackIdType_3 (0 .. 31)
 with {
-variant "name as 'subrackIdType-3'";
+  variant "name as 'subrackIdType-3'";
 };
 
 
 type XSD.Integer Subrack2IdType_26 (0 .. 31)
 with {
-variant "name as 'subrack2IdType-26'";
+  variant "name as 'subrack2IdType-26'";
 };
 
 
 type XSD.Integer IdentityType_7 (0 .. 4096)
 with {
-variant "name as 'identityType-7'";
+  variant "name as 'identityType-7'";
 };
 
 
 type XSD.Integer NumberType_21 (0 .. 25)
 with {
-variant "name as 'numberType-21'";
+  variant "name as 'numberType-21'";
 };
 
 
 type XSD.Integer SlotNoType_4 (0 .. 25)
 with {
-variant "name as 'slotNoType-4'";
+  variant "name as 'slotNoType-4'";
 };
 
 
 type XSD.Integer PhysicalAddrPlug0Type_18 (0 .. 15)
 with {
-variant "name as 'physicalAddrPlug0Type-18'";
+  variant "name as 'physicalAddrPlug0Type-18'";
 };
 
 
@@ -205,7 +205,7 @@ type XSD.Token HwmOperationalState (pattern "disabled|enabled");
 
 type XSD.Integer PhysicalAddrPlug1Type_19 (0 .. 15)
 with {
-variant "name as 'physicalAddrPlug1Type-19'";
+  variant "name as 'physicalAddrPlug1Type-19'";
 };
 
 
@@ -223,8 +223,8 @@ type XSD.Token SwmMatchStrategy (pattern "exact|prefix|unknown");
 
 type record of ObjectRef BladeSwgRefsType_2
 with {
-variant "name as 'bladeSwgRefsType-2'";
-variant "list";
+  variant "name as 'bladeSwgRefsType-2'";
+  variant "list";
 };
 
 
@@ -242,20 +242,20 @@ type enumerated Subrack1XslotType_23
 	int25(25)
 }
 with {
-variant "useNumber";
-variant "name as 'subrack1XslotType-23'";
+  variant "useNumber";
+  variant "name as 'subrack1XslotType-23'";
 };
 
 
 type XSD.Integer Subrack1PslotType_24 (0 .. 25)
 with {
-variant "name as 'subrack1PslotType-24'";
+  variant "name as 'subrack1PslotType-24'";
 };
 
 
 type XSD.Token JobResultType_35 (pattern "ok|inputError|executionError|unknown")
 with {
-variant "name as 'jobResultType-35'";
+  variant "name as 'jobResultType-35'";
 };
 
 
@@ -265,32 +265,32 @@ type enumerated Subrack2XslotType_27
 	int25(25)
 }
 with {
-variant "useNumber";
-variant "name as 'subrack2XslotType-27'";
+  variant "useNumber";
+  variant "name as 'subrack2XslotType-27'";
 };
 
 
 type XSD.Integer Subrack2PslotType_28 (0 .. 25)
 with {
-variant "name as 'subrack2PslotType-28'";
+  variant "name as 'subrack2PslotType-28'";
 };
 
 
 type XSD.Integer PhysicalAddrPlug3Type_20 (0 .. 15)
 with {
-variant "name as 'physicalAddrPlug3Type-20'";
+  variant "name as 'physicalAddrPlug3Type-20'";
 };
 
 
 type XSD.Token StatusType_33 (pattern "complete|incomplete|inconsistent")
 with {
-variant "name as 'statusType-33'";
+  variant "name as 'statusType-33'";
 };
 
 
 type XSD.Token JobStatusType_34 (pattern "notStarted|ongoing|complete")
 with {
-variant "name as 'jobStatusType-34'";
+  variant "name as 'jobStatusType-34'";
 };
 
 
@@ -299,31 +299,31 @@ type enumerated DummyEmptyType
 	x
 }
 with {
-variant "text 'x' as ''";
+  variant "text 'x' as ''";
 };
 
 
 type XSD.Integer WidthType_16 (1 .. 12)
 with {
-variant "name as 'widthType-16'";
+  variant "name as 'widthType-16'";
 };
 
 
 type XSD.Integer MaskType_5 (0 .. 32)
 with {
-variant "name as 'maskType-5'";
+  variant "name as 'maskType-5'";
 };
 
 
 type XSD.Integer MaskType_6 (0 .. 32)
 with {
-variant "name as 'maskType-6'";
+  variant "name as 'maskType-6'";
 };
 
 
 type XSD.Integer RlspLinkUpThresholdType_13 (0 .. 65535)
 with {
-variant "name as 'rlspLinkUpThresholdType-13'";
+  variant "name as 'rlspLinkUpThresholdType-13'";
 };
 
 
@@ -340,49 +340,49 @@ type XSD.Token HwmAdministrativeState (pattern "locked|shuttingDown|unlocked");
 
 type XSD.Integer PbitsType_8 (0 .. 7)
 with {
-variant "name as 'pbitsType-8'";
+  variant "name as 'pbitsType-8'";
 };
 
 
 type XSD.Token IslTypeType_30 (pattern "islb|frontPort")
 with {
-variant "name as 'islTypeType-30'";
+  variant "name as 'islTypeType-30'";
 };
 
 
 type XSD.Token TypeType_31 (pattern "bladeSystemInformation|bladeInformation|application|rootFileSystem|kernel|correction|ipmi")
 with {
-variant "name as 'typeType-31'";
+  variant "name as 'typeType-31'";
 };
 
 
 type XSD.Integer Subrack1PortType_25 (1 .. 6)
 with {
-variant "name as 'subrack1PortType-25'";
+  variant "name as 'subrack1PortType-25'";
 };
 
 
 type XSD.Integer IdType_17 (0 .. 31)
 with {
-variant "name as 'idType-17'";
+  variant "name as 'idType-17'";
 };
 
 
 type XSD.Integer Subrack2PortType_29 (1 .. 6)
 with {
-variant "name as 'subrack2PortType-29'";
+  variant "name as 'subrack2PortType-29'";
 };
 
 
 type XSD.Token ModeType_15 (pattern "prepare|publish|accept|reject|purge")
 with {
-variant "name as 'modeType-15'";
+  variant "name as 'modeType-15'";
 };
 
 
 type XSD.Integer RlspMarkerGenerateIntervalType_11 (10 .. 200)
 with {
-variant "name as 'rlspMarkerGenerateIntervalType-11'";
+  variant "name as 'rlspMarkerGenerateIntervalType-11'";
 };
 
 
@@ -1625,97 +1625,97 @@ type record IntegratedSite
 	} software
 }
 with {
-variant "element";
-variant (administrativeData) "name as capitalized";
-variant (administrativeData.systemRestart) "name as capitalized";
-variant (bladeSystems) "name as capitalized";
-variant (bladeSystems.bladeSystem_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-]) "name as 'BladeSystem'";
-variant (bladeSystems.bladeSystem_list[-].blade_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-].blade_list[-]) "name as 'Blade'";
-variant (bladeSystems.bladeSystem_list[-].blade_list[-].linkSap_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-].blade_list[-].linkSap_list[-]) "name as 'LinkSap'";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration) "name as capitalized";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsIpTrafficClass_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsIpTrafficClass_list[-]) "name as 'BsIpTrafficClass'";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLanTrafficClass_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLanTrafficClass_list[-]) "name as 'BsLanTrafficClass'";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-]) "name as 'BsLogicalNetwork'";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].private_) "name as 'private'";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].bsSubnet_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].bsSubnet_list[-]) "name as 'BsSubnet'";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].bsSubnet_list[-].bsSubnetSegment_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].bsSubnet_list[-].bsSubnetSegment_list[-]) "name as 'BsSubnetSegment'";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list[-]) "name as 'BsVlan'";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list[-].private_) "name as 'private'";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list[-].bsVlanSap_list) "untagged";
-variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list[-].bsVlanSap_list[-]) "name as 'BsVlanSap'";
-variant (hardware) "name as capitalized";
-variant (hardware.bladeSystemDomain_list) "untagged";
-variant (hardware.bladeSystemDomain_list[-]) "name as 'BladeSystemDomain'";
-variant (hardware.bladeType_list) "untagged";
-variant (hardware.bladeType_list[-]) "name as 'BladeType'";
-variant (hardware.bladeType_list[-].type_) "name as 'type'";
-variant (hardware.interSubrackLink_list) "untagged";
-variant (hardware.interSubrackLink_list[-]) "name as 'InterSubrackLink'";
-variant (hardware.subrack_list) "untagged";
-variant (hardware.subrack_list[-]) "name as 'Subrack'";
-variant (hardware.subrack_list[-].type_) "name as 'type'";
-variant (hardware.subrack_list[-].slot_list) "untagged";
-variant (hardware.subrack_list[-].slot_list[-]) "name as 'Slot'";
-variant (networkConfiguration) "name as capitalized";
-variant (networkConfiguration.externalBootServer_list) "untagged";
-variant (networkConfiguration.externalBootServer_list[-]) "name as 'ExternalBootServer'";
-variant (networkConfiguration.isIpTrafficClass_list) "untagged";
-variant (networkConfiguration.isIpTrafficClass_list[-]) "name as 'IsIpTrafficClass'";
-variant (networkConfiguration.isLanTrafficClass_list) "untagged";
-variant (networkConfiguration.isLanTrafficClass_list[-]) "name as 'IsLanTrafficClass'";
-variant (networkConfiguration.isLogicalNetwork_list) "untagged";
-variant (networkConfiguration.isLogicalNetwork_list[-]) "name as 'IsLogicalNetwork'";
-variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list) "untagged";
-variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-]) "name as 'IsSubnet'";
-variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-].address_) "name as 'address'";
-variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-].isSubnetSegment_list) "untagged";
-variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-].isSubnetSegment_list[-]) "name as 'IsSubnetSegment'";
-variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-].isSubnetSegment_list[-].address_) "name as 'address'";
-variant (networkConfiguration.isVariables) "name as capitalized";
-variant (networkConfiguration.isVlan_list) "untagged";
-variant (networkConfiguration.isVlan_list[-]) "name as 'IsVlan'";
-variant (software) "name as capitalized";
-variant (software.softwareInventory) "name as capitalized";
-variant (software.softwareInventory.backup_list) "untagged";
-variant (software.softwareInventory.backup_list[-]) "name as 'Backup'";
-variant (software.softwareInventory.softwareAlarm_list) "untagged";
-variant (software.softwareInventory.softwareAlarm_list[-]) "name as 'SoftwareAlarm'";
-variant (software.softwareInventory.softwareDeliveryPackage_list) "untagged";
-variant (software.softwareInventory.softwareDeliveryPackage_list[-]) "name as 'SoftwareDeliveryPackage'";
-variant (software.softwareInventory.softwareDeliveryPackage_list[-].type_) "name as 'type'";
-variant (software.softwareInventory.softwareGroup_list) "untagged";
-variant (software.softwareInventory.softwareGroup_list[-]) "name as 'SoftwareGroup'";
-variant (software.softwareJobs) "name as capitalized";
-variant (software.softwareJobs.backupCreateJob_list) "untagged";
-variant (software.softwareJobs.backupCreateJob_list[-]) "name as 'BackupCreateJob'";
-variant (software.softwareJobs.backupExportJob_list) "untagged";
-variant (software.softwareJobs.backupExportJob_list[-]) "name as 'BackupExportJob'";
-variant (software.softwareJobs.backupImportJob_list) "untagged";
-variant (software.softwareJobs.backupImportJob_list[-]) "name as 'BackupImportJob'";
-variant (software.softwareJobs.backupRestoreJob_list) "untagged";
-variant (software.softwareJobs.backupRestoreJob_list[-]) "name as 'BackupRestoreJob'";
-variant (software.softwareJobs.softwareChangeJob_list) "untagged";
-variant (software.softwareJobs.softwareChangeJob_list[-]) "name as 'SoftwareChangeJob'";
-variant (software.softwareJobs.softwareChangeJob_list[-].softwareChangeJobBladeInfo_list) "untagged";
-variant (software.softwareJobs.softwareChangeJob_list[-].softwareChangeJobBladeInfo_list[-]) "name as 'SoftwareChangeJobBladeInfo'";
-variant (software.softwareJobs.softwareDownloadJob_list) "untagged";
-variant (software.softwareJobs.softwareDownloadJob_list[-]) "name as 'SoftwareDownloadJob'";
+  variant "element";
+  variant (administrativeData) "name as capitalized";
+  variant (administrativeData.systemRestart) "name as capitalized";
+  variant (bladeSystems) "name as capitalized";
+  variant (bladeSystems.bladeSystem_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-]) "name as 'BladeSystem'";
+  variant (bladeSystems.bladeSystem_list[-].blade_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-].blade_list[-]) "name as 'Blade'";
+  variant (bladeSystems.bladeSystem_list[-].blade_list[-].linkSap_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-].blade_list[-].linkSap_list[-]) "name as 'LinkSap'";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration) "name as capitalized";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsIpTrafficClass_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsIpTrafficClass_list[-]) "name as 'BsIpTrafficClass'";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLanTrafficClass_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLanTrafficClass_list[-]) "name as 'BsLanTrafficClass'";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-]) "name as 'BsLogicalNetwork'";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].private_) "name as 'private'";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].bsSubnet_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].bsSubnet_list[-]) "name as 'BsSubnet'";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].bsSubnet_list[-].bsSubnetSegment_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsLogicalNetwork_list[-].bsSubnet_list[-].bsSubnetSegment_list[-]) "name as 'BsSubnetSegment'";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list[-]) "name as 'BsVlan'";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list[-].private_) "name as 'private'";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list[-].bsVlanSap_list) "untagged";
+  variant (bladeSystems.bladeSystem_list[-].bsNetworkConfiguration.bsVlan_list[-].bsVlanSap_list[-]) "name as 'BsVlanSap'";
+  variant (hardware) "name as capitalized";
+  variant (hardware.bladeSystemDomain_list) "untagged";
+  variant (hardware.bladeSystemDomain_list[-]) "name as 'BladeSystemDomain'";
+  variant (hardware.bladeType_list) "untagged";
+  variant (hardware.bladeType_list[-]) "name as 'BladeType'";
+  variant (hardware.bladeType_list[-].type_) "name as 'type'";
+  variant (hardware.interSubrackLink_list) "untagged";
+  variant (hardware.interSubrackLink_list[-]) "name as 'InterSubrackLink'";
+  variant (hardware.subrack_list) "untagged";
+  variant (hardware.subrack_list[-]) "name as 'Subrack'";
+  variant (hardware.subrack_list[-].type_) "name as 'type'";
+  variant (hardware.subrack_list[-].slot_list) "untagged";
+  variant (hardware.subrack_list[-].slot_list[-]) "name as 'Slot'";
+  variant (networkConfiguration) "name as capitalized";
+  variant (networkConfiguration.externalBootServer_list) "untagged";
+  variant (networkConfiguration.externalBootServer_list[-]) "name as 'ExternalBootServer'";
+  variant (networkConfiguration.isIpTrafficClass_list) "untagged";
+  variant (networkConfiguration.isIpTrafficClass_list[-]) "name as 'IsIpTrafficClass'";
+  variant (networkConfiguration.isLanTrafficClass_list) "untagged";
+  variant (networkConfiguration.isLanTrafficClass_list[-]) "name as 'IsLanTrafficClass'";
+  variant (networkConfiguration.isLogicalNetwork_list) "untagged";
+  variant (networkConfiguration.isLogicalNetwork_list[-]) "name as 'IsLogicalNetwork'";
+  variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list) "untagged";
+  variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-]) "name as 'IsSubnet'";
+  variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-].address_) "name as 'address'";
+  variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-].isSubnetSegment_list) "untagged";
+  variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-].isSubnetSegment_list[-]) "name as 'IsSubnetSegment'";
+  variant (networkConfiguration.isLogicalNetwork_list[-].isSubnet_list[-].isSubnetSegment_list[-].address_) "name as 'address'";
+  variant (networkConfiguration.isVariables) "name as capitalized";
+  variant (networkConfiguration.isVlan_list) "untagged";
+  variant (networkConfiguration.isVlan_list[-]) "name as 'IsVlan'";
+  variant (software) "name as capitalized";
+  variant (software.softwareInventory) "name as capitalized";
+  variant (software.softwareInventory.backup_list) "untagged";
+  variant (software.softwareInventory.backup_list[-]) "name as 'Backup'";
+  variant (software.softwareInventory.softwareAlarm_list) "untagged";
+  variant (software.softwareInventory.softwareAlarm_list[-]) "name as 'SoftwareAlarm'";
+  variant (software.softwareInventory.softwareDeliveryPackage_list) "untagged";
+  variant (software.softwareInventory.softwareDeliveryPackage_list[-]) "name as 'SoftwareDeliveryPackage'";
+  variant (software.softwareInventory.softwareDeliveryPackage_list[-].type_) "name as 'type'";
+  variant (software.softwareInventory.softwareGroup_list) "untagged";
+  variant (software.softwareInventory.softwareGroup_list[-]) "name as 'SoftwareGroup'";
+  variant (software.softwareJobs) "name as capitalized";
+  variant (software.softwareJobs.backupCreateJob_list) "untagged";
+  variant (software.softwareJobs.backupCreateJob_list[-]) "name as 'BackupCreateJob'";
+  variant (software.softwareJobs.backupExportJob_list) "untagged";
+  variant (software.softwareJobs.backupExportJob_list[-]) "name as 'BackupExportJob'";
+  variant (software.softwareJobs.backupImportJob_list) "untagged";
+  variant (software.softwareJobs.backupImportJob_list[-]) "name as 'BackupImportJob'";
+  variant (software.softwareJobs.backupRestoreJob_list) "untagged";
+  variant (software.softwareJobs.backupRestoreJob_list[-]) "name as 'BackupRestoreJob'";
+  variant (software.softwareJobs.softwareChangeJob_list) "untagged";
+  variant (software.softwareJobs.softwareChangeJob_list[-]) "name as 'SoftwareChangeJob'";
+  variant (software.softwareJobs.softwareChangeJob_list[-].softwareChangeJobBladeInfo_list) "untagged";
+  variant (software.softwareJobs.softwareChangeJob_list[-].softwareChangeJobBladeInfo_list[-]) "name as 'SoftwareChangeJobBladeInfo'";
+  variant (software.softwareJobs.softwareDownloadJob_list) "untagged";
+  variant (software.softwareJobs.softwareDownloadJob_list[-]) "name as 'SoftwareDownloadJob'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.ericsson.com/is/isco/IntegratedSite/R4L06/R4AB_1.02' prefix 'IntegratedSite'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.ericsson.com/is/isco/IntegratedSite/R4L06/R4AB_1.02' prefix 'IntegratedSite'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

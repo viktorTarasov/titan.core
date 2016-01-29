@@ -19,7 +19,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- sequence_embeds_sequence.xsd
+//	- sequence_embeds_sequence_e.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "http://www.example.org/seq-embeds-seq/e" */
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,11 +53,11 @@ type record E34b
 	} choice
 }
 with {
-variant "name as uncapitalized";
-variant (choice) "untagged";
-variant (choice.sequence) "untagged";
-variant (choice.sequence.foo_1) "name as 'foo'";
-variant (choice.sequence.bar_1) "name as 'bar'";
+  variant "name as uncapitalized";
+  variant (choice) "untagged";
+  variant (choice.sequence) "untagged";
+  variant (choice.sequence.foo_1) "name as 'foo'";
+  variant (choice.sequence.bar_1) "name as 'bar'";
 };
 
 
@@ -68,13 +68,13 @@ type record E40a
 	XSD.String ding
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.example.org/seq-embeds-seq'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.example.org/seq-embeds-seq'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

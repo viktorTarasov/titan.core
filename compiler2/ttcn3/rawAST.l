@@ -680,10 +680,10 @@ void rawAST_error(const char *str)
   Location loc(infile, yylloc);
   if (*yytext) {
     // the most recently parsed token is known
-    loc.error("in variant attribute, at or before token `%s': %s", yytext, str);
+    loc.warning("in variant attribute, at or before token `%s': %s", yytext, str);
   } else {
     // the most recently parsed token is unknown
-    loc.error("in variant attribute: %s", str);
+    loc.warning("in variant attribute: %s", str);
   }
 }
 

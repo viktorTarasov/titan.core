@@ -42,8 +42,8 @@ import from www_w3_org_XML_1998_namespace_e all;
 
 type Presence_1 Presence
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -55,14 +55,14 @@ type record Presence_1
 	record of XSD.String elem_list
 }
 with {
-variant "name as 'presence'";
-variant (entity) "attribute";
-variant (tuple_list) "untagged";
-variant (tuple_list[-]) "name as 'tuple'";
-variant (note_list) "untagged";
-variant (note_list[-]) "name as 'note'";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:pidf'";
+  variant "name as 'presence'";
+  variant (entity) "attribute";
+  variant (tuple_list) "untagged";
+  variant (tuple_list[-]) "name as 'tuple'";
+  variant (note_list) "untagged";
+  variant (note_list[-]) "name as 'note'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:pidf'";
 };
 
 
@@ -76,12 +76,12 @@ type record Tuple
 	XSD.DateTime timestamp optional
 }
 with {
-variant "name as uncapitalized";
-variant (id) "attribute";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:pidf'";
-variant (note_list) "untagged";
-variant (note_list[-]) "name as 'note'";
+  variant "name as uncapitalized";
+  variant (id) "attribute";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:pidf'";
+  variant (note_list) "untagged";
+  variant (note_list[-]) "name as 'note'";
 };
 
 
@@ -91,9 +91,9 @@ type record Status
 	record of XSD.String elem_list
 }
 with {
-variant "name as uncapitalized";
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:pidf'";
+  variant "name as uncapitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:pidf'";
 };
 
 
@@ -103,7 +103,7 @@ type enumerated Basic
 	open
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -113,9 +113,9 @@ type record Contact
 	XSD.AnyURI base
 }
 with {
-variant "name as uncapitalized";
-variant (priority) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant (priority) "attribute";
+  variant (base) "untagged";
 };
 
 
@@ -125,15 +125,15 @@ type record Note
 	XSD.String base
 }
 with {
-variant "name as uncapitalized";
-variant (lang) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant (lang) "attribute";
+  variant (base) "untagged";
 };
 
 
 type XSD.Decimal Qvalue
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -146,16 +146,16 @@ variant "name as uncapitalized";
          element is to be handled. */
 type XSD.Boolean MustUnderstand
 with {
-variant "name as uncapitalized";
-variant "defaultForEmpty as '0'";
-variant "attribute";
+  variant "name as uncapitalized";
+  variant "defaultForEmpty as '0'";
+  variant "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'urn:ietf:params:xml:ns:pidf' prefix 'pidf'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'urn:ietf:params:xml:ns:pidf' prefix 'pidf'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

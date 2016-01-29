@@ -108,6 +108,7 @@ static void yyerror(const char *str);
 %token <str> ErrorBehaviorString
 %token <id> IDentifier "Identifier"
 %token <number> Number
+%token <str> CustomEncoding
 
 /*********************************************************************
  * Tokens without semantic value
@@ -223,6 +224,7 @@ VersionAttribute
 RequiresAttribute
 PrintingAttribute
 PrintingType
+CustomEncoding
 
 %destructor { delete $$.encoding_options; }
 DecodeAttribute
@@ -542,6 +544,11 @@ EncDecAttributeBody:
   {
     $$.encoding_type = $2;
     $$.encoding_options = $4;
+  }
+| '(' CustomEncoding ')'
+  {
+    $$.encoding_type = Type::CT_CUSTOM;
+    $$.encoding_options = $2;
   }
 ;
 

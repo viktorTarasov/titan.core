@@ -51,19 +51,19 @@ type record MyComplexElem_13
 	XSD.Boolean b
 }
 with {
-variant "name as 'MyComplexElem-13'";
-variant "useOrder";
-variant "embedValues";
-variant "element";
-variant (foo) "attribute";
-//variant (b) "text 'true' as '1'";
-//variant (b) "text 'false' as '0'";
+  variant "name as 'MyComplexElem-13'";
+  variant "useOrder";
+  variant "embedValues";
+  variant "element";
+  variant (foo) "attribute";
+  //variant (b) "text 'true' as '1'";
+  //variant (b) "text 'false' as '0'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/unnamed/union'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/unnamed/union'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -98,6 +98,7 @@ s/^$//g
 # $2 : cfg file base without extension
 #####################################
 run_and_modify_logfile() {
+  echo $TTCN3_DIR/bin/ttcn3_start $MYEXE $1
   $TTCN3_DIR/bin/ttcn3_start $MYEXE $1
   cp $LOGDIR/${MYEXE}-mtc.log $LOGDIR/${2}-mtc.log
   cp $LOGDIR/${MYEXE}-hc.log $LOGDIR/${2}-hc.log

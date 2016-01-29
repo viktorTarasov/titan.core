@@ -46,9 +46,9 @@ type record Elements
 	XSD.String elem3
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (elem3) "form as unqualified";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (elem3) "form as unqualified";
 };
 
 
@@ -59,20 +59,20 @@ type record Attributes
 	XSD.String attrib3 optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (attrib1) "attribute";
-variant (attrib2) "attribute";
-variant (attrib3) "form as unqualified";
-variant (attrib3) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (attrib1) "attribute";
+  variant (attrib2) "attribute";
+  variant (attrib3) "form as unqualified";
+  variant (attrib3) "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/qualified/element/attrib' prefix 'ns22'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "attributeFormQualified";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'www.example.org/qualified/element/attrib' prefix 'ns22'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "attributeFormQualified";
+  variant "elementFormQualified";
 }

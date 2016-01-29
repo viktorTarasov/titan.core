@@ -60,19 +60,19 @@ type enumerated AccountActionType
 	int5(5)
 }
 with {
-variant "useNumber";
+  variant "useNumber";
 };
 
 
 type AccountActionType AccountAction
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/simple_enum' prefix 'ns17'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/simple_enum' prefix 'ns17'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

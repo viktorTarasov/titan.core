@@ -59,33 +59,33 @@ type record Resources
 	} resource_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (resource_list) "untagged";
-variant (resource_list[-]) "name as 'resource'";
-variant (resource_list[-].keys.key_list) "untagged";
-variant (resource_list[-].keys.key_list[-]) "name as 'key'";
-variant (resource_list[-].keys.key_list[-].name) "attribute";
-variant (resource_list[-].keys.key_list[-].priority) "defaultForEmpty as '1'";
-variant (resource_list[-].keys.key_list[-].priority) "attribute";
-variant (resource_list[-].keys.key_list[-].searchable) "defaultForEmpty as 'true'";
-variant (resource_list[-].keys.key_list[-].searchable) "attribute";
-variant (resource_list[-].keys.key_list[-].value_) "name as 'value'";
-variant (resource_list[-].keys.key_list[-].value_) "attribute";
-variant (resource_list[-].resourceHomes.dataSource_list) "untagged";
-variant (resource_list[-].resourceHomes.dataSource_list[-]) "name as 'dataSource'";
-variant (resource_list[-].resourceHomes.dataSource_list[-].identifier) "attribute";
-variant (resource_list[-].resourceHomes.additionalData.data_list) "untagged";
-variant (resource_list[-].resourceHomes.additionalData.data_list[-]) "name as 'data'";
-variant (resource_list[-].resourceHomes.additionalData.data_list[-].name) "attribute";
-variant (resource_list[-].resourceHomes.additionalData.data_list[-].value_) "name as 'value'";
-variant (resource_list[-].resourceHomes.additionalData.data_list[-].value_) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (resource_list) "untagged";
+  variant (resource_list[-]) "name as 'resource'";
+  variant (resource_list[-].keys.key_list) "untagged";
+  variant (resource_list[-].keys.key_list[-]) "name as 'key'";
+  variant (resource_list[-].keys.key_list[-].name) "attribute";
+  variant (resource_list[-].keys.key_list[-].priority) "defaultForEmpty as '1'";
+  variant (resource_list[-].keys.key_list[-].priority) "attribute";
+  variant (resource_list[-].keys.key_list[-].searchable) "defaultForEmpty as 'true'";
+  variant (resource_list[-].keys.key_list[-].searchable) "attribute";
+  variant (resource_list[-].keys.key_list[-].value_) "name as 'value'";
+  variant (resource_list[-].keys.key_list[-].value_) "attribute";
+  variant (resource_list[-].resourceHomes.dataSource_list) "untagged";
+  variant (resource_list[-].resourceHomes.dataSource_list[-]) "name as 'dataSource'";
+  variant (resource_list[-].resourceHomes.dataSource_list[-].identifier) "attribute";
+  variant (resource_list[-].resourceHomes.additionalData.data_list) "untagged";
+  variant (resource_list[-].resourceHomes.additionalData.data_list[-]) "name as 'data'";
+  variant (resource_list[-].resourceHomes.additionalData.data_list[-].name) "attribute";
+  variant (resource_list[-].resourceHomes.additionalData.data_list[-].value_) "name as 'value'";
+  variant (resource_list[-].resourceHomes.additionalData.data_list[-].value_) "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://schemas.ericsson.com/upg/bulkprovisioning/1.0' prefix 'bulk'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://schemas.ericsson.com/upg/bulkprovisioning/1.0' prefix 'bulk'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

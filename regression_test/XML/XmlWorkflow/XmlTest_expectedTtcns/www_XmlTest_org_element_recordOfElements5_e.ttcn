@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright Ericsson Telecom AB
+* Copyright (c) 2000-2015 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
 *
@@ -19,7 +19,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- XmlTest_element_recordOfElements5.xsd
+//	- XmlTest_element_recordOfElements5_e.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "www.XmlTest.org/element_recordOfElements5" */
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,17 +54,17 @@ type record PersonInfo5
 	} degree_list
 }
 with {
-variant (degree_list) "untagged";
-variant (degree_list[-]) "name as 'Degree'";
-variant (degree_list[-].year) "name as capitalized";
-variant (degree_list[-].year) "attribute";
-variant (degree_list[-].base) "untagged";
+  variant (degree_list) "untagged";
+  variant (degree_list[-]) "name as 'Degree'";
+  variant (degree_list[-].year) "name as capitalized";
+  variant (degree_list[-].year) "attribute";
+  variant (degree_list[-].base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/element_recordOfElements5' prefix 'ns28'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/element_recordOfElements5' prefix 'ns28'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

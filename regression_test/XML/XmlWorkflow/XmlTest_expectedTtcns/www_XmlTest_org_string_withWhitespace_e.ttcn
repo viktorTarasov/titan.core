@@ -56,25 +56,25 @@ import from XSD all;
 
 type XSD.String StringWhiteSpaceP
 with {
-variant "whiteSpace preserve";
+  variant "whiteSpace preserve";
 };
 
 
 type XSD.String StringWhiteSpaceR
 with {
-variant "whiteSpace replace";
+  variant "whiteSpace replace";
 };
 
 
 type XSD.String StringWhiteSpaceC
 with {
-variant "whiteSpace collapse";
+  variant "whiteSpace collapse";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.XmlTest.org/string_withWhitespace' prefix 'wws'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.XmlTest.org/string_withWhitespace' prefix 'wws'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

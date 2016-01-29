@@ -39,8 +39,8 @@ type record JMdict
 	record length(1 .. infinity) of Entry entry_list
 }
 with {
-variant "element";
-variant (entry_list) "untagged";
+  variant "element";
+  variant (entry_list) "untagged";
 };
 
 
@@ -53,18 +53,18 @@ type record Entry
 	record length(1 .. infinity) of Sense sense_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (k_ele_list) "untagged";
-variant (r_ele_list) "untagged";
-variant (sense_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (k_ele_list) "untagged";
+  variant (r_ele_list) "untagged";
+  variant (sense_list) "untagged";
 };
 
 
 type XSD.Integer Ent_seq
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -75,31 +75,31 @@ type record K_ele
 	record of Ke_pri ke_pri_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (ke_inf_list) "untagged";
-variant (ke_pri_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (ke_inf_list) "untagged";
+  variant (ke_pri_list) "untagged";
 };
 
 
 type XSD.String Keb
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NCName Ke_inf
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NCName Ke_pri
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -114,19 +114,19 @@ type record R_ele
 	record of Re_pri re_pri_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice) "untagged";
-variant (choice.re_restr_list) "untagged";
-variant (re_inf_list) "untagged";
-variant (re_pri_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice) "untagged";
+  variant (choice.re_restr_list) "untagged";
+  variant (re_inf_list) "untagged";
+  variant (re_pri_list) "untagged";
 };
 
 
 type XSD.String Reb
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -135,29 +135,29 @@ type record Re_nokanji
 
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.String Re_restr
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NCName Re_inf
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NCName Re_pri
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -166,8 +166,8 @@ type record Info
 	Audit audit
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -177,22 +177,22 @@ type record Audit
 	Upd_detl upd_detl
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NMTOKEN Upd_date
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.String Upd_detl
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -213,82 +213,82 @@ type record Sense
 	record of Gloss gloss_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (stagk_list) "untagged";
-variant (stagr_list) "untagged";
-variant (pos_list) "untagged";
-variant (xref_list) "untagged";
-variant (ant_list) "untagged";
-variant (field_list) "untagged";
-variant (misc_list) "untagged";
-variant (choice) "untagged";
-variant (choice.dial_list) "untagged";
-variant (choice.lsource_list) "untagged";
-variant (gloss_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (stagk_list) "untagged";
+  variant (stagr_list) "untagged";
+  variant (pos_list) "untagged";
+  variant (xref_list) "untagged";
+  variant (ant_list) "untagged";
+  variant (field_list) "untagged";
+  variant (misc_list) "untagged";
+  variant (choice) "untagged";
+  variant (choice.dial_list) "untagged";
+  variant (choice.lsource_list) "untagged";
+  variant (gloss_list) "untagged";
 };
 
 
 type XSD.String Stagk
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NCName Stagr
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NCName Pos
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.String Xref
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.String Ant
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NCName Field
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NCName Misc
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.String S_inf
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.NCName Dial
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -299,11 +299,11 @@ type record Lsource
 	XSD.NCName ls_wasei optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (lang) "attribute";
-variant (ls_wasei) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (lang) "attribute";
+  variant (ls_wasei) "attribute";
 };
 
 
@@ -313,16 +313,16 @@ type record Gloss
 	XSD.Language lang
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (lang) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (lang) "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

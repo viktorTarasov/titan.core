@@ -44,9 +44,9 @@ import from www_example_org_type_substitution_mod1 all;
 
 type ParentType_derivations Subsgroup
 with {
-variant "name as uncapitalized";
-variant "abstract";
-variant "element";
+  variant "name as uncapitalized";
+  variant "abstract";
+  variant "element";
 };
 
 
@@ -57,10 +57,10 @@ type record ExtendedType
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (attr1) "attribute";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as uncapitalized";
+  variant (attr1) "attribute";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
@@ -70,23 +70,23 @@ type record RestrictedExtendedType
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
+  variant "name as uncapitalized";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
 };
 
 
 type RestrictedType_derivations NameTest
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type ExtendedType_derivations NameTest2
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -96,15 +96,15 @@ type union ExtendedType_derivations
 	RestrictedExtendedType restrictedExtendedType
 }
 with {
-variant "name as uncapitalized";
-variant "useType";
-variant (restrictedExtendedType) "block";
+  variant "name as uncapitalized";
+  variant "useType";
+  variant (restrictedExtendedType) "block";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/type/substitution/mod2'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/type/substitution/mod2'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

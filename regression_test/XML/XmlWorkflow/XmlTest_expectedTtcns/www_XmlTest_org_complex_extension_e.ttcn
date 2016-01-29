@@ -53,12 +53,12 @@ type record MySubjects3
 	XSD.String chemistry optional
 }
 with {
-variant (year) "name as capitalized";
-variant (year) "attribute";
-variant (english) "name as capitalized";
-variant (math) "name as capitalized";
-variant (physics) "name as capitalized";
-variant (chemistry) "name as capitalized";
+  variant (year) "name as capitalized";
+  variant (year) "attribute";
+  variant (english) "name as capitalized";
+  variant (math) "name as capitalized";
+  variant (physics) "name as capitalized";
+  variant (chemistry) "name as capitalized";
 };
 
 
@@ -73,21 +73,21 @@ type record MySubjects3Extension
 	XSD.String arts
 }
 with {
-variant (semester) "name as capitalized";
-variant (semester) "attribute";
-variant (year) "name as capitalized";
-variant (year) "attribute";
-variant (english) "name as capitalized";
-variant (math) "name as capitalized";
-variant (physics) "name as capitalized";
-variant (chemistry) "name as capitalized";
-variant (arts) "name as capitalized";
+  variant (semester) "name as capitalized";
+  variant (semester) "attribute";
+  variant (year) "name as capitalized";
+  variant (year) "attribute";
+  variant (english) "name as capitalized";
+  variant (math) "name as capitalized";
+  variant (physics) "name as capitalized";
+  variant (chemistry) "name as capitalized";
+  variant (arts) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_extension' prefix 'ns39'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_extension' prefix 'ns39'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

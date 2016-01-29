@@ -60,10 +60,10 @@ type record PurchaseReport
 	PartsType parts
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (period) "attribute";
-variant (periodEnding) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (period) "attribute";
+  variant (periodEnding) "attribute";
 };
 
 
@@ -87,13 +87,13 @@ type record RegionsType
 	} zip_list
 }
 with {
-variant (zip_list) "untagged";
-variant (zip_list[-]) "name as 'zip'";
-variant (zip_list[-].code) "attribute";
-variant (zip_list[-].part_list) "untagged";
-variant (zip_list[-].part_list[-]) "name as 'part'";
-variant (zip_list[-].part_list[-].number) "attribute";
-variant (zip_list[-].part_list[-].quantity) "attribute";
+  variant (zip_list) "untagged";
+  variant (zip_list[-]) "name as 'zip'";
+  variant (zip_list[-].code) "attribute";
+  variant (zip_list[-].part_list) "untagged";
+  variant (zip_list[-].part_list[-]) "name as 'part'";
+  variant (zip_list[-].part_list[-].number) "attribute";
+  variant (zip_list[-].part_list[-].quantity) "attribute";
 };
 
 
@@ -105,17 +105,17 @@ type record PartsType
 	} part_list
 }
 with {
-variant (part_list) "untagged";
-variant (part_list[-]) "name as 'part'";
-variant (part_list[-].number) "attribute";
-variant (part_list[-].base) "untagged";
+  variant (part_list) "untagged";
+  variant (part_list[-]) "name as 'part'";
+  variant (part_list[-].number) "attribute";
+  variant (part_list[-].base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_include' prefix 'r'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_include' prefix 'r'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

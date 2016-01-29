@@ -41,8 +41,8 @@ import from XSD all;
 
 type XSD.String Member
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -52,9 +52,9 @@ type enumerated StringEnum
 	something
 }
 with {
-variant "text 'else_' as 'else'";
-variant "name as uncapitalized";
-variant "element";
+  variant "text 'else_' as 'else'";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -65,18 +65,18 @@ type record ComplexEnum
 	XSD.String base
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (bar) "attribute";
-variant (foo) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (bar) "attribute";
+  variant (foo) "attribute";
+  variant (base) "untagged";
 };
 
 
 type E27seq Member3
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -86,16 +86,16 @@ type record E27seq
 	Member2 base
 }
 with {
-variant "name as uncapitalized";
-variant (extAttrib) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant (extAttrib) "attribute";
+  variant (base) "untagged";
 };
 
 
 type E26seq Member2
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -107,11 +107,11 @@ type record E26seq
 	XSD.String base
 }
 with {
-variant "name as uncapitalized";
-variant (bar) "attribute";
-variant (foo) "attribute";
-variant (unitOfAge) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant (bar) "attribute";
+  variant (foo) "attribute";
+  variant (unitOfAge) "attribute";
+  variant (base) "untagged";
 };
 
 
@@ -120,10 +120,10 @@ type record Ize
 	record of Head_group head_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (head_list) "untagged";
-variant (head_list[-]) "name as 'head'";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (head_list) "untagged";
+  variant (head_list[-]) "name as 'head'";
 };
 
 
@@ -137,16 +137,16 @@ type union Head_group
 	StringEnum stringEnum
 }
 with {
-variant "untagged";
-variant (complexEnum) "block";
-variant (member2) "block";
-variant (member3) "block";
+  variant "untagged";
+  variant (complexEnum) "block";
+  variant (member2) "block";
+  variant (member3) "block";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/substitutiongroup/long/extension' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/substitutiongroup/long/extension' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

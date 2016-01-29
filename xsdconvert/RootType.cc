@@ -175,16 +175,16 @@ void RootType::printVariant(FILE * file) {
   if (!e_flag_used && !variant.empty()) {
     fprintf(file, "\nwith {\n");
     for (List<Mstring>::iterator var = variant.end(); var; var = var->Prev) {
-      fprintf(file, "variant %s;\n", var->Data.c_str());
+      fprintf(file, "  variant %s;\n", var->Data.c_str());
     }
     for (List<Mstring>::iterator var = hidden_variant.end(); var; var = var->Prev) {
-      fprintf(file, "//variant %s;\n", var->Data.c_str());
+      fprintf(file, "  //variant %s;\n", var->Data.c_str());
     }
     fprintf(file, "}");
   } else if (!e_flag_used && type.originalValueWoPrefix == Mstring("boolean")) {
     fprintf(file, ";\n//with {\n");
     for (List<Mstring>::iterator var = hidden_variant.end(); var; var = var->Prev) {
-      fprintf(file, "//variant %s;\n", var->Data.c_str());
+      fprintf(file, "  //variant %s;\n", var->Data.c_str());
     }
     fprintf(file, "//}");
   }

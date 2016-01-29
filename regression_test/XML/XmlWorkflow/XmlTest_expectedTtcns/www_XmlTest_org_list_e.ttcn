@@ -46,243 +46,243 @@ import from XSD all;
 
 type record of XSD.String StringList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.NormalizedString NormalizedStringList
 with {
-variant "name as uncapitalized";
-variant "list";
+  variant "name as uncapitalized";
+  variant "list";
 };
 
 
 type record of XSD.NMTOKEN NMTokenList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Base64Binary Base64BinaryList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.HexBinary HexBinaryList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Integer IntegerList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.PositiveInteger PositiveIntegerList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.NegativeInteger NegativeIntegerList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.NonNegativeInteger NonNegativeIntegerList
 with {
-variant "name as uncapitalized";
-variant "list";
+  variant "name as uncapitalized";
+  variant "list";
 };
 
 
 type record of XSD.NonPositiveInteger NonPositiveIntegerList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Long LongList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.UnsignedLong UnsignedLongList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Int IntList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.UnsignedInt UnsignedIntList
 with {
-variant "name as uncapitalized";
-variant "list";
+  variant "name as uncapitalized";
+  variant "list";
 };
 
 
 type record of XSD.Short ShortList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.UnsignedShort UnsignedShortList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Byte ByteList
 with {
-variant "name as uncapitalized";
-variant "list";
+  variant "name as uncapitalized";
+  variant "list";
 };
 
 
 type record of XSD.UnsignedByte UnsignedByteList
 with {
-variant "name as uncapitalized";
-variant "list";
+  variant "name as uncapitalized";
+  variant "list";
 };
 
 
 type record of XSD.Decimal DecimalList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Float FloatList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Double DoubleList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Boolean BooleanList
 with {
-variant "list";
-//variant "text 'true' as '1'";
-//variant "text 'false' as '0'";
+  variant "list";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 };
 
 
 type record of XSD.Duration DurationList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.DateTime DateTimeList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Date DateList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Time TimeList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.GYear GYearList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.GYearMonth GYearMonthList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.GMonth GMonthList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.GMonthDay GMonthDayList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.GDay GDayList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Token TokenList
 with {
-variant "name as uncapitalized";
-variant "list";
+  variant "name as uncapitalized";
+  variant "list";
 };
 
 
 type record of XSD.Name NameList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.QName QNameList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.NCName NCNameList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.AnyURI AnyURIList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.Language LanguageList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.ID IDList
 with {
-variant "list";
+  variant "list";
 };
 
 
 type record of XSD.IDREF IDRefList
 with {
-variant "list";
+  variant "list";
 };
 
 
@@ -291,7 +291,7 @@ variant "list";
 
 type record of XSD.ENTITY ENTITYList
 with {
-variant "list";
+  variant "list";
 };
 
 
@@ -306,7 +306,7 @@ variant "list";
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/list' prefix 'ns19'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/list' prefix 'ns19'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

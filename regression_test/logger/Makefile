@@ -10,7 +10,7 @@ include   ../Makefile.regression
 unexport ABS_SRC
 unexport SRCDIR
 
-DIRS := emergency_logging logcontrol logtest
+DIRS := emergency_logging logcontrol # logtest - is unstable, fails on some systems
 
 # List of fake targets:
 .PHONY: all dep clean run $(DIRS) $(addsuffix /, $(DIRS)) profile

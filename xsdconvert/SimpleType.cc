@@ -331,8 +331,8 @@ void SimpleType::addToTypeSubstitutions() {
   }
 
   //It would be nice if here outside_reference.resolved to everything
-  SimpleType * st = (SimpleType*)outside_reference.get_ref();
   bool newST = false;
+  SimpleType * st = (SimpleType*)outside_reference.get_ref();
   if(st == NULL && !isBuiltInType(type.convertedValue)){
     //Not even a reference, and not a built in type
     return;
@@ -341,30 +341,44 @@ void SimpleType::addToTypeSubstitutions() {
     st->type.upload(type.convertedValue);
     st->name.upload(type.convertedValue);
     st->typeSubsGroup = findBuiltInTypeInStoredTypeSubstitutions(type.convertedValue);
+    outside_reference.set_resolved(st);
+    //Add this decoy type to the maintypes -> module will free st
+    //st->setInvisible();
+    module->addMainType(st);
     newST = true;
   }
 
   addedToTypeSubstitution = true;
-
+  st->addToTypeSubstitutions();
   //If type substitution is NULL then we need to create the union
   if(st->getTypeSubstitution() == NULL){
     ComplexType * head_element = new ComplexType(*st, ComplexType::fromTypeSubstitution);
-    for(List<SimpleType*>::iterator simpletype = st->nameDepList.begin(); simpletype; simpletype = simpletype->Next){
-      head_element->getNameDepList().push_back(simpletype->Data);
+    head_element->getNameDepList().clear();
+    for(List<SimpleType*>::iterator simpletype = st->nameDepList.begin(), nextST; simpletype; simpletype = nextST){
+      nextST = simpletype->Next;
+      //Don't add if it is in a type substitution 
+      if(simpletype->Data->getTypeSubstitution() == NULL){
+        head_element->getNameDepList().push_back(simpletype->Data);
+        st->getNameDepList().remove(simpletype);
+      }
     }
-    st->nameDepList.clear();
+    
     st->getModule()->addMainType(head_element);
     head_element->addVariant(V_useType);
+    //For cascading type substitution
+    if(st->outside_reference.get_ref() != NULL && ((ComplexType*)st->outside_reference.get_ref())->getTypeSubstitution() != NULL){
+      head_element->setParentTypeSubsGroup(((ComplexType*)st->outside_reference.get_ref())->getTypeSubstitution());
+    }
     head_element->addTypeSubstitution(st);
     head_element->addTypeSubstitution(this);
     bool found = false;
     //Check to find if there was already an element reference with this type
     for(List<typeNameDepList>::iterator str = module->getElementTypes().begin(); str; str = str->Next){
       Mstring prefix = str->Data.type.getPrefix(':');
-      Mstring value = str->Data.type.getValueWithoutPrefix(':');
+      Mstring value_ = str->Data.type.getValueWithoutPrefix(':');
 
-      if((value == st->getName().convertedValue.getValueWithoutPrefix(':') && prefix == module->getTargetNamespaceConnector()) ||
-         (isBuiltInType(value) && !isBuiltInType(st->getType().convertedValue) && value == st->getType().convertedValue && prefix == module->getTargetNamespaceConnector())){
+      if((value_ == st->getName().convertedValue.getValueWithoutPrefix(':') && prefix == module->getTargetNamespaceConnector()) ||
+         (isBuiltInType(value_) && !isBuiltInType(st->getType().convertedValue) && value_ == st->getType().convertedValue && prefix == module->getTargetNamespaceConnector())){
         //Push the namedeplist
         for(List<SimpleType*>::iterator simpletype = str->Data.nameDepList.begin(); simpletype; simpletype = simpletype->Next){
           head_element->getNameDepList().push_back(simpletype->Data);
@@ -382,11 +396,9 @@ void SimpleType::addToTypeSubstitutions() {
   }else {
     st->getTypeSubstitution()->addTypeSubstitution(this);
   }
-
-  //Free pointer
   if(newST){
-    delete st;
-    st = NULL;
+    //Make the decoy invisible
+    st->setInvisible();
   }
 }
 
@@ -395,19 +407,19 @@ void SimpleType::collectElementTypes(SimpleType* found_ST, ComplexType* found_CT
   //it is a not top level element(complextype)
   if(h_flag_used && (hasVariant(Mstring("\"element\"")) || xsdtype == n_element)){
     SimpleType * st =  NULL, *nameDep = NULL;
-    Mstring uri, value, type_;
+    Mstring uri, value_, type_;
     if(found_ST != NULL || found_CT != NULL){
       // st := found_ST or found_CT, which is not null
       st = found_ST != NULL ? found_ST : found_CT;
       uri = outside_reference.get_uri();
-      value = outside_reference.get_val();
-      type_ = value;
+      value_ = outside_reference.get_val();
+      type_ = value_;
     }else if(isBuiltInType(type.convertedValue)){
       st = this;
       uri = module->getTargetNamespace();
-      value = type.convertedValue;
+      value_ = type.convertedValue;
       if(outside_reference.empty()){
-        type_ = value;
+        type_ = value_;
         nameDep = this;
       }else {
         type_ = outside_reference.get_val();
@@ -418,7 +430,7 @@ void SimpleType::collectElementTypes(SimpleType* found_ST, ComplexType* found_CT
     }
     type_ = type_.getValueWithoutPrefix(':');
     bool found = false;
-    const Mstring typeSubsName = value + Mstring("_derivations");
+    const Mstring typeSubsName = value_ + Mstring("_derivations");
     //Find if we already have a substitution type to this element reference
     for(List<ComplexType*>::iterator complex = st->getModule()->getStoredTypeSubstitutions().begin(); complex; complex = complex->Next){
 
@@ -517,7 +529,7 @@ void SimpleType::setReference(const Mstring& ref, bool only_name_dependency) {
 }
 
 void SimpleType::referenceResolving() {
-  if (outside_reference.empty()){
+  if (outside_reference.empty() || outside_reference.is_resolved()){
     addToTypeSubstitutions();
     collectElementTypes();
   }
@@ -533,8 +545,10 @@ void SimpleType::referenceResolving() {
     collectElementTypes(found_ST, found_CT);
     if (found_ST != NULL) {
       if (!found_ST->outside_reference.empty() && !found_ST->outside_reference.is_resolved() && found_ST != this) {
-        found_ST->outside_reference.set_resolved(NULL);
         found_ST->referenceResolving();
+        if(!found_ST->outside_reference.is_resolved()){
+          found_ST->outside_reference.set_resolved(NULL);
+        }
       }
       referenceForST(found_ST);
       addToTypeSubstitutions();
@@ -978,6 +992,7 @@ void PatternType::applyFacet() // only for time types and string types without h
           break;
         case '"':
           value += "\"\"";
+          break;
         case '{':
         {
           if (charclass == 0) {
@@ -1332,6 +1347,8 @@ void ValueType::applyReference(const ValueType & other) {
   if (other.facet_maxInclusive < facet_maxInclusive) facet_maxInclusive = other.facet_maxInclusive;
   if (other.facet_minExclusive > facet_minExclusive) facet_minExclusive = other.facet_minExclusive;
   if (other.facet_maxExclusive < facet_maxExclusive) facet_maxExclusive = other.facet_maxExclusive;
+  if (other.upperExclusive) upperExclusive = other.upperExclusive;
+  if (other.lowerExclusive) lowerExclusive = other.lowerExclusive;
   //-1 in case when it is not modified
   if (other.facet_totalDigits < facet_totalDigits || facet_totalDigits == -1) facet_totalDigits = other.facet_totalDigits;
   if (!other.default_value.empty()) {

@@ -45,7 +45,7 @@ type XSD.Decimal DecimalWithLength5 (-99999..99999);
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/decimal_withLength' prefix 'ns'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/decimal_withLength' prefix 'ns'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

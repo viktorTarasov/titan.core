@@ -77,6 +77,13 @@ namespace Common {
     /** Containers to store the modules. */
     vector<Module> mods_v;
     map<string, Module> mods_m;
+    
+    /** Contains info needed for delayed type encoding checks */
+    struct type_enc_t {
+      Type* t;
+      bool enc;
+    };
+    static vector<type_enc_t> delayed_type_enc_v;
 
     /** Not implemented */
     Modules(const Modules& p);
@@ -125,6 +132,13 @@ namespace Common {
       * @param json_refs map of JSON documents containing the references and function
       * info related to each type */
     void generate_json_schema(JSON_Tokenizer& json, map<Type*, JSON_Tokenizer>& json_refs);
+    
+    /** Called if a Type::chk_coding() call could not be resolved (because the
+      * needed custom coding function was not found yet, but it might be among
+      * the functions that have not been checked yet).
+      * This stores the info needed to call the function again after everything
+      * else has been checked. */
+    static void delay_type_encode_check(Type* p_type, bool p_encode);
   };
 
   /**

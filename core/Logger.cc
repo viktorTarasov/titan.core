@@ -104,18 +104,18 @@ const TTCN_Logger::Severity TTCN_Logger::sev_categories[] =
   TTCN_Logger::ACTION_UNQUALIFIED, // 1
   TTCN_Logger::DEFAULTOP_UNQUALIFIED, // 5
   TTCN_Logger::ERROR_UNQUALIFIED, // 6
-  TTCN_Logger::EXECUTOR_UNQUALIFIED, // 11
-  TTCN_Logger::FUNCTION_UNQUALIFIED, // 13
-  TTCN_Logger::PARALLEL_UNQUALIFIED, // 17
-  TTCN_Logger::TESTCASE_UNQUALIFIED, // 20
-  TTCN_Logger::PORTEVENT_UNQUALIFIED, // 34
-  TTCN_Logger::STATISTICS_UNQUALIFIED, // 36
-  TTCN_Logger::TIMEROP_UNQUALIFIED, // 42
-  TTCN_Logger::USER_UNQUALIFIED, // 43
-  TTCN_Logger::VERDICTOP_UNQUALIFIED, // 47
-  TTCN_Logger::WARNING_UNQUALIFIED, // 48
-  TTCN_Logger::MATCHING_UNQUALIFIED, // 60
-  TTCN_Logger::DEBUG_UNQUALIFIED, // 63
+  TTCN_Logger::EXECUTOR_UNQUALIFIED, // 12
+  TTCN_Logger::FUNCTION_UNQUALIFIED, // 14
+  TTCN_Logger::PARALLEL_UNQUALIFIED, // 18
+  TTCN_Logger::TESTCASE_UNQUALIFIED, // 21
+  TTCN_Logger::PORTEVENT_UNQUALIFIED, // 35
+  TTCN_Logger::STATISTICS_UNQUALIFIED, // 37
+  TTCN_Logger::TIMEROP_UNQUALIFIED, // 43
+  TTCN_Logger::USER_UNQUALIFIED, // 44
+  TTCN_Logger::VERDICTOP_UNQUALIFIED, // 48
+  TTCN_Logger::WARNING_UNQUALIFIED, // 49
+  TTCN_Logger::MATCHING_UNQUALIFIED, // 61
+  TTCN_Logger::DEBUG_UNQUALIFIED, // 66
 };
 
 const char* TTCN_Logger::severity_category_names[] =
@@ -221,6 +221,8 @@ const char* TTCN_Logger::severity_subcategory_names[NUMBER_OF_LOGSEVERITIES] = {
   // DEBUG:
   "ENCDEC",
   "TESTPORT",
+  "USER",
+  "FRAMEWORK",
   "UNQUALIFIED"
 };
 
@@ -410,6 +412,8 @@ char *TTCN_Logger::mputstr_severity(char *str, const TTCN_Logger::Severity& seve
     return mputstr(str, "MATCHING");
   case TTCN_Logger::DEBUG_ENCDEC:
   case TTCN_Logger::DEBUG_TESTPORT:
+  case TTCN_Logger::DEBUG_USER:
+  case TTCN_Logger::DEBUG_FRAMEWORK:
   case TTCN_Logger::DEBUG_UNQUALIFIED:
     return mputstr(str, "DEBUG");
   default:

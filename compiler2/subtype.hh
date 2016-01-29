@@ -272,7 +272,8 @@ public:
     * 
     * The float special values NaN, INF and -INF are not included in the code 
     * generated for float value lists if the 2nd parameter is false. */
-  void generate_json_schema_value_list(JSON_Tokenizer& json, bool allow_special_float);
+  void generate_json_schema_value_list(JSON_Tokenizer& json, bool allow_special_float,
+    bool union_value_list);
   
   /** Generates the JSON schema elements for integer and float range restrictions.
     * If there are multiple restrictions, then they are placed in an 'anyOf' structure,

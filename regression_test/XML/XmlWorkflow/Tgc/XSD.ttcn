@@ -13,7 +13,7 @@ import from UsefulTtcn3Types all;
 const charstring
   dash := "-",
   cln  := ":",
-  year := "(0(0(0[1-9]|[1-9][0-9])|[1-9][0-9][0-9])|[1-9][0-9][0-9][0-9])",
+  year := "[0-9]#4",
   yearExpansion := "(-([1-9][0-9]#(0,))#(,1))#(,1)",
   month := "(0[1-9]|1[0-2])",
   dayOfMonth := "(0[1-9]|[12][0-9]|3[01])",
@@ -41,11 +41,13 @@ variant "XSD:anySimpleType";
 
 type record AnyType
 {
-	record of String attr,
+	record of String embed_values optional,
+	record of String attr optional,
 	record of String elem_list
 }
 with {
 variant "XSD:anyType";
+variant "embedValues";
 variant (attr) "anyAttributes";
 variant (elem_list) "anyElement";
 };

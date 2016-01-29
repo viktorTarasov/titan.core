@@ -58,7 +58,7 @@ type XSD.Integer IntegerWithPosMaxExcl (-infinity .. !314);
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/integer_withMaxExcl' prefix 'ns23'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/integer_withMaxExcl' prefix 'ns23'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -2081,7 +2081,8 @@ void Type::generate_code_Fat(output_struct *target)
   }
   fdef.runs_on_self = u.fatref.runs_on.self ? TRUE : FALSE;
   fdef.is_startable = u.fatref.is_startable;
-  fdef.formal_par_list = u.fatref.fp_list->generate_code(memptystr());
+  fdef.formal_par_list = u.fatref.fp_list->generate_code(memptystr(),
+    u.fatref.fp_list->get_nof_fps());
   u.fatref.fp_list->generate_code_defval(target);
   fdef.actual_par_list = u.fatref.fp_list
                           ->generate_code_actual_parlist(memptystr(),"");

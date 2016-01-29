@@ -41,9 +41,9 @@ import from XSD all;
 
 type RequestAbstractType_group RequestAbstractType1
 with {
-variant "name as uncapitalized";
-variant "abstract";
-variant "element";
+  variant "name as uncapitalized";
+  variant "abstract";
+  variant "element";
 };
 
 
@@ -56,8 +56,8 @@ type record ProductionRequest
 	XSD.String productionName
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -70,8 +70,8 @@ type record ProgrammingRequest
 	XSD.String programmingName
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -84,15 +84,15 @@ type union RequestAbstractType_group
 	ProgrammingRequest programmingRequest
 }
 with {
-variant "untagged";
-variant (requestAbstractType) "form as qualified";
-variant (requestAbstractType) "abstract";
+  variant "untagged";
+  variant (requestAbstractType) "form as qualified";
+  variant (requestAbstractType) "abstract";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/only/element/substitution'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/only/element/substitution'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

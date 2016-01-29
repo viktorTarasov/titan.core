@@ -44,7 +44,7 @@ type record SomeType
 	XSD.String something
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -53,7 +53,7 @@ type record Type
 	XSD.String something optional
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -67,8 +67,8 @@ type record OtherType
 
 type record of XSD.String Start_list
 with {
-variant "name as uncapitalized";
-variant "list";
+  variant "name as uncapitalized";
+  variant "list";
 };
 
 
@@ -80,7 +80,7 @@ type XSD.String Info;
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/simpletype/ref' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/simpletype/ref' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

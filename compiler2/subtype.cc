@@ -18,6 +18,7 @@
 #include "ttcn3/PatternString.hh"
 #include "Constraint.hh"
 #include "../common/JSON_Tokenizer.hh"
+#include "ttcn3/Ttcn2Json.hh"
 
 #include <limits.h>
 
@@ -3041,7 +3042,8 @@ void SubType::generate_code(output_struct &)
   if (checked!=STC_YES) FATAL_ERROR("SubType::generate_code()");
 }
 
-void SubType::generate_json_schema(JSON_Tokenizer& json, bool allow_special_float /* = true */)
+void SubType::generate_json_schema(JSON_Tokenizer& json,
+                                   bool allow_special_float /* = true */)
 {
   bool has_value_list = false;
   size_t nof_ranges = 0;
@@ -3113,8 +3115,19 @@ void SubType::generate_json_schema(JSON_Tokenizer& json, bool allow_special_floa
     // generate the value list into an enum
     json.put_next_token(JSON_TOKEN_NAME, "enum");
     json.put_next_token(JSON_TOKEN_ARRAY_START);
-    generate_json_schema_value_list(json, allow_special_float);
+    generate_json_schema_value_list(json, allow_special_float, false);
     json.put_next_token(JSON_TOKEN_ARRAY_END);
+    if (my_owner->has_as_value_union()) {
+      // the original value list cannot always be recreated from the generated
+      // JSON value list in case of "as value" unions (because there are no field
+      // names)
+      // the list needs to be regenerated with field names (as if it was a regular
+      // union) under a new keyword (valueList)
+      json.put_next_token(JSON_TOKEN_NAME, "valueList");
+      json.put_next_token(JSON_TOKEN_ARRAY_START);
+      generate_json_schema_value_list(json, allow_special_float, true);
+      json.put_next_token(JSON_TOKEN_ARRAY_END);
+    }
   }
   if (need_anyOf && has_value_list) {
     // end of the value list and beginning of the first value range
@@ -3148,7 +3161,9 @@ void SubType::generate_json_schema(JSON_Tokenizer& json, bool allow_special_floa
   }
 }
 
-void SubType::generate_json_schema_value_list(JSON_Tokenizer& json, bool allow_special_float)
+void SubType::generate_json_schema_value_list(JSON_Tokenizer& json,
+                                              bool allow_special_float,
+                                              bool union_value_list)
 {
   for (size_t i = 0; i < parsed->size(); ++i) {
     SubTypeParse *parse = (*parsed)[i];
@@ -3157,11 +3172,17 @@ void SubType::generate_json_schema_value_list(JSON_Tokenizer& json, bool allow_s
         Common::Assignment* ass = parse->Single()->get_reference()->get_refd_assignment();
         if (ass->get_asstype() == Common::Assignment::A_TYPE) {
           // it's a reference to another subtype, insert its value list here
-          ass->get_Type()->get_sub_type()->generate_json_schema_value_list(json, allow_special_float);
+          ass->get_Type()->get_sub_type()->generate_json_schema_value_list(json,
+            allow_special_float, union_value_list);
         }
       }
       else {
-        parse->Single()->generate_json_value(json, allow_special_float);
+        Ttcn::JsonOmitCombination omit_combo(parse->Single());
+        do {
+          parse->Single()->generate_json_value(json, allow_special_float,
+            union_value_list, &omit_combo);
+        } // only generate the first combination for the unions' "valueList" keyword
+        while (!union_value_list && omit_combo.next());
       }
     }
   }

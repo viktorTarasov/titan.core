@@ -44,7 +44,7 @@ import from XSD all;
 
 type SubmitRequestType Submit
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -53,7 +53,7 @@ type record RequestGroup
 	Request_group request
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -73,8 +73,8 @@ type record RequestAbstractType
 	XSD.String commonName
 }
 with {
-variant "name as uncapitalized";
-variant "abstract";
+  variant "name as uncapitalized";
+  variant "abstract";
 };
 
 
@@ -83,8 +83,8 @@ variant "abstract";
 
 type MyProductionRequestType ProductionRequest
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -94,7 +94,7 @@ type record MyProductionRequestType
 	XSD.String productionName
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -103,8 +103,8 @@ variant "name as uncapitalized";
 
 type MyProgrammingRequestType ProgrammingRequest
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -114,7 +114,7 @@ type record MyProgrammingRequestType
 	XSD.String programmingName
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -125,9 +125,9 @@ type union Request_group
 	ProgrammingRequest programmingRequest
 }
 with {
-variant "untagged";
-variant (request) "form as qualified";
-variant (request) "abstract";
+  variant "untagged";
+  variant (request) "form as qualified";
+  variant (request) "abstract";
 };
 
 
@@ -138,15 +138,15 @@ type union RequestAbstractType_derivations
 	MyProgrammingRequestType myProgrammingRequestType
 }
 with {
-variant "name as uncapitalized";
-variant "useType";
-variant (requestAbstractType) "abstract";
+  variant "name as uncapitalized";
+  variant "useType";
+  variant (requestAbstractType) "abstract";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/type/subs/with/elem/subs'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/type/subs/with/elem/subs'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -52,11 +52,11 @@ type union MyUnion1
 	XSD.Boolean boolean_
 }
 with {
-variant "useUnion";
-variant (float_) "name as 'float'";
-variant (boolean_) "name as 'boolean'";
-//variant (boolean_) "text 'true' as '1'";
-//variant (boolean_) "text 'false' as '0'";
+  variant "useUnion";
+  variant (float_) "name as 'float'";
+  variant (boolean_) "name as 'boolean'";
+  //variant (boolean_) "text 'true' as '1'";
+  //variant (boolean_) "text 'false' as '0'";
 };
 
 
@@ -66,10 +66,10 @@ type union MyUnion2
 	XSD.Boolean boolean_
 }
 with {
-variant "useUnion";
-variant (boolean_) "name as 'boolean'";
-//variant (boolean_) "text 'true' as '1'";
-//variant (boolean_) "text 'false' as '0'";
+  variant "useUnion";
+  variant (boolean_) "name as 'boolean'";
+  //variant (boolean_) "text 'true' as '1'";
+  //variant (boolean_) "text 'false' as '0'";
 };
 
 
@@ -83,30 +83,30 @@ type union MyUnion3
 	XSD.Double double
 }
 with {
-variant "useUnion";
-variant (boolean_) "name as 'boolean'";
-//variant (boolean_) "text 'true' as '1'";
-//variant (boolean_) "text 'false' as '0'";
-variant (float_) "name as 'float'";
+  variant "useUnion";
+  variant (boolean_) "name as 'boolean'";
+  //variant (boolean_) "text 'true' as '1'";
+  //variant (boolean_) "text 'false' as '0'";
+  variant (float_) "name as 'float'";
 };
 
 
 type XSD.Boolean Result;
 //with {
-//variant "text 'true' as '1'";
-//variant "text 'false' as '0'";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 //};
 
 
 type MyUnion1 MyUnion4
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/union' prefix 'ns2'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/union' prefix 'ns2'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -42,10 +42,10 @@ type record Box
 	Coord coord_1
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
-variant (coord_1) "name as 'coord'";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
+  variant (coord_1) "name as 'coord'";
 };
 
 
@@ -62,9 +62,9 @@ type record CircularArcArea
 	DistanceUnit distanceUnit optional
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
 };
 
 
@@ -77,9 +77,9 @@ type record CircularArea
 	DistanceUnit distanceUnit optional
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
 };
 
 
@@ -88,8 +88,8 @@ type record CoordinateReferenceSystem
 	Identifier identifier
 }
 with {
-variant "element";
-variant (identifier) "name as capitalized";
+  variant "element";
+  variant (identifier) "name as capitalized";
 };
 
 
@@ -105,9 +105,9 @@ type record EllipticalArea
 	DistanceUnit distanceUnit optional
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
 };
 
 
@@ -118,7 +118,7 @@ type record Identifier
 	Edition edition
 }
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -130,10 +130,10 @@ type record LineString
 	record length(1 .. infinity) of Coord coord_list
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
-variant (coord_list) "untagged";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
+  variant (coord_list) "untagged";
 };
 
 
@@ -147,12 +147,12 @@ type record LinearRing
 	record of Coord coord_list
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
-variant (coord_1) "name as 'coord'";
-variant (coord_2) "name as 'coord'";
-variant (coord_list) "untagged";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
+  variant (coord_1) "name as 'coord'";
+  variant (coord_2) "name as 'coord'";
+  variant (coord_list) "untagged";
 };
 
 
@@ -163,10 +163,10 @@ type record MultiLineString
 	record length(1 .. infinity) of LineString lineString_list
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
-variant (lineString_list) "untagged";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
+  variant (lineString_list) "untagged";
 };
 
 
@@ -177,10 +177,10 @@ type record MultiPoint
 	record length(1 .. infinity) of Point point_list
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
-variant (point_list) "untagged";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
+  variant (point_list) "untagged";
 };
 
 
@@ -197,16 +197,16 @@ type record MultiPolygon
 	} choice_list
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
-variant (choice_list) "untagged";
-variant (choice_list[-]) "untagged";
-variant (choice_list[-].polygon) "name as capitalized";
-variant (choice_list[-].box) "name as capitalized";
-variant (choice_list[-].circularArea) "name as capitalized";
-variant (choice_list[-].circularArcArea) "name as capitalized";
-variant (choice_list[-].ellipticalArea) "name as capitalized";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
+  variant (choice_list) "untagged";
+  variant (choice_list[-]) "untagged";
+  variant (choice_list[-].polygon) "name as capitalized";
+  variant (choice_list[-].box) "name as capitalized";
+  variant (choice_list[-].circularArea) "name as capitalized";
+  variant (choice_list[-].circularArcArea) "name as capitalized";
+  variant (choice_list[-].ellipticalArea) "name as capitalized";
 };
 
 
@@ -217,9 +217,9 @@ type record Point
 	Coord coord
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
 };
 
 
@@ -231,10 +231,10 @@ type record Polygon
 	record of InnerBoundaryIs innerBoundaryIs_list
 }
 with {
-variant "element";
-variant (gid) "attribute";
-variant (srsName) "attribute";
-variant (innerBoundaryIs_list) "untagged";
+  variant "element";
+  variant (gid) "attribute";
+  variant (srsName) "attribute";
+  variant (innerBoundaryIs_list) "untagged";
 };
 
 
@@ -243,8 +243,8 @@ type record X
 	record of XSD.String embed_values
 }
 with {
-variant "embedValues";
-variant "element";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -253,8 +253,8 @@ type record Y
 	record of XSD.String embed_values
 }
 with {
-variant "embedValues";
-variant "element";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -263,8 +263,8 @@ type record Z
 	record of XSD.String embed_values
 }
 with {
-variant "embedValues";
-variant "element";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -273,9 +273,9 @@ type record Add_info
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -284,9 +284,9 @@ type record Alt
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -299,12 +299,12 @@ type record Alt_acc
 	} qos_class optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (qos_class) "text 'aSSURED' as capitalized";
-variant (qos_class) "text 'bEST_EFFORT' as capitalized";
-variant (qos_class) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (qos_class) "text 'aSSURED' as capitalized";
+  variant (qos_class) "text 'bEST_EFFORT' as capitalized";
+  variant (qos_class) "attribute";
 };
 
 
@@ -313,9 +313,9 @@ type record Alt_unc
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -324,9 +324,9 @@ type record Angle
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -335,9 +335,9 @@ type record AngularUnit
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -346,9 +346,9 @@ type record Arfcn
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -357,9 +357,9 @@ type record Base_id
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -368,9 +368,9 @@ type record Base_lat
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -379,9 +379,9 @@ type record Base_long
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -390,9 +390,9 @@ type record Bsic
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -401,9 +401,9 @@ type record Cc
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -417,8 +417,8 @@ type record Cdma_net_param
 	Ref_pn ref_pn optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -427,9 +427,9 @@ type record Cellid
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -441,8 +441,8 @@ type record Cgi
 	Cellid cellid
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -461,16 +461,16 @@ type record Change_area
 	No_of_reports no_of_reports optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (loc_estimates) "text 'fALSE' as capitalized";
-variant (loc_estimates) "text 'tRUE' as capitalized";
-variant (loc_estimates) "attribute";
-variant (type_) "text 'mS_ENTERING' as capitalized";
-variant (type_) "text 'mS_LEAVING' as capitalized";
-variant (type_) "text 'mS_WITHIN_AREA' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (loc_estimates) "text 'fALSE' as capitalized";
+  variant (loc_estimates) "text 'tRUE' as capitalized";
+  variant (loc_estimates) "attribute";
+  variant (type_) "text 'mS_ENTERING' as capitalized";
+  variant (type_) "text 'mS_LEAVING' as capitalized";
+  variant (type_) "text 'mS_WITHIN_AREA' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "attribute";
 };
 
 
@@ -490,14 +490,14 @@ type record Client
 	Poi poi optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (type_) "text 'x1' as '1'";
-variant (type_) "text 'x2' as '2'";
-variant (type_) "text 'x3' as '3'";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as '1'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (type_) "text 'x1' as '1'";
+  variant (type_) "text 'x2' as '2'";
+  variant (type_) "text 'x3' as '3'";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as '1'";
+  variant (type_) "attribute";
 };
 
 
@@ -506,9 +506,9 @@ type record Clientname
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -517,9 +517,9 @@ type record Code
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -528,9 +528,9 @@ type record CodeSpace
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -539,9 +539,9 @@ type record Codeword
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -552,11 +552,11 @@ type record Coord
 	Z z optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (x) "name as capitalized";
-variant (y) "name as capitalized";
-variant (z) "name as capitalized";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (x) "name as capitalized";
+  variant (y) "name as capitalized";
+  variant (z) "name as capitalized";
 };
 
 
@@ -565,9 +565,9 @@ type record Direction
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -576,9 +576,9 @@ type record DistanceUnit
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -587,9 +587,9 @@ type record Duration
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -598,9 +598,9 @@ type record Edition
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -613,12 +613,12 @@ type record Eme_event
 	record length(1 .. infinity) of Eme_pos eme_pos_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (eme_trigger) "text 'eME_ORG' as capitalized";
-variant (eme_trigger) "text 'eME_REL' as capitalized";
-variant (eme_trigger) "attribute";
-variant (eme_pos_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (eme_trigger) "text 'eME_ORG' as capitalized";
+  variant (eme_trigger) "text 'eME_REL' as capitalized";
+  variant (eme_trigger) "attribute";
+  variant (eme_pos_list) "untagged";
 };
 
 
@@ -642,17 +642,17 @@ type record Eme_pos
 	Esrk esrk optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (pos_method) "text 'a_GPS' as 'A-GPS'";
-variant (pos_method) "text 'cELL' as capitalized";
-variant (pos_method) "text 'e_OTD' as 'E-OTD'";
-variant (pos_method) "text 'gPS' as capitalized";
-variant (pos_method) "text 'oTDOA' as capitalized";
-variant (pos_method) "text 'oTHER' as capitalized";
-variant (pos_method) "text 'u_TDOA' as 'U-TDOA'";
-variant (pos_method) "attribute";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (pos_method) "text 'a_GPS' as 'A-GPS'";
+  variant (pos_method) "text 'cELL' as capitalized";
+  variant (pos_method) "text 'e_OTD' as 'E-OTD'";
+  variant (pos_method) "text 'gPS' as capitalized";
+  variant (pos_method) "text 'oTDOA' as capitalized";
+  variant (pos_method) "text 'oTHER' as capitalized";
+  variant (pos_method) "text 'u_TDOA' as 'U-TDOA'";
+  variant (pos_method) "attribute";
+  variant (choice) "untagged";
 };
 
 
@@ -668,9 +668,9 @@ type record Eqop
 	Max_loc_age max_loc_age optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice) "untagged";
 };
 
 
@@ -682,13 +682,13 @@ type record Esrd
 	} type_ optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (type_) "text 'nA' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as 'NA'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (type_) "text 'nA' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as 'NA'";
+  variant (type_) "attribute";
 };
 
 
@@ -700,13 +700,13 @@ type record Esrk
 	} type_ optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (type_) "text 'nA' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as 'NA'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (type_) "text 'nA' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as 'NA'";
+  variant (type_) "attribute";
 };
 
 
@@ -717,8 +717,8 @@ type record Frequencyinfo
 	Uarfcn_nt uarfcn_nt optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -727,9 +727,9 @@ type record Geo_info
 	CoordinateReferenceSystem coordinateReferenceSystem
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (coordinateReferenceSystem) "name as capitalized";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (coordinateReferenceSystem) "name as capitalized";
 };
 
 
@@ -740,8 +740,8 @@ type record Global_uc_id
 	Uc_id uc_id
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -753,8 +753,8 @@ type record Gsm_net_param
 	Lmsi lmsi optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -763,9 +763,9 @@ type record H_ls
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -778,12 +778,12 @@ type record Hor_acc
 	} qos_class optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (qos_class) "text 'aSSURED' as capitalized";
-variant (qos_class) "text 'bEST_EFFORT' as capitalized";
-variant (qos_class) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (qos_class) "text 'aSSURED' as capitalized";
+  variant (qos_class) "text 'bEST_EFFORT' as capitalized";
+  variant (qos_class) "attribute";
 };
 
 
@@ -792,9 +792,9 @@ type record Id
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -803,9 +803,9 @@ type record Imsi
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -814,9 +814,9 @@ type record InRadius
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -825,9 +825,9 @@ type record InnerBoundaryIs
 	LinearRing linearRing
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (linearRing) "name as capitalized";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (linearRing) "name as capitalized";
 };
 
 
@@ -836,9 +836,9 @@ type record Interval
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -847,9 +847,9 @@ type record Lac
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -858,9 +858,9 @@ type record Lcs_ref
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -869,9 +869,9 @@ type record Lev_conf
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -884,12 +884,12 @@ type record Ll_acc
 	} qos_class optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (qos_class) "text 'aSSURED' as capitalized";
-variant (qos_class) "text 'bEST_EFFORT' as capitalized";
-variant (qos_class) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (qos_class) "text 'aSSURED' as capitalized";
+  variant (qos_class) "text 'bEST_EFFORT' as capitalized";
+  variant (qos_class) "attribute";
 };
 
 
@@ -898,9 +898,9 @@ type record Lmsi
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -915,16 +915,16 @@ type record Loc_type
 	} type_ optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (type_) "text 'cURRENT' as capitalized";
-variant (type_) "text 'cURRENT_OR_LAST' as capitalized";
-variant (type_) "text 'cURRENT_OR_LAST_AS_FALLBACK' as capitalized";
-variant (type_) "text 'iNITIAL' as capitalized";
-variant (type_) "text 'lAST' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as 'CURRENT'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (type_) "text 'cURRENT' as capitalized";
+  variant (type_) "text 'cURRENT_OR_LAST' as capitalized";
+  variant (type_) "text 'cURRENT_OR_LAST_AS_FALLBACK' as capitalized";
+  variant (type_) "text 'iNITIAL' as capitalized";
+  variant (type_) "text 'lAST' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as 'CURRENT'";
+  variant (type_) "attribute";
 };
 
 
@@ -934,8 +934,8 @@ type record Locationserver
 	Pwd pwd optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -944,9 +944,9 @@ type record Max_loc_age
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -955,9 +955,9 @@ type record Mcc
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -966,9 +966,9 @@ type record Mnc
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -979,11 +979,11 @@ type record Ms_action
 	} type_
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (type_) "text 'mS_AVAIL' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (type_) "text 'mS_AVAIL' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "attribute";
 };
 
 
@@ -1011,29 +1011,29 @@ type record Msid
 	} type_ optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (enc) "text 'aSC' as capitalized";
-variant (enc) "text 'cRP' as capitalized";
-variant (enc) "defaultForEmpty as 'ASC'";
-variant (enc) "attribute";
-variant (type_) "text 'aSID' as capitalized";
-variant (type_) "text 'eME_MSID' as capitalized";
-variant (type_) "text 'iMEI' as capitalized";
-variant (type_) "text 'iMSI' as capitalized";
-variant (type_) "text 'iPV4' as capitalized";
-variant (type_) "text 'iPV6' as capitalized";
-variant (type_) "text 'mDN' as capitalized";
-variant (type_) "text 'mIN' as capitalized";
-variant (type_) "text 'mSISDN' as capitalized";
-variant (type_) "text 'oPE_ID' as capitalized";
-variant (type_) "text 'sESSID' as capitalized";
-variant (type_) "text 'sIP_URI' as capitalized";
-variant (type_) "text 'tEL_URL' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as 'MSISDN'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (enc) "text 'aSC' as capitalized";
+  variant (enc) "text 'cRP' as capitalized";
+  variant (enc) "defaultForEmpty as 'ASC'";
+  variant (enc) "attribute";
+  variant (type_) "text 'aSID' as capitalized";
+  variant (type_) "text 'eME_MSID' as capitalized";
+  variant (type_) "text 'iMEI' as capitalized";
+  variant (type_) "text 'iMSI' as capitalized";
+  variant (type_) "text 'iPV4' as capitalized";
+  variant (type_) "text 'iPV6' as capitalized";
+  variant (type_) "text 'mDN' as capitalized";
+  variant (type_) "text 'mIN' as capitalized";
+  variant (type_) "text 'mSISDN' as capitalized";
+  variant (type_) "text 'oPE_ID' as capitalized";
+  variant (type_) "text 'sESSID' as capitalized";
+  variant (type_) "text 'sIP_URI' as capitalized";
+  variant (type_) "text 'tEL_URL' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as 'MSISDN'";
+  variant (type_) "attribute";
 };
 
 
@@ -1043,8 +1043,8 @@ type record Msid_range
 	Stop_msid stop_msid
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1064,13 +1064,13 @@ type record Msids
 	} choice_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice_list) "untagged";
-variant (choice_list[-]) "untagged";
-variant (choice_list[-].sequence) "untagged";
-variant (choice_list[-].sequence_1) "untagged";
-variant (choice_list[-].sequence_1.codeword_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice_list) "untagged";
+  variant (choice_list[-]) "untagged";
+  variant (choice_list[-].sequence) "untagged";
+  variant (choice_list[-].sequence_1) "untagged";
+  variant (choice_list[-].sequence_1.codeword_list) "untagged";
 };
 
 
@@ -1079,9 +1079,9 @@ type record Name_area
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1090,9 +1090,9 @@ type record Ndc
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1103,8 +1103,8 @@ type record Neid
 	Vlrid vlrid optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1122,9 +1122,9 @@ type record Net_param
 	} choice optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice) "untagged";
 };
 
 
@@ -1133,9 +1133,9 @@ type record Nid
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1144,9 +1144,9 @@ type record Nmr
 	record length(1 .. infinity) of Nmr_element nmr_element_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (nmr_element_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (nmr_element_list) "untagged";
 };
 
 
@@ -1157,8 +1157,8 @@ type record Nmr_element
 	Rxlev rxlev
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1167,9 +1167,9 @@ type record No_of_reports
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1178,9 +1178,9 @@ type record OutRadius
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1189,9 +1189,9 @@ type record OuterBoundaryIs
 	LinearRing linearRing
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (linearRing) "name as capitalized";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (linearRing) "name as capitalized";
 };
 
 
@@ -1200,9 +1200,9 @@ type record Pce
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1220,10 +1220,10 @@ type record Pd
 	Qop_not_met qop_not_met optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (sequence) "untagged";
-variant (sequence.alt_) "name as 'alt'";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (sequence) "untagged";
+  variant (sequence.alt_) "name as 'alt'";
 };
 
 
@@ -1233,8 +1233,8 @@ type record Plmn
 	Mnc mnc
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1246,12 +1246,12 @@ type record Poi
 	} flag optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (flag) "text 'oFF' as capitalized";
-variant (flag) "text 'oN' as capitalized";
-variant (flag) "defaultForEmpty as 'OFF'";
-variant (flag) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (flag) "text 'oFF' as capitalized";
+  variant (flag) "text 'oN' as capitalized";
+  variant (flag) "defaultForEmpty as 'OFF'";
+  variant (flag) "attribute";
 };
 
 
@@ -1273,17 +1273,17 @@ type record Pos
 	} choice
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (pos_method) "text 'a_GPS' as 'A-GPS'";
-variant (pos_method) "text 'cELL' as capitalized";
-variant (pos_method) "text 'e_OTD' as 'E-OTD'";
-variant (pos_method) "text 'gPS' as capitalized";
-variant (pos_method) "text 'oTDOA' as capitalized";
-variant (pos_method) "text 'oTHER' as capitalized";
-variant (pos_method) "text 'u_TDOA' as 'U-TDOA'";
-variant (pos_method) "attribute";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (pos_method) "text 'a_GPS' as 'A-GPS'";
+  variant (pos_method) "text 'cELL' as capitalized";
+  variant (pos_method) "text 'e_OTD' as 'E-OTD'";
+  variant (pos_method) "text 'gPS' as capitalized";
+  variant (pos_method) "text 'oTDOA' as capitalized";
+  variant (pos_method) "text 'oTHER' as capitalized";
+  variant (pos_method) "text 'u_TDOA' as 'U-TDOA'";
+  variant (pos_method) "attribute";
+  variant (choice) "untagged";
 };
 
 
@@ -1294,8 +1294,8 @@ type record Poserr
 	XSD.Time time
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1304,9 +1304,9 @@ type record Primaryscramblingcode
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1318,13 +1318,13 @@ type record Prio
 	} type_ optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (type_) "text 'hIGH' as capitalized";
-variant (type_) "text 'nORMAL' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as 'NORMAL'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (type_) "text 'hIGH' as capitalized";
+  variant (type_) "text 'nORMAL' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as 'NORMAL'";
+  variant (type_) "attribute";
 };
 
 
@@ -1333,9 +1333,9 @@ type record Pseudoid
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1346,8 +1346,8 @@ type record Pushaddr
 	Pwd pwd optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1356,9 +1356,9 @@ type record Pwd
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1371,9 +1371,9 @@ type record Qop
 	Alt_acc alt_acc optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice) "untagged";
 };
 
 
@@ -1382,8 +1382,8 @@ type record Qop_not_met
 
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1392,9 +1392,9 @@ type record Radius
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1403,9 +1403,9 @@ type record Ref_pn
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1414,9 +1414,9 @@ type record Req_id
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1432,14 +1432,14 @@ type record Requestmode
 	} choice optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (type_) "text 'aCTIVE' as capitalized";
-variant (type_) "text 'pASSIVE' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as 'PASSIVE'";
-variant (type_) "attribute";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (type_) "text 'aCTIVE' as capitalized";
+  variant (type_) "text 'pASSIVE' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as 'PASSIVE'";
+  variant (type_) "attribute";
+  variant (choice) "untagged";
 };
 
 
@@ -1456,18 +1456,18 @@ type record Requestor
 	} type_ optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (type_) "text 'eMAIL' as capitalized";
-variant (type_) "text 'iMS' as capitalized";
-variant (type_) "text 'mSISDN' as capitalized";
-variant (type_) "text 'nAME' as capitalized";
-variant (type_) "text 'sIPURL' as capitalized";
-variant (type_) "text 'uRL' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as 'MSISDN'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (type_) "text 'eMAIL' as capitalized";
+  variant (type_) "text 'iMS' as capitalized";
+  variant (type_) "text 'mSISDN' as capitalized";
+  variant (type_) "text 'nAME' as capitalized";
+  variant (type_) "text 'sIPURL' as capitalized";
+  variant (type_) "text 'uRL' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as 'MSISDN'";
+  variant (type_) "attribute";
 };
 
 
@@ -1480,14 +1480,14 @@ type record Resp_req
 	} type_ optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (type_) "text 'dELAY_TOL' as capitalized";
-variant (type_) "text 'lOW_DELAY' as capitalized";
-variant (type_) "text 'nO_DELAY' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "defaultForEmpty as 'DELAY_TOL'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (type_) "text 'dELAY_TOL' as capitalized";
+  variant (type_) "text 'lOW_DELAY' as capitalized";
+  variant (type_) "text 'nO_DELAY' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "defaultForEmpty as 'DELAY_TOL'";
+  variant (type_) "attribute";
 };
 
 
@@ -1496,9 +1496,9 @@ type record Resp_timer
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1508,10 +1508,10 @@ type record Result
 	XSD.AnySimpleType resid
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (resid) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (resid) "attribute";
 };
 
 
@@ -1525,10 +1525,10 @@ type record Rlp_hdr
 	Net_param net_param optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (ver) "defaultForEmpty as '1.0.0'";
-variant (ver) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (ver) "defaultForEmpty as '1.0.0'";
+  variant (ver) "attribute";
 };
 
 
@@ -1539,10 +1539,10 @@ type record Rlp_svc_init
 	Srlir srlir
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (ver) "defaultForEmpty as '1.0.0'";
-variant (ver) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (ver) "defaultForEmpty as '1.0.0'";
+  variant (ver) "attribute";
 };
 
 
@@ -1551,9 +1551,9 @@ type record Rxlev
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1562,9 +1562,9 @@ type record Sac
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1576,8 +1576,8 @@ type record Sai
 	Sac sac
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1586,9 +1586,9 @@ type record SemiMajor
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1597,9 +1597,9 @@ type record SemiMinor
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1611,11 +1611,11 @@ type record Service_coverage
 	} sequence_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (sequence_list) "untagged";
-variant (sequence_list[-]) "untagged";
-variant (sequence_list[-].ndc_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
+  variant (sequence_list[-].ndc_list) "untagged";
 };
 
 
@@ -1624,9 +1624,9 @@ type record Serviceid
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1635,9 +1635,9 @@ type record Servicetype
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1659,21 +1659,21 @@ type record Serving_node_action
 	} passive_type
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (active_type) "text 'nOTIFY_AND_POSITION' as capitalized";
-variant (active_type) "text 'pOSITION' as capitalized";
-variant (active_type) "text 'pOSITION_IF_ALLOWED' as capitalized";
-variant (active_type) "text 'pOSITION_IF_NOT_DISALLOWED' as capitalized";
-variant (active_type) "text 'pOSITION_NOT_ALLOWED' as capitalized";
-variant (active_type) "defaultForEmpty as 'POSITION_NOT_ALLOWED'";
-variant (active_type) "attribute";
-variant (passive_type) "text 'nOTIFY_AND_POSITION' as capitalized";
-variant (passive_type) "text 'pOSITION' as capitalized";
-variant (passive_type) "text 'pOSITION_IF_ALLOWED' as capitalized";
-variant (passive_type) "text 'pOSITION_IF_NOT_DISALLOWED' as capitalized";
-variant (passive_type) "text 'pOSITION_NOT_ALLOWED' as capitalized";
-variant (passive_type) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (active_type) "text 'nOTIFY_AND_POSITION' as capitalized";
+  variant (active_type) "text 'pOSITION' as capitalized";
+  variant (active_type) "text 'pOSITION_IF_ALLOWED' as capitalized";
+  variant (active_type) "text 'pOSITION_IF_NOT_DISALLOWED' as capitalized";
+  variant (active_type) "text 'pOSITION_NOT_ALLOWED' as capitalized";
+  variant (active_type) "defaultForEmpty as 'POSITION_NOT_ALLOWED'";
+  variant (active_type) "attribute";
+  variant (passive_type) "text 'nOTIFY_AND_POSITION' as capitalized";
+  variant (passive_type) "text 'pOSITION' as capitalized";
+  variant (passive_type) "text 'pOSITION_IF_ALLOWED' as capitalized";
+  variant (passive_type) "text 'pOSITION_IF_NOT_DISALLOWED' as capitalized";
+  variant (passive_type) "text 'pOSITION_NOT_ALLOWED' as capitalized";
+  variant (passive_type) "attribute";
 };
 
 
@@ -1686,13 +1686,13 @@ type record Session
 	} type_
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (type_) "text 'aPN' as capitalized";
-variant (type_) "text 'dIAL' as capitalized";
-variant (type_) "name as 'type'";
-variant (type_) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (type_) "text 'aPN' as capitalized";
+  variant (type_) "text 'dIAL' as capitalized";
+  variant (type_) "name as 'type'";
+  variant (type_) "attribute";
 };
 
 
@@ -1709,13 +1709,13 @@ type record Sgsnid
 	Sgsnno sgsnno
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (capability) "text 'x1' as '1'";
-variant (capability) "text 'x2' as '2'";
-variant (capability) "text 'x3' as '3'";
-variant (capability) "text 'x4' as '4'";
-variant (capability) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (capability) "text 'x1' as '1'";
+  variant (capability) "text 'x2' as '2'";
+  variant (capability) "text 'x3' as '3'";
+  variant (capability) "text 'x4' as '4'";
+  variant (capability) "attribute";
 };
 
 
@@ -1724,9 +1724,9 @@ type record Sgsnno
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1747,20 +1747,20 @@ type record Shape
 	} choice
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice) "untagged";
-variant (choice.point) "name as capitalized";
-variant (choice.lineString) "name as capitalized";
-variant (choice.polygon) "name as capitalized";
-variant (choice.box) "name as capitalized";
-variant (choice.circularArea) "name as capitalized";
-variant (choice.circularArcArea) "name as capitalized";
-variant (choice.ellipticalArea) "name as capitalized";
-variant (choice.multiLineString) "name as capitalized";
-variant (choice.multiPoint) "name as capitalized";
-variant (choice.multiPolygon) "name as capitalized";
-variant (choice.linearRing) "name as capitalized";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice) "untagged";
+  variant (choice.point) "name as capitalized";
+  variant (choice.lineString) "name as capitalized";
+  variant (choice.polygon) "name as capitalized";
+  variant (choice.box) "name as capitalized";
+  variant (choice.circularArea) "name as capitalized";
+  variant (choice.circularArcArea) "name as capitalized";
+  variant (choice.ellipticalArea) "name as capitalized";
+  variant (choice.multiLineString) "name as capitalized";
+  variant (choice.multiPoint) "name as capitalized";
+  variant (choice.multiPolygon) "name as capitalized";
+  variant (choice.linearRing) "name as capitalized";
 };
 
 
@@ -1769,9 +1769,9 @@ type record Sid
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1780,9 +1780,9 @@ type record Speed
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1807,17 +1807,17 @@ type record Srlir
 	Service_coverage service_coverage optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (recv_role) "text 'hLS' as capitalized";
-variant (recv_role) "text 'vLS' as capitalized";
-variant (recv_role) "attribute";
-variant (res_type) "text 'aSYNC' as capitalized";
-variant (res_type) "text 'sYNC' as capitalized";
-variant (res_type) "defaultForEmpty as 'SYNC'";
-variant (res_type) "attribute";
-variant (ver) "defaultForEmpty as '1.0.0'";
-variant (ver) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (recv_role) "text 'hLS' as capitalized";
+  variant (recv_role) "text 'vLS' as capitalized";
+  variant (recv_role) "attribute";
+  variant (res_type) "text 'aSYNC' as capitalized";
+  variant (res_type) "text 'sYNC' as capitalized";
+  variant (res_type) "defaultForEmpty as 'SYNC'";
+  variant (res_type) "attribute";
+  variant (ver) "defaultForEmpty as '1.0.0'";
+  variant (ver) "attribute";
 };
 
 
@@ -1826,9 +1826,9 @@ type record StartAngle
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1837,8 +1837,8 @@ type record Start_msid
 	Msid msid
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1848,11 +1848,11 @@ type record Start_time
 	XSD.AnySimpleType utc_off optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (utc_off) "defaultForEmpty as '0000'";
-variant (utc_off) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (utc_off) "defaultForEmpty as '0000'";
+  variant (utc_off) "attribute";
 };
 
 
@@ -1861,9 +1861,9 @@ type record StopAngle
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1872,8 +1872,8 @@ type record Stop_msid
 	Msid msid
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -1883,11 +1883,11 @@ type record Stop_time
 	XSD.AnySimpleType utc_off optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (utc_off) "defaultForEmpty as '0000'";
-variant (utc_off) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (utc_off) "defaultForEmpty as '0000'";
+  variant (utc_off) "attribute";
 };
 
 
@@ -1896,9 +1896,9 @@ type record Supl_message
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1907,9 +1907,9 @@ type record Supl_session_id
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -1965,68 +1965,68 @@ type record Supported_shapes
 	} polygon optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (altitude) "text 'nO' as capitalized";
-variant (altitude) "text 'yES' as capitalized";
-variant (altitude) "name as capitalized";
-variant (altitude) "defaultForEmpty as 'NO'";
-variant (altitude) "attribute";
-variant (box) "text 'nO' as capitalized";
-variant (box) "text 'yES' as capitalized";
-variant (box) "name as capitalized";
-variant (box) "defaultForEmpty as 'NO'";
-variant (box) "attribute";
-variant (circularArcArea) "text 'nO' as capitalized";
-variant (circularArcArea) "text 'yES' as capitalized";
-variant (circularArcArea) "name as capitalized";
-variant (circularArcArea) "defaultForEmpty as 'NO'";
-variant (circularArcArea) "attribute";
-variant (circularArea) "text 'nO' as capitalized";
-variant (circularArea) "text 'yES' as capitalized";
-variant (circularArea) "name as capitalized";
-variant (circularArea) "defaultForEmpty as 'NO'";
-variant (circularArea) "attribute";
-variant (ellipticalArea) "text 'nO' as capitalized";
-variant (ellipticalArea) "text 'yES' as capitalized";
-variant (ellipticalArea) "name as capitalized";
-variant (ellipticalArea) "defaultForEmpty as 'NO'";
-variant (ellipticalArea) "attribute";
-variant (lineString) "text 'nO' as capitalized";
-variant (lineString) "text 'yES' as capitalized";
-variant (lineString) "name as capitalized";
-variant (lineString) "defaultForEmpty as 'NO'";
-variant (lineString) "attribute";
-variant (linearRing) "text 'nO' as capitalized";
-variant (linearRing) "text 'yES' as capitalized";
-variant (linearRing) "name as capitalized";
-variant (linearRing) "defaultForEmpty as 'NO'";
-variant (linearRing) "attribute";
-variant (multiLineString) "text 'nO' as capitalized";
-variant (multiLineString) "text 'yES' as capitalized";
-variant (multiLineString) "name as capitalized";
-variant (multiLineString) "defaultForEmpty as 'NO'";
-variant (multiLineString) "attribute";
-variant (multiPoint) "text 'nO' as capitalized";
-variant (multiPoint) "text 'yES' as capitalized";
-variant (multiPoint) "name as capitalized";
-variant (multiPoint) "defaultForEmpty as 'NO'";
-variant (multiPoint) "attribute";
-variant (multiPolygon) "text 'nO' as capitalized";
-variant (multiPolygon) "text 'yES' as capitalized";
-variant (multiPolygon) "name as capitalized";
-variant (multiPolygon) "defaultForEmpty as 'NO'";
-variant (multiPolygon) "attribute";
-variant (point) "text 'nO' as capitalized";
-variant (point) "text 'yES' as capitalized";
-variant (point) "name as capitalized";
-variant (point) "defaultForEmpty as 'NO'";
-variant (point) "attribute";
-variant (polygon) "text 'nO' as capitalized";
-variant (polygon) "text 'yES' as capitalized";
-variant (polygon) "name as capitalized";
-variant (polygon) "defaultForEmpty as 'NO'";
-variant (polygon) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (altitude) "text 'nO' as capitalized";
+  variant (altitude) "text 'yES' as capitalized";
+  variant (altitude) "name as capitalized";
+  variant (altitude) "defaultForEmpty as 'NO'";
+  variant (altitude) "attribute";
+  variant (box) "text 'nO' as capitalized";
+  variant (box) "text 'yES' as capitalized";
+  variant (box) "name as capitalized";
+  variant (box) "defaultForEmpty as 'NO'";
+  variant (box) "attribute";
+  variant (circularArcArea) "text 'nO' as capitalized";
+  variant (circularArcArea) "text 'yES' as capitalized";
+  variant (circularArcArea) "name as capitalized";
+  variant (circularArcArea) "defaultForEmpty as 'NO'";
+  variant (circularArcArea) "attribute";
+  variant (circularArea) "text 'nO' as capitalized";
+  variant (circularArea) "text 'yES' as capitalized";
+  variant (circularArea) "name as capitalized";
+  variant (circularArea) "defaultForEmpty as 'NO'";
+  variant (circularArea) "attribute";
+  variant (ellipticalArea) "text 'nO' as capitalized";
+  variant (ellipticalArea) "text 'yES' as capitalized";
+  variant (ellipticalArea) "name as capitalized";
+  variant (ellipticalArea) "defaultForEmpty as 'NO'";
+  variant (ellipticalArea) "attribute";
+  variant (lineString) "text 'nO' as capitalized";
+  variant (lineString) "text 'yES' as capitalized";
+  variant (lineString) "name as capitalized";
+  variant (lineString) "defaultForEmpty as 'NO'";
+  variant (lineString) "attribute";
+  variant (linearRing) "text 'nO' as capitalized";
+  variant (linearRing) "text 'yES' as capitalized";
+  variant (linearRing) "name as capitalized";
+  variant (linearRing) "defaultForEmpty as 'NO'";
+  variant (linearRing) "attribute";
+  variant (multiLineString) "text 'nO' as capitalized";
+  variant (multiLineString) "text 'yES' as capitalized";
+  variant (multiLineString) "name as capitalized";
+  variant (multiLineString) "defaultForEmpty as 'NO'";
+  variant (multiLineString) "attribute";
+  variant (multiPoint) "text 'nO' as capitalized";
+  variant (multiPoint) "text 'yES' as capitalized";
+  variant (multiPoint) "name as capitalized";
+  variant (multiPoint) "defaultForEmpty as 'NO'";
+  variant (multiPoint) "attribute";
+  variant (multiPolygon) "text 'nO' as capitalized";
+  variant (multiPolygon) "text 'yES' as capitalized";
+  variant (multiPolygon) "name as capitalized";
+  variant (multiPolygon) "defaultForEmpty as 'NO'";
+  variant (multiPolygon) "attribute";
+  variant (point) "text 'nO' as capitalized";
+  variant (point) "text 'yES' as capitalized";
+  variant (point) "name as capitalized";
+  variant (point) "defaultForEmpty as 'NO'";
+  variant (point) "attribute";
+  variant (polygon) "text 'nO' as capitalized";
+  variant (polygon) "text 'yES' as capitalized";
+  variant (polygon) "name as capitalized";
+  variant (polygon) "defaultForEmpty as 'NO'";
+  variant (polygon) "attribute";
 };
 
 
@@ -2035,9 +2035,9 @@ type record Ta
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2053,11 +2053,11 @@ type record Target_area
 	} choice
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice) "untagged";
-variant (choice.sequence) "untagged";
-variant (choice.plmn_list) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice) "untagged";
+  variant (choice.sequence) "untagged";
+  variant (choice.plmn_list) "untagged";
 };
 
 
@@ -2067,11 +2067,11 @@ type record Time
 	XSD.AnySimpleType utc_off optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (utc_off) "defaultForEmpty as '0000'";
-variant (utc_off) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (utc_off) "defaultForEmpty as '0000'";
+  variant (utc_off) "attribute";
 };
 
 
@@ -2080,9 +2080,9 @@ type record Time_remaining
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2094,9 +2094,9 @@ type record Tlrr_event
 	} choice
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice) "untagged";
 };
 
 
@@ -2105,9 +2105,9 @@ type record Trans_id
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2134,20 +2134,20 @@ type record Trl_pos
 	} choice
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (pos_method) "text 'a_GPS' as 'A-GPS'";
-variant (pos_method) "text 'cELL' as capitalized";
-variant (pos_method) "text 'e_OTD' as 'E-OTD'";
-variant (pos_method) "text 'gPS' as capitalized";
-variant (pos_method) "text 'oTDOA' as capitalized";
-variant (pos_method) "text 'oTHER' as capitalized";
-variant (pos_method) "text 'u_TDOA' as 'U-TDOA'";
-variant (pos_method) "attribute";
-variant (trl_trigger) "text 'cHANGE_AREA' as capitalized";
-variant (trl_trigger) "text 'mS_AVAIL' as capitalized";
-variant (trl_trigger) "attribute";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (pos_method) "text 'a_GPS' as 'A-GPS'";
+  variant (pos_method) "text 'cELL' as capitalized";
+  variant (pos_method) "text 'e_OTD' as 'E-OTD'";
+  variant (pos_method) "text 'gPS' as capitalized";
+  variant (pos_method) "text 'oTDOA' as capitalized";
+  variant (pos_method) "text 'oTHER' as capitalized";
+  variant (pos_method) "text 'u_TDOA' as 'U-TDOA'";
+  variant (pos_method) "attribute";
+  variant (trl_trigger) "text 'cHANGE_AREA' as capitalized";
+  variant (trl_trigger) "text 'mS_AVAIL' as capitalized";
+  variant (trl_trigger) "attribute";
+  variant (choice) "untagged";
 };
 
 
@@ -2156,9 +2156,9 @@ type record Uarfcn_dl
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2167,9 +2167,9 @@ type record Uarfcn_nt
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2178,9 +2178,9 @@ type record Uarfcn_ul
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2194,14 +2194,14 @@ type record Uc_id
 	} status optional
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
-variant (status) "text 'cURRENT' as capitalized";
-variant (status) "text 'sTALE' as capitalized";
-variant (status) "text 'uNKNOWN' as capitalized";
-variant (status) "defaultForEmpty as 'CURRENT'";
-variant (status) "attribute";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
+  variant (status) "text 'cURRENT' as capitalized";
+  variant (status) "text 'sTALE' as capitalized";
+  variant (status) "text 'uNKNOWN' as capitalized";
+  variant (status) "defaultForEmpty as 'CURRENT'";
+  variant (status) "attribute";
 };
 
 
@@ -2210,9 +2210,9 @@ type record Url
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2221,9 +2221,9 @@ type record V_ls
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2240,13 +2240,13 @@ type record Vlrid
 	Vlrno vlrno
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (capability) "text 'x1' as '1'";
-variant (capability) "text 'x2' as '2'";
-variant (capability) "text 'x3' as '3'";
-variant (capability) "text 'x4' as '4'";
-variant (capability) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (capability) "text 'x1' as '1'";
+  variant (capability) "text 'x2' as '2'";
+  variant (capability) "text 'x3' as '3'";
+  variant (capability) "text 'x4' as '4'";
+  variant (capability) "attribute";
 };
 
 
@@ -2255,9 +2255,9 @@ type record Vlrno
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2274,13 +2274,13 @@ type record Vmscid
 	Vmscno vmscno
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (capability) "text 'x1' as '1'";
-variant (capability) "text 'x2' as '2'";
-variant (capability) "text 'x3' as '3'";
-variant (capability) "text 'x4' as '4'";
-variant (capability) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (capability) "text 'x1' as '1'";
+  variant (capability) "text 'x2' as '2'";
+  variant (capability) "text 'x3' as '3'";
+  variant (capability) "text 'x4' as '4'";
+  variant (capability) "attribute";
 };
 
 
@@ -2289,9 +2289,9 @@ type record Vmscno
 	record of XSD.String embed_values
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
@@ -2303,13 +2303,13 @@ type record Wcdma_net_param
 	Sai sai optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

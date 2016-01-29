@@ -49,12 +49,12 @@ type union E21unnamed
 	XSD.Integer alt_2
 }
 with {
-variant "name as uncapitalized";
-variant "useUnion";
-variant "element";
-variant (alt_) "name as ''";
-variant (alt_1) "name as ''";
-variant (alt_2) "name as ''";
+  variant "name as uncapitalized";
+  variant "useUnion";
+  variant "element";
+  variant (alt_) "name as ''";
+  variant (alt_1) "name as ''";
+  variant (alt_2) "name as ''";
 };
 
 
@@ -71,8 +71,8 @@ type record E39
 	XSD.String ding
 }
 with {
-variant "name as uncapitalized";
-variant (choice) "untagged";
+  variant "name as uncapitalized";
+  variant (choice) "untagged";
 };
 
 
@@ -83,13 +83,13 @@ variant (choice) "untagged";
 /* SomeComment */
 type XSD.Integer Int
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/comment/placement'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/comment/placement'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

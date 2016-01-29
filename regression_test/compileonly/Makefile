@@ -9,7 +9,7 @@ TOPDIR := ..
 include $(TOPDIR)/Makefile.regression
 
 CODIRS := dynamicTemplate styleGuide topLevelPdu \
-	circularImport typeInstantiation \
+	circularImport circularImport2 typeInstantiation \
 	compareImported compoundif \
 	centralstorage mfgen-tpd \
 	openType optionalAssignCompare portConstructor \

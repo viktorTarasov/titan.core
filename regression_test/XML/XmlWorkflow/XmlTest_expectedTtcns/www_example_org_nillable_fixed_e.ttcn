@@ -44,9 +44,9 @@ type record RemarkNillable
 	XSD.String content optional
 }
 with {
-variant "name as uncapitalized";
-variant "useNil";
-variant "element";
+  variant "name as uncapitalized";
+  variant "useNil";
+  variant "element";
 };
 
 
@@ -58,9 +58,9 @@ type record E16c
 	} bar
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (bar) "useNil";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (bar) "useNil";
 };
 
 
@@ -81,22 +81,22 @@ type record SeqNillable
 	} content optional
 }
 with {
-variant "useNil";
-variant "element";
-variant (bar) "attribute";
-variant (foo) "defaultForEmpty as '1'";
-variant (foo) "attribute";
-variant (content.forename) "useNil";
-variant (content.surname) "useNil";
-variant (content.livingAddress_list) "untagged";
-variant (content.livingAddress_list[-]) "name as 'livingAddress'";
-variant (content.livingAddress_list[-]) "useNil";
+  variant "useNil";
+  variant "element";
+  variant (bar) "attribute";
+  variant (foo) "defaultForEmpty as '1'";
+  variant (foo) "attribute";
+  variant (content.forename) "useNil";
+  variant (content.surname) "useNil";
+  variant (content.livingAddress_list) "untagged";
+  variant (content.livingAddress_list[-]) "name as 'livingAddress'";
+  variant (content.livingAddress_list[-]) "useNil";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/nillable/fixed'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/nillable/fixed'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

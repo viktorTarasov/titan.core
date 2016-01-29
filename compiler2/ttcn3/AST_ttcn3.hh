@@ -333,6 +333,8 @@ namespace Ttcn {
      * and the referred objects are bound or not.*/
     void generate_code_ispresentbound(expression_struct_t *expr,
       bool is_template, const bool isbound);
+    /** If the referenced object is a formal parameter, it is marked as used. */
+    void refd_param_usage_found();
   private:
     /** Detects whether the first identifier in subrefs is a module id */
     void detect_modid();
@@ -1590,6 +1592,9 @@ namespace Ttcn {
     /** Flag that indicates whether the C++ code for the parameter's default
       * value has been generated or not. */
     bool defval_generated;
+    /** Flag that indicates whether the parameter is used in the function/
+     * altstep/testcase/parameterized template body. */
+    bool usage_found;
 
     /// Copy constructor disabled
     FormalPar(const FormalPar& p);
@@ -1652,8 +1657,11 @@ namespace Ttcn {
      * parameter (if present). */
     virtual void generate_code_defval(output_struct *target, bool clean_up = false);
     /** Generates the C++ equivalent of the formal parameter, appends it to
-     * \a str and returns the resulting string. */
-    char *generate_code_fpar(char *str);
+     * \a str and returns the resulting string.
+     * The name of the parameter is not displayed if the parameter is unused
+     * (unless forced).
+     * @param display_unused forces the display of the parameter name */
+    char *generate_code_fpar(char *str, bool display_unused = false);
     /** Generates a C++ statement that defines an object (variable) for the
      * formal parameter, appends it to \a str and returns the resulting
      * string. The name of the object is constructed from \a p_prefix and the
@@ -1675,7 +1683,9 @@ namespace Ttcn {
     virtual bool get_lazy_eval() const { return lazy_eval; }
     // code generation: get the C++ string that refers to the formal parameter
     // adds a casting to data type if wrapped into a lazy param
-    string get_reference_name(Scope* scope) const; 
+    string get_reference_name(Scope* scope) const;
+    /** Indicates that the parameter is used at least once. */
+    void set_usage_found() { usage_found = true; }
   };
 
   /** Class to represent a list of formal parameters. Owned by a
@@ -1754,8 +1764,11 @@ namespace Ttcn {
                                const char* p_description);
     void set_genname(const string& p_prefix);
     /** Generates the C++ equivalent of the formal parameter list, appends it
-     * to \a str and returns the resulting string. */
-    char *generate_code(char *str);
+     * to \a str and returns the resulting string.
+     * The names of unused parameters are not displayed (unless forced).
+     * @param display_unused forces the display of parameter names (an amount
+     * equal to this parameter are forced, starting from the first) */
+    char *generate_code(char *str, size_t display_unused = 0);
     /** Partially generates the C++ objects that represent the default value for
       * the parameters (if present). The objects' declarations are not generated,
       * only their value assignments. */

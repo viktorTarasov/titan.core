@@ -310,6 +310,78 @@ testcase dec_uo_any() runs on Ord
 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+// Example 6: USE-ORDER with only one element that is optional
+
+type record UORecordOneOpt {
+  record of enumerated { id } order,
+  integer id optional
+} with {
+  variant "useOrder";
+}
+
+DECLARE_EXER_ENCODERS(UORecordOneOpt, uo_one_opt);
+
+const UORecordOneOpt one_opt := {
+  order := { id },
+  id := 2
+};
+
+const universal charstring str_one_opt_e :=
+  "<UORecordOneOpt>\n" &
+  "\t<id>2</id>\n" &
+  "</UORecordOneOpt>\n\n";
+
+testcase enc_uo_one_opt() runs on Ord
+{
+  CHECK_METHOD(exer_enc_uo_one_opt, one_opt, str_one_opt_e);
+}
+
+testcase dec_uo_one_opt() runs on Ord
+{
+  CHECK_DECODE(exer_dec_uo_one_opt, str_one_opt_e, UORecordOneOpt, one_opt);
+}
+
+// -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+// Example 7: USE-ORDER with only one record element that is optional
+
+type record UORecordOneOpt2 {
+  record of enumerated { id } order,
+  RecordOneOpt id optional
+} with {
+  variant "useOrder";
+}
+
+type record RecordOneOpt {
+  integer identity
+}
+
+DECLARE_EXER_ENCODERS(UORecordOneOpt2, uo_one_opt2);
+
+const UORecordOneOpt2 one_opt2 := {
+  order := { id },
+  id := { identity := 2 }
+};
+
+const universal charstring str_one_opt2_e :=
+  "<UORecordOneOpt2>\n" &
+  "\t<id>\n" &
+  "\t\t<identity>2</identity>\n" &
+  "\t</id>\n" &
+  "</UORecordOneOpt2>\n\n";
+
+testcase enc_uo_one_opt2() runs on Ord
+{
+  CHECK_METHOD(exer_enc_uo_one_opt2, one_opt2, str_one_opt2_e);
+}
+
+testcase dec_uo_one_opt2() runs on Ord
+{
+  CHECK_DECODE(exer_dec_uo_one_opt2, str_one_opt2_e, UORecordOneOpt2, one_opt2);
+}
+
+// -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
 control {
   execute(enc_uo());
   execute(dec_uo());
@@ -324,6 +396,12 @@ control {
 
   execute(enc_uo_any());
   execute(dec_uo_any());
+
+  execute(enc_uo_one_opt());
+  execute(dec_uo_one_opt());
+
+  execute(enc_uo_one_opt2());
+  execute(dec_uo_one_opt2());
 }
 
 }
@@ -342,4 +420,5 @@ NAMESPACE ALL, ALL IN ALL AS ...
 because (at least for a record or set type) unqualified attributes stop there
 and are not propagated to the component.
 */
+
 }

@@ -44,13 +44,13 @@ import from www_example_org_imported all;
 
 type www_example_org_imported.Foobar Foobar
 with {
-variant "element";
+  variant "element";
 };
 
 
 type www_example_org_imported.Ding Ding
 with {
-variant "attribute";
+  variant "attribute";
 };
 
 
@@ -60,22 +60,22 @@ type record Valami_1
 	Foobar foobar
 }
 with {
-variant "name as 'valami'";
-variant (ding) "name as capitalized";
-variant (ding) "attribute";
-variant (foobar) "name as capitalized";
+  variant "name as 'valami'";
+  variant (ding) "name as capitalized";
+  variant (ding) "attribute";
+  variant (foobar) "name as capitalized";
 };
 
 
 type Valami_1 Valami
 with {
-variant "element";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/import/prefix' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/import/prefix' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

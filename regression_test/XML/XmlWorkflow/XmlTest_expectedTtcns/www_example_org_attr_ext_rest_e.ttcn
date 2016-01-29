@@ -47,8 +47,8 @@ type record E25seq
 	XSD.String surnameElemBase
 }
 with {
-variant "name as uncapitalized";
-variant (genderAttrBase) "attribute";
+  variant "name as uncapitalized";
+  variant (genderAttrBase) "attribute";
 };
 
 
@@ -61,9 +61,9 @@ type record E25seqa
 	XSD.String surnameElemBase
 }
 with {
-variant "name as uncapitalized";
-variant (gender) "attribute";
-variant (genderAttrBase) "attribute";
+  variant "name as uncapitalized";
+  variant (gender) "attribute";
+  variant (genderAttrBase) "attribute";
 };
 
 
@@ -77,9 +77,9 @@ type record E25seqb
 	XSD.Integer ageElemExt
 }
 with {
-variant "name as uncapitalized";
-variant (gender) "attribute";
-variant (genderAttrBase) "attribute";
+  variant "name as uncapitalized";
+  variant (gender) "attribute";
+  variant (genderAttrBase) "attribute";
 };
 
 
@@ -89,8 +89,8 @@ type record E25seqc
 	XSD.Integer ageElemExt
 }
 with {
-variant "name as uncapitalized";
-variant (gender) "attribute";
+  variant "name as uncapitalized";
+  variant (gender) "attribute";
 };
 
 
@@ -101,16 +101,16 @@ type record E25seqd
 	XSD.Integer ageElemExt
 }
 with {
-variant "name as uncapitalized";
-variant (gender) "attribute";
-variant (genderAttrBase) "attribute";
+  variant "name as uncapitalized";
+  variant (gender) "attribute";
+  variant (genderAttrBase) "attribute";
 };
 
 
 type XSD.String Comment
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -123,8 +123,8 @@ type record PurchaseOrderType
 	Comment comment optional
 }
 with {
-variant (orderDate) "attribute";
-variant (shipDate) "attribute";
+  variant (orderDate) "attribute";
+  variant (shipDate) "attribute";
 };
 
 
@@ -138,7 +138,7 @@ type record RestrictedPurchaseOrderType
 	Comment comment
 }
 with {
-variant (shipDate) "attribute";
+  variant (shipDate) "attribute";
 };
 
 
@@ -150,13 +150,13 @@ type record E23
 	XSD.String base_1
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (bar) "attribute";
-variant (base) "attribute";
-variant (foo) "attribute";
-variant (base_1) "name as 'base'";
-variant (base_1) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (bar) "attribute";
+  variant (base) "attribute";
+  variant (foo) "attribute";
+  variant (base_1) "name as 'base'";
+  variant (base_1) "untagged";
 };
 
 
@@ -169,14 +169,14 @@ type record E24
 	XSD.String base_1
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (bar) "attribute";
-variant (base) "attribute";
-variant (foo) "attribute";
-variant (goo) "attribute";
-variant (base_1) "name as 'base'";
-variant (base_1) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (bar) "attribute";
+  variant (base) "attribute";
+  variant (foo) "attribute";
+  variant (goo) "attribute";
+  variant (base_1) "name as 'base'";
+  variant (base_1) "untagged";
 };
 
 
@@ -187,11 +187,11 @@ type record E25
 	XSD.String base length(4)
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (bar) "attribute";
-variant (goo) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (bar) "attribute";
+  variant (goo) "attribute";
+  variant (base) "untagged";
 };
 
 
@@ -203,18 +203,18 @@ type record E26
 	XSD.String base length(4)
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (bar) "attribute";
-variant (foo) "attribute";
-variant (goo) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (bar) "attribute";
+  variant (foo) "attribute";
+  variant (goo) "attribute";
+  variant (base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/attr/ext/rest' prefix 'nss'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/attr/ext/rest' prefix 'nss'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

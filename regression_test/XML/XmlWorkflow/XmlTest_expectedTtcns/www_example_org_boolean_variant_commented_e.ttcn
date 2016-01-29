@@ -41,25 +41,25 @@ import from XSD all;
 
 type XSD.Boolean CelsiusBodyTemp
 with {
-variant "name as uncapitalized";
-//variant "text 'true' as '1'";
-//variant "text 'false' as '0'";
+  variant "name as uncapitalized";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 };
 
 
 type XSD.Boolean BooleanElement
 with {
-variant "name as uncapitalized";
-variant "element";
-//variant "text 'true' as '1'";
-//variant "text 'false' as '0'";
+  variant "name as uncapitalized";
+  variant "element";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 };
 
 
 type XSD.Boolean BooleanSimple;
 //with {
-//variant "text 'true' as '1'";
-//variant "text 'false' as '0'";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 //};
 
 
@@ -70,14 +70,14 @@ type union Union_with_boolean
 	XSD.Integer alt_2
 }
 with {
-variant "name as uncapitalized";
-variant "useUnion";
-variant "element";
-variant (alt_) "name as ''";
-variant (alt_1) "name as ''";
-//variant (alt_1) "text 'true' as '1'";
-//variant (alt_1) "text 'false' as '0'";
-variant (alt_2) "name as ''";
+  variant "name as uncapitalized";
+  variant "useUnion";
+  variant "element";
+  variant (alt_) "name as ''";
+  variant (alt_1) "name as ''";
+  //variant (alt_1) "text 'true' as '1'";
+  //variant (alt_1) "text 'false' as '0'";
+  variant (alt_2) "name as ''";
 };
 
 
@@ -89,12 +89,12 @@ type record Seq_with_boolean
 	XSD.Boolean smart
 }
 with {
-variant "name as uncapitalized";
-variant (stupid) "attribute";
-//variant (stupid) "text 'true' as '1'";
-//variant (stupid) "text 'false' as '0'";
-//variant (smart) "text 'true' as '1'";
-//variant (smart) "text 'false' as '0'";
+  variant "name as uncapitalized";
+  variant (stupid) "attribute";
+  //variant (stupid) "text 'true' as '1'";
+  //variant (stupid) "text 'false' as '0'";
+  //variant (smart) "text 'true' as '1'";
+  //variant (smart) "text 'false' as '0'";
 };
 
 
@@ -104,11 +104,11 @@ type record E15b
 	XSD.Float bar
 }
 with {
-variant "name as uncapitalized";
-variant (foo_list) "untagged";
-variant (foo_list[-]) "name as 'foo'";
-//variant (foo_list[-]) "text 'true' as '1'";
-//variant (foo_list[-]) "text 'false' as '0'";
+  variant "name as uncapitalized";
+  variant (foo_list) "untagged";
+  variant (foo_list[-]) "name as 'foo'";
+  //variant (foo_list[-]) "text 'true' as '1'";
+  //variant (foo_list[-]) "text 'false' as '0'";
 };
 
 
@@ -118,14 +118,14 @@ type record E15b_2
 	XSD.Float bar
 };
 //with {
-//variant (foo) "text 'true' as '1'";
-//variant (foo) "text 'false' as '0'";
+  //variant (foo) "text 'true' as '1'";
+  //variant (foo) "text 'false' as '0'";
 //};
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/boolean/variant/commented'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/boolean/variant/commented'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

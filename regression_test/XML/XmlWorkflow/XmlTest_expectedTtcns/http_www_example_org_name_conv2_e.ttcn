@@ -41,7 +41,7 @@ import from XSD all;
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.example.org/name_conv2;;;;;;'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.example.org/name_conv2;;;;;;'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

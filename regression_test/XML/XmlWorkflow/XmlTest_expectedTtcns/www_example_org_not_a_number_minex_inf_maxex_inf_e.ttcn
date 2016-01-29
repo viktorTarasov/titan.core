@@ -41,13 +41,13 @@ import from XSD all;
 
 type XSD.Float E9e ( not_a_number )
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.Float E9e_2 ( not_a_number )
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -57,17 +57,17 @@ type union Union_maxeclusive_NaN
 	XSD.Integer alt_1
 }
 with {
-variant "name as uncapitalized";
-variant "useUnion";
-variant "element";
-variant (alt_) "name as ''";
-variant (alt_1) "name as ''";
+  variant "name as uncapitalized";
+  variant "useUnion";
+  variant "element";
+  variant (alt_) "name as ''";
+  variant (alt_1) "name as ''";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/not_a_number/minex_inf/maxex_-inf'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/not_a_number/minex_inf/maxex_-inf'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -19,7 +19,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- XmlTest_element_recordOfElements3.xsd
+//	- XmlTest_element_recordOfElements3_e.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "www.XmlTest.org/element_recordOfElements3" */
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ import from XSD all;
 
 type XSD.String Child
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -56,14 +56,14 @@ type record PersonInfo3
 	record length(2 .. infinity) of Child child_list
 }
 with {
-variant (child_list) "untagged";
-variant (child_list[-]) "name as 'child'";
+  variant (child_list) "untagged";
+  variant (child_list[-]) "name as 'child'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/element_recordOfElements3' prefix 'ns30'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/element_recordOfElements3' prefix 'ns30'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -46,11 +46,11 @@ type record ComplexEnum
 	XSD.String base
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (bar) "attribute";
-variant (foo) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (bar) "attribute";
+  variant (foo) "attribute";
+  variant (base) "untagged";
 };
 
 
@@ -62,12 +62,12 @@ type record Member2
 	XSD.String base
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (bar) "attribute";
-variant (foo) "attribute";
-variant (unitOfAge) "attribute";
-variant (base) "untagged";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (bar) "attribute";
+  variant (foo) "attribute";
+  variant (unitOfAge) "attribute";
+  variant (base) "untagged";
 };
 
 
@@ -76,10 +76,10 @@ type record Ize
 	record of Head_group head_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (head_list) "untagged";
-variant (head_list[-]) "name as 'head'";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (head_list) "untagged";
+  variant (head_list[-]) "name as 'head'";
 };
 
 
@@ -89,15 +89,15 @@ type union Head_group
 	Member2 member2
 }
 with {
-variant "untagged";
-variant (head) "form as qualified";
-variant (member2) "block";
+  variant "untagged";
+  variant (head) "form as qualified";
+  variant (member2) "block";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/generate/element/substitution' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/generate/element/substitution' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

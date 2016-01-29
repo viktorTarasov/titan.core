@@ -41,25 +41,25 @@ import from XSD all;
 
 type XSD.String Pattern1 (pattern "}[\(@\)\{1,5\}\{\}|\\.\[\]]#(3,)")
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String Pattern2 (pattern "\{[?.a-zA-Z\(@\)\{1,3\},\[\]/\^\{\}]#(0,1)")
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 type XSD.String Pattern3 (pattern "(sip:(^[a-zA-Z0-9+\-_]*(!?*!)#(0,1)[\(@\)\{1\}a-zA-Z0-9.\-_])#(1,71))|tel:\+([\-.\(\)0-9]*(!?*!)#(0,1))#(4,71)")
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/regex/square/brackets'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/regex/square/brackets'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -41,8 +41,8 @@ import from XSD all;
 
 type String_derivations Elem
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -51,7 +51,7 @@ type enumerated Enable
 	equal
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -60,7 +60,7 @@ type enumerated Session
 	visible_and_interactive
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -69,7 +69,7 @@ type enumerated Res
 	pending
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -78,7 +78,7 @@ type enumerated Data
 	dateTime
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -91,14 +91,14 @@ type union String_derivations
 	Session session
 }
 with {
-variant "name as uncapitalized";
-variant "useType";
+  variant "name as uncapitalized";
+  variant "useType";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/type/substitution/builtintype' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/type/substitution/builtintype' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

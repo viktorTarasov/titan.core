@@ -63,10 +63,10 @@ namespace Ttcn {
       u.templates = p.u.templates->clone(); // FATAL_ERROR
       break;
     case NAMED_TEMPLATE_LIST:
-      u.named_templates = p.u.named_templates->clone(); // FATAL_ERROR
+      u.named_templates = p.u.named_templates->clone();
       break;
     case INDEXED_TEMPLATE_LIST:
-      u.indexed_templates = p.u.indexed_templates->clone(); // FATAL_ERROR
+      u.indexed_templates = p.u.indexed_templates->clone();
       break;
     case VALUE_RANGE:
       u.value_range = p.u.value_range->clone();
@@ -3612,10 +3612,9 @@ end:
           char* str_set_size = mputprintf(0, "%s.set_size(%lu", name,
             (unsigned long)fixed_part);
 
-         // variable part
-        for (size_t i = 0; i < nof_ts; i++) {
-          Template *t = u.templates->get_t_byIndex(i);
-          for (size_t k = 0, v = variables.size(); k < v; ++k) {
+          // variable part
+          for (size_t i = 0, v = variables.size(); i < v; ++i) {
+            Template *t = u.templates->get_t_byIndex(variables[i]);
             if (t->templatetype == ALL_FROM) {
               Value *refv = t->u.all_from->u.specific_value;
               // don't call get_Value(), it rips out the value from the template
@@ -3670,20 +3669,19 @@ end:
               str_set_size = mputstr(str_set_size, ".n_elem()");
             }
           }
-        }
-        str = mputstr(str, str_preamble);
-        str = mputstr(str, str_set_size);
-        Free(str_preamble);
-        Free(str_set_size);
-        str = mputstrn(str, ");\n", 3); // finally done set_size
-        
-        size_t index = 0;
-        string skipper;
-        for (size_t i = 0; i < nof_ts; i++) {
-          Template *t = u.templates->get_t_byIndex(i);
-          Int ix(index_offset + i);
-          switch (t->templatetype) {
-          case ALL_FROM: {
+          str = mputstr(str, str_preamble);
+          str = mputstr(str, str_set_size);
+          Free(str_preamble);
+          Free(str_set_size);
+          str = mputstrn(str, ");\n", 3); // finally done set_size
+
+          size_t index = 0;
+          string skipper;
+          for (size_t i = 0; i < nof_ts; i++) {
+            Template *t = u.templates->get_t_byIndex(i);
+            Int ix(index_offset + i);
+            switch (t->templatetype) {
+            case ALL_FROM: {
               expression_struct expr;
               Code::init_expr(&expr);
               switch (t->u.all_from->templatetype) {
@@ -3750,6 +3748,7 @@ end:
                break; }
             }
           }
+          break;
         }
 
         // else carry on
@@ -4859,7 +4858,7 @@ compile_time:
     TypeChain l_chain;
     TypeChain r_chain;
     if (!governor) return type;
-    else if (governor->is_compatible(type, &info, &l_chain, &r_chain)) {
+    else if (governor->is_compatible(type, &info, &l_chain, &r_chain, true)) {
       return governor;
     } else {
       if (info.is_subtype_error()) {

@@ -12,6 +12,8 @@
 
 #include "../AST.hh"
 #include "../../common/JSON_Tokenizer.hh"
+#include "../Value.hh"
+#include "../Valuestuff.hh"
 
 // forward declarations
 namespace Common {
@@ -107,6 +109,97 @@ void Ttcn2Json::insert_schema(JSON_Tokenizer& to, JSON_Tokenizer& from)
       value_str[value_len] = temp;
     }
   } while (token != JSON_TOKEN_NONE);
+}
+
+JsonOmitCombination::JsonOmitCombination(Common::Value* p_top_level)
+{
+  parse_value(p_top_level->get_value_refd_last());
+}
+
+JsonOmitCombination::~JsonOmitCombination()
+{
+  for (size_t i = 0; i < combinations.size(); ++i) {
+    delete combinations.get_nth_elem(i);
+  }
+  combinations.clear();
+}
+
+bool JsonOmitCombination::next(int current_value /* = 0 */)
+{
+  if ((size_t)current_value == combinations.size()) {
+    return false;
+  }
+  Common::Value* val = combinations.get_nth_key(current_value);
+  int* omitted_fields = combinations.get_nth_elem(current_value);
+  for (size_t i = 0; i < val->get_nof_comps(); ++i) {
+    if (omitted_fields[i] == OMITTED_ABSENT) {
+      // ABSENT (zero bit) found, set it to NULL (one bit) and reset all previous
+      // NULLs (ones) to ABSENTs (zeros), first in this value ...
+      omitted_fields[i] = OMITTED_NULL;
+      for (size_t j = 0; j < i; ++j) {
+        if (omitted_fields[j] == OMITTED_NULL) {
+          omitted_fields[j] = OMITTED_ABSENT;
+        }
+      }
+      // ... and then in all previous record values
+      reset_previous(current_value);
+      return true;
+    }
+  }
+  // no new combinations in this value, check the next one
+  return next(current_value + 1);
+}
+
+JsonOmitCombination::omit_state_t JsonOmitCombination::get_state(
+  Common::Value* p_rec_value, size_t p_comp) const
+{
+  return (JsonOmitCombination::omit_state_t)combinations[p_rec_value][p_comp];
+}
+
+void JsonOmitCombination::parse_value(Common::Value* p_value)
+{
+  switch (p_value->get_valuetype()) {
+  case Common::Value::V_SEQ:
+  case Common::Value::V_SET: {
+    size_t len = p_value->get_nof_comps();
+    int* omitted_fields = new int[len]; // stores one combination
+    for (size_t i = 0; i < len; ++i) {
+      Common::Value* val = p_value->get_se_comp_byIndex(i)->get_value();
+      if (val->get_valuetype() == Common::Value::V_OMIT) {
+        // all omitted fields are absent in the first combination
+        omitted_fields[i] = OMITTED_ABSENT;
+      }
+      else {
+        omitted_fields[i] = NOT_OMITTED;
+      }
+      parse_value(val->get_value_refd_last());
+    }
+    combinations.add(p_value, omitted_fields);
+    break; }
+  case Common::Value::V_SEQOF:
+  case Common::Value::V_SETOF:
+    for (size_t i = 0; i < p_value->get_nof_comps(); ++i) {
+      parse_value(p_value->get_comp_byIndex(i)->get_value_refd_last());
+    }
+    break;
+  case Common::Value::V_CHOICE:
+    parse_value(p_value->get_alt_value()->get_value_refd_last());
+  default:
+    break;
+  }
+}
+
+void JsonOmitCombination::reset_previous(int value_count)
+{
+  for (int i = 0; i < value_count; ++i) {
+    Common::Value* val = combinations.get_nth_key(i);
+    int* omitted_fields = combinations.get_nth_elem(i);
+    for (size_t j = 0; j < val->get_nof_comps(); ++j) {
+      if (omitted_fields[j] == OMITTED_NULL) {
+        omitted_fields[j] = OMITTED_ABSENT;
+      }
+    }
+  }
 }
 
 } // namespace

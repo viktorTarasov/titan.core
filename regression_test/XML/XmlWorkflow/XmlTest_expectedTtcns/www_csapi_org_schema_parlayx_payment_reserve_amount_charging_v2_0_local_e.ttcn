@@ -42,8 +42,8 @@ import from www_csapi_org_schema_parlayx_common_v2_0_e all;
 
 type ReserveAmount_1 ReserveAmount
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -54,14 +54,14 @@ type record ReserveAmount_1
 	XSD.String billingText
 }
 with {
-variant "name as 'reserveAmount'";
+  variant "name as 'reserveAmount'";
 };
 
 
 type ReserveAmountResponse_1 ReserveAmountResponse
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -70,14 +70,14 @@ type record ReserveAmountResponse_1
 	XSD.String result
 }
 with {
-variant "name as 'reserveAmountResponse'";
+  variant "name as 'reserveAmountResponse'";
 };
 
 
 type ReserveAdditionalAmount_1 ReserveAdditionalAmount
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -88,14 +88,14 @@ type record ReserveAdditionalAmount_1
 	XSD.String billingText
 }
 with {
-variant "name as 'reserveAdditionalAmount'";
+  variant "name as 'reserveAdditionalAmount'";
 };
 
 
 type ReserveAdditionalAmountResponse_1 ReserveAdditionalAmountResponse
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -104,14 +104,14 @@ type record ReserveAdditionalAmountResponse_1
 
 }
 with {
-variant "name as 'reserveAdditionalAmountResponse'";
+  variant "name as 'reserveAdditionalAmountResponse'";
 };
 
 
 type ChargeReservation_1 ChargeReservation
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -123,14 +123,14 @@ type record ChargeReservation_1
 	XSD.String referenceCode
 }
 with {
-variant "name as 'chargeReservation'";
+  variant "name as 'chargeReservation'";
 };
 
 
 type ChargeReservationResponse_1 ChargeReservationResponse
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -139,14 +139,14 @@ type record ChargeReservationResponse_1
 
 }
 with {
-variant "name as 'chargeReservationResponse'";
+  variant "name as 'chargeReservationResponse'";
 };
 
 
 type ReleaseReservation_1 ReleaseReservation
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -155,14 +155,14 @@ type record ReleaseReservation_1
 	XSD.String reservationIdentifier
 }
 with {
-variant "name as 'releaseReservation'";
+  variant "name as 'releaseReservation'";
 };
 
 
 type ReleaseReservationResponse_1 ReleaseReservationResponse
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -171,14 +171,14 @@ type record ReleaseReservationResponse_1
 
 }
 with {
-variant "name as 'releaseReservationResponse'";
+  variant "name as 'releaseReservationResponse'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.csapi.org/schema/parlayx/payment/reserve_amount_charging/v2_0/local' prefix 'parlayx_payment_reserve_amount_charging_local_xsd'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.csapi.org/schema/parlayx/payment/reserve_amount_charging/v2_0/local' prefix 'parlayx_payment_reserve_amount_charging_local_xsd'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

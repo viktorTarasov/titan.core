@@ -21,7 +21,7 @@
 //	Generated from file(s):
 //	- type_conversion_follow.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/type/conversion/follow/e" */
+//			/* targetnamespace = "www.example.org/type/conversion/follow" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -48,10 +48,10 @@ type record E45
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
-variant (birthDateAttrGroup) "attribute";
-variant (birthPlaceAttrGroup) "attribute";
-variant (sd) "attribute";
+  variant "name as uncapitalized";
+  variant (birthDateAttrGroup) "attribute";
+  variant (birthPlaceAttrGroup) "attribute";
+  variant (sd) "attribute";
 };
 
 
@@ -60,8 +60,8 @@ type record E45_1
 	XSD.String attr optional
 }
 with {
-variant "name as 'e45_'";
-variant (attr) "attribute";
+  variant "name as 'e45_'";
+  variant (attr) "attribute";
 };
 
 
@@ -70,14 +70,14 @@ type record Ss_1
 	E45_1 sss
 }
 with {
-variant "untagged";
+  variant "untagged";
 };
 
 
 type E45_1 Ss
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -87,13 +87,13 @@ type record FoobarGroup
 	XSD.String bar
 }
 with {
-variant "untagged";
+  variant "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/type/conversion/follow' prefix 'ns11'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/type/conversion/follow' prefix 'ns11'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

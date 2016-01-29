@@ -51,11 +51,11 @@ type record MethodCall
 	} params optional
 }
 with {
-variant "name as uncapitalized";
-variant "useOrder";
-variant "element";
-variant (params.param_list) "untagged";
-variant (params.param_list[-]) "name as 'param'";
+  variant "name as uncapitalized";
+  variant "useOrder";
+  variant "element";
+  variant (params.param_list) "untagged";
+  variant (params.param_list[-]) "name as 'param'";
 };
 
 
@@ -77,12 +77,12 @@ type record MethodResponse
 	} choice
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice) "untagged";
-variant (choice.params.param_) "name as 'param'";
-variant (choice.fault.value_) "name as 'value'";
-variant (choice.fault.value_.struct.member_1) "name as 'member'";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice) "untagged";
+  variant (choice.params.param_) "name as 'param'";
+  variant (choice.fault.value_) "name as 'value'";
+  variant (choice.fault.value_.struct.member_1) "name as 'member'";
 };
 
 
@@ -91,7 +91,7 @@ type record ParamType
 	ValueType value_
 }
 with {
-variant (value_) "name as 'value'";
+  variant (value_) "name as 'value'";
 };
 
 
@@ -115,11 +115,11 @@ type record ValueType
 	} choice
 }
 with {
-variant "embedValues";
-variant (choice) "untagged";
-variant (choice.base64) "name as capitalized";
-variant (choice.boolean_) "name as 'boolean'";
-variant (choice.dateTime_iso8601) "name as 'dateTime.iso8601'";
+  variant "embedValues";
+  variant (choice) "untagged";
+  variant (choice.base64) "name as capitalized";
+  variant (choice.boolean_) "name as 'boolean'";
+  variant (choice.dateTime_iso8601) "name as 'dateTime.iso8601'";
 };
 
 
@@ -128,8 +128,8 @@ type record StructType
 	record length(1 .. infinity) of MemberType member_list
 }
 with {
-variant (member_list) "untagged";
-variant (member_list[-]) "name as 'member'";
+  variant (member_list) "untagged";
+  variant (member_list[-]) "name as 'member'";
 };
 
 
@@ -139,7 +139,7 @@ type record MemberType
 	ValueType value_
 }
 with {
-variant (value_) "name as 'value'";
+  variant (value_) "name as 'value'";
 };
 
 
@@ -150,8 +150,8 @@ type record ArrayType
 	} data
 }
 with {
-variant (data.value_list) "untagged";
-variant (data.value_list[-]) "name as 'value'";
+  variant (data.value_list) "untagged";
+  variant (data.value_list[-]) "name as 'value'";
 };
 
 
@@ -163,6 +163,6 @@ type XSD.Boolean NumericBoolean;
 
 }
 with {
-encode "XML";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -42,7 +42,7 @@ import from XSD all;
 
 type XSD.String String_withFixedLenth length(5)
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -53,13 +53,13 @@ variant "name as uncapitalized";
 
 type String_withFixedLenth ChildString
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/string_withFixedLength' prefix 'ns12'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/string_withFixedLength' prefix 'ns12'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

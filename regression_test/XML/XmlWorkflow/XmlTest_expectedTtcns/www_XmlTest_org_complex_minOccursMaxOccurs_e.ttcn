@@ -55,7 +55,7 @@ type record SeqTypeMin0max1
 	} sequence optional
 }
 with {
-variant (sequence) "untagged";
+  variant (sequence) "untagged";
 };
 
 
@@ -72,8 +72,8 @@ type record SeqTypeMin0maxU
 	} sequence_list
 }
 with {
-variant (sequence_list) "untagged";
-variant (sequence_list[-]) "untagged";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
 };
 
 
@@ -84,8 +84,8 @@ type record SeqTypeMin1maxU
 	} sequence_list
 }
 with {
-variant (sequence_list) "untagged";
-variant (sequence_list[-]) "untagged";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
 };
 
 
@@ -97,7 +97,7 @@ type record ChoTypeMin0max1
 	} choice optional
 }
 with {
-variant (choice) "untagged";
+  variant (choice) "untagged";
 };
 
 
@@ -109,8 +109,8 @@ type record ChoTypeMin0maxU
 	} choice_list
 }
 with {
-variant (choice_list) "untagged";
-variant (choice_list[-]) "untagged";
+  variant (choice_list) "untagged";
+  variant (choice_list[-]) "untagged";
 };
 
 
@@ -124,16 +124,16 @@ type record ChoiceChildMinMax
 	} choice
 }
 with {
-variant "element";
-variant (choice) "untagged";
-variant (choice.elem0_list) "untagged";
-variant (choice.elem0_list[-]) "name as 'elem0'";
-variant (choice.elem1_list) "untagged";
-variant (choice.elem1_list[-]) "name as 'elem1'";
-variant (choice.elem2_list) "untagged";
-variant (choice.elem2_list[-]) "name as 'elem2'";
-variant (choice.elem3_list) "untagged";
-variant (choice.elem3_list[-]) "name as 'elem3'";
+  variant "element";
+  variant (choice) "untagged";
+  variant (choice.elem0_list) "untagged";
+  variant (choice.elem0_list[-]) "name as 'elem0'";
+  variant (choice.elem1_list) "untagged";
+  variant (choice.elem1_list[-]) "name as 'elem1'";
+  variant (choice.elem2_list) "untagged";
+  variant (choice.elem2_list[-]) "name as 'elem2'";
+  variant (choice.elem3_list) "untagged";
+  variant (choice.elem3_list[-]) "name as 'elem3'";
 };
 
 
@@ -144,11 +144,11 @@ type record MinOccurs_maxOccurs_frame
 	} choice_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (choice_list) "untagged";
-variant (choice_list[-]) "untagged";
-variant (choice_list[-].choiceChildMinMax) "name as capitalized";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (choice_list) "untagged";
+  variant (choice_list[-]) "untagged";
+  variant (choice_list[-].choiceChildMinMax) "name as capitalized";
 };
 
 
@@ -162,7 +162,7 @@ type record AllTypeMin0max1
 	XSD.String elem2 optional
 }
 with {
-variant "useOrder";
+  variant "useOrder";
 };
 
 
@@ -180,7 +180,7 @@ type record SeqGroup
 	XSD.String elem
 }
 with {
-variant "untagged";
+  variant "untagged";
 };
 
 
@@ -189,7 +189,7 @@ type union ChoGroup
 	XSD.String elem
 }
 with {
-variant "untagged";
+  variant "untagged";
 };
 
 
@@ -201,8 +201,8 @@ type record AllGroup
 	XSD.String elem
 }
 with {
-variant "useOrder";
-variant "untagged";
+  variant "useOrder";
+  variant "untagged";
 };
 
 
@@ -222,22 +222,22 @@ type record SeqMixed
 	XSD.String item_1
 }
 with {
-variant (min0maxU_list) "untagged";
-variant (min0maxU_list[-]) "name as 'min0maxU'";
-variant (min1maxU_list) "untagged";
-variant (min1maxU_list[-]) "name as 'min1maxU'";
-variant (nilmin0max1) "useNil";
-variant (nilmin0maxU_list) "untagged";
-variant (nilmin0maxU_list[-]) "name as 'nilmin0maxU'";
-variant (nilmin0maxU_list[-]) "useNil";
-variant (item) "name as capitalized";
-variant (item_1) "name as 'Item'";
+  variant (min0maxU_list) "untagged";
+  variant (min0maxU_list[-]) "name as 'min0maxU'";
+  variant (min1maxU_list) "untagged";
+  variant (min1maxU_list[-]) "name as 'min1maxU'";
+  variant (nilmin0max1) "useNil";
+  variant (nilmin0maxU_list) "untagged";
+  variant (nilmin0maxU_list[-]) "name as 'nilmin0maxU'";
+  variant (nilmin0maxU_list[-]) "useNil";
+  variant (item) "name as capitalized";
+  variant (item_1) "name as 'Item'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_minOccursMaxOccurs' prefix 'ns38'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_minOccursMaxOccurs' prefix 'ns38'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

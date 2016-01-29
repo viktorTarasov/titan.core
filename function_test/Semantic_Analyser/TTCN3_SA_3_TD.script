@@ -7772,7 +7772,7 @@ module ModuleC {
 (?im)\bwarning\b.+?Definition.+?ModuleA.+?hides.+?module
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
-(?im)\berror\b.+?resolve.+?reference.+?unambigously
+(?im)\berror\b.+?resolve.+?reference.+?unambiguously
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?is)\berror:
@@ -8516,7 +8516,7 @@ module ModuleC {
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)\berror\b.+?resolve.+?reference.+?unambigously
+(?im)\berror\b.+?resolve.+?reference.+?unambiguously
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?is)\berror:

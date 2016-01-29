@@ -196,6 +196,12 @@ namespace Ttcn {
   // =================================
   // ===== IndexedTemplate
   // =================================
+  
+  IndexedTemplate::IndexedTemplate(const IndexedTemplate& p)
+  {
+    index = p.index->clone();
+    temp = p.temp->clone();
+  }
 
   IndexedTemplate::IndexedTemplate(FieldOrArrayRef *p_i, Template *p_t)
   {
@@ -212,7 +218,7 @@ namespace Ttcn {
 
   IndexedTemplate *IndexedTemplate::clone() const
   {
-    FATAL_ERROR("IndexedTemplate::clone");
+    return new IndexedTemplate(*this);
   }
 
   void IndexedTemplate::set_fullname(const string& p_fullname)
@@ -245,6 +251,14 @@ namespace Ttcn {
   // =================================
   // ===== IndexedTemplates
   // =================================
+  
+  IndexedTemplates::IndexedTemplates(const IndexedTemplates& p)
+  : Node(p)
+  {
+    for (size_t i = 0; i < p.its_v.size(); i++) {
+      its_v.add(p.its_v[i]->clone());
+    }
+  }
 
   IndexedTemplates::~IndexedTemplates()
   {
@@ -254,7 +268,7 @@ namespace Ttcn {
 
   IndexedTemplates *IndexedTemplates::clone() const
   {
-    FATAL_ERROR("IndexedTemplates::clone");
+    return new IndexedTemplates(*this);
   }
 
   void IndexedTemplates::set_fullname(const string& p_fullname)
@@ -296,6 +310,12 @@ namespace Ttcn {
     name = p_n;
     temp = p_t;
   }
+  
+  NamedTemplate::NamedTemplate(const NamedTemplate& p)
+  {
+    name = p.name->clone();
+    temp = p.temp->clone();
+  }
 
   NamedTemplate::~NamedTemplate()
   {
@@ -305,7 +325,7 @@ namespace Ttcn {
 
   NamedTemplate *NamedTemplate::clone() const
   {
-    FATAL_ERROR("NamedTemplate::clone");
+    return new NamedTemplate(*this);
   }
 
   void NamedTemplate::set_fullname(const string& p_fullname)
@@ -354,6 +374,18 @@ namespace Ttcn {
   // =================================
   // ===== NamedTemplates
   // =================================
+  
+  NamedTemplates::NamedTemplates(const NamedTemplates& p)
+  : Node(p), checked(p.checked)
+  {
+    for (size_t i = 0; i < p.nts_v.size(); i++) {
+      NamedTemplate* nt = p.nts_v[i]->clone();
+      nts_v.add(nt);
+      if (checked) {
+        nts_m.add(p.nts_m.get_nth_key(i), nt);
+      }
+    }
+  }
 
   NamedTemplates::~NamedTemplates()
   {
@@ -364,7 +396,7 @@ namespace Ttcn {
 
   NamedTemplates *NamedTemplates::clone() const
   {
-    FATAL_ERROR("NamedTemplates::clone");
+    return new NamedTemplates(*this);
   }
 
   void NamedTemplates::set_fullname(const string& p_fullname)

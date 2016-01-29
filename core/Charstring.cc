@@ -1112,6 +1112,15 @@ int CHARSTRING::encode_raw(TTCN_Buffer& p_buf) const
   p_buf.put_string(*this);
   return val_ptr ? val_ptr->n_chars : 0;
 }
+
+int CHARSTRING::JSON_encode_negtest_raw(JSON_Tokenizer& p_tok) const
+{
+  if (val_ptr != NULL) {
+    p_tok.put_raw_data(val_ptr->chars_ptr, val_ptr->n_chars);
+    return val_ptr->n_chars;
+  }
+  return 0;
+}
 #endif
 
 

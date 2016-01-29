@@ -352,15 +352,15 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
      "param.error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
      "  }\n"
      "  param.basic_check(Module_Param::BC_VALUE, \"union value\");\n"
-     "  Module_Param_Ptr mp = &param;\n"
+     "  Module_Param_Ptr m_p = &param;\n"
      "  if (param.get_type() == Module_Param::MP_Reference) {\n"
-     "    mp = param.get_referenced_param();\n"
+     "    m_p = param.get_referenced_param();\n"
      "  }\n"
-     "  if (mp->get_type()==Module_Param::MP_Value_List && mp->get_size()==0) return;\n"
-     "  if (mp->get_type()!=Module_Param::MP_Assignment_List) {\n"
+     "  if (m_p->get_type()==Module_Param::MP_Value_List && m_p->get_size()==0) return;\n"
+     "  if (m_p->get_type()!=Module_Param::MP_Assignment_List) {\n"
      "    param.error(\"union value with field name was expected\");\n"
      "  }\n"
-     "  Module_Param* mp_last = mp->get_elem(mp->get_size()-1);\n", dispname);
+     "  Module_Param* mp_last = m_p->get_elem(m_p->get_size()-1);\n", dispname);
 
     for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, 
@@ -416,9 +416,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "  default:\n"
     "    break;\n"
     "  }\n"
-    "  Module_Param_Assignment_List* mp = new Module_Param_Assignment_List();\n"
-    "  mp->add_elem(mp_field);\n"
-    "  return mp;\n"
+    "  Module_Param_Assignment_List* m_p = new Module_Param_Assignment_List();\n"
+    "  m_p->add_elem(mp_field);\n"
+    "  return m_p;\n"
     "}\n\n");
 
   /* set implicit omit function, recursive */
@@ -803,8 +803,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     for (i = 0; i < sdef->nElements; i++) {
       if ((tag_type[i] > 0)
         && (sdef->raw.taglist.list + tag_type[i] - 1)->nElements) {
-        src = mputstr(src, "    boolean already_failed = FALSE;\n"
-          "    raw_order_t local_top_order;\n");
+        src = mputstr(src, "    boolean already_failed = FALSE;\n");
         break;
       }
     }
@@ -885,17 +884,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
             }
             if (temp_variable_list[variable_index].decoded_for_element
               == -1) {
-              src = mputstr(src, "     ");
-              for (k = cur_field_list->nElements - 1; k > 0; k--) {
-                src = mputprintf(src,
-                  " if(%s_descr_.raw->top_bit_order==TOP_BIT_RIGHT)"
-                    "local_top_order=ORDER_MSB;\n"
-                    "      else if(%s_descr_.raw->top_bit_order==TOP_BIT_LEFT)"
-                    "local_top_order=ORDER_LSB;\n"
-                    "      else", cur_field_list->fields[k - 1].typedescr,
-                  cur_field_list->fields[k - 1].typedescr);
-              }
-              src = mputprintf(src, " local_top_order=top_bit_ord;\n"
+              src = mputprintf(src,
                 "      p_buf.set_pos_bit(starting_pos + %d);\n"
                 "      decoded_%lu_length = temporal_%lu.RAW_decode("
                 "%s_descr_, p_buf, limit, top_bit_ord, TRUE);\n",
@@ -1843,8 +1832,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   if (json_needed) {
     // JSON encode
     src = mputprintf(src,
-      "int %s::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) const\n"
+      "int %s::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok) const\n"
       "{\n", name);
+    if (use_runtime_2) {
+      src = mputstr(src, "  if (err_descr) return JSON_encode_negtest(err_descr, p_td, p_tok);\n");
+    }
     if (!sdef->jsonAsValue) {
       src = mputstr(src, "  int enc_len = p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);\n\n");
     } else {
@@ -1876,6 +1868,78 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     src = mputstr(src,
       "  return enc_len;\n"
       "}\n\n");
+    
+    if (use_runtime_2) {
+      // JSON encode for negative testing
+      def = mputstr(def,
+        "int JSON_encode_negtest(const Erroneous_descriptor_t*, "
+        "const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;\n");
+      src = mputprintf(src,
+        "int %s::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
+        "const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) const\n"
+        "{\n", name);
+      if (!sdef->jsonAsValue) {
+        src = mputstr(src, "  int enc_len = p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);\n\n");
+      } else {
+        src = mputstr(src, "  int enc_len = 0;\n\n");
+      }
+      src = mputstr(src,
+        "  const Erroneous_values_t* err_vals = NULL;\n"
+        "  const Erroneous_descriptor_t* emb_descr = NULL;\n"
+        "  switch(union_selection) {\n");
+        
+      for (i = 0; i < sdef->nElements; ++i) {
+        src = mputprintf(src, 
+          "  case %s_%s:\n"
+          "    err_vals = p_err_descr->get_field_err_values(%d);\n"
+          "    emb_descr = p_err_descr->get_field_emb_descr(%d);\n"
+          "    if (NULL != err_vals && NULL != err_vals->value) {\n"
+          "      if (NULL != err_vals->value->errval) {\n"
+          "        if(err_vals->value->raw){\n"
+          "          enc_len += err_vals->value->errval->JSON_encode_negtest_raw(p_tok);\n"
+          "        } else {\n"
+          "          if (NULL == err_vals->value->type_descr) {\n"
+          "            TTCN_error(\"internal error: erroneous value typedescriptor missing\");\n"
+          "          }\n"
+          , selection_prefix, sdef->elements[i].name, (int)i, (int)i);
+        if (!sdef->jsonAsValue) {
+          src = mputprintf(src, "          enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, \"%s\");\n"
+            , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname);
+        }
+        src = mputstr(src,
+          "          enc_len += err_vals->value->errval->JSON_encode(*err_vals->value->type_descr, p_tok);\n"
+          "        }\n"
+          "      }\n"
+          "    } else {\n");
+        if (!sdef->jsonAsValue) {
+          src = mputprintf(src, "      enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, \"%s\");\n"
+            , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname);
+        }
+        src = mputprintf(src,
+          "      if (NULL != emb_descr) {\n"
+          "        enc_len += field_%s->JSON_encode_negtest(emb_descr, %s_descr_, p_tok);\n"
+          "      } else {\n"
+          "        enc_len += field_%s->JSON_encode(%s_descr_, p_tok);\n"
+          "      }\n"
+          "    }\n"
+          "    break;\n"
+          , sdef->elements[i].name, sdef->elements[i].typedescrname
+          , sdef->elements[i].name, sdef->elements[i].typedescrname);
+      }
+      src = mputprintf(src, 
+        "  default:\n"
+        "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND, \n"
+        "      \"Encoding an unbound value of type %s.\");\n"
+        "    return -1;\n"
+        "  }\n\n"
+        , dispname);
+      if (!sdef->jsonAsValue) {
+        src = mputstr(src, "  enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);\n");
+      }
+      src = mputstr(src,
+        "  return enc_len;\n"
+        "}\n\n");
+    }
     
     // JSON decode
     src = mputprintf(src,
@@ -2015,7 +2079,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "    return JSON_ERROR_INVALID_TOKEN;\n"
         "  }\n\n"
         "  char* fld_name = 0;\n"
-        "  size_t name_len = 0;"
+        "  size_t name_len = 0;\n"
         "  dec_len += p_tok.get_next_token(&j_token, &fld_name, &name_len);\n"
         "  if (JSON_TOKEN_NAME != j_token) {\n"
         "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_NAME_TOKEN_ERROR);\n"
@@ -2791,11 +2855,11 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "param.error(\"Field `%%s' not found in union template type `%s'\", param_field);\n"
     "  }\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"union template\");\n"
-    "  Module_Param_Ptr mp = &param;\n"
+    "  Module_Param_Ptr m_p = &param;\n"
     "  if (param.get_type() == Module_Param::MP_Reference) {\n"
-    "    mp = param.get_referenced_param();\n"
+    "    m_p = param.get_referenced_param();\n"
     "  }\n"
-    "  switch (mp->get_type()) {\n"
+    "  switch (m_p->get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
     "    break;\n"
@@ -2807,20 +2871,20 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "    break;\n"
     "  case Module_Param::MP_List_Template:\n"
     "  case Module_Param::MP_ComplementList_Template: {\n"
-    "    %s_template temp;\n"
-    "    temp.set_type(mp->get_type()==Module_Param::MP_List_Template ? "
-    "VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());\n"
-    "    for (size_t p_i=0; p_i<mp->get_size(); p_i++) {\n"
-    "      temp.list_item(p_i).set_param(*mp->get_elem(p_i));\n"
+    "    %s_template new_temp;\n"
+    "    new_temp.set_type(m_p->get_type()==Module_Param::MP_List_Template ? "
+    "VALUE_LIST : COMPLEMENTED_LIST, m_p->get_size());\n"
+    "    for (size_t p_i=0; p_i<m_p->get_size(); p_i++) {\n"
+    "      new_temp.list_item(p_i).set_param(*m_p->get_elem(p_i));\n"
     "    }\n"
-    "    *this = temp;\n"
+    "    *this = new_temp;\n"
     "    break; }\n"
     "  case Module_Param::MP_Value_List:\n"
-    "    if (mp->get_size()==0) break;\n" /* for backward compatibility */
+    "    if (m_p->get_size()==0) break;\n" /* for backward compatibility */
     "    param.type_error(\"union template\", \"%s\");\n"
     "    break;\n"
     "  case Module_Param::MP_Assignment_List: {\n"
-    "    Module_Param* mp_last = mp->get_elem(mp->get_size()-1);\n",
+    "    Module_Param* mp_last = m_p->get_elem(m_p->get_size()-1);\n",
     dispname, name, dispname);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, 
@@ -2835,7 +2899,7 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "  default:\n"
     "    param.type_error(\"union template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();\n"
+    "  is_ifpresent = param.get_ifpresent() || m_p->get_ifpresent();\n"
     "}\n\n", dispname, dispname);
   
   /* get_param() */
@@ -2862,19 +2926,19 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
   src = mputprintf(src,
     "TTCN_error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
     "  }\n"
-    "  Module_Param* mp = NULL;\n"
+    "  Module_Param* m_p = NULL;\n"
     "  switch (template_selection) {\n"
     "  case UNINITIALIZED_TEMPLATE:\n"
-    "    mp = new Module_Param_Unbound();\n"
+    "    m_p = new Module_Param_Unbound();\n"
     "    break;\n"
     "  case OMIT_VALUE:\n"
-    "    mp = new Module_Param_Omit();\n"
+    "    m_p = new Module_Param_Omit();\n"
     "    break;\n"
     "  case ANY_VALUE:\n"
-    "    mp = new Module_Param_Any();\n"
+    "    m_p = new Module_Param_Any();\n"
     "    break;\n"
     "  case ANY_OR_OMIT:\n"
-    "    mp = new Module_Param_AnyOrNone();\n"
+    "    m_p = new Module_Param_AnyOrNone();\n"
     "    break;\n"
     "  case SPECIFIC_VALUE: {\n"
     "    Module_Param* mp_field = NULL;\n"
@@ -2893,28 +2957,28 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "    default:\n"
     "      break;\n"
     "    }\n"
-    "    mp = new Module_Param_Assignment_List();\n"
-    "    mp->add_elem(mp_field);\n"
+    "    m_p = new Module_Param_Assignment_List();\n"
+    "    m_p->add_elem(mp_field);\n"
     "    break; }\n"
     "  case VALUE_LIST:\n"
     "  case COMPLEMENTED_LIST: {\n"
     "    if (template_selection == VALUE_LIST) {\n"
-    "      mp = new Module_Param_List_Template();\n"
+    "      m_p = new Module_Param_List_Template();\n"
     "    }\n"
     "    else {\n"
-    "      mp = new Module_Param_ComplementList_Template();\n"
+    "      m_p = new Module_Param_ComplementList_Template();\n"
     "    }\n"
-    "    for (size_t i = 0; i < value_list.n_values; ++i) {\n"
-    "      mp->add_elem(value_list.list_value[i].get_param(param_name));\n"
+    "    for (size_t i_i = 0; i_i < value_list.n_values; ++i_i) {\n"
+    "      m_p->add_elem(value_list.list_value[i_i].get_param(param_name));\n"
     "    }\n"
     "    break; }\n"
     "  default:\n"
     "    break;\n"
     "  }\n"
     "  if (is_ifpresent) {\n"
-    "    mp->set_ifpresent();\n"
+    "    m_p->set_ifpresent();\n"
     "  }\n"
-    "  return mp;\n"
+    "  return m_p;\n"
     "}\n\n");
 
   /* check template restriction */

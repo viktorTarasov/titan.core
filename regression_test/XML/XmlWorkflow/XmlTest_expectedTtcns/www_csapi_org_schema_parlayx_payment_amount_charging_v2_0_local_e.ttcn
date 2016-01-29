@@ -42,8 +42,8 @@ import from www_csapi_org_schema_parlayx_common_v2_0_e all;
 
 type ChargeAmount_1 ChargeAmount
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -55,14 +55,14 @@ type record ChargeAmount_1
 	XSD.String referenceCode
 }
 with {
-variant "name as 'chargeAmount'";
+  variant "name as 'chargeAmount'";
 };
 
 
 type ChargeAmountResponse_1 ChargeAmountResponse
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -71,14 +71,14 @@ type record ChargeAmountResponse_1
 
 }
 with {
-variant "name as 'chargeAmountResponse'";
+  variant "name as 'chargeAmountResponse'";
 };
 
 
 type RefundAmount_1 RefundAmount
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -90,14 +90,14 @@ type record RefundAmount_1
 	XSD.String referenceCode
 }
 with {
-variant "name as 'refundAmount'";
+  variant "name as 'refundAmount'";
 };
 
 
 type RefundAmountResponse_1 RefundAmountResponse
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -106,14 +106,14 @@ type record RefundAmountResponse_1
 
 }
 with {
-variant "name as 'refundAmountResponse'";
+  variant "name as 'refundAmountResponse'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.csapi.org/schema/parlayx/payment/amount_charging/v2_0/local' prefix 'parlayx_payment_amount_charging_local_xsd'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.csapi.org/schema/parlayx/payment/amount_charging/v2_0/local' prefix 'parlayx_payment_amount_charging_local_xsd'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

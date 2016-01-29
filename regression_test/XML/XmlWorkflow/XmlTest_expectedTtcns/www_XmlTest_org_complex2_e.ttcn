@@ -21,7 +21,7 @@
 //	Generated from file(s):
 //	- XmlTest_complex2.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.XmlTest.org/complex2" */
+//			/* targetnamespace = "www.XmlTest.org/complex2/e" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -48,7 +48,7 @@ import from XSD all;
 
 type InternationalPrice2 IP
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -58,9 +58,9 @@ type record InternationalPrice2
 	XSD.Decimal value_ optional
 }
 with {
-variant (currency) "attribute";
-variant (value_) "name as 'value'";
-variant (value_) "attribute";
+  variant (currency) "attribute";
+  variant (value_) "name as 'value'";
+  variant (value_) "attribute";
 };
 
 
@@ -70,11 +70,11 @@ type record InternationalPrice3
 	XSD.Decimal value_ optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (currency) "attribute";
-variant (value_) "name as 'value'";
-variant (value_) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (currency) "attribute";
+  variant (value_) "name as 'value'";
+  variant (value_) "attribute";
 };
 
 
@@ -84,17 +84,17 @@ type record InternationalPrice4
 	XSD.Decimal value_ optional
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (currency) "attribute";
-variant (value_) "name as 'value'";
-variant (value_) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (currency) "attribute";
+  variant (value_) "name as 'value'";
+  variant (value_) "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex2' prefix 'ns42'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex2' prefix 'ns42'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -726,7 +726,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   autostring tpd_dir(get_dir_from_path(p_tpd_name));
   autostring abs_tpd_dir(get_absolute_dir(tpd_dir, NULL));
   if (NULL == (const char*)abs_tpd_dir) {
-    ERROR("absolut TPD directory could not be retreaved from %s", (const char*)tpd_dir);
+    ERROR("absolute TPD directory could not be retrieved from %s", (const char*)tpd_dir);
     return TPD_FAILED;
   }
   autostring tpd_filename(get_file_from_path(p_tpd_name));
@@ -1098,6 +1098,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
           ERROR("A FileResource %s must be unique!", (const char*)cpath);
         }
         else {
+          bool drop = false;
           const char* file_path = ruri;
           expstring_t rel_file_dir = get_dir_from_path(file_path);
           expstring_t file_name = get_file_from_path(file_path);
@@ -1128,9 +1129,17 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
                 }
               }
               fclose(fp);
-            }
+            }else {
+              drop = true;
+              ERROR("%s does not exist", abs_file_name);
+            }            
           }
-          files.add(cpath, ruri); // relativeURI to the TPD location
+          if(abs_dir_path != NULL && !drop){
+            files.add(cpath, ruri); // relativeURI to the TPD location
+          }else {
+            cpath.destroy();
+            result = TPD_FAILED;
+          }
           { // set the *preprocess value if .ttcnpp file was found
             const size_t ttcnpp_extension_len = 7; // ".ttcnpp"
             const size_t ruri_len = strlen(ruri);
@@ -1169,7 +1178,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   xsdbool2boolean(xpathCtx, actcfg, "includeSourceInfo", p_isflag);
   xsdbool2boolean(xpathCtx, actcfg, "addSourceLineInfo", p_asflag);
   xsdbool2boolean(xpathCtx, actcfg, "suppressWarnings", p_swflag);
-  xsdbool2boolean(xpathCtx, actcfg, "outParamBoundness", p_Yflag);
+  xsdbool2boolean(xpathCtx, actcfg, "outParamBoundness", p_Yflag); //not documented, obsolete
+  xsdbool2boolean(xpathCtx, actcfg, "forceOldFuncOutParHandling", p_Yflag);
   xsdbool2boolean(xpathCtx, actcfg, "omitInValueList", p_Mflag);
 
   projDesc = projGenHelper.getTargetOfProject(*p_project_name);
@@ -2079,6 +2089,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
         }
         else if (success == TPD_FAILED) {
           ERROR("Failed to process %s", (const char*)abs_projectLocationURI);
+          result = TPD_FAILED;
         }
         // else TPD_SKIPPED, keep quiet
 

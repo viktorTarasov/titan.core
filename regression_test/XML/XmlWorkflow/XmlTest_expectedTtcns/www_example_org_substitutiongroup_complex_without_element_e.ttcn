@@ -41,14 +41,14 @@ import from XSD all;
 
 type XSD.String Head_group
 with {
-variant "element";
+  variant "element";
 };
 
 
 type XSD.String Member
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -58,16 +58,16 @@ type enumerated StringEnum
 	something
 }
 with {
-variant "text 'else_' as 'else'";
-variant "name as uncapitalized";
-variant "element";
+  variant "text 'else_' as 'else'";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type E26seq Member2
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
@@ -79,10 +79,10 @@ type record E26seq
 	XSD.Integer ageElemExt
 }
 with {
-variant "name as uncapitalized";
-variant (headAttrib) "attribute";
-variant (unitOfAge) "attribute";
-variant (something) "name as capitalized";
+  variant "name as uncapitalized";
+  variant (headAttrib) "attribute";
+  variant (unitOfAge) "attribute";
+  variant (something) "name as capitalized";
 };
 
 
@@ -91,10 +91,10 @@ type record Ize
 	record of Head_group_1 head_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (head_list) "untagged";
-variant (head_list[-]) "name as 'head'";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (head_list) "untagged";
+  variant (head_list[-]) "name as 'head'";
 };
 
 
@@ -109,20 +109,20 @@ type union Head_group_1
 	StringEnum stringEnum
 }
 with {
-variant "untagged";
-variant (head) "form as qualified";
-variant (head) "abstract";
-variant (head.headAttrib) "attribute";
-variant (head.something) "name as capitalized";
-variant (member) "block";
-variant (member2) "block";
-variant (stringEnum) "block";
+  variant "untagged";
+  variant (head) "form as qualified";
+  variant (head) "abstract";
+  variant (head.headAttrib) "attribute";
+  variant (head.something) "name as capitalized";
+  variant (member) "block";
+  variant (member2) "block";
+  variant (stringEnum) "block";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/substitutiongroup/complex/without/element' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/substitutiongroup/complex/without/element' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

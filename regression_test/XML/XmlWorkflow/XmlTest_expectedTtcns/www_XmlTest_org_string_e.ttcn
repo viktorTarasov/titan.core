@@ -49,7 +49,7 @@ import from XSD all;
 
 type XSD.Name NameA
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -58,14 +58,14 @@ type XSD.String Name;
 
 type Name_1 NameB
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.String Name_1
 with {
-variant "name as 'name'";
+  variant "name as 'name'";
 };
 
 
@@ -74,32 +74,32 @@ type XSD.String NameLength4 length(4);
 
 type Non_empty_string_1 Non_empty_string
 with {
-variant "name as 'Non-empty-string'";
-variant "element";
+  variant "name as 'Non-empty-string'";
+  variant "element";
 };
 
 
 type XSD.String Non_empty_string_1 length(3)
 with {
-variant "name as 'Non-empty-string'";
+  variant "name as 'Non-empty-string'";
 };
 
 
 type Non_empty_string Non_empty_stringChild length(0 .. infinity)
 with {
-variant "name as 'Non-empty-stringChild'";
+  variant "name as 'Non-empty-stringChild'";
 };
 
 
 type XSD.String Longer_string length(5)
 with {
-variant "name as 'Longer-string'";
+  variant "name as 'Longer-string'";
 };
 
 
 type XSD.String Longer_stringChild length(5)
 with {
-variant "name as 'Longer-stringChild'";
+  variant "name as 'Longer-stringChild'";
 };
 
 
@@ -114,7 +114,7 @@ type XSD.String StringMinMax length(5 .. 7);
 
 type XSD.String Better_us_zipcode (pattern "[0-9]#5(-[0-9]#4)#(0,1)")
 with {
-variant "name as 'better-us-zipcode'";
+  variant "name as 'better-us-zipcode'";
 };
 
 
@@ -144,9 +144,15 @@ type XSD.String HO47449b (pattern "still-inside=[\]$\w\d.\-_:\[]+");
 type XSD.String HO47449c (pattern "outside=[ ]$[\w\d.\-_:][ ]+");
 
 
+type XSD.String Artf673083 (pattern "(""[\w\d:][\w\d.\-_:]*"")")
+with {
+  variant "name as uncapitalized";
+};
+
+
 type XSD.String Mystring_1 length(4 .. infinity)
 with {
-variant "name as 'mystring'";
+  variant "name as 'mystring'";
 };
 
 
@@ -158,20 +164,20 @@ type XSD.String Mystring length(4 .. infinity);
 
 type Type_1 Type
 with {
-variant "name as uncapitalized";
-variant "element";
+  variant "name as uncapitalized";
+  variant "element";
 };
 
 
 type XSD.String Type_1
 with {
-variant "name as 'type'";
+  variant "name as 'type'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.XmlTest.org/string' prefix 'strng'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'http://www.XmlTest.org/string' prefix 'strng'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -45,25 +45,25 @@ import from www_ericsson_com_is_isco_IsTypes_R4L06_R4AF11 all;
 
 type XSD.UnsignedInt LinkGuardTimerType_140 (0 .. 86400)
 with {
-variant "name as 'linkGuardTimerType-140'";
+  variant "name as 'linkGuardTimerType-140'";
 };
 
 
 type XSD.Token NameType_71 length(1 .. 100)
 with {
-variant "name as 'nameType-71'";
+  variant "name as 'nameType-71'";
 };
 
 
 type XSD.Token GrGlobalRegistrationCapabilityType_82 (pattern "no|handoff|all")
 with {
-variant "name as 'grGlobalRegistrationCapabilityType-82'";
+  variant "name as 'grGlobalRegistrationCapabilityType-82'";
 };
 
 
 type XSD.UnsignedShort T2Type_42 (1 .. 10)
 with {
-variant "name as 't2Type-42'";
+  variant "name as 't2Type-42'";
 };
 
 
@@ -73,188 +73,188 @@ type XSD.UnsignedInt MlgCounter32 (0 .. 4294967295);
 
 type XSD.Token NameType_73 length(1 .. 100)
 with {
-variant "name as 'nameType-73'";
+  variant "name as 'nameType-73'";
 };
 
 
 type XSD.Token CapCallFinishedType_134 (pattern "no|yes")
 with {
-variant "name as 'capCallFinishedType-134'";
+  variant "name as 'capCallFinishedType-134'";
 };
 
 
 type XSD.UnsignedShort IncrementIType_34 (0 .. 5000)
 with {
-variant "name as 'incrementIType-34'";
+  variant "name as 'incrementIType-34'";
 };
 
 
 type XSD.UnsignedShort RtoMinType_4 (40 .. 5000)
 with {
-variant "name as 'rtoMinType-4'";
+  variant "name as 'rtoMinType-4'";
 };
 
 
 type XSD.UnsignedShort CrlAlarmWindowCountType_95 (1 .. 65535)
 with {
-variant "name as 'crlAlarmWindowCountType-95'";
+  variant "name as 'crlAlarmWindowCountType-95'";
 };
 
 
 type XSD.UnsignedShort Pm3Type_55 (0 .. 100)
 with {
-variant "name as 'pm3Type-55'";
+  variant "name as 'pm3Type-55'";
 };
 
 
 type XSD.UnsignedShort IdType_66 (1 .. 28)
 with {
-variant "name as 'idType-66'";
+  variant "name as 'idType-66'";
 };
 
 
 type XSD.UnsignedShort Pm12Type_46 (0 .. 100)
 with {
-variant "name as 'pm12Type-46'";
+  variant "name as 'pm12Type-46'";
 };
 
 
 type XSD.UnsignedInt PollCountType_76 (0 .. 4294967295)
 with {
-variant "name as 'pollCountType-76'";
+  variant "name as 'pollCountType-76'";
 };
 
 
 type XSD.UnsignedShort ConnPointRoutingInfoType_117 (0 .. 65535)
 with {
-variant "name as 'connPointRoutingInfoType-117'";
+  variant "name as 'connPointRoutingInfoType-117'";
 };
 
 
 type XSD.Token NameType_78 length(1 .. 100)
 with {
-variant "name as 'nameType-78'";
+  variant "name as 'nameType-78'";
 };
 
 
 type XSD.UnsignedShort IdType_68 (1 .. 28)
 with {
-variant "name as 'idType-68'";
+  variant "name as 'idType-68'";
 };
 
 
 type XSD.Token DtmfSendingPhysType_129 (pattern "no|yes|audit")
 with {
-variant "name as 'dtmfSendingPhysType-129'";
+  variant "name as 'dtmfSendingPhysType-129'";
 };
 
 
 type XSD.Token H248TonePackageType_70 (pattern "eriEcgDt|eriEcgRt|eriEcgBt|eriEcgCt|eriEcgSit|eriEcgWt|eriEcgPt|eriEcgCw|eriEcgCr|eriEcgIt|eriEcgTq|eriEcgPg|eriEcgBo|eriEcgSd|eriEcgTl|eriEcgLl|eriEcgSdt|eriEcgAt|eriEcgRf|eriEcgStt|eriEcgOh|eriEcgSr|eriEcgDd|eriEcgMw|eriEcgRc|eriEcgNu|eriEcgTStt|bcgBdt|bcgBrt|bcgBbt|bcgBct|bcgBsit|bcgBwt|bcgBpt|bcgBcw|bcgBcr|cgDt|cgRt|cgBt|cgCt|cgSit|cgWt|cgPrt|cgCw|cgCr|intInt|intIntque|xcgCmft|intBv|srvtnRdt|conftnTimelim|xcgRoh|xcgSpec|srvtnConf|xcgNack|biztnErwt|srvtnHt|xsrvtnSrdt|biztnDdt|srvtnMwt|xcgVac|briztnErwt|bcgBpy|xsrvtnXferdt|xsrvtnCft|xsrvtnCcst")
 with {
-variant "name as 'h248TonePackageType-70'";
+  variant "name as 'h248TonePackageType-70'";
 };
 
 
 type XSD.UnsignedShort MaxAdjustmentType_40 (0 .. 100)
 with {
-variant "name as 'maxAdjustmentType-40'";
+  variant "name as 'maxAdjustmentType-40'";
 };
 
 
 type XSD.UnsignedShort T1Type_41 (1 .. 10)
 with {
-variant "name as 't1Type-41'";
+  variant "name as 't1Type-41'";
 };
 
 
 type XSD.Token DtmfSendingEphType_132 (pattern "no|yes")
 with {
-variant "name as 'dtmfSendingEphType-132'";
+  variant "name as 'dtmfSendingEphType-132'";
 };
 
 
 type XSD.Token EncodingType_103 (pattern "prettytext|compacttext")
 with {
-variant "name as 'encodingType-103'";
+  variant "name as 'encodingType-103'";
 };
 
 
 type XSD.UnsignedShort FactorFType_33 (1 .. 5)
 with {
-variant "name as 'factorFType-33'";
+  variant "name as 'factorFType-33'";
 };
 
 
 type XSD.UnsignedShort MgExecTimeType_23 (1 .. 10000)
 with {
-variant "name as 'mgExecTimeType-23'";
+  variant "name as 'mgExecTimeType-23'";
 };
 
 
 type XSD.UnsignedShort SubnetMaskLengthType_114 (0 .. 32)
 with {
-variant "name as 'subnetMaskLengthType-114'";
+  variant "name as 'subnetMaskLengthType-114'";
 };
 
 
 type XSD.UnsignedShort Pm4Type_54 (0 .. 100)
 with {
-variant "name as 'pm4Type-54'";
+  variant "name as 'pm4Type-54'";
 };
 
 
 type XSD.UnsignedShort MgcExecTimeType_24 (1 .. 10000)
 with {
-variant "name as 'mgcExecTimeType-24'";
+  variant "name as 'mgcExecTimeType-24'";
 };
 
 
 type XSD.Token GrRedundancySchemeType_86 (pattern "none|matedtes|aasgr")
 with {
-variant "name as 'grRedundancySchemeType-86'";
+  variant "name as 'grRedundancySchemeType-86'";
 };
 
 
 type XSD.Token EncodingType_107 (pattern "prettytext|compacttext")
 with {
-variant "name as 'encodingType-107'";
+  variant "name as 'encodingType-107'";
 };
 
 
 type XSD.UnsignedShort Pm11Type_47 (0 .. 100)
 with {
-variant "name as 'pm11Type-47'";
+  variant "name as 'pm11Type-47'";
 };
 
 
 type XSD.Token MapType_17 length(0 .. 1000)
 with {
-variant "name as 'mapType-17'";
+  variant "name as 'mapType-17'";
 };
 
 
 type XSD.Token TypeType_88 (pattern "mgic|agw|tgw|mgw|bgw|mgic_ip_ip|any")
 with {
-variant "name as 'typeType-88'";
+  variant "name as 'typeType-88'";
 };
 
 
 type record of ObjectRef Restricted_confd_objectRef_148
 with {
-variant "name as 'Restricted-confd_objectRef-148'";
-variant "list";
+  variant "name as 'Restricted-confd_objectRef-148'";
+  variant "list";
 };
 
 
 type XSD.Token H248MidFormatType_89 (pattern "deviceName|ip4Address|ip4AddressAndPort|domainName|domainNameAndPort")
 with {
-variant "name as 'h248MidFormatType-89'";
+  variant "name as 'h248MidFormatType-89'";
 };
 
 
 type XSD.UnsignedShort NrCapacityWeightType_102 (1 .. 65535)
 with {
-variant "name as 'nrCapacityWeightType-102'";
+  variant "name as 'nrCapacityWeightType-102'";
 };
 
 
@@ -262,31 +262,31 @@ variant "name as 'nrCapacityWeightType-102'";
       A fluctuating positive integer (0 .. 4294967295). */
 type XSD.UnsignedInt Gauge32_1 (0 .. 4294967295)
 with {
-variant "name as 'Gauge32'";
+  variant "name as 'Gauge32'";
 };
 
 
 type XSD.UnsignedShort Pm5Type_53 (0 .. 100)
 with {
-variant "name as 'pm5Type-53'";
+  variant "name as 'pm5Type-53'";
 };
 
 
 type XSD.Token DtmfReceivingEphType_133 (pattern "no|yes")
 with {
-variant "name as 'dtmfReceivingEphType-133'";
+  variant "name as 'dtmfReceivingEphType-133'";
 };
 
 
 type XSD.UnsignedShort GrAXEPeriodicDisturbanceType_84 (1 .. 3600)
 with {
-variant "name as 'grAXEPeriodicDisturbanceType-84'";
+  variant "name as 'grAXEPeriodicDisturbanceType-84'";
 };
 
 
 type XSD.Token InterfaceOrientationType_115 (pattern "internal|external")
 with {
-variant "name as 'interfaceOrientationType-115'";
+  variant "name as 'interfaceOrientationType-115'";
 };
 
 
@@ -296,109 +296,109 @@ type XSD.Token MlgTruthValue (pattern "true|false");
 
 type XSD.UnsignedShort Pm10Type_48 (0 .. 100)
 with {
-variant "name as 'pm10Type-48'";
+  variant "name as 'pm10Type-48'";
 };
 
 
 type XSD.UnsignedShort Pm6Type_52 (0 .. 100)
 with {
-variant "name as 'pm6Type-52'";
+  variant "name as 'pm6Type-52'";
 };
 
 
 type XSD.UnsignedShort ValCookieLifeType_12 (120 .. 60000)
 with {
-variant "name as 'valCookieLifeType-12'";
+  variant "name as 'valCookieLifeType-12'";
 };
 
 
 type XSD.Token TypeType_64 (pattern "G?711 a-law|G?711 u-law|G?723|G?726|G?729|Clear channel|Silence suppression|DTMF relay")
 with {
-variant "name as 'typeType-64'";
+  variant "name as 'typeType-64'";
 };
 
 
 type XSD.Token PollMessageType_75 (pattern "modify-root|empty-audit-root")
 with {
-variant "name as 'pollMessageType-75'";
+  variant "name as 'pollMessageType-75'";
 };
 
 
 type XSD.Token InterfaceOpStateType_116 (pattern "on|off|tempunavail")
 with {
-variant "name as 'interfaceOpStateType-116'";
+  variant "name as 'interfaceOpStateType-116'";
 };
 
 
 type XSD.Token NameType_69 (pattern "dial|ringing|busy|congestion|special-information|warning|payphone-recognition|call-waiting|caller-waiting|intrusion|trunk-queue|progress|operator-busy|second-dial|time-limit|line-lockout|special-dial|acceptance|refusal|subscriber-trunk-dialing|on-hold|special-recall-dial|distinctive-dial|message-waiting|ring-control|number-unobtainable|bothway-std")
 with {
-variant "name as 'nameType-69'";
+  variant "name as 'nameType-69'";
 };
 
 
 type XSD.UnsignedShort PotsTermWeightType_61 (0 .. 100)
 with {
-variant "name as 'potsTermWeightType-61'";
+  variant "name as 'potsTermWeightType-61'";
 };
 
 
 type XSD.UnsignedShort Pm7Type_51 (0 .. 100)
 with {
-variant "name as 'pm7Type-51'";
+  variant "name as 'pm7Type-51'";
 };
 
 
 type XSD.UnsignedShort RtoInitialType_3 (80 .. 49000)
 with {
-variant "name as 'rtoInitialType-3'";
+  variant "name as 'rtoInitialType-3'";
 };
 
 
 type XSD.UnsignedShort GrAXERestartNumType_85 (1 .. 5)
 with {
-variant "name as 'grAXERestartNumType-85'";
+  variant "name as 'grAXERestartNumType-85'";
 };
 
 
 type XSD.UnsignedShort AMeasIFixedType_126 (0 .. 100)
 with {
-variant "name as 'aMeasIFixedType-126'";
+  variant "name as 'aMeasIFixedType-126'";
 };
 
 
 type XSD.Token MassCallReleaseRegulationStateType_96 (pattern "on|off")
 with {
-variant "name as 'massCallReleaseRegulationStateType-96'";
+  variant "name as 'massCallReleaseRegulationStateType-96'";
 };
 
 
 type XSD.Token DtmfReceivingPhysType_130 (pattern "no|yes|audit")
 with {
-variant "name as 'dtmfReceivingPhysType-130'";
+  variant "name as 'dtmfReceivingPhysType-130'";
 };
 
 
 type XSD.UnsignedShort Pm8Type_50 (0 .. 100)
 with {
-variant "name as 'pm8Type-50'";
+  variant "name as 'pm8Type-50'";
 };
 
 
 type XSD.Token ClearChannelType_122 (pattern "5|10|20|40")
 with {
-variant "name as 'clearChannelType-122'";
+  variant "name as 'clearChannelType-122'";
 };
 
 
 type XSD.UnsignedShort IsdnOrigWeightType_62 (0 .. 100)
 with {
-variant "name as 'isdnOrigWeightType-62'";
+  variant "name as 'isdnOrigWeightType-62'";
 };
 
 
 type XSD.UnsignedShort MaxAvgOccupancyType_124 (0 .. 100)
 with {
-variant "name as 'maxAvgOccupancyType-124'";
+  variant "name as 'maxAvgOccupancyType-124'";
 };
 
 
@@ -408,49 +408,49 @@ type XSD.UnsignedLong MlgUnsigned64 (0 .. 18446744073709551615);
 
 type XSD.UnsignedShort RoMeasIFixedType_125 (0 .. 100)
 with {
-variant "name as 'roMeasIFixedType-125'";
+  variant "name as 'roMeasIFixedType-125'";
 };
 
 
 type XSD.Token OpStateType_67 (pattern "up|down")
 with {
-variant "name as 'opStateType-67'";
+  variant "name as 'opStateType-67'";
 };
 
 
 type XSD.Token FskSendingPhysType_128 (pattern "no|yes|audit")
 with {
-variant "name as 'fskSendingPhysType-128'";
+  variant "name as 'fskSendingPhysType-128'";
 };
 
 
 type XSD.Token LongTimerType_20 (pattern "noChange|1|2|3|5|10|20|30|40|50|75|99")
 with {
-variant "name as 'longTimerType-20'";
+  variant "name as 'longTimerType-20'";
 };
 
 
 type XSD.Token StatRequestType_141 (pattern "on_demand|always")
 with {
-variant "name as 'statRequestType-141'";
+  variant "name as 'statRequestType-141'";
 };
 
 
 type XSD.UnsignedShort EphAuditLinesType_101 (1 .. 8)
 with {
-variant "name as 'ephAuditLinesType-101'";
+  variant "name as 'ephAuditLinesType-101'";
 };
 
 
 type XSD.Token TypeType_2 (pattern "normal|fast")
 with {
-variant "name as 'typeType-2'";
+  variant "name as 'typeType-2'";
 };
 
 
 type XSD.UnsignedShort GrAXEDeadIntervalType_83 (1 .. 3600)
 with {
-variant "name as 'grAXEDeadIntervalType-83'";
+  variant "name as 'grAXEDeadIntervalType-83'";
 };
 
 
@@ -460,43 +460,43 @@ type XSD.Token MlgOpState (pattern "enabled|disabled");
 
 type XSD.UnsignedShort LatencyType_77 (10 .. 5000)
 with {
-variant "name as 'latencyType-77'";
+  variant "name as 'latencyType-77'";
 };
 
 
 type XSD.UnsignedShort LongRequestTimerType_30 (1 .. 10)
 with {
-variant "name as 'longRequestTimerType-30'";
+  variant "name as 'longRequestTimerType-30'";
 };
 
 
 type XSD.UnsignedShort LocalPortType_104 (0 .. 65535)
 with {
-variant "name as 'localPortType-104'";
+  variant "name as 'localPortType-104'";
 };
 
 
 type XSD.UnsignedShort TypeNumType_65 (0 .. 127)
 with {
-variant "name as 'typeNumType-65'";
+  variant "name as 'typeNumType-65'";
 };
 
 
 type XSD.UnsignedShort RtoAlphaType_6 (1 .. 4)
 with {
-variant "name as 'rtoAlphaType-6'";
+  variant "name as 'rtoAlphaType-6'";
 };
 
 
 type XSD.Token GranularityType_147 length(1 .. 2)
 with {
-variant "name as 'granularityType-147'";
+  variant "name as 'granularityType-147'";
 };
 
 
 type XSD.Token ToneDirEphType_137 (pattern "egress|egress_ingress|no")
 with {
-variant "name as 'toneDirEphType-137'";
+  variant "name as 'toneDirEphType-137'";
 };
 
 
@@ -507,73 +507,73 @@ type XSD.Token MlgDisplayString length(0 .. 255);
 
 type XSD.UnsignedShort LocalPortType_108 (0 .. 65535)
 with {
-variant "name as 'localPortType-108'";
+  variant "name as 'localPortType-108'";
 };
 
 
 type XSD.UnsignedShort InitialBucketFillType_59 (0 .. 300)
 with {
-variant "name as 'initialBucketFillType-59'";
+  variant "name as 'initialBucketFillType-59'";
 };
 
 
 type XSD.Token PTimeType_120 (pattern "5|10|20|30|40|50|60")
 with {
-variant "name as 'pTimeType-120'";
+  variant "name as 'pTimeType-120'";
 };
 
 
 type XSD.Token DscpType_110 length(2 .. 4)
 with {
-variant "name as 'dscpType-110'";
+  variant "name as 'dscpType-110'";
 };
 
 
 type XSD.Token CallCountingStateType_90 (pattern "on|off")
 with {
-variant "name as 'callCountingStateType-90'";
+  variant "name as 'callCountingStateType-90'";
 };
 
 
 type XSD.UnsignedShort GrIndexType_80 (1 .. 1)
 with {
-variant "name as 'grIndexType-80'";
+  variant "name as 'grIndexType-80'";
 };
 
 
 type XSD.Token FskSendingEphType_131 (pattern "no|yes")
 with {
-variant "name as 'fskSendingEphType-131'";
+  variant "name as 'fskSendingEphType-131'";
 };
 
 
 type XSD.Token CallRateLimiterStateType_91 (pattern "on|off")
 with {
-variant "name as 'callRateLimiterStateType-91'";
+  variant "name as 'callRateLimiterStateType-91'";
 };
 
 
 type XSD.Token IdType_112 length(1 .. 51)
 with {
-variant "name as 'idType-112'";
+  variant "name as 'idType-112'";
 };
 
 
 type XSD.UnsignedShort CcAlarmThresholdType_92 (1 .. 65535)
 with {
-variant "name as 'ccAlarmThresholdType-92'";
+  variant "name as 'ccAlarmThresholdType-92'";
 };
 
 
 type XSD.Token BaseTypeType_72 (pattern "etsi-tgw|etsi-agw|eric-mgw|eric-mgw2|etsi-bgf")
 with {
-variant "name as 'baseTypeType-72'";
+  variant "name as 'baseTypeType-72'";
 };
 
 
 type XSD.UnsignedShort RtoMaxType_5 (80 .. 50000)
 with {
-variant "name as 'rtoMaxType-5'";
+  variant "name as 'rtoMaxType-5'";
 };
 
 
@@ -583,31 +583,31 @@ type XSD.UnsignedShort MlgUnsigned16 (0 .. 65535);
 
 type XSD.UnsignedShort AssociationMaxRetransType_8 (1 .. 20)
 with {
-variant "name as 'associationMaxRetransType-8'";
+  variant "name as 'associationMaxRetransType-8'";
 };
 
 
 type XSD.UnsignedShort RequestRetriesType_29 (0 .. 5)
 with {
-variant "name as 'requestRetriesType-29'";
+  variant "name as 'requestRetriesType-29'";
 };
 
 
 type XSD.Token TypeType_121 length(1 .. 100)
 with {
-variant "name as 'typeType-121'";
+  variant "name as 'typeType-121'";
 };
 
 
 type XSD.UnsignedShort IdType_123 (1 .. 28)
 with {
-variant "name as 'idType-123'";
+  variant "name as 'idType-123'";
 };
 
 
 type XSD.Token InterfaceSetType_113 length(0 .. 7)
 with {
-variant "name as 'interfaceSetType-113'";
+  variant "name as 'interfaceSetType-113'";
 };
 
 
@@ -616,44 +616,44 @@ type enumerated DummyEmptyType_1
 	x
 }
 with {
-variant "text 'x' as ''";
-variant "name as 'DummyEmptyType'";
+  variant "text 'x' as ''";
+  variant "name as 'DummyEmptyType'";
 };
 
 
 type XSD.Token NameType_127 length(1 .. 100)
 with {
-variant "name as 'nameType-127'";
+  variant "name as 'nameType-127'";
 };
 
 
 type XSD.UnsignedShort OrderType_119 (1 .. 255)
 with {
-variant "name as 'orderType-119'";
+  variant "name as 'orderType-119'";
 };
 
 
 type XSD.UnsignedShort Pm9Type_49 (0 .. 100)
 with {
-variant "name as 'pm9Type-49'";
+  variant "name as 'pm9Type-49'";
 };
 
 
 type XSD.Token GrResidencyStatusType_100 (pattern "locally-registered|registered-to-peer|pending|unknown")
 with {
-variant "name as 'grResidencyStatusType-100'";
+  variant "name as 'grResidencyStatusType-100'";
 };
 
 
 type XSD.UnsignedShort PotsOrigWeightType_60 (0 .. 100)
 with {
-variant "name as 'potsOrigWeightType-60'";
+  variant "name as 'potsOrigWeightType-60'";
 };
 
 
 type XSD.UnsignedShort GrMatePortType_81 (0 .. 65535)
 with {
-variant "name as 'grMatePortType-81'";
+  variant "name as 'grMatePortType-81'";
 };
 
 
@@ -663,169 +663,169 @@ type XSD.UnsignedInt MlgUnsigned32 (0 .. 4294967295);
 
 type XSD.Token StartTimerType_18 (pattern "noChange|0|1|2|3|5|10|20|30|40|50|75|99")
 with {
-variant "name as 'startTimerType-18'";
+  variant "name as 'startTimerType-18'";
 };
 
 
 type XSD.Token ShortTimerType_19 (pattern "noChange|1|2|3|5|10|20|30|40|50|75|99")
 with {
-variant "name as 'shortTimerType-19'";
+  variant "name as 'shortTimerType-19'";
 };
 
 
 type XSD.UnsignedShort InterfaceGuardTimerType_111 (1 .. 60)
 with {
-variant "name as 'interfaceGuardTimerType-111'";
+  variant "name as 'interfaceGuardTimerType-111'";
 };
 
 
 type XSD.Token KeyType_142 (pattern "nodeH24811Params")
 with {
-variant "name as 'keyType-142'";
+  variant "name as 'keyType-142'";
 };
 
 
 type XSD.Token NameType_143 length(1 .. 100)
 with {
-variant "name as 'nameType-143'";
+  variant "name as 'nameType-143'";
 };
 
 
 type XSD.UnsignedShort IsdnTermWeightType_63 (0 .. 100)
 with {
-variant "name as 'isdnTermWeightType-63'";
+  variant "name as 'isdnTermWeightType-63'";
 };
 
 
 type XSD.Token SubnetSegmentType_145 (pattern "h248_subnet_segment_1|h248_subnet_segment_2")
 with {
-variant "name as 'subnetSegmentType-145'";
+  variant "name as 'subnetSegmentType-145'";
 };
 
 
 type XSD.UnsignedShort KeyType_146 (1 .. 1)
 with {
-variant "name as 'keyType-146'";
+  variant "name as 'keyType-146'";
 };
 
 
 type XSD.Token ToneDirPhysType_136 (pattern "egress|egress_ingress|no")
 with {
-variant "name as 'toneDirPhysType-136'";
+  variant "name as 'toneDirPhysType-136'";
 };
 
 
 type XSD.UnsignedShort MgcProvRespTimeType_26 (1 .. 10000)
 with {
-variant "name as 'mgcProvRespTimeType-26'";
+  variant "name as 'mgcProvRespTimeType-26'";
 };
 
 
 type XSD.Token GrAASStatusType_87 (pattern "idle|open|closed")
 with {
-variant "name as 'grAASStatusType-87'";
+  variant "name as 'grAASStatusType-87'";
 };
 
 
 type XSD.Token CodecIdType_118 (pattern "G?711|G?723?1-H|G?723?1-L|G?723?1a-H|G?723?1a-L|G?726-32|G?729AB|G?729A")
 with {
-variant "name as 'codecIdType-118'";
+  variant "name as 'codecIdType-118'";
 };
 
 
 type XSD.Token GateManagementType_139 (pattern "no|yes|audit")
 with {
-variant "name as 'gateManagementType-139'";
+  variant "name as 'gateManagementType-139'";
 };
 
 
 type XSD.UnsignedShort WindowSizeType_79 (1 .. 1000)
 with {
-variant "name as 'windowSizeType-79'";
+  variant "name as 'windowSizeType-79'";
 };
 
 
 type Restricted_confd_objectRef_148 BladesType_1 length(2)
 with {
-variant "name as 'bladesType-1'";
+  variant "name as 'bladesType-1'";
 };
 
 
 type XSD.UnsignedShort CcAlarmWindowCountType_93 (1 .. 65535)
 with {
-variant "name as 'ccAlarmWindowCountType-93'";
+  variant "name as 'ccAlarmWindowCountType-93'";
 };
 
 
 type XSD.Token CapLineInfoType_135 (pattern "no|yes")
 with {
-variant "name as 'capLineInfoType-135'";
+  variant "name as 'capLineInfoType-135'";
 };
 
 
 type XSD.Token NameType_35 length(1 .. 100)
 with {
-variant "name as 'nameType-35'";
+  variant "name as 'nameType-35'";
 };
 
 
 type XSD.Token NameType_36 length(1 .. 100)
 with {
-variant "name as 'nameType-36'";
+  variant "name as 'nameType-36'";
 };
 
 
 type XSD.UnsignedInt HangtermTimerType_97 (0 .. 2147483647)
 with {
-variant "name as 'hangtermTimerType-97'";
+  variant "name as 'hangtermTimerType-97'";
 };
 
 
 type XSD.Token NameType_37 length(1 .. 100)
 with {
-variant "name as 'nameType-37'";
+  variant "name as 'nameType-37'";
 };
 
 
 type XSD.Token GrAllocationType_98 (pattern "primary|redundant")
 with {
-variant "name as 'grAllocationType-98'";
+  variant "name as 'grAllocationType-98'";
 };
 
 
 type XSD.Token NameType_39 length(1 .. 100)
 with {
-variant "name as 'nameType-39'";
+  variant "name as 'nameType-39'";
 };
 
 
 type XSD.UnsignedShort LongRequestRetriesType_31 (0 .. 5)
 with {
-variant "name as 'longRequestRetriesType-31'";
+  variant "name as 'longRequestRetriesType-31'";
 };
 
 
 type XSD.Token DurationTimerType_21 (pattern "noChange|1|2|3|5|10|20|30|40|50|75|99")
 with {
-variant "name as 'durationTimerType-21'";
+  variant "name as 'durationTimerType-21'";
 };
 
 
 type XSD.UnsignedShort Pm15Type_43 (0 .. 100)
 with {
-variant "name as 'pm15Type-43'";
+  variant "name as 'pm15Type-43'";
 };
 
 
 type XSD.UnsignedShort MaskLengthType_144 (1 .. 32)
 with {
-variant "name as 'maskLengthType-144'";
+  variant "name as 'maskLengthType-144'";
 };
 
 
 type XSD.UnsignedShort SctpHeartBeatIntervalType_105 (0 .. 20)
 with {
-variant "name as 'sctpHeartBeatIntervalType-105'";
+  variant "name as 'sctpHeartBeatIntervalType-105'";
 };
 
 
@@ -835,151 +835,151 @@ type XSD.Token MlgAdmState (pattern "unlocked|shutting down|locked");
 
 type XSD.UnsignedShort RtoBetaType_7 (1 .. 4)
 with {
-variant "name as 'rtoBetaType-7'";
+  variant "name as 'rtoBetaType-7'";
 };
 
 
 type XSD.UnsignedShort Pm0Type_58 (0 .. 100)
 with {
-variant "name as 'pm0Type-58'";
+  variant "name as 'pm0Type-58'";
 };
 
 
 type XSD.UnsignedShort T95TimerType_38 (10 .. 1000)
 with {
-variant "name as 't95TimerType-38'";
+  variant "name as 't95TimerType-38'";
 };
 
 
 type XSD.UnsignedShort MtuType_11 (256 .. 9180)
 with {
-variant "name as 'mtuType-11'";
+  variant "name as 'mtuType-11'";
 };
 
 
 type XSD.UnsignedShort H248LongTimerType_32 (15000 .. 45000)
 with {
-variant "name as 'h248LongTimerType-32'";
+  variant "name as 'h248LongTimerType-32'";
 };
 
 
 type XSD.UnsignedShort PollTimerType_74 (10000 .. 60000)
 with {
-variant "name as 'pollTimerType-74'";
+  variant "name as 'pollTimerType-74'";
 };
 
 
 type XSD.UnsignedShort Pm14Type_44 (0 .. 100)
 with {
-variant "name as 'pm14Type-44'";
+  variant "name as 'pm14Type-44'";
 };
 
 
 type XSD.UnsignedShort GlobalNodeUdpPortType_14 (0 .. 65535)
 with {
-variant "name as 'globalNodeUdpPortType-14'";
+  variant "name as 'globalNodeUdpPortType-14'";
 };
 
 
 type XSD.UnsignedShort CodeType_15 (0 .. 65535)
 with {
-variant "name as 'codeType-15'";
+  variant "name as 'codeType-15'";
 };
 
 
 type XSD.Token NameType_16 length(1 .. 100)
 with {
-variant "name as 'nameType-16'";
+  variant "name as 'nameType-16'";
 };
 
 
 type XSD.UnsignedShort Pm1Type_57 (0 .. 100)
 with {
-variant "name as 'pm1Type-57'";
+  variant "name as 'pm1Type-57'";
 };
 
 
 type XSD.UnsignedShort MgOrigPendLimitType_27 (1 .. 10)
 with {
-variant "name as 'mgOrigPendLimitType-27'";
+  variant "name as 'mgOrigPendLimitType-27'";
 };
 
 
 type XSD.Token DiffServType_138 (pattern "no|yes|audit")
 with {
-variant "name as 'diffServType-138'";
+  variant "name as 'diffServType-138'";
 };
 
 
 type XSD.UnsignedShort MgcOrigPendLimitType_28 (1 .. 10)
 with {
-variant "name as 'mgcOrigPendLimitType-28'";
+  variant "name as 'mgcOrigPendLimitType-28'";
 };
 
 
 type XSD.UnsignedShort MaxShutdownRetransType_10 (1 .. 16)
 with {
-variant "name as 'maxShutdownRetransType-10'";
+  variant "name as 'maxShutdownRetransType-10'";
 };
 
 
 type XSD.Token NameType_22 length(1 .. 100)
 with {
-variant "name as 'nameType-22'";
+  variant "name as 'nameType-22'";
 };
 
 
 type XSD.UnsignedShort GlobalTrafficThroughputType_13 (0 .. 100)
 with {
-variant "name as 'globalTrafficThroughputType-13'";
+  variant "name as 'globalTrafficThroughputType-13'";
 };
 
 
 type XSD.UnsignedShort CrlAlarmThresholdType_94 (1 .. 65535)
 with {
-variant "name as 'crlAlarmThresholdType-94'";
+  variant "name as 'crlAlarmThresholdType-94'";
 };
 
 
 type XSD.UnsignedShort Pm13Type_45 (0 .. 100)
 with {
-variant "name as 'pm13Type-45'";
+  variant "name as 'pm13Type-45'";
 };
 
 
 type XSD.UnsignedShort MgProvRespTimeType_25 (1 .. 10000)
 with {
-variant "name as 'mgProvRespTimeType-25'";
+  variant "name as 'mgProvRespTimeType-25'";
 };
 
 
 type XSD.Token SubnetSegmentType_106 (pattern "iser1|iser2")
 with {
-variant "name as 'subnetSegmentType-106'";
+  variant "name as 'subnetSegmentType-106'";
 };
 
 
 type XSD.UnsignedShort Pm2Type_56 (0 .. 100)
 with {
-variant "name as 'pm2Type-56'";
+  variant "name as 'pm2Type-56'";
 };
 
 
 type XSD.Token NameType_109 length(1 .. 100)
 with {
-variant "name as 'nameType-109'";
+  variant "name as 'nameType-109'";
 };
 
 
 type XSD.Token GrRegistrationCapabilityType_99 (pattern "no|all")
 with {
-variant "name as 'grRegistrationCapabilityType-99'";
+  variant "name as 'grRegistrationCapabilityType-99'";
 };
 
 
 type XSD.UnsignedShort MaxInitRetransType_9 (1 .. 16)
 with {
-variant "name as 'maxInitRetransType-9'";
+  variant "name as 'maxInitRetransType-9'";
 };
 
 
@@ -3169,187 +3169,187 @@ type record Tgc
 	} tispReport optional
 }
 with {
-variant "element";
-variant (blade_list) "untagged";
-variant (blade_list[-]) "name as 'Blade'";
-variant (blade_list[-].cp) "name as capitalized";
-variant (system_) "name as 'System'";
-variant (system_.bladePair_list) "untagged";
-variant (system_.bladePair_list[-]) "name as 'BladePair'";
-variant (system_.sctpParameters) "name as capitalized";
-variant (system_.sctpParameters.rtoInitial) "defaultForEmpty as '1000'";
-variant (system_.sctpParameters.rtoMin) "defaultForEmpty as '500'";
-variant (system_.sctpParameters.rtoMax) "defaultForEmpty as '10000'";
-variant (system_.sctpParameters.rtoAlpha) "defaultForEmpty as '3'";
-variant (system_.sctpParameters.rtoBeta) "defaultForEmpty as '2'";
-variant (system_.sctpParameters.associationMaxRetrans) "defaultForEmpty as '10'";
-variant (system_.sctpParameters.maxInitRetrans) "defaultForEmpty as '8'";
-variant (system_.sctpParameters.maxShutdownRetrans) "defaultForEmpty as '5'";
-variant (system_.sctpParameters.mtu) "defaultForEmpty as '1428'";
-variant (system_.sctpParameters.valCookieLife) "defaultForEmpty as '400'";
-variant (network) "name as capitalized";
-variant (network.h248Route_list) "untagged";
-variant (network.h248Route_list[-]) "name as 'H248Route'";
-variant (network.h248Route_list[-].maskLength) "defaultForEmpty as '32'";
-variant (tgcApp) "name as capitalized";
-variant (tgcApp.globalTrafficThroughput) "defaultForEmpty as '100'";
-variant (tgcApp.applyParamSetChanges) "defaultForEmpty as 'false'";
-variant (tgcApp.autoApplyParamSetChanges) "defaultForEmpty as 'false'";
-variant (tgcApp.announcementSet_list) "untagged";
-variant (tgcApp.announcementSet_list[-]) "name as 'AnnouncementSet'";
-variant (tgcApp.announcementSet_list[-].announcement_list) "untagged";
-variant (tgcApp.announcementSet_list[-].announcement_list[-]) "name as 'Announcement'";
-variant (tgcApp.bgwInterfaceParameterSet_list) "untagged";
-variant (tgcApp.bgwInterfaceParameterSet_list[-]) "name as 'BgwInterfaceParameterSet'";
-variant (tgcApp.bgwInterfaceParameterSet_list[-].sourceAddressFiltering) "defaultForEmpty as 'true'";
-variant (tgcApp.bgwInterfaceParameterSet_list[-].sourcePortFiltering) "defaultForEmpty as 'true'";
-variant (tgcApp.bgwInterfaceParameterSet_list[-].rtpSpecificBehaviour) "defaultForEmpty as 'true'";
-variant (tgcApp.bgwInterfaceParameterSet_list[-].policing) "defaultForEmpty as 'false'";
-variant (tgcApp.bgwInterfaceParameterSet_list[-].sustDataRate) "defaultForEmpty as '0'";
-variant (tgcApp.bgwInterfaceParameterSet_list[-].dscp) "defaultForEmpty as '00'";
-variant (tgcApp.bgwInterfaceParameterSet_list[-].linkLayerOverhead) "defaultForEmpty as '42'";
-variant (tgcApp.bgwInterfaceParameterSet_list[-].interfaceGuardTimer) "defaultForEmpty as '30'";
-variant (tgcApp.defaultPointAssociation) "name as capitalized";
-variant (tgcApp.digitMap_list) "untagged";
-variant (tgcApp.digitMap_list[-]) "name as 'DigitMap'";
-variant (tgcApp.digitMap_list[-].map_) "name as 'map'";
-variant (tgcApp.h248Parameters_list) "untagged";
-variant (tgcApp.h248Parameters_list[-]) "name as 'H248Parameters'";
-variant (tgcApp.h248Parameters_list[-].mgExecTime) "defaultForEmpty as '2000'";
-variant (tgcApp.h248Parameters_list[-].mgcExecTime) "defaultForEmpty as '2000'";
-variant (tgcApp.h248Parameters_list[-].mgProvRespTime) "defaultForEmpty as '3000'";
-variant (tgcApp.h248Parameters_list[-].mgcProvRespTime) "defaultForEmpty as '3000'";
-variant (tgcApp.h248Parameters_list[-].mgOrigPendLimit) "defaultForEmpty as '5'";
-variant (tgcApp.h248Parameters_list[-].mgcOrigPendLimit) "defaultForEmpty as '5'";
-variant (tgcApp.h248Parameters_list[-].requestRetries) "defaultForEmpty as '2'";
-variant (tgcApp.h248Parameters_list[-].longRequestTimer) "defaultForEmpty as '5'";
-variant (tgcApp.h248Parameters_list[-].longRequestRetries) "defaultForEmpty as '1'";
-variant (tgcApp.h248Parameters_list[-].h248LongTimer) "defaultForEmpty as '15000'";
-variant (tgcApp.h248Parameters_list[-].factorF) "defaultForEmpty as '1'";
-variant (tgcApp.h248Parameters_list[-].incrementI) "defaultForEmpty as '0'";
-variant (tgcApp.callCountingParameters_list) "untagged";
-variant (tgcApp.callCountingParameters_list[-]) "name as 'CallCountingParameters'";
-variant (tgcApp.callCountingParameters_list[-].emergencyCallReservation) "defaultForEmpty as '65536'";
-variant (tgcApp.callCountingParameters_list[-].totalTrafficLimit) "defaultForEmpty as '65536'";
-variant (tgcApp.overloadControlParameters_list) "untagged";
-variant (tgcApp.overloadControlParameters_list[-]) "name as 'OverloadControlParameters'";
-variant (tgcApp.overloadControlParameters_list[-].ericssonWindow) "name as capitalized";
-variant (tgcApp.overloadControlParameters_list[-].ericssonWindow.t95Timer) "defaultForEmpty as '500'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket) "name as capitalized";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.targetOverloadRate) "defaultForEmpty as '1.0'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.maxLeakAmount) "defaultForEmpty as '200.0'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.minLeakAmount) "defaultForEmpty as '10.0'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.adjConstant) "defaultForEmpty as '0.20'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.coefficient) "defaultForEmpty as '1.00'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.maxAdjustment) "defaultForEmpty as '5'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.t1) "defaultForEmpty as '2'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.t2) "defaultForEmpty as '2'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.initialLeakAmount) "defaultForEmpty as '100.0'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm15) "defaultForEmpty as '95'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm14) "defaultForEmpty as '90'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm13) "defaultForEmpty as '85'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm12) "defaultForEmpty as '80'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm11) "defaultForEmpty as '75'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm10) "defaultForEmpty as '70'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm9) "defaultForEmpty as '65'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm8) "defaultForEmpty as '60'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm7) "defaultForEmpty as '55'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm6) "defaultForEmpty as '50'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm5) "defaultForEmpty as '45'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm4) "defaultForEmpty as '40'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm3) "defaultForEmpty as '35'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm2) "defaultForEmpty as '30'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm1) "defaultForEmpty as '25'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm0) "defaultForEmpty as '20'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.maxPendingCycles) "defaultForEmpty as '40'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.initialBucketFill) "defaultForEmpty as '0'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.activateStreamFairness) "defaultForEmpty as 'false'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.controlPOTSOrig) "defaultForEmpty as 'false'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.controlISDNOrig) "defaultForEmpty as 'true'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.potsOrigWeight) "defaultForEmpty as '100'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.potsTermWeight) "defaultForEmpty as '100'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.isdnOrigWeight) "defaultForEmpty as '100'";
-variant (tgcApp.overloadControlParameters_list[-].leakyBucket.isdnTermWeight) "defaultForEmpty as '100'";
-variant (tgcApp.payloadMapping_list) "untagged";
-variant (tgcApp.payloadMapping_list[-]) "name as 'PayloadMapping'";
-variant (tgcApp.payloadMapping_list[-].type_) "name as 'type'";
-variant (tgcApp.pointAssociation_list) "untagged";
-variant (tgcApp.pointAssociation_list[-]) "name as 'PointAssociation'";
-variant (tgcApp.pointAssociation_list[-].callHandler) "name as capitalized";
-variant (tgcApp.pointAssociation_list[-].callHandler.override_) "name as 'override'";
-variant (tgcApp.toneSet_list) "untagged";
-variant (tgcApp.toneSet_list[-]) "name as 'ToneSet'";
-variant (tgcApp.toneSet_list[-].tone_list) "untagged";
-variant (tgcApp.toneSet_list[-].tone_list[-]) "name as 'Tone'";
-variant (tgcApp.udpInactivityParameters_list) "untagged";
-variant (tgcApp.udpInactivityParameters_list[-]) "name as 'UdpInactivityParameters'";
-variant (tgcApp.udpInactivityParameters_list[-].pollTimer) "defaultForEmpty as '20000'";
-variant (tgcApp.udpInactivityParameters_list[-].pollCount) "defaultForEmpty as '2'";
-variant (tgcApp.h248Profile_list) "untagged";
-variant (tgcApp.h248Profile_list[-]) "name as 'H248Profile'";
-variant (tgcApp.h248CapabilitySet_list) "untagged";
-variant (tgcApp.h248CapabilitySet_list[-]) "name as 'H248CapabilitySet'";
-variant (tgcApp.h248CapabilitySet_list[-].toneDirPhys) "defaultForEmpty as 'no'";
-variant (tgcApp.h248CapabilitySet_list[-].toneDirEph) "defaultForEmpty as 'no'";
-variant (tgcApp.h248CapabilitySet_list[-].linkGuardTimer) "defaultForEmpty as '0'";
-variant (tgcApp.massCallReleaseRegulationParameters_list) "untagged";
-variant (tgcApp.massCallReleaseRegulationParameters_list[-]) "name as 'MassCallReleaseRegulationParameters'";
-variant (tgcApp.massCallReleaseRegulationParameters_list[-].windowSize) "defaultForEmpty as '100'";
-variant (tgcApp.geographicalRedundancyParameters) "name as capitalized";
-variant (tgcApp.geographicalRedundancyParameters.grGlobalSwitchover) "defaultForEmpty as 'false'";
-variant (tgcApp.geographicalRedundancyParameters.grGlobalSwitchback) "defaultForEmpty as 'false'";
-variant (tgcApp.geographicalRedundancyParameters.grGlobalRegistrationCapability) "defaultForEmpty as 'no'";
-variant (tgcApp.geographicalRedundancyParameters.grMBP) "defaultForEmpty as 'false'";
-variant (tgcApp.geographicalRedundancyParameters.grSwitchoverAXEFailure) "defaultForEmpty as 'false'";
-variant (tgcApp.geographicalRedundancyParameters.grAXEDeadInterval) "defaultForEmpty as '180'";
-variant (tgcApp.geographicalRedundancyParameters.grAXEPeriodicDisturbance) "defaultForEmpty as '240'";
-variant (tgcApp.geographicalRedundancyParameters.grAXERestartNum) "defaultForEmpty as '1'";
-variant (tgcApp.geographicalRedundancyParameters.grRedundancyScheme) "defaultForEmpty as 'none'";
-variant (tgcApp.perRoutePCS_list) "untagged";
-variant (tgcApp.perRoutePCS_list[-]) "name as 'PerRoutePCS'";
-variant (tgcApp.perRoutePCS_list[-].type_) "name as 'type'";
-variant (tgcApp.perRoutePCS_list[-].codec_list) "untagged";
-variant (tgcApp.perRoutePCS_list[-].codec_list[-]) "name as 'Codec'";
-variant (tgcApp.digitMapSet_list) "untagged";
-variant (tgcApp.digitMapSet_list[-]) "name as 'DigitMapSet'";
-variant (tgcApp.digitMapSet_list[-].dMSDigitMap_list) "untagged";
-variant (tgcApp.digitMapSet_list[-].dMSDigitMap_list[-]) "name as 'DMSDigitMap'";
-variant (tgcApp.digitMapMapping_list) "untagged";
-variant (tgcApp.digitMapMapping_list[-]) "name as 'DigitMapMapping'";
-variant (tgcApp.loadDistribution_list) "untagged";
-variant (tgcApp.loadDistribution_list[-]) "name as 'LoadDistribution'";
-variant (tgcApp.nodeLevelH24811Params_list) "untagged";
-variant (tgcApp.nodeLevelH24811Params_list[-]) "name as 'NodeLevelH24811Params'";
-variant (tgcApp.nodeLevelH24811Params_list[-].activateH24811) "defaultForEmpty as 'false'";
-variant (tgcApp.nodeLevelH24811Params_list[-].sendH24811Statistics) "defaultForEmpty as 'false'";
-variant (tgcApp.gateway_list) "untagged";
-variant (tgcApp.gateway_list[-]) "name as 'Gateway'";
-variant (tgcApp.gateway_list[-].type_) "name as 'type'";
-variant (tgcApp.gateway_list[-].port_) "name as 'port'";
-variant (tgcApp.gateway_list[-].hangtermTimer) "defaultForEmpty as '240'";
-variant (tgcApp.gateway_list[-].grSwitchover) "defaultForEmpty as 'false'";
-variant (tgcApp.gateway_list[-].grAllocation) "defaultForEmpty as 'primary'";
-variant (tgcApp.gateway_list[-].grRegistrationCapability) "defaultForEmpty as 'all'";
-variant (tgcApp.gateway_list[-].grForceToPeer) "defaultForEmpty as 'false'";
-variant (tgcApp.gateway_list[-].orderRootAudit) "defaultForEmpty as 'false'";
-variant (tgcApp.gateway_list[-].h248SctpLink) "name as capitalized";
-variant (tgcApp.gateway_list[-].h248SctpLink.sctpHeartBeatInterval) "defaultForEmpty as '5'";
-variant (tgcApp.gateway_list[-].h248UdpLink) "name as capitalized";
-variant (tgcApp.gateway_list[-].bgwInterface_list) "untagged";
-variant (tgcApp.gateway_list[-].bgwInterface_list[-]) "name as 'BgwInterface'";
-variant (tgcApp.gateway_list[-].bgwInterface_list[-].subnetMaskLength) "defaultForEmpty as '0'";
-variant (tgcApp.gateway_list[-].bgwInterface_list[-].bwThresholdNormal) "defaultForEmpty as '4096'";
-variant (tgcApp.gateway_list[-].bgwInterface_list[-].bwThresholdEmPrio) "defaultForEmpty as '5120'";
-variant (tgcApp.gateway_list[-].bgwInterface_list[-].interfaceOrientation) "defaultForEmpty as 'external'";
-variant (tgcApp.gateway_list[-].bgwInterface_list[-].connPointRoutingInfo) "defaultForEmpty as '0'";
-variant (tispReport) "name as capitalized";
+  variant "element";
+  variant (blade_list) "untagged";
+  variant (blade_list[-]) "name as 'Blade'";
+  variant (blade_list[-].cp) "name as capitalized";
+  variant (system_) "name as 'System'";
+  variant (system_.bladePair_list) "untagged";
+  variant (system_.bladePair_list[-]) "name as 'BladePair'";
+  variant (system_.sctpParameters) "name as capitalized";
+  variant (system_.sctpParameters.rtoInitial) "defaultForEmpty as '1000'";
+  variant (system_.sctpParameters.rtoMin) "defaultForEmpty as '500'";
+  variant (system_.sctpParameters.rtoMax) "defaultForEmpty as '10000'";
+  variant (system_.sctpParameters.rtoAlpha) "defaultForEmpty as '3'";
+  variant (system_.sctpParameters.rtoBeta) "defaultForEmpty as '2'";
+  variant (system_.sctpParameters.associationMaxRetrans) "defaultForEmpty as '10'";
+  variant (system_.sctpParameters.maxInitRetrans) "defaultForEmpty as '8'";
+  variant (system_.sctpParameters.maxShutdownRetrans) "defaultForEmpty as '5'";
+  variant (system_.sctpParameters.mtu) "defaultForEmpty as '1428'";
+  variant (system_.sctpParameters.valCookieLife) "defaultForEmpty as '400'";
+  variant (network) "name as capitalized";
+  variant (network.h248Route_list) "untagged";
+  variant (network.h248Route_list[-]) "name as 'H248Route'";
+  variant (network.h248Route_list[-].maskLength) "defaultForEmpty as '32'";
+  variant (tgcApp) "name as capitalized";
+  variant (tgcApp.globalTrafficThroughput) "defaultForEmpty as '100'";
+  variant (tgcApp.applyParamSetChanges) "defaultForEmpty as 'false'";
+  variant (tgcApp.autoApplyParamSetChanges) "defaultForEmpty as 'false'";
+  variant (tgcApp.announcementSet_list) "untagged";
+  variant (tgcApp.announcementSet_list[-]) "name as 'AnnouncementSet'";
+  variant (tgcApp.announcementSet_list[-].announcement_list) "untagged";
+  variant (tgcApp.announcementSet_list[-].announcement_list[-]) "name as 'Announcement'";
+  variant (tgcApp.bgwInterfaceParameterSet_list) "untagged";
+  variant (tgcApp.bgwInterfaceParameterSet_list[-]) "name as 'BgwInterfaceParameterSet'";
+  variant (tgcApp.bgwInterfaceParameterSet_list[-].sourceAddressFiltering) "defaultForEmpty as 'true'";
+  variant (tgcApp.bgwInterfaceParameterSet_list[-].sourcePortFiltering) "defaultForEmpty as 'true'";
+  variant (tgcApp.bgwInterfaceParameterSet_list[-].rtpSpecificBehaviour) "defaultForEmpty as 'true'";
+  variant (tgcApp.bgwInterfaceParameterSet_list[-].policing) "defaultForEmpty as 'false'";
+  variant (tgcApp.bgwInterfaceParameterSet_list[-].sustDataRate) "defaultForEmpty as '0'";
+  variant (tgcApp.bgwInterfaceParameterSet_list[-].dscp) "defaultForEmpty as '00'";
+  variant (tgcApp.bgwInterfaceParameterSet_list[-].linkLayerOverhead) "defaultForEmpty as '42'";
+  variant (tgcApp.bgwInterfaceParameterSet_list[-].interfaceGuardTimer) "defaultForEmpty as '30'";
+  variant (tgcApp.defaultPointAssociation) "name as capitalized";
+  variant (tgcApp.digitMap_list) "untagged";
+  variant (tgcApp.digitMap_list[-]) "name as 'DigitMap'";
+  variant (tgcApp.digitMap_list[-].map_) "name as 'map'";
+  variant (tgcApp.h248Parameters_list) "untagged";
+  variant (tgcApp.h248Parameters_list[-]) "name as 'H248Parameters'";
+  variant (tgcApp.h248Parameters_list[-].mgExecTime) "defaultForEmpty as '2000'";
+  variant (tgcApp.h248Parameters_list[-].mgcExecTime) "defaultForEmpty as '2000'";
+  variant (tgcApp.h248Parameters_list[-].mgProvRespTime) "defaultForEmpty as '3000'";
+  variant (tgcApp.h248Parameters_list[-].mgcProvRespTime) "defaultForEmpty as '3000'";
+  variant (tgcApp.h248Parameters_list[-].mgOrigPendLimit) "defaultForEmpty as '5'";
+  variant (tgcApp.h248Parameters_list[-].mgcOrigPendLimit) "defaultForEmpty as '5'";
+  variant (tgcApp.h248Parameters_list[-].requestRetries) "defaultForEmpty as '2'";
+  variant (tgcApp.h248Parameters_list[-].longRequestTimer) "defaultForEmpty as '5'";
+  variant (tgcApp.h248Parameters_list[-].longRequestRetries) "defaultForEmpty as '1'";
+  variant (tgcApp.h248Parameters_list[-].h248LongTimer) "defaultForEmpty as '15000'";
+  variant (tgcApp.h248Parameters_list[-].factorF) "defaultForEmpty as '1'";
+  variant (tgcApp.h248Parameters_list[-].incrementI) "defaultForEmpty as '0'";
+  variant (tgcApp.callCountingParameters_list) "untagged";
+  variant (tgcApp.callCountingParameters_list[-]) "name as 'CallCountingParameters'";
+  variant (tgcApp.callCountingParameters_list[-].emergencyCallReservation) "defaultForEmpty as '65536'";
+  variant (tgcApp.callCountingParameters_list[-].totalTrafficLimit) "defaultForEmpty as '65536'";
+  variant (tgcApp.overloadControlParameters_list) "untagged";
+  variant (tgcApp.overloadControlParameters_list[-]) "name as 'OverloadControlParameters'";
+  variant (tgcApp.overloadControlParameters_list[-].ericssonWindow) "name as capitalized";
+  variant (tgcApp.overloadControlParameters_list[-].ericssonWindow.t95Timer) "defaultForEmpty as '500'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket) "name as capitalized";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.targetOverloadRate) "defaultForEmpty as '1.0'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.maxLeakAmount) "defaultForEmpty as '200.0'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.minLeakAmount) "defaultForEmpty as '10.0'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.adjConstant) "defaultForEmpty as '0.20'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.coefficient) "defaultForEmpty as '1.00'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.maxAdjustment) "defaultForEmpty as '5'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.t1) "defaultForEmpty as '2'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.t2) "defaultForEmpty as '2'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.initialLeakAmount) "defaultForEmpty as '100.0'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm15) "defaultForEmpty as '95'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm14) "defaultForEmpty as '90'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm13) "defaultForEmpty as '85'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm12) "defaultForEmpty as '80'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm11) "defaultForEmpty as '75'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm10) "defaultForEmpty as '70'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm9) "defaultForEmpty as '65'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm8) "defaultForEmpty as '60'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm7) "defaultForEmpty as '55'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm6) "defaultForEmpty as '50'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm5) "defaultForEmpty as '45'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm4) "defaultForEmpty as '40'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm3) "defaultForEmpty as '35'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm2) "defaultForEmpty as '30'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm1) "defaultForEmpty as '25'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.pm0) "defaultForEmpty as '20'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.maxPendingCycles) "defaultForEmpty as '40'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.initialBucketFill) "defaultForEmpty as '0'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.activateStreamFairness) "defaultForEmpty as 'false'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.controlPOTSOrig) "defaultForEmpty as 'false'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.controlISDNOrig) "defaultForEmpty as 'true'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.potsOrigWeight) "defaultForEmpty as '100'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.potsTermWeight) "defaultForEmpty as '100'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.isdnOrigWeight) "defaultForEmpty as '100'";
+  variant (tgcApp.overloadControlParameters_list[-].leakyBucket.isdnTermWeight) "defaultForEmpty as '100'";
+  variant (tgcApp.payloadMapping_list) "untagged";
+  variant (tgcApp.payloadMapping_list[-]) "name as 'PayloadMapping'";
+  variant (tgcApp.payloadMapping_list[-].type_) "name as 'type'";
+  variant (tgcApp.pointAssociation_list) "untagged";
+  variant (tgcApp.pointAssociation_list[-]) "name as 'PointAssociation'";
+  variant (tgcApp.pointAssociation_list[-].callHandler) "name as capitalized";
+  variant (tgcApp.pointAssociation_list[-].callHandler.override_) "name as 'override'";
+  variant (tgcApp.toneSet_list) "untagged";
+  variant (tgcApp.toneSet_list[-]) "name as 'ToneSet'";
+  variant (tgcApp.toneSet_list[-].tone_list) "untagged";
+  variant (tgcApp.toneSet_list[-].tone_list[-]) "name as 'Tone'";
+  variant (tgcApp.udpInactivityParameters_list) "untagged";
+  variant (tgcApp.udpInactivityParameters_list[-]) "name as 'UdpInactivityParameters'";
+  variant (tgcApp.udpInactivityParameters_list[-].pollTimer) "defaultForEmpty as '20000'";
+  variant (tgcApp.udpInactivityParameters_list[-].pollCount) "defaultForEmpty as '2'";
+  variant (tgcApp.h248Profile_list) "untagged";
+  variant (tgcApp.h248Profile_list[-]) "name as 'H248Profile'";
+  variant (tgcApp.h248CapabilitySet_list) "untagged";
+  variant (tgcApp.h248CapabilitySet_list[-]) "name as 'H248CapabilitySet'";
+  variant (tgcApp.h248CapabilitySet_list[-].toneDirPhys) "defaultForEmpty as 'no'";
+  variant (tgcApp.h248CapabilitySet_list[-].toneDirEph) "defaultForEmpty as 'no'";
+  variant (tgcApp.h248CapabilitySet_list[-].linkGuardTimer) "defaultForEmpty as '0'";
+  variant (tgcApp.massCallReleaseRegulationParameters_list) "untagged";
+  variant (tgcApp.massCallReleaseRegulationParameters_list[-]) "name as 'MassCallReleaseRegulationParameters'";
+  variant (tgcApp.massCallReleaseRegulationParameters_list[-].windowSize) "defaultForEmpty as '100'";
+  variant (tgcApp.geographicalRedundancyParameters) "name as capitalized";
+  variant (tgcApp.geographicalRedundancyParameters.grGlobalSwitchover) "defaultForEmpty as 'false'";
+  variant (tgcApp.geographicalRedundancyParameters.grGlobalSwitchback) "defaultForEmpty as 'false'";
+  variant (tgcApp.geographicalRedundancyParameters.grGlobalRegistrationCapability) "defaultForEmpty as 'no'";
+  variant (tgcApp.geographicalRedundancyParameters.grMBP) "defaultForEmpty as 'false'";
+  variant (tgcApp.geographicalRedundancyParameters.grSwitchoverAXEFailure) "defaultForEmpty as 'false'";
+  variant (tgcApp.geographicalRedundancyParameters.grAXEDeadInterval) "defaultForEmpty as '180'";
+  variant (tgcApp.geographicalRedundancyParameters.grAXEPeriodicDisturbance) "defaultForEmpty as '240'";
+  variant (tgcApp.geographicalRedundancyParameters.grAXERestartNum) "defaultForEmpty as '1'";
+  variant (tgcApp.geographicalRedundancyParameters.grRedundancyScheme) "defaultForEmpty as 'none'";
+  variant (tgcApp.perRoutePCS_list) "untagged";
+  variant (tgcApp.perRoutePCS_list[-]) "name as 'PerRoutePCS'";
+  variant (tgcApp.perRoutePCS_list[-].type_) "name as 'type'";
+  variant (tgcApp.perRoutePCS_list[-].codec_list) "untagged";
+  variant (tgcApp.perRoutePCS_list[-].codec_list[-]) "name as 'Codec'";
+  variant (tgcApp.digitMapSet_list) "untagged";
+  variant (tgcApp.digitMapSet_list[-]) "name as 'DigitMapSet'";
+  variant (tgcApp.digitMapSet_list[-].dMSDigitMap_list) "untagged";
+  variant (tgcApp.digitMapSet_list[-].dMSDigitMap_list[-]) "name as 'DMSDigitMap'";
+  variant (tgcApp.digitMapMapping_list) "untagged";
+  variant (tgcApp.digitMapMapping_list[-]) "name as 'DigitMapMapping'";
+  variant (tgcApp.loadDistribution_list) "untagged";
+  variant (tgcApp.loadDistribution_list[-]) "name as 'LoadDistribution'";
+  variant (tgcApp.nodeLevelH24811Params_list) "untagged";
+  variant (tgcApp.nodeLevelH24811Params_list[-]) "name as 'NodeLevelH24811Params'";
+  variant (tgcApp.nodeLevelH24811Params_list[-].activateH24811) "defaultForEmpty as 'false'";
+  variant (tgcApp.nodeLevelH24811Params_list[-].sendH24811Statistics) "defaultForEmpty as 'false'";
+  variant (tgcApp.gateway_list) "untagged";
+  variant (tgcApp.gateway_list[-]) "name as 'Gateway'";
+  variant (tgcApp.gateway_list[-].type_) "name as 'type'";
+  variant (tgcApp.gateway_list[-].port_) "name as 'port'";
+  variant (tgcApp.gateway_list[-].hangtermTimer) "defaultForEmpty as '240'";
+  variant (tgcApp.gateway_list[-].grSwitchover) "defaultForEmpty as 'false'";
+  variant (tgcApp.gateway_list[-].grAllocation) "defaultForEmpty as 'primary'";
+  variant (tgcApp.gateway_list[-].grRegistrationCapability) "defaultForEmpty as 'all'";
+  variant (tgcApp.gateway_list[-].grForceToPeer) "defaultForEmpty as 'false'";
+  variant (tgcApp.gateway_list[-].orderRootAudit) "defaultForEmpty as 'false'";
+  variant (tgcApp.gateway_list[-].h248SctpLink) "name as capitalized";
+  variant (tgcApp.gateway_list[-].h248SctpLink.sctpHeartBeatInterval) "defaultForEmpty as '5'";
+  variant (tgcApp.gateway_list[-].h248UdpLink) "name as capitalized";
+  variant (tgcApp.gateway_list[-].bgwInterface_list) "untagged";
+  variant (tgcApp.gateway_list[-].bgwInterface_list[-]) "name as 'BgwInterface'";
+  variant (tgcApp.gateway_list[-].bgwInterface_list[-].subnetMaskLength) "defaultForEmpty as '0'";
+  variant (tgcApp.gateway_list[-].bgwInterface_list[-].bwThresholdNormal) "defaultForEmpty as '4096'";
+  variant (tgcApp.gateway_list[-].bgwInterface_list[-].bwThresholdEmPrio) "defaultForEmpty as '5120'";
+  variant (tgcApp.gateway_list[-].bgwInterface_list[-].interfaceOrientation) "defaultForEmpty as 'external'";
+  variant (tgcApp.gateway_list[-].bgwInterface_list[-].connPointRoutingInfo) "defaultForEmpty as '0'";
+  variant (tispReport) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.ericsson.com/is/isco/Tgc/R6A48/R6H01' prefix 'tgc'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.ericsson.com/is/isco/Tgc/R6A48/R6H01' prefix 'tgc'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

@@ -158,6 +158,11 @@ public:
     * @return The number of characters added to the JSON document */
   int put_next_token(json_token_t p_token, const char* p_token_str = 0);
   
+  /** Adds raw data to the end of the buffer.
+    * @param p_data [in] Pointer to the beginning of the data
+    * @param p_len [in] Length of the data in bytes */
+  void put_raw_data(const char* p_data, size_t p_len);
+  
 }; // class JSON_Tokenizer
 
 // A dummy JSON tokenizer, use when there is no actual JSON document

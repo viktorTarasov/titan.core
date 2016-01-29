@@ -46,7 +46,7 @@ type record E15f
 	XSD.String bar
 }
 with {
-variant "name as uncapitalized";
+  variant "name as uncapitalized";
 };
 
 
@@ -56,10 +56,10 @@ type record E15fa
 	record length(5 .. 10) of FoobarGroup foobarGroup_list_1
 }
 with {
-variant "name as uncapitalized";
-variant (foobarGroup_list) "untagged";
-variant (foobarGroup_list[-]) "name as 'foobarGroup'";
-variant (foobarGroup_list_1) "untagged";
+  variant "name as uncapitalized";
+  variant (foobarGroup_list) "untagged";
+  variant (foobarGroup_list[-]) "name as 'foobarGroup'";
+  variant (foobarGroup_list_1) "untagged";
 };
 
 
@@ -69,13 +69,13 @@ type record FoobarGroup
 	XSD.String bar
 }
 with {
-variant "untagged";
+  variant "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/seq/group/reference' prefix 'ns9'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/seq/group/reference' prefix 'ns9'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

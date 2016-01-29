@@ -50,15 +50,15 @@ type record Salutation
 	XSD.String name
 }
 with {
-variant "name as uncapitalized";
-variant "embedValues";
-variant "element";
+  variant "name as uncapitalized";
+  variant "embedValues";
+  variant "element";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_mixed' prefix 'ns37'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_mixed' prefix 'ns37'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

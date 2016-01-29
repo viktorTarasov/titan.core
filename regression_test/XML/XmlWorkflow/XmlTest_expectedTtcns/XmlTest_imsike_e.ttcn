@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Copyright Ericsson Telecom AB
 *
-* XSD to TTCN-3 Translator
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R2B 
 *
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
@@ -47,10 +47,10 @@ type record IndividualTrigger
 	} content optional
 }
 with {
-variant "name as uncapitalized";
-variant "useNil";
-variant "element";
-variant (triggerDescriptionA) "attribute";
+  variant "name as uncapitalized";
+  variant "useNil";
+  variant "element";
+  variant (triggerDescriptionA) "attribute";
 };
 
 
@@ -64,12 +64,12 @@ type record Isp
 	} individualTrigger_list
 }
 with {
-variant "name as uncapitalized";
-variant "element";
-variant (individualTrigger_list) "untagged";
-variant (individualTrigger_list[-]) "name as 'individualTrigger'";
-variant (individualTrigger_list[-]) "useNil";
-variant (individualTrigger_list[-].triggerDescriptionA) "attribute";
+  variant "name as uncapitalized";
+  variant "element";
+  variant (individualTrigger_list) "untagged";
+  variant (individualTrigger_list[-]) "name as 'individualTrigger'";
+  variant (individualTrigger_list[-]) "useNil";
+  variant (individualTrigger_list[-].triggerDescriptionA) "attribute";
 };
 
 
@@ -78,9 +78,9 @@ type record RemarkNillable
 	XSD.String content optional
 }
 with {
-variant "name as uncapitalized";
-variant "useNil";
-variant "element";
+  variant "name as uncapitalized";
+  variant "useNil";
+  variant "element";
 };
 
 
@@ -92,8 +92,8 @@ type record E16c
 	} bar
 }
 with {
-variant "name as uncapitalized";
-variant (bar) "useNil";
+  variant "name as uncapitalized";
+  variant (bar) "useNil";
 };
 
 
@@ -114,21 +114,21 @@ type record SeqNillable
 	} content optional
 }
 with {
-variant "useNil";
-variant "element";
-variant (triggerDescriptionA) "attribute";
-variant (content.forename) "useNil";
-variant (content.surname) "useNil";
-variant (content.bornPlace_list) "untagged";
-variant (content.bornPlace_list[-]) "name as 'bornPlace'";
-variant (content.bornPlace_list[-]) "useNil";
+  variant "useNil";
+  variant "element";
+  variant (triggerDescriptionA) "attribute";
+  variant (content.forename) "useNil";
+  variant (content.surname) "useNil";
+  variant (content.bornPlace_list) "untagged";
+  variant (content.bornPlace_list[-]) "name as 'bornPlace'";
+  variant (content.bornPlace_list[-]) "useNil";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'urn:XmlTest.imsike' prefix 'ns50'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'urn:XmlTest.imsike' prefix 'ns50'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

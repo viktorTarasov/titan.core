@@ -55,13 +55,13 @@ type record Lesson
 	} choice
 }
 with {
-variant (starts) "name as capitalized";
-variant (starts) "attribute";
-variant (choice) "untagged";
-variant (choice.english) "name as capitalized";
-variant (choice.math) "name as capitalized";
-variant (choice.nature) "name as capitalized";
-variant (choice.lab) "name as capitalized";
+  variant (starts) "name as capitalized";
+  variant (starts) "attribute";
+  variant (choice) "untagged";
+  variant (choice.english) "name as capitalized";
+  variant (choice.math) "name as capitalized";
+  variant (choice.nature) "name as capitalized";
+  variant (choice.lab) "name as capitalized";
 };
 
 
@@ -71,9 +71,9 @@ type union Nature
 	XSD.String chemistry
 }
 with {
-variant "untagged";
-variant (physics) "name as capitalized";
-variant (chemistry) "name as capitalized";
+  variant "untagged";
+  variant (physics) "name as capitalized";
+  variant (chemistry) "name as capitalized";
 };
 
 
@@ -83,15 +83,15 @@ type record Lab
 	XSD.String evaluation
 }
 with {
-variant "untagged";
-variant (measurement) "name as capitalized";
-variant (evaluation) "name as capitalized";
+  variant "untagged";
+  variant (measurement) "name as capitalized";
+  variant (evaluation) "name as capitalized";
 };
 
 
 type Lesson MyLessonElement
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -112,17 +112,17 @@ type record Lesson2
 	} choice
 }
 with {
-variant (starts) "name as capitalized";
-variant (starts) "attribute";
-variant (choice) "untagged";
-variant (choice.english) "name as capitalized";
-variant (choice.math) "name as capitalized";
-variant (choice.choice) "untagged";
-variant (choice.choice.physics) "name as capitalized";
-variant (choice.choice.chemistry) "name as capitalized";
-variant (choice.sequence) "untagged";
-variant (choice.sequence.measurement) "name as capitalized";
-variant (choice.sequence.evaluation) "name as capitalized";
+  variant (starts) "name as capitalized";
+  variant (starts) "attribute";
+  variant (choice) "untagged";
+  variant (choice.english) "name as capitalized";
+  variant (choice.math) "name as capitalized";
+  variant (choice.choice) "untagged";
+  variant (choice.choice.physics) "name as capitalized";
+  variant (choice.choice.chemistry) "name as capitalized";
+  variant (choice.sequence) "untagged";
+  variant (choice.sequence.measurement) "name as capitalized";
+  variant (choice.sequence.evaluation) "name as capitalized";
 };
 
 
@@ -145,24 +145,24 @@ type record Lesson3
 	} choice
 }
 with {
-variant (starts) "name as capitalized";
-variant (starts) "attribute";
-variant (choice) "untagged";
-variant (choice.english) "name as capitalized";
-variant (choice.math) "name as capitalized";
-variant (choice.nature) "name as capitalized";
-variant (choice.nature.choice) "untagged";
-variant (choice.nature.choice.physics) "name as capitalized";
-variant (choice.nature.choice.chemistry) "name as capitalized";
-variant (choice.lab) "name as capitalized";
-variant (choice.lab.measurement) "name as capitalized";
-variant (choice.lab.evaluation) "name as capitalized";
+  variant (starts) "name as capitalized";
+  variant (starts) "attribute";
+  variant (choice) "untagged";
+  variant (choice.english) "name as capitalized";
+  variant (choice.math) "name as capitalized";
+  variant (choice.nature) "name as capitalized";
+  variant (choice.nature.choice) "untagged";
+  variant (choice.nature.choice.physics) "name as capitalized";
+  variant (choice.nature.choice.chemistry) "name as capitalized";
+  variant (choice.lab) "name as capitalized";
+  variant (choice.lab.measurement) "name as capitalized";
+  variant (choice.lab.evaluation) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_choice' prefix 'ns40'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_choice' prefix 'ns40'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -42,8 +42,8 @@ type record AnyDocumentType
 	record length(1 .. infinity) of XSD.String elem_list
 }
 with {
-variant (elem_list) "untagged";
-variant (elem_list[-]) "anyElement";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement";
 };
 
 
@@ -61,7 +61,7 @@ type record ResourceMO
 	XSD.AnyURI resourceId
 }
 with {
-variant (resourceId) "name as capitalized";
+  variant (resourceId) "name as capitalized";
 };
 
 
@@ -73,7 +73,7 @@ variant (resourceId) "name as capitalized";
 
 type CreateResourceAttributesType CreateResourceAttributes
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -85,11 +85,11 @@ type record CreateResourceAttributesType
 	AdditionalDataType additionalData
 }
 with {
-variant (resourceId) "name as capitalized";
-variant (resourceId) "attribute";
-variant (identifiers) "name as capitalized";
-variant (repositoryIds) "name as capitalized";
-variant (additionalData) "name as capitalized";
+  variant (resourceId) "name as capitalized";
+  variant (resourceId) "attribute";
+  variant (identifiers) "name as capitalized";
+  variant (repositoryIds) "name as capitalized";
+  variant (additionalData) "name as capitalized";
 };
 
 
@@ -98,8 +98,8 @@ type record AdditionalDataType
 	record of DataType data_list
 }
 with {
-variant (data_list) "untagged";
-variant (data_list[-]) "name as 'Data'";
+  variant (data_list) "untagged";
+  variant (data_list[-]) "name as 'Data'";
 };
 
 
@@ -109,8 +109,8 @@ type record DataType
 	XSD.String value_
 }
 with {
-variant (name) "name as capitalized";
-variant (value_) "name as 'Value'";
+  variant (name) "name as capitalized";
+  variant (value_) "name as 'Value'";
 };
 
 
@@ -119,8 +119,8 @@ type record RepositoryIdType
 	record of XSD.String repositoryId_list
 }
 with {
-variant (repositoryId_list) "untagged";
-variant (repositoryId_list[-]) "name as 'RepositoryId'";
+  variant (repositoryId_list) "untagged";
+  variant (repositoryId_list[-]) "name as 'RepositoryId'";
 };
 
 
@@ -129,8 +129,8 @@ type record IdentifiersType
 	record length(1 .. infinity) of IdentifierType identifier_list
 }
 with {
-variant (identifier_list) "untagged";
-variant (identifier_list[-]) "name as 'Identifier'";
+  variant (identifier_list) "untagged";
+  variant (identifier_list[-]) "name as 'Identifier'";
 };
 
 
@@ -142,19 +142,19 @@ type record IdentifierType
 	XSD.Boolean searchable optional
 }
 with {
-variant (resourceId) "name as capitalized";
-variant (resourceId) "attribute";
-variant (resourceId_1) "name as 'ResourceId'";
-variant (priority) "name as capitalized";
-variant (priority) "defaultForEmpty as '1'";
-variant (searchable) "name as capitalized";
-variant (searchable) "defaultForEmpty as 'true'";
+  variant (resourceId) "name as capitalized";
+  variant (resourceId) "attribute";
+  variant (resourceId_1) "name as 'ResourceId'";
+  variant (priority) "name as capitalized";
+  variant (priority) "defaultForEmpty as '1'";
+  variant (searchable) "name as capitalized";
+  variant (searchable) "defaultForEmpty as 'true'";
 };
 
 
 type GetResourceAttributesType GetResourceAttributes
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -165,9 +165,9 @@ type record GetResourceAttributesType
 	AdditionalDataType additionalData optional
 }
 with {
-variant (identifiers) "name as capitalized";
-variant (repositoryIds) "name as capitalized";
-variant (additionalData) "name as capitalized";
+  variant (identifiers) "name as capitalized";
+  variant (repositoryIds) "name as capitalized";
+  variant (additionalData) "name as capitalized";
 };
 
 
@@ -191,7 +191,7 @@ type record IdentifierMO
 	XSD.AnyURI resourceId
 }
 with {
-variant (resourceId) "name as capitalized";
+  variant (resourceId) "name as capitalized";
 };
 
 
@@ -203,7 +203,7 @@ variant (resourceId) "name as capitalized";
 
 type CreateIdentifierAttributesType CreateIdentifierAttributes
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -215,19 +215,19 @@ type record CreateIdentifierAttributesType
 	XSD.Boolean searchable optional
 }
 with {
-variant (resourceId) "name as capitalized";
-variant (resourceId) "attribute";
-variant (resourceId_1) "name as 'ResourceId'";
-variant (priority) "name as capitalized";
-variant (priority) "defaultForEmpty as '1'";
-variant (searchable) "name as capitalized";
-variant (searchable) "defaultForEmpty as 'true'";
+  variant (resourceId) "name as capitalized";
+  variant (resourceId) "attribute";
+  variant (resourceId_1) "name as 'ResourceId'";
+  variant (priority) "name as capitalized";
+  variant (priority) "defaultForEmpty as '1'";
+  variant (searchable) "name as capitalized";
+  variant (searchable) "defaultForEmpty as 'true'";
 };
 
 
 type SetIdentifierAttributesType SetIdentifierAttributes
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -239,13 +239,13 @@ type record SetIdentifierAttributesType
 	XSD.Boolean searchable optional
 }
 with {
-variant (resourceId) "name as capitalized";
-variant (resourceId) "attribute";
-variant (resourceId_1) "name as 'ResourceId'";
-variant (priority) "name as capitalized";
-variant (priority) "defaultForEmpty as '1'";
-variant (searchable) "name as capitalized";
-variant (searchable) "defaultForEmpty as 'true'";
+  variant (resourceId) "name as capitalized";
+  variant (resourceId) "attribute";
+  variant (resourceId_1) "name as 'ResourceId'";
+  variant (priority) "name as capitalized";
+  variant (priority) "defaultForEmpty as '1'";
+  variant (searchable) "name as capitalized";
+  variant (searchable) "defaultForEmpty as 'true'";
 };
 
 
@@ -270,8 +270,8 @@ type record RepositoryIdMO
 	XSD.String repositoryId
 }
 with {
-variant (resourceId) "name as capitalized";
-variant (repositoryId) "name as capitalized";
+  variant (resourceId) "name as capitalized";
+  variant (repositoryId) "name as capitalized";
 };
 
 
@@ -283,7 +283,7 @@ variant (repositoryId) "name as capitalized";
 
 type CreateRepositoryIdsAttributesType CreateRepositoryIdsAttributes
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -295,7 +295,7 @@ type record CreateRepositoryIdsAttributesType
 
 type SetRepositoryIdsAttributesType SetRepositoryIdsAttributes
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -306,11 +306,11 @@ type record SetRepositoryIdsAttributesType
 	XSD.String repositoryId_1
 }
 with {
-variant (repositoryId) "name as capitalized";
-variant (repositoryId) "attribute";
-variant (resourceId) "name as capitalized";
-variant (resourceId) "attribute";
-variant (repositoryId_1) "name as 'RepositoryId'";
+  variant (repositoryId) "name as capitalized";
+  variant (repositoryId) "attribute";
+  variant (resourceId) "name as capitalized";
+  variant (resourceId) "attribute";
+  variant (repositoryId_1) "name as 'RepositoryId'";
 };
 
 
@@ -335,8 +335,8 @@ type record AdditionalDataMO
 	XSD.String name
 }
 with {
-variant (resourceId) "name as capitalized";
-variant (name) "name as capitalized";
+  variant (resourceId) "name as capitalized";
+  variant (name) "name as capitalized";
 };
 
 
@@ -348,7 +348,7 @@ variant (name) "name as capitalized";
 
 type CreateAdditionalDataAttributesType CreateAdditionalDataAttributes
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -357,13 +357,13 @@ type record CreateAdditionalDataAttributesType
 	XSD.String value_
 }
 with {
-variant (value_) "name as 'Value'";
+  variant (value_) "name as 'Value'";
 };
 
 
 type SetAdditionalDataAttributesType SetAdditionalDataAttributes
 with {
-variant "element";
+  variant "element";
 };
 
 
@@ -374,11 +374,11 @@ type record SetAdditionalDataAttributesType
 	XSD.String value_
 }
 with {
-variant (name) "name as capitalized";
-variant (name) "attribute";
-variant (resourceId) "name as capitalized";
-variant (resourceId) "attribute";
-variant (value_) "name as 'Value'";
+  variant (name) "name as capitalized";
+  variant (name) "attribute";
+  variant (resourceId) "name as capitalized";
+  variant (resourceId) "attribute";
+  variant (value_) "name as 'Value'";
 };
 
 
@@ -390,8 +390,8 @@ variant (value_) "name as 'Value'";
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://schemas.ericsson.com/upg/provisioning/1.0'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://schemas.ericsson.com/upg/provisioning/1.0'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

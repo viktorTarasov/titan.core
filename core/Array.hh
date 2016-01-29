@@ -231,6 +231,8 @@ public:
   virtual const TTCN_Typedescriptor_t* get_elem_descr() const 
   { TTCN_error("Internal error: VALUE_ARRAY<>::get_elem_descr() called."); }
   
+  virtual ~VALUE_ARRAY() { } // just to avoid warnings
+  
   /** Encodes accordingly to the JSON encoding rules.
     * Returns the length of the encoded data. */
   int JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;
@@ -1681,10 +1683,14 @@ match_omit(boolean legacy /* = FALSE */) const
     return TRUE;
   case VALUE_LIST:
   case COMPLEMENTED_LIST:
-    for (unsigned int i=0; i<value_list.n_values; i++)
-      if (value_list.list_value[i].match_omit())
-        return template_selection==VALUE_LIST;
-    return template_selection==COMPLEMENTED_LIST;
+    if (legacy) {
+      // legacy behavior: 'omit' can appear in the value/complement list
+      for (unsigned int i=0; i<value_list.n_values; i++)
+        if (value_list.list_value[i].match_omit())
+          return template_selection==VALUE_LIST;
+      return template_selection==COMPLEMENTED_LIST;
+    }
+    // else fall through
   default:
     return FALSE;
   }

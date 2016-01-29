@@ -46,16 +46,16 @@ type enumerated State
 	on_
 }
 with {
-variant "text 'off' as capitalized";
-variant "text 'off_1' as 'off'";
-variant "text 'on_' as 'on'";
-variant "name as uncapitalized";
+  variant "text 'off' as capitalized";
+  variant "text 'off_1' as 'off'";
+  variant "text 'on_' as 'on'";
+  variant "name as uncapitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/enum/field/names'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/enum/field/names'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

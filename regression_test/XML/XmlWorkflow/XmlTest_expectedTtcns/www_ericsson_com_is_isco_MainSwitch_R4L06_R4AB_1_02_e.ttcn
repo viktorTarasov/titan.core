@@ -42,21 +42,21 @@ import from www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02_e all;
 
 type record of VlanId VlanIdsType_26 (1 .. 4094)
 with {
-variant "name as 'vlanIdsType-26'";
-variant "list";
+  variant "name as 'vlanIdsType-26'";
+  variant "list";
 };
 
 
 type record of VlanId VlanIdsType_27 (1 .. 4094)
 with {
-variant "name as 'vlanIdsType-27'";
-variant "list";
+  variant "name as 'vlanIdsType-27'";
+  variant "list";
 };
 
 
 type XSD.Integer BandwidthUsageSamplingPeriodType_2 (1 .. 1440)
 with {
-variant "name as 'bandwidthUsageSamplingPeriodType-2'";
+  variant "name as 'bandwidthUsageSamplingPeriodType-2'";
 };
 
 
@@ -66,37 +66,37 @@ type XSD.Integer PercentUsage (0 .. 100);
 
 type XSD.Token DistributingType_17 (pattern "Yes|No")
 with {
-variant "name as 'distributingType-17'";
+  variant "name as 'distributingType-17'";
 };
 
 
 type XSD.Token DefaultedType_18 (pattern "Yes|No")
 with {
-variant "name as 'defaultedType-18'";
+  variant "name as 'defaultedType-18'";
 };
 
 
 type XSD.Token ExpiredType_19 (pattern "Yes|No")
 with {
-variant "name as 'expiredType-19'";
+  variant "name as 'expiredType-19'";
 };
 
 
 type XSD.Token SchedulingType_21 (pattern "notUsed|wrr|strictpriority")
 with {
-variant "name as 'schedulingType-21'";
+  variant "name as 'schedulingType-21'";
 };
 
 
 type XSD.Integer CpuUsageSamplingPeriodType_1 (1 .. 60)
 with {
-variant "name as 'cpuUsageSamplingPeriodType-1'";
+  variant "name as 'cpuUsageSamplingPeriodType-1'";
 };
 
 
 type XSD.Token PmMemoryStatusType_4 (pattern "on|off")
 with {
-variant "name as 'pmMemoryStatusType-4'";
+  variant "name as 'pmMemoryStatusType-4'";
 };
 
 
@@ -111,7 +111,7 @@ type XSD.Integer StatisticCounter;
 
 type XSD.Token ProcessorStatusType_3 (pattern "on|off")
 with {
-variant "name as 'processorStatusType-3'";
+  variant "name as 'processorStatusType-3'";
 };
 
 
@@ -126,7 +126,7 @@ type XSD.Integer ThresholdPercent (0 .. 100);
 
 type XSD.Integer QueueValueType_25 (0 .. 7)
 with {
-variant "name as 'queueValueType-25'";
+  variant "name as 'queueValueType-25'";
 };
 
 
@@ -137,25 +137,25 @@ type XSD.Integer PhysicalPort (1 .. 50);
 
 type XSD.Token LacpActivityType_12 (pattern "Passive|Active")
 with {
-variant "name as 'lacpActivityType-12'";
+  variant "name as 'lacpActivityType-12'";
 };
 
 
 type XSD.Token LacpTimeoutType_13 (pattern "Long|Short")
 with {
-variant "name as 'lacpTimeoutType-13'";
+  variant "name as 'lacpTimeoutType-13'";
 };
 
 
 type XSD.Token SyncronizationType_15 (pattern "In Sync|Out of Sync")
 with {
-variant "name as 'syncronizationType-15'";
+  variant "name as 'syncronizationType-15'";
 };
 
 
 type XSD.Token LinkSelectionPolicyType_11 (pattern "Src MAC|Dst MAC|Src and Dst MAC|Src IP|Dst IP|Src and Dst IP")
 with {
-variant "name as 'linkSelectionPolicyType-11'";
+  variant "name as 'linkSelectionPolicyType-11'";
 };
 
 
@@ -164,8 +164,8 @@ type enumerated BladeSlotLinkType_23
 	int1(1)
 }
 with {
-variant "useNumber";
-variant "name as 'bladeSlotLinkType-23'";
+  variant "useNumber";
+  variant "name as 'bladeSlotLinkType-23'";
 };
 
 
@@ -174,19 +174,19 @@ type enumerated DummyEmptyType
 	x
 }
 with {
-variant "text 'x' as ''";
+  variant "text 'x' as ''";
 };
 
 
 type XSD.Token CollectingType_16 (pattern "Yes|No")
 with {
-variant "name as 'collectingType-16'";
+  variant "name as 'collectingType-16'";
 };
 
 
 type XSD.Token ModeType_9 (pattern "LACP|Manual|Disable")
 with {
-variant "name as 'modeType-9'";
+  variant "name as 'modeType-9'";
 };
 
 
@@ -197,55 +197,55 @@ type XSD.Integer BladeSlotLink (1 .. 24);
 
 type XSD.Token WeightType_22 (pattern "notUsed|high|medium|low")
 with {
-variant "name as 'weightType-22'";
+  variant "name as 'weightType-22'";
 };
 
 
 type XSD.Token VlanTypeType_7 (pattern "static|dynamic|-")
 with {
-variant "name as 'vlanTypeType-7'";
+  variant "name as 'vlanTypeType-7'";
 };
 
 
 type XSD.Token MacSelectionPolicyType_10 (pattern "Dynamic|Force")
 with {
-variant "name as 'macSelectionPolicyType-10'";
+  variant "name as 'macSelectionPolicyType-10'";
 };
 
 
 type XSD.Token AggregationType_14 (pattern "Individual|Aggregatable")
 with {
-variant "name as 'aggregationType-14'";
+  variant "name as 'aggregationType-14'";
 };
 
 
 type XSD.Token StatusType_6 (pattern "on|off")
 with {
-variant "name as 'statusType-6'";
+  variant "name as 'statusType-6'";
 };
 
 
 type XSD.Token IsolationStatusType_8 (pattern "protected|isolatable|-")
 with {
-variant "name as 'isolationStatusType-8'";
+  variant "name as 'isolationStatusType-8'";
 };
 
 
 type XSD.Integer PbitKeyType_24 (0 .. 7)
 with {
-variant "name as 'pbitKeyType-24'";
+  variant "name as 'pbitKeyType-24'";
 };
 
 
 type XSD.Token PmBandwidthStatusType_5 (pattern "on|off")
 with {
-variant "name as 'pmBandwidthStatusType-5'";
+  variant "name as 'pmBandwidthStatusType-5'";
 };
 
 
 type XSD.Integer QueueType_20 (0 .. 7)
 with {
-variant "name as 'queueType-20'";
+  variant "name as 'queueType-20'";
 };
 
 
@@ -662,58 +662,58 @@ type record MainSwitch
 	} vlan
 }
 with {
-variant "element";
-variant (cos) "name as capitalized";
-variant (cos.cosQueueConfigurationData_list) "untagged";
-variant (cos.cosQueueConfigurationData_list[-]) "name as 'CosQueueConfigurationData'";
-variant (cos.operational_list) "untagged";
-variant (cos.operational_list[-]) "name as 'Operational'";
-variant (cos.operational_list[-].cosQueueConfigurationData_list) "untagged";
-variant (cos.operational_list[-].cosQueueConfigurationData_list[-]) "name as 'CosQueueConfigurationData'";
-variant (cos.operational_list[-].pbitToQueueMapping) "name as capitalized";
-variant (cos.operational_list[-].pbitToQueueMapping.pbitQueue_list) "untagged";
-variant (cos.operational_list[-].pbitToQueueMapping.pbitQueue_list[-]) "name as 'PbitQueue'";
-variant (cos.pbitToQueueMapping) "name as capitalized";
-variant (cos.pbitToQueueMapping.pbitQueue_list) "untagged";
-variant (cos.pbitToQueueMapping.pbitQueue_list[-]) "name as 'PbitQueue'";
-variant (pm) "name as capitalized";
-variant (pm.pmBladeMeasure_list) "untagged";
-variant (pm.pmBladeMeasure_list[-]) "name as 'PmBladeMeasure'";
-variant (pm.pmConfiguration_list) "untagged";
-variant (pm.pmConfiguration_list[-]) "name as 'PmConfiguration'";
-variant (pm.pmLink) "name as capitalized";
-variant (pm.pmLink.pmBwMeasure_list) "untagged";
-variant (pm.pmLink.pmBwMeasure_list[-]) "name as 'PmBwMeasure'";
-variant (pm.pmLink.pmStatistics_list) "untagged";
-variant (pm.pmLink.pmStatistics_list[-]) "name as 'PmStatistics'";
-variant (state) "name as capitalized";
-variant (state.stateBlade) "name as capitalized";
-variant (state.stateBlade.mXB4_list) "untagged";
-variant (state.stateBlade.mXB4_list[-]) "name as 'MXB4'";
-variant (state.stateBlade.mXB5LE_list) "untagged";
-variant (state.stateBlade.mXB5LE_list[-]) "name as 'MXB5LE'";
-variant (state.stateLink) "name as capitalized";
-variant (state.stateLink.stateLa_list) "untagged";
-variant (state.stateLink.stateLa_list[-]) "name as 'StateLa'";
-variant (state.stateLink.stateLa_list[-].linkAggregationData) "name as capitalized";
-variant (state.stateLink.stateLa_list[-].linkAggregationData.linkAggregationPortData) "name as capitalized";
-variant (state.stateLink.stateLa_list[-].linkAggregationData.linkAggregationPortData.linkAggregationOperStateData) "name as capitalized";
-variant (state.stateLink.stateVlan_list) "untagged";
-variant (state.stateLink.stateVlan_list[-]) "name as 'StateVlan'";
-variant (state.stateLink.stateVlan_list[-].vlanData_list) "untagged";
-variant (state.stateLink.stateVlan_list[-].vlanData_list[-]) "name as 'VlanData'";
-variant (vlan) "name as capitalized";
-variant (vlan.vlanAdmin_list) "untagged";
-variant (vlan.vlanAdmin_list[-]) "name as 'VlanAdmin'";
-variant (vlan.vlanOper_list) "untagged";
-variant (vlan.vlanOper_list[-]) "name as 'VlanOper'";
+  variant "element";
+  variant (cos) "name as capitalized";
+  variant (cos.cosQueueConfigurationData_list) "untagged";
+  variant (cos.cosQueueConfigurationData_list[-]) "name as 'CosQueueConfigurationData'";
+  variant (cos.operational_list) "untagged";
+  variant (cos.operational_list[-]) "name as 'Operational'";
+  variant (cos.operational_list[-].cosQueueConfigurationData_list) "untagged";
+  variant (cos.operational_list[-].cosQueueConfigurationData_list[-]) "name as 'CosQueueConfigurationData'";
+  variant (cos.operational_list[-].pbitToQueueMapping) "name as capitalized";
+  variant (cos.operational_list[-].pbitToQueueMapping.pbitQueue_list) "untagged";
+  variant (cos.operational_list[-].pbitToQueueMapping.pbitQueue_list[-]) "name as 'PbitQueue'";
+  variant (cos.pbitToQueueMapping) "name as capitalized";
+  variant (cos.pbitToQueueMapping.pbitQueue_list) "untagged";
+  variant (cos.pbitToQueueMapping.pbitQueue_list[-]) "name as 'PbitQueue'";
+  variant (pm) "name as capitalized";
+  variant (pm.pmBladeMeasure_list) "untagged";
+  variant (pm.pmBladeMeasure_list[-]) "name as 'PmBladeMeasure'";
+  variant (pm.pmConfiguration_list) "untagged";
+  variant (pm.pmConfiguration_list[-]) "name as 'PmConfiguration'";
+  variant (pm.pmLink) "name as capitalized";
+  variant (pm.pmLink.pmBwMeasure_list) "untagged";
+  variant (pm.pmLink.pmBwMeasure_list[-]) "name as 'PmBwMeasure'";
+  variant (pm.pmLink.pmStatistics_list) "untagged";
+  variant (pm.pmLink.pmStatistics_list[-]) "name as 'PmStatistics'";
+  variant (state) "name as capitalized";
+  variant (state.stateBlade) "name as capitalized";
+  variant (state.stateBlade.mXB4_list) "untagged";
+  variant (state.stateBlade.mXB4_list[-]) "name as 'MXB4'";
+  variant (state.stateBlade.mXB5LE_list) "untagged";
+  variant (state.stateBlade.mXB5LE_list[-]) "name as 'MXB5LE'";
+  variant (state.stateLink) "name as capitalized";
+  variant (state.stateLink.stateLa_list) "untagged";
+  variant (state.stateLink.stateLa_list[-]) "name as 'StateLa'";
+  variant (state.stateLink.stateLa_list[-].linkAggregationData) "name as capitalized";
+  variant (state.stateLink.stateLa_list[-].linkAggregationData.linkAggregationPortData) "name as capitalized";
+  variant (state.stateLink.stateLa_list[-].linkAggregationData.linkAggregationPortData.linkAggregationOperStateData) "name as capitalized";
+  variant (state.stateLink.stateVlan_list) "untagged";
+  variant (state.stateLink.stateVlan_list[-]) "name as 'StateVlan'";
+  variant (state.stateLink.stateVlan_list[-].vlanData_list) "untagged";
+  variant (state.stateLink.stateVlan_list[-].vlanData_list[-]) "name as 'VlanData'";
+  variant (vlan) "name as capitalized";
+  variant (vlan.vlanAdmin_list) "untagged";
+  variant (vlan.vlanAdmin_list[-]) "name as 'VlanAdmin'";
+  variant (vlan.vlanOper_list) "untagged";
+  variant (vlan.vlanOper_list[-]) "name as 'VlanOper'";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'http://www.ericsson.com/is/isco/MainSwitch/R4L06/R4AB_1.02'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'http://www.ericsson.com/is/isco/MainSwitch/R4L06/R4AB_1.02'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

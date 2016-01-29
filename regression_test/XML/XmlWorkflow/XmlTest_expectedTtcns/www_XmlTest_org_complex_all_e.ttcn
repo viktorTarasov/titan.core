@@ -59,13 +59,13 @@ type record MySubjects1
 	XSD.String chemistry optional
 }
 with {
-variant "useOrder";
-variant (year) "name as capitalized";
-variant (year) "attribute";
-variant (english) "name as capitalized";
-variant (math) "name as capitalized";
-variant (physics) "name as capitalized";
-variant (chemistry) "name as capitalized";
+  variant "useOrder";
+  variant (year) "name as capitalized";
+  variant (year) "attribute";
+  variant (english) "name as capitalized";
+  variant (math) "name as capitalized";
+  variant (physics) "name as capitalized";
+  variant (chemistry) "name as capitalized";
 };
 
 
@@ -86,14 +86,14 @@ type record MySubjects2
 	XSD.String history
 }
 with {
-variant "useOrder";
-variant (year) "name as capitalized";
-variant (year) "attribute";
-variant (english) "name as capitalized";
-variant (math) "name as capitalized";
-variant (physics) "name as capitalized";
-variant (chemistry) "name as capitalized";
-variant (history) "name as capitalized";
+  variant "useOrder";
+  variant (year) "name as capitalized";
+  variant (year) "attribute";
+  variant (english) "name as capitalized";
+  variant (math) "name as capitalized";
+  variant (physics) "name as capitalized";
+  variant (chemistry) "name as capitalized";
+  variant (history) "name as capitalized";
 };
 
 
@@ -113,19 +113,19 @@ type record Subject
 	XSD.String history
 }
 with {
-variant "useOrder";
-variant "untagged";
-variant (english) "name as capitalized";
-variant (math) "name as capitalized";
-variant (physics) "name as capitalized";
-variant (chemistry) "name as capitalized";
-variant (history) "name as capitalized";
+  variant "useOrder";
+  variant "untagged";
+  variant (english) "name as capitalized";
+  variant (math) "name as capitalized";
+  variant (physics) "name as capitalized";
+  variant (chemistry) "name as capitalized";
+  variant (history) "name as capitalized";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_all' prefix 'ns41'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_all' prefix 'ns41'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

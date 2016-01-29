@@ -52,7 +52,7 @@ type XSD.String NameLength4 length(4);
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/string_withPosLength' prefix 'wpsl'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/string_withPosLength' prefix 'wpsl'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

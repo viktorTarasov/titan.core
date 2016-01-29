@@ -50,7 +50,7 @@ type XSD.Decimal DecimalEnum (-1000.1, 2.0, 3.0, 4.2);
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/decimal_withEnum' prefix 'dwe'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/decimal_withEnum' prefix 'dwe'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

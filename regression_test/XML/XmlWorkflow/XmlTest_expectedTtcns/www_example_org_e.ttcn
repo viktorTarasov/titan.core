@@ -52,10 +52,10 @@ type record E43complex
 	XSD.Float foo optional
 }
 with {
-variant "name as uncapitalized";
-variant (bar) "attribute";
-variant (ding) "attribute";
-variant (foo) "attribute";
+  variant "name as uncapitalized";
+  variant (bar) "attribute";
+  variant (ding) "attribute";
+  variant (foo) "attribute";
 };
 
 
@@ -66,15 +66,15 @@ type record E44sequence
 	XSD.String ding
 }
 with {
-variant "name as uncapitalized";
-variant (bar) "attribute";
-variant (foo) "attribute";
+  variant "name as uncapitalized";
+  variant (bar) "attribute";
+  variant (foo) "attribute";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org' prefix 'ns'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org' prefix 'ns'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

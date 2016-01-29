@@ -103,6 +103,7 @@ then
 fi
 
 make
+echo "ttcn3_start Titan_LogTest $1"
 ttcn3_start Titan_LogTest  "$1" | tee "Console_$2"
 
 #ttcn3_logmerge *.log >  "$2"

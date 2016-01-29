@@ -9,7 +9,7 @@
 * http://www.eclipse.org/legal/epl-v10.html
 *******************************************************************************/
 //
-//  File:          www_XmlTest_org_complex_include.ttcn
+//  File:          www_XmlTest_org_complex_include_e.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -60,13 +60,13 @@ type record RegionsType
 	} zip_list
 }
 with {
-variant (zip_list) "untagged";
-variant (zip_list[-]) "name as 'zip'";
-variant (zip_list[-].code) "attribute";
-variant (zip_list[-].part_list) "untagged";
-variant (zip_list[-].part_list[-]) "name as 'part'";
-variant (zip_list[-].part_list[-].number) "attribute";
-variant (zip_list[-].part_list[-].quantity) "attribute";
+  variant (zip_list) "untagged";
+  variant (zip_list[-]) "name as 'zip'";
+  variant (zip_list[-].code) "attribute";
+  variant (zip_list[-].part_list) "untagged";
+  variant (zip_list[-].part_list[-]) "name as 'part'";
+  variant (zip_list[-].part_list[-].number) "attribute";
+  variant (zip_list[-].part_list[-].quantity) "attribute";
 };
 
 
@@ -78,17 +78,17 @@ type record PartsType
 	} part_list
 }
 with {
-variant (part_list) "untagged";
-variant (part_list[-]) "name as 'part'";
-variant (part_list[-].number) "attribute";
-variant (part_list[-].base) "untagged";
+  variant (part_list) "untagged";
+  variant (part_list[-]) "name as 'part'";
+  variant (part_list[-].number) "attribute";
+  variant (part_list[-].base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.XmlTest.org/complex_include2' prefix 'r2'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-variant "elementFormQualified";
+  encode "XML";
+  variant "namespace as 'www.XmlTest.org/complex_include2' prefix 'r2'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
 }

@@ -21,7 +21,7 @@
 //	Generated from file(s):
 //	- simpletype_base_e.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/simpletype/base/e" */
+//			/* targetnamespace = "www.example.org/simpletype/base" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -46,13 +46,13 @@ type record SimpleTypebase
 	} base
 }
 with {
-variant (base) "untagged";
+  variant (base) "untagged";
 };
 
 
 }
 with {
-encode "XML";
-variant "namespace as 'www.example.org/simpletype/base' prefix 'this'";
-variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  encode "XML";
+  variant "namespace as 'www.example.org/simpletype/base' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }
