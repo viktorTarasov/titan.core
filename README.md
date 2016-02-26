@@ -129,4 +129,7 @@ Compressed update site and SHA512 checksum:
 
 * https://github.com/eclipse/titan.Libraries.TCCUsefulFunctions
 
- 
+## Miscellaneous projects: 
+
+* https://github.com/eclipse/titan.misc
+(VSBOT, SIP_ETSI, more to come...) 
