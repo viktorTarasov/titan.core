@@ -190,7 +190,6 @@ char* generate_raw_coding(char* src,
       "p_td, TTCN_Buffer& p_buf, int limit, raw_order_t top_bit_ord, "
       "boolean, int, boolean)\n"
       "{\n"
-        "bound_flag = TRUE;\n"
         "int prepaddlength = p_buf.increase_pos_padd(p_td.raw->prepadding);\n"
         "limit -= prepaddlength;\n"
         "int decoded_length = 0;\n"
@@ -421,7 +420,6 @@ char* generate_raw_coding(char* src,
       "TTCN_Buffer& p_buf, int limit, raw_order_t top_bit_ord, boolean no_err, "
       "int, boolean)\n"
       "{ (void)no_err;\n"
-	"  bound_flag = TRUE;\n"
 	"  int prepaddlength=p_buf.increase_pos_padd(p_td.raw->prepadding);\n"
 	"  limit-=prepaddlength;\n"
 	"  size_t last_decoded_pos = p_buf.get_pos_bit();\n"
@@ -1965,7 +1963,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "    p_buf.put_s((size_t)p_td.namelens[e_xer]%s-(!is_indented%s), "
       "(cbyte*)p_td.names[e_xer]);\n"
       "  }\n"
-      "  else if (p_flavor & USE_TYPE_ATTR) {\n"
+      "  else if (p_flavor & (USE_NIL|USE_TYPE_ATTR)) {\n"
       "    size_t buf_len = p_buf.get_len();\n"
       "    const unsigned char * const buf_data = p_buf.get_data();\n"
       "    if (buf_data[buf_len-1-chopped_chars] == '\\n') ++chopped_chars;\n"
@@ -2082,7 +2080,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       , sdef->elements[sdef->nElements-1].name
     );
   }
-
+  
   if (want_namespaces) {
     /* there were some attributes. close the start tag left open */
     src = mputprintf(src,
@@ -2366,9 +2364,8 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
 
   src = mputprintf(src, /* XERSTUFF decodegen for record/SEQUENCE*/
     "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,"
-    " unsigned int p_flavor, embed_values_dec_struct_t*)\n"
+    " unsigned int p_flavor, unsigned int p_flavor2, embed_values_dec_struct_t*)\n"
     "{\n"
-    "  bound_flag = TRUE;\n"
     /* Remove XER_LIST, XER_RECOF from p_flavor. This is not required
      * for is_exer (which tests another bit), but for subsequent code. */
     "  int e_xer = is_exer(p_flavor);\n"
@@ -2377,9 +2374,10 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     "  const boolean omit_tag = e_xer && ((xerbits & (UNTAGGED|XER_ATTRIBUTE)) "
     "|| (p_flavor & (USE_NIL|USE_TYPE_ATTR)));\n"
     "%s"
-    "  const boolean parent_tag = e_xer && (p_flavor & (USE_TYPE_ATTR));\n"
+    "  const boolean parent_tag = e_xer && ((p_flavor & USE_TYPE_ATTR)|| (p_flavor2 & USE_NIL_PARENT_TAG));\n"
     "  (void)parent_tag;\n"
     "  p_flavor &= XER_MASK;\n" /* also removes "toplevel" bit */
+    "  p_flavor2 = XER_NONE;\n" /* Remove only bit: USE_NIL_PARENT_TAG (for now) */
     "  int rd_ok, xml_depth=-1, type;\n"
     "  {\n" /* scope for the error contexts */
     , name
@@ -2389,8 +2387,10 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
      * or if EMBED-VALUES is possible, but isn't. */
   );
 
-  if (sdef->xerUseNilPossible) src = mputstr(src,
-    "  boolean nil_attribute = FALSE;\n");
+  if (sdef->xerUseNilPossible) { src = mputstr(src,
+    "  boolean nil_attribute = FALSE;\n"
+    "  boolean already_processed = FALSE;\n");
+  }
 
   src = mputprintf(src,
     "  TTCN_EncDec_ErrorContext ec_0(\"Component '\");\n"
@@ -2449,12 +2449,11 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
 
   /* ********************************************************************
    * ATTRIBUTES
-   ***************************/
+   ***************************/ 
   if (num_attributes || sdef->xerUseNilPossible /* maybe QNAME too ? */) {
     size_t aaa;
-    src = mputstr(src, " if (!omit_tag || parent_tag) {\n");
 
-    /* Prepare for attributes not present in the XML.
+     /* Prepare for attributes not present in the XML.
      * Set all attributes with defaultForEmpty to the D-F-E value.
      * Set all optional components with ATTRIBUTE to omit.
      *
@@ -2477,6 +2476,8 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         , sdef->elements[aaa].isOptional ? " = OMIT_VALUE" : ".set_size(0)");
       }
     }
+    
+    src = mputstr(src, " if (!omit_tag || parent_tag) {\n");
 
     if (num_attributes==0 /* therefore sdef->xerUseNilPossible is true */ ) {
       /* Only the "nil" attribute may be present. If there is no USE-NIL,
@@ -2492,7 +2493,12 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     }
 
     src = mputstr(src,
-      "  for (rd_ok = p_reader.MoveToFirstAttribute(); rd_ok==1 && "
+      "  if(parent_tag && p_reader.NodeType() == XML_READER_TYPE_ATTRIBUTE) {\n"
+      "    rd_ok = p_reader.Ok();\n"
+      "  } else {\n"
+      "    rd_ok = p_reader.MoveToFirstAttribute();\n"
+      "  }\n"
+      "  for (; rd_ok==1 && "
       "p_reader.NodeType()==XML_READER_TYPE_ATTRIBUTE; "
       "rd_ok = p_reader.AdvanceAttribute()) {\n"
       "    if (p_reader.IsNamespaceDecl()) continue;\n");
@@ -2525,11 +2531,22 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputprintf(src,
         "    if (check_name(attr_name, %s_xer_, 1) && check_namespace(ns_uri, %s_xer_)) {\n"
         "      ec_1.set_msg(\"%s': \");\n"
-        "      field_%s.XER_decode(%s_xer_, p_reader, p_flavor | (p_td.xer_bits & USE_NIL), 0);\n"
+        "      field_%s.XER_decode(%s_xer_, p_reader, p_flavor | (p_td.xer_bits & USE_NIL), p_flavor2, 0);\n"
         "    } else"
         , sdef->elements[i].typegen, sdef->elements[i].typegen
         , sdef->elements[i].dispname /* set_msg */
         , sdef->elements[i].name, sdef->elements[i].typegen
+      );
+    }
+    
+    if(sdef->xerUseNilPossible) {
+      src = mputprintf(src,
+        "    if(p_td.xer_bits & USE_NIL) {\n"
+        "      field_%s.XER_decode(%s_xer_, p_reader, p_flavor | USE_NIL, p_flavor2 | USE_NIL_PARENT_TAG, 0);\n"
+        "      already_processed = TRUE;\n"
+        "    } else"
+        , sdef->elements[sdef->nElements-1].name
+        , sdef->elements[sdef->nElements-1].typegen
       );
     }
 
@@ -2617,7 +2634,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  if (!(p_td.xer_bits & EMBED_VALUES)) {\n"
       "    ec_1.set_msg(\"%s': \");\n"
       "    field_%s.XER_decode(%s_xer_, p_reader, "
-      "p_flavor | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : XER_NONE), 0);\n"
+      "p_flavor | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : XER_NONE), p_flavor2, 0);\n"
       "  }\n"
       , sdef->elements[0].dispname
       , sdef->elements[0].name, sdef->elements[0].typegen
@@ -2651,7 +2668,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputprintf(src,
         "  {\n"
         "    ec_1.set_msg(\"%s': \");\n"
-        "    field_%s.XER_decode(%s_xer_, p_reader, p_flavor | (p_td.xer_bits & USE_NIL), 0);\n"
+        "    field_%s.XER_decode(%s_xer_, p_reader, p_flavor | (p_td.xer_bits & USE_NIL), p_flavor2, 0);\n"
         "  }\n"
         , sdef->elements[i].dispname
         , sdef->elements[i].name, sdef->elements[i].typegen
@@ -2777,7 +2794,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         src = mputprintf(src,
           "      if (check_name(x_name, %s_xer_, 1)) {\n"
           "        ec_1.set_msg(\"%s': \");\n"
-          "        field_%s%s%s%s.XER_decode(%s_xer_, p_reader, p_flavor, %s);\n"
+          "        field_%s%s%s%s.XER_decode(%s_xer_, p_reader, p_flavor, p_flavor2, %s);\n"
           , sdef->elements[i].typegen
           , sdef->elements[i].dispname
           , (sdef->xerUseNilPossible ? sdef->elements[sdef->nElements-1].name: sdef->elements[i].name)
@@ -2814,7 +2831,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
           "          }\n"
           "          if (!next_any) {\n"
           "            ec_1.set_msg(\"%s': \");\n"
-          "            field_%s%s%s%s.XER_decode(%s_xer_, p_reader, p_flavor, 0);\n"
+          "            field_%s%s%s%s.XER_decode(%s_xer_, p_reader, p_flavor, p_flavor2, 0);\n"
           "            field_%s[i] = e_val;\n"
           "            any_found = true;\n"
           "          }\n"
@@ -2921,8 +2938,9 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         "  if (e_xer && p_td.dfeValue && p_reader.IsEmptyElement()) {\n"
         "    field_%s = *static_cast<const %s*>(p_td.dfeValue);\n"
         "  }\n"
-        "  else"
-        , sdef->elements[i].name, sdef->elements[i].type);
+        "  else%s"
+        , sdef->elements[i].name, sdef->elements[i].type
+        , sdef->xerUseNilPossible ? " if (!already_processed)" : "");
     }
     /* Decode the field */
     src = mputprintf(src,
@@ -2946,7 +2964,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     
     src = mputprintf(src, 
       "    field_%s.XER_decode(%s_xer_, p_reader, p_flavor"
-      " | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : XER_NONE), %s);\n"
+      " | (p_td.xer_bits & USE_NIL)| (tag_closed ? PARENT_CLOSED : XER_NONE), p_flavor2, %s);\n"
       "  }\n"
       , sdef->elements[i].name, sdef->elements[i].typegen
       , sdef->xerEmbedValuesPossible ? "emb_val" : "0");
@@ -3111,7 +3129,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     def=mputprintf(def, "class %s {\n", name);
   }
 
-  /* fields */
   for (i = 0; i < sdef->nElements; i++) {
     if(sdef->elements[i].isOptional)
       def = mputprintf(def, "  OPTIONAL<%s> field_%s;\n",
@@ -3121,16 +3138,12 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       def = mputprintf(def, "  %s field_%s;\n",
                        sdef->elements[i].type, sdef->elements[i].name);
   }
-  
-  /* bound flag */
-  def = mputstr(def, "  boolean bound_flag;\n");
 
   /* default constructor */
   def = mputprintf(def, "public:\n"
     "  %s();\n", name);
   src = mputprintf(src, "%s::%s()\n"
     "{\n"
-    "  bound_flag = FALSE;\n"
     "}\n\n", name, name);
 
   /* constructor by fields */
@@ -3164,7 +3177,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   }
   src = mputstr(src, "\n"
                 "{\n"
-                "  bound_flag = TRUE;\n"
                 "}\n\n");
 
   /* copy constructor */
@@ -3172,8 +3184,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   src = mputprintf(src, "%s::%s(const %s& other_value)\n"
       "{\n"
       "if(!other_value.is_bound()) "
-      "TTCN_error(\"Copying an unbound value of type %s.\");\n"
-      "bound_flag = TRUE;\n",
+      "TTCN_error(\"Copying an unbound value of type %s.\");\n",
       name, name, name, dispname);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src,
@@ -3196,7 +3207,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "field_%s.clean_up();\n", sdef->elements[i].name);
   }
   src = mputstr(src,
-      "bound_flag = FALSE;\n"
       "}\n\n");
 
   /* = operator */
@@ -3205,8 +3215,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "{\n"
       "if (this != &other_value) {\n"
       "  if(!other_value.is_bound()) "
-      "TTCN_error(\"Assignment of an unbound value of type %s.\");\n"
-      "  bound_flag = TRUE;\n",
+      "TTCN_error(\"Assignment of an unbound value of type %s.\");\n",
       name, name, name, dispname);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src,
@@ -3226,7 +3235,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   src = mputprintf(src,
                    "boolean %s::operator==(const %s& other_value) const\n"
                    "{\n"
-                   "if (!is_bound() && !other_value.is_bound()) return TRUE;\n"
                    "return ", name, name);
   for (i = 0; i < sdef->nElements; i++) {
     if (i > 0) src = mputstr(src, "\n  && ");
@@ -3245,8 +3253,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "  boolean is_bound() const;\n\n");
   src = mputprintf(src,
       "boolean %s::is_bound() const\n"
-      "{\n"
-      "if (bound_flag) return TRUE;\n", name);
+      "{\n", name);
       for(i=0; i < sdef->nElements; i++) {
         if(sdef->elements[i].isOptional) {
           src = mputprintf(src,
@@ -3271,8 +3278,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "  boolean is_value() const;\n\n");
   src = mputprintf(src,
       "boolean %s::is_value() const\n"
-      "{\n"
-      "if (!is_bound()) return FALSE;\n", name);
+      "{\n", name);
       for(i=0; i < sdef->nElements; i++) {
         if(sdef->elements[i].isOptional) {
           src = mputprintf(src,
@@ -3316,18 +3322,17 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   mandatory_fields_count = 0;
   for (i = 0; i < sdef->nElements; i++)
     if (!sdef->elements[i].isOptional) mandatory_fields_count++;
-  
-  def = mputstr(def, "  int size_of() const;\n");
-  src = mputprintf(src,
-    "int %s::size_of() const\n"
-    "{\n"
-    "  if (!is_bound()) "
-    "TTCN_error(\"Calculating the size of an unbound record/set value of type %s\");\n"
-    , name, dispname);
-  if (sdef->nElements == mandatory_fields_count) {
-    src = mputprintf(src, "  return %lu;\n", (unsigned long) mandatory_fields_count);
-  }
-  else {
+
+  if(sdef->nElements == mandatory_fields_count){
+    def = mputprintf(def,
+        "  inline int size_of() const\n"
+        "    {return %lu;}\n", (unsigned long) mandatory_fields_count);
+  }else{
+    def = mputstr(def, "  int size_of() const;\n");
+    src = mputprintf(src,
+      "int %s::size_of() const\n"
+      "{\n",
+      name);
     src = mputprintf(src, "  int ret_val = %lu;\n",
       (unsigned long) mandatory_fields_count);
     for (i = 0; i < sdef->nElements; i++)
@@ -3335,9 +3340,10 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
         src = mputprintf(src,
           "  if (field_%s.ispresent()) ret_val++;\n",
           sdef->elements[i].name);
-    src = mputstr(src, "  return ret_val;\n");
+    src = mputstr(src,
+      "  return ret_val;\n"
+      "}\n\n");
   }
-  src = mputstr(src, "}\n\n");
 
   /* log function */
   def = mputstr(def, "  void log() const;\n");
@@ -3362,7 +3368,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   src = mputprintf
     (src,
      "void %s::set_param(Module_Param& param)\n{\n"
-     "  bound_flag = TRUE;\n"
      "  if (dynamic_cast<Module_Param_Name*>(param.get_id()) != NULL &&\n"
      "      param.get_id()->next_name()) {\n"
     // Haven't reached the end of the module parameter name
@@ -3491,11 +3496,8 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
 
   /* text encoder function */
   def = mputstr(def, "  void encode_text(Text_Buf& text_buf) const;\n");
-  src = mputprintf(src,
-    "void %s::encode_text(Text_Buf& text_buf) const\n{\n"
-    "if (!is_bound()) "
-    "TTCN_error(\"Text encoder: Encoding an unbound record/set value of type %s.\");\n"
-    , name, dispname);
+  src = mputprintf(src,"void %s::encode_text(Text_Buf& text_buf) const\n{\n",
+                   name);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, "field_%s.encode_text(text_buf);\n",
                      sdef->elements[i].name);
@@ -3504,9 +3506,8 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
 
   /* text decoder function */
   def = mputstr(def, "  void decode_text(Text_Buf& text_buf);\n");
-  src = mputprintf(src, 
-    "void %s::decode_text(Text_Buf& text_buf)\n{\n"
-    "bound_flag = TRUE;\n", name);
+  src = mputprintf(src, "void %s::decode_text(Text_Buf& text_buf)\n{\n",
+                   name);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, "field_%s.decode_text(text_buf);\n",
                      sdef->elements[i].name);
@@ -3580,7 +3581,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
        "boolean %s::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,"
        " const ASN_BER_TLV_t& p_tlv, unsigned L_form)\n"
        "{\n"
-       "  bound_flag = TRUE;\n"
        "  BER_chk_descr(p_td);\n"
        "  ASN_BER_TLV_t stripped_tlv;\n"
        "  BER_decode_strip_tags(*p_td.ber, p_tlv, L_form, stripped_tlv);\n"
@@ -3782,7 +3782,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
          "void %s::BER_decode_opentypes(TTCN_Type_list& p_typelist,"
          " unsigned L_form)\n"
          "{\n"
-         "  bound_flag = TRUE;\n"
          "  p_typelist.push(this);\n"
          "  TTCN_EncDec_ErrorContext ec_0(\"Component '\");\n"
          "  TTCN_EncDec_ErrorContext ec_1;\n"
@@ -3869,7 +3868,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       src = mputprintf(src,
       "int %s::TEXT_decode(const TTCN_Typedescriptor_t& p_td,"
       " TTCN_Buffer& p_buf, Limit_Token_List& limit, boolean no_err, boolean){\n"
-      "  bound_flag = TRUE;\n"
       "  int decoded_length=0;\n"
       "  int decoded_field_length=0;\n"
       "  size_t pos=p_buf.get_pos();\n"
@@ -4135,7 +4133,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       src = mputprintf(src,
       "int %s::TEXT_decode(const TTCN_Typedescriptor_t& p_td,"
       " TTCN_Buffer& p_buf, Limit_Token_List& limit, boolean no_err, boolean){\n"
-      "  bound_flag = TRUE;\n"
       "  int decoded_length=0;\n"
       "  int decoded_field_length=0;\n"
       "%s"
@@ -4418,10 +4415,10 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "  else if (JSON_TOKEN_OBJECT_START != j_token) {\n"
       "    return JSON_ERROR_INVALID_TOKEN;\n"
       "  }\n"
-      "  bound_flag = TRUE;\n\n"
       , name);
     boolean has_metainfo_enabled = FALSE;
     for (i = 0; i < sdef->nElements; ++i) {
+      src = mputprintf(src, "  boolean %s_found = FALSE;\n", sdef->elements[i].name);
       if (sdef->elements[i].jsonMetainfoUnbound) {
         // initialize meta info states
         src = mputprintf(src, 
@@ -4461,8 +4458,10 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       src = mputprintf(src,
         // check field name
         "if (%d == name_len && 0 == strncmp(fld_name, \"%s\", name_len)) {\n"
+        "        %s_found = TRUE;\n"
         , (int)strlen(sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname)
-        , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname);
+        , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname
+        , sdef->elements[i].name);
       if (has_metainfo_enabled) {
         src = mputstr(src, "        if (is_metainfo) {\n");
         if (sdef->elements[i].jsonMetainfoUnbound) {
@@ -4571,7 +4570,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           , sdef->elements[i].name, sdef->elements[i].dispname);
       }
       src = mputprintf(src,
-        "if (!field_%s.is_bound()) {\n"
+        "if (!%s_found) {\n"
         , sdef->elements[i].name);
       if (sdef->elements[i].jsonDefaultValue) {
         src = mputprintf(src,
@@ -6145,7 +6144,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
         "// written by %s in " __FILE__ " at %d\n"
 #endif
         "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader, "
-        "unsigned int p_flavor, embed_values_dec_struct_t*)\n"
+        "unsigned int p_flavor, unsigned int /*p_flavor2*/, embed_values_dec_struct_t*)\n"
         "{\n"
         "  int e_xer = is_exer(p_flavor);\n"
         "  bound_flag = true;\n"
@@ -6824,8 +6823,7 @@ void defRecordClass2(const struct_def *sdef, output_struct *output)
     src = mputprintf(src, "%s::%s(const %s& other_value) : Record_Type(other_value)\n", name, name, name);
     src = mputstr(src, "{\n"
       "  if(!other_value.is_bound()) "
-      "TTCN_error(\"Copying an unbound record/set value.\");\n"
-      "bound_flag = TRUE;\n");
+      "TTCN_error(\"Copying an unbound record/set value.\");\n");
     for (i = 0; i < sdef->nElements; i++) {
       src = mputprintf(src,
           "if (other_value.field_%s.is_bound() )\n"
@@ -6870,7 +6868,6 @@ void defRecordClass2(const struct_def *sdef, output_struct *output)
     src = mputstr(src, "\n"
                   "{\n"
                   "init_vec();\n"
-                  "bound_flag = TRUE;\n"
                   "}\n\n");
   } else { /* constructor from null */
     def = mputprintf(def, "  %s(null_type) {bound_flag = TRUE;}\n", name);

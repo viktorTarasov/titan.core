@@ -412,7 +412,7 @@ public:
   int XER_encode(const XERdescriptor_t& p_td,
                  TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-                 unsigned int flavor, embed_values_dec_struct_t*);
+                 unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
 };
 
 class EXTERNAL_template : public Base_Template {

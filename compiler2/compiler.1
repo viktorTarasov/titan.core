@@ -3,7 +3,7 @@
 compiler \- TTCN-3 and ASN.1 to C++ translator
 .SH SYNOPSIS
 .B compiler
-.RB "[\| " \-abcdfgijlLMpqrRsStuwxXyY " \|]"
+.RB "[\| " \-abcdEfgijlLMpqrRsStuwxXyY " \|]"
 .RB "[\| " \-V
 .IR " verb_level" " \|]"
 .RB "[\| " \-K
@@ -80,6 +80,10 @@ Treat ASN.1
 fields with DEFAULT values as
 .I omit
 in TTCN-3.
+.TP
+.B \-E
+Instructs the variant attribute parser to display warnings instead of errors
+for unrecognized/erroneous attributes.
 .TP
 .B \-f
 Forces the compiler to

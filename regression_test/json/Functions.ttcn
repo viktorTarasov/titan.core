@@ -98,6 +98,9 @@ external function f_enc_profile0(in Profile0 u) return octetstring
 external function f_enc_cba(in CBA u) return octetstring
   with { extension "prototype(convert)"; extension "encode(JSON)"; }
 
+external function f_enc_kw_fld(in KeywordFields u) return octetstring
+  with { extension "prototype(convert)"; extension "encode(JSON)"; }
+
 external function f_enc_stuff(in Stuff x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
 
@@ -114,6 +117,18 @@ external function f_enc_meta_rec(in MetainfoRecord x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
   
 external function f_enc_meta_set(in MetainfoSet x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_meta_outer_rec(in MetainfoOuterRecord x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+
+external function f_enc_meta_recof(in MetainfoRecOf x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+
+external function f_enc_meta_setof(in MetainfoSetOf x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+
+external function f_enc_meta_arr(in MetainfoArray x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
 
 // for ASN.1 types
@@ -213,6 +228,9 @@ external function f_dec_profile0(in octetstring u) return Profile0
 external function f_dec_cba(in octetstring u) return CBA
   with { extension "prototype(convert)"; extension "decode(JSON)"; }
 
+external function f_dec_kw_fld(in octetstring u) return KeywordFields
+  with { extension "prototype(convert)"; extension "decode(JSON)"; }
+
 external function f_dec_stuff(in octetstring x) return Stuff
   with { extension "prototype(convert) decode(JSON)" }
 
@@ -232,6 +250,18 @@ external function f_dec_meta_rec(in octetstring x) return MetainfoRecord
   with { extension "prototype(convert) decode(JSON)" }
   
 external function f_dec_meta_set(in octetstring x) return MetainfoSet
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_meta_outer_rec(in octetstring x) return MetainfoOuterRecord
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_meta_recof(in octetstring x) return MetainfoRecOf
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_meta_setof(in octetstring x) return MetainfoSetOf
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_meta_arr(in octetstring x) return MetainfoArray
   with { extension "prototype(convert) decode(JSON)" }
 
 // for ASN.1 types

@@ -1450,9 +1450,18 @@ int Record_Of_Type::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
   int enc_len = p_tok.put_next_token(JSON_TOKEN_ARRAY_START, NULL);
   
   for (int i = 0; i < get_nof_elements(); ++i) {
-    int ret_val = get_at(i)->JSON_encode(*p_td.oftype_descr, p_tok);
-    if (0 > ret_val) break;
-    enc_len += ret_val;
+    if (NULL != p_td.json && p_td.json->metainfo_unbound && !get_at(i)->is_bound()) {
+      // unbound elements are encoded as { "metainfo []" : "unbound" }
+      enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+      enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, "metainfo []");
+      enc_len += p_tok.put_next_token(JSON_TOKEN_STRING, "\"unbound\"");
+      enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+    }
+    else {
+      int ret_val = get_at(i)->JSON_encode(*p_td.oftype_descr, p_tok);
+      if (0 > ret_val) break;
+      enc_len += ret_val;
+    }
   }
   
   enc_len += p_tok.put_next_token(JSON_TOKEN_ARRAY_END, NULL);
@@ -1507,7 +1516,15 @@ int Record_Of_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_desc
           enc_len += err_vals->value->errval->JSON_encode(*(err_vals->value->type_descr), p_tok);
         }
       }
-    } else {
+    }
+    else if (NULL != p_td.json && p_td.json->metainfo_unbound && !get_at(i)->is_bound()) {
+      // unbound elements are encoded as { "metainfo []" : "unbound" }
+      enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+      enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, "metainfo []");
+      enc_len += p_tok.put_next_token(JSON_TOKEN_STRING, "\"unbound\"");
+      enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+    }
+    else {
       int ret_val;
       if (NULL != emb_descr) {
         ret_val = get_at(i)->JSON_encode_negtest(emb_descr, *p_td.oftype_descr, p_tok);
@@ -1554,11 +1571,35 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
   } 
   
   set_size(0);
-  while (true) {
+  for (int nof_elements = 0; true; ++nof_elements) {
     // Read value tokens until we reach some other token
     size_t buf_pos = p_tok.get_buf_pos();
+    int ret_val;
+    if (NULL != p_td.json && p_td.json->metainfo_unbound) {
+      // check for metainfo object
+      ret_val = p_tok.get_next_token(&token, NULL, NULL);
+      if (JSON_TOKEN_OBJECT_START == token) {
+        char* value = NULL;
+        size_t value_len = 0;
+        ret_val += p_tok.get_next_token(&token, &value, &value_len);
+        if (JSON_TOKEN_NAME == token && 11 == value_len &&
+            0 == strncmp(value, "metainfo []", 11)) {
+          ret_val += p_tok.get_next_token(&token, &value, &value_len);
+          if (JSON_TOKEN_STRING == token && 9 == value_len &&
+              0 == strncmp(value, "\"unbound\"", 9)) {
+            ret_val = p_tok.get_next_token(&token, NULL, NULL);
+            if (JSON_TOKEN_OBJECT_END == token) {
+              dec_len += ret_val;
+              continue;
+            }
+          }
+        }
+      }
+      // metainfo object not found, jump back and let the element type decode it
+      p_tok.set_buf_pos(buf_pos);
+    }
     Base_Type* val = create_elem();
-    int ret_val = val->JSON_decode(*p_td.oftype_descr, p_tok, p_silent);
+    ret_val = val->JSON_decode(*p_td.oftype_descr, p_tok, p_silent);
     if (JSON_ERROR_INVALID_TOKEN == ret_val) {
       // undo the last action on the buffer
       p_tok.set_buf_pos(buf_pos);
@@ -1574,12 +1615,12 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
     }
     if (NULL == refd_ind_ptr) {
       val_ptr->value_elements = (Base_Type**)reallocate_pointers(
-        (void**)val_ptr->value_elements, val_ptr->n_elements, val_ptr->n_elements + 1);
-      val_ptr->value_elements[val_ptr->n_elements] = val;
-      val_ptr->n_elements++;
+        (void**)val_ptr->value_elements, val_ptr->n_elements, nof_elements + 1);
+      val_ptr->value_elements[nof_elements] = val;
+      val_ptr->n_elements = nof_elements + 1;
     }
     else {
-      get_at(get_nof_elements())->set_value(val);
+      get_at(nof_elements)->set_value(val);
       delete val;
     }
     dec_len += ret_val;
@@ -1701,7 +1742,7 @@ void Record_Of_Type::decode(const TTCN_Typedescriptor_t& p_td,
     for (int success=reader.Read(); success==1; success=reader.Read()) {
       if (reader.NodeType() == XML_READER_TYPE_ELEMENT) break;
     }
-    XER_decode(*(p_td.xer), reader, XER_coding | XER_TOPLEVEL, 0);
+    XER_decode(*(p_td.xer), reader, XER_coding | XER_TOPLEVEL, XER_NONE, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -2199,7 +2240,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
 }
 
 int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
-  XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t* emb_val)
+  XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t* emb_val)
 {
   int exer = is_exer(flavor);
   int xerbits = p_td.xer_bits;
@@ -2278,7 +2319,7 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
       // The call to the non-const operator[], I mean get_at(), creates
       // a new element (because it is indexing one past the last element).
       // Then we call its XER_decode with the temporary XML reader.
-      get_at(get_nof_elements())->XER_decode(sub_xer, reader2, flavor, 0);
+      get_at(get_nof_elements())->XER_decode(sub_xer, reader2, flavor, flavor2, 0);
       if (flavor & EXIT_ON_ERROR && !is_elem_bound(get_nof_elements() - 1)) {
         if (1 == get_nof_elements()) {
           // Failed to decode even the first element
@@ -2344,10 +2385,10 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
             }
             ec_1.set_msg("%d: ", get_nof_elements());
             /* The call to the non-const get_at() creates the element */
-            get_at(get_nof_elements())->XER_decode(*p_td.oftype_descr, reader, flavor, emb_val);
-            if (0 != emb_val && !own_tag && get_nof_elements() > 1) {
-              ++emb_val->embval_index;
-            }
+            get_at(get_nof_elements())->XER_decode(*p_td.oftype_descr, reader, flavor, flavor2, emb_val);
+          }
+          if (0 != emb_val && !own_tag && get_nof_elements() > 1) {
+            ++emb_val->embval_index;
           }
         }
         else if (XML_READER_TYPE_END_ELEMENT == type) {
@@ -2534,7 +2575,6 @@ boolean operator!=(null_type null_value,
 
 boolean Record_Type::is_bound() const
 {
-  if (bound_flag) return TRUE;
   int field_cnt = get_count();
   for (int field_idx=0; field_idx<field_cnt; field_idx++) {
     const Base_Type* temp = get_at(field_idx);
@@ -2548,9 +2588,6 @@ boolean Record_Type::is_bound() const
 
 boolean Record_Type::is_value() const
 {
-  if (!is_bound()) {
-    return FALSE;
-  }
   int field_cnt = get_count();
   for (int field_idx=0; field_idx<field_cnt; field_idx++) {
     const Base_Type* temp = get_at(field_idx);
@@ -2570,7 +2607,6 @@ void Record_Type::clean_up()
   for (int field_idx=0; field_idx<field_cnt; field_idx++) {
     get_at(field_idx)->clean_up();
   }
-  bound_flag = FALSE;
 }
 
 void Record_Type::log() const
@@ -2592,7 +2628,6 @@ void Record_Type::log() const
 }
 
 void Record_Type::set_param(Module_Param& param) {
-  bound_flag = TRUE;
   if (dynamic_cast<Module_Param_Name*>(param.get_id()) != NULL &&
       param.get_id()->next_name()) {
     // Haven't reached the end of the module parameter name
@@ -2703,10 +2738,6 @@ void Record_Type::set_implicit_omit()
 
 int Record_Type::size_of() const
 {
-  if (!is_bound()) {
-    TTCN_error("Calculating the size of an unbound record/set value of type %s",
-      get_descriptor()->name);
-  }
   int opt_count = optional_count();
   if (opt_count==0) return get_count();
   const int* optional_indexes = get_optional_indexes();
@@ -2730,7 +2761,6 @@ void Record_Type::encode_text(Text_Buf& text_buf) const
 
 void Record_Type::decode_text(Text_Buf& text_buf)
 {
-  bound_flag = TRUE;
   int field_cnt = get_count();
   for (int field_idx=0; field_idx<field_cnt; field_idx++)
     get_at(field_idx)->decode_text(text_buf);
@@ -2739,9 +2769,6 @@ void Record_Type::decode_text(Text_Buf& text_buf)
 boolean Record_Type::is_equal(const Base_Type* other_value) const
 {
   const Record_Type* other_record = static_cast<const Record_Type*>(other_value);
-  if (!is_bound() && !other_record->is_bound()) {
-    return TRUE;
-  }
   int field_cnt = get_count();
   for (int field_idx=0; field_idx<field_cnt; field_idx++) {
     const Base_Type* elem = get_at(field_idx);
@@ -2773,7 +2800,6 @@ void Record_Type::set_value(const Base_Type* other_value)
     }
   }
   err_descr = other_record->err_descr;
-  bound_flag = TRUE;
 }
 
 void Record_Type::encode(const TTCN_Typedescriptor_t& p_td,
@@ -2896,7 +2922,7 @@ void Record_Type::decode(const TTCN_Typedescriptor_t& p_td,
     for (int success=reader.Read(); success==1; success=reader.Read()) {
       if (reader.NodeType() == XML_READER_TYPE_ELEMENT) break;
     }
-    XER_decode(*(p_td.xer), reader, XER_coding | XER_TOPLEVEL, 0);
+    XER_decode(*(p_td.xer), reader, XER_coding | XER_TOPLEVEL, XER_NONE, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -3054,7 +3080,6 @@ ASN_BER_TLV_t* Record_Type::BER_encode_TLV_negtest(const Erroneous_descriptor_t*
 boolean Record_Type::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
   const ASN_BER_TLV_t& p_tlv, unsigned L_form)
 {
-  bound_flag = TRUE;
   BER_chk_descr(p_td);
   ASN_BER_TLV_t stripped_tlv;
   BER_decode_strip_tags(*p_td.ber, p_tlv, L_form, stripped_tlv);
@@ -3161,7 +3186,6 @@ boolean Record_Type::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
 
 void Record_Type::BER_decode_opentypes(TTCN_Type_list& p_typelist, unsigned L_form)
 {
-  bound_flag = TRUE;
   p_typelist.push(this);
   TTCN_EncDec_ErrorContext ec_0("Component '");
   TTCN_EncDec_ErrorContext ec_1;
@@ -3358,7 +3382,6 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
 int Record_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   int limit, raw_order_t top_bit_ord, boolean no_err, int, boolean)
 {
-  bound_flag = TRUE;
   int field_cnt = get_count();
   int opt_cnt = optional_count();
   int mand_num = field_cnt - opt_cnt; // expected mandatory fields
@@ -3632,7 +3655,6 @@ int Record_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr, 
 int Record_Type::TEXT_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   Limit_Token_List& limit, boolean no_err, boolean /*first_call*/)
 {
-  bound_flag = TRUE;
   if (is_set()) {
     int decoded_length=0;
     int decoded_field_length=0;
@@ -4166,7 +4188,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       - (!indenting || delay_close || (exer && (p_td.xer_bits & HAS_1UNTAGGED))),
       (cbyte*)p_td.names[exer]);
   }
-  else if (flavor & USE_TYPE_ATTR) {
+  else if (flavor & (USE_NIL|USE_TYPE_ATTR)) {
     // reopen the parent's start tag by overwriting the '>'
     size_t buf_len = p_buf.get_len();
     const unsigned char * const buf_data = p_buf.get_data();
@@ -5082,9 +5104,8 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
 }
 
 int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-                            unsigned int flavor, embed_values_dec_struct_t*)
+                            unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
 {
-  bound_flag = TRUE;
   int exer = is_exer(flavor);
   int success, type;
   int depth=-1; // depth of the start tag
@@ -5096,10 +5117,11 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   boolean tag_closed = (flavor & PARENT_CLOSED) != 0;
   // If the parent has USE-TYPE, our ATTRIBUTE members can be found
   // in the parent's tag (the reader is sitting on it).
-  const boolean parent_tag = exer && (flavor & (/*USE_NIL|*/ USE_TYPE_ATTR));
+  const boolean parent_tag = exer && ((flavor & USE_TYPE_ATTR) || (flavor2 & USE_NIL_PARENT_TAG));
 
   // Filter out flags passed by our parent. These are not for the fields.
   flavor &= XER_MASK; // also removes XER_TOPLEVEL
+  flavor2 = XER_NONE; // Remove only bit: USE_NIL_PARENT_TAG (for now)
 
   const int field_cnt = get_count();
   const int num_attributes = get_xer_num_attr();
@@ -5112,7 +5134,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   // fields); normal processing start at this field.
   const int start_at = uo_index + ((p_td.xer_bits & USE_ORDER) != 0);
   const int first_nonattr = start_at + num_attributes;
-
+  
   // The index of the ANY-ATTRIBUTES member, if any
   int aa_index = -1;
   for (int k = 0; k < first_nonattr; ++k) {
@@ -5180,12 +5202,15 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     TTCN_EncDec_ErrorContext ec_0("Component '");
     TTCN_EncDec_ErrorContext ec_1;
     boolean usenil_attribute = FALSE; // true if found and said yes
+    // If nillable and the nillable field is a record type, that has attributes
+    // then it will become true, and skips the processing of the fields after
+    boolean already_processed = FALSE;
     if (!exer) {
       if (!reader.IsEmptyElement()) reader.Read();
       // First, the (would-be) attributes (unaffected by USE-ORDER)
       for (i = 0; i < first_nonattr; i++) {
         ec_1.set_msg("%s': ", fld_name(i));
-        get_at(i)->XER_decode(*xer_descr(i), reader, flavor, 0);
+        get_at(i)->XER_decode(*xer_descr(i), reader, flavor, flavor2, 0);
       } // next field
     }
     else if (own_tag || parent_tag) { // EXER and not UNTAGGED: do attributes
@@ -5213,7 +5238,12 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
       }
 
       /* * * * * * * * * Attributes * * * * * * * * * * * * * */
-      for (success = reader.MoveToFirstAttribute();
+      if(parent_tag && reader.NodeType() == XML_READER_TYPE_ATTRIBUTE) {
+        success = reader.Ok();
+      } else {
+        success = reader.MoveToFirstAttribute();
+      }
+      for (;
         success == 1 && reader.NodeType() == XML_READER_TYPE_ATTRIBUTE;
         success = reader.AdvanceAttribute())
       {
@@ -5227,7 +5257,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
         if (field_index != -1) {
           // There is a field. Let it decode the attribute.
           ec_1.set_msg("%s': ", fld_name(field_index));
-          get_at(field_index)->XER_decode(*xer_descr(field_index), reader, flavor, 0);
+          get_at(field_index)->XER_decode(*xer_descr(field_index), reader, flavor, flavor2, 0);
           continue;
         }
 
@@ -5249,8 +5279,13 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
 
             continue;
           } // it is the "nil" attribute
+          // else, let the nillable field decode the next attributes, it is possible
+          // that it belongs to him
+          get_at(field_cnt-1)->XER_decode(*xer_descr(field_cnt-1), reader, flavor | USE_NIL, flavor2 | USE_NIL_PARENT_TAG, 0);
+          already_processed = TRUE;
+          continue;
         } // type has USE-NIL
-
+        
         if (parent_tag) {
           const char *prefix = (const char*)reader.Prefix();
           // prefix may be NULL, control_ns->px is never NULL or empty
@@ -5311,7 +5346,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
             continue;
           }
         }
-
+        
         // Nobody wanted the attribute. That is an error.
         ec_0.set_msg(" "); ec_1.set_msg(" ");
         TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,
@@ -5333,7 +5368,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
       // AdvanceAttribute did MoveToElement. Move into the content (if any).
       if (!reader.IsEmptyElement()) reader.Read();
     } // end if (own_tag)
-
+    
     /* * * * * * * * Non-attributes (elements) * * * * * * * * * * * */
     embed_values_dec_struct_t* emb_val = 0;
     bool emb_val_optional = false;
@@ -5450,7 +5485,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
               static_cast<Enum_Type*>(use_order->get_at(i - begin))
               ->from_int(in_dex);
               Base_Type *b = jumbled->get_at(k);
-              b->XER_decode(*jumbled->xer_descr(k), reader, flavor, emb_val);
+              b->XER_decode(*jumbled->xer_descr(k), reader, flavor, flavor2, emb_val);
               field_name_found = true;
               break;
             }
@@ -5476,7 +5511,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                 static_cast<Enum_Type*>(use_order->get_at(i - begin))
                 ->from_int(in_dex);
                 Base_Type *b = jumbled->get_at(k);
-                b->XER_decode(*jumbled->xer_descr(k), reader, flavor, emb_val);
+                b->XER_decode(*jumbled->xer_descr(k), reader, flavor, flavor2, emb_val);
                 last_any_elem = k;
                 field_name_found = true;
                 break;
@@ -5561,12 +5596,12 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                 optional_any_elem_check = opt_field->XER_check_any_elem(reader, next_field_name, tag_closed);
               }
             }
-            if (optional_any_elem_check) {
+            if (optional_any_elem_check && !already_processed) {
               int new_flavor = flavor ;
               if (i == field_cnt-1) new_flavor |= (p_td.xer_bits & USE_NIL);
               if (tag_closed)       new_flavor |= PARENT_CLOSED;
 
-              get_at(i)->XER_decode(*xer_descr(i), reader, new_flavor, emb_val);
+              get_at(i)->XER_decode(*xer_descr(i), reader, new_flavor, flavor2, emb_val);
             }
           }
           if (!get_at(i)->is_present()) {
@@ -5808,14 +5843,15 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   }
   else if (JSON_TOKEN_OBJECT_START != token) {
     return JSON_ERROR_INVALID_TOKEN;
-  }
-  bound_flag = TRUE;
+  } 
   
   const int field_count = get_count();
   
   // initialize meta info states
   int* metainfo = new int[field_count];
+  boolean* field_found = new boolean[field_count];
   for (int i = 0; i < field_count; ++i) {
+    field_found[i] = FALSE;
     metainfo[i] = (NULL != fld_descr(i)->json && fld_descr(i)->json->metainfo_unbound) ?
       JSON_METAINFO_NONE : JSON_METAINFO_NOT_APPLICABLE;
   }
@@ -5855,6 +5891,7 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
         }
         if (strlen(expected_name) == name_len &&
             0 == strncmp(expected_name, name, name_len)) {
+          field_found[field_idx] = TRUE;
           break;
         }
       }
@@ -5942,7 +5979,7 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
       // no meta info was found for this field, report the delayed error
       JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, fld_name(field_idx));
     }
-    else if (!field->is_bound()) {
+    else if (!field_found[field_idx]) {
       if (NULL != fld_descr(field_idx)->json && NULL != fld_descr(field_idx)->json->default_value) {
         get_at(field_idx)->JSON_decode(*fld_descr(field_idx), DUMMY_BUFFER, p_silent);
       }
@@ -6145,7 +6182,7 @@ void Empty_Record_Type::decode(const TTCN_Typedescriptor_t& p_td,
     for (int success=reader.Read(); success==1; success=reader.Read()) {
       if (reader.NodeType() == XML_READER_TYPE_ELEMENT) break;
     }
-    XER_decode(*(p_td.xer), reader, XER_coding | XER_TOPLEVEL, 0);
+    XER_decode(*(p_td.xer), reader, XER_coding | XER_TOPLEVEL, XER_NONE, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -6268,7 +6305,7 @@ int Empty_Record_Type::XER_encode(const XERdescriptor_t& p_td,
 }
 
 int Empty_Record_Type::XER_decode(const XERdescriptor_t& p_td,
-  XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
+  XmlReaderWrap& reader, unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
   int exer = is_exer(flavor);
   bound_flag = true;

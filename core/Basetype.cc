@@ -149,7 +149,7 @@ void Base_Type::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     for (int success=reader.Read(); success==1; success=reader.Read()) {
       if (reader.NodeType() == XML_READER_TYPE_ELEMENT) break;
     }
-    XER_decode(*(p_td.xer), reader, XER_coding, 0);
+    XER_decode(*(p_td.xer), reader, XER_coding, XER_NONE, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -975,7 +975,7 @@ int Base_Type::XER_encode(const XERdescriptor_t& p_td,
 }
 
 int Base_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap&,
-                          unsigned int, embed_values_dec_struct_t*) {
+                          unsigned int, unsigned int, embed_values_dec_struct_t*) {
   TTCN_error("XER decoding requested for type '%-.*s' which has no"
              " XER decoding method.", p_td.namelens[0]-2, p_td.names[0]);
   return 0;

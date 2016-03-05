@@ -87,6 +87,10 @@ template templateCharstr_rec templateCharstr_tRepeatFull := {
  x1:= pattern "6#(3,)", // at least 3
  x2:= pattern "6#(,3)", // at most  3
  x3:= pattern "6#(3,3)" }; // precisely 3
+template templateCharstr_rec templateCharstr_tPattern := {
+  x1 := pattern "abc?xyz",
+  x2 := pattern @nocase "abc?xyz",
+  x3 := pattern @nocase "abc*xyz" };
 
 testcase templateCharstrSpec() runs on templateCharstr_mycomp {
 var templateCharstr_rec x1,x2;		//specific value
@@ -468,6 +472,29 @@ if (not(match(x4,templateCharstr_tRepeatFull))) {setverdict(pass);}
  else {setverdict(fail);}
 }
 
+testcase templateCharstrPattern() runs on templateCharstr_mycomp {
+  var templateCharstr_rec x0, x1, x2, x3, x4; // pattern
+  x0 := { x1 := "abc,xyz",  x2 := "abc1xyz",   x3 := "abcxyz" };
+  x1 := { x1 := "abcpxyz",  x2 := "abcPxyz",   x3 := "abc123abcJKL.? \txyz" };
+  x2 := { x1 := "abcxyz",   x2 := "abcPxyz",   x3 := "abc123xyz" };  // fail first
+  x3 := { x1 := "abcpxyz",  x2 := "abc123xyz", x3 := "abc123xyz" };  // fail second
+  x4 := { x1 := "abcpxyz",  x2 := "abcPxyz",   x3 := "abc123xy z" }; // fail third
+
+  // match
+  if (match(x0, templateCharstr_tPattern)) { setverdict(pass); }
+  else { setverdict(fail); }
+  if (match(x1, templateCharstr_tPattern)) { setverdict(pass); }
+  else { setverdict(fail); }
+
+  // not match
+  if (not match(x2, templateCharstr_tPattern)) { setverdict(pass); }
+  else { setverdict(fail); }
+  if (not match(x3, templateCharstr_tPattern)) { setverdict(pass); }
+  else { setverdict(fail); }
+  if (not match(x4, templateCharstr_tPattern)) { setverdict(pass); }
+  else { setverdict(fail); }
+}
+
 testcase TR920() runs on templateCharstr_mycomp {
   var template charstring temp := pattern "[0-9]|[0-9][0-9]";
   const charstring x := "10a";
@@ -694,6 +721,7 @@ control {
  execute(templateCharstrEmptyPattern());
  execute(templateCharstrRepeat());
  execute(templateCharstrRepeatFull());
+ execute(templateCharstrPattern());
  execute(TR920());
  execute(templateCharstrPatternCat());
  execute(CatBasic())

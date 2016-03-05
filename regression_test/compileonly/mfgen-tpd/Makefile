@@ -23,14 +23,16 @@ DIRLIST := buildconfig_param invalid_buildconfig_param invalid_buildconfig_tpd H
 # The default target.
 ifeq ($(findstring c,$(MFGEN_FLAGS)),) # no -c
 #  Build in "reverse" order to reduce false positives
-all: BuildConsumer BuildSupplier BuildSubplier HP35732 HQ56829 BuildDirs HQ60308
+all: BuildConsumer BuildSupplier BuildSubplier HP35732 HQ56829 BuildDirs HQ60308 SearchPaths
 else
 # Build from supplier to consumer because central dirs must be ready
 # when the toplevel is built
-all: BuildSubplier BuildSupplier BuildConsumer COMMON NAS HP35732 HQ56829 BuildDirs
+all: BuildSubplier BuildSupplier BuildConsumer COMMON NAS HP35732 HQ56829 BuildDirs SearchPaths
 
 .NOTPARALLEL:
 endif
+
+WORKING_DIR := $(shell pwd)
 
 # The run target is not normally used in compileonly.
 # It can be built manually.
@@ -82,16 +84,21 @@ NAS:
 	&& $(TTCN3_DIR)/bin/ttcn3_makefilegen -fD $(MFGEN_FLAGS) $(COVERAGE_FLAG) -t ../NAS_EPS_v9.7.0_CNL113729.tpd \
 	&& $(MAKEPROG)
 
+SearchPaths:
+	cd search_paths/main && \
+	$(TTCN3_DIR)/bin/ttcn3_makefilegen -fg -t Main.tpd -I/something -I$(WORKING_DIR)/search_paths/dep3/Test3/ -I$(WORKING_DIR)/search_paths/dep2/Test2 -I$(WORKING_DIR)/search_paths/dep2/dep2_1/Test2_1 && \
+	cd bin && $(MAKEPROG)
+
 /tmp/issue:
 	-touch $@
 
 clean:
 	@for dir in $(DIRLIST); do $(MAKE) -C $$dir $@ || exit; done
 	if [ -f HQ60308/Makefile ]; then $(MAKEPROG) -C HQ60308 $@ || exit ; else : ; fi
-	-rm -rf consumer/bin supplier/bin subplier/bin HP35732 COMMON/bin NAS_EPS_v9.7.0_CNL113729/bin HQ60308/Makefile
+	-rm -rf consumer/bin supplier/bin subplier/bin HP35732 COMMON/bin NAS_EPS_v9.7.0_CNL113729/bin HQ60308/Makefile search_paths/main/bin
 
 distclean: clean
 	-rm -f *.out
 
-.PHONY: all clean distclean run BuildDirs BuildConsumer BuildSupplier BuildSubplier HP35732 HQ56829 HQ56834 HQ56848 COMMON NAS HQ60308
+.PHONY: all clean distclean run BuildDirs BuildConsumer BuildSupplier BuildSubplier HP35732 HQ56829 HQ56834 HQ56848 COMMON NAS HQ60308 SearchPaths 
 

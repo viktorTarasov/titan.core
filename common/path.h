@@ -68,8 +68,10 @@ extern expstring_t compose_path_name(const char *dir_name,
  * (i.e. symlinks in it are resolved). NULL pointer returned in case of error.
  * The string returned shall be deallocated by the caller using \a Free().
  * Note: The working directory of the current process might change during the
- * function call, but it is restored before the function returns. */
-extern expstring_t get_absolute_dir(const char *dir_name, const char *base_dir);
+ * function call, but it is restored before the function returns.
+ * If the with_error is true, then it won't sign error when set_working_dir
+ * is called.*/
+extern expstring_t get_absolute_dir(const char *dir_name, const char *base_dir, const int with_error);
 
 /** Converts \a dir_name to a relative path name based on \a working_dir. If
  * \a working_dir is NULL the current working directory of the process is used.

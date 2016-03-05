@@ -366,8 +366,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     src = mputprintf(src, 
       "  if (!strcmp(mp_last->get_id()->get_name(), \"%s\")) {\n"
       "    %s%s().set_param(*mp_last);\n"
+      // a union's alternative cannot be unbound
+      "    if (!%s%s().is_bound()) clean_up();\n"
       "    return;\n"
-      "  }\n", sdef->elements[i].dispname, at_field, sdef->elements[i].name);
+      "  }\n", sdef->elements[i].dispname, at_field, sdef->elements[i].name,
+      at_field, sdef->elements[i].name);
     }
   src = mputprintf(src,
     "  mp_last->error(\"Field %%s does not exist in type %s.\", mp_last->get_id()->get_name());\n"
@@ -1592,7 +1595,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 #endif
     src = mputprintf(src, /* XERSTUFF decoder functions for union */
       "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,"
-      " unsigned int p_flavor, embed_values_dec_struct_t*)\n"
+      " unsigned int p_flavor, unsigned int p_flavor2, embed_values_dec_struct_t*)\n"
       "{\n"
       "  int e_xer = is_exer(p_flavor);\n"
       "  int type = 0;\n" /* None */
@@ -1709,7 +1712,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "      ec_2.set_msg(\"%s': \");\n"
           "      if (%s==union_selection) {\n"
           "        matched = %d;\n"
-          "        %s().XER_decode(%s_xer_, p_reader, flavor_1, 0);\n"
+          "        %s().XER_decode(%s_xer_, p_reader, flavor_1, p_flavor2, 0);\n"
           "      }\n"
           "      if (field_%s->is_bound()) break; else clean_up();\n"
           "    }\n",
@@ -1766,7 +1769,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
             "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
             "          \"Attempting to decode blocked or abstract field.\");\n"
             "      }\n"
-            "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, 0);\n"
+            "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, p_flavor2, 0);\n"
             "      if (!%s%s().is_bound()) {\n"
             "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, \"Failed to decode field.\");\n"
             "      }\n"
@@ -1788,7 +1791,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
           "          \"Attempting to decode blocked or abstract field.\");\n"
           "      }\n"
-          "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, 0);\n"
+          "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, p_flavor2, 0);\n"
           "      if (!%s%s().is_bound()) {\n"
           "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, \"Failed to decode field.\");\n"
           "      }\n"
@@ -1832,8 +1835,8 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   if (json_needed) {
     // JSON encode
     src = mputprintf(src,
-      "int %s::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok) const\n"
-      "{\n", name);
+      "int %s::JSON_encode(const TTCN_Typedescriptor_t&%s, JSON_Tokenizer& p_tok) const\n"
+      "{\n", name, use_runtime_2 ? " p_td" : "");
     if (use_runtime_2) {
       src = mputstr(src, "  if (err_descr) return JSON_encode_negtest(err_descr, p_td, p_tok);\n");
     }

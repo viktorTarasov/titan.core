@@ -2467,6 +2467,9 @@ namespace Common {
         u.val_Real = i_mant * pow(static_cast<double>(i_base),
 	  static_cast<double>(i_exp));
         break; }
+      case V_NOTUSED:
+        clean_up();
+        break;
       default:
         FATAL_ERROR("Value::set_valuetype()");
       } // switch
@@ -2532,6 +2535,15 @@ namespace Common {
         // SEQOF -> SETOF or ARRAY: trivial
         break;
       default:
+        FATAL_ERROR("Value::set_valuetype()");
+      }
+      break;
+    case V_SET:
+    case V_CHOICE:
+      if (p_valuetype == V_NOTUSED) {
+        clean_up();
+      }
+      else {
         FATAL_ERROR("Value::set_valuetype()");
       }
       break;
@@ -5927,8 +5939,8 @@ error:
     if (!governor) {
       string str;
       ti->append_stringRepr( str);
-      ti->error("Cannot determine the argument type of %s in the`%s' operation.\n"
-                "If type is known, use valuof(<type>: %s) as argument.",
+      ti->error("Cannot determine the argument type of %s in the `%s' operation.\n"
+                "If type is known, use valueof(<type>: %s) as argument.",
                 str.c_str(), get_opname(), str.c_str()); 
       set_valuetype(V_ERROR);
     }
@@ -11097,6 +11109,9 @@ error:
         FATAL_ERROR("Value::generate_code_init()");
       }
       break;
+    case V_NOTUSED:
+      // unbound value, don't generate anything
+      break;
     default:
       FATAL_ERROR("Value::generate_code_init()");
     }
@@ -11672,8 +11687,7 @@ error:
         expr->expr=mputstr(expr->expr, ".is_bound()");
         break;
       case OPTYPE_ISPRESENT:
-        expr->expr=mputprintf(expr->expr, ".is_present(%s)",
-          omit_in_value_list ? "TRUE" : "");
+        expr->expr=mputprintf(expr->expr, ".is_present()");
         break;
       case OPTYPE_SIZEOF:
         expr->expr=mputstr(expr->expr, ".size_of()");
@@ -12878,6 +12892,9 @@ error:
       FATAL_ERROR("Value::has_single_expr()");
     case V_INT:
       return u.val_Int->is_native_fit();
+    case V_NOTUSED:
+      // should only happen when generating code for an unbound record/set value
+      return false;
     default:
       // other value types (literal values) do not need temporary reference
       return true;

@@ -702,10 +702,13 @@ static const string anyname("anytype");
 %token XorKeyword
 %token Xor4bKeyword
 
+/* modifier keywords */
+%token NocaseKeyword
+%token LazyKeyword
+
 /* TITAN specific keywords */
 %token TitanSpecificTryKeyword
 %token TitanSpecificCatchKeyword
-%token TitanSpecificLazyKeyword
 %token TitanSpecificProfilerKeyword
 
 /* Keywords combined with a leading dot */
@@ -3416,6 +3419,13 @@ CharStringMatch: // 124
     Location loc(infile, @2);
     $$ = parse_pattern($2, loc);
     Free($2);
+  }
+| PatternKeyword NocaseKeyword PatternChunkList
+  {
+    // @nocase is ignored for now
+    Location loc(infile, @3);
+    $$ = parse_pattern($3, loc);
+    Free($3);
   }
 ;
 
@@ -7134,7 +7144,7 @@ Reference: // 490 ValueReference
 
 optLazyEval:
   /* empty */ { $$ = false; }
-| TitanSpecificLazyKeyword { $$ = true; }
+| LazyKeyword { $$ = true; }
 ;
 
 FormalValuePar: // 516
@@ -8453,6 +8463,12 @@ PredefinedOps:
     $$ = new Value(Value::OPTYPE_REGEXP, $4, $8, $12);
     $$->set_location(infile, @$);
   }
+| regexpKeyword NocaseKeyword '(' optError TemplateInstance optError ',' optError
+  TemplateInstance optError ',' optError Expression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_REGEXP, $5, $9, $13);
+    $$->set_location(infile, @$);
+  }
 | regexpKeyword '(' error ')'
   {
     Template *t1 = new Template(Template::TEMPLATE_ERROR);
@@ -8465,6 +8481,21 @@ PredefinedOps:
     ti2->set_location(infile, @3);
     Value *v3 = new Value(Value::V_ERROR);
     v3->set_location(infile, @3);
+    $$ = new Value(Value::OPTYPE_REGEXP, ti1, ti2, v3);
+    $$->set_location(infile, @$);
+  }
+| regexpKeyword NocaseKeyword '(' error ')'
+  {
+    Template *t1 = new Template(Template::TEMPLATE_ERROR);
+    t1->set_location(infile, @4);
+    TemplateInstance *ti1 = new TemplateInstance(0, 0, t1);
+    ti1->set_location(infile, @4);
+    Template *t2 = new Template(Template::TEMPLATE_ERROR);
+    t2->set_location(infile, @4);
+    TemplateInstance *ti2 = new TemplateInstance(0, 0, t2);
+    ti2->set_location(infile, @4);
+    Value *v3 = new Value(Value::V_ERROR);
+    v3->set_location(infile, @4);
     $$ = new Value(Value::OPTYPE_REGEXP, ti1, ti2, v3);
     $$->set_location(infile, @$);
   }

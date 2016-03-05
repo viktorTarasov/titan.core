@@ -8,6 +8,7 @@
 #include "GeneralFunctions.hh"
 #include "SimpleType.hh"
 #include "TTCN3Module.hh"
+#include "ImportStatement.hh"
 
 #include <cctype> // for using "toupper" function
 #include <cstring>
@@ -15,7 +16,18 @@
 #include <cmath>
 #include <regex.h>
 
+#include "../common/version_internal.h"
+
+#include <ctime>
+
+#if defined(WIN32) && !defined(MINGW)
+#include <cygwin/version.h>
+#include <sys/cygwin.h>
+#include <limits.h>
+#endif
+
 extern bool w_flag_used;
+extern bool t_flag_used;
 
 // XSDName2TTCN3Name function:
 // Parameters:
@@ -656,7 +668,7 @@ RootType * lookup(const List<TTCN3Module*> mods,
 RootType *lookup1(const TTCN3Module *module,
   const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w) {
   if (nsuri != module->getTargetNamespace()) return NULL;
-
+      
   for (List<RootType*>::iterator type = module->getDefinedTypes().begin(); type; type = type->Next) {
     switch (type->Data->getConstruct()) {
       case c_simpleType:
@@ -685,7 +697,16 @@ RootType *lookup1(const TTCN3Module *module,
         break;
     }
   }
-
+  
+  //Check for an include with NoTargetNamespace to look for the type
+  //XSD to TTCN ETSI standard 5.1.2
+  for(List<RootType*>::iterator it = module->getDefinedTypes().begin(); it; it = it->Next) {
+    if (it->Data != NULL && it->Data->getConstruct() == c_include &&
+        ((ImportStatement*)(it->Data))->getSourceModule() != NULL &&
+        ((ImportStatement*)(it->Data))->getSourceModule()->getTargetNamespace() == Mstring("NoTargetNamespace")) {
+      return lookup1(((ImportStatement*)(it->Data))->getSourceModule(), name, Mstring("NoTargetNamespace"), reference, w);
+    }
+  }
   return NULL;
 }
 
@@ -706,4 +727,57 @@ int multi(const TTCN3Module *module, ReferenceData const& outside_reference,
       }
     }
   return multiplicity;
+}
+
+void generate_TTCN3_header(FILE * file, const char * modulename, const bool timestamp /* = true */) {
+  time_t time_current = time(NULL);
+  fprintf(file,
+    "/*******************************************************************************\n"
+    );
+  if (t_flag_used) {
+    fprintf(file,
+      "* Copyright Ericsson Telecom AB\n"
+      "*\n"
+      "* XSD to TTCN-3 Translator\n"
+      "*\n"
+      );
+  } else {
+    fprintf(file,
+      "* Copyright (c) 2000-%-4d Ericsson Telecom AB\n"
+      "*\n"
+      "* XSD to TTCN-3 Translator version: %-40s\n"
+      "*\n",
+      1900 + (localtime(&time_current))->tm_year,
+      PRODUCT_NUMBER
+      );
+  }
+  fprintf(file,
+    "* All rights reserved. This program and the accompanying materials\n"
+    "* are made available under the terms of the Eclipse Public License v1.0\n"
+    "* which accompanies this distribution, and is available at\n"
+    "* http://www.eclipse.org/legal/epl-v10.html\n"
+    "*******************************************************************************/\n"
+    "//\n"
+    "//  File:          %s.ttcn\n"
+    "//  Description:\n"
+    "//  References:\n"
+    "//  Rev:\n"
+    "//  Prodnr:\n",
+    modulename
+    );
+  if (t_flag_used || !timestamp) {
+    fprintf(file,
+      "//  Updated:\n"
+      );
+  } else {
+    fprintf(file,
+      "//  Updated:       %s",
+      ctime(&time_current)
+      );
+  }
+  fprintf(file,
+    "//  Contact:       http://ttcn.ericsson.se\n"
+    "//\n"
+    "////////////////////////////////////////////////////////////////////////////////\n"
+    );
 }

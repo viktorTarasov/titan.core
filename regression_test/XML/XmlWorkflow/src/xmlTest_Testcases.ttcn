@@ -1608,6 +1608,19 @@ group ComplexType {
   }//tc_
 
   //=========================================================================
+  //  tc_complex_include_without_namespace
+  //=========================================================================
+  //Positive test: The including schema includes a schema without a namespace
+  testcase tc_complex_include_without_namespace() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn including_module.xsd included_without_namespace.xsd","",c_shell_successWithoutWarningAndError);
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_including_module_e.ttcn","www_example_org_including_module.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
+  //=========================================================================
   //  tc_complex_include_neg1_converter
   //=========================================================================
   //Negative test: The including and the included schema are not in the same namespace
@@ -1893,6 +1906,21 @@ group Elements{
       elem_list:={"<MyElement1/>", "<MyElement2/>"}
     };
     f_encDecTest_Anything1(vl_pdu,vl_expectedEncodedPdu,vl_expectedDecodedPdu);
+  }//tc_
+
+  testcase tc_element_anyType_embed_encDec() runs on xmlTest_CT {
+    var Anything1 vl_pdu:= {
+      embed_values := {"The ordered ", " has arrived ", "Wait for further information.", "Ok"},
+      attr :={"someattr=\"1\""},
+      elem_list := {
+       "<ns:a xmlns:ns=\"http://www.example.org/other\">product</ns:a>",
+       "<ns:b xmlns:ns=\"http://www.example.org/other_1\">2</ns:b>",
+       "<ns:c xmlns:ns=\"http://www.example.org/other_13\">2</ns:c>"
+      }
+    }
+    var charstring vl_expectedEncodedPdu:=
+      "<ns31:anything1 xmlns:ns31='www.XmlTest.org/element_anyType' someattr=\"1\">The ordered <ns:a xmlns:ns=\"http://www.example.org/other\">product</ns:a> has arrived <ns:b xmlns:ns=\"http://www.example.org/other_1\">2</ns:b>Wait for further information.<ns:c xmlns:ns=\"http://www.example.org/other_13\">2</ns:c>Ok</ns31:anything1>\n";
+    f_encDecTest_Anything1(vl_pdu,vl_expectedEncodedPdu,vl_pdu);
   }//tc_
 
   //===============================================================
@@ -2602,6 +2630,7 @@ control {
   execute(tc_complex_unique_converter());
   execute(tc_complex_include_converter());
   execute(tc_complex_include_neg1_converter());
+  execute(tc_complex_include_without_namespace());
   execute(tc_complex_import_pos1_converter());
   execute(tc_complex_import_pos2_converter());
   execute(tc_complex_import_neg1_converter());
@@ -2623,6 +2652,7 @@ control {
   execute(tc_element_anyType_2attrOnly_encDec());//Passed
   execute(tc_element_anyType_elemOnly_encDec());//Passed, TR: HL29711
   execute(tc_element_anyType_encDec());//Passed, HL29711
+  execute(tc_element_anyType_embed_encDec());
   execute(tc_element_anyType_deeper_encDec());
   execute(tc_element_anyType_longer_encDec());
   execute(tc_element_recOfElements_converter()); //Passed: TR: HL27438

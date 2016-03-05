@@ -269,21 +269,23 @@ static bool checkFailure() {
 }
 
 static bool generatePredefinedModules() {
-  struct stat stFileInfo;
-  // Only generate the missing predefined modules.
-  if (stat("UsefulTtcn3Types.ttcn", &stFileInfo) != 0) {
+  //struct stat stFileInfo;
+  // Only generate the missing predefined modules. 
+  // Generate, because the copyright is now generated into the modules.
+  //if (stat("UsefulTtcn3Types.ttcn", &stFileInfo) != 0) {
     extern const char *moduleUsefulTtcn3Types;
     FILE *fileUsefulTtcn3Types = fopen("UsefulTtcn3Types.ttcn", "w");
     if (fileUsefulTtcn3Types == NULL) {
       fprintf(stderr, "ERROR:\nCannot create file UsefulTtcn3Types.ttcn!\n");
       return false;
     }
+    generate_TTCN3_header(fileUsefulTtcn3Types, "UsefulTtcn3Types", false);
     fprintf(fileUsefulTtcn3Types, "%s", moduleUsefulTtcn3Types);
     if (!q_flag_used) {
       fprintf(stderr, "Notify: File \'UsefulTtcn3Types.ttcn\' was generated.\n");
     }
     fclose(fileUsefulTtcn3Types);
-  }
+  //}
 
   //XSD.ttcn changed
   //if (stat("XSD.ttcn", &stFileInfo) != 0) {
@@ -293,6 +295,7 @@ static bool generatePredefinedModules() {
       fprintf(stderr, "ERROR:\nCannot create file XSD.ttcn!\n");
       return false;
     }
+    generate_TTCN3_header(fileXsd, "XSD", false);
     fprintf(fileXsd, "%s", moduleXSD);
     if (!q_flag_used) {
       fprintf(stderr, "Notify: File \'XSD.ttcn\' was generated.\n");

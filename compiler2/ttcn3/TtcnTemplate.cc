@@ -731,6 +731,7 @@ namespace Ttcn {
         bool allow_fewer = false;
         switch (my_governor->get_typetype()) {
         case Type::T_SEQ_T: case Type::T_SET_T:
+        case Type::T_SEQ_A: case Type::T_SET_A:
           allow_fewer = true;
           break;
         case Type::T_SIGNATURE: // be precise
@@ -1810,6 +1811,7 @@ namespace Ttcn {
       if (t->templatetype == SPECIFIC_VALUE) break;
       else if (!refch.add(t->get_fullname())) goto end;
       else if (t->templatetype != TEMPLATE_REFD) break;
+      t->u.ref.ref->get_refd_assignment(true); // make sure the parameter list is checked
       ActualParList *parlist = t->u.ref.ref->get_parlist();
       if (parlist) parlist->chk_recursions(refch);
       Template *t_refd = t->get_template_refd(&refch);

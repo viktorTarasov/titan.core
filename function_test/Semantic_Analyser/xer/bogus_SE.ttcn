@@ -8,7 +8,7 @@
 module bogus {	//^In TTCN-3 module `bogus'://
 
 type integer i //^In type definition//
-  with { variant "variant" } //^warning: in variant attribute.+?syntax error, unexpected XIdentifier, expecting \$end//
+  with { variant "variant" } //^error: in variant attribute.+?syntax error, unexpected XIdentifier, expecting \$end//
 
 }
 with {

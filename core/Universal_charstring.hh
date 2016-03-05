@@ -330,7 +330,7 @@ public:
   int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,  Limit_Token_List&,
                   boolean no_err=FALSE, boolean first_call=TRUE);
   int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const;
-  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, embed_values_dec_struct_t*);
+  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, unsigned int, embed_values_dec_struct_t*);
   /** Decodes UTF-8 into the internal representation (UCS4-BE)
    *
    * @param n_octets number of UTF-8 bytes (not characters)

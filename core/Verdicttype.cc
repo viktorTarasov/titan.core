@@ -239,7 +239,7 @@ void VERDICTTYPE::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       if (type==XML_READER_TYPE_ELEMENT)
         break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding, 0);
+    XER_decode(*p_td.xer, reader, XER_coding, XER_NONE, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -297,7 +297,7 @@ verdicttype VERDICTTYPE::str_to_verdict(const char *v, boolean silent)
 }
 
 int VERDICTTYPE::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,
-  unsigned int p_flavor, embed_values_dec_struct_t*)
+  unsigned int p_flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
   int rd_ok = 1, type;
   const int e_xer = is_exer(p_flavor);

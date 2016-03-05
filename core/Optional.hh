@@ -281,7 +281,7 @@ public:
     * @param parent_tag_closed true, if the record's XML tag is closed (is an empty element)*/
   bool XER_check_any_elem(XmlReaderWrap& reader, const char* next_field_name, bool parent_tag_closed);
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-    unsigned int flavor, embed_values_dec_struct_t* emb_val);
+    unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t* emb_val);
 
   char ** collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const;
 
@@ -1030,7 +1030,7 @@ OPTIONAL<T_type>::XER_check_any_elem(XmlReaderWrap& reader, const char* next_fie
 template<typename T_type>
 int
 OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-  unsigned int flavor, embed_values_dec_struct_t* emb_val)
+  unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t* emb_val)
 {
   int exer  = is_exer(flavor);
   for (int success = reader.Ok(); success==1; success=reader.Read()) {
@@ -1058,10 +1058,13 @@ OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
         }
         
         set_to_present();
-        optional_value->XER_decode(p_td, reader, flavor, emb_val);
+        optional_value->XER_decode(p_td, reader, flavor, flavor2, emb_val);
         goto finished;
       }
       else break;
+    }
+    else if(XML_READER_TYPE_ATTRIBUTE == type && (flavor & USE_NIL)){
+        goto found_it;
     }
     else { // not attribute
       if (XML_READER_TYPE_ELEMENT == type) { // we are at an element
@@ -1075,7 +1078,7 @@ OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
           found_it:
           set_to_present();
           //success = reader.Read(); // move to next thing TODO should it loop till an element ?
-          optional_value->XER_decode(p_td, reader, flavor, emb_val);
+          optional_value->XER_decode(p_td, reader, flavor, flavor2, emb_val);
           if (!optional_value->is_bound()) {
             set_to_omit();
           }

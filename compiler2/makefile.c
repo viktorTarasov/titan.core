@@ -238,6 +238,8 @@ struct makefile_struct {
   boolean suppresswarnings;
   boolean outparamboundness;
   boolean omit_in_value_list;
+  boolean warnings_for_bad_variants;
+  boolean disable_predef_ext_folder;
   struct string_list* solspeclibraries; /* not owned */
   struct string_list* sol8speclibraries; /* not owned */
   struct string_list* linuxspeclibraries; /* not owned */
@@ -301,6 +303,7 @@ static void init_makefile_struct(struct makefile_struct *makefile)
   makefile->prep_defines = NULL;
   makefile->outparamboundness = FALSE;
   makefile->omit_in_value_list = FALSE;
+  makefile->warnings_for_bad_variants = FALSE;
   makefile->solspeclibraries = NULL;
   makefile->sol8speclibraries = NULL;
   makefile->linuxspeclibraries = NULL;
@@ -518,7 +521,7 @@ static char *get_dir_name(const char *path_name, const char *working_dir)
 {
   char *dir_name = get_dir_from_path(path_name);
   if (dir_name != NULL) {
-    char *absolute_dir = get_absolute_dir(dir_name, working_dir);
+    char *absolute_dir = get_absolute_dir(dir_name, working_dir, TRUE);
     Free(dir_name);
     if (absolute_dir == NULL || working_dir == NULL) {
       /* an error occurred */
@@ -1975,13 +1978,13 @@ static void print_makefile(struct makefile_struct *makefile)
           "AR = ar\n"
           "ARFLAGS = \n\n"
           "# Flags for the TTCN-3 and ASN.1 compiler:\n"
-          "COMPILER_FLAGS =%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n\n"
+          "COMPILER_FLAGS =%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n\n"
           "# Execution mode: (either ttcn3 or ttcn3-parallel)\n"
           "TTCN3_LIB = ttcn3%s%s%s\n\n"
 #ifdef LICENSE
           "# The path of your OpenSSL installation:\n"
           "# If you do not have your own one, leave it unchanged.\n"
-          "OPENSSL_DIR = $(TTCN3_DIR)\n\n"
+          "%sOPENSSL_DIR = $(TTCN3_DIR)\n\n"
 #endif
           "# The path of your libxml2 installation:\n"
           "# If you do not have your own one, leave it unchanged.\n"
@@ -2012,12 +2015,16 @@ static void print_makefile(struct makefile_struct *makefile)
           (makefile->suppresswarnings ? " -w" : ""),
           (makefile->outparamboundness ? " -Y" : ""),
           (makefile->omit_in_value_list ? " -M" : ""),
+          (makefile->warnings_for_bad_variants ? " -E" : ""),
           (makefile->tcov_file_name ? makefile->tcov_file_name : ""),
           (makefile->profiled_file_list ? " -z $(PROFILED_FILE_LIST)" : ""),
           /* end of COMPILER FLAGS */
           (makefile->use_runtime_2 ? "-rt2"    : ""), /* TTCN3_LIB */
           (makefile->single_mode   ? ""        : "-parallel"),
           (makefile->dynamic       ? "-dynamic": "")
+#ifdef LICENSE
+          ,(makefile->disable_predef_ext_folder ? "# " : "")
+#endif 
           );
     if (!makefile->gnu_make) {
       fputs("# Note: you can set any directory except ./archive\n", fp);
@@ -3719,8 +3726,8 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   const char* cxxcompiler, const char* optlevel, const char* optflags, boolean disableber, boolean disableraw, boolean disabletext,
   boolean disablexer, boolean disablejson, boolean forcexerinasn, boolean defaultasomit, boolean gccmsgformat,
   boolean linenumbersonlymsg, boolean includesourceinfo, boolean addsourcelineinfo, boolean suppresswarnings,
-  boolean outparamboundness, boolean omit_in_value_list, struct string_list* solspeclibraries, struct string_list* sol8speclibraries,
-  struct string_list* linuxspeclibraries, struct string_list* freebsdspeclibraries,
+  boolean outparamboundness, boolean omit_in_value_list, boolean warnings_for_bad_variants, boolean disable_predef_ext_folder, struct string_list* solspeclibraries,
+  struct string_list* sol8speclibraries, struct string_list* linuxspeclibraries, struct string_list* freebsdspeclibraries,
   struct string_list* win32speclibraries, const char* ttcn3preprocessor, struct string_list* linkerlibraries,
   struct string_list* additionalObjects, struct string_list* linkerlibsearchpath, char* generatorCommandOutput,
   struct string2_list* target_placement_list)
@@ -3770,6 +3777,8 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   makefile.suppresswarnings = suppresswarnings;
   makefile.outparamboundness = outparamboundness;
   makefile.omit_in_value_list = omit_in_value_list;
+  makefile.warnings_for_bad_variants = warnings_for_bad_variants;
+  makefile.disable_predef_ext_folder = disable_predef_ext_folder;
   makefile.solspeclibraries = solspeclibraries;
   makefile.sol8speclibraries = sol8speclibraries;
   makefile.linuxspeclibraries = linuxspeclibraries;
@@ -3904,7 +3913,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
 static void usage(void)
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abc" C_flag "dDfFglLmMprRstTVwWXZ] [-K file] [-z file ] [-P dir]"
+    "usage: %s [-abc" C_flag "dDEfFglLmMprRstTVwWXZ] [-K file] [-z file ] [-P dir]"
     " [-U none|type] [-e ets_name] [-o dir|file]\n"
     "        [-t project_descriptor.tpd [-b buildconfig]]\n"
     "        [-O file] ... module_name ... testport_name ...\n"
@@ -3918,8 +3927,10 @@ static void usage(void)
 #endif
     "	-d:		dump the data used for Makefile generation\n"
     "	-e ets_name:	name of the target executable\n"
+    "	-E:		display only warnings for unrecognized encoding variants\n"
     "	-f:		force overwriting of the output Makefile\n"
     "	-g:		generate Makefile for use with GNU make\n"
+    "	-I path:	Add path to the search paths when using TPD files\n"
     "	-K file:	enable selective code coverage\n"
     "	-l:		use dynamic linking\n"
     "	-L:		create makefile with library archive as the default target\n"
@@ -3992,7 +4003,7 @@ int main(int argc, char *argv[])
     gfflag = FALSE, lnflag = FALSE, isflag = FALSE, asflag = FALSE,
     swflag = FALSE, Vflag = FALSE, Dflag = FALSE, Wflag = FALSE,
     djflag = FALSE, Zflag = FALSE, Hflag = FALSE, Mflag = FALSE,
-    zflag = FALSE;
+    diflag = FALSE, zflag = FALSE, Eflag = FALSE;
   boolean error_flag = FALSE;
   char *output_file = NULL;
   char *ets_name = NULL;
@@ -4003,6 +4014,8 @@ int main(int argc, char *argv[])
   const char *tpd_file_name = NULL;
   const char *tpd_build_config = NULL;
   const char *tcov_file_name = NULL;
+  size_t n_search_paths = 0;
+  const char **search_paths = NULL;
   struct string_list* profiled_file_list = NULL;
   const char *profiled_file_list_zflag = NULL;
   const char *file_list_path = NULL;
@@ -4047,7 +4060,7 @@ int main(int argc, char *argv[])
   }
 
   for ( ; ; ) {
-    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:fFgK:o:lLmMpP:rRst:TU:vVwWXYz:ZH");
+    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:EfFgI:K:o:lLmMpP:rRst:TU:vVwWXYz:ZH");
     if (c == -1) break;
     switch (c) {
     case 'O':
@@ -4055,6 +4068,12 @@ int main(int argc, char *argv[])
       other_files = (const char**)
       Realloc(other_files, n_other_files * sizeof(*other_files));
       other_files[n_other_files - 1] = optarg;
+      break;
+      case 'I':
+        n_search_paths++;
+        search_paths = (const char**)
+        Realloc(search_paths, n_search_paths * sizeof(*search_paths));
+        search_paths[n_search_paths - 1] = optarg;
       break;
     case 'a':
       SET_FLAG(a);
@@ -4084,6 +4103,9 @@ int main(int argc, char *argv[])
     case 'e':
       SET_FLAG(e);
       ets_name = optarg;
+      break;
+    case 'E':
+      SET_FLAG(E);
       break;
     case 'f':
       SET_FLAG(f);
@@ -4189,7 +4211,7 @@ int main(int argc, char *argv[])
     if ( aflag || bflag || cflag || Cflag || dflag || eflag || fflag || Fflag || gflag
       || mflag || oflag || lflag || pflag || Pflag || rflag || Rflag || sflag
       || tflag || Tflag || Vflag || wflag || Xflag || Kflag || Dflag || Wflag || Yflag
-      || Zflag || Hflag || Mflag || zflag || n_other_files > 0)
+      || Zflag || Hflag || Mflag || zflag || Eflag || n_other_files > 0 || n_search_paths > 0)
       error_flag = TRUE;
   }
 
@@ -4237,6 +4259,30 @@ int main(int argc, char *argv[])
     ERROR("Generating Makefile with dynamic linking enabled is not supported "
           "on Windows platform");
     error_flag = TRUE;
+  }
+
+  if (n_search_paths > 0 && !tflag) {
+    ERROR("Using the '-I' option requires use of the '-t' option.");
+    error_flag = TRUE;
+  }
+
+  for (size_t i = 0; i < n_search_paths; i++) {
+    boolean is_abs_path =
+#if defined WIN32 && defined MINGW
+        /* On native Windows the absolute path name shall begin with
+         * a drive letter, colon and backslash */
+        (((search_paths[i][0] < 'A' || search_paths[i][0] > 'Z') &&
+          (search_paths[i][0] < 'a' || search_paths[i][0] > 'z')) ||
+         search_paths[i][1] != ':' || search_paths[i][2] != '\\');
+#else
+        /* On UNIX-like systems the absolute path name shall begin with
+         * a slash */
+        search_paths[i][0] != '/';
+#endif
+    if (is_abs_path) {
+      ERROR("The path after the -I flag must be an absolute path.");
+      error_flag = TRUE;
+    }
   }
 
   if (error_flag) {
@@ -4351,9 +4397,9 @@ int main(int argc, char *argv[])
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
       create_symlink_list,ttcn3_prep_includes, ttcn3_prep_defines,ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csflag, 
       &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
-      &asflag, &swflag, &Yflag, &Mflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
+      &asflag, &swflag, &Yflag, &Mflag, &Eflag, &diflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
       linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &Zflag, &Hflag,
-      &generatorCommandOutput, target_placement_list, Wflag, run_command_list, required_configs, &profiled_file_list);
+      &generatorCommandOutput, target_placement_list, Wflag, run_command_list, required_configs, &profiled_file_list, search_paths, n_search_paths);
 
     Free(abs_work_dir);
     if (prj_graph_fp) {
@@ -4390,7 +4436,7 @@ int main(int argc, char *argv[])
       Rflag, lflag, mflag, Cflag, code_splitting_mode, tcov_file_name, profiled_file_list,
       Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
       ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, csflag, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
-      drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, swflag, Yflag, Mflag, solspeclibraries,
+      drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, swflag, Yflag, Mflag, Eflag, diflag, solspeclibraries,
       sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, ttcn3prep, linkerlibraries, additionalObjects,
       linkerlibsearchpath, generatorCommandOutput, target_placement_list);
   }
@@ -4411,6 +4457,8 @@ int main(int argc, char *argv[])
   free_string_list(additionalObjects);
   free_string_list(linkerlibsearchpath);
   free_string_list(profiled_file_list);
+
+  Free(search_paths);
 
   Free(generatorCommandOutput);
   free_string2_list(target_placement_list);

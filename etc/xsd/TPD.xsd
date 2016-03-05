@@ -105,6 +105,7 @@ XML Schema for TITAN_Project_File_Information
                     <xs:element name="suppressWarnings" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="outParamBoundness" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="omitInValueList" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+                    <xs:element name="warningsForBadVariants" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="quietly" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="namingRules" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
                     <xs:element name="disableSubtypeChecking" minOccurs="0" maxOccurs="1" type="xs:boolean" />
@@ -408,6 +409,7 @@ XML Schema for TITAN_Project_File_Information
 				<xs:complexType>
 					<xs:attribute name="name" type="xs:normalizedString" use="required" />
 					<xs:attribute name="projectLocationURI" type="xs:normalizedString" use="required" />
+					<xs:attribute name="tpdName" type="xs:normalizedString" use="optional" />
 				</xs:complexType>
 			  </xs:element>
 			</xs:sequence>

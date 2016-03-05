@@ -4376,6 +4376,8 @@ namespace Ttcn {
           // the object is initialized by the constructor
           str = mputprintf(str, "%s %s(%s);\n", type_genname_str,
           genname_str, body->get_single_expr(false).c_str());
+          // make sure the template's code is not generated twice (TR: HU56425)
+          body->set_code_generated();
         } else {
           // the default constructor is used
           str = mputprintf(str, "%s %s;\n", type_genname_str, genname_str);

@@ -106,6 +106,14 @@ testcase tc_ispresent_legacy() runs on CT
   if (ispresent(t_enum_comp_list)) {
     setverdict(fail, t_enum_comp_list, " should not be present");
   }
+  
+  var template Everything vt_present := { 1, "a", { 1.0, '10AB'O }, { '110'B, '101'B }, { b := true }, Second };
+  if (not ispresent(vt_present)) {
+    setverdict(fail, vt_present, " should be present");
+  }
+  if (not ispresent(valueof(vt_present))) {
+    setverdict(fail, "value of ", vt_present, " should be present");
+  }
   setverdict(pass);
 }
 

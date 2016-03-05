@@ -499,11 +499,12 @@ public:
    * @param p_td type descriptor
    * @param reader Wrapper around the XML processor
    * @param flavor one of XER_flavor values
+   * @param flavor2 one of XER_flavor2 values
    * @param emb_val embed values data (only relevant for record of types)
    * @return number of bytes "consumed"
    */
   VIRTUAL_IF_RUNTIME_2 int XER_decode(const XERdescriptor_t& p_td,
-    XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t* emb_val);
+    XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t* emb_val);
 
   /** Return an array of namespace declarations.
    *
@@ -804,7 +805,7 @@ public:
   int encode_element(int i, const XERdescriptor_t& p_td, const Erroneous_values_t* err_vals,
     const Erroneous_descriptor_t* emb_descr,
     TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val) const;
-  virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int, embed_values_dec_struct_t*);
+  virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int, unsigned int, embed_values_dec_struct_t*);
   virtual boolean isXerAttribute() const;
   virtual boolean isXmlValueList() const;
   
@@ -864,16 +865,15 @@ protected:
     const Base_Type* value;
   };
   Erroneous_descriptor_t* err_descr;
-  boolean bound_flag;
 public:
-  Record_Type() : err_descr(NULL), bound_flag(false) {}
+  Record_Type() : err_descr(NULL) {}
 
   /// @{
   /** get pointer to a field */
   virtual Base_Type* get_at(int index_value) = 0;
   virtual const Base_Type* get_at(int index_value) const = 0;
   /// @}
-  
+
   /** get the index to a field based on its name and namespace URI, or -1 */
   int get_index_byname(const char *name, const char *uri) const;
 
@@ -946,7 +946,7 @@ public:
     const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
   virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-    unsigned int, embed_values_dec_struct_t*);
+    unsigned int, unsigned int, embed_values_dec_struct_t*);
   /// @{
   /// Methods overridden in the derived (generated) class
   virtual int get_xer_num_attr() const { return 0; /* default */ }
@@ -1023,7 +1023,7 @@ public:
   virtual int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
   virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-    unsigned int, embed_values_dec_struct_t*);
+    unsigned int, unsigned int, embed_values_dec_struct_t*);
   
   /** Encodes accordingly to the JSON encoding rules.
     * Returns the length of the encoded data. */

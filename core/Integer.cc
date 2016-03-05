@@ -855,7 +855,7 @@ void INTEGER::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       if (type==XML_READER_TYPE_ELEMENT)
         break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding, 0);
+    XER_decode(*p_td.xer, reader, XER_coding, XER_NONE, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -1593,7 +1593,7 @@ int INTEGER::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 }
 
 int INTEGER::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-  unsigned int flavor, embed_values_dec_struct_t*)
+  unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
   const boolean exer = is_exer(flavor);
   int depth = -1, success = reader.Ok(), type;

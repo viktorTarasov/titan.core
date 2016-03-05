@@ -42,7 +42,13 @@ struct TTCN_JSONdescriptor_t
     * The decoder sets the field to unbound if the meta info field is present and
     * the field's value in the JSON code is either null or a valid value for that
     * field.
-    * Example: { "field1" : null, "metainfo field1" : "unbound" } */
+    * Example: { "field1" : null, "metainfo field1" : "unbound" }
+    *
+    * Also usable on record of/set of/array types to indicate that an element is
+    * unbound. Unbound elements are encoded as a JSON object containing one
+    * metainfo member. The decoder sets the element to unbound if the object
+    * with the meta information is found.
+    * Example: [ value1, value2, { "metainfo []" : "unbound" }, value3 ] */
   boolean metainfo_unbound;
 };
 

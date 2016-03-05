@@ -495,9 +495,9 @@ void VALUE_ARRAY<T_type,array_size,index_offset>::decode(
 
 template <typename T_type, unsigned int array_size, int index_offset>
 int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_encode(
-  const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) const
+  const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok) const
 {
-  if (!is_bound()) {
+  if (!is_bound() && (NULL == p_td.json || !p_td.json->metainfo_unbound)) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound array value.");
     return -1;
@@ -505,10 +505,19 @@ int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_encode(
   
   int enc_len = p_tok.put_next_token(JSON_TOKEN_ARRAY_START, NULL);
   
-  for(unsigned int i = 0; i < array_size; ++i) {
-    int ret_val = array_elements[i].JSON_encode(*get_elem_descr(), p_tok);
-    if (0 > ret_val) break;
-    enc_len += ret_val;
+  for (unsigned int i = 0; i < array_size; ++i) {
+    if (NULL != p_td.json && p_td.json->metainfo_unbound && !array_elements[i].is_bound()) {
+      // unbound elements are encoded as { "metainfo []" : "unbound" }
+      enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+      enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, "metainfo []");
+      enc_len += p_tok.put_next_token(JSON_TOKEN_STRING, "\"unbound\"");
+      enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+    }
+    else {
+      int ret_val = array_elements[i].JSON_encode(*get_elem_descr(), p_tok);
+      if (0 > ret_val) break;
+      enc_len += ret_val;
+    }
   }
   
   enc_len += p_tok.put_next_token(JSON_TOKEN_ARRAY_END, NULL);
@@ -517,7 +526,7 @@ int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_encode(
 
 template <typename T_type, unsigned int array_size, int index_offset>
 int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_decode(
-  const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, boolean p_silent)
+  const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
 {
   json_token_t token = JSON_TOKEN_NONE;
   int dec_len = p_tok.get_next_token(&token, NULL, NULL);
@@ -529,8 +538,33 @@ int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_decode(
     return JSON_ERROR_INVALID_TOKEN;
   } 
   
-  for(unsigned int i = 0; i < array_size; ++i) {
-    int ret_val = array_elements[i].JSON_decode(*get_elem_descr(), p_tok, p_silent);
+  for (unsigned int i = 0; i < array_size; ++i) {
+    size_t buf_pos = p_tok.get_buf_pos();
+    int ret_val;
+    if (NULL != p_td.json && p_td.json->metainfo_unbound) {
+      // check for metainfo object
+      ret_val = p_tok.get_next_token(&token, NULL, NULL);
+      if (JSON_TOKEN_OBJECT_START == token) {
+        char* value = NULL;
+        size_t value_len = 0;
+        ret_val += p_tok.get_next_token(&token, &value, &value_len);
+        if (JSON_TOKEN_NAME == token && 11 == value_len &&
+            0 == strncmp(value, "metainfo []", 11)) {
+          ret_val += p_tok.get_next_token(&token, &value, &value_len);
+          if (JSON_TOKEN_STRING == token && 9 == value_len &&
+              0 == strncmp(value, "\"unbound\"", 9)) {
+            ret_val = p_tok.get_next_token(&token, NULL, NULL);
+            if (JSON_TOKEN_OBJECT_END == token) {
+              dec_len += ret_val;
+              continue;
+            }
+          }
+        }
+      }
+      // metainfo object not found, jump back and let the element type decode it
+      p_tok.set_buf_pos(buf_pos);
+    }
+    ret_val = array_elements[i].JSON_decode(*get_elem_descr(), p_tok, p_silent);
     if (JSON_ERROR_INVALID_TOKEN == ret_val) {
       JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_ARRAY_ELEM_TOKEN_ERROR,
         array_size - i, (array_size - i > 1) ? "s" : "");

@@ -536,6 +536,229 @@ testcase decode_multi_nil() runs on Nil {
 
 /* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** */
 
+// Encoding nillable field, which is a record type without attributes
+
+type record NilTypeRec {
+  record {
+    TypeWithoutAttr nil optional
+  } field
+} with {
+  variant(field) "useNil";
+}
+
+type record TypeWithoutAttr {
+  charstring inner_field
+}
+
+const NilTypeRec c_nil_rec_absent := {
+	field := {
+		nil := omit
+	}
+};
+
+const universal charstring str_nil_rec_absent :=
+"<NilTypeRec xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>\n" &
+"\t<field xsi:nil='true'/>\n" &
+"</NilTypeRec>\n\n";
+
+const NilTypeRec c_nil_rec_present_no_attr := {
+	field := {
+		nil := {
+			inner_field := "field"
+		}
+	}
+};
+
+const universal charstring str_nil_rec_present_no_attr :=
+"<NilTypeRec>\n" &
+"\t<field>\n" &
+"\t\t<inner_field>field</inner_field>\n" &
+"\t</field>\n" &
+"</NilTypeRec>\n\n";
+
+DECLARE_EXER_ENCODERS(NilTypeRec, typerec);
+
+testcase encode_NilTypeRec() runs on Nil {
+  CHECK_METHOD(exer_enc_typerec, c_nil_rec_absent, str_nil_rec_absent);
+  CHECK_METHOD(exer_enc_typerec, c_nil_rec_present_no_attr, str_nil_rec_present_no_attr);
+}
+
+testcase decode_NilTypeRec() runs on Nil {
+  CHECK_DECODE(exer_dec_typerec, str_nil_rec_absent, NilTypeRec, c_nil_rec_absent);
+  CHECK_DECODE(exer_dec_typerec, str_nil_rec_present_no_attr, NilTypeRec, c_nil_rec_present_no_attr);
+}
+
+/* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** */
+
+// Encoding nillable field, which is a record type with attributes
+
+type record NilTypeRecInAttr {
+  record {
+    TypeWithAttr nil optional
+  } field
+} with {
+  variant(field) "useNil";
+}
+
+type record TypeWithAttr {
+  charstring attr1 optional,
+  charstring inner_field
+} with {
+  variant (attr1) "attribute";
+}
+
+const NilTypeRecInAttr c_nil_rec_absent2 := {
+	field := {
+		nil := omit
+	}
+};
+
+const universal charstring str_nil_rec_absent2 :=
+"<NilTypeRecInAttr xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>\n" &
+"\t<field xsi:nil='true'/>\n" &
+"</NilTypeRecInAttr>\n\n";
+
+const NilTypeRecInAttr c_nil_rec_present_attr_omit := {
+	field := {
+		nil := {
+			attr1 := omit,
+			inner_field := "field"
+		}
+	}
+};
+
+const universal charstring str_nil_rec_present_attr_omit :=
+"<NilTypeRecInAttr>\n" &
+"\t<field>\n" &
+"\t\t<inner_field>field</inner_field>\n" &
+"\t</field>\n" &
+"</NilTypeRecInAttr>\n\n";
+
+const NilTypeRecInAttr c_nil_rec_present_attr_present := {
+	field := {
+		nil := {
+			attr1 := "attr",
+			inner_field := "field"
+		}
+	}
+};
+
+const universal charstring str_nil_rec_present_attr_present :=
+"<NilTypeRecInAttr>\n" &
+"\t<field attr1='attr'>\n" &
+"\t\t<inner_field>field</inner_field>\n" &
+"\t</field>\n" &
+"</NilTypeRecInAttr>\n\n";
+
+DECLARE_EXER_ENCODERS(NilTypeRecInAttr, typerecinattr);
+
+testcase encode_NilTypeRecInAttr() runs on Nil {
+  CHECK_METHOD(exer_enc_typerecinattr, c_nil_rec_absent2, str_nil_rec_absent2);
+  CHECK_METHOD(exer_enc_typerecinattr, c_nil_rec_present_attr_omit, str_nil_rec_present_attr_omit);
+  CHECK_METHOD(exer_enc_typerecinattr, c_nil_rec_present_attr_present, str_nil_rec_present_attr_present);
+}
+
+testcase decode_NilTypeRecInAttr() runs on Nil {
+  CHECK_DECODE(exer_dec_typerecinattr, str_nil_rec_absent2, NilTypeRecInAttr, c_nil_rec_absent2);
+  CHECK_DECODE(exer_dec_typerecinattr, str_nil_rec_present_attr_omit, NilTypeRecInAttr, c_nil_rec_present_attr_omit);
+  //CHECK_DECODE(exer_dec_typerecinattr, str_nil_rec_present_attr_present, NilTypeRecInAttr, c_nil_rec_present_attr_present);
+}
+
+/* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** */
+
+// Encoding nillable field with attribute, which is a record type that has attributes
+
+type record NilTypeRecAttr {
+  record {
+    charstring outer_attr optional,
+    TypeWithAttr nil optional
+  } field
+} with {
+  variant(field.outer_attr) "attribute";
+  variant(field) "useNil";
+}
+
+const NilTypeRecAttr c_nil_absent := {
+	field := {
+		outer_attr := "outer",
+		nil := omit
+	}
+};
+
+const universal charstring str_nil_absent :=
+"<NilTypeRecAttr xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>\n" &
+"\t<field outer_attr='outer' xsi:nil='true'/>\n" &
+"</NilTypeRecAttr>\n\n";
+
+const NilTypeRecAttr c_nil_present := {
+	field := {
+		outer_attr := "outer",
+		nil := {
+			attr1 := "a",
+			inner_field := "field"
+		}
+	}
+};
+
+const universal charstring str_nil_present :=
+"<NilTypeRecAttr>\n" &
+"\t<field outer_attr='outer' attr1='a'>\n" &
+"\t\t<inner_field>field</inner_field>\n" &
+"\t</field>\n" &
+"</NilTypeRecAttr>\n\n";
+
+const NilTypeRecAttr c_nil_present2 := {
+	field := {
+		outer_attr := omit,
+		nil := {
+			attr1 := "a",
+			inner_field := "field"
+		}
+	}
+};
+
+const universal charstring str_nil_present2 :=
+"<NilTypeRecAttr>\n" &
+"\t<field attr1='a'>\n" &
+"\t\t<inner_field>field</inner_field>\n" &
+"\t</field>\n" &
+"</NilTypeRecAttr>\n\n";
+
+const NilTypeRecAttr c_nil_present_attr_absent := {
+	field := {
+		outer_attr := "outer",
+		nil := {
+			attr1 := omit,
+			inner_field := "field"
+		}
+	}
+};
+
+const universal charstring str_nil_present_attr_absent :=
+"<NilTypeRecAttr>\n" &
+"\t<field outer_attr='outer'>\n" &
+"\t\t<inner_field>field</inner_field>\n" &
+"\t</field>\n" &
+"</NilTypeRecAttr>\n\n";
+
+DECLARE_EXER_ENCODERS(NilTypeRecAttr, typeattr);
+
+testcase encode_NilTypeRecAttr() runs on Nil {
+  CHECK_METHOD(exer_enc_typeattr, c_nil_absent, str_nil_absent);
+  CHECK_METHOD(exer_enc_typeattr, c_nil_present, str_nil_present);
+  CHECK_METHOD(exer_enc_typeattr, c_nil_present2, str_nil_present2);
+  CHECK_METHOD(exer_enc_typeattr, c_nil_present_attr_absent, str_nil_present_attr_absent);
+}
+
+testcase decode_NilTypeRecAttr() runs on Nil {
+  CHECK_DECODE(exer_dec_typeattr, str_nil_absent, NilTypeRecAttr, c_nil_absent);
+  CHECK_DECODE(exer_dec_typeattr, str_nil_present, NilTypeRecAttr, c_nil_present);
+  CHECK_DECODE(exer_dec_typeattr, str_nil_present2, NilTypeRecAttr, c_nil_present2);
+  CHECK_DECODE(exer_dec_typeattr, str_nil_present_attr_absent, NilTypeRecAttr, c_nil_present_attr_absent);
+}
+
+/* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** */
+
 control {
   execute(encode_nil_absent());
   execute(encode_nil_present());
@@ -561,6 +784,15 @@ control {
 
   execute(encode_multi_nil());
   execute(decode_multi_nil());
+
+  execute(encode_NilTypeRec());
+  execute(decode_NilTypeRec());
+
+  execute(encode_NilTypeRecInAttr());
+  execute(decode_NilTypeRecInAttr());
+
+  execute(encode_NilTypeRecAttr());
+  execute(decode_NilTypeRecAttr());
 }
 
 }

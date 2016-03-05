@@ -387,6 +387,9 @@ type mycstr7 mycstr8 length(1)
 type charstring mycstr9 (mycstr2)
 type charstring mycstr10 length(0..infinity)  // Full set.
 
+type charstring mycstr11 (pattern "abc?xyz");
+type charstring mycstr12 (pattern @nocase "abc*xyz");
+
 const mycstr7 c_mycstr1 := "a"
 const mycstr9 c_mycstr2 := "abcd"
 
@@ -405,14 +408,20 @@ testcase charstrSubtypes() runs on charstrOper_comptype {
   var template mycstr4 vt_mycstr2 := "ab"  // Length with range.
   var template mycstr6 vt_mycstr3 := "a"  // Value range list.
   var template mycstr7 vt_mycstr4 := vt_mycstr3  // Value range with length.
+  var template mycstr11 vt_mycstr5 := "abc1xyz"; // Pattern (case sensitive)
+  var template mycstr12 vt_mycstr6 := "abc123xyz"; // Pattern (case insensitive)
   var mycstr2 v_mycstr1 := valueof(vt_mycstr1)
   var mycstr4 v_mycstr2 := valueof(vt_mycstr2)
   var mycstr6 v_mycstr3 := valueof(vt_mycstr3)
   var mycstr7 v_mycstr4 := valueof(vt_mycstr4)
+  var mycstr11 v_mycstr5 := valueof(vt_mycstr5)
+  var mycstr12 v_mycstr6 := valueof(vt_mycstr6)
 
   if (valueof(vt_mycstr1) == v_mycstr1 and v_mycstr2 == valueof(vt_mycstr2)) { setverdict(pass) }
   else { setverdict(fail) }
   if (valueof(vt_mycstr3) == v_mycstr3 and v_mycstr4 == valueof(vt_mycstr4)) { setverdict(pass) }
+  else { setverdict(fail) }
+  if (valueof(vt_mycstr5) == v_mycstr5 and v_mycstr6 == valueof(vt_mycstr6)) { setverdict(pass) }
   else { setverdict(fail) }
   if (c_mycstr1 == f_cstr2() and " " == f_cstr1()) { setverdict(pass) }
   else { setverdict(fail) }

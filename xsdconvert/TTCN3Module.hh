@@ -101,7 +101,6 @@ public:
       FormValue a_attributeFormDefault,
       BlockValue a_blockDefault);
 
-  void generate_TTCN3_header(FILE * file);
   void generate_TTCN3_fileinfo(FILE * file);
   void generate_TTCN3_modulestart(FILE * file);
   void generate_TTCN3_included_types(FILE * file);

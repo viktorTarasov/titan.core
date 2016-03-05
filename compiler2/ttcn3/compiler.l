@@ -495,12 +495,17 @@ with		RETURN(WithKeyword);
 xor		RETURN(XorKeyword);
 xor4b		RETURN(Xor4bKeyword);
 
+  /* modifier keywords */
+
+"@nocase" RETURN(NocaseKeyword);
+"@lazy"   RETURN(LazyKeyword);
+
   /* special TITAN specific keywords */
 
 "@try"    RETURN(TitanSpecificTryKeyword);
 "@catch"  RETURN(TitanSpecificCatchKeyword);
-"@lazy"   RETURN(TitanSpecificLazyKeyword);
 "@profiler" RETURN(TitanSpecificProfilerKeyword);
+
 
 	/* Predefined function identifiers */
 

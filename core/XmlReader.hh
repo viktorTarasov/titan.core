@@ -76,7 +76,7 @@ public:
    *  @return 1 on success, 0 if no more nodes to read, -1 on error */
   int Read();
   int ReadDbg(const char *where);
-
+  
 #if 0
   /** Return the child nodes of the current node.
    *

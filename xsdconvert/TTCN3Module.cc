@@ -15,8 +15,6 @@
 
 #include "../common/version_internal.h"
 
-#include <ctime>
-
 #if defined(WIN32) && !defined(MINGW)
 #include <cygwin/version.h>
 #include <sys/cygwin.h>
@@ -24,7 +22,6 @@
 #endif
 
 extern bool e_flag_used;
-extern bool t_flag_used;
 extern bool z_flag_used;
 
 TTCN3Module::TTCN3Module(const char * a_filename, XMLParser * a_parser)
@@ -204,59 +201,6 @@ void TTCN3Module::replaceLastMainType(RootType * t) {
   definedTypes.pop_back();
   definedTypes.push_back(t);
   actualXsdConstruct = t->getConstruct();
-}
-
-void TTCN3Module::generate_TTCN3_header(FILE * file) {
-  time_t time_current = time(NULL);
-  fprintf(file,
-    "/*******************************************************************************\n"
-    );
-  if (t_flag_used) {
-    fprintf(file,
-      "* Copyright Ericsson Telecom AB\n"
-      "*\n"
-      "* XSD to TTCN-3 Translator\n"
-      "*\n"
-      );
-  } else {
-    fprintf(file,
-      "* Copyright (c) 2000-%-4d Ericsson Telecom AB\n"
-      "*\n"
-      "* XSD to TTCN-3 Translator version: %-40s\n"
-      "*\n",
-      1900 + (localtime(&time_current))->tm_year,
-      PRODUCT_NUMBER
-      );
-  }
-  fprintf(file,
-    "* All rights reserved. This program and the accompanying materials\n"
-    "* are made available under the terms of the Eclipse Public License v1.0\n"
-    "* which accompanies this distribution, and is available at\n"
-    "* http://www.eclipse.org/legal/epl-v10.html\n"
-    "*******************************************************************************/\n"
-    "//\n"
-    "//  File:          %s.ttcn\n"
-    "//  Description:\n"
-    "//  References:\n"
-    "//  Rev:\n"
-    "//  Prodnr:\n",
-    modulename.c_str()
-    );
-  if (t_flag_used) {
-    fprintf(file,
-      "//  Updated:\n"
-      );
-  } else {
-    fprintf(file,
-      "//  Updated:       %s",
-      ctime(&time_current)
-      );
-  }
-  fprintf(file,
-    "//  Contact:       http://ttcn.ericsson.se\n"
-    "//\n"
-    "////////////////////////////////////////////////////////////////////////////////\n"
-    );
 }
 
 void TTCN3Module::generate_TTCN3_fileinfo(FILE * file) {

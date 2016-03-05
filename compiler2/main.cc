@@ -71,7 +71,8 @@ boolean generate_skeleton = FALSE, force_overwrite = FALSE,
   use_runtime_2 = FALSE, gcc_compat = FALSE, asn1_xer = FALSE,
   check_subtype = TRUE, suppress_context = FALSE, display_up_to_date = FALSE,
   implicit_json_encoding = FALSE, json_refs_for_all_types = TRUE,
-  force_gen_seof = FALSE, omit_in_value_list = FALSE;
+  force_gen_seof = FALSE, omit_in_value_list = FALSE,
+  warnings_for_bad_variants = FALSE;
 
 // Default code splitting mode is set to 'no splitting'.
 CodeGenHelper::split_type code_splitting_mode = CodeGenHelper::SPLIT_NONE;
@@ -224,7 +225,7 @@ char *canonize_input_file(const char *path_name)
     break;
   }
   char *dir_name = get_dir_from_path(path_name);
-  char *abs_dir = get_absolute_dir(dir_name, NULL);
+  char *abs_dir = get_absolute_dir(dir_name, NULL, true);
   Free(dir_name);
   char *file_name = get_file_from_path(path_name);
   char *ret_val = compose_path_name(abs_dir, file_name);
@@ -360,7 +361,7 @@ static boolean is_valid_asn1_filename(const char* file_name)
 static void usage()
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abcdfgijlLOpqrRsStuwxXyY] [-K file] [-z file] [-V verb_level]\n"
+    "usage: %s [-abcdEfgijlLOpqrRsStuwxXyY] [-K file] [-z file] [-V verb_level]\n"
     "	[-o dir] [-U none|type] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
     "	[-T] module.ttcn [-A] module.asn ...\n"
     "	or  %s -v\n"
@@ -371,6 +372,7 @@ static void usage()
     "	-b:		disable BER encoder/decoder functions\n"
     "	-c:		write out checksums in case of error\n"
     "	-d:		treat default fields as omit\n"
+    "	-E:		display only warnings for unrecognized encoding variants\n"
     "	-f:		force overwriting of output files\n"
     "	-g:		emulate GCC error/warning message format\n"
     "	-i:		use only line numbers in error/warning messages\n"
@@ -455,7 +457,8 @@ int main(int argc, char *argv[])
     dflag = false, Xflag = false, Rflag = false, gflag = false, aflag = false,
     s0flag = false, Cflag = false, yflag = false, Uflag = false, Qflag = false,
     Sflag = false, Kflag = false, jflag = false, zflag = false, Fflag = false,
-    Mflag = false, errflag = false, print_usage = false, ttcn2json = false;
+    Mflag = false, Eflag = false, errflag = false, print_usage = false,
+    ttcn2json = false;
 
   CodeGenHelper cgh;
 
@@ -547,7 +550,7 @@ int main(int argc, char *argv[])
 
   if (!ttcn2json) {
     for ( ; ; ) {
-      int c = getopt(argc, argv, "aA:C:K:LP:T:V:bcdfFgilMo:YpqQ:rRs0StuU:vwxXjyz:-");
+      int c = getopt(argc, argv, "aA:bcC:dEfFgijK:lLMo:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
       if (c == -1) break;
       switch (c) {
       case 'a':
@@ -714,6 +717,10 @@ int main(int argc, char *argv[])
         SET_FLAG(M);
         omit_in_value_list = TRUE;
         break;
+      case 'E':
+        SET_FLAG(E);
+        warnings_for_bad_variants = TRUE;
+        break;
 
       case 'Q': {
         long max_errs;
@@ -758,7 +765,7 @@ int main(int argc, char *argv[])
       if (Aflag || Lflag || Pflag || Tflag || Vflag || Yflag ||
         bflag || fflag || iflag || lflag || oflag || pflag || qflag ||
         rflag || sflag || tflag || uflag || wflag || xflag || Xflag || Rflag ||
-        Uflag || yflag || Kflag || jflag || zflag || Fflag || Mflag) {
+        Uflag || yflag || Kflag || jflag || zflag || Fflag || Mflag || Eflag) {
         errflag = true;
         print_usage = true;
       }

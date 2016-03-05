@@ -256,7 +256,7 @@ extern int add_include_file(const std::string& filename)
     expstring_t currdirname, dirname, filenamepart, basedir;
     currdirname = get_dir_from_path(get_cfg_preproc_current_file().c_str());
     dirname = get_dir_from_path(filename.c_str());
-    basedir = get_absolute_dir(dirname, currdirname);
+    basedir = get_absolute_dir(dirname, currdirname, 1);
     Free(currdirname);
     Free(dirname);
     filenamepart = get_file_from_path(filename.c_str());
@@ -294,7 +294,7 @@ extern int preproc_parse_file(const char *filename, string_chain_t **filenames,
   config_preproc_defines=string_map_new();
   {
     expstring_t dirname=get_dir_from_path(filename);
-    expstring_t basedir=get_absolute_dir(dirname, NULL);
+    expstring_t basedir=get_absolute_dir(dirname, NULL, 1);
     expstring_t filenamepart=get_file_from_path(filename);
     Free(dirname);
     if (basedir == NULL) {

@@ -1532,32 +1532,6 @@ testcase tc_record_partiallyInit13() runs on recordOper_mycomp {
     if(ispresent(vl_r.roi[0])){setverdict(fail)}else {setverdict(pass)};
     if(ispresent(vl_r.roi[90])){setverdict(fail)}else {setverdict(pass)};
   }
-
-// Must be able to make a difference between an unbound record and a bound record with unbound elements (TR: HT25776)
-type record TheRec {
-  integer num,
-  charstring str
-} with {
-  encode "JSON"
-}
-
-external function f_dec(in octetstring x) return TheRec
-  with { extension "prototype(convert) decode(JSON) errorbehavior(ALL:WARNING)" }
-
-testcase tc_record_unbound_diff() runs on recordOper_mycomp
-{
-  // Unbound record
-  var TheRec v1;
-  log(v1);
-  if (not isbound(v1)) { setverdict(pass); }
-  else { setverdict(fail, "expected unbound record, got: ", v1); }
-
-  // Create a bound, but empty record with the JSON decoder (decoding errors will only display warnings)
-  v1 := f_dec(char2oct("{}"));
-  log(v1);
-  if (isbound(v1)) { setverdict(pass); }
-  else { setverdict(fail, "record is unbound, expected bound record with unbound fields"); }
-}
     
 control {
  const recordOper_trecord cl_temp1:={ x1:=omit, x2:=3.4 }; // can constants be declared in the control part
@@ -1629,6 +1603,5 @@ control {
  execute(tc_record_omit2());
  execute(tc_record_omit_HQ51693());
  execute(tc_recordOf_omit());
- execute(tc_record_unbound_diff());
 }
 }

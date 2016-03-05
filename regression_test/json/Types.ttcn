@@ -106,6 +106,33 @@ type set Product {
   variant(price) "JSON:omit as null"
 }
 
+type record KeywordFields {
+  integer a1,
+  integer a2,
+  integer a3,
+  integer a4,
+  integer a5,
+  integer a6,
+  integer a7,
+  integer a8,
+  integer a9,
+  integer a10,
+  integer a11
+}
+with {
+  variant(a1) "JSON: name as omit";
+  variant(a2) "JSON: name as as";
+  variant(a3) "JSON: name as null";
+  variant(a4) "JSON: name as name";
+  variant(a5) "JSON: name as value";
+  variant(a6) "JSON: name as default";
+  variant(a7) "JSON: name as extend";
+  variant(a8) "JSON: name as metainfo";
+  variant(a9) "JSON: name as for";
+  variant(a10) "JSON: name as unbound";
+  variant(a11) "JSON: name as JSON";
+}
+
 type union Thing {
   integer ival,
   float fval,
@@ -202,6 +229,29 @@ with {
   variant " JSON : metainfo for unbound ";
   variant (num) " JSON : name as int ";
 }
+
+type record MetainfoInnerRecord {
+  integer num,
+  charstring str
+}
+with {
+  variant "JSON: metainfo for unbound";
+}
+
+type record MetainfoOuterRecord {
+  integer mynum,
+  charstring mystr,
+  MetainfoInnerRecord myRec
+}
+
+type record of integer MetainfoRecOf
+with { variant "JSON: metainfo for unbound"; }
+
+type set of MetainfoRecord MetainfoSetOf
+with { variant "JSON: metainfo for unbound"; }
+
+type float MetainfoArray[3]
+with { variant "JSON: metainfo for unbound"; }
 
 } with {
   encode "JSON";

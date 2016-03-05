@@ -1157,7 +1157,7 @@ void UNIVERSAL_CHARSTRING::decode(const TTCN_Typedescriptor_t& p_td,
       if (type==XML_READER_TYPE_ELEMENT)
 	break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding, 0);
+    XER_decode(*p_td.xer, reader, XER_coding, XER_NONE, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break; }
@@ -2030,7 +2030,7 @@ in_word_set (const char *str, unsigned int len)
 universal_char const uspace = {0,0,0,32};
 
 int UNIVERSAL_CHARSTRING::XER_decode(const XERdescriptor_t& p_td,
-  XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
+  XmlReaderWrap& reader, unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1;

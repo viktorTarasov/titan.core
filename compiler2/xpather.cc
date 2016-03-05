@@ -605,7 +605,7 @@ const char* get_act_config(struct string2_list* cfg, const char* project_name) {
   return NULL;
 }
 
-static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcfg,
+static tpd_result process_tpd_internal(const char *p_tpd_name, char* tpdName, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
   int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
@@ -617,11 +617,12 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
-  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
+  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean *p_Eflag, boolean* p_diflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   struct string_list* linkerlibs, struct string_list* additionalObjects, struct string_list* linkerlibsearchp, boolean Vflag, boolean Dflag,
   boolean *p_Zflag, boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, 
-  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list);
+  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list,
+  const char **search_paths, size_t n_search_paths);
 
 extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
@@ -635,18 +636,19 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag, 
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
-  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
+  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean* p_Eflag, boolean* p_diflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
   boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir,
-  struct string2_list* run_command_list, struct string2_list* required_configs, struct string_list** profiled_file_list) {
+  struct string2_list* run_command_list, struct string2_list* required_configs, struct string_list** profiled_file_list,
+  const char **search_paths, size_t n_search_paths) {
 
   map<cstring, int> seen_tpd_files;
+  char *tpdName = NULL;
   projGenHelper.setZflag(*p_Zflag);
   projGenHelper.setWflag(prefix_workdir);
   projGenHelper.setHflag(*p_Hflag);
-
-  tpd_result success = process_tpd_internal(p_tpd_name,
+  tpd_result success = process_tpd_internal(p_tpd_name, tpdName,
       actcfg, file_list_path, p_argc, p_argv, p_optind, p_ets_name, p_project_name,
       p_gflag, p_sflag, p_cflag, p_aflag, preprocess,
       p_Rflag, p_lflag, p_mflag, p_Pflag,
@@ -657,11 +659,12 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
       prep_undefines, p_csflag, p_quflag, p_dsflag, cxxcompiler,
       optlevel, optflags, p_dbflag, p_drflag, p_dtflag, p_dxflag, p_djflag,
       p_fxflag, p_doflag, p_gfflag, p_lnflag, p_isflag,
-      p_asflag, p_swflag, p_Yflag, p_Mflag, solspeclibs, sol8speclibs,
+      p_asflag, p_swflag, p_Yflag, p_Mflag, p_Eflag, p_diflag, solspeclibs, sol8speclibs,
       linuxspeclibs, freebsdspeclibs, win32speclibs, ttcn3prep,
       linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag, p_Zflag,
       p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
-      run_command_list, seen_tpd_files, required_configs, profiled_file_list);
+      run_command_list, seen_tpd_files, required_configs, profiled_file_list,
+      search_paths, n_search_paths);
 
   if (TPD_FAILED == success) exit(EXIT_FAILURE);
 
@@ -693,7 +696,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
 // process_tpd() may alter these strings; new values will be on the heap.
 // If process_tpd() preserves the content of such a string (e.g. ets_name),
 // it must nevertheless make a copy on the heap via mcopystr().
-static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcfg,
+static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
   int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
@@ -705,11 +708,12 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
-  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
+  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean* p_Eflag, boolean* p_diflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
   boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir,
-  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list)
+  struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list,
+  const char **search_paths, size_t n_search_paths)
 {
   tpd_result result = TPD_SUCCESS;
   // read-only non-pointer aliases
@@ -724,7 +728,47 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   assert(local_argc   >= local_optind);
 
   autostring tpd_dir(get_dir_from_path(p_tpd_name));
-  autostring abs_tpd_dir(get_absolute_dir(tpd_dir, NULL));
+  autostring abs_tpd_dir(get_absolute_dir(tpd_dir, NULL, FALSE));
+  boolean free_name = FALSE;
+  struct stat buf;
+  //Only referenced project, when first try is failed,              and when not absolute path
+  if(0 == local_optind && p_tpd_name != NULL && stat(p_tpd_name, &buf) && tpdName != NULL) {
+    //Find the first search_path that has the tpd
+    for(size_t i = 0; i<n_search_paths; i++) {
+      boolean need_slash = search_paths[i][strlen(search_paths[i]) - 1] != '/';
+      NOTIFY("Cannot find %s, trying with %s%s%s\n", p_tpd_name, search_paths[i], need_slash ? "/" : "", tpdName);
+      //Create path
+      char * prefixed_file_path = (char*)Malloc((strlen(search_paths[i]) + strlen(tpdName) + 1 + need_slash) * sizeof(char));
+      strcpy(prefixed_file_path, search_paths[i]);
+      if(need_slash) {
+        strcat(prefixed_file_path, "/");
+      }
+      strcat(prefixed_file_path, tpdName);
+
+      tpd_dir = get_dir_from_path(prefixed_file_path);
+      abs_tpd_dir = get_absolute_dir(tpd_dir, NULL, FALSE);
+
+      if(!stat(prefixed_file_path, &buf)){
+        //Ok, tpd found
+        p_tpd_name = prefixed_file_path;
+        free_name = TRUE;
+        NOTIFY("TPD with name %s found at %s.", tpdName, search_paths[i]);
+        break;
+      }else {
+        //tpd not found, continue search
+        abs_tpd_dir = NULL;
+        Free(prefixed_file_path);
+      }
+    }
+    //Error if tpd is not found in either search paths
+    if(NULL == (const char*)abs_tpd_dir) {
+      //Only write out the name in the error message (without .tpd)
+      tpdName[strlen(tpdName)-4] ='\0';
+      ERROR("Unable to find ReferencedProject with name: %s", (const char*)tpdName);
+      return TPD_FAILED;
+    }
+  }
+
   if (NULL == (const char*)abs_tpd_dir) {
     ERROR("absolute TPD directory could not be retrieved from %s", (const char*)tpd_dir);
     return TPD_FAILED;
@@ -994,7 +1038,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
       set_working_dir(real_workdir); // go into the working dir
     }
     if (hasWorkDir) { //we created working directory, or its already been created (from a parent makefilegen process maybe)
-      *abs_work_dir_p = get_absolute_dir(real_workdir, abs_tpd_dir);
+      *abs_work_dir_p = get_absolute_dir(real_workdir, abs_tpd_dir, TRUE);
       abs_workdir = (mcopystr(*abs_work_dir_p));
       proj_abs_workdir = mcopystr(*abs_work_dir_p);
     }
@@ -1044,9 +1088,12 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
     xmlNodeSetPtr nodes = theConfigEx->nodesetval;
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
       xmlNodePtr curnode = nodes->nodeTab[i];
-
       cstring aa((const char*)curnode->content);
-      excluded_files.add(aa, *p_project_name);
+      if (!excluded_files.has_key(aa)) {
+        excluded_files.add(aa, *p_project_name);
+      } else {
+        WARNING("Multiple exclusion of file %s", (const char*)curnode->content);
+      }
     }
   }
 
@@ -1102,7 +1149,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
           const char* file_path = ruri;
           expstring_t rel_file_dir = get_dir_from_path(file_path);
           expstring_t file_name = get_file_from_path(file_path);
-          expstring_t abs_dir_path = get_absolute_dir(rel_file_dir, abs_tpd_dir);
+          expstring_t abs_dir_path = get_absolute_dir(rel_file_dir, abs_tpd_dir, TRUE);
           expstring_t abs_file_name = compose_path_name(abs_dir_path, file_name);
           if (abs_file_name != NULL) {
             if (get_path_status(abs_file_name) == PS_FILE) {
@@ -1132,7 +1179,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
             }else {
               drop = true;
               ERROR("%s does not exist", abs_file_name);
-            }            
+            }
           }
           if(abs_dir_path != NULL && !drop){
             files.add(cpath, ruri); // relativeURI to the TPD location
@@ -1181,6 +1228,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   xsdbool2boolean(xpathCtx, actcfg, "outParamBoundness", p_Yflag); //not documented, obsolete
   xsdbool2boolean(xpathCtx, actcfg, "forceOldFuncOutParHandling", p_Yflag);
   xsdbool2boolean(xpathCtx, actcfg, "omitInValueList", p_Mflag);
+  xsdbool2boolean(xpathCtx, actcfg, "warningsForBadVariants", p_Eflag);
+  xsdbool2boolean(xpathCtx, actcfg, "disablePredefinedExternalFolder", p_diflag);
 
   projDesc = projGenHelper.getTargetOfProject(*p_project_name);
   if (projDesc) projDesc->setLinkingStrategy(*p_lflag);
@@ -1951,10 +2000,12 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
   // Referenced projects
   {
     XPathObject subprojects(run_xpath(xpathCtx,
-      "/TITAN_Project_File_Information/ReferencedProjects/ReferencedProject/attribute::*"));
+      "/TITAN_Project_File_Information/ReferencedProjects/ReferencedProject"));
     xmlNodeSetPtr nodes = subprojects->nodesetval;
-    const char *name = NULL, *projectLocationURI = NULL;
+    //Go through ReferencedProjects
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
+      const char *name = NULL, *projectLocationURI = NULL;
+      char *tpdName_loc = NULL;
       // FIXME: this assumes every ReferencedProject has name and URI.
       // This is not necessarily so if the referenced project was closed
       // when the project was exported to TPD.
@@ -1963,13 +2014,44 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
       // changes the next ReferencedProject to have the projectLocationURI
       // as the first attribute, it will be joined to the name
       // of the previous, closed, ReferencedProject.
-      if (!strcmp((const char*)nodes->nodeTab[i]->name, "name")) {
-        name = (const char*)nodes->nodeTab[i]->children->content;
+      
+      //Go through attributes
+      for (xmlAttrPtr attr = nodes->nodeTab[i]->properties; attr; attr = attr->next) {
+        if (!strcmp((const char*)attr->name, "name")) {
+          name = (const char*)attr->children->content;
+        }
+        else if (!strcmp((const char*)attr->name,"projectLocationURI")) {
+          projectLocationURI = (const char*)attr->children->content;
+        }
+        else if (!strcmp((const char*)attr->name, "tpdName")) {
+          //Allocate memory
+          tpdName_loc = mcopystr((char*)attr->children->content);
+        }
       }
-      else if (!strcmp((const char*)nodes->nodeTab[i]->name,"projectLocationURI")) {
-        projectLocationURI = (const char*)nodes->nodeTab[i]->children->content;
+      //We don't want to orerride an absolute location with -I, tpdName remains NULL
+      boolean not_abs_path = projectLocationURI &&
+#if defined WIN32 && defined MINGW
+	/* On native Windows the absolute path name shall begin with
+	 * a drive letter, colon and backslash */
+	(((projectLocationURI[0] < 'A' || projectLocationURI[0] > 'Z') &&
+	  (projectLocationURI[0] < 'a' || projectLocationURI[0] > 'z')) ||
+	 projectLocationURI[1] != ':' || projectLocationURI[2] != '\\');
+#else
+	/* On UNIX-like systems the absolute path name shall begin with
+	 * a slash */
+	projectLocationURI[0] != '/';
+#endif
+      if (!tpdName_loc && not_abs_path) {
+        //Allocate memory: +5 because .tpd + closing 0
+        tpdName_loc = (char*)Malloc((strlen(name) + 5) * sizeof(char));
+        //Default name: name + .tpd
+        strcpy(tpdName_loc, name);
+        strcat(tpdName_loc, ".tpd");
+      }else if (!not_abs_path) {
+        Free(tpdName_loc);
+        tpdName_loc = NULL;
       }
-
+      
       if (name && projectLocationURI) { // collected both
         // see if there is a specified configuration for the project
 
@@ -1987,16 +2069,21 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
           my_quflag = 0, my_dsflag = 0, my_dbflag = 0, my_drflag = 0,
           my_dtflag = 0, my_dxflag = 0, my_djflag = 0, my_fxflag = 0, my_doflag = 0, 
           my_gfflag = 0, my_lnflag = 0, my_isflag = 0, my_asflag = 0, 
-          my_swflag = 0, my_Yflag = 0, my_Mflag = *p_Mflag;
+          my_swflag = 0, my_Yflag = 0, my_Mflag = *p_Mflag, my_Eflag = 0, my_diflag = *p_diflag;
 
         char *my_ets = NULL;
         char *my_proj_name = NULL;
-        autostring abs_projectLocationURI(
-          compose_path_name(abs_tpd_dir, projectLocationURI));
+        autostring abs_projectLocationURI;
+        if (not_abs_path) {
+          abs_projectLocationURI = compose_path_name(abs_tpd_dir, projectLocationURI);
+        } else {
+          //If absolute directory, then just copy the URI
+          abs_projectLocationURI = mcopystr(projectLocationURI);
+        }
 
         char* sub_proj_abs_work_dir = NULL;
         
-        tpd_result success = process_tpd_internal((const char*)abs_projectLocationURI,
+        tpd_result success = process_tpd_internal((const char*)abs_projectLocationURI, tpdName_loc,
           my_actcfg, file_list_path, &my_argc, &my_argv, &my_optind, &my_ets, &my_proj_name,
           &my_gflag, &my_sflag, &my_cflag, &my_aflag, preprocess, &my_Rflag, &my_lflag,
           &my_mflag, &my_Pflag, &my_Lflag, recursive, force_overwrite, gen_only_top_level, NULL, &sub_proj_abs_work_dir,
@@ -2004,10 +2091,11 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
           prep_includes, prep_defines, prep_undefines, &my_csflag,
           &my_quflag, &my_dsflag, cxxcompiler, optlevel, optflags, &my_dbflag, &my_drflag,
           &my_dtflag, &my_dxflag, &my_djflag, &my_fxflag, &my_doflag,
-          &my_gfflag, &my_lnflag, &my_isflag, &my_asflag, &my_swflag, &my_Yflag, &my_Mflag,
+          &my_gfflag, &my_lnflag, &my_isflag, &my_asflag, &my_swflag, &my_Yflag, &my_Mflag, &my_Eflag, &my_diflag,
           solspeclibs, sol8speclibs, linuxspeclibs, freebsdspeclibs, win32speclibs,
           ttcn3prep, linkerlibs, additionalObjects, linkerlibsearchp, Vflag, FALSE, &my_Zflag, 
-          &my_Hflag, NULL, NULL, prefix_workdir, run_command_list, seen_tpd_files, required_configs, profiled_file_list);
+          &my_Hflag, NULL, NULL, prefix_workdir, run_command_list, seen_tpd_files, required_configs, profiled_file_list,
+          search_paths, n_search_paths);
 
         autostring sub_proj_abs_work_dir_as(sub_proj_abs_work_dir); // ?!
 
@@ -2092,8 +2180,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
           result = TPD_FAILED;
         }
         // else TPD_SKIPPED, keep quiet
-
-        name = projectLocationURI = NULL; // forget both
+        Free(tpdName_loc);
+        name = projectLocationURI = tpdName_loc = NULL; // forget all
       }
     } // next referenced project
   }
@@ -2122,7 +2210,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
     const char *fn = files.get_nth_elem(n); // relativeURI to the TPD location
     autostring  dir_n (get_dir_from_path (fn));
     autostring  file_n(get_file_from_path(fn));
-    autostring  rel_n (get_absolute_dir(dir_n, abs_tpd_dir));
+    autostring  rel_n (get_absolute_dir(dir_n, abs_tpd_dir, TRUE));
     autostring  abs_n (compose_path_name(rel_n, file_n));
 
     if (local_argc == 0) {
@@ -2238,6 +2326,10 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, const char *actcf
     Free(const_cast<char*>(folders.get_nth_elem(i)));
   }
   folders.clear();
+  
+  if(free_name) {
+    Free((char*)p_tpd_name);
+  }
 
   excluded_files.clear();
   excluded_folders.clear();

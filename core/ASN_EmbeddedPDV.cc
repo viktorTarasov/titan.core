@@ -797,7 +797,7 @@ int EMBEDDED_PDV_identification::XER_encode(const XERdescriptor_t& p_td,
 }
 
 int EMBEDDED_PDV_identification::XER_decode(const XERdescriptor_t& p_td,
-  XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
+  XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   // we are supposed to be parked on our element
@@ -817,27 +817,27 @@ int EMBEDDED_PDV_identification::XER_decode(const XERdescriptor_t& p_td,
 	size_t namelen = strlen(name);
 	switch (namelen) {
 	case 8: // syntaxes
-	  syntaxes().XER_decode(EMBEDDED_PDV_identification_sxs_xer_, reader, flavor, 0);
+	  syntaxes().XER_decode(EMBEDDED_PDV_identification_sxs_xer_, reader, flavor, flavor2, 0);
 	  break;
 
 	case 6: // syntax
-	  syntax().XER_decode(EMBEDDED_PDV_identification_sx_xer_, reader, flavor, 0);
+	  syntax().XER_decode(EMBEDDED_PDV_identification_sx_xer_, reader, flavor, flavor2, 0);
 	  break;
 
 	case 23: // presentation-context-id
-	  presentation__context__id().XER_decode(EMBEDDED_PDV_identification_pci_xer_, reader, flavor, 0);
+	  presentation__context__id().XER_decode(EMBEDDED_PDV_identification_pci_xer_, reader, flavor, flavor2, 0);
 	  break;
 
 	case 19: // context-negotiation
-	  context__negotiation().XER_decode(EMBEDDED_PDV_identification_cn_xer_, reader, flavor, 0);
+	  context__negotiation().XER_decode(EMBEDDED_PDV_identification_cn_xer_, reader, flavor, flavor2, 0);
 	  break;
 
 	case 15: // transfer-syntax
-	  transfer__syntax().XER_decode(EMBEDDED_PDV_identification_ts_xer_, reader, flavor, 0);
+	  transfer__syntax().XER_decode(EMBEDDED_PDV_identification_ts_xer_, reader, flavor, flavor2, 0);
 	  break;
 
 	case 5: // fixed
-	  fixed().XER_decode(EMBEDDED_PDV_identification_fix_xer_, reader, flavor, 0);
+	  fixed().XER_decode(EMBEDDED_PDV_identification_fix_xer_, reader, flavor, flavor2, 0);
 	  break;
 
 	default:
@@ -1778,7 +1778,7 @@ int EMBEDDED_PDV_identification_syntaxes::XER_encode(const XERdescriptor_t& p_td
 }
 
 int EMBEDDED_PDV_identification_syntaxes::XER_decode(const XERdescriptor_t& /*p_td*/,
-  XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
+  XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
 { // we stand on <syntaxes>, move ahead first
   int type;
   for (int success = reader.Read(); success == 1; success = reader.Read())
@@ -1789,8 +1789,8 @@ int EMBEDDED_PDV_identification_syntaxes::XER_decode(const XERdescriptor_t& /*p_
       break;
   }
   // FIXME this assumes the right element
-  field_abstract.XER_decode(EMBEDDED_PDV_identification_sxs_abs_xer_, reader, flavor, 0);
-  field_transfer.XER_decode(EMBEDDED_PDV_identification_sxs_xfr_xer_, reader, flavor, 0);
+  field_abstract.XER_decode(EMBEDDED_PDV_identification_sxs_abs_xer_, reader, flavor, flavor2, 0);
+  field_transfer.XER_decode(EMBEDDED_PDV_identification_sxs_xfr_xer_, reader, flavor, flavor2, 0);
   for (int success = 1; success == 1; success = reader.Read())
   {
     type = reader.NodeType();
@@ -2511,7 +2511,7 @@ int EMBEDDED_PDV_identification_context__negotiation::XER_encode(const XERdescri
 }
 
 int EMBEDDED_PDV_identification_context__negotiation::XER_decode(
-  const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
+  const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   int type = reader.NodeType(), depth = -1;
@@ -2522,8 +2522,8 @@ int EMBEDDED_PDV_identification_context__negotiation::XER_decode(
     depth = reader.Depth();
     success = reader.Read();
   }
-  field_presentation__context__id.XER_decode(EMBEDDED_PDV_identification_cn_pci_xer_, reader, flavor, 0);
-  field_transfer__syntax         .XER_decode(EMBEDDED_PDV_identification_cn_tsx_xer_, reader, flavor, 0);
+  field_presentation__context__id.XER_decode(EMBEDDED_PDV_identification_cn_pci_xer_, reader, flavor, flavor2, 0);
+  field_transfer__syntax         .XER_decode(EMBEDDED_PDV_identification_cn_tsx_xer_, reader, flavor, flavor2, 0);
   for (; success == 1; success = reader.Read()) {
     type = reader.NodeType();
     if (XML_READER_TYPE_END_ELEMENT == type) {
@@ -3267,7 +3267,7 @@ void EMBEDDED_PDV::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       if (type==XML_READER_TYPE_ELEMENT)
 	break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding, 0);
+    XER_decode(*p_td.xer, reader, XER_coding, XER_NONE, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}
@@ -3364,7 +3364,7 @@ int EMBEDDED_PDV::XER_encode(const XERdescriptor_t& p_td,
   return (int)p_buf.get_len() - encoded_length;
 }
 
-int EMBEDDED_PDV::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
+int EMBEDDED_PDV::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
 {
   int exer  = is_exer(flavor);
   int depth = 1, type, success;
@@ -3377,13 +3377,13 @@ int EMBEDDED_PDV::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
       break;
     }
   }
-  field_identification         .XER_decode(EMBEDDED_PDV_identification_xer_       , reader, flavor, 0);
-  field_data__value__descriptor.XER_decode(EMBEDDED_PDV_data_value_descriptor_xer_, reader, flavor, 0);
+  field_identification         .XER_decode(EMBEDDED_PDV_identification_xer_       , reader, flavor, flavor2, 0);
+  field_data__value__descriptor.XER_decode(EMBEDDED_PDV_data_value_descriptor_xer_, reader, flavor, flavor2, 0);
   if (field_data__value__descriptor.is_value()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,
       "data-value-descriptor not allowed for EMBEDDED PDV");
   }
-  field_data__value            .XER_decode(EMBEDDED_PDV_data_value_xer_           , reader, flavor, 0);
+  field_data__value            .XER_decode(EMBEDDED_PDV_data_value_xer_           , reader, flavor, flavor2, 0);
   for (success = reader.Read(); success == 1; success = reader.Read()) {
     type = reader.NodeType();
     if (XML_READER_TYPE_END_ELEMENT == type) {

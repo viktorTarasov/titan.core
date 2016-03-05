@@ -105,7 +105,7 @@ namespace { /* anonymous namespace */
     int XER_encode(const XERdescriptor_t& p_td,
                    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
     int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-                   unsigned int flavor, embed_values_dec_struct_t*);
+                   unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   private:
     boolean BER_decode_set_selection(const ASN_BER_TLV_t& p_tlv);
   public:
@@ -163,7 +163,7 @@ namespace { /* anonymous namespace */
     int XER_encode(const XERdescriptor_t& p_td,
                    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
     int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-                   unsigned int flavor, embed_values_dec_struct_t*);
+                   unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   };
 
   /** Transform the information from the visible format to the encoding format
@@ -440,7 +440,7 @@ namespace { /* anonymous namespace */
   }
 
   int EXTERNALtransfer_encoding::XER_decode(const XERdescriptor_t& p_td,
-    XmlReaderWrap& reader, unsigned int flavor, embed_values_dec_struct_t*)
+    XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
   {
     int exer  = is_exer(flavor);
     int  success = reader.Ok(), type, depth = -1;
@@ -463,15 +463,15 @@ namespace { /* anonymous namespace */
 
     switch (*name) {
     case 's': // single-ASN1-type
-      single__ASN1__type().XER_decode(EXTERNAL_encoding_singleASN_xer_, reader, flavor, 0);
+      single__ASN1__type().XER_decode(EXTERNAL_encoding_singleASN_xer_, reader, flavor, flavor2, 0);
       break;
 
     case 'o': // octet-aligned
-      octet__aligned().XER_decode(EXTERNAL_encoding_octet_aligned_xer_, reader, flavor, 0);
+      octet__aligned().XER_decode(EXTERNAL_encoding_octet_aligned_xer_, reader, flavor, flavor2, 0);
       break;
 
     case 'a': // arbitrary
-      arbitrary().XER_decode(EXTERNAL_encoding_arbitrary_xer_, reader, flavor, 0);
+      arbitrary().XER_decode(EXTERNAL_encoding_arbitrary_xer_, reader, flavor, flavor2, 0);
       break;
 
     default:
@@ -582,7 +582,7 @@ namespace { /* anonymous namespace */
   }
 
   int EXTERNALtransfer::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-                                   unsigned int flavor, embed_values_dec_struct_t*)
+                                   unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
   {
     int exer  = is_exer(flavor);
     int success = reader.Ok(), depth = -1;
@@ -596,10 +596,10 @@ namespace { /* anonymous namespace */
       }
     }
 
-    field_direct__reference      .XER_decode(EXTERNAL_direct_reference_xer_     , reader, flavor, 0);
-    field_indirect__reference    .XER_decode(EXTERNAL_indirect_reference_xer_   , reader, flavor, 0);
-    field_data__value__descriptor.XER_decode(EXTERNAL_data_value_descriptor_xer_, reader, flavor, 0);
-    field_encoding               .XER_decode(EXTERNAL_encoding_xer_             , reader, flavor, 0);
+    field_direct__reference      .XER_decode(EXTERNAL_direct_reference_xer_     , reader, flavor, flavor2, 0);
+    field_indirect__reference    .XER_decode(EXTERNAL_indirect_reference_xer_   , reader, flavor, flavor2, 0);
+    field_data__value__descriptor.XER_decode(EXTERNAL_data_value_descriptor_xer_, reader, flavor, flavor2, 0);
+    field_encoding               .XER_decode(EXTERNAL_encoding_xer_             , reader, flavor, flavor2, 0);
 
     for (success = reader.Read(); success == 1; success = reader.Read()) {
       int type = reader.NodeType();
@@ -709,10 +709,10 @@ int EXTERNAL::XER_encode(const XERdescriptor_t& p_td,
 }
 
 int EXTERNAL::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-  unsigned int flavor, embed_values_dec_struct_t*)
+  unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
 {
   EXTERNALtransfer xfer;
-  xfer.XER_decode(p_td, reader, flavor, 0);
+  xfer.XER_decode(p_td, reader, flavor, flavor2, 0);
   transfer(&xfer);
   return 1; // decode successful
 }
@@ -3469,7 +3469,7 @@ void EXTERNAL::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTC
       if (type==XML_READER_TYPE_ELEMENT)
 	break;
     }
-    XER_decode(*p_td.xer, reader, XER_coding, 0);
+    XER_decode(*p_td.xer, reader, XER_coding, XER_NONE, 0);
     size_t bytes = reader.ByteConsumed();
     p_buf.set_pos(bytes);
     break;}

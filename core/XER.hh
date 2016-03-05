@@ -96,6 +96,10 @@ enum XER_flavor {
   BLOCKED        = 1U << 31  // 0x80000000 either ABSTRACT or BLOCK
 };
 
+enum XER_flavor2 {
+    USE_NIL_PARENT_TAG = 1U << 0 // Content field has attribute that was read by parent
+};
+
 /** WHITESPACE actions.
  * Note that WHITESPACE_COLLAPSE includes the effect of WHITESPACE_REPLACE
  * and the code relies on WHITESPACE_COLLAPSE having the higher value. */

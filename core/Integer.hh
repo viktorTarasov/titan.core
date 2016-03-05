@@ -166,7 +166,7 @@ public:
   /** @brief Decode according to XML Encoding Rules.
    **/
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-                 unsigned int flavor, embed_values_dec_struct_t*);
+                 unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   
   /** Encodes accordingly to the JSON encoding rules.
     * Returns the length of the encoded data. */

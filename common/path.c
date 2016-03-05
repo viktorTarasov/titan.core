@@ -129,7 +129,7 @@ expstring_t compose_path_name(const char *dir_name,
     } else return mcopystr(file_name);
 }
 
-expstring_t get_absolute_dir(const char *dir_name, const char *base_dir)
+expstring_t get_absolute_dir(const char *dir_name, const char *base_dir, const int with_error)
 {
     expstring_t ret_val;
     /* save the working directory */
@@ -142,9 +142,15 @@ expstring_t get_absolute_dir(const char *dir_name, const char *base_dir)
 	    return NULL;
 	}
     }
-    if (dir_name != NULL && set_working_dir(dir_name)) {
+    if (dir_name != NULL && with_error && set_working_dir(dir_name)) {
 	/* there was an error: go back to initial_dir */
 	set_working_dir(initial_dir);
+	Free(initial_dir);
+	return NULL;
+    }
+    if (dir_name != NULL && !with_error && chdir(dir_name)) {
+        //No error sign
+        errno = 0;
 	Free(initial_dir);
 	return NULL;
     }
@@ -174,9 +180,9 @@ expstring_t get_relative_dir(const char *dir_name, const char *base_dir)
 {
     expstring_t ret_val = NULL;
     /* canonize dir_name and the base directory */
-    expstring_t canonized_dir_name = get_absolute_dir(dir_name, base_dir);
+    expstring_t canonized_dir_name = get_absolute_dir(dir_name, base_dir, 1);
     expstring_t canonized_base_dir = base_dir != NULL ?
-	get_absolute_dir(base_dir, NULL) : get_working_dir();
+	get_absolute_dir(base_dir, NULL, 1) : get_working_dir();
     size_t i, last_slash = 0;
     if (canonized_dir_name == NULL || canonized_base_dir == NULL) {
 	/* an error occurred */

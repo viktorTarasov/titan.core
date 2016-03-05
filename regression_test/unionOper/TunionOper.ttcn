@@ -1003,6 +1003,98 @@ testcase tc_sideeffect2() runs on unionOper_mycomp {
     if(vl_newsize == vl_oldsize) {setverdict(pass)}else {setverdict(fail)}
     //log(vl_u.i);
   }
+  
+type set InnerSet {
+  integer num,
+  charstring str
+}
+
+type record InnerRec {
+  integer num,
+  charstring str
+}
+
+type union InnerUni {
+  InnerSet s,
+  InnerRec r
+}
+
+type record Outer {
+  InnerUni uni1,
+  InnerUni uni2,
+  record of InnerUni unis
+}
+
+modulepar Outer mp;
+
+// Test case for artf703093 : A union with an unbound alternative should itself be unbound
+// All unions in the module parameter and the variable declared in the test case should
+// be unbound (instead of being bound with an unbound alternative).
+// Copying the record containing the unions should be possible, too, without errors.
+testcase tc_union_with_unbound_alternative() runs on unionOper_mycomp {
+  if (isbound(mp.uni1)) {
+    setverdict(fail, "mp.uni1 is bound: ", mp.uni1);
+  }
+  if (isbound(mp.uni2)) {
+    setverdict(fail, "mp.uni2 is bound: ", mp.uni2);
+  }
+  if (isbound(mp.unis[0])) {
+    setverdict(fail, "mp.unis[0] is bound: ", mp.unis[0]);
+  }
+  if (isbound(mp.unis[1])) {
+    setverdict(fail, "mp.unis[1] is bound: ", mp.unis[1]);
+  }
+
+  var Outer x := {
+    uni1 := { r := { num := -, str := - } },
+    uni2 := { s := { num := -, str := - } },
+    unis := {
+      { r := { num := -, str := - } },
+      { s := { num := -, str := - } }
+    }
+  };
+  if (isbound(x.uni1)) {
+    setverdict(fail, "x.uni1 is bound: ", x.uni1);
+  }
+  if (isbound(x.uni2)) {
+    setverdict(fail, "x.uni2 is bound: ", x.uni2);
+  }
+  if (isbound(x.unis[0])) {
+    setverdict(fail, "x.unis[0] is bound: ", x.unis[0]);
+  }
+  if (isbound(x.unis[1])) {
+    setverdict(fail, "x.unis[1] is bound: ", x.unis[1]);
+  }
+
+  var Outer copy := x;
+  if (isbound(copy.uni1)) {
+    setverdict(fail, "copied x.uni1 is bound: ", copy.uni1);
+  }
+  if (isbound(copy.uni2)) {
+    setverdict(fail, "copied x.uni2 is bound: ", copy.uni2);
+  }
+  if (isbound(copy.unis[0])) {
+    setverdict(fail, "copied x.unis[0] is bound: ", copy.unis[0]);
+  }
+  if (isbound(copy.unis[1])) {
+    setverdict(fail, "copied x.unis[1] is bound: ", copy.unis[1]);
+  }
+
+  copy := mp;
+  if (isbound(copy.uni1)) {
+    setverdict(fail, "copied mp.uni1 is bound: ", copy.uni1);
+  }
+  if (isbound(copy.uni2)) {
+    setverdict(fail, "copied mp.uni2 is bound: ", copy.uni2);
+  }
+  if (isbound(copy.unis[0])) {
+    setverdict(fail, "copied mp.unis[0] is bound: ", copy.unis[0]);
+  }
+  if (isbound(copy.unis[1])) {
+    setverdict(fail, "copied mp.unis[1] is bound: ", copy.unis[1]);
+  }
+  setverdict(pass);
+}
 
 control {
  const typedefunionComp_myunion cl_1:= { x1:={ x1:=1, x2:=1.2 }}; // constant in control part
@@ -1062,5 +1154,6 @@ control {
  execute(tc_union_modify_ispresent());
  execute(tc_sideeffect1_ispresent());
  execute(tc_sideeffect2_ispresent());
+ execute(tc_union_with_unbound_alternative());
 }
 }

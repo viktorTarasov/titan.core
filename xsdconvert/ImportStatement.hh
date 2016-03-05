@@ -48,6 +48,8 @@ public:
     void validityChecking() {
     }
     void printToFile(FILE * file);
+    
+    const TTCN3Module* getSourceModule() { return source_module; }
 
     void dump(unsigned int depth) const;
 };

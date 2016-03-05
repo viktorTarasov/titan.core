@@ -624,6 +624,17 @@ testcase tc_isbound4ROI4() runs on mycomp {
   f(t_il4,5);
 }
 
+template integer tpard(template integer i) := i;
+
+testcase tc_HU56425() runs on mycomp {
+  template integer t_i := tpard(3);
+  template templateRecof_myrecof t_list := { tpard(t_i) };
+  // HU56425 refers to a code generation error (which caused a C++ compilation error), but let's check the resulting template anyway
+  template templateRecof_myrecof t_list_exp := { 3 };
+  if (log2str(t_list) == log2str(t_list_exp)) { setverdict(pass); }
+  else { setverdict(fail); }
+}
+
 
 control {
  execute(templateRecofSpec());

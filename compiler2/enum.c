@@ -677,7 +677,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "// written by %s in " __FILE__ " at %d\n"
 #endif
       "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,"
-      " unsigned int p_flavor, embed_values_dec_struct_t*)\n"
+      " unsigned int p_flavor,  unsigned int /*p_flavor2*/, embed_values_dec_struct_t*)\n"
       "{\n"
       "  int rd_ok = 1, type;\n"
 

@@ -289,7 +289,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
     XDecodeToken
 
 %type <cstr>
-    XTextReservedWord
+    XTextReservedWord XJsonAlias
 
 %type <identifier>
     XPointerToDef XRecordFieldRef XIdentifierOrReserved
@@ -1547,8 +1547,21 @@ XOmitAsNull:
 ;
 
 XNameAs:
-  XKWname XSpaces XKWas XSpaces XAliasToken { jsonstruct->alias = mcopystr($5); }
+  XKWname XSpaces XKWas XSpaces XJsonAlias { jsonstruct->alias = mcopystr($5); }
 ;
+
+XJsonAlias: // include all keywords, so they can be used as aliases for fields, too
+  XAliasToken { $$ = $1; }
+| XKWomit     { $$ = "omit"; }
+| XKWas       { $$ = "as"; }
+| XKWnull     { $$ = "null"; }
+| XKWname     { $$ = "name"; }
+| XKWvalue    { $$ = "value"; }
+| XKWdefault  { $$ = "default"; }
+| XKWextend   { $$ = "extend"; }
+| XKWmetainfo { $$ = "metainfo"; }
+| XKWfor      { $$ = "for"; }
+| XKWunbound  { $$ = "unbound"; }
 
 XAsValue:
   XKWas XSpaces XKWvalue { jsonstruct->as_value = true; }

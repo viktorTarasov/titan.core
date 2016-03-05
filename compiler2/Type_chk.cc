@@ -395,6 +395,7 @@ void Type::parse_attributes()
     case T_SEQ_T:
     case T_SET_T:
     case T_ANYTYPE:
+    case T_ARRAY:
       if(rawattrib==NULL) {rawattrib= new RawAST; new_raw=true;}
       if(textattrib==NULL){textattrib= new TextAST; new_text=true;}
       if(xerattrib==NULL) {xerattrib = new XerAttributes; new_xer = true;}
@@ -459,7 +460,8 @@ void Type::parse_attributes()
 
           // This should be bool, but gcc 4.1.2-sol8 generates incorrect code
           // with -O2 :(
-          const int se_of = (typetype == T_SEQOF || typetype == T_SETOF);
+          const int se_of = (typetype == T_SEQOF || typetype == T_SETOF ||
+            typetype == T_ARRAY);
           const size_t nof_comps = se_of ? 1 : get_nof_comps();
 
           // Distribute the attributes with qualifiers to the components.
@@ -4070,6 +4072,9 @@ bool Type::chk_this_value_Choice(Value *value, Common::Assignment *lhs,
     alt_type->chk_this_value_ref(alt_value);
     self_ref |= alt_type->chk_this_value(alt_value, lhs, expected_value,
       incomplete_allowed, OMIT_NOT_ALLOWED, SUB_CHK, implicit_omit);
+    if (alt_value->get_valuetype() == Value::V_NOTUSED) {
+      value->set_valuetype(Value::V_NOTUSED);
+    }
     break;}
   default:
     value->error("%s value was expected for type `%s'",
@@ -4159,6 +4164,7 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
   CompField *last_cf = 0;
   size_t next_index = 0;
   size_t seq_index = 0;
+  bool is_empty = n_type_comps > 0; // don't do this check if the record type has no fields
   for (size_t v_i = 0; v_i < n_value_comps; v_i++, seq_index++) {
     NamedValue *nv = value->get_se_comp_byIndex(v_i);
     const Identifier& value_id = nv->get_name();
@@ -4226,8 +4232,16 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
     type->chk_this_value_ref(comp_value);
     self_ref |= type->chk_this_value(comp_value, lhs, expected_value, incomplete_allowed,
       cf->get_is_optional() ? OMIT_ALLOWED : OMIT_NOT_ALLOWED, SUB_CHK, implicit_omit);
+    if (comp_value->get_valuetype() != Value::V_NOTUSED) {
+      is_empty = false;
+    }
   }
-  if (!incomplete_allowed || implicit_omit) {
+  if (is_empty) {
+    // all of the record's fields are unused (-), set the record to unused
+    // to avoid unnecessary code generation
+    value->set_valuetype(Value::V_NOTUSED);
+  }
+  else if (!incomplete_allowed || implicit_omit) {
     for (size_t i = 0; i < n_type_comps; i++) {
       const Identifier& id = get_comp_byIndex(i)->get_name();
       if (!comp_map.has_key(id.get_name())) {
@@ -4251,6 +4265,7 @@ bool Type::chk_this_value_Set_T(Value *value, Common::Assignment *lhs, expected_
   map<string, NamedValue> comp_map;
   size_t n_type_comps = get_nof_comps();
   size_t n_value_comps = value->get_nof_comps();
+  bool is_empty = n_type_comps > 0; // don't do this check if the set type has no fields
   for(size_t v_i = 0; v_i < n_value_comps; v_i++) {
     NamedValue *nv = value->get_se_comp_byIndex(v_i);
     const Identifier& value_id = nv->get_name();
@@ -4282,8 +4297,16 @@ bool Type::chk_this_value_Set_T(Value *value, Common::Assignment *lhs, expected_
     type->chk_this_value_ref(comp_value);
     self_ref |= type->chk_this_value(comp_value, lhs, expected_value, incomplete_allowed,
       cf->get_is_optional() ? OMIT_ALLOWED : OMIT_NOT_ALLOWED, SUB_CHK, implicit_omit);
+    if (comp_value->get_valuetype() != Value::V_NOTUSED) {
+      is_empty = false;
+    }
   }
-  if (!incomplete_allowed || implicit_omit) {
+  if (is_empty) {
+    // all of the set's fields are unused (-), set the set to unused to avoid
+    // unnecessary code generation
+    value->set_valuetype(Value::V_NOTUSED);
+  }
+  else if (!incomplete_allowed || implicit_omit) {
     for (size_t i = 0; i < n_type_comps; i++) {
       const Identifier& id = get_comp_byIndex(i)->get_name();
       if(!comp_map.has_key(id.get_name())) {
@@ -5460,7 +5483,7 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
       t_comp->set_my_governor(this);
       chk_this_template_ref(t_comp);
       self_ref |= chk_this_template_generic(t_comp, INCOMPLETE_NOT_ALLOWED,
-        omit_in_value_list ? OMIT_ALLOWED : OMIT_NOT_ALLOWED,
+        omit_in_value_list ? allow_omit : OMIT_NOT_ALLOWED,
         ANY_OR_OMIT_ALLOWED, sub_chk, implicit_omit, lhs);
       if(temptype==Ttcn::Template::COMPLEMENTED_LIST &&
          t_comp->get_template_refd_last()->get_templatetype() ==

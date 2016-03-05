@@ -7077,7 +7077,7 @@ module ModuleA {
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)\berror\b.+?invalid.+?field.+?reference.+?Nonexi08
+(?im)\berror\b.+?Referencing.+?fields.+?component.+?not.+?allowed
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
 (?is)\berror:

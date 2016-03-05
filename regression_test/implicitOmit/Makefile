@@ -38,7 +38,7 @@ TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 TTCN3_MODULES = io.ttcn
 
 # ASN.1 modules of this project:
-ASN1_MODULES =
+ASN1_MODULES = IOAsn.asn
 
 # C++ source & header files generated from the TTCN-3 & ASN.1 modules of
 # this project:

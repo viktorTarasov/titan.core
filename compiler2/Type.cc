@@ -1610,6 +1610,9 @@ namespace Common {
         case T_SET_T:
         case T_ANYTYPE:
           break;
+	case T_COMPONENT:
+	  ref->error("Referencing fields of a component is not allowed");
+	  return 0;
         default:
           ref->error("Invalid field reference `%s': type `%s' "
             "does not have fields", id.get_dispname().c_str(),
@@ -2777,11 +2780,14 @@ namespace Common {
             comp_type->jsonattrib->metainfo_unbound = true;
           }
         }
-        else if (NULL == parent || (T_SEQ_T != parent->typetype &&
-          T_SET_T != parent->typetype)) {
-          // only allowed if it's a field of a record/set
+        else if (T_SEQOF != get_type_refd_last()->typetype &&
+                 T_SETOF != get_type_refd_last()->typetype &&
+                 T_ARRAY != get_type_refd_last()->typetype &&
+                 (NULL == parent || (T_SEQ_T != parent->typetype &&
+                  T_SET_T != parent->typetype))) {
+          // only allowed if it's an array type or a field of a record/set
           error("Invalid attribute 'metainfo for unbound', requires record, set, "
-            "or field of a record or set");
+            "record of, set of, array or field of a record or set");
         }
       }
     }

@@ -65,8 +65,8 @@ reg[34]  := regexp("333\rhhh "		,"*\r(*) "           ,0)
 reg[35]  := regexp("333\"hhh "		,"*\"(???)(?)*"    ,0)
 reg[36]  := regexp("333\"hhh "		,"*3?(?*??)[ ,1]"  ,0)
 reg[37]  := regexp("333\"hhh "		,"*3?(???)[1, ,2]" ,0) //In variable assignment//   //In operation `regexp\(\)'//   //In character string pattern//   //Charstring pattern: Duplicate character `.' in the character set//
-reg[38]  := regexp("333\"hhh "		,"*33?(???)[^a,1]" ,0)
-reg[39]  := regexp("333\"hhh "		,"333\"(???)*"     ,0)
+reg[38]  := regexp @nocase ("333\"hhh "		,"*33?(???)[^a,1]" ,0)
+reg[39]  := regexp @nocase ("333\"hhh "		,"333\"(???)*"     ,0)
 
 
 for (var integer j:=0; j<=39; j:=j+1) {

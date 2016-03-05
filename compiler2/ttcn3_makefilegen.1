@@ -3,7 +3,7 @@
 ttcn3_makefilegen \- Makefile Generator
 .SH SYNOPSIS
 .B ttcn3_makefilegen
-.RB "[\| " \-acdfglMpRsw " \|]"
+.RB "[\| " \-acdEfglMpRsw " \|]"
 .RB "[\| " \-e
 .IR " ETS_name" " \|]"
 .RB "[\| " \-o
@@ -52,6 +52,10 @@ suite) to
 in the generated Makefile. If this option is omitted, the name of the
 first TTCN-3 module will be used as default.
 .TP
+.B \-E
+Instructs the variant attribute parser to display warnings instead of errors
+for unrecognized/erroneous attributes.
+.TP
 .B \-f
 Forces the Makefile Generator to
 .I overwrite
@@ -63,6 +67,21 @@ Generates a Makefile that can be used with
 only. The resulting Makefile will be smaller and less redundant. It
 exploits the pattern substitution features of GNU make, which may cause
 syntax errors with other versions of make.
+.TP
+.BI \-I " path"
+Adds the path to the list of search paths.
+.I path
+must be an
+absolute path. Used with the 
+.B -t
+option when the referenced projects
+can not be found at the projectRelativeURI location. In that case the
+tool will try to find the referenced TPD file using the search paths.
+The first TPD file found is taken. If the tpdName attribute is present in
+ ReferencedProject then the value of tpdName will be used as a TPD name
+during search. However if the tpdName attribute is missing then the value
+of the name attribute is taken with the .tpd suffix and used during the
+search.
 .TP
 .BI \-o " dir|file"
 Write the Makefile to the given directory or file.

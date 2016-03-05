@@ -6,6 +6,9 @@
  * http://www.eclipse.org/legal/epl-v10.html
  ******************************************************************************/
 module io {
+
+import from IOAsn all;
+
 type component O {}
 
 
@@ -542,6 +545,16 @@ testcase tc_io_notused() runs on O
   else { setverdict(fail, c_notused_value); }
 }
 
+// Implicit omit on an ASN.1 record, with only empty brackets (which is considered as value list notation)
+template AsnSequence t_asn_rec_empty := { } with { optional "implicit omit" };
+template AsnSequence t_asn_rec_empty_exp := { omit, omit, omit, omit };
+
+testcase tc_io_asn_record_empty() runs on O
+{
+  if (log2str(t_asn_rec_empty) == log2str(t_asn_rec_empty_exp)) { setverdict(pass); }
+  else { setverdict(fail, t_asn_rec_empty); }
+}
+
 control {
 execute(tc12());
 execute(tc1ab());
@@ -584,6 +597,7 @@ execute(tc_HQ30261())
 
 execute(tc_io_embedded());
 execute(tc_io_notused());
+execute(tc_io_asn_record_empty());
 }
 with {
   optional "implicit omit"

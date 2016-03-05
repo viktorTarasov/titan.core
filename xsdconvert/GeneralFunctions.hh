@@ -67,6 +67,8 @@ RootType *lookup1(const TTCN3Module *module,
 int multi(const TTCN3Module *module, ReferenceData const& outside_reference,
         const RootType *obj);
 
+void generate_TTCN3_header(FILE * file, const char* modulename, const bool timestamp = true);
+
 inline unsigned long long llmin(unsigned long long l, unsigned long long r) {
     return l < r ? l : r;
 }

@@ -175,7 +175,7 @@ public:
      boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
 
   int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const;
-  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, embed_values_dec_struct_t*);
+  int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, unsigned int, embed_values_dec_struct_t*);
   
   /** Encodes accordingly to the JSON encoding rules.
     * Returns the length of the encoded data. */

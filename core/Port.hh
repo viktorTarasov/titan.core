@@ -13,6 +13,7 @@
 #include "Types.h"
 #include "Event_Handler.hh"
 #include <stddef.h> // only for NULL
+#include <sys/select.h>
 
 class COMPONENT;
 class COMPONENT_template;

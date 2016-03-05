@@ -231,7 +231,7 @@ void TTCN3ModuleInventory::moduleGeneration() {
     setvbuf(file, NULL, _IONBF, 0);
 #endif
 
-    module->Data->generate_TTCN3_header(file);
+    generate_TTCN3_header(file, module->Data->getModulename().c_str());
 
     fprintf(file, "//\tGenerated from file(s):\n");
 

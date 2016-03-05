@@ -66,7 +66,6 @@ namespace Common {
     /** value type */
 
 
-
     enum valuetype_t {
       V_ERROR, /**< erroneous */
       V_NULL, /**< NULL (for ASN.1 NULL type, also in TTCN-3) */

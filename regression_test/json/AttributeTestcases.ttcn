@@ -58,6 +58,14 @@ testcase tc_name_as() runs on MTC {
   f_bool2verdict( match(f_dec_profile(f_enc_profile(p)), p) );
 }
 
+// testing attribute "name as ..." when the aliases are keywords of the JSON variant syntax
+testcase tc_name_as_with_keywords() runs on MTC {
+  var KeywordFields p := { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+  var octetstring os := char2oct("{\"omit\":1,\"as\":2,\"null\":3,\"name\":4,\"value\":5,\"default\":6,\"extend\":7,\"metainfo\":8,\"for\":9,\"unbound\":10,\"JSON\":11}");
+  f_check_encoding(encoded := f_enc_kw_fld(p), expected := os);
+  f_bool2verdict( match(f_dec_kw_fld(os), p) );
+}
+
 //tests in case of selecting attributes:
 //if omit fields appear in the encoded
 //if all not omitted field value appear in the correct form
@@ -302,11 +310,49 @@ testcase tc_attribute_metainfo_for_unbound_negtest() runs on MTC {
   setverdict(pass);
 }
 
+// Decoding test for the 'metainfo for unbound' attribute, where all fields of an embedded record are
+// set to unbound by meta info. The decoded embedded record should be unbound.
+testcase tc_attribute_metainfo_for_unbound_empty_rec() runs on MTC {
+  var charstring dec_str := "{\"mynum\":99,\"mystr\":\"aa\", \"myRec\": {\"num\":null,\"metainfo num\":\"unbound\",\"str\":null,\"metainfo str\":\"unbound\" } }";
+  var MetainfoOuterRecord dec_val := f_dec_meta_outer_rec(char2oct(dec_str));
+  if (isbound(dec_val.myRec)) {
+    setverdict(fail, "Field myrec should be unbound after decoding, instead of ", dec_val.myRec);
+  }
+  var MetainfoOuterRecord dec_val_exp := { mynum := 99, mystr := "aa", myRec := - };
+  if (log2str(dec_val) != log2str(dec_val_exp)) {
+    setverdict(fail, "Invalid value after decoding. Expected: ", dec_val_exp, ", got: ", dec_val);
+  }
+  setverdict(pass);
+}
+
+// Encoding array types with unbound elements with meta info (attribute 'metainfo for unbound')
+// A JSON object with one key-value pair (containing the meta info) specifies that an element is unbound.
+testcase tc_attribute_metainfo_for_unbound_arrays() runs on MTC {
+  // test 1: pre-generated array type (record of integer)
+  var MetainfoRecOf recof := { 1, 2, -, 4 };
+  var octetstring os := char2oct("[1,2,{\"metainfo []\":\"unbound\"},4]");
+  f_check_encoding(encoded := f_enc_meta_recof(recof), expected := os);
+  f_bool2verdict( log2str(f_dec_meta_recof(os)) == log2str(recof) );
+  
+  // test 2: array of a structured type (set of MetainfoRecord)
+  var MetainfoSetOf setof := { { num := 3, str := "abc" }, -, { num := 6 } };
+  os := char2oct("[{\"num\":3,\"str\":\"abc\"},{\"metainfo []\":\"unbound\"},{\"num\":6,\"str\":null,\"metainfo str\":\"unbound\"}]");
+  f_check_encoding(encoded := f_enc_meta_setof(setof), expected := os);
+  f_bool2verdict( log2str(f_dec_meta_setof(os)) == log2str(setof) );
+  
+  // test 3: TTCN-3 array (float [3])
+  var MetainfoArray arr := { 3.0, 6.0, - };
+  os := char2oct("[3.000000,6.000000,{\"metainfo []\":\"unbound\"}]");
+  f_check_encoding(encoded := f_enc_meta_arr(arr), expected := os);
+  f_bool2verdict( log2str(f_dec_meta_arr(os)) == log2str(arr) );
+}
+
 
 control {
   execute(tc_NoAttributeOnUpperLevel())
   execute(tc_name_as_omit_as_null());
   execute(tc_name_as());
+  execute(tc_name_as_with_keywords());
   execute(tc_attribute_compactprint1());
   execute(tc_attribute_compactprint2());
   execute(tc_attribute_compactprintp());
@@ -319,5 +365,7 @@ control {
   execute(tc_attribute_optional_as_value());
   execute(tc_attribute_metainfo_for_unbound());
   execute(tc_attribute_metainfo_for_unbound_negtest());
+  execute(tc_attribute_metainfo_for_unbound_empty_rec());
+  execute(tc_attribute_metainfo_for_unbound_arrays());
 }
 }
