@@ -6,7 +6,7 @@
 # http://www.eclipse.org/legal/epl-v10.html
 ###############################################################################
 
-# Creates C++ header from the Java code for Java to C++ JNI calls.
+# Creates C++ header from the Java code for Java to C++ JNI function calls.
 # This must run if any of the native Java methods change (in org.eclipse.titan.executor.jni.JNIMiddleWare).
 # A C++ function header is generated for each native Java method.
 # Native Java method: declared with native keyword without implementation
