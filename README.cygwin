@@ -7,7 +7,7 @@
 ******************************************************************************
 
 Cygwin setup
-    - If Cygwin is installed already, refresh your Cygwin installation
+    - If Cygwin is installed already, then refresh your Cygwin installation
       Titan is always build for the newest Cygwin version available. 
       Start the Cygwin setup utility (see below), it will refresh your
       installed Cygwin packages to the newest versions.
