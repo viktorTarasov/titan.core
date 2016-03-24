@@ -54,7 +54,6 @@ GEN_PDF := no
 
 
 
-
 b) JNI  enabled
 
 install JDK   into /home/<user id>/jdk
@@ -124,7 +123,5 @@ make run
 
 These tests might run for half an hour (regr.tests)  to two hours (func.tests)
 
-8. Optionally , copy Titan into its final directory.
-From here on, you can continue with the Titan installation guide, see /Install/docs, 
-to set/change environment variables etc.
-
+8. Optionally, copy Titan into its final directory.
+From here on, you can continue with the Titan installation guide, see /Install/docs, to set/change environment variables etc.
