@@ -118,7 +118,6 @@ Cygwin setup
 	        make install 
 	 The compiled files will be placed into the titan/Install directory. 
 	 
-  (L) If you want to use graphical tools (like nedit for example), then you need to install the Cygwin/X
-      component too. The install procedure can be found at the homepage:
+  (L) If you want to use graphical tools (like nedit for example), then you need to install the Cygwin/X component too. The install procedure can be found at the homepage:
       http://x.cygwin.com/docs/ug/cygwin-x-ug.html	  
   
