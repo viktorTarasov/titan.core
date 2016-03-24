@@ -10,7 +10,7 @@
 
 build.xml is generated.
 The generated build.xml is modified manually:
-  target TITAN_Executor_API_test is modified to fail in ant level if any testcase fails to make Jenkins show the failures
+  target TITAN_Executor_API_test is modified to fail in ant level if any testcase fails, to make Jenkins show the failures
   failureproperty="test.failed" added to <junit fork="yes" printsummary="withOutAndErr" HERE>
   <fail if="test.failed" message="TITAN_Executor_API_test FAILED"/> added after </junit>
 
