@@ -98,7 +98,7 @@ make install
 This will install Titan into  /home/<user id>/titan.core/Install
 
 
-7. Optionally , run function/regression tests
+7. Optionally, run function/regression tests
 
 cd /home/<user id>/titan.core/function_test
 
