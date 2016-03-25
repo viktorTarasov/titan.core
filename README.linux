@@ -24,7 +24,7 @@ git clone https://github.com/eclipse/titan.core  titan.core
 3. Configure the build 
 
 cd titan.core
-check  that MakefileFOSS.cfg is present   and  has the following content:
+check that MakefileFOSS.cfg is present and has the following content:
 cat MakefileFOSS.cfg
 
 # Configurations for the Free Open Source Software version
