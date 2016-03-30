@@ -37,7 +37,7 @@ import org.eclipse.titan.executorapi.util.Log;
  * SINGLETON
  * <p>
  * This executor handles the execution of tests compiled in a parallel mode, via directly connecting to the MainController (MC) written in C++.
- * It controls MC with commands, most of methods in this class represents one or more MC commands.
+ * It controls MC with commands, most methods in this class represents one or more MC commands.
  * These methods can be called in certain states.
  * They can be synchronous or asynchronous.
  * <p>
