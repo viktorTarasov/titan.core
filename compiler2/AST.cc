@@ -29,9 +29,9 @@ reffer::reffer(const char*) {}
 
 namespace Common {
 
-  // =================================
+  // ==================================
   // ===== Modules
-  // =================================
+  // ==================================
   
   vector<Modules::type_enc_t> Modules::delayed_type_enc_v;
 
