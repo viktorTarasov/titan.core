@@ -9,6 +9,7 @@
 #define EVENT_HANDLER_HH
 
 #include "Types.h"
+#include <sys/select.h>
 
 /**
 * The definitions in this header file are needed for TITAN.
