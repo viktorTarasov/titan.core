@@ -1,16 +1,21 @@
 ###############################################################################
-# Copyright (c) 2000-2015 Ericsson Telecom AB
+# Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+#   Balasko, Jeno
+#   Lovassy, Arpad
+#
 ###############################################################################
 
 1. GENERATING BUILD.XML
 
 build.xml is generated.
 The generated build.xml is modified manually:
-  target TITAN_Executor_API_test is modified to fail in ant level if any testcase fails, to make Jenkins show the failures
+  target TITAN_Executor_API_test is modified to fail in ant level if any testcase fails to make Jenkins show the failures
   failureproperty="test.failed" added to <junit fork="yes" printsummary="withOutAndErr" HERE>
   <fail if="test.failed" message="TITAN_Executor_API_test FAILED"/> added after </junit>
 
@@ -55,7 +60,7 @@ Typical error situations during test running and their solutions
 Error:
 java.lang.UnsatisfiedLinkError: org.eclipse.titan.executor.jni.JNIMiddleWare.init(I)J
 Reason:
-The Titan binaries you use are old (before 2014-12-11 or release before CRL 113 200/5 R1A), and since then the project became open source and that’s why all the java packages were renamed from com.ericsson.titan.* to org.eclipse.titan.*
+The Titan binaries you use are old (before 2014-12-11 or release before CRL 113 200/5 R1A), and since then the project became open source and thatâs why all the java packages were renamed from com.ericsson.titan.* to org.eclipse.titan.*
 Solution:
 So you should use the latest release.
 You can download a new package from

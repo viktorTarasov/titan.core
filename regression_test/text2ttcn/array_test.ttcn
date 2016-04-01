@@ -1,9 +1,14 @@
 /******************************************************************************
- * Copyright (c) 2000-2015 Ericsson Telecom AB
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *
  ******************************************************************************/
 module array_test
 {
@@ -725,7 +730,9 @@ testcase tc_array_string2ttcn_i3_mod4v0() runs on MC {
   template REC_BAI3 tl_rec := { b:= true, ai3:= {-,-,-} };
   var REC_BAI3 vl_rec := { b:= true, ai3:= {-,-,-} };
   f_string2ttcn_REC_BAI3_t_str("{ b := true, ai3 := { -, -, - } }", "{ b := true, ai3 := { <uninitialized template>, <uninitialized template>, <uninitialized template> } }" )
-  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { -, -, - } }", "{ b := true, ai3 := { <unbound>, <unbound>, <unbound> } }" , true)
+  //f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { -, -, - } }", "{ b := true, ai3 := { <unbound>, <unbound>, <unbound> } }" , true)
+  // partial array values are currently deleted if the array is an optional field or a union alternative (see artf708493)
+  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { -, -, - } }", "{ b := true, ai3 := <unbound> }" , true);
   //TODO: Check if It is ok or not: log2str(tl_rec) gives back: "{ b := true, ai3 := <unbound> }"
   log(tl_rec);
   log(vl_rec);
@@ -735,7 +742,9 @@ testcase tc_array_string2ttcn_i3_mod4v1() runs on MC {
   template REC_BAI3 tl_rec := { b:= true, ai3:= {1,-,-} };
   var REC_BAI3 vl_rec := { b:= true, ai3:= {1,-,-} };
   f_string2ttcn_REC_BAI3_t_str("{ b := true, ai3 := { 1, -, - } }", "{ b := true, ai3 := { 1, <uninitialized template>, <uninitialized template> } }")
-  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, -, - } }", log2str(vl_rec),true)
+  //f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, -, - } }", log2str(vl_rec),true)
+  // partial array values are currently deleted if the array is an optional field or a union alternative (see artf708493)
+  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, -, - } }", "{ b := true, ai3 := <unbound> }" , true);
   log(tl_rec);
   log(vl_rec);
 }
@@ -744,7 +753,9 @@ testcase tc_array_string2ttcn_i3_mod4v2() runs on MC {
   template REC_BAI3 tl_rec := { b:= true, ai3:= {1,2,-} };
   var REC_BAI3 vl_rec := { b:= true, ai3:= {1,2,-} };
   f_string2ttcn_REC_BAI3_t_str("{ b := true, ai3 := { 1, 2, - } }", "{ b := true, ai3 := { 1, 2, <uninitialized template> } }")
-  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, 2, - } }", log2str(vl_rec), true);
+  //f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, 2, - } }", log2str(vl_rec), true);
+  // partial array values are currently deleted if the array is an optional field or a union alternative (see artf708493)
+  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, 2, - } }", "{ b := true, ai3 := <unbound> }" , true);
   log(tl_rec);
   log(vl_rec);
 }

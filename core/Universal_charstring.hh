@@ -1,10 +1,26 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Delic, Adam
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Bence Janos
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szalai, Gabor
+ *   Zalanyi, Balazs Andor
+ *
+ ******************************************************************************/
 #ifndef UNIVERSAL_CHARSTRING_HH
 #define UNIVERSAL_CHARSTRING_HH
 
@@ -324,6 +340,17 @@ public:
 
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
                          const ASN_BER_TLV_t& p_tlv, unsigned L_form);
+  
+  /** Encodes the value according to the TTCN_Typedescriptor_t.
+    * It must be public because it can be called by other types during encoding.
+    * Returns the length of encoded data */
+  int RAW_encode(const TTCN_Typedescriptor_t&, RAW_enc_tree&) const;
+  
+  /** Decodes the value according to the TTCN_Typedescriptor_t.
+    * It must be public because it can be called by other types during encoding.
+    * Returns the number of decoded bits */
+  int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, int, raw_order_t,
+                 boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
   
   int TEXT_encode(const TTCN_Typedescriptor_t&,
                  TTCN_Buffer&) const;

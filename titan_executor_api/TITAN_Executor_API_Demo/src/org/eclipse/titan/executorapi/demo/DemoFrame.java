@@ -1,9 +1,14 @@
 /******************************************************************************
- * Copyright (c) 2000-2015 Ericsson Telecom AB
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Lovassy, Arpad
+ *
  ******************************************************************************/
 package org.eclipse.titan.executorapi.demo;
 
@@ -163,7 +168,7 @@ public class DemoFrame extends JFrame {
 			}
 			
 			mVerdicts = null;
-			// Showing “JOptionPane.showMessageDialog” without stopping flow of execution,
+			// Showing âJOptionPane.showMessageDialogâ without stopping flow of execution,
 			// this line would block the thread:
 			//JOptionPane.showMessageDialog(DemoFrame.this, sb.toString(), "Verdict statistics", JOptionPane.INFORMATION_MESSAGE);
 			EventQueue.invokeLater(new Runnable(){

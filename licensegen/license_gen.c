@@ -1,10 +1,19 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Gecse, Roland
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan â€“ initial implementation
+ *
+ ******************************************************************************/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -382,7 +391,7 @@ static const char *get_first_name(void)
     case 34217: /* ethjra */
 	return "Julianna";
     case 34385: /* ethgasz */
-	return "Gábor";
+	return "GÃ¡bor";
     case 45719: /* etccadmi1 */
 	return "Admin";
     default:
@@ -395,13 +404,13 @@ static const char *get_email_signature(void)
     switch (my_uid) {
     case 34217: /* ethjra */
 	return
-"Julianna Rózsa                           Ericsson Hungary Ltd.\n"
-"Configuration Manager                    H-1117 Budapest, Irinyi József u.4-20.\n"
+"Julianna RÃ³zsa                           Ericsson Hungary Ltd.\n"
+"Configuration Manager                    H-1117 Budapest, Irinyi JÃ³zsef u.4-20.\n"
 "Test Competence Center                   Phone: +36 1 437 7895\n"
 "Julianna.Rozsa@ericsson.com              Fax:   +36 1 439 5176\n";
     case 34385: /* ethgasz */
 	return
-"Gábor Szalai                             Gabor.Szalai@ericsson.com\n"
+"GÃ¡bor Szalai                             Gabor.Szalai@ericsson.com\n"
 "Test Competence Center                   Tel: +36-1-437-7591\n"
 "Ericsson Telecommunications Ltd.         Fax: +36-1-439-5176\n"
 "H-1037 Budapest, Laborc u. 1., Hungary   Mob: +36-30-743-7669\n"

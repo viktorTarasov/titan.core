@@ -1,10 +1,32 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Bibo, Zoltan
+ *   Cserveni, Akos
+ *   Delic, Adam
+ *   Dimitrov, Peter
+ *   Feher, Csaba
+ *   Forstner, Matyas
+ *   Gecse, Roland
+ *   Kovacs, Ferenc
+ *   Nagy, Lenard
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szalai, Gabor
+ *   Tatarka, Gabor
+ *   Zalanyi, Balazs Andor
+ *
+ ******************************************************************************/
 #include "../common/dbgnew.hh"
 #include "Type.hh"
 #include <ctype.h>
@@ -1945,6 +1967,7 @@ namespace Common {
             rawattrib->length_restrition=-1;
             break;
           case T_CSTR:
+          case T_USTR:
             rawattrib->fieldlength=rawattrib->length_restrition*8;
             rawattrib->length_restrition=-1;
             break;
@@ -2453,6 +2476,7 @@ namespace Common {
         }
         break;
       case T_CSTR:
+      case T_USTR:
         if(rawattrib->fieldlength==0 && rawattrib->length_restrition!=-1){
           rawattrib->fieldlength=rawattrib->length_restrition*8;
           rawattrib->length_restrition=-1;
@@ -5699,6 +5723,7 @@ end_ext:
           case T_HSTR:
           case T_OSTR:
           case T_CSTR:
+          case T_USTR:
             // these basic types support RAW encoding by default
             return true;
           default:

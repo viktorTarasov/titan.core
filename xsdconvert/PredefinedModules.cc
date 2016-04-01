@@ -1,10 +1,16 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Godar, Marton
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
 /**
  * Predefined and standardized TTCN-3 modules
  * containing mappings of XSD element from the http://www.w3.org/2001/XMLSchema namespace
@@ -389,7 +395,7 @@ const char * moduleXSD = {
   "(\n"
   "	char(0,0,0,9)..char(0,0,0,9),\n"
   "	char(0,0,0,10)..char(0,0,0,10),\n"
-  "	char(0,0,0,12)..char(0,0,0,12),\n"
+  "	char(0,0,0,13)..char(0,0,0,13),\n"
   "  	char(0,0,0,32)..char(0,0,215,255),\n"
   "  	char(0,0,224,0)..char(0,0,255,253),\n"
   "  	char(0,1,0,0)..char(0,16,255,253)\n"

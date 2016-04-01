@@ -1,10 +1,34 @@
-###############################################################################
-# Copyright (c) 2000-2015 Ericsson Telecom AB
+##############################################################################
+# Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
-###############################################################################
+#
+# Contributors:
+#   
+#   Balasko, Jeno
+#   Baranyi, Botond
+#   Beres, Szabolcs
+#   Czerman, Oliver
+#   Delic, Adam
+#   Dimitrov, Peter
+#   Forstner, Matyas
+#   Godar, Marton
+#   Hanko, Matyas
+#   Koppany, Csaba
+#   Kovacs, Ferenc
+#   Lovassy, Arpad
+#   Ormandi, Matyas
+#   Raduly, Csaba
+#   Szabados, Kristof
+#   Szabo, Bence Janos
+#   Szabo, Janos Zoltan – initial implementation
+#   Szalai, Gabor
+#   Tatarka, Gabor
+#   Zalanyi, Balazs Andor
+#
+##############################################################################
 # Settings for the regression test
 
 TOPDIR := $(CURDIR)
@@ -22,7 +46,7 @@ assignmentNotation omitdef anytype RAW implicitMsgEncoding pattern_quadruples \
 macros visibility hexstrOper ucharstrOper objidOper CRTR00015758 slider \
 XML ipv6 implicitOmit testcase_defparam transparent HQ16404 cfgFile \
 all_from lazyEval tryCatch text2ttcn json junitlogger ttcn2json profiler templateOmit \
-customEncoding makefilegen logger
+customEncoding makefilegen
 
 ifdef DYN
 DIRS += loggerplugin

@@ -1,10 +1,24 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Delic, Adam
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Zalanyi, Balazs Andor
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #ifndef LOGGER_HH
 #define LOGGER_HH
 
@@ -180,6 +194,10 @@ public:
   static emergency_logging_behaviour_t emergency_logging_behaviour;
   static void set_emergency_logging_behaviour(emergency_logging_behaviour_t behaviour);
   static emergency_logging_behaviour_t get_emergency_logging_behaviour();
+  
+  static boolean emergency_logging_for_fail_verdict;
+  static void set_emergency_logging_for_fail_verdict(boolean b);
+  static boolean get_emergency_logging_for_fail_verdict();
 
   /** @brief returns the actual length of the logmatch buffer
   This way it can be stored for later, when the buffer needs to be reverted.

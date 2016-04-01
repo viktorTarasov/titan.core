@@ -6,7 +6,8 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
-#   Janos Zoltan Szabo – initial implementation
+#   Balasko, Jeno
+#   Lovassy, Arpad
 #
 ###############################################################################
 

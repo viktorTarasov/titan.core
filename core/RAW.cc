@@ -1,10 +1,21 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szalai, Gabor
+ *
+ ******************************************************************************/
 #include <string.h>
 #include "../common/memory.h"
 #include "Types.h"
@@ -419,17 +430,18 @@ int min_of_ints(int num_of_int,...)
   return min_val;
 }
 
-/** Default descriptors of RAW encoding for primitive types.                                                                                  padding
- *                                                                                                                                            | prepadding
- *                                                                                                                                            |   ptroffset
- *                                                                                                                                            |     unit
- *                                                                                                                                            |     | padding_pattern_length
- *                                                                                                                                            |     |   padding_pattern
- *                                      length,comp ,byteorder,align    ,ord_field,ord_octet,ext_bit   ,hexorder,fieldorder,top_bit,          |     |        length_restriction*/
-const TTCN_RAWdescriptor_t INTEGER_raw_=    {8,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
-const TTCN_RAWdescriptor_t BOOLEAN_raw_=    {1,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
-const TTCN_RAWdescriptor_t BITSTRING_raw_=  {0,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
-const TTCN_RAWdescriptor_t OCTETSTRING_raw_={0,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
-const TTCN_RAWdescriptor_t HEXSTRING_raw_=  {0,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
-const TTCN_RAWdescriptor_t CHARSTRING_raw_= {0,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
-const TTCN_RAWdescriptor_t FLOAT_raw_=     {64,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
+/** Default descriptors of RAW encoding for primitive types.                                                                                             padding
+ *                                                                                                                                                       | prepadding
+ *                                                                                                                                                       |   ptroffset
+ *                                                                                                                                                       |     unit
+ *                                                                                                                                                       |     | padding_pattern_length
+ *                                                                                                                                                       |     |   padding_pattern
+ *                                                 length,comp ,byteorder,align    ,ord_field,ord_octet,ext_bit   ,hexorder,fieldorder,top_bit,          |     |        length_restriction*/
+const TTCN_RAWdescriptor_t INTEGER_raw_=               {8,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
+const TTCN_RAWdescriptor_t BOOLEAN_raw_=               {1,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
+const TTCN_RAWdescriptor_t BITSTRING_raw_=             {0,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
+const TTCN_RAWdescriptor_t OCTETSTRING_raw_=           {0,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
+const TTCN_RAWdescriptor_t HEXSTRING_raw_=             {0,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
+const TTCN_RAWdescriptor_t CHARSTRING_raw_=            {0,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
+const TTCN_RAWdescriptor_t FLOAT_raw_=                {64,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};
+const TTCN_RAWdescriptor_t UNIVERSAL_CHARSTRING_raw_ = {0,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1};

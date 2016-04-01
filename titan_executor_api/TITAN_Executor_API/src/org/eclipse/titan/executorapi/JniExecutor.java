@@ -1,9 +1,14 @@
 /******************************************************************************
- * Copyright (c) 2000-2015 Ericsson Telecom AB
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Lovassy, Arpad
+ *
  ******************************************************************************/
 package org.eclipse.titan.executorapi;
 
@@ -37,7 +42,7 @@ import org.eclipse.titan.executorapi.util.Log;
  * SINGLETON
  * <p>
  * This executor handles the execution of tests compiled in a parallel mode, via directly connecting to the MainController (MC) written in C++.
- * It controls MC with commands, most methods in this class represents one or more MC commands.
+ * It controls MC with commands, most of methods in this class represents one or more MC commands.
  * These methods can be called in certain states.
  * They can be synchronous or asynchronous.
  * <p>

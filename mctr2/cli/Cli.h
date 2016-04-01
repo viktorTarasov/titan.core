@@ -1,16 +1,23 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Bene, Tamas
+ *   Forstner, Matyas
+ *   Gecse, Roland
+ *   Lovassy, Arpad
+ *   Raduly, Csaba
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Vilmos Varga - author
+ *
+ ******************************************************************************/
 //
 // Description:           Header file for Cli
-// Author:                Vilmos Varga
-// mail:                  ethvva@eth.ericsson.se
-//
-// Copyright (c) 2000-2015 Ericsson Telecom AB
 //
 #ifndef CLI_CLI_H
 #define CLI_CLI_H

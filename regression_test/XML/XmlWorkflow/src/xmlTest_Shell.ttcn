@@ -1,9 +1,15 @@
 /******************************************************************************
- * Copyright (c) 2000-2015 Ericsson Telecom AB
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Raduly, Csaba
+ *   Szabo, Bence Janos
+ *
  ******************************************************************************/
 //=========================================================================
 // Tags denoted by <MyTag> have to be replaced implicitly!
@@ -106,12 +112,12 @@ const integer c_shell_error_noSuchFileOrDirectory:=512;
 // Line "ETSI ES 201 873-9 V4.1.2"          - 2 diffs ???? << Fix it !
 // Line "variant \"namespace as"            - 4 diffs
 // Script counts the strings "\n" thus N different lines mean N-1 numOfDiff
-//Possible values: 19,21,23,25 but 21 and 25 should be eliminated!
+//Possible values:12+ 8+ 19,21,23,25 but 21 and 25 should be eliminated!
 
-const integer c_numOfDiff_header := 13;
-const integer c_numOfDiff_headerAndModuleName := 19;
-const integer c_numOfDiff_headerModNameAndNamespace := 23;
-const integer c_numOfDiff_headerModNameAndImport := 23;
+const integer c_numOfDiff_header := 21+12;
+const integer c_numOfDiff_headerAndModuleName := 27+12;
+const integer c_numOfDiff_headerModNameAndNamespace := 31+12;
+const integer c_numOfDiff_headerModNameAndImport := 31+12;
 
 //=========================================================================
 // Templates

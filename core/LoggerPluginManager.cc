@@ -1,10 +1,21 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Zalanyi, Balazs Andor
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #include "LoggerPluginManager.hh"
 #include "LoggerPlugin.hh"
 #include "TitanLoggerApi.hh"
@@ -356,6 +367,9 @@ void LoggerPluginManager::send_parameter_to_plugin(LoggerPlugin *plugin,
     TTCN_Logger::set_emergency_logging_mask(logparam.component,
           logparam.logparam.logoptions_val);
     break;
+  case LP_EMERGENCYFORFAIL:
+    TTCN_Logger::set_emergency_logging_for_fail_verdict(logparam.logparam.bool_val);
+    break;
   default:
     break;
   }
@@ -634,8 +648,11 @@ void LoggerPluginManager::log(const API::TitanLogEvent& event)
     }
     ring_buffer.put(event);
   }
-  // ERROR, flush the ring buffer content
-  if ((TTCN_Logger::Severity)(int)event.severity() == TTCN_Logger::ERROR_UNQUALIFIED) {
+  // ERROR or setverdict(fail), flush the ring buffer content
+  if ((TTCN_Logger::Severity)(int)event.severity() == TTCN_Logger::ERROR_UNQUALIFIED ||
+      (TTCN_Logger::get_emergency_logging_for_fail_verdict() &&
+      (TTCN_Logger::Severity)(int)event.severity() == TTCN_Logger::VERDICTOP_SETVERDICT &&
+       event.logEvent().choice().verdictOp().choice().setVerdict().newVerdict() == API::Verdict::v3fail)) {
     TitanLoggerApi::TitanLogEvent ring_event;
     // get all the events from the ring: buffer
     while (!ring_buffer.isEmpty()) {

@@ -1,10 +1,31 @@
-###############################################################################
-# Copyright (c) 2000-2015 Ericsson Telecom AB
+##############################################################################
+# Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
-###############################################################################
+#
+# Contributors:
+#   
+#   Baji, Laszlo
+#   Balasko, Jeno
+#   Delic, Adam
+#   Forstner, Matyas
+#   Godar, Marton
+#   Horvath, Gabriella
+#   Koppany, Csaba
+#   Kovacs, Ferenc
+#   Kovacs, Zoltan
+#   Kremer, Peter
+#   Lovassy, Arpad
+#   Ormandi, Matyas
+#   Raduly, Csaba
+#   Szabados, Kristof
+#   Szabo, Janos Zoltan – initial implementation
+#   Torpis, Zsolt
+#   Zalanyi, Balazs Andor
+#
+##############################################################################
 # Main Makefile for the TTCN-3 Test Executor
 # For use with GNU make only.
 
@@ -65,8 +86,8 @@ endif
 	  $(MAKE) -C $$dir $@ || exit; \
 	done
 ifeq ($(LICENSING), yes)
-	mkdir -p $(ETCDIR)/license
-	cp license/license.dat $(ETCDIR)/license
+	mkdir -p $(ETCDIR)/licensegen
+	cp licensegen/license.dat $(ETCDIR)/license
 endif
 	chmod -R +r,go-w $(TTCN3_DIR)
 

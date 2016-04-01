@@ -1,20 +1,24 @@
 #!/usr/bin/perl -w
 ###############################################################################
-# Copyright (c) 2000-2015 Ericsson Telecom AB
+# Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
-###############################################################################
+#
 # Contributors:
-# Csaba Raduly - author
-# Jeno Balasko - Test, troubleshooting, bugfixes
+#   Balasko, Jeno
+#   Lovassy, Arpad
+#   Raduly, Csaba
+#
+###############################################################################
 
 use strict;
 
 my $numtests; # Gotcha! If you assign a value here, it will take effect
                # _after_ the BEGIN block!
 
+my %first_line_of_module = (); #First line after header by file
 my %msg_hash;    # repository of expected messages
 # A key is an expected message regex.
 # A value is a hash reference:
@@ -74,6 +78,11 @@ else
     # at the same line as the first line ending in backslash.
     while (<TESTFILE>) {
       chomp;
+      if ( /^module / ) {
+        #search for the module, and store the line number of the match
+        #print "\$first_line_of_module\{ $arg \} = $.\n";
+        $first_line_of_module{$arg} = $.;
+      }
       while ( s/\\$// ) { # line ends with backslash
         my $next_line = <TESTFILE>;
         last unless defined $next_line;
@@ -339,7 +348,7 @@ INPUT: while (<PIPE>) {
     }    # if (it looks like an error message)
     elsif (/^\S*compiler\S*: ((?:error|warning): .*?[``](\S+)[''].*)/) { # redundant `' help nedit syntax highlight
       # mycompiler: error: Cannot recognize file `ASN1_Invalid_module_identifier-A.asn3\' ....
-      $loc = "$2:1";   # assume it contains a `filename\' , pretend to be on the first line (eight????)
+      $loc = "$2:$first_line_of_module{$2}";   # assume it contains a `filename\' , pretend to be on the first line after the header
       $error = $1;
       goto check;
     }
@@ -348,8 +357,9 @@ INPUT: while (<PIPE>) {
     {       # an error/warning without line number
       my $fname = $1;
       if ( defined $fname ) {
-        $fname =~ s/: //;
-        $loc = "$fname:8"; #8: line number of the line containing "module"
+				#printf "fname:%s\n", $fname;
+        $fname =~ s/: //; # cuts the ": " from the end of the string
+        $loc = "$fname:$first_line_of_module{$fname}"; # line number of the line containing "module"
       }
       else {     
         $loc = $last_loc;

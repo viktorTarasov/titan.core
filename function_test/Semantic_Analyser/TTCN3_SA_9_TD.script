@@ -1,9 +1,22 @@
 .******************************************************************************
-.* Copyright (c) 2000-2015 Ericsson Telecom AB
+.* Copyright (c) 2000-2016 Ericsson Telecom AB
 .* All rights reserved. This program and the accompanying materials
 .* are made available under the terms of the Eclipse Public License v1.0
 .* which accompanies this distribution, and is available at
 .* http://www.eclipse.org/legal/epl-v10.html
+.*
+.* Contributors:
+.*   Balasko, Jeno
+.*   Delic, Adam
+.*   Harai, Tibor
+.*   Kovacs, Ferenc
+.*   Pandi, Krisztian
+.*   Raduly, Csaba
+.*   Szabados, Kristof
+.*   Szabo, Janos Zoltan – initial implementation
+.*   Szalai, Endre
+.*   Szalai, Gabor
+.*
 .******************************************************************************/
 :text.
 :lang eng.
@@ -3912,7 +3925,7 @@ module ModuleA {
 :nl.- Loop constructs for, while and do-while loops are accepted and supported
       without any restriction in interleave statements.
 :nl.- Statements activate, deactivate and stop can also be used within interleave.
-:nl.- The compiler does not check whether a TTCN�3 function invoked from within
+:nl.- The compiler does not check whether a TTCN3 function invoked from within
       an interleave statement has side-effects. The run-time behaviour is undefined
       if a function with side-effects (e.g. communication operations) is called
       while an interleave statement is being executed.
