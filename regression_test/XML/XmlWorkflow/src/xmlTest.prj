@@ -162,6 +162,7 @@
 		<File path="../xsd/attribute_enumeration_variant.xsd" />
 		<File path="../xsd/including_module.xsd" />
 		<File path="../xsd/included_without_namespace.xsd" />
+		<File path="../xsd/list_complextype.xsd" />
             </File_Group>
             <File_Group name="XmlTest_xsds" >
                 <File path="../XmlTest_xsds/XmlTest_boolean.xsd" />
@@ -394,6 +395,7 @@
 	        <File path="../XmlTest_expectedTtcns/www_XmlTest_org_element_nameInheritance_e.ttcn" />
 	        <File path="../XmlTest_expectedTtcns/www_example_org_attribute_enumeration_variant_e.ttcn" />
 	        <File path="../XmlTest_expectedTtcns/www_example_org_including_module_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_list_complextype_e.ttcn" />
             </File_Group>
             <File_Group name="XmlTest_src" >
                 <File path="xmlTest_Shell.ttcn" />

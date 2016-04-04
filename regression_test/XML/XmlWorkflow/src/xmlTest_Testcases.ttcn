@@ -1073,6 +1073,17 @@ group ListTest {
     }
 
   }//tc_
+
+  testcase tc_list_complextype() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  list_complextype.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_list_complextype_e.ttcn","www_example_org_list_complextype.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+  }//tc_
 }//ListTest
 
 group UnionTest {
@@ -2572,6 +2583,7 @@ control {
   execute(tc_list_encDec());//Passed
   execute(tc_integerList());//Passed
   execute(tc_list_simpletype());//Passed
+  execute(tc_list_complextype());
   //===Float===
   execute(tc_float_not_a_number());
 
