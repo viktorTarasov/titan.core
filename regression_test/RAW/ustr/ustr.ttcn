@@ -18,7 +18,7 @@ type record Rec {
 }
 with {
   variant "";
-  variant (ustr) "FIELDLENGTH(256)"; // 32 UTF-8 characters
+  variant (ustr) "FIELDLENGTH(32)"; // 32 UTF-8 characters
 }
 
 type component CT {}

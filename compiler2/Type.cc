@@ -3044,6 +3044,7 @@ namespace Common {
       break;
     case T_OSTR:
     case T_CSTR:
+    case T_USTR:
       return 8;
     default:
       return 1;
