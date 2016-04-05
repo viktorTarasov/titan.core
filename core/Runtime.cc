@@ -2129,6 +2129,12 @@ void TTCN_Runtime::setverdict_internal(verdicttype new_value,
       TTCN_Logger::log_setverdict(new_value, old_verdict, local_verdict);
     else TTCN_Logger::log_setverdict(new_value, old_verdict, local_verdict, reason, reason);
   }
+  if (new_value == FAIL) {
+    ttcn3_debugger.breakpoint_entry(TTCN3_Debugger::SBP_FAIL_VERDICT);
+  }
+  else if (new_value == ERROR) {
+    ttcn3_debugger.breakpoint_entry(TTCN3_Debugger::SBP_ERROR_VERDICT);
+  }
 }
 
 void TTCN_Runtime::set_begin_controlpart_command(const char *new_command)

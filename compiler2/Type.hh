@@ -24,6 +24,7 @@
  *   Zalanyi, Balazs Andor
  *
  ******************************************************************************/
+
 #ifndef _Common_Type_HH
 #define _Common_Type_HH
 

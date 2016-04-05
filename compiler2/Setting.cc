@@ -293,6 +293,9 @@ namespace Common {
               mputprintf(effective_module_lines, "%s%d",
               		   (effective_module_lines ? ", " : ""), yyloc.first_line);
         }
+        if (debugger_active) {
+          str = mputprintf(str, "ttcn3_debugger.breakpoint_entry(%d);\n", yyloc.first_line);
+        }
       }
 
       if (include_line_info)

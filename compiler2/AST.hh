@@ -268,6 +268,24 @@ namespace Common {
      * module object to output->source.global_vars */
     void generate_functions(output_struct *output);
     void generate_conversion_functions(output_struct *output);
+    
+    /** Generates the debugger initialization function for this module.
+      * The function creates the global debug scope associated with this module,
+      * and initializes it with all the global variables visible in the module
+      * (including imported variables).
+      * The debug scopes of all component types defined in the module are also
+      * created and initialized with their variables. */
+    virtual void generate_debugger_init(output_struct *output) = 0;
+    
+    /** Generates the variable adding code for all global variables defined
+      * in this module. This function is called by generate_debugger_init()
+      * for both the current module and all imported modules. */
+    virtual char* generate_debugger_global_vars(char* str, Common::Module* current_mod) = 0;
+    
+    /** Generates the debugger variable printing function, which can print values
+      * and templates of all types defined in this module (excluding subtypes). */
+    virtual void generate_debugger_functions(output_struct *output) = 0;
+    
   private:
     /** Copy constructor not implemented */
     Module(const Module& p);

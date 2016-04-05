@@ -86,7 +86,8 @@ PredefFunc.cc AST.cc Code.cc Constraint.cc CompilerError.cc \
 CompField.cc CompType.cc EnumItem.cc Identifier.cc Int.cc \
 main.cc Real.cc Setting.cc SigParam.cc string.cc subtype.cc Stopwatch.cc \
 Type.cc Type_chk.cc Type_codegen.cc TypeCompat.cc \
-Typestuff.cc ustring.cc Value.cc Valuestuff.cc XerAttributes.cc subtypestuff.cc CodeGenHelper.cc
+Typestuff.cc ustring.cc Value.cc Valuestuff.cc XerAttributes.cc subtypestuff.cc \
+CodeGenHelper.cc DebuggerStuff.cc
 
 MFGEN_SOURCES := makefile.c xpather.cc ProjectGenHelper.cc
 

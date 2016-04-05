@@ -104,7 +104,7 @@ Module_list.cc Objid.cc Octetstring.cc Parallel_main.cc Port.cc RAW.cc \
 Runtime.cc Single_main.cc Snapshot.cc Struct_of.cc Template.cc TEXT.cc \
 Textbuf.cc Timer.cc Param_Types.cc Universal_charstring.cc \
 Verdicttype.cc XER.cc XmlReader.cc TitanLoggerControlImpl.cc TCov.cc JSON.cc \
-Profiler.cc ProfilerTools.cc ProfMerge_main.cc $(RT2_SOURCES)
+Profiler.cc ProfilerTools.cc ProfMerge_main.cc Debugger.cc $(RT2_SOURCES)
 
 # Keep GENERATED_SOURCES at the beginning. This may speed up parallel builds
 # by starting early the compilation of the largest files.
@@ -186,7 +186,7 @@ Port.hh Event_Handler.hh Struct_of.hh Array.hh Optional.hh Textbuf.hh Encdec.hh 
 Module_list.hh Parameters.h Addfunc.hh RAW.hh BER.hh TEXT.hh ASN_Null.hh \
 ASN_Any.hh ASN_External.hh ASN_EmbeddedPDV.hh ASN_CharacterString.hh XER.hh \
 XmlReader.hh cversion.h TitanLoggerControl.ttcn TitanLoggerApi.xsd Vector.hh \
-JSON.hh Profiler.hh RefdIndex.hh ProfilerTools.hh
+JSON.hh Profiler.hh RefdIndex.hh ProfilerTools.hh Debugger.hh
 # Copied during "make install"
 
 ifdef REGEX_DIR

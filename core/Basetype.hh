@@ -28,6 +28,7 @@
 #include "Encdec.hh"
 #include "RInt.hh"
 #include "JSON_Tokenizer.hh"
+#include "Logger.hh"
 #ifdef TITAN_RUNTIME_2
 #include "Struct_of.hh"
 #include "XER.hh"
@@ -1076,6 +1077,14 @@ public:
     return expr_cache;
   }
   virtual ~Lazy_Param() {}
+  void log() const {
+    if (!expr_evaluated) {
+      TTCN_Logger::log_event_str("<not evaluated>");
+    }
+    else {
+      expr_cache.log();
+    }
+  }
 };
 
 #endif
