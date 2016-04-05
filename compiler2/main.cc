@@ -94,7 +94,7 @@ boolean generate_skeleton = FALSE, force_overwrite = FALSE,
   check_subtype = TRUE, suppress_context = FALSE, display_up_to_date = FALSE,
   implicit_json_encoding = FALSE, json_refs_for_all_types = TRUE,
   force_gen_seof = FALSE, omit_in_value_list = FALSE,
-  warnings_for_bad_variants = FALSE;
+  warnings_for_bad_variants = FALSE, debugger_active = FALSE;
 
 // Default code splitting mode is set to 'no splitting'.
 CodeGenHelper::split_type code_splitting_mode = CodeGenHelper::SPLIT_NONE;
@@ -479,8 +479,8 @@ int main(int argc, char *argv[])
     dflag = false, Xflag = false, Rflag = false, gflag = false, aflag = false,
     s0flag = false, Cflag = false, yflag = false, Uflag = false, Qflag = false,
     Sflag = false, Kflag = false, jflag = false, zflag = false, Fflag = false,
-    Mflag = false, Eflag = false, errflag = false, print_usage = false,
-    ttcn2json = false;
+    Mflag = false, Eflag = false, nflag = false, errflag = false,
+    print_usage = false, ttcn2json = false;
 
   CodeGenHelper cgh;
 
@@ -572,7 +572,7 @@ int main(int argc, char *argv[])
 
   if (!ttcn2json) {
     for ( ; ; ) {
-      int c = getopt(argc, argv, "aA:bcC:dEfFgijK:lLMo:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
+      int c = getopt(argc, argv, "aA:bcC:dEfFgijK:lLMno:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
       if (c == -1) break;
       switch (c) {
       case 'a':
@@ -743,6 +743,10 @@ int main(int argc, char *argv[])
         SET_FLAG(E);
         warnings_for_bad_variants = TRUE;
         break;
+      case 'n':
+        SET_FLAG(n);
+        debugger_active = TRUE;
+        break;
 
       case 'Q': {
         long max_errs;
@@ -787,7 +791,8 @@ int main(int argc, char *argv[])
       if (Aflag || Lflag || Pflag || Tflag || Vflag || Yflag ||
         bflag || fflag || iflag || lflag || oflag || pflag || qflag ||
         rflag || sflag || tflag || uflag || wflag || xflag || Xflag || Rflag ||
-        Uflag || yflag || Kflag || jflag || zflag || Fflag || Mflag || Eflag) {
+        Uflag || yflag || Kflag || jflag || zflag || Fflag || Mflag || Eflag ||
+        nflag) {
         errflag = true;
         print_usage = true;
       }
@@ -805,6 +810,10 @@ int main(int argc, char *argv[])
       }
       if (zflag && !Lflag) {
         ERROR("Source line information `-L' is necessary for profiling `-z'.");
+        errflag = true;
+      }
+      if (nflag && !Lflag) {
+        ERROR("Source line information `-L' is necessary for debugging `-n'.");
         errflag = true;
       }
       if (iflag && gflag) {

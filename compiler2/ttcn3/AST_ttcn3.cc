@@ -43,6 +43,7 @@
 #include "../../common/version_internal.h"
 #include "../CodeGenHelper.hh"
 #include "../../common/JSON_Tokenizer.hh"
+#include "../DebuggerStuff.hh"
 #include <limits.h>
 
 // implemented in coding_attrib_p.y
@@ -1673,6 +1674,10 @@ namespace Ttcn {
   {
     target->header.includes = mputstr(target->header.includes,
       "#include <TTCN3.hh>\n");
+    /*if (debugger_active) {
+      target->header.includes = mputstr(target->header.includes,
+        "#include \"init_debug.inc\"\n");
+    }*/
     for (size_t i = 0; i < impmods_v.size(); i++) {
       ImpMod *im = impmods_v[i];
       Common::Module *m = im->get_mod();
@@ -2091,6 +2096,12 @@ namespace Ttcn {
       module_dispname);
     target->functions.control = mputprintf(target->functions.control,
       "TTCN_Runtime::begin_controlpart(\"%s\");\n", module_dispname);
+    if (debugger_active) {
+      target->functions.control = mputprintf(target->functions.control,
+        "charstring_list no_params = NULL_VALUE;\n"
+        "TTCN3_Debug_Function debug_scope(NULL, \"control\", \"%s\", no_params, no_params, NULL);\n"
+        "debug_scope.initial_snapshot();\n", module_dispname);
+    }
     target->functions.control =
       block->generate_code(target->functions.control);
     target->functions.control = mputstr(target->functions.control,
@@ -2805,6 +2816,132 @@ namespace Ttcn {
       }
     }
   }
+  
+  void Module::generate_debugger_init(output_struct* output)
+  {
+    // create the initializer function
+    output->source.global_vars = mputstr(output->source.global_vars,
+      "\n/* Initializing TTCN-3 debugger */\n"
+      "void init_ttcn3_debugger()\n"
+      "{\n"
+      /*"  debugger_manual_init();\n"*/);
+    
+    // initialize global scope and variables (including imported variables)
+    char* str_glob = generate_debugger_global_vars(NULL, this);
+    for (int i = 0; i < imp->get_imports_size(); ++i) {
+      str_glob = imp->get_impmod(i)->get_mod()->generate_debugger_global_vars(str_glob, this);
+    }
+    if (str_glob != NULL) {
+      // only add the global scope if it actually has variables
+      output->source.global_vars = mputprintf(output->source.global_vars,
+        "  /* global variables */\n"
+        "  TTCN3_Debug_Scope* global_scope = ttcn3_debugger.add_global_scope(\"%s\");\n"
+        "%s",
+        get_modid().get_dispname().c_str(), str_glob);
+      Free(str_glob);
+    }
+    
+    // initialize components' scopes and their variables
+    for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
+      Def_Type* def = dynamic_cast<Def_Type*>(asss->get_ass_byIndex(i));
+      if (def != NULL) {
+        Type* comp_type = def->get_Type();
+        if (comp_type->get_typetype() == Type::T_COMPONENT) {
+          char* str_comp = NULL;
+          ComponentTypeBody* comp_body = comp_type->get_CompBody();
+          for (size_t j = 0; j < comp_body->get_nof_asss(); ++j) {
+            str_comp = generate_code_debugger_add_var(str_comp, comp_body->get_ass_byIndex(j),
+              this, comp_type->get_dispname().c_str());
+          }
+          if (str_comp != NULL) {
+            // only add the component if it actually has variables
+            output->source.global_vars = mputprintf(output->source.global_vars,
+              "  /* variables of component %s */\n"
+              "  TTCN3_Debug_Scope* %s_scope = ttcn3_debugger.add_component_scope(\"%s\");\n"
+              "%s"
+              , comp_type->get_dispname().c_str(), comp_type->get_dispname().c_str()
+              , comp_type->get_dispname().c_str(), str_comp);
+            Free(str_comp);
+          }
+        }
+      }
+    }
+    
+    // close the initializer function
+    output->source.global_vars = mputstr(output->source.global_vars, "}\n");
+  }
+  
+  char* Module::generate_debugger_global_vars(char* str, Common::Module* current_mod)
+  {
+    for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
+      Common::Assignment* ass = asss->get_ass_byIndex(i);
+      switch (ass->get_asstype()) {
+      case Common::Assignment::A_TEMPLATE:
+        if (ass->get_FormalParList() != NULL) {
+          // don't add parameterized templates, since they are functions in C++
+          break;
+        }
+        // else fall through
+      case Common::Assignment::A_CONST:
+      //case Common::Assignment::A_EXT_CONST: TODO: handle unused ext_const
+      case Common::Assignment::A_MODULEPAR:
+      case Common::Assignment::A_MODULEPAR_TEMP:
+        str = generate_code_debugger_add_var(str, ass, current_mod, "global");
+        break;
+      default:
+        break;
+      }
+    }
+    return str;
+  }
+  
+  void Module::generate_debugger_functions(output_struct *output)
+  {
+    char* str = NULL;
+    for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
+      Def_Type* def = dynamic_cast<Def_Type*>(asss->get_ass_byIndex(i));
+      if (def != NULL) {
+        Type* t = def->get_Type();
+        if (!t->is_ref() && t->get_typetype() != Type::T_COMPONENT) {
+          // don't generate code for subtypes
+          if (t->get_typetype() != Type::T_SIGNATURE) {
+            str = mputprintf(str, 
+              "  %sif (!strcmp(p_var.type_name, \"%s\")) {\n"
+              "    ((const %s*)p_var.value)->log();\n"
+              "  }\n"
+              , (str != NULL) ? "else " : ""
+              , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
+          }
+          if (t->get_typetype() != Type::T_PORT) {
+            str = mputprintf(str,
+              "  %sif (!strcmp(p_var.type_name, \"%s template\")) {\n"
+              "    ((const %s_template*)p_var.value)->log();\n"
+              "  }\n"
+              , (str != NULL) ? "else " : ""
+              , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
+          }
+        }
+      }
+    }
+    if (str != NULL) {
+      // don't generate an empty printing function
+      output->header.class_defs = mputprintf(output->header.class_defs,
+        "/* Debugger printing function for types declared in this module */\n\n"
+        "extern CHARSTRING print_var_%s(const TTCN3_Debugger::variable_t& p_var);\n",
+        get_modid().get_ttcnname().c_str());
+      output->source.global_vars = mputprintf(output->source.global_vars,
+        "\n/* Debugger printing function for types declared in this module */\n"
+        "CHARSTRING print_var_%s(const TTCN3_Debugger::variable_t& p_var)\n"
+        "{\n"
+        "  TTCN_Logger::begin_event_log2str();\n"
+        "%s"
+        "  else {\n"
+        "    TTCN_Logger::log_event_str(\"<unrecognized value or template>\");\n"
+        "  }\n"
+        "  return TTCN_Logger::end_event_log2str();\n"
+        "}\n", get_modid().get_ttcnname().c_str(), str);
+    }
+  }
 
   // =================================
   // ===== Definition
@@ -3380,6 +3517,9 @@ namespace Ttcn {
         type->get_genname_value(my_scope).c_str(), genname_str);
       // the value is assigned using subsequent statements
       str = value->generate_code_init(str, genname_str);
+    }
+    if (debugger_active) {
+      str = generate_code_debugger_add_var(str, this);
     }
     return str;
   }
@@ -4230,6 +4370,9 @@ namespace Ttcn {
       size_t nof_base_pars = 0;
       char* function_body = create_location_object(memptystr(), "TEMPLATE",
         template_dispname);
+      if (debugger_active) {
+        function_body = generate_code_debugger_function_init(function_body, this);
+      }
       if (base_template) {
         // modified template
         function_body = mputprintf(function_body, "%s ret_val(%s",
@@ -4260,6 +4403,11 @@ namespace Ttcn {
       if (template_restriction!=TR_NONE && gen_restriction_check)
         function_body = Template::generate_restriction_check_code(function_body,
                           "ret_val", template_restriction);
+      if (debugger_active) {
+        function_body = mputstr(function_body,
+          "ttcn3_debugger.set_return_value((TTCN_Logger::begin_event_log2str(), "
+          "ret_val.log(), TTCN_Logger::end_event_log2str()));\n");
+      }
       function_body = mputstr(function_body, "return ret_val;\n");
       // if the template modifies a parameterized template, then the inherited
       // formal parameters must always be displayed, otherwise generate a smart
@@ -4402,6 +4550,9 @@ namespace Ttcn {
       if (template_restriction != TR_NONE && gen_restriction_check)
         str = Template::generate_restriction_check_code(str, genname_str,
           template_restriction);
+    }
+    if (debugger_active) {
+      str = generate_code_debugger_add_var(str, this);
     }
     return str;
   }
@@ -4625,6 +4776,9 @@ namespace Ttcn {
         // the initial value is assigned using subsequent statements
         str = initial_value->generate_code_init(str, genname_str);
       }
+    }
+    if (debugger_active) {
+      str = generate_code_debugger_add_var(str, this);
     }
     return str;
   }
@@ -4853,6 +5007,9 @@ namespace Ttcn {
         && gen_restriction_check)
       str = Template::generate_restriction_check_code(str, genname_str,
                                                       template_restriction);
+    if (debugger_active) {
+      str = generate_code_debugger_add_var(str, this);
+    }
     return str;
   }
 
@@ -5370,6 +5527,9 @@ namespace Ttcn {
           str = Code::merge_free_expr(str, &expr);
         }
       }
+    }
+    if (debugger_active) {
+      str = generate_code_debugger_add_var(str, this);
     }
     return str;
   }
@@ -6072,6 +6232,9 @@ namespace Ttcn {
     if (!enable_set_bound_out_param)
       body = fp_list->generate_code_set_unbound(body); // conform the standard out parameter is unbound
     body = fp_list->generate_shadow_objects(body);
+    if (debugger_active) {
+      body = generate_code_debugger_function_init(body, this);
+    }
     body = block->generate_code(body);
     // smart formal parameter list (names of unused parameters are omitted)
     char *formal_par_list = fp_list->generate_code(memptystr());
@@ -6637,7 +6800,14 @@ namespace Ttcn {
       "TTCN_Logger::end_event();\n"
       "}\n", result_name, function_name, result_name);
     // returning the result stream if necessary
-    if (prototype == PROTOTYPE_CONVERT) str = mputstr(str, "return ret_val;\n");
+    if (prototype == PROTOTYPE_CONVERT) {
+      if (debugger_active) {
+        str = mputstr(str,
+          "ttcn3_debugger.set_return_value((TTCN_Logger::begin_event_log2str(), "
+          "ret_val.log(), TTCN_Logger::end_event_log2str()));\n");
+      }
+      str = mputstr(str, "return ret_val;\n");
+    }
     return str;
   }
 
@@ -6718,12 +6888,28 @@ namespace Ttcn {
         "}\n", input_type->get_genname_value(my_scope).c_str(), function_name);
       // closing the block and returning the appropriate result or status code
       if (prototype == PROTOTYPE_BACKTRACK) {
-        str = mputstr(str, "return 0;\n"
-          "} else return 1;\n");
+        if (debugger_active) {
+          str = mputstr(str, "ttcn3_debugger.set_return_value(\"0\");\n");
+        }
+        str = mputstr(str,
+          "return 0;\n"
+          "} else {\n");
+        if (debugger_active) {
+          str = mputstr(str, "ttcn3_debugger.set_return_value(\"1\");\n");
+        }
+        str = mputstr(str,  
+          "return 1;\n"
+          "}\n");
       } else {
         str = mputstr(str, "}\n");
-        if (prototype == PROTOTYPE_CONVERT)
+        if (prototype == PROTOTYPE_CONVERT) {
+          if (debugger_active) {
+            str = mputstr(str,
+              "ttcn3_debugger.set_return_value((TTCN_Logger::begin_event_log2str(), "
+              "ret_val.log(), TTCN_Logger::end_event_log2str()));\n");
+          }
           str = mputstr(str, "return ret_val;\n");
+        }
       }
     } else {
       // result handling and debug printout for sliding decoders
@@ -6738,13 +6924,16 @@ namespace Ttcn {
         "%s.log();\n"
         "TTCN_Logger::end_event();\n"
         "}\n"
-        "return 0;\n"
+        "%sreturn 0;\n"
         "case TTCN_EncDec::ET_INCOMPL_MSG:\n"
         "case TTCN_EncDec::ET_LEN_ERR:\n"
-        "return 2;\n"
+        "%sreturn 2;\n"
         "default:\n"
-        "return 1;\n"
-        "}\n", first_par_name, function_name, first_par_name);
+        "%sreturn 1;\n"
+        "}\n", first_par_name, function_name, first_par_name,
+        debugger_active ? "ttcn3_debugger.set_return_value(\"0\");\n" : "",
+        debugger_active ? "ttcn3_debugger.set_return_value(\"2\");\n" : "",
+        debugger_active ? "ttcn3_debugger.set_return_value(\"1\");\n" : "");
     }
     return str;
   }
@@ -6786,6 +6975,9 @@ namespace Ttcn {
         "%s %s(%s)\n"
         "{\n"
         , return_type_str, genname_str, formal_par_list);
+      if (debugger_active) {
+        body = generate_code_debugger_function_init(body, this);
+      }
       switch (function_type) {
       case EXTFUNC_ENCODE:
         body = generate_code_encode(body);
@@ -7067,6 +7259,9 @@ namespace Ttcn {
     // are never used)
     char* body = create_location_object(memptystr(), "ALTSTEP", dispname_str);
     body = fp_list->generate_shadow_objects(body);
+    if (debugger_active) {
+      body = generate_code_debugger_function_init(body, this);
+    }
     body = sb->generate_code(body);
     body = ags->generate_code_altstep(body);
     // generate a smart formal parameter list (omits unused parameter names)
@@ -7342,6 +7537,9 @@ namespace Ttcn {
       body = system_type->get_CompBody()->generate_code_comptype_name(body);
     else body = runs_on_body->generate_code_comptype_name(body);
     body = mputstr(body, ", has_timer, timer_value);\n");
+    if (debugger_active) {
+      body = generate_code_debugger_function_init(body, this);
+    }
     body = block->generate_code(body);
     body = mputprintf(body,
       "} catch (const TC_Error& tc_error) {\n"
@@ -8283,8 +8481,8 @@ namespace Ttcn {
   {
     // the name of the parameter should not be displayed if the parameter is not
     // used (to avoid a compiler warning)
-    bool display_name = (usage_found || display_unused || (!enable_set_bound_out_param &&
-      (asstype == A_PAR_VAL_OUT || asstype == A_PAR_TEMPL_OUT)));
+    bool display_name = (usage_found || display_unused || debugger_active ||
+      (!enable_set_bound_out_param && (asstype == A_PAR_VAL_OUT || asstype == A_PAR_TEMPL_OUT)));
     const char *name_str = display_name ? id->get_name().c_str() : "";
     switch (asstype) {
     case A_PAR_VAL_IN:

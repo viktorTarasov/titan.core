@@ -5819,6 +5819,9 @@ error:
     }
     if (block->get_nof_stmts() > 0 || block->get_exception_handling()!=StatementBlock::EH_NONE) {
       str = mputstr(str, "{\n");
+      if (debugger_active) {
+        str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+      }
       str = block->generate_code(str);
       str = mputstr(str, "}\n");
     } else str = mputstr(str, "/* empty block */;\n");
@@ -5905,6 +5908,9 @@ error:
       if(!eachfalse) str=mputstr(str, "else ");
       eachfalse=false;
       str=mputstr(str, "{\n");
+      if (debugger_active) {
+        str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+      }
       blockcount++;
       str=if_stmt.elseblock->generate_code(str);
     }
@@ -5937,6 +5943,9 @@ error:
     // generate code for them anyway
     if (loop.for_stmt.varinst) {
       str = mputstr(str, "{\n");
+      if (debugger_active) {
+        str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+      }
       str = loop.for_stmt.init_varinst->generate_code_str(str);
     } else {
       str = loop.for_stmt.init_ass->update_location_object(str);
@@ -5965,6 +5974,9 @@ error:
 	while (blockcount-- > 0) str = mputstr(str, "}\n");
       }
       if (loop.label_next) str = mputstr(str, "{\n");
+      if (debugger_active) {
+        str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+      }
       str = loop.block->generate_code(str);
       if (loop.label_next)
         str = mputprintf(str, "}\n"
@@ -6001,6 +6013,9 @@ error:
 	str = mputstr(str, ") break;\n");
 	while(blockcount-- > 0) str = mputstr(str, "}\n");
       }
+      if (debugger_active) {
+        str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+      }
       str = loop.block->generate_code(str);
       str = mputstr(str, "}\n");
     }
@@ -6018,6 +6033,9 @@ error:
     }
     if (loop.iterate_once && !loop.has_brk && !loop.has_cnt) {
       str = mputstr(str, "{\n");
+      if (debugger_active) {
+        str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+      }
       str = loop.block->generate_code(str);
     } else {
       str = mputstr(str, "for ( ; ; ) {\n");
@@ -6027,6 +6045,9 @@ error:
       if (loop.label_next && is_infinite_loop)
         str = mputprintf(str, "%s:\n", loop.label_next->c_str());
       if (loop.label_next && !is_infinite_loop) str = mputstr(str, "{\n");
+      if (debugger_active) {
+        str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+      }
       str = loop.block->generate_code(str);
       // do not generate the exit condition for infinite loops
       if (!is_infinite_loop) {
@@ -6432,10 +6453,31 @@ error:
     Definition *my_def = my_sb->get_my_def();
     if (returnexpr.v) {
       expr.expr = mputc(expr.expr, ' ');
+      if (debugger_active) {
+        // the debugger's return value storing macro requires a temporary,
+        // so the returned expression isn't evaluated twice
+        string tmp_id = my_def->get_my_scope()->get_scope_mod_gen()->get_temporary_id();
+        expr.preamble = mputprintf(expr.preamble, "%s %s;\n",
+          returnexpr.v->get_expr_governor_last()->get_genname_value(my_def->get_my_scope()).c_str(),
+          tmp_id.c_str());
+        expr.expr = mputprintf(expr.expr, "DEBUGGER_STORE_RETURN_VALUE(%s, ", tmp_id.c_str());
+      }
       returnexpr.v->generate_code_expr_mandatory(&expr);
+      if (debugger_active) {
+        expr.expr = mputc(expr.expr, ')');
+      }
     } else if (returnexpr.t) {
       expr.expr = mputc(expr.expr, ' ');
       if (!my_def) FATAL_ERROR("Statement::generate_code_return()");
+      if (debugger_active) {
+        // the debugger's return value storing macro requires a temporary,
+        // so the returned expression isn't evaluated twice
+        string tmp_id = my_def->get_my_scope()->get_scope_mod_gen()->get_temporary_id();
+        expr.preamble = mputprintf(expr.preamble, "%s_template %s;\n",
+          returnexpr.t->get_my_governor()->get_genname_value(my_def->get_my_scope()).c_str(),
+          tmp_id.c_str());
+        expr.expr = mputprintf(expr.expr, "DEBUGGER_STORE_RETURN_VALUE(%s, ", tmp_id.c_str());
+      }
       Def_Function_Base* dfb = dynamic_cast<Def_Function_Base*>(my_def);
       if (!dfb) FATAL_ERROR("Statement::generate_code_return()");
       if (dfb->get_template_restriction() != TR_NONE &&
@@ -6444,6 +6486,9 @@ error:
           dfb->get_template_restriction());
       } else {
         returnexpr.t->generate_code_expr(&expr, TR_NONE);
+      }
+      if (debugger_active) {
+        expr.expr = mputc(expr.expr, ')');
       }
     } else {
       if (my_def && my_def->get_asstype() == Definition::A_ALTSTEP)
@@ -8953,6 +8998,9 @@ error:
     }
     eachfalse = false;
     str=mputstr(str, "{\n");
+    if (debugger_active) {
+      str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+    }
     str=block->generate_code(str);
     str=mputstr(str, "}\n");
     return str;
@@ -9282,6 +9330,9 @@ error:
     if(unreach) return str;
     if(!tis) unreach=true;
     str=mputprintf(str, "%s_%lu:\n{\n", tmp_prefix, (unsigned long) idx);
+    if (debugger_active) {
+      str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+    }
     str=block->generate_code(str);
     str=mputprintf(str, "goto %s_end;\n}\n", tmp_prefix);
     return str;
@@ -10055,6 +10106,9 @@ error:
 	StatementBlock *block = ag->get_block();
 	if (block->get_nof_stmts() > 0) {
 	  str = mputstr(str, "{\n");
+	  if (debugger_active) {
+	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+	  }
 	  str = block->generate_code(str);
 	  str = mputstr(str, "}\n");
 	}
@@ -10134,6 +10188,9 @@ error:
 	StatementBlock *block = ag->get_block();
 	if (block && block->get_nof_stmts() > 0) {
 	  str = mputstr(str, "{\n");
+	  if (debugger_active) {
+	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+	  }
 	  str = block->generate_code(str);
 	  if (block->has_return() != StatementBlock::RS_YES)
 	    str = mputstr(str, "break;\n");
@@ -10192,6 +10249,9 @@ error:
 	StatementBlock *block = ag->get_block();
 	if (block->get_nof_stmts() > 0) {
 	  str = mputstr(str, "{\n");
+	  if (debugger_active) {
+	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+	  }
 	  str = block->generate_code(str);
 	  str = mputstr(str, "}\n");
 	}
@@ -10264,6 +10324,9 @@ error:
 	StatementBlock *block = ag->get_block();
 	if (block && block->get_nof_stmts() > 0) {
 	  str = mputstr(str, "{\n");
+	  if (debugger_active) {
+	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+	  }
 	  str = block->generate_code(str);
 	  str = mputstr(str, "}\n");
 	}

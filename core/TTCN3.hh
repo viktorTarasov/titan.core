@@ -85,5 +85,6 @@
 #include "Error.hh"
 #include "XmlReader.hh"
 #include "Profiler.hh"
+#include "Debugger.hh"
 
 #endif
