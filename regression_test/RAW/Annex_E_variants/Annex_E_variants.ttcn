@@ -86,6 +86,9 @@ type octetstring OStr32Eq with { variant "FIELDLENGTH(4), BYTEORDER(last)" };
 type charstring CStr64 with { variant "64 bit" }; // 64 bits = 8 characters
 type charstring CStr64Eq with { variant "FIELDLENGTH(8), BYTEORDER(last)" };
 
+type universal charstring UStr80 with { variant "80 bit" }; // 80 bits = 10 UTF-8 characters
+type universal charstring UStr80Eq with { variant "FIELDLENGTH(10), BYTEORDER(last)" };
+
 // Component type
 type component CT {}
 
@@ -490,6 +493,28 @@ testcase tc_cstr64() runs on CT
   setverdict(pass);
 }
 
+testcase tc_ustr80() runs on CT
+{
+  var UStr80 x := "sepr" & char(0, 0, 1, 113);
+  var UStr80Eq x_eq := x;
+  var bitstring enc := encvalue(x);
+  var bitstring enc_exp := encvalue(x_eq);
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  else {
+    var UStr80 dec;
+    var UStr80Eq dec_exp;
+    if (decvalue(enc, dec) != 0 or decvalue(enc_exp, dec_exp) != 0) {
+      setverdict(fail, "Could not decode ", enc);
+    }
+    else if (dec != dec_exp) {
+      setverdict(fail, "Expected: ", dec_exp, ", got: ", dec);
+    }
+  }
+  setverdict(pass);
+}
+
 // Control part
 control {
   execute(tc_byte());
@@ -511,6 +536,7 @@ control {
   execute(tc_hstr20());
   execute(tc_ostr32());
   execute(tc_cstr64());
+  execute(tc_ustr80());
 }
 
 }
