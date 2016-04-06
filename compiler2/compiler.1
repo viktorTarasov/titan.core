@@ -69,6 +69,12 @@ Disables the generation of
 .I BER
 encoder/decoder routines for all ASN.1 types.
 .TP
+.B \-B
+Allows the selected field in a union value to be unbound, when setting module
+parameters (legacy behavior). A warning is displayed whenever a union value
+receives an unbound selected field and when a union with an unbound selected field
+is copied.
+.TP
 .B \-c
 Write out
 .I checksums
