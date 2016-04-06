@@ -136,10 +136,22 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "{\n"
     "switch (other_value.union_selection) {\n", name, name);
   for (i = 0; i < sdef->nElements; i++) {
-    src = mputprintf(src, "case %s_%s:\n"
-      "field_%s = new %s(*other_value.field_%s);\n"
-      "break;\n", selection_prefix, sdef->elements[i].name,
+    src = mputprintf(src, "case %s_%s:\n", selection_prefix, sdef->elements[i].name);
+    if (legacy_unbound_union_fields) {
+      src = mputprintf(src, "if (other_value.field_%s->is_bound()) ",
+        sdef->elements[i].name);
+    }
+    src = mputprintf(src, "field_%s = new %s(*other_value.field_%s);\n",
       sdef->elements[i].name, sdef->elements[i].type, sdef->elements[i].name);
+    if (legacy_unbound_union_fields) {
+      src = mputprintf(src,
+        "else {\n"
+        "field_%s = new %s;\n"
+        "TTCN_warning(\"Assignment of a union value with an unbound selected "
+        "alternative\");\n"      
+        "}\n", sdef->elements[i].name, sdef->elements[i].type);
+    }
+    src = mputstr(src, "break;\n");
   }
   src = mputprintf(src, "default:\n"
     "TTCN_error(\"Assignment of an unbound union value of type %s.\");\n"
@@ -383,16 +395,27 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
      "  }\n"
      "  Module_Param* mp_last = m_p->get_elem(m_p->get_size()-1);\n", dispname);
 
-    for (i = 0; i < sdef->nElements; i++) {
+  for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, 
       "  if (!strcmp(mp_last->get_id()->get_name(), \"%s\")) {\n"
       "    %s%s().set_param(*mp_last);\n"
-      // a union's alternative cannot be unbound
-      "    if (!%s%s().is_bound()) clean_up();\n"
-      "    return;\n"
-      "  }\n", sdef->elements[i].dispname, at_field, sdef->elements[i].name,
-      at_field, sdef->elements[i].name);
+      "    if (!%s%s().is_bound()) "
+      , sdef->elements[i].dispname, at_field, sdef->elements[i].name
+      , at_field, sdef->elements[i].name);
+    if (legacy_unbound_union_fields) {
+      src = mputprintf(src,
+        "TTCN_warning(\"Alternative '%s' was selected for union of type '%s', "
+        "but its value is unbound\");\n"
+        , sdef->elements[i].dispname, sdef->dispname);
     }
+    else {
+      // a union's alternative cannot be unbound
+      src = mputstr(src, "clean_up();\n");
+    }
+    src = mputstr(src,
+      "    return;\n"
+      "  }\n");
+  }
   src = mputprintf(src,
     "  mp_last->error(\"Field %%s does not exist in type %s.\", mp_last->get_id()->get_name());\n"
     "}\n\n", dispname);
