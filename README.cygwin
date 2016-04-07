@@ -124,5 +124,5 @@ Cygwin setup
 	 
   (L) If you want to use graphical tools (like nedit for example), then you need to install the Cygwin/X
       component too. The install procedure can be found at the homepage:
-      http://x.cygwin.com/docs/ug/cygwin-x-ug.html	  
+      http://x.cygwin.com/docs/ug/cygwin-x-ug.html
   
