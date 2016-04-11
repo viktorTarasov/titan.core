@@ -9638,7 +9638,7 @@ namespace Ttcn {
   {
     switch (selection) {
     case AP_VALUE:
-      str = val->rearrange_init_code(str);
+      str = val->rearrange_init_code(str, usage_mod);
       break;
     case AP_TEMPLATE:
       str = temp->rearrange_init_code(str, usage_mod);
@@ -9714,7 +9714,7 @@ namespace Ttcn {
       temp->dump(level + 1);
       break;
     case AP_REF:
-      DEBUG(level, "actual parameter: referecne");
+      DEBUG(level, "actual parameter: reference");
       ref->dump(level + 1);
       break;
     case AP_DEFAULT:

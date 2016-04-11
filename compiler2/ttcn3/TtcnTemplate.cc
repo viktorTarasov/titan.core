@@ -3008,7 +3008,7 @@ end:
       break;
     case SPECIFIC_VALUE:
       if (get_code_section() == CS_POST_INIT)
-        str = u.specific_value->rearrange_init_code(str);
+        str = u.specific_value->rearrange_init_code(str, my_scope->get_scope_mod_gen());
       str = u.specific_value->generate_code_init(str, name);
       break;
     case TEMPLATE_REFD:
@@ -3040,7 +3040,7 @@ end:
       break;
     case VALUE_RANGE:
       if (get_code_section() == CS_POST_INIT)
-        str = u.value_range->rearrange_init_code(str);
+        str = u.value_range->rearrange_init_code(str, my_scope->get_scope_mod_gen());
       str = u.value_range->generate_code_init(str, name);
       break;
     case SUPERSET_MATCH:
@@ -3060,7 +3060,7 @@ end:
     }
     if (length_restriction) {
       if (get_code_section() == CS_POST_INIT)
-        str = length_restriction->rearrange_init_code(str);
+        str = length_restriction->rearrange_init_code(str, my_scope->get_scope_mod_gen());
       str = length_restriction->generate_code_init(str, name);
     }
     if (is_ifpresent) str = mputprintf(str, "%s.set_ifpresent();\n", name);
@@ -3074,7 +3074,7 @@ end:
   {
     switch (templatetype) {
     case SPECIFIC_VALUE:
-      str = u.specific_value->rearrange_init_code(str);
+      str = u.specific_value->rearrange_init_code(str, usage_mod);
       break;
     case TEMPLATE_REFD:
       str = rearrange_init_code_refd(str, usage_mod);
@@ -3102,12 +3102,12 @@ end:
           ->rearrange_init_code(str, usage_mod);
       break;
     case VALUE_RANGE:
-      str = u.value_range->rearrange_init_code(str);
+      str = u.value_range->rearrange_init_code(str, usage_mod);
       break;
     default:
       break;
     }
-    if (length_restriction) str = length_restriction->rearrange_init_code(str);
+    if (length_restriction) str = length_restriction->rearrange_init_code(str, usage_mod);
     return str;
   }
 
@@ -4516,7 +4516,7 @@ compile_time:
 
   char *Template::rearrange_init_code_invoke(char *str, Common::Module* usage_mod)
   {
-    str = u.invoke.v->rearrange_init_code(str);
+    str = u.invoke.v->rearrange_init_code(str, usage_mod);
     str = u.invoke.ap_list->rearrange_init_code(str, usage_mod);
     return str;
   }
