@@ -797,7 +797,7 @@ namespace Common {
      *  parameter list of parameterized value references
      *  (e.g. function calls) and in operands of valueof or match
      *  operations. */
-    char *rearrange_init_code(char *str);
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
     /**
      *  Generates a value for temporary use. Example:
      *

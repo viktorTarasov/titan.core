@@ -11144,20 +11144,18 @@ error:
     return str;
   }
 
-  char *Value::rearrange_init_code(char *str)
+  char *Value::rearrange_init_code(char *str, Common::Module* usage_mod)
   {
     switch (valuetype) {
     case V_REFD: {
       Ttcn::ActualParList *parlist = u.ref.ref->get_parlist();
       if (parlist) {
-	str = parlist->rearrange_init_code(str,
-	  u.ref.ref->get_refd_assignment()->get_my_scope()->get_scope_mod_gen());
+	str = parlist->rearrange_init_code(str, usage_mod);
       }
       break; }
     case V_INVOKE: {
-      str = u.invoke.v->rearrange_init_code(str);
-      str = u.invoke.ap_list->rearrange_init_code(str,
-        u.invoke.v->get_expr_governor_last()->get_my_scope()->get_scope_mod_gen());
+      str = u.invoke.v->rearrange_init_code(str, usage_mod);
+      str = u.invoke.ap_list->rearrange_init_code(str, usage_mod);
       break; }
     case V_EXPR:
       switch (u.expr.v_optype) {
@@ -11198,16 +11196,16 @@ error:
       case OPTYPE_GET_STRINGENCODING:
       case OPTYPE_REMOVE_BOM:
       case OPTYPE_DECODE_BASE64:
-        str = u.expr.v1->rearrange_init_code(str);
+        str = u.expr.v1->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_DECODE: {
         Ttcn::ActualParList *parlist = u.expr.r1->get_parlist();
         Common::Assignment *ass = u.expr.r1->get_refd_assignment();
-        if (parlist) str = parlist->rearrange_init_code(str, ass->get_my_scope()->get_scope_mod_gen());
+        if (parlist) str = parlist->rearrange_init_code(str, usage_mod);
 
         parlist = u.expr.r2->get_parlist();
         ass = u.expr.r2->get_refd_assignment();
-        if (parlist) str = parlist->rearrange_init_code(str, ass->get_my_scope()->get_scope_mod_gen());
+        if (parlist) str = parlist->rearrange_init_code(str, usage_mod);
         break; }
       case OPTYPE_ADD:
       case OPTYPE_SUBTRACT:
@@ -11236,35 +11234,35 @@ error:
       case OPTYPE_INT2HEX:
       case OPTYPE_INT2OCT:
       //case OPTYPE_DECODE:
-        str = u.expr.v1->rearrange_init_code(str);
-        str = u.expr.v2->rearrange_init_code(str);
+        str = u.expr.v1->rearrange_init_code(str, usage_mod);
+        str = u.expr.v2->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_UNICHAR2OCT: // v1 [v2]
       case OPTYPE_OCT2UNICHAR:
       case OPTYPE_ENCODE_BASE64:
-        str = u.expr.v1->rearrange_init_code(str);
-        if (u.expr.v2) str = u.expr.v2->rearrange_init_code(str);
+        str = u.expr.v1->rearrange_init_code(str, usage_mod);
+        if (u.expr.v2) str = u.expr.v2->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_SUBSTR:
-        str = u.expr.ti1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
-        str = u.expr.v2->rearrange_init_code(str);
-        str = u.expr.v3->rearrange_init_code(str);
+        str = u.expr.ti1->rearrange_init_code(str, usage_mod);
+        str = u.expr.v2->rearrange_init_code(str, usage_mod);
+        str = u.expr.v3->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_REGEXP:
-        str = u.expr.ti1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
-        str = u.expr.t2->rearrange_init_code(str, my_scope->get_scope_mod_gen());
-        str = u.expr.v3->rearrange_init_code(str);
+        str = u.expr.ti1->rearrange_init_code(str, usage_mod);
+        str = u.expr.t2->rearrange_init_code(str, usage_mod);
+        str = u.expr.v3->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_DECOMP:
-        str = u.expr.v1->rearrange_init_code(str);
-        str = u.expr.v2->rearrange_init_code(str);
-        str = u.expr.v3->rearrange_init_code(str);
+        str = u.expr.v1->rearrange_init_code(str, usage_mod);
+        str = u.expr.v2->rearrange_init_code(str, usage_mod);
+        str = u.expr.v3->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_REPLACE:
-        str = u.expr.ti1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
-        str = u.expr.v2->rearrange_init_code(str);
-        str = u.expr.v3->rearrange_init_code(str);
-        str = u.expr.ti4->rearrange_init_code(str, my_scope->get_scope_mod_gen());
+        str = u.expr.ti1->rearrange_init_code(str, usage_mod);
+        str = u.expr.v2->rearrange_init_code(str, usage_mod);
+        str = u.expr.v3->rearrange_init_code(str, usage_mod);
+        str = u.expr.ti4->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_LENGTHOF:
       case OPTYPE_SIZEOF:
@@ -11272,14 +11270,14 @@ error:
       case OPTYPE_ENCODE:
       case OPTYPE_ISPRESENT:
       case OPTYPE_TTCN2STRING:
-        str = u.expr.ti1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
+        str = u.expr.ti1->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_ISCHOSEN_T:
-        str = u.expr.t1->rearrange_init_code(str, my_scope->get_scope_mod_gen());
+        str = u.expr.t1->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_MATCH:
-        str = u.expr.v1->rearrange_init_code(str);
-        str = u.expr.t2->rearrange_init_code(str, my_scope->get_scope_mod_gen());
+        str = u.expr.v1->rearrange_init_code(str, usage_mod);
+        str = u.expr.t2->rearrange_init_code(str, usage_mod);
         break;
       default:
         // other kinds of expressions cannot appear within templates

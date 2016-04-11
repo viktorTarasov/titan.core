@@ -67,7 +67,7 @@ namespace Ttcn {
     /** Appends the initialization sequence of all (directly or indirectly)
      * referred non-parameterized templates to \a str and returns the resulting
      * string. */
-    char *rearrange_init_code(char *str);
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
     /** Appends the string representation of the value range to \a str. */
     void append_stringRepr(string& str) const;
     virtual void dump(unsigned level) const;
@@ -270,7 +270,7 @@ namespace Ttcn {
     /** Appends the initialization sequence of all (directly or indirectly)
      * referred non-parameterized templates to \a str and returns the resulting
      * string. */
-    char *rearrange_init_code(char *str);
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
     /** Appends the string representation of the length restriction to
      * \a str. */
     void append_stringRepr(string& str) const;

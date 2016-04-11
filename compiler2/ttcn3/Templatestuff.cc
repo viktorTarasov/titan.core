@@ -129,10 +129,10 @@ namespace Ttcn {
     return str;
   }
 
-  char *ValueRange::rearrange_init_code(char *str)
+  char *ValueRange::rearrange_init_code(char *str, Common::Module* usage_mod)
   {
-    if (min_v) str = min_v->rearrange_init_code(str);
-    if (max_v) str = max_v->rearrange_init_code(str);
+    if (min_v) str = min_v->rearrange_init_code(str, usage_mod);
+    if (max_v) str = max_v->rearrange_init_code(str, usage_mod);
     return str;
   }
 
@@ -765,12 +765,12 @@ namespace Ttcn {
     return str;
   }
 
-  char *LengthRestriction::rearrange_init_code(char *str)
+  char *LengthRestriction::rearrange_init_code(char *str, Common::Module* usage_mod)
   {
     if (is_range) {
-      str = range.lower->rearrange_init_code(str);
-      if (range.upper) str = range.upper->rearrange_init_code(str);
-    } else str = single->rearrange_init_code(str);
+      str = range.lower->rearrange_init_code(str, usage_mod);
+      if (range.upper) str = range.upper->rearrange_init_code(str, usage_mod);
+    } else str = single->rearrange_init_code(str, usage_mod);
     return str;
   }
 
