@@ -1,0 +1,58 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:20.2, Ensure that the killed-block in an alt-statement is triggered as expected when the component is killed (loopback case).
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+module Sem_2002_TheAltStatement_009 {
+
+	type port MyPort message {
+		inout charstring
+	} with {extension "internal"}
+
+	type component SystemComp { 
+		port MyPort p;
+	}
+
+	type component MTCComp { 
+		port MyPort p;
+	}
+
+	type component PTCComp { 
+		port MyPort p;
+	}
+
+	function f_secondComponent() runs on PTCComp {
+	}
+
+	testcase TC_Sem_2002_TheAltStatement_009() runs on MTCComp system SystemComp {
+		var PTCComp v_ptc := PTCComp.create;
+		map(self:p, system:p);
+
+		v_ptc.start(f_secondComponent());
+		v_ptc.kill;
+	
+		alt {
+		    [] v_ptc.killed {
+		        setverdict(pass);
+		    }
+		    [else] {
+		        setverdict(fail);
+		    }
+		}
+	}
+
+	control {
+		execute(TC_Sem_2002_TheAltStatement_009());
+	}
+
+}

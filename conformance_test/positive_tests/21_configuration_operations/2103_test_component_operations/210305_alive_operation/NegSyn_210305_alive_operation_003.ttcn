@@ -1,0 +1,45 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:21.3.5, Verify that error occurs when using index redirection in all component.alive operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210305_alive_operation_003 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210305_alive_operation_003() runs on GeneralComp system GeneralComp {
+		var boolean v_isAlive;
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+        v_isAlive := all component.alive -> @index v_index;
+        if(v_isAlive){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from alive operation didn't find alive components");
+        }
+    }
+
+    control {
+        execute(TC_NegSyn_210305_alive_operation_003(), 5.0);
+    }
+}

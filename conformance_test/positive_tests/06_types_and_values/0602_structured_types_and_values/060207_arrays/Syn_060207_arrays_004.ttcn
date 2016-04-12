@@ -1,0 +1,38 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.2.7, array type dimension specified as a range
+ ** @verdict  pass accept, noexecution
+ ***************************************************/
+
+// The following requirement is tested:
+// Array dimensions may also be specified using ranges (with inclusive 
+// boundaries only). In such cases, the lower and upper values of the range 
+// define the lower and upper index values. Such an array is corresponding to 
+// a record of with a fixed length restriction computed as the difference 
+// between upper and lower index bound plus 1 and indexing starting from the 
+// lower bound of the array definition.
+
+module Syn_060207_arrays_004 {
+
+    type integer Arr[1..5];
+
+	type component GeneralComp {
+	}
+
+	testcase TC_Syn_060207_arrays_004() runs on GeneralComp { 
+		setverdict(pass);   
+	}
+
+	control {
+		execute(TC_Syn_060207_arrays_004());
+	}
+}
