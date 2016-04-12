@@ -1,0 +1,42 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:9, Ensure that it is not possible to connect a port with two other ports owned by the same component
+ ** @verdict  pass reject
+ ** @configuration  port:broadcast
+ ***************************************************/
+
+/*NOTE: see Figure 7(a): MyCompA has 3 ports and A2 shall not be connected to A1 and A3 both
+ * */
+
+module NegSem_0901_Communication_ports_003{ 
+
+	type charstring address;
+
+    type port IntegerInputPortType message {
+	  inout integer
+	} with {extension "internal"}
+	
+	type component MycompA {	 // MyCompA has 3 ports    	    
+		  port IntegerInputPortType messagePortA1,messagePortA2,messagePortA3
+	}	
+
+	testcase TC_NegSem_0901_Communication_ports_003() runs on MycompA {
+
+		connect(mtc:messagePortA1,mtc:messagePortA2); 
+		connect(mtc:messagePortA2,mtc:messagePortA3); // Error: this is not allowed
+	}
+
+	control{
+		execute(TC_NegSem_0901_Communication_ports_003());
+	}
+
+}

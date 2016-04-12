@@ -1,0 +1,31 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.1.2.2, Assign values to list of types restricted boolean value.
+ ** @verdict  pass accept, ttcn3verdict:pass
+ ***************************************************/
+module Sem_06010202_ListOfTypes_008 {
+    type boolean MyBoolean1 (false);
+	type boolean MyBoolean2 (true);
+	type boolean MyBoolean_1_2 (MyBoolean1,MyBoolean2);	
+
+    type component GeneralComp {}
+    
+    testcase TC_Sem_06010202_ListOfTypes_008() runs on GeneralComp {
+        var MyBoolean_1_2 v_b;
+        v_b := false;
+		setverdict(pass);
+    }
+    
+    control{
+        execute(TC_Sem_06010202_ListOfTypes_008());
+    }
+}

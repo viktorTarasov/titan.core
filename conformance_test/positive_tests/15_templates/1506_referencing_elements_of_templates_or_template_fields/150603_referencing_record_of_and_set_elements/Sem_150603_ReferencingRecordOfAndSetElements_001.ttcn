@@ -1,0 +1,43 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:15.6.3, Ensure that assignment of an anyvalue on the right hand side yields an anyvalue in the context of record of.
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+module Sem_150603_ReferencingRecordOfAndSetElements_001 {
+
+    type component GeneralComp { }
+
+    type record of integer RoI;
+
+    testcase TC_Sem_150603_ReferencingRecordOfAndSetElements_001() runs on GeneralComp {
+        var template RoI m_one;
+        var template RoI m_two;
+	
+        m_one := {0,?,2};
+        m_two := {0,1,2};
+        m_two[1] := m_one[1];
+	
+        if (match(5,m_two[1])) {
+            setverdict(pass);
+        } else {
+            setverdict(fail);
+        }
+    }
+
+    control{
+        execute(TC_Sem_150603_ReferencingRecordOfAndSetElements_001());
+    }
+
+
+
+}

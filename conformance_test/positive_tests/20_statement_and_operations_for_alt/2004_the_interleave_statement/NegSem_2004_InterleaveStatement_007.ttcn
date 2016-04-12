@@ -1,0 +1,52 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:20.4, stop inside interleave
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirement is tested:
+// Control transfer statements for, while, do-while, goto, activate, 
+// deactivate, stop, repeat, return, direct call of altsteps as alternatives
+// and (direct and indirect) calls of user-defined functions, which include 
+// reception statements, shall not be used in interleave statements.
+
+module NegSem_2004_InterleaveStatement_007 {
+
+    type port MyPort message {
+        inout charstring
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port MyPort p;
+    }    
+    
+    testcase TC_NegSem_2004_InterleaveStatement_007() runs on GeneralComp {
+
+		connect(self:p, self:p);
+
+        p.send(charstring:"foo");
+        p.send(charstring:"bar");
+    
+        interleave {
+            [] p.receive(charstring:"bar") {
+                setverdict(pass);
+                stop;
+            }
+            [] p.receive(charstring:"foo") {
+            }
+        }
+    }
+
+    control{
+        execute(TC_NegSem_2004_InterleaveStatement_007());
+    }
+}

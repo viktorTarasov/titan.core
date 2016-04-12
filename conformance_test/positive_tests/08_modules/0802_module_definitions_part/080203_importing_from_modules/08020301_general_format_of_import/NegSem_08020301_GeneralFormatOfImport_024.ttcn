@@ -1,0 +1,38 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:8.2.3.1, Verify that identifiers of signatures are not imported together with signature templates
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The TTCN-3 import mechanism distinguishes between the identifier of a referenced 
+// definition and the information necessary for the usage of a referenced definition 
+// within the imported definition. For the usage, the identifier of a referenced 
+// definition is not required and therefore not imported automatically.
+// Table 8:
+// Possible referenced definitions for a signature template: signatures
+
+module NegSem_08020301_GeneralFormatOfImport_024 {
+	import from NegSem_08020301_GeneralFormatOfImport_024_import { template s_test };
+	// f_test should be undefined, because it is not automatically imported
+	template S s_test2 := { p := ? }
+
+	type component GeneralComp {}
+
+	testcase TC_NegSem_08020301_GeneralFormatOfImport_024() runs on GeneralComp {	
+		setverdict(pass); 
+	}
+
+ 	control 
+	{ execute(TC_NegSem_08020301_GeneralFormatOfImport_024()); }
+}
+

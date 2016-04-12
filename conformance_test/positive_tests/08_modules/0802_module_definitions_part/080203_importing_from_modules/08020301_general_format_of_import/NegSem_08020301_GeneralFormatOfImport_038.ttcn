@@ -1,0 +1,27 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:8.2.3.1, Verify that definition from inside an imported function cannot be referenced
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Restriction f:
+// When importing a function, altstep or test case the corresponding behaviour 
+// specifications and all definitions used inside the behaviour specifications 
+// remain invisible for the importing module.
+
+module NegSem_08020301_GeneralFormatOfImport_038 {
+	import from NegSem_08020301_GeneralFormatOfImport_038_import { function f_test };
+	// c_test should be undefined, because it is invisible for the importing module
+	const integer c_test2 := c_test;
+}
+
