@@ -15,6 +15,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Solaris 10 on x86 may define ERR in /usr/include/sys/regset.h depending on compiler and flags.
+// Workaround enum conflict with undef.
+#undef ERR
+
 void string_chain_add(string_chain_t **ec, char *s)
 {
   string_chain_t *i = *ec, *new_ec;
