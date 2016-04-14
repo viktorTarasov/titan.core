@@ -37,4 +37,4 @@ module NegSem_160102_predefined_functions_032 {
 
 	}
 
-}
+} with { encode "RAW"}

@@ -18,11 +18,17 @@
 
 module Syn_060207_arrays_001 {
 
+	type component GeneralComp {}
+
     const integer c_arr[2] := {0, 1};
-    modulepar integer PX_ARR[3];
+    //modulepar integer PX_ARR[3];
     
+	testcase TC_Syn_060207_arrays_001() runs on GeneralComp 
+	{ setverdict(pass);	}
+
 	control {
 		var integer v_arr[5], v_noarr, v_arr2[2];
+		execute(TC_Syn_060207_arrays_001());
 	}
 
 }

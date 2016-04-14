@@ -1907,7 +1907,7 @@ module NegSem_24_toplevel_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: An evaluatable constant value was expected instead of operation `getverdict\(\)'
+error: An evaluable constant value was expected instead of operation `getverdict\(\)'
 <END_RESULT>
 
 <END_TC>
@@ -3759,7 +3759,7 @@ module NegSem_2602_TheControlPart_027 {
 error: Component operation is not allowed in the control part
 <END_RESULT>
 <RESULT COUNT 1>
-error: Invalid field reference `p': type `@NegSem_2602_TheControlPart_027.MTCComp' does not have fields
+error: Referencing fields of a component is not allowed
 <END_RESULT>
 
 <END_TC>

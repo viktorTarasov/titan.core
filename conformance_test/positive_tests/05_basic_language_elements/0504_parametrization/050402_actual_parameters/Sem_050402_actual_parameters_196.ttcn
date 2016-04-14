@@ -9,7 +9,7 @@
  *   Adrien Kirjak – initial implementation
  *
  ** @version  0.0.1
- ** @purpose  1:5.4.2, verify that the third part of the Example 3 can be executed
+ ** @purpose  1:5.4.2, verify that the second part of the Example 3 can be executed
  ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
 
