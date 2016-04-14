@@ -173,6 +173,13 @@ static void __attribute((constructor)) init(void) {
 #define SKIP_FRAMES 1
 #endif
 
+// TODO: Values for __x86_64 are only guesses, not tested.
+#if defined(__x86_64) 
+#define FLUSHWIN()
+#define FRAME_PTR_INDEX 7
+#define SKIP_FRAMES 1
+#endif
+
 #if defined(ppc) || defined(__ppc)
 #define FLUSHWIN()
 #define FRAME_PTR_INDEX 0
