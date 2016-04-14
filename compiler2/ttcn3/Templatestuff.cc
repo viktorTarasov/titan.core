@@ -1,10 +1,23 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Cserveni, Akos
+ *   Feher, Csaba
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Tatarka, Gabor
+ *
+ ******************************************************************************/
 #include "../../common/dbgnew.hh"
 #include "Templatestuff.hh"
 #include "../Identifier.hh"
@@ -116,10 +129,10 @@ namespace Ttcn {
     return str;
   }
 
-  char *ValueRange::rearrange_init_code(char *str)
+  char *ValueRange::rearrange_init_code(char *str, Common::Module* usage_mod)
   {
-    if (min_v) str = min_v->rearrange_init_code(str);
-    if (max_v) str = max_v->rearrange_init_code(str);
+    if (min_v) str = min_v->rearrange_init_code(str, usage_mod);
+    if (max_v) str = max_v->rearrange_init_code(str, usage_mod);
     return str;
   }
 
@@ -752,12 +765,12 @@ namespace Ttcn {
     return str;
   }
 
-  char *LengthRestriction::rearrange_init_code(char *str)
+  char *LengthRestriction::rearrange_init_code(char *str, Common::Module* usage_mod)
   {
     if (is_range) {
-      str = range.lower->rearrange_init_code(str);
-      if (range.upper) str = range.upper->rearrange_init_code(str);
-    } else str = single->rearrange_init_code(str);
+      str = range.lower->rearrange_init_code(str, usage_mod);
+      if (range.upper) str = range.upper->rearrange_init_code(str, usage_mod);
+    } else str = single->rearrange_init_code(str, usage_mod);
     return str;
   }
 

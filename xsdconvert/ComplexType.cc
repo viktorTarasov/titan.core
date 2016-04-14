@@ -1,10 +1,19 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Beres, Szabolcs
+ *   Godar, Marton
+ *   Ormandi, Matyas
+ *   Raduly, Csaba
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
 #include "ComplexType.hh"
 
 #include "GeneralFunctions.hh"
@@ -26,6 +35,7 @@ ComplexType::ComplexType(XMLParser * a_parser, TTCN3Module * a_module, Construct
 , fromAll(false)
 , max_alt(0)
 , skipback(0)
+, list(false)
 , lastType()
 , actualPath(empty_string)
 , actfield(this)
@@ -53,6 +63,7 @@ ComplexType::ComplexType(ComplexType & other)
 , fromAll(other.fromAll)
 , max_alt(other.max_alt)
 , skipback(other.skipback)
+, list(other.list)
 , lastType(other.lastType)
 , actualPath(other.actualPath)
 , actfield(this)
@@ -100,6 +111,7 @@ ComplexType::ComplexType(ComplexType * other)
 , fromAll(false)
 , max_alt(0)
 , skipback(0)
+, list(false)
 , lastType()
 , actualPath(empty_string)
 , actfield(this)
@@ -129,6 +141,7 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
 , fromAll(false)
 , max_alt(0)
 , skipback(0)
+, list(false)
 , lastType()
 , actualPath(empty_string)
 , actfield(this)
@@ -571,6 +584,13 @@ void ComplexType::loadWithValues() {
       }
       break;
     case n_list:
+      if (parent != NULL && parent->basefield == this) {
+        parent->list = true;
+        parent->SimpleType::loadWithValues();
+        parent->basefield = NULL;
+        setInvisible();
+        break;
+      }
     case n_length:
     case n_minLength:
     case n_maxLength:
@@ -605,8 +625,16 @@ void ComplexType::modifyValues() {
   if (xsdtype == n_sequence) {
     skipback = skipback - 1;
   }
+  
+  //embedded simpletype with list in element
+  if(xsdtype == n_simpleType && list) {
+    list = false;
+    return;
+  }
+  
 
-  if ((xsdtype == n_element || 
+  if ( parent != NULL && 
+      (xsdtype == n_element || 
        xsdtype == n_complexType || 
        xsdtype == n_complexContent || 
        xsdtype == n_all || 
@@ -617,11 +645,10 @@ void ComplexType::modifyValues() {
        xsdtype == n_attributeGroup || 
        xsdtype == n_extension || 
        xsdtype == n_restriction || 
-       xsdtype == n_simpleType || 
+       (xsdtype == n_simpleType && !list) || 
        xsdtype == n_simpleContent ||
        (xsdtype == n_sequence && skipback < 0)
-      ) 
-      && parent != NULL) {
+      )) {
     if (!tagNames.empty() && tagNames.back() == parser->getParentTagName()) {
       if (nillable && tagNames.back() == n_element) {
         parent->modifyValues();
@@ -2086,3 +2113,4 @@ Mstring ComplexType::findRoot(const BlockValue block_value, SimpleType* elem, co
     return empty_string;
   }
 }
+

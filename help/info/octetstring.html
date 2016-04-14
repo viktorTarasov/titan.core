@@ -1,11 +1,18 @@
 <!--
- Copyright (c) 2000-2015 Ericsson Telecom AB
-
+ Copyright (c) 2000-2016 Ericsson Telecom AB
  All rights reserved. This program and the accompanying materials
  are made available under the terms of the Eclipse Public License v1.0
  which accompanies this distribution, and is available at
  http://www.eclipse.org/legal/epl-v10.html
- -->
+
+ Contributors:
+  Baji, Laszlo
+  Balasko, Jeno
+  Csorba, Mate
+  Farkas, Laszlo
+  Forstner, Matyas
+  Szabados, Kristof
+-->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -168,7 +175,7 @@ string).</p>
 <p>The constant called c_laenge will have the value 6 corresponding to the number of octets in the string .</p>
 <hr align="left" width="50%">
 <p><a name="oct2char">Example 7f</a>:
-<p><font face="Courier New">const charstring c_specific := oct2char (’4469707379’O);<br>
+<p><font face="Courier New">const charstring c_specific := oct2char (â4469707379âO);<br>
 </font>
 <p>The constant called c_specific will contain the string &quot;Dipsy&quot; because the resulting character string will have the same length as the incoming octet string. The octets are
 interpreted as ISO/IEC 646 [8] codes (according to the IRV) and the resulting characters are stored in the returned string. Octet values higher than 7F cause an error.</p>

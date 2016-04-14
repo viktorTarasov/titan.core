@@ -1,14 +1,23 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Beres, Szabolcs
+ *
+ ******************************************************************************/
 #include "config_preproc.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+// Solaris 10 on x86 may define ERR in /usr/include/sys/regset.h depending on compiler and flags.
+// Workaround enum conflict with undef.
+#undef ERR
 
 void string_chain_add(string_chain_t **ec, char *s)
 {

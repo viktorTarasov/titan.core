@@ -1,0 +1,36 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:19.1, Ensure that the IUT properly evaluates assignment statements
+ ** @verdict  pass  reject
+ ***************************************************/
+module NegSyn_1901_assignments_001 {
+	
+	type component GeneralComp {	
+	}
+	
+	testcase TC_NegSyn_1901_assignments_001 () runs on GeneralComp system GeneralComp {
+	 	var integer v_i;
+	 	var integer v_j;
+	 	var integer v_k;
+	 	v_i:=1;	
+	 	v_k:=(v_j:=v_i);	//such sequential assignments are not allowed by the syntax
+	 
+	}
+
+
+	control{
+
+		execute(TC_NegSyn_1901_assignments_001());
+
+	}
+
+}

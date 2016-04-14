@@ -1,0 +1,32 @@
+/***************************************************
+ ** @author   STF 451, re-numbering done by STF 470 and 487
+ ** @version  0.0.1
+ ** @desc     Test cases for clause 6.2                     
+ ** @purpose  1:6.2, Ensure that assignments with "implicit omit" attribute are correctly handled
+ ** @verdict  pass reject
+ ***************************************************/
+module NegSem_060201_RecordTypeValues_002 {
+
+	type component GeneralComp {	    	    
+	}
+
+	 type record R {
+	  	integer f1,
+	  	integer f2 optional,
+	  	integer f3,
+	  	integer f4 optional,
+	  	integer f5 optional
+	 }  
+	 
+	testcase TC_NegSem_060201_RecordTypeValues_002() runs on GeneralComp {
+
+	 	var R v_assigned := { 1, 2 } with { optional "implicit omit" }		
+		//rejected since f3 stays undefined
+	
+	}
+
+	control {
+		execute(TC_NegSem_060201_RecordTypeValues_002());
+	}
+
+}

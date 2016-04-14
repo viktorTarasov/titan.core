@@ -1,10 +1,26 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Delic, Adam
+ *   Feher, Csaba
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Lovassy, Arpad
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Zalanyi, Balazs Andor
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #if defined(LINUX) && ! defined(_GNU_SOURCE)
   // in order to get the prototype of non-standard strsignal()
 # define _GNU_SOURCE
@@ -2113,6 +2129,12 @@ void TTCN_Runtime::setverdict_internal(verdicttype new_value,
       TTCN_Logger::log_setverdict(new_value, old_verdict, local_verdict);
     else TTCN_Logger::log_setverdict(new_value, old_verdict, local_verdict, reason, reason);
   }
+  if (new_value == FAIL) {
+    ttcn3_debugger.breakpoint_entry(TTCN3_Debugger::SBP_FAIL_VERDICT);
+  }
+  else if (new_value == ERROR) {
+    ttcn3_debugger.breakpoint_entry(TTCN3_Debugger::SBP_ERROR_VERDICT);
+  }
 }
 
 void TTCN_Runtime::set_begin_controlpart_command(const char *new_command)
@@ -2260,9 +2282,6 @@ void TTCN_Runtime::process_create_mtc()
       "state.");
     return;
   }
-  
-  // let the HC's TTCN-3 Profiler know of the MTC
-  ttcn3_prof.add_component(MTC_COMPREF);
 
   // clean Emergency log buffer before fork, to avoid duplication
   TTCN_Logger::ring_buffer_dump(false);
@@ -2283,6 +2302,8 @@ void TTCN_Runtime::process_create_mtc()
     TTCN_Logger::log_mtc_created(mtc_pid);
     add_component(MTC_COMPREF, mtc_pid);
     successful_process_creation();
+    // let the HC's TTCN-3 Profiler know of the MTC
+    ttcn3_prof.add_child_process(mtc_pid);
   } else {
     // fork() was successful, this code runs on the child process (MTC)
     // The inherited epoll fd has to be closed first, and then the mc fd
@@ -2308,9 +2329,6 @@ void TTCN_Runtime::process_create_ptc(component component_reference,
       "state.");
     return;
   }
-  
-  // let the HC's TTCN-3 Profiler know of this new PTC
-  ttcn3_prof.add_component(component_reference);
 
   // clean Emergency log buffer before fork, to avoid duplication
   TTCN_Logger::ring_buffer_dump(false);
@@ -2335,6 +2353,8 @@ void TTCN_Runtime::process_create_ptc(component component_reference,
     COMPONENT::register_component_name(component_reference,
       par_component_name);
     successful_process_creation();
+    // let the HC's TTCN-3 Profiler know of this new PTC
+    ttcn3_prof.add_child_process(ptc_pid);
   } else {
     // fork() was successful, this code runs on the child process (PTC)
     // The inherited epoll fd has to be closed first, and then the mc fd

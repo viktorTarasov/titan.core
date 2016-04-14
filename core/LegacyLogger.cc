@@ -1,10 +1,21 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Delic, Adam
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szalai, Gabor
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #include "LegacyLogger.hh"
 
 #include "TitanLoggerApi.hh"
@@ -71,8 +82,8 @@ LegacyLogger::LegacyLogger()
   format_t_present_(false), current_filename_(NULL)
 {
   if (myself != 0) {
-    // Whoa, dÈj‡ vu!
-    // A dÈj‡ vu is usually a glitch in the Matrix.
+    // Whoa, d√©j√† vu!
+    // A d√©j√† vu is usually a glitch in the Matrix.
     // It happens when they change something.
     fputs("Only one LegacyLogger allowed! Aborting.\n", stderr);
     abort(); // Don't use TTCN_error. Debugging infinite recursion is not fun.

@@ -1,10 +1,33 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   
+ *   >
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Delic, Adam
+ *   Forstner, Matyas
+ *   Koppany, Csaba
+ *   Kovacs, Ferenc
+ *   Kremer, Peter
+ *   Lovassy, Arpad
+ *   Pandi, Krisztian
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Bence Janos
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szalay, Akos
+ *   Zalanyi, Balazs Andor
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1728,8 +1751,9 @@ static void print_makefile(struct makefile_struct *makefile)
       "# The following make commands are available:\n"
       "# - make, make all      Builds the %s.\n"
       "# - make archive        Archives all source files.\n"
-      "# - make check          Checks the semantics of TTCN-3 and ASN.1 "
-      "modules.\n"
+      "# - make check          Checks the semantics of TTCN-3 and ASN.1"
+      "modules.\n"       
+      "# - make port           Generates port skeletons.\n"
       "%s" // clean:
       "%s" //clean-all
       "# - make compile        Translates TTCN-3 and ASN.1 modules to C++.\n"
@@ -1767,7 +1791,7 @@ static void print_makefile(struct makefile_struct *makefile)
             "#\n"
             "# Do NOT touch this line...\n"
             "#\n"
-            ".PHONY: all shared_objects executable library objects check clean dep archive", fp);
+            ".PHONY: all shared_objects executable library objects check port clean dep archive", fp);
       if (makefile->preprocess) fputs(" preprocess", fp);
       if (add_refd_prjs) {
         fprintf(fp, "\\\n referenced-all referenced-shared_objects referenced-executable referenced-library referenced-objects referenced-check"
@@ -3312,6 +3336,29 @@ static void print_makefile(struct makefile_struct *makefile)
           "$(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
           "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)", fp);
         }
+        fprintf(fp, "\n\n"
+        "port: $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+        "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
+        "%s\n"
+        "\t$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) ",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+        makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"");
+        if (makefile->gnu_make) {
+          if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
+            fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+                        "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
+                        "%s\n",
+                    makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+                    makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"");
+          else
+            fputs("$^", fp);
+        }
+        else {
+          fputs("\\\n"
+          "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
+          "\t$(PREPROCESSED_TTCN3_MODULES) "
+          "$(BASE_PREPROCESSED_TTCN3_MODULES) \n", fp);
+        }
         if (makefile->linkingStrategy && makefile->hierarchical) {
           fputs("\n\n"
           "update: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
@@ -3383,6 +3430,22 @@ static void print_makefile(struct makefile_struct *makefile)
           fputs("\\\n"
           "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
           "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)", fp);
+        }
+        
+        fprintf(fp, "\n\n"
+        "port: $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\n"
+        "\t$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) ",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"");
+        if (makefile->gnu_make) {
+          if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
+            fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\n",
+                    makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"");
+          else
+            fputs("$^", fp);
+        }
+        else {
+          fputs("\\\n"
+          "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \n", fp);
         }
 
         if (makefile->linkingStrategy && makefile->hierarchical) {
@@ -3471,6 +3534,19 @@ static void print_makefile(struct makefile_struct *makefile)
               "\t$(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) $(ASN1_MODULES)",
               fp);
       }
+      
+      fputs("\n\n", fp);
+      fprintf(fp, "port: $(TTCN3_MODULES) ");
+      if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
+      fputs("\n", fp);
+      fputs("\t$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) ", fp);
+      if (makefile->gnu_make) fputs("$^", fp);
+      else {
+        fputs("\\\n"
+              "\t$(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES)",
+              fp);
+      }
+      
       if (makefile->profiled_file_list) {
         fputs("\n\ncompile:: $(PROFILED_FILE_LIST)\n"
               "\ttouch $(TTCN3_MODULES) ", fp);
@@ -3551,7 +3627,7 @@ static void print_makefile(struct makefile_struct *makefile)
     if (makefile->gcc_dep) {
       fprintf(fp, " \n\n"
         "ifeq ($(findstring n,$(MAKEFLAGS)),)\n"
-        "ifeq ($(filter clean%s check compile archive diag%s,$(MAKECMDGOALS)),)\n"
+        "ifeq ($(filter clean%s check port compile archive diag%s,$(MAKECMDGOALS)),)\n"
         "-include $(DEPFILES)\n"
         "endif\n"
         "endif", 
@@ -4265,26 +4341,26 @@ int main(int argc, char *argv[])
     ERROR("Using the '-I' option requires use of the '-t' option.");
     error_flag = TRUE;
   }
-
+  
   for (size_t i = 0; i < n_search_paths; i++) {
-    boolean is_abs_path =
+    boolean is_abs_path = 
 #if defined WIN32 && defined MINGW
-        /* On native Windows the absolute path name shall begin with
-         * a drive letter, colon and backslash */
-        (((search_paths[i][0] < 'A' || search_paths[i][0] > 'Z') &&
-          (search_paths[i][0] < 'a' || search_paths[i][0] > 'z')) ||
-         search_paths[i][1] != ':' || search_paths[i][2] != '\\');
+	/* On native Windows the absolute path name shall begin with
+	 * a drive letter, colon and backslash */
+	(((search_paths[i][0] < 'A' || search_paths[i][0] > 'Z') &&
+	  (search_paths[i][0] < 'a' || search_paths[i][0] > 'z')) ||
+	 search_paths[i][1] != ':' || search_paths[i][2] != '\\');
 #else
-        /* On UNIX-like systems the absolute path name shall begin with
-         * a slash */
-        search_paths[i][0] != '/';
+	/* On UNIX-like systems the absolute path name shall begin with
+	 * a slash */
+	search_paths[i][0] != '/';
 #endif
     if (is_abs_path) {
       ERROR("The path after the -I flag must be an absolute path.");
       error_flag = TRUE;
     }
   }
-
+  
   if (error_flag) {
     usage();
     return EXIT_FAILURE;

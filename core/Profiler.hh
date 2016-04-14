@@ -1,14 +1,20 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
 
 #ifndef PROFILER_HH
 #define PROFILER_HH
 
+#include <signal.h>
 #include "ProfilerTools.hh"
 
 /** This class performs profiling and code coverage on lines and functions in
@@ -56,11 +62,11 @@ public:
   /** Returns true if the profiler is currently running (not stopped) */
   boolean is_running() const;
   
-  /** Stores the component reference of a newly created PTC or MTC (in parallel mode only) */
-  void add_component(component p_comp_ref);
+  /** Stores the PID of a newly created PTC or MTC (in parallel mode only) */
+  void add_child_process(pid_t p_pid);
 
   /** Adds the data from the database file to the local database */
-  void import_data(component p_comp_ref = NULL_COMPREF);
+  void import_data(pid_t p_pid = 0);
   /** Writes the local database to the database file (overwrites the file) */
   void export_data();
   
@@ -127,9 +133,9 @@ private:
   Profiler_Tools::profiler_db_t profiler_db;
   /** The stack length at the previously executed line */
   int prev_stack_len;
-  /** Contains the component references of the other processes (only relevant in the Host
+  /** Contains the PIDs of the child processes (only relevant in the Host
     * Controller's process, in parallel mode) */
-  Vector<component> component_list;
+  Vector<pid_t> pid_list;
 };
 
 /** The global TTCN3_Profiler object

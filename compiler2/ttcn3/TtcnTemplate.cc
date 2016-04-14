@@ -1,10 +1,22 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Delic, Adam
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Zalanyi, Balazs Andor
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #include "TtcnTemplate.hh"
 #include "../Identifier.hh"
 #include "Templatestuff.hh"
@@ -2996,7 +3008,7 @@ end:
       break;
     case SPECIFIC_VALUE:
       if (get_code_section() == CS_POST_INIT)
-        str = u.specific_value->rearrange_init_code(str);
+        str = u.specific_value->rearrange_init_code(str, my_scope->get_scope_mod_gen());
       str = u.specific_value->generate_code_init(str, name);
       break;
     case TEMPLATE_REFD:
@@ -3028,7 +3040,7 @@ end:
       break;
     case VALUE_RANGE:
       if (get_code_section() == CS_POST_INIT)
-        str = u.value_range->rearrange_init_code(str);
+        str = u.value_range->rearrange_init_code(str, my_scope->get_scope_mod_gen());
       str = u.value_range->generate_code_init(str, name);
       break;
     case SUPERSET_MATCH:
@@ -3048,7 +3060,7 @@ end:
     }
     if (length_restriction) {
       if (get_code_section() == CS_POST_INIT)
-        str = length_restriction->rearrange_init_code(str);
+        str = length_restriction->rearrange_init_code(str, my_scope->get_scope_mod_gen());
       str = length_restriction->generate_code_init(str, name);
     }
     if (is_ifpresent) str = mputprintf(str, "%s.set_ifpresent();\n", name);
@@ -3062,7 +3074,7 @@ end:
   {
     switch (templatetype) {
     case SPECIFIC_VALUE:
-      str = u.specific_value->rearrange_init_code(str);
+      str = u.specific_value->rearrange_init_code(str, usage_mod);
       break;
     case TEMPLATE_REFD:
       str = rearrange_init_code_refd(str, usage_mod);
@@ -3090,12 +3102,12 @@ end:
           ->rearrange_init_code(str, usage_mod);
       break;
     case VALUE_RANGE:
-      str = u.value_range->rearrange_init_code(str);
+      str = u.value_range->rearrange_init_code(str, usage_mod);
       break;
     default:
       break;
     }
-    if (length_restriction) str = length_restriction->rearrange_init_code(str);
+    if (length_restriction) str = length_restriction->rearrange_init_code(str, usage_mod);
     return str;
   }
 
@@ -4089,7 +4101,7 @@ compile_time:
       // the size increase due to the runtime expansion of "all from".
       // In nof_ts, each "all from" appears as 1, but actually contributes
       // more. So the increase (by which all elements after the "all from"
-      // are shifted) is:    target_of_all_from.n_elem()-1
+      // are shifted) is:Â    target_of_all_from.n_elem()-1
       // This needs to be accumulated for each "all from".
       for (size_t vi = 0; vi < nof_ts; ++vi) {
         Template *t = u.templates->get_t_byIndex(vi);
@@ -4504,7 +4516,7 @@ compile_time:
 
   char *Template::rearrange_init_code_invoke(char *str, Common::Module* usage_mod)
   {
-    str = u.invoke.v->rearrange_init_code(str);
+    str = u.invoke.v->rearrange_init_code(str, usage_mod);
     str = u.invoke.ap_list->rearrange_init_code(str, usage_mod);
     return str;
   }

@@ -1,10 +1,16 @@
-###############################################################################
-# Copyright (c) 2000-2015 Ericsson Telecom AB
+##############################################################################
+# Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
-###############################################################################
+#
+# Contributors:
+#   
+#   Balasko, Jeno
+#   Kovacs, Ferenc
+#
+##############################################################################
 import os, re, types, time
 import utils
 
@@ -1283,4 +1289,3 @@ class StatHandler:
          overall_percent, self.buzzword(overall_percent), self._period_started,
          self._period_score, self._period_score_all, period_percent, self.buzzword(period_percent))
     return ret_val
-  

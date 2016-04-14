@@ -132,4 +132,4 @@ Compressed update site and SHA512 checksum:
 ## Miscellaneous projects: 
 
 * https://github.com/eclipse/titan.misc
-(VSBOT, SIP_ETSI, more to come...) 
+(VSBOT, SIP_ETSI,DIAMETER_Rx_ETSI, CoAP and MQTT protocol modules for IOT,  more to come...) 

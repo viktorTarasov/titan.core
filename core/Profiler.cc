@@ -1,10 +1,15 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
 
 #include "Profiler.hh"
 #include <stdio.h>
@@ -12,9 +17,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <sys/wait.h>
 #include "memory.h"
 #include "Runtime.hh"
-#include "Component.hh"
+#include "Logger.hh"
 
 ////////////////////////////////////
 ////////// TTCN3_Profiler //////////
@@ -42,8 +48,8 @@ TTCN3_Profiler::~TTCN3_Profiler()
     if (TTCN_Runtime::is_hc()) {
       // import the data gathered by the other processes (the import function
       // waits for them to finish exporting)
-      for (size_t i = 0; i < component_list.size(); ++i) {
-        import_data(component_list[i]);
+      for (size_t i = 0; i < pid_list.size(); ++i) {
+        import_data(pid_list[i]);
       }
     }
     export_data();
@@ -178,32 +184,31 @@ boolean TTCN3_Profiler::is_running() const
   return !stopped;
 }
 
-void TTCN3_Profiler::add_component(component p_comp_ref)
+void TTCN3_Profiler::add_child_process(pid_t p_pid)
 {
-  component_list.push_back(p_comp_ref);
+  pid_list.push_back(p_pid);
 }
 
-void TTCN3_Profiler::import_data(component p_comp_ref /* = NULL_COMPREF */)
+void TTCN3_Profiler::import_data(pid_t p_pid /* = 0 */)
 {
   char* file_name = NULL;
-  if (NULL_COMPREF == p_comp_ref) {
+  if (0 == p_pid) {
     // this is the main database file (from the previous run), no suffix needed
     file_name = database_filename;
   }
-  else if (MTC_COMPREF == p_comp_ref) {
-    // this is the database for the MTC, suffix the file name with "mtc"
-    file_name = mprintf("%s.mtc", database_filename);
-  }
   else {
-    // this is the database for one of the PTCs, suffix the file name with the
-    // component reference
-    file_name = mprintf("%s.%d", database_filename, p_comp_ref);
+    // this is the database for one of the PTCs or the MTC,
+    // suffix the file name with the component's PID
+    file_name = mprintf("%s.%d", database_filename, p_pid);
+    
+    // wait for the process to finish
+    int status = 0;
+    waitpid(p_pid, &status, 0);
   }
   
-  Profiler_Tools::import_data(profiler_db, file_name, NULL_COMPREF != p_comp_ref,
-    TTCN_warning);
+  Profiler_Tools::import_data(profiler_db, file_name, TTCN_warning);
   
-  if (NULL_COMPREF != p_comp_ref) {
+  if (0 != p_pid) {
     // the process-specific database file is no longer needed
     remove(file_name);
     Free(file_name);
@@ -217,14 +222,10 @@ void TTCN3_Profiler::export_data()
     // this is the main database file, no suffix needed
     file_name = database_filename;
   }
-  else if (TTCN_Runtime::is_mtc()) {
-    // this is the database for the MTC, suffix the file name with "mtc"
-    file_name = mprintf("%s.mtc", database_filename);
-  }
   else {
-    // this is the database for one of the PTCs, suffix the file name with the
-    // component reference
-    file_name = mprintf("%s.%d", database_filename, (component)self);
+    // this is the database for one of the PTCs or the MTC,
+    // suffix the file name with the component's PID
+    file_name = mprintf("%s.%d", database_filename, (int)getpid());
   }
   
   Profiler_Tools::export_data(profiler_db, file_name, disable_profiler,

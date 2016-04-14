@@ -1,10 +1,23 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Delic, Adam
+ *   Forstner, Matyas
+ *   Herrlin, Thomas
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szalai, Gabor
+ *
+ ******************************************************************************/
 #include "Error.hh"
 #include "TitanLoggerApi.hh"
 
@@ -157,6 +170,13 @@ static void __attribute((constructor)) init(void) {
 #if defined(i386) || defined(__i386)
 #define FLUSHWIN()
 #define FRAME_PTR_INDEX 3
+#define SKIP_FRAMES 1
+#endif
+
+// TODO: Values for __x86_64 are only guesses, not tested.
+#if defined(__x86_64) 
+#define FLUSHWIN()
+#define FRAME_PTR_INDEX 7
 #define SKIP_FRAMES 1
 #endif
 

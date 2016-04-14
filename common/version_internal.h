@@ -1,10 +1,20 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Godar, Marton
+ *   Kovacs, Ferenc
+ *   Lovassy, Arpad
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *
+ ******************************************************************************/
 #ifndef VERSION_INTERNAL_H
 #define VERSION_INTERNAL_H
 
@@ -249,7 +259,7 @@
 #endif
 
 /* Copyright message */
-#define COPYRIGHT_STRING COMMENT_PREFIX "Copyright (c) 2000-2015 Ericsson Telecom AB"
+#define COPYRIGHT_STRING COMMENT_PREFIX "Copyright (c) 2000-2016 Ericsson Telecom AB"
 
 /* For prefixing the above messages. Default value: empty string. */
 #define COMMENT_PREFIX

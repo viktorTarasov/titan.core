@@ -1,10 +1,21 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Cserveni, Akos
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *
+ ******************************************************************************/
 #ifndef _Ttcn_Templatestuff_HH
 #define _Ttcn_Templatestuff_HH
 
@@ -56,7 +67,7 @@ namespace Ttcn {
     /** Appends the initialization sequence of all (directly or indirectly)
      * referred non-parameterized templates to \a str and returns the resulting
      * string. */
-    char *rearrange_init_code(char *str);
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
     /** Appends the string representation of the value range to \a str. */
     void append_stringRepr(string& str) const;
     virtual void dump(unsigned level) const;
@@ -259,7 +270,7 @@ namespace Ttcn {
     /** Appends the initialization sequence of all (directly or indirectly)
      * referred non-parameterized templates to \a str and returns the resulting
      * string. */
-    char *rearrange_init_code(char *str);
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
     /** Appends the string representation of the length restriction to
      * \a str. */
     void append_stringRepr(string& str) const;

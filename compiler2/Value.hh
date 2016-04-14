@@ -1,10 +1,28 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Bibo, Zoltan
+ *   Cserveni, Akos
+ *   Delic, Adam
+ *   Forstner, Matyas
+ *   Gecse, Roland
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Tatarka, Gabor
+ *   Zalanyi, Balazs Andor
+ *
+ ******************************************************************************/
 #ifndef _Common_Value_HH
 #define _Common_Value_HH
 
@@ -779,7 +797,7 @@ namespace Common {
      *  parameter list of parameterized value references
      *  (e.g. function calls) and in operands of valueof or match
      *  operations. */
-    char *rearrange_init_code(char *str);
+    char *rearrange_init_code(char *str, Common::Module* usage_mod);
     /**
      *  Generates a value for temporary use. Example:
      *

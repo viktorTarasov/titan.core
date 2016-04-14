@@ -1,10 +1,23 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Delic, Adam
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Bence Janos
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #include "Basetype.hh"
 #include "TEXT.hh"
 #include "BER.hh"
@@ -5283,7 +5296,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
           // that it belongs to him
           get_at(field_cnt-1)->XER_decode(*xer_descr(field_cnt-1), reader, flavor | USE_NIL, flavor2 | USE_NIL_PARENT_TAG, 0);
           already_processed = TRUE;
-          continue;
+          break;
         } // type has USE-NIL
         
         if (parent_tag) {
@@ -5365,8 +5378,9 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
       }
 
       i = first_nonattr; // finished with attributes
-      // AdvanceAttribute did MoveToElement. Move into the content (if any).
-      if (!reader.IsEmptyElement()) reader.Read();
+      // AdvanceAttribute did MoveToElement. Move into the content (if any),
+      // except when the reader is already moved in(already_processed).
+      if (!reader.IsEmptyElement() && !already_processed) reader.Read();
     } // end if (own_tag)
     
     /* * * * * * * * Non-attributes (elements) * * * * * * * * * * * */

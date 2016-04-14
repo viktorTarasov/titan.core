@@ -1,0 +1,47 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:9, Ensure that the IUT correctly handles loopback message 
+ ** @verdict  pass accept, ttcn3verdict:pass
+ ***************************************************/
+ 
+// Loopback test: messagePort is a loopback port and sends (2). If receives(2) pass, else failed.
+module Sem_0901_Communication_ports_001{ 
+
+    type port loopbackPort message {
+	  inout integer
+	} with {extension "internal"}
+	
+	type component GeneralComp {	    	    
+		  port loopbackPort messagePort
+	}	
+
+	testcase TC_Sem_0901_Communication_ports_001() runs on GeneralComp {
+	
+		connect(self:messagePort, self:messagePort);
+
+		messagePort.send(2);  //can send also in-line template
+
+			alt {
+			 [] messagePort.receive(2) {
+				setverdict(pass);
+			 }
+			 [] messagePort.receive {
+				setverdict(fail);
+			 }
+			}
+	}
+
+	control{
+		execute(TC_Sem_0901_Communication_ports_001());
+	}
+
+}

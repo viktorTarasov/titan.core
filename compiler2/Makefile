@@ -1,10 +1,30 @@
-###############################################################################
-# Copyright (c) 2000-2015 Ericsson Telecom AB
+##############################################################################
+# Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
-###############################################################################
+#
+# Contributors:
+#   
+#   Baji, Laszlo
+#   Balasko, Jeno
+#   Baranyi, Botond
+#   Cserveni, Akos
+#   Delic, Adam
+#   Feher, Csaba
+#   Forstner, Matyas
+#   Kovacs, Ferenc
+#   Kremer, Peter
+#   Ormandi, Matyas
+#   Raduly, Csaba
+#   Szabados, Kristof
+#   Szabo, Janos Zoltan – initial implementation
+#   Szalai, Gabor
+#   Tatarka, Gabor
+#   Zalanyi, Balazs Andor
+#
+##############################################################################
 # Makefile for the integrated (TTCN-3 and ASN.1) compiler
 # and the makefile generator
 
@@ -66,7 +86,8 @@ PredefFunc.cc AST.cc Code.cc Constraint.cc CompilerError.cc \
 CompField.cc CompType.cc EnumItem.cc Identifier.cc Int.cc \
 main.cc Real.cc Setting.cc SigParam.cc string.cc subtype.cc Stopwatch.cc \
 Type.cc Type_chk.cc Type_codegen.cc TypeCompat.cc \
-Typestuff.cc ustring.cc Value.cc Valuestuff.cc XerAttributes.cc subtypestuff.cc CodeGenHelper.cc
+Typestuff.cc ustring.cc Value.cc Valuestuff.cc XerAttributes.cc subtypestuff.cc \
+CodeGenHelper.cc DebuggerStuff.cc
 
 MFGEN_SOURCES := makefile.c xpather.cc ProjectGenHelper.cc
 

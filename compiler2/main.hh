@@ -1,10 +1,23 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Delic, Adam
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Kremer, Peter
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *
+ ******************************************************************************/
 #ifndef MAIN_H
 #define MAIN_H
 
@@ -36,7 +49,8 @@ extern boolean generate_skeleton, force_overwrite, include_line_info,
   output_only_linenum, default_as_optional, use_runtime_2, gcc_compat, asn1_xer,
   check_subtype, suppress_context, enable_set_bound_out_param, display_up_to_date,
   implicit_json_encoding, json_refs_for_all_types, force_gen_seof,
-  omit_in_value_list, warnings_for_bad_variants;
+  omit_in_value_list, warnings_for_bad_variants, debugger_active,
+  legacy_unbound_union_fields;
 
 extern const char *expected_platform;
 

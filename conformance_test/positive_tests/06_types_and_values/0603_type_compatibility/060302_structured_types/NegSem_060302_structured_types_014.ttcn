@@ -1,0 +1,44 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.3.2, Ensure that the IUT rejects assignments between incompatible structures 
+ ** @verdict  pass reject
+ ***************************************************/
+
+module NegSem_060302_structured_types_014 {
+
+    type record RecordType {
+        integer  a,
+        integer  b optional,
+        integer  c
+    }
+
+    type record of integer IntegerList;
+
+
+    type component GeneralComp {
+    }
+
+    testcase TC_NegSem_060302_structured_types_014() runs on GeneralComp {
+        
+		var RecordType v_record := { 1, omit, 2};
+		var IntegerList v_IntList;
+		var integer v_array[2];
+    
+        v_array:=v_record;  //assignment between incompatible types
+
+    }
+
+    control{
+        execute(TC_NegSem_060302_structured_types_014());
+    }
+
+}

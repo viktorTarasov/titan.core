@@ -1,0 +1,60 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:B.1.2.6, Ensure that the IUT correctly handles template matching of superset definitions 
+ ** @verdict  pass accept, ttcn3verdict:pass
+ ***************************************************/
+
+ //Restriction c)
+/*The member type of the set of associated with the SuperSet template and the member type of the template in
+the all from clause shall be compatible.*/
+
+module Sem_B010206_superset_004 { 
+
+  	type set of integer SoI;
+
+    type port loopbackPort message {
+	  	inout SoI
+	} with {extension "internal"}
+	
+
+	type component GeneralComp {	    	    
+	  	port loopbackPort messagePort
+	}	
+
+	testcase TC_Sem_B010206_superset_004() runs on GeneralComp {
+
+    	var SoI v_testMessage;
+
+ 		template SoI Template:= {1,2};
+ 		template SoI mw_matchingTemplate:= superset(all from Template);
+  
+ 		v_testMessage:={1,2}; 
+ 
+		connect(self:messagePort, self:messagePort);
+ 		messagePort.send(v_testMessage);
+
+    	alt {
+     		[] messagePort.receive(mw_matchingTemplate) {
+        		setverdict(pass);
+     		}
+     		[] messagePort.receive {
+        		setverdict(fail);
+     		}
+    	}
+	}
+
+	control{
+		execute(TC_Sem_B010206_superset_004());
+	}
+
+}
+ 

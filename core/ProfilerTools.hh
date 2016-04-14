@@ -1,10 +1,15 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
 
 #ifndef PROFILERTOOLS_HH
 #define PROFILERTOOLS_HH
@@ -131,10 +136,9 @@ namespace Profiler_Tools {
   /** Adds the data from the database file to the local database 
     * @param p_db local database
     * @param p_filename database file name
-    * @param p_wait waits for the file to appear if it doesn't exist 
     * @param p_error_function callback function for displaying error messages */
   extern void import_data(profiler_db_t& p_db, const char* p_filename,
-    boolean p_wait, void (*p_error_function)(const char*, ...));
+    void (*p_error_function)(const char*, ...));
   
   /** Writes the local database to the database file (overwrites the file) 
     * @param p_db local database

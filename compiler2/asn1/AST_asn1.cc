@@ -1,10 +1,23 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Delic, Adam
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szalai, Gabor
+ *   Zalanyi, Balazs Andor
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #include "AST_asn1.hh"
 #include "../Identifier.hh"
 #include "../CompilerError.hh"
@@ -15,6 +28,7 @@
 #include "../main.hh"
 #include "../CodeGenHelper.hh"
 #include "../../common/JSON_Tokenizer.hh"
+#include "../DebuggerStuff.hh"
 
 /* defined in asn1p.y */
 extern int asn1_parse_string(const char* p_str);
@@ -516,22 +530,23 @@ namespace Asn {
     // cycle through all type assignments, insert schema segments and references
     // when needed
     for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
-      Common::Assignment* ass = asss->get_ass_byIndex(i);
-      if (Common::Assignment::A_TYPE == ass->get_asstype()) {
-        Asn::Assignment* asn_ass = dynamic_cast<Asn::Assignment*>(ass);
-        // skip parameterized types and their instances
-        if (NULL == asn_ass || NULL == asn_ass->get_ass_pard()) {
-          Type* t = ass->get_Type();
-          if (!t->is_pard_type_instance() && t->has_encoding(Type::CT_JSON)) {
-            // insert type's schema segment
-            t->generate_json_schema(json, false, false);
-            
-            if (json_refs_for_all_types && !json_refs.has_key(t)) {
-              // create JSON schema reference for the type
-              JSON_Tokenizer* json_ref = new JSON_Tokenizer;
-              json_refs.add(t, json_ref);
-              t->generate_json_schema_ref(*json_ref);
-            }
+      Asn::Assignment* asn_ass = dynamic_cast<Asn::Assignment*>(asss->get_ass_byIndex(i));
+      if (asn_ass == NULL || asn_ass->get_ass_pard() != NULL) {
+        // skip parameterized types
+        continue;
+      }
+      if (Common::Assignment::A_TYPE == asn_ass->get_asstype()) {
+        Type* t = asn_ass->get_Type();
+        // skip instances of parameterized types
+        if (!t->is_pard_type_instance() && t->has_encoding(Type::CT_JSON)) {
+          // insert type's schema segment
+          t->generate_json_schema(json, false, false);
+
+          if (json_refs_for_all_types && !json_refs.has_key(t)) {
+            // create JSON schema reference for the type
+            JSON_Tokenizer* json_ref = new JSON_Tokenizer;
+            json_refs.add(t, json_ref);
+            t->generate_json_schema_ref(*json_ref);
           }
         }
       }
@@ -539,6 +554,77 @@ namespace Asn {
     
     // end of type definitions
     json.put_next_token(JSON_TOKEN_OBJECT_END);
+  }
+  
+  void Module::generate_debugger_init(output_struct *output)
+  {
+    // no debugging in ASN.1 modules
+  }
+  
+  char* Module::generate_debugger_global_vars(char* str, Common::Module* current_mod)
+  {
+    for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
+      Asn::Assignment* asn_ass = dynamic_cast<Asn::Assignment*>(asss->get_ass_byIndex(i));
+      if (asn_ass->get_ass_pard() != NULL) {
+        // this check must be done before get_asstype() is called
+        continue;
+      }
+      if (asn_ass->get_asstype() == Common::Assignment::A_CONST) {
+        str = generate_code_debugger_add_var(str, asn_ass, current_mod, "global");
+      }
+    }
+    return str;
+  }
+  
+  void Module::generate_debugger_functions(output_struct *output)
+  {
+    char* str = NULL;
+    for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
+      Asn::Assignment* asn_ass = dynamic_cast<Asn::Assignment*>(asss->get_ass_byIndex(i));
+      if (asn_ass->get_ass_pard() != NULL) {
+        // skip parameterized types
+        // this check must be done before get_asstype() is called
+        continue;
+      }
+      if (Common::Assignment::A_TYPE == asn_ass->get_asstype()) {
+        Type* t = asn_ass->get_Type();
+        if (!t->is_pard_type_instance() && (t->is_structured_type() ||
+            t->get_typetype() == Type::T_ENUM_A ||
+            (t->is_ref() && t->get_type_refd()->is_pard_type_instance()))) {
+          // only structured types and enums are needed
+          // for instances of parameterized types, the last reference, which is
+          // not itself an instance of a parameterized type, holds the type's display name
+          str = mputprintf(str, 
+            "  %sif (!strcmp(p_var.type_name, \"%s\")) {\n"
+            "    ((const %s*)p_var.value)->log();\n"
+            "  }\n"
+            "  else if (!strcmp(p_var.type_name, \"%s template\")) {\n"
+            "    ((const %s_template*)p_var.value)->log();\n"
+            "  }\n"
+            , (str != NULL) ? "else " : ""
+            , t->get_dispname().c_str(), t->get_genname_value(this).c_str()
+            , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
+        }
+      }
+    }
+    if (str != NULL) {
+      // don't generate an empty printing function
+      output->header.class_defs = mputprintf(output->header.class_defs,
+        "/* Debugger printing function for types declared in this module */\n\n"
+        "extern CHARSTRING print_var_%s(const TTCN3_Debugger::variable_t& p_var);\n",
+        get_modid().get_ttcnname().c_str());
+      output->source.global_vars = mputprintf(output->source.global_vars,
+        "\n/* Debugger printing function for types declared in this module */\n"
+        "CHARSTRING print_var_%s(const TTCN3_Debugger::variable_t& p_var)\n"
+        "{\n"
+        "  TTCN_Logger::begin_event_log2str();\n"
+        "%s"
+        "  else {\n"
+        "    TTCN_Logger::log_event_str(\"<unrecognized value or template>\");\n"
+        "  }\n"
+        "  return TTCN_Logger::end_event_log2str();\n"
+        "}\n", get_modid().get_ttcnname().c_str(), str);
+    }
   }
 
   // =================================

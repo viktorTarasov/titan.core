@@ -1,22 +1,20 @@
 ###############################################################################
-# Copyright (c) 2000-2015 Ericsson Telecom AB
+# Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+#   Balasko, Jeno
+#   Lovassy, Arpad
+#
 ###############################################################################
 
 # EDIT THESE LINES TO SET CORRECT JAR LOCATIONS
 
-LIB_DIR_GIT=$HOME/git/titan_playground/jar
-
-# short file name
-JUNIT_JAR=junit.jar
-HAMCREST_JAR=org.hamcrest.core_1.3.0.v201303031735.jar
-
-# full path
-JUNIT_FULL=${LIB_DIR_GIT}/org.junit_4.11.0.v201303080030/${JUNIT_JAR}
-HAMCREST_FULL=${LIB_DIR_GIT}/${HAMCREST_JAR}
+JUNIT_FULL=$HOME/lib/org.junit_4.11.0.v201303080030/junit.jar
+HAMCREST_FULL=$HOME/lib/org.hamcrest.core_1.3.0.v201303031735.jar
 
 #---------------------------------------------------------------------
 # DO NOT EDIT AFTER THIS LINE
@@ -77,6 +75,7 @@ file_exist ${HAMCREST_FULL}
 
 # run test (and build its dependencies if needed)
 ant \
--lib ${JUNIT_FULL} \
--lib ${HAMCREST_FULL} \
+-Djunit.full=${JUNIT_FULL} \
+-Dhamcrest.full=${HAMCREST_FULL} \
 TITAN_Executor_API_test
+

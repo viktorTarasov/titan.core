@@ -1,10 +1,31 @@
-###############################################################################
-# Copyright (c) 2000-2015 Ericsson Telecom AB
+##############################################################################
+# Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
-###############################################################################
+#
+# Contributors:
+#   
+#   >
+#   Baji, Laszlo
+#   Balasko, Jeno
+#   Bene, Tamas
+#   Beres, Szabolcs
+#   Csondes, Tibor
+#   Czimbalmos, Eduard
+#   Delic, Adam
+#   Feher, Csaba
+#   Forstner, Matyas
+#   Gecse, Roland
+#   Kovacs, Ferenc
+#   Kremer, Peter
+#   Raduly, Csaba
+#   Szabados, Kristof
+#   Szabo, Janos Zoltan – initial implementation
+#   Varga, Vilmos
+#
+##############################################################################
 # Makefile for the TTCN-3 Main Controller
 
 TOP := ../..

@@ -1,0 +1,37 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.2
+ ** @purpose  1:26.2, Ensure that the send statements are not allowed in the control part.
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_2602_TheControlPart_015 {
+
+    type port MyPort message {
+        inout charstring
+    } with {extension "internal"}
+
+    type component MTCComp {
+        port MyPort p;
+    }
+
+    function f_createComp() return MTCComp {
+        return  MTCComp.create;
+    }
+
+    control {
+        var MTCComp v_myComp := f_createComp(); // assume create was accepted
+	
+        v_myComp.p.send(charstring:"foobar");
+	
+    }
+
+}

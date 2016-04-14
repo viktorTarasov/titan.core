@@ -1,10 +1,25 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Delic, Adam
+ *   Feher, Csaba
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Ormandi, Matyas
+ *   Raduly, Csaba
+ *   Szabo, Bence Janos
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szalai, Gabor
+ *
+ ******************************************************************************/
 #include "Basetype.hh"
 #include "../common/memory.h"
 #include "Logger.hh"
@@ -1113,7 +1128,7 @@ const TTCN_Typedescriptor_t CHARSTRING_descr_={"charstring", NULL,
   &CHARSTRING_raw_, &CHARSTRING_text_, &CHARSTRING_xer_, &CHARSTRING_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t UNIVERSAL_CHARSTRING_descr_={"universal charstring",
-  NULL, NULL, &UNIVERSAL_CHARSTRING_text_, &UNIVERSAL_CHARSTRING_xer_, &UNIVERSAL_CHARSTRING_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
+  NULL, &UNIVERSAL_CHARSTRING_raw_, &UNIVERSAL_CHARSTRING_text_, &UNIVERSAL_CHARSTRING_xer_, &UNIVERSAL_CHARSTRING_json_, NULL, TTCN_Typedescriptor_t::DONTCARE};
 
 const TTCN_Typedescriptor_t COMPONENT_descr_={"component", NULL, NULL, NULL,
   NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE};

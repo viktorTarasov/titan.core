@@ -1,10 +1,29 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Cserveni, Akos
+ *   Delic, Adam
+ *   Feher, Csaba
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Kremer, Peter
+ *   Ormandi, Matyas
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Bence Janos
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szalai, Gabor
+ *
+ ******************************************************************************/
 #include <string.h>
 #include "datatypes.h"
 #include "../common/memory.h"
@@ -2544,6 +2563,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         "    if(p_td.xer_bits & USE_NIL) {\n"
         "      field_%s.XER_decode(%s_xer_, p_reader, p_flavor | USE_NIL, p_flavor2 | USE_NIL_PARENT_TAG, 0);\n"
         "      already_processed = TRUE;\n"
+        "      break;\n"
         "    } else"
         , sdef->elements[sdef->nElements-1].name
         , sdef->elements[sdef->nElements-1].typegen
@@ -2622,9 +2642,10 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     src = mputstr(src,  " }\n"); /* process (attributes) in (own or parent) tag */
   } /* * * * * * * * * end if(attributes...) * * * * * * * * * * * * */
 
-  src = mputstr(src,
-    "  if ((!omit_tag || parent_tag) && !p_reader.IsEmptyElement()) "
-    "rd_ok = p_reader.Read();\n");
+  src = mputprintf(src,
+    "  if ((!omit_tag || parent_tag) && !p_reader.IsEmptyElement()%s) "
+    "rd_ok = p_reader.Read();\n"
+    , sdef->xerUseNilPossible ? " && !already_processed" : "");
 
   if (sdef->xerEmbedValuesPossible && num_attributes==0) {
     /* EMBED-VALUES possible, but isn't: the first component is a non-special

@@ -1,0 +1,32 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.1.2.3, Assign values to range restricted cahrstring with inclusive bounds.
+ ** @verdict  pass accept, ttcn3verdict:pass
+ ***************************************************/
+module Sem_06010203_Ranges_004 {
+    type charstring MyCharstringRange ("a".."f");
+    
+    type component GeneralComp {}
+    
+    testcase TC_Sem_06010203_Ranges_004() runs on GeneralComp {
+        var MyCharstringRange v_c1;
+        v_c1 := "a";
+        v_c1 := "c";
+        v_c1 := "f";
+        v_c1 := "acdef";
+		setverdict(pass);
+    }
+    
+    control{
+        execute(TC_Sem_06010203_Ranges_004());
+    }
+}

@@ -1,10 +1,31 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Cserveni, Akos
+ *   Czerman, Oliver
+ *   Delic, Adam
+ *   Feher, Csaba
+ *   Forstner, Matyas
+ *   Gecse, Roland
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szalai, Gabor
+ *   Zalanyi, Balazs Andor
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #include <set>
 #include <string>
 #include <sstream>
@@ -794,8 +815,9 @@ namespace Common {
     // pre_init function
     bool has_pre_init = false;
     bool profiled = MOD_TTCN == get_moduletype() && is_file_profiled(get_filename());
+    bool debugged = debugger_active && MOD_TTCN == get_moduletype();
     // always generate pre_init_module if the file is profiled
-    if (output->functions.pre_init || profiled) {
+    if (output->functions.pre_init || profiled || debugged) {
       output->source.static_function_prototypes =
 	mputstr(output->source.static_function_prototypes,
 	  "static void pre_init_module();\n");
@@ -826,6 +848,10 @@ namespace Common {
             "%s::init_ttcn3_profiler();\n"
             "TTCN3_Stack_Depth stack_depth;\n"
             "ttcn3_prof.execute_line(\"%s\", 0);\n", get_modid().get_name().c_str(), get_filename());
+        }
+        if (debugged) {
+          output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+            "%s::init_ttcn3_debugger();\n", get_modid().get_name().c_str());
         }
       }
       output->source.static_function_bodies =
@@ -1543,7 +1569,7 @@ namespace Common {
         "{\n");
       char* function_name = 0;
       int line_no = -1;
-      while(get_profiler_code_line(get_filename(), &function_name, &line_no)) {
+      while (get_profiler_code_line(get_filename(), &function_name, &line_no)) {
         output->source.global_vars = mputprintf(output->source.global_vars,
           "  ttcn3_prof.create_line(ttcn3_prof.get_element(\"%s\"), %d);\n",
           get_filename(), line_no);
@@ -1553,7 +1579,15 @@ namespace Common {
             get_filename(), line_no, function_name);
         }
       }
-      output->source.global_vars = mputstr(output->source.global_vars, "}\n\n");
+      output->source.global_vars = mputstr(output->source.global_vars, "}\n");
+    }
+    /* TTCN-3 debugger:
+       generate the printing function for the types defined in this module
+       and initialize the debugger with this module's global variables,
+       component types and the components' variables */
+    if (debugger_active) {
+      generate_debugger_functions(output);
+      generate_debugger_init(output);
     }
   }
 

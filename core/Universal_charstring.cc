@@ -1,10 +1,26 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Delic, Adam
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Bence Janos
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szalai, Gabor
+ *   Zalanyi, Balazs Andor
+ *
+ ******************************************************************************/
 #include "Universal_charstring.hh"
 
 #include "../common/dbgnew.hh"
@@ -1071,8 +1087,15 @@ void UNIVERSAL_CHARSTRING::encode(const TTCN_Typedescriptor_t& p_td,
     break;}
   case TTCN_EncDec::CT_RAW: {
     TTCN_EncDec_ErrorContext ec("While RAW-encoding type '%s': ", p_td.name);
-    TTCN_EncDec_ErrorContext::error_internal
-      ("No RAW descriptor available for type '%s'.", p_td.name);
+    if(!p_td.raw)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No RAW descriptor available for type '%s'.", p_td.name);
+    RAW_enc_tr_pos rp;
+    rp.level=0;
+    rp.pos=NULL;
+    RAW_enc_tree root(TRUE, NULL, &rp, 1, p_td.raw);
+    RAW_encode(p_td, root);
+    root.put_to_buf(p_buf);
     break;}
   case TTCN_EncDec::CT_TEXT: {
     TTCN_EncDec_ErrorContext ec("While TEXT-encoding type '%s': ", p_td.name);
@@ -1127,8 +1150,23 @@ void UNIVERSAL_CHARSTRING::decode(const TTCN_Typedescriptor_t& p_td,
     break;}
   case TTCN_EncDec::CT_RAW: {
     TTCN_EncDec_ErrorContext ec("While RAW-decoding type '%s': ", p_td.name);
-    TTCN_EncDec_ErrorContext::error_internal
-      ("No RAW descriptor available for type '%s'.", p_td.name);
+    if(!p_td.raw)
+      TTCN_EncDec_ErrorContext::error_internal
+        ("No RAW descriptor available for type '%s'.", p_td.name);
+    raw_order_t order;
+    switch(p_td.raw->top_bit_order){
+    case TOP_BIT_LEFT:
+      order=ORDER_LSB;
+      break;
+    case TOP_BIT_RIGHT:
+    default:
+      order=ORDER_MSB;
+    }
+    if(RAW_decode(p_td, p_buf, p_buf.get_len()*8, order)<0)
+      ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
+               "Can not decode type '%s', because invalid or incomplete"
+               " message was received"
+               , p_td.name);
     break;}
   case TTCN_EncDec::CT_TEXT: {
     Limit_Token_List limit;
@@ -2231,6 +2269,61 @@ char* UNIVERSAL_CHARSTRING::to_JSON_string(const TTCN_Buffer& p_buf) const
   
   json_str = mputc(json_str, '\"');
   return json_str;
+}
+
+int UNIVERSAL_CHARSTRING::RAW_encode(const TTCN_Typedescriptor_t& p_td,
+  RAW_enc_tree& myleaf) const
+{
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound value.");
+  }
+  if (charstring) {
+    return cstr.RAW_encode(p_td, myleaf);
+  }
+  TTCN_Buffer buff;
+  encode_utf8(buff);
+  int buff_len = buff.get_len();
+  int bl = buff_len * 8; // bit length
+  int align_length = p_td.raw->fieldlength ? p_td.raw->fieldlength - bl : 0;
+  if (align_length < 0) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
+      "There are insufficient bits to encode '%s': ", p_td.name);
+    bl = p_td.raw->fieldlength;
+    align_length = 0;
+  }
+  if (myleaf.must_free) Free(myleaf.body.leaf.data_ptr);
+  myleaf.body.leaf.data_ptr = (unsigned char*)Malloc(buff_len);
+  memcpy(myleaf.body.leaf.data_ptr, buff.get_data(), buff_len);
+  myleaf.must_free = TRUE;
+  myleaf.data_ptr_used = TRUE;
+  if (p_td.raw->endianness == ORDER_MSB) myleaf.align = -align_length;
+  else myleaf.align = align_length;
+  return myleaf.length = bl + align_length;
+}
+
+int UNIVERSAL_CHARSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td,
+  TTCN_Buffer& buff, int limit, raw_order_t top_bit_ord, boolean no_err,
+  int /*sel_field*/, boolean /*first_call*/)
+{
+  CHARSTRING buff_str;
+  int dec_len = buff_str.RAW_decode(p_td, buff, limit, top_bit_ord, no_err);
+  if (buff_str.is_bound()) {
+    charstring = true;
+    for (int i = 0; i < buff_str.val_ptr->n_chars; ++i) {
+      if (buff_str.val_ptr->chars_ptr[i] < 0) {
+        charstring = false;
+        break;
+      }
+    }
+    if (charstring) {
+      cstr = buff_str;
+    }
+    else {
+      decode_utf8(buff_str.val_ptr->n_chars, (const unsigned char*)buff_str.val_ptr->chars_ptr);
+    }
+  }
+  return dec_len;
 }
 
 boolean UNIVERSAL_CHARSTRING::from_JSON_string(boolean check_quotes)
@@ -4114,9 +4207,11 @@ void UNIVERSAL_CHARSTRING_template::set_param(Module_Param& param) {
     }
     *this = temp;
     break; }
-  case Module_Param::MP_Charstring:
-    *this = CHARSTRING(mp->get_string_size(), (char*)mp->get_string_data());
-    break;
+  case Module_Param::MP_Charstring: {
+    TTCN_Buffer buff;
+    buff.put_s(mp->get_string_size(), (unsigned char*)mp->get_string_data());
+    *this = UNIVERSAL_CHARSTRING::from_UTF8_buffer(buff);
+    break; }
   case Module_Param::MP_Universal_Charstring:
     *this = UNIVERSAL_CHARSTRING(mp->get_string_size(), (universal_char*)mp->get_string_data());
     break;

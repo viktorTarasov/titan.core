@@ -1,10 +1,25 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Delic, Adam
+ *   Feher, Csaba
+ *   Forstner, Matyas
+ *   Kovacs, Ferenc
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Zalanyi, Balazs Andor
+ *   Pandi, Krisztian
+ *
+ ******************************************************************************/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -85,6 +100,7 @@ TTCN_Logger::log_mask_struct TTCN_Logger::emergency_log_mask;
 
 TTCN_Logger::emergency_logging_behaviour_t TTCN_Logger::emergency_logging_behaviour = BUFFER_MASKED;
 size_t TTCN_Logger::emergency_logging;
+boolean TTCN_Logger::emergency_logging_for_fail_verdict = FALSE;
 
 TTCN_Logger::matching_verbosity_t TTCN_Logger::matching_verbosity = VERBOSITY_COMPACT;
 
@@ -713,6 +729,16 @@ size_t TTCN_Logger::get_emergency_logging()
 void TTCN_Logger::set_emergency_logging(size_t size)
 {
   emergency_logging = size;
+}
+
+boolean TTCN_Logger::get_emergency_logging_for_fail_verdict()
+{
+  return emergency_logging_for_fail_verdict;
+}
+
+void TTCN_Logger::set_emergency_logging_for_fail_verdict(boolean b)
+{
+  emergency_logging_for_fail_verdict = b;
 }
 
 Logging_Bits const& TTCN_Logger::get_file_mask()

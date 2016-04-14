@@ -1,0 +1,52 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:5.4.2, verify that error is generated when passing union and its sub-element to inout parameters
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Whenever a value or template of a record, set, union, record of, set of, array 
+// and anytype type is passed as an actual parameter to an inout parameter, none of 
+// the fields or elemens of this structured value or template shall be passed as 
+// an actual parameter to another inout parameter of the same parameterized TTCN-3 
+// object. This restriction applies recursively to all sub-elements of the structured
+// value or template in any level of nesting.
+
+module NegSem_050402_actual_parameters_138 { 
+
+    type component GeneralComp {
+	}
+    
+    type record Sub {
+        integer subfield1
+    }
+
+    type union U {
+        Sub option1,
+        charstring option2
+    }
+    
+    function f_test (inout integer p_val, inout U p_un) {
+        p_un.option1.subfield1 := 10;
+        if (p_val == 10) { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    testcase TC_NegSem_050402_actual_parameters_138() runs on GeneralComp {
+        var U v_val := { option1 := { subfield1 := 1 } }; 
+        f_test(v_val.option1.subfield1, v_val);
+	}
+
+	control {
+		execute(TC_NegSem_050402_actual_parameters_138());
+	}
+}

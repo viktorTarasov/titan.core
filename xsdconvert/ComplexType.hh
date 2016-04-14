@@ -1,10 +1,17 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Godar, Marton
+ *   Raduly, Csaba
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
 #ifndef COMPLEXTYPE_H_
 #define COMPLEXTYPE_H_
 
@@ -64,6 +71,9 @@ private:
   bool fromAll;
   unsigned max_alt;
   int skipback;
+  //Special use: true if an element of a complextype is restricted to a list
+  // in a simpletype
+  bool list;
   TagName lastType;
   Mstring actualPath;
   RootType * actfield;
@@ -158,3 +168,4 @@ inline bool compareTypes(ComplexType * lhs, ComplexType * rhs) {
 
 
 #endif /* COMPLEXTYPE_H_ */
+

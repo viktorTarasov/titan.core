@@ -1,0 +1,32 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:24, Ensure setverdict accepts parameters of verdicttype only
+ ** @verdict  pass reject
+ ***************************************************/
+/*
+ * #reqname  /Requirements/24 Test verdict operations/24.2 The Setverdict operation/Setverdict allowed verdict values
+ **/
+
+
+module NegSem_2402_setverdict_params_002 {
+    type component TComp {}
+    type record TRec { verdicttype field1 }
+    
+    testcase TC_NegSem_2402_setverdict_params_002() runs on TComp {
+        var TRec v_pass := { field1 := pass };
+        setverdict(v_pass);
+    }
+    
+    control {
+        execute(TC_NegSem_2402_setverdict_params_002())
+    } 
+}

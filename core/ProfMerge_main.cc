@@ -1,10 +1,15 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2000-2015 Ericsson Telecom AB
-// All rights reserved. This program and the accompanying materials
-// are made available under the terms of the Eclipse Public License v1.0
-// which accompanies this distribution, and is available at
-// http://www.eclipse.org/legal/epl-v10.html
-///////////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -188,7 +193,7 @@ int main(int argc, char* argv[])
   for (int i = optind; i < argc; i++) {
     // import each input file's contents into the local database
     fprintf(stderr, "Notify: Importing database file '%s'...\n", argv[i]);
-    Profiler_Tools::import_data(profiler_db, argv[i], FALSE, error);
+    Profiler_Tools::import_data(profiler_db, argv[i], error);
     if (erroneous) {
       // an import failed -> exit
       return EXIT_FAILURE;

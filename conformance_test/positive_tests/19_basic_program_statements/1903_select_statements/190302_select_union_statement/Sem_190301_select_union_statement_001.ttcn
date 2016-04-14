@@ -1,0 +1,46 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:19.3.2, verify that it is possible to use a select union statement with several branches
+ ** @verdict  pass accept, ttcn3verdict:pass
+ ***************************************************/
+
+// The following requirement is tested:
+// The statement contains a header part and zero or more branches. 
+
+module Sem_190301_select_union_statement_001 { 
+
+    type component GeneralComp {
+	}	
+    
+    type union U {
+        integer intOption,
+        charstring strOption,
+        boolean boolOption
+    }
+
+    testcase TC_Sem_190301_select_union_statement_001() runs on GeneralComp {
+        var U v_un := { strOption := "abc" }
+        select union (v_un) {
+            case (intOption) {
+                setverdict(fail);
+            } case (strOption) {
+                setverdict(pass);
+            } case (boolOption) {
+                setverdict(fail);
+            }
+        }
+	}
+
+	control {
+		execute(TC_Sem_190301_select_union_statement_001());
+	}
+}

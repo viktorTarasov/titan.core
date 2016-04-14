@@ -1,0 +1,37 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Adrien Kirjak – initial implementation
+ *
+ ** @version  0.0.1
+ ** @purpose  1:7.1.1, Ensure that arithmetic operators can handle special float values
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+
+module Sem_070101_ArithmeticOperators_048 {
+
+type component GeneralComp {	    	    
+}
+
+testcase TC_Sem_070101_ArithmeticOperators_048() runs on GeneralComp {
+	var float v_i := not_a_number;
+	var float v_k := -infinity;
+	
+	var float v_result := v_k / v_i;	// -infinity special float as nominator and NaN special float as denominator
+	
+	if (v_result == not_a_number) { setverdict(pass,"match") }
+	else { setverdict(fail,v_result) }
+    
+
+}	
+control{
+    execute(TC_Sem_070101_ArithmeticOperators_048());
+}
+
+}

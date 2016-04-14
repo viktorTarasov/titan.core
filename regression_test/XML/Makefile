@@ -1,10 +1,20 @@
-###############################################################################
-# Copyright (c) 2000-2015 Ericsson Telecom AB
+##############################################################################
+# Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
 # are made available under the terms of the Eclipse Public License v1.0
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
-###############################################################################
+#
+# Contributors:
+#   Baji, Laszlo
+#   Balasko, Jeno
+#   Baranyi, Botond
+#   Ormandi, Matyas
+#   Pilisi, Gergely
+#   Raduly, Csaba
+#   Szabo, Bence Janos
+#
+##############################################################################
 TOPDIR := ..
 include   ../Makefile.regression
 unexport ABS_SRC
@@ -19,7 +29,7 @@ endif
 
 XDIRS := $(wildcard $(SHADOWED)) xsdConverter \
 HM60295 HN15589 HQ30408 HR49727 HU13380 $(RT2_ONLY) \
-XmlWorkflow tpdValidTest AbstractBlock
+XmlWorkflow tpdValidTest AbstractBlock UseNilLong
 
 # List of fake targets:
 .PHONY: all dep clean run $(XDIRS) $(addsuffix /, $(XDIRS)) profile
