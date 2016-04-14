@@ -1383,6 +1383,151 @@ error: The operand of operation `rnd \(seed\)' cannot be INF, it must be a numer
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_160102_predefined_functions_032 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that an error is generated when the parameter of the encvalue function contains a matching symbol >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_160102_predefined_functions_032 NegSem_160102_predefined_functions_032.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:16.1.2, Ensure that an error is generated when the parameter of the encvalue function contains a matching symbol
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// (C.5.1) When the actual parameter that is passed to inpar is a template, it shall resolve to 
+// a specific value (the same restrictions apply as for the argument of the send statement).
+
+module NegSem_160102_predefined_functions_032 {
+	
+	type integer I with { variant "32 bit"};
+	
+	type component GeneralComp {	
+	}
+	
+
+	testcase TC_NegSem_160102_predefined_functions_032 () runs on GeneralComp {
+		template I v_test := ?;
+		var bitstring v_res := encvalue(v_test);
+		setverdict(fail, "The previous encvalue call should have caused an error"); 
+	}
+
+	control{
+
+		execute(TC_NegSem_160102_predefined_functions_032());
+
+	}
+
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A specific value was expected instead of any value
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_160102_predefined_functions_033 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that an error is detected when the parameter of the encvalue function contains an unitialized value >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_160102_predefined_functions_033 NegSem_160102_predefined_functions_033.ttcn >
+/****************************************************
+ ** @version  0.0.1
+ ** @purpose  1:16.1.2, Ensure that an error is detected when the parameter of the encvalue function contains an unitialized value
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// 16.1.2, restriction a.3: all actual in and inout parameters shall be initialized
+
+module NegSem_160102_predefined_functions_033 {
+	
+	type integer I with { variant "32 bit"};
+	
+	type component GeneralComp {	
+	}
+	
+	testcase TC_NegSem_160102_predefined_functions_033 () runs on GeneralComp {
+		var template I v_test;
+		var bitstring v_res := encvalue(v_test);
+		setverdict(fail, "The previous encvalue call should have caused an error"); 
+	}
+
+	control{
+
+		execute(TC_NegSem_160102_predefined_functions_033());
+
+	}
+
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing a valueof or send operation on a non-specific integer template.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_160102_predefined_functions_035 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that an error is detected when the first parameter of the decvalue function contains an uninitialized value >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_160102_predefined_functions_035 NegSem_160102_predefined_functions_035.ttcn >
+/****************************************************
+ ** @version  0.0.1
+ ** @purpose  1:16.1.2, Ensure that an error is detected when the first parameter of the decvalue function contains an uninitialized value
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// 16.1.2, restriction a.3: all actual in and inout parameters shall be initialized
+
+module NegSem_160102_predefined_functions_035 {
+	type integer I with { variant "32 bit"};
+
+    type component GeneralComp {
+    }
+
+    testcase TC_NegSem_160102_predefined_functions_035 () runs on GeneralComp {
+        var bitstring v_test;
+		var I v_decoded;
+		var integer v_res := decvalue(v_test, v_decoded);
+		setverdict(fail, "The previous decvalue call should have caused an error"); 
+    }
+
+    control{
+        execute(TC_NegSem_160102_predefined_functions_035());
+    }
+} with {encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The argument of function bit2oct\(\) is an unbound bitstring value.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_160102_predefined_functions_036 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.

@@ -39,11 +39,11 @@ module Sem_160102_predefined_functions_019 {
 		if (match(v_res, 1) and not isbound(v_decoded) and match(lengthof(v_test), 32)) {
 			setverdict(pass);
 		} else {
-			setverdict(fail, "Unexpected decoding result");
+			setverdict(fail, "Unexpected decoding result"); // not isbound(v_decoded) = false
 		}
     }
 
     control{
         execute(TC_Sem_160102_predefined_functions_019());
     }
-}
+} with {encode "RAW"}

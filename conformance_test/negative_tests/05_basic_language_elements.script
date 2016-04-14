@@ -1344,7 +1344,7 @@ module NegSem_05040101_parameters_of_kind_value_014 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `@lazy': syntax error, unexpected TitanSpecificLazyKeyword
+error: at or before token `@lazy': syntax error, unexpected LazyKeyword
 <END_RESULT>
 
 <END_TC>
@@ -1392,7 +1392,7 @@ module NegSem_05040101_parameters_of_kind_value_016 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `@lazy': syntax error, unexpected TitanSpecificLazyKeyword
+error: at or before token `@lazy': syntax error, unexpected LazyKeyword
 <END_RESULT>
 
 <END_TC>
@@ -2397,7 +2397,7 @@ module NegSem_05040102_parameters_of_kind_template_014 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `@lazy': syntax error, unexpected TitanSpecificLazyKeyword
+error: at or before token `@lazy': syntax error, unexpected LazyKeyword
 <END_RESULT>
 
 <END_TC>
@@ -2445,7 +2445,7 @@ module NegSem_05040102_parameters_of_kind_template_016 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `@lazy': syntax error, unexpected TitanSpecificLazyKeyword
+error: at or before token `@lazy': syntax error, unexpected LazyKeyword
 <END_RESULT>
 
 <END_TC>

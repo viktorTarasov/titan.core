@@ -32,4 +32,4 @@ module NegSem_160102_predefined_functions_035 {
     control{
         execute(TC_NegSem_160102_predefined_functions_035());
     }
-}
+} with {encode "RAW"}

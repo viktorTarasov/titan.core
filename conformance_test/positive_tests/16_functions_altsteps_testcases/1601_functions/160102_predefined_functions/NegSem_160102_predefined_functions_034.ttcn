@@ -22,7 +22,7 @@ module NegSem_160102_predefined_functions_034 {
 	{
 		integer field1,
 		integer field2
-	}
+	} with { variant "" }
 	
 	type component GeneralComp {	
 	}
@@ -40,4 +40,4 @@ module NegSem_160102_predefined_functions_034 {
 
 	}
 
-}
+} with { encode "RAW"}

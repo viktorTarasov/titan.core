@@ -1996,7 +1996,7 @@ module NegSem_10_Constants_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: An evaluatable constant value was expected instead of operation `rnd \(seed\)'
+error: An evaluable constant value was expected instead of operation `rnd \(seed\)'
 <END_RESULT>
 
 <END_TC>

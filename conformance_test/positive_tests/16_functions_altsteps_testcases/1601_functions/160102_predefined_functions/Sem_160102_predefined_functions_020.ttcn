@@ -47,4 +47,4 @@ module Sem_160102_predefined_functions_020 {
     control{
         execute(TC_Sem_160102_predefined_functions_020());
     }
-}
+} with {encode "RAW"}

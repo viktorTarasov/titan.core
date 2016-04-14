@@ -6,107 +6,34 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
-#   
-#   Baji, Laszlo
-#   Balasko, Jeno
-#   Delic, Adam
-#   Forstner, Matyas
-#   Godar, Marton
-#   Horvath, Gabriella
-#   Koppany, Csaba
-#   Kovacs, Ferenc
-#   Kovacs, Zoltan
-#   Kremer, Peter
-#   Lovassy, Arpad
-#   Ormandi, Matyas
-#   Raduly, Csaba
-#   Szabados, Kristof
-#   Szabo, Janos Zoltan – initial implementation
-#   Torpis, Zsolt
-#   Zalanyi, Balazs Andor
+#   Kirjak, Adrien
 #
+# not ready
 ##############################################################################
-# Main Makefile for the TTCN-3 Test Executor
-# For use with GNU make only.
+#TOPDIR := ../..
+#include $(TOPDIR)/Makefile.regression
 
-TOP := .
-include $(TOP)/Makefile.cfg
+#ifdef LCOV
+#COVERAGE_FLAG := -C
+#endif
 
-# Dirlist for "all", "clean", "distclean"
-ALLDIRS := common compiler2 repgen xsdconvert
+MAKE := make
 
-ifndef MINGW
-	ALLDIRS += core core2 mctr2 loggerplugins
-endif
+MAKECLEAN := make clean
 
-# JNI not supported on Cygwin or Mingw
-ifneq ($(PLATFORM), WIN32)
-	ifeq ($(JNI), yes)
-		ALLDIRS += JNI
-	endif
-endif
+run:
+	$(TTCN3_DIR)/bin/ttcn3_makefilegen -f -t pos_conf_tests.tpd && \
+	cd bin && \
+	$(MAKE) && \
+	$(TTCN3_DIR)/bin/ttcn3_start pos_conf_tests pos_conf_tests.cfg && \
+	cd ..
 
-#ALLDIRS += ctags
+clean:
+	cd bin && \
+	$(MAKECLEAN) && \
+	cd .. 
 
-# Dirlist for "dep", "tags"
-DEPDIRS := $(ALLDIRS)
-
-ALLDIRS += usrguide
-
-# Dirlist for "install"
-INSTALLDIRS := $(ALLDIRS)
-
-INSTALLDIRS += etc help hello
-
-###########################################################
-
-all run clean distclean:
-	@for dir in $(ALLDIRS); do \
-	  $(MAKE) -C $$dir $@ || exit; \
-	done
-
-dep tags:
-	@for dir in $(DEPDIRS); do \
-	  $(MAKE) -C $$dir $@ || exit; \
-	done
-
-install:
-	if test -h $(TTCN3_DIR); then \
-	  echo $(TTCN3_DIR) is a symlink, you cannot be serious; exit 1; fi
-ifdef MINGW
-	$(info cross your fingers...)
-endif
-	-rm -rf $(TTCN3_DIR)
-ifeq ($(INCLUDE_EXTERNAL_LIBS), yes)
-	mkdir -p $(TTCN3_DIR)/lib
-	cp -d $(OPENSSL_DIR)/lib/libcrypto.so* $(TTCN3_DIR)/lib
-	cp -d $(XMLDIR)/lib/libxml2.so* $(TTCN3_DIR)/lib
-endif
-	@for dir in $(INSTALLDIRS); do \
-	  $(MAKE) -C $$dir $@ || exit; \
-	done
-ifeq ($(LICENSING), yes)
-	mkdir -p $(ETCDIR)/licensegen
-	cp licensegen/license.dat $(ETCDIR)/license
-endif
-	chmod -R +r,go-w $(TTCN3_DIR)
-
-# check is the standard GNU target for running tests
-# (avoids clash with shell builtin 'test')
-check:
-	make -C regression_test report
-
-ifneq (,$(findstring prereq,$(MAKECMDGOALS)))
-# Export all variables into the environment for the prereq target
-export
-endif
+.PHONY: all clean run 
 
 
-# no need to include Makefile.genrules
 
-.PHONY: all clean distclean dep tags install psi dox check confess prereq
-
-
-Makefile.personal: SHELL:=/bin/bash
-Makefile.personal:
-	if [ -f $(TOP)/makefiles/$@.$${HOSTNAME:=$${COMPUTERNAME}} ]; then ln -s $(TOP)/makefiles/$@.$${HOSTNAME} $@; else touch $@; fi
