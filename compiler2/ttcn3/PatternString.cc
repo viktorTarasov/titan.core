@@ -11,6 +11,7 @@
  *   Delic, Adam
  *   Forstner, Matyas
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -278,6 +279,14 @@ namespace Ttcn {
     ps_elem_t *last_elem = get_last_elem();
     if (last_elem) *last_elem->str += p_str;
     else elems.add(new ps_elem_t(ps_elem_t::PSE_STR, p_str));
+  }
+  
+  void PatternString::addStringUSI(char **usi_str, const size_t size)
+  {
+    ustring s = ustring((const char**)usi_str, size);
+    ps_elem_t *last_elem = get_last_elem();
+    if (last_elem) *last_elem->str += s.get_stringRepr_for_pattern().c_str();
+    else elems.add(new ps_elem_t(ps_elem_t::PSE_STR, s.get_stringRepr_for_pattern()));
   }
 
   void PatternString::addRef(Ttcn::Reference *p_ref)

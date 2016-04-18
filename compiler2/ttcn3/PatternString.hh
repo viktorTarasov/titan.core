@@ -11,6 +11,7 @@
  *   Delic, Adam
  *   Forstner, Matyas
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -65,6 +66,7 @@ namespace Ttcn {
     void addChar(char c);
     void addString(const char *p_str);
     void addString(const string& p_str);
+    void addStringUSI(char **usi_str, const size_t size);
     void addRef(Ttcn::Reference *p_ref);
     void addRefdCharSet(Ttcn::Reference *p_ref);
     string get_full_str() const;

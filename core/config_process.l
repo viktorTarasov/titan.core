@@ -16,6 +16,7 @@
  *   Pandi, Krisztian
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
@@ -133,13 +134,15 @@ DNSNAME {HOSTNAME}(\.{HOSTNAME})*\.?
 /* Example: fe80::c002:37ff:fe6c:0%fastethernet0/0 */
 IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
 
+UID [uU][+]?[0-9A-Fa-f]{1,8}
+
 TTCNSTRINGPARSING "$#&&&(#TTCNSTRINGPARSING$#&&^#% "
 TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
 
 %x SC_commentblock SC_cstring SC_DEFINE
 %s SC_MODULE_PARAMETERS SC_LOGGING SC_TESTPORT_PARAMETERS SC_EXECUTE SC_GROUPS
 %s SC_COMPONENTS SC_EXTERNAL_COMMANDS SC_MAIN_CONTROLLER SC_INCLUDE SC_ORDERED_INCLUDE
-%s SC_STRING2TTCN_COMPONENT SC_PROFILER
+%s SC_STRING2TTCN_COMPONENT SC_PROFILER SC_CHAR_KEYWORD
 
 %%
 
@@ -319,7 +322,7 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
 
 {NUMBER}	{
 	yylval.int_val = new int_val_t(yytext);
-  if (YY_START == SC_MODULE_PARAMETERS) {
+  if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     // return a different token for module parameters so it doesn't conflict with references
     return MPNumber;
   }
@@ -328,7 +331,7 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
 
 {FLOAT}		{
 	yylval.float_val = atof(yytext);
-  if (YY_START == SC_MODULE_PARAMETERS) {
+  if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     // return a different token for module parameters so it doesn't conflict with references
     return MPFloat;
   }
@@ -445,7 +448,7 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
     break;
   default:
     set_ret_val_cstr(cstring);
-    if (caller_state == SC_MODULE_PARAMETERS) {
+    if (caller_state == SC_MODULE_PARAMETERS || caller_state == SC_CHAR_KEYWORD) {
       // return a different token for module parameters so it doesn't conflict with references
       return MPCstring;
     }
@@ -502,7 +505,7 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
   BEGIN(caller_state);
   if (caller_state!=SC_DEFINE) {
     set_ret_val_cstr(cstring);
-    if (caller_state == SC_MODULE_PARAMETERS) {
+    if (caller_state == SC_MODULE_PARAMETERS || caller_state == SC_CHAR_KEYWORD) {
       // return a different token for module parameters so it doesn't conflict with references
       return MPCstring;
     }
@@ -513,13 +516,25 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
 	}
 }
 
+<SC_CHAR_KEYWORD>
+{
+  {UID} {
+    yylval.str_val = mcopystrn(yytext, yyleng);
+    return UIDval;
+  }
+
+  [,] { return *yytext; }
+
+  [)] { BEGIN(SC_MODULE_PARAMETERS); return *yytext; }
+}
+
 	/* Section-wide keywords */
 
 <SC_MODULE_PARAMETERS>
 {
 NULL		return NULLKeyword;
 null		return nullKeyword;
-char		return CharKeyword;
+char		{ BEGIN(SC_CHAR_KEYWORD); return CharKeyword; }
 objid		return ObjIdKeyword;
 omit		return OmitKeyword;
 none		{
@@ -1300,7 +1315,7 @@ LOG_ALL	{
       "this context.");
     yylval.int_val = new int_val_t((RInt)0);
   }
-  if (YY_START == SC_MODULE_PARAMETERS) {
+  if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     // return a different token for module parameters so it doesn't conflict with references
     return MPNumber;
   }
@@ -1332,7 +1347,7 @@ LOG_ALL	{
       "this context.");
     yylval.float_val = 0.0;
   }
-  if (YY_START == SC_MODULE_PARAMETERS) {
+  if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     // return a different token for module parameters so it doesn't conflict with references
     return MPFloat;
   }
@@ -1385,7 +1400,7 @@ LOG_ALL	{
         "this context.");
     yylval.charstring_val.n_chars = 0;
     yylval.charstring_val.chars_ptr = memptystr();
-    if (YY_START == SC_MODULE_PARAMETERS) {
+    if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
       // return a different token for module parameters so it doesn't conflict with references
       return MPCstring;
     }
@@ -1405,7 +1420,7 @@ LOG_ALL	{
     yylval.charstring_val.n_chars=0;
     yylval.charstring_val.chars_ptr=memptystr();
     Free(macroname);
-    if (YY_START == SC_MODULE_PARAMETERS) {
+    if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
       // return a different token for module parameters so it doesn't conflict with references
       return MPCstring;
     }
@@ -1422,7 +1437,7 @@ LOG_ALL	{
     yylval.charstring_val.chars_ptr=(char*)Malloc(macrolen+1);
     memcpy(yylval.charstring_val.chars_ptr, macrovalue, macrolen+1);
     Free(macroname);
-    if (YY_START == SC_MODULE_PARAMETERS) {
+    if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
       // return a different token for module parameters so it doesn't conflict with references
       return MPCstring;
     }
@@ -1621,7 +1636,7 @@ LOG_ALL	{
 
 
 
-.           return yytext[0];
+.       return yytext[0];
 
 
 %%

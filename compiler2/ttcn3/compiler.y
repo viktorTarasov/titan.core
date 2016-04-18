@@ -21,6 +21,7 @@
  *   Pandi, Krisztian
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Tatarka, Gabor
@@ -241,6 +242,10 @@ static const string anyname("anytype");
     Statement **elements;
   } stmt_list;
 
+  struct {
+    size_t nElements;
+    const char **elements;
+  } uid_list;
 
   struct {
     Value *lower;
@@ -854,6 +859,7 @@ static const string anyname("anytype");
   IdentifierOrAddressKeyword StructFieldRef PredefOrIdentifier
 %type <string_val> CstringList
 %type <ustring_val> Quadruple
+%type <uid_list> USI UIDlike
 
 %type <typetype> PredefinedType
 %type <portoperationmode> PortOperationMode
@@ -1405,6 +1411,9 @@ VarInstance
 optArrayDef
 optExtendedFieldReference
 FriendModuleDef
+USI
+UIDlike
+
 
 %destructor {
   delete $$.lower;
@@ -7004,6 +7013,15 @@ CharStringValue: // 478
     delete $1;
     $$->set_location(infile, @$);
   }
+| USI
+  {
+    $$ = new Value(Value::V_USTR, new ustring($1.elements, $1.nElements));
+    for(size_t i = 0; i < $1.nElements; ++i) {
+      Free((char*)$1.elements[i]);
+    }
+    Free($1.elements);
+    $$->set_location(infile, @$);
+  }
 ;
 
 CstringList:
@@ -7012,6 +7030,29 @@ CstringList:
     Location loc(infile, @1);
     $$ = parse_charstring_value($1, loc);
     Free($1);
+  }
+;
+
+USI:
+  CharKeyword '(' optError UIDlike optError ')'
+  {
+    $$ = $4;
+  }
+;
+
+UIDlike:
+  Cstring
+  {
+    $$.nElements = 1;
+    $$.elements = (const char**)
+      Realloc($$.elements, ($$.nElements) * sizeof(*$$.elements));
+    $$.elements[$$.nElements-1] = $1;
+  }
+| UIDlike optError ',' optError Cstring {
+    $$.nElements = $1.nElements + 1;
+    $$.elements = (const char**)
+      Realloc($1.elements, ($$.nElements) * sizeof(*$$.elements));
+    $$.elements[$$.nElements-1] = $5;
   }
 ;
 

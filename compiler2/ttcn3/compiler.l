@@ -17,6 +17,7 @@
  *   Kremer, Peter
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -192,10 +193,13 @@ NEWLINE \r|\n|\r\n
 
 LINEMARKER {NUMBER}{WHITESPACE}+\"([^\\\"\r\n]|\\[^\r\n])*\"
 
+UID [uU][+]?[0-9A-Fa-f]{1,8}
+
 TITAN "$#&&&(#TITANERRONEOUS$#&&^#% "
 
 %x SC_blockcomment SC_cstring
 %x SC_binstring SC_binstring_bad
+%s SC_charkeyword
 
 %%
   /* local variables of yylex() */
@@ -374,7 +378,7 @@ break		RETURN(BreakKeyword);
 call		RETURN_DOT(CallOpKeyword);
 case		RETURN(CaseKeyword);
 catch		RETURN_DOT(CatchOpKeyword);
-char		RETURN(CharKeyword);
+char		{ BEGIN(SC_charkeyword); RETURN(CharKeyword); }
 charstring	RETURN(CharStringKeyword);
 check		RETURN_DOT(CheckOpKeyword);
 clear		RETURN_DOT(ClearOpKeyword);
@@ -621,6 +625,18 @@ NULL RETURN(NullValue);
   current_column++;
   MD5_Update(&md5_ctx, yytext, yyleng);
   BEGIN(SC_cstring);
+}  
+
+<SC_charkeyword>
+{  
+  {UID} {
+    yylval.str = mcopystrn(yytext, yyleng);
+    RETURN_LVAL(Cstring);
+  }
+
+  [,] { RETURN(*yytext); }
+
+  [)] { BEGIN(INITIAL); RETURN(*yytext); }
 }
 
 <SC_binstring> /* -------- SC_binstring scope -------------- */
