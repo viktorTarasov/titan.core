@@ -30,7 +30,7 @@ git clone https://github.com/eclipse/titan.core  titan.core
 3. Configure the build 
 
 cd titan.core
-check  that MakefileFOSS.cfg is present   and  has the following content:
+check that MakefileFOSS.cfg is present and has the following content:
 cat MakefileFOSS.cfg
 
 # Configurations for the Free Open Source Software version
@@ -38,7 +38,7 @@ LICENSING := no
 USAGE_STATS := no
 
 
-Several build options are possible; for details on options , please read through the Makefile.cfg.
+Several build options are possible; for details on options please read through the Makefile.cfg.
 Options can be overridden by the content of  a file named Makefile.personal which can be used to 
 adapt to local installation directories, change config options etc.
 Below, a small number of typical scenarios are presented.
@@ -130,7 +130,9 @@ make run
 
 These tests might run for half an hour (regr.tests)  to two hours (func.tests)
 
-8. Optionally , copy Titan into its final directory.
-From here on, you can continue with the Titan installation guide, see /Install/docs, 
-to set/change environment variables etc.
+8. Optionally, copy Titan into its final directory.
+From here on, you can continue with the Titan installation guide, see /Install/docs, to set/change environment variables etc.
 
+nagylenard
+elnrnag
+elnrnag2

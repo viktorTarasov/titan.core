@@ -15,7 +15,10 @@
 module Sem_160102_predefined_functions_005 {
     type enumerated MyEnumeratedType {e_black, e_white, e_green};
 
+	type bitstring BIT1 with { variant "FIELDLENGTH(1)" }
+
     type record MyRecord {
+		BIT1 field0, 
         record {
             boolean innerField1 optional,
             integer innerField2 optional
@@ -23,14 +26,15 @@ module Sem_160102_predefined_functions_005 {
         integer field2,
         integer field3,
         MyEnumeratedType field4 optional
-    };
+    } with { variant (field4) "PRESENCE(field0 = '1'B)"  }
 	
     type component GeneralComp {
     }
 	
     testcase TC_Sem_160102_predefined_functions_005 () runs on GeneralComp {
         var MyRecord v_record1 := {
-				field1 := {},
+				field0 := '0'B,
+				field1 := { innerField1 := true, innerField2 := 2 },
 				field2 := 2,
 				field3 := 3,
 				field4 := omit
@@ -39,14 +43,14 @@ module Sem_160102_predefined_functions_005 {
         var bitstring v_encoded;
         var MyRecord v_decoded;
 	
-        v_encoded:=encvalue(v_record1);
+        v_encoded := encvalue(v_record1);
         if( match(decvalue(v_encoded,v_decoded), 0) and
             match(v_record1,v_decoded)
         ) {
             setverdict(pass);
         }
         else {
-            setverdict(fail);
+            setverdict(fail, "decoded: ", v_decoded);
         }
     } with {
         optional "implicit omit";
@@ -55,4 +59,4 @@ module Sem_160102_predefined_functions_005 {
     control{
         execute(TC_Sem_160102_predefined_functions_005());
     }
-}
+} with { encode "RAW"}

@@ -5762,7 +5762,7 @@ module NegSem_060207_arrays_014 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: Reference to an \(evaluatable\) constant value was expected instead of module parameter `@NegSem_060207_arrays_014.PX_DIMENSION'
+error: Reference to an \(evaluable\) constant value was expected instead of module parameter `@NegSem_060207_arrays_014.PX_DIMENSION'
 <END_RESULT>
 
 <END_TC>

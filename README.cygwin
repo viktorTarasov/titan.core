@@ -9,7 +9,6 @@
 *   Baranyi, Botond
 *   Pilisi, Gergely
 ******************************************************************************
-
 Cygwin setup
     - If Cygwin is installed already, refresh your Cygwin installation
       Titan is always build for the newest Cygwin version available. 
