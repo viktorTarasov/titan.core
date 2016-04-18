@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 ###############################################################################
 # Copyright (c) 2000-2016 Ericsson Telecom AB
 # All rights reserved. This program and the accompanying materials
@@ -10,7 +11,6 @@
 #   Balasko, Jeno
 #
 ###############################################################################
-#!/usr/bin/perl
 ###############################################################################
 # This script is intended to archive the project hierarchy from a TPD file structure
 ###############################################################################
