@@ -3239,7 +3239,7 @@ static void print_makefile(struct makefile_struct *makefile)
             if (act_ext_elem->str && hasExternalLibrary(act_ext_elem->str, makefile->project_name)) {
               fputs(" \\\n", fp);
               fprintf(fp, "\tlib%s.a", act_ext_elem->str);
-              ERROR("linking static 3d party or sytem library 'lib%s.a' to "
+              ERROR("linking static 3d party or system library 'lib%s.a' to "
                       "project library 'lib%s.a' is not supported ",
                       act_ext_elem->str, makefile->ets_name);
               exit(EXIT_FAILURE);
