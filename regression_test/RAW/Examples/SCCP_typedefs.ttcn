@@ -155,7 +155,7 @@ type record  SCCP_field_SignallingPointCode
 //--------------------------------------------------------------------------------
 // Subfield Subsystem Number (Q713 $3.4.2.2)
 //--------------------------------------------------------------------------------
-//type enumerated SCCP_field_SubsytemNumber
+//type enumerated SCCP_field_SubsystemNumber
 //  {
 //   notKnown(0),  sCCPmanagement(1),  reservedForITU(2),  iSUP(3),  oMAP(4),  mAP(5),
 //   hLR(6),       vLR(7),             mSC(8),             eIC(9),   aUC(10),  isdnSS(11),
@@ -165,7 +165,7 @@ type record  SCCP_field_SignallingPointCode
 
 //values declared in SCCPConstants
 
-type integer    SCCP_field_SubsytemNumber
+type integer    SCCP_field_SubsystemNumber
    with { variant "FIELDLENGTH(8)" };
 
 //--------------------------------------------------------------------------------
@@ -302,9 +302,9 @@ type union SCCP_superfield_SignallingPointCode
    Dummy                            absent
   } with { variant "" }
 
-type union SCCP_superfield_SubsytemNumber
+type union SCCP_superfield_SubsystemNumber
   {
-   SCCP_field_SubsytemNumber        present_,
+   SCCP_field_SubsystemNumber        present_,
    Dummy                            absent
   } with { variant "" }
 
@@ -313,7 +313,7 @@ type record SCCP_param_CPartyAddress
    LIN1                                  paramLength,
    SCCP_field_AddressIndicator           addressIndicator,
    SCCP_superfield_SignallingPointCode   signPointCode,
-   SCCP_superfield_SubsytemNumber        subsystemNumber,
+   SCCP_superfield_SubsystemNumber        subsystemNumber,
    SCCP_field_GlobalTitle                globalTitle
   }
    with { variant (signPointCode) "CROSSTAG(
@@ -338,7 +338,7 @@ type record SCCP_param_CPartyAddress_opt
    LIN1                                  paramLength,
    SCCP_field_AddressIndicator           addressIndicator,
    SCCP_superfield_SignallingPointCode   signPointCode,
-   SCCP_superfield_SubsytemNumber        subsystemNumber,
+   SCCP_superfield_SubsystemNumber        subsystemNumber,
    SCCP_field_GlobalTitle                globalTitle
   }
    with { variant (signPointCode) "CROSSTAG(
@@ -595,7 +595,7 @@ type enumerated SCMG_param_FormatId
 //--------------------------------------------------------------------------------
 // Affected SSN (Q713 $5.2.1)
 //--------------------------------------------------------------------------------
-type SCCP_field_SubsytemNumber SCMG_param_AffectedSSN;
+type SCCP_field_SubsystemNumber SCMG_param_AffectedSSN;
 
 //--------------------------------------------------------------------------------
 // Affected Pointcode (Q713 $5.2.2)
