@@ -12,6 +12,7 @@
  *   Pandi, Krisztian
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *
  ******************************************************************************/
@@ -82,6 +83,7 @@ IDENTIFIER [A-Za-z][A-Za-z0-9_]*
 NUMBER 0|([1-9][0-9]*)
 WS [ \t\r\n\v\f]*
 NEWLINE \r|\n|\r\n
+UID [uU][+]?[0-9A-Fa-f]{1,8} 
 
 %% /* ***************** rules ************************* */
 
@@ -344,12 +346,39 @@ if (in_set) {
   UPDATE_LOCATION(cell_begin, yyleng);
 }
 
+"\\q"({WS}"{"{WS}({UID}{WS}","{WS})*{UID}{WS}"}") {
+  //Split UID-s. For example: \q{ U23423 , U+001 } -> [U23423, U+001]
+  size_t begin = 3;
+  size_t size = 0;
+  char ** uids = (char **)Malloc(sizeof(char*));
+  while(yytext[begin] != '}'){
+    //Find first digit
+    while(yytext[begin] != 'U' && yytext[begin] != 'u') begin++;
+    size_t end = begin + 2;
+    //Find last digit
+    while(isxdigit(yytext[end])) end++;
+    size++;
+    uids = (char**)Realloc(uids, size * sizeof(char*));
+    uids[size-1] = mcopystrn(yytext + begin, end-begin);
+    //Skip whitespaces until the next UID or the end
+    while(!isxdigit(yytext[end]) && yytext[end] != 'U' && yytext[end] != 'u' && yytext[end] != '}') end++;
+    UPDATE_LOCATION(begin, end);
+    begin = end;
+  }
+  ps->addStringUSI(uids, size);
+  //Free
+  for (size_t i = 0; i < size; ++i) {
+    Free(uids[i]);
+  }
+  Free(uids);
+}
+
 "\\q"({WS}"{"[^}]*"}")? {
   int first_line = current_line, first_column = current_column;
   UPDATE_LOCATION(0, yyleng);
   Location loc(current_file, first_line, first_column, current_line,
     current_column);
-  loc.error("Invalid quadruple notation: `%s'", yytext);
+  loc.error("Invalid quadruple or UID-like notation: `%s'", yytext);
 }
 
 "[]" {

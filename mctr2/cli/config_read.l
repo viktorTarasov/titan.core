@@ -16,6 +16,7 @@
  *   Pandi, Krisztian
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
@@ -134,10 +135,12 @@ DNSNAME {HOSTNAME}(\.{HOSTNAME})*\.?
 /* Example: fe80::c002:37ff:fe6c:0%fastethernet0/0 */
 IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
 
+UID [uU][+]?[0-9A-Fa-f]{1,8}
 
 %x SC_blockcomment SC_DEFINE SC_CSTRING SC_ORDERED_INCLUDE
 %s SC_MODULE_PARAMETERS SC_LOGGING SC_TESTPORT_PARAMETERS SC_EXECUTE SC_GROUPS
 %s SC_COMPONENTS SC_EXTERNAL_COMMANDS SC_MAIN_CONTROLLER SC_INCLUDE SC_PROFILER
+%s SC_CHAR_KEYWORD
 
 %%
 	int comment_caller = INITIAL;
@@ -350,7 +353,7 @@ IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
 {NUMBER} {
 	yylval.int_val = NULL;
   BN_dec2bn(&yylval.int_val, *yytext == '+' ? yytext + 1 : yytext);
-  if (YY_START == SC_MODULE_PARAMETERS) {
+  if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     RETURN(MPNumber);
   }
 	RETURN(Number);
@@ -358,7 +361,7 @@ IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
 
 {FLOAT}	{
 	yylval.float_val = atof(yytext);
-  if (YY_START == SC_MODULE_PARAMETERS) {
+  if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     RETURN(MPFloat);
   }
 	RETURN(Float);
@@ -397,10 +400,22 @@ IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
 
 {CHARSTRING}	{
   yylval.str_val = mcopystrn(yytext, yyleng);
-  if (YY_START == SC_MODULE_PARAMETERS) {
+  if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     RETURN(MPCstring);
   }
   RETURN(Cstring);
+}
+
+<SC_CHAR_KEYWORD>
+{
+  {UID} {
+    yylval.str_val = mcopystrn(yytext, yyleng);
+    RETURN(Cstring);
+  }
+
+  [,] { RETURN(*yytext); }
+
+  [)] { BEGIN(SC_MODULE_PARAMETERS); RETURN(*yytext); }
 }
 
 	/* Section-wide keywords */
@@ -409,7 +424,7 @@ IPV6 [0-9A-Fa-f:.]+(%[0-9A-Za-z]+)?
 {
 NULL	RETURN(NULLKeyword);
 null	RETURN(nullKeyword);
-char	RETURN(CharKeyword);
+char	{ BEGIN(SC_CHAR_KEYWORD); RETURN(CharKeyword); }
 objid	RETURN(ObjIdKeyword);
 omit	RETURN(OmitKeyword);
 none	|
@@ -756,7 +771,7 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
   if (whether_update_buffer())
     cfg->config_read_buffer = mputprintf(cfg->config_read_buffer, "%s ", int_val_str);
   OPENSSL_free(int_val_str);
-  if (YY_START == SC_MODULE_PARAMETERS) {
+  if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     return MPNumber;
   }
   return Number;
@@ -783,7 +798,7 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
   Free(macroname);
   if (whether_update_buffer()) cfg->config_read_buffer =
     mputprintf(cfg->config_read_buffer, "%f ", yylval.float_val);
-  if (YY_START == SC_MODULE_PARAMETERS) {
+  if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     return MPFloat;
   }
   return Float;
@@ -834,7 +849,7 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
         "name `%s'", macroname);
     yylval.str_val = memptystr();
     Free(macroname);
-    if (YY_START == SC_MODULE_PARAMETERS) {
+    if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
       return MPCstring;
     }
     return Cstring;
@@ -867,7 +882,7 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
     }
     Free(macroname);
     yylval.str_val = mcopystr(macrovalue);
-    if (YY_START == SC_MODULE_PARAMETERS) {
+    if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
       return MPCstring;
     }
     return Cstring;
@@ -981,7 +996,7 @@ WARNING_UNQUALIFIED RETURN(LoggingBit);
 ":="|"="    RETURN(AssignmentChar);
 "&="        RETURN(ConcatChar);
 
-.		RETURN(yytext[0]);
+.	          RETURN(yytext[0]);
 
 <*><<EOF>> {
   if (expansion_buffer) {
@@ -1022,6 +1037,7 @@ static boolean whether_update_buffer()
 {
   switch (YY_START) {
   case SC_MODULE_PARAMETERS:
+  case SC_CHAR_KEYWORD:
   case SC_LOGGING:
   case SC_TESTPORT_PARAMETERS:
   case SC_EXTERNAL_COMMANDS:

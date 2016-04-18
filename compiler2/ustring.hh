@@ -12,6 +12,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -68,6 +69,9 @@ public:
 
   /** Constructs a universal string from \a s. */
   ustring(const string& s);
+  
+  /** Constructs a universal string from \a uid which contains \a n chars. */
+  ustring(const char** uid, const int n);
 
   /** Copy constructor */
   ustring(const ustring& s) : val_ptr(s.val_ptr) { val_ptr->ref_count++;}

@@ -17,6 +17,7 @@
  *   Pandi, Krisztian
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
@@ -143,6 +144,10 @@ string_map_t *config_defines;
   logging_plugin_t *logging_plugins;
 	logging_param_t logging_params;
 	logging_setting_t logging_param_line;
+  struct {
+    size_t nElements;
+    const char **elements;
+  } uid_list;
 }
 
 %token ModuleParametersKeyword
@@ -210,6 +215,7 @@ string_map_t *config_defines;
 %token <str_val> HstringMatch "hex string template"
 %token <str_val> OstringMatch "octet string template"
 %token <charstring_val> Cstring MPCstring "charstring value"
+%token <str_val> UIDval
 %token DNSName "hostname"
 /* a single bit */
 %token <logseverity_val> LoggingBit
@@ -256,6 +262,7 @@ string_map_t *config_defines;
 
 %type <universal_charstring_val> UniversalCharstringValue UniversalCharstringFragment
 %type <universal_char_val> Quadruple
+%type <uid_list> USI UIDlike
 
 %type <str_val> LoggerPluginId
 %type <logging_plugins> LoggerPlugin LoggerPluginList
@@ -918,6 +925,31 @@ UniversalCharstringValue:
 	$$.uchars_ptr = (universal_char*)Malloc(sizeof(universal_char));
 	$$.uchars_ptr[0] = $1;
 }
+  | USI
+{
+  $$.n_uchars = $1.nElements;
+  $$.uchars_ptr = (universal_char*)Malloc($$.n_uchars * sizeof(universal_char));
+  for (int i = 0; i < $$.n_uchars; ++i) {
+    size_t offset = 1; //Always starts with u or U
+    offset = $1.elements[i][1] == '+' ? offset + 1 : offset; //Optional '+'
+
+    char* p;
+    unsigned long int_val = strtoul($1.elements[i] + offset, &p, 16);
+    if(*p != 0) {
+      //Error, should not happen
+      config_process_error_f("Invalid hexadecimal string %s.", $1.elements[i] + offset);
+    }
+    
+    //Fill in the quadruple
+    $$.uchars_ptr[i].uc_group = (int_val >> 24) & 0xFF;
+    $$.uchars_ptr[i].uc_plane = (int_val >> 16) & 0xFF;
+    $$.uchars_ptr[i].uc_row   = (int_val >> 8) & 0xFF;
+    $$.uchars_ptr[i].uc_cell  = int_val & 0xFF;
+
+    Free((char*)$1.elements[i]);
+  }
+  Free($1.elements);
+}
 ;
 
 UniversalCharstringFragment:
@@ -996,6 +1028,29 @@ Quadruple:
   delete $7;
   delete $9;
 }
+;
+
+USI:
+  CharKeyword '(' UIDlike ')'
+  {
+    $$ = $3;
+  }
+;
+
+UIDlike:
+  UIDval
+  {
+    $$.nElements = 1;
+    $$.elements = (const char**)
+      Malloc($$.nElements * sizeof(*$$.elements));
+    $$.elements[$$.nElements-1] = $1;
+  }
+| UIDlike ',' UIDval {
+    $$.nElements = $1.nElements + 1;
+    $$.elements = (const char**)
+      Realloc($1.elements, ($$.nElements) * sizeof(*$1.elements));
+    $$.elements[$$.nElements-1] = $3;
+  }
 ;
 
 // character strings outside of the [MODULE_PARAMETERS] section
@@ -2126,7 +2181,8 @@ boolean process_config_string(const char *config_string, int string_len)
 
   try {
     reset_configuration_options();
-    reset_config_process_lex(NULL);
+    reset_config_process_lex(NULL); 
+
     if (config_process_parse()) error_flag = TRUE;
 
   } catch (const TC_Error& TC_error) {

@@ -17,6 +17,7 @@
  *   Pandi, Krisztian
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
@@ -144,6 +145,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token EndControlPart
 %token BeginTestCase
 %token EndTestCase
+
 
 %token <str_val> Identifier
 %token ASN1LowerIdentifier "ASN.1 identifier beginning with a lowercase letter"
@@ -479,6 +481,7 @@ OctetstringValue:
 
 UniversalCharstringValue:
 	Quadruple
+	| USI
 ;
 
 UniversalCharstringFragment:
@@ -489,6 +492,15 @@ UniversalCharstringFragment:
 Quadruple:
 	CharKeyword '(' ParameterExpression ',' ParameterExpression ','
   ParameterExpression ',' ParameterExpression ')'
+;
+
+USI:
+    CharKeyword '(' UIDlike ')'     
+;
+
+UIDlike:
+    Cstring { Free($1); }
+    | UIDlike ',' Cstring { Free($3); }
 ;
 
 StringValue:
