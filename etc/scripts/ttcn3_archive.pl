@@ -34,7 +34,7 @@ if (-l $tpd)  #get the path if it is a symlink
 my $root = getPathToRootDir(\@list); # get the workspace directory of the OS
 chomp ($root);
 chdir ($root) or die "cannot change: $!\n";
-my $cutstring = cwd; # this is string generated from the the absolut path to the workspace
+my $cutstring = cwd; # this is string generated from the the absolute path to the workspace
 my $archiveDir = getArchiveDir(\@list); #directory to place the archive
 $archiveDir = $home . "/" .  $archiveDir;
 chomp ($archiveDir);
