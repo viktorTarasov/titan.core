@@ -38,7 +38,7 @@ all1: bin/Makefile
 	$(MAKE) -C bin all
 
 run1: bin/Makefile
-	export LD_LIBRARY_PATH $LD_LIBRARY_PATH_ORIG:$(TOPDIR)/XML/XmlWorkflow/bin/; \
+	export LD_LIBRARY_PATH $$LD_LIBRARY_PATH_ORIG:$(TOPDIR)/XML/XmlWorkflow/bin/; \
 	$(MAKE) -C bin run
 
 clean1:
