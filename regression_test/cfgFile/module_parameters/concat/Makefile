@@ -27,6 +27,14 @@ ifeq ($(COVERAGE), yes)
   COVERAGE_FLAG += -C
 endif
 
+ifdef DYN
+ifeq ($(PLATFORM), WIN32)
+  export PATH:=$(TTCN3_DIR)/lib:$(PATH):$(ABS_SRC)/$(DIR_SINGLE):$(ANS_SRC)/$(DIR_PARALLEL)
+else
+  export LD_LIBRARY_PATH:=$(LD_LIBRARY_PATH):$(ABS_SRC)/$(DIR_SINGLE):$(ANS_SRC)/$(DIR_PARALLEL)
+endif 
+endif
+
 MAKE_PROG := $(MAKE)
 
 # List of fake targets:
