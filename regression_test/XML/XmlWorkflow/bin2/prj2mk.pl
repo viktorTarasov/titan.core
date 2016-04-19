@@ -131,7 +131,7 @@ while (<MAKEFILE_IN>) {
 TOPDIR := ../../..
 include   ../../../Makefile.regression
 export PATH:=\$(TTCN3_DIR)/bin:\$(PATH)
-export LD_LIBRARY_PATH:=\$(LD_LIBRARY_PATH):\$(ABS_SRC)/XmlWorkflow/bin:\$(TTCN3_DIR)/lib
+export LD_LIBRARY_PATH:=\$(LD_LIBRARY_PATH):\$(ABS_SRC):\$(TTCN3_DIR)/lib
 MKF
   }
 }
