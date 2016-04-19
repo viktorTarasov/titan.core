@@ -62,7 +62,7 @@ DYNAMIC_SUFFIX = -dynamic
 ifeq ($(PLATFORM), WIN32)
   export PATH:=$(TTCN3_DIR)/lib:$(PATH)
 else
-  export LD_LIBRARY_PATH:=$(TTCN3_DIR)/lib:$(LD_LIBRARY_PATH)
+  export LD_LIBRARY_PATH:=$(TTCN3_DIR)/lib:$(LD_LIBRARY_PATH):$(ABS_SRC)
 endif 
 endif
 
