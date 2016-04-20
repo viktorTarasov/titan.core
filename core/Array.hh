@@ -65,7 +65,7 @@ public:
   TIMER_ARRAY() { }
 
   ~TIMER_ARRAY() {
-    for (size_t i = 0; i < array_size; ++i) {
+    for (unsigned int i = 0; i < array_size; ++i) {
       Free(names[i]);
     }
   }
@@ -126,7 +126,7 @@ public:
   PORT_ARRAY() { }
 
   ~PORT_ARRAY() {
-    for (size_t i = 0; i < array_size; ++i) {
+    for (unsigned int i = 0; i < array_size; ++i) {
       Free(names[i]);
     }
   }
@@ -439,7 +439,7 @@ Module_Param* VALUE_ARRAY<T_type,array_size,index_offset>::get_param
     return array_elements[param_index].get_param(param_name);
   }
   Vector<Module_Param*> values;
-  for (int i = 0; i < array_size; ++i) {
+  for (unsigned int i = 0; i < array_size; ++i) {
     values.push_back(array_elements[i].get_param(param_name));
   }
   Module_Param_Value_List* mp = new Module_Param_Value_List();
@@ -1610,7 +1610,7 @@ Module_Param* TEMPLATE_ARRAY<T_value_type,T_template_type,array_size,index_offse
     break;
   case SPECIFIC_VALUE: {
     Vector<Module_Param*> values;
-    for (int i = 0; i < array_size; ++i) {
+    for (unsigned int i = 0; i < array_size; ++i) {
       values.push_back(single_value.value_elements[i]->get_param(param_name));
     }
     mp = new Module_Param_Value_List();
