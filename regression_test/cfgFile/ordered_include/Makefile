@@ -30,9 +30,9 @@ endif
 
 ifdef DYN
 ifeq ($(PLATFORM), WIN32)
-  export PATH:=$(TTCN3_DIR)/lib:$(PATH):$(ABS_SRC)/$(DIR_SINGLE):$(ANS_SRC)/$(DIR_PARALLEL)
+  export PATH:=$(TTCN3_DIR)/lib:$(ABS_SRC)/$(DIR_SINGLE):$(ABS_SRC)/$(DIR_PARALLEL):$(PATH)
 else
-  export LD_LIBRARY_PATH:=$(LD_LIBRARY_PATH):$(ABS_SRC)/$(DIR_SINGLE):$(ANS_SRC)/$(DIR_PARALLEL)
+  export LD_LIBRARY_PATH:=$(ABS_SRC)/$(DIR_SINGLE):$(ABS_SRC)/$(DIR_PARALLEL):$(LD_LIBRARY_PATH)
 endif 
 endif
 
