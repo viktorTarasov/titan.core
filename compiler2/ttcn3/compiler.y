@@ -832,6 +832,8 @@ static const string anyname("anytype");
 %token get_stringencodingKeyWord
 %token encode_base64KeyWord
 %token decode_base64KeyWord
+%token encvalue_unicharKeyWord
+%token decvalue_unicharKeyWord
 
 /* Multi-character operators */
 
@@ -8735,6 +8737,43 @@ PredefinedOps:
     $$->set_location(infile, @$);
   }
 | ttcn2stringKeyword '(' error ')'
+  {
+    $$ = new Value(Value::V_ERROR);
+    $$->set_location(infile, @$);
+  }
+| encvalue_unicharKeyWord '(' optError TemplateInstance optError ',' optError
+  Expression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_ENCVALUE_UNICHAR, $4, $8);
+    $$->set_location(infile, @$);
+  }
+| encvalue_unicharKeyWord '(' optError TemplateInstance optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_ENCVALUE_UNICHAR, $4);
+    $$->set_location(infile, @$);
+  }
+| encvalue_unicharKeyWord '(' error ')'
+  {
+    Template *t1 = new Template(Template::TEMPLATE_ERROR);
+    t1->set_location(infile, @3);
+    TemplateInstance *ti1 = new TemplateInstance(0, 0, t1);
+    ti1->set_location(infile, @3);
+    $$ = new Value(Value::OPTYPE_ENCVALUE_UNICHAR, ti1);
+    $$->set_location(infile, @$);
+  }
+| decvalue_unicharKeyWord '(' optError DecValueArg optError ',' optError
+  DecValueArg optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_DECVALUE_UNICHAR, $4, $8);
+    $$->set_location(infile, @$);
+  }
+| decvalue_unicharKeyWord '(' optError DecValueArg optError ',' optError
+  DecValueArg optError ',' optError Expression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_DECVALUE_UNICHAR, $4, $8, $12);
+    $$->set_location(infile, @$);
+  }
+| decvalue_unicharKeyWord '(' error ')'
   {
     $$ = new Value(Value::V_ERROR);
     $$->set_location(infile, @$);
