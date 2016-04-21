@@ -18,6 +18,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Tatarka, Gabor
  *   Zalanyi, Balazs Andor
@@ -259,6 +260,9 @@ namespace Common {
 
       OPTYPE_LOG2STR, // logagrs
       OPTYPE_PROF_RUNNING, // -     99
+      
+      OPTYPE_ENCVALUE_UNICHAR, // ti1 [v2]
+      OPTYPE_DECVALUE_UNICHAR, // r1 r2 [v3]
 
       NUMBER_OF_OPTYPES // must be last
     };
@@ -414,6 +418,8 @@ namespace Common {
     Value(operationtype_t p_optype, Value *p_v1, Value *p_v2);
     /** Constructor used by V_EXPR "v1 v2 v3" */
     Value(operationtype_t p_optype, Value *p_v1, Value *p_v2, Value *p_v3);
+    /** Constructor used by encvalue_unichar "ti1 [v2]" */
+    Value(operationtype_t p_optype, TemplateInstance *p_ti1, Value *p_v2);
     /** Constructor used by V_EXPR "ti1 v2 v3" */
     Value(operationtype_t p_optype, TemplateInstance *p_ti1, Value *p_v2, Value *p_v3);
     /** Constructor used by V_EXPR "ti1 t2 v3" */
@@ -435,6 +441,8 @@ namespace Common {
     Value(valuetype_t p_vt, verdict_t p_verdict);
     /** Constructor used by decode */
     Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2);
+    /** Constructor used by decvalue_unichar*/
+    Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2, Value *p_v3);
     virtual ~Value();
     virtual Value* clone() const;
     valuetype_t get_valuetype() const {return valuetype;}
@@ -628,7 +636,8 @@ namespace Common {
       Type::expected_value_t exp_val);
     void chk_expr_operand_encode(ReferenceChain *refch,
       Type::expected_value_t exp_val);
-    void chk_expr_operands_decode();
+    /** \a has two possible value: OPTYPE_DECODE | OPTYPE_DECVALUE_UNICHAR */
+    void chk_expr_operands_decode(operationtype_t p_optype);
     /** Checks whether \a this can be compared with omit value (i.e. \a this
      * should be a referenced value pointing to a optional record/set field. */
     void chk_expr_omit_comparison(Type::expected_value_t exp_val);
@@ -907,6 +916,12 @@ namespace Common {
     void generate_code_expr_encode(expression_struct *expr);
 
     void generate_code_expr_decode(expression_struct *expr);
+    
+    void generate_code_expr_encvalue_unichar(expression_struct *expr);
+    
+    void generate_code_expr_decvalue_unichar(expression_struct *expr);
+    
+    char* generate_code_char_coding_check(expression_struct *expr, Value *v, const char *name);
 
     /** Helper function for \a generate_code_init(). It handles the
      *  union (CHOICE) values. */

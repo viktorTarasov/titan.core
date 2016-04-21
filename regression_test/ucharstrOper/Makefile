@@ -20,7 +20,7 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = TucharstrOper.ttcn cstr_content.ttcn Common.ttcn UTF8Testcases.ttcn UTF16Testcases.ttcn UTF32Testcases.ttcn Base64Testcases.ttcn
+TTCN3_MODULES = TucharstrOper.ttcn cstr_content.ttcn Common.ttcn UTF8Testcases.ttcn UTF16Testcases.ttcn UTF32Testcases.ttcn Base64Testcases.ttcn EncDecvalueUnichar.ttcn
 
 GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc)
 GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)

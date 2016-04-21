@@ -21,6 +21,7 @@
  *   Ormandi, Matyas
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Tatarka, Gabor
@@ -277,6 +278,15 @@ namespace Common {
       case OPTYPE_ISPRESENT:
       case OPTYPE_TTCN2STRING:
         u.expr.ti1=p.u.expr.ti1->clone();
+        break;
+      case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
+        u.expr.ti1=p.u.expr.ti1->clone();
+        u.expr.v2=p.u.expr.v2?p.u.expr.v2->clone():0;
+        break; 
+      case OPTYPE_DECVALUE_UNICHAR: // r1 r2 [v3]
+        u.expr.r1 = p.u.expr.r1->clone();
+        u.expr.r2 = p.u.expr.r2->clone();
+        u.expr.v3=p.u.expr.v3?p.u.expr.v3->clone():0;
         break;
       case OPTYPE_UNDEF_RUNNING:
       case OPTYPE_TMR_READ:
@@ -580,6 +590,15 @@ namespace Common {
     case OPTYPE_ISPRESENT:
     case OPTYPE_TTCN2STRING:
       delete u.expr.ti1;
+      break;
+    case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
+      delete u.expr.ti1;
+      delete u.expr.v2;
+      break;
+    case OPTYPE_DECVALUE_UNICHAR: // r1 r2 [v3]
+      delete u.expr.r1;
+      delete u.expr.r2;
+      delete u.expr.v3;
       break;
     case OPTYPE_UNDEF_RUNNING:
     case OPTYPE_TMR_READ:
@@ -909,6 +928,7 @@ namespace Common {
     case OPTYPE_ISVALUE:
     case OPTYPE_ISBOUND:
     case OPTYPE_ENCODE:
+    case OPTYPE_ENCVALUE_UNICHAR:
     case OPTYPE_ISPRESENT:
     case OPTYPE_TTCN2STRING:
       if(!p_ti1) FATAL_ERROR("Value::Value()");
@@ -1094,12 +1114,29 @@ namespace Common {
       u.expr.v1=p_v1;
       u.expr.v2=p_v2;
       u.expr.v3=p_v3;
-      break;
+      break;   
     default:
       FATAL_ERROR("Value::Value()");
     } // switch
   }
 
+  // ti1 [v2]
+  Value::Value(operationtype_t p_optype, TemplateInstance *p_ti1,  Value *p_v2)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+  {
+    u.expr.v_optype = p_optype;
+    u.expr.state = EXPR_NOT_CHECKED;
+    switch(p_optype) {
+    case OPTYPE_ENCVALUE_UNICHAR:
+      if(!p_ti1 || !p_v2) FATAL_ERROR("Value::Value()");
+      u.expr.ti1=p_ti1;
+      u.expr.v2=p_v2;
+      break;
+    default:
+      FATAL_ERROR("Value::Value()");
+    } // switch
+  }
+  
   // ti1 v2 v3
   Value::Value(operationtype_t p_optype, TemplateInstance *p_ti1, Value *p_v2, Value *p_v3)
     : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
@@ -1275,9 +1312,29 @@ namespace Common {
     u.expr.state = EXPR_NOT_CHECKED;
     switch(p_optype) {
     case OPTYPE_DECODE:
+    case OPTYPE_DECVALUE_UNICHAR:
       if(!p_r1 || !p_r2) FATAL_ERROR("Value::Value()");
       u.expr.r1=p_r1;
       u.expr.r2=p_r2;
+      break;
+    default:
+      FATAL_ERROR("Value::Value()");
+    } // switch
+  }
+  
+  // r1 r2 [v3]
+  Value::Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2,
+          Value *p_v3)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+  {
+    u.expr.v_optype = p_optype;
+    u.expr.state = EXPR_NOT_CHECKED;
+    switch(p_optype) {
+    case OPTYPE_DECVALUE_UNICHAR:
+      if(!p_r1 || !p_r2 || !p_v3) FATAL_ERROR("Value::Value()");
+      u.expr.r1=p_r1;
+      u.expr.r2=p_r2;
+      u.expr.v3=p_v3;
       break;
     default:
       FATAL_ERROR("Value::Value()");
@@ -1528,6 +1585,14 @@ namespace Common {
     case OPTYPE_TTCN2STRING:
       u.expr.ti1->set_fullname(p_fullname+".<operand>");
       break;
+    case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
+      u.expr.ti1->set_fullname(p_fullname+".<operand1>");
+      if (u.expr.v2) u.expr.v2->set_fullname(p_fullname+".<operand2>");
+      break;
+    case OPTYPE_DECVALUE_UNICHAR: // r1 r2 [v3]
+      u.expr.r1->set_fullname(p_fullname+".<operand1>");
+      u.expr.r2->set_fullname(p_fullname+".<operand2>");
+      if (u.expr.v3) u.expr.v3->set_fullname(p_fullname+".<operand3>");
     case OPTYPE_UNDEF_RUNNING: // r1
     case OPTYPE_TMR_READ:
     case OPTYPE_TMR_RUNNING:
@@ -1707,6 +1772,15 @@ namespace Common {
     case OPTYPE_ISPRESENT:
     case OPTYPE_TTCN2STRING:
       u.expr.ti1->set_my_scope(p_scope);
+      break;
+    case OPTYPE_ENCVALUE_UNICHAR: //ti1 [v2]
+      u.expr.ti1->set_my_scope(p_scope);
+      if(u.expr.v2) u.expr.v2->set_my_scope(p_scope);
+      break;
+    case OPTYPE_DECVALUE_UNICHAR: // r1 r2 [v3]
+      u.expr.r1->set_my_scope(p_scope);
+      u.expr.r2->set_my_scope(p_scope);
+      if(u.expr.v3) u.expr.v3->set_my_scope(p_scope);
       break;
     case OPTYPE_UNDEF_RUNNING: // r1
     case OPTYPE_TMR_READ:
@@ -2017,6 +2091,15 @@ namespace Common {
       case OPTYPE_ISPRESENT:
       case OPTYPE_TTCN2STRING:
         u.expr.ti1->set_code_section(p_code_section);
+        break;
+      case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
+        u.expr.ti1->set_code_section(p_code_section);
+        if (u.expr.v2) u.expr.v2->set_code_section(p_code_section);
+        break;
+      case OPTYPE_DECVALUE_UNICHAR: // r1 r2 [v3]
+        u.expr.r1->set_code_section(p_code_section);
+        u.expr.r2->set_code_section(p_code_section);
+        if (u.expr.v3) u.expr.v3->set_code_section(p_code_section);
         break;
       case OPTYPE_UNDEF_RUNNING: // r1
       case OPTYPE_TMR_READ:
@@ -3029,6 +3112,7 @@ namespace Common {
       case OPTYPE_SIZEOF:
       case OPTYPE_DECODE:
       case OPTYPE_ENUM2INT:
+      case OPTYPE_DECVALUE_UNICHAR:
         return Type::T_INT;
       case OPTYPE_BIT2STR:
       case OPTYPE_FLOAT2STR:
@@ -3046,6 +3130,7 @@ namespace Common {
         return Type::T_CSTR;
       case OPTYPE_INT2UNICHAR:
       case OPTYPE_OCT2UNICHAR:
+      case OPTYPE_ENCVALUE_UNICHAR:
         return Type::T_USTR;
       case OPTYPE_INT2BIT:
       case OPTYPE_HEX2BIT:
@@ -3446,6 +3531,10 @@ namespace Common {
       return "int2oct()";
     case OPTYPE_OCT2UNICHAR:
       return "oct2unichar()";
+    case OPTYPE_ENCVALUE_UNICHAR:
+      return "encvalue_unichar()";
+    case OPTYPE_DECVALUE_UNICHAR:
+      return "decvalue_unichar()";
     case OPTYPE_SUBSTR:
       return "substr()";
     case OPTYPE_REGEXP:
@@ -5331,7 +5420,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       error("Cannot determine type of value");
       goto error;
     }
-
+    
     // todo: fix this
     /*if (u.expr.par1_is_value && u.expr.v1->get_valuetype() != V_REFD) {
       error("Expecting a value of a type with coding attributes in first"
@@ -5343,7 +5432,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     if(!disable_attribute_validation()) {
       t_type->chk_coding(true);
     }
-
+    
     switch (t_type->get_typetype()) {
     case Type::T_UNDEF:
     case Type::T_ERROR:
@@ -5370,9 +5459,9 @@ error:
     set_valuetype(V_ERROR);
   }
 
-  void Value::chk_expr_operands_decode()
+  void Value::chk_expr_operands_decode(operationtype_t p_optype)
   {
-    Error_Context cntxt(this, "In the parameters of decvalue()");
+    Error_Context cntxt(this, "In the parameters of decvalue()"); //todo
     Ttcn::Ref_base* ref = u.expr.r1;
     Ttcn::FieldOrArrayRefs* t_subrefs = ref->get_subrefs();
     Type* t_type = 0;
@@ -5426,9 +5515,22 @@ error:
     if (!t_type) {
       goto error;
     }
-    if (t_type->get_type_refd_last()->get_typetype() != Type::T_BSTR){
-      error("First parameter has to be a bitstring");
-      goto error;
+    switch(p_optype) {
+      case OPTYPE_DECODE:
+        if (t_type->get_type_refd_last()->get_typetype() != Type::T_BSTR){
+          error("First parameter has to be a bitstring");
+          goto error;
+        }
+        break;
+      case OPTYPE_DECVALUE_UNICHAR:
+        if (t_type->get_type_refd_last()->get_typetype() != Type::T_USTR){
+          error("First parameter has to be a universal charstring");
+          goto error;
+        }
+        break; 
+      default:
+        FATAL_ERROR("Value::chk_expr_decode_operands()");
+        break;
     }
 
     ref = u.expr.r2;
@@ -6471,6 +6573,30 @@ error:
         chk_expr_eval_value(v2, t_chk, refch, exp_val);
       }
       break;
+    case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
+      chk_expr_operand_encode(refch, exp_val);
+      v2=u.expr.v2 ? u.expr.v2 : 0;
+      if (v2)
+      {
+        Error_Context cntxt(this, "In the second operand of operation `%s'", opname);
+        v2->set_lowerid_to_ref();
+        tt2=v2->get_expr_returntype(exp_val);
+        chk_expr_operandtype_charstr(tt2, second, opname, v2);
+        chk_expr_eval_value(v2, t_chk, refch, exp_val);
+      }
+      break;
+    case OPTYPE_DECVALUE_UNICHAR:
+      chk_expr_operands_decode(OPTYPE_DECVALUE_UNICHAR);
+      v3=u.expr.v3 ? u.expr.v3 : 0;
+      if (v3)
+      {
+        Error_Context cntxt(this, "In the thrid operand of operation `%s'", opname);
+        v3->set_lowerid_to_ref();
+        tt3=v3->get_expr_returntype(exp_val);
+        chk_expr_operandtype_charstr(tt3, third, opname, v3);
+        chk_expr_eval_value(v3, t_chk, refch, exp_val);
+      }
+      break;
     case OPTYPE_ADD: // v1 v2
     case OPTYPE_SUBTRACT:
     case OPTYPE_MULTIPLY:
@@ -6752,7 +6878,7 @@ error:
       chk_expr_operands_int2binstr();
       break;
     case OPTYPE_DECODE:
-      chk_expr_operands_decode();
+      chk_expr_operands_decode(OPTYPE_DECODE);
       break;
     case OPTYPE_SUBSTR:
       {
@@ -7067,6 +7193,8 @@ error:
     case OPTYPE_OCT2UNICHAR:
     case OPTYPE_ENCODE_BASE64:
     case OPTYPE_DECODE_BASE64:
+    case OPTYPE_ENCVALUE_UNICHAR:
+    case OPTYPE_DECVALUE_UNICHAR:
       break;
     case OPTYPE_TESTCASENAME: { // -
       if (!my_scope) FATAL_ERROR("Value::evaluate_value()");
@@ -8363,6 +8491,8 @@ error:
       case OPTYPE_UNICHAR2OCT:
       case OPTYPE_ENCODE_BASE64:
       case OPTYPE_DECODE_BASE64:
+      case OPTYPE_ENCVALUE_UNICHAR:
+      case OPTYPE_DECVALUE_UNICHAR:
         return true;
       case OPTYPE_COMP_NULL: // -
         return false;
@@ -9682,6 +9812,25 @@ error:
       u.expr.ti1->chk_recursions(refch);
       refch.prev_state();
       break;
+    case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
+      refch.mark_state();
+      u.expr.ti1->chk_recursions(refch);
+      refch.prev_state();
+      if (u.expr.v2){
+        refch.mark_state();
+        u.expr.v2->chk_recursions(refch);
+        refch.prev_state();
+      }
+      break;
+    case OPTYPE_DECVALUE_UNICHAR: // r1 r2 [v3]
+      chk_recursions_expr_decode(u.expr.r1, refch);
+      chk_recursions_expr_decode(u.expr.r2, refch);
+      if (u.expr.v3){
+        refch.mark_state();
+        u.expr.v3->chk_recursions(refch);
+        refch.prev_state();
+      }
+      break;
     case OPTYPE_MATCH: // v1 t2
       refch.mark_state();
       u.expr.v1->chk_recursions(refch);
@@ -9973,7 +10122,16 @@ error:
     case OPTYPE_TTCN2STRING:
       self_ref |= chk_expr_self_ref_templ(u.expr.ti1->get_Template(), lhs);
       break;
-
+    case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
+      self_ref |= chk_expr_self_ref_templ(u.expr.ti1->get_Template(), lhs);
+      if (u.expr.v2) self_ref |= chk_expr_self_ref_val(u.expr.v2, lhs);
+      break;
+    case OPTYPE_DECVALUE_UNICHAR: { // r1 r2 [v3]
+      Common::Assignment *ass = u.expr.r2->get_refd_assignment();
+      self_ref |= (ass == lhs);
+      if (u.expr.v3) self_ref |= chk_expr_self_ref_val(u.expr.v3, lhs);
+      goto label_r1;
+      break; }
     case OPTYPE_COMP_CREATE: // r1 [v2] [v3] b4
       // component.create -- assume no self-ref
     case OPTYPE_ACTIVATE: // r1
@@ -10276,6 +10434,24 @@ error:
       case OPTYPE_UNICHAR2OCT: {
          if (u.expr.v2) return create_stringRepr_predef2("unichar2oct");
          else return create_stringRepr_predef1("unichar2oct");
+      }
+      case OPTYPE_ENCVALUE_UNICHAR: {
+         if (u.expr.v2) return create_stringRepr_predef2("encvalue_unichar");
+         else return create_stringRepr_predef1("encvalue_unichar");
+      }
+      case OPTYPE_DECVALUE_UNICHAR: {
+         if (u.expr.v3) {
+           string ret_val("decvalue_unichar");
+           ret_val += '(';
+           ret_val += u.expr.v1->get_stringRepr();
+           ret_val += ", ";
+           ret_val += u.expr.v2->get_stringRepr();
+           ret_val += ", ";
+           ret_val += u.expr.v3->get_stringRepr();
+           ret_val += ')';
+           return ret_val;
+         }
+         else return create_stringRepr_predef2("decvalue_unichar");
       }
       case OPTYPE_STR2BIT:
         return create_stringRepr_predef1("str2bit");
@@ -10655,7 +10831,7 @@ error:
   {
     string ret_val(function_name);
     ret_val += '(';
-    if (u.expr.v_optype == OPTYPE_ENCODE) { // ti1, not v1
+    if (u.expr.v_optype == OPTYPE_ENCODE || u.expr.v_optype == OPTYPE_ENCVALUE_UNICHAR) { // ti1, not v1
       ret_val += u.expr.ti1->get_specific_value()->get_stringRepr();
     }
     else ret_val += u.expr.v1->get_stringRepr();
@@ -11272,6 +11448,20 @@ error:
       case OPTYPE_TTCN2STRING:
         str = u.expr.ti1->rearrange_init_code(str, usage_mod);
         break;
+      case OPTYPE_ENCVALUE_UNICHAR:
+        str = u.expr.ti1->rearrange_init_code(str, usage_mod);
+        if (u.expr.v2) str = u.expr.v2->rearrange_init_code(str, usage_mod);
+        break;
+      case OPTYPE_DECVALUE_UNICHAR: {
+        Ttcn::ActualParList *parlist = u.expr.r1->get_parlist();
+        Common::Assignment *ass = u.expr.r1->get_refd_assignment();
+        if (parlist) str = parlist->rearrange_init_code(str, usage_mod);
+
+        parlist = u.expr.r2->get_parlist();
+        ass = u.expr.r2->get_refd_assignment();
+        if (parlist) str = parlist->rearrange_init_code(str, usage_mod);
+        if (u.expr.v3) str = u.expr.v3->rearrange_init_code(str, usage_mod);
+        break; }
       case OPTYPE_ISCHOSEN_T:
         str = u.expr.t1->rearrange_init_code(str, usage_mod);
         break;
@@ -11495,6 +11685,12 @@ error:
         generate_code_expr_predef2(expr, "unichar2oct", u.expr.v1, u.expr.v2);
       else
         generate_code_expr_predef1(expr, "unichar2oct", u.expr.v1);
+      break;
+    case OPTYPE_ENCVALUE_UNICHAR:
+        generate_code_expr_encvalue_unichar(expr);
+      break;
+    case OPTYPE_DECVALUE_UNICHAR:
+        generate_code_expr_decvalue_unichar(expr);
       break;
     case OPTYPE_OCT2HEX:
       generate_code_expr_predef1(expr, "oct2hex", u.expr.v1);
@@ -12346,7 +12542,7 @@ error:
         is_templ ? ".valueof()" : "");
     Code::free_expr(&expr2);
   }
-
+  
   void Value::generate_code_expr_decode(expression_struct *expr)
   {
     expression_struct expr1, expr2;
@@ -12430,6 +12626,197 @@ error:
       expr->postamble = mputprintf(expr->postamble, "%s", expr2.postamble);
     Code::free_expr(&expr1);
     Code::free_expr(&expr2);
+  }
+  
+void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
+  {
+    Value* v1 = 0;
+
+    Template* templ = u.expr.ti1->get_Template()->get_template_refd_last();
+    if (templ->get_templatetype() == Template::SPECIFIC_VALUE)
+      v1 = templ->get_specific_value();
+    Type* gov_last = templ->get_my_governor()->get_type_refd_last();
+
+    expression_struct expr2;
+    Code::init_expr(&expr2);
+
+    bool is_templ = false;
+    switch (templ->get_templatetype()) {
+    case Template::SPECIFIC_VALUE:
+      v1->generate_code_expr_mandatory(&expr2);
+      break;
+    default:
+      u.expr.ti1->generate_code(&expr2);
+      is_templ = true;
+      break;
+    }
+
+    if (!gov_last->is_coding_by_function()) {
+      const string& tmp_id = get_temporary_id();
+      const string& tmp_buf_id = get_temporary_id();
+      const string& tmp_ref_id = get_temporary_id();
+      expr->preamble = mputprintf(expr->preamble, "OCTETSTRING %s;\n",
+        tmp_id.c_str());
+      expr->preamble = mputprintf(expr->preamble, "TTCN_Buffer %s;\n",
+        tmp_buf_id.c_str());
+      if (expr2.preamble) { // copy preamble setting up the argument, if any
+        expr->preamble = mputstr(expr->preamble, expr2.preamble);
+        expr->preamble = mputc  (expr->preamble, '\n');
+      }
+      expr->preamble = mputprintf(expr->preamble, "%s const& %s = %s",
+        gov_last->get_genname_typedescriptor(
+          u.expr.ti1->get_Template()->get_my_scope()
+        ).c_str(),
+        tmp_ref_id.c_str(),
+        expr2.expr);
+      if (is_templ) // make a value out of the template, if needed
+        expr->preamble = mputprintf(expr->preamble, ".valueof()");
+      expr->preamble = mputprintf(expr->preamble,
+        ";\n%s.encode(%s_descr_, %s, TTCN_EncDec::CT_%s",
+        tmp_ref_id.c_str(),
+        gov_last->get_genname_typedescriptor(
+          u.expr.ti1->get_Template()->get_my_scope()
+        ).c_str(),
+        tmp_buf_id.c_str(),
+        gov_last->get_coding(true).c_str()
+      );
+      expr->preamble = mputstr(expr->preamble, ");\n");
+      expr->preamble = mputprintf(expr->preamble, "%s.get_string(%s);\n",
+        tmp_buf_id.c_str(),
+        tmp_id.c_str()
+      );
+      const char * v2_code = NULL;
+      if(u.expr.v2) {
+        v2_code = generate_code_char_coding_check(expr, u.expr.v2, "encvalue_unichar");
+      }
+      expr->expr = mputprintf(expr->expr, "oct2unichar(%s", tmp_id.c_str());
+      if(u.expr.v2) {
+        expr->expr = mputprintf(expr->expr, ", %s", v2_code);
+      } else {
+        expr->expr = mputprintf(expr->expr, ", \"UTF-8\"");  //default
+      }
+      expr->expr = mputprintf(expr->expr, ")");
+      if (expr2.postamble)
+        expr->postamble = mputstr(expr->postamble, expr2.postamble);
+    } else
+      expr->expr = mputprintf(expr->expr, "%s(%s%s)",
+        gov_last->get_coding(true).c_str(), expr2.expr,
+        is_templ ? ".valueof()" : "");
+    Code::free_expr(&expr2);
+  }
+
+  void Value::generate_code_expr_decvalue_unichar(expression_struct *expr)
+  {
+    expression_struct expr1, expr2;
+    Code::init_expr(&expr1);
+    Code::init_expr(&expr2);
+    u.expr.r1->generate_code(&expr1);
+    u.expr.r2->generate_code(&expr2);
+
+    Type* _type = u.expr.r2->get_refd_assignment()->get_Type()->
+      get_field_type(u.expr.r2->get_subrefs(), Type::EXPECTED_DYNAMIC_VALUE)->
+      get_type_refd_last();
+
+    if (expr1.preamble)
+      expr->preamble = mputprintf(expr->preamble, "%s", expr1.preamble);
+    if (expr2.preamble)
+      expr->preamble = mputprintf(expr->preamble, "%s", expr2.preamble);
+
+    if (!_type->is_coding_by_function()) {
+      const string& tmp_id = get_temporary_id();
+      const string& buffer_id = get_temporary_id();
+      const string& retval_id = get_temporary_id();
+      const bool optional = u.expr.r2->get_refd_assignment()->get_Type()->
+        field_is_optional(u.expr.r2->get_subrefs());
+
+      const char* v3_code = NULL;
+      if(u.expr.v3) {
+        v3_code = generate_code_char_coding_check(expr, u.expr.v3, "decvalue_unichar");
+      }
+      expr->preamble = mputprintf(expr->preamble,
+        "TTCN_Buffer %s(unichar2oct(%s, %s));\n"
+        "INTEGER %s;\n"
+        "TTCN_EncDec::set_error_behavior("
+        "TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);\n"
+        "TTCN_EncDec::clear_error();\n",
+        buffer_id.c_str(),
+        expr1.expr,
+        u.expr.v3 ? v3_code : "\"UTF-8\"",
+        retval_id.c_str()
+      );
+      expr->preamble = mputprintf(expr->preamble,
+        "%s%s.decode(%s_descr_, %s, TTCN_EncDec::CT_%s);\n",
+        expr2.expr,
+        optional ? "()" : "",
+          _type->get_genname_typedescriptor(
+            u.expr.r2->get_my_scope()
+          ).c_str(),
+          buffer_id.c_str(),
+          _type->get_coding(false).c_str()
+      );
+      expr->preamble = mputprintf(expr->preamble,
+        "switch (TTCN_EncDec::get_last_error_type()) {\n"
+        "case TTCN_EncDec::ET_NONE: {\n"
+        "%s.cut();\n"
+        "OCTETSTRING %s;\n"
+        "%s.get_string(%s);\n"
+        "%s = oct2unichar(%s, %s);\n"
+        "%s = 0;\n"
+        "}break;\n"
+        "case TTCN_EncDec::ET_INCOMPL_MSG:\n"
+        "case TTCN_EncDec::ET_LEN_ERR:\n"
+        "%s = 2;\n"
+        "break;\n"
+        "default:\n"
+        "%s = 1;\n"
+        "}\n"
+        "TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL,"
+        "TTCN_EncDec::EB_DEFAULT);\n"
+        "TTCN_EncDec::clear_error();\n",
+        buffer_id.c_str(),
+        tmp_id.c_str(),
+        buffer_id.c_str(),
+        tmp_id.c_str(),
+        expr1.expr,
+        tmp_id.c_str(),
+        u.expr.v3 ? v3_code : "\"UTF-8\"",
+        retval_id.c_str(),
+        retval_id.c_str(),
+        retval_id.c_str()
+      );
+      expr->expr = mputprintf(expr->expr, "%s", retval_id.c_str());
+    } else
+      expr->expr = mputprintf(expr->expr, "%s(%s, %s)",
+        _type->get_coding(false).c_str(), expr1.expr, expr2.expr);
+    if (expr1.postamble)
+      expr->postamble = mputprintf(expr->postamble, "%s", expr1.postamble);
+    if (expr2.postamble)
+      expr->postamble = mputprintf(expr->postamble, "%s", expr2.postamble);
+    Code::free_expr(&expr1);
+    Code::free_expr(&expr2);
+  }
+  
+  char* Value::generate_code_char_coding_check(expression_struct *expr, Value *v, const char *name)
+  {
+    expression_struct expr2;
+    Code::init_expr(&expr2);
+    v->generate_code_expr_mandatory(&expr2);
+    expr->preamble = mputprintf(expr->preamble,
+      "if (\"UTF-8\" != %s && \"UTF-16\" != %s && \"UTF-16LE\" != %s && \n"
+      "  \"UTF-16BE\" != %s && \"UTF-32\" != %s && \"UTF-32LE\" != %s && \n"
+      "  \"UTF-32BE\" != %s) {\n"
+      "   TTCN_error(\"%s: Invalid encoding parameter: %%s\", (const char*)%s);\n"
+      "}\n", //todo errorbehaviour?
+      expr2.expr,
+      expr2.expr,
+      expr2.expr,
+      expr2.expr,
+      expr2.expr,
+      expr2.expr,
+      expr2.expr,
+      name,
+      expr2.expr);
+    return expr2.expr;
   }
 
   char *Value::generate_code_init_choice(char *str, const char *name)
@@ -13091,6 +13478,8 @@ error:
     case OPTYPE_ISBOUND:
     case OPTYPE_ISPRESENT:
     case OPTYPE_TTCN2STRING:
+    case OPTYPE_ENCVALUE_UNICHAR:
+    case OPTYPE_DECVALUE_UNICHAR:
       return false;
     case OPTYPE_UNARYPLUS: // v1
     case OPTYPE_UNARYMINUS:

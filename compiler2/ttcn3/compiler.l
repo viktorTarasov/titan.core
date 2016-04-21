@@ -585,6 +585,8 @@ remove_bom	RETURN(remove_bomKeyWord);
 get_stringencoding	RETURN(get_stringencodingKeyWord);
 encode_base64	RETURN(encode_base64KeyWord);
 decode_base64	RETURN(decode_base64KeyWord);
+encvalue_unichar RETURN(encvalue_unicharKeyWord);
+decvalue_unichar RETURN(decvalue_unicharKeyWord);
 
 	/* Values */
 
