@@ -340,6 +340,7 @@ namespace Common {
         u.expr.v3 = p.u.expr.v3 ? p.u.expr.v3->clone() : 0;
         break;
       case OPTYPE_LOG2STR:
+      case OPTYPE_ANY2UNISTR:
         u.expr.logargs = p.u.expr.logargs->clone();
         break;
       default:
@@ -647,6 +648,7 @@ namespace Common {
       delete u.expr.v3;
       break;
     case OPTYPE_LOG2STR:
+    case OPTYPE_ANY2UNISTR:
       delete u.expr.logargs;
       break;
     default:
@@ -1215,6 +1217,7 @@ namespace Common {
     u.expr.state = EXPR_NOT_CHECKED;
     switch(p_optype) {
     case OPTYPE_LOG2STR:
+    case OPTYPE_ANY2UNISTR:
       if (!p_logargs) FATAL_ERROR("Value::Value()");
       u.expr.logargs = p_logargs;
       break;
@@ -1640,6 +1643,9 @@ namespace Common {
     case OPTYPE_LOG2STR:
       u.expr.logargs->set_fullname(p_fullname+".<logargs>");
       break;
+    case OPTYPE_ANY2UNISTR:
+      u.expr.logargs->set_fullname(p_fullname+".<logarg>");
+      break;
     default:
       FATAL_ERROR("Value::set_fullname_expr()");
     } // switch
@@ -1828,6 +1834,7 @@ namespace Common {
 	u.expr.v3->set_my_scope(p_scope);
       break;
     case OPTYPE_LOG2STR:
+    case OPTYPE_ANY2UNISTR:
       u.expr.logargs->set_my_scope(p_scope);
       break;
     default:
@@ -2152,6 +2159,7 @@ namespace Common {
           u.expr.v3->set_code_section(p_code_section);
       break;
       case OPTYPE_LOG2STR:
+      case OPTYPE_ANY2UNISTR:
         u.expr.logargs->set_code_section(p_code_section);
         break;
       default:
@@ -3131,6 +3139,7 @@ namespace Common {
       case OPTYPE_INT2UNICHAR:
       case OPTYPE_OCT2UNICHAR:
       case OPTYPE_ENCVALUE_UNICHAR:
+      case OPTYPE_ANY2UNISTR:
         return Type::T_USTR;
       case OPTYPE_INT2BIT:
       case OPTYPE_HEX2BIT:
@@ -3578,6 +3587,8 @@ namespace Common {
       return "isbound()";
     case OPTYPE_LOG2STR:
       return "log2str()";
+    case OPTYPE_ANY2UNISTR:
+      return "any2unistr()";
     case OPTYPE_TTCN2STRING:
       return "ttcn2string()";
     case OPTYPE_PROF_RUNNING:
@@ -5402,7 +5413,8 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
   void Value::chk_expr_operand_encode(ReferenceChain *refch,
     Type::expected_value_t exp_val) {
 
-    Error_Context cntxt(this, "In the parameter of encvalue()");
+    Error_Context cntxt(this, "In the parameter of %s",
+      u.expr.v_optype == OPTYPE_ENCVALUE_UNICHAR ? "encvalue_unichar()" : "encvalue()");
     Type t_chk(Type::T_ERROR);
     Type* t_type;
 
@@ -5461,7 +5473,8 @@ error:
 
   void Value::chk_expr_operands_decode(operationtype_t p_optype)
   {
-    Error_Context cntxt(this, "In the parameters of decvalue()"); //todo
+    Error_Context cntxt(this, "In the parameters of %s",
+      p_optype == OPTYPE_DECVALUE_UNICHAR ? "encvalue_unichar()" : "decvalue()");
     Ttcn::Ref_base* ref = u.expr.r1;
     Ttcn::FieldOrArrayRefs* t_subrefs = ref->get_subrefs();
     Type* t_type = 0;
@@ -7115,7 +7128,8 @@ error:
       }
       chk_expr_operands_replace();
       break; }
-    case OPTYPE_LOG2STR: {
+    case OPTYPE_LOG2STR:
+    case OPTYPE_ANY2UNISTR: {
       Error_Context cntxt(this, "In the operand of operation `%s'", opname);
       u.expr.logargs->chk();
       if (!semantic_check_only) u.expr.logargs->join_strings();
@@ -7184,6 +7198,7 @@ error:
     case OPTYPE_MATCH: // v1 t2
     case OPTYPE_ISCHOSEN_T:
     case OPTYPE_LOG2STR:
+    case OPTYPE_ANY2UNISTR:
     case OPTYPE_ENCODE:
     case OPTYPE_DECODE:
     case OPTYPE_ISBOUND:
@@ -8627,6 +8642,7 @@ error:
       case OPTYPE_ISCHOSEN_V:
         return u.expr.v1->is_unfoldable(refch, exp_val);
       case OPTYPE_LOG2STR:
+      case OPTYPE_ANY2UNISTR:
       case OPTYPE_TTCN2STRING:
         return true;
       default:
@@ -9840,6 +9856,7 @@ error:
       refch.prev_state();
       break;
     case OPTYPE_LOG2STR:
+    case OPTYPE_ANY2UNISTR:
       u.expr.logargs->chk_recursions(refch);
       break;
     default:
@@ -10140,14 +10157,16 @@ error:
       // boolvar := a_timer.running -- assume no self-ref
       break;
       break;
-
+      
+    case OPTYPE_ANY2UNISTR:
     case OPTYPE_LOG2STR: {// logargs
       for (size_t i = 0, e = u.expr.logargs->get_nof_logargs(); i < e; ++i) {
         const Ttcn::LogArgument *la = u.expr.logargs->get_logarg_byIndex(i);
         switch (la->get_type()) {
         case Ttcn::LogArgument::L_UNDEF:
         case Ttcn::LogArgument::L_ERROR:
-          FATAL_ERROR("log2str argument type");
+          FATAL_ERROR("%s argument type",
+            u.expr.v_optype == OPTYPE_ANY2UNISTR ? "any2unistr" : "log2str");
           break; // not reached
 
         case Ttcn::LogArgument::L_MACRO:
@@ -10617,6 +10636,8 @@ error:
 	return ret_val; }
       case OPTYPE_LOG2STR:
         return string("log2str(...)");
+      case OPTYPE_ANY2UNISTR:
+        return string("any2unistr(...)");     
       case OPTYPE_MATCH: {
         string ret_val("match(");
         ret_val += u.expr.v1->get_stringRepr();
@@ -12006,6 +12027,7 @@ error:
       generate_code_expr_execute_refd(expr);
       break;
     case OPTYPE_LOG2STR:
+    case OPTYPE_ANY2UNISTR:
       u.expr.logargs->generate_code_expr(expr);
       break;
     case OPTYPE_TTCN2STRING: {
@@ -13580,6 +13602,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     case OPTYPE_VALUEOF: // ti1
       return u.expr.ti1->has_single_expr();
     case OPTYPE_LOG2STR:
+    case OPTYPE_ANY2UNISTR:
       return u.expr.logargs->has_single_expr();
     case OPTYPE_MATCH: // v1 t2
       return u.expr.v1->has_single_expr() &&

@@ -258,11 +258,13 @@ namespace Common {
       OPTYPE_EXECUTE, // r1 [v2]
       OPTYPE_EXECUTE_REFD, // v1 t_list2 [v3]
 
-      OPTYPE_LOG2STR, // logagrs
+      OPTYPE_LOG2STR, // logargs
       OPTYPE_PROF_RUNNING, // -     99
       
       OPTYPE_ENCVALUE_UNICHAR, // ti1 [v2]
       OPTYPE_DECVALUE_UNICHAR, // r1 r2 [v3]
+      
+      OPTYPE_ANY2UNISTR, // logarg, length = 1
 
       NUMBER_OF_OPTYPES // must be last
     };

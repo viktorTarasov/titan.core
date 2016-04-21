@@ -587,6 +587,7 @@ encode_base64	RETURN(encode_base64KeyWord);
 decode_base64	RETURN(decode_base64KeyWord);
 encvalue_unichar RETURN(encvalue_unicharKeyWord);
 decvalue_unichar RETURN(decvalue_unicharKeyWord);
+any2unistr      RETURN(any2unistrKeyWord);
 
 	/* Values */
 
