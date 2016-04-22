@@ -5556,7 +5556,7 @@ DisconnectStatement: // 335
   }
 | DisconnectKeyword SingleOrMultiConnectionSpec
   {
-    if ($2.compref1 && $2.portref1 && $2.compref1 && $2.compref2) {
+    if ($2.portref1 && $2.portref2 && $2.compref1 && $2.compref2) {
       $$ = new Statement(Statement::S_DISCONNECT,
 	$2.compref1, $2.portref1, $2.compref2, $2.portref2);
     } else {
