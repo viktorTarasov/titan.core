@@ -3053,8 +3053,9 @@ end:
       warning("Don't know how to init PERMUT");
       str = mputprintf(str, "/* FIXME: PERMUT goes here, name=%s*/\n", name);
       break;
-    case TEMPLATE_ERROR:
     case TEMPLATE_NOTUSED:
+      break;
+    case TEMPLATE_ERROR:
       // "default"
       FATAL_ERROR("Template::generate_code_init()");
     }
@@ -4536,6 +4537,7 @@ compile_time:
     case OSTR_PATTERN:
     case CSTR_PATTERN:
     case USTR_PATTERN:
+    case TEMPLATE_NOTUSED:
       return false;
     case TEMPLATE_LIST:
       // temporary reference is needed if the template has at least one
@@ -4564,7 +4566,6 @@ compile_time:
     case SUBSET_MATCH:
       return true;
     case TEMPLATE_ERROR:
-    case TEMPLATE_NOTUSED:
       FATAL_ERROR("Template::needs_temp_ref()");
     case PERMUTATION_MATCH:
       // FIXME
@@ -4586,6 +4587,7 @@ compile_time:
     case OSTR_PATTERN:
     case CSTR_PATTERN:
     case USTR_PATTERN:
+    case TEMPLATE_NOTUSED:
       return true;
     case SPECIFIC_VALUE:
       return u.specific_value->has_single_expr();
