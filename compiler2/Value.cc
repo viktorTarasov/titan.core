@@ -5474,7 +5474,7 @@ error:
   void Value::chk_expr_operands_decode(operationtype_t p_optype)
   {
     Error_Context cntxt(this, "In the parameters of %s",
-      p_optype == OPTYPE_DECVALUE_UNICHAR ? "encvalue_unichar()" : "decvalue()");
+      p_optype == OPTYPE_DECVALUE_UNICHAR ? "decvalue_unichar()" : "decvalue()");
     Ttcn::Ref_base* ref = u.expr.r1;
     Ttcn::FieldOrArrayRefs* t_subrefs = ref->get_subrefs();
     Type* t_type = 0;
