@@ -95,7 +95,7 @@ system("ln -s @symlinkfiles ./");
 map { s!.+/!!g } @files;
 
 # Generate the makefile
-print("$ENV{TTCN3_DIR}/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest @files");
+print("$ENV{TTCN3_DIR}/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest @files\n");
 
 system(   "\$TTCN3_DIR/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -o Makefile.1 @files");
 
