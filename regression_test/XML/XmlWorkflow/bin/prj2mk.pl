@@ -98,6 +98,7 @@ system("ln -s @symlinkfiles ./");
 map { s!.+/!!g } @files;
 
 # Generate the makefile
+print("LD_LIBRARY_PATH is $ENV{LD_LIBRARY_PATH}\n");#temporary debug printout
 print("$ENV{TTCN3_DIR}/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest @files\n");
 
 system(   "\$TTCN3_DIR/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -o Makefile.1 @files");
