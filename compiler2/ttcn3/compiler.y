@@ -834,6 +834,7 @@ static const string anyname("anytype");
 %token decode_base64KeyWord
 %token encvalue_unicharKeyWord
 %token decvalue_unicharKeyWord
+%token any2unistrKeyWord
 
 /* Multi-character operators */
 
@@ -8725,6 +8726,20 @@ PredefinedOps:
   {
     $$ = new Value(Value::OPTYPE_LOG2STR, new LogArguments());
     $$->set_location(infile, @$);
+  }
+| any2unistrKeyWord '(' LogItemList optError ')'
+  {
+    if ($3->get_nof_logargs() != 1) {
+      Location loc(infile, @1);
+      loc.error("The any2unistr function takes exactly one argument, not %lu.",
+        $3->get_nof_logargs());
+        delete $3;
+        $$ = new Value(Value::OPTYPE_ANY2UNISTR, new LogArguments());
+        $$->set_location(infile, @$);
+    } else {
+      $$ = new Value(Value::OPTYPE_ANY2UNISTR, $3);
+      $$->set_location(infile, @$);
+    }
   }
 | testcasenameKeyword '(' ')'
   {
