@@ -42,9 +42,9 @@ module Sem_B0105_toplevel_002 {
  		}
        
  		v_testMessage:=  {  
-		  	field1 := "Å±",
-		  	field2 := "Å±1234Å´",
-		  	field3 := "Å±"
+		  	field1 := "ű",
+		  	field2 := "ű1234Ŵ",
+		  	field3 := "ű"
  		} 
  
 		connect(self:messagePort, self:messagePort);

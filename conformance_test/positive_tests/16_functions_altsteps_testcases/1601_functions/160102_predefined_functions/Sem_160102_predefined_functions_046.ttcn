@@ -20,7 +20,7 @@
 
 module Sem_160102_predefined_functions_046 {
 	    
-        type record MyRec {
+    type record MyRec {
         integer field1,
         boolean field2,
         integer field3 optional
@@ -34,9 +34,9 @@ module Sem_160102_predefined_functions_046 {
        template MyRec v_4 := {1,false,-}; // record containing integer, boolean and optional elements
            
         // record containing integer, boolean and optional elements
-        if(match(any2unistr(v_4),pattern "{ field1 := 1, field2 := false, field3 := UNINITIALIZED }" )) { 
+        if(match(any2unistr(v_4),"{ field1 := 1, field2 := false, field3 := <uninitialized template> }" )) { 
           setverdict(pass,"Result: ",any2unistr(v_4));}
-         else{setverdict(fail,"Result is: ",any2unistr(v_4), " Expected:{ field1 := 1, field2 := false, field3 := UNINITIALIZED }");}        
+         else{setverdict(fail,"Result is: ",any2unistr(v_4), " Expected:{ field1 := 1, field2 := false, field3 := <uninitialized template> }");}        
     }
 
     control{

@@ -7,35 +7,35 @@
  ***************************************************/
 module Sem_060202_SetTypeValues_007 {
 
-type component GeneralComp {	    	    
-}
+	type component GeneralComp {	    	    
+	}
 
- type record S {
-  integer f1,
-  integer f2 optional,
-  integer f3,
-  integer f4 optional,
-  integer f5 optional
- }  
- 
-testcase TC_Sem_060202_SetTypeValues_007() runs on GeneralComp {
+ 	type record S {
+	  integer f1,
+	  integer f2 optional,
+	  integer f3,
+	  integer f4 optional,
+	  integer f5 optional
+ 	}  
 
- var S v_assigned := { 1, 2, 3 } with { optional "implicit omit" }
+	const S v_assigned := { f1 := 1, f2 := 2, f3 := 3 } with { optional "implicit omit" }
  
-      if ( match(v_assigned.f1,1) 
+	testcase TC_Sem_060202_SetTypeValues_007() runs on GeneralComp {
+
+      	if ( match(v_assigned.f1,1) 
            and match(v_assigned.f3,3) 
            and not ispresent(v_assigned.f4) 
            and not ispresent(v_assigned.f5) ) {
-	    setverdict(pass);
-      }
-      else {
-	    setverdict(fail);
-	  }
+	    	setverdict(pass);
+      	}
+      	else {
+	    	setverdict(fail);
+	  	}
 
-}
+	}
 
-control {
-    execute(TC_Sem_060202_SetTypeValues_007());
-}
+	control {
+		execute(TC_Sem_060202_SetTypeValues_007());
+	}
 
 }

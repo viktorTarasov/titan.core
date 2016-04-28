@@ -16,24 +16,20 @@
 //Two ports are mapped to two system interface
 module Sem_0902_Communication_ports_002{ 
 
- 	type port loopbackPort message {
+ 	type port loopbackPort1 message {
 	  	inout integer
 	}
-
- 	type port MyMessagePortType message {
-	  	inout integer
-	}	
 
 	type component GeneralComp
 	{
 		var integer v_received1:=0;
 		var integer v_received2:=0;
-		port MyMessagePortType myPortA,myPortB
+		port loopbackPort1 myPortA,myPortB
 	}
 
 	type component MyTestSystemInterface
 	{
- 		port loopbackPort messagePortA,messagePortB
+ 		port loopbackPort1 messagePortA,messagePortB
 	}
 	
 	// MyTestSystemInterface is the test system interface
@@ -41,7 +37,6 @@ module Sem_0902_Communication_ports_002{
 		// establishing the port connections
 		map(mtc:myPortA, system:messagePortA);
 		map(mtc:myPortB, system:messagePortB);
-
 
 		myPortA.send(2);  //can send also in-line template
 		myPortB.send(3); 

@@ -29,8 +29,8 @@ module Sem_160102_predefined_functions_043 {
          var integer v_1;    //uninitialized value
            
         //uninitialized value
-        if( match(any2unistr(v_1),"UNINITIALIZED")) { setverdict(pass,"Result: ",any2unistr(v_1));}
-         else{setverdict(fail,"Result is: ",any2unistr(v_1), " Expected: UNINITIALIZED");}
+        if( match(any2unistr(v_1),"<unbound>")) { setverdict(pass,"Result: ",any2unistr(v_1));}
+         else{setverdict(fail,"Result is: ",any2unistr(v_1), " Expected: unbound");}
        
     }
 

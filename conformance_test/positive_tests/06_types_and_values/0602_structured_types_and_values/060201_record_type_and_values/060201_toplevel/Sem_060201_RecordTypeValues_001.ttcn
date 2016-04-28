@@ -3,32 +3,33 @@
  ** @version  0.0.1
  ** @desc     Test cases for clause 6.2                     
  ** @purpose  1:6.2, Ensure that assignments with "implicit omit" attribute are correctly handled
- ** @verdict  pass accept, ttcn3verdict:pass
+ ** @verdict  pass reject
  ***************************************************/
-module Sem_060201_RecordTypeValues_001  {
+module Sem_060201_RecordTypeValues_001 {
 
 	type component GeneralComp {	    	    
 	}
 
-	type record R {
+	 type record R {
 	  	integer f1,
 	  	integer f2 optional,
 	  	integer f3,
 	  	integer f4 optional,
 	  	integer f5 optional
-	}  
+	 }  
 
-	const R v_assigned := { 1, -, 2 } with { optional "implicit omit" }
+	const R v_assigned := { 1, 2 } 
+		with { optional "implicit omit" }
 	 
 	testcase TC_Sem_060201_RecordTypeValues_001() runs on GeneralComp {
 
-	 	template R m_check := { 1, omit, 2, omit, omit }
+	 	template R m_check := { 1, omit, 2, omit, omit };
 	 
-		if (match(v_assigned,m_check)) {
-			setverdict(pass);
+		if (match(v_assigned,m_check)) {  //cannot match undefined components of v_assigned
+			setverdict(fail, "somehow it matched?");
 		}
 		else {
-			setverdict(fail);
+			setverdict(pass, "cannot match: ", v_assigned, " with ", m_check);
 		}
 
 	}
@@ -37,4 +38,4 @@ module Sem_060201_RecordTypeValues_001  {
 		execute(TC_Sem_060201_RecordTypeValues_001());
 	}
 
-}
+} 
