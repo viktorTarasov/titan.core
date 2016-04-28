@@ -13,17 +13,18 @@
  ******************************************************************************/
 #include "dbgnew.hh"
 #include <stddef.h>
+#include <new>
 
 #undef new
 
 static void *dummy = NULL;
 
-void *operator new(size_t size) throw ()
+void *operator new(size_t size) throw (std::bad_alloc)
 {
     return Malloc(size);
 }
 
-void *operator new[](size_t size) throw ()
+void *operator new[](size_t size) throw (std::bad_alloc)
 {
     if (size == 0) return &dummy;
     else return Malloc(size);
