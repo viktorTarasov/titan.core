@@ -19,6 +19,7 @@
 #   Kremer, Peter
 #   Lovassy, Arpad
 #   Ormandi, Matyas
+#   Pilisi, Gergely
 #   Raduly, Csaba
 #   Szabados, Kristof
 #   Szabo, Janos Zoltan – initial implementation
@@ -94,7 +95,7 @@ endif
 # check is the standard GNU target for running tests
 # (avoids clash with shell builtin 'test')
 check:
-	make -C regression_test report
+	compiler2/compiler -v
 
 ifneq (,$(findstring prereq,$(MAKECMDGOALS)))
 # Export all variables into the environment for the prereq target
