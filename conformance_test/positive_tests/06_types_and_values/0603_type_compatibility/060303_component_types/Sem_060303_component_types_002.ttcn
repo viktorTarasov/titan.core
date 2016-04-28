@@ -17,8 +17,7 @@ module Sem_060303_component_types_002 {
 
     type integer ConstrainedInteger(0..10);
 
-    type component TestCaseComp {
-        const integer c_integer:=2;
+    type component TestCaseComp extends FunctionComp{
         const ConstrainedInteger c_constrained:=2;
     }
 

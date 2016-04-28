@@ -26,16 +26,19 @@ module Sem_060101_TopLevel_007 {
     
     testcase TC_Sem_060101_TopLevel_007() runs on GeneralComp {
         var universal charstring v_a  :=  char(U0041);  //USI notation for character "A"
-        var universal charstring v_b  :=  char(U0171);  //USI notation for character "Å±"
+        var universal charstring v_b  :=  char(U0171);  //USI notation for character "ű"
         var universal charstring v_c  :=  char(U41);    //USI notation for character "A" without leading zeroes
-        var universal charstring v_d  :=  char(U+171,U41);  //USI notation for character "Å±" and "A"  without leading zeroes and + sign notation
+        var universal charstring v_d  :=  char(U+171,U41);  //USI notation for character "ű" and "A"  without leading zeroes and + sign notation
 
-        
+  	var universal charstring a_exp := "A";
+        var universal charstring b_exp := "ű";
+	var universal charstring c_exp := "A";
+	var universal charstring d_exp := "űA";      
                
-    	if (match(v_a,"A") and 
-            match(v_b,"Å±") and
-            match(v_c,"A") and
-            match(v_d,"Å±A"))
+    	if (match(v_a,a_exp) and 
+            match(v_b,"ű") and
+            match(v_c,c_exp) and
+            match(v_d,"űA"))
         {
     		setverdict(pass,"v_a:",v_a, "v_b:",v_b, "v_c:",v_c,"v_d:",v_d);
     	}
@@ -48,3 +51,5 @@ module Sem_060101_TopLevel_007 {
         execute(TC_Sem_060101_TopLevel_007());
     }
 }
+
+

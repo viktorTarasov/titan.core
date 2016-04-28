@@ -26,9 +26,11 @@ module Sem_160102_predefined_functions_066 {
 
     }
 
+	type charstring CS with { variant "FIELDLENGTH(2), ALIGN(right)" };
+
     testcase TC_Sem_160102_predefined_functions_066 () runs on GeneralComp {
 
-    	var charstring v_test := "abc";
+    	var CS v_test := "ab";
 
      	//Encoding:  
 
@@ -44,4 +46,4 @@ module Sem_160102_predefined_functions_066 {
 
     }
 
-}
+} with { encode "RAW"}

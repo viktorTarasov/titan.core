@@ -26,19 +26,22 @@ module Sem_160102_predefined_functions_072 {
 
     }
 
+	type integer I with { variant "FIELDLENGTH(16)" };
+
     testcase TC_Sem_160102_predefined_functions_072 () runs on GeneralComp {
 
+		var I input := 123;
     
 		//encoded text:
-	   	var universal charstring v_enc := encvalue_unichar(123,"UTF-16");
+	   	var universal charstring v_enc := encvalue_unichar(input,"UTF-16");
 
 
 		//decode:
-		var integer v_test_dec;
+		var I v_test_dec;
 		var integer v_res:= decvalue_unichar(v_enc,v_test_dec,"UTF-16"); //decode (UTF-16)
 		
 		if (v_res == 0) {
-		      setverdict(pass, "Decoded ", v_enc , " with result ", v_res);
+		      setverdict(pass, "Decoded ", v_enc , " into ", v_test_dec, " with result ", v_res);
 		} else {
 		      setverdict(fail, "Unexpected decoding result: Decoded ", v_enc , " with result ", v_res);
 		}
@@ -51,4 +54,4 @@ module Sem_160102_predefined_functions_072 {
 
     }
 
-}
+} with { encode "RAW"}
