@@ -3648,7 +3648,7 @@ static void print_makefile(struct makefile_struct *makefile)
     if (makefile->linkingStrategy) {
       fputs("\n\n"
         "archive:\n"
-        "\t@perl $(TTCN3_DIR)/bin/ttcn3_archive.pl\n\n", fp);
+        "\t@perl $(TTCN3_DIR)/bin/ttcn3_archive\n\n", fp);
     }
     else {
       fputs("\n\n"
