@@ -10760,7 +10760,7 @@ error:
       case OPTYPE_CHECKSTATE_ALL: {
         string ret_val("");
         if (u.expr.r1) {
-          ret_val += "port";
+          ret_val += u.expr.r1->get_dispname();
         } else {
           if (u.expr.v_optype == OPTYPE_CHECKSTATE_ANY) {
             ret_val += "any port";
