@@ -298,6 +298,11 @@ namespace Common {
         u.expr.r1=p.u.expr.r1->clone();
         u.expr.v2=p.u.expr.v2?p.u.expr.v2->clone():0;
         break;
+      case OPTYPE_CHECKSTATE_ANY: // [r1] v2
+      case OPTYPE_CHECKSTATE_ALL:
+        u.expr.r1=p.u.expr.r1?p.u.expr.r1->clone():0;
+        u.expr.v2=p.u.expr.v2->clone();
+        break;
       case OPTYPE_COMP_CREATE: // r1 [v2] [v3]
         u.expr.r1=p.u.expr.r1->clone();
         u.expr.v2=p.u.expr.v2?p.u.expr.v2->clone():0;
@@ -608,6 +613,11 @@ namespace Common {
       delete u.expr.r1;
       break;
     case OPTYPE_EXECUTE: // r1 [v2]
+      delete u.expr.r1;
+      delete u.expr.v2;
+      break;
+    case OPTYPE_CHECKSTATE_ANY: // [r1] v2
+    case OPTYPE_CHECKSTATE_ALL:
       delete u.expr.r1;
       delete u.expr.v2;
       break;
@@ -997,7 +1007,7 @@ namespace Common {
     }
   }
 
-  // r1 [v2]
+  // r1 [v2] or [r1] v2
   Value::Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Value *p_v2)
     : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
   {
@@ -1007,6 +1017,12 @@ namespace Common {
     case OPTYPE_EXECUTE:
       if(!p_r1) FATAL_ERROR("Value::Value()");
       u.expr.r1=p_r1;
+      u.expr.v2=p_v2;
+      break;
+    case OPTYPE_CHECKSTATE_ANY:
+    case OPTYPE_CHECKSTATE_ALL:
+      if(!p_v2) FATAL_ERROR("Value::Value()");
+      u.expr.r1=p_r1; // may be null if any port or all port
       u.expr.v2=p_v2;
       break;
     default:
@@ -1646,6 +1662,10 @@ namespace Common {
     case OPTYPE_ANY2UNISTR:
       u.expr.logargs->set_fullname(p_fullname+".<logarg>");
       break;
+    case OPTYPE_CHECKSTATE_ANY: // [r1] v2
+    case OPTYPE_CHECKSTATE_ALL:
+      u.expr.v2->set_fullname(p_fullname+".<operand1>");
+      break;
     default:
       FATAL_ERROR("Value::set_fullname_expr()");
     } // switch
@@ -1797,6 +1817,11 @@ namespace Common {
     case OPTYPE_EXECUTE: // r1 [v2]
       u.expr.r1->set_my_scope(p_scope);
       if(u.expr.v2) u.expr.v2->set_my_scope(p_scope);
+      break;
+    case OPTYPE_CHECKSTATE_ANY: // [r1] v2
+    case OPTYPE_CHECKSTATE_ALL:
+      if(u.expr.r1) u.expr.r1->set_my_scope(p_scope);
+      u.expr.v2->set_my_scope(p_scope);
       break;
     case OPTYPE_COMP_CREATE: // r1 [v2] [v3]
       u.expr.r1->set_my_scope(p_scope);
@@ -2117,6 +2142,11 @@ namespace Common {
       case OPTYPE_EXECUTE: // r1 [v2]
         u.expr.r1->set_code_section(p_code_section);
         if(u.expr.v2) u.expr.v2->set_code_section(p_code_section);
+        break;
+      case OPTYPE_CHECKSTATE_ANY: // [r1] v2
+      case OPTYPE_CHECKSTATE_ALL:
+        if(u.expr.r1) u.expr.r1->set_code_section(p_code_section);
+        u.expr.v2->set_code_section(p_code_section);
         break;
       case OPTYPE_COMP_CREATE: // r1 [v2] [v3] b4
         u.expr.r1->set_code_section(p_code_section);
@@ -2899,6 +2929,8 @@ namespace Common {
       case OPTYPE_ISVALUE:
       case OPTYPE_ISBOUND:
       case OPTYPE_PROF_RUNNING:
+      case OPTYPE_CHECKSTATE_ANY:
+      case OPTYPE_CHECKSTATE_ALL:
         return Type::T_BOOL;
       case OPTYPE_GETVERDICT:
         return Type::T_VERDICT;
@@ -3400,6 +3432,18 @@ namespace Common {
       return "getverdict()";
     case OPTYPE_TESTCASENAME:
       return "testcasename()";
+    case OPTYPE_CHECKSTATE_ANY:
+      if (u.expr.r1) {
+        return "port.checkstate()";
+      } else {
+        return "any port.checkstate()";
+      }
+    case OPTYPE_CHECKSTATE_ALL:
+      if (u.expr.r1) {
+        return "port.checkstate()";
+      } else {
+        return "all port.checkstate()";
+      }
     case OPTYPE_UNARYPLUS: // v1
       return "unary +";
     case OPTYPE_UNARYMINUS:
@@ -7062,6 +7106,18 @@ error:
       chk_expr_operand_activate(u.expr.r1, the, opname);
       chk_expr_dynamic_part(exp_val, true);
       break;
+    case OPTYPE_CHECKSTATE_ANY: // [r1] v2
+    case OPTYPE_CHECKSTATE_ALL:
+      chk_expr_dynamic_part(exp_val, false);
+      v2=u.expr.v2;
+      if(v2) {
+        Error_Context cntxt(this, "In the first operand of operation `%s'", opname);
+        v2->set_lowerid_to_ref();
+        tt2=v2->get_expr_returntype(exp_val);
+	chk_expr_operandtype_cstr(tt2, first, opname, v2);
+	chk_expr_eval_value(v2, t_chk, refch, exp_val);
+      }
+      break;
     case OPTYPE_ACTIVATE_REFD:{ //v1 t_list2
       Ttcn::ActualParList *parlist = new Ttcn::ActualParList;
       chk_expr_operand_activate_refd(u.expr.v1,u.expr.t_list2->get_tis(), parlist, the,
@@ -7210,6 +7266,8 @@ error:
     case OPTYPE_DECODE_BASE64:
     case OPTYPE_ENCVALUE_UNICHAR:
     case OPTYPE_DECVALUE_UNICHAR:
+    case OPTYPE_CHECKSTATE_ANY:
+    case OPTYPE_CHECKSTATE_ALL:
       break;
     case OPTYPE_TESTCASENAME: { // -
       if (!my_scope) FATAL_ERROR("Value::evaluate_value()");
@@ -8508,6 +8566,8 @@ error:
       case OPTYPE_DECODE_BASE64:
       case OPTYPE_ENCVALUE_UNICHAR:
       case OPTYPE_DECVALUE_UNICHAR:
+      case OPTYPE_CHECKSTATE_ANY:
+      case OPTYPE_CHECKSTATE_ALL:
         return true;
       case OPTYPE_COMP_NULL: // -
         return false;
@@ -10031,6 +10091,8 @@ error:
     case OPTYPE_TMR_RUNNING_ANY: // -
     case OPTYPE_GETVERDICT: // -
     case OPTYPE_PROF_RUNNING: // -
+    case OPTYPE_CHECKSTATE_ANY:
+    case OPTYPE_CHECKSTATE_ALL:
       break; // nothing to do
 
     case OPTYPE_MATCH: // v1 t2
@@ -10694,6 +10756,22 @@ error:
         return u.expr.r1->get_dispname() + ".running";
       case OPTYPE_TMR_RUNNING_ANY:
         return string("any timer.running");
+      case OPTYPE_CHECKSTATE_ANY:
+      case OPTYPE_CHECKSTATE_ALL: {
+        string ret_val("");
+        if (u.expr.r1) {
+          ret_val += "port";
+        } else {
+          if (u.expr.v_optype == OPTYPE_CHECKSTATE_ANY) {
+            ret_val += "any port";
+          } else if (u.expr.v_optype == OPTYPE_CHECKSTATE_ALL) {
+            ret_val += "all port";
+          }
+        }
+        ret_val += "checkstate(";
+        ret_val += u.expr.v2->get_stringRepr();
+        ret_val += ")";
+        return ret_val; }
       case OPTYPE_GETVERDICT:
         return string("getverdict");
       case OPTYPE_ACTIVATE: {
@@ -12017,6 +12095,10 @@ error:
     case OPTYPE_ACTIVATE: // r1
       generate_code_expr_activate(expr);
       break;
+    case OPTYPE_CHECKSTATE_ANY: // [r1] v2
+    case OPTYPE_CHECKSTATE_ALL:
+      generate_code_expr_checkstate(expr);
+      break;
     case OPTYPE_ACTIVATE_REFD: // v1 ap_list2
       generate_code_expr_activate_refd(expr);
       break;
@@ -12818,6 +12900,27 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     Code::free_expr(&expr2);
   }
   
+  void Value::generate_code_expr_checkstate(expression_struct *expr)
+  {
+    if (u.expr.r1) { 
+      // It is a port if r1 is not null
+      u.expr.r1->generate_code_const_ref(expr);
+      expr->expr = mputstr(expr->expr, ".");
+    } else {
+      // it is an any or all port if r1 is null
+      if (u.expr.v_optype == OPTYPE_CHECKSTATE_ANY) {
+       expr->expr = mputstr(expr->expr, "PORT::any_");
+      } else if (u.expr.v_optype == OPTYPE_CHECKSTATE_ALL) {
+        expr->expr = mputstr(expr->expr, "PORT::all_");
+      } else {
+        FATAL_ERROR("Value::generate_code_expr_checkstate()");
+      }
+    }
+    expr->expr = mputstr(expr->expr, "check_port_state(");
+    u.expr.v2->generate_code_expr_mandatory(expr);
+    expr->expr = mputstr(expr->expr, ")");
+  }
+  
   char* Value::generate_code_char_coding_check(expression_struct *expr, Value *v, const char *name)
   {
     expression_struct expr2;
@@ -13494,6 +13597,8 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     case OPTYPE_GETVERDICT:
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
+    case OPTYPE_CHECKSTATE_ANY:
+    case OPTYPE_CHECKSTATE_ALL:
       return true;
     case OPTYPE_ENCODE:
     case OPTYPE_DECODE:
