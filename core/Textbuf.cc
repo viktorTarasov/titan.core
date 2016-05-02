@@ -291,6 +291,18 @@ void Text_Buf::push_raw(int len, const void *data)
   buf_len += len;
 }
 
+void Text_Buf::push_raw_front(int len, const void* data)
+{
+  if (len < 0) TTCN_error("Text encoder: Encoding raw data with negative "
+                          "length (%d).", len);
+  Reallocate(buf_len + len);
+  for (int i = buf_len - 1; i >= 0; --i) {
+    ((char*)data_ptr)[buf_begin + len + i] = ((char*)data_ptr)[buf_begin + i];
+  }
+  memcpy((char*)data_ptr + buf_begin, data, len);
+  buf_len += len;
+}
+
 /** Extract a fixed number of bytes from the buffer.
  *
  * @param len number of bytes to read

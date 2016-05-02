@@ -40,6 +40,7 @@
 #include "../../common/version_internal.h"
 #include "../../common/memory.h"
 #include "../../common/config_preproc.h"
+#include "../../core/DebugCommands.hh"
 
 #define PROMPT "MC2> "
 #define CMTC_TEXT "cmtc"
@@ -100,6 +101,72 @@ static const Command command_list[] = {
   { EXIT_TEXT, &Cli::exitCallback, EXIT_TEXT, "Exit Main Controller." },
   { EXIT_TEXT2, &Cli::exitCallback, EXIT_TEXT2, "Exit Main Controller." },
   { NULL, NULL, NULL, NULL }
+};
+
+struct DebugCommand {
+  const char *name;
+  int commandID;
+  const char *synopsis;
+  const char *description;
+};
+
+static const DebugCommand debug_command_list[] = {
+  { D_SWITCH_TEXT, D_SWITCH, D_SWITCH_TEXT " on|off",
+    "Switch the debugger on or off." },
+  { D_ADD_BREAKPOINT_TEXT, D_ADD_BREAKPOINT,
+    D_ADD_BREAKPOINT_TEXT " <module> <line>",
+    "Add breakpoint at specified location." },
+  { D_REMOVE_BREAKPOINT_TEXT, D_REMOVE_BREAKPOINT,
+    D_REMOVE_BREAKPOINT_TEXT " <module> <line>",
+    "Remove breakpoint from specified location." },
+  { D_SET_ERROR_BEHAVIOR_TEXT, D_SET_ERROR_BEHAVIOR,
+    D_SET_ERROR_BEHAVIOR_TEXT " yes|no",
+    "Set whether to halt test execution when component verdict is set to 'error'." },
+  { D_SET_FAIL_BEHAVIOR_TEXT, D_SET_FAIL_BEHAVIOR,
+    D_SET_FAIL_BEHAVIOR_TEXT " yes|no",
+    "Set whether to halt test execution when component verdict is set to 'fail'." },
+  { D_SET_OUTPUT_TEXT, D_SET_OUTPUT,
+    D_SET_OUTPUT_TEXT " console|file|both [file_name]",
+    "Set the output of the debugger." },
+  { D_SET_COMPONENT_TEXT, D_SET_COMPONENT,
+    D_SET_COMPONENT_TEXT " mtc|<component_reference>",
+    "Set the test component to print debug information from." },
+  { D_PRINT_CALL_STACK_TEXT, D_PRINT_CALL_STACK, D_PRINT_CALL_STACK_TEXT,
+    "Print call stack." },
+  { D_SET_STACK_LEVEL_TEXT, D_SET_STACK_LEVEL, D_SET_STACK_LEVEL_TEXT " <level>",
+    "Set the stack level to print debug information from." },
+  { D_LIST_VARIABLES_TEXT, D_LIST_VARIABLES,
+    D_LIST_VARIABLES_TEXT " local|global|comp|all [pattern]",
+    "List variable names." },
+  { D_PRINT_VARIABLE_TEXT, D_PRINT_VARIABLE,
+    D_PRINT_VARIABLE_TEXT " <variable_name>[{ <variable_name>}]",
+    "Print current value of one or more variables." },
+  { D_OVERWRITE_VARIABLE_TEXT, D_OVERWRITE_VARIABLE,
+    D_OVERWRITE_VARIABLE_TEXT " <variable_name> <value>",
+    "Overwrite the current value of a variable." },
+  { D_PRINT_SNAPSHOTS_TEXT, D_PRINT_SNAPSHOTS, D_PRINT_SNAPSHOTS_TEXT,
+    "Print snapshots of function calls until this point." },
+  // D_SET_SNAPSHOT_BEHAVIOR_TEXT
+  { D_STEP_OVER_TEXT, D_STEP_OVER, D_STEP_OVER_TEXT,
+    "Resume test execution until the next line of code (in this function or the "
+    "caller function)." },
+  { D_STEP_INTO_TEXT, D_STEP_INTO, D_STEP_INTO_TEXT,
+    "Resume test execution until the next line of code (on any stack level)." },
+  { D_STEP_OUT_TEXT, D_STEP_OUT, D_STEP_OUT_TEXT,
+    "Resume test execution until the next line of code in the caller function." },
+  { D_RUN_TO_CURSOR_TEXT, D_RUN_TO_CURSOR, D_RUN_TO_CURSOR_TEXT " <module> <line>",
+    "Resume test execution until the specified location." },
+  { D_HALT_TEXT, D_HALT, D_HALT_TEXT, "Halt test execution." },
+  { D_CONTINUE_TEXT, D_CONTINUE, D_CONTINUE_TEXT, "Resume halted test execution." },
+  { D_EXIT_TEXT, D_EXIT, D_EXIT_TEXT " test|all",
+    "Exit the current test or the execution of all tests." },
+  { D_BATCH_TEXT, D_BATCH, D_BATCH_TEXT " <batch_file_name>",
+    "Run commands from batch file." },
+  { D_SET_HALTING_BATCH_FILE_TEXT, D_SET_HALTING_BATCH_FILE,
+    D_SET_HALTING_BATCH_FILE_TEXT " yes|no [batch_file_name]",
+    "Set whether a batch file should be executed automatically when test execution "
+    "is halted by the debugger." },
+  { NULL, D_ERROR, NULL, NULL }
 };
 
 Cli::Cli()
@@ -395,12 +462,22 @@ int Cli::batchMode()
 void Cli::processCommand(char *line_read)
 {
   for (const Command *command = command_list; command->name != NULL;
-    command++) {
+       command++) {
     size_t command_name_len = strlen(command->name);
     if (!strncmp(line_read, command->name, command_name_len)) {
       memset(line_read, ' ', command_name_len);
       stripLWS(line_read);
       (this->*command->callback_function)(line_read);
+      return;
+    }
+  }
+  for (const DebugCommand* command = debug_command_list; command->name != NULL;
+       command++) {
+    size_t command_name_len = strlen(command->name);
+    if (!strncmp(line_read, command->name, command_name_len)) {
+      memset(line_read, ' ', command_name_len);
+      stripLWS(line_read);
+      MainController::debug_command(command->commandID, line_read);
       return;
     }
   }
@@ -656,10 +733,24 @@ void Cli::helpCallback(const char *arguments)
       command->name != NULL; command++) {
       printf(" %s", command->name);
     }
+    for (const DebugCommand *command = debug_command_list;
+         command->name != NULL; command++) {
+      printf(" %s", command->name);
+    }
     putchar('\n');
   } else {
     for (const Command *command = command_list;
       command->name != NULL; command++) {
+      if (!strncmp(arguments, command->name,
+        strlen(command->name))) {
+        printf("%s usage: %s\n%s\n", command->name,
+          command->synopsis,
+          command->description);
+        return;
+      }
+    }
+    for (const DebugCommand *command = debug_command_list;
+         command->name != NULL; command++) {
       if (!strncmp(arguments, command->name,
         strlen(command->name))) {
         printf("%s usage: %s\n%s\n", command->name,
@@ -719,6 +810,7 @@ void Cli::exitCallback(const char *arguments)
 char *Cli::completeCommand(const char *prefix, int state)
 {
   static int command_index;
+  static int debug_command_index;
   static size_t prefix_len;
   const char *command_name;
 
@@ -727,12 +819,21 @@ char *Cli::completeCommand(const char *prefix, int state)
 
   if(state == 0) {
     command_index = 0;
+    debug_command_index = 0;
     prefix_len = strlen(prefix);
   }
 
   while((command_name = command_list[command_index].name)) {
     ++command_index;
     if(strncmp(prefix, command_name, prefix_len) == 0) {
+      // Must allocate buffer for returned string (readline frees it)
+      return strdup(command_name);
+    }
+  }
+  
+  while ((command_name = debug_command_list[debug_command_index].name)) {
+    ++debug_command_index;
+    if (strncmp(prefix, command_name, prefix_len) == 0) {
       // Must allocate buffer for returned string (readline frees it)
       return strdup(command_name);
     }

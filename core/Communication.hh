@@ -68,6 +68,7 @@ public:
 
   static void process_all_messages_hc();
   static void process_all_messages_tc();
+  static void process_debug_messages();
 
   static void send_version();
   static void send_configure_ack();
@@ -143,7 +144,9 @@ public:
   static void send_stopped_killed(verdicttype final_verdict,
     const char* reason = "");
   static void send_killed(verdicttype final_verdict, const char* reason = "");
-
+  
+  static void send_debug_return_value(int return_type, const char* message);
+  static void send_debug_halt_req();
 
   /** @brief Send a log message to the MC.
 
@@ -214,6 +217,8 @@ private:
 
   static void process_error();
   static void process_unsupported_message(int msg_type, int msg_end);
+  
+  static void process_debug_command();
   /** @} */
 };
 

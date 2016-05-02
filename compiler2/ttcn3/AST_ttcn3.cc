@@ -617,10 +617,10 @@ namespace Ttcn {
     return true;
   }
   
-  void Reference::refd_param_usage_found()
+  void Reference::ref_usage_found()
   {
     Common::Assignment *ass = get_refd_assignment();
-    if (!ass) FATAL_ERROR("Reference::refd_param_usage_found()");
+    if (!ass) FATAL_ERROR("Reference::ref_usage_found()");
     switch (ass->get_asstype()) {
     case Common::Assignment::A_PAR_VAL_OUT:
     case Common::Assignment::A_PAR_TEMPL_OUT:
@@ -632,8 +632,17 @@ namespace Ttcn {
     case Common::Assignment::A_PAR_PORT:
     case Common::Assignment::A_PAR_TIMER: {
       FormalPar *fpar = dynamic_cast<FormalPar*>(ass);
-      if (!fpar) FATAL_ERROR("Reference::refd_param_usage_found()");
+      if (fpar == NULL) {
+        FATAL_ERROR("Reference::ref_usage_found()");
+      }
       fpar->set_usage_found();
+      break; }
+    case Common::Assignment::A_EXT_CONST: {
+      Def_ExtConst* def = dynamic_cast<Def_ExtConst*>(ass);
+      if (def == NULL) {
+        FATAL_ERROR("Reference::ref_usage_found()");
+      }
+      def->set_usage_found();
       break; }
     default:
       break;
@@ -642,7 +651,7 @@ namespace Ttcn {
 
   void Reference::generate_code(expression_struct_t *expr)
   {
-    refd_param_usage_found();
+    ref_usage_found();
     Common::Assignment *ass = get_refd_assignment();
     if (!ass) FATAL_ERROR("Reference::generate_code()");
     if (parlist) {
@@ -670,7 +679,7 @@ namespace Ttcn {
       return;
     }
     
-    refd_param_usage_found();
+    ref_usage_found();
     Common::Assignment *ass = get_refd_assignment();
     if (!ass) FATAL_ERROR("Reference::generate_code_const_ref()");
 
@@ -731,7 +740,7 @@ namespace Ttcn {
   void Reference::generate_code_portref(expression_struct_t *expr,
     Scope *p_scope)
   {
-    refd_param_usage_found();
+    ref_usage_found();
     Common::Assignment *ass = get_refd_assignment();
     if (!ass) FATAL_ERROR("Reference::generate_code_portref()");
     expr->expr = mputstr(expr->expr,
@@ -743,7 +752,7 @@ namespace Ttcn {
   void Reference::generate_code_ispresentbound(expression_struct_t *expr,
     bool is_template, const bool isbound)
   {
-    refd_param_usage_found();
+    ref_usage_found();
     Common::Assignment *ass = get_refd_assignment();
     const string& ass_id = ass->get_genname_from_scope(my_scope);
     const char *ass_id_str = ass_id.c_str();
@@ -1674,10 +1683,6 @@ namespace Ttcn {
   {
     target->header.includes = mputstr(target->header.includes,
       "#include <TTCN3.hh>\n");
-    /*if (debugger_active) {
-      target->header.includes = mputstr(target->header.includes,
-        "#include \"init_debug.inc\"\n");
-    }*/
     for (size_t i = 0; i < impmods_v.size(); i++) {
       ImpMod *im = impmods_v[i];
       Common::Module *m = im->get_mod();
@@ -2819,12 +2824,14 @@ namespace Ttcn {
   
   void Module::generate_debugger_init(output_struct* output)
   {
+    static boolean first = TRUE;
     // create the initializer function
-    output->source.global_vars = mputstr(output->source.global_vars,
-      "\n/* Initializing TTCN-3 debugger */\n"
+    output->source.global_vars = mputprintf(output->source.global_vars,
+      "\n/* Initializing the TTCN-3 debugger */\n"
       "void init_ttcn3_debugger()\n"
       "{\n"
-      /*"  debugger_manual_init();\n"*/);
+      "%s", first ? "  ttcn3_debugger.activate();\n" : "");
+    first = FALSE;
     
     // initialize global scope and variables (including imported variables)
     char* str_glob = generate_debugger_global_vars(NULL, this);
@@ -2883,11 +2890,19 @@ namespace Ttcn {
         }
         // else fall through
       case Common::Assignment::A_CONST:
-      //case Common::Assignment::A_EXT_CONST: TODO: handle unused ext_const
       case Common::Assignment::A_MODULEPAR:
       case Common::Assignment::A_MODULEPAR_TEMP:
         str = generate_code_debugger_add_var(str, ass, current_mod, "global");
         break;
+      case Common::Assignment::A_EXT_CONST: {
+        Def_ExtConst* def = dynamic_cast<Def_ExtConst*>(ass);
+        if (def == NULL) {
+          FATAL_ERROR("Module::generate_debugger_global_vars");
+        }
+        if (def->is_used()) {
+          str = generate_code_debugger_add_var(str, ass, current_mod, "global");
+        }
+        break; }
       default:
         break;
       }
@@ -3559,6 +3574,7 @@ namespace Ttcn {
     if (!p_type) FATAL_ERROR("Ttcn::Def_ExtConst::Def_ExtConst()");
     type = p_type;
     type->set_ownertype(Type::OT_CONST_DEF, this);
+    usage_found = false;
   }
 
   Def_ExtConst::~Def_ExtConst()
@@ -9512,7 +9528,7 @@ namespace Ttcn {
           // check if the reference is a parameter, mark it as used if it is
           Reference* ref = dynamic_cast<Reference*>(val->get_reference());
           if (ref != NULL) {
-            ref->refd_param_usage_found();
+            ref->ref_usage_found();
           }
         }
       } else {
@@ -9544,7 +9560,7 @@ namespace Ttcn {
           Reference* ref = dynamic_cast<Reference*>(temp->get_DerivedRef() != NULL ?
             temp->get_DerivedRef() : temp->get_Template()->get_reference());
           if (ref != NULL) {
-            ref->refd_param_usage_found();
+            ref->ref_usage_found();
           }
         }
       } else {

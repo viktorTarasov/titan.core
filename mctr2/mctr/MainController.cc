@@ -40,6 +40,7 @@
 #include "../../core/Error.hh"
 #include "../../core/Textbuf.hh"
 #include "../../core/Logger.hh"
+#include "DebugCommands.hh"
 
 #include <stdio.h>
 #include <string.h>
@@ -86,6 +87,9 @@ struct sigaction MainController::new_action, MainController::old_action;
 int MainController::server_fd;
 int MainController::server_fd_unix = -1;
 boolean MainController::server_fd_disabled;
+
+debugger_settings_struct MainController::debugger_settings;
+debug_command_struct MainController::last_debug_command;
 
 void MainController::disable_server_fd()
 {
@@ -683,6 +687,7 @@ void MainController::configure_host(host_struct *host, boolean should_notify)
         host->hostname);
     }
     send_configure(host, config_str);
+    send_debug_setup(host);
   }
 }
 
@@ -843,6 +848,7 @@ int MainController::n_components, MainController::n_active_ptcs,
     MainController::max_ptcs;
 component_struct **MainController::components;
 component_struct *MainController::mtc, *MainController::system;
+const component_struct* MainController::debugger_active_tc;
 component MainController::next_comp_ref, MainController::tc_first_comp_ref;
 
 boolean MainController::any_component_done_requested,
@@ -2726,6 +2732,9 @@ void MainController::handle_hc_data(host_struct *hc, boolean recv_from_socket)
         case MSG_HC_READY:
           process_hc_ready(hc);
           break;
+        case MSG_DEBUG_RETURN_VALUE:
+          process_debug_return_value(*hc->text_buf, hc->log_source, false);
+          break;
         default:
           error("Invalid message type (%d) was received on HC "
             "connection from %s [%s].", message_type,
@@ -2863,6 +2872,12 @@ void MainController::handle_tc_data(component_struct *tc,
           break;
         case MSG_UNMAPPED:
           process_unmapped(tc);
+          break;
+        case MSG_DEBUG_RETURN_VALUE:
+          process_debug_return_value(*tc->text_buf, tc->log_source, tc == mtc);
+          break;
+        case MSG_DEBUG_HALT_REQ:
+          process_debug_halt_req(tc);
           break;
         default:
           if (tc == mtc) {
@@ -3074,6 +3089,26 @@ void MainController::clean_up()
   hosts = NULL;
   Free(config_str);
   config_str = NULL;
+  
+  Free(debugger_settings.on_switch);
+  debugger_settings.on_switch = NULL;
+  Free(debugger_settings.output_type);
+  debugger_settings.output_type = NULL;
+  Free(debugger_settings.output_file);
+  debugger_settings.output_file = NULL;
+  Free(debugger_settings.error_behavior);
+  debugger_settings.error_behavior = NULL;
+  Free(debugger_settings.fail_behavior);
+  debugger_settings.fail_behavior = NULL;
+  for (int i = 0; i < debugger_settings.nof_breakpoints; ++i) {
+    Free(debugger_settings.breakpoints[i].module);
+    Free(debugger_settings.breakpoints[i].line);
+  }
+  debugger_settings.nof_breakpoints = 0;
+  Free(debugger_settings.breakpoints);
+  debugger_settings.breakpoints = NULL;
+  Free(last_debug_command.arguments);
+  last_debug_command.arguments = NULL;
 
   while (timer_head != NULL) cancel_timer(timer_head);
 
@@ -3326,6 +3361,68 @@ void MainController::send_unmap_ack(component_struct *tc)
   Text_Buf text_buf;
   text_buf.push_int(MSG_UNMAP_ACK);
   send_message(tc->tc_fd, text_buf);
+}
+
+static void get_next_argument_loc(const char* arguments, size_t len, size_t& start, size_t& end)
+{
+  while (start < len && isspace(arguments[start])) {
+    ++start;
+  }
+  end = start;
+  while (end < len && !isspace(arguments[end])) {
+    ++end;
+  }
+}
+
+void MainController::send_debug_command(int fd, int commandID, const char* arguments)
+{
+  Text_Buf text_buf;
+  text_buf.push_int(MSG_DEBUG_COMMAND);
+  text_buf.push_int(commandID);
+  
+  size_t arg_len = strlen(arguments);
+  int arg_count = 0;
+  for (size_t i = 0; i < arg_len; ++i) {
+    if (isspace(arguments[i]) && (i == 0 || !isspace(arguments[i - 1]))) {
+      ++arg_count;
+    }
+  }
+  if (arg_len > 0) {
+    ++arg_count;
+  }
+  text_buf.push_int(arg_count);
+  
+  if (arg_count > 0) {
+    size_t start = 0;
+    size_t end = 0;
+    while (start < arg_len) {
+      get_next_argument_loc(arguments, arg_len, start, end);
+      // don't use push_string, as that requires a null-terminated string
+      text_buf.push_int(end - start);
+      text_buf.push_raw(end - start, arguments + start);
+      start = end;
+    }
+  }
+  
+  send_message(fd, text_buf);
+}
+
+void MainController::send_debug_setup(host_struct *hc)
+{
+  Text_Buf text_buf;
+  text_buf.push_int(MSG_DEBUG_COMMAND);
+  text_buf.push_int(D_SETUP);
+  text_buf.push_int(5 + 2 * debugger_settings.nof_breakpoints);
+  text_buf.push_string(debugger_settings.on_switch);
+  text_buf.push_string(debugger_settings.output_file);
+  text_buf.push_string(debugger_settings.output_type);
+  text_buf.push_string(debugger_settings.error_behavior);
+  text_buf.push_string(debugger_settings.fail_behavior);
+  for (int i = 0; i < debugger_settings.nof_breakpoints; ++i) {
+    text_buf.push_string(debugger_settings.breakpoints[i].module);
+    text_buf.push_string(debugger_settings.breakpoints[i].line);
+  }
+  send_message(hc->hc_fd, text_buf);
 }
 
 void MainController::send_cancel_done_mtc(component component_reference,
@@ -5318,6 +5415,123 @@ void MainController::process_unmapped(component_struct *tc)
   status_change();
 }
 
+void MainController::process_debug_return_value(Text_Buf& text_buf, char* log_source, bool from_mtc)
+{
+  int return_type = text_buf.pull_int().get_val();
+  timeval tv;
+  tv.tv_sec = text_buf.pull_int().get_val();
+  tv.tv_usec = text_buf.pull_int().get_val();
+  char* message = text_buf.pull_string();
+  if (return_type == DRET_DATA) {
+    char* result = mprintf("\n%s", message);
+    notify(&tv, log_source, TTCN_Logger::DEBUG_UNQUALIFIED, result);
+    Free(result);
+  }
+  else {
+    if (from_mtc) {
+      if (return_type == DRET_SETTING_CHANGE) {
+        switch (last_debug_command.command) {
+        case D_SWITCH:
+          Free(debugger_settings.on_switch);
+          debugger_settings.on_switch = mcopystr(last_debug_command.arguments);
+          break;
+        case D_SET_OUTPUT: {
+          Free(debugger_settings.output_type);
+          Free(debugger_settings.output_file);
+          debugger_settings.output_file = NULL;
+          size_t args_len = mstrlen(last_debug_command.arguments);
+          size_t start = 0;
+          size_t end = 0;
+          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+          debugger_settings.output_type = mcopystrn(last_debug_command.arguments + start, end - start);
+          if (end < args_len) {
+            start = end;
+            get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+            debugger_settings.output_file = mcopystrn(last_debug_command.arguments + start, end - start);
+          }
+          break; }
+        case D_SET_ERROR_BEHAVIOR:
+          Free(debugger_settings.error_behavior);
+          debugger_settings.error_behavior = mcopystr(last_debug_command.arguments);
+          break;
+        case D_SET_FAIL_BEHAVIOR:
+          Free(debugger_settings.fail_behavior);
+          debugger_settings.fail_behavior = mcopystr(last_debug_command.arguments);
+          break;
+        case D_ADD_BREAKPOINT: {
+          debugger_settings.breakpoints = (debugger_settings_struct::breakpoint_struct*)
+            Realloc(debugger_settings.breakpoints, (debugger_settings.nof_breakpoints + 1) *
+            sizeof(debugger_settings_struct::breakpoint_struct));
+          size_t args_len = mstrlen(last_debug_command.arguments);
+          size_t start = 0;
+          size_t end = 0;
+          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+          debugger_settings.breakpoints[debugger_settings.nof_breakpoints].module =
+            mcopystrn(last_debug_command.arguments + start, end - start);
+          start = end;
+          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+          debugger_settings.breakpoints[debugger_settings.nof_breakpoints].line =
+            mcopystrn(last_debug_command.arguments + start, end - start);
+          ++debugger_settings.nof_breakpoints;
+          break; }
+        case D_REMOVE_BREAKPOINT: {
+          size_t args_len = mstrlen(last_debug_command.arguments);
+          size_t start = 0;
+          size_t end = 0;
+          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+          char* module = mcopystrn(last_debug_command.arguments + start, end - start);
+          start = end;
+          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+          char* line = mcopystrn(last_debug_command.arguments + start, end - start);
+          for (int i = 0; i < debugger_settings.nof_breakpoints; ++i) {
+            if (!strcmp(debugger_settings.breakpoints[i].module, module) &&
+                !strcmp(debugger_settings.breakpoints[i].line, line)) {
+              Free(debugger_settings.breakpoints[i].module);
+              Free(debugger_settings.breakpoints[i].line);
+              for (int j = i; j < debugger_settings.nof_breakpoints - 1; ++j) {
+                debugger_settings.breakpoints[j] = debugger_settings.breakpoints[j + 1];
+              }
+              debugger_settings.breakpoints = (debugger_settings_struct::breakpoint_struct*)
+                Realloc(debugger_settings.breakpoints, (debugger_settings.nof_breakpoints - 1) *
+                sizeof(debugger_settings_struct::breakpoint_struct));
+              --debugger_settings.nof_breakpoints;
+              break;
+            }
+          }
+          Free(module);
+          Free(line);
+          break; }
+        default:
+          break;
+        }
+      }
+      else if (return_type == DRET_EXIT_ALL) {
+        stop_requested = TRUE;
+      }
+    }
+    notify(&tv, log_source, TTCN_Logger::DEBUG_UNQUALIFIED, message);
+  }
+  delete [] message;
+}
+
+void MainController::process_debug_halt_req(component_struct* tc)
+{
+  //lock();
+  // don't send the halt command back to the requesting component
+  if (tc != mtc) {
+    send_debug_command(mtc->tc_fd, D_HALT, "");
+  }
+  for (component i = tc_first_comp_ref; i < n_components; ++i) {
+    component_struct* comp = components[i];
+    if (tc != comp && comp->tc_state != PTC_STALE && comp->tc_state != TC_EXITED) {
+      send_debug_command(comp->tc_fd, D_HALT, "");
+    }
+  }
+  debugger_active_tc = tc;
+  //status_change();
+  //unlock();
+}
+
 void MainController::process_testcase_started()
 {
   if (mc_state != MC_EXECUTING_CONTROL) {
@@ -5520,6 +5734,16 @@ void MainController::initialize(UserInterface& par_ui, int par_max_ptcs)
   n_hosts = 0;
   hosts = NULL;
   config_str = NULL;
+  
+  debugger_settings.on_switch = NULL;
+  debugger_settings.output_type = NULL;
+  debugger_settings.output_file = NULL;
+  debugger_settings.error_behavior = NULL;
+  debugger_settings.fail_behavior = NULL;
+  debugger_settings.nof_breakpoints = 0;
+  debugger_settings.breakpoints = NULL;
+  last_debug_command.command = D_ERROR;
+  last_debug_command.arguments = NULL;
 
   version_known = FALSE;
   n_modules = 0;
@@ -5530,6 +5754,7 @@ void MainController::initialize(UserInterface& par_ui, int par_max_ptcs)
   components = NULL;
   mtc = NULL;
   system = NULL;
+  debugger_active_tc = NULL;
   next_comp_ref = FIRST_PTC_COMPREF;
 
   stop_after_tc = FALSE;
@@ -6129,6 +6354,99 @@ void MainController::stop_execution()
     stop_requested = TRUE;
     status_change();
   } else notify("Stop was already requested. Operation ignored.");
+  unlock();
+}
+
+void MainController::debug_command(int commandID, char* arguments)
+{
+  lock();
+  if (mtc != NULL) {
+    switch (commandID) {
+    case D_SET_COMPONENT: // handled by the MC
+      if (!strcmp(arguments, "mtc")) {
+        notify("Debugger %sset to print data from the MTC.",
+          debugger_active_tc == mtc ? "was already " : "");
+        debugger_active_tc = mtc;
+      }
+      else {
+        size_t len = strlen(arguments);
+        for (size_t i = 0; i < len; ++i) {
+          if (arguments[i] < '0' || arguments[i] > '9') {
+            notify("Argument 1 is invalid. Expected 'mtc' or integer value "
+              "(component reference).");
+            unlock();
+            return;
+          }
+        }
+        const component_struct* tc = lookup_component(strtol(arguments, NULL, 10));
+        if (tc == NULL || tc->tc_state == PTC_STALE || tc->tc_state == TC_EXITED) {
+          notify("Invalid component reference %s.", arguments);
+        }
+        else {
+          notify("Debugger %sset to print data from PTC %s%s%d%s.",
+            debugger_active_tc == tc ? "was already " : "",
+            tc->comp_name != NULL ? tc->comp_name : "",
+            tc->comp_name != NULL ? "(" : "", tc->comp_ref,
+            tc->comp_name != NULL ? ")" : "");
+          debugger_active_tc = tc;
+        }
+      }
+      break;
+    case D_PRINT_CALL_STACK:
+    case D_SET_STACK_LEVEL:
+    case D_LIST_VARIABLES:
+    case D_PRINT_VARIABLE:
+    case D_OVERWRITE_VARIABLE:
+    case D_PRINT_SNAPSHOTS:
+    case D_STEP_OVER:
+    case D_STEP_INTO:
+    case D_STEP_OUT:
+    case D_RUN_TO_CURSOR:
+      // it's a data printing or stepping command, needs to be sent to the
+      // active component
+      if (debugger_active_tc == NULL) {
+        // set the MTC as active if test execution hasn't halted and no
+        // D_SET_COMPONENT command has been issued
+        debugger_active_tc = mtc;
+      }
+      send_debug_command(debugger_active_tc->tc_fd, commandID, arguments);
+      break;
+    case D_SWITCH:
+    case D_SET_OUTPUT:
+    case D_SET_ERROR_BEHAVIOR:
+    case D_SET_FAIL_BEHAVIOR:
+    case D_ADD_BREAKPOINT:
+    case D_REMOVE_BREAKPOINT:
+      // it's a global setting, needs to be sent to all HCs and TCs
+      for (int i = 0; i < n_hosts; i++) {
+        send_debug_command(hosts[i]->hc_fd, commandID, arguments);
+      }
+      // store this command, the next MSG_DEBUG_RETURN_VALUE message might need it
+      last_debug_command.command = commandID;
+      Free(last_debug_command.arguments);
+      last_debug_command.arguments = mcopystr(arguments);
+      // no break, send it to TCs, too
+    case D_HALT:
+    case D_CONTINUE:
+    case D_EXIT:
+      // it's a global setting or a command related to the halted state,
+      // needs to be sent to all TCs
+      send_debug_command(mtc->tc_fd, commandID, arguments);
+      for (component i = FIRST_PTC_COMPREF; i < n_components; ++i) {
+        component_struct *comp = components[i];
+        if (comp != NULL && comp->tc_state != PTC_STALE && comp->tc_state != TC_EXITED) {
+          send_debug_command(comp->tc_fd, commandID, arguments);
+        }
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  else {
+    notify("Cannot execute debug commands before the MTC is created.");
+  }
+  status_change();
   unlock();
 }
 

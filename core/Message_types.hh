@@ -103,6 +103,7 @@
 #define MSG_MAPPED		18
 #define MSG_UNMAP_REQ		19
 #define MSG_UNMAPPED		20
+#define MSG_DEBUG_HALT_REQ	101
 
 /* Messages from MTC to MC (up) */
 
@@ -115,5 +116,13 @@
 #define MSG_STOPPED		21
 #define MSG_STOPPED_KILLED	22
 #define MSG_KILLED		23
+
+/* Messages from MC to HC or TC (down) */
+
+#define MSG_DEBUG_COMMAND	100
+
+/* Messages from HC or TC to MC (up) */
+
+#define MSG_DEBUG_RETURN_VALUE	100
 
 #endif

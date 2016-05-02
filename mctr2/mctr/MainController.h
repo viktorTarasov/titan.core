@@ -240,6 +240,26 @@ struct module_version_info {
 /** Possible reasons for waking up the MC thread from the main thread. */
 enum wakeup_reason_t { REASON_NOTHING, REASON_SHUTDOWN, REASON_MTC_KILL_TIMER };
 
+/** Structure for storing the settings needed to initialize the debugger of a
+  * newly connected HC */
+struct debugger_settings_struct {
+  char* on_switch;
+  char* output_type;
+  char* output_file;
+  char* error_behavior;
+  char* fail_behavior;
+  int nof_breakpoints;
+  struct breakpoint_struct {
+    char* module;
+    char* line;
+  }* breakpoints;
+};
+
+struct debug_command_struct {
+  int command;
+  char* arguments;
+};
+
 /** The MainController class. The collection of all functions and data
  *   structures */
 class MainController {
@@ -310,6 +330,8 @@ class MainController {
   static int n_hosts;
   static host_struct **hosts;
   static char *config_str;
+  static debugger_settings_struct debugger_settings;
+  static debug_command_struct last_debug_command;
   static host_struct *add_new_host(unknown_connection *conn);
   static void close_hc_connection(host_struct *hc);
   static boolean is_hc_in_state(hc_state_enum checked_state);
@@ -328,6 +350,7 @@ class MainController {
   static int n_components, n_active_ptcs, max_ptcs;
   static component_struct **components;
   static component_struct *mtc, *system;
+  static const component_struct* debugger_active_tc;
   static component next_comp_ref, tc_first_comp_ref;
   static boolean any_component_done_requested, any_component_done_sent,
   all_component_done_requested, any_component_killed_requested,
@@ -494,6 +517,8 @@ private:
   static void send_unmap(component_struct *tc,
     const char *local_port, const char *system_port);
   static void send_unmap_ack(component_struct *tc);
+  static void send_debug_command(int fd, int commandID, const char* arguments);
+  static void send_debug_setup(host_struct *hc);
 
   /* Messages to MTC */
   static void send_cancel_done_mtc(component component_reference,
@@ -563,6 +588,8 @@ private:
   static void process_mapped(component_struct *tc);
   static void process_unmap_req(component_struct *tc);
   static void process_unmapped(component_struct *tc);
+  static void process_debug_return_value(Text_Buf& text_buf, char* log_source, bool from_mtc);
+  static void process_debug_halt_req(component_struct *tc);
 
   /* Incoming messages from MTC */
   static void process_testcase_started();
@@ -600,6 +627,8 @@ public:
   static void stop_after_testcase(boolean new_state);
   static void continue_testcase();
   static void stop_execution();
+  
+  static void debug_command(int commandID, char* arguments);
 
   static mc_state_enum get_state();
   static boolean get_stop_after_testcase();

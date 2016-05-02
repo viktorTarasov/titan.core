@@ -52,6 +52,8 @@
 #include "../common/version.h"
 
 #include "Event_Handler.hh"
+#include "Debugger.hh"
+#include "DebugCommands.hh"
 
 class MC_Connection : public Fd_And_Timeout_Event_Handler {
   virtual void Handle_Fd_Event(int fd,
@@ -591,6 +593,9 @@ void TTCN_Communication::process_all_messages_hc()
     case MSG_EXIT_HC:
       process_exit_hc();
       break;
+    case MSG_DEBUG_COMMAND:
+      process_debug_command();
+      break;
     default:
       process_unsupported_message(msg_type, msg_end);
     }
@@ -676,6 +681,9 @@ void TTCN_Communication::process_all_messages_tc()
     case MSG_UNMAP_ACK:
       process_unmap_ack();
       break;
+    case MSG_DEBUG_COMMAND:
+      process_debug_command();
+      break;
     default:
       if (TTCN_Runtime::is_mtc()) {
         // messages: MC -> MTC
@@ -712,6 +720,56 @@ void TTCN_Communication::process_all_messages_tc()
         }
       }
     }
+  }
+}
+
+void TTCN_Communication::process_debug_messages()
+{
+  // receives and processes messages from the MC, while test execution is halted
+  // by the debugger
+  char *buf_ptr;
+  int buf_len;
+  Text_Buf storage_buf;
+  while (ttcn3_debugger.is_halted()) {
+    incoming_buf.get_end(buf_ptr, buf_len);
+
+    int recv_len = recv(mc_fd, buf_ptr, buf_len, 0);
+
+    if (recv_len > 0) {
+      incoming_buf.increase_length(recv_len);
+
+      while (incoming_buf.is_message() && ttcn3_debugger.is_halted()) {
+        int msg_len = incoming_buf.pull_int().get_val();
+        int msg_end = incoming_buf.get_pos() + msg_len;
+        int msg_type = incoming_buf.pull_int().get_val();
+        // process only debug commands and 'stop' messages, store the rest
+        switch (msg_type) {
+        case MSG_DEBUG_COMMAND:
+          process_debug_command();
+          break;
+        case MSG_STOP:
+          process_stop();
+          break;
+        default: {
+          // store all other messages in a different buffer
+          int data_len = msg_end - incoming_buf.get_pos();
+          char* msg_data = new char[data_len];
+          incoming_buf.pull_raw(data_len, msg_data);
+          incoming_buf.cut_message();
+          storage_buf.push_int(msg_type);
+          storage_buf.push_raw(data_len, msg_data);
+          delete [] msg_data;
+          storage_buf.calculate_length();
+          break; }
+        }
+      }
+    }
+  }
+  // append the stored messages to the beginning of the main buffer and
+  // process them
+  if (storage_buf.is_message()) {
+    incoming_buf.push_raw_front(storage_buf.get_len(), storage_buf.get_data());
+    process_all_messages_tc();
   }
 }
 
@@ -1092,6 +1150,26 @@ void TTCN_Communication::send_killed(verdicttype final_verdict,
   text_buf.push_int(MSG_KILLED);
   text_buf.push_int(final_verdict);
   text_buf.push_string(reason);
+  send_message(text_buf);
+}
+
+void TTCN_Communication::send_debug_return_value(int return_type, const char* message)
+{
+  Text_Buf text_buf;
+  text_buf.push_int(MSG_DEBUG_RETURN_VALUE);
+  text_buf.push_int(return_type);
+  timeval tv;
+  gettimeofday(&tv, NULL);
+  text_buf.push_int(tv.tv_sec);
+  text_buf.push_int(tv.tv_usec);
+  text_buf.push_string(message);
+  send_message(text_buf);
+}
+
+void TTCN_Communication::send_debug_halt_req()
+{
+  Text_Buf text_buf;
+  text_buf.push_int(MSG_DEBUG_HALT_REQ);
   send_message(text_buf);
 }
 
@@ -1843,6 +1921,27 @@ void TTCN_Communication::process_unsupported_message(int msg_type, int msg_end)
     TTCN_Logger::log_octet(msg_ptr[i]);
   TTCN_Logger::end_event();
   incoming_buf.cut_message();
+}
+
+void TTCN_Communication::process_debug_command()
+{
+  int command = incoming_buf.pull_int().get_val();
+  int argument_count = incoming_buf.pull_int().get_val();
+  char** arguments = NULL;
+  if (argument_count > 0) {
+    arguments = new char*[argument_count];
+    for (int i = 0; i < argument_count; ++i) {
+      arguments[i] = incoming_buf.pull_string();
+    }
+  }
+  incoming_buf.cut_message();
+  ttcn3_debugger.execute_command(command, argument_count, arguments);
+  if (argument_count > 0) {
+    for (int i = 0; i < argument_count; ++i) {
+      delete [] arguments[i];
+    }
+    delete [] arguments;
+  }
 }
 
 /* * * * Temporary squatting place because it includes version.h * * * */
