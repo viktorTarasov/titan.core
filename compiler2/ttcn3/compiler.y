@@ -595,6 +595,7 @@ static const string anyname("anytype");
 %token CharKeyword
 %token CharStringKeyword
 %token CheckOpKeyword
+%token CheckStateKeyword
 %token ClearOpKeyword
 %token ComplementKeyword
 %token ComponentKeyword
@@ -751,6 +752,7 @@ static const string anyname("anytype");
 %token DotCallOpKeyword
 %token DotCatchOpKeyword
 %token DotCheckOpKeyword
+%token DotCheckStateKeyword
 %token DotClearOpKeyword
 %token DotCreateKeyword
 %token DotDoneKeyword
@@ -5806,7 +5808,7 @@ CommunicationStatements: // 353
 | ClearStatement {$$ = $1;}
 | StartStatement {$$ = $1;}
 | StopStatement {$$ = $1;}
-| HaltStatement { $$ = $1; }
+| HaltStatement {$$ = $1;}
 ;
 
 SendStatement: // 354
@@ -8456,6 +8458,18 @@ OpCall: // 611
     $$->set_location(infile, @$);
   }
 | ProfilerRunningOp { $$ = $1; }
+| PortOrAny DotCheckStateKeyword '(' SingleExpression ')'
+  {
+    $$ = new Value(Value::OPTYPE_CHECKSTATE_ANY, $1, $4);
+    $$->set_location(infile, @$);
+  }
+// PortOrAll would cause a conflict 
+| AllKeyword PortKeyword DotCheckStateKeyword '(' SingleExpression ')'
+  {
+    Ttcn::Reference *r = NULL;
+    $$ = new Value(Value::OPTYPE_CHECKSTATE_ALL, r, $5);
+    $$->set_location(infile, @$);
+  }
 ;
 
 PredefinedOps:

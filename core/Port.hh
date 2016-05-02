@@ -12,6 +12,7 @@
  *   Feher, Csaba
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Tatarka, Gabor
  *
@@ -30,6 +31,7 @@ class COMPONENT;
 class COMPONENT_template;
 class Text_Buf;
 class OCTETSTRING;
+class CHARSTRING;
 
 extern const COMPONENT_template& any_compref;
 
@@ -126,6 +128,10 @@ public:
   static void all_stop();
   void halt();
   static void all_halt();
+  
+  bool check_port_state(const CHARSTRING& type) const;
+  static bool any_check_port_state(const CHARSTRING& type);
+  static bool all_check_port_state(const CHARSTRING& type);
 
   virtual alt_status receive(const COMPONENT_template& sender_template =
     any_compref, COMPONENT *sender_ptr = NULL);

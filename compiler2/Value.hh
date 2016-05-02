@@ -265,6 +265,8 @@ namespace Common {
       OPTYPE_DECVALUE_UNICHAR, // r1 r2 [v3]
       
       OPTYPE_ANY2UNISTR, // logarg, length = 1
+      OPTYPE_CHECKSTATE_ANY, // [r1] v2, port or any
+      OPTYPE_CHECKSTATE_ALL, // [r1] v2, port or all
 
       NUMBER_OF_OPTYPES // must be last
     };
@@ -411,7 +413,7 @@ namespace Common {
     /** OPTYPE_EXECUTE_REFD */
     Value(operationtype_t p_optype, Value *p_v1,
       Ttcn::ParsedActualParameters *p_t_list2, Value *p_v3);
-    /** Constructor used by V_EXPR "r1 [v2]": EXECUTE */
+    /** Constructor used by V_EXPR "r1 [v2]": EXECUTE or [r1] v2 */
     Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Value *v2);
     /** Constructor used by V_EXPR "r1 [v2] [v3] b4": COMP_CREATE */
     Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Value *p_v2,
@@ -922,6 +924,8 @@ namespace Common {
     void generate_code_expr_encvalue_unichar(expression_struct *expr);
     
     void generate_code_expr_decvalue_unichar(expression_struct *expr);
+    
+    void generate_code_expr_checkstate(expression_struct *expr);
     
     char* generate_code_char_coding_check(expression_struct *expr, Value *v, const char *name);
 

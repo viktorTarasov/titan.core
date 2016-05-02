@@ -380,6 +380,7 @@ case		RETURN(CaseKeyword);
 catch		RETURN_DOT(CatchOpKeyword);
 char		{ BEGIN(SC_charkeyword); RETURN(CharKeyword); }
 charstring	RETURN(CharStringKeyword);
+checkstate      RETURN_DOT(CheckStateKeyword);
 check		RETURN_DOT(CheckOpKeyword);
 clear		RETURN_DOT(ClearOpKeyword);
 complement	RETURN(ComplementKeyword);
