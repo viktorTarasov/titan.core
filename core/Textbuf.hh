@@ -56,6 +56,7 @@ public:
   double pull_double();
 
   void push_raw(int len, const void *data);
+  void push_raw_front(int len, const void *data);
   void pull_raw(int len, void *data);
 
   void push_string(const char *string_ptr);

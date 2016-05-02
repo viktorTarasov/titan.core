@@ -345,8 +345,9 @@ namespace Ttcn {
      * and the referred objects are bound or not.*/
     void generate_code_ispresentbound(expression_struct_t *expr,
       bool is_template, const bool isbound);
-    /** If the referenced object is a formal parameter, it is marked as used. */
-    void refd_param_usage_found();
+    /** Lets the referenced assignment object know, that the reference is used
+      * at least once (only relevant for formal parameters and external constants). */
+    void ref_usage_found();
   private:
     /** Detects whether the first identifier in subrefs is a module id */
     void detect_modid();
@@ -965,6 +966,7 @@ namespace Ttcn {
   class Def_ExtConst : public Definition {
   private:
     Type *type;
+    bool usage_found;
 
     /// Copy constructor disabled
     Def_ExtConst(const Def_ExtConst& p);
@@ -981,6 +983,10 @@ namespace Ttcn {
     virtual void generate_code(output_struct *target, bool clean_up = false);
     virtual void generate_code(CodeGenHelper& cgh);
     virtual void dump_internal(unsigned level) const;
+    /** Indicates that the parameter is used at least once. */
+    void set_usage_found() { usage_found = true; }
+    /** Returns true if the external constant is used at least once. */
+    bool is_used() const { return usage_found; }
   };
 
   /**

@@ -7704,7 +7704,7 @@ error:
   char *Assignment::generate_code(char *str)
   {
     // check if the LHS reference is a parameter, mark it as used if it is
-    ref->refd_param_usage_found();
+    ref->ref_usage_found();
     FieldOrArrayRefs *t_subrefs = ref->get_subrefs();
     const bool rhs_copied = self_ref;
     switch (asstype) {
