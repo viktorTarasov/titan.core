@@ -13,6 +13,7 @@
  *   Forstner, Matyas
  *   Kovacs, Ferenc
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -43,6 +44,7 @@ class TTCN_Communication {
 
 public:
   static const NetworkFamily& get_network_family() { return hcnh.get_family(); }
+  static bool has_local_address() { return local_addr_set; }
   static void set_local_address(const char *host_name);
   static const IPAddress *get_local_address();
   static void set_mc_address(const char *host_name,

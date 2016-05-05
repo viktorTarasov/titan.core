@@ -16,6 +16,7 @@
  *   Lovassy, Arpad
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *   Pandi, Krisztian
@@ -279,6 +280,35 @@ const char *TTCN_Runtime::get_host_name()
 #endif
   }
   return host_name;
+}
+
+CHARSTRING TTCN_Runtime::get_host_address(const CHARSTRING& type)
+{
+  if (type != "Ipv4orIpv6" && type != "Ipv4" && type != "Ipv6") {
+      TTCN_error("The argument of hostid function must be Ipv4orIpv6 or Ipv4"
+        "or Ipv6. %s is not a valid argument.", (const char*)type);
+  }
+  
+  // Return empty if no host address could be retrieved
+  if (!TTCN_Communication::has_local_address()) {
+    return CHARSTRING("");
+  }
+  const IPAddress *address = TTCN_Communication::get_local_address();
+  
+  // Return empty if the type is not matching the address type
+  if (type == "Ipv4") {
+    const IPv4Address * ipv4 = dynamic_cast<const IPv4Address*>(address);
+    if (ipv4 == NULL) {
+      return CHARSTRING("");
+    }
+  } else if (type == "Ipv6") {
+    const IPv6Address * ipv6 = dynamic_cast<const IPv6Address*>(address);
+    if (ipv6 == NULL) {
+      return CHARSTRING("");
+    }
+  }
+  // Return the string representation of the address
+  return CHARSTRING(address->get_addr_str());
 }
 
 CHARSTRING TTCN_Runtime::get_testcase_id_macro()

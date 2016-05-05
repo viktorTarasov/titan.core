@@ -211,6 +211,9 @@ namespace Common {
       case OPTYPE_REMOVE_BOM:
         u.expr.v1=p.u.expr.v1->clone();
         break;
+      case OPTYPE_HOSTID: // [v1]
+        u.expr.v1=p.u.expr.v1?p.u.expr.v1->clone():0;
+        break;
       case OPTYPE_ADD: // v1 v2
       case OPTYPE_SUBTRACT:
       case OPTYPE_MULTIPLY:
@@ -528,6 +531,7 @@ namespace Common {
     case OPTYPE_REMOVE_BOM:
     case OPTYPE_GET_STRINGENCODING:
     case OPTYPE_DECODE_BASE64:
+    case OPTYPE_HOSTID:
       delete u.expr.v1;
       break;
     case OPTYPE_ADD: // v1 v2
@@ -920,6 +924,9 @@ namespace Common {
     case OPTYPE_GET_STRINGENCODING:
     case OPTYPE_DECODE_BASE64:
       if(!p_v1) FATAL_ERROR("Value::Value()");
+      u.expr.v1=p_v1;
+      break;
+    case OPTYPE_HOSTID:
       u.expr.v1=p_v1;
       break;
     default:
@@ -1534,6 +1541,9 @@ namespace Common {
     case OPTYPE_DECODE_BASE64:
       u.expr.v1->set_fullname(p_fullname+".<operand>");
       break;
+    case OPTYPE_HOSTID: // [v1]
+      if(u.expr.v1) u.expr.v1->set_fullname(p_fullname+".<operand>");
+      break;
     case OPTYPE_ADD: // v1 v2
     case OPTYPE_SUBTRACT:
     case OPTYPE_MULTIPLY:
@@ -1728,6 +1738,9 @@ namespace Common {
     case OPTYPE_GET_STRINGENCODING:
     case OPTYPE_DECODE_BASE64:
       u.expr.v1->set_my_scope(p_scope);
+      break;
+    case OPTYPE_HOSTID: // [v1]
+      if(u.expr.v1) u.expr.v1->set_my_scope(p_scope);
       break;
     case OPTYPE_ADD: // v1 v2
     case OPTYPE_SUBTRACT:
@@ -2053,6 +2066,9 @@ namespace Common {
       case OPTYPE_DECODE_BASE64:
       case OPTYPE_REMOVE_BOM:
         u.expr.v1->set_code_section(p_code_section);
+        break;
+      case OPTYPE_HOSTID: // [v1]
+        if(u.expr.v1) u.expr.v1->set_code_section(p_code_section);
         break;
       case OPTYPE_ADD: // v1 v2
       case OPTYPE_SUBTRACT:
@@ -3167,6 +3183,7 @@ namespace Common {
       case OPTYPE_TTCN2STRING:
       case OPTYPE_GET_STRINGENCODING:
       case OPTYPE_ENCODE_BASE64:
+      case OPTYPE_HOSTID:
         return Type::T_CSTR;
       case OPTYPE_INT2UNICHAR:
       case OPTYPE_OCT2UNICHAR:
@@ -3530,6 +3547,8 @@ namespace Common {
       return "encode_base64()";
     case OPTYPE_DECODE_BASE64:
       return "decode_base64()";
+    case OPTYPE_HOSTID: // [v1]
+      return "hostid()";
     case OPTYPE_ADD: // v1 v2
       return "+";
     case OPTYPE_SUBTRACT:
@@ -6592,6 +6611,17 @@ error:
         chk_expr_val_ustr_7bitchars(v1, the, opname);
       }
       break;
+    case OPTYPE_HOSTID:
+      v1=u.expr.v1 ? u.expr.v1 : 0;
+      if (v1)
+      {
+        Error_Context cntxt(this, "In the first operand of operation `%s'", opname);
+        v1->set_lowerid_to_ref();
+        tt1=v1->get_expr_returntype(exp_val);
+        chk_expr_operandtype_cstr(tt1, second, opname, v1);
+        chk_expr_eval_value(v1, t_chk, refch, exp_val);
+      }
+      break;
     case OPTYPE_UNICHAR2OCT: // v1 [v2]
       v1=u.expr.v1;
       {
@@ -7268,6 +7298,7 @@ error:
     case OPTYPE_DECVALUE_UNICHAR:
     case OPTYPE_CHECKSTATE_ANY:
     case OPTYPE_CHECKSTATE_ALL:
+    case OPTYPE_HOSTID:
       break;
     case OPTYPE_TESTCASENAME: { // -
       if (!my_scope) FATAL_ERROR("Value::evaluate_value()");
@@ -8568,6 +8599,7 @@ error:
       case OPTYPE_DECVALUE_UNICHAR:
       case OPTYPE_CHECKSTATE_ANY:
       case OPTYPE_CHECKSTATE_ALL:
+      case OPTYPE_HOSTID:
         return true;
       case OPTYPE_COMP_NULL: // -
         return false;
@@ -9782,6 +9814,13 @@ error:
       u.expr.t1->chk_recursions(refch);
       refch.prev_state();
       break;
+    case OPTYPE_HOSTID: // [v1]
+      if (u.expr.v1) {
+        refch.mark_state();
+        u.expr.v1->chk_recursions(refch);
+        refch.prev_state();
+      }
+      break;
     case OPTYPE_ADD: // v1 v2
     case OPTYPE_SUBTRACT:
     case OPTYPE_MULTIPLY:
@@ -10139,6 +10178,9 @@ error:
     case OPTYPE_DECODE_BASE64:
     case OPTYPE_REMOVE_BOM:
       self_ref |= chk_expr_self_ref_val(u.expr.v1, lhs);
+      break;
+    case OPTYPE_HOSTID: // [v1]
+      if (u.expr.v1) self_ref |= chk_expr_self_ref_val(u.expr.v1, lhs);
       break;
     case OPTYPE_ADD: // v1 v2
     case OPTYPE_SUBTRACT: // v1 v2
@@ -10519,6 +10561,10 @@ error:
       case OPTYPE_ENCVALUE_UNICHAR: {
          if (u.expr.v2) return create_stringRepr_predef2("encvalue_unichar");
          else return create_stringRepr_predef1("encvalue_unichar");
+      }
+      case OPTYPE_HOSTID: {
+        if (u.expr.v1) return create_stringRepr_predef1("hostid");   
+        else return string("hostid()");
       }
       case OPTYPE_DECVALUE_UNICHAR: {
          if (u.expr.v3) {
@@ -11482,6 +11528,9 @@ error:
         ass = u.expr.r2->get_refd_assignment();
         if (parlist) str = parlist->rearrange_init_code(str, usage_mod);
         break; }
+      case OPTYPE_HOSTID:    
+        if (u.expr.v1) str = u.expr.v1->rearrange_init_code(str, usage_mod);
+        break;
       case OPTYPE_ADD:
       case OPTYPE_SUBTRACT:
       case OPTYPE_MULTIPLY:
@@ -11790,6 +11839,9 @@ error:
       break;
     case OPTYPE_DECVALUE_UNICHAR:
         generate_code_expr_decvalue_unichar(expr);
+      break;
+    case OPTYPE_HOSTID:
+      generate_code_expr_hostid(expr);
       break;
     case OPTYPE_OCT2HEX:
       generate_code_expr_predef1(expr, "oct2hex", u.expr.v1);
@@ -12921,6 +12973,14 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     expr->expr = mputstr(expr->expr, ")");
   }
   
+  void Value::generate_code_expr_hostid(expression_struct *expr)
+  {
+    expr->expr = mputstr(expr->expr, "TTCN_Runtime::get_host_address(");
+    if (u.expr.v1) u.expr.v1->generate_code_expr_mandatory(expr);
+    else expr->expr = mputstr(expr->expr, "CHARSTRING(\"Ipv4orIpv6\")");
+    expr->expr = mputstr(expr->expr, ")");
+  }
+  
   char* Value::generate_code_char_coding_check(expression_struct *expr, Value *v, const char *name)
   {
     expression_struct expr2;
@@ -13599,6 +13659,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     case OPTYPE_PROF_RUNNING:
     case OPTYPE_CHECKSTATE_ANY:
     case OPTYPE_CHECKSTATE_ALL:
+    case OPTYPE_HOSTID:
       return true;
     case OPTYPE_ENCODE:
     case OPTYPE_DECODE:
