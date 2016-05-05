@@ -837,6 +837,7 @@ static const string anyname("anytype");
 %token encvalue_unicharKeyWord
 %token decvalue_unicharKeyWord
 %token any2unistrKeyWord
+%token hostidKeyWord
 
 /* Multi-character operators */
 
@@ -8805,6 +8806,17 @@ PredefinedOps:
 | decvalue_unicharKeyWord '(' error ')'
   {
     $$ = new Value(Value::V_ERROR);
+    $$->set_location(infile, @$);
+  }
+| hostidKeyWord '(' ')'
+  {
+    Value *null_value = NULL;
+    $$ = new Value(Value::OPTYPE_HOSTID, null_value);
+    $$->set_location(infile, @$);
+  }
+| hostidKeyWord '(' optError Expression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_HOSTID, $4);
     $$->set_location(infile, @$);
   }
 ;

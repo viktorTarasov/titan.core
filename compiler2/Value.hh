@@ -267,6 +267,7 @@ namespace Common {
       OPTYPE_ANY2UNISTR, // logarg, length = 1
       OPTYPE_CHECKSTATE_ANY, // [r1] v2, port or any
       OPTYPE_CHECKSTATE_ALL, // [r1] v2, port or all
+      OPTYPE_HOSTID, // [v1]
 
       NUMBER_OF_OPTYPES // must be last
     };
@@ -400,7 +401,7 @@ namespace Common {
      *  COMP_ALIVE_ALL, COMP_ALIVE_ANY, TMR_RUNNING_ANY, GETVERDICT,
      *  PROF_RUNNING */
     Value(operationtype_t p_optype);
-    /** Constructor used by V_EXPR "v1" */
+    /** Constructor used by V_EXPR "v1" or [v1] */
     Value(operationtype_t p_optype, Value *p_v1);
     /** Constructor used by V_EXPR "ti1": LENGTHOF, SIZEOF, VALUEOF, TTCN2STRING */
     Value(operationtype_t p_optype, TemplateInstance *p_ti1);
@@ -926,6 +927,8 @@ namespace Common {
     void generate_code_expr_decvalue_unichar(expression_struct *expr);
     
     void generate_code_expr_checkstate(expression_struct *expr);
+    
+    void generate_code_expr_hostid(expression_struct *expr);
     
     char* generate_code_char_coding_check(expression_struct *expr, Value *v, const char *name);
 

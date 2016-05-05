@@ -14,6 +14,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -153,6 +154,8 @@ public:
 
   /// Returns a string which must not be freed.
   static const char *get_host_name();
+  
+  static CHARSTRING get_host_address(const CHARSTRING& type);
 
   static CHARSTRING get_testcase_id_macro();
   static CHARSTRING get_testcasename();
