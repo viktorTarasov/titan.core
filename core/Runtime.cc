@@ -301,8 +301,12 @@ CHARSTRING TTCN_Runtime::get_host_address(const CHARSTRING& type)
     if (ipv4 == NULL) {
       return CHARSTRING("");
     }
-  } else if (type == "Ipv6") {
-    const IPv6Address * ipv6 = dynamic_cast<const IPv6Address*>(address);
+  }
+  if (type == "Ipv6") {
+    const IPv6Address * ipv6 = NULL;
+#if defined(LINUX) || defined(CYGWIN17)
+    ipv6 = dynamic_cast<const IPv6Address*>(address);
+#endif // LINUX || CYGWIN17
     if (ipv6 == NULL) {
       return CHARSTRING("");
     }
