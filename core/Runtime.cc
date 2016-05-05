@@ -303,13 +303,11 @@ CHARSTRING TTCN_Runtime::get_host_address(const CHARSTRING& type)
     }
   }
   if (type == "Ipv6") {
-    const IPv6Address * ipv6 = NULL;
 #if defined(LINUX) || defined(CYGWIN17)
-    ipv6 = dynamic_cast<const IPv6Address*>(address);
+    const IPv6Address * ipv6 = dynamic_cast<const IPv6Address*>(address);
+    if (ipv6 == NULL) 
 #endif // LINUX || CYGWIN17
-    if (ipv6 == NULL) {
       return CHARSTRING("");
-    }
   }
   // Return the string representation of the address
   return CHARSTRING(address->get_addr_str());
