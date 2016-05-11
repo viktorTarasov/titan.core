@@ -21,7 +21,7 @@ include $(TOPDIR)/Makefile.regression
 .SUFFIXES: .ttcn .hh
 .PHONY: all clean dep run
 
-TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
+TTCN3_LIB = ttcn3$(RT2_SUFFIX)-parallel$(DYNAMIC_SUFFIX)
 
 TTCN3_MODULES = PIPEasp_PortType.ttcn PIPEasp_Types.ttcn
 
