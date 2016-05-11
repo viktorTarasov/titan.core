@@ -34,7 +34,7 @@ include ${TOPDIR}/Makefile.regression
 
 # Your C++ compiler:
 # (if you change the platform, you may need to change the compiler)
-CXX = g++
+#CXX = g++
 
 # Flags for the C++ preprocessor (and makedepend as well):
 CPPFLAGS = -D$(PLATFORM) -I$(TTCN3_DIR)/include

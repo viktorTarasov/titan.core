@@ -1874,10 +1874,19 @@ static void print_makefile(struct makefile_struct *makefile)
       , titan_dir ? titan_dir : "");
     if (titan_dir) Free(titan_dir);
 
+    boolean cxx_free = FALSE;
     if (makefile->cxxcompiler) {
       cxx = makefile->cxxcompiler;
     } else {
+#ifdef __clang__
+      unsigned int
+        compiler_major = __clang_major__,
+        compiler_minor = __clang_minor__;
+      cxx = mprintf("clang++-%u.%u", compiler_major, compiler_minor);
+      cxx_free = TRUE;
+#else
       cxx = "g++";
+#endif
     }
 
     fprintf(fp, "\n# Your platform: (SOLARIS, SOLARIS8, LINUX, FREEBSD or "
@@ -1944,6 +1953,11 @@ static void print_makefile(struct makefile_struct *makefile)
         "CXXDEPFLAGS = -%s\n\n", strstr(cxx, "g++") ? "MM" : "xM1");
     }
 
+    if (cxx_free) {
+      Free((char*)cxx);
+      cxx = NULL;
+    }
+    
     if (makefile->preprocess || makefile->ttcn3_prep_includes ||  makefile->ttcn3_prep_defines) {
       fputs("# Flags for preprocessing TTCN-3 files:\n"
             "CPPFLAGS_TTCN3 =", fp);
