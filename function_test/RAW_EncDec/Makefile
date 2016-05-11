@@ -45,7 +45,7 @@ PLATFORM = SOLARIS
 endif
 
 # Your C++ compiler:
-CXX = g++
+#CXX = g++
 
 # Flags for the C++ preprocessor (and makedepend as well):
 CPPFLAGS = -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2

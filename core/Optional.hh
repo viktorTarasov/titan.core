@@ -194,8 +194,8 @@ public:
   template <typename T_tmp>
   inline boolean operator!=(const T_tmp& other_value) const
     { return !is_equal(other_value); }
-#ifdef __SUNPRO_CC
-  /* Note: Without these functions the Sun Workshop Pro C++ compiler reports
+#if defined(__SUNPRO_CC) || defined(__clang__)
+  /* Note: Without these functions the Sun Workshop Pro C++ compiler or clang reports
    * overloading ambiguity when comparing an optional charstring field with an
    * optional universal charstring. */
   template <typename T_tmp>
