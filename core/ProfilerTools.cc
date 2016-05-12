@@ -896,7 +896,7 @@ namespace Profiler_Tools {
 
       // number of lines and functions
       if (p_flags & STATS_NUMBER_OF_LINES) {
-        line_func_count_str = mputprintf(line_func_count_str, "%s:\t%lu lines,\t%lu functions\n",
+        line_func_count_str = mputprintf(line_func_count_str, "%s:\t%zu lines,\t%zu functions\n",
            p_db[i].filename, p_db[i].lines.size(), p_db[i].functions.size());
       }
       total_code_lines += p_db[i].lines.size();
@@ -905,7 +905,7 @@ namespace Profiler_Tools {
     if (p_flags & STATS_NUMBER_OF_LINES) {
       line_func_count_str = mputprintf(line_func_count_str,
         "--------------------------------------\n"
-        "Total:\t%lu lines,\t%lu functions\n", total_code_lines, total_functions);
+        "Total:\t%zu lines,\t%zu functions\n", total_code_lines, total_functions);
     }
 
     if (p_flags & (STATS_TOP10_ALL_DATA | STATS_ALL_DATA_SORTED)) {

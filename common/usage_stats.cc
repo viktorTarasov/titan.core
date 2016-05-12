@@ -117,7 +117,7 @@ std::string gethostnameFullyQualified ( void )
     }
 
     if( !domain[0] && NULL != (fp=fopen("/etc/defaultdomain","r")) ) {
-      fgets(domain, sizeof(domain), fp);
+      (void)fgets(domain, sizeof(domain), fp);
       fclose(fp);
     }
 
@@ -238,7 +238,7 @@ ssize_t process_http(int sockfd, const char *host, const char *page, const char 
      "Content-length: %lu\r\n\r\n"
      "%s", page, host, (unsigned long)strlen(poststr), poststr);
 
-  write(sockfd, sendline, strlen(sendline));
+  (void)write(sockfd, sendline, strlen(sendline));
   /*while ((n = read(sockfd, recvline, MAXLINE)) > 0) {
     recvline[n] = '\0';
     printf("%s", recvline);

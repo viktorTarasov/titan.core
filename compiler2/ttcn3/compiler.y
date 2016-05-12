@@ -8746,7 +8746,7 @@ PredefinedOps:
   {
     if ($3->get_nof_logargs() != 1) {
       Location loc(infile, @1);
-      loc.error("The any2unistr function takes exactly one argument, not %lu.",
+      loc.error("The any2unistr function takes exactly one argument, not %zu.",
         $3->get_nof_logargs());
         delete $3;
         $$ = new Value(Value::OPTYPE_ANY2UNISTR, new LogArguments());

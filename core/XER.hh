@@ -25,7 +25,7 @@ class XmlReaderWrap;
 class Base_Type;
 #ifdef TITAN_RUNTIME_2
 class Record_Of_Type;
-class Erroneous_descriptor_t;
+struct Erroneous_descriptor_t;
 #else
 namespace PreGenRecordOf {
   class PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING;
