@@ -503,7 +503,9 @@ void Free(void *ptr)
     }
 }
 
+#ifdef MEMORY_DEBUG
 static const size_t maxprint = 32;
+#endif
 
 void check_mem_leak(const char *program_name)
 {

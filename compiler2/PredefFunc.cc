@@ -751,7 +751,7 @@ string* remove_bom(const string& encoded_value)
 {
   size_t length = encoded_value.size();
   if (0 == length) return new string();
-  if (length % 2 || 0 > length) {
+  if (length % 2) {
     ERROR("remove_bom(): Wrong string. The number of nibbles (%d) in string "
                 "shall be divisible by 2", static_cast<int>(length));
     return new string(encoded_value);
@@ -819,7 +819,7 @@ string* get_stringencoding(const string& encoded_value)
 {
   size_t length = encoded_value.size();
   if (0 == length) return new string("<unknown>");
-  if (length % 2 || 0 > length) {
+  if (length % 2) {
     ERROR("get_stringencoding(): Wrong string. The number of nibbles (%d) in string "
                 "shall be divisible by 2", static_cast<int>(length));
     return new string("<unknown>");

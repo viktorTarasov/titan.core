@@ -6006,7 +6006,7 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
     }
   }
   
-  delete metainfo;
+  delete[] metainfo;
   
   return dec_len;
 }

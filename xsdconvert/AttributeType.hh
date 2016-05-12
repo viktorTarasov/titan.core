@@ -100,6 +100,9 @@ public:
     return isAnyAttr;
   }
 
+  void printToFile(FILE* file) {
+    printToFile(file, 0);
+  }
   void printToFile(FILE* file, unsigned level);
 
   void dump(unsigned int depth) const;

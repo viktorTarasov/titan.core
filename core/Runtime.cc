@@ -2895,7 +2895,7 @@ void TTCN_Runtime::wait_terminated_processes()
   errno = 0;
   for ( ; ; ) {
     int statuscode;
-    struct rusage r_usage = {{0,0},{0,0},0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    struct rusage r_usage = {{0,0},{0,0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
 #ifdef INTERIX
     pid_t child_pid = waitpid(-1, &statuscode, WNOHANG);
     getrusage(RUSAGE_CHILDREN, &r_usage);

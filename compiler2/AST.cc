@@ -1037,19 +1037,19 @@ namespace Common {
     // All we can do is store NULLs for the unused namespaces.
     size_t num_xml_namespaces = namespaces.size();
     if (moduletype == MOD_TTCN) { //TODO remove this when ASN.1 gets EXER
+#ifndef NDEBUG
       output->source.global_vars = mputprintf(output->source.global_vars,
-#ifndef NDEBUG
         "// written by %s in " __FILE__ " at %d\n"
-#endif
-        "static const size_t num_namespaces = %lu;\n"
-#ifndef NDEBUG
         , __FUNCTION__, __LINE__
-#endif
-        , (unsigned long)num_xml_namespaces
       );
+#endif
+
       if (num_xml_namespaces != 0 || (control_ns && control_ns_prefix)) {
-        output->source.global_vars = mputstr(output->source.global_vars,
-          "static const namespace_t xml_namespaces[num_namespaces+1] = {\n");
+        output->source.global_vars = mputprintf(output->source.global_vars,
+          "static const size_t num_namespaces = %lu;\n"
+          "static const namespace_t xml_namespaces[num_namespaces+1] = {\n"
+          , (unsigned long)num_xml_namespaces
+        );
         for (size_t i=0; i < namespaces.size(); ++i) {
           if (used_namespaces.has_key(i)) {
             output->source.global_vars = mputprintf(output->source.global_vars,
