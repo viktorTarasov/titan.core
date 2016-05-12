@@ -3037,7 +3037,7 @@ void Type::generate_json_schema_array(JSON_Tokenizer& json)
       "\"record of\"" : "\"set of\"");
   } else {
     // set the number of elements for arrays
-    char* size_str = mprintf("%zu", get_nof_comps());
+    char* size_str = mprintf("%lu", (unsigned long)(get_nof_comps()));
     json.put_next_token(JSON_TOKEN_NAME, "minItems");
     json.put_next_token(JSON_TOKEN_NUMBER, size_str);
     json.put_next_token(JSON_TOKEN_NAME, "maxItems");
