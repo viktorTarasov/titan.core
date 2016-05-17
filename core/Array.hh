@@ -185,8 +185,7 @@ public:
   // This class use the compiler-generated copy constructor and
   // copy assignment.
     
-  // User defined default constructor, because with clang the text2ttcn test
-  // won't compile
+  // User defined default constructor
   VALUE_ARRAY() : array_elements(){};
   boolean operator==(const VALUE_ARRAY& other_value) const;
   inline boolean operator!=(const VALUE_ARRAY& other_value) const
