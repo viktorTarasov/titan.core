@@ -1317,6 +1317,30 @@ testcase tc_sizeof_lengthof_standard6() runs on recofOper_mycomp {
   if(lengthof(tr_roI5)==3) { setverdict(pass)}else { setverdict(fail) };
 }
 
+// test cases for bug 494614:
+// when initializing a record-of-record element with an empty value ('{}') through module parameters,
+// an actual unbound record element was created, instead of the usual null pointer used for unbound elements;
+// copying this empty record caused a dynamic test case error
+
+modulepar recofOper_myrecof3 recofOper_mymodulepar; // initialized with value list notation
+modulepar recofOper_myrecof3 recofOper_mymodulepar2; // initialized with assignment notation
+
+testcase tc_empty_record_element() runs on recofOper_mycomp {
+  var recofOper_myrecof3 copy := recofOper_mymodulepar;
+  copy[0].x1 := omit; // this is where the record-of is actually copied, and where the DTE occured
+  copy[0].x2 := 1.0;
+  if (copy == { { omit, 1.0 } }) { setverdict(pass); }
+  else { setverdict(fail); }
+}
+
+testcase tc_empty_record_element2() runs on recofOper_mycomp {
+  var recofOper_myrecof3 copy := recofOper_mymodulepar2;
+  copy[0].x1 := omit; // this is where the record-of is actually copied, and where the DTE occured
+  copy[0].x2 := 1.0;
+  if (copy == { { omit, 1.0 } }) { setverdict(pass); }
+  else { setverdict(fail); }
+}
+
 control {
   const recofOper_trecord cl_temp1:={ x1:=omit, x2:=3.4 }; // constants in the control part
   const recofOper_trecof cl_temp2:={ 'AF12'O };
@@ -1390,6 +1414,9 @@ control {
   execute(tc_sizeof_lengthof_standard2());
   execute(tc_sizeof_lengthof_standard4());
   execute(tc_sizeof_lengthof_standard6());
+  
+  execute(tc_empty_record_element());
+  execute(tc_empty_record_element2());
 }
 
 }

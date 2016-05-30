@@ -2468,6 +2468,11 @@ void Record_Of_Type::set_param(Module_Param& param) {
         Module_Param* const curr = mp->get_elem(i);
         if (curr->get_type()!=Module_Param::MP_NotUsed) {
           get_at(i)->set_param(*curr);
+          if (!get_at(i)->is_bound()) {
+            // use null pointers for unbound elements
+            delete val_ptr->value_elements[i];
+            val_ptr->value_elements[i] = NULL;
+          }
         }
       }
       break;
@@ -2475,6 +2480,11 @@ void Record_Of_Type::set_param(Module_Param& param) {
       for (size_t i=0; i<mp->get_size(); ++i) {
         Module_Param* const current = mp->get_elem(i);
         get_at(current->get_id()->get_index())->set_param(*current);
+        if (!get_at(current->get_id()->get_index())->is_bound()) {
+          // use null pointers for unbound elements
+          delete val_ptr->value_elements[current->get_id()->get_index()];
+          val_ptr->value_elements[current->get_id()->get_index()] = NULL;
+        }
       }
       break;
     default:
