@@ -16,22 +16,18 @@
 // Mycompport A is dynamically mapped
 module Sem_2002_TheAltStatement_012{ 
 
-    type port loopbackPort message {
+    type port Sem_2002_012_loopbackPort message {
 	  	inout integer
-	} with {extension "internal"}
-		
-	type port IntegerOutputPortType message {
-	  	inout integer
-	} with {extension "internal"}
+	}
 	
 	type component GeneralComp
 	{
-		port IntegerOutputPortType MycomportA
+		port Sem_2002_012_loopbackPort MycomportA
 	}
 
 	type component MyTestSystemInterface
 	{
-	 	port loopbackPort messagePort
+	 	port Sem_2002_012_loopbackPort messagePort
 	}
 	
 	// MyTestSystemInterface is the test system interface
