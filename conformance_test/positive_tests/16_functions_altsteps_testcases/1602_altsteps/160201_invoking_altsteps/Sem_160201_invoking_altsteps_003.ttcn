@@ -16,22 +16,18 @@
 // Mycompport A is dynamically mapped
 module Sem_160201_invoking_altsteps_003{ 
 
-    type port loopbackPort message {
+    type port Sem_160201_003_loopbackPort message {
 	  	inout integer
-	} with {extension "internal"}
-		
-	type port IntegerOutputPortType message {
-	  	inout integer
-	} with {extension "internal"}
+	} 
 	
 	type component GeneralComp
 	{ 
-		port IntegerOutputPortType MycomportA
+		port Sem_160201_003_loopbackPort MycomportA
 	}
 
 	type component MyTestSystemInterface
 	{
-	 	port loopbackPort messagePort
+	 	port Sem_160201_003_loopbackPort messagePort
 	}
 	
 	altstep AltStep1() runs on GeneralComp { 
