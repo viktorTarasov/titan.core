@@ -113,6 +113,7 @@
                     <xs:element name="outParamBoundness" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="omitInValueList" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="warningsForBadVariants" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+                    <xs:element name="activateDebugger" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="quietly" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="namingRules" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
                     <xs:element name="disableSubtypeChecking" minOccurs="0" maxOccurs="1" type="xs:boolean" />

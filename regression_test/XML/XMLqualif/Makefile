@@ -121,11 +121,11 @@ TARGET = POtest$(EXESUFFIX)
 # Do not modify these unless you know what you are doing...
 # Platform specific additional libraries:
 #
-SOLARIS_LIBS  = -lsocket -lnsl -lxml2 -lresolv
-SOLARIS8_LIBS = -lsocket -lnsl -lxml2 -lresolv
-LINUX_LIBS = -lxml2 -lpthread -lrt
-FREEBSD_LIBS = -lxml2 -liconv
-WIN32_LIBS = -lxml2 -liconv
+SOLARIS_LIBS  = -lsocket -lnsl -lxml2 -lresolv -lcurses
+SOLARIS8_LIBS = -lsocket -lnsl -lxml2 -lresolv -lcurses
+LINUX_LIBS = -lxml2 -lpthread -lrt -lncurses
+FREEBSD_LIBS = -lxml2 -liconv -lncurses
+WIN32_LIBS = -lxml2 -liconv -lncurses
 
 #
 # Rules for building the executable...

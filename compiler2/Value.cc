@@ -11521,11 +11521,9 @@ error:
         break;
       case OPTYPE_DECODE: {
         Ttcn::ActualParList *parlist = u.expr.r1->get_parlist();
-        Common::Assignment *ass = u.expr.r1->get_refd_assignment();
         if (parlist) str = parlist->rearrange_init_code(str, usage_mod);
 
         parlist = u.expr.r2->get_parlist();
-        ass = u.expr.r2->get_refd_assignment();
         if (parlist) str = parlist->rearrange_init_code(str, usage_mod);
         break; }
       case OPTYPE_HOSTID:    

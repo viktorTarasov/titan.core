@@ -37,7 +37,7 @@ include $(TOP)/Makefile.cfg
 ALLDIRS := common compiler2 repgen xsdconvert
 
 ifndef MINGW
-	ALLDIRS += core core2 mctr2 loggerplugins
+	ALLDIRS += mctr2 core core2 loggerplugins
 endif
 
 # JNI not supported on Cygwin or Mingw

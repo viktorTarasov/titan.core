@@ -262,6 +262,7 @@ struct makefile_struct {
   boolean outparamboundness;
   boolean omit_in_value_list;
   boolean warnings_for_bad_variants;
+  boolean activate_debugger;
   boolean disable_predef_ext_folder;
   struct string_list* solspeclibraries; /* not owned */
   struct string_list* sol8speclibraries; /* not owned */
@@ -327,6 +328,7 @@ static void init_makefile_struct(struct makefile_struct *makefile)
   makefile->outparamboundness = FALSE;
   makefile->omit_in_value_list = FALSE;
   makefile->warnings_for_bad_variants = FALSE;
+  makefile->activate_debugger = FALSE;
   makefile->solspeclibraries = NULL;
   makefile->sol8speclibraries = NULL;
   makefile->linuxspeclibraries = NULL;
@@ -2054,6 +2056,7 @@ static void print_makefile(struct makefile_struct *makefile)
           (makefile->outparamboundness ? " -Y" : ""),
           (makefile->omit_in_value_list ? " -M" : ""),
           (makefile->warnings_for_bad_variants ? " -E" : ""),
+          (makefile->activate_debugger ? " -n" : ""),
           (makefile->tcov_file_name ? makefile->tcov_file_name : ""),
           (makefile->profiled_file_list ? " -z $(PROFILED_FILE_LIST)" : ""),
           /* end of COMPILER FLAGS */
@@ -2939,7 +2942,7 @@ static void print_makefile(struct makefile_struct *makefile)
       "# Platform specific additional libraries:\n"
       "#\n", fp);
 
-    fputs("SOLARIS_LIBS = -lsocket -lnsl -lxml2", fp);
+    fputs("SOLARIS_LIBS = -lsocket -lnsl -lxml2 -lcurses", fp);
 #ifdef USAGE_STATS
     fputs(" -lresolv", fp);
 #endif
@@ -2954,7 +2957,7 @@ static void print_makefile(struct makefile_struct *makefile)
     }
     fputs("\n", fp);
 
-    fputs("SOLARIS8_LIBS = -lsocket -lnsl -lxml2", fp);
+    fputs("SOLARIS8_LIBS = -lsocket -lnsl -lxml2 -lcurses", fp);
 #ifdef USAGE_STATS
     fputs(" -lresolv", fp);
 #endif
@@ -2969,7 +2972,7 @@ static void print_makefile(struct makefile_struct *makefile)
     }
     fputs("\n", fp);
 
-    fputs("LINUX_LIBS = -lxml2", fp);
+    fputs("LINUX_LIBS = -lxml2 -lncurses", fp);
 #ifdef USAGE_STATS
     fputs(" -lpthread -lrt", fp);
 #endif
@@ -2984,7 +2987,7 @@ static void print_makefile(struct makefile_struct *makefile)
     }
     fputs("\n", fp);
 
-    fputs("FREEBSD_LIBS = -lxml2", fp);
+    fputs("FREEBSD_LIBS = -lxml2 -lncurses", fp);
     if (makefile->freebsdspeclibraries) {
       struct string_list* act_elem = makefile->freebsdspeclibraries;
       while (act_elem) {
@@ -2996,7 +2999,7 @@ static void print_makefile(struct makefile_struct *makefile)
     }
     fputs("\n", fp);
 
-    fputs("WIN32_LIBS = -lxml2", fp);
+    fputs("WIN32_LIBS = -lxml2 -lncurses", fp);
     if (makefile->win32speclibraries) {
       struct string_list* act_elem = makefile->win32speclibraries;
       while (act_elem) {
@@ -3816,7 +3819,8 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   const char* cxxcompiler, const char* optlevel, const char* optflags, boolean disableber, boolean disableraw, boolean disabletext,
   boolean disablexer, boolean disablejson, boolean forcexerinasn, boolean defaultasomit, boolean gccmsgformat,
   boolean linenumbersonlymsg, boolean includesourceinfo, boolean addsourcelineinfo, boolean suppresswarnings,
-  boolean outparamboundness, boolean omit_in_value_list, boolean warnings_for_bad_variants, boolean disable_predef_ext_folder, struct string_list* solspeclibraries,
+  boolean outparamboundness, boolean omit_in_value_list, boolean warnings_for_bad_variants, boolean activate_debugger,
+  boolean disable_predef_ext_folder, struct string_list* solspeclibraries,
   struct string_list* sol8speclibraries, struct string_list* linuxspeclibraries, struct string_list* freebsdspeclibraries,
   struct string_list* win32speclibraries, const char* ttcn3preprocessor, struct string_list* linkerlibraries,
   struct string_list* additionalObjects, struct string_list* linkerlibsearchpath, char* generatorCommandOutput,
@@ -3868,6 +3872,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   makefile.outparamboundness = outparamboundness;
   makefile.omit_in_value_list = omit_in_value_list;
   makefile.warnings_for_bad_variants = warnings_for_bad_variants;
+  makefile.activate_debugger = activate_debugger;
   makefile.disable_predef_ext_folder = disable_predef_ext_folder;
   makefile.solspeclibraries = solspeclibraries;
   makefile.sol8speclibraries = sol8speclibraries;
@@ -4003,7 +4008,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
 static void usage(void)
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abc" C_flag "dDEfFglLmMprRstTVwWXZ] [-K file] [-z file ] [-P dir]"
+    "usage: %s [-abc" C_flag "dDEfFglLmMnprRstTVwWXZ] [-K file] [-z file ] [-P dir]"
     " [-U none|type] [-e ets_name] [-o dir|file]\n"
     "        [-t project_descriptor.tpd [-b buildconfig]]\n"
     "        [-O file] ... module_name ... testport_name ...\n"
@@ -4026,6 +4031,7 @@ static void usage(void)
     "	-L:		create makefile with library archive as the default target\n"
     "	-m:		always use makedepend for dependencies\n"
     "	-M:		allow 'omit' in template value lists (legacy behavior)\n"
+    "	-n:		activate debugger (generates extra code for debugging)\n"
     "	-o dir|file:	write the Makefile to the given directory or file\n"
     "	-O file:	add the given file to the Makefile as other file\n"
     "	-p:		generate Makefile with TTCN-3 preprocessing\n"
@@ -4093,7 +4099,7 @@ int main(int argc, char *argv[])
     gfflag = FALSE, lnflag = FALSE, isflag = FALSE, asflag = FALSE,
     swflag = FALSE, Vflag = FALSE, Dflag = FALSE, Wflag = FALSE,
     djflag = FALSE, Zflag = FALSE, Hflag = FALSE, Mflag = FALSE,
-    diflag = FALSE, zflag = FALSE, Eflag = FALSE;
+    diflag = FALSE, zflag = FALSE, Eflag = FALSE, nflag = FALSE;
   boolean error_flag = FALSE;
   char *output_file = NULL;
   char *ets_name = NULL;
@@ -4150,7 +4156,7 @@ int main(int argc, char *argv[])
   }
 
   for ( ; ; ) {
-    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:EfFgI:K:o:lLmMpP:rRst:TU:vVwWXYz:ZH");
+    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:EfFgI:K:o:lLmMnpP:rRst:TU:vVwWXYz:ZH");
     if (c == -1) break;
     switch (c) {
     case 'O':
@@ -4224,6 +4230,9 @@ int main(int argc, char *argv[])
       break;
     case 'M':
       SET_FLAG(M);
+      break;
+    case 'n':
+      SET_FLAG(n);
       break;
     case 'p':
       SET_FLAG(p);
@@ -4301,7 +4310,7 @@ int main(int argc, char *argv[])
     if ( aflag || bflag || cflag || Cflag || dflag || eflag || fflag || Fflag || gflag
       || mflag || oflag || lflag || pflag || Pflag || rflag || Rflag || sflag
       || tflag || Tflag || Vflag || wflag || Xflag || Kflag || Dflag || Wflag || Yflag
-      || Zflag || Hflag || Mflag || zflag || Eflag || n_other_files > 0 || n_search_paths > 0)
+      || Zflag || Hflag || Mflag || zflag || Eflag || nflag || n_other_files > 0 || n_search_paths > 0)
       error_flag = TRUE;
   }
 
@@ -4487,7 +4496,7 @@ int main(int argc, char *argv[])
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
       create_symlink_list,ttcn3_prep_includes, ttcn3_prep_defines,ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csflag, 
       &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
-      &asflag, &swflag, &Yflag, &Mflag, &Eflag, &diflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
+      &asflag, &swflag, &Yflag, &Mflag, &Eflag, &nflag, &diflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
       linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &Zflag, &Hflag,
       &generatorCommandOutput, target_placement_list, Wflag, run_command_list, required_configs, &profiled_file_list, search_paths, n_search_paths);
 
@@ -4526,7 +4535,7 @@ int main(int argc, char *argv[])
       Rflag, lflag, mflag, Cflag, code_splitting_mode, tcov_file_name, profiled_file_list,
       Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
       ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, csflag, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
-      drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, swflag, Yflag, Mflag, Eflag, diflag, solspeclibraries,
+      drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, swflag, Yflag, Mflag, Eflag, nflag, diflag, solspeclibraries,
       sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, ttcn3prep, linkerlibraries, additionalObjects,
       linkerlibsearchpath, generatorCommandOutput, target_placement_list);
   }

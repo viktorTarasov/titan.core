@@ -685,6 +685,15 @@ public:
   static bool happening() { return string_parsing; }
 };
 
+class Debugger_Value_Parsing {
+private: // only instantiation can set it to true and destruction set it back to false
+  static bool is_happening;
+public:
+  Debugger_Value_Parsing() { is_happening = true; }
+  ~Debugger_Value_Parsing() { is_happening = false; }
+  static bool happening() { return is_happening; }
+};
+
 /** Use the configuration file parser to convert a string into a TTCN-3 value.
   * @param mp_str the converted string (used as if it were a module parameter in a
   * config file)
@@ -694,5 +703,7 @@ public:
   * This conflicts with several other rules, so certain rules in the parser will only
   * be applied to components. */
 extern Module_Param* process_config_string2ttcn(const char* mp_str, bool is_component);
+
+extern Module_Param* process_config_debugger_value(const char* mp_str);
 
 #endif

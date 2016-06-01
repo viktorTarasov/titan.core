@@ -75,12 +75,12 @@ TTCN_COMPILER_FLAGS += -o $(APIDIR)
 # -I. is needed because TitanLoggerApi.hh (generated) does #include <TTCN3.hh>
 CPPFLAGS += -I. -I$(APIDIR)
 
-SOLARIS_LIBS   := -lsocket -lnsl -lxml2
-SOLARIS8_LIBS  := -lsocket -lnsl -lxml2
-LINUX_LIBS     := -lxml2
-FREEBSD_LIBS   := -lxml2
-WIN32_LIBS     := -lxml2
-INTERIX_LIBS   := -lxml2
+SOLARIS_LIBS   := -lsocket -lnsl -lxml2 -lcurses
+SOLARIS8_LIBS  := -lsocket -lnsl -lxml2 -lcurses
+LINUX_LIBS     := -lxml2 -lncurses
+FREEBSD_LIBS   := -lxml2 -lncurses
+WIN32_LIBS     := -lxml2 -lncurses
+INTERIX_LIBS   := -lxml2 -lncurses
 
 ifeq ($(USAGE_STATS), yes)
   SOLARIS_LIBS  += -lresolv
@@ -104,7 +104,8 @@ Module_list.cc Objid.cc Octetstring.cc Parallel_main.cc Port.cc RAW.cc \
 Runtime.cc Single_main.cc Snapshot.cc Struct_of.cc Template.cc TEXT.cc \
 Textbuf.cc Timer.cc Param_Types.cc Universal_charstring.cc \
 Verdicttype.cc XER.cc XmlReader.cc TitanLoggerControlImpl.cc TCov.cc JSON.cc \
-Profiler.cc ProfilerTools.cc ProfMerge_main.cc Debugger.cc $(RT2_SOURCES)
+Profiler.cc ProfilerTools.cc ProfMerge_main.cc Debugger.cc DebuggerUI.cc \
+$(RT2_SOURCES)
 
 # Keep GENERATED_SOURCES at the beginning. This may speed up parallel builds
 # by starting early the compilation of the largest files.
@@ -169,8 +170,13 @@ ifeq ($(USAGE_STATS), yes)
   COMMON_OBJECTS += ../common/usage_stats.o
 endif
 
+EDITLINE_OBJECTS := $(addprefix ../mctr2/editline/build/src/.libs/, chared.o common.o \
+emacs.o fgetln.o help.o history.o map.o prompt.o read.o search.o strlcat.o term.o tty.o \
+vi.o wcsdup.o chartype.o el.o fcns.o filecomplete.o hist.o key.o parse.o readline.o \
+refresh.o sig.o strlcpy.o tokenizer.o unvis.o vis.o)
+
 LIBRARY_OBJECTS_NOMAIN := $(filter-out Single_main.o Parallel_main.o ProfMerge_main.o, \
-  $(OBJECTS)) $(COMMON_OBJECTS)
+  $(OBJECTS)) $(COMMON_OBJECTS) $(EDITLINE_OBJECTS)
 
 TOBECLEANED := LoggerPlugin_static.o LoggerPlugin_dynamic.o ProfilerTools.profmerge.o
 
@@ -186,7 +192,8 @@ Port.hh Event_Handler.hh Struct_of.hh Array.hh Optional.hh Textbuf.hh Encdec.hh 
 Module_list.hh Parameters.h Addfunc.hh RAW.hh BER.hh TEXT.hh ASN_Null.hh \
 ASN_Any.hh ASN_External.hh ASN_EmbeddedPDV.hh ASN_CharacterString.hh XER.hh \
 XmlReader.hh cversion.h TitanLoggerControl.ttcn TitanLoggerApi.xsd Vector.hh \
-JSON.hh Profiler.hh RefdIndex.hh ProfilerTools.hh Debugger.hh DebugCommands.hh
+JSON.hh Profiler.hh RefdIndex.hh ProfilerTools.hh Debugger.hh DebugCommands.hh \
+DebuggerUI.hh
 # Copied during "make install"
 
 ifdef REGEX_DIR

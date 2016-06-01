@@ -2912,7 +2912,8 @@ namespace Ttcn {
   
   void Module::generate_debugger_functions(output_struct *output)
   {
-    char* str = NULL;
+    char* print_str = NULL;
+    char* overwrite_str = NULL;
     for (size_t i = 0; i < asss->get_nof_asss(); ++i) {
       Def_Type* def = dynamic_cast<Def_Type*>(asss->get_ass_byIndex(i));
       if (def != NULL) {
@@ -2920,41 +2921,74 @@ namespace Ttcn {
         if (!t->is_ref() && t->get_typetype() != Type::T_COMPONENT) {
           // don't generate code for subtypes
           if (t->get_typetype() != Type::T_SIGNATURE) {
-            str = mputprintf(str, 
+            print_str = mputprintf(print_str, 
               "  %sif (!strcmp(p_var.type_name, \"%s\")) {\n"
-              "    ((const %s*)p_var.value)->log();\n"
+              "    ((const %s*)ptr)->log();\n"
               "  }\n"
-              , (str != NULL) ? "else " : ""
+              , (print_str != NULL) ? "else " : ""
               , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
+            if (t->get_typetype() != Type::T_PORT) {
+              overwrite_str = mputprintf(overwrite_str,
+                "  %sif (!strcmp(p_var.type_name, \"%s\")) {\n"
+                "    ((%s*)p_var.value)->set_param(p_new_value);\n"
+                "  }\n"
+                , (overwrite_str != NULL) ? "else " : ""
+                , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
+            }
           }
           if (t->get_typetype() != Type::T_PORT) {
-            str = mputprintf(str,
+            print_str = mputprintf(print_str,
               "  %sif (!strcmp(p_var.type_name, \"%s template\")) {\n"
-              "    ((const %s_template*)p_var.value)->log();\n"
+              "    ((const %s_template*)ptr)->log();\n"
               "  }\n"
-              , (str != NULL) ? "else " : ""
+              , (print_str != NULL) ? "else " : ""
               , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
+            if (t->get_typetype() != Type::T_SIGNATURE) {
+              overwrite_str = mputprintf(overwrite_str,
+                "  %sif (!strcmp(p_var.type_name, \"%s template\")) {\n"
+                "    ((%s_template*)p_var.value)->set_param(p_new_value);\n"
+                "  }\n"
+                , (overwrite_str != NULL) ? "else " : ""
+                , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
+            }
           }
         }
       }
     }
-    if (str != NULL) {
+    if (print_str != NULL) {
       // don't generate an empty printing function
       output->header.class_defs = mputprintf(output->header.class_defs,
-        "/* Debugger printing function for types declared in this module */\n\n"
+        "/* Debugger printing and overwriting functions for types declared in this module */\n\n"
         "extern CHARSTRING print_var_%s(const TTCN3_Debugger::variable_t& p_var);\n",
         get_modid().get_ttcnname().c_str());
       output->source.global_vars = mputprintf(output->source.global_vars,
         "\n/* Debugger printing function for types declared in this module */\n"
         "CHARSTRING print_var_%s(const TTCN3_Debugger::variable_t& p_var)\n"
         "{\n"
+        "  const void* ptr = p_var.set_function != NULL ? p_var.value : p_var.cvalue;\n"
         "  TTCN_Logger::begin_event_log2str();\n"
         "%s"
         "  else {\n"
         "    TTCN_Logger::log_event_str(\"<unrecognized value or template>\");\n"
         "  }\n"
         "  return TTCN_Logger::end_event_log2str();\n"
-        "}\n", get_modid().get_ttcnname().c_str(), str);
+        "}\n", get_modid().get_ttcnname().c_str(), print_str);
+    }
+    if (overwrite_str != NULL) {
+      // don't generate an empty overwriting function
+      output->header.class_defs = mputprintf(output->header.class_defs,
+        "extern boolean set_var_%s(TTCN3_Debugger::variable_t& p_var, Module_Param& p_new_value);\n",
+        get_modid().get_ttcnname().c_str());
+      output->source.global_vars = mputprintf(output->source.global_vars,
+        "\n/* Debugger overwriting function for types declared in this module */\n"
+        "boolean set_var_%s(TTCN3_Debugger::variable_t& p_var, Module_Param& p_new_value)\n"
+        "{\n"
+        "%s"
+        "  else {\n"
+        "    return FALSE;\n"
+        "  }\n"
+        "  return TRUE;\n"
+        "}\n", get_modid().get_ttcnname().c_str(), overwrite_str);
     }
   }
 
@@ -7542,6 +7576,9 @@ namespace Ttcn {
         "timer_value);\n");
     body = create_location_object(body, "TESTCASE", dispname_str);
     body = fp_list->generate_shadow_objects(body);
+    if (debugger_active) {
+      body = generate_code_debugger_function_init(body, this);
+    }
     body = mputprintf(body, "try {\n"
       "TTCN_Runtime::begin_testcase(\"%s\", \"%s\", ",
       my_scope->get_scope_mod()->get_modid().get_dispname().c_str(),
@@ -7553,9 +7590,6 @@ namespace Ttcn {
       body = system_type->get_CompBody()->generate_code_comptype_name(body);
     else body = runs_on_body->generate_code_comptype_name(body);
     body = mputstr(body, ", has_timer, timer_value);\n");
-    if (debugger_active) {
-      body = generate_code_debugger_function_init(body, this);
-    }
     body = block->generate_code(body);
     body = mputprintf(body,
       "} catch (const TC_Error& tc_error) {\n"

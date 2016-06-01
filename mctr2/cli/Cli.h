@@ -90,6 +90,8 @@ public:
   void helpCallback(const char *arguments);
   void shellCallback(const char *arguments);
   void exitCallback(const char *arguments);
+  
+  virtual void executeBatchFile(const char* filename);
 
 private:
   /**

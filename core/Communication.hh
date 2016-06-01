@@ -8,6 +8,7 @@
  * Contributors:
  *   Baji, Laszlo
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Beres, Szabolcs
  *   Feher, Csaba
  *   Forstner, Matyas
@@ -149,6 +150,8 @@ public:
   
   static void send_debug_return_value(int return_type, const char* message);
   static void send_debug_halt_req();
+  static void send_debug_continue_req();
+  static void send_debug_batch(const char* batch_file);
 
   /** @brief Send a log message to the MC.
 
