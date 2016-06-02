@@ -173,7 +173,7 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
 {LINECOMMENT}	current_line++;
 
 {TTCNSTRINGPARSING} {
-  if (Ttcn_String_Parsing::happening()) {
+  if (Ttcn_String_Parsing::happening() || Debugger_Value_Parsing::happening()) {
     BEGIN(SC_MODULE_PARAMETERS);
     return TtcnStringParsingKeyword;
   } else {

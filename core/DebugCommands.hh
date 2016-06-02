@@ -17,46 +17,49 @@
 /** list of commands coming from the user interface to the debugger (parameters listed in comments) */
 
 // settings
-#define D_SWITCH                  1 // 1, "on" or "off"
-#define D_ADD_BREAKPOINT          2 // 2, module name and line number
-#define D_REMOVE_BREAKPOINT       3 // 2, module name and line number
-#define D_SET_ERROR_BEHAVIOR      4 // 1, "yes" or "no"
-#define D_SET_FAIL_BEHAVIOR       5 // 1, "yes" or "no"
-#define D_SET_OUTPUT              6 // 1-2, "console", or "file" or "both" + file name
+#define D_SWITCH                   1 // 1, "on" or "off"
+#define D_SET_BREAKPOINT           2 // 2-3, module name and line number + optional batch file name
+#define D_REMOVE_BREAKPOINT        3 // 1-2, 'all', or module name + 'all' or line number
+#define D_SET_AUTOMATIC_BREAKPOINT 4 // 2-3, "error" or "fail", + "off", or "on" + optional batch file name
+#define D_SET_OUTPUT               5 // 1-2, "console", or "file" or "both", + file name
+#define D_SET_GLOBAL_BATCH_FILE    6 // 1-2, "off", or "on" + batch file name
 // printing and overwriting data
-#define D_SET_COMPONENT           7 // 1, "mtc" or component reference
-#define D_PRINT_CALL_STACK        8 // 0
-#define D_SET_STACK_LEVEL         9 // 1, stack level
-#define D_LIST_VARIABLES         10 // 1-2, "local", "global", "comp" or "all", + optional filter (pattern)
-#define D_PRINT_VARIABLE         11 // 1+, list of variable names
-#define D_OVERWRITE_VARIABLE     12 // 2, variable name, new value (in module parameter syntax)
-#define D_PRINT_SNAPSHOTS        13 // 0
-#define D_SET_SNAPSHOT_BEHAVIOR  14 // TBD
+#define D_SET_COMPONENT            7 // 1, "mtc" or component reference
+#define D_PRINT_CALL_STACK         8 // 0
+#define D_SET_STACK_LEVEL          9 // 1, stack level
+#define D_LIST_VARIABLES          10 // 1-2, "local", "global", "comp" or "all", + optional filter (pattern)
+#define D_PRINT_VARIABLE          11 // 1+, list of variable names
+#define D_OVERWRITE_VARIABLE      12 // 2, variable name, new value (in module parameter syntax)
+#define D_PRINT_SNAPSHOTS         13 // 0
+#define D_SET_SNAPSHOT_BEHAVIOR   14 // TBD
 // stepping
-#define D_STEP_OVER              15 // 0
-#define D_STEP_INTO              16 // 0
-#define D_STEP_OUT               17 // 0
-#define D_RUN_TO_CURSOR          18 // 2, module name and line number
+#define D_STEP_OVER               15 // 0
+#define D_STEP_INTO               16 // 0
+#define D_STEP_OUT                17 // 0
+#define D_RUN_TO_CURSOR           18 // 2, module name and line number
 // the halted state
-#define D_HALT                   19 // 0
-#define D_CONTINUE               20 // 0
-#define D_EXIT                   21 // 1, "test" or "all"
-// batch files
-#define D_BATCH                  22 // 1, batch file name
-#define D_SET_HALTING_BATCH_FILE 23 // 1-2, "no", or "yes" + batch file name
+#define D_HALT                    19 // 0
+#define D_CONTINUE                20 // 0
+#define D_EXIT                    21 // 1, "test" or "all"
 // initialization
-#define D_SETUP                  24 // 5+, arguments for D_SWITCH, D_SET_OUTPUT, D_ERROR_BEHAVIOR, D_FAIL_BEHAVIOR + any number of D_ADD_BREAKPOINT arguments
+#define D_SETUP                   22 // 9+:
+                                     // 1 argument for D_SWITCH,
+                                     // 2 arguments for D_SET_OUTPUT,
+                                     // 2 arguments (2nd and 3rd) for D_SET_AUTOMATIC_BREAKPOINT, where the first argument is "error",
+                                     // 2 arguments (2nd and 3rd) for D_SET_AUTOMATIC_BREAKPOINT, where the first argument is "fail",
+                                     // 2 arguments for D_SET_GLOBAL_BATCH_FILE,
+                                     // + arguments for any number of D_SET_BREAKPOINT commands (optional)
 
-#define D_ERROR                   0 // any
+#define D_ERROR                    0 // any
 
 /** names of commands in the user interface */
 
 #define D_SWITCH_TEXT "debug"
-#define D_ADD_BREAKPOINT_TEXT "daddbp"
+#define D_SET_BREAKPOINT_TEXT "dsetbp"
 #define D_REMOVE_BREAKPOINT_TEXT "drembp"
-#define D_SET_ERROR_BEHAVIOR_TEXT "derrcfg"
-#define D_SET_FAIL_BEHAVIOR_TEXT "dfailcfg"
+#define D_SET_AUTOMATIC_BREAKPOINT_TEXT "dautobp"
 #define D_SET_OUTPUT_TEXT "doutput"
+#define D_SET_GLOBAL_BATCH_FILE_TEXT "dglobbatch"
 #define D_SET_COMPONENT_TEXT "dcomp"
 #define D_PRINT_CALL_STACK_TEXT "dprintstack"
 #define D_SET_STACK_LEVEL_TEXT "dstacklevel"
@@ -72,8 +75,6 @@
 #define D_HALT_TEXT "dhalt"
 #define D_CONTINUE_TEXT "dcont"
 #define D_EXIT_TEXT "dexit"
-#define D_BATCH_TEXT "dbatch"
-#define D_SET_HALTING_BATCH_FILE_TEXT "dbatchcfg"
 
 /** debugger return value types */
 

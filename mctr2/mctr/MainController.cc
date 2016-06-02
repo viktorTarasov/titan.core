@@ -8,6 +8,7 @@
  * Contributors:
  *   Baji, Laszlo
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Bene, Tamas
  *   Feher, Csaba
  *   Forstner, Matyas
@@ -2711,7 +2712,8 @@ void MainController::handle_hc_data(host_struct *hc, boolean recv_from_socket)
   if (recv_len > 0) {
     try {
       while (text_buf.is_message()) {
-        text_buf.pull_int(); // message length
+        int msg_len = text_buf.pull_int().get_val();
+        int msg_end = text_buf.get_pos() + msg_len;
         int message_type = text_buf.pull_int().get_val();
         switch (message_type) {
         case MSG_ERROR:
@@ -2733,7 +2735,7 @@ void MainController::handle_hc_data(host_struct *hc, boolean recv_from_socket)
           process_hc_ready(hc);
           break;
         case MSG_DEBUG_RETURN_VALUE:
-          process_debug_return_value(*hc->text_buf, hc->log_source, false);
+          process_debug_return_value(*hc->text_buf, hc->log_source, msg_end, false);
           break;
         default:
           error("Invalid message type (%d) was received on HC "
@@ -2874,10 +2876,17 @@ void MainController::handle_tc_data(component_struct *tc,
           process_unmapped(tc);
           break;
         case MSG_DEBUG_RETURN_VALUE:
-          process_debug_return_value(*tc->text_buf, tc->log_source, tc == mtc);
+          process_debug_return_value(*tc->text_buf, tc->log_source, message_end,
+            tc == mtc);
           break;
         case MSG_DEBUG_HALT_REQ:
-          process_debug_halt_req(tc);
+          process_debug_broadcast_req(tc, D_HALT);
+          break;
+        case MSG_DEBUG_CONTINUE_REQ:
+          process_debug_broadcast_req(tc, D_CONTINUE);
+          break;
+        case MSG_DEBUG_BATCH:
+          process_debug_batch(tc);
           break;
         default:
           if (tc == mtc) {
@@ -3098,11 +3107,20 @@ void MainController::clean_up()
   debugger_settings.output_file = NULL;
   Free(debugger_settings.error_behavior);
   debugger_settings.error_behavior = NULL;
+  Free(debugger_settings.error_batch_file);
+  debugger_settings.error_batch_file = NULL;
   Free(debugger_settings.fail_behavior);
   debugger_settings.fail_behavior = NULL;
+  Free(debugger_settings.fail_batch_file);
+  debugger_settings.fail_batch_file = NULL;
+  Free(debugger_settings.global_batch_state);
+  debugger_settings.global_batch_state = NULL;
+  Free(debugger_settings.global_batch_file);
+  debugger_settings.global_batch_file = NULL;
   for (int i = 0; i < debugger_settings.nof_breakpoints; ++i) {
     Free(debugger_settings.breakpoints[i].module);
     Free(debugger_settings.breakpoints[i].line);
+    Free(debugger_settings.breakpoints[i].batch_file);
   }
   debugger_settings.nof_breakpoints = 0;
   Free(debugger_settings.breakpoints);
@@ -3412,15 +3430,20 @@ void MainController::send_debug_setup(host_struct *hc)
   Text_Buf text_buf;
   text_buf.push_int(MSG_DEBUG_COMMAND);
   text_buf.push_int(D_SETUP);
-  text_buf.push_int(5 + 2 * debugger_settings.nof_breakpoints);
+  text_buf.push_int(9 + 3 * debugger_settings.nof_breakpoints);
   text_buf.push_string(debugger_settings.on_switch);
   text_buf.push_string(debugger_settings.output_file);
   text_buf.push_string(debugger_settings.output_type);
   text_buf.push_string(debugger_settings.error_behavior);
+  text_buf.push_string(debugger_settings.error_batch_file);
   text_buf.push_string(debugger_settings.fail_behavior);
+  text_buf.push_string(debugger_settings.fail_batch_file);
+  text_buf.push_string(debugger_settings.global_batch_state);
+  text_buf.push_string(debugger_settings.global_batch_file);
   for (int i = 0; i < debugger_settings.nof_breakpoints; ++i) {
     text_buf.push_string(debugger_settings.breakpoints[i].module);
     text_buf.push_string(debugger_settings.breakpoints[i].line);
+    text_buf.push_string(debugger_settings.breakpoints[i].batch_file);
   }
   send_message(hc->hc_fd, text_buf);
 }
@@ -5415,66 +5438,145 @@ void MainController::process_unmapped(component_struct *tc)
   status_change();
 }
 
-void MainController::process_debug_return_value(Text_Buf& text_buf, char* log_source, bool from_mtc)
+void MainController::process_debug_return_value(Text_Buf& text_buf, char* log_source,
+                                                int msg_end, bool from_mtc)
 {
   int return_type = text_buf.pull_int().get_val();
-  timeval tv;
-  tv.tv_sec = text_buf.pull_int().get_val();
-  tv.tv_usec = text_buf.pull_int().get_val();
-  char* message = text_buf.pull_string();
-  if (return_type == DRET_DATA) {
-    char* result = mprintf("\n%s", message);
-    notify(&tv, log_source, TTCN_Logger::DEBUG_UNQUALIFIED, result);
-    Free(result);
+  if (text_buf.get_pos() != msg_end) {
+    timeval tv;
+    tv.tv_sec = text_buf.pull_int().get_val();
+    tv.tv_usec = text_buf.pull_int().get_val();
+    char* message = text_buf.pull_string();
+    if (return_type == DRET_DATA) {
+      char* result = mprintf("\n%s", message);
+      notify(&tv, log_source, TTCN_Logger::DEBUG_UNQUALIFIED, result);
+      Free(result);
+    }
+    else {
+      notify(&tv, log_source, TTCN_Logger::DEBUG_UNQUALIFIED, message);
+    }
+    delete [] message;
   }
-  else {
-    if (from_mtc) {
-      if (return_type == DRET_SETTING_CHANGE) {
-        switch (last_debug_command.command) {
-        case D_SWITCH:
-          Free(debugger_settings.on_switch);
-          debugger_settings.on_switch = mcopystr(last_debug_command.arguments);
-          break;
-        case D_SET_OUTPUT: {
-          Free(debugger_settings.output_type);
-          Free(debugger_settings.output_file);
-          debugger_settings.output_file = NULL;
-          size_t args_len = mstrlen(last_debug_command.arguments);
-          size_t start = 0;
-          size_t end = 0;
+  if (from_mtc) {
+    if (return_type == DRET_SETTING_CHANGE) {
+      switch (last_debug_command.command) {
+      case D_SWITCH:
+        Free(debugger_settings.on_switch);
+        debugger_settings.on_switch = mcopystr(last_debug_command.arguments);
+        break;
+      case D_SET_OUTPUT: {
+        Free(debugger_settings.output_type);
+        Free(debugger_settings.output_file);
+        debugger_settings.output_file = NULL;
+        size_t args_len = mstrlen(last_debug_command.arguments);
+        size_t start = 0;
+        size_t end = 0;
+        get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+        debugger_settings.output_type = mcopystrn(last_debug_command.arguments + start, end - start);
+        if (end < args_len) {
+          start = end;
           get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
-          debugger_settings.output_type = mcopystrn(last_debug_command.arguments + start, end - start);
-          if (end < args_len) {
-            start = end;
-            get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
-            debugger_settings.output_file = mcopystrn(last_debug_command.arguments + start, end - start);
+          debugger_settings.output_file = mcopystrn(last_debug_command.arguments + start, end - start);
+        }
+        break; }
+      case D_SET_AUTOMATIC_BREAKPOINT: {
+        size_t args_len = mstrlen(last_debug_command.arguments);
+        size_t start = 0;
+        size_t end = 0;
+        get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+        char* event_str = mcopystrn(last_debug_command.arguments + start, end - start);
+        char** event_behavior;
+        char** event_batch_file;
+        if (!strcmp(event_str, "error")) {
+          event_behavior = &debugger_settings.error_behavior;
+          event_batch_file = &debugger_settings.error_batch_file;
+        }
+        else if (!strcmp(event_str, "fail")) {
+          event_behavior = &debugger_settings.fail_behavior;
+          event_batch_file = &debugger_settings.fail_batch_file;
+        }
+        else { // should never happen
+          Free(event_str);
+          break;
+        }
+        Free(event_str);
+        Free(*event_behavior);
+        Free(*event_batch_file);
+        *event_batch_file = NULL;
+        start = end;
+        get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+        *event_behavior = mcopystrn(last_debug_command.arguments + start, end - start);
+        if (end < args_len) {
+          start = end;
+          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+          *event_batch_file = mcopystrn(last_debug_command.arguments + start, end - start);
+        }
+        break; }
+      case D_SET_GLOBAL_BATCH_FILE: {
+        Free(debugger_settings.global_batch_state);
+        Free(debugger_settings.global_batch_file);
+        debugger_settings.global_batch_file = NULL;
+        size_t args_len = mstrlen(last_debug_command.arguments);
+        size_t start = 0;
+        size_t end = 0;
+        get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+        debugger_settings.global_batch_state = mcopystrn(last_debug_command.arguments + start, end - start);
+        if (end < args_len) {
+          start = end;
+          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+          debugger_settings.global_batch_file = mcopystrn(last_debug_command.arguments + start, end - start);
+        }
+        break; }
+      case D_SET_BREAKPOINT: {
+        size_t args_len = mstrlen(last_debug_command.arguments);
+        size_t start = 0;
+        size_t end = 0;
+        get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+        char* module = mcopystrn(last_debug_command.arguments + start, end - start);
+        start = end;
+        get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+        char* line = mcopystrn(last_debug_command.arguments + start, end - start);
+        char* batch_file = NULL;
+        if (end < args_len) {
+          start = end;
+          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+          batch_file = mcopystrn(last_debug_command.arguments + start, end - start);
+        }
+        int pos;
+        for (pos = 0; pos < debugger_settings.nof_breakpoints; ++pos) {
+          if (!strcmp(debugger_settings.breakpoints[pos].module, module) &&
+              !strcmp(debugger_settings.breakpoints[pos].line, line)) {
+            break;
           }
-          break; }
-        case D_SET_ERROR_BEHAVIOR:
-          Free(debugger_settings.error_behavior);
-          debugger_settings.error_behavior = mcopystr(last_debug_command.arguments);
-          break;
-        case D_SET_FAIL_BEHAVIOR:
-          Free(debugger_settings.fail_behavior);
-          debugger_settings.fail_behavior = mcopystr(last_debug_command.arguments);
-          break;
-        case D_ADD_BREAKPOINT: {
+        }
+        if (pos == debugger_settings.nof_breakpoints) {
+          // not found, add a new one
           debugger_settings.breakpoints = (debugger_settings_struct::breakpoint_struct*)
             Realloc(debugger_settings.breakpoints, (debugger_settings.nof_breakpoints + 1) *
             sizeof(debugger_settings_struct::breakpoint_struct));
-          size_t args_len = mstrlen(last_debug_command.arguments);
-          size_t start = 0;
-          size_t end = 0;
-          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
-          debugger_settings.breakpoints[debugger_settings.nof_breakpoints].module =
-            mcopystrn(last_debug_command.arguments + start, end - start);
-          start = end;
-          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
-          debugger_settings.breakpoints[debugger_settings.nof_breakpoints].line =
-            mcopystrn(last_debug_command.arguments + start, end - start);
           ++debugger_settings.nof_breakpoints;
-          break; }
-        case D_REMOVE_BREAKPOINT: {
+          debugger_settings.breakpoints[pos].module = module;
+          debugger_settings.breakpoints[pos].line = line;
+        }
+        else {
+          Free(debugger_settings.breakpoints[pos].batch_file);
+          Free(module);
+          Free(line);
+        }
+        debugger_settings.breakpoints[pos].batch_file = batch_file;
+        break; }
+      case D_REMOVE_BREAKPOINT:
+        if (!strcmp(last_debug_command.arguments, "all")) {
+          for (int i = 0; i < debugger_settings.nof_breakpoints; ++i) {
+            Free(debugger_settings.breakpoints[i].module);
+            Free(debugger_settings.breakpoints[i].line);
+            Free(debugger_settings.breakpoints[i].batch_file);
+          }
+          Free(debugger_settings.breakpoints);
+          debugger_settings.breakpoints = NULL;
+          debugger_settings.nof_breakpoints = 0;
+        }
+        else {
           size_t args_len = mstrlen(last_debug_command.arguments);
           size_t start = 0;
           size_t end = 0;
@@ -5483,53 +5585,68 @@ void MainController::process_debug_return_value(Text_Buf& text_buf, char* log_so
           start = end;
           get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
           char* line = mcopystrn(last_debug_command.arguments + start, end - start);
+          bool all_in_module = !strcmp(line, "all");
           for (int i = 0; i < debugger_settings.nof_breakpoints; ++i) {
             if (!strcmp(debugger_settings.breakpoints[i].module, module) &&
-                !strcmp(debugger_settings.breakpoints[i].line, line)) {
+                (all_in_module || !strcmp(debugger_settings.breakpoints[i].line, line))) {
               Free(debugger_settings.breakpoints[i].module);
               Free(debugger_settings.breakpoints[i].line);
+              Free(debugger_settings.breakpoints[i].batch_file);
               for (int j = i; j < debugger_settings.nof_breakpoints - 1; ++j) {
                 debugger_settings.breakpoints[j] = debugger_settings.breakpoints[j + 1];
               }
-              debugger_settings.breakpoints = (debugger_settings_struct::breakpoint_struct*)
-                Realloc(debugger_settings.breakpoints, (debugger_settings.nof_breakpoints - 1) *
-                sizeof(debugger_settings_struct::breakpoint_struct));
               --debugger_settings.nof_breakpoints;
-              break;
+              if (!all_in_module) {
+                break;
+              }
             }
           }
+          debugger_settings.breakpoints = (debugger_settings_struct::breakpoint_struct*)
+            Realloc(debugger_settings.breakpoints, debugger_settings.nof_breakpoints *
+            sizeof(debugger_settings_struct::breakpoint_struct));
           Free(module);
           Free(line);
-          break; }
-        default:
-          break;
         }
-      }
-      else if (return_type == DRET_EXIT_ALL) {
-        stop_requested = TRUE;
+        break;
+      default:
+        break;
       }
     }
-    notify(&tv, log_source, TTCN_Logger::DEBUG_UNQUALIFIED, message);
+    else if (return_type == DRET_EXIT_ALL) {
+      stop_requested = TRUE;
+    }
   }
-  delete [] message;
 }
 
-void MainController::process_debug_halt_req(component_struct* tc)
+void MainController::process_debug_broadcast_req(component_struct* tc, int commandID)
 {
-  //lock();
-  // don't send the halt command back to the requesting component
+  // don't send the command back to the requesting component
   if (tc != mtc) {
-    send_debug_command(mtc->tc_fd, D_HALT, "");
+    send_debug_command(mtc->tc_fd, commandID, "");
   }
   for (component i = tc_first_comp_ref; i < n_components; ++i) {
     component_struct* comp = components[i];
     if (tc != comp && comp->tc_state != PTC_STALE && comp->tc_state != TC_EXITED) {
-      send_debug_command(comp->tc_fd, D_HALT, "");
+      send_debug_command(comp->tc_fd, commandID, "");
     }
   }
   debugger_active_tc = tc;
-  //status_change();
-  //unlock();
+  for (int i = 0; i < n_hosts; i++) {
+    host_struct* host = hosts[i];
+    if (host->hc_state != HC_DOWN) {
+      send_debug_command(hosts[i]->hc_fd, commandID, "");
+    }
+  }
+}
+
+void MainController::process_debug_batch(component_struct* tc)
+{
+  Text_Buf& text_buf = *tc->text_buf;
+  const char* batch_file = text_buf.pull_string();
+  unlock();
+  ui->executeBatchFile(batch_file);
+  lock();
+  delete [] batch_file;
 }
 
 void MainController::process_testcase_started()
@@ -5739,7 +5856,11 @@ void MainController::initialize(UserInterface& par_ui, int par_max_ptcs)
   debugger_settings.output_type = NULL;
   debugger_settings.output_file = NULL;
   debugger_settings.error_behavior = NULL;
+  debugger_settings.error_batch_file = NULL;
   debugger_settings.fail_behavior = NULL;
+  debugger_settings.fail_batch_file = NULL;
+  debugger_settings.global_batch_state = NULL;
+  debugger_settings.global_batch_file = NULL;
   debugger_settings.nof_breakpoints = 0;
   debugger_settings.breakpoints = NULL;
   last_debug_command.command = D_ERROR;
@@ -6401,41 +6522,46 @@ void MainController::debug_command(int commandID, char* arguments)
     case D_STEP_OVER:
     case D_STEP_INTO:
     case D_STEP_OUT:
-    case D_RUN_TO_CURSOR:
       // it's a data printing or stepping command, needs to be sent to the
       // active component
-      if (debugger_active_tc == NULL) {
-        // set the MTC as active if test execution hasn't halted and no
-        // D_SET_COMPONENT command has been issued
+      if (debugger_active_tc == NULL ||
+          debugger_active_tc->tc_state == PTC_STALE ||
+          debugger_active_tc->tc_state == TC_EXITED) {
+        // set the MTC as active in the beginning or if the active PTC has
+        // finished executing
         debugger_active_tc = mtc;
       }
       send_debug_command(debugger_active_tc->tc_fd, commandID, arguments);
       break;
     case D_SWITCH:
     case D_SET_OUTPUT:
-    case D_SET_ERROR_BEHAVIOR:
-    case D_SET_FAIL_BEHAVIOR:
-    case D_ADD_BREAKPOINT:
+    case D_SET_AUTOMATIC_BREAKPOINT:
+    case D_SET_GLOBAL_BATCH_FILE:
+    case D_SET_BREAKPOINT:
     case D_REMOVE_BREAKPOINT:
-      // it's a global setting, needs to be sent to all HCs and TCs
-      for (int i = 0; i < n_hosts; i++) {
-        send_debug_command(hosts[i]->hc_fd, commandID, arguments);
-      }
-      // store this command, the next MSG_DEBUG_RETURN_VALUE message might need it
+      // it's a global setting, store it, the next MSG_DEBUG_RETURN_VALUE message
+      // might need it
       last_debug_command.command = commandID;
       Free(last_debug_command.arguments);
       last_debug_command.arguments = mcopystr(arguments);
-      // no break, send it to TCs, too
+      // no break
+    case D_RUN_TO_CURSOR:
     case D_HALT:
     case D_CONTINUE:
     case D_EXIT:
-      // it's a global setting or a command related to the halted state,
-      // needs to be sent to all TCs
+      // it's a global setting, a 'run to' command or a command related to the
+      // halted state, needs to be sent to all HCs and TCs
       send_debug_command(mtc->tc_fd, commandID, arguments);
       for (component i = FIRST_PTC_COMPREF; i < n_components; ++i) {
-        component_struct *comp = components[i];
+        component_struct* comp = components[i];
         if (comp != NULL && comp->tc_state != PTC_STALE && comp->tc_state != TC_EXITED) {
           send_debug_command(comp->tc_fd, commandID, arguments);
+        }
+      }
+      for (int i = 0; i < n_hosts; i++) {
+        host_struct* host = hosts[i];
+        if (host->hc_state != HC_DOWN) {
+          send_debug_command(host->hc_fd, commandID, arguments);
         }
       }
       break;
@@ -6446,7 +6572,6 @@ void MainController::debug_command(int commandID, char* arguments)
   else {
     notify("Cannot execute debug commands before the MTC is created.");
   }
-  status_change();
   unlock();
 }
 

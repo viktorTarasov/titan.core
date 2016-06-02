@@ -56,6 +56,8 @@
 #include "LoggingParam.hh"
 
 #include "Profiler.hh"
+#include "Debugger.hh"
+#include "DebugCommands.hh"
 
 #define YYERROR_VERBOSE
 
@@ -71,7 +73,7 @@ static void check_duplicate_option(const char *section_name,
     const char *option_name, boolean& option_flag);
 static void check_ignored_section(const char *section_name);
 static void set_param(Module_Param& module_param);
-static unsigned char char_to_hexdigit(char c);
+static unsigned char char_to_hexdigit_(char c);
 
 static boolean error_flag = FALSE;
 
@@ -397,7 +399,7 @@ all modules in the next module parameter (reduce).
 GrammarRoot:
   ConfigFile
   {
-    if (Ttcn_String_Parsing::happening()) {
+    if (Ttcn_String_Parsing::happening() || Debugger_Value_Parsing::happening()) {
       config_process_error("Config file cannot be parsed as ttcn string");
     }
   }
@@ -692,7 +694,7 @@ SimpleParameterValue:
     for (int i=0; i<n_chars; i++) {
       if ($1[i]=='?') chars_ptr[i] = 16;
       else if ($1[i]=='*') chars_ptr[i] = 17;
-      else chars_ptr[i] = char_to_hexdigit($1[i]);
+      else chars_ptr[i] = char_to_hexdigit_($1[i]);
     }
     Free($1);
     $$ = new Module_Param_Hexstring_Template(n_chars, chars_ptr);
@@ -707,11 +709,11 @@ SimpleParameterValue:
       else if ($1[i]=='*') num = 257;
       else {
         // first digit
-        num = 16 * char_to_hexdigit($1[i]);
+        num = 16 * char_to_hexdigit_($1[i]);
         i++;
         if (i>=str_len) config_process_error("Unexpected end of octetstring pattern");
         // second digit
-        num += char_to_hexdigit($1[i]);
+        num += char_to_hexdigit_($1[i]);
       }
       octet_vec.push_back(num);
     }
@@ -2167,6 +2169,59 @@ Module_Param* process_config_string2ttcn(const char* mp_str, bool is_component)
   }
 }
 
+Module_Param* process_config_debugger_value(const char* mp_str)
+{
+  if (parsed_module_param != NULL || parsing_error_messages != NULL) {
+    ttcn3_debugger.print(DRET_NOTIFICATION,
+      "Internal error: previously parsed TTCN string was not cleared.");
+    return NULL;
+  }
+  // add the hidden keyword
+  std::string mp_string = std::string("$#&&&(#TTCNSTRINGPARSING$#&&^#% ") + mp_str;
+  struct yy_buffer_state *flex_buffer = config_process__scan_bytes(mp_string.c_str(), (int)mp_string.size());
+  if (flex_buffer == NULL) {
+    ttcn3_debugger.print(DRET_NOTIFICATION, "Internal error: flex buffer creation failed.");
+    return NULL;
+  }
+  reset_config_process_lex(NULL);
+  error_flag = FALSE;
+  try {
+    Debugger_Value_Parsing debugger_value_parsing;
+    if (config_process_parse()) {
+      error_flag = TRUE;
+    }
+  }
+  catch (const TC_Error& TC_error) {
+    if (parsed_module_param != NULL) {
+      delete parsed_module_param;
+      parsed_module_param = NULL;
+    }
+    error_flag = TRUE;
+  }
+  config_process_close();
+  config_process_lex_destroy();
+
+  if (error_flag || parsing_error_messages != NULL) {
+    delete parsed_module_param;
+    parsed_module_param = NULL;
+    char* pem = parsing_error_messages != NULL ? parsing_error_messages :
+      mcopystr("Unknown parsing error");
+    parsing_error_messages = NULL;
+    ttcn3_debugger.print(DRET_NOTIFICATION, "%s", pem);
+    Free(pem);
+    return NULL;
+  }
+  else {
+    if (parsed_module_param == NULL) {
+      ttcn3_debugger.print(DRET_NOTIFICATION, "Internal error: could not parse TTCN string.");
+      return NULL;
+    }
+    Module_Param* ret_val = parsed_module_param;
+    parsed_module_param = NULL;
+    return ret_val;
+  }
+}
+
 boolean process_config_string(const char *config_string, int string_len)
 {
   error_flag = FALSE;
@@ -2245,14 +2300,20 @@ boolean process_config_file(const char *file_name)
 
 void config_process_error_f(const char *error_str, ...)
 {
-  if (Ttcn_String_Parsing::happening()) {
+  if (Ttcn_String_Parsing::happening() || Debugger_Value_Parsing::happening()) {
     va_list p_var;
     va_start(p_var, error_str);
     char* error_msg_str = mprintf_va_list(error_str, p_var);
     va_end(p_var);
     if (parsing_error_messages!=NULL) parsing_error_messages = mputc(parsing_error_messages, '\n');
-    parsing_error_messages = mputprintf(parsing_error_messages,
-      "Parse error in line %d, at or before token `%s': %s", config_process_get_current_line(), config_process_text, error_msg_str);
+    if (Debugger_Value_Parsing::happening()) {
+      parsing_error_messages = mputprintf(parsing_error_messages,
+        "Parse error at or before token `%s': %s", config_process_text, error_msg_str);
+    }
+    else { // Ttcn_String_Parsing::happening()
+      parsing_error_messages = mputprintf(parsing_error_messages,
+        "Parse error in line %d, at or before token `%s': %s", config_process_get_current_line(), config_process_text, error_msg_str);
+    }
     Free(error_msg_str);
     error_flag = TRUE;
     return;
@@ -2334,13 +2395,13 @@ static void set_param(Module_Param& param)
   }
 }
 
-unsigned char char_to_hexdigit(char c)
+unsigned char char_to_hexdigit_(char c)
 {
   if (c >= '0' && c <= '9') return c - '0';
   else if (c >= 'A' && c <= 'F') return c - 'A' + 10;
   else if (c >= 'a' && c <= 'f') return c - 'a' + 10;
   else {
-    config_process_error_f("char_to_hexdigit(): invalid argument: %c", c);
+    config_process_error_f("char_to_hexdigit_(): invalid argument: %c", c);
     return 0; // to avoid warning
   }
 }

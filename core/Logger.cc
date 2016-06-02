@@ -1510,6 +1510,14 @@ void TTCN_Location::strip_entity_name(char*& par_str)
   par_str = new_str;
 }
 
+unsigned int TTCN_Location::get_line_number()
+{
+  if (innermost_location != NULL) {
+    return innermost_location->line_number;
+  }
+  return 0;
+}
+
 char *TTCN_Location::append_contents(char *par_str,
   boolean print_entity_name) const
 {

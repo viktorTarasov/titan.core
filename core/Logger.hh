@@ -836,6 +836,10 @@ public:
    *
    **/
   static void strip_entity_name(char*& par_str);
+  
+  /** @brief Return the innermost location's line number 
+   **/
+  static unsigned int get_line_number();
 protected:
   char *append_contents(char *par_str, boolean print_entity_name) const;
 };

@@ -8,6 +8,7 @@
  * Contributors:
  *   Baji, Laszlo
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Beres, Szabolcs
  *   Delic, Adam
  *   Feher, Csaba
@@ -1158,11 +1159,13 @@ void TTCN_Communication::send_debug_return_value(int return_type, const char* me
   Text_Buf text_buf;
   text_buf.push_int(MSG_DEBUG_RETURN_VALUE);
   text_buf.push_int(return_type);
-  timeval tv;
-  gettimeofday(&tv, NULL);
-  text_buf.push_int(tv.tv_sec);
-  text_buf.push_int(tv.tv_usec);
-  text_buf.push_string(message);
+  if (message != NULL) {
+    timeval tv;
+    gettimeofday(&tv, NULL);
+    text_buf.push_int(tv.tv_sec);
+    text_buf.push_int(tv.tv_usec);
+    text_buf.push_string(message);
+  }
   send_message(text_buf);
 }
 
@@ -1170,6 +1173,21 @@ void TTCN_Communication::send_debug_halt_req()
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_DEBUG_HALT_REQ);
+  send_message(text_buf);
+}
+
+void TTCN_Communication::send_debug_continue_req()
+{
+  Text_Buf text_buf;
+  text_buf.push_int(MSG_DEBUG_CONTINUE_REQ);
+  send_message(text_buf);
+}
+
+void TTCN_Communication::send_debug_batch(const char* batch_file)
+{
+  Text_Buf text_buf;
+  text_buf.push_int(MSG_DEBUG_BATCH);
+  text_buf.push_string(batch_file);
   send_message(text_buf);
 }
 

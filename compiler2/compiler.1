@@ -3,7 +3,7 @@
 compiler \- TTCN-3 and ASN.1 to C++ translator
 .SH SYNOPSIS
 .B compiler
-.RB "[\| " \-abcdEfgijlLMpqrRsStuwxXyY " \|]"
+.RB "[\| " \-abcdEfgijlLMnpqrRsStuwxXyY " \|]"
 .RB "[\| " \-V
 .IR " verb_level" " \|]"
 .RB "[\| " \-K
@@ -166,6 +166,9 @@ attribute can still be used for matching omitted fields). This also affects the
 operation and the
 .B present
 template restriction accordingly.
+.TP
+.B \-n
+Activates the debugger and generates extra code for storing debug information.
 .TP
 .BI \-o " dir"
 The output files (including Test Port skeletons) will be placed into

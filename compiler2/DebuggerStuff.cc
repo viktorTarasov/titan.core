@@ -110,11 +110,12 @@ string array_dimensions_to_string(Ttcn::ArrayDimensions* p_dims)
   return ret_val;
 }
 
-void calculate_type_name_and_print_function_from_type(Type* p_type,
-                                                      Type* p_type_last,
-                                                      Module* p_module,
-                                                      string& p_type_name,
-                                                      string& p_print_function)
+void calculate_type_name_and_debug_functions_from_type(Type* p_type,
+                                                       Type* p_type_last,
+                                                       Module* p_module,
+                                                       string& p_type_name,
+                                                       string& p_print_function,
+                                                       string& p_set_function)
 {
   if (p_type_last->get_typetype() == Type::T_COMPONENT) {
     p_type_name = "component";
@@ -142,13 +143,17 @@ void calculate_type_name_and_print_function_from_type(Type* p_type,
       p_type_name = p_type_last->get_dispname();
     }
     const Module* var_type_mod = p_type_last->get_my_scope()->get_scope_mod();
+    string module_prefix;
     if (var_type_mod != p_module) {
-      p_print_function = var_type_mod->get_modid().get_name() + "::";
+      module_prefix = var_type_mod->get_modid().get_name() + "::";
     }
-    else {
-      p_print_function.clear();
+    p_print_function = module_prefix + "print_var_" +
+      var_type_mod->get_modid().get_ttcnname();
+    if (p_type_last->get_typetype() != Type::T_SIGNATURE &&
+        p_type_last->get_typetype() != Type::T_PORT) {
+      p_set_function = module_prefix + "set_var_" +
+        var_type_mod->get_modid().get_ttcnname();
     }
-    p_print_function += "print_var_" + var_type_mod->get_modid().get_ttcnname();
   }
   else {
     // built-in type, get the TTCN-3 version of the type if possible
@@ -182,23 +187,34 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
   }
   
   bool is_lazy_param = false;
+  bool is_constant = false;
   switch (var_ass->get_asstype()) {
   case Common::Assignment::A_PAR_VAL:
   case Common::Assignment::A_PAR_VAL_IN:
-  case Common::Assignment::A_PAR_TEMPL_IN:
+  case Common::Assignment::A_PAR_TEMPL_IN: {
     if (var_ass->get_lazy_eval()) {
       // lazy parameters have their own printing function
       is_lazy_param = true;
     }
-    break;
+    Ttcn::FormalPar* fpar = dynamic_cast<Ttcn::FormalPar*>(var_ass);
+    is_constant = fpar == NULL || !fpar->get_used_as_lvalue();
+    break; }
+  case Common::Assignment::A_CONST:
+  case Common::Assignment::A_EXT_CONST:
+  case Common::Assignment::A_MODULEPAR:
+  case Common::Assignment::A_MODULEPAR_TEMP:
+  case Common::Assignment::A_TEMPLATE:
+    is_constant = scope_name != NULL;
   default:
     break;
   }
   
-  // recreate the TTCN-3 version of the type name and determine the type's printing function
-  string type_name, print_function;
+  // recreate the TTCN-3 version of the type name and determine the type's 
+  // printing and overwriting functions
+  string type_name, print_function, set_function;
   print_function = is_lazy_param ? "TTCN3_Debugger::print_lazy_param<" :
     "TTCN3_Debugger::print_base_var";
+  set_function = "TTCN3_Debugger::set_base_var";
   if (var_ass->get_asstype() == Common::Assignment::A_TIMER ||
       var_ass->get_asstype() == Common::Assignment::A_PAR_TIMER) {
     type_name = "timer";
@@ -242,8 +258,9 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
         dims_str += t->get_dimension()->get_stringRepr();
         t = t->get_ofType()->get_type_refd_last();
       }
-      string dummy;
-      calculate_type_name_and_print_function_from_type(t, t, current_mod, type_name, dummy);
+      string dummy1, dummy2;
+      calculate_type_name_and_debug_functions_from_type(t, t, current_mod,
+        type_name, dummy1, dummy2);
       type_name += dims_str;
       if (!is_lazy_param) {
         switch (var_ass->get_asstype()) {
@@ -257,10 +274,16 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
           print_function = string("TTCN3_Debugger::print_template_array<") +
             function_params_for_array_type(var_type, current_mod, true) +
             string(">");
+          set_function = string("TTCN3_Debugger::set_template_array<") +
+            function_params_for_array_type(var_type, current_mod, true) +
+            string(">");
           break;
         default:
           // value array
           print_function = string("TTCN3_Debugger::print_value_array<") +
+            function_params_for_array_type(var_type, current_mod, false) +
+            string(">");
+          set_function = string("TTCN3_Debugger::set_value_array<") +
             function_params_for_array_type(var_type, current_mod, false) +
             string(">");
           break;
@@ -269,8 +292,9 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
     }
     else {
       string dummy;
-      calculate_type_name_and_print_function_from_type(var_ass->get_Type(),
-        var_type, current_mod, type_name, is_lazy_param ? dummy : print_function);
+      calculate_type_name_and_debug_functions_from_type(var_ass->get_Type(),
+        var_type, current_mod, type_name, is_lazy_param ? dummy : print_function,
+        set_function);
     }
   }
   
@@ -295,7 +319,7 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
     print_function += ">";
   }
   
-  return mputprintf(str, "%s%s_scope%sadd_variable(&%s, \"%s\", \"%s\", %s);\n",
+  return mputprintf(str, "%s%s_scope%sadd_variable(&%s, \"%s\", \"%s\", %s%s%s);\n",
     scope_name != NULL ? "  " : "", // add indenting for global variables
     scope_name != NULL ? scope_name : "debug", // the prefix of the debugger scope:
     // ("global" for global variables, "debug" for local variables,
@@ -307,7 +331,9 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
     // so the lazy parameter evaluation code is not generated)
     var_ass->get_id().get_ttcnname().c_str(), // variable name in TTCN-3
     type_name.c_str(), // variable type in TTCN-3, with a suffix if it's a template
-    print_function.c_str()); // variable printing function
+    print_function.c_str(), // variable printing function
+    is_constant ? "" : ", ", is_constant ? "" : set_function.c_str());
+    // variable overwriting function (not generated for constants)
 }
 
 char* generate_code_debugger_function_init(char* str, Common::Assignment* func_ass)
