@@ -92,8 +92,11 @@ Cygwin setup
        "/cygdrive/c/Users/<yourUserId>/Documents/My_Home"
        WARNING: The path of your "unix" home directory shall not contain
                 any space!
-
-  (J) Using the bynary Titan package: download the Titan package for from
+		(I1) If you are working with Titan plugins for Eclipse or any Windows based program 
+				using cygwin commands, insert the Windows equivalent path of cygwin folders "/bin" or/and "/usr/bin" 
+				into the Windows environment variable "Path". For example if the cygwin root is "C:\cygwin64" then 
+				Path should contain  "C:\cygwin64\bin;C:\cygwin64\usr\bin".
+  (J) Using the binary Titan package: download the Titan package for from
     GitHub. Unpack the Titan package into a folder of your choice.
       Note: It is not a requirement, but is a kind of best practice to 
             place Titan into a subfolder within your "unix" home directory.
