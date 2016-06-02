@@ -1782,6 +1782,15 @@ void ComplexType::resolveSimpleTypeExtension() {
         st->addToNameDepList(basefield);
         basefield->nameDep = st;
         addNameSpaceAsVariant(basefield, st);
+        const Mstring old_type = basefield->getType().originalValueWoPrefix;
+        basefield->applyReference(*st);
+        // If st has enumeration then the type is restored to the original value
+        // because enumerations cannot be extended here and this way we just
+        // create an alias.
+        if (st->getEnumeration().modified) {
+          basefield->setTypeValue(old_type);
+          basefield->getEnumeration().modified = false;
+        }
       }
     } else if(!isBuiltInType(basefield->getType().convertedValue)){
          printError(module->getSchemaname(), name.convertedValue,

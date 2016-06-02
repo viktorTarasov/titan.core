@@ -1149,8 +1149,11 @@ EnumerationType::EnumerationType(SimpleType * a_simpleType)
 
 void EnumerationType::applyReference(const EnumerationType & other) {
   if (!modified) modified = other.modified;
-  for (List<Mstring>::iterator facet = other.facets.begin(); facet; facet = facet->Next) {
-    facets.push_back(facet->Data);
+  if ((other.parent->getXsdtype() == n_NOTSET && parent->getMode() != SimpleType::restrictionMode)
+        || parent->getXsdtype() == n_simpleType) {
+    for (List<Mstring>::iterator facet = other.facets.begin(); facet; facet = facet->Next) {
+      facets.push_back(facet->Data);
+    }
   }
 }
 
