@@ -838,6 +838,19 @@ type record of MyRec2 MyRecOf
     if(ispresent(t_i(1,2*vl_i))) {setverdict(pass)} else {setverdict(fail)};
     //if(ispresent(t_i(1,2/vl_j))) {setverdict(pass)} else {setverdict(fail)}; //DTE
   }
+  
+  // Test case for:
+  // Bug 495128 - Incorrect code generated for anytype field reference in ispresent clause
+  // The 'ispresent' clauses in this test caused C++ compilation errors, because 
+  // 'x.MyRecord()' was generated instead of 'x.AT_MyRecord()', when accessing the anytype field
+  testcase tc_anytype_field() runs on MTC_CT {
+    var anytype x;
+    x.MyRecord := { i := 1, x := omit, c := "a" };
+    if (ispresent(x.MyRecord.i)) { setverdict(pass); }
+    else { setverdict(fail, "field i should be present"); }
+    if (not ispresent(x.MyRecord.x)) { setverdict(pass); }
+    else { setverdict(fail, "field x should not be present"); }
+  }
 
 
   control {
@@ -929,7 +942,10 @@ type record of MyRec2 MyRecOf
     //execute(tc_runtimeDivisionByZero()); //expected DTE
     //execute(tc_compilationErrorDivisionByZero()); ok!?
     execute(tc_runtimeExprEval());
-
+    execute(tc_anytype_field());
   }
 
 }//module
+with {
+  extension "anytype MyRecord";
+}

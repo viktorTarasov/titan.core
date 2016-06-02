@@ -2472,10 +2472,10 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
         const string& tmp_id = module->get_temporary_id();
         const char *tmp_id_str = tmp_id.c_str();
         expr->expr = mputprintf(expr->expr,
-          "const %s%s& %s = %s.%s();\n",
+          "const %s%s& %s = %s.%s%s();\n",
           next_t->get_genname_value(module).c_str(),
           is_template?"_template":"", tmp_id_str, tmp_generalid_str,
-          id.get_name().c_str());
+          t->typetype == T_ANYTYPE ? "AT_" : "", id.get_name().c_str());
 
         expr->expr = mputprintf(expr->expr,
           "%s = %s.%s(%s);\n", global_id.c_str(),
