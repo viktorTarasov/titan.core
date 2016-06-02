@@ -1130,6 +1130,18 @@ group UnionTest {
     }
   }
 
+ testcase tc_enumeration_restriction3() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict("xsd2ttcn  enumeration_restriction3.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_enumeration_restriction3_e.ttcn",
+        "www_example_org_enumeration_restriction3.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }
+
+
  testcase tc_enumeration_remove_dup() runs on xmlTest_CT {
 
     f_shellCommandWithVerdict("xsd2ttcn  enumeration_remove_dup.xsd","",c_shell_successWithoutWarningAndError)
@@ -2599,6 +2611,7 @@ control {
   execute(tc_union_optional());//CR_TR18883
   execute(tc_enumeration_union_restriction());
   execute(tc_enumeration_union_restriction2());
+  execute(tc_enumeration_restriction3());
   execute(tc_enumeration_remove_dup());
   //===complex===
   execute(tc_complex1()); //Passed
