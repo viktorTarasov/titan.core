@@ -1786,7 +1786,7 @@ void ComplexType::resolveSimpleTypeExtension() {
         basefield->applyReference(*st);
         // If st has enumeration then the type is restored to the original value
         // because enumerations cannot be extended here and this way we just
-        // we just create an alias.
+        // create an alias.
         if (st->getEnumeration().modified) {
           basefield->setTypeValue(old_type);
           basefield->getEnumeration().modified = false;
