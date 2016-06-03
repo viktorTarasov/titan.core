@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Bene, Tamas
  *   Beres, Szabolcs
  *   Delic, Adam
@@ -56,6 +57,7 @@
 #define SHELL_TEXT "!"
 #define EXIT_TEXT "quit"
 #define EXIT_TEXT2 "exit"
+#define BATCH_TEXT "batch"
 #define SHELL_ESCAPE '!'
 #define TTCN3_HISTORY_FILENAME ".ttcn3_history"
 
@@ -100,6 +102,8 @@ static const Command command_list[] = {
     "Execute commands in subshell." },
   { EXIT_TEXT, &Cli::exitCallback, EXIT_TEXT, "Exit Main Controller." },
   { EXIT_TEXT2, &Cli::exitCallback, EXIT_TEXT2, "Exit Main Controller." },
+  { BATCH_TEXT, &Cli::executeBatchFile, BATCH_TEXT " <batch_file>",
+    "Run commands from batch file." },
   { NULL, NULL, NULL, NULL }
 };
 
@@ -113,21 +117,24 @@ struct DebugCommand {
 static const DebugCommand debug_command_list[] = {
   { D_SWITCH_TEXT, D_SWITCH, D_SWITCH_TEXT " on|off",
     "Switch the debugger on or off." },
-  { D_ADD_BREAKPOINT_TEXT, D_ADD_BREAKPOINT,
-    D_ADD_BREAKPOINT_TEXT " <module> <line>",
-    "Add breakpoint at specified location." },
+  { D_SET_BREAKPOINT_TEXT, D_SET_BREAKPOINT,
+    D_SET_BREAKPOINT_TEXT " <module> <line> [<batch_file>]",
+    "Add a breakpoint at the specified location, or change the batch file of "
+    " an existing breakpoint." },
   { D_REMOVE_BREAKPOINT_TEXT, D_REMOVE_BREAKPOINT,
-    D_REMOVE_BREAKPOINT_TEXT " <module> <line>",
-    "Remove breakpoint from specified location." },
-  { D_SET_ERROR_BEHAVIOR_TEXT, D_SET_ERROR_BEHAVIOR,
-    D_SET_ERROR_BEHAVIOR_TEXT " yes|no",
-    "Set whether to halt test execution when component verdict is set to 'error'." },
-  { D_SET_FAIL_BEHAVIOR_TEXT, D_SET_FAIL_BEHAVIOR,
-    D_SET_FAIL_BEHAVIOR_TEXT " yes|no",
-    "Set whether to halt test execution when component verdict is set to 'fail'." },
+    D_REMOVE_BREAKPOINT_TEXT " all|<module> [all|<line>]", "Remove a breakpoint, "
+    "or all breakpoints from a module, or all breakpoints from all modules." },
+  { D_SET_AUTOMATIC_BREAKPOINT_TEXT, D_SET_AUTOMATIC_BREAKPOINT,
+    D_SET_AUTOMATIC_BREAKPOINT_TEXT " error|fail on|off [<batch_file>]",
+    "Switch an automatic breakpoint (truggered by an event) on or off, and/or "
+    "change its batch file." },
   { D_SET_OUTPUT_TEXT, D_SET_OUTPUT,
     D_SET_OUTPUT_TEXT " console|file|both [file_name]",
     "Set the output of the debugger." },
+  { D_SET_GLOBAL_BATCH_FILE_TEXT, D_SET_GLOBAL_BATCH_FILE,
+    D_SET_GLOBAL_BATCH_FILE_TEXT " on|off [batch_file_name]",
+    "Set whether a batch file should be executed automatically when test execution "
+    "is halted (breakpoint-specific batch files override this setting)." },
   { D_SET_COMPONENT_TEXT, D_SET_COMPONENT,
     D_SET_COMPONENT_TEXT " mtc|<component_reference>",
     "Set the test component to print debug information from." },
@@ -139,8 +146,9 @@ static const DebugCommand debug_command_list[] = {
     D_LIST_VARIABLES_TEXT " local|global|comp|all [pattern]",
     "List variable names." },
   { D_PRINT_VARIABLE_TEXT, D_PRINT_VARIABLE,
-    D_PRINT_VARIABLE_TEXT " <variable_name>[{ <variable_name>}]",
-    "Print current value of one or more variables." },
+    D_PRINT_VARIABLE_TEXT " <variable_name>|$ [{ <variable_name>|$}]",
+    "Print current value of one or more variables ('$' is substituted with the "
+    "result of the last " D_LIST_VARIABLES_TEXT " command)." },
   { D_OVERWRITE_VARIABLE_TEXT, D_OVERWRITE_VARIABLE,
     D_OVERWRITE_VARIABLE_TEXT " <variable_name> <value>",
     "Overwrite the current value of a variable." },
@@ -160,12 +168,6 @@ static const DebugCommand debug_command_list[] = {
   { D_CONTINUE_TEXT, D_CONTINUE, D_CONTINUE_TEXT, "Resume halted test execution." },
   { D_EXIT_TEXT, D_EXIT, D_EXIT_TEXT " test|all",
     "Exit the current test or the execution of all tests." },
-  { D_BATCH_TEXT, D_BATCH, D_BATCH_TEXT " <batch_file_name>",
-    "Run commands from batch file." },
-  { D_SET_HALTING_BATCH_FILE_TEXT, D_SET_HALTING_BATCH_FILE,
-    D_SET_HALTING_BATCH_FILE_TEXT " yes|no [batch_file_name]",
-    "Set whether a batch file should be executed automatically when test execution "
-    "is halted by the debugger." },
   { NULL, D_ERROR, NULL, NULL }
 };
 
@@ -800,6 +802,35 @@ void Cli::exitCallback(const char *arguments)
   } else {
     helpCallback(EXIT_TEXT);
   }
+}
+
+void Cli::executeBatchFile(const char* filename)
+{
+  FILE* fp = fopen(filename, "r");
+  if (fp == NULL) {
+    printf("Failed to open file '%s' for reading.\n", filename);
+    return;
+  }
+  else {
+    printf("Executing batch file '%s'.\n", filename);
+  }
+  char line[1024];
+  while (fgets(line, sizeof(line), fp) != NULL) {
+    size_t len = strlen(line);
+    if (line[len - 1] == '\n') {
+      line[len - 1] = '\0';
+      --len;
+    }
+    if (len != 0) {
+      printf("%s\n", line);
+      processCommand(line);
+    }
+  }
+  if (!feof(fp)) {
+    printf("Error occurred while reading batch file '%s' (error code: %d).\n",
+      filename, ferror(fp));
+  }
+  fclose(fp);
 }
 
 //----------------------------------------------------------------------------

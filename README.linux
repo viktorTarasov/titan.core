@@ -30,20 +30,23 @@ git clone https://github.com/eclipse/titan.core  titan.core
 3. Configure the build 
 
 cd titan.core
-check that MakefileFOSS.cfg is present and has the following content:
+
+For open source users: check that MakefileFOSS.cfg is present and has the following content:
 cat MakefileFOSS.cfg
 
 # Configurations for the Free Open Source Software version
 LICENSING := no
 USAGE_STATS := no
 
+If you want to use your build within teh Ericsson domain: delete MakefileFOSS.cfg
+This will enable licensing.
 
 Several build options are possible; for details on options please read through the Makefile.cfg.
 Options can be overridden by the content of  a file named Makefile.personal which can be used to 
 adapt to local installation directories, change config options etc.
 Below, a small number of typical scenarios are presented.
 
-a) JNI  disabled
+a) JNI  disabled, gcc compiler (default)
 
 The JNI interface is used by the Eclipse Titan Executor or by the Java Executor API.
 If you don't need them , Titan can be compiled without JNI. 
@@ -58,15 +61,27 @@ XMLDIR := /usr
 JNI := no
 GEN_PDF := no
 
+b) JNI  disabled, clang compiler ver. 3.8
+
+Create ~/titan.core/Makefile.personal to override settings in Makefile.cfg with the following content:
+(replace paths with values relevant to your installation). 
+
+TTCN3_DIR := /home/<user id>/titan.core/Install
+OPENSSL_DIR := /usr
+#JDKDIR := /usr/lib/jvm/java-7-openjdk-amd64
+XMLDIR := /usr
+JNI := no
+GEN_PDF := no
+CXX := clang++-3.8
+CC := clang-3.8 
 
 
-
-b) JNI  enabled
+c) JNI  enabled, gcc compiler (default)
 
 install JDK   into /home/<user id>/jdk
 
 Create ~/titan.core/Makefile.personal to override settings in Makefile.cfg with the following content:
-(replace paths with values relevant to your installation)
+(replace paths with values relevant to your installation).
 
 TTCN3_DIR := /home/<user id>/titan.core/Install
 OPENSSL_DIR := /usr
@@ -133,6 +148,3 @@ These tests might run for half an hour (regr.tests)  to two hours (func.tests)
 8. Optionally, copy Titan into its final directory.
 From here on, you can continue with the Titan installation guide, see /Install/docs, to set/change environment variables etc.
 
-nagylenard
-elnrnag
-elnrnag2

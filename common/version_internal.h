@@ -12,6 +12,7 @@
  *   Lovassy, Arpad
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *
  ******************************************************************************/
@@ -123,17 +124,29 @@
 /* Version of the C/C++ compiler */
 
 #if defined(__GNUC__)
-  /* the code is compiled with GCC */
-# ifdef __GNUC_PATCHLEVEL__
-   /* the patch number is known (version 3.0 or later) */
-#  define GEN_COMP_VER2(major, minor, patchlevel) "GCC " #major "." #minor "." #patchlevel
-#  define GEN_COMP_VER(major, minor, patchlevel) GEN_COMP_VER2(major, minor, patchlevel)
-#  define C_COMPILER_VERSION GEN_COMP_VER(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
+# ifdef __clang__
+#  ifdef __clang_patchlevel__
+#    define GEN_COMP_VER2(major, minor, patchlevel) "clang " #major "." #minor "." #patchlevel
+#    define GEN_COMP_VER(major, minor, patchlevel) GEN_COMP_VER2(major, minor, patchlevel)
+#    define C_COMPILER_VERSION GEN_COMP_VER(__clang_major__, __clang_minor__, __clang_patchlevel__)
+#  else
+#    define GEN_COMP_VER2(major, minor) "clang " #major "." #minor ".?"
+#    define GEN_COMP_VER(major, minor) GEN_COMP_VER2(major, minor)
+#    define C_COMPILER_VERSION GEN_COMP_VER(__clang_major__, __clang_minor__)
+#  endif
 # else
-   /* the patch number is unknown (version 2.x.?) */
-#  define GEN_COMP_VER2(major, minor) "GCC " #major "." #minor ".?"
-#  define GEN_COMP_VER(major, minor) GEN_COMP_VER2(major, minor)
-#  define C_COMPILER_VERSION GEN_COMP_VER(__GNUC__, __GNUC_MINOR__)
+    /* the code is compiled with GCC */
+#  ifdef __GNUC_PATCHLEVEL__
+     /* the patch number is known (version 3.0 or later) */
+#    define GEN_COMP_VER2(major, minor, patchlevel) "GCC " #major "." #minor "." #patchlevel
+#    define GEN_COMP_VER(major, minor, patchlevel) GEN_COMP_VER2(major, minor, patchlevel)
+#    define C_COMPILER_VERSION GEN_COMP_VER(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
+#  else
+     /* the patch number is unknown (version 2.x.?) */
+#    define GEN_COMP_VER2(major, minor) "GCC " #major "." #minor ".?"
+#    define GEN_COMP_VER(major, minor) GEN_COMP_VER2(major, minor)
+#    define C_COMPILER_VERSION GEN_COMP_VER(__GNUC__, __GNUC_MINOR__)
+#  endif
 # endif
 #elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
   /* the code is compiled with Sun Workshop C/C++ compiler */

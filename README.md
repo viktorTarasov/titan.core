@@ -30,26 +30,7 @@ https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_User_P.pdf
 ##Binaries and SHA512 checksums for a number of Linux platforms can be downloaded from:
 
 
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux32-gcc4.3-sled11.1.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux32-gcc4.3-sled11.1.tgz.sha512
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.8.3-sled12.0.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.8.3-sled12.0.tgz.sha512
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.1.2-rhel5.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.1.2-rhel5.tgz.sha512
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.3-SLED11.1.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.3-SLED11.1.tgz.sha512
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.3-sled11.0.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.3-sled11.0.tgz.sha512
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.3-sles11.1.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.3-sles11.1.tgz.sha512
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.4.5-rhel6.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.4.5-rhel6.tgz.sha512
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.8.2-rhel7.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.8.2-rhel7.tgz.sha512
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.6-ubuntu12.04.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.6-ubuntu12.04.tgz.sha512
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.8-ubuntu14.04.tgz
-* https://www.eclipse.org/downloads/download.php?file=/titan/ttcn3-5.4.pl0-linux64-gcc4.8-ubuntu14.04.tgz.sha512
+* https://projects.eclipse.org/projects/tools.titan/downloads
 
 
 # Related products:
@@ -62,8 +43,7 @@ Source code:
 
 Compressed update site and SHA512 checksum:
 
-* https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_on_Eclipse_5.4.0.CRL_113_200_5_R4A_20151113-1513.zip
-* https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_on_Eclipse_5.4.0.CRL_113_200_5_R4A_20151113-1513.zip.sha512
+* https://projects.eclipse.org/projects/tools.titan/downloads
  
 ## Test Ports:
  

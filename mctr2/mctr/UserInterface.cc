@@ -34,6 +34,11 @@ void UserInterface::initialize()
 
 }
 
+void UserInterface::executeBatchFile(const char* /* filename */)
+{
+  error(/* severity */ 0, "This user interface does not support batch files.");
+}
+
 //----------------------------------------------------------------------------
 // Local Variables:
 // mode: C++

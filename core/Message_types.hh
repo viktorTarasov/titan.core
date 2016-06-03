@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Forstner, Matyas
  *   Szabo, Janos Zoltan – initial implementation
  *
@@ -104,6 +105,8 @@
 #define MSG_UNMAP_REQ		19
 #define MSG_UNMAPPED		20
 #define MSG_DEBUG_HALT_REQ	101
+#define MSG_DEBUG_CONTINUE_REQ	102
+#define MSG_DEBUG_BATCH		103
 
 /* Messages from MTC to MC (up) */
 

@@ -33,6 +33,8 @@
 #include "Universal_charstring.hh"
 #include "Logger.hh"
 #include "Module_list.hh"
+#include "Debugger.hh"
+#include "DebugCommands.hh"
 
 
 size_t Module_Param_Id::get_index() const {
@@ -317,6 +319,9 @@ Module_Param_Reference::Module_Param_Reference(Module_Param_Name* p): mp_ref(p) 
 }
 
 Module_Param_Ptr Module_Param_Reference::get_referenced_param() const {
+  if (Debugger_Value_Parsing::happening()) {
+    error("References to other variables are not allowed.");
+  }
   mp_ref->reset();
   Module_Param_Ptr ptr = Module_List::get_param(*mp_ref);
   ptr.set_temporary();
@@ -635,6 +640,31 @@ void Module_Param::error(const char* err_msg, ...) const {
     Free(exception_str);
     TTCN_error_end();
   }
+  else if (Debugger_Value_Parsing::happening()) {
+    char* exception_str = mcopystr("Error while overwriting ");
+    char* param_ctx;
+    if (id && id->is_custom()) {
+      param_ctx = mputstr(id->get_str(), " in the variable");
+    }
+    else {
+      char* tmp = get_param_context();
+      param_ctx = tmp != NULL ? mprintf("variable field '%s'", tmp) : 
+        mcopystr("the variable");
+      Free(tmp);
+    }
+    exception_str = mputstr(exception_str, param_ctx);
+    Free(param_ctx);
+    exception_str = mputstr(exception_str, ": ");
+    va_list p_var;
+    va_start(p_var, err_msg);
+    char* error_msg_str = mprintf_va_list(err_msg, p_var);
+    va_end(p_var);
+    exception_str = mputstr(exception_str, error_msg_str);
+    Free(error_msg_str);
+    ttcn3_debugger.print(DRET_NOTIFICATION, "%s", exception_str);
+    Free(exception_str);
+    throw TC_Error(); // don't log anything in this case
+  }
   TTCN_Logger::begin_event(TTCN_Logger::ERROR_UNQUALIFIED);
   TTCN_Logger::log_event_str("Error while ");
   switch (operation_type) {
@@ -673,19 +703,26 @@ void Module_Param::error(const char* err_msg, ...) const {
 }
 
 void Module_Param::type_error(const char* expected, const char* type_name /* = NULL */) const {
-  const Module_Param* reporter = this;
-  // if it's an expression, find its head and use that to report the error
-  // (since that's the only parameter with a valid name)
-  while (reporter->parent != NULL && reporter->parent->get_type() == MP_Expression) {
-    reporter = reporter->parent;
+  if (Debugger_Value_Parsing::happening()) {
+    // no references when overwriting a variable through the debugger
+    error("Type mismatch: %s was expected instead of %s.", expected, get_type_str());
   }
-  // either use this parameter's or the referenced parameter's type string
-  // (but never the head's type string)
-  reporter->error("Type mismatch: %s or reference to %s was expected%s%s instead of %s%s.",
-    expected, expected,
-    (type_name != NULL) ? " for type " : "", (type_name != NULL) ? type_name : "",
-    (get_type() == MP_Reference) ? "reference to " : "",
-    (get_type() == MP_Reference) ? get_referenced_param()->get_type_str() : get_type_str());
+  else {
+    const Module_Param* reporter = this;
+    // if it's an expression, find its head and use that to report the error
+    // (since that's the only parameter with a valid name)
+    while (reporter->parent != NULL && reporter->parent->get_type() == MP_Expression) {
+      reporter = reporter->parent;
+    }
+    // either use this parameter's or the referenced parameter's type string
+    // (but never the head's type string)
+    reporter->error("Type mismatch: %s or reference to %s was expected%s%s instead of %s%s.",
+      expected, expected,
+      (type_name != NULL) ? " for type " : "", (type_name != NULL) ? type_name : "",
+      (get_type() == MP_Reference) ? "reference to " : "",
+      (get_type() == MP_Reference) ? get_referenced_param()->get_type_str() : get_type_str());
+  }
 }
 
 bool Ttcn_String_Parsing::string_parsing = false;
+bool Debugger_Value_Parsing::is_happening = false;

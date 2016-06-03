@@ -16,18 +16,18 @@
 // Mycompport A is mapped with a system interface
 module Sem_0902_Communication_ports_001{ 
 
-    type port loopbackPort message {
+    type port Sem_0902_001_loopbackPort message {
 	  	inout integer
 	} 
 
 	type component GeneralComp
 	{
-		port loopbackPort MycomportA
+		port Sem_0902_001_loopbackPort MycomportA
 	}
 
 	type component MyTestSystemInterface
 	{
- 		port loopbackPort messagePort
+ 		port Sem_0902_001_loopbackPort messagePort
 	}
 	// MyTestSystemInterface is the test system interface
 

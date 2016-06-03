@@ -68,6 +68,8 @@ public:
      */
     virtual void notify(const struct timeval* timestamp, const char* source,
                         int severity, const char* message) = 0;
+    
+    virtual void executeBatchFile(const char* filename);
 
 };
 

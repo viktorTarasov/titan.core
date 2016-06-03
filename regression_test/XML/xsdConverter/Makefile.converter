@@ -29,11 +29,11 @@ OBJECTS = $(GENERATED_SOURCES:.cc=.o)
 
 OTHER_FILES = Makefile
 
-SOLARIS_LIBS = -lsocket -lnsl -lxml2 -lresolv
-SOLARIS8_LIBS = -lsocket -lnsl -lxml2 -lresolv
-LINUX_LIBS = -lxml2 -lpthread -lrt
-FREEBSD_LIBS = -lxml2
-WIN32_LIBS = -lxml2
+SOLARIS_LIBS = -lsocket -lnsl -lxml2 -lresolv -lcurses
+SOLARIS8_LIBS = -lsocket -lnsl -lxml2 -lresolv -lcurses
+LINUX_LIBS = -lxml2 -lpthread -lrt -lncurses
+FREEBSD_LIBS = -lxml2 -lncurses
+WIN32_LIBS = -lxml2 -lncurses
 
 
 all: $(TARGET) ;

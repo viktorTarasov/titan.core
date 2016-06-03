@@ -28,6 +28,8 @@ module Sem_0901_Communication_ports_009 {
 
 	function checkConnected() runs on GeneralComp
 	{
+		log("check");
+
 		if(p.checkstate("Connected")) {
 			setverdict(pass,"Connected");			
 		} else {
@@ -49,6 +51,7 @@ module Sem_0901_Communication_ports_009 {
 		v_ptcB.start(checkConnected());
 		v_ptcC.start(checkConnected());
 			
+		all component.done;
     }
 	
     control{

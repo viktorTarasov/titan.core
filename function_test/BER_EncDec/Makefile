@@ -119,11 +119,11 @@ endif
 #
 # Do not modify these unless you know what you are doing...
 #
-SOLARIS_LIBS = -lxnet -L$(XMLDIR)/lib -lxml2 -lresolv
-SOLARIS8_LIBS = -lxnet -L$(XMLDIR)/lib -lxml2 -lresolv -lnsl -lsocket
-LINUX_LIBS = -L$(XMLDIR)/lib -lxml2 -lpthread -lrt
-FREEBSD_LIBS = -L$(XMLDIR)/lib -lxml2
-WIN32_LIBS = -L$(XMLDIR)/lib -lxml2
+SOLARIS_LIBS = -lxnet -L$(XMLDIR)/lib -lxml2 -lresolv -lcurses
+SOLARIS8_LIBS = -lxnet -L$(XMLDIR)/lib -lxml2 -lresolv -lnsl -lsocket -lcurses
+LINUX_LIBS = -L$(XMLDIR)/lib -lxml2 -lpthread -lrt -lncurses
+FREEBSD_LIBS = -L$(XMLDIR)/lib -lxml2 -lncurses
+WIN32_LIBS = -L$(XMLDIR)/lib -lxml2 -lncurses
 
 #
 # Rules for building the executable...

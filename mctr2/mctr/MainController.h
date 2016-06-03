@@ -8,6 +8,7 @@
  * Contributors:
  *   Baji, Laszlo
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Bene, Tamas
  *   Czimbalmos, Eduard
  *   Feher, Csaba
@@ -247,11 +248,16 @@ struct debugger_settings_struct {
   char* output_type;
   char* output_file;
   char* error_behavior;
+  char* error_batch_file;
   char* fail_behavior;
+  char* fail_batch_file;
+  char* global_batch_state;
+  char* global_batch_file;
   int nof_breakpoints;
   struct breakpoint_struct {
     char* module;
     char* line;
+    char* batch_file;
   }* breakpoints;
 };
 
@@ -436,6 +442,8 @@ class MainController {
   static struct sigaction new_action, old_action;
   static void register_termination_handlers();
   static void termination_handler(int signum);
+  
+  static void execute_batch_file(const char* file_name);
 
 public:
   static void error(const char *fmt, ...)
@@ -588,8 +596,10 @@ private:
   static void process_mapped(component_struct *tc);
   static void process_unmap_req(component_struct *tc);
   static void process_unmapped(component_struct *tc);
-  static void process_debug_return_value(Text_Buf& text_buf, char* log_source, bool from_mtc);
-  static void process_debug_halt_req(component_struct *tc);
+  static void process_debug_return_value(Text_Buf& text_buf, char* log_source,
+    int msg_end, bool from_mtc);
+  static void process_debug_broadcast_req(component_struct *tc, int commandID);
+  static void process_debug_batch(component_struct *tc);
 
   /* Incoming messages from MTC */
   static void process_testcase_started();

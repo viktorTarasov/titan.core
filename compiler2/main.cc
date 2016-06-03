@@ -384,7 +384,7 @@ static boolean is_valid_asn1_filename(const char* file_name)
 static void usage()
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abcdEfgijlLOpqrRsStuwxXyY] [-K file] [-z file] [-V verb_level]\n"
+    "usage: %s [-abcdEfgijlLMnOpqrRsStuwxXyY] [-K file] [-z file] [-V verb_level]\n"
     "	[-o dir] [-U none|type] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
     "	[-T] module.ttcn [-A] module.asn ...\n"
     "	or  %s -v\n"
@@ -405,6 +405,7 @@ static void usage()
     "	-l:		include source line info in C++ code\n"
     "	-L:		add source line info for logging\n"
     "	-M:		allow 'omit' in template value lists (legacy behavior)\n"
+    "	-n:		activate debugger (generates extra code for debugging)\n"
     "	-o dir:		output files will be placed into dir\n"
     "	-p:		parse only (no semantic check or code generation)\n"
     "	-P pduname:	define top-level pdu\n"
@@ -791,7 +792,7 @@ int main(int argc, char *argv[])
         break;
       }
     }
-
+    
     /* Checking incompatible options */
     if (vflag) {
       if (Aflag || Lflag || Pflag || Tflag || Vflag || Yflag ||

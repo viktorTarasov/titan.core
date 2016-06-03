@@ -37,6 +37,7 @@
 #endif
 
 #include "../common/dbgnew.hh"
+#include "Debugger.hh"
 
 #include <stdio.h>
 #include <string.h>
@@ -985,6 +986,9 @@ void TTCN_Module::execute_all_testcases()
   boolean found = FALSE;
   for (testcase_list_item *list_iter = testcase_head; list_iter != NULL;
     list_iter = list_iter->next_testcase) {
+    if (ttcn3_debugger.is_exiting()) {
+      break;
+    }
     if (!list_iter->is_pard) {
       list_iter->testcase_function(FALSE, 0.0);
       found = TRUE;
