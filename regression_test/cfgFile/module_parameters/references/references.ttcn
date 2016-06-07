@@ -15,6 +15,7 @@ module references {
 // This module contains tests for referencing other (or the same) module parameters
 // in module parameter initialization (in the configuration file)
 
+import from A all;
 /******** Types ********/
 type record Rec {
   integer num,
@@ -160,6 +161,30 @@ modulepar template Uni mptuni3 := { bval := false };
 modulepar template TwoStrings mptarray1;
 modulepar template TwoStrings mptarray2 := { "one", "two" };
 modulepar template TwoStrings mptarray3 := { [1] := ?, [0] := "x" };
+
+/*****ASN.1 types*******/
+modulepar ASN1MyBooleanType tsp_TRUE := false;
+modulepar ASN1MyBooleanType tsp_FALSE:= true;
+modulepar ASN1MyBooleanType tsp_R1 := false;
+modulepar ASN1MyBooleanType tsp_RESULT2 := false;
+modulepar MyBitstringType tsp_asnbitstr1 := ''B;
+modulepar MyBitstringType tsp_asnbitstr2 := ''B;
+modulepar MyBitstringType tsp_asnbitstr3 := ''B;
+modulepar MyOctetStringType tsp_asnos1 := '01'O;
+modulepar MyOctetStringType tsp_asnos2 := '02'O;
+modulepar MyOctetStringType tsp_asnos3 := '03'O;
+
+modulepar MyPrintableString tsp_asnstr1 := "default1"
+modulepar MyPrintableString tsp_asnstr2 := "d2"
+modulepar MyPrintableString tsp_asnstr3 := "d3"
+
+modulepar MyIntegerType1 tsp_asnint1 :=0;
+modulepar MyIntegerType1 tsp_asnint2 :=0;
+modulepar MyIntegerType1 tsp_asnint3 :=0;
+
+modulepar MyRealType1 tsp_asnreal1 := 0.0
+modulepar MyRealType1 tsp_asnreal2 := 0.0
+modulepar MyRealType1 tsp_asnreal3 := 0.0
 
 /******** Test cases (for values) ********/
 testcase tc_ref_integer() runs on CT
@@ -664,6 +689,63 @@ testcase tc_ref_array_template() runs on CT
   setverdict(pass);
 }
 
+//********** ASN.1 *******************
+
+testcase tc_asn1_bool() runs on CT {
+  if(tsp_TRUE == true ){
+    setverdict(pass)
+  } else {
+    setverdict(fail, "true expected, false got")
+  }
+  if(tsp_FALSE == false ){
+    setverdict(pass)
+  } else {
+    setverdict(fail, "false expected, true got")
+  }
+}
+testcase tc_asn1_bitstr() runs on CT {
+  if(tsp_asnbitstr3 == '0010101'B) {
+    setverdict(pass);
+  } else {
+    setverdict(fail, "BIT STRING concat error")
+  }
+}
+
+testcase tc_asn1_octetstr() runs on CT {
+  if(tsp_asnos3 == '12EF0123456789'O){
+    setverdict(pass);
+  } else {
+    setverdict(fail, "OCTET STRING concat error")
+  }
+}
+
+testcase tc_asn1_charstr() runs on CT {
+  if(tsp_asnstr3 == "Laci1()tail"){
+    setverdict(pass);
+  } else {
+    setverdict(fail, "PrintableString concat error")
+  }
+}
+
+testcase tc_asn1_integer() runs on CT {
+  if(tsp_asnint3 == -4) {
+    setverdict(pass)
+  } else {
+    setverdict(fail,"INTEGER calc error in cfg file")
+  }
+}
+
+testcase tc_asn1_real() runs on CT {
+  var float eps := 0.01;
+  log("tsp_asnreal1:",tsp_asnreal1)
+  log("tsp_asnreal2:",tsp_asnreal2)
+  log("tsp_asnreal3:",tsp_asnreal3)
+  if((-eps < tsp_asnreal3-(-4.0)) and (tsp_asnreal3-(-4.0) < eps) ) {
+    setverdict(pass)
+  } else {
+    setverdict(fail,"REAL calc error in cfg file")
+  }
+}
 control {
   execute(tc_ref_integer());
   execute(tc_ref_float());
@@ -701,6 +783,12 @@ control {
   execute(tc_ref_empty_record_template());
   execute(tc_ref_union_template());
   execute(tc_ref_array_template());
+  execute(tc_asn1_bool());
+  execute(tc_asn1_bitstr());
+  execute(tc_asn1_octetstr());
+  execute(tc_asn1_charstr());
+  execute(tc_asn1_integer());
+  //execute(tc_asn1_real());
 }
 
 }
