@@ -204,7 +204,7 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
   case Common::Assignment::A_MODULEPAR:
   case Common::Assignment::A_MODULEPAR_TEMP:
   case Common::Assignment::A_TEMPLATE:
-    is_constant = scope_name != NULL;
+    is_constant = true; //scope_name != NULL;
   default:
     break;
   }

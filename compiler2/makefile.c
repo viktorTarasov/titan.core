@@ -2018,7 +2018,7 @@ static void print_makefile(struct makefile_struct *makefile)
           "AR = ar\n"
           "ARFLAGS = \n\n"
           "# Flags for the TTCN-3 and ASN.1 compiler:\n"
-          "COMPILER_FLAGS =%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n\n"
+          "COMPILER_FLAGS =%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n\n"
           "# Execution mode: (either ttcn3 or ttcn3-parallel)\n"
           "TTCN3_LIB = ttcn3%s%s%s\n\n"
 #ifdef LICENSE

@@ -20,6 +20,7 @@
 
 #define PROMPT_TEXT "DEBUG> "
 #define BATCH_TEXT "batch"
+#define HELP_TEXT "help"
 
 // use a different file, than the MCTR CLI, since not all commands are the same
 #define TTCN3_HISTORY_FILENAME ".ttcn3_history_single"
@@ -30,7 +31,7 @@ const TTCN_Debugger_UI::command_t TTCN_Debugger_UI::debug_command_list[] = {
   { D_SET_BREAKPOINT_TEXT, D_SET_BREAKPOINT,
     D_SET_BREAKPOINT_TEXT " <module> <line> [<batch_file>]",
     "Add a breakpoint at the specified location, or change the batch file of "
-    " an existing breakpoint." },
+    "an existing breakpoint." },
   { D_REMOVE_BREAKPOINT_TEXT, D_REMOVE_BREAKPOINT,
     D_REMOVE_BREAKPOINT_TEXT " all|<module> [all|<line>]", "Remove a breakpoint, "
     "or all breakpoints from a module, or all breakpoints from all modules." },
@@ -46,8 +47,8 @@ const TTCN_Debugger_UI::command_t TTCN_Debugger_UI::debug_command_list[] = {
     "Set whether a batch file should be executed automatically when test execution "
     "is halted (breakpoint-specific batch files override this setting)." },
   { D_SET_COMPONENT_TEXT, D_SET_COMPONENT,
-    D_SET_COMPONENT_TEXT " mtc|<component_reference>",
-    "Set the test component to print debug information from." },
+    D_SET_COMPONENT_TEXT " mtc|<component_reference>", "Set the test component "
+    "to print debug information from (not available in single mode)." },
   { D_PRINT_CALL_STACK_TEXT, D_PRINT_CALL_STACK, D_PRINT_CALL_STACK_TEXT,
     "Print call stack." },
   { D_SET_STACK_LEVEL_TEXT, D_SET_STACK_LEVEL, D_SET_STACK_LEVEL_TEXT " <level>",
@@ -158,7 +159,42 @@ void TTCN_Debugger_UI::process_command(const char* p_line_read)
     execute_batch_file(p_line_read + start);
     return;
   }
+  if (!strncmp(p_line_read + start, HELP_TEXT, end - start)) {
+    start = end;
+    get_next_argument_loc(p_line_read, len, start, end); // just to skip to the argument
+    help(p_line_read + start);
+    return;
+  }
   puts("Unknown command, try again...");
+}
+
+void TTCN_Debugger_UI::help(const char* p_argument)
+{
+  if (*p_argument == 0) {
+    puts("Help is available for the following commands:");
+    printf(BATCH_TEXT);
+    for (const command_t *command = debug_command_list;
+         command->name != NULL; command++) {
+      printf(" %s", command->name);
+    }
+    putchar('\n');
+  }
+  else {
+    for (const command_t *command = debug_command_list;
+         command->name != NULL; command++) {
+      if (!strncmp(p_argument, command->name, strlen(command->name))) {
+        printf("%s usage: %s\n%s\n", command->name, command->synopsis,
+          command->description);
+        return;
+      }
+    }
+    if (!strcmp(p_argument, BATCH_TEXT)) {
+      puts(BATCH_TEXT " usage: " BATCH_TEXT "\nRun commands from batch file.");
+    }
+    else {
+      printf("No help for %s.\n", p_argument);
+    }
+  }
 }
 
 void TTCN_Debugger_UI::init()

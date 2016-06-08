@@ -141,8 +141,9 @@ void COMPONENT::set_param(Module_Param& param) {
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
-  if (Ttcn_String_Parsing::happening()) {
-    // accept all component values in case it's a string2ttcn operation
+  if (Ttcn_String_Parsing::happening() || Debugger_Value_Parsing::happening()) {
+    // accept all component values in case it's a string2ttcn operation or
+    // an overwrite operation through the debugger
     switch (mp->get_type()) {
     case Module_Param::MP_Integer:
       component_value = (component)mp->get_integer()->get_val();

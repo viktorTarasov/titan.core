@@ -120,7 +120,7 @@ static const DebugCommand debug_command_list[] = {
   { D_SET_BREAKPOINT_TEXT, D_SET_BREAKPOINT,
     D_SET_BREAKPOINT_TEXT " <module> <line> [<batch_file>]",
     "Add a breakpoint at the specified location, or change the batch file of "
-    " an existing breakpoint." },
+    "an existing breakpoint." },
   { D_REMOVE_BREAKPOINT_TEXT, D_REMOVE_BREAKPOINT,
     D_REMOVE_BREAKPOINT_TEXT " all|<module> [all|<line>]", "Remove a breakpoint, "
     "or all breakpoints from a module, or all breakpoints from all modules." },
@@ -480,6 +480,11 @@ void Cli::processCommand(char *line_read)
       memset(line_read, ' ', command_name_len);
       stripLWS(line_read);
       MainController::debug_command(command->commandID, line_read);
+      if (waitState == WAIT_EXECUTE_LIST && command->commandID == D_EXIT &&
+          !strcmp(line_read, "all")) {
+        // stop executing the list from the config file
+        waitState = WAIT_NOTHING;
+      }
       return;
     }
   }
@@ -733,11 +738,11 @@ void Cli::helpCallback(const char *arguments)
     puts("Help is available for the following commands:");
     for (const Command *command = command_list;
       command->name != NULL; command++) {
-      printf(" %s", command->name);
+      printf("%s ", command->name);
     }
     for (const DebugCommand *command = debug_command_list;
          command->name != NULL; command++) {
-      printf(" %s", command->name);
+      printf("%s ", command->name);
     }
     putchar('\n');
   } else {

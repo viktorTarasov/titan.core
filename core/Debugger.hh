@@ -223,13 +223,13 @@ private:
   /** adds a new breakpoint at the specified module and line with the specified
     * batch file (if not NULL), or changes the batch file of an existing
     * breakpoint
-    * handles the D_ADD_BREAKPOINT command */
+    * handles the D_SET_BREAKPOINT command */
   void set_breakpoint(const char* p_module, int p_line, const char* batch_file);
   
   /** removes the breakpoint from the specified module/line, if it exists
     * can also be used to remove all breakpoints from the specified module or
     * all breakpoints in all modules
-    * handles the D_REMOVE_BREAKPOINT command  */
+    * handles the D_REMOVE_BREAKPOINT command */
   void remove_breakpoint(const char* p_module, const char* p_line);
   
   /** switches an automatic breakpoint related to the specified event on or off
@@ -253,9 +253,19 @@ private:
   
   /** finds the variable with the specified name, and prints its value or an
     * error message
+    * the variable's value is printed using its log() function
     * handles (one parameter of) the D_PRINT_VARIABLE command */
   void print_variable(const char* p_var_name);
   
+  /** finds the variable with the specified name, and overwrites its value or
+    * displays an error message
+    * the new value is received in a string array; this is concatenated into one
+    * string (with one space separating each string element); then it is passed 
+    * to the module parameter parser, which creates a Module_Param object from it
+    * (if its syntax is correct)
+    * the variable's value is overwritten by passing the Module_Param object to
+    * its set_param() function
+    * handles the D_OVERWRITE_VARIABLE command */
   void overwrite_variable(const char* p_var_name, int p_value_element_count,
     char** p_value_elements);
   

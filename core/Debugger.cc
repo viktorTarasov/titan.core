@@ -657,7 +657,7 @@ void TTCN3_Debugger::test_execution_started()
       halt(NULL, false);
     }
   }
-  halt_at_start = false;
+  halt_at_start = true;
 }
 
 void TTCN3_Debugger::test_execution_finished()

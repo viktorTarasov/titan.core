@@ -44,6 +44,8 @@ class TTCN_Debugger_UI {
     * if it's not valid, an error message is displayed */
   static void process_command(const char* p_line_read);
   
+  static void help(const char* p_argument);
+  
 public:
   
   /** initializes the UI */
