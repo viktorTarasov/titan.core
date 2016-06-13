@@ -111,6 +111,7 @@ private:
   void resolveComplexTypeExtension();
   void resolveComplexTypeRestriction();
   void resolveUnion(SimpleType *st);
+  bool hasMatchingFields(const List<ComplexType*>& a, const List<ComplexType*>& b) const;
 
   void printVariant(FILE * file);
 

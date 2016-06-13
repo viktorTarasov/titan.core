@@ -112,8 +112,6 @@ protected:
 
   NameType name;
   NameType type;
-  unsigned long long int minOccurs;
-  unsigned long long int maxOccurs;
   List<Mstring> variant;
   List<Mstring> variant_ref;
   List<Mstring> hidden_variant;
@@ -126,7 +124,13 @@ protected:
   /// List of types that depend on this one.
   /// Used to propagate the effect of name conversion to the dependents
   List<SimpleType*> nameDepList; // no responsibility for elements
-
+  
+private:
+  unsigned long long int minOccurs;
+  unsigned long long int maxOccurs;
+  bool min_mod;
+  bool max_mod;
+  
 public:
   RootType(XMLParser * a_parser, TTCN3Module * a_module, const ConstructType a_construct);
 
@@ -174,6 +178,24 @@ public:
 
   void setVisible() {
     visible = true;
+  }
+  
+  void setMinOccurs(const unsigned long long int min) {
+      minOccurs = min;
+      min_mod = true;
+  }
+
+  void setMaxOccurs(const unsigned long long int max) {
+      maxOccurs = max;
+      max_mod = true;
+  }
+  
+  const bool getMinMod() const {
+      return min_mod;
+  }
+  
+  const bool getMaxMod() const {
+      return max_mod;
   }
 
   const NameType & getName() const {

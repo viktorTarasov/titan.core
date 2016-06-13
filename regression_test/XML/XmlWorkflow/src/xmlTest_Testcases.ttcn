@@ -1598,6 +1598,16 @@ group ComplexType {
     }
   }//tc_
 
+ testcase tc_xmlschema() runs on xmlTest_CT {
+    f_shellCommandWithVerdict("xsd2ttcn MyXMLSchema.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "http_www_example_org_2001_XMLSchema_e.ttcn",
+         "http_www_example_org_2001_XMLSchema.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    }
+  }//tc_
+
   testcase tc_complex_restriction_encDec() runs on xmlTest_CT
   {
     var MySubjects4Restriction vl_pdu:={
@@ -2650,6 +2660,7 @@ control {
   execute(tc_complex_nillable());
   execute(tc_nillable_fixed());
   execute(tc_no_ns_connector());
+  execute(tc_xmlschema());
 
 
 

@@ -89,8 +89,8 @@ void SimpleType::loadWithValues() {
     case n_list:
       type.upload(atts.itemType);
       setReference(atts.itemType);
-      minOccurs = 0;
-      maxOccurs = ULLONG_MAX;
+      setMinOccurs(0);
+      setMaxOccurs(ULLONG_MAX);
       addVariant(V_list);
       mode = listMode;
       break;
@@ -133,8 +133,8 @@ void SimpleType::loadWithValues() {
     }
     case n_length:
       if (mode == listMode) {
-        minOccurs = strtoull(atts.value.c_str(), NULL, 0);
-        maxOccurs = strtoull(atts.value.c_str(), NULL, 0);
+        setMinOccurs(strtoull(atts.value.c_str(), NULL, 0));
+        setMaxOccurs(strtoull(atts.value.c_str(), NULL, 0));
         break;
       }
       length.facet_minLength = strtoull(atts.value.c_str(), NULL, 0);
@@ -143,7 +143,7 @@ void SimpleType::loadWithValues() {
       break;
     case n_minLength:
       if (mode == listMode) {
-        minOccurs = strtoull(atts.value.c_str(), NULL, 0);
+        setMinOccurs(strtoull(atts.value.c_str(), NULL, 0));
         break;
       }
       length.facet_minLength = strtoull(atts.value.c_str(), NULL, 0);
@@ -151,7 +151,7 @@ void SimpleType::loadWithValues() {
       break;
     case n_maxLength:
       if (mode == listMode) {
-        maxOccurs = strtoull(atts.value.c_str(), NULL, 0);
+        setMaxOccurs(strtoull(atts.value.c_str(), NULL, 0));
         break;
       }
       length.facet_maxLength = strtoull(atts.value.c_str(), NULL, 0);
@@ -771,7 +771,7 @@ void SimpleType::finalModification() {
     addVariant(V_onlyValueHidden, Mstring("\"text 'true' as '1'\""));
   }
 
-  isOptional = isOptional || (minOccurs == 0 && maxOccurs == 0);
+  isOptional = isOptional || (getMinOccurs() == 0 && getMaxOccurs() == 0);
 
   // If the type name is the same as the identifier then we have to prefix it 
   // with the module identifier.

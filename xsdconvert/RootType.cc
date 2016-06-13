@@ -21,15 +21,17 @@ RootType::RootType(XMLParser * a_parser, TTCN3Module * a_module, const Construct
 , module(a_module)
 , name()
 , type()
-, minOccurs(1)
-, maxOccurs(1)
 , variant()
 , variant_ref()
 , comment()
 , construct(a_construct)
 , origin(from_unknown)
 , visible(true)
-, nameDepList() {
+, nameDepList()
+, minOccurs(1)
+, maxOccurs(1)
+, min_mod(false)
+, max_mod(false){
   switch (a_construct) {
     case c_schema:
     case c_annotation:
