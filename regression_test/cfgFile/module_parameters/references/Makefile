@@ -13,7 +13,7 @@
 TOPDIR := ../../../
 include   $(TOPDIR)/Makefile.regression
 
-FILES := references.ttcn references.cfg
+FILES := references.ttcn A.asn references.cfg
 RUNNABLE := references
 CFG := references.cfg
 DIR_SINGLE := dir_single_mode
