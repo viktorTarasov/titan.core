@@ -34,9 +34,11 @@ class TTCN_Debugger_UI {
   
   /** list of commands */
   static const command_t debug_command_list[];
-  
+
+#ifdef ADVANCED_DEBUGGER_UI
   /** name of the file, where the command history is stored */
   static char* ttcn3_history_filename;
+#endif
   
   /** processes the command in the specified input line
     * if it's a valid command, then it is added to the command history and 
@@ -44,6 +46,7 @@ class TTCN_Debugger_UI {
     * if it's not valid, an error message is displayed */
   static void process_command(const char* p_line_read);
   
+  /** displays help for the specified command, or lists available commands */
   static void help(const char* p_argument);
   
 public:
@@ -65,8 +68,10 @@ public:
   /** prints the specified text to the standard output */
   static void print(const char* p_str);
   
+#ifdef ADVANCED_DEBUGGER_UI
   /** command completion function for editline */
   static char* complete_command(const char* p_prefix, int p_state);
+#endif
 };
 
 #endif /* DEBUGGER_UI_HH */

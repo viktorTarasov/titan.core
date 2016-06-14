@@ -14,16 +14,18 @@
 #include "DebuggerUI.hh"
 #include "DebugCommands.hh"
 #include "Debugger.hh"
-#include "../mctr2/editline/libedit/src/editline/readline.h"
 #include <stdio.h>
 #include <ctype.h>
+
+#ifdef ADVANCED_DEBUGGER_UI
+#include "../mctr2/editline/libedit/src/editline/readline.h"
+// use a different file, than the MCTR CLI, since not all commands are the same
+#define TTCN3_HISTORY_FILENAME ".ttcn3_history_single"
+#endif
 
 #define PROMPT_TEXT "DEBUG> "
 #define BATCH_TEXT "batch"
 #define HELP_TEXT "help"
-
-// use a different file, than the MCTR CLI, since not all commands are the same
-#define TTCN3_HISTORY_FILENAME ".ttcn3_history_single"
 
 const TTCN_Debugger_UI::command_t TTCN_Debugger_UI::debug_command_list[] = {
   { D_SWITCH_TEXT, D_SWITCH, D_SWITCH_TEXT " on|off",
@@ -82,7 +84,9 @@ const TTCN_Debugger_UI::command_t TTCN_Debugger_UI::debug_command_list[] = {
   { NULL, D_ERROR, NULL, NULL }
 };
 
+#ifdef ADVANCED_DEBUGGER_UI
 char* TTCN_Debugger_UI::ttcn3_history_filename = NULL;
+#endif
 
 /** local function for extracting the command name and its arguments from an
   * input line
@@ -114,7 +118,9 @@ void TTCN_Debugger_UI::process_command(const char* p_line_read)
     // empty command
     return;
   }
+#ifdef ADVANCED_DEBUGGER_UI
   add_history(p_line_read + start);
+#endif
   for (const command_t *command = debug_command_list; command->name != NULL;
        ++command) {
     if (!strncmp(p_line_read + start, command->name, end - start)) {
@@ -199,6 +205,7 @@ void TTCN_Debugger_UI::help(const char* p_argument)
 
 void TTCN_Debugger_UI::init()
 {
+#ifdef ADVANCED_DEBUGGER_UI
   // initialize history library
   using_history();
   // calculate history file name
@@ -211,25 +218,38 @@ void TTCN_Debugger_UI::init()
   read_history(ttcn3_history_filename);
   // set our own command completion function
   rl_completion_entry_function = (Function*)complete_command;
+#endif
 }
 
 void TTCN_Debugger_UI::clean_up()
 {
+#ifdef ADVANCED_DEBUGGER_UI
   if (write_history(ttcn3_history_filename)) {
     puts("Could not save debugger command history.");
   }
   Free(ttcn3_history_filename);
+#endif
 }
 
 void TTCN_Debugger_UI::read_loop()
 {
   while (ttcn3_debugger.is_halted()) {
+#ifdef ADVANCED_DEBUGGER_UI
     // print the prompt and read a line using the readline(), which
     // automatically handles command completion and command history
     char* line = readline(PROMPT_TEXT);
     if (line != NULL) {
+#else
+    // simplified debugger UI: use a simple fgets
+    printf(PROMPT_TEXT);
+    char line[1024];
+    char* res = fgets(line, sizeof(line), stdin);
+    if (res != NULL) {
+#endif
       process_command(line);
+#ifdef ADVANCED_DEBUGGER_UI     
       free(line);
+#endif
     }
     else {
       // EOF was received -> exit all
@@ -276,6 +296,7 @@ void TTCN_Debugger_UI::print(const char* p_str)
   puts(p_str);
 }
 
+#ifdef ADVANCED_DEBUGGER_UI
 char* TTCN_Debugger_UI::complete_command(const char* p_prefix, int p_state)
 {
   static int command_index;
@@ -297,3 +318,4 @@ char* TTCN_Debugger_UI::complete_command(const char* p_prefix, int p_state)
   // no match found
   return NULL;
 }
+#endif
