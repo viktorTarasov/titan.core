@@ -48,5 +48,4 @@ else
 #	cp asciiart/*.txt $(ETCDIR)/asciiart
 	mkdir -p $(ETCDIR)/scripts
 	cp scripts/*.py $(ETCDIR)/scripts
-	cp scripts/ttcn3_archive $(BINDIR)
 endif
