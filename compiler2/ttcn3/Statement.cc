@@ -5794,7 +5794,7 @@ error:
       expr.expr = mputprintf(expr.expr, ".%s(",
 	t_governor->get_typetype() == Type::T_ALTSTEP ?
 	"invoke_standalone" : "invoke");
-      fau_refd.ap_list2->generate_code_alias(&expr, 0,
+      fau_refd.ap_list2->generate_code_alias(&expr, t_governor->get_fat_parameters(),
 	t_governor->get_fat_runs_on_type(),
         t_governor->get_fat_runs_on_self()); }
     }
