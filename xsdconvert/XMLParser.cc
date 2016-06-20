@@ -353,7 +353,15 @@ void XMLParser::endelementHandler(const xmlChar * localname) {
      tag == n_documentation){
     inside_annotation.pop_back();
   }
-
+  
+  if(tag == n_list) {
+      if(module->hasDefinedMainType()) {
+          SimpleType& st = (SimpleType&)(module->getLastMainType());
+          if(st.getXsdtype() == n_NOTSET){
+            st.setMode(SimpleType::restrictionAfterListMode);
+          }
+      }
+  }
 
   --actualDepth;
   if (actualDepth == 0 || actualDepth == 1) {
@@ -836,3 +844,4 @@ void XMLParser::TagAttributes::fillUp(TagAttributeName * att_name_e, Mstring * a
     }
   }
 }
+

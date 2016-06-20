@@ -35,7 +35,6 @@ ComplexType::ComplexType(XMLParser * a_parser, TTCN3Module * a_module, Construct
 , fromAll(false)
 , max_alt(0)
 , skipback(0)
-, list(false)
 , lastType()
 , actualPath(empty_string)
 , actfield(this)
@@ -63,7 +62,6 @@ ComplexType::ComplexType(ComplexType & other)
 , fromAll(other.fromAll)
 , max_alt(other.max_alt)
 , skipback(other.skipback)
-, list(other.list)
 , lastType(other.lastType)
 , actualPath(other.actualPath)
 , actfield(this)
@@ -111,7 +109,6 @@ ComplexType::ComplexType(ComplexType * other)
 , fromAll(false)
 , max_alt(0)
 , skipback(0)
-, list(false)
 , lastType()
 , actualPath(empty_string)
 , actfield(this)
@@ -141,7 +138,6 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
 , fromAll(false)
 , max_alt(0)
 , skipback(0)
-, list(false)
 , lastType()
 , actualPath(empty_string)
 , actfield(this)
@@ -301,6 +297,12 @@ void ComplexType::loadWithValues() {
         complexfields.push_back(f);
         basefield = f;
         actfield = f;
+        
+        // If it is a restriction of a list, then no new basefield will be 
+        // present, to we apply the references to the parent.
+        if(parent != NULL && parent->inList) {
+          parent->applyReference(*f, true);
+        }
       } else if (cmode == CT_complextype_mode) {
         setReference(atts.base);
         xsdtype = n_restriction;
@@ -585,12 +587,14 @@ void ComplexType::loadWithValues() {
       break;
     case n_list:
       if (parent != NULL && parent->basefield == this) {
-        parent->list = true;
+        parent->inList = true;
         parent->SimpleType::loadWithValues();
         parent->basefield = NULL;
         setInvisible();
-        break;
+      } else if(parent != NULL) {
+        SimpleType::loadWithValues();
       }
+      break;
     case n_length:
     case n_minLength:
     case n_maxLength:
@@ -626,12 +630,6 @@ void ComplexType::modifyValues() {
     skipback = skipback - 1;
   }
   
-  //embedded simpletype with list in element
-  if(xsdtype == n_simpleType && list) {
-    list = false;
-    return;
-  }
-  
 
   if ( parent != NULL && 
       (xsdtype == n_element || 
@@ -645,7 +643,7 @@ void ComplexType::modifyValues() {
        xsdtype == n_attributeGroup || 
        xsdtype == n_extension || 
        xsdtype == n_restriction || 
-       (xsdtype == n_simpleType && !list) || 
+       (xsdtype == n_simpleType && !inList) || 
        xsdtype == n_simpleContent ||
        (xsdtype == n_sequence && skipback < 0)
       )) {
@@ -658,6 +656,9 @@ void ComplexType::modifyValues() {
       parent->actfield = parent;
       parent->lastType = xsdtype;
     }
+  }
+  if (xsdtype == n_simpleType) {
+    inList = false;
   }
 }
 
@@ -1869,7 +1870,13 @@ void ComplexType::resolveSimpleTypeRestriction() {
       addNameSpaceAsVariant(this, ct);
     }
     if(!basefield->parent->top){
-      applyReference(*basefield, true);
+      // This is the case of restriction -> list -> simpletype -> restriction
+      // we have to apply the reference to the parent's parent.
+      if(basefield->parent->parent != NULL && !basefield->parent->isVisible()) {
+        basefield->parent->parent->applyReference(*basefield, true);
+      } else {
+        applyReference(*basefield, true);
+      }
       basefield->setInvisible();
     }
   }

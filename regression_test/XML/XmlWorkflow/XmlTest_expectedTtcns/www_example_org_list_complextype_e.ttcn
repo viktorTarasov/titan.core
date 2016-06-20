@@ -60,6 +60,13 @@ with {
 };
 
 
+type record length(3) of XSD.String ElementWithList2 length(4)
+with {
+  variant "list";
+  variant "element";
+};
+
+
 type record ChoiceWithList
 {
 	union {
@@ -73,6 +80,25 @@ with {
   variant (choice.element1) "list";
   variant (choice.element2) "name as capitalized";
   variant (choice.element2) "list";
+};
+
+
+type record ChoiceWithList2
+{
+	union {
+		record length(3) of XSD.Float element1,
+		record of XSD.String element2,
+		record length(3) of XSD.String element3 length(4)
+	} choice
+}
+with {
+  variant (choice) "untagged";
+  variant (choice.element1) "name as capitalized";
+  variant (choice.element1) "list";
+  variant (choice.element2) "name as capitalized";
+  variant (choice.element2) "list";
+  variant (choice.element3) "name as capitalized";
+  variant (choice.element3) "list";
 };
 
 

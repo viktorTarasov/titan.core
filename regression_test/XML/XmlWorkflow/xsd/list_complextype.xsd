@@ -43,6 +43,24 @@
 	</xs:simpleType>
 </xs:element>
 
+<xs:element name="ElementWithList2">
+	<xs:simpleType>
+		<xs:restriction>
+			<xs:simpleType>
+				<xs:list>
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:length value="4" />
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:list>    
+			</xs:simpleType>
+			<xs:minLength value="3" />
+			<xs:maxLength value="3" />
+		</xs:restriction>
+	</xs:simpleType>
+</xs:element>
+
 <xs:complexType name="ChoiceWithList">
 	<xs:choice>
 		<xs:element name="Element1">
@@ -59,6 +77,44 @@
 		<xs:element name="Element2">
 			<xs:simpleType>
 				<xs:list itemType="xs:string" />
+			</xs:simpleType>
+		</xs:element>
+	</xs:choice>
+</xs:complexType>
+
+<xs:complexType name="ChoiceWithList2">
+	<xs:choice>
+		<xs:element name="Element1">
+			<xs:simpleType>
+				<xs:restriction>
+					<xs:simpleType>
+						<xs:list itemType="xs:float" />
+					</xs:simpleType>
+					<xs:minLength value="3" />
+					<xs:maxLength value="3" />
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:element>
+		<xs:element name="Element2">
+			<xs:simpleType>
+				<xs:list itemType="xs:string" />
+			</xs:simpleType>
+		</xs:element>
+		<xs:element name="Element3">
+			<xs:simpleType>
+				<xs:restriction>
+					<xs:simpleType>
+						<xs:list>
+							<xs:simpleType>
+								<xs:restriction base="string">
+									<xs:length value="4" />
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:list> 
+					</xs:simpleType>
+					<xs:minLength value="3" />
+					<xs:maxLength value="3" />
+				</xs:restriction>
 			</xs:simpleType>
 		</xs:element>
 	</xs:choice>

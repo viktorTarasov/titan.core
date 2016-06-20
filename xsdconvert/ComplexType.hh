@@ -71,9 +71,6 @@ private:
   bool fromAll;
   unsigned max_alt;
   int skipback;
-  //Special use: true if an element of a complextype is restricted to a list
-  // in a simpletype
-  bool list;
   TagName lastType;
   Mstring actualPath;
   RootType * actfield;

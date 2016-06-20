@@ -46,6 +46,7 @@ SimpleType::SimpleType(XMLParser * a_parser, TTCN3Module * a_module, ConstructTy
 , typeSubsGroup(NULL)
 , addedToTypeSubstitution(false)
 , block(not_set)
+, inList(false)
 , parent(NULL) {
 }
 
@@ -70,6 +71,7 @@ SimpleType::SimpleType(const SimpleType& other)
 , typeSubsGroup(other.typeSubsGroup)
 , addedToTypeSubstitution(other.addedToTypeSubstitution)
 , block(other.block)
+, inList(other.inList)
 , parent(NULL) {
   length.parent = this;
   pattern.parent = this;
@@ -93,6 +95,7 @@ void SimpleType::loadWithValues() {
       setMaxOccurs(ULLONG_MAX);
       addVariant(V_list);
       mode = listMode;
+      inList = true;
       break;
     case n_union:
     { // generating complextype from simpletype
@@ -132,7 +135,7 @@ void SimpleType::loadWithValues() {
       break;
     }
     case n_length:
-      if (mode == listMode) {
+       if (inList && (xsdtype != n_NOTSET || mode == restrictionAfterListMode)) {
         setMinOccurs(strtoull(atts.value.c_str(), NULL, 0));
         setMaxOccurs(strtoull(atts.value.c_str(), NULL, 0));
         break;
@@ -142,7 +145,7 @@ void SimpleType::loadWithValues() {
       length.modified = true;
       break;
     case n_minLength:
-      if (mode == listMode) {
+      if (inList && (xsdtype != n_NOTSET || mode == restrictionAfterListMode)) {
         setMinOccurs(strtoull(atts.value.c_str(), NULL, 0));
         break;
       }
@@ -150,7 +153,7 @@ void SimpleType::loadWithValues() {
       length.modified = true;
       break;
     case n_maxLength:
-      if (mode == listMode) {
+      if (inList && (xsdtype != n_NOTSET || mode == restrictionAfterListMode)) {
         setMaxOccurs(strtoull(atts.value.c_str(), NULL, 0));
         break;
       }
@@ -591,7 +594,7 @@ void SimpleType::referenceForST(SimpleType * found_ST) {
   if (construct == c_element)
     return;
 
-  if (mode == listMode)
+  if (mode == listMode || mode == restrictionAfterListMode)
     return;
 
   if (!found_ST->builtInBase.empty()) {
@@ -605,7 +608,7 @@ void SimpleType::referenceForST(SimpleType * found_ST) {
   value.applyReference(found_ST->value);
 
   mode = found_ST->mode;
-  if (found_ST->mode != listMode) {
+  if (found_ST->mode != listMode && found_ST->mode != restrictionAfterListMode) {
     type.upload(found_ST->getType().convertedValue);
   }
 }
@@ -877,7 +880,7 @@ LengthType::LengthType(SimpleType * a_simpleType)
 , upper(ULLONG_MAX) {
 }
 
-void LengthType::applyReference(const LengthType & other) {
+void LengthType::applyReference(const LengthType & other) { 
   if (!modified) modified = other.modified;
   if (other.facet_minLength > facet_minLength) facet_minLength = other.facet_minLength;
   if (other.facet_maxLength < facet_maxLength) facet_maxLength = other.facet_maxLength;
@@ -903,6 +906,7 @@ void LengthType::applyFacets() // only for string types and list types without Q
     }
     case SimpleType::extensionMode:
     case SimpleType::listMode:
+    case SimpleType::restrictionAfterListMode:
       lower = facet_minLength;
       upper = facet_maxLength;
       break;
@@ -1603,3 +1607,4 @@ void ValueType::printToFile(FILE * file) const {
 
   fputc(')', file);
 }
+

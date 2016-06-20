@@ -44,6 +44,13 @@ module www_example_org_list_simpletype {
 import from XSD all;
 
 
+type record length(3) of XSD.String ListLength length(4)
+with {
+  variant "name as uncapitalized";
+  variant "list";
+};
+
+
 type record of enumerated
 {
 	orange,
@@ -111,6 +118,13 @@ with {
   //variant (listUnion[-].alt_) "text 'true' as '1'";
   //variant (listUnion[-].alt_) "text 'false' as '0'";
   variant (listUnion[-].alt_1) "name as ''";
+};
+
+
+type record length(3) of XSD.Float ElementWithList
+with {
+  variant "list";
+  variant "element";
 };
 
 
