@@ -1,22 +1,3 @@
-#Warning!!!
-
-A new feature added after the release of TITAN version 5.5 requires the linking of an extra library (libncurses.a).
-
-The TTCN-3 makefile generator now automatically adds this new library to the platform-specific linker flags (-lncurses  for Linux):
-
-SOLARIS_LIBS = -lsocket -lnsl -lxml2 -lcurses
-
-SOLARIS8_LIBS = -lsocket -lnsl -lxml2 -lcurses
-
-LINUX_LIBS = -lxml2 -lncurses
-
-FREEBSD_LIBS = -lxml2 -lncurses
-
-WIN32_LIBS = -lxml2 -lncurses
-
-If you are using this tool to generate your makefile, then regenerating it should fix the problem. Otherwise you’ll need to add the library to the linker flags manually (the Eclipse designer plug-in’s makefile generator does not add this library). You could also revert back to the official TITAN 5.5 release.
-
-
 # titan.core
 
 TTCN-3 is a standardized, modular language specifically designed for testing. 
