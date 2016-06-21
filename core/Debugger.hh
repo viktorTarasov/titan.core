@@ -64,6 +64,9 @@ public:
     const char* name;
     /** name of the variable's type, not owned */
     const char* type_name;
+    /** name of the module the variable was declared in (only set for global
+      * variables, otherwise NULL), not owned */
+    const char* module;
     /** variable printing function (using the variable object's log() function) */
     print_function_t print_function;
     /** variable setting (overwriting) function (using the variable object's
@@ -242,6 +245,10 @@ private:
     * handles the D_SET_AUTOMATIC_BREAKPOINT command */
   void set_automatic_breakpoint(const char* p_event_str, const char* p_state_str,
     const char* p_batch_file);
+  
+  /** prints the debugger's settings 
+    * handles the D_PRINT_SETTINGS command */
+  void print_settings();
   
   /** prints the current call stack
     * handles the D_PRINT_CALL_STACK command */
@@ -477,11 +484,12 @@ public:
     * if the call stack is not empty (and if the debugger is switched on), the 
     * variable entry for a local variable is created and stored by the current function */
   variable_t* add_variable(const void* p_value, const char* p_name, const char* p_type,
-    print_function_t p_print_function);
+    const char* p_module, print_function_t p_print_function);
   
   /** same as before, but for non-constant variables */
   variable_t* add_variable(void* p_value, const char* p_name, const char* p_type,
-    print_function_t p_print_function, set_function_t p_set_function);
+    const char* p_module, print_function_t p_print_function,
+    set_function_t p_set_function);
   
   /** removes the variable entry for the specified local variable in the current
     * function (only if the call stack is not empty) */
@@ -559,11 +567,11 @@ public:
     * variable by storing a pointer to it
     * (local variables are only created and stored if the debugger is switched on) */
   void add_variable(const void* p_value, const char* p_name, const char* p_type,
-    TTCN3_Debugger::print_function_t p_print_function);
+    const char* p_module, TTCN3_Debugger::print_function_t p_print_function);
   
   /** same as before, but for non-constant variables */
   void add_variable(void* p_value, const char* p_name, const char* p_type,
-    TTCN3_Debugger::print_function_t p_print_function,
+    const char* p_module, TTCN3_Debugger::print_function_t p_print_function,
     TTCN3_Debugger::set_function_t p_set_function);
   
   //////////////////////////////////////////////////////
@@ -573,13 +581,19 @@ public:
   /** returns true if there is at least one variable in the scope object */
   bool has_variables() const { return !variables.empty(); }
   
-  /** returns the specified variable, if found, otherwise returns NULL */
+  /** returns the specified variable, if found, otherwise returns NULL 
+    * (the name searched for can also be prefixed with the module name in
+    * case of global variables) */
   TTCN3_Debugger::variable_t* find_variable(const char* p_name) const;
   
-  /** prints the names of variables in this scope that match the specified
+  /** prints the names of variables in this scope that match the specified;
+    * names of imported global variables are prefixed with their module's name
     * @param p_posix_regexp the pattern converted into a POSIX regex structure
-    * @param p_first true if no variables have been printed yet */
-  void list_variables(regex_t* p_posix_regexp, bool& p_first) const;
+    * @param p_first true if no variables have been printed yet
+    * @param p_module name of the current module, if it's a global scope,
+    * otherwise NULL */
+  void list_variables(regex_t* p_posix_regexp, bool& p_first,
+    const char* p_module) const;
 };
 
 
@@ -653,11 +667,13 @@ public:
   /** creates, stores and returns the variable entry of the local (constant) variable
     * specified by the parameters (only if the debugger is switched on) */
   TTCN3_Debugger::variable_t* add_variable(const void* p_value, const char* p_name,
-    const char* p_type, TTCN3_Debugger::print_function_t p_print_function);
+    const char* p_type, const char* p_module,
+    TTCN3_Debugger::print_function_t p_print_function);
   
   /** same as before, but for non-constant variables */
   TTCN3_Debugger::variable_t* add_variable(void* p_value, const char* p_name,
-    const char* p_type, TTCN3_Debugger::print_function_t p_print_function,
+    const char* p_type, const char* p_module,
+    TTCN3_Debugger::print_function_t p_print_function,
     TTCN3_Debugger::set_function_t p_set_function);
   
   /** stores the string representation of the value returned by the function */

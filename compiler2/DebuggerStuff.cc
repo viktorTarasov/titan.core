@@ -319,7 +319,17 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
     print_function += ">";
   }
   
-  return mputprintf(str, "%s%s_scope%sadd_variable(&%s, \"%s\", \"%s\", %s%s%s);\n",
+  string module_str;
+  if (scope_name != NULL && !strcmp(scope_name, "global")) {
+    // only store the module name for global variables
+    module_str = string("\"") +
+      var_ass->get_my_scope()->get_scope_mod()->get_modid().get_ttcnname() + string("\"");
+  }
+  else {
+    module_str = "NULL";
+  }
+  
+  return mputprintf(str, "%s%s_scope%sadd_variable(&%s, \"%s\", \"%s\", %s, %s%s%s);\n",
     scope_name != NULL ? "  " : "", // add indenting for global variables
     scope_name != NULL ? scope_name : "debug", // the prefix of the debugger scope:
     // ("global" for global variables, "debug" for local variables,
@@ -331,6 +341,7 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
     // so the lazy parameter evaluation code is not generated)
     var_ass->get_id().get_ttcnname().c_str(), // variable name in TTCN-3
     type_name.c_str(), // variable type in TTCN-3, with a suffix if it's a template
+    module_str.c_str(), // module name, where the variable was defined
     print_function.c_str(), // variable printing function
     is_constant ? "" : ", ", is_constant ? "" : set_function.c_str());
     // variable overwriting function (not generated for constants)

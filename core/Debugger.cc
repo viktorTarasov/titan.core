@@ -250,11 +250,53 @@ void TTCN3_Debugger::set_automatic_breakpoint(const char* p_event_str,
   *old_batch_file_ptr = p_batch_file != NULL ? mcopystr(p_batch_file) : NULL;
 }
 
+void TTCN3_Debugger::print_settings()
+{
+  // on/off switch
+  add_to_result("Debugger is switched %s.\n", active ? "on" : "off");
+  // output
+  char* final_file_name = finalize_file_name(output_file_name);
+  char* file_str = output_file != NULL ? mprintf("file '%s'", final_file_name) : NULL;
+  Free(final_file_name);
+  add_to_result("Output is printed to %s%s%s.\n",
+    send_to_console ? "the console" : "",
+    (send_to_console && output_file != NULL) ? " and to " : "",
+    output_file != NULL ? file_str : "");
+  Free(file_str);
+  // global batch file
+  add_to_result("Global batch file%s%s.\n", global_batch_file != NULL ? ": " : "",
+    global_batch_file != NULL ? global_batch_file : " not set");
+  // user breakpoints
+  if (breakpoints.empty()) {
+    add_to_result("No user breakpoints.\n");
+  }
+  else {
+    add_to_result("User breakpoints:\n");
+    for (size_t i = 0; i < breakpoints.size(); ++i) {
+      const breakpoint_t& bp = breakpoints[i];
+      add_to_result("%s %d %s\n", bp.module, bp.line,
+        bp.batch_file != NULL ? bp.batch_file : "");
+    }
+  }
+  // automatic breakpoints
+  add_to_result("Automatic breakpoints:\nerror %s %s\nfail %s %s",
+    error_behavior.trigger ? "on" : "off",
+    error_behavior.batch_file != NULL ? error_behavior.batch_file : "",
+    fail_behavior.trigger ? "on" : "off",
+    fail_behavior.batch_file != NULL ? fail_behavior.batch_file : "");
+}
+
+#define STACK_LEVEL (stack_level >= 0) ? (size_t)stack_level : (call_stack.size() - 1)
+
 void TTCN3_Debugger::print_call_stack()
 {
   for (size_t i = call_stack.size(); i != 0; --i) {
     add_to_result("%d.\t", (int)call_stack.size() - (int)i + 1);
     call_stack[i - 1].function->print_function();
+    if (i - 1 == (STACK_LEVEL)) {
+      // mark the active stack level with an asterisk
+      add_to_result("*");
+    }
     if (i != 1) {
       add_to_result("\n");
     }
@@ -279,14 +321,13 @@ void TTCN3_Debugger::set_stack_level(int new_level)
   }
 }
 
-#define STACK_LEVEL (stack_level >= 0) ? (size_t)stack_level : (call_stack.size() - 1)
-
 void TTCN3_Debugger::print_variable(const char* p_var_name)
 {
   const variable_t* var = call_stack[STACK_LEVEL].function->find_variable(p_var_name);
   if (var != NULL) {
-    add_to_result("[%s] %s := %s", var->type_name, var->name,
-      (const char*)var->print_function(*var));
+    add_to_result("[%s] %s%s%s := %s", var->type_name,
+      var->module != NULL ? var->module : "", var->module != NULL ? "." : "",
+      var->name, (const char*)var->print_function(*var));
   }
   else {
     add_to_result("Variable '%s' not found.", p_var_name);
@@ -1121,6 +1162,7 @@ void TTCN3_Debugger::remove_scope(TTCN3_Debug_Scope* p_scope)
 TTCN3_Debugger::variable_t* TTCN3_Debugger::add_variable(const void* p_value,
                                                          const char* p_name,
                                                          const char* p_type,
+                                                         const char* p_module,
                                                          TTCN3_Debugger::print_function_t p_print_function)
 {
   if (call_stack.empty()) {
@@ -1131,6 +1173,7 @@ TTCN3_Debugger::variable_t* TTCN3_Debugger::add_variable(const void* p_value,
       var->cvalue = p_value;
       var->name = p_name;
       var->type_name = p_type;
+      var->module = p_module;
       var->print_function = p_print_function;
       var->set_function = NULL;
       variables.push_back(var);
@@ -1140,7 +1183,7 @@ TTCN3_Debugger::variable_t* TTCN3_Debugger::add_variable(const void* p_value,
   else if (active) {
     // it's a local variable for the top-most function
     return call_stack[call_stack.size() - 1].function->add_variable(
-      p_value, p_name, p_type, p_print_function);
+      p_value, p_name, p_type, p_module, p_print_function);
   }
   return NULL;
 }
@@ -1148,6 +1191,7 @@ TTCN3_Debugger::variable_t* TTCN3_Debugger::add_variable(const void* p_value,
 TTCN3_Debugger::variable_t* TTCN3_Debugger::add_variable(void* p_value,
                                                          const char* p_name,
                                                          const char* p_type,
+                                                         const char* p_module,
                                                          TTCN3_Debugger::print_function_t p_print_function,
                                                          TTCN3_Debugger::set_function_t p_set_function)
 {
@@ -1159,6 +1203,7 @@ TTCN3_Debugger::variable_t* TTCN3_Debugger::add_variable(void* p_value,
       var->value = p_value;
       var->name = p_name;
       var->type_name = p_type;
+      var->module = p_module;
       var->print_function = p_print_function;
       var->set_function = p_set_function;
       variables.push_back(var);
@@ -1168,7 +1213,7 @@ TTCN3_Debugger::variable_t* TTCN3_Debugger::add_variable(void* p_value,
   else if (active) {
     // it's a local variable for the top-most function
     return call_stack[call_stack.size() - 1].function->add_variable(
-      p_value, p_name, p_type, p_print_function);
+      p_value, p_name, p_type, p_module, p_print_function, p_set_function);
   }
   return NULL;
 }
@@ -1296,10 +1341,9 @@ void TTCN3_Debugger::execute_command(int p_command, int p_argument_count,
     CHECK_NOF_ARGUMENTS_RANGE(1, 2)
     set_global_batch_file(p_arguments[0], (p_argument_count == 2) ? p_arguments[1] : NULL);
     break;
-  case D_SET_COMPONENT:
-    print(DRET_NOTIFICATION, "Command " D_SET_COMPONENT_TEXT " %s.",
-      TTCN_Runtime::is_single() ? "is not available in single mode" :
-      "should have been sent to the Main Controller");
+  case D_PRINT_SETTINGS:
+    CHECK_NOF_ARGUMENTS(0)
+    print_settings();
     break;
   case D_PRINT_CALL_STACK:
     CHECK_CALL_STACK(true)
@@ -1479,9 +1523,11 @@ TTCN3_Debug_Scope::~TTCN3_Debug_Scope()
 void TTCN3_Debug_Scope::add_variable(const void* p_value,
                                      const char* p_name,
                                      const char* p_type,
+                                     const char* p_module,
                                      TTCN3_Debugger::print_function_t p_print_function)
 {
-  TTCN3_Debugger::variable_t* var = ttcn3_debugger.add_variable(p_value, p_name, p_type, p_print_function);
+  TTCN3_Debugger::variable_t* var = ttcn3_debugger.add_variable(p_value, p_name,
+    p_type, p_module, p_print_function);
   if (var != NULL) {
     variables.push_back(var);
   }
@@ -1490,11 +1536,12 @@ void TTCN3_Debug_Scope::add_variable(const void* p_value,
 void TTCN3_Debug_Scope::add_variable(void* p_value,
                                      const char* p_name,
                                      const char* p_type,
+                                     const char* p_module,
                                      TTCN3_Debugger::print_function_t p_print_function,
                                      TTCN3_Debugger::set_function_t p_set_function)
 {
   TTCN3_Debugger::variable_t* var = ttcn3_debugger.add_variable(p_value, p_name,
-    p_type, p_print_function, p_set_function);
+    p_type, p_module, p_print_function, p_set_function);
   if (var != NULL) {
     variables.push_back(var);
   }
@@ -1503,19 +1550,35 @@ void TTCN3_Debug_Scope::add_variable(void* p_value,
 TTCN3_Debugger::variable_t* TTCN3_Debug_Scope::find_variable(const char* p_name) const
 {
   for (size_t i = 0; i < variables.size(); ++i) {
-    if (strcmp(variables[i]->name, p_name) == 0) {
-      return variables[i];
+    TTCN3_Debugger::variable_t* var = variables[i];
+    if (strcmp(var->name, p_name) == 0) {
+      // the string matches the variable's name
+      return var;
+    }
+    else if (var->module != NULL) {
+      size_t name_len = strlen(var->name);
+      size_t mod_len = strlen(var->module);
+      size_t len = strlen(p_name);
+      if (len == mod_len + name_len + 1 && p_name[mod_len] == '.' &&
+          strncmp(p_name, var->module, mod_len) == 0 &&
+          strncmp(p_name + mod_len + 1, var->name, name_len) == 0) {
+        // the string matches the variable's name prefixed by its module name
+        return var;
+      }
     }
   }
   return NULL;
 }
 
-void TTCN3_Debug_Scope::list_variables(regex_t* p_posix_regexp, bool& p_first) const
+void TTCN3_Debug_Scope::list_variables(regex_t* p_posix_regexp, bool& p_first,
+                                       const char* p_module) const
 {
   for (size_t i = 0; i < variables.size(); ++i) {
     if (p_posix_regexp == NULL ||
         regexec(p_posix_regexp, variables[i]->name, 0, NULL, 0) == 0) {
-      ttcn3_debugger.add_to_result("%s%s", p_first ? "" : " ", variables[i]->name);
+      bool imported = p_module != NULL && strcmp(p_module, variables[i]->module) != 0;
+      ttcn3_debugger.add_to_result("%s%s%s%s", p_first ? "" : " ",
+        imported ? variables[i]->module : "", imported ? "." : "", variables[i]->name);
       p_first = false;
     }
   }
@@ -1582,6 +1645,7 @@ TTCN3_Debug_Function::~TTCN3_Debug_Function()
 TTCN3_Debugger::variable_t* TTCN3_Debug_Function::add_variable(const void* p_value,
                                                                const char* p_name,
                                                                const char* p_type,
+                                                               const char* p_module,
                                                                TTCN3_Debugger::print_function_t p_print_function)
 {
   if (ttcn3_debugger.is_on()) {
@@ -1589,6 +1653,7 @@ TTCN3_Debugger::variable_t* TTCN3_Debug_Function::add_variable(const void* p_val
     var->cvalue = p_value;
     var->name = p_name;
     var->type_name = p_type;
+    var->module = p_module;
     var->print_function = p_print_function;
     var->set_function = NULL;
     variables.push_back(var);
@@ -1600,6 +1665,7 @@ TTCN3_Debugger::variable_t* TTCN3_Debug_Function::add_variable(const void* p_val
 TTCN3_Debugger::variable_t* TTCN3_Debug_Function::add_variable(void* p_value,
                                                                const char* p_name,
                                                                const char* p_type,
+                                                               const char* p_module,
                                                                TTCN3_Debugger::print_function_t p_print_function,
                                                                TTCN3_Debugger::set_function_t p_set_function)
 {
@@ -1608,6 +1674,7 @@ TTCN3_Debugger::variable_t* TTCN3_Debug_Function::add_variable(void* p_value,
     var->value = p_value;
     var->name = p_name;
     var->type_name = p_type;
+    var->module = p_module;
     var->print_function = p_print_function;
     var->set_function = p_set_function;
     variables.push_back(var);
@@ -1759,10 +1826,10 @@ void TTCN3_Debug_Function::list_variables(const char* p_scope, const char* p_fil
     }
   }
   if (list_global && global_scope != NULL && global_scope->has_variables()) {
-    global_scope->list_variables(posix_regexp, first);
+    global_scope->list_variables(posix_regexp, first, module_name);
   }
   if (list_comp && component_scope != NULL && component_scope->has_variables()) {
-    component_scope->list_variables(posix_regexp, first);
+    component_scope->list_variables(posix_regexp, first, NULL);
   }
   if (first) {
     ttcn3_debugger.print(DRET_NOTIFICATION, "No variables found.");

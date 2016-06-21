@@ -5618,6 +5618,28 @@ void MainController::process_debug_return_value(Text_Buf& text_buf, char* log_so
   }
 }
 
+static bool is_tc_debuggable(const component_struct* tc)
+{
+  if (tc->comp_ref == MTC_COMPREF || tc->comp_ref == SYSTEM_COMPREF) {
+    return true; // let these pass, they are checked later
+  }
+  switch (tc->tc_state) {
+  case TC_CREATE:
+  case TC_START:
+  case TC_STOP:
+  case TC_KILL:
+  case TC_CONNECT:
+  case TC_DISCONNECT:
+  case TC_MAP:
+  case TC_UNMAP:
+  case PTC_FUNCTION:
+  case PTC_STARTING:
+    return true;
+  default:
+    return false;
+  }
+}
+
 void MainController::process_debug_broadcast_req(component_struct* tc, int commandID)
 {
   // don't send the command back to the requesting component
@@ -5626,7 +5648,7 @@ void MainController::process_debug_broadcast_req(component_struct* tc, int comma
   }
   for (component i = tc_first_comp_ref; i < n_components; ++i) {
     component_struct* comp = components[i];
-    if (tc != comp && comp->tc_state != PTC_STALE && comp->tc_state != TC_EXITED) {
+    if (tc != comp && is_tc_debuggable(comp)) {
       send_debug_command(comp->tc_fd, commandID, "");
     }
   }
@@ -6483,36 +6505,72 @@ void MainController::debug_command(int commandID, char* arguments)
   lock();
   if (mtc != NULL) {
     switch (commandID) {
-    case D_SET_COMPONENT: // handled by the MC
-      if (!strcmp(arguments, "mtc")) {
-        notify("Debugger %sset to print data from the MTC.",
-          debugger_active_tc == mtc ? "was already " : "");
-        debugger_active_tc = mtc;
+    case D_LIST_COMPONENTS: // handled by the MC
+      if (*arguments != 0) {
+        notify("Invalid number of arguments, expected 0.");
       }
       else {
-        size_t len = strlen(arguments);
-        for (size_t i = 0; i < len; ++i) {
-          if (arguments[i] < '0' || arguments[i] > '9') {
-            notify("Argument 1 is invalid. Expected 'mtc' or integer value "
-              "(component reference).");
-            unlock();
-            return;
+        // the active component is marked with an asterisk
+        char* result = mprintf("%s(%d)%s", mtc->comp_name, mtc->comp_ref,
+          debugger_active_tc == mtc ? "*" : "");
+        for (component i = FIRST_PTC_COMPREF; i < n_components; ++i) {
+          component_struct* comp = components[i];
+          if (comp != NULL && is_tc_debuggable(comp)) {
+            if (comp->comp_name != NULL) {
+              result = mputprintf(result, " %s(%d)%s", comp->comp_name, comp->comp_ref,
+                debugger_active_tc == comp ? "*" : "");
+            }
+            else {
+              result = mputprintf(result, " %d%s", comp->comp_ref,
+                debugger_active_tc == comp ? "*" : "");
+            }
           }
         }
-        const component_struct* tc = lookup_component(strtol(arguments, NULL, 10));
-        if (tc == NULL || tc->tc_state == PTC_STALE || tc->tc_state == TC_EXITED) {
-          notify("Invalid component reference %s.", arguments);
-        }
-        else {
-          notify("Debugger %sset to print data from PTC %s%s%d%s.",
-            debugger_active_tc == tc ? "was already " : "",
-            tc->comp_name != NULL ? tc->comp_name : "",
-            tc->comp_name != NULL ? "(" : "", tc->comp_ref,
-            tc->comp_name != NULL ? ")" : "");
-          debugger_active_tc = tc;
-        }
+        notify("%s", result);
+        Free(result);
       }
       break;
+    case D_SET_COMPONENT: { // handled by the MC
+      bool number = true;
+      size_t len = strlen(arguments);
+      for (size_t i = 0; i < len; ++i) {
+        if (arguments[i] < '0' || arguments[i] > '9') {
+          number = false;
+          break;
+        }
+      }
+      component_struct* tc = NULL;
+      if (number) { // component reference
+        tc = lookup_component(strtol(arguments, NULL, 10));
+      }
+      else { // component name
+        for (component i = 1; i < n_components; ++i) {
+          component_struct *comp = components[i];
+          if (comp != NULL && comp->comp_name != NULL && is_tc_debuggable(comp)
+              && !strcmp(comp->comp_name, arguments)) {
+            tc = comp;
+            break;            
+          } 
+        }
+      }
+      if (tc == system) {
+        notify("Debugging is not available on %s(%d).", tc->comp_name, tc->comp_ref);
+      }
+      else if (tc == NULL || !is_tc_debuggable(tc)) {
+        notify("Component with %s %s does not exist or is not running anything.",
+          number ? "reference" : "name", arguments);
+      }
+      else {
+        notify("Debugger %sset to print data from %s %s%s%d%s.",
+          debugger_active_tc == tc ? "was already " : "",
+          tc == mtc ? "the" : "PTC",
+          tc->comp_name != NULL ? tc->comp_name : "",
+          tc->comp_name != NULL ? "(" : "", tc->comp_ref,
+          tc->comp_name != NULL ? ")" : "");
+        debugger_active_tc = tc;
+      }
+      break; }
+    case D_PRINT_SETTINGS:
     case D_PRINT_CALL_STACK:
     case D_SET_STACK_LEVEL:
     case D_LIST_VARIABLES:
@@ -6521,12 +6579,9 @@ void MainController::debug_command(int commandID, char* arguments)
     case D_PRINT_SNAPSHOTS:
     case D_STEP_OVER:
     case D_STEP_INTO:
-    case D_STEP_OUT:
-      // it's a data printing or stepping command, needs to be sent to the
-      // active component
-      if (debugger_active_tc == NULL ||
-          debugger_active_tc->tc_state == PTC_STALE ||
-          debugger_active_tc->tc_state == TC_EXITED) {
+    case D_STEP_OUT:    
+      // it's a printing or stepping command, needs to be sent to the active component
+      if (debugger_active_tc == NULL || !is_tc_debuggable(debugger_active_tc)) {
         // set the MTC as active in the beginning or if the active PTC has
         // finished executing
         debugger_active_tc = mtc;
@@ -6544,17 +6599,32 @@ void MainController::debug_command(int commandID, char* arguments)
       last_debug_command.command = commandID;
       Free(last_debug_command.arguments);
       last_debug_command.arguments = mcopystr(arguments);
-      // no break
-    case D_RUN_TO_CURSOR:
-    case D_HALT:
-    case D_CONTINUE:
-    case D_EXIT:
-      // it's a global setting, a 'run to' command or a command related to the
-      // halted state, needs to be sent to all HCs and TCs
+      // needs to be sent to all HCs and TCs
       send_debug_command(mtc->tc_fd, commandID, arguments);
       for (component i = FIRST_PTC_COMPREF; i < n_components; ++i) {
         component_struct* comp = components[i];
         if (comp != NULL && comp->tc_state != PTC_STALE && comp->tc_state != TC_EXITED) {
+          send_debug_command(comp->tc_fd, commandID, arguments);
+        }
+      }
+      for (int i = 0; i < n_hosts; i++) {
+        host_struct* host = hosts[i];
+        if (host->hc_state != HC_DOWN) {
+          send_debug_command(host->hc_fd, commandID, arguments);
+        }
+      }
+      break;
+    case D_RUN_TO_CURSOR:
+    case D_HALT:
+    case D_CONTINUE:
+    case D_EXIT:
+      // a 'run to' command or a command related to the
+      // halted state, needs to be sent to all HCs and TCs
+      send_debug_command(mtc->tc_fd, commandID, arguments);
+      for (component i = FIRST_PTC_COMPREF; i < n_components; ++i) {
+        component_struct* comp = components[i];
+        // only send it to the PTC if it is actually running something
+        if (comp != NULL && is_tc_debuggable(comp)) {
           send_debug_command(comp->tc_fd, commandID, arguments);
         }
       }

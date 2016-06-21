@@ -48,9 +48,8 @@ const TTCN_Debugger_UI::command_t TTCN_Debugger_UI::debug_command_list[] = {
     D_SET_GLOBAL_BATCH_FILE_TEXT " on|off [batch_file_name]",
     "Set whether a batch file should be executed automatically when test execution "
     "is halted (breakpoint-specific batch files override this setting)." },
-  { D_SET_COMPONENT_TEXT, D_SET_COMPONENT,
-    D_SET_COMPONENT_TEXT " mtc|<component_reference>", "Set the test component "
-    "to print debug information from (not available in single mode)." },
+  { D_PRINT_SETTINGS_TEXT, D_PRINT_SETTINGS, D_PRINT_SETTINGS_TEXT,
+    "Prints the debugger's settings." },
   { D_PRINT_CALL_STACK_TEXT, D_PRINT_CALL_STACK, D_PRINT_CALL_STACK_TEXT,
     "Print call stack." },
   { D_SET_STACK_LEVEL_TEXT, D_SET_STACK_LEVEL, D_SET_STACK_LEVEL_TEXT " <level>",

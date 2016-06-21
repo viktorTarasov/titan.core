@@ -135,8 +135,12 @@ static const DebugCommand debug_command_list[] = {
     D_SET_GLOBAL_BATCH_FILE_TEXT " on|off [batch_file_name]",
     "Set whether a batch file should be executed automatically when test execution "
     "is halted (breakpoint-specific batch files override this setting)." },
+  { D_PRINT_SETTINGS_TEXT, D_PRINT_SETTINGS, D_PRINT_SETTINGS_TEXT,
+    "Prints the debugger's settings." },
+  { D_LIST_COMPONENTS_TEXT, D_LIST_COMPONENTS, D_LIST_COMPONENTS_TEXT,
+    "List the test components currently running debuggable code." },
   { D_SET_COMPONENT_TEXT, D_SET_COMPONENT,
-    D_SET_COMPONENT_TEXT " mtc|<component_reference>",
+    D_SET_COMPONENT_TEXT " <component name>|<component_reference>",
     "Set the test component to print debug information from." },
   { D_PRINT_CALL_STACK_TEXT, D_PRINT_CALL_STACK, D_PRINT_CALL_STACK_TEXT,
     "Print call stack." },

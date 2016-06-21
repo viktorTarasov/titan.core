@@ -23,26 +23,28 @@
 #define D_SET_AUTOMATIC_BREAKPOINT 4 // 2-3, "error" or "fail", + "off", or "on" + optional batch file name
 #define D_SET_OUTPUT               5 // 1-2, "console", or "file" or "both", + file name
 #define D_SET_GLOBAL_BATCH_FILE    6 // 1-2, "off", or "on" + batch file name
+#define D_PRINT_SETTINGS           7 // 0
 // printing and overwriting data
-#define D_SET_COMPONENT            7 // 1, "mtc" or component reference
-#define D_PRINT_CALL_STACK         8 // 0
-#define D_SET_STACK_LEVEL          9 // 1, stack level
-#define D_LIST_VARIABLES          10 // 1-2, "local", "global", "comp" or "all", + optional filter (pattern)
-#define D_PRINT_VARIABLE          11 // 1+, list of variable names
-#define D_OVERWRITE_VARIABLE      12 // 2, variable name, new value (in module parameter syntax)
-#define D_PRINT_SNAPSHOTS         13 // 0
-#define D_SET_SNAPSHOT_BEHAVIOR   14 // TBD
+#define D_LIST_COMPONENTS          8 // 0
+#define D_SET_COMPONENT            9 // 1, "mtc" or component reference
+#define D_PRINT_CALL_STACK        10 // 0
+#define D_SET_STACK_LEVEL         11 // 1, stack level
+#define D_LIST_VARIABLES          12 // 1-2, "local", "global", "comp" or "all", + optional filter (pattern)
+#define D_PRINT_VARIABLE          13 // 1+, list of variable names
+#define D_OVERWRITE_VARIABLE      14 // 2, variable name, new value (in module parameter syntax)
+#define D_PRINT_SNAPSHOTS         15 // 0
+#define D_SET_SNAPSHOT_BEHAVIOR   16 // TBD
 // stepping
-#define D_STEP_OVER               15 // 0
-#define D_STEP_INTO               16 // 0
-#define D_STEP_OUT                17 // 0
-#define D_RUN_TO_CURSOR           18 // 2, module name and line number
+#define D_STEP_OVER               17 // 0
+#define D_STEP_INTO               18 // 0
+#define D_STEP_OUT                19 // 0
+#define D_RUN_TO_CURSOR           20 // 2, module name and line number
 // the halted state
-#define D_HALT                    19 // 0
-#define D_CONTINUE                20 // 0
-#define D_EXIT                    21 // 1, "test" or "all"
+#define D_HALT                    21 // 0
+#define D_CONTINUE                22 // 0
+#define D_EXIT                    23 // 1, "test" or "all"
 // initialization
-#define D_SETUP                   22 // 9+:
+#define D_SETUP                   24 // 9+:
                                      // 1 argument for D_SWITCH,
                                      // 2 arguments for D_SET_OUTPUT,
                                      // 2 arguments (2nd and 3rd) for D_SET_AUTOMATIC_BREAKPOINT, where the first argument is "error",
@@ -60,7 +62,9 @@
 #define D_SET_AUTOMATIC_BREAKPOINT_TEXT "dautobp"
 #define D_SET_OUTPUT_TEXT "doutput"
 #define D_SET_GLOBAL_BATCH_FILE_TEXT "dglobbatch"
-#define D_SET_COMPONENT_TEXT "dcomp"
+#define D_PRINT_SETTINGS_TEXT "dsettings"
+#define D_LIST_COMPONENTS_TEXT "dlistcomp"
+#define D_SET_COMPONENT_TEXT "dsetcomp"
 #define D_PRINT_CALL_STACK_TEXT "dprintstack"
 #define D_SET_STACK_LEVEL_TEXT "dstacklevel"
 #define D_LIST_VARIABLES_TEXT "dlistvar"
