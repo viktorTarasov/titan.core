@@ -3117,6 +3117,10 @@ void MainController::clean_up()
   debugger_settings.global_batch_state = NULL;
   Free(debugger_settings.global_batch_file);
   debugger_settings.global_batch_file = NULL;
+  Free(debugger_settings.function_calls_cfg);
+  debugger_settings.function_calls_cfg = NULL;
+  Free(debugger_settings.function_calls_file);
+  debugger_settings.function_calls_file = NULL;
   for (int i = 0; i < debugger_settings.nof_breakpoints; ++i) {
     Free(debugger_settings.breakpoints[i].module);
     Free(debugger_settings.breakpoints[i].line);
@@ -3430,7 +3434,7 @@ void MainController::send_debug_setup(host_struct *hc)
   Text_Buf text_buf;
   text_buf.push_int(MSG_DEBUG_COMMAND);
   text_buf.push_int(D_SETUP);
-  text_buf.push_int(9 + 3 * debugger_settings.nof_breakpoints);
+  text_buf.push_int(11 + 3 * debugger_settings.nof_breakpoints);
   text_buf.push_string(debugger_settings.on_switch);
   text_buf.push_string(debugger_settings.output_file);
   text_buf.push_string(debugger_settings.output_type);
@@ -3440,6 +3444,8 @@ void MainController::send_debug_setup(host_struct *hc)
   text_buf.push_string(debugger_settings.fail_batch_file);
   text_buf.push_string(debugger_settings.global_batch_state);
   text_buf.push_string(debugger_settings.global_batch_file);
+  text_buf.push_string(debugger_settings.function_calls_cfg);
+  text_buf.push_string(debugger_settings.function_calls_file);
   for (int i = 0; i < debugger_settings.nof_breakpoints; ++i) {
     text_buf.push_string(debugger_settings.breakpoints[i].module);
     text_buf.push_string(debugger_settings.breakpoints[i].line);
@@ -5608,6 +5614,21 @@ void MainController::process_debug_return_value(Text_Buf& text_buf, char* log_so
           Free(line);
         }
         break;
+      case D_FUNCTION_CALL_CONFIG: {
+        Free(debugger_settings.function_calls_cfg);
+        Free(debugger_settings.function_calls_file);
+        debugger_settings.function_calls_file = NULL;
+        size_t args_len = mstrlen(last_debug_command.arguments);
+        size_t start = 0;
+        size_t end = 0;
+        get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+        debugger_settings.function_calls_cfg = mcopystrn(last_debug_command.arguments + start, end - start);
+        if (end < args_len) {
+          start = end;
+          get_next_argument_loc(last_debug_command.arguments, args_len, start, end);
+          debugger_settings.function_calls_file = mcopystrn(last_debug_command.arguments + start, end - start);
+        }
+        break; }
       default:
         break;
       }
@@ -5883,6 +5904,8 @@ void MainController::initialize(UserInterface& par_ui, int par_max_ptcs)
   debugger_settings.fail_batch_file = NULL;
   debugger_settings.global_batch_state = NULL;
   debugger_settings.global_batch_file = NULL;
+  debugger_settings.function_calls_cfg = NULL;
+  debugger_settings.function_calls_file = NULL;
   debugger_settings.nof_breakpoints = 0;
   debugger_settings.breakpoints = NULL;
   last_debug_command.command = D_ERROR;
@@ -6576,7 +6599,7 @@ void MainController::debug_command(int commandID, char* arguments)
     case D_LIST_VARIABLES:
     case D_PRINT_VARIABLE:
     case D_OVERWRITE_VARIABLE:
-    case D_PRINT_SNAPSHOTS:
+    case D_PRINT_FUNCTION_CALLS:
     case D_STEP_OVER:
     case D_STEP_INTO:
     case D_STEP_OUT:    
@@ -6594,6 +6617,7 @@ void MainController::debug_command(int commandID, char* arguments)
     case D_SET_GLOBAL_BATCH_FILE:
     case D_SET_BREAKPOINT:
     case D_REMOVE_BREAKPOINT:
+    case D_FUNCTION_CALL_CONFIG:
       // it's a global setting, store it, the next MSG_DEBUG_RETURN_VALUE message
       // might need it
       last_debug_command.command = commandID;

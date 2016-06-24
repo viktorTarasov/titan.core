@@ -253,6 +253,8 @@ struct debugger_settings_struct {
   char* fail_batch_file;
   char* global_batch_state;
   char* global_batch_file;
+  char* function_calls_cfg;
+  char* function_calls_file;
   int nof_breakpoints;
   struct breakpoint_struct {
     char* module;

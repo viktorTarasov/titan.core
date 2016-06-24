@@ -118,12 +118,13 @@ static const DebugCommand debug_command_list[] = {
   { D_SWITCH_TEXT, D_SWITCH, D_SWITCH_TEXT " on|off",
     "Switch the debugger on or off." },
   { D_SET_BREAKPOINT_TEXT, D_SET_BREAKPOINT,
-    D_SET_BREAKPOINT_TEXT " <module> <line> [<batch_file>]",
+    D_SET_BREAKPOINT_TEXT " <module> <line>|<function> [<batch_file>]",
     "Add a breakpoint at the specified location, or change the batch file of "
     "an existing breakpoint." },
   { D_REMOVE_BREAKPOINT_TEXT, D_REMOVE_BREAKPOINT,
-    D_REMOVE_BREAKPOINT_TEXT " all|<module> [all|<line>]", "Remove a breakpoint, "
-    "or all breakpoints from a module, or all breakpoints from all modules." },
+    D_REMOVE_BREAKPOINT_TEXT " all|<module> [all|<line>|<function>]",
+    "Remove a breakpoint, or all breakpoints from a module, or all breakpoints "
+    "from all modules." },
   { D_SET_AUTOMATIC_BREAKPOINT_TEXT, D_SET_AUTOMATIC_BREAKPOINT,
     D_SET_AUTOMATIC_BREAKPOINT_TEXT " error|fail on|off [<batch_file>]",
     "Switch an automatic breakpoint (truggered by an event) on or off, and/or "
@@ -135,6 +136,9 @@ static const DebugCommand debug_command_list[] = {
     D_SET_GLOBAL_BATCH_FILE_TEXT " on|off [batch_file_name]",
     "Set whether a batch file should be executed automatically when test execution "
     "is halted (breakpoint-specific batch files override this setting)." },
+  { D_FUNCTION_CALL_CONFIG_TEXT, D_FUNCTION_CALL_CONFIG,
+    D_FUNCTION_CALL_CONFIG_TEXT " file|<limit>|all [<file_name>]",
+    "Configure the storing of function call data." },
   { D_PRINT_SETTINGS_TEXT, D_PRINT_SETTINGS, D_PRINT_SETTINGS_TEXT,
     "Prints the debugger's settings." },
   { D_LIST_COMPONENTS_TEXT, D_LIST_COMPONENTS, D_LIST_COMPONENTS_TEXT,
@@ -147,7 +151,7 @@ static const DebugCommand debug_command_list[] = {
   { D_SET_STACK_LEVEL_TEXT, D_SET_STACK_LEVEL, D_SET_STACK_LEVEL_TEXT " <level>",
     "Set the stack level to print debug information from." },
   { D_LIST_VARIABLES_TEXT, D_LIST_VARIABLES,
-    D_LIST_VARIABLES_TEXT " local|global|comp|all [pattern]",
+    D_LIST_VARIABLES_TEXT " [local|global|comp|all] [pattern]",
     "List variable names." },
   { D_PRINT_VARIABLE_TEXT, D_PRINT_VARIABLE,
     D_PRINT_VARIABLE_TEXT " <variable_name>|$ [{ <variable_name>|$}]",
@@ -156,9 +160,9 @@ static const DebugCommand debug_command_list[] = {
   { D_OVERWRITE_VARIABLE_TEXT, D_OVERWRITE_VARIABLE,
     D_OVERWRITE_VARIABLE_TEXT " <variable_name> <value>",
     "Overwrite the current value of a variable." },
-  { D_PRINT_SNAPSHOTS_TEXT, D_PRINT_SNAPSHOTS, D_PRINT_SNAPSHOTS_TEXT,
-    "Print snapshots of function calls until this point." },
-  // D_SET_SNAPSHOT_BEHAVIOR_TEXT
+  { D_PRINT_FUNCTION_CALLS_TEXT, D_PRINT_FUNCTION_CALLS,
+    D_PRINT_FUNCTION_CALLS_TEXT " [all|<amount>]",
+    "Print function call data." },
   { D_STEP_OVER_TEXT, D_STEP_OVER, D_STEP_OVER_TEXT,
     "Resume test execution until the next line of code (in this function or the "
     "caller function)." },
@@ -166,7 +170,8 @@ static const DebugCommand debug_command_list[] = {
     "Resume test execution until the next line of code (on any stack level)." },
   { D_STEP_OUT_TEXT, D_STEP_OUT, D_STEP_OUT_TEXT,
     "Resume test execution until the next line of code in the caller function." },
-  { D_RUN_TO_CURSOR_TEXT, D_RUN_TO_CURSOR, D_RUN_TO_CURSOR_TEXT " <module> <line>",
+  { D_RUN_TO_CURSOR_TEXT, D_RUN_TO_CURSOR,
+    D_RUN_TO_CURSOR_TEXT " <module> <line>|<function>",
     "Resume test execution until the specified location." },
   { D_HALT_TEXT, D_HALT, D_HALT_TEXT, "Halt test execution." },
   { D_CONTINUE_TEXT, D_CONTINUE, D_CONTINUE_TEXT, "Resume halted test execution." },

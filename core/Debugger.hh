@@ -96,10 +96,22 @@ public:
   struct breakpoint_t {
     /** module name, owned */
     char* module;
+    /** line number (if it's a line breakpoint, otherwise 0) */
+    int line;
+    /** function name (if it's a function breakpoint, otherwise NULL), owned */
+    char* function;
+    /** batch file to be executed when the breakpoint is reached (optional), owned */
+    char* batch_file;
+  };
+  
+  /** type for storing data related to a breakpoint entry */
+  struct breakpoint_entry_t {
+    /** module name, not owned */
+    const char* module;
     /** line number */
     int line;
-    /** batch file to be executed when the breakpoint is reached (optional) */
-    char* batch_file;
+    /** size of the call stack */
+    size_t stack_size;
   };
   
   /** special breakpoint types, passed to breakpoint_entry() as the line parameter,
@@ -115,8 +127,56 @@ public:
   struct automatic_breakpoint_behavior_t {
     /** indicates whether the breakpoint should be triggered by the associated event */
     bool trigger;
-    /** batch file to be executed if the breakpoint is triggered (optional) */
+    /** batch file to be executed if the breakpoint is triggered (optional), owned */
     char* batch_file;
+  };
+  
+  /** possible function call data handling configurations */
+  enum function_call_data_config_t {
+    /** function call data is printed directly to file and not stored by the
+      * debugger */
+    CALLS_TO_FILE,
+    /** function call data is stored in a ring buffer of a set size 
+      * (i.e. when the buffer is full, adding a new function call automatically
+      * deletes the oldest function call)
+      * the buffer size can be zero, in which case no calls are stored */
+    CALLS_RING_BUFFER,
+    /** function call data is stored in a buffer of variable length (i.e. when
+      * the buffer is full, its size is increased) */
+    CALLS_STORE_ALL
+  };
+  
+  /** structure containing the function call data and information related to
+    * their handling */
+  struct function_call_data_t {
+    /** current function call data configuration (this also indicates which 
+      * field of the following union is selected) */
+    function_call_data_config_t cfg;
+    union {
+      /** information related to the file, that function calls are printed to
+        * (in case of CALLS_TO_FILE) */
+      struct {
+        /** name of the target file (may contain metacharacters), owned */
+        char* name;
+        /** the target file's handler, owned */
+        FILE* ptr;
+      } file;
+      /** information related to the storing of function calls 
+        * (in case of CALLS_RING_BUFFER or CALLS_STORE_ALL) */
+      struct {
+        /** size of the buffer used for storing function calls (this value is 
+          * fixed in case of CALLS_RING_BUFFER and dynamic in case of CALLS_STORE_ALL) */
+        int size;
+        /** stores the index of the first function call in the buffer
+          * (is always 0 in case of CALLS_STORE_ALL) */
+        int start;
+        /** stores the index of the last function call in the buffer 
+          * (its value is -1 if no function calls are currently stored) */
+        int end;
+        /** buffer containing the function call data, owned */
+        char** ptr;
+      } buffer;
+    };
   };
   
   /** stepping type */
@@ -141,11 +201,11 @@ private:
   bool halted;
   
   /** the debugger's output file handler (NULL if the debugger's output is only
-    * sent to the console) */
+    * sent to the console); owned */
   FILE* output_file;
   
   /** name of the debugger's output file (NULL if the debugger's output is only
-    * sent to the console) */
+    * sent to the console); may contain metacharacters; owned */
   char* output_file_name;
   
   /** indicates whether the debugger's output should be sent to the console */
@@ -168,11 +228,11 @@ private:
   /** list of breakpoints */
   Vector<breakpoint_t> breakpoints;
   
-  /** string containing function call snapshots, owned */
-  char* snapshots;
+  /** structure containing function call data */
+  function_call_data_t function_calls;
   
   /** stores the last line hit by breakpoint_entry() */
-  breakpoint_t last_breakpoint_entry;
+  breakpoint_entry_t last_breakpoint_entry;
   
   /** current stack level (reset when test execution is halted or resumed) */
   int stack_level;
@@ -184,14 +244,14 @@ private:
   automatic_breakpoint_behavior_t error_behavior;
   
   /** batch file executed automatically when test execution is halted
-    * NULL if switched off
+    * NULL if switched off (owned)
     * is overridden by breakpoint-specific batch files */
   char* global_batch_file;
   
-  /** result of the currently executing command */
+  /** result of the currently executing command, owned */
   char* command_result;
   
-  /** result of the last D_LIST_VARIABLES command */
+  /** result of the last D_LIST_VARIABLES command, owned */
   char* last_variable_list;
   
   /** stores which stepping option was requested by the user (if any) */
@@ -223,17 +283,18 @@ private:
     * handles the D_SWITCH command */
   void switch_state(const char* p_state_str);
   
-  /** adds a new breakpoint at the specified module and line with the specified
-    * batch file (if not NULL), or changes the batch file of an existing
+  /** adds a new breakpoint at the specified location (line or function) with the
+    * specified batch file (if not NULL), or changes the batch file of an existing
     * breakpoint
     * handles the D_SET_BREAKPOINT command */
-  void set_breakpoint(const char* p_module, int p_line, const char* batch_file);
+  void set_breakpoint(const char* p_module, const char* p_location,
+    const char* batch_file);
   
-  /** removes the breakpoint from the specified module/line, if it exists
+  /** removes the breakpoint from the specified location, if it exists
     * can also be used to remove all breakpoints from the specified module or
     * all breakpoints in all modules
     * handles the D_REMOVE_BREAKPOINT command */
-  void remove_breakpoint(const char* p_module, const char* p_line);
+  void remove_breakpoint(const char* p_module, const char* p_location);
   
   /** switches an automatic breakpoint related to the specified event on or off
     * and/or sets the batch file to run when the breakpoint is triggered
@@ -276,6 +337,18 @@ private:
   void overwrite_variable(const char* p_var_name, int p_value_element_count,
     char** p_value_elements);
   
+  /** frees all resources related to the handling of function call data */
+  void clean_up_function_calls();
+  
+  /** changes the method of handling function call data
+    * handles the D_FUNCTION_CALL_CONFIG command */
+  void configure_function_calls(const char* p_config, const char* p_file_name);
+  
+  /** prints the last stored function calls
+    * handles the D_PRINT_FUNCTION_CALLS command
+    * @param p_amount amount of function calls to print or "all" */
+  void print_function_calls(const char* p_amount);
+  
   /** sets the debugger's output to the console and/or a text file
     * handles the D_SET_OUTPUT command
     * @param p_output_type "console", "file" or "both"
@@ -292,10 +365,10 @@ private:
     * handles the D_STEP_OVER, D_STEP_INTO and D_STEP_OUT commands */
   void step(stepping_t p_stepping_type);
   
-  /** resumes execution until the specified location is reached 
+  /** resumes execution until the specified location (line or function) is reached 
     * (or until test execution is halted for any other reason)
     * handles the D_RUN_TO_CURSOR command */
-  void run_to_cursor(const char* p_module, int p_line);
+  void run_to_cursor(const char* p_module, const char* p_location);
   
   /** halts test execution, processing only debug commands
     * @param p_batch_file batch file executed after the halt (if not NULL)
@@ -314,7 +387,8 @@ private:
   
   /** returns the index of the specified breakpoint, if found,
     * otherwise returns breakpoints.size() */
-  size_t find_breakpoint(const char* p_module, int p_line) const;
+  size_t find_breakpoint(const char* p_module, int p_line,
+    const char* p_function) const;
   
   /** returns the specified variable, if found, otherwise returns NULL */
   TTCN3_Debugger::variable_t* find_variable(const void* p_value) const;
@@ -501,15 +575,18 @@ public:
   /** returns the component scope object associated with the specified component type */
   const TTCN3_Debug_Scope* get_component_scope(const char* p_component) const;
   
-  /** appends the specified function call snapshot to the end of the snapshot string */
-  void add_snapshot(const char* p_snapshot);
+  /** stores the specified snapshot of a function call, together with a time stamp
+    * (the debugger is responsible for freeing the string parameter) */
+  void store_function_call(char* p_snapshot);
   
   /** executes a command received from the user interface */
   void execute_command(int p_command, int p_argument_count, char** p_arguments);
   
-  /** opens the debugger's output file for writing (if one has been set, but not
-    * opened, in the HC process) */
-  void open_output_file();
+  /** called when a PTC is forked from the HC process
+    * contains supplementary initializations (i.e. opening of file pointers and
+    * allocations of buffers) that the HC's debugger does not perform, but are
+    * needed by the PTC's debugger */
+  void init_PTC_settings();
   
   /** indicates whether an 'exit all' command has been issued 
     * (this causes the execution of tests in the current queue to stop) */
@@ -705,6 +782,9 @@ public:
   
   /** prints the function's type, name and current values of parameters */
   void print_function() const;
+  
+  /** returns the name of the function */
+  const char* get_function_name() const { return function_name; }
   
   /** returns the name of the module the function was defined in */
   const char* get_module_name() const { return module_name; }

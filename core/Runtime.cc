@@ -535,7 +535,7 @@ int TTCN_Runtime::ptc_main()
     }
     if (ret_val == EXIT_SUCCESS) {
       if (ttcn3_debugger.is_activated()) {
-        ttcn3_debugger.open_output_file();
+        ttcn3_debugger.init_PTC_settings();
       }
       try {
         do {
