@@ -3,7 +3,7 @@
 ttcn3_makefilegen \- Makefile Generator
 .SH SYNOPSIS
 .B ttcn3_makefilegen
-.RB "[\| " \-acdEfglMnpRsw " \|]"
+.RB "[\| " \-acdEfglMnpRsSw " \|]"
 .RB "[\| " \-e
 .IR " ETS_name" " \|]"
 .RB "[\| " \-o
@@ -146,6 +146,11 @@ Generates a Makefile, which links the executable test suite with the
 version of the base library. If this switch is omitted the executable is
 built for parallel mode by default.
 .TP
+.B \-S
+Supresses all 
+.I makefilegen
+warning messages.
+.TP
 .B \-v
 Prints
 .I version
@@ -154,7 +159,7 @@ and license key information and exits.
 .B \-w
 Suppresses all
 .I warning
-messages.
+messages gerenated by TITAN.
 .TP
 .BI \-z " file"
 Enables code coverage and profiling in the TTCN-3 files listed in the
