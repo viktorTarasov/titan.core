@@ -63,7 +63,7 @@ enum mc_state_enum {
   MC_INACTIVE, MC_LISTENING, MC_LISTENING_CONFIGURED, MC_HC_CONNECTED,
   MC_CONFIGURING, MC_ACTIVE, MC_SHUTDOWN, MC_CREATING_MTC, MC_READY,
   MC_TERMINATING_MTC, MC_EXECUTING_CONTROL, MC_EXECUTING_TESTCASE,
-  MC_TERMINATING_TESTCASE, MC_PAUSED
+  MC_TERMINATING_TESTCASE, MC_PAUSED, MC_RECONFIGURING
 };
 
 /** Data structure for unknown incoming connections (before receiving
@@ -164,7 +164,7 @@ enum tc_state_enum { TC_INITIAL, TC_IDLE, TC_CREATE, TC_START, TC_STOP, TC_KILL,
   MTC_CONTROLPART, MTC_TESTCASE, MTC_ALL_COMPONENT_STOP,
   MTC_ALL_COMPONENT_KILL, MTC_TERMINATING_TESTCASE, MTC_PAUSED,
   PTC_FUNCTION, PTC_STARTING, PTC_STOPPED, PTC_KILLING, PTC_STOPPING_KILLING,
-  PTC_STALE, TC_SYSTEM };
+  PTC_STALE, TC_SYSTEM, MTC_CONFIGURING };
 
 /** Data structure for each TC */
 struct component_struct {
@@ -345,6 +345,7 @@ class MainController {
   static boolean is_hc_in_state(hc_state_enum checked_state);
   static boolean all_hc_in_state(hc_state_enum checked_state);
   static void configure_host(host_struct *host, boolean should_notify);
+  static void configure_mtc();
   static void check_all_hc_configured();
   static void add_component_to_host(host_struct *host,
     component_struct *comp);
@@ -544,6 +545,7 @@ private:
   static void send_ptc_verdict(boolean continue_execution);
   static void send_continue();
   static void send_exit_mtc();
+  static void send_configure_mtc(const char *config_file);
 
   /** Messages to PTCs */
   static void send_cancel_done_ptc(component_struct *tc,
@@ -607,6 +609,8 @@ private:
   static void process_testcase_started();
   static void process_testcase_finished();
   static void process_mtc_ready();
+  static void process_configure_ack_mtc();
+  static void process_configure_nak_mtc();
 
   /* Incoming messages from PTCs */
   static void process_stopped(component_struct *tc, int message_end);
@@ -629,6 +633,7 @@ public:
   static void shutdown_session();
 
   static void configure(const char *config_file);
+  static bool start_reconfiguring();
 
   static void create_mtc(int host_index);
   static void exit_mtc();

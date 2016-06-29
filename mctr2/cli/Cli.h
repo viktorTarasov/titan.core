@@ -191,6 +191,7 @@ private:
    */
   int executeListIndex;
 
+  char* cfg_file_name;
   config_data mycfg;
 };
 

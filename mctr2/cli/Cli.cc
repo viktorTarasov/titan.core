@@ -195,12 +195,14 @@ Cli::Cli()
     perror("Cli::Cli: pthread_cond_init failed.");
     exit(EXIT_FAILURE);
   }
+  cfg_file_name = NULL;
 }
 
 Cli::~Cli()
 {
   pthread_mutex_destroy(&mutex);
   pthread_cond_destroy(&cond);
+  Free(cfg_file_name);
 }
 
 //----------------------------------------------------------------------------
@@ -217,8 +219,9 @@ int Cli::enterLoop(int argc, char *argv[])
   printWelcome();
 
   if (argc == 2) {
-    printf("Using configuration file: %s\n", argv[1]);
-    if (process_config_read_file(argv[1], &mycfg)) {
+    cfg_file_name = mcopystr(argv[1]);
+    printf("Using configuration file: %s\n", cfg_file_name);
+    if (process_config_read_file(cfg_file_name, &mycfg)) {
       puts("Error was found in the configuration file. Exiting.");
       cleanUp();
       return EXIT_FAILURE;
@@ -728,12 +731,37 @@ void Cli::infoCallback(const char *arguments)
 
 void Cli::reconfCallback(const char *arguments)
 {
-  if(*arguments == 0) { // reconf called without its optional argument
-    puts("Reconfiguration of MC and HCs using original configuration "
-      "data\n -- not supported, yet.");
-  } else { // reconf called with config_file argument
-    puts("Reconfiguration of MC and HCs using configuration file"
-      "specified in\ncommand line argument -- not supported, yet.");
+  if (!MainController::start_reconfiguring()) {
+    return;
+  }
+  if (*arguments != 0) {
+    Free(cfg_file_name);
+    cfg_file_name = mcopystr(arguments);
+  }
+  
+  printf("Using configuration file: %s\n", cfg_file_name);
+  if (process_config_read_file(cfg_file_name, &mycfg)) {
+    puts("Error was found in the configuration file. Exiting.");
+    cleanUp();
+    puts("exit");
+    exitCallback("");
+  }
+  else {
+    MainController::set_kill_timer(mycfg.kill_timer);
+
+    for (int i = 0; i < mycfg.group_list_len; ++i) {
+      MainController::add_host(mycfg.group_list[i].group_name,
+        mycfg.group_list[i].host_name);
+    }
+
+    for (int i = 0; i < mycfg.component_list_len; ++i) {
+      MainController::assign_component(mycfg.component_list[i].host_or_group,
+        mycfg.component_list[i].component);
+    }
+    
+    if (MainController::get_state() == mctr::MC_RECONFIGURING) {
+      MainController::configure(mycfg.config_read_buffer);
+    }
   }
 }
 
@@ -800,6 +828,7 @@ void Cli::exitCallback(const char *arguments)
   if (*arguments == 0) {
     switch (MainController::get_state()) {
     case mctr::MC_READY:
+    case mctr::MC_RECONFIGURING:
       MainController::exit_mtc();
       waitMCState(WAIT_MTC_TERMINATED);
     case mctr::MC_LISTENING:

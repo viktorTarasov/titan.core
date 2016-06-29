@@ -572,7 +572,7 @@ void TTCN_Communication::process_all_messages_hc()
       process_error();
       break;
     case MSG_CONFIGURE:
-      process_configure(msg_end);
+      process_configure(msg_end, false);
       break;
     case MSG_CREATE_MTC:
       process_create_mtc();
@@ -703,6 +703,9 @@ void TTCN_Communication::process_all_messages_tc()
           break;
         case MSG_EXIT_MTC:
           process_exit_mtc();
+          break;
+        case MSG_CONFIGURE:
+          process_configure(msg_end, true);
           break;
         default:
           process_unsupported_message(msg_type, msg_end);
@@ -1263,20 +1266,28 @@ void TTCN_Communication::send_message(Text_Buf& text_buf)
   }
 }
 
-void TTCN_Communication::process_configure(int msg_end)
+void TTCN_Communication::process_configure(int msg_end, bool to_mtc)
 {
   switch (TTCN_Runtime::get_state()) {
   case TTCN_Runtime::HC_IDLE:
   case TTCN_Runtime::HC_ACTIVE:
   case TTCN_Runtime::HC_OVERLOADED:
-    break;
+    if (!to_mtc) {
+      break;
+    }
+    // no break
+  case TTCN_Runtime::MTC_IDLE:
+    if (to_mtc) {
+      break;
+    }
+    // no break
   default:
     incoming_buf.cut_message();
     send_error("Message CONFIGURE arrived in invalid state.");
     return;
   }
 
-  TTCN_Runtime::set_state(TTCN_Runtime::HC_CONFIGURING);
+  TTCN_Runtime::set_state(to_mtc ? TTCN_Runtime::MTC_CONFIGURING : TTCN_Runtime::HC_CONFIGURING);
   TTCN_Logger::log_configdata(TitanLoggerApiSimple::ExecutorConfigdata_reason::received__from__mc);
 
   // take the config string directly from the buffer for efficiency reasons
@@ -1311,12 +1322,12 @@ void TTCN_Communication::process_configure(int msg_end)
 
   if (success) {
     send_configure_ack();
-    TTCN_Runtime::set_state(TTCN_Runtime::HC_ACTIVE);
+    TTCN_Runtime::set_state(to_mtc ? TTCN_Runtime::MTC_IDLE : TTCN_Runtime::HC_ACTIVE);
     TTCN_Logger::log_configdata(
       TitanLoggerApiSimple::ExecutorConfigdata_reason::processing__succeeded);
   } else {
     send_configure_nak();
-    TTCN_Runtime::set_state(TTCN_Runtime::HC_IDLE);
+    TTCN_Runtime::set_state(to_mtc ? TTCN_Runtime::MTC_IDLE : TTCN_Runtime::HC_IDLE);
   }
 
   incoming_buf.cut_message();

@@ -34,7 +34,6 @@
 
 /* Messages from MC to HC (down) */
 
-#define MSG_CONFIGURE		1
 #define MSG_CREATE_MTC		2
 #define MSG_CREATE_PTC		3
 #define MSG_KILL_PROCESS	4
@@ -42,8 +41,6 @@
 
 /* Messages from HC to MC (up) */
 
-#define MSG_CONFIGURE_ACK	2
-#define MSG_CONFIGURE_NAK	3
 #define MSG_CREATE_NAK		4
 #define MSG_HC_READY		5
 
@@ -127,5 +124,14 @@
 /* Messages from HC or TC to MC (up) */
 
 #define MSG_DEBUG_RETURN_VALUE	100
+
+/* Messages from MC to HC or MTC (down) */
+
+#define MSG_CONFIGURE		200
+
+/* Messages from HC or MTC to MC (up) */
+
+#define MSG_CONFIGURE_ACK	200
+#define MSG_CONFIGURE_NAK	201
 
 #endif

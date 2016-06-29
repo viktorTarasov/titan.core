@@ -688,20 +688,37 @@ void MainController::configure_host(host_struct *host, boolean should_notify)
         host->hostname);
     }
     send_configure(host, config_str);
-    send_debug_setup(host);
+    if (mc_state != MC_RECONFIGURING) {
+      send_debug_setup(host);
+    }
+  }
+}
+
+void MainController::configure_mtc()
+{
+  if (config_str == NULL) {
+    fatal_error("MainController::configure_mtc: no config file");
+  }
+  if (mtc->tc_state != TC_IDLE) {
+    error("MainController::configure_mtc(): MTC is in wrong state.");
+  }
+  else {
+    mtc->tc_state = MTC_CONFIGURING;
+    send_configure_mtc(config_str);
   }
 }
 
 void MainController::check_all_hc_configured()
 {
+  bool reconf = mc_state == MC_RECONFIGURING;
   if (is_hc_in_state(HC_CONFIGURING) ||
     is_hc_in_state(HC_CONFIGURING_OVERLOADED)) return;
   if (is_hc_in_state(HC_IDLE)) {
     error("There were errors during configuring HCs.");
-    mc_state = MC_HC_CONNECTED;
+    mc_state = reconf ? MC_READY : MC_HC_CONNECTED;
   } else if (is_hc_in_state(HC_ACTIVE) || is_hc_in_state(HC_OVERLOADED)) {
     notify("Configuration file was processed on all HCs.");
-    mc_state = MC_ACTIVE;
+    mc_state = reconf ? MC_READY : MC_ACTIVE;
   } else {
     error("There is no HC connection after processing the configuration "
       "file.");
@@ -2782,6 +2799,7 @@ void MainController::handle_hc_data(host_struct *hc, boolean recv_from_socket)
       if (all_hc_in_state(HC_DOWN)) mc_state = MC_LISTENING;
       break;
     case MC_CONFIGURING:
+    case MC_RECONFIGURING:
       check_all_hc_configured();
       break;
     case MC_ACTIVE:
@@ -2900,6 +2918,12 @@ void MainController::handle_tc_data(component_struct *tc,
               break;
             case MSG_MTC_READY:
               process_mtc_ready();
+              break;
+            case MSG_CONFIGURE_ACK:
+              process_configure_ack_mtc();
+              break;
+            case MSG_CONFIGURE_NAK:
+              process_configure_nak_mtc();
               break;
             default:
               error("Invalid message type (%d) was received "
@@ -3538,6 +3562,15 @@ void MainController::send_exit_mtc()
   send_message(mtc->tc_fd, text_buf);
 }
 
+void MainController::send_configure_mtc(const char* config_file)
+{
+  Text_Buf text_buf;
+  text_buf.push_int(MSG_CONFIGURE);
+  text_buf.push_string(config_file);
+  send_message(mtc->tc_fd, text_buf);
+}
+
+
 void MainController::send_cancel_done_ptc(component_struct *tc,
   component component_reference)
 {
@@ -3840,7 +3873,8 @@ void MainController::process_configure_ack(host_struct *hc)
       "received.");
     return;
   }
-  if (mc_state == MC_CONFIGURING) check_all_hc_configured();
+  if (mc_state == MC_CONFIGURING || mc_state == MC_RECONFIGURING)
+    check_all_hc_configured();
   else notify("Host %s was configured successfully.", hc->hostname);
   status_change();
 }
@@ -3857,7 +3891,8 @@ void MainController::process_configure_nak(host_struct *hc)
       "received.");
     return;
   }
-  if (mc_state == MC_CONFIGURING) check_all_hc_configured();
+  if (mc_state == MC_CONFIGURING || mc_state == MC_RECONFIGURING)
+    check_all_hc_configured();
   else notify("Processing of configuration file failed on host %s.",
     hc->hostname);
   status_change();
@@ -5766,6 +5801,26 @@ void MainController::process_mtc_ready()
   status_change();
 }
 
+void MainController::process_configure_ack_mtc()
+{
+  if (mtc->tc_state != MTC_CONFIGURING) {
+    send_error_str(mtc->tc_fd, "Unexpected message CONFIGURE_ACK was received.");
+    return;
+  }
+  mtc->tc_state = TC_IDLE;
+  notify("Configuration file was processed on the MTC.");
+}
+
+void MainController::process_configure_nak_mtc()
+{
+  if (mtc->tc_state != MTC_CONFIGURING) {
+    send_error_str(mtc->tc_fd, "Unexpected message CONFIGURE_NAK was received.");
+    return;
+  }
+  mtc->tc_state = TC_IDLE;
+  notify("Processing of configuration file failed on the MTC.");
+}
+
 void MainController::process_stopped(component_struct *tc, int message_end)
 {
   switch (tc->tc_state) {
@@ -6049,12 +6104,20 @@ void MainController::destroy_host_groups()
 void MainController::set_kill_timer(double timer_val)
 {
   lock();
-  if (mc_state != MC_INACTIVE)
+  switch (mc_state) {
+  case MC_INACTIVE:
+  case MC_LISTENING:
+  case MC_HC_CONNECTED:
+  case MC_RECONFIGURING:
+    if (timer_val < 0.0)
+      error("MainController::set_kill_timer: setting a negative kill timer "
+        "value.");
+    else kill_timer = timer_val;
+    break;
+  default:
     error("MainController::set_kill_timer: called in wrong state.");
-  else if (timer_val < 0.0)
-    error("MainController::set_kill_timer: setting a negative kill timer "
-      "value.");
-  else kill_timer = timer_val;
+    break;
+  }
   unlock();
 }
 
@@ -6309,6 +6372,8 @@ void MainController::configure(const char *config_file)
   case MC_LISTENING_CONFIGURED:
     mc_state = MC_LISTENING_CONFIGURED;
     break;
+  case MC_RECONFIGURING:
+    break;
   default:
     error("MainController::configure: called in wrong state.");
     unlock();
@@ -6316,12 +6381,33 @@ void MainController::configure(const char *config_file)
   }
   Free(config_str);
   config_str = mcopystr(config_file);
-  if(mc_state == MC_CONFIGURING) {
+  if (mc_state == MC_CONFIGURING || mc_state == MC_RECONFIGURING) {
     notify("Downloading configuration file to all HCs.");
     for (int i = 0; i < n_hosts; i++) configure_host(hosts[i], FALSE);
   }
+  if (mc_state == MC_RECONFIGURING) {
+    notify("Downloading configuration file to the MTC.");
+    configure_mtc();
+  }
   status_change();
   unlock();
+}
+
+bool MainController::start_reconfiguring()
+{
+  switch (mc_state) {
+  case MC_READY:
+    mc_state = MC_RECONFIGURING;
+    return true;
+  case MC_LISTENING:
+  case MC_HC_CONNECTED:
+    return true;
+  default:
+    lock();
+    error("MainController::start_reconfiguring: called in wrong state.");
+    unlock();
+    return false;
+  }
 }
 
 void MainController::create_mtc(int host_index)
@@ -6415,7 +6501,7 @@ void MainController::create_mtc(int host_index)
 void MainController::exit_mtc()
 {
   lock();
-  if (mc_state != MC_READY) {
+  if (mc_state != MC_READY && mc_state != MC_RECONFIGURING) {
     error("MainController::exit_mtc: called in wrong state.");
     unlock();
     return;

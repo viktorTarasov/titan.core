@@ -182,7 +182,7 @@ private:
   /** @name Handlers of various messages
   *   @{
   */
-  static void process_configure(int msg_end);
+  static void process_configure(int msg_end, bool to_mtc);
   static void process_create_mtc();
   static void process_create_ptc();
   static void process_kill_process();
