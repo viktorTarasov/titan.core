@@ -40,7 +40,7 @@ CPPFLAGS_RT2 := $(CPPFLAGS) -I$(ABS_SRC)/../../core2 -DTITAN_RUNTIME_2
 CXXFLAGS += -Werror
 
 LDFLAGS_ORIG	     := $(LDFLAGS)
-LDFLAGS              += $(LDFLAGS_ORIG) -g -L$(ABS_SRC)/../../core  -Wl,-soname,$(SHARED_LIB).$(MAJOR)              -o $(SHARED_LIB).$(MAJOR).$(MINOR)
+LDFLAGS              += -g -L$(ABS_SRC)/../../core  -Wl,-soname,$(SHARED_LIB).$(MAJOR)				    -o $(SHARED_LIB).$(MAJOR).$(MINOR)
 LDFLAGS_RT2          += $(LDFLAGS_ORIG) -g -L$(ABS_SRC)/../../core2 -Wl,-soname,$(SHARED_LIB_RT2).$(MAJOR)          -o $(SHARED_LIB_RT2).$(MAJOR).$(MINOR)
 LDFLAGS_PARALLEL     += $(LDFLAGS_ORIG) -g -L$(ABS_SRC)/../../core  -Wl,-soname,$(SHARED_LIB_PARALLEL).$(MAJOR)     -o $(SHARED_LIB_PARALLEL).$(MAJOR).$(MINOR)
 LDFLAGS_PARALLEL_RT2 += $(LDFLAGS_ORIG) -g -L$(ABS_SRC)/../../core2 -Wl,-soname,$(SHARED_LIB_PARALLEL_RT2).$(MAJOR) -o $(SHARED_LIB_PARALLEL_RT2).$(MAJOR).$(MINOR)
