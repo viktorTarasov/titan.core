@@ -39,10 +39,11 @@ CPPFLAGS_RT2 := $(CPPFLAGS) -I$(ABS_SRC)/../../core2 -DTITAN_RUNTIME_2
 
 CXXFLAGS += -Werror
 
-LDFLAGS              += -g -L$(ABS_SRC)/../../core  -Wl,-soname,$(SHARED_LIB).$(MAJOR)              -o $(SHARED_LIB).$(MAJOR).$(MINOR)
-LDFLAGS_RT2          += -g -L$(ABS_SRC)/../../core2 -Wl,-soname,$(SHARED_LIB_RT2).$(MAJOR)          -o $(SHARED_LIB_RT2).$(MAJOR).$(MINOR)
-LDFLAGS_PARALLEL     += -g -L$(ABS_SRC)/../../core  -Wl,-soname,$(SHARED_LIB_PARALLEL).$(MAJOR)     -o $(SHARED_LIB_PARALLEL).$(MAJOR).$(MINOR)
-LDFLAGS_PARALLEL_RT2 += -g -L$(ABS_SRC)/../../core2 -Wl,-soname,$(SHARED_LIB_PARALLEL_RT2).$(MAJOR) -o $(SHARED_LIB_PARALLEL_RT2).$(MAJOR).$(MINOR)
+LDFLAGS_ORIG	     := $(LDFLAGS)
+LDFLAGS              += -g -L$(ABS_SRC)/../../core  -Wl,-soname,$(SHARED_LIB).$(MAJOR) 				    -o $(SHARED_LIB).$(MAJOR).$(MINOR)
+LDFLAGS_RT2          += $(LDFLAGS_ORIG) -g -L$(ABS_SRC)/../../core2 -Wl,-soname,$(SHARED_LIB_RT2).$(MAJOR)          -o $(SHARED_LIB_RT2).$(MAJOR).$(MINOR)
+LDFLAGS_PARALLEL     += $(LDFLAGS_ORIG) -g -L$(ABS_SRC)/../../core  -Wl,-soname,$(SHARED_LIB_PARALLEL).$(MAJOR)     -o $(SHARED_LIB_PARALLEL).$(MAJOR).$(MINOR)
+LDFLAGS_PARALLEL_RT2 += $(LDFLAGS_ORIG) -g -L$(ABS_SRC)/../../core2 -Wl,-soname,$(SHARED_LIB_PARALLEL_RT2).$(MAJOR) -o $(SHARED_LIB_PARALLEL_RT2).$(MAJOR).$(MINOR)
 
 LIBS              := -lttcn3-dynamic
 LIBS_RT2          := -lttcn3-rt2-dynamic
