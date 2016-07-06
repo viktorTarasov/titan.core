@@ -4591,7 +4591,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           , sdef->elements[i].name, sdef->elements[i].dispname);
       }
       src = mputprintf(src,
-        "if (!%s_found) {\n"
+        "  if (!%s_found) {\n"
         , sdef->elements[i].name);
       if (sdef->elements[i].jsonDefaultValue) {
         src = mputprintf(src,
