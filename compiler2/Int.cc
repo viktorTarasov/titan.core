@@ -314,7 +314,6 @@ int_val_t int_val_t::operator*(const int_val_t& right) const
         BIGNUM *left_bn = to_openssl();
         BIGNUM *right_bn = right.to_openssl();
         BN_CTX *ctx = BN_CTX_new();
-        BN_CTX_init(ctx);
         BN_mul(left_bn, left_bn, right_bn, ctx);
         BN_CTX_free(ctx);
         BN_free(right_bn);
@@ -328,7 +327,6 @@ int_val_t int_val_t::operator*(const int_val_t& right) const
     } else {
       BIGNUM *this_bn = to_openssl();
       BN_CTX *ctx = BN_CTX_new();
-      BN_CTX_init(ctx);
       BN_mul(this_bn, this_bn, right.get_val_openssl(), ctx);
       BN_CTX_free(ctx);
       return int_val_t(this_bn);
@@ -337,7 +335,6 @@ int_val_t int_val_t::operator*(const int_val_t& right) const
     BIGNUM *result = BN_new();
     BIGNUM *right_bn;
     BN_CTX *ctx = BN_CTX_new();
-    BN_CTX_init(ctx);
     right_bn = right.native_flag ? right.to_openssl()
       : right.get_val_openssl();
     BN_mul(result, val.openssl, right_bn, ctx);
@@ -359,7 +356,6 @@ int_val_t int_val_t::operator/(const int_val_t& right) const
     } else {
       BIGNUM *left_bn = to_openssl();
       BN_CTX *ctx = BN_CTX_new();
-      BN_CTX_init(ctx);
       BN_div(left_bn, NULL, left_bn, right.get_val_openssl(), ctx);
       BN_CTX_free(ctx);
       if (BN_num_bits(left_bn) <= (int)sizeof(long long) * 8 - 1) {
@@ -376,7 +372,6 @@ int_val_t int_val_t::operator/(const int_val_t& right) const
     BIGNUM *result = BN_new();
     BIGNUM *right_bn;
     BN_CTX *ctx = BN_CTX_new();
-    BN_CTX_init(ctx);
     right_bn = right.is_native() ? right.to_openssl() :
       right.get_val_openssl();
     BN_div(result, NULL, val.openssl, right_bn, ctx);

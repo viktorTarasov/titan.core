@@ -395,7 +395,6 @@ INTEGER INTEGER::operator*(const INTEGER& other_value) const
         BIGNUM *this_int = to_openssl(val.native);
         BIGNUM *other_value_int = to_openssl(other_value.val.native);
         BN_CTX *ctx = BN_CTX_new();
-        BN_CTX_init(ctx);
         BN_mul(this_int, this_int, other_value_int, ctx);
         BN_CTX_free(ctx);
         BN_free(other_value_int);
@@ -409,7 +408,6 @@ INTEGER INTEGER::operator*(const INTEGER& other_value) const
     } else {
       BIGNUM *this_int = to_openssl(val.native);
       BN_CTX *ctx = BN_CTX_new();
-      BN_CTX_init(ctx);
       BN_mul(this_int, this_int, other_value.val.openssl, ctx);
       BN_CTX_free(ctx);
       return INTEGER(this_int);
@@ -418,7 +416,6 @@ INTEGER INTEGER::operator*(const INTEGER& other_value) const
     BIGNUM *result = BN_new();
     BIGNUM *other_value_int = NULL;
     BN_CTX *ctx = BN_CTX_new();
-    BN_CTX_init(ctx);
     other_value_int = other_value.native_flag
       ? to_openssl(other_value.val.native) : other_value.val.openssl;
     BN_mul(result, val.openssl, other_value_int, ctx);
@@ -447,7 +444,6 @@ INTEGER INTEGER::operator/(const INTEGER& other_value) const
     } else {
       BIGNUM *this_int = to_openssl(val.native);
       BN_CTX *ctx = BN_CTX_new();
-      BN_CTX_init(ctx);
       BN_div(this_int, NULL, this_int, other_value.val.openssl, ctx);
       BN_CTX_free(ctx);
       if (BN_num_bits(this_int) <= (int)sizeof(int) * 8 - 1) {
@@ -464,7 +460,6 @@ INTEGER INTEGER::operator/(const INTEGER& other_value) const
     BIGNUM *result = BN_new();
     BIGNUM *other_value_int = NULL;
     BN_CTX *ctx = BN_CTX_new();
-    BN_CTX_init(ctx);
     other_value_int = other_value.native_flag
       ? to_openssl(other_value.val.native) : other_value.val.openssl;
     BN_div(result, NULL, val.openssl, other_value_int, ctx);
@@ -597,23 +592,25 @@ long long int INTEGER::get_long_long_val() const
 {
   must_bound("Using the value of an unbound integer variable.");
   if (likely(native_flag)) return val.native;
-  size_t slot_size = sizeof(BN_ULONG);
   bool is_negative = BN_is_negative(val.openssl);
   long long int ret_val = 0;
-  if (unlikely(val.openssl->top == 0)) return 0;
+  if (unlikely(BN_is_zero(val.openssl))) return 0;
   // It feels so bad accessing a BIGNUM directly, but faster than string
   // conversion...
-  else if (likely(val.openssl->top == 1))
-    return !is_negative ? val.openssl->d[0] : -val.openssl->d[0];
-  ret_val = val.openssl->d[val.openssl->top - 1];
-  // From now, shift by 8.
-  for (int i = val.openssl->top - 2; i >= 0; i--) {
-    for (int j = slot_size - 1; j >= 0; j--) {
-      unsigned char tmp = (val.openssl->d[i] >> 8 * j) & 0xff;
-      ret_val <<= 8;
-      ret_val += tmp;
-    }
+  // I know, I had to fix this... Bence
+  if (BN_num_bytes(val.openssl) <= sizeof(BN_ULONG)) {
+    return !is_negative ? BN_get_word(val.openssl) : -BN_get_word(val.openssl);
   }
+  
+  unsigned num_bytes = BN_num_bytes(val.openssl);
+  unsigned char* tmp = (unsigned char*)Malloc(num_bytes * sizeof(unsigned char));
+  BN_bn2bin(val.openssl, tmp);
+  ret_val = tmp[0] & 0xff;
+  for (int i = 1; i < num_bytes; i++) {
+    ret_val <<= 8;
+    ret_val += tmp[i] & 0xff;
+  }
+  Free(tmp);
   return !is_negative ? ret_val : -ret_val;
 }
 
@@ -1250,14 +1247,14 @@ int INTEGER::RAW_encode_openssl(const TTCN_Typedescriptor_t& p_td,
   int val_bits = 0, len_bits = 0; // only for IntX
   BIGNUM *D = BN_new();
   BN_copy(D, val.openssl);
-  boolean neg_sgbit = (D->neg) && (p_td.raw->comp == SG_SG_BIT);
+  boolean neg_sgbit = (BN_is_negative(D)) && (p_td.raw->comp == SG_SG_BIT);
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound value.");
     BN_clear(D);
     neg_sgbit = FALSE;
   }
-  if ((D->neg) && (p_td.raw->comp == SG_NO)) {
+  if ((BN_is_negative(D)) && (p_td.raw->comp == SG_NO)) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_SIGN_ERR,
       "Unsigned encoding of a negative number: %s", p_td.name);
     BN_set_negative(D, 0);
@@ -1307,12 +1304,17 @@ int INTEGER::RAW_encode_openssl(const TTCN_Typedescriptor_t& p_td,
   } else {
     bc = myleaf.body.leaf.data_array;
   }
-  boolean twos_compl = (D->neg) && !neg_sgbit;
+  boolean twos_compl = (BN_is_negative(D)) && !neg_sgbit;
   // Conversion to 2's complement.
   if (twos_compl) {
     BN_set_negative(D, 0);
-    for (int a = 0; a < D->dmax; a++) D->d[a] = ~D->d[a];
+    unsigned num_bytes = BN_num_bytes(D);
+    unsigned char* tmp = (unsigned char*)Malloc(num_bytes * sizeof(unsigned char));
+    BN_bn2bin(D, tmp);
+    for (int a = 0; a < num_bytes; a++) tmp[a] = ~tmp[a];
+    BN_bin2bn(tmp, num_bytes, D);
     BN_add_word(D, 1);
+    Free(tmp);
   }
   if (p_td.raw->fieldlength == RAW_INTX) {
     int i = 0;
@@ -1320,13 +1322,17 @@ int INTEGER::RAW_encode_openssl(const TTCN_Typedescriptor_t& p_td,
     // of the value, too
     val_bits = length * 8 - len_bits;
     // first, encode the value
+    unsigned num_bytes = BN_num_bytes(D);
+    unsigned char* tmp = (unsigned char*)Malloc(num_bytes * sizeof(unsigned char));
+    BN_bn2bin(D, tmp);
     do {
-      bc[i] = (D->top ? D->d[0] : (twos_compl ? 0xFF : 0)) & INTX_MASKS[val_bits > 8 ? 8 : val_bits];
+      bc[i] = (num_bytes-i > 0 ? tmp[num_bytes - (i + 1)] : (twos_compl ? 0xFF : 0)) & INTX_MASKS[val_bits > 8 ? 8 : val_bits];
       ++i;
-      BN_rshift(D, D, 8);
       val_bits -= 8;
     }
     while (val_bits > 0);
+    Free(tmp);
+    BN_free(D);
     if (neg_sgbit) {
       // the sign bit is the first bit after the length
       unsigned char mask = 0x80 >> len_bits % 8;
@@ -1364,15 +1370,17 @@ int INTEGER::RAW_encode_openssl(const TTCN_Typedescriptor_t& p_td,
   }
   else {
     int num_bytes = BN_num_bytes(D);
+    unsigned char* tmp = (unsigned char*)Malloc(num_bytes * sizeof(unsigned char));
+    BN_bn2bin(D, tmp);
     for (int a = 0; a < length; a++) {
       if (twos_compl && num_bytes - 1 < a) bc[a] = 0xff;
-      else bc[a] = (D->top ? D->d[0] : 0) & 0xff;
-      BN_rshift(D, D, 8);
+      else bc[a] = (num_bytes - a > 0 ? tmp[num_bytes - (a + 1)] : 0) & 0xff;
     }
     if (neg_sgbit) {
       unsigned char mask = 0x01 << (p_td.raw->fieldlength - 1) % 8;
       bc[length - 1] |= mask;
     }
+    Free(tmp);
     BN_free(D);
     myleaf.length = p_td.raw->fieldlength;
   }
@@ -1557,7 +1565,7 @@ int INTEGER::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
         }
         else {
           native_flag = TRUE;
-          val.native = BN_is_negative(D) ? -D->d[0] : D->d[0];
+          val.native = BN_is_negative(D) ? -BN_get_word(D) : BN_get_word(D);
           BN_free(D);
         }
         Free(data);
@@ -1682,7 +1690,7 @@ int INTEGER::get_nof_digits()
     BIGNUM *x = BN_new();
     BN_copy(x, val.openssl);
     if (BN_is_zero(x)) return 1;
-    x->neg = 0;
+    BN_set_negative(x, 1);
     while (!BN_is_zero(x)) {
       ++digits;
       BN_div_word(x, 10);

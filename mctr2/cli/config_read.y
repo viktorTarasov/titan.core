@@ -402,7 +402,7 @@ IntegerValue:
 	{
 	  $$ = BN_new();
     BN_CTX *ctx = BN_CTX_new();
-    BN_CTX_init(ctx);
+    //BN_CTX_init(ctx);
     BN_mul($$, $1, $3, ctx);
     BN_CTX_free(ctx);
     BN_free($1);
@@ -418,7 +418,7 @@ IntegerValue:
       $$ = BN_0;
     } else {
       BN_CTX *ctx = BN_CTX_new();
-      BN_CTX_init(ctx);
+      //BN_CTX_init(ctx);
       BN_div($$, NULL, $1, $3, ctx);
       BN_CTX_free(ctx);
       BN_free(BN_0);

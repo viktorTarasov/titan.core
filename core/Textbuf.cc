@@ -126,19 +126,24 @@ void Text_Buf::push_int(const int_val_t& value)
     unsigned num_bytes = (num_bits / 7)+1;
     Reallocate(buf_len + num_bytes);
     unsigned char *buf = (unsigned char *)data_ptr + buf_begin + buf_len;
+    // Alloc once, free once
+    unsigned char* buf2 = (unsigned char*)Malloc(BN_num_bytes(D) * sizeof(unsigned char));
     for (unsigned i = num_bytes - 1; ; i--) {
+      BN_bn2bin(D, buf2); // TODO: query once and then get the 7 loads
+      unsigned temp_num_bytes = BN_num_bytes(D);
       // Seven bits at a time, except the first byte has only 6 payload bits
       if (i > 0) {
-        buf[i] = D->d[0] & 0x7f;
+        buf[i] = buf2[temp_num_bytes-1] & 0x7f;
         if (!BN_rshift(D, D, 7)) return;
       } else {
-        buf[i] = (D->top ? D->d[0] : 0) & 0x3f;
+          buf[i] = (BN_is_zero(D) ? 0 : buf2[temp_num_bytes-1]) & 0x3f;
       }
       if (i < num_bytes - 1) buf[i] |= 0x80;
       if (i == 0) break;
     }
     if (BN_is_negative(D)) buf[0] |= 0x40; // Put in the sign bit
     BN_free(D);
+    Free(buf2);
     buf_len += num_bytes;
   }
 }
@@ -186,7 +191,8 @@ boolean Text_Buf::safe_pull_int(int_val_t& value)
     if (BN_num_bits(D) > (RInt)sizeof(RInt) * 8 - 1) {
       value = int_val_t(D);
     } else {
-      value = int_val_t(neg ? -D->d[0] : D->d[0]);
+      BN_ULONG num = BN_get_word(D); // BN_ULONG is unsigned long
+      value = int_val_t(neg ? -num : num);
       BN_free(D);
     }
   } else {

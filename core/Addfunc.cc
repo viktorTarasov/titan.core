@@ -461,10 +461,11 @@ OCTETSTRING int2oct(const INTEGER& value, int length)
         "does not fit in %d octet%s.", (const char *)value_str, length,
         length > 1 ? "s" : "");
     } else {
+      unsigned char* tmp = (unsigned char*)Malloc(bytes * sizeof(unsigned char));
+      BN_bn2bin(value_tmp, tmp);
       for (int i = length - 1; i >= 0; i--) {
-        if (value_tmp->top) {
-          octets_ptr[i] = value_tmp->d[0] & 0xff;
-          BN_rshift(value_tmp, value_tmp, 8);
+        if (bytes-length+i >= 0) {
+          octets_ptr[i] = tmp[bytes-length+i] & 0xff;
         }
         else { // we used up all of the bignum; zero the beginning and quit
           memset(octets_ptr, 0, i+1);
@@ -472,6 +473,7 @@ OCTETSTRING int2oct(const INTEGER& value, int length)
         }
       }
       BN_free(value_tmp);
+      Free(tmp);
       return ret_val;
     }
   }
