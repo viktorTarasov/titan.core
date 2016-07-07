@@ -14,7 +14,7 @@
 #ifndef RInt_HH
 #define RInt_HH
 
-#include <openssl/bn.h>
+#include <openssl/ossl_typ.h>
 
 typedef int RInt;
 
