@@ -14,7 +14,8 @@
 #ifndef RInt_HH
 #define RInt_HH
 
-#include <openssl/ossl_typ.h>
+struct bignum_st;
+typedef bignum_st BIGNUM;
 
 typedef int RInt;
 
