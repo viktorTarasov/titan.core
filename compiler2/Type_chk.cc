@@ -5624,7 +5624,7 @@ bool Type::chk_this_template(Template *t, namedbool is_modified, namedbool,
   case T_UTCTIME:
   case T_GENERALIZEDTIME:
   case T_OBJECTDESCRIPTOR:
-    t_last->chk_this_template_Str(t);
+    self_ref = t_last->chk_this_template_Str(t, implicit_omit, lhs);
     break;
   case T_INT:
   case T_INT_A:
@@ -5676,8 +5676,10 @@ bool Type::chk_this_template(Template *t, namedbool is_modified, namedbool,
   return self_ref;
 }
 
-void Type::chk_this_template_Str(Template *t)
+bool Type::chk_this_template_Str(Template *t, namedbool implicit_omit,
+                                 Common::Assignment *lhs)
 {
+  bool self_ref = false;
   typetype_t tt = get_typetype_ttcn3(typetype);
   bool report_error = false;
   switch (t->get_templatetype()) {
@@ -5737,6 +5739,48 @@ void Type::chk_this_template_Str(Template *t)
       if (!pstr->has_refs()) pstr->chk_pattern();
     } else report_error = true;
     break;
+  case Ttcn::Template::DECODE_MATCH:
+    {
+      Error_Context cntxt(t, "In decoding target");
+      TemplateInstance* target = t->get_decode_target();
+      target->get_Template()->set_lowerid_to_ref();
+      Type* target_type = target->get_expr_governor(EXPECTED_TEMPLATE);
+      if (target_type == NULL) {
+        target->error("Type of template instance cannot be determined");
+        break;
+      }
+      if (target->get_Type() != NULL) {
+        target_type = target_type->get_type_refd();
+      }
+      self_ref = target_type->chk_this_template_generic(
+        target->get_Template(), (target->get_DerivedRef() != NULL) ?
+        INCOMPLETE_ALLOWED : INCOMPLETE_NOT_ALLOWED,
+        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, implicit_omit, lhs);
+      target_type->get_type_refd_last()->chk_coding(false);
+    }
+    {
+      Value* str_enc = t->get_string_encoding();
+      if (str_enc != NULL) {
+        if (tt != T_USTR) {
+          str_enc->error("The encoding format parameter is only available to "
+            "universal charstring templates");
+          break;
+        }
+        Error_Context cntxt(t, "In encoding format");
+        str_enc->set_lowerid_to_ref();
+        get_pooltype(T_CSTR)->chk_this_value(str_enc, lhs, EXPECTED_DYNAMIC_VALUE,
+          INCOMPLETE_NOT_ALLOWED, OMIT_NOT_ALLOWED, NO_SUB_CHK);
+        if (!str_enc->is_unfoldable()) {
+          string enc_name = str_enc->get_val_str();
+          if (enc_name != "UTF-8" && enc_name != "UTF-16" && enc_name != "UTF-32"
+              && enc_name != "UTF-16LE" && enc_name != "UTF-16BE"
+              && enc_name != "UTF-32LE" && enc_name != "UTF-32BE") {
+            str_enc->error("'%s' is not a valid encoding format", enc_name.c_str());
+          }
+        }
+      }
+    }
+    break;
   default:
     report_error = true;
     break;
@@ -5745,6 +5789,7 @@ void Type::chk_this_template_Str(Template *t)
     t->error("%s cannot be used for type `%s'", t->get_templatetype_str(),
       get_typename().c_str());
   }
+  return self_ref;
 }
 
 void Type::chk_range_boundary_infinity(Value *v, bool is_upper)

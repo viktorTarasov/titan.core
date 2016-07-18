@@ -535,6 +535,11 @@ static const string anyname("anytype");
   struct {
     visibility_t visibility;
   } visbilitytype;
+
+  struct {
+    Value* string_encoding;
+    TemplateInstance* target_template;
+  } decode_match;
 }
 
 /* Tokens of TTCN-3 */
@@ -604,6 +609,7 @@ static const string anyname("anytype");
 %token ContinueKeyword
 %token ControlKeyword
 %token CreateKeyword
+%token DecodedMatchKeyword
 %token DeactivateKeyword
 %token DefaultKeyword
 %token DerefersKeyword
@@ -1047,6 +1053,7 @@ static const string anyname("anytype");
 %type <float_val> FloatOrSpecialFloatValue
 %type <erroneous_indicator> ErroneousIndicator
 %type <imptype> ImportSpec ImportElement
+%type <decode_match> DecodedContentMatch
 
 /*********************************************************************
  * Destructors
@@ -1737,6 +1744,14 @@ PortElementList
 }
 optRunsOnComprefOrSelf
 
+%destructor {
+  if ($$.string_encoding != NULL) {
+    delete $$.string_encoding;
+  }
+  delete $$.target_template;
+}
+DecodedContentMatch
+
 /*********************************************************************
  * Operator precedences (lowest first)
  *********************************************************************/
@@ -1756,12 +1771,12 @@ optRunsOnComprefOrSelf
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 26
+%expect 53
 
 %start GrammarRoot
 
 /*
-XXX Source of conflicts (26 S/R):
+XXX Source of conflicts (53 S/R):
 
 1.) 9 conflicts in one state
 The Expression after 'return' keyword is optional in ReturnStatement.
@@ -1769,7 +1784,7 @@ For 9 tokens the parser cannot decide whether the token is a part of
 the return expression (shift) or it is the beginning of the next statement
 (reduce).
 
-2.) 9 distinct states, each with one conflict caused by token '['
+2.) 10 distinct states, each with one conflict caused by token '['
 The local definitions in altsteps can be followed immediately by the guard
 expression. When the parser sees the '[' token it cannot decide whether it
 belongs to the local definition as array dimension or array subreference
@@ -1784,6 +1799,7 @@ The situations are the following:
 - var t v := ref.objid{...}.subref <here> [
 - var template t v <here> [
 - var t v := function(...)<subrefs> <here> [
+- var template t v := decmatch (...) ref <here> [
 
 3.) 1 conflict
 The sequence identifier.objid can be either the beginning of a module name
@@ -1799,6 +1815,13 @@ non-standard language extension.
 5.) 5 conflicts in in three states, related to named parameters
 
 6.) 1 Conflict due to pattern concatenation
+
+7.) 26 conflicts in one state
+In the DecodedContentMatch rule a SingleExpression encased in round brackets is
+followed by an in-line template. For 26 tokens (after the ')' ) the parser cannot
+decide whether the token is the beginning of the in-line template (shift) or
+the brackets are only part of the SingleExpression itself and the conflicting
+token is the next segment in the expression (reduce).
 
 Note that the parser implemented by bison always chooses to shift instead of
 reduce in case of conflicts.
@@ -3176,6 +3199,11 @@ TemplateBody: // 101 is a Template*
     $$->set_length_restriction($2.len_restr);
     $$->set_ifpresent($2.is_ifpresent);
   }
+| DecodedContentMatch
+  {
+    $$ = new Template($1.string_encoding, $1.target_template);
+    $$->set_location(infile, @$);
+  }
 ;
 
 SimpleSpec: // 102
@@ -3544,6 +3572,19 @@ SupersetMatch: // 135 is a Templates*
 
 PermutationMatch: // 137 is a Templates*
   PermutationKeyword ValueList { $$ = $2; }
+;
+
+DecodedContentMatch:
+  DecodedMatchKeyword '(' SingleExpression ')' InLineTemplate
+  {
+    $$.string_encoding = $3;
+    $$.target_template = $5;
+  }
+| DecodedMatchKeyword InLineTemplate
+  {
+    $$.string_encoding = NULL;
+    $$.target_template = $2;
+  }
 ;
 
 AnyValue: // 140

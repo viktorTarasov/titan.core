@@ -56,7 +56,7 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
     "bitstring", "boolean", "break",
     "call", "case", "catch", "char", "charstring", "check", "clear", "complement", "component", "connect",
     "const", "continue", "control", "create",
-    "deactivate", "default", "derefers", "disconnect", "display", "do", "done",
+    "decmatch", "deactivate", "default", "derefers", "disconnect", "display", "do", "done",
     "else", "encode", "enumerated", "error", "except", "exception", "execute", "extends", "extension",
     "external",
     "fail", "false", "float", "for", "friend", "from", "function",

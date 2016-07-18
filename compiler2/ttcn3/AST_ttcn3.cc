@@ -8119,6 +8119,9 @@ namespace Ttcn {
       } // next
 
       break; }
+    case Template::DECODE_MATCH:
+      chk_defpar_template(body->get_decode_target()->get_Template(), exp_val);
+      break;
     } // switch templatetype
 
   }

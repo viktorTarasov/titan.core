@@ -973,6 +973,7 @@ int Record_Of_Template::n_elem() const
   case STRING_PATTERN:
   case SUPERSET_MATCH:
   case SUBSET_MATCH:
+  case DECODE_MATCH:
     break;
   }
   TTCN_error("Performing n_elem() operation on an uninitialized/unsupported "
@@ -1719,6 +1720,7 @@ int Set_Of_Template::size_of(boolean is_size) const
   case UNINITIALIZED_TEMPLATE:
   case VALUE_RANGE:
   case STRING_PATTERN:
+  case DECODE_MATCH:
     TTCN_error("Performing %sof() operation on an uninitialized/unsupported "
                "template of type %s.", op_name, get_descriptor()->name);
   }
@@ -1745,6 +1747,7 @@ int Set_Of_Template::n_elem() const
   case VALUE_LIST:
   case VALUE_RANGE:
   case STRING_PATTERN:
+  case DECODE_MATCH:
     break;
   }
   TTCN_error("Performing n_elem() operation on an uninitialized/unsupported "

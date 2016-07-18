@@ -598,6 +598,7 @@ namespace Common {
     {"char2int__", "char2int", "char2int_"},
     {"char2oct__", "char2oct", "char2oct_"},
     {"component__", "component", "component_"},
+    {"decmatch__", "decmatch", "decmatch_"},
     {"decomp__", "decomp", "decomp_"},
     {"float2int__", "float2int", "float2int_"},
     {"float2str__", "float2str", "float2str_"},

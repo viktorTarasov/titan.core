@@ -390,6 +390,7 @@ const		RETURN(ConstKeyword);
 continue	RETURN(ContinueKeyword);
 control		RETURN(ControlKeyword);
 create		RETURN_DOT(CreateKeyword);
+decmatch	RETURN(DecodedMatchKeyword);
 deactivate	RETURN(DeactivateKeyword);
 default		RETURN(DefaultKeyword);
 derefers	RETURN(DerefersKeyword);

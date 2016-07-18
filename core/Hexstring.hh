@@ -199,6 +199,7 @@ public:
 };
 
 // hexstring template class
+struct decmatch_struct;
 
 class HEXSTRING_template : public Restricted_Length_Template {
 #ifdef __SUNPRO_CC
@@ -213,6 +214,7 @@ private:
       HEXSTRING_template *list_value;
     } value_list;
     hexstring_pattern_struct *pattern_value;
+    decmatch_struct* dec_match;
   };
 
   void copy_template(const HEXSTRING_template& other_value);
@@ -247,8 +249,10 @@ public:
 
   int lengthof() const;
 
-  void set_type(template_sel template_type, unsigned int list_length);
+  void set_type(template_sel template_type, unsigned int list_length = 0);
   HEXSTRING_template& list_item(unsigned int list_index);
+
+  void set_decmatch(Dec_Match_Interface* new_instance);
 
   void log() const;
   void log_match(const HEXSTRING& match_value, boolean legacy = FALSE) const;

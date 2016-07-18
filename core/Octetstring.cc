@@ -1538,6 +1538,19 @@ void OCTETSTRING_template::clean_up()
     else TTCN_error("Internal error: Invalid reference counter in an "
       "octetstring pattern.");
     break;
+  case DECODE_MATCH:
+    if (dec_match->ref_count > 1) {
+      dec_match->ref_count--;
+    }
+    else if (dec_match->ref_count == 1) {
+      delete dec_match->instance;
+      delete dec_match;
+    }
+    else {
+      TTCN_error("Internal error: Invalid reference counter in a "
+        "decoded content match.");
+    }
+    break;
   default:
     break;
   }
@@ -1566,6 +1579,10 @@ void OCTETSTRING_template::copy_template
   case STRING_PATTERN:
     pattern_value = other_value.pattern_value;
     pattern_value->ref_count++;
+    break;
+  case DECODE_MATCH:
+    dec_match = other_value.dec_match;
+    dec_match->ref_count++;
     break;
   default:
     TTCN_error("Copying an uninitialized/unsupported octetstring template.");
@@ -1817,6 +1834,14 @@ boolean OCTETSTRING_template::match(const OCTETSTRING& other_value,
     return template_selection == COMPLEMENTED_LIST;
   case STRING_PATTERN:
     return match_pattern(pattern_value, other_value.val_ptr);
+  case DECODE_MATCH: {
+    TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);
+    TTCN_EncDec::clear_error();
+    TTCN_Buffer buff(other_value);
+    boolean ret_val = dec_match->instance->match(buff);
+    TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL,TTCN_EncDec::EB_DEFAULT);
+    TTCN_EncDec::clear_error();
+    return ret_val; }
   default:
     TTCN_error("Matching an uninitialized/unsupported octetstring template.");
   }
@@ -1892,12 +1917,15 @@ int OCTETSTRING_template::lengthof() const
 void OCTETSTRING_template::set_type(template_sel template_type,
   unsigned int list_length)
 {
-  if (template_type != VALUE_LIST && template_type != COMPLEMENTED_LIST)
-    TTCN_error("Setting an invalid list type for an octetstring template.");
+  if (template_type != VALUE_LIST && template_type != COMPLEMENTED_LIST &&
+      template_type != DECODE_MATCH)
+    TTCN_error("Setting an invalid type for an octetstring template.");
   clean_up();
   set_selection(template_type);
-  value_list.n_values = list_length;
-  value_list.list_value = new OCTETSTRING_template[list_length];
+  if (template_type != DECODE_MATCH) {
+    value_list.n_values = list_length;
+    value_list.list_value = new OCTETSTRING_template[list_length];
+  }
 }
 
 OCTETSTRING_template& OCTETSTRING_template::list_item(unsigned int list_index)
@@ -1908,6 +1936,17 @@ OCTETSTRING_template& OCTETSTRING_template::list_item(unsigned int list_index)
   if (list_index >= value_list.n_values)
     TTCN_error("Index overflow in an octetstring value list template.");
   return value_list.list_value[list_index];
+}
+
+void OCTETSTRING_template::set_decmatch(Dec_Match_Interface* new_instance)
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Setting the decoded content matching mechanism of a non-decmatch "
+      "octetstring template.");
+  }
+  dec_match = new decmatch_struct;
+  dec_match->ref_count = 1;
+  dec_match->instance = new_instance;
 }
 
 void OCTETSTRING_template::log() const
@@ -1937,6 +1976,10 @@ void OCTETSTRING_template::log() const
       else TTCN_Logger::log_event_str("<unknown>");
     }
     TTCN_Logger::log_event_str("'O");
+    break;
+  case DECODE_MATCH:
+    TTCN_Logger::log_event_str("decmatch ");
+    dec_match->instance->log();
     break;
   default:
     log_generic();
@@ -2054,6 +2097,9 @@ Module_Param* OCTETSTRING_template::get_param(Module_Param_Name& param_name) con
       sizeof(unsigned short));
     mp = new Module_Param_Octetstring_Template(pattern_value->n_elements, val_cpy);
     break; }
+  case DECODE_MATCH:
+    mp->error("Referencing a decoded content matching template is not supported.");
+    break;
   default:
     break;
   }

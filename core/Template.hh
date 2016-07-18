@@ -47,7 +47,8 @@ enum template_sel {
   VALUE_RANGE = 6,
   STRING_PATTERN = 7,
   SUPERSET_MATCH = 8,
-  SUBSET_MATCH = 9
+  SUBSET_MATCH = 9,
+  DECODE_MATCH = 10
 };
 
 enum template_res {
