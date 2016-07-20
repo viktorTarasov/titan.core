@@ -123,7 +123,6 @@ void calculate_type_name_and_debug_functions_from_type(Type* p_type,
   else if (p_type_last->is_structured_type() ||
            p_type_last->get_typetype() == Type::T_ENUM_A ||
            p_type_last->get_typetype() == Type::T_ENUM_T ||
-           p_type_last->get_typetype() == Type::T_PORT ||
            p_type_last->get_typetype() == Type::T_SIGNATURE ||
            p_type_last->get_typetype() == Type::T_FUNCTION ||
            p_type_last->get_typetype() == Type::T_ALTSTEP ||
@@ -164,6 +163,9 @@ void calculate_type_name_and_debug_functions_from_type(Type* p_type,
     case Type::T_VIDEOTEXSTRING:
       // these ASN.1 string types are not converted right by Type::get_typetype_ttcn3()
       p_type_name = "universal charstring";
+      break;
+    case Type::T_PORT:
+      p_type_name = "port";
       break;
     case Type::T_UNRESTRICTEDSTRING:
     case Type::T_EMBEDDED_PDV:

@@ -2918,7 +2918,8 @@ namespace Ttcn {
       Def_Type* def = dynamic_cast<Def_Type*>(asss->get_ass_byIndex(i));
       if (def != NULL) {
         Type* t = def->get_Type();
-        if (!t->is_ref() && t->get_typetype() != Type::T_COMPONENT) {
+        if (!t->is_ref() && t->get_typetype() != Type::T_COMPONENT &&
+            t->get_typetype() != Type::T_PORT) {
           // don't generate code for subtypes
           if (t->get_typetype() != Type::T_SIGNATURE) {
             print_str = mputprintf(print_str, 
@@ -2927,30 +2928,26 @@ namespace Ttcn {
               "  }\n"
               , (print_str != NULL) ? "else " : ""
               , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
-            if (t->get_typetype() != Type::T_PORT) {
-              overwrite_str = mputprintf(overwrite_str,
-                "  %sif (!strcmp(p_var.type_name, \"%s\")) {\n"
-                "    ((%s*)p_var.value)->set_param(p_new_value);\n"
-                "  }\n"
-                , (overwrite_str != NULL) ? "else " : ""
-                , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
-            }
-          }
-          if (t->get_typetype() != Type::T_PORT) {
-            print_str = mputprintf(print_str,
-              "  %sif (!strcmp(p_var.type_name, \"%s template\")) {\n"
-              "    ((const %s_template*)ptr)->log();\n"
+            overwrite_str = mputprintf(overwrite_str,
+              "  %sif (!strcmp(p_var.type_name, \"%s\")) {\n"
+              "    ((%s*)p_var.value)->set_param(p_new_value);\n"
               "  }\n"
-              , (print_str != NULL) ? "else " : ""
+              , (overwrite_str != NULL) ? "else " : ""
               , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
-            if (t->get_typetype() != Type::T_SIGNATURE) {
-              overwrite_str = mputprintf(overwrite_str,
-                "  %sif (!strcmp(p_var.type_name, \"%s template\")) {\n"
-                "    ((%s_template*)p_var.value)->set_param(p_new_value);\n"
-                "  }\n"
-                , (overwrite_str != NULL) ? "else " : ""
-                , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
-            }
+          }
+          print_str = mputprintf(print_str,
+            "  %sif (!strcmp(p_var.type_name, \"%s template\")) {\n"
+            "    ((const %s_template*)ptr)->log();\n"
+            "  }\n"
+            , (print_str != NULL) ? "else " : ""
+            , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
+          if (t->get_typetype() != Type::T_SIGNATURE) {
+            overwrite_str = mputprintf(overwrite_str,
+              "  %sif (!strcmp(p_var.type_name, \"%s template\")) {\n"
+              "    ((%s_template*)p_var.value)->set_param(p_new_value);\n"
+              "  }\n"
+              , (overwrite_str != NULL) ? "else " : ""
+              , t->get_dispname().c_str(), t->get_genname_value(this).c_str());
           }
         }
       }

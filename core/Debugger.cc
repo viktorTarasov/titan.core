@@ -576,20 +576,25 @@ void TTCN3_Debugger::print_function_calls(const char* p_amount)
                function_calls.buffer.start == (function_calls.buffer.end + 1) %
                function_calls.buffer.size) ?
     function_calls.buffer.size : function_calls.buffer.end + 1;
+  bool invalid_arg = false;
   if (p_amount == NULL || strcmp(p_amount, "all") == 0) {
     amount = limit;
   }
   else if (is_numeric(p_amount)) {
     amount = strtol(p_amount, NULL, 10);
-    if (amount == 0 || amount > limit) {
-      print(DRET_NOTIFICATION, "Invalid number of function calls. Expected 1 - %d.",
-        limit);
-      return;
+    if (amount == 0) {
+      invalid_arg = true;
+    }
+    else if (amount > limit) {
+      amount = limit;
     }
   }
   else {
-    print(DRET_NOTIFICATION, "Argument 1 is invalid. Expected 'all' or integer "
-      "value (number of calls).");
+    invalid_arg = true;
+  }
+  if (invalid_arg) {
+    print(DRET_NOTIFICATION, "Argument 1 is invalid. Expected 'all' or non-zero "
+      "integer value (number of calls).");
     return;
   }
   for (int i = (function_calls.buffer.end - amount + function_calls.buffer.size + 1) %
@@ -1229,6 +1234,9 @@ CHARSTRING TTCN3_Debugger::print_base_var(const TTCN3_Debugger::variable_t& p_va
   }
   else if (!strcmp(p_var.type_name, "component template")) {
     ((const COMPONENT_template*)ptr)->log();
+  }
+  else if (!strcmp(p_var.type_name, "port")) {
+    ((const PORT*)ptr)->log(); // virtual
   }
   else if (!strcmp(p_var.type_name, "default")) {
     ((const DEFAULT*)ptr)->log();
