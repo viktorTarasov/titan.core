@@ -1799,8 +1799,6 @@ LoggerPlugin *LoggerPluginManager::find_plugin(const char *name)
 #undef new
 #endif
 
-inline void * operator new (size_t, void * p) throw() { return p ; }
-
 LoggerPluginManager::ActiveEvent::ActiveEvent(bool fake_event, event_destination_t dest)
 : event_()
 , event_str_(NULL)

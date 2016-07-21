@@ -598,11 +598,11 @@ long long int INTEGER::get_long_long_val() const
   // It feels so bad accessing a BIGNUM directly, but faster than string
   // conversion...
   // I know, I had to fix this... Bence
-  if (BN_num_bytes(val.openssl) <= sizeof(BN_ULONG)) {
+  if ((size_t)BN_num_bytes(val.openssl) <= sizeof(BN_ULONG)) {
     return !is_negative ? BN_get_word(val.openssl) : -BN_get_word(val.openssl);
   }
   
-  unsigned num_bytes = BN_num_bytes(val.openssl);
+  int num_bytes = BN_num_bytes(val.openssl);
   unsigned char* tmp = (unsigned char*)Malloc(num_bytes * sizeof(unsigned char));
   BN_bn2bin(val.openssl, tmp);
   ret_val = tmp[0] & 0xff;
@@ -1308,7 +1308,7 @@ int INTEGER::RAW_encode_openssl(const TTCN_Typedescriptor_t& p_td,
   // Conversion to 2's complement.
   if (twos_compl) {
     BN_set_negative(D, 0);
-    unsigned num_bytes = BN_num_bytes(D);
+    int num_bytes = BN_num_bytes(D);
     unsigned char* tmp = (unsigned char*)Malloc(num_bytes * sizeof(unsigned char));
     BN_bn2bin(D, tmp);
     for (int a = 0; a < num_bytes; a++) tmp[a] = ~tmp[a];

@@ -143,7 +143,7 @@ extern "C" {
 #if defined(__GNUC__) && __GNUC__ < 3
 #  define mprintf(f, args...) mprintf_dbg(__FILE__, __LINE__, f, ## args)
 #else
-#  define mprintf(f,...) mprintf_dbg(__FILE__, __LINE__, f, __VA_ARGS__)
+#  define mprintf(...) mprintf_dbg(__FILE__, __LINE__, __VA_ARGS__)
 #endif
 #endif
 

@@ -13,7 +13,6 @@
  ******************************************************************************/
 #include "dbgnew.hh"
 #include <stddef.h>
-#include <new>
 
 #undef new
 
@@ -51,6 +50,17 @@ void* operator new(size_t size, const char* file, int line)
 }
 
 void* operator new[](size_t size, const char* file, int line)
+{
+    if (size == 0) return &dummy;
+    else return Malloc_dbg(file, line, size);
+}
+
+void* operator new(size_t size, const std::nothrow_t&, const char* file, int line)
+{
+    return Malloc_dbg(file, line, size);
+}
+
+void* operator new[](size_t size, const std::nothrow_t&, const char* file, int line)
 {
     if (size == 0) return &dummy;
     else return Malloc_dbg(file, line, size);
