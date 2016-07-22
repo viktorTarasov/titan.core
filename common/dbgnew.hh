@@ -17,9 +17,9 @@
 #include "memory.h"
 #endif
 
-#ifdef MEMORY_DEBUG
-
 #include <new>
+
+#ifdef MEMORY_DEBUG
 
 class debug_new_counter_t
 {
