@@ -4240,23 +4240,25 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
       is_empty = false;
     }
   }
-  if (is_empty) {
-    // all of the record's fields are unused (-), set the record to unused
-    // to avoid unnecessary code generation
-    value->set_valuetype(Value::V_NOTUSED);
-  }
-  else if (!incomplete_allowed || implicit_omit) {
+  if (!incomplete_allowed || implicit_omit) {
     for (size_t i = 0; i < n_type_comps; i++) {
       const Identifier& id = get_comp_byIndex(i)->get_name();
       if (!comp_map.has_key(id.get_name())) {
-        if (get_comp_byIndex(i)->get_is_optional() && implicit_omit)
+        if (get_comp_byIndex(i)->get_is_optional() && implicit_omit) {
           value->add_se_comp(new NamedValue(new Identifier(id),
             new Value(Value::V_OMIT)));
+          is_empty = false;
+        }
         else if (!incomplete_allowed)
           value->error("Field `%s' is missing from record value",
                      id.get_dispname().c_str());
       }
     }
+  }
+  if (is_empty) {
+    // all of the record's fields are unused (-), set the record to unused
+    // to avoid unnecessary code generation
+    value->set_valuetype(Value::V_NOTUSED);
   }
   comp_map.clear();
   return self_ref;
@@ -4305,23 +4307,25 @@ bool Type::chk_this_value_Set_T(Value *value, Common::Assignment *lhs, expected_
       is_empty = false;
     }
   }
-  if (is_empty) {
-    // all of the set's fields are unused (-), set the set to unused to avoid
-    // unnecessary code generation
-    value->set_valuetype(Value::V_NOTUSED);
-  }
-  else if (!incomplete_allowed || implicit_omit) {
+  if (!incomplete_allowed || implicit_omit) {
     for (size_t i = 0; i < n_type_comps; i++) {
       const Identifier& id = get_comp_byIndex(i)->get_name();
       if(!comp_map.has_key(id.get_name())) {
-        if (get_comp_byIndex(i)->get_is_optional() && implicit_omit)
+        if (get_comp_byIndex(i)->get_is_optional() && implicit_omit) {
           value->add_se_comp(new NamedValue(new Identifier(id),
             new Value(Value::V_OMIT)));
+          is_empty = false;
+        }
         else if (!incomplete_allowed)
         value->error("Field `%s' is missing from set value %s",
                      id.get_dispname().c_str(), implicit_omit ? "yes" : "no");
       }
     }
+  }
+  if (is_empty) {
+    // all of the set's fields are unused (-), set the set to unused to avoid
+    // unnecessary code generation
+    value->set_valuetype(Value::V_NOTUSED);
   }
   comp_map.clear();
   return self_ref;
