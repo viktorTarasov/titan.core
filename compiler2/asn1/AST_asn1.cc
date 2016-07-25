@@ -647,6 +647,8 @@ namespace Asn {
         "  return TRUE;\n"
         "}\n", get_modid().get_ttcnname().c_str(), print_str,
         get_modid().get_ttcnname().c_str(), overwrite_str);
+      Free(print_str);
+      Free(overwrite_str);
     }
   }
 
