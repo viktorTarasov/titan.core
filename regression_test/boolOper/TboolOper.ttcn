@@ -366,6 +366,18 @@ testcase boolShortCircuit() runs on boolOper_comptype {
   setverdict(pass);
 }
 
+type record MyRecord {
+  integer a optional
+}
+
+// comparing an optional record field to 'omit' in a boolean variable assignment (bug 498430)
+testcase boolCompEqOmit() runs on boolOper_comptype {
+  var MyRecord myRecord := { a := omit };
+  var boolean b := myRecord.a == omit;
+  if (b == true) { setverdict(pass); }
+  else { setverdict(fail); }
+}
+
 control {
   const boolean cl_1:=true;
   var boolean vl_1;
@@ -381,6 +393,7 @@ control {
   execute(boolSubtypes());
   execute(boolIsvalue());
   execute(boolShortCircuit());
+  execute(boolCompEqOmit());
 }
 
 }
