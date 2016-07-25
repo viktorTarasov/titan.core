@@ -348,6 +348,8 @@ extern CHARSTRING operator>>=(const char *string_value,
 
 // charstring template class
 
+struct unichar_decmatch_struct;
+
 class CHARSTRING_template : public Restricted_Length_Template {
 
   friend class UNIVERSAL_CHARSTRING_template;
@@ -367,6 +369,7 @@ private:
       boolean regexp_init;
       regex_t posix_regexp;
     } pattern_value;
+    unichar_decmatch_struct* dec_match;
   };
 
   void copy_template(const CHARSTRING_template& other_value);
@@ -422,9 +425,11 @@ public:
 
   void set_type(template_sel template_type, unsigned int list_length = 0);
   CHARSTRING_template& list_item(unsigned int list_index);
-
+  
   void set_min(const CHARSTRING& min_value);
   void set_max(const CHARSTRING& max_value);
+  
+  void set_decmatch(Dec_Match_Interface* new_instance);
 
   void log() const;
   void log_match(const CHARSTRING& match_value, boolean legacy = FALSE) const;

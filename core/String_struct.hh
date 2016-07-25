@@ -22,6 +22,7 @@
 #include "Charstring.hh"
 #include "Universal_charstring.hh"
 #include "Encdec.hh"
+#include "CharCoding.hh"
 
 /** Type of the reference counters in all structures. */
 typedef unsigned int ref_count_t;
@@ -87,6 +88,21 @@ struct TTCN_Buffer::buffer_struct {
   ref_count_t ref_count;
   int unused_length_field; /**< placeholder only */
   unsigned char data_ptr[sizeof(int)];
+};
+
+/** Structure for storing a decoded content matching mechanism 
+  * (for bitstrings, hexstrings, octetstrings and charstrings) */
+struct decmatch_struct {
+  ref_count_t ref_count;
+  Dec_Match_Interface* instance;
+};
+
+/** Structure for storing a decoded content matching mechanism for universal
+  * charstrings (also contains the character coding method) */
+struct unichar_decmatch_struct {
+  ref_count_t ref_count;
+  Dec_Match_Interface* instance;
+  CharCoding::CharCodingType coding;
 };
 
 #endif

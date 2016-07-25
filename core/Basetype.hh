@@ -1087,4 +1087,17 @@ public:
   }
 };
 
+/** Interface/base class for decoded content matching 
+  *
+  * For every decmatch template the compiler generates a new class that inherits
+  * this one and implements its virtual functions. An instance of the new class
+  * is stored in the template object, which calls the appropriate virtual
+  * functions when the template object's match() or log() functions are called. */
+class Dec_Match_Interface {
+public:
+  virtual boolean match(TTCN_Buffer&) const = 0;
+  virtual void log() const = 0;
+  virtual ~Dec_Match_Interface() {}
+};
+
 #endif

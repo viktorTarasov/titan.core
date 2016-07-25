@@ -815,7 +815,8 @@ namespace Common {
     void chk_this_template_length_restriction(Template *t);
     bool chk_this_template(Template *t, namedbool is_modified, namedbool sub_chk,
       namedbool implicit_omit, Common::Assignment *);
-    void chk_this_template_Str(Template *t);
+    bool chk_this_template_Str(Template *t, namedbool implicit_omit,
+      Common::Assignment *lhs);
     /** Checks whether \a v is a correct range boundary for this type.
      * Applicable to the following types: integer, float, charstring,
      * universal charstring.

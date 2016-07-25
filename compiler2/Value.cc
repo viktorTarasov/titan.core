@@ -10085,6 +10085,9 @@ error:
       break; // self-ref can't happen
     case Ttcn::Template::TEMPLATE_INVOKE:
       break; // assume self-ref can't happen
+    case Ttcn::Template::DECODE_MATCH:
+      self_ref |= chk_expr_self_ref_templ(t->get_decode_target()->get_Template(), lhs);
+      break;
     case Ttcn::Template::TEMPLATE_ERROR:
       //FATAL_ERROR("Value::chk_expr_self_ref_templ()");
       break;

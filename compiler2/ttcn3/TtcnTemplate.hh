@@ -68,7 +68,8 @@ namespace Ttcn {
       HSTR_PATTERN, /**< hexstring pattern */
       OSTR_PATTERN, /**< octetstring pattern */
       CSTR_PATTERN, /**< character string pattern */
-      USTR_PATTERN  /**< universal charstring pattern */
+      USTR_PATTERN, /**< universal charstring pattern */
+      DECODE_MATCH  /**< decoded content match */
     };
 
     /** Status codes for the verification of template body completeness. */
@@ -122,6 +123,11 @@ namespace Ttcn {
         Ttcn::ParsedActualParameters *t_list;
         Ttcn::ActualParList *ap_list;
       } invoke;
+      /** Used by DECODE_MATCH */
+      struct {
+        Value* str_enc;
+        TemplateInstance* target;
+      } dec_match;
     } u;
 
     /** This points to the type of the template */
@@ -203,6 +209,9 @@ namespace Ttcn {
 
     /** Constructor for CSTR_PATTERN. */
     Template(PatternString *p_ps);
+    
+    /** Constructor for DECODE_MATCH */
+    Template(Value* v, TemplateInstance* ti);
 
     virtual ~Template();
 
@@ -289,6 +298,8 @@ namespace Ttcn {
     Template* get_refd_sub_template(Ttcn::FieldOrArrayRefs *subrefs,
                                     bool usedInIsbound,
                                     ReferenceChain *refch);
+    Value* get_string_encoding() const;
+    TemplateInstance* get_decode_target() const;
   private:
     Template* get_template_refd(ReferenceChain *refch);
     Template* get_refd_field_template(const Identifier& field_id,
@@ -462,6 +473,8 @@ namespace Ttcn {
      *  representations in runtime. */
     char *generate_code_init_set(char *str, const char *name,
       bool is_superset);
+    
+    char* generate_code_init_dec_match(char* str, const char* name);
 
     char *generate_code_init_all_from(char *str, const char *name);
     char *generate_code_init_all_from_list(char *str, const char *name);

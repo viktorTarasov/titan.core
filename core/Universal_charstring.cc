@@ -3577,6 +3577,19 @@ void UNIVERSAL_CHARSTRING_template::clean_up()
     if (pattern_value.regexp_init) regfree(&pattern_value.posix_regexp);
     delete pattern_string;
   }
+  else if (template_selection == DECODE_MATCH) {
+    if (dec_match->ref_count > 1) {
+      dec_match->ref_count--;
+    }
+    else if (dec_match->ref_count == 1) {
+      delete dec_match->instance;
+      delete dec_match;
+    }
+    else {
+      TTCN_error("Internal error: Invalid reference counter in a "
+        "decoded content match.");
+    }
+  }
   template_selection = UNINITIALIZED_TEMPLATE;
 }
 
@@ -3622,6 +3635,10 @@ void UNIVERSAL_CHARSTRING_template::copy_template
     pattern_string = new CHARSTRING(other_value.single_value);
     pattern_value.regexp_init=FALSE;
     break;
+  case DECODE_MATCH:
+    dec_match = other_value.dec_match;
+    dec_match->ref_count++;
+    break;
   default:
     TTCN_error("Copying an uninitialized/unsupported charstring template to a "
       "universal charstring template.");
@@ -3659,6 +3676,10 @@ void UNIVERSAL_CHARSTRING_template::copy_template
   case STRING_PATTERN:
     pattern_string = new CHARSTRING(*(other_value.pattern_string));
     pattern_value.regexp_init=FALSE;
+    break;
+  case DECODE_MATCH:
+    dec_match = other_value.dec_match;
+    dec_match->ref_count++;
     break;
   default:
     TTCN_error("Copying an uninitialized/unsupported universal charstring "
@@ -3975,6 +3996,32 @@ boolean UNIVERSAL_CHARSTRING_template::match
       TTCN_error("Pattern matching error: %s", msg);
     }
     break;}
+  case DECODE_MATCH: {
+    TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);
+    TTCN_EncDec::clear_error();
+    TTCN_Buffer buff;
+    switch (dec_match->coding) {
+    case CharCoding::UTF_8:
+      other_value.encode_utf8(buff, false);
+      break;
+    case CharCoding::UTF16:
+    case CharCoding::UTF16LE:
+    case CharCoding::UTF16BE:
+      other_value.encode_utf16(buff, dec_match->coding);
+      break;
+    case CharCoding::UTF32:
+    case CharCoding::UTF32LE:
+    case CharCoding::UTF32BE:
+      other_value.encode_utf32(buff, dec_match->coding);
+      break;
+    default:
+      TTCN_error("Internal error: Invalid string serialization for "
+        "universal charstring template with decoded content matching.");
+    }
+    boolean ret_val = dec_match->instance->match(buff);
+    TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL,TTCN_EncDec::EB_DEFAULT);
+    TTCN_EncDec::clear_error();
+    return ret_val; }
   default:
     TTCN_error("Matching with an uninitialized/unsupported universal "
       "charstring template.");
@@ -4059,6 +4106,9 @@ void UNIVERSAL_CHARSTRING_template::set_type(template_sel template_type,
     value_range.min_is_set = FALSE;
     value_range.max_is_set = FALSE;
     break;
+  case DECODE_MATCH:
+    set_selection(DECODE_MATCH);
+    break;
   default:
     TTCN_error("Setting an invalid type for a universal charstring template.");
   }
@@ -4110,6 +4160,43 @@ void UNIVERSAL_CHARSTRING_template::set_max
       "is smaller than the lower bound.");
 }
 
+void UNIVERSAL_CHARSTRING_template::set_decmatch(Dec_Match_Interface* new_instance,
+                                                 const char* coding_str /* = NULL */)
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Setting the decoded content matching mechanism of a non-decmatch "
+      "universal charstring template.");
+  }
+  CharCoding::CharCodingType new_coding = CharCoding::UTF_8;
+  if (coding_str != NULL && strcmp(coding_str, "UTF-8") != 0) {
+    if (strcmp(coding_str, "UTF-16") == 0) {
+      new_coding = CharCoding::UTF16;
+    }
+    else if (strcmp(coding_str, "UTF-16LE") == 0) {
+      new_coding = CharCoding::UTF16LE;
+    }
+    else if (strcmp(coding_str, "UTF-16BE") == 0) {
+      new_coding = CharCoding::UTF16BE;
+    }
+    else if (strcmp(coding_str, "UTF-32") == 0) {
+      new_coding = CharCoding::UTF32;
+    }
+    else if (strcmp(coding_str, "UTF-32LE") == 0) {
+      new_coding = CharCoding::UTF32LE;
+    }
+    else if (strcmp(coding_str, "UTF-32BE") == 0) {
+      new_coding = CharCoding::UTF32BE;
+    }
+    else {
+      TTCN_error("Invalid string serialization for decoded content matching.");
+    }
+  }
+  dec_match = new unichar_decmatch_struct;
+  dec_match->ref_count = 1;
+  dec_match->instance = new_instance;
+  dec_match->coding = new_coding;
+}
+
 void UNIVERSAL_CHARSTRING_template::log() const
 {
   switch (template_selection) {
@@ -4157,6 +4244,37 @@ void UNIVERSAL_CHARSTRING_template::log() const
       }
     } else TTCN_Logger::log_event_str("<unknown upper bound>");
     TTCN_Logger::log_char(')');
+    break;
+  case DECODE_MATCH:
+    TTCN_Logger::log_event_str("decmatch(");
+    switch (dec_match->coding) {
+    case CharCoding::UTF_8:
+      TTCN_Logger::log_event_str("UTF-8");
+      break;
+    case CharCoding::UTF16:
+      TTCN_Logger::log_event_str("UTF-16");
+      break;
+    case CharCoding::UTF16LE:
+      TTCN_Logger::log_event_str("UTF-16LE");
+      break;
+    case CharCoding::UTF16BE:
+      TTCN_Logger::log_event_str("UTF-16BE");
+      break;
+    case CharCoding::UTF32:
+      TTCN_Logger::log_event_str("UTF-32");
+      break;
+    case CharCoding::UTF32LE:
+      TTCN_Logger::log_event_str("UTF-32LE");
+      break;
+    case CharCoding::UTF32BE:
+      TTCN_Logger::log_event_str("UTF-32BE");
+      break;
+    default:
+      TTCN_Logger::log_event_str("<unknown coding>");
+      break;
+    }
+    TTCN_Logger::log_event_str(") ");
+    dec_match->instance->log();
     break;
   default:
     log_generic();
@@ -4304,6 +4422,9 @@ Module_Param* UNIVERSAL_CHARSTRING_template::get_param(Module_Param_Name& param_
     break;
   case STRING_PATTERN:
     mp = new Module_Param_Pattern(mcopystr(*pattern_string));
+    break;
+  case DECODE_MATCH:
+    mp->error("Referencing a decoded content matching template is not supported.");
     break;
   default:
     break;

@@ -2007,6 +2007,19 @@ void CHARSTRING_template::clean_up()
   case STRING_PATTERN:
     if (pattern_value.regexp_init) regfree(&pattern_value.posix_regexp);
     break;
+  case DECODE_MATCH:
+    if (dec_match->ref_count > 1) {
+      dec_match->ref_count--;
+    }
+    else if (dec_match->ref_count == 1) {
+      delete dec_match->instance;
+      delete dec_match;
+    }
+    else {
+      TTCN_error("Internal error: Invalid reference counter in a "
+        "decoded content match.");
+    }
+    break;
   default:
     break;
   }
@@ -2040,6 +2053,10 @@ void CHARSTRING_template::copy_template(const CHARSTRING_template& other_value)
     if (!other_value.value_range.max_is_set) TTCN_error("The upper bound is "
       "not set when copying a charstring value range template.");
     value_range = other_value.value_range;
+    break;
+  case DECODE_MATCH:
+    dec_match = other_value.dec_match;
+    dec_match->ref_count++;
     break;
   default:
     TTCN_error("Copying an uninitialized/unsupported charstring template.");
@@ -2268,6 +2285,14 @@ boolean CHARSTRING_template::match(const CHARSTRING& other_value,
     }
     return TRUE;
     break; }
+  case DECODE_MATCH: {
+    TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);
+    TTCN_EncDec::clear_error();
+    TTCN_Buffer buff(other_value);
+    boolean ret_val = dec_match->instance->match(buff);
+    TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL,TTCN_EncDec::EB_DEFAULT);
+    TTCN_EncDec::clear_error();
+    return ret_val; }
   default:
     TTCN_error("Matching with an uninitialized/unsupported charstring "
                "template.");
@@ -2352,6 +2377,9 @@ void CHARSTRING_template::set_type(template_sel template_type,
     value_range.min_is_set = FALSE;
     value_range.max_is_set = FALSE;
     break;
+  case DECODE_MATCH:
+    set_selection(DECODE_MATCH);
+    break;
   default:
     TTCN_error("Setting an invalid type for a charstring template.");
   }
@@ -2401,6 +2429,20 @@ void CHARSTRING_template::set_max(const CHARSTRING& max_value)
     TTCN_error("The upper bound (\"%c\") in a charstring value range template "
       "is smaller than the lower bound (\"%c\").", value_range.max_value,
       value_range.min_value);
+}
+
+void CHARSTRING_template::set_decmatch(Dec_Match_Interface* new_instance)
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Setting the decoded content matching mechanism of a non-decmatch "
+      "charstring template.");
+  }
+  dec_match = new unichar_decmatch_struct;
+  dec_match->ref_count = 1;
+  dec_match->instance = new_instance;
+  // the character coding is only used if this template is copied to a
+  // universal charstring template
+  dec_match->coding = CharCoding::UTF_8;
 }
 
 void CHARSTRING_template::log_pattern(int n_chars, const char *chars_ptr)
@@ -2567,6 +2609,10 @@ void CHARSTRING_template::log() const
     } else TTCN_Logger::log_event_str("<unknown upper bound>");
     TTCN_Logger::log_char(')');
     break;
+  case DECODE_MATCH:
+    TTCN_Logger::log_event_str("decmatch ");
+    dec_match->instance->log();
+    break;
   default:
     log_generic();
   }
@@ -2707,6 +2753,9 @@ Module_Param* CHARSTRING_template::get_param(Module_Param_Name& param_name) cons
     break; }
   case STRING_PATTERN:
     mp = new Module_Param_Pattern(mcopystr(single_value));
+    break;
+  case DECODE_MATCH:
+    mp->error("Referencing a decoded content matching template is not supported.");
     break;
   default:
     break;

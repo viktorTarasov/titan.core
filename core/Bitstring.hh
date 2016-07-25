@@ -245,6 +245,8 @@ public:
 };
 
 /// bitstring template class
+struct decmatch_struct;
+
 class BITSTRING_template : public Restricted_Length_Template {
 #ifdef __SUNPRO_CC
 public:
@@ -258,6 +260,7 @@ private:
       BITSTRING_template *list_value;
     } value_list;
     bitstring_pattern_struct *pattern_value;
+    decmatch_struct* dec_match;
   };
 
   void copy_template(const BITSTRING_template& other_value);
@@ -292,8 +295,10 @@ public:
 
   int lengthof() const;
 
-  void set_type(template_sel template_type, unsigned int list_length);
+  void set_type(template_sel template_type, unsigned int list_length = 0);
   BITSTRING_template& list_item(unsigned int list_index);
+  
+  void set_decmatch(Dec_Match_Interface* new_instance);
 
   void log() const;
   void log_match(const BITSTRING& match_value, boolean legacy = FALSE) const;

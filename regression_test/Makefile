@@ -37,8 +37,8 @@ include $(TOPDIR)/Makefile.regression
 DIRS := intOper boolOper floatOper bitstrOper octetstrOper charOper charstrOper \
 verdictOper recordOper recofOper setOper setofOper setofMatch unionOper \
 enumOper arrayOper anytypeOper templateInt templateBool templateFloat templateBitstr \
-templateOctetstr templateChar templateCharstr templateRec templateRecof \
-templateSet templateSetof templateUnion templateEnum modifiedTemplate \
+templateHexstr templateOctetstr templateChar templateCharstr templateUnicharstr \
+templateRec templateRecof templateSet templateSetof templateUnion templateEnum modifiedTemplate \
 basicStatem configOper commMessage commProcedure lostTimer controlTimer \
 BER BER_x682 ASN1 predefFunction ERC preCompilerFlags functionReference \
 nonMandatoryPar logFiles logger_control namedActualParameters \

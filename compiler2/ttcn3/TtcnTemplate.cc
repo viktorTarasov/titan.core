@@ -92,6 +92,11 @@ namespace Ttcn {
     case USTR_PATTERN:
       u.pstring = p.u.pstring->clone();
       break;
+    case DECODE_MATCH:
+      u.dec_match.str_enc = p.u.dec_match.str_enc != NULL ?
+        p.u.dec_match.str_enc->clone() : NULL;
+      u.dec_match.target = p.u.dec_match.target->clone();
+      break;
 //    default:
 //      FATAL_ERROR("Template::Template()");
     }
@@ -148,6 +153,12 @@ namespace Ttcn {
     case CSTR_PATTERN:
     case USTR_PATTERN:
       delete u.pstring;
+      break;
+    case DECODE_MATCH:
+      if (u.dec_match.str_enc != NULL) {
+        delete u.dec_match.str_enc;
+      }
+      delete u.dec_match.target;
       break;
 //    default:
 //      FATAL_ERROR("Template::clean_up()");
@@ -271,6 +282,18 @@ namespace Ttcn {
       ret_val += "pattern \"";
       ret_val += u.pstring->get_full_str();
       ret_val += "\"";
+      break;
+    case DECODE_MATCH:
+      ret_val += "decmatch ";
+      if (u.dec_match.str_enc != NULL) {
+        ret_val += "(";
+        ret_val += u.dec_match.str_enc->get_val_str();
+        ret_val += ") ";
+      }
+      ret_val += u.dec_match.target->get_expr_governor(
+        Type::EXPECTED_TEMPLATE)->get_stringRepr();
+      ret_val += ": ";
+      ret_val += u.dec_match.target->get_Template()->create_stringRepr();
       break;
     default:
       ret_val += "<unknown template>";
@@ -441,6 +464,19 @@ namespace Ttcn {
     if (!p_ps) FATAL_ERROR("Template::Template()");
     u.pstring = p_ps;
   }
+  
+  Template::Template(Value* v, TemplateInstance* ti)
+    : GovernedSimple(S_TEMPLATE),
+      templatetype(DECODE_MATCH), my_governor(0), length_restriction(0),
+      is_ifpresent(false), specific_value_checked(false),
+      has_permutation(false), flattened(true), base_template(0)
+  {
+    if (ti == NULL) {
+      FATAL_ERROR("Template::Template()");
+    }
+    u.dec_match.str_enc = v;
+    u.dec_match.target = ti;
+  }
 
   Template::~Template()
   {
@@ -513,6 +549,12 @@ namespace Ttcn {
     case USTR_PATTERN:
       u.pstring->set_fullname(p_fullname);
       break;
+    case DECODE_MATCH:
+      if (u.dec_match.str_enc != NULL) {
+        u.dec_match.str_enc->set_fullname(p_fullname + ".<string_encoding>");
+      }
+      u.dec_match.target->set_fullname(p_fullname + ".<decoding_target>");
+      break;
 //    default:
 //      FATAL_ERROR("Template::set_fullname()");
     }
@@ -568,6 +610,12 @@ namespace Ttcn {
     case CSTR_PATTERN:
     case USTR_PATTERN:
       u.pstring->set_my_scope(p_scope);
+      break;
+    case DECODE_MATCH:
+      if (u.dec_match.str_enc != NULL) {
+        u.dec_match.str_enc->set_my_scope(p_scope);
+      }
+      u.dec_match.target->set_my_scope(p_scope);
       break;
 //    default:
 //      FATAL_ERROR("Template::set_my_scope()");
@@ -680,6 +728,12 @@ namespace Ttcn {
     case CSTR_PATTERN:
     case USTR_PATTERN:
       u.pstring->set_code_section(p_code_section);
+      break;
+    case DECODE_MATCH:
+      if (u.dec_match.str_enc != NULL) {
+        u.dec_match.str_enc->set_code_section(p_code_section);
+      }
+      u.dec_match.target->set_code_section(p_code_section);
       break;
     default:
       break;
@@ -849,6 +903,8 @@ namespace Ttcn {
       return "character string pattern";
     case USTR_PATTERN:
       return "universal string pattern";
+    case DECODE_MATCH:
+      return "decoded content match";
     default:
       return "unknown template";
     }
@@ -1296,6 +1352,22 @@ namespace Ttcn {
       else t=t->get_refd_array_template(ref->get_val(), usedInIsbound, refch);
     }
     return t;
+  }
+  
+  Value* Template::get_string_encoding() const
+  {
+    if (templatetype != DECODE_MATCH) {
+      FATAL_ERROR("Template::get_decode_target()");
+    }
+    return u.dec_match.str_enc;
+  }
+  
+  TemplateInstance* Template::get_decode_target() const
+  {
+    if (templatetype != DECODE_MATCH) {
+      FATAL_ERROR("Template::get_decode_target()");
+    }
+    return u.dec_match.target;
   }
 
   Template* Template::get_template_refd(ReferenceChain *refch)
@@ -1866,6 +1938,9 @@ namespace Ttcn {
     case CSTR_PATTERN:
     case USTR_PATTERN:
       t->u.pstring->chk_recursions(refch);
+      break;
+    case DECODE_MATCH:
+      t->u.dec_match.target->chk_recursions(refch);
       break;
     default:
       break;
@@ -2551,7 +2626,7 @@ end:
     case VALUE_RANGE:
     case ALL_FROM:
     case BSTR_PATTERN: case HSTR_PATTERN: case OSTR_PATTERN:
-    case CSTR_PATTERN: case USTR_PATTERN:
+    case CSTR_PATTERN: case USTR_PATTERN: case DECODE_MATCH:
       break; // NOP
     }
 
@@ -3053,6 +3128,9 @@ end:
       warning("Don't know how to init PERMUT");
       str = mputprintf(str, "/* FIXME: PERMUT goes here, name=%s*/\n", name);
       break;
+    case DECODE_MATCH:
+      str = generate_code_init_dec_match(str, name);
+      break;
     case TEMPLATE_NOTUSED:
       break;
     case TEMPLATE_ERROR:
@@ -3329,6 +3407,7 @@ end:
     switch (templatetype) {
     case ALL_FROM:
     case VALUE_LIST_ALL_FROM:
+    case DECODE_MATCH:
       return false;
     case TEMPLATE_ERROR: /**< erroneous template */
     case TEMPLATE_NOTUSED: /**< not used symbol (-) */
@@ -4432,6 +4511,108 @@ compile_time:
     }
     return str;
   }
+  
+  char* Template::generate_code_init_dec_match(char* str, const char* name)
+  {
+    // generate a new class for this decmatch template
+    string class_tmp_id = my_scope->get_scope_mod_gen()->get_temporary_id();
+    Type* target_type = u.dec_match.target->get_expr_governor(
+      Type::EXPECTED_TEMPLATE)->get_type_refd_last();
+    // use the name of the type at the end of the reference chain for logging
+    const char* type_name_ptr = target_type->get_typename_builtin(
+      target_type->get_typetype_ttcn3());
+    if (type_name_ptr == NULL) {
+      type_name_ptr = target_type->get_type_refd_last()->get_dispname().c_str();
+    }
+    // copy the character pointer returned by Type::get_dispname() as it might
+    // change before its use
+    char* type_name = mcopystr(type_name_ptr);
+    str = mputprintf(str,
+      "class Dec_Match_%s : public Dec_Match_Interface {\n"
+      // store the decoding target as a member, since both functions use it
+      "%s target;\n"
+      "public:\n"
+      "Dec_Match_%s(%s p_target): target(p_target) { }\n"
+      // called when matching, the buffer parameter contains the string to be matched
+      "virtual boolean match(TTCN_Buffer& buff) const\n"
+      "{\n"
+      "%s val;\n"
+      // decode the value
+      "val.decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
+      // make sure the buffer is empty after decoding and no errors occurred
+      "if (TTCN_EncDec::get_last_error_type() != TTCN_EncDec::ET_NONE || "
+      "buff.get_read_len() != 0) return FALSE;\n"
+      // finally, match the decoded value against the target template
+      "return target.match(val%s);\n"
+      "}\n"
+      "virtual void log() const\n"
+      "{\n"
+      // the decoding target is always logged as an in-line template
+      "TTCN_Logger::log_event_str(\"%s: \");\n"
+      "target.log();\n"
+      "}\n"
+      "};\n"
+      "%s.set_type(DECODE_MATCH);\n"
+      "{\n", class_tmp_id.c_str(),
+      target_type->get_genname_template(my_scope).c_str(), class_tmp_id.c_str(),
+      target_type->get_genname_template(my_scope).c_str(),
+      target_type->get_genname_value(my_scope).c_str(),
+      target_type->get_genname_typedescriptor(my_scope).c_str(),
+      target_type->get_coding(false).c_str(),
+      omit_in_value_list ? ", TRUE" : "", type_name, name);
+    Free(type_name);
+    
+    // generate the decoding target into a temporary
+    string target_tmp_id = my_scope->get_scope_mod_gen()->get_temporary_id();
+    if (u.dec_match.target->get_DerivedRef() != NULL) {
+      // it's a derived reference: initialize the decoding target with the
+      // base template first
+      expression_struct ref_expr;
+      Code::init_expr(&ref_expr);
+      u.dec_match.target->get_DerivedRef()->generate_code(&ref_expr);
+      if (ref_expr.preamble != NULL) {
+        str = mputstr(str, ref_expr.preamble);
+      }
+      str = mputprintf(str, "%s %s(%s);\n",
+        target_type->get_genname_template(my_scope).c_str(),
+        target_tmp_id.c_str(), ref_expr.expr);
+      if (ref_expr.postamble != NULL) {
+        str = mputstr(str, ref_expr.postamble);
+      }
+      Code::free_expr(&ref_expr);
+    }
+    else {
+      str = mputprintf(str, "%s %s;\n",
+        target_type->get_genname_template(my_scope).c_str(),
+        target_tmp_id.c_str());
+    }
+    str = u.dec_match.target->get_Template()->generate_code_init(str,
+      target_tmp_id.c_str());
+    
+    // the string encoding format might be an expression, generate its preamble here
+    expression_struct coding_expr;
+    Code::init_expr(&coding_expr);
+    if (u.dec_match.str_enc != NULL) {
+      u.dec_match.str_enc->generate_code_expr(&coding_expr);
+      if (coding_expr.preamble != NULL) {
+        str = mputstr(str, coding_expr.preamble);
+      }
+    }
+    // initialize the decmatch template with an instance of the new class
+    // (pass the temporary template to the new instance's constructor) and
+    // the encoding format if it's an universal charstring
+    str = mputprintf(str,
+      "%s.set_decmatch(new Dec_Match_%s(%s)%s%s);\n",
+      name, class_tmp_id.c_str(), target_tmp_id.c_str(),
+      (coding_expr.expr != NULL) ? ", " : "",
+      (coding_expr.expr != NULL) ? coding_expr.expr : "");
+    if (coding_expr.postamble != NULL) {
+      str = mputstr(str, coding_expr.postamble);
+    }
+    Code::free_expr(&coding_expr);
+    str = mputstr(str, "}\n");
+    return str;
+  }
 
   void Template::generate_code_expr_invoke(expression_struct *expr)
   {
@@ -4564,6 +4745,7 @@ compile_time:
     case VALUE_RANGE:
     case SUPERSET_MATCH:
     case SUBSET_MATCH:
+    case DECODE_MATCH:
       return true;
     case TEMPLATE_ERROR:
       FATAL_ERROR("Template::needs_temp_ref()");
@@ -4621,6 +4803,7 @@ compile_time:
     case SUPERSET_MATCH:
     case SUBSET_MATCH:
     case PERMUTATION_MATCH:
+    case DECODE_MATCH:
       return false;
     case ALL_FROM:
     case VALUE_LIST_ALL_FROM:
@@ -4757,6 +4940,14 @@ compile_time:
     case ALL_FROM:
     case VALUE_LIST_ALL_FROM:
       u.all_from->dump(level+1);
+      break;
+    case DECODE_MATCH:
+      if (u.dec_match.str_enc != NULL) {
+        DEBUG(level, "string encoding:");
+        u.dec_match.str_enc->dump(level + 1);
+      }
+      DEBUG(level, "decoding target:");
+      u.dec_match.target->dump(level + 1);
       break;
     default:
       break;

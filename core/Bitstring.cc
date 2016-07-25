@@ -32,6 +32,7 @@
 #include "Error.hh"
 #include "Logger.hh"
 #include "Encdec.hh"
+#include "Addfunc.hh"
 
 #include "../common/dbgnew.hh"
 
@@ -1410,6 +1411,19 @@ void BITSTRING_template::clean_up()
     else TTCN_error("Internal error: Invalid reference counter in a bitstring "
       "pattern.");
     break;
+  case DECODE_MATCH:
+    if (dec_match->ref_count > 1) {
+      dec_match->ref_count--;
+    }
+    else if (dec_match->ref_count == 1) {
+      delete dec_match->instance;
+      delete dec_match;
+    }
+    else {
+      TTCN_error("Internal error: Invalid reference counter in a "
+        "decoded content match.");
+    }
+    break;
   default:
     break;
   }
@@ -1437,6 +1451,10 @@ void BITSTRING_template::copy_template(const BITSTRING_template& other_value)
   case STRING_PATTERN:
     pattern_value = other_value.pattern_value;
     pattern_value->ref_count++;
+    break;
+  case DECODE_MATCH:
+    dec_match = other_value.dec_match;
+    dec_match->ref_count++;
     break;
   default:
     TTCN_error("Copying an uninitialized/unsupported bitstring template.");
@@ -1693,6 +1711,15 @@ boolean BITSTRING_template::match(const BITSTRING& other_value,
     return template_selection == COMPLEMENTED_LIST;
   case STRING_PATTERN:
     return match_pattern(pattern_value, other_value.val_ptr);
+  case DECODE_MATCH: {
+    TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);
+    TTCN_EncDec::clear_error();
+    OCTETSTRING os(bit2oct(other_value));
+    TTCN_Buffer buff(os);
+    boolean ret_val = dec_match->instance->match(buff);
+    TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL,TTCN_EncDec::EB_DEFAULT);
+    TTCN_EncDec::clear_error();
+    return ret_val; }
   default:
     TTCN_error("Matching an uninitialized/unsupported bitstring template.");
   }
@@ -1766,14 +1793,17 @@ int BITSTRING_template::lengthof() const
 }
 
 void BITSTRING_template::set_type(template_sel template_type,
-  unsigned int list_length)
+  unsigned int list_length /* = 0 */)
 {
-  if (template_type != VALUE_LIST && template_type != COMPLEMENTED_LIST)
+  if (template_type != VALUE_LIST && template_type != COMPLEMENTED_LIST &&
+      template_type != DECODE_MATCH)
     TTCN_error("Setting an invalid list type for a bitstring template.");
   clean_up();
   set_selection(template_type);
-  value_list.n_values = list_length;
-  value_list.list_value = new BITSTRING_template[list_length];
+  if (template_type != DECODE_MATCH) {
+    value_list.n_values = list_length;
+    value_list.list_value = new BITSTRING_template[list_length];
+  }
 }
 
 BITSTRING_template& BITSTRING_template::list_item(unsigned int list_index)
@@ -1784,6 +1814,17 @@ BITSTRING_template& BITSTRING_template::list_item(unsigned int list_index)
   if (list_index >= value_list.n_values)
     TTCN_error("Index overflow in a bitstring value list template.");
   return value_list.list_value[list_index];
+}
+
+void BITSTRING_template::set_decmatch(Dec_Match_Interface* new_instance)
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Setting the decoded content matching mechanism of a non-decmatch "
+      "bitstring template.");
+  }
+  dec_match = new decmatch_struct;
+  dec_match->ref_count = 1;
+  dec_match->instance = new_instance;
 }
 
 static const char patterns[] = { '0', '1', '?', '*' };
@@ -1813,6 +1854,10 @@ void BITSTRING_template::log() const
       else TTCN_Logger::log_event_str("<unknown>");
     }
     TTCN_Logger::log_event_str("'B");
+    break;
+  case DECODE_MATCH:
+    TTCN_Logger::log_event_str("decmatch ");
+    dec_match->instance->log();
     break;
   default:
     log_generic();
@@ -1928,6 +1973,9 @@ Module_Param* BITSTRING_template::get_param(Module_Param_Name& param_name) const
     memcpy(val_cpy, pattern_value->elements_ptr, pattern_value->n_elements);
     mp = new Module_Param_Bitstring_Template(pattern_value->n_elements, val_cpy);
     break; }
+  case DECODE_MATCH:
+    mp->error("Referencing a decoded content matching template is not supported.");
+    break;
   default:
     break;
   }

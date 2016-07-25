@@ -522,6 +522,8 @@ extern UNIVERSAL_CHARSTRING operator+(const char *string_value,
   const UNIVERSAL_CHARSTRING_ELEMENT& other_value);
 
 
+struct unichar_decmatch_struct;
+
 class UNIVERSAL_CHARSTRING_template : public Restricted_Length_Template {
 private:
   UNIVERSAL_CHARSTRING single_value;
@@ -539,6 +541,7 @@ private:
       boolean regexp_init;
       regex_t posix_regexp;
     } pattern_value;
+    unichar_decmatch_struct* dec_match;
   };
 
   void copy_template(const CHARSTRING_template& other_value);
@@ -597,6 +600,8 @@ public:
 
   void set_min(const UNIVERSAL_CHARSTRING& min_value);
   void set_max(const UNIVERSAL_CHARSTRING& max_value);
+  
+  void set_decmatch(Dec_Match_Interface* new_instance, const char* coding_str = NULL);
 
   void log() const;
   void log_match(const UNIVERSAL_CHARSTRING& match_value, boolean legacy = FALSE) const;
