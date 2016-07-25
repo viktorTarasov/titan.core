@@ -10107,7 +10107,7 @@ error:
       }
     }
     return gov->chk_this_value(v, lhs, Type::EXPECTED_DYNAMIC_VALUE,
-      INCOMPLETE_NOT_ALLOWED, OMIT_NOT_ALLOWED, NO_SUB_CHK, NOT_IMPLICIT_OMIT,
+      INCOMPLETE_NOT_ALLOWED, OMIT_ALLOWED, NO_SUB_CHK, NOT_IMPLICIT_OMIT,
       is_str_elem);
   }
 
