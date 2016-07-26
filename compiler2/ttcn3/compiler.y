@@ -739,6 +739,10 @@ static const string anyname("anytype");
 /* modifier keywords */
 %token NocaseKeyword
 %token LazyKeyword
+%token DecodedKeyword
+%token DeterministicKeyword
+%token FuzzyKeyword
+%token IndexKeyword
 
 /* TITAN specific keywords */
 %token TitanSpecificTryKeyword
@@ -864,7 +868,7 @@ static const string anyname("anytype");
  *********************************************************************/
 
 %type <bool_val> optAliveKeyword optOptionalKeyword optOverrideKeyword
-  optErrValueRaw optAllKeyword optLazyEval
+  optErrValueRaw optAllKeyword optLazyOrFuzzyModifier
 %type <str> FreeText optLanguageSpec PatternChunk PatternChunkList
 %type <uchar_val> Group Plane Row Cell
 %type <id> FieldIdentifier FieldReference GlobalModuleId
@@ -3108,10 +3112,10 @@ TestcaseTypeDef:
 /* A.1.6.1.3 Template definitions */
 
 TemplateDef: // 93
-  TemplateKeyword optTemplateRestriction BaseTemplate
+  TemplateKeyword optTemplateRestriction optLazyOrFuzzyModifier BaseTemplate
   optDerivedDef AssignmentChar TemplateBody
   {
-    $$ = new Def_Template($2, $3.name, $3.type, $3.fp_list, $4, $6);
+    $$ = new Def_Template($2, $4.name, $4.type, $4.fp_list, $5, $7);
     $$->set_location(infile, @$);
   }
 ;
@@ -3829,13 +3833,22 @@ ValueofOp: // 162
 /* A.1.6.1.4 Function definitions */
 
 FunctionDef: // 164
-  FunctionKeyword IDentifier '(' optFunctionFormalParList ')'
+  FunctionKeyword optDeterministicModifier IDentifier '(' optFunctionFormalParList ')'
   optRunsOnSpec optReturnType optError StatementBlock
   {
-    $4->set_location(infile, @3, @5);
-    $$ = new Def_Function($2, $4, $6, $7.type, $7.returns_template,
-                          $7.template_restriction, $9);
+    $5->set_location(infile, @4, @6);
+    $$ = new Def_Function($3, $5, $7, $8.type, $8.returns_template,
+                          $8.template_restriction, $10);
     $$->set_location(infile, @$);
+  }
+;
+
+optDeterministicModifier:
+  /* empty */
+| DeterministicKeyword
+  {
+    Location loc(infile, @1);
+    loc.error("Modifier '@deterministic' is not currently supported.");
   }
 ;
 
@@ -4916,12 +4929,12 @@ GroupIdentifier: // 274 (followed by) 275.
 /* A.1.6.1.10 External function definitions */
 
 ExtFunctionDef: // 276
-  ExtKeyword FunctionKeyword IDentifier
+  ExtKeyword FunctionKeyword optDeterministicModifier IDentifier
   '(' optFunctionFormalParList ')' optReturnType
   {
-    $5->set_location(infile, @4, @6);
-    $$ = new Def_ExtFunction($3, $5, $7.type, $7.returns_template,
-                             $7.template_restriction);
+    $6->set_location(infile, @5, @7);
+    $$ = new Def_ExtFunction($4, $6, $8.type, $8.returns_template,
+                             $8.template_restriction);
     $$->set_location(infile, @$);
   }
 ;
@@ -5178,37 +5191,11 @@ ControlStatement: /* Statement *stmt */ // 295
 /* A.1.6.2.1 Variable instantiation */
 
 VarInstance: // 296
-  VarKeyword Type VarList
-  {
-    $$.nElements = $3.nElements;
-    $$.elements = (Ttcn::Definition**)
-      Malloc($$.nElements*sizeof(*$$.elements));
-    for (size_t i = 0; i < $$.nElements; i++) {
-      Type *type;
-      if (i > 0) {
-	type = new Type(Type::T_REFDSPEC, $2);
-	type->set_location(*$2);
-      } else type = $2;
-      /* creation of array type(s) if necessary (from right to left) */
-      for (size_t j = $3.elements[i].arrays.nElements; j > 0; j--) {
-        type = new Type(Type::T_ARRAY, type,
-	  $3.elements[i].arrays.elements[j - 1], false);
-        type->set_location(*$2);
-      }
-      Free($3.elements[i].arrays.elements);
-
-      /* Create the definition */
-      $$.elements[i] = new Def_Var($3.elements[i].id,
-                                   type, $3.elements[i].initial_value);
-      $$.elements[i]->set_location(infile, $3.elements[i].yyloc);
-    }
-    Free($3.elements);
-  }
-| VarKeyword TemplateOptRestricted Type TempVarList
+  VarKeyword optLazyOrFuzzyModifier Type VarList
   {
     $$.nElements = $4.nElements;
     $$.elements = (Ttcn::Definition**)
-      Malloc($$.nElements * sizeof(*$$.elements));
+      Malloc($$.nElements*sizeof(*$$.elements));
     for (size_t i = 0; i < $$.nElements; i++) {
       Type *type;
       if (i > 0) {
@@ -5224,12 +5211,38 @@ VarInstance: // 296
       Free($4.elements[i].arrays.elements);
 
       /* Create the definition */
-      $$.elements[i] = new Def_Var_Template($4.elements[i].id, type,
-                                            $4.elements[i].initial_value, $2);
+      $$.elements[i] = new Def_Var($4.elements[i].id,
+                                   type, $4.elements[i].initial_value);
       $$.elements[i]->set_location(infile, $4.elements[i].yyloc);
     }
-
     Free($4.elements);
+  }
+| VarKeyword TemplateOptRestricted optLazyOrFuzzyModifier Type TempVarList
+  {
+    $$.nElements = $5.nElements;
+    $$.elements = (Ttcn::Definition**)
+      Malloc($$.nElements * sizeof(*$$.elements));
+    for (size_t i = 0; i < $$.nElements; i++) {
+      Type *type;
+      if (i > 0) {
+	type = new Type(Type::T_REFDSPEC, $4);
+	type->set_location(*$4);
+      } else type = $4;
+      /* creation of array type(s) if necessary (from right to left) */
+      for (size_t j = $5.elements[i].arrays.nElements; j > 0; j--) {
+        type = new Type(Type::T_ARRAY, type,
+	  $5.elements[i].arrays.elements[j - 1], false);
+        type->set_location(*$4);
+      }
+      Free($5.elements[i].arrays.elements);
+
+      /* Create the definition */
+      $$.elements[i] = new Def_Var_Template($5.elements[i].id, type,
+                                            $5.elements[i].initial_value, $2);
+      $$.elements[i]->set_location(infile, $5.elements[i].yyloc);
+    }
+
+    Free($5.elements);
 }
 ;
 
@@ -5477,7 +5490,17 @@ optDoneParameter:
     $$.donematch = $1;
     $$.redirect = 0;
   }
+| optReceiveParameter PortRedirectSymbol IndexSpec
+  {
+    $$.donematch = $1;
+    $$.redirect = 0;
+  }
 | optReceiveParameter PortRedirectSymbol ValueSpec
+  {
+    $$.donematch = $1;
+    $$.redirect = $3;
+  }
+| optReceiveParameter PortRedirectSymbol ValueSpec IndexSpec
   {
     $$.donematch = $1;
     $$.redirect = $3;
@@ -6146,7 +6169,27 @@ optPortRedirect: // [387]
     $$.redirectval=0;
     $$.redirectsender=$2;
   }
+| PortRedirectSymbol IndexSpec
+  {
+    $$.redirectval=0;
+    $$.redirectsender=0;
+  }
 | PortRedirectSymbol ValueSpec SenderSpec
+  {
+    $$.redirectval=$2;
+    $$.redirectsender=$3;
+  }
+| PortRedirectSymbol ValueSpec IndexSpec
+  {
+    $$.redirectval=$2;
+    $$.redirectsender=0;
+  }
+| PortRedirectSymbol SenderSpec IndexSpec
+  {
+    $$.redirectval=0;
+    $$.redirectsender=$2;
+  }
+| PortRedirectSymbol ValueSpec SenderSpec IndexSpec
   {
     $$.redirectval=$2;
     $$.redirectsender=$3;
@@ -6166,6 +6209,15 @@ ValueSpec: // 389
 SenderSpec: // 391
   SenderKeyword VariableRef { $$ = $2; }
 | SenderKeyword error { $$ = 0; }
+;
+
+IndexSpec:
+  IndexKeyword ValueSpec
+  {
+    Location loc(infile, @1);
+    loc.error("Modifier '@index' is not currently supported.");
+    delete $2;
+  }
 ;
 
 TriggerStatement: // 393
@@ -6217,15 +6269,35 @@ optPortRedirectWithParam: // [399]
     $$.redirectparam=$2;
     $$.redirectsender=0;
   }
+| PortRedirectSymbol SenderSpec
+  {
+    $$.redirectparam=0;
+    $$.redirectsender=$2;
+  }
+| PortRedirectSymbol IndexSpec
+  {
+    $$.redirectparam=0;
+    $$.redirectsender=0;
+  }
 | PortRedirectSymbol ParamSpec SenderSpec
   {
     $$.redirectparam=$2;
     $$.redirectsender=$3;
   }
-| PortRedirectSymbol SenderSpec
+| PortRedirectSymbol ParamSpec IndexSpec
+  {
+    $$.redirectparam=$2;
+    $$.redirectsender=0;
+  }
+| PortRedirectSymbol SenderSpec IndexSpec
   {
     $$.redirectparam=0;
     $$.redirectsender=$2;
+  }
+| PortRedirectSymbol ParamSpec SenderSpec IndexSpec
+  {
+    $$.redirectparam=$2;
+    $$.redirectsender=$3;
   }
 | PortRedirectSymbol error
   {
@@ -6277,10 +6349,25 @@ AssignmentList: // 404
 ;
 
 VariableAssignment: // 405
-  VariableRef AssignmentChar IDentifier
+  VariableRef AssignmentChar optDecodedModifier IDentifier
   {
-    $$ = new ParamAssignment($3, $1);
+    $$ = new ParamAssignment($4, $1);
     $$->set_location(infile, @$);
+  }
+;
+
+optDecodedModifier:
+  /* empty */
+| DecodedKeyword
+  {
+    Location loc(infile, @1);
+    loc.error("Modifier '@decoded' is not currently supported.");
+  }
+| DecodedKeyword '(' SingleExpression ')'
+  {
+    Location loc(infile, @1);
+    loc.error("Modifier '@decoded' is not currently supported.");
+    delete $3;
   }
 ;
 
@@ -6351,24 +6438,6 @@ optPortRedirectWithValueAndParam: // [411]
     $$.redirectparam=0;
     $$.redirectsender=0;
   }
-| PortRedirectSymbol ValueSpec ParamSpec
-  {
-    $$.redirectval=$2;
-    $$.redirectparam=$3;
-    $$.redirectsender=0;
-  }
-| PortRedirectSymbol ValueSpec SenderSpec
-  {
-    $$.redirectval=$2;
-    $$.redirectparam=0;
-    $$.redirectsender=$3;
-  }
-| PortRedirectSymbol ValueSpec ParamSpec SenderSpec
-  {
-    $$.redirectval=$2;
-    $$.redirectparam=$3;
-    $$.redirectsender=$4;
-  }
 | PortRedirectSymbol ParamSpec
   {
     $$.redirectval=0;
@@ -6381,11 +6450,77 @@ optPortRedirectWithValueAndParam: // [411]
     $$.redirectparam=0;
     $$.redirectsender=$2;
   }
+| PortRedirectSymbol IndexSpec
+  {
+    $$.redirectval=0;
+    $$.redirectparam=0;
+    $$.redirectsender=0;
+  }
+| PortRedirectSymbol ValueSpec ParamSpec
+  {
+    $$.redirectval=$2;
+    $$.redirectparam=$3;
+    $$.redirectsender=0;
+  }
+| PortRedirectSymbol ValueSpec SenderSpec
+  {
+    $$.redirectval=$2;
+    $$.redirectparam=0;
+    $$.redirectsender=$3;
+  }
+| PortRedirectSymbol ValueSpec IndexSpec
+  {
+    $$.redirectval=$2;
+    $$.redirectparam=0;
+    $$.redirectsender=0;
+  }
 | PortRedirectSymbol ParamSpec SenderSpec
   {
     $$.redirectval=0;
     $$.redirectparam=$2;
     $$.redirectsender=$3;
+  }
+| PortRedirectSymbol ParamSpec IndexSpec
+  {
+    $$.redirectval=0;
+    $$.redirectparam=$2;
+    $$.redirectsender=0;
+  }
+| PortRedirectSymbol SenderSpec IndexSpec
+  {
+    $$.redirectval=0;
+    $$.redirectparam=0;
+    $$.redirectsender=$2;
+  }
+| PortRedirectSymbol ValueSpec ParamSpec SenderSpec
+  {
+    $$.redirectval=$2;
+    $$.redirectparam=$3;
+    $$.redirectsender=$4;
+  }
+| PortRedirectSymbol ValueSpec ParamSpec IndexSpec
+  {
+    $$.redirectval=$2;
+    $$.redirectparam=$3;
+    $$.redirectsender=0;
+  }
+| PortRedirectSymbol ValueSpec SenderSpec IndexSpec
+  {
+    $$.redirectval=$2;
+    $$.redirectparam=0;
+    $$.redirectsender=$3;
+  }
+| PortRedirectSymbol ParamSpec SenderSpec IndexSpec
+  {
+    $$.redirectval=0;
+    $$.redirectparam=$2;
+    $$.redirectsender=$3;
+  }
+| PortRedirectSymbol ValueSpec ParamSpec SenderSpec IndexSpec
+  {
+    $$.redirectval=$2;
+    $$.redirectparam=$3;
+    $$.redirectsender=$4;
   }
 | PortRedirectSymbol error
   {
@@ -6506,7 +6641,31 @@ FromClausePresent: // 419
     $$.redirectparam = 0;
     $$.redirectsender = 0;
   }
+| FromClause PortRedirectSymbol IndexSpec
+  {
+    $$.statementtype = Statement::S_CHECK;
+    $$.signature = 0;
+    $$.templ_inst = $1;
+    $$.valuematch = 0;
+    $$.timeout = false;
+    $$.fromclause = 0;
+    $$.redirectval = 0;
+    $$.redirectparam = 0;
+    $$.redirectsender = 0;
+  }
 | FromClause PortRedirectSymbol SenderSpec
+  {
+    $$.statementtype = Statement::S_CHECK;
+    $$.signature = 0;
+    $$.templ_inst = $1;
+    $$.valuematch = 0;
+    $$.timeout = false;
+    $$.fromclause = 0;
+    $$.redirectval = 0;
+    $$.redirectparam = 0;
+    $$.redirectsender = $3;
+  }
+| FromClause PortRedirectSymbol SenderSpec IndexSpec
   {
     $$.statementtype = Statement::S_CHECK;
     $$.signature = 0;
@@ -6522,6 +6681,30 @@ FromClausePresent: // 419
 
 RedirectPresent: // 420
   PortRedirectSymbol SenderSpec
+  {
+    $$.statementtype = Statement::S_CHECK;
+    $$.signature = 0;
+    $$.templ_inst = 0;
+    $$.valuematch = 0;
+    $$.timeout = false;
+    $$.fromclause = 0;
+    $$.redirectval = 0;
+    $$.redirectparam = 0;
+    $$.redirectsender = $2;
+  }
+| PortRedirectSymbol IndexSpec
+  {
+    $$.statementtype = Statement::S_CHECK;
+    $$.signature = 0;
+    $$.templ_inst = 0;
+    $$.valuematch = 0;
+    $$.timeout = false;
+    $$.fromclause = 0;
+    $$.redirectval = 0;
+    $$.redirectparam = 0;
+    $$.redirectsender = 0;
+  }
+| PortRedirectSymbol SenderSpec IndexSpec
   {
     $$.statementtype = Statement::S_CHECK;
     $$.signature = 0;
@@ -7252,18 +7435,24 @@ Reference: // 490 ValueReference
 
 /* A.1.6.5 Parameterization */
 
-optLazyEval:
+optLazyOrFuzzyModifier:
   /* empty */ { $$ = false; }
 | LazyKeyword { $$ = true; }
+| FuzzyKeyword
+  {
+    $$ = false;
+    Location loc(infile, @1);
+    loc.error("Modifier '@fuzzy' is not currently supported.");
+  }
 ;
 
 FormalValuePar: // 516
-  optLazyEval Type IDentifier optParDefaultValue
+  optLazyOrFuzzyModifier Type IDentifier optParDefaultValue
   {
     $$ = new FormalPar(Common::Assignment::A_PAR_VAL, $2, $3, $4, $1);
     $$->set_location(infile, @$);
   }
-| InParKeyword optLazyEval Type IDentifier optParDefaultValue
+| InParKeyword optLazyOrFuzzyModifier Type IDentifier optParDefaultValue
   {
     $$ = new FormalPar(Common::Assignment::A_PAR_VAL_IN, $3, $4, $5, $2);
     $$->set_location(infile, @$);
@@ -7301,12 +7490,12 @@ FormalTimerPar: // 520
 ;
 
 FormalTemplatePar: // 522
-  TemplateOptRestricted optLazyEval Type IDentifier optParDefaultValue
+  TemplateOptRestricted optLazyOrFuzzyModifier Type IDentifier optParDefaultValue
   {
     $$ = new FormalPar(Common::Assignment::A_PAR_TEMPL_IN, $1, $3, $4, $5, $2);
     $$->set_location(infile, @$);
   }
-| InParKeyword TemplateOptRestricted optLazyEval Type IDentifier optParDefaultValue
+| InParKeyword TemplateOptRestricted optLazyOrFuzzyModifier Type IDentifier optParDefaultValue
   {
     $$ = new FormalPar(Common::Assignment::A_PAR_TEMPL_IN, $2, $4, $5, $6, $3);
     $$->set_location(infile, @$);

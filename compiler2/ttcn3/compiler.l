@@ -519,8 +519,12 @@ xor4b		RETURN(Xor4bKeyword);
 
   /* modifier keywords */
 
-"@nocase" RETURN(NocaseKeyword);
-"@lazy"   RETURN(LazyKeyword);
+"@nocase"        RETURN(NocaseKeyword);
+"@lazy"          RETURN(LazyKeyword);
+"@decoded"       RETURN(DecodedKeyword);
+"@deterministic" RETURN(DeterministicKeyword);
+"@fuzzy"         RETURN(FuzzyKeyword);
+"@index"         RETURN(IndexKeyword);
 
   /* special TITAN specific keywords */
 
