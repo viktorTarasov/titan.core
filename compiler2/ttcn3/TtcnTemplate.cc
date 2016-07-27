@@ -4539,9 +4539,16 @@ compile_time:
       "%s val;\n"
       // decode the value
       "val.decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
-      // make sure the buffer is empty after decoding and no errors occurred
-      "if (TTCN_EncDec::get_last_error_type() != TTCN_EncDec::ET_NONE || "
-      "buff.get_read_len() != 0) return FALSE;\n"
+      // make sure no errors occurred (these already displayed warnings during
+      // decoding)
+      "if (TTCN_EncDec::get_last_error_type() != TTCN_EncDec::ET_NONE) "
+      "return FALSE;\n"
+      // make sure the buffer is empty after decoding, display a warning otherwise
+      "if (buff.get_read_len() != 0) {\n"
+      "TTCN_warning(\"Decoded content matching failed, because the buffer was not "
+      "empty after decoding. Remaining octets: %%d.\", (int)buff.get_read_len());\n"
+      "return FALSE;\n"
+      "}\n"
       // finally, match the decoded value against the target template
       "return target.match(val%s);\n"
       "}\n"
