@@ -12,8 +12,15 @@
 #   Susanszky, Eszter
 #
 ##############################################################################
+TOP    := ..
+include   ../Makefile.cfg
+
 DIRS := \
 JUnitLogger TSTLogger JUnitLogger2
+
+ifeq ($(LTTNGUSTLOGGER),yes)
+	DIRS += LTTngUSTLogger
+endif
 
 all run dep clean distclean install:
 	for d in $(DIRS); do $(MAKE) -C $$d $@ || exit 1; done
