@@ -20,6 +20,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
@@ -49,7 +50,7 @@
 reffer::reffer(const char*) {}
 
 namespace Common {
-
+    
   // =================================
   // ===== Modules
   // =================================
@@ -356,7 +357,7 @@ namespace Common {
       if (bits == 0) continue;
       if (is_nonempty) src = mputstr(src, ",\n");
       else {
-        src = mputstr(src, "static const unsigned char ");
+        src = mputprintf(src, "%sconst unsigned char ", split_to_slices ? "" : "static ");
         is_nonempty = true;
       }
       src = mputprintf(src, "%s_bits[] = { ",
@@ -395,12 +396,14 @@ namespace Common {
     if (splitting) hdr = mputstr(hdr, ";\n");
   }
 
-  void Module::generate_bp_literals(char *&src, char *& /*hdr*/)
+  void Module::generate_bp_literals(char *&src, char *& hdr)
   {
     if (bp_literals.size() == 0) return;
     for (size_t i = 0; i < bp_literals.size(); i++) {
       if (i > 0) src = mputstr(src, ",\n");
-      else src = mputstr(src, "static const unsigned char ");
+      else {
+        src = mputprintf(src, "%sconst unsigned char ", split_to_slices ? "" : "static ");
+      }
       src = mputprintf(src, "%s_elements[] = { ",
         bp_literals.get_nth_elem(i)->c_str());
       const string& str = bp_literals.get_nth_key(i);
@@ -427,13 +430,29 @@ namespace Common {
     }
     src = mputstr(src, ";\n");
     for (size_t i = 0; i < bp_literals.size(); i++) {
-      if (i > 0) src = mputstr(src, ",\n");
-      else src = mputstr(src, "static const BITSTRING_template ");
+      if (i > 0) {
+        src = mputstr(src, ",\n");
+        if (split_to_slices) {
+          hdr = mputstr(hdr, ",\n");
+        }
+      }
+      else {
+        src = mputprintf(src, "%sconst BITSTRING_template ", split_to_slices ? "" : "static ");
+        if (split_to_slices) {
+            hdr = mputprintf(hdr, "extern const BITSTRING_template ");
+        }
+      }
       const char *name = bp_literals.get_nth_elem(i)->c_str();
       src = mputprintf(src, "%s(%lu, %s_elements)",
         name, (unsigned long) bp_literals.get_nth_key(i).size(), name);
+      if (split_to_slices) {
+        hdr = mputstr(hdr, name);
+      }
     }
     src = mputstr(src, ";\n");
+    if (split_to_slices) {
+      hdr = mputstr(hdr, ";\n");
+    }
   }
 
   void Module::generate_hs_literals(char *&src, char *&hdr)
@@ -451,7 +470,7 @@ namespace Common {
       const char *str_ptr = str.c_str();
       if (is_nonempty) src = mputstr(src, ",\n");
       else {
-        src = mputstr(src, "static const unsigned char ");
+        src = mputprintf(src, "%sconst unsigned char ", split_to_slices ? "" : "static ");
         is_nonempty = true;
       }
       src = mputprintf(src, "%s_nibbles[] = { ",
@@ -494,12 +513,15 @@ namespace Common {
     if (splitting) hdr = mputstr(hdr, ";\n");
   }
 
-  void Module::generate_hp_literals(char *&src, char *& /*hdr*/)
+  void Module::generate_hp_literals(char *&src, char *& hdr)
   {
     if (hp_literals.size() == 0) return;
     for (size_t i = 0; i < hp_literals.size(); i++) {
-      if (i > 0) src = mputstr(src, ",\n");
-      else src = mputstr(src, "static const unsigned char ");
+      if (i > 0) {
+        src = mputstr(src, ",\n");
+      } else {
+        src = mputprintf(src, "%sconst unsigned char ", split_to_slices ? "" : "static ");
+      }
       src = mputprintf(src, "%s_elements[] = { ",
         hp_literals.get_nth_elem(i)->c_str());
       const string& str = hp_literals.get_nth_key(i);
@@ -517,13 +539,28 @@ namespace Common {
     }
     src = mputstr(src, ";\n");
     for (size_t i = 0; i < hp_literals.size(); i++) {
-      if (i > 0) src = mputstr(src, ",\n");
-      else src = mputstr(src, "static const HEXSTRING_template ");
+      if (i > 0) {
+        src = mputstr(src, ",\n");
+        if (split_to_slices) {
+          hdr = mputstr(hdr, ",\n");
+        }
+      } else {
+        src = mputprintf(src, "%sconst HEXSTRING_template ", split_to_slices ? "" : "static ");
+        if (split_to_slices) {
+          hdr = mputprintf(hdr, "extern const HEXSTRING_template ");
+        }
+      }
       const char *name = hp_literals.get_nth_elem(i)->c_str();
       src = mputprintf(src, "%s(%lu, %s_elements)",
         name, (unsigned long) hp_literals.get_nth_key(i).size(), name);
+      if (split_to_slices) {
+        hdr = mputstr(hdr, name);
+      }
     }
     src = mputstr(src, ";\n");
+    if (split_to_slices) {
+      hdr = mputstr(hdr, ";\n");
+    }
   }
 
   void Module::generate_os_literals(char *&src, char *&hdr)
@@ -542,7 +579,7 @@ namespace Common {
       const char *str_ptr = str.c_str();
       if (is_nonempty) src = mputstr(src, ",\n");
       else {
-        src = mputstr(src, "static const unsigned char ");
+        src = mputprintf(src, "%sconst unsigned char ", split_to_slices ? "" : "static ");
         is_nonempty = true;
       }
       src = mputprintf(src, "%s_octets[] = { ",
@@ -576,13 +613,16 @@ namespace Common {
     if (splitting) hdr = mputstr(hdr, ";\n");
   }
 
-  void Module::generate_op_literals(char *&src, char *& /*hdr*/)
+  void Module::generate_op_literals(char *&src, char *& hdr)
   {
     if (op_literals.size() == 0) return;
     vector<size_t> pattern_lens;
     for(size_t i = 0; i < op_literals.size(); i++) {
-      if (i > 0) src = mputstr(src, ",\n");
-      else src = mputstr(src, "static const unsigned short ");
+      if (i > 0) {
+        src = mputstr(src, ",\n");
+      } else {
+        src = mputprintf(src, "%sconst unsigned short ", split_to_slices ? "" : "static ");
+      }
       src = mputprintf(src, "%s_elements[] = { ",
         op_literals.get_nth_elem(i)->c_str());
       const string& str = op_literals.get_nth_key(i);
@@ -610,13 +650,29 @@ namespace Common {
     }
     src = mputstr(src, ";\n");
     for (size_t i = 0; i < op_literals.size(); i++) {
-      if (i > 0) src = mputstr(src, ",\n");
-      else src = mputstr(src, "static const OCTETSTRING_template ");
+      if (i > 0) {
+        src = mputstr(src, ",\n");
+        if (split_to_slices) {
+          hdr = mputstr(hdr, ",\n");
+        }
+      }
+      else {
+        src = mputprintf(src, "%sconst OCTETSTRING_template ", split_to_slices ? "" : "static ");
+        if (split_to_slices) {
+            hdr = mputprintf(hdr, "extern const OCTETSTRING_template ");
+        }
+      }
       const char *name = op_literals.get_nth_elem(i)->c_str();
       src = mputprintf(src, "%s(%lu, %s_elements)",
         name, (unsigned long) *pattern_lens[i], name);
+      if (split_to_slices) {
+        hdr = mputstr(hdr, name);
+      }
     }
     src = mputstr(src, ";\n");
+    if (split_to_slices) {
+      hdr = mputstr(hdr, ";\n");
+    }
     for (size_t i = 0; i < pattern_lens.size(); i++) delete pattern_lens[i];
     pattern_lens.clear();
   }
@@ -674,8 +730,12 @@ namespace Common {
       const string& pattern = pp_literals.get_nth_key(i);
       size_t pattern_len = pattern.size();
       const char *pattern_ptr = pattern.c_str();
-      if (i > 0) src = mputstr(src, ",\n");
-      else src = mputstr(src, "static const unsigned char ");
+      if (i > 0) {
+        src = mputstr(src, ",\n");
+      }
+      else {
+        src = mputprintf(src, "%sconst unsigned char ", split_to_slices ? "" : "static ");
+      }
       src = mputprintf(src, "%s[] = { ", pp_literals.get_nth_elem(i)->c_str());
       if (pattern_len % 8 != 0) FATAL_ERROR("Module::generate_pp_literals()");
       size_t nof_octets = pattern_len / 8;
@@ -704,7 +764,7 @@ namespace Common {
       const char *str_ptr = str.c_str();
 
       if (i > 0) src = mputstr(src, ",\n");
-      else src = mputstr(src, "static const Token_Match ");
+      else src = mputprintf(src, "%sconst Token_Match ", split_to_slices ? "" : "static ");
 
       src = mputprintf(src, "%s(\"", mp_literals.get_nth_elem(i)->c_str());
       src = Code::translate_string(src, str_ptr + 1);
@@ -730,7 +790,7 @@ namespace Common {
       if (value_size < 2) continue;
       if (array_needed) src = mputstr(src, ",\n");
       else {
-        src = mputstr(src, "static const universal_char ");
+        src = mputprintf(src, "%sconst universal_char ", split_to_slices ? "" : "static ");
         array_needed = true;
       }
       src = mputprintf(src, "%s_uchars[] = { ",
@@ -777,12 +837,12 @@ namespace Common {
     if (splitting) hdr = mputstr(hdr, ";\n");
   }
 
-  void Module::generate_oid_literals(char *&src, char *& /*hdr*/)
+  void Module::generate_oid_literals(char *&src, char *& hdr)
   {
     if (oid_literals.size() == 0) return;
     for (size_t i = 0; i < oid_literals.size(); i++) {
        if (i > 0) src = mputstr(src, ",\n");
-       else src = mputstr(src, "static const OBJID::objid_element ");
+       else src = mputprintf(src, "%sconst OBJID::objid_element ", split_to_slices ? "" : "static ");
 
        src = mputprintf(src, "%s_comps[] = { %s }",
          oid_literals.get_nth_elem(i)->oid_id.c_str(),
@@ -792,14 +852,30 @@ namespace Common {
     for(size_t i = 0; i < oid_literals.size(); i++) {
        const OID_literal *litstruct = oid_literals.get_nth_elem(i);
 
-       if (i > 0) src = mputstr(src, ",\n");
-       else src = mputstr(src, "static const OBJID ");
+       if (i > 0) { 
+         src = mputstr(src, ",\n");
+         if (split_to_slices) {
+           hdr = mputstr(hdr, ",\n");
+         }
+       }
+       else {
+         src = mputprintf(src, "%sconst OBJID ", split_to_slices ? "" : "static ");
+         if (split_to_slices) {
+           hdr = mputstr(hdr, "extern const OBJID ");
+         }
+       }
 
        src = mputprintf(src, "%s(%lu, %s_comps)",
          litstruct->oid_id.c_str(), (unsigned long) litstruct->nof_elems,
          litstruct->oid_id.c_str());
+       if (split_to_slices) {
+         hdr = mputstr(hdr, litstruct->oid_id.c_str());
+       }
     }
     src = mputstr(src, ";\n");
+    if (split_to_slices) {
+      hdr = mputstr(hdr, ";\n");
+    }
   }
 
   void Module::generate_functions(output_struct *output)
@@ -819,11 +895,11 @@ namespace Common {
     // always generate pre_init_module if the file is profiled
     if (output->functions.pre_init || profiled || debugged) {
       output->source.static_function_prototypes =
-	mputstr(output->source.static_function_prototypes,
-	  "static void pre_init_module();\n");
-      output->source.static_function_bodies = mputstr(output->source.static_function_bodies,
-	  "static void pre_init_module()\n"
-          "{\n");
+	  mputprintf(output->source.static_function_prototypes,
+	    "%svoid pre_init_module();\n", split_to_slices ? "extern " : "static ");
+    output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+	    "%svoid pre_init_module()\n"
+          "{\n", split_to_slices ? "" : "static ");
       if (include_location_info) {
         output->source.static_function_bodies =
           mputstr(output->source.static_function_bodies,
@@ -866,11 +942,11 @@ namespace Common {
     // post_init function
     bool has_post_init = false;
     if (output->functions.post_init) {
-      output->source.static_function_prototypes = mputstr(output->source.static_function_prototypes,
-          "static void post_init_module();\n");
-      output->source.static_function_bodies = mputstr(output->source.static_function_bodies,
-	  "static void post_init_module()\n"
-          "{\n");
+      output->source.static_function_prototypes = mputprintf(output->source.static_function_prototypes,
+          "%svoid post_init_module();\n", split_to_slices ? "extern " : "static ");
+      output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+	  "%svoid post_init_module()\n"
+          "{\n", split_to_slices ? "" : "static ");
       if (include_location_info) {
         output->source.static_function_bodies =
           mputstr(output->source.static_function_bodies,
@@ -907,12 +983,12 @@ namespace Common {
     // set_param function
     bool has_set_param;
     if (output->functions.set_param) {
-      output->source.static_function_prototypes = mputstr(output->source.static_function_prototypes,
-        "static boolean set_module_param(Module_Param& param);\n");
-      output->source.static_function_bodies = mputstr(output->source.static_function_bodies,
-        "static boolean set_module_param(Module_Param& param)\n"
+      output->source.static_function_prototypes = mputprintf(output->source.static_function_prototypes,
+        "%sboolean set_module_param(Module_Param& param);\n", split_to_slices ? "extern " : "static ");
+      output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+        "%sboolean set_module_param(Module_Param& param)\n"
         "{\n"
-           "const char* const par_name = param.get_id()->get_current_name();\n");
+           "const char* const par_name = param.get_id()->get_current_name();\n", split_to_slices ? "" : "static ");
       output->source.static_function_bodies =
         mputstr(output->source.static_function_bodies, output->functions.set_param);
       output->source.static_function_bodies =
@@ -925,12 +1001,12 @@ namespace Common {
     // get_param function
     bool has_get_param;
     if (output->functions.get_param) {
-      output->source.static_function_prototypes = mputstr(output->source.static_function_prototypes,
-        "static Module_Param* get_module_param(Module_Param_Name& param_name);\n");
-      output->source.static_function_bodies = mputstr(output->source.static_function_bodies,
-        "static Module_Param* get_module_param(Module_Param_Name& param_name)\n"
+      output->source.static_function_prototypes = mputprintf(output->source.static_function_prototypes,
+        "%sModule_Param* get_module_param(Module_Param_Name& param_name);\n", split_to_slices ? "extern " : "static ");
+      output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+        "%sModule_Param* get_module_param(Module_Param_Name& param_name)\n"
         "{\n"
-           "const char* const par_name = param_name.get_current_name();\n");
+           "const char* const par_name = param_name.get_current_name();\n", split_to_slices ? "" : "static ");
       output->source.static_function_bodies =
         mputstr(output->source.static_function_bodies, output->functions.get_param);
       output->source.static_function_bodies =
@@ -943,11 +1019,11 @@ namespace Common {
     // log_param function
     bool has_log_param;
     if (output->functions.log_param) {
-      output->source.static_function_prototypes = mputstr(output->source.static_function_prototypes,
-	  "static void log_module_param();\n");
-      output->source.static_function_bodies = mputstr(output->source.static_function_bodies,
-	  "static void log_module_param()\n"
-	  "{\n");
+      output->source.static_function_prototypes = mputprintf(output->source.static_function_prototypes,
+	  "%svoid log_module_param();\n", split_to_slices ? "extern " : "static ");
+      output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+	  "%svoid log_module_param()\n"
+	  "{\n", split_to_slices ? "" : "static ");
       output->source.static_function_bodies =
         mputstr(output->source.static_function_bodies, output->functions.log_param);
       output->source.static_function_bodies = mputstr(output->source.static_function_bodies,
@@ -960,14 +1036,14 @@ namespace Common {
     bool has_init_comp;
     if (output->functions.init_comp) {
       output->source.static_function_prototypes =
-	mputstr(output->source.static_function_prototypes,
-	  "static boolean init_comp_type("
-	  "const char *component_type, boolean init_base_comps);\n");
+	mputprintf(output->source.static_function_prototypes,
+	  "%sboolean init_comp_type("
+	  "const char *component_type, boolean init_base_comps);\n", split_to_slices ? "extern " : "static ");
       output->source.static_function_bodies =
-	mputstr(output->source.static_function_bodies,
-	  "static boolean init_comp_type(const char *component_type, "
+	mputprintf(output->source.static_function_bodies,
+	  "%sboolean init_comp_type(const char *component_type, "
 	    "boolean init_base_comps)\n"
-	  "{\n(void)init_base_comps;\n");
+	  "{\n(void)init_base_comps;\n", split_to_slices ? "" : "static ");
       output->source.static_function_bodies =
         mputstr(output->source.static_function_bodies,
 	  output->functions.init_comp);
@@ -981,13 +1057,13 @@ namespace Common {
     // start function
     bool has_start;
     if (output->functions.start) {
-      output->source.static_function_prototypes = mputstr(output->source.static_function_prototypes,
-	 "static boolean start_ptc_function(const char *function_name, "
-	 "Text_Buf& function_arguments);\n");
-      output->source.static_function_bodies = mputstr(output->source.static_function_bodies,
-	 "static boolean start_ptc_function(const char *function_name, "
+      output->source.static_function_prototypes = mputprintf(output->source.static_function_prototypes,
+	 "%sboolean start_ptc_function(const char *function_name, "
+	 "Text_Buf& function_arguments);\n", split_to_slices ? "extern " : "static ");
+      output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+	 "%sboolean start_ptc_function(const char *function_name, "
 	 "Text_Buf& function_arguments)\n"
-	 "{\n");
+	 "{\n", split_to_slices ? "" : "static ");
       output->source.static_function_bodies =
         mputstr(output->source.static_function_bodies, output->functions.start);
       output->source.static_function_bodies =
@@ -1000,11 +1076,11 @@ namespace Common {
     // control part
     bool has_control;
     if (output->functions.control) {
-      output->source.static_function_prototypes = mputstr(output->source.static_function_prototypes,
-	  "static void module_control_part();\n");
-      output->source.static_function_bodies = mputstr(output->source.static_function_bodies,
-	  "static void module_control_part()\n"
-	  "{\n");
+      output->source.static_function_prototypes = mputprintf(output->source.static_function_prototypes,
+	  "%svoid module_control_part();\n", split_to_slices ? "extern " : "static ");
+      output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,
+	  "%svoid module_control_part()\n"
+	  "{\n", split_to_slices ? "" : "static ");
       output->source.static_function_bodies =
         mputstr(output->source.static_function_bodies, output->functions.control);
       output->source.static_function_bodies =
@@ -1015,8 +1091,11 @@ namespace Common {
     } else has_control = false;
     // module checksum
     if (has_checksum) {
-      output->source.string_literals = mputstr(output->source.string_literals,
-	"static const unsigned char module_checksum[] = {");
+      if (split_to_slices) {
+        output->header.global_vars = mputprintf(output->header.global_vars, "extern const unsigned char module_checksum[];\n");
+      }
+      output->source.string_literals = mputprintf(output->source.string_literals,
+	"%sconst unsigned char module_checksum[] = {", split_to_slices ? "" : "static ");
       for (size_t i = 0; i < sizeof(module_checksum); i++) {
         if (i > 0) output->source.string_literals =
 	  mputc(output->source.string_literals, ',');
@@ -1046,10 +1125,17 @@ namespace Common {
 
       if (num_xml_namespaces != 0 || (control_ns && control_ns_prefix)) {
         output->source.global_vars = mputprintf(output->source.global_vars,
-          "static const size_t num_namespaces = %lu;\n"
-          "static const namespace_t xml_namespaces[num_namespaces+1] = {\n"
-          , (unsigned long)num_xml_namespaces
+          "%sconst size_t num_namespaces = %lu;\n"
+          "%sconst namespace_t xml_namespaces[num_namespaces+1] = {\n"
+          , split_to_slices ? "" : "static ", (unsigned long)num_xml_namespaces
+          , split_to_slices ? "" : "static "
         );
+        if (split_to_slices) {
+          output->header.global_vars = mputprintf(output->header.global_vars,
+            "extern const size_t num_namespaces;\n");
+          output->header.global_vars = mputprintf(output->header.global_vars,
+            "extern const namespace_t xml_namespaces[];\n");
+        }
         for (size_t i=0; i < namespaces.size(); ++i) {
           if (used_namespaces.has_key(i)) {
             output->source.global_vars = mputprintf(output->source.global_vars,
@@ -1126,19 +1212,31 @@ namespace Common {
       duplicate_underscores ? module_name : modid->get_ttcnname().c_str());
 
     output->source.global_vars = mputprintf(output->source.global_vars,
-      "\nstatic const RuntimeVersionChecker ver_checker("
+      "\n%sconst RuntimeVersionChecker ver_checker("
       "  current_runtime_version.requires_major_version_%d,\n"
       "  current_runtime_version.requires_minor_version_%d,\n"
       "  current_runtime_version.requires_patch_level_%d,"
       "  current_runtime_version.requires_runtime_%d);\n",
+      split_to_slices ? "" : "static ",
       TTCN3_MAJOR, TTCN3_MINOR, TTCN3_PATCHLEVEL, use_runtime_2 ? 2 : 1
       );
+    if (split_to_slices) {
+      output->header.global_vars = mputprintf(output->header.global_vars,
+        "extern const RuntimeVersionChecker ver_checker;\n");
+    }
     if (tcov_enabled) {
       output->source.global_vars = mputprintf(output->source.global_vars,
-        "\nstatic const int effective_module_lines[] = { %s };\n" \
-        "static const char *effective_module_functions[] = { %s };\n",
+        "\n%sconst int effective_module_lines[] = { %s };\n" \
+        "%sconst char *effective_module_functions[] = { %s };\n",
+        split_to_slices ? "" : "static ",
         effective_module_lines ? static_cast<const char *>(effective_module_lines) : "",
+        split_to_slices ? "" : "static ",     
         effective_module_functions ? static_cast<const char *>(effective_module_functions) : "");
+      if (split_to_slices) {
+        output->header.global_vars = mputprintf(output->header.global_vars,
+          "extern const int effective_module_lines[];\n" \
+          "extern const char *effective_module_functions[];\n");
+      }
     }
   }
 
@@ -1545,19 +1643,26 @@ namespace Common {
     cgh.add_module(modid->get_name(), modid->get_ttcnname(),
       moduletype == MOD_TTCN, true);
     cgh.set_current_module(modid->get_ttcnname());
-
+    
     // language specific parts (definitions, imports, etc.)
     //generate_code_internal(&target);  <- needed to pass cgh
     generate_code_internal(cgh);
     
     output_struct* output = cgh.get_current_outputstruct();
+    
+    CodeGenHelper::update_intervals(output);
 
     // string literals
     generate_literals(output);
     // module level entry points
     generate_functions(output);
+    
+    CodeGenHelper::update_intervals(output); // maybe deeper in generate_functions
+    
     // type conversion functions for type compatibility
     generate_conversion_functions(output);
+    
+    CodeGenHelper::update_intervals(output); // maybe deeper in conv_funcs
     
     /* generate the initializer function for the TTCN-3 profiler
      * (this is done at the end of the code generation, to make sure all code 
@@ -1580,6 +1685,10 @@ namespace Common {
         }
       }
       output->source.global_vars = mputstr(output->source.global_vars, "}\n");
+      if (split_to_slices) {
+        output->header.global_vars = mputstr(output->header.global_vars,
+          "extern void init_ttcn3_profiler();\n");
+      }
     }
     /* TTCN-3 debugger:
        generate the printing function for the types defined in this module

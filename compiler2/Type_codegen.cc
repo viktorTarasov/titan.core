@@ -12,6 +12,7 @@
  *   Delic, Adam
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Pandi, Krisztian
  *
  ******************************************************************************/
@@ -53,6 +54,7 @@ void Type::generate_code(output_struct *target)
 {
   if (code_generated) return;
   generate_code_embedded_before(target);
+  CodeGenHelper::update_intervals(target);  // TODO: class and template separate everywhere?
   // escape from recursion loops
   if (code_generated) return;
   code_generated = true;
@@ -101,11 +103,14 @@ void Type::generate_code(output_struct *target)
       break;
     } // switch
   }
+  CodeGenHelper::update_intervals(target);
   generate_code_embedded_after(target);
+  CodeGenHelper::update_intervals(target);
   if (!is_asn1()) {
     if (has_done_attribute()) generate_code_done(target);
     if (sub_type) sub_type->generate_code(*target);
   }
+  CodeGenHelper::update_intervals(target);
 }
 
 void Type::generate_code_include(const string& sourcefile, output_struct *target)
@@ -434,8 +439,8 @@ void Type::generate_code_typedescriptor(output_struct *target)
 void Type::generate_code_berdescriptor(output_struct *target)
 {
   const char *gennameown_str = get_genname_own().c_str();
-  char *str = mprintf("static const ASN_Tag_t %s_tag_[] = { ",
-    gennameown_str);
+  char *str = mprintf("%sconst ASN_Tag_t %s_tag_[] = { ",
+    split_to_slices ? "" : "static ", gennameown_str);
   Tags *joinedtags = build_tags_joined();
   size_t tagarraysize = joinedtags->get_nof_tags();
   for (size_t i = 0; i < tagarraysize; i++) {
@@ -720,7 +725,11 @@ void Type::generate_code_textdescriptor(output_struct *target)
    case T_BOOL:
     if (textattrib->true_params || textattrib->false_params) {
       target->source.global_vars = mputprintf(target->source.global_vars,
-        "static const TTCN_TEXTdescriptor_bool %s_bool_ = {", gennameown_str);
+        "%sconst TTCN_TEXTdescriptor_bool %s_bool_ = {", split_to_slices ? "" : "static ", gennameown_str);
+      if (split_to_slices) {
+        target->header.global_vars = mputprintf(target->header.global_vars,
+          "extern const TTCN_TEXTdescriptor_bool %s_bool_;\n", gennameown_str);
+      }
       if (textattrib->true_params &&
           textattrib->true_params->encode_token) {
         target->source.global_vars = mputprintf(target->source.global_vars,
@@ -779,8 +788,12 @@ void Type::generate_code_textdescriptor(output_struct *target)
     break;
    case T_ENUM_T:
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "static const TTCN_TEXTdescriptor_enum %s_enum_[] = { ",
-        gennameown_str);
+      "%sconst TTCN_TEXTdescriptor_enum %s_enum_[] = { ",
+        split_to_slices ? "" : "static ", gennameown_str);
+    if (split_to_slices) {
+      target->header.global_vars = mputprintf(target->header.global_vars,
+        "extern const TTCN_TEXTdescriptor_enum %s_enum_[];\n", gennameown_str);
+    }
     for (size_t i = 0; i < t->u.enums.eis->get_nof_eis(); i++) {
       if (i > 0) target->source.global_vars =
         mputstr(target->source.global_vars, ", ");
@@ -845,8 +858,12 @@ void Type::generate_code_textdescriptor(output_struct *target)
        textattrib->decoding_params.convert!=0 ||
        textattrib->decoding_params.just!=1 ){
       target->source.global_vars=mputprintf(target->source.global_vars,
-        "static const TTCN_TEXTdescriptor_param_values %s_par_ = {",
-        gennameown_str);
+        "%sconst TTCN_TEXTdescriptor_param_values %s_par_ = {",
+        split_to_slices ? "" : "static ", gennameown_str);
+      if (split_to_slices) {
+        target->header.global_vars=mputprintf(target->header.global_vars,
+          "extern const TTCN_TEXTdescriptor_param_values %s_par_;\n", gennameown_str);
+      }
       target->source.global_vars=mputprintf(target->source.global_vars,
            "{%s,%s,%i,%i,%i,%i},{%s,%s,%i,%i,%i,%i}};\n"
            ,textattrib->coding_params.leading_zero?"true":"false"
@@ -868,8 +885,12 @@ void Type::generate_code_textdescriptor(output_struct *target)
    case T_SEQOF:
    case T_SETOF:
     target->source.global_vars=mputprintf(target->source.global_vars,
-      "static const TTCN_TEXTdescriptor_param_values %s_par_ = {",
-      gennameown_str);
+      "%sconst TTCN_TEXTdescriptor_param_values %s_par_ = {",
+      split_to_slices ? "" : "static ", gennameown_str);
+    if (split_to_slices) {
+      target->header.global_vars=mputprintf(target->header.global_vars,
+        "extern const TTCN_TEXTdescriptor_param_values %s_par_;\n", gennameown_str);
+    }
     target->source.global_vars=mputprintf(target->source.global_vars,
          "{%s,%s,%i,%i,%i,%i},{%s,%s,%i,%i,%i,%i}};\n"
          ,textattrib->coding_params.leading_zero?"true":"false"
@@ -2040,7 +2061,7 @@ void Type::generate_code_Array(output_struct *target)
       "};\n\n",
       own_name, 
       u.array.dimension->get_value_type(u.array.element_type, my_scope).c_str());
-    target->source.class_defs = mputprintf(target->source.class_defs,
+    target->source.methods = mputprintf(target->source.methods,
       "const TTCN_Typedescriptor_t* %s::get_elem_descr() const { return &%s_descr_; }\n\n",
       own_name, u.array.element_type->get_genname_typedescriptor(my_scope).c_str());
   } else {
@@ -2696,8 +2717,11 @@ void Type::generate_code_object(const_def *cdef, Scope *p_scope,
   if (prefix) {
     cdef->decl = mputprintf(cdef->decl, "extern const %s& %s;\n",
       type_name_str, name_str);
-    cdef->def = mputprintf(cdef->def, "static %s %s%s;\n"
-      "const %s& %s = %s%s;\n", type_name_str, prefix, name_str,
+    if (split_to_slices) {
+      cdef->decl = mputprintf(cdef->decl, "extern %s %s%s;\n", type_name_str, prefix, name_str);
+    }
+    cdef->def = mputprintf(cdef->def, "%s%s %s%s;\n"
+      "const %s& %s = %s%s;\n", split_to_slices ? "" : "static ", type_name_str, prefix, name_str,
         type_name_str, name_str, prefix, name_str);
   } else {
     cdef->decl = mputprintf(cdef->decl, "extern %s %s;\n",
@@ -2720,8 +2744,8 @@ void Type::generate_code_object(const_def *cdef, GovernedSimple *p_setting)
     FATAL_ERROR("Type::generate_code_object()");
   }
   if (p_setting->get_err_descr()) {
-    cdef->def = p_setting->get_err_descr()->generate_code_str(cdef->def,
-      p_setting->get_genname_prefix() + p_setting->get_genname_own());
+    cdef->def = p_setting->get_err_descr()->generate_code_str(cdef->def, cdef->decl,
+      p_setting->get_genname_prefix() + p_setting->get_genname_own(), false);
   }
   generate_code_object(cdef, p_setting->get_my_scope(),
     p_setting->get_genname_own(), p_setting->get_genname_prefix(),

@@ -10,6 +10,7 @@
 #   Delic, Adam
 #   Kovacs, Ferenc
 #   Raduly, Csaba
+#   Szabo, Bence Janos
 #
 ##############################################################################
 #!/usr/bin/make -f
@@ -50,6 +51,11 @@ GOOD_HH := $(GOOD_TTCN:.ttcn=.hh)
 
 ifdef CODE_SPLIT
 GOOD_CC := $(foreach file, $(GOOD_CC:.cc=), $(addprefix $(file), .cc _seq.cc _set.cc  _seqof.cc _setof.cc _union.cc))
+else ifdef SPLIT_TO_SLICES
+POSTFIXES := $(foreach file, $(SPLIT_TO_SLICES), $(addsuffix $(file), _part_))
+POSTFIXES := $(foreach file, $(POSTFIXES), $(addprefix $(file), .cc))
+GENERATED_SOURCES2 := $(foreach file, $(GOOD_CC:.cc=), $(addprefix $(file), $(POSTFIXES)))
+GOOD_CC += $(GENERATED_SOURCES2)
 endif
 
 

@@ -10,6 +10,7 @@
  *   Delic, Adam
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -118,7 +119,7 @@ namespace Ttcn {
     bool get_is_raw() const { return is_raw; }
     bool get_is_omit() const;
     static const char* get_indicator_str(indicator_t i);
-    char* generate_code_str(char *str, string genname);
+    char* generate_code_str(char *str, char *& def, string genname, const bool embedded);
     char* generate_code_init_str(char *str, string genname);
     string get_typedescriptor_str();
     void chk_recursions(ReferenceChain& refch);
@@ -131,9 +132,9 @@ namespace Ttcn {
     ErroneousAttributeSpec *before, *value, *after; // NULL if not specified
     string field_name; // qualifier string
     ErroneousValues(const string& p_field_name): before(0), value(0), after(0), field_name(p_field_name) {}
-    char* generate_code_embedded_str(char *str, string genname);
+    char* generate_code_embedded_str(char *str, char *& def, string genname, const bool embedded);
     char* generate_code_init_str(char *str, string genname);
-    char* generate_code_embedded_str(char *str, string genname, ErroneousAttributeSpec* attr_spec);
+    char* generate_code_embedded_str(char *str, char *& def, string genname, ErroneousAttributeSpec* attr_spec, const bool embedded);
     char* generate_code_struct_str(char *str, string genname, int field_index);
     void chk_recursions(ReferenceChain& refch);
   };
@@ -151,10 +152,10 @@ namespace Ttcn {
   public:
     ErroneousDescriptor(): omit_before(-1), omit_after(-1) {}
     ~ErroneousDescriptor();
-    char* generate_code_embedded_str(char *str, string genname);
+    char* generate_code_embedded_str(char *str, char *& def, string genname, const bool embedded);
     char* generate_code_init_str(char *str, string genname);
-    char* generate_code_struct_str(char *str, string genname, int field_index);
-    char* generate_code_str(char *str, string genname);
+    char* generate_code_struct_str(char *str, char *& def, string genname, int field_index);
+    char* generate_code_str(char *str, char *& def, string genname, const bool embedded);
     void chk_recursions(ReferenceChain& refch);
   };
 

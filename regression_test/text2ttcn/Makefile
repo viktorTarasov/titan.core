@@ -48,12 +48,12 @@ all: $(GENERATED_DIRS)
 $(DIR_SINGLE):
 	mkdir $@
 	cd $@ && for file in $(SINGLE_FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) -sM -e $(RUNNABLE) ./*  && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) -sM -e $(RUNNABLE) ./*  && $(MAKE_PROG)
 
 $(DIR_PARALLEL):
 	mkdir $@
 	cd $@ && for file in $(PARALLEL_FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) -M -e $(RUNNABLE) ./*  && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) -M -e $(RUNNABLE) ./*  && $(MAKE_PROG)
 
 run: $(GENERATED_DIRS)
 	cd $(DIR_SINGLE) && ./$(RUNNABLE) $(SINGLE_CFG) && grep "Overall verdict: pass" *.log

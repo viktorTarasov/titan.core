@@ -14,6 +14,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
  *   Pandi, Krisztian
@@ -1866,7 +1867,10 @@ namespace Ttcn {
 
   void Definitions::generate_code(CodeGenHelper& cgh) {
     // FIXME: implement
-    for(size_t i = 0; i < ass_v.size(); i++) ass_v[i]->generate_code(cgh);
+    for(size_t i = 0; i < ass_v.size(); i++) {
+      ass_v[i]->generate_code(cgh);
+      CodeGenHelper::update_intervals(cgh.get_current_outputstruct());
+    }
   }
 
   char* Definitions::generate_code_str(char *str)
@@ -4446,7 +4450,7 @@ namespace Ttcn {
       }
       if (erroneous_attrs && erroneous_attrs->get_err_descr()) {
         function_body = erroneous_attrs->get_err_descr()->
-          generate_code_str(function_body, string("ret_val"));
+          generate_code_str(function_body, target->header.global_vars, string("ret_val"), true);
       }
       function_body = body->generate_code_init(function_body, "ret_val");
       if (template_restriction!=TR_NONE && gen_restriction_check)

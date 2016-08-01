@@ -12,6 +12,7 @@
  *   Feher, Csaba
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -20,6 +21,7 @@
 #include "../map.hh"
 #include "../CompilerError.hh"
 #include "../Type.hh"
+#include "../main.hh"
 #include "TtcnTemplate.hh"
 
 namespace Ttcn {
@@ -313,17 +315,21 @@ namespace Ttcn {
     return "";
   }
 
-  char* ErroneousAttributeSpec::generate_code_str(char *str, string genname)
+  char* ErroneousAttributeSpec::generate_code_str(char *str, char *& def, string genname, const bool embedded)
   {
     if (get_is_omit()) return str;
     if (!type) FATAL_ERROR("ErroneousAttributeSpec::generate_code_str()");
     if (!value) FATAL_ERROR("ErroneousAttributeSpec::generate_code_str()");
     if (first_genname.empty()) { // this is the first use
-      str = mputprintf(str, "static %s %s;\n",
+      str = mputprintf(str, "%s%s %s;\n", split_to_slices && !embedded ? "" : "static ",
         type->get_genname_value(value->get_my_scope()).c_str(), genname.c_str());
       first_genname = genname;
+      if (split_to_slices && !embedded) {
+        def = mputprintf(def, "extern %s %s;\n",
+          type->get_genname_value(value->get_my_scope()).c_str(), genname.c_str());
+      }
     } else {
-      str = mputprintf(str, "static %s& %s = %s;\n",
+      str = mputprintf(str, "%s%s& %s = %s;\n", split_to_slices && !embedded ? "" : "static ",
         type->get_genname_value(value->get_my_scope()).c_str(),
         genname.c_str(), first_genname.c_str());
     }
@@ -358,21 +364,24 @@ namespace Ttcn {
 
   // ==== ErroneousValues ====
 
-  char* ErroneousValues::generate_code_embedded_str(char *str, string genname)
+  char* ErroneousValues::generate_code_embedded_str(char *str, char *& def, string genname, const bool embedded)
   {
-    if (before) str = generate_code_embedded_str(str, genname+"_before", before);
-    if (value) str = generate_code_embedded_str(str, genname+"_value", value);
-    if (after) str = generate_code_embedded_str(str, genname+"_after", after);
+    if (before) str = generate_code_embedded_str(str, def, genname+"_before", before, embedded);
+    if (value) str = generate_code_embedded_str(str, def, genname+"_value", value, embedded);
+    if (after) str = generate_code_embedded_str(str, def, genname+"_after", after, embedded);
     return str;
   }
 
-  char* ErroneousValues::generate_code_embedded_str(char *str, string genname, ErroneousAttributeSpec* attr_spec)
+  char* ErroneousValues::generate_code_embedded_str(char *str, char *& def, string genname, ErroneousAttributeSpec* attr_spec, const bool embedded)
   {
-    str = attr_spec->generate_code_str(str, genname+"_errval");
-    str = mputprintf(str, "static Erroneous_value_t %s = { %s, %s, %s };\n", genname.c_str(),
+    str = attr_spec->generate_code_str(str, def, genname+"_errval", embedded);
+    str = mputprintf(str, "%sErroneous_value_t %s = { %s, %s, %s };\n", split_to_slices && !embedded ? "" : "static ", genname.c_str(),
       attr_spec->get_is_raw() ? "true" : "false",
       attr_spec->get_is_omit() ? "NULL" : ("&"+genname+"_errval").c_str(),
       attr_spec->get_typedescriptor_str().c_str());
+    if (split_to_slices && !embedded) {
+      def = mputprintf(def, "extern Erroneous_value_t %s;\n", genname.c_str());
+    }
     return str;
   }
 
@@ -403,35 +412,41 @@ namespace Ttcn {
 
   // ==== ErroneousDescriptor ====
 
-  char* ErroneousDescriptor::generate_code_embedded_str(char *str, string genname)
+  char* ErroneousDescriptor::generate_code_embedded_str(char *str, char *& def, string genname, const bool embedded)
   {
     // values
     for (size_t i=0; i<values_m.size(); i++) {
-      str = values_m.get_nth_elem(i)->generate_code_embedded_str(str, genname+"_v"+Int2string((int)values_m.get_nth_key(i)));
+      str = values_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_v"+Int2string((int)values_m.get_nth_key(i)), embedded);
     }
     // embedded descriptors
     for (size_t i=0; i<descr_m.size(); i++) {
-      str = descr_m.get_nth_elem(i)->generate_code_embedded_str(str, genname+"_d"+Int2string((int)descr_m.get_nth_key(i)));
+      str = descr_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_d"+Int2string((int)descr_m.get_nth_key(i)), embedded);
     }
     // values vector
     if (values_m.size()>0) {
-      str = mputprintf(str, "static Erroneous_values_t %s_valsvec[%d] = { ", genname.c_str(), (int)values_m.size());
+      str = mputprintf(str, "%sErroneous_values_t %s_valsvec[%d] = { ", split_to_slices && !embedded ? "" : "static ", genname.c_str(), (int)values_m.size());
       for (size_t i=0; i<values_m.size(); i++) {
         if (i>0) str = mputstr(str, ", ");
         int key_i = (int)values_m.get_nth_key(i);
         str = values_m.get_nth_elem(i)->generate_code_struct_str(str, genname+"_v"+Int2string(key_i), key_i);
       }
       str = mputstr(str, " };\n");
+      if (split_to_slices && !embedded) {
+        def = mputprintf(def, "extern Erroneous_values_t %s_valsvec[%d];\n", genname.c_str(), (int)values_m.size());
+      }
     }
     // embedded descriptor vector
     if (descr_m.size()>0) {
-      str = mputprintf(str, "static Erroneous_descriptor_t %s_embvec[%d] = { ", genname.c_str(), (int)descr_m.size());
+      str = mputprintf(str, "%sErroneous_descriptor_t %s_embvec[%d] = { ", split_to_slices && !embedded ? "" : "static ", genname.c_str(), (int)descr_m.size());
       for (size_t i=0; i<descr_m.size(); i++) {
         if (i>0) str = mputstr(str, ", ");
         int key_i = (int)descr_m.get_nth_key(i);
-        str = descr_m.get_nth_elem(i)->generate_code_struct_str(str, genname+"_d"+Int2string(key_i), key_i);
+        str = descr_m.get_nth_elem(i)->generate_code_struct_str(str, def, genname+"_d"+Int2string(key_i), key_i);
       }
       str = mputstr(str, " };\n");
+      if (split_to_slices && !embedded) {
+        def = mputprintf(def, "extern Erroneous_descriptor_t %s_embvec[%d];\n", genname.c_str(), (int)descr_m.size());
+      }
     }
     return str;
   }
@@ -447,7 +462,7 @@ namespace Ttcn {
     return str;
   }
 
-  char* ErroneousDescriptor::generate_code_struct_str(char *str, string genname, int field_index)
+  char* ErroneousDescriptor::generate_code_struct_str(char *str, char *& def, string genname, int field_index)
   {
     string genname_values_vec = genname + "_valsvec";
     string genname_embedded_vec = genname + "_embvec";
@@ -465,18 +480,22 @@ namespace Ttcn {
     for (size_t i=0; i<values_m.size(); i++) {
       values_m.get_nth_elem(i)->chk_recursions(refch);
     }
+      
     for (size_t i=0; i<descr_m.size(); i++) {
       descr_m.get_nth_elem(i)->chk_recursions(refch);
     }
   }
 
-  char* ErroneousDescriptor::generate_code_str(char *str, string genname)
+  char* ErroneousDescriptor::generate_code_str(char *str, char *& def, string genname, const bool embedded)
   {
     genname += "_err_descr";
-    str = generate_code_embedded_str(str, genname);
-    str = mputprintf(str, "static Erroneous_descriptor_t %s = ", genname.c_str());
-    str = generate_code_struct_str(str, genname, -1);
+    str = generate_code_embedded_str(str, def, genname, embedded);
+    str = mputprintf(str, "%sErroneous_descriptor_t %s = ", split_to_slices && !embedded ? "" : "static ", genname.c_str());
+    str = generate_code_struct_str(str, def, genname, -1);
     str = mputstr(str, ";\n");
+    if (split_to_slices && !embedded) {
+      def = mputprintf(def, "extern Erroneous_descriptor_t %s;\n", genname.c_str());
+    }
     return str;
   }
 

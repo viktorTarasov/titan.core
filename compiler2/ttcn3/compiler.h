@@ -14,6 +14,7 @@
  *   Kovacs, Ferenc
  *   Kremer, Peter
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Tatarka, Gabor
  *   Zalanyi, Balazs Andor
@@ -65,6 +66,21 @@ extern "C" {
       char *start;     /**< Code for start_ptc_function() */
       char *control;   /**< Code for module_control_part() */
     } functions;
+    struct {
+      size_t pre_things_size; // Size of string_literals + global_vars
+      size_t *methods;
+      size_t methods_max_size;
+      size_t methods_size;
+      size_t *function_bodies;
+      size_t function_bodies_max_size;
+      size_t function_bodies_size;
+      size_t *static_function_bodies;
+      size_t static_function_bodies_max_size;
+      size_t static_function_bodies_size;
+      size_t *static_conversion_function_bodies;
+      size_t static_conversion_function_bodies_size;
+      size_t static_conversion_function_bodies_max_size;
+    } intervals;
   } output_struct;
 
   typedef struct expression_struct_t {

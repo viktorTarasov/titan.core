@@ -13,7 +13,7 @@ then
     then
 	if $GREP -q "extern const INTEGER& my__Integer__Value" ./Test284.hh
         then 
-	    if $GREP -q "const_my__Integer__Value = 9;" ./Test284.cc
+	    if $GREP -q "const_my__Integer__Value = 9;" ./*.cc
             then Verdict="pass"
             else Verdict="fail 4"
             fi

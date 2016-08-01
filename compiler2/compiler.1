@@ -17,7 +17,7 @@ compiler \- TTCN-3 and ASN.1 to C++ translator
 .RB "[\| " \-Q
 .IR "n" " \|] "
 .RB "[\| " \-U
-.IR "none|type" " \|] "
+.IR "none|type|'number'" " \|] "
 .RB "[\| " \-T " \|]"
 module.ttcn ...
 .RB "[\| " \-A " \|]"
@@ -262,8 +262,10 @@ Forces the compiler to do
 characters in all output file names. This option turns on the
 compatibility mode with versions 1.1 or earlier.
 .TP
-.BI \-U " none|type"
+.BI \-U " none|type|'number'"
 Selects code splitting mode for the generated C++ code.
+The 'number' should be a positive number between 1 and 999999.
+If the 'number' is present the files will be sliced into 'number' files.
 .TP
 .B \-v
 Prints

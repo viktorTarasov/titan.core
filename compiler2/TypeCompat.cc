@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 #include "TypeCompat.hh"
@@ -323,12 +324,12 @@ void TypeConv::gen_conv_func(char **p_prototypes, char **p_bodies,
   string to_name = m_is_temp ? m_to->get_genname_template(p_mod)
     : m_to->get_genname_value(p_mod);
   *p_prototypes = mputprintf(*p_prototypes,
-    "static boolean %s(%s& p_to_v, const %s& p_from_v);\n",
-    get_conv_func(m_from, m_to, p_mod).c_str(), to_name.c_str(),
+    "%sboolean %s(%s& p_to_v, const %s& p_from_v);\n",
+    split_to_slices ? "" : "static ", get_conv_func(m_from, m_to, p_mod).c_str(), to_name.c_str(),
     from_name.c_str());
   *p_bodies = mputprintf(*p_bodies,
-    "static boolean %s(%s& p_to_v, const %s& p_from_v)\n{\n",
-    get_conv_func(m_from, m_to, p_mod).c_str(), to_name.c_str(),
+    "%sboolean %s(%s& p_to_v, const %s& p_from_v)\n{\n",
+    split_to_slices ? "" : "static ", get_conv_func(m_from, m_to, p_mod).c_str(), to_name.c_str(),
     from_name.c_str());
   switch (m_to->get_typetype()) {
   case Type::T_SEQ_A:

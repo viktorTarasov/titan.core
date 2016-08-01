@@ -1675,14 +1675,21 @@ static void print_shared_object_name(FILE *fp, const struct user_struct *user)
 }
 /** Prints the splitted files' names for a given module. */
 static void print_splitted_file_names(FILE *fp,
-  const struct makefile_struct *makefile, const struct module_struct *module)
+  const struct makefile_struct *makefile, const struct module_struct *module, const boolean dir)
 {
+  int n_slices;
   if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
-    print_generated_file_name(fp, module, FALSE, "_seq.cc");
-    print_generated_file_name(fp, module, FALSE, "_set.cc");
-    print_generated_file_name(fp, module, FALSE, "_seqof.cc");
-    print_generated_file_name(fp, module, FALSE, "_setof.cc");
-    print_generated_file_name(fp, module, FALSE, "_union.cc");
+    print_generated_file_name(fp, module, dir, "_seq.cc");
+    print_generated_file_name(fp, module, dir, "_set.cc");
+    print_generated_file_name(fp, module, dir, "_seqof.cc");
+    print_generated_file_name(fp, module, dir, "_setof.cc");
+    print_generated_file_name(fp, module, dir, "_union.cc");
+  } else if(makefile->code_splitting_mode != NULL && (n_slices = atoi(makefile->code_splitting_mode + 2))) {
+    for (int i = 1; i < n_slices; i++) {
+      char buffer[16]; // 6 digits + 4 chars + _part
+      sprintf(buffer, "_part_%i.cc", i);
+      print_generated_file_name(fp, module, dir, buffer);
+    }
   }
 }
 
@@ -2267,7 +2274,7 @@ static void print_makefile(struct makefile_struct *makefile)
         for (i = 0; i < makefile->nTTCN3Modules; i++) {
           const struct module_struct *module = makefile->TTCN3Modules + i;
           if (module->dir_name == NULL || !makefile->central_storage)
-            print_splitted_file_names(fp, makefile, module);
+            print_splitted_file_names(fp, makefile, module, FALSE);
         }
       }
       if (makefile->preprocess) {
@@ -2276,7 +2283,7 @@ static void print_makefile(struct makefile_struct *makefile)
           for (i = 0; i < makefile->nTTCN3PPModules; i++) {
             const struct module_struct *module = makefile->TTCN3PPModules + i;
             if (module->dir_name == NULL || !makefile->central_storage)
-              print_splitted_file_names(fp, makefile, module);
+              print_splitted_file_names(fp, makefile, module, FALSE);
           }
         }
       }
@@ -2286,7 +2293,7 @@ static void print_makefile(struct makefile_struct *makefile)
         if (module->dir_name == NULL || !makefile->central_storage) {
           print_generated_file_name(fp, module, FALSE, ".cc");
           if (makefile->code_splitting_mode)
-            print_splitted_file_names(fp, makefile, module);
+            print_splitted_file_names(fp, makefile, module, FALSE);
         }
       }
       if (makefile->preprocess) {
@@ -2295,7 +2302,7 @@ static void print_makefile(struct makefile_struct *makefile)
           if (module->dir_name == NULL || !makefile->central_storage) {
             print_generated_file_name(fp, module, FALSE, ".cc");
             if (makefile->code_splitting_mode)
-              print_splitted_file_names(fp, makefile, module);
+              print_splitted_file_names(fp, makefile, module, FALSE);
           }
         }
       }
@@ -2306,7 +2313,7 @@ static void print_makefile(struct makefile_struct *makefile)
         for (i = 0; i < makefile->nASN1Modules; i++) {
           const struct module_struct *module = makefile->ASN1Modules + i;
           if (module->dir_name == NULL || !makefile->central_storage) {
-            print_splitted_file_names(fp, makefile, module);
+            print_splitted_file_names(fp, makefile, module, FALSE);
           }
         }
       }
@@ -2316,7 +2323,7 @@ static void print_makefile(struct makefile_struct *makefile)
         if (module->dir_name == NULL || !makefile->central_storage) {
           print_generated_file_name(fp, module, FALSE, ".cc");
           if (makefile->code_splitting_mode)
-            print_splitted_file_names(fp, makefile, module);
+            print_splitted_file_names(fp, makefile, module, FALSE);
         }
       }
     }
@@ -2356,7 +2363,7 @@ static void print_makefile(struct makefile_struct *makefile)
           for (i = 0; i < makefile->nTTCN3Modules; i++) {
             const struct module_struct *module = makefile->TTCN3Modules + i;
             if (module->dir_name != NULL) {
-              print_splitted_file_names(fp, makefile, module);
+              print_splitted_file_names(fp, makefile, module, TRUE);
             }
           }
         }
@@ -2366,7 +2373,7 @@ static void print_makefile(struct makefile_struct *makefile)
             for (i = 0; i < makefile->nTTCN3PPModules; i++) {
               const struct module_struct *module = makefile->TTCN3PPModules + i;
               if (module->dir_name != NULL) {
-                print_splitted_file_names(fp, makefile, module);
+                print_splitted_file_names(fp, makefile, module, TRUE);
               }
             }
           }
@@ -2377,7 +2384,7 @@ static void print_makefile(struct makefile_struct *makefile)
           if (module->dir_name != NULL) {
             print_generated_file_name(fp, module, TRUE, ".cc");
             if (makefile->code_splitting_mode)
-              print_splitted_file_names(fp, makefile, module);
+              print_splitted_file_names(fp, makefile, module, TRUE);
           }
         }
         if (makefile->preprocess) {
@@ -2386,7 +2393,7 @@ static void print_makefile(struct makefile_struct *makefile)
             if (module->dir_name != NULL) {
               print_generated_file_name(fp, module, TRUE, ".cc");
               if (makefile->code_splitting_mode)
-                print_splitted_file_names(fp, makefile, module);
+                print_splitted_file_names(fp, makefile, module, TRUE);
             }
           }
         }
@@ -2397,7 +2404,7 @@ static void print_makefile(struct makefile_struct *makefile)
           for (i = 0; i < makefile->nASN1Modules; i++) {
             const struct module_struct *module = makefile->ASN1Modules + i;
             if (module->dir_name != NULL) {
-              print_splitted_file_names(fp, makefile, module);
+              print_splitted_file_names(fp, makefile, module, TRUE);
             }
           }
         }
@@ -2407,7 +2414,7 @@ static void print_makefile(struct makefile_struct *makefile)
           if (module->dir_name != NULL) {
             print_generated_file_name(fp, module, TRUE, ".cc");
             if (makefile->code_splitting_mode)
-              print_splitted_file_names(fp, makefile, module);
+              print_splitted_file_names(fp, makefile, module, TRUE);
           }
         }
       }
@@ -2573,14 +2580,22 @@ static void print_makefile(struct makefile_struct *makefile)
           const struct module_struct *module = makefile->TTCN3Modules + i;
           if (module->dir_name == NULL || !makefile->central_storage) {
             print_generated_file_name(fp, module, FALSE, ".so");
-            if (makefile->code_splitting_mode != NULL)
+            if (makefile->code_splitting_mode != NULL) {
+              int n_slices;
               if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
                 print_generated_file_name(fp, module, FALSE, "_seq.so");
                 print_generated_file_name(fp, module, FALSE, "_set.so");
                 print_generated_file_name(fp, module, FALSE, "_seqof.so");
                 print_generated_file_name(fp, module, FALSE, "_setof.so");
                 print_generated_file_name(fp, module, FALSE, "_union.so");
+              } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                for (int i = 1; i < n_slices; i++) {
+                char buffer[16]; // 6 digits + 4 chars + _part
+                sprintf(buffer, "_part_%i.so", i);
+                  print_generated_file_name(fp, module, FALSE, buffer);
+                }
               }
+            }
           }
         }
         if (makefile->preprocess) {
@@ -2588,14 +2603,22 @@ static void print_makefile(struct makefile_struct *makefile)
             const struct module_struct *module = makefile->TTCN3PPModules + i;
             if (module->dir_name == NULL || !makefile->central_storage) {
               print_generated_file_name(fp, module, FALSE, ".so");
-              if (makefile->code_splitting_mode != NULL)
+              if (makefile->code_splitting_mode != NULL) {
+                int n_slices;
                 if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
                   print_generated_file_name(fp, module, FALSE, "_seq.so");
                   print_generated_file_name(fp, module, FALSE, "_set.so");
                   print_generated_file_name(fp, module, FALSE, "_seqof.so");
                   print_generated_file_name(fp, module, FALSE, "_setof.so");
                   print_generated_file_name(fp, module, FALSE, "_union.so");
+                } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                  for (int i = 1; i < n_slices; i++) {
+                char buffer[16]; // 6 digits + 4 chars + _part
+                sprintf(buffer, "_part_%i.so", i);
+                    print_generated_file_name(fp, module, FALSE, buffer);
+                  }
                 }
+              }
             }
           }
         }
@@ -2603,14 +2626,22 @@ static void print_makefile(struct makefile_struct *makefile)
           const struct module_struct *module = makefile->ASN1Modules + i;
           if (module->dir_name == NULL || !makefile->central_storage) {
             print_generated_file_name(fp, module, FALSE, ".so");
-            if (makefile->code_splitting_mode != NULL)
+            if (makefile->code_splitting_mode != NULL) {
+              int n_slices;
               if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
                 print_generated_file_name(fp, module, FALSE, "_seq.so");
                 print_generated_file_name(fp, module, FALSE, "_set.so");
                 print_generated_file_name(fp, module, FALSE, "_seqof.so");
                 print_generated_file_name(fp, module, FALSE, "_setof.so");
                 print_generated_file_name(fp, module, FALSE, "_union.so");
+              } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                for (int i = 1; i < n_slices; i++) {
+                char buffer[16]; // 6 digits + 4 chars + _part
+                sprintf(buffer, "_part_%i.so", i);
+                  print_generated_file_name(fp, module, FALSE, buffer);
+                }
               }
+            }
           }
         }
       }
@@ -2637,14 +2668,22 @@ static void print_makefile(struct makefile_struct *makefile)
         const struct module_struct *module = makefile->TTCN3Modules + i;
         if (module->dir_name == NULL || !makefile->central_storage) {
           print_generated_file_name(fp, module, FALSE, ".o");
-          if (makefile->code_splitting_mode != NULL)
+          if (makefile->code_splitting_mode != NULL) {
+            int n_slices;
             if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
               print_generated_file_name(fp, module, FALSE, "_seq.o");
               print_generated_file_name(fp, module, FALSE, "_set.o");
               print_generated_file_name(fp, module, FALSE, "_seqof.o");
               print_generated_file_name(fp, module, FALSE, "_setof.o");
               print_generated_file_name(fp, module, FALSE, "_union.o");
+            } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+              for (int i = 1; i < n_slices; i++) {
+                char buffer[16]; // 6 digits + 4 chars + _part
+                sprintf(buffer, "_part_%i.o", i);
+                print_generated_file_name(fp, module, FALSE, buffer);
+              }
             }
+          }
         }
       }
       if (makefile->preprocess) {
@@ -2652,14 +2691,22 @@ static void print_makefile(struct makefile_struct *makefile)
           const struct module_struct *module = makefile->TTCN3PPModules + i;
           if (module->dir_name == NULL || !makefile->central_storage) {
             print_generated_file_name(fp, module, FALSE, ".o");
-            if (makefile->code_splitting_mode != NULL)
+            if (makefile->code_splitting_mode != NULL) {
+              int n_slices;
               if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
                 print_generated_file_name(fp, module, FALSE, "_seq.o");
                 print_generated_file_name(fp, module, FALSE, "_set.o");
                 print_generated_file_name(fp, module, FALSE, "_seqof.o");
                 print_generated_file_name(fp, module, FALSE, "_setof.o");
                 print_generated_file_name(fp, module, FALSE, "_union.o");
+              } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                for (int i = 1; i < n_slices; i++) {
+                  char buffer[16]; // 6 digits + 4 chars + _part
+                sprintf(buffer, "_part_%i.o", i);
+                  print_generated_file_name(fp, module, FALSE, buffer);
+                }
               }
+            }
           }
         }
       }
@@ -2667,14 +2714,22 @@ static void print_makefile(struct makefile_struct *makefile)
         const struct module_struct *module = makefile->ASN1Modules + i;
         if (module->dir_name == NULL || !makefile->central_storage) {
           print_generated_file_name(fp, module, FALSE, ".o");
-          if (makefile->code_splitting_mode != NULL)
+          if (makefile->code_splitting_mode != NULL) {
+            int n_slices;
             if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
               print_generated_file_name(fp, module, FALSE, "_seq.o");
               print_generated_file_name(fp, module, FALSE, "_set.o");
               print_generated_file_name(fp, module, FALSE, "_seqof.o");
               print_generated_file_name(fp, module, FALSE, "_setof.o");
               print_generated_file_name(fp, module, FALSE, "_union.o");
+            } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+              for (int i = 1; i < n_slices; i++) {
+                char buffer[16]; // 6 digits + 4 chars + _part
+                sprintf(buffer, "_part_%i.o", i);
+                print_generated_file_name(fp, module, FALSE, buffer);
+              }
             }
+          }
         }
       }
     }
@@ -2769,14 +2824,36 @@ static void print_makefile(struct makefile_struct *makefile)
         else {
           for (i = 0; i < makefile->nTTCN3Modules; i++) {
             const struct module_struct *module = makefile->TTCN3Modules + i;
-            if (module->dir_name != NULL)
+            if (module->dir_name != NULL) {
               print_generated_file_name(fp, module, TRUE, ".o");
+              if (makefile->code_splitting_mode != NULL) {
+                int n_slices;
+                if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                  for (int i = 1; i < n_slices; i++) {
+                    char buffer[16]; // 6 digits + 4 chars + _part
+                sprintf(buffer, "_part_%i.o", i);
+                    print_generated_file_name(fp, module, TRUE, buffer);
+                  }
+                }
+              }
+            }
           }
           if (makefile->preprocess) {
             for (i = 0; i < makefile->nTTCN3PPModules; i++) {
               const struct module_struct *module = makefile->TTCN3PPModules + i;
-              if (module->dir_name != NULL)
+              if (module->dir_name != NULL) {
                 print_generated_file_name(fp, module, TRUE, ".o");
+                if (makefile->code_splitting_mode != NULL) {
+                  int n_slices;
+                  if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                    for (int i = 1; i < n_slices; i++) {
+                      char buffer[16]; // 6 digits + 4 chars + _part
+                      sprintf(buffer, "_part_%i.o", i);
+                      print_generated_file_name(fp, module, TRUE, buffer);
+                    }
+                  }
+                }
+              }
             }
           }
           for (i = 0; i < makefile->nASN1Modules; i++) {
@@ -4024,7 +4101,7 @@ static void usage(void)
 {
   fprintf(stderr, "\n"
     "usage: %s [-abc" C_flag "dDEfFglLmMnprRsStTVwWXZ] [-K file] [-z file ] [-P dir]"
-    " [-U none|type] [-e ets_name] [-o dir|file]\n"
+    " [-U none|type|'number'] [-e ets_name] [-o dir|file]\n"
     "        [-t project_descriptor.tpd [-b buildconfig]]\n"
     "        [-O file] ... module_name ... testport_name ...\n"
     "   or  %s -v\n"
@@ -4053,7 +4130,7 @@ static void usage(void)
     "	-R:		use function test runtime (TITAN_RUNTIME_2)\n"
     "	-s:		generate Makefile for single mode\n"
     "	-S:		suppress makefilegen warnings\n"
-    "	-U none|type:	split generated code\n"
+    "	-U none|type|'number':	split generated code\n"
     "	-v:		show version\n"
     "	-w:		suppress warnings generated by TITAN\n"
     "	-Y:		Enforces legacy behaviour of the \"out\" function parameters (see refguide)\n"
@@ -4289,11 +4366,26 @@ int main(int argc, char *argv[])
       break;
     case 'U':
       SET_FLAG(U);
+      int n_slices = atoi(optarg);
       code_splitting_mode = optarg;
-      if (strcmp(optarg, "none") != 0 &&
-        strcmp(optarg, "type") != 0)
+      if (!n_slices && 
+        (strcmp(optarg, "none") != 0 &&
+        strcmp(optarg, "type") != 0))
+      {
         ERROR("Unrecognizable argument: '%s'. Valid options for -U switch are: "
-          "'none', 'type'", optarg);
+          "'none', 'type', or a number.", optarg);
+      } else {
+        size_t length = strlen(optarg);
+        for (int i=0;i<length; i++) {
+          if (!isdigit(optarg[i])) {
+            ERROR("The number argument of -U must be a valid number.");
+            break;
+          }
+        }
+        if (n_slices < 1 || n_slices > 999999) {
+          ERROR("The number argument of -U must be between 1 and 999999.");
+        }
+      }
       break;
     case 'v':
       SET_FLAG(v);

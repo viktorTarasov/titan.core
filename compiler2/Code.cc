@@ -12,12 +12,14 @@
  *   Forstner, Matyas
  *   Kovacs, Ferenc
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *
  ******************************************************************************/
 #include "Code.hh"
 #include "../common/memory.h"
 #include "error.h"
+#include "CodeGenHelper.hh"
 
 #include <ctype.h>
 
@@ -54,6 +56,31 @@ namespace Common {
     output->functions.init_comp = NULL;
     output->functions.start = NULL;
     output->functions.control = NULL;
+    output->intervals.pre_things_size = 0;
+    output->intervals.methods_size = 0;
+    output->intervals.function_bodies_size = 0;
+    output->intervals.static_conversion_function_bodies_size = 0;
+    output->intervals.static_function_bodies_size = 0;
+    output->intervals.methods_max_size = 1;
+    output->intervals.function_bodies_max_size = 1;
+    output->intervals.static_conversion_function_bodies_max_size = 1;
+    output->intervals.static_function_bodies_max_size = 1;
+    if (CodeGenHelper::GetInstance().get_split_mode() == CodeGenHelper::SPLIT_TO_SLICES) {
+      output->intervals.methods = (size_t*)Malloc(output->intervals.methods_max_size * sizeof(size_t));
+      output->intervals.function_bodies = (size_t*)Malloc(output->intervals.function_bodies_max_size * sizeof(size_t));
+      output->intervals.static_conversion_function_bodies = (size_t*)Malloc(output->intervals.static_conversion_function_bodies_max_size * sizeof(size_t));
+      output->intervals.static_function_bodies = (size_t*)Malloc(output->intervals.static_function_bodies_max_size * sizeof(size_t));
+      
+      output->intervals.methods[0] = 0;
+      output->intervals.function_bodies[0] = 0;
+      output->intervals.static_conversion_function_bodies[0] = 0;
+      output->intervals.static_function_bodies[0] = 0;
+    } else {
+      output->intervals.methods = NULL;
+      output->intervals.function_bodies = NULL;
+      output->intervals.static_conversion_function_bodies = NULL;
+      output->intervals.static_function_bodies = NULL;
+    }
   }
 
   void Code::merge_output(output_struct *dest, output_struct *src)
@@ -142,6 +169,10 @@ namespace Common {
     Free(output->functions.init_comp);
     Free(output->functions.start);
     Free(output->functions.control);
+    Free(output->intervals.methods);
+    Free(output->intervals.function_bodies);
+    Free(output->intervals.static_conversion_function_bodies);
+    Free(output->intervals.static_function_bodies);
     init_output(output);
   }
 

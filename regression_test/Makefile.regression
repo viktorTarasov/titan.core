@@ -15,6 +15,7 @@
 #   Ormandi, Matyas
 #   Raduly, Csaba
 #   Szabados, Kristof
+#   Szabo, Bence Janos
 #
 ##############################################################################
 #
@@ -48,7 +49,10 @@ TTCN3_COMPILER += -g -L
 #RT2 := true
 
 # Use code splitting when running the tests
+# DO NOT enable both CODE_SPLIT and SPLIT_TO_SLICES
 #CODE_SPLIT := true
+# Use code splitting into slices when running the tests
+#SPLIT_TO_SLICES := 30
 
 ifdef RT2
 # add command line option to generate code for alternative runtime
@@ -70,6 +74,13 @@ ifdef CODE_SPLIT
 SPLIT_FLAG = -Utype
 # No space between -U and type !
 TTCN3_COMPILER += $(SPLIT_FLAG)
+export SPLIT_FLAG
+else ifdef SPLIT_TO_SLICES
+SPLIT_FLAG := -U$(SPLIT_TO_SLICES)
+TTCN3_COMPILER += $(SPLIT_FLAG)
+SPLIT_TO_SLICES := $(shell echo $(SPLIT_TO_SLICES) - 1 | bc)
+SPLIT_TO_SLICES := $(shell seq 1 ${SPLIT_TO_SLICES})
+export SPLIT_FLAG
 endif
 
 # Your platform. Allowed values: SOLARIS, SOLARIS8, LINUX, FREEBSD, WIN32

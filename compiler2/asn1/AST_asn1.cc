@@ -13,6 +13,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
  *   Pandi, Krisztian
@@ -921,7 +922,10 @@ namespace Asn {
   void Assignments::generate_code(CodeGenHelper& cgh) {
     for (size_t i = 0; i < asss_v.size(); i++) {
       Assignment *ass = asss_v[i];
-      if (!top_level_pdu || ass->get_checked()) ass->generate_code(cgh);
+      if (!top_level_pdu || ass->get_checked()) {
+        ass->generate_code(cgh);
+        CodeGenHelper::update_intervals(cgh.get_current_outputstruct());
+      }
     }
   }
 
@@ -1400,6 +1404,7 @@ namespace Asn {
     if (ass_pard || dontgen) return;
     classify_ass();
     ass->generate_code(cgh);
+    CodeGenHelper::update_intervals(cgh.get_current_outputstruct());
   }
 
   void Ass_Undef::dump(unsigned level) const

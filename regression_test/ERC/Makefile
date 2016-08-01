@@ -11,6 +11,7 @@
 #   Kovacs, Ferenc
 #   Raduly, Csaba
 #   Szabados, Kristof
+#   Szabo, Bence Janos
 #   Szabo, Janos Zoltan – initial implementation
 #
 ##############################################################################
@@ -26,6 +27,11 @@ GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc)
 GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)
 ifdef CODE_SPLIT
 GENERATED_SOURCES := $(foreach file, $(GENERATED_SOURCES:.cc=), $(addprefix $(file), .cc _seq.cc _set.cc  _seqof.cc _setof.cc _union.cc))
+else ifdef SPLIT_TO_SLICES
+POSTFIXES := $(foreach file, $(SPLIT_TO_SLICES), $(addsuffix $(file), _part_))
+POSTFIXES := $(foreach file, $(POSTFIXES), $(addprefix $(file), .cc))
+GENERATED_SOURCES2 := $(foreach file, $(GENERATED_SOURCES:.cc=), $(addprefix $(file), $(POSTFIXES)))
+GENERATED_SOURCES += $(GENERATED_SOURCES2)
 endif
 
 OBJECTS = $(GENERATED_SOURCES:.cc=.o)
@@ -35,14 +41,11 @@ PARALLEL_TARGET = erc_parallel$(EXESUFFIX)
 
 all: $(SINGLE_TARGET) $(PARALLEL_TARGET)
 
-$(SINGLE_TARGET): $(OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $(OBJECTS) -L$(TTCN3_DIR)/lib -lttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX) -L$(OPENSSL_DIR)/lib -lcrypto $($(PLATFORM)_LIBS)
+$(SINGLE_TARGET): $(GENERATED_SOURCES)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $(GENERATED_SOURCES) -L$(TTCN3_DIR)/lib -lttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX) -L$(OPENSSL_DIR)/lib -lcrypto $($(PLATFORM)_LIBS)
 
-$(PARALLEL_TARGET): $(OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $(OBJECTS) -L$(TTCN3_DIR)/lib -lttcn3$(RT2_SUFFIX)-parallel$(DYNAMIC_SUFFIX) -L$(OPENSSL_DIR)/lib -lcrypto $($(PLATFORM)_LIBS)
-
-.cc.o:
-	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
+$(PARALLEL_TARGET): $(GENERATED_SOURCES)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $(GENERATED_SOURCES) -L$(TTCN3_DIR)/lib -lttcn3$(RT2_SUFFIX)-parallel$(DYNAMIC_SUFFIX) -L$(OPENSSL_DIR)/lib -lcrypto $($(PLATFORM)_LIBS)
 
 .ttcn.cc .ttcn.hh:
 	$(TTCN3_COMPILER) $<

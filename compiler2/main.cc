@@ -95,7 +95,7 @@ boolean generate_skeleton = FALSE, force_overwrite = FALSE,
   implicit_json_encoding = FALSE, json_refs_for_all_types = TRUE,
   force_gen_seof = FALSE, omit_in_value_list = FALSE,
   warnings_for_bad_variants = FALSE, debugger_active = FALSE,
-  legacy_unbound_union_fields = FALSE;
+  legacy_unbound_union_fields = FALSE, split_to_slices = FALSE;
 
 // Default code splitting mode is set to 'no splitting'.
 CodeGenHelper::split_type code_splitting_mode = CodeGenHelper::SPLIT_NONE;
@@ -385,7 +385,7 @@ static void usage()
 {
   fprintf(stderr, "\n"
     "usage: %s [-abcdEfgijlLMnOpqrRsStuwxXyY] [-K file] [-z file] [-V verb_level]\n"
-    "	[-o dir] [-U none|type] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
+    "	[-o dir] [-U none|type|'number'] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
     "	[-T] module.ttcn [-A] module.asn ...\n"
     "	or  %s -v\n"
     "	or  %s --ttcn2json [-jf] ... [-T] module.ttcn [-A] module.asn ... [- schema.json]\n"
@@ -417,7 +417,7 @@ static void usage()
     "	-S:		suppress context information\n"
     "	-t:		generate Test Port skeleton\n"
     "	-u:		duplicate underscores in file names\n"
-    "	-U none|type:	select code splitting mode for the generated C++ code\n"
+    "	-U none|type|'number':	select code splitting mode for the generated C++ code\n"
     "	-V verb_level:	set verbosity level bitmask (decimal)\n"
     "	-w:		suppress warnings\n"
     "	-x:		disable TEXT encoder/decoder functions\n"
@@ -483,7 +483,7 @@ int main(int argc, char *argv[])
     s0flag = false, Cflag = false, yflag = false, Uflag = false, Qflag = false,
     Sflag = false, Kflag = false, jflag = false, zflag = false, Fflag = false,
     Mflag = false, Eflag = false, nflag = false, Bflag = false, errflag = false,
-    print_usage = false, ttcn2json = false;
+    print_usage = false, ttcn2json = false; 
 
   CodeGenHelper cgh;
 
@@ -702,10 +702,10 @@ int main(int argc, char *argv[])
         SET_FLAG(U);
         if (!cgh.set_split_mode(optarg)) {
           ERROR("Wrong code splitting option: '%s'. Valid values are: 'none', "
-            "'type'.", optarg);
+            "'type', or a positive number.", optarg);
           errflag = true;
         }
-        break;
+          break;
       case 'v':
         SET_FLAG(v);
         break;

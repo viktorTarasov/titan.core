@@ -8,6 +8,7 @@
 # Contributors:
 #   Balasko, Jeno
 #   Szabados, Kristof
+#   Szabo, Bence Janos
 #
 ##############################################################################
 TOPDIR := ../
@@ -44,12 +45,12 @@ all: $(GENERATED_DIRS)
 $(DIR_SINGLE):
 	mkdir $@
 	cd $@ && for file in $(FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) -s -e $(RUNNABLE) ./*  && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) -s -e $(RUNNABLE) ./*  && $(MAKE_PROG)
 
 $(DIR_PARALLEL):
 	mkdir $@
 	cd $@ && for file in $(FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) -e $(RUNNABLE) ./*  && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) -e $(RUNNABLE) ./*  && $(MAKE_PROG)
 
 run: $(GENERATED_DIRS)
 	cd $(DIR_SINGLE) && ./$(RUNNABLE) $(CFG) && grep "Overall verdict: pass" *.log

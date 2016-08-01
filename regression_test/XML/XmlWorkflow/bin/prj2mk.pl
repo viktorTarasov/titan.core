@@ -11,6 +11,7 @@
 #   Kovacs, Ferenc
 #   Pandi, Krisztian
 #   Raduly, Csaba
+#   Szabo, Bence Janos
 #
 ###############################################################################
 
@@ -44,7 +45,7 @@ do {
 } unless $prj_dir =~ s!/[^/]+$!/!;
 
 # Pick up parameters from the environment
-my $split = defined $ENV{CODE_SPLIT} ? '-Utype' : '';
+my $split = defined $ENV{SPLIT_FLAG} ? $ENV{SPLIT_FLAG} : '';
 my $rt2   = defined $ENV{RT2}        ? '-R'     : '';
 
 my %files;

@@ -15,6 +15,7 @@
  *   Kremer, Peter
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *
  ******************************************************************************/
@@ -50,7 +51,7 @@ extern boolean generate_skeleton, force_overwrite, include_line_info,
   check_subtype, suppress_context, enable_set_bound_out_param, display_up_to_date,
   implicit_json_encoding, json_refs_for_all_types, force_gen_seof,
   omit_in_value_list, warnings_for_bad_variants, debugger_active,
-  legacy_unbound_union_fields;
+  legacy_unbound_union_fields, split_to_slices;
 
 extern const char *expected_platform;
 

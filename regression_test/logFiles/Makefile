@@ -39,6 +39,12 @@ GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)
 
 ifdef CODE_SPLIT
 GENERATED_SOURCES := $(foreach file, $(GENERATED_SOURCES:.cc=), $(addprefix $(file), .cc _seq.cc _set.cc  _seqof.cc _setof.cc _union.cc))
+else ifdef SPLIT_TO_SLICES
+COMPILER_FLAGS += $(SPLIT_FLAG)
+POSTFIXES := $(foreach file, $(SPLIT_TO_SLICES), $(addsuffix $(file), _part_))
+POSTFIXES := $(foreach file, $(POSTFIXES), $(addprefix $(file), .cc))
+GENERATED_SOURCES2 := $(foreach file, $(GENERATED_SOURCES:.cc=), $(addprefix $(file), $(POSTFIXES)))
+GENERATED_SOURCES += $(GENERATED_SOURCES2)
 endif
 
 USER_SOURCES := $(ABS_SRC)/extfunc.cc

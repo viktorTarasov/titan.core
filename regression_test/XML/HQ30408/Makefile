@@ -9,6 +9,7 @@
 #   Baji, Laszlo
 #   Balasko, Jeno
 #   Raduly, Csaba
+#   Szabo, Bence Janos
 #
 ##############################################################################
 TOPDIR = ../..
@@ -60,7 +61,12 @@ ASN1_MODULES =
 # this project:
 GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc) $(ASN1_MODULES:.asn=.cc)
 GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)
-
+ifdef SPLIT_TO_SLICES
+POSTFIXES := $(foreach file, $(SPLIT_TO_SLICES), $(addsuffix $(file), _part_))
+POSTFIXES := $(foreach file, $(POSTFIXES), $(addprefix $(file), .cc))
+GENERATED_SOURCES2 := $(foreach file, $(GENERATED_SOURCES:.cc=), $(addprefix $(file), $(POSTFIXES)))
+GENERATED_SOURCES += $(GENERATED_SOURCES2)
+endif
 # C/C++ Source & header files of Test Ports, external functions and
 # other modules:
 USER_SOURCES =
