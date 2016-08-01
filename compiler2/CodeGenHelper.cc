@@ -19,6 +19,7 @@
 #include "main.hh"
 #include <cstdio>
 #include <cstring>
+#include <stdlib.h>
 
 namespace Common {
     
