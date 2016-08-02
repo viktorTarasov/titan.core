@@ -22,10 +22,10 @@ module NegSem_1508_TemplateRestrictions_051 {
 	type record Mymessage {
 	  	integer field1,
 	  	bitstring field2 optional
-    }
+    } with { variant " "};
 	
     type port loopbackPort message
-	{inout MessageType} {extension "internal"};
+	{inout MessageType} with {extension "internal"};
 	
     type component GeneralComp {	    	    
 	    port loopbackPort messagePort
@@ -66,5 +66,5 @@ module NegSem_1508_TemplateRestrictions_051 {
 		execute(TC_NegSem_1508_TemplateRestrictions_051());
 	}
 
-}
+} with { encode "RAW"}
  

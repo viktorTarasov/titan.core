@@ -17,6 +17,8 @@
 /*It can be assigned to templates and template fields of bitstring, hexstring, octetstring,
 charstring and universal charstring types.*/
 
+//RAW encoding adds extra bits, up to 8 bit, to a bitstring because it encodes anything into an octetstring
+
 module Sem_B010209_decoded_content_001 { 
 
 	type record MessageType {
@@ -26,7 +28,7 @@ module Sem_B010209_decoded_content_001 {
 	type record Mymessage {
 	  	integer 	field1,
 	  	bitstring 	field2 optional
-    }
+    } with { variant " "};
 	
 
     type port loopbackPort message { 
@@ -51,7 +53,7 @@ module Sem_B010209_decoded_content_001 {
 		Message.payload := encvalue(v_testMessage);		//encode message to payload
           
  		template MessageType mw_matchingTemplate:= {  			
-  			payload :=  decmatch Mymessage: {field1:= 10, field2 := '1001'B}
+  			payload :=  decmatch Mymessage: {field1:= 10, field2 := '00001001'B}
   		} 
 
 		connect(self:messagePort, self:messagePort);
@@ -72,5 +74,5 @@ module Sem_B010209_decoded_content_001 {
 		execute(TC_Sem_B010209_decoded_content_001());
 	}
 
-}
+} with { encode "RAW"}
  
