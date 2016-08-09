@@ -97,6 +97,10 @@ type component mtc_CT {}
 // Constants
 //=========================================================================
 
+// -p switch needed because it would overwrite the predefined XSD.ttcn and
+// UsefulTtcn3types.ttcn file with each xsd2ttcn execution
+const charstring xsd2ttcn_command := "xsd2ttcn -p ";
+
 const integer c_shell_successWithoutWarningAndError:=0;
 const integer c_shell_success := 0;
 const integer c_shell_successWithWarning:=1; //temp until licence is solved

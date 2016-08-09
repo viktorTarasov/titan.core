@@ -396,7 +396,7 @@ function f_encDecTest_SIP_MessageType(in MessageType pl_pdu, in charstring pl_ex
 
 testcase tc_XmlTest_CAI3G_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn Bulk.xsd GenericCai3gType.xsd Provisioning.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "Bulk.xsd GenericCai3gType.xsd Provisioning.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -410,7 +410,7 @@ testcase tc_XmlTest_CAI3G_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_CCAPI_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn CCAPI.xsd","",c_shell_successWithoutWarningAndError);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "CCAPI.xsd","",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -420,7 +420,7 @@ testcase tc_XmlTest_CCAPI_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_HSS_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn avg.xsd cai3g1.2_provisioning.xsd eps.xsd hssla_types.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "avg.xsd cai3g1.2_provisioning.xsd eps.xsd hssla_types.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -432,7 +432,7 @@ testcase tc_XmlTest_HSS_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_JMdict_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn jmdict-good.xsd","",c_shell_successWithoutWarningAndError);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "jmdict-good.xsd","",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -442,7 +442,7 @@ testcase tc_XmlTest_JMdict_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_MGW_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn confd.xsd IntegratedSite.xsd IsTypes.xsd MainSwitch.xsd Mgw_R9B27.xsd Misc.xsd xml.xsd XMLSchema.xsd", "",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "confd.xsd IntegratedSite.xsd IsTypes.xsd MainSwitch.xsd Mgw_R9B27.xsd Misc.xsd xml.xsd XMLSchema.xsd", "",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -464,7 +464,7 @@ testcase tc_XmlTest_MGW_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_MGW_HK84933_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn IntegratedSite_HK84933.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "IntegratedSite_HK84933.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -481,7 +481,7 @@ testcase tc_XmlTest_MGW_encDec() runs on xmlTest_CT
 
 testcase tc_XmlTest_PAP_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn PAP.xsd","",c_shell_successWithoutWarningAndError);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "PAP.xsd","",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -491,7 +491,7 @@ testcase tc_XmlTest_PAP_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_ParlayX_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn parlayx_common_types_2_0.xsd parlayx_payment_amount_charging_interface_2_0.xsd parlayx_payment_reserve_amount_charging_interface_2_0.xsd parlayx_payment_reserve_volume_charging_interface_2_0.xsd parlayx_payment_types_2_0.xsd parlayx_payment_volume_charging_interface_2_0.xsd", "",c_shell_successWithoutWarningAndError);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "parlayx_common_types_2_0.xsd parlayx_payment_amount_charging_interface_2_0.xsd parlayx_payment_reserve_amount_charging_interface_2_0.xsd parlayx_payment_reserve_volume_charging_interface_2_0.xsd parlayx_payment_types_2_0.xsd parlayx_payment_volume_charging_interface_2_0.xsd", "",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -511,7 +511,7 @@ testcase tc_XmlTest_ParlayX_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_PIDF_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn pidf.xsd rlmi.xsd testschema.xsd xml_PIDF.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "pidf.xsd rlmi.xsd testschema.xsd xml_PIDF.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -527,7 +527,7 @@ testcase tc_XmlTest_PIDF_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_RLP_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn RLP_SVC.xsd","",c_shell_successWithoutWarningAndError);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "RLP_SVC.xsd","",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -537,7 +537,7 @@ testcase tc_XmlTest_RLP_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_RLXML_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn RLXML_small.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "RLXML_small.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -547,7 +547,7 @@ testcase tc_XmlTest_RLXML_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_ShData_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn ShDataType.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "ShDataType.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
@@ -557,7 +557,7 @@ testcase tc_XmlTest_ShData_converter() runs on xmlTest_CT
 
 testcase tc_XmlTest_SIPserver_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict("xsd2ttcn SIP.xsd","",c_shell_successWithoutWarningAndError);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "SIP.xsd","",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
