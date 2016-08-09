@@ -538,12 +538,15 @@ namespace Common {
     {"char2oct", 0, 0},
     {"component", 0, 0},
     {"decomp", 0, 0},
+    {"decvalue_unichar", 0, 0},
+    {"encvalue_unichar", 0, 0},
     {"float2int", 0, 0},
     {"float2str", 0, 0},
     {"hex2bit", 0, 0},
     {"hex2int", 0, 0},
     {"hex2oct", 0, 0},
     {"hex2str", 0, 0},
+    {"hostid", 0, 0},
     {"int2bit", 0, 0},
     {"int2char", 0, 0},
     {"int2float", 0, 0},
@@ -553,6 +556,7 @@ namespace Common {
     {"int2unichar", 0, 0},
     {"ischosen", 0, 0},
     {"ispresent", 0, 0},
+    {"istemplatekind", 0, 0},
     {"isvalue", 0, 0},
     {"lengthof", 0, 0},
     {"log", 0, 0},
@@ -600,12 +604,15 @@ namespace Common {
     {"component__", "component", "component_"},
     {"decmatch__", "decmatch", "decmatch_"},
     {"decomp__", "decomp", "decomp_"},
+     {"decvalue_unichar__", "decvalue_unichar", "decvalue_unichar_"},
+    {"encvalue_unichar__", "encvalue_unichar", "encvalue_unichar_"},
     {"float2int__", "float2int", "float2int_"},
     {"float2str__", "float2str", "float2str_"},
     {"hex2bit__", "hex2bit", "hex2bit_"},
     {"hex2int__", "hex2int", "hex2int_"},
     {"hex2oct__", "hex2oct", "hex2oct_"},
     {"hex2str__", "hex2str", "hex2str_"},
+    {"hostid__", "hostid", "hostid_"},
     {"int2bit__", "int2bit", "int2bit_"},
     {"int2char__", "int2char", "int2char_"},
     {"int2float__", "int2float", "int2float_"},
@@ -615,6 +622,7 @@ namespace Common {
     {"int2unichar__", "int2unichar", "int2unichar_"},
     {"ischosen__", "ischosen", "ischosen_"},
     {"ispresent__", "ispresent", "ispresent_"},
+    {"istemplatekind__", "istemplatekind", "istemplatekind_"},
     {"isvalue__", "isvalue", "isvalue_"},
     {"lengthof__", "lengthof", "lengthof_"},
     {"log__", "log", "log_"},
@@ -999,10 +1007,10 @@ namespace Common {
     switch (p_id_t) {
     case ID_NAME:
       if (d->id_map_name.has_key(p_name)) {
-	id_data_t *id_data_p = d->id_map_name[p_name];
-	if (id_data_p->asnname == d->string_invalid &&
-	    id_data_p->ttcnname == d->string_invalid) return true;
-	else return false;
+        id_data_t *id_data_p = d->id_map_name[p_name];
+        if (id_data_p->asnname == d->string_invalid &&
+          id_data_p->ttcnname == d->string_invalid) return true;
+        else return false;
       } else return false;
     case ID_ASN:
       if (p_name[0] == '&' || d->id_map_asn.has_key(p_name)) return false;

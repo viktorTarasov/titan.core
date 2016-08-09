@@ -808,6 +808,7 @@ static const string anyname("anytype");
 %token isboundKeyword
 %token ischosenKeyword
 %token ispresentKeyword
+%token istemplatekindKeyword
 %token lengthofKeyword
 %token oct2bitKeyword
 %token oct2charKeyword
@@ -8916,6 +8917,17 @@ PredefinedOps:
     $$->set_location(infile, @$);
   }
 | ispresentKeyword '(' error ')'
+  {
+    $$ = new Value(Value::V_ERROR);
+    $$->set_location(infile, @$);
+  }
+| istemplatekindKeyword '(' optError TemplateInstance optError ','
+  optError SingleExpression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_ISTEMPLATEKIND, $4, $8);
+    $$->set_location(infile, @$);
+  }
+| istemplatekindKeyword '(' error ')'
   {
     $$ = new Value(Value::V_ERROR);
     $$->set_location(infile, @$);

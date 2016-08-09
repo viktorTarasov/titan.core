@@ -4665,6 +4665,38 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
       "violated.\", get_res_name(t_res), t_name ? t_name : \"%s\");\n"
     "}\n\n", name, dispname, dispname);
 
+  /* istemplatekind function */
+  def = mputstr(def, "boolean get_istemplate_kind(const char* type) const;\n");
+  src = mputprintf(src, "boolean %s_template::get_istemplate_kind(const char* type) const {\n"
+    "if (!strcmp(type, \"AnyElement\")) {\n"
+    "  if (template_selection != SPECIFIC_VALUE) {\n"
+    "    return FALSE;\n"
+    "  }\n"
+    "  for (int i = 0; i < single_value.n_elements; i++) {\n"
+    "    if (single_value.value_elements[i]->get_selection() == ANY_VALUE) {\n"
+    "      return TRUE;\n"
+    "    }\n"
+    "  }\n"
+    "  return FALSE;\n"
+    "} else if (!strcmp(type, \"AnyElementsOrNone\")) {\n"
+    "  if (template_selection != SPECIFIC_VALUE) {\n"
+    "    return FALSE;\n"
+    "  }\n"
+    "  for (int i = 0; i < single_value.n_elements; i++) {\n"
+    "    if (single_value.value_elements[i]->get_selection() == ANY_OR_OMIT) {\n"
+    "      return TRUE;\n"
+    "    }\n"
+    "  }\n"
+    "  return FALSE;\n"
+    "} else if (!strcmp(type, \"permutation\")) {\n"
+    "  return %s;\n"
+    "} else if (!strcmp(type, \"length\")) {\n"
+    "  return length_restriction_type != NO_LENGTH_RESTRICTION;\n"
+    "} else {\n"
+    "  return Base_Template::get_istemplate_kind(type);\n"
+    "}\n"
+    "}\n", name, sdef->kind == RECORD_OF ? "number_of_permutations" : "FALSE");
+  
   /* end of class */
   def = mputstr(def, "};\n\n");
 

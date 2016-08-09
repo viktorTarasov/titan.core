@@ -601,6 +601,7 @@ namespace Common {
     case OPTYPE_TTCN2STRING:
       delete u.expr.ti1;
       break;
+    case OPTYPE_ISTEMPLATEKIND: // ti1 v2
     case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
       delete u.expr.ti1;
       delete u.expr.v2;
@@ -1154,6 +1155,7 @@ namespace Common {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
     switch(p_optype) {
+    case OPTYPE_ISTEMPLATEKIND:
     case OPTYPE_ENCVALUE_UNICHAR:
       if(!p_ti1 || !p_v2) FATAL_ERROR("Value::Value()");
       u.expr.ti1=p_ti1;
@@ -1618,6 +1620,10 @@ namespace Common {
     case OPTYPE_TTCN2STRING:
       u.expr.ti1->set_fullname(p_fullname+".<operand>");
       break;
+    case OPTYPE_ISTEMPLATEKIND: // ti1 v2
+      u.expr.ti1->set_fullname(p_fullname+".<operand1>");
+      u.expr.v2->set_fullname(p_fullname+".<operand2>");
+      break;
     case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
       u.expr.ti1->set_fullname(p_fullname+".<operand1>");
       if (u.expr.v2) u.expr.v2->set_fullname(p_fullname+".<operand2>");
@@ -1815,6 +1821,10 @@ namespace Common {
     case OPTYPE_ISPRESENT:
     case OPTYPE_TTCN2STRING:
       u.expr.ti1->set_my_scope(p_scope);
+      break;
+    case OPTYPE_ISTEMPLATEKIND: // ti1 v2
+      u.expr.ti1->set_my_scope(p_scope);
+      u.expr.v2->set_my_scope(p_scope);
       break;
     case OPTYPE_ENCVALUE_UNICHAR: //ti1 [v2]
       u.expr.ti1->set_my_scope(p_scope);
@@ -2143,6 +2153,10 @@ namespace Common {
       case OPTYPE_ISPRESENT:
       case OPTYPE_TTCN2STRING:
         u.expr.ti1->set_code_section(p_code_section);
+        break;
+      case OPTYPE_ISTEMPLATEKIND: // ti1 v2
+        u.expr.ti1->set_code_section(p_code_section);
+        u.expr.v2->set_code_section(p_code_section);
         break;
       case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
         u.expr.ti1->set_code_section(p_code_section);
@@ -2847,6 +2861,7 @@ namespace Common {
       case OPTYPE_REGEXP:
       case OPTYPE_REPLACE:
       case OPTYPE_TTCN2STRING:
+      case OPTYPE_ISTEMPLATEKIND:
         if (!u.expr.ti1->get_Type() && !u.expr.ti1->get_DerivedRef()) {
           Error_Context cntxt(u.expr.ti1->get_Template(),
                               "In the operand of operation `%s'",
@@ -2951,6 +2966,7 @@ namespace Common {
       case OPTYPE_PROF_RUNNING:
       case OPTYPE_CHECKSTATE_ANY:
       case OPTYPE_CHECKSTATE_ALL:
+      case OPTYPE_ISTEMPLATEKIND:
         return Type::T_BOOL;
       case OPTYPE_GETVERDICT:
         return Type::T_VERDICT;
@@ -3652,6 +3668,8 @@ namespace Common {
       return "isvalue()";
     case OPTYPE_ISBOUND:
       return "isbound()";
+    case OPTYPE_ISTEMPLATEKIND:
+      return "istemplatekind()";
     case OPTYPE_LOG2STR:
       return "log2str()";
     case OPTYPE_ANY2UNISTR:
@@ -6664,6 +6682,36 @@ error:
         chk_expr_eval_value(v2, t_chk, refch, exp_val);
       }
       break;
+    case OPTYPE_ISTEMPLATEKIND: { // ti1 v2
+      if (exp_val == Type::EXPECTED_DYNAMIC_VALUE)
+      	exp_val = Type::EXPECTED_TEMPLATE;
+      {
+        Error_Context cntxt(u.expr.ti1, "In the first operand of operation `%s'", opname);
+        Type *governor = chk_expr_operands_ti(u.expr.ti1, exp_val);
+        if (!governor) return;
+        if (valuetype == V_ERROR) return;
+        chk_expr_eval_ti(u.expr.ti1, governor, refch, exp_val);
+      }
+      Error_Context cntxt(u.expr.v2, "In the second operand of operation `%s'", opname);
+      u.expr.v2->set_lowerid_to_ref();
+      tt2=u.expr.v2->get_expr_returntype(exp_val);
+      chk_expr_operandtype_charstr(tt2, second, opname, u.expr.v2);
+      chk_expr_eval_value(u.expr.v2, t_chk, refch, exp_val);
+      if (!u.expr.v2->is_unfoldable()) {
+        const string& type_param = u.expr.v2->get_val_str();
+        if (type_param != "value" && type_param != "list" && type_param != "complement" &&
+            type_param != "AnyValue" && type_param != "?" && type_param != "AnyValueOrNone" &&
+            type_param != "*" && type_param != "range" && type_param != "superset" &&
+            type_param != "subset" && type_param != "omit" && type_param != "decmatch" &&
+            type_param != "AnyElement" && type_param != "AnyElementsOrNone" &&
+            type_param != "permutation" && type_param != "length" && 
+            type_param != "ifpresent" && type_param != "pattern") {
+          error("Incorrect second parameter (%s) was passed to istemplatekind.",
+            type_param.c_str());
+        set_valuetype(V_ERROR);
+        }
+      }
+      break; }
     case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
       chk_expr_operand_encode(refch, exp_val);
       v2=u.expr.v2 ? u.expr.v2 : 0;
@@ -7303,6 +7351,7 @@ error:
     case OPTYPE_CHECKSTATE_ANY:
     case OPTYPE_CHECKSTATE_ALL:
     case OPTYPE_HOSTID:
+    case OPTYPE_ISTEMPLATEKIND: // ti1 v2
       break;
     case OPTYPE_TESTCASENAME: { // -
       if (!my_scope) FATAL_ERROR("Value::evaluate_value()");
@@ -8604,6 +8653,7 @@ error:
       case OPTYPE_CHECKSTATE_ANY:
       case OPTYPE_CHECKSTATE_ALL:
       case OPTYPE_HOSTID:
+      case OPTYPE_ISTEMPLATEKIND: // ti1 v2
         return true;
       case OPTYPE_COMP_NULL: // -
         return false;
@@ -10331,7 +10381,10 @@ error:
       else t = u.expr.ti1->get_Template();
       self_ref |= chk_expr_self_ref_templ(t, lhs);
       break; }
-
+    case OPTYPE_ISTEMPLATEKIND: // ti1 v2
+      self_ref |= chk_expr_self_ref_templ(u.expr.ti1->get_Template(), lhs);
+      self_ref |= chk_expr_self_ref_val(u.expr.v2, lhs);
+      break;
     case OPTYPE_EXECUTE_REFD: // v1 t_list2 [v3]
       if (u.expr.v3) {
         self_ref |= chk_expr_self_ref_val(u.expr.v3, lhs);
@@ -12078,6 +12131,12 @@ error:
       u.expr.ti1->generate_code(expr);
       expr->expr = mputstr(expr->expr, ".valueof()");
       break;
+    case OPTYPE_ISTEMPLATEKIND: // ti1 v2
+      u.expr.ti1->generate_code(expr);
+      expr->expr = mputstr(expr->expr, ".get_istemplate_kind((const char*)");
+      u.expr.v2->generate_code_expr(expr);
+      expr->expr = mputstr(expr->expr, ")");
+      break;
     case OPTYPE_MATCH: // v1 t2
       u.expr.t2->generate_code(expr);
       expr->expr = mputstr(expr->expr, ".match(");
@@ -13775,6 +13834,9 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     case OPTYPE_LOG2STR:
     case OPTYPE_ANY2UNISTR:
       return u.expr.logargs->has_single_expr();
+    case OPTYPE_ISTEMPLATEKIND:
+      return u.expr.ti1->has_single_expr() &&
+             u.expr.v2->has_single_expr();
     case OPTYPE_MATCH: // v1 t2
       return u.expr.v1->has_single_expr() &&
              u.expr.t2->has_single_expr();

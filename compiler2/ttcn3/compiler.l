@@ -560,6 +560,7 @@ isvalue		RETURN(isvalueKeyword);
 isbound		RETURN(isboundKeyword);
 ischosen	RETURN(ischosenKeyword);
 ispresent	RETURN(ispresentKeyword);
+istemplatekind  RETURN(istemplatekindKeyword);
 lengthof	RETURN(lengthofKeyword);
 oct2bit		RETURN(oct2bitKeyword);
 oct2char	RETURN(oct2charKeyword);

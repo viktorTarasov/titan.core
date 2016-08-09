@@ -268,6 +268,7 @@ namespace Common {
       OPTYPE_CHECKSTATE_ANY, // [r1] v2, port or any
       OPTYPE_CHECKSTATE_ALL, // [r1] v2, port or all
       OPTYPE_HOSTID, // [v1]
+      OPTYPE_ISTEMPLATEKIND, // ti1 v2
 
       NUMBER_OF_OPTYPES // must be last
     };

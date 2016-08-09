@@ -14,6 +14,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Tatarka, Gabor
  *   Zalanyi, Balazs Andor
@@ -99,6 +100,8 @@ public:
   { template_selection = UNINITIALIZED_TEMPLATE; }
   /** return the name of template restriction \a tr */
   static const char* get_res_name(template_res tr);
+  
+  VIRTUAL_IF_RUNTIME_2 boolean get_istemplate_kind(const char* type) const;
 
   /** Initialize this object (or one of its fields/elements) with a 
     * module parameter value. The module parameter may contain references to
@@ -237,6 +240,7 @@ public:
   unsigned int get_permutation_size(unsigned int index_value) const;
   boolean permutation_starts_at(unsigned int index_value) const;
   boolean permutation_ends_at(unsigned int index_value) const;
+  boolean get_istemplate_kind(const char *type) const;
 };
 
 #else
@@ -326,6 +330,8 @@ public:
 
   void set_param(Module_Param& param);
   Module_Param* get_param(Module_Param_Name& param_name) const;
+  
+  boolean get_istemplate_kind(const char *type) const;
   
   void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
   void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }
@@ -429,6 +435,8 @@ public:
 
   void set_param(Module_Param& param);
   Module_Param* get_param(Module_Param_Name& param_name) const;
+  
+  boolean get_istemplate_kind(const char *type) const;
 
   void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
   void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }
@@ -500,7 +508,7 @@ public:
 
   void set_param(Module_Param& param);
   Module_Param* get_param(Module_Param_Name& param_name) const;
-
+  
   void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
   void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }
 };

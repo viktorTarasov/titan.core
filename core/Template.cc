@@ -12,6 +12,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Tatarka, Gabor
  *
@@ -145,6 +146,39 @@ const char* Base_Template::get_res_name(template_res tr)
   default: break;
   }
   return "<unknown/invalid>";
+}
+
+boolean Base_Template::get_istemplate_kind(const char* type) const {
+  if(!strcmp(type, "value")) {
+    return is_value();
+  } else if (!strcmp(type, "list")) {
+    return template_selection == VALUE_LIST;
+  } else if (!strcmp(type, "complement")) {
+    return template_selection == COMPLEMENTED_LIST;
+  } else if (!strcmp(type, "?") || !strcmp(type, "AnyValue")) {
+    return template_selection == ANY_VALUE;
+  } else if (!strcmp(type, "*") || !strcmp(type, "AnyValueOrNone")) {
+    return template_selection == ANY_OR_OMIT;
+  } else if (!strcmp(type, "range")) {
+    return template_selection == VALUE_RANGE;
+  } else if (!strcmp(type, "superset")) {
+    return template_selection == SUPERSET_MATCH;
+  } else if (!strcmp(type, "subset")) {
+    return template_selection == SUBSET_MATCH;
+  }else if (!strcmp(type, "omit")) {
+    return template_selection == OMIT_VALUE;
+  }else if (!strcmp(type, "decmatch")) {
+    return template_selection == DECODE_MATCH;
+  } else if (!strcmp(type, "ifpresent")) {
+    return is_ifpresent;
+  } else if (!strcmp(type, "pattern")) {
+    return template_selection == STRING_PATTERN;
+  } else if (!strcmp(type, "AnyElement") || !strcmp(type, "AnyElementsOrNone") ||
+    !strcmp(type, "permutation") || !strcmp(type, "length")) {
+    return FALSE;
+  }
+  TTCN_error("Incorrect second parameter (%s) was passed to istemplatekind.", type);
+  return FALSE;
 }
 
 void Base_Template::set_param(Module_Param& /*param*/)
@@ -1373,6 +1407,37 @@ Module_Param* Record_Of_Template::get_param(Module_Param_Name& param_name) const
   return mp;
 }
 
+boolean Record_Of_Template::get_istemplate_kind(const char* type) const {
+  if (!strcmp(type, "AnyElement")) {
+    if (template_selection != SPECIFIC_VALUE) {
+      return FALSE;
+    }
+    for (int i = 0; i < single_value.n_elements; i++) {
+      if (single_value.value_elements[i]->get_selection() == ANY_VALUE) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  } else if (!strcmp(type, "AnyElementsOrNone")) {
+    if (template_selection != SPECIFIC_VALUE) {
+      return FALSE;
+    }
+    for (int i = 0; i < single_value.n_elements; i++) {
+      if (single_value.value_elements[i]->get_selection() == ANY_OR_OMIT) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  } else if (!strcmp(type, "permutation")) {
+      return number_of_permutations;
+  } else if (!strcmp(type, "length")) {
+      return length_restriction_type != NO_LENGTH_RESTRICTION;
+  } else {
+     return Base_Template::get_istemplate_kind(type);
+  }
+}
+
+
 void Record_Of_Template::check_restriction(template_res t_res, const char* t_name,
                                            boolean legacy /* = FALSE */) const
 {
@@ -2222,6 +2287,36 @@ Module_Param* Set_Of_Template::get_param(Module_Param_Name& param_name) const
   }
   mp->set_length_restriction(get_length_range());
   return mp;
+}
+
+boolean Set_Of_Template::get_istemplate_kind(const char* type) const {
+  if (!strcmp(type, "AnyElement")) {
+    if (template_selection != SPECIFIC_VALUE) {
+      return FALSE;
+    }
+    for (int i = 0; i < single_value.n_elements; i++) {
+      if (single_value.value_elements[i]->get_selection() == ANY_VALUE) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  } else if (!strcmp(type, "AnyElementsOrNone")) {
+    if (template_selection != SPECIFIC_VALUE) {
+      return FALSE;
+    }
+    for (int i = 0; i < single_value.n_elements; i++) {
+      if (single_value.value_elements[i]->get_selection() == ANY_OR_OMIT) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  } else if (!strcmp(type, "permutation")) {
+      return FALSE; // Set of can´t have permutation
+  } else if (!strcmp(type, "length")) {
+      return length_restriction_type != NO_LENGTH_RESTRICTION;
+  } else {
+     return Base_Template::get_istemplate_kind(type);
+  }
 }
 
 void Set_Of_Template::check_restriction(template_res t_res, const char* t_name,
