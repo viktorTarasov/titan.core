@@ -4376,7 +4376,7 @@ int main(int argc, char *argv[])
           "'none', 'type', or a number.", optarg);
       } else {
         size_t length = strlen(optarg);
-        for (int i=0;i<length; i++) {
+        for (size_t i=0;i<length; i++) {
           if (!isdigit(optarg[i])) {
             ERROR("The number argument of -U must be a valid number.");
             break;

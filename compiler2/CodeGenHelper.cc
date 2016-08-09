@@ -136,7 +136,7 @@ bool CodeGenHelper::set_split_mode(const char* type) {
     split_to_slices = false;
   } else if ((n = atoi(type))) {
     size_t length = strlen(type);
-    for (int i=0;i<length; i++) {
+    for (size_t i=0;i<length; i++) {
       if (!isdigit(type[i])) {
         ERROR("The number argument of -U must be a valid number.");
         break;
@@ -278,7 +278,7 @@ void CodeGenHelper::get_chunk_from_poslist(const char* from, char *& to, const s
   if (pos > base_pos) { // If we haven't finished with this interval_array
     if (pos - base_pos >= chunk_size) { // It is a good chunk, but make it more precise because it may be too big
       int ind = 0;
-      for (int i = 0; i <= interval_array_size; i++) {
+      for (size_t i = 0; i <= interval_array_size; i++) {
         if (tmp + interval_array[i] <= base_pos) { // Find the pos where we left off
           ind = i;
         } else if (tmp + interval_array[i] - base_pos >= chunk_size) {
@@ -290,7 +290,7 @@ void CodeGenHelper::get_chunk_from_poslist(const char* from, char *& to, const s
       }
     } else { // We can't form a new chunk from the remaining characters
       int ind = 0;
-      for (int i = 0; i <= interval_array_size; i++) {
+      for (size_t i = 0; i <= interval_array_size; i++) {
         if (tmp + interval_array[i] <= base_pos) {
           ind = i;
         } else {
