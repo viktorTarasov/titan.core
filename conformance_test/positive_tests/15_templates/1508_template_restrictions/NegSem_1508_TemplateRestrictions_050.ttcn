@@ -22,7 +22,7 @@ module NegSem_1508_TemplateRestrictions_050 {
 	type record Mymessage {
 	  	integer field1,
 	  	bitstring field2 optional
-    }
+    } with { variant " "};
 	
 
     type port loopbackPort message
@@ -70,5 +70,5 @@ module NegSem_1508_TemplateRestrictions_050 {
 		execute(TC_NegSem_1508_TemplateRestrictions_050());
 	}
 
-}
+} with { encode "RAW"}
  

@@ -24,7 +24,7 @@ module Sem_B010209_decoded_content_004 {
         charstring payload
     }
     
-    type integer MyInt with { encode "32bit" }
+    type integer MyInt with { variant "32 bit" }
 
     type port loopbackPort message{
 		inout MessageType
@@ -37,23 +37,24 @@ module Sem_B010209_decoded_content_004 {
     const MyInt c_input := 1633837665;
     
     template MessageType mw_matchingTemplate:= {  			
-        payload :=  decmatch MyInt:c_input
-    } 
+      payload :=  decmatch MyInt:c_input
+   } 
 
     testcase TC_Sem_B010209_decoded_content_004() runs on GeneralComp {
         var MessageType v_message;
-    
-        v_message.payload := encvalue_unichar(c_input); //encode message to payload, charstring
+		var MessageType got;
+
+		v_message.payload := oct2char(bit2oct(encvalue(c_input)));
               
 		connect(self:messagePort, self:messagePort);
         messagePort.send(v_message); //send message
-    
+
         alt {
             [] messagePort.receive(mw_matchingTemplate) {
                 setverdict(pass);
             }
-            [] messagePort.receive {
-                setverdict(fail,mw_matchingTemplate);
+            [] messagePort.receive(MessageType:?) -> value got {
+                setverdict(fail,"exepted: ", mw_matchingTemplate, " recieved: ", got);
             }
         }
     }
@@ -62,5 +63,5 @@ module Sem_B010209_decoded_content_004 {
         execute(TC_Sem_B010209_decoded_content_004());
     }
 
-}
+} with { encode "RAW"}
  
