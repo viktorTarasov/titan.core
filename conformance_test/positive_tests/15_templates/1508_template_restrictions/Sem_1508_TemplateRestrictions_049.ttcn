@@ -13,6 +13,7 @@
  ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
 
+//RAW encoding adds extra bits, up to 8 bit, to a bitstring because it encodes anything into an octetstring
 
 module Sem_1508_TemplateRestrictions_049 { 
 
@@ -23,7 +24,7 @@ module Sem_1508_TemplateRestrictions_049 {
 	type record Mymessage {
 	  	integer field1,
 	  	bitstring field2 optional
-    }
+    } with { variant " "};
 	
 
    	type port loopbackPort message
@@ -38,6 +39,9 @@ module Sem_1508_TemplateRestrictions_049 {
 		var bitstring v_enc;
 		var Mymessage v_testMessage;
 		var MessageType Message;
+
+		var MessageType got;
+		var Mymessage dec_got;
 		
 		v_testMessage:=  {  
 		    field1 := 10,
@@ -48,17 +52,22 @@ module Sem_1508_TemplateRestrictions_049 {
 		      
  		template (present) MessageType mw_matchingTemplate:=
   		{  			
-  			payload :=  decmatch Mymessage: {field1:= 10, field2 := '1001'B}
+  			payload :=  decmatch Mymessage: {field1:= 10, field2 := '00001001'B}
   		} 
 
+		connect(self:messagePort, self:messagePort);
 	  	messagePort.send(Message);	//send message
+
+		var bitstring bitpayload := hex2bit(Message.payload);
+
+		var integer v_res := decvalue(bitpayload, dec_got);
 
 		alt {
 		 	[] messagePort.receive(mw_matchingTemplate) {
 		    	setverdict(pass);
 		 	}
-		 	[] messagePort.receive {
-		    	setverdict(fail,mw_matchingTemplate);
+		 	[] messagePort.receive(MessageType:?) -> value got  {
+		    	setverdict(fail,"exepted: ", mw_matchingTemplate, " recieved: ", dec_got);
 		 	}
 		}
     
@@ -68,5 +77,5 @@ module Sem_1508_TemplateRestrictions_049 {
 		execute(TC_Sem_1508_TemplateRestrictions_049());
 	}
 
-}
+} with { encode "RAW"}
  
