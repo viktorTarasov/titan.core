@@ -26,6 +26,6 @@ split:
 run: envvar split
 
 clean distclean:
-	rm TempMakefile
+	rm -f TempMakefile
 
 dep:
