@@ -17,9 +17,15 @@ include $(TOPDIR)/Makefile.regression
 
 all: $(TARGET)
 
-run: $(TARGET)
+envvar:
 	./makefilegen_envvar_test.sh
 
+split:
+	./makefilegen_split.sh
+
+run: envvar split
+
 clean distclean:
+	rm TempMakefile
 
 dep:

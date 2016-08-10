@@ -28,7 +28,7 @@ TPD_FILENAME="TpdEnvVarTestMain.tpd"
 #export TEST_DIR
 
 #Running makefilegen command
-../../Install/bin/makefilegen -fg -t $MAKEFILEGEN_ENVVAR_TEST_FOLDER/$TPD_FILENAME
+$TTCN3_DIR/bin/ttcn3_makefilegen -fg -t $MAKEFILEGEN_ENVVAR_TEST_FOLDER/$TPD_FILENAME
 if [ $? -ne 0 ]; then
   echo "Makefilegen envvar test failed! Overall verdict: fail"
   rm -r $MAKEFILEGEN_ENVVAR_TEST_FOLDER/bin

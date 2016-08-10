@@ -4374,7 +4374,7 @@ int main(int argc, char *argv[])
       {
         ERROR("Unrecognizable argument: '%s'. Valid options for -U switch are: "
           "'none', 'type', or a number.", optarg);
-      } else {
+      } else if (n_slices) {
         size_t length = strlen(optarg);
         for (size_t i=0;i<length; i++) {
           if (!isdigit(optarg[i])) {
