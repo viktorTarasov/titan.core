@@ -251,7 +251,7 @@ testcase f_TC_isBoundValuePresent_RecordWithMandatoryField_Template() runs on PD
 
   vl_Rec1:={f:=*}; //^In variable assignment:// \
   //^In template for record field `f':// \
-  //^warning: Using `\*' for mandatory field//
+  //^error: Using `\*' for mandatory field//
   if (not isbound(vl_Rec1)) {setverdict(fail)}
   if (isvalue(vl_Rec1)) {setverdict(fail)}
   if (not ispresent(vl_Rec1)) {setverdict(fail)}
@@ -357,7 +357,7 @@ testcase f_TC_isBoundValuePresent_Union_Template() runs on PDTestComponent //^In
 
   vl_Uni:={u:=*}; //^In variable assignment:// \
   //^In template for union field `u':// \
-  //^warning: Using `\*' for mandatory field//
+  //^error: Using `\*' for mandatory field//
   if (not isbound(vl_Uni)) {setverdict(fail)}
   if (isvalue(vl_Uni)) {setverdict(fail)}
   if (not ispresent(vl_Uni)) {setverdict(fail)}

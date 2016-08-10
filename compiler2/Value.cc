@@ -6708,7 +6708,7 @@ error:
             type_param != "ifpresent" && type_param != "pattern") {
           error("Incorrect second parameter (%s) was passed to istemplatekind.",
             type_param.c_str());
-        set_valuetype(V_ERROR);
+          set_valuetype(V_ERROR);
         }
       }
       break; }

@@ -5414,7 +5414,7 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
   }
   if (!allow_any_or_omit && t->get_template_refd_last()->get_templatetype() ==
       Ttcn::Template::ANY_OR_OMIT) {
-      t->warning("Using `*' for mandatory field");
+      t->error("Using `*' for mandatory field");
   }
 
   Ttcn::Template::templatetype_t temptype = t->get_templatetype();
