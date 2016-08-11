@@ -35,7 +35,7 @@
  * TTCN3_VERSION = TTCN3_MAJOR * 1000000 + TTCN3_MINOR * 10000 +
  *                 TTCN3_PATCHLEVEL * 100 + TTCN3_BUILDNUMBER
  */
-#define TTCN3_VERSION 50500
+#define TTCN3_VERSION 5050101
 
 /* A monotonically increasing version number.
  * An official release is deemed to have the highest possible build number (99)
