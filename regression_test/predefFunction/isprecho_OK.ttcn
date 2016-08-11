@@ -11,7 +11,7 @@
  *   Raduly, Csaba
  *
  ******************************************************************************/
-module isprecho_OK { //^In TTCN-3 module `isprecho_OK'://
+module isprecho_OK {
 
 type component PDTestComponent {};
 
@@ -205,7 +205,7 @@ testcase f_TC_isBoundValuePresent_Integer_Template() runs on PDTestComponent
   setverdict(pass);
 }
 
-testcase f_TC_isBoundValuePresent_RecordWithMandatoryField_Template() runs on PDTestComponent //^In testcase definition `f_TC_isBoundValuePresent_RecordWithMandatoryField_Template'://
+testcase f_TC_isBoundValuePresent_RecordWithMandatoryField_Template() runs on PDTestComponent
 {
   var template Rec1 vl_Rec1;
   if (isbound(vl_Rec1)) {setverdict(fail)}
@@ -248,17 +248,6 @@ testcase f_TC_isBoundValuePresent_RecordWithMandatoryField_Template() runs on PD
   if (not isbound(vl_Rec1.f)) {setverdict(fail)}
   if (isvalue(vl_Rec1.f)) {setverdict(fail)}
   if (not ispresent(vl_Rec1.f)) {setverdict(fail)}
-
-  vl_Rec1:={f:=*}; //^In variable assignment:// \
-  //^In template for record field `f':// \
-  //^error: Using `\*' for mandatory field//
-  if (not isbound(vl_Rec1)) {setverdict(fail)}
-  if (isvalue(vl_Rec1)) {setverdict(fail)}
-  if (not ispresent(vl_Rec1)) {setverdict(fail)}
-
-  if (not isbound(vl_Rec1.f)) {setverdict(fail)}
-  if (isvalue(vl_Rec1.f)) {setverdict(fail)}
-  if (ispresent(vl_Rec1.f)) {setverdict(fail)}
 
   setverdict(pass);
 }
@@ -320,7 +309,7 @@ testcase f_TC_isBoundValuePresent_RecordWithOptionalField_Template() runs on PDT
   setverdict(pass);
 }
 
-testcase f_TC_isBoundValuePresent_Union_Template() runs on PDTestComponent //^In testcase definition `f_TC_isBoundValuePresent_Union_Template'://
+testcase f_TC_isBoundValuePresent_Union_Template() runs on PDTestComponent
 {
   var template Uni vl_Uni;
   if (isbound(vl_Uni)) {setverdict(fail)}
@@ -354,17 +343,6 @@ testcase f_TC_isBoundValuePresent_Union_Template() runs on PDTestComponent //^In
   if (not isbound(vl_Uni.u)) {setverdict(fail)}
   if (isvalue(vl_Uni.u)) {setverdict(fail)}
   if (not ispresent(vl_Uni.u)) {setverdict(fail)}
-
-  vl_Uni:={u:=*}; //^In variable assignment:// \
-  //^In template for union field `u':// \
-  //^error: Using `\*' for mandatory field//
-  if (not isbound(vl_Uni)) {setverdict(fail)}
-  if (isvalue(vl_Uni)) {setverdict(fail)}
-  if (not ispresent(vl_Uni)) {setverdict(fail)}
-
-  if (not isbound(vl_Uni.u)) {setverdict(fail)}
-  if (isvalue(vl_Uni.u)) {setverdict(fail)}
-  if (ispresent(vl_Uni.u)) {setverdict(fail)}
 
   setverdict(pass);
 }
