@@ -116,7 +116,7 @@ type union myuni2 {
 //** TEMPLATES **//
 template myrec1 t_rec1 := { 1, 2 }
 template myrec2 t_rec2 := { 2, 3 }
-template myrec3 t_rec3 := { 99, { 88, 77 }, { ?, * }, ? }
+template myrec3 t_rec3 := { 99, { 88, 77 }, { ?, ? /* * */ }, ? }
 template myrec4 t_rec4 := { 77, { 66, 55 }, { *, ? }, * }
 template myrec2 t_rec5 := t_rec1
 template intlist4 t_il4 := t_rec2
