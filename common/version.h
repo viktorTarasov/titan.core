@@ -24,8 +24,8 @@
 /* Version numbers */
 #define TTCN3_MAJOR 5
 #define TTCN3_MINOR 5
-#define TTCN3_PATCHLEVEL 0
-//#define TTCN3_BUILDNUMBER 0
+#define TTCN3_PATCHLEVEL 1   //0-> x=A, 1-> x=B, ... 
+#define TTCN3_BUILDNUMBER 1  //0=R5x, 1=R5x01, 2=R5x02, ...
 
 /* The aggregated version number must be set manually since some stupid
  * 'makedepend' programs cannot calculate arithmetic expressions.
