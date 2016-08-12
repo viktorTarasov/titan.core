@@ -6802,10 +6802,10 @@ control {
 }
 }
 <END_MODULE>
-<RESULT IF_PASS COUNT 3>
+<RESULT IF_PASS COUNT 2>
 (?im)error: Subtype mismatch: subtype length\(2\) has no common value with a string element
 <END_RESULT>
-<RESULT IF_PASS COUNT 7>
+<RESULT IF_PASS COUNT 6>
 (?im)error: Subtype mismatch: subtype length\(2\) has no common value with subtype length\(1\)
 <END_RESULT>
 <RESULT IF_PASS COUNT 4>
