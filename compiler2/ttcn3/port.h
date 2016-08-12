@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Cserveni, Akos
  *   Delic, Adam
  *   Kremer, Peter
@@ -25,6 +26,7 @@
 typedef struct port_msg_type_tag {
   const char *name;
   const char *dispname;
+  const char* name_w_no_prefix;
 } port_msg_type;
 
 typedef struct port_msg_type_list_tag {

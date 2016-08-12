@@ -255,6 +255,11 @@ namespace Ttcn {
      * @param nof_subrefs indicates the number of sub-references
      * to generate code from (UINT_MAX means all of them) */
     void generate_code(expression_struct *expr, Common::Assignment *ass, size_t nof_subrefs = UINT_MAX);
+    /** Generates the C++ sub-expression that could access the
+      * sub-references of a reference of type \a type
+      * @param nof_subrefs indicates the number of sub-references
+      * to generate code from (UINT_MAX means all of them) */
+    void generate_code(expression_struct *expr, Type *type, bool is_template = false, size_t nof_subrefs = UINT_MAX);
     /** Appends the string representation of sub-references to \a str. */
     void append_stringRepr(string &str) const;
     bool refers_to_string_element() const { return refs_str_element; }

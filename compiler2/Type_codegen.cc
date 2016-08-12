@@ -2150,8 +2150,12 @@ void Type::generate_code_Signature(output_struct *target)
   memset(&sdef, 0, sizeof(sdef));
   sdef.name = get_genname_own().c_str();
   sdef.dispname = get_fullname().c_str();
-  if (u.signature.return_type) sdef.return_type =
-    pool.add(u.signature.return_type->get_genname_value(my_scope));
+  if (u.signature.return_type) {
+    sdef.return_type =
+      pool.add(u.signature.return_type->get_genname_value(my_scope));
+    sdef.return_type_w_no_prefix = pool.add(u.signature.return_type->get_genname_value(
+      u.signature.return_type->get_type_refd_last()->get_my_scope()));
+  }
   else sdef.return_type = NULL;
   if (u.signature.parameters) {
     sdef.parameters.nElements = u.signature.parameters->get_nof_params();
@@ -2193,6 +2197,8 @@ void Type::generate_code_Signature(output_struct *target)
         pool.add(type->get_genname_value(my_scope));
       sdef.exceptions.elements[i].dispname = pool.add(type->get_typename());
       sdef.exceptions.elements[i].altname = pool.add(type->get_genname_altname());
+      sdef.exceptions.elements[i].name_w_no_prefix =
+        pool.add(type->get_genname_value(type->get_type_refd_last()->get_my_scope()));
     }
   } else {
     sdef.exceptions.nElements = 0;
@@ -2225,15 +2231,25 @@ void Type::generate_code_done(output_struct *target)
   const char *genname_str = t_genname.c_str();
   const string& dispname = get_typename();
   const char *dispname_str = dispname.c_str();
+  // value redirect base class (interface)
+  target->header.class_decls = mputprintf(target->header.class_decls,
+    "class %s_Redirect_Interface;\n", genname_str);
+  target->header.class_defs = mputprintf(target->header.class_defs,
+    "class %s_Redirect_Interface {\n"
+    "public:\n"
+    "virtual void set_values(const %s&) = 0;\n"
+    "virtual ~%s_Redirect_Interface() { }\n"
+    "};\n\n", genname_str, genname_str, genname_str);
+  // the done function
   target->header.function_prototypes = mputprintf
     (target->header.function_prototypes,
      "extern alt_status done(const COMPONENT& component_reference, "
-     "const %s_template& value_template, %s *value_ptr);\n",
+     "const %s_template& value_template, %s_Redirect_Interface *value_redirect);\n",
      genname_str, genname_str);
   target->source.function_bodies = mputprintf
     (target->source.function_bodies,
      "alt_status done(const COMPONENT& component_reference, "
-     "const %s_template& value_template, %s *value_ptr)\n"
+     "const %s_template& value_template, %s_Redirect_Interface *value_redirect)\n"
      "{\n"
      "if (!component_reference.is_bound()) "
      "TTCN_error(\"Performing a done operation on an unbound component "
@@ -2245,7 +2261,10 @@ void Type::generate_code_done(output_struct *target)
      "%s return_value;\n"
      "return_value.decode_text(*text_buf);\n"
      "if (value_template.match(return_value)) {\n"
-     "if (value_ptr != NULL) *value_ptr = return_value;\n"
+     "if (value_redirect != NULL) {\n"
+     "value_redirect->set_values(return_value);\n"
+     "delete value_redirect;\n"
+     "}\n"
      "TTCN_Logger::begin_event(TTCN_Logger::PARALLEL_PTC);\n"
      "TTCN_Logger::log_event_str(\"PTC with component reference \");\n"
      "component_reference.log();\n"

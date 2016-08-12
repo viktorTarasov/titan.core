@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Szabo, Janos Zoltan – initial implementation
  *   Tatarka, Gabor
  *
@@ -37,6 +38,7 @@ typedef struct {
   const char *name;
   const char *dispname;
   const char *altname;
+  const char* name_w_no_prefix;
 } signature_exception;
 
 typedef struct {
@@ -49,6 +51,7 @@ typedef struct {
   const char *dispname;
   signature_par_list parameters;
   const char *return_type;
+  const char* return_type_w_no_prefix;
   boolean is_noblock;
   signature_exception_list exceptions;
 } signature_def;

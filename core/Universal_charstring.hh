@@ -391,6 +391,14 @@ public:
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  
+  /** Converts a string containing a character coding format to its corresponding
+    * enum value.
+    * @param coding_str string containing the coding format
+    * @param context_str string containing the context this function was called
+    * from (printed as part of an error message if the coding string is invalid) */
+  static CharCoding::CharCodingType get_character_coding(const char* coding_str,
+    const char* context_str);
 
 private:
 #ifdef TITAN_RUNTIME_2

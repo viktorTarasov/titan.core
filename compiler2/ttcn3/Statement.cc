@@ -1092,7 +1092,7 @@ namespace Ttcn {
   Statement::Statement(statementtype_t p_st, Reference *p_ref,
                        TemplateInstance *p_templinst,
                        TemplateInstance *p_fromclause,
-                       Reference *p_redirectval, Reference *p_redirectsender)
+                       ValueRedirect *p_redirectval, Reference *p_redirectsender)
     : statementtype(p_st), my_sb(0)
   {
     switch(statementtype) {
@@ -1137,7 +1137,7 @@ namespace Ttcn {
                        TemplateInstance *p_templinst,
                        TemplateInstance *p_valuematch,
                        TemplateInstance *p_fromclause,
-                       Reference *p_redirectval, ParamRedirect *p_redirectparam,
+                       ValueRedirect *p_redirectval, ParamRedirect *p_redirectparam,
                        Reference *p_redirectsender)
     : statementtype(p_st), my_sb(0)
   {
@@ -1161,7 +1161,7 @@ namespace Ttcn {
   Statement::Statement(statementtype_t p_st, Reference *p_ref,
                        Reference *p_sig, TemplateInstance *p_templinst,
                        bool p_timeout, TemplateInstance *p_fromclause,
-                       Reference *p_redirectval, Reference *p_redirectsender)
+                       ValueRedirect *p_redirectval, Reference *p_redirectsender)
     : statementtype(p_st), my_sb(0)
   {
     switch(statementtype) {
@@ -1258,7 +1258,7 @@ namespace Ttcn {
   }
 
   Statement::Statement(statementtype_t p_st, Value *p_compref,
-                       TemplateInstance *p_donematch, Reference *p_redirect)
+                       TemplateInstance *p_donematch, ValueRedirect *p_redirect)
     : statementtype(p_st), my_sb(0)
   {
     switch (statementtype) {
@@ -3604,7 +3604,7 @@ error:
       // the receive parameter (template instance) is present
       // trying to determine type of the incoming message
       Type *msg_type = 0;
-      bool msg_type_determined = false, value_redirect_checked = false;
+      bool msg_type_determined = false;
       if (port_type) {
 	// the port reference is correct and the port type is known
 	PortTypeBody *port_type_body = port_type->get_PortBody();
@@ -3616,8 +3616,7 @@ error:
 	    msg_type = in_msgs->get_type_byIndex(0);
 	  } else {
 	    // there are more than one incoming message types
-	    msg_type = get_incoming_type(port_op.r.rcvpar,
-	      port_op.r.redirect.value, value_redirect_checked);
+	    msg_type = get_incoming_type(port_op.r.rcvpar, port_op.r.redirect.value);
 	    if (msg_type) {
 	      size_t nof_comp_types =
 		in_msgs->get_nof_compatible_types(msg_type);
@@ -3657,15 +3656,15 @@ error:
 	}
       }
       if (!msg_type_determined) {
-	msg_type = get_incoming_type(port_op.r.rcvpar, port_op.r.redirect.value,
-	  value_redirect_checked);
+	msg_type = get_incoming_type(port_op.r.rcvpar, port_op.r.redirect.value);
       }
       if (!msg_type) msg_type = Type::get_pooltype(Type::T_ERROR);
       // check the template instance using the message type
       port_op.r.rcvpar->chk(msg_type);
-      // check the value redirect if it is not done so far
-      if (!value_redirect_checked)
-	chk_value_redirect(port_op.r.redirect.value, msg_type);
+      // check the value redirect if it exists
+      if (port_op.r.redirect.value != NULL) {
+        port_op.r.redirect.value->chk(msg_type);
+      }
     } else {
       // the statement does not have parameter
       if (port_type) {
@@ -3686,7 +3685,7 @@ error:
       if (port_op.r.redirect.value) {
 	port_op.r.redirect.value->error("Value redirect cannot be used without "
 	  "receive parameter");
-	chk_value_redirect(port_op.r.redirect.value, 0);
+	port_op.r.redirect.value->chk_erroneous();
       }
     }
     // checking from clause and sender redirect
@@ -3907,7 +3906,9 @@ error:
 	port_op.r.getreply_valuematch->chk(return_type);
       }
       // checking the value redirect if present
-      chk_value_redirect(port_op.r.redirect.value, return_type);
+      if (port_op.r.redirect.value != NULL) {
+        port_op.r.redirect.value->chk(return_type);
+      }
     } else {
       // the statement does not have parameter (value match is also omitted)
       if (port_type) {
@@ -3929,7 +3930,7 @@ error:
       if (port_op.r.redirect.value) {
 	port_op.r.redirect.value->error("Value redirect cannot be used "
 	  "without signature template");
-	chk_value_redirect(port_op.r.redirect.value, 0);
+  port_op.r.redirect.value->chk_erroneous();
       }
       if (port_op.r.redirect.param) {
 	port_op.r.redirect.param->error("Parameter redirect cannot be used "
@@ -3994,7 +3995,7 @@ error:
       // the receive parameter (template instance) must be also present
       // trying to determine type of the exception
       Type *exc_type = 0;
-      bool exc_type_determined = false, value_redirect_checked = false;
+      bool exc_type_determined = false;
       if (port_op.r.ctch.signature) {
 	// the signature is known
 	SignatureExceptions *exceptions =
@@ -4006,8 +4007,7 @@ error:
 	    exc_type = exceptions->get_type_byIndex(0);
 	  } else {
 	    // the signature has more than one exception types
-	    exc_type = get_incoming_type(port_op.r.rcvpar,
-	      port_op.r.redirect.value, value_redirect_checked);
+	    exc_type = get_incoming_type(port_op.r.rcvpar, port_op.r.redirect.value);
 	    if (exc_type) {
 	      size_t nof_comp_types =
 		exceptions->get_nof_compatible_types(exc_type);
@@ -4034,15 +4034,15 @@ error:
 	}
       }
       if (!exc_type_determined) {
-	exc_type = get_incoming_type(port_op.r.rcvpar, port_op.r.redirect.value,
-	  value_redirect_checked);
+	exc_type = get_incoming_type(port_op.r.rcvpar, port_op.r.redirect.value);
       }
       if (!exc_type) exc_type = Type::get_pooltype(Type::T_ERROR);
       // check the template instance using the exception type
       port_op.r.rcvpar->chk(exc_type);
-      // check the value redirect if it is not done so far
-      if (!value_redirect_checked)
-	chk_value_redirect(port_op.r.redirect.value, exc_type);
+      // check the value redirect if it exists
+      if (port_op.r.redirect.value != NULL) {
+        port_op.r.redirect.value->chk(exc_type);
+      }
       // checking for invalid exception types
       exc_type = exc_type->get_type_refd_last();
       switch (exc_type->get_typetype()) {
@@ -4121,7 +4121,7 @@ error:
 	// but the value redirect is present
 	port_op.r.redirect.value->error("Value redirect cannot be used without "
 	  "signature and parameter");
-	chk_value_redirect(port_op.r.redirect.value, 0);
+	port_op.r.redirect.value->chk_erroneous();
       }
     }
     // checking from clause and sender redirect
@@ -4313,10 +4313,9 @@ error:
     // value returning done can be used only when the statement contains a
     // specific component reference
     if (comp_op.donereturn.donematch) {
-      bool value_redirect_checked = false;
-      // try to determine the type of return value
+      // try to determine the type of the return value
       Type *return_type = get_incoming_type(comp_op.donereturn.donematch,
-	comp_op.donereturn.redirect, value_redirect_checked);
+	comp_op.donereturn.redirect);
       if (return_type) {
 	bool return_type_correct = false;
 	for (Type *t = return_type; ; t = t->get_type_refd()) {
@@ -4336,12 +4335,13 @@ error:
 	return_type = Type::get_pooltype(Type::T_ERROR);
       }
       comp_op.donereturn.donematch->chk(return_type);
-      if (!value_redirect_checked)
-	chk_value_redirect(comp_op.donereturn.redirect, return_type);
+      if (comp_op.donereturn.redirect != NULL) {
+        comp_op.donereturn.redirect->chk(return_type);
+      }
     } else if (comp_op.donereturn.redirect) {
       comp_op.donereturn.redirect->error("Redirect cannot be used for the "
 	"return value without a matching template");
-      chk_value_redirect(comp_op.donereturn.redirect, 0);
+      comp_op.donereturn.redirect->chk_erroneous();
     }
   }
 
@@ -4900,15 +4900,16 @@ error:
   }
 
   Type *Statement::get_incoming_type(TemplateInstance *p_ti,
-    Reference *p_val_redir, bool& p_val_redir_checked)
+    ValueRedirect *p_val_redir)
   {
     // first analyze the template instance
     Type *ret_val = p_ti->get_expr_governor(Type::EXPECTED_TEMPLATE);
     // return if this step was successful
     if (ret_val) return ret_val;
-    // use the variable in value redirect in the next step
-    ret_val = chk_value_redirect(p_val_redir, 0);
-    p_val_redir_checked = true;
+    // try to determine the type from the value redirect in the next step
+    if (p_val_redir != NULL) {
+      ret_val = p_val_redir->get_type();
+    }
     // return if this step was successful
     if (ret_val) return ret_val;
     // finally try to convert the undef identifier in the template instance to
@@ -4916,33 +4917,6 @@ error:
     Template *t_templ = p_ti->get_Template();
     t_templ->set_lowerid_to_ref();
     return t_templ->get_expr_governor(Type::EXPECTED_TEMPLATE);
-  }
-
-  Type *Statement::chk_value_redirect(Reference *p_ref, Type *p_type)
-  {
-    if (!p_ref) return NULL;
-    Error_Context cntxt(p_ref, "In `value' redirect");
-    Type *t_var_type = p_ref->chk_variable_ref();
-    if (p_type && t_var_type) {
-      TypeCompatInfo info(my_sb->get_scope_mod(), p_type, t_var_type, true, false);
-      if (p_ref->get_subrefs()) info.set_str2_elem(p_ref->get_subrefs()->refers_to_string_element());
-      TypeChain l_chain;
-      TypeChain r_chain;
-      if (!p_type->is_compatible(t_var_type, &info, &l_chain, &r_chain)) {
-        if (info.is_subtype_error()) {
-          p_ref->error("%s", info.get_subtype_error().c_str());
-        } else
-        if (!info.is_erroneous()) {
-          p_ref->error("Type mismatch in value redirect: "
-                       "A variable of type `%s' was expected instead of `%s'",
-                       p_type->get_typename().c_str(),
-                       t_var_type->get_typename().c_str());
-        } else {
-          p_ref->error("%s", info.get_error_str_str().c_str());
-        }
-      }
-    }
-    return t_var_type;
   }
 
   Type *Statement::chk_sender_redirect(Type *address_type)
@@ -6872,23 +6846,13 @@ error:
       expr->expr = mputprintf(expr->expr, ".%s(", opname);
       if (port_op.r.rcvpar) {
         // The receive parameter is present.
-        if (use_runtime_2 && TypeConv::needs_conv_redir(port_op.r.rcvpar,
-            port_op.r.redirect.value)) {
-          // Don't change the first parameter.  Otherwise it won't receive
-          // anything.  The only thing we need is a temporary to save the
-          // result and a conversion at the end.
-          TypeConv::gen_conv_code_redir(expr, port_op.r.rcvpar,
-                                        port_op.r.redirect.value);
-        } else {
-          port_op.r.rcvpar->generate_code(expr);
-          expr->expr = mputstr(expr->expr, ", ");
-          if (port_op.r.redirect.value) {
-            // Value redirect is also present.
-            expr->expr = mputstr(expr->expr, "&(");
-            port_op.r.redirect.value->generate_code(expr);
-            expr->expr = mputc(expr->expr, ')');
-          } else expr->expr = mputstr(expr->expr, "NULL");
-        }
+        port_op.r.rcvpar->generate_code(expr);
+        expr->expr = mputstr(expr->expr, ", ");
+        if (port_op.r.redirect.value) {
+          // Value redirect is also present.
+          port_op.r.redirect.value->generate_code(expr,
+            port_op.portref->get_refd_assignment()->get_Type()->get_genname_value(my_sb));
+        } else expr->expr = mputstr(expr->expr, "NULL");
         expr->expr = mputstr(expr->expr, ", ");
       }
     } else {
@@ -6915,8 +6879,21 @@ error:
 	generate_code_expr_fromclause(expr);
 	// a temporary object is needed for parameter redirect
 	Type *signature = port_op.r.rcvpar->get_Template()->get_my_governor();
-	expr->expr = mputprintf(expr->expr, ", %s_call_redirect(",
-	  signature->get_genname_value(my_sb).c_str());
+  if (port_op.r.redirect.param != NULL &&
+      port_op.r.redirect.param->has_decoded_modifier()) {
+    // a new redirect class (inheriting the old one) is needed if any of the
+    // redirects have the '@decoded' modifier
+    string tmp_id = my_sb->get_scope_mod_gen()->get_temporary_id();
+    expr->preamble = port_op.r.redirect.param->generate_code_decoded(
+      expr->preamble, signature, tmp_id.c_str(), false);
+    expr->expr = mputprintf(expr->expr, ", %s_call_redirect_%s(",
+      signature->get_genname_value(signature->get_type_refd_last()->get_my_scope()
+      ).c_str(), tmp_id.c_str());
+  }
+  else {
+    expr->expr = mputprintf(expr->expr, ", %s_call_redirect(",
+      signature->get_genname_value(my_sb).c_str());
+  }
 	if (port_op.r.redirect.param)
 	  port_op.r.redirect.param->generate_code(expr);
 	expr->expr = mputstr(expr->expr, "), ");
@@ -6966,15 +6943,27 @@ error:
 	expr->expr = mputstr(expr->expr, ", ");
 	generate_code_expr_fromclause(expr);
 	// a temporary object is needed for value and parameter redirect
-	expr->expr = mputprintf(expr->expr, ", %s_reply_redirect(",
-	  signature->get_genname_value(my_sb).c_str());
+  if (port_op.r.redirect.param != NULL &&
+      port_op.r.redirect.param->has_decoded_modifier()) {
+    // a new redirect class (inheriting the old one) is needed if any of the
+    // redirects have the '@decoded' modifier
+    string tmp_id = my_sb->get_scope_mod_gen()->get_temporary_id();
+    expr->preamble = port_op.r.redirect.param->generate_code_decoded(
+      expr->preamble, signature, tmp_id.c_str(), true);
+    expr->expr = mputprintf(expr->expr, ", %s_reply_redirect_%s(",
+      signature->get_genname_value(signature->get_type_refd_last()->get_my_scope()
+      ).c_str(), tmp_id.c_str());
+  }
+  else {
+    expr->expr = mputprintf(expr->expr, ", %s_reply_redirect(",
+      signature->get_genname_value(my_sb).c_str());
+  }
 	if (return_type) {
 	  // the first argument of the constructor must contain
 	  // the value redirect
 	  if (port_op.r.redirect.value) {
-	    expr->expr = mputstr(expr->expr, "&(");
-	    port_op.r.redirect.value->generate_code(expr);
-	    expr->expr = mputc(expr->expr, ')');
+	    port_op.r.redirect.value->generate_code(expr,
+        signature->get_genname_value(my_sb) + "_reply_redirect");
 	  } else expr->expr = mputstr(expr->expr, "NULL");
 	  if (port_op.r.redirect.param) expr->expr = mputstr(expr->expr, ", ");
 	}
@@ -7018,9 +7007,8 @@ error:
 	expr->expr = mputstr(expr->expr, ", ");
 	if (port_op.r.redirect.value) {
 	  // value redirect is also present
-	  expr->expr = mputstr(expr->expr, "&(");
-	  port_op.r.redirect.value->generate_code(expr);
-	  expr->expr = mputc(expr->expr, ')');
+	  port_op.r.redirect.value->generate_code(expr,
+      port_op.r.ctch.signature->get_genname_value(my_sb) + "_exception_template");
 	} else expr->expr = mputstr(expr->expr, "NULL");
 	expr->expr = mputstr(expr->expr, "), ");
       }
@@ -7078,9 +7066,9 @@ error:
 	expr->expr = mputstr(expr->expr, ", ");
 	if (comp_op.donereturn.redirect) {
 	  // value redirect is present
-	  expr->expr = mputstr(expr->expr, "&(");
-	  comp_op.donereturn.redirect->generate_code(expr);
-	  expr->expr = mputc(expr->expr, ')');
+	  comp_op.donereturn.redirect->generate_code(expr,
+      t_mod != my_sb->get_scope_mod_gen() ? t_mod->get_modid().get_name() :
+      string(""));
 	} else {
 	  // value redirect is omitted
 	  expr->expr = mputstr(expr->expr, "NULL");
@@ -7924,16 +7912,23 @@ error:
   // ===== ParamAssignment
   // =================================
 
-  ParamAssignment::ParamAssignment(Identifier *p_id, Reference *p_ref)
-    : Node(), Location(), id(p_id), ref(p_ref)
+  ParamAssignment::ParamAssignment(Identifier *p_id, Reference *p_ref,
+                                   bool p_decoded, Value* p_str_enc)
+    : Node(), Location(), id(p_id), ref(p_ref), decoded(p_decoded)
+    , str_enc(p_str_enc), dec_type(NULL)
   {
-    if(!id || !ref) FATAL_ERROR("Ttcn::ParamAssignment::ParamAssignment()");
+    if (!id || !ref || (!decoded && str_enc)) {
+      FATAL_ERROR("Ttcn::ParamAssignment::ParamAssignment()");
+    }
   }
 
   ParamAssignment::~ParamAssignment()
   {
     delete id;
     delete ref;
+    if (str_enc != NULL) {
+      delete str_enc;
+    }
   }
 
   ParamAssignment *ParamAssignment::clone() const
@@ -7945,12 +7940,18 @@ error:
   {
     if (!ref) FATAL_ERROR("Ttcn::ParamAssignment::set_my_scope()");
     ref->set_my_scope(p_scope);
+    if (str_enc != NULL) {
+      str_enc->set_my_scope(p_scope);
+    }
   }
 
   void ParamAssignment::set_fullname(const string& p_fullname)
   {
     if (!ref) FATAL_ERROR("Ttcn::ParamAssignment::set_fullname()");
     ref->set_fullname(p_fullname);
+    if (str_enc != NULL) {
+      str_enc->set_fullname(p_fullname + ".<string_encoding>");
+    }
   }
 
   Reference *ParamAssignment::get_ref() const
@@ -7964,6 +7965,18 @@ error:
     if (!ref) FATAL_ERROR("Ttcn::ParamAssignment::steal_ref()");
     Reference *ret_val = ref;
     ref = 0;
+    return ret_val;
+  }
+  
+  Value* ParamAssignment::get_str_enc() const
+  {
+    return str_enc;
+  }
+
+  Value* ParamAssignment::steal_str_enc()
+  {
+    Value *ret_val = str_enc;
+    str_enc = NULL;
     return ret_val;
   }
 
@@ -8008,7 +8021,15 @@ error:
   // =================================
 
   VariableEntry::VariableEntry(Reference *p_ref)
-    : Node(), Location(), ref(p_ref)
+    : Node(), Location(), ref(p_ref), decoded(false), str_enc(NULL), dec_type(NULL)
+  {
+    if(!ref) FATAL_ERROR("VariableEntry::VariableEntry()");
+  }
+  
+  VariableEntry::VariableEntry(Reference* p_ref, bool p_decoded,
+                               Value* p_str_enc, Type* p_dec_type)
+    : Node(), Location(), ref(p_ref), decoded(p_decoded), str_enc(p_str_enc)
+    , dec_type(p_dec_type)
   {
     if(!ref) FATAL_ERROR("VariableEntry::VariableEntry()");
   }
@@ -8016,6 +8037,9 @@ error:
   VariableEntry::~VariableEntry()
   {
     delete ref;
+    if (str_enc != NULL) {
+      delete str_enc;
+    }
   }
 
   VariableEntry *VariableEntry::clone() const
@@ -8026,12 +8050,18 @@ error:
   void VariableEntry::set_my_scope(Scope *p_scope)
   {
     if(ref) ref->set_my_scope(p_scope);
+    if (str_enc != NULL) {
+      str_enc->set_my_scope(p_scope);
+    }
   }
 
   void VariableEntry::set_fullname(const string& p_fullname)
   {
     Node::set_fullname(p_fullname);
     if(ref) ref->set_fullname(p_fullname+".ref");
+    if (str_enc != NULL) {
+      str_enc->set_fullname(p_fullname + ".<string_encoding>");
+    }
   }
 
   // =================================
@@ -8154,6 +8184,10 @@ error:
 	Error_Context cntxt2(t_parass, "In redirect for parameter `%s'",
 	  dispname_str);
 	chk_variable_ref(t_parass->get_ref(), 0);
+  Value* str_enc = t_parass->get_str_enc();
+  if (str_enc != NULL) {
+    str_enc->chk_string_encoding(NULL);
+  }
       }
       parass_m.clear();
       break; }
@@ -8227,12 +8261,50 @@ error:
 	    error_flag = true;
 	  }
 	}
-	chk_variable_ref(t_parass->get_ref(), t_par->get_type());
+  if (t_parass->is_decoded()) {
+    // the redirected parameter could be decoded into any type
+    Type *t_var_type = t_parass->get_ref()->chk_variable_ref();
+    if (t_var_type != NULL) {
+      // make sure the variable's type has a decoding type set, and store it
+      t_parass->set_dec_type(t_var_type->get_type_refd());
+      t_parass->get_dec_type()->chk_coding(false);
+    }
+    Value* str_enc = t_parass->get_str_enc();
+    switch (t_par->get_type()->get_type_refd_last()->get_typetype_ttcn3()) {
+    case Type::T_BSTR:
+    case Type::T_HSTR:
+    case Type::T_OSTR:
+    case Type::T_CSTR:
+      if (str_enc != NULL) {
+        str_enc->error("The encoding format parameter for the '@decoded' modifier "
+          "is only available to parameter redirects of universal charstrings");
+        error_flag = true;
+      }
+      break;
+    case Type::T_USTR:
+      if (str_enc != NULL) {
+        str_enc->chk_string_encoding(NULL);
+      }
+      break;
+    default:
+      t_parass->error("The '@decoded' modifier is only available to parameter "
+        "redirects of string types.");
+      error_flag = true;
+      break;
+    }
+  }
+  else {
+    chk_variable_ref(t_parass->get_ref(), t_par->get_type());
+  }
       } else {
 	t_parass->error("Signature `%s' does not have parameter named `%s'",
 	  p_sig->get_typename().c_str(), dispname_str);
 	error_flag = true;
 	chk_variable_ref(t_parass->get_ref(), 0);
+  Value* str_enc = t_parass->get_str_enc();
+  if (str_enc != NULL) {
+    str_enc->chk_string_encoding(NULL);
+  }
       }
     }
     if (!error_flag) {
@@ -8245,7 +8317,9 @@ error:
 	  : p_parlist->get_in_param_byIndex(i);
 	const string& name = t_par->get_id().get_name();
 	if (parass_m.has_key(name))
-	  t_ves->add_ve(new VariableEntry(parass_m[name]->steal_ref()));
+	  t_ves->add_ve(new VariableEntry(parass_m[name]->steal_ref(), 
+      parass_m[name]->is_decoded(), parass_m[name]->steal_str_enc(),
+      parass_m[name]->get_dec_type()));
 	else t_ves->add_ve(new VariableEntry);
       }
       delete parasss;
@@ -8320,14 +8394,642 @@ error:
     if (parredirtype != P_VAR) FATAL_ERROR("ParamRedirect::generate_code()");
     for (size_t i = 0; i < ves->get_nof_ves(); i++) {
       if (i > 0) expr->expr = mputstr(expr->expr, ", ");
-      Reference *ref = ves->get_ve_byIndex(i)->get_ref();
+      VariableEntry* ve = ves->get_ve_byIndex(i);
+      // there's an extra charstring parameter for every decoded universal
+      // charstring parameter redirect with an unfoldable encoding format
+      Value* str_enc = (ve->is_decoded() && ve->get_str_enc() != NULL &&
+        ve->get_str_enc()->is_unfoldable()) ? ve->get_str_enc() : NULL;
+      Reference *ref = ve->get_ref();
       if (ref) {
-	// the variable reference is present
-	expr->expr = mputstr(expr->expr, "&(");
-	ref->generate_code(expr);
-	expr->expr = mputc(expr->expr, ')');
-      } else expr->expr = mputstr(expr->expr, "NULL");
+        // the variable reference is present
+        expr->expr = mputstr(expr->expr, "&(");
+        ref->generate_code(expr);
+        expr->expr = mputc(expr->expr, ')');
+        if (str_enc != NULL) {
+          expr->expr = mputstr(expr->expr, ", ");
+          str_enc->generate_code_expr(expr);
+        }
+      }
+      else {
+        expr->expr = mputstr(expr->expr, "NULL");
+        if (str_enc != NULL) {
+          expr->expr = mputstr(expr->expr, ", CHARSTRING()");
+        }
+      }
     }
+  }
+  
+  char* ParamRedirect::generate_code_decoded(char* str, Type* sig_type,
+                                             const char* tmp_id, bool is_out)
+  {
+    // AssignmentList is converted to VariableList during checking
+    if (parredirtype != P_VAR) {
+      FATAL_ERROR("ParamRedirect::generate_code_decoded()");
+    }
+    Scope* scope = NULL;
+    for (size_t i = 0; i < ves->get_nof_ves(); i++) {
+      Reference* ref = ves->get_ve_byIndex(i)->get_ref();
+      if (ref != NULL) {
+        // there must be at least one reference in the redirect, otherwise this
+        // function would not be called
+        scope = ref->get_my_scope();
+        break;
+      }
+    }
+    // cycle through the variable list and gather all the data needed for the
+    // new class
+    char* members_str = NULL;
+    char* constr_params_str = NULL;
+    char* base_constr_params_str = NULL;
+    char* constr_init_list_str = NULL;
+    char* set_params_str = NULL;
+    Type* return_type = sig_type->get_signature_return_type();
+    if (return_type != NULL && is_out) {
+      // the return type's value redirect object must be passed through this
+      // class
+      constr_params_str = mprintf("%s_Redirect_Interface* return_redirect",
+        return_type->get_genname_value(return_type->get_my_scope()).c_str());
+      base_constr_params_str = mcopystr("return_redirect");
+    }
+    SignatureParamList* parlist = sig_type->get_signature_parameters();
+    for (size_t i = 0; i < ves->get_nof_ves(); i++) {
+      VariableEntry* ve = ves->get_ve_byIndex(i);
+      SignatureParam* par = is_out ? parlist->get_out_param_byIndex(i) :
+        parlist->get_in_param_byIndex(i);
+      const char* par_name = par->get_id().get_name().c_str();
+      if (constr_params_str != NULL) {
+        constr_params_str = mputstr(constr_params_str, ", ");
+        base_constr_params_str = mputstr(base_constr_params_str, ", ");
+      }
+      if (ve->is_decoded()) {
+        members_str = mputprintf(members_str, "%s* ptr_%s_dec;\n",
+          ve->get_dec_type()->get_genname_value(scope).c_str(), par_name);
+        constr_params_str = mputprintf(constr_params_str, "%s* par_%s_dec = NULL",
+          ve->get_dec_type()->get_genname_value(scope).c_str(), par_name);
+        base_constr_params_str = mputstr(base_constr_params_str, "NULL");
+        constr_init_list_str = mputprintf(constr_init_list_str,
+          ", ptr_%s_dec(par_%s_dec)", par_name, par_name);
+        set_params_str = mputprintf(set_params_str,
+          "if (ptr_%s_dec != NULL) {\n", par_name);
+        switch (par->get_type()->get_type_refd_last()->get_typetype_ttcn3()) {
+        case Type::T_OSTR:
+        case Type::T_CSTR:
+          set_params_str = mputprintf(set_params_str,
+            "TTCN_Buffer buff(par.%s());\n", par_name);
+          break;
+        case Type::T_BSTR:
+          set_params_str = mputprintf(set_params_str,
+            "OCTETSTRING os(bit2oct(par.%s()));\n"
+            "TTCN_Buffer buff(os);\n", par_name);
+          break;
+        case Type::T_HSTR:
+          set_params_str = mputprintf(set_params_str,
+            "OCTETSTRING os(hex2oct(par.%s()));\n"
+            "TTCN_Buffer buff(os);\n", par_name);
+          break;
+        case Type::T_USTR:
+          set_params_str = mputstr(set_params_str, "TTCN_Buffer buff;\n");
+          if (ve->get_str_enc() == NULL || !ve->get_str_enc()->is_unfoldable()) {
+            // if the encoding format is missing or is known at compile-time, then
+            // use the appropriate string encoding function
+            string str_enc = (ve->get_str_enc() != NULL) ?
+              ve->get_str_enc()->get_val_str() : string("UTF-8");
+            if (str_enc == "UTF-8") {
+              set_params_str = mputprintf(set_params_str,
+                "par.%s().encode_utf8(buff, false);\n", par_name);
+            }
+            else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
+                     str_enc == "UTF-16BE") {
+              set_params_str = mputprintf(set_params_str,
+                "par.%s().encode_utf16(buff, CharCoding::UTF16%s);\n", par_name,
+                (str_enc == "UTF-16LE") ? "LE" : "BE");
+            }
+            else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
+                     str_enc == "UTF-32BE") {
+              set_params_str = mputprintf(set_params_str,
+                "par.%s().encode_utf32(buff, CharCoding::UTF32%s);\n", par_name,
+                (str_enc == "UTF-32LE") ? "LE" : "BE");
+            }
+          }
+          else {
+            // the encoding format is not known at compile-time, so an extra
+            // member and constructor parameter is needed to store it
+            members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%s;\n",
+              par_name);
+            constr_params_str = mputprintf(constr_params_str,
+              ", CHARSTRING par_fmt_%s = CHARSTRING()", par_name);
+            constr_init_list_str = mputprintf(constr_init_list_str,
+              ", enc_fmt_%s(par_fmt_%s)", par_name, par_name);
+            set_params_str = mputprintf(set_params_str,
+              "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
+              "get_character_coding(enc_fmt_%s, \"decoded parameter redirect\");\n"
+              "switch (coding) {\n"
+              "case CharCoding::UTF_8:\n"
+              "par.%s().encode_utf8(buff, false);\n"
+              "break;\n"
+              "case CharCoding::UTF16:\n"
+              "case CharCoding::UTF16LE:\n"
+              "case CharCoding::UTF16BE:\n"
+              "par.%s().encode_utf16(buff, coding);\n"
+              "break;\n"
+              "case CharCoding::UTF32:\n"
+              "case CharCoding::UTF32LE:\n"
+              "case CharCoding::UTF32BE:\n"
+              "par.%s().encode_utf32(buff, coding);\n"
+              "break;\n"
+              "default:\n"
+              "break;\n"
+              "}\n", par_name, par_name, par_name, par_name);
+          }
+          break;
+        default:
+          FATAL_ERROR("ParamRedirect::generate_code_decoded");
+        }
+        set_params_str = mputprintf(set_params_str,
+          "ptr_%s_dec->decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
+          "if (buff.get_read_len() != 0) {\n"
+          "TTCN_error(\"Parameter redirect failed, because the buffer was not "
+          "empty after decoding. Remaining octets: %%d.\", (int)buff.get_read_len());\n"
+          "}\n"
+          "}\n", par_name,
+          ve->get_dec_type()->get_genname_typedescriptor(scope).c_str(),
+          ve->get_dec_type()->get_coding(false).c_str());
+      }
+      else {
+        constr_params_str = mputprintf(constr_params_str, "%s* par_%s = NULL",
+          par->get_type()->get_genname_value(scope).c_str(), par_name);
+        base_constr_params_str = mputprintf(base_constr_params_str, "par_%s",
+          par_name);
+      }
+    }
+    // generate the new class with the gathered data
+    string qualified_sig_name_ = sig_type->get_genname_value(scope);
+    const char* qualified_sig_name = qualified_sig_name_.c_str();
+    string unqualified_sig_name_ = sig_type->get_genname_value(
+      sig_type->get_type_refd_last()->get_my_scope());
+    const char* unqualified_sig_name = unqualified_sig_name_.c_str();
+    const char* op_name = is_out ? "reply" : "call";
+    str = mputprintf(str,
+      "class %s_%s_redirect_%s : public %s_%s_redirect {\n"
+      // member declarations for the decoded parameters and their encoding formats
+      // (if they have one)
+      "%s" 
+      "public:\n"
+      // constructor:
+      // same as the inherited constructor, except the types of the parameter
+      // redirects with the '@decoded' modifier are replaced with the decoded
+      // types (plus an extra encoding format parameter is added when necessary)
+      "%s_%s_redirect_%s(%s)\n"
+      // the base constructor is called with the parameters that don't need to
+      // be decoded; the ones that need to be decoded are set to NULL and are
+      // initialized in the member initializer list (together with their
+      // eventual encoding formats)
+      ": %s_%s_redirect(%s)%s { }\n"
+      // set_parameters function: decodes the parameters that need decoding,
+      // the ones that don't are sent to the base class' function
+      "virtual void set_parameters(const %s_%s& par) const\n"
+      "{\n"
+      "%s" 
+      "%s_%s_redirect::set_parameters(par);\n"
+      "}\n"
+      "};\n", unqualified_sig_name, op_name, tmp_id, qualified_sig_name, op_name,
+      members_str, unqualified_sig_name, op_name, tmp_id, constr_params_str,
+      unqualified_sig_name, op_name, base_constr_params_str, constr_init_list_str,
+      qualified_sig_name, op_name, set_params_str, unqualified_sig_name, op_name);
+    Free(members_str);
+    Free(constr_params_str);
+    Free(base_constr_params_str);
+    Free(constr_init_list_str);
+    Free(set_params_str);
+    return str;
+  }
+  
+  bool ParamRedirect::has_decoded_modifier() const
+  {
+    // this is called during code generation
+    // AssignmentList is converted to VariableList during checking
+    if (parredirtype != P_VAR) {
+      FATAL_ERROR("ParamRedirect::generate_code()");
+    }
+    for (size_t i = 0; i < ves->get_nof_ves(); i++) {
+      if (ves->get_ve_byIndex(i)->is_decoded()) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  // =================================
+  // ===== SingleValueRedirect
+  // =================================
+  
+  SingleValueRedirect::SingleValueRedirect(Reference* p_var_ref)
+  : Node(), Location(), var_ref(p_var_ref), subrefs(NULL), decoded(false)
+  , str_enc(NULL), dec_type(NULL)
+  {
+    if (var_ref == NULL) {
+      FATAL_ERROR("SingleValueRedirect::SingleValueRedirect");
+    }
+  }
+  
+  SingleValueRedirect::SingleValueRedirect(Reference* p_var_ref,
+                                           FieldOrArrayRefs* p_subrefs,
+                                           bool p_decoded, Value* p_str_enc)
+  : Node(), Location(), var_ref(p_var_ref), subrefs(p_subrefs)
+  , decoded(p_decoded), str_enc(p_str_enc), dec_type(NULL)
+  {
+    if (var_ref == NULL || subrefs == NULL || (!decoded && str_enc != NULL)) {
+      FATAL_ERROR("SingleValueRedirect::SingleValueRedirect");
+    }
+  }
+  
+  SingleValueRedirect::~SingleValueRedirect()
+  {
+    delete var_ref;
+    if (subrefs != NULL) {
+      delete subrefs;
+    }
+    if (str_enc != NULL) {
+      delete str_enc;
+    }
+  }
+  
+  SingleValueRedirect* SingleValueRedirect::clone() const
+  {
+    FATAL_ERROR("SingleValueRedirect::clone");
+  }
+  
+  void SingleValueRedirect::set_my_scope(Scope* p_scope)
+  {
+    var_ref->set_my_scope(p_scope);
+    if (subrefs != NULL) {
+      subrefs->set_my_scope(p_scope);
+    }
+    if (str_enc != NULL) {
+      str_enc->set_my_scope(p_scope);
+    }
+  }
+
+  void SingleValueRedirect::set_fullname(const string& p_fullname)
+  {
+    Node::set_fullname(p_fullname);
+    var_ref->set_fullname(p_fullname + ".varref");
+    if (subrefs != NULL) {
+      subrefs->set_fullname(p_fullname + ".fieldrefs");
+    }
+    if (str_enc != NULL) {
+      str_enc->set_fullname(p_fullname + ".<string_encoding>");
+    }
+  }
+  
+  // =================================
+  // ==== ValueRedirect
+  // =================================
+  
+  ValueRedirect::~ValueRedirect()
+  {
+    for (size_t i = 0; i < v.size(); ++i) {
+      delete v[i];
+    }
+    v.clear();
+  }
+  
+  ValueRedirect* ValueRedirect::clone() const
+  {
+    FATAL_ERROR("ValueRedirect::clone");
+  }
+  
+  void ValueRedirect::set_my_scope(Scope* p_scope)
+  {
+    for (size_t i = 0; i < v.size(); ++i) {
+      v[i]->set_my_scope(p_scope);
+    }
+  }
+  
+  void ValueRedirect::set_fullname(const string& p_fullname)
+  {
+    Node::set_fullname(p_fullname);
+    for (size_t i = 0; i < v.size(); ++i) {
+      v[i]->set_fullname(p_fullname + ".redirect_" + Int2string(i + 1));
+    }
+  }
+  
+  void ValueRedirect::set_code_section(GovernedSimple::code_section_t p_code_section)
+  {
+    for (size_t i = 0; i < v.size(); ++i) {
+      v[i]->get_var_ref()->set_code_section(p_code_section);
+    }
+  }
+  
+  void ValueRedirect::add(SingleValueRedirect* ptr)
+  {
+    if (ptr == NULL) {
+      FATAL_ERROR("ValueRedirect::add");
+    }
+    v.add(ptr);
+  }
+  
+  Type* ValueRedirect::get_type() const
+  {
+    Error_Context cntxt(this, "In value redirect");
+    Type* ret_val = NULL;
+    for (size_t i = 0; i < v.size(); ++i) {
+      if (v[i]->get_subrefs() == NULL) {
+        Type* var_type = v[i]->get_var_ref()->chk_variable_ref();
+        if (var_type != NULL) {
+          if (ret_val == NULL) {
+            ret_val = var_type;
+          }
+          else {
+            if (!ret_val->is_identical(var_type)) {
+              error("The variable references the whole value is redirected to "
+                "should be of the same type");
+              return NULL;
+            }
+          }
+        }
+      }
+    }
+    return ret_val;
+  }
+  
+  void ValueRedirect::chk_erroneous()
+  {
+    Error_Context cntxt(this, "In value redirect");
+    for (size_t i = 0; i < v.size(); ++i) {
+      Error_Context cntxt2(v[i], "In redirect #%d", (int)(i + 1));
+      v[i]->get_var_ref()->chk_variable_ref();
+      Value* str_enc = v[i]->get_str_enc();
+      if (str_enc != NULL) {
+        str_enc->chk_string_encoding(NULL);
+      }
+    }
+  }
+  
+  void ValueRedirect::chk(Type* p_type)
+  {
+    bool invalid_type = p_type->get_typetype() == Type::T_ERROR;
+    if (!invalid_type) {
+      // initial check: redirects of fields require the value type to be a record
+      // or set
+      Type::typetype_t tt = p_type->get_type_refd_last()->get_typetype_ttcn3();
+      Error_Context cntxt(this, "In value redirect");
+      if (tt != Type::T_SEQ_T && tt != Type::T_SET_T) {
+        for (size_t i = 0; i < v.size(); ++i) {
+          if (v[i]->get_subrefs() != NULL) {
+            invalid_type = true;
+            Error_Context cntxt2(v[i], "In redirect #%d", (int)(i + 1));
+            v[i]->error("Cannot redirect fields of type '%s', because it is not a "
+              "record or set", p_type->get_typename().c_str());
+          }
+        }
+      }
+    }
+    if (invalid_type) {
+      chk_erroneous();
+      return;
+    }
+    value_type = p_type->get_type_refd_last();
+    Error_Context cntxt(this, "In value redirect");
+    for (size_t i = 0; i < v.size(); ++i) {
+      Type* var_type = v[i]->get_var_ref()->chk_variable_ref();
+      FieldOrArrayRefs* subrefs = v[i]->get_subrefs();
+      Error_Context cntxt2(v[i], "In redirect #%d", (int)(i + 1));
+      if (subrefs != NULL) {
+        // a field of the value is redirected to the referenced variable
+        Type* field_type = p_type->get_field_type(subrefs, Type::EXPECTED_DYNAMIC_VALUE);
+        if (field_type != NULL) {
+          if (v[i]->is_decoded()) {
+            Value* str_enc = v[i]->get_str_enc();
+            switch (field_type->get_type_refd_last()->get_typetype_ttcn3()) {
+            case Type::T_BSTR:
+            case Type::T_HSTR:
+            case Type::T_OSTR:
+            case Type::T_CSTR:
+              if (str_enc != NULL) {
+                str_enc->error("The encoding format parameter for the '@decoded' modifier "
+                  "is only available to value redirects of universal charstrings");
+              }
+              break;
+            case Type::T_USTR:
+              if (str_enc != NULL) {
+                str_enc->chk_string_encoding(NULL);
+              }
+              break;
+            default:
+              v[i]->error("The '@decoded' modifier is only available to value "
+                "redirects of string types.");
+              break;
+            }
+            if (var_type != NULL) {
+              // store the variable type in case it's decoded (since this cannot
+              // be extracted from the value type with the sub-references)
+              v[i]->set_dec_type(var_type->get_type_refd());
+              v[i]->get_dec_type()->chk_coding(false);
+            }
+          }
+          else if (var_type != NULL && !var_type->is_identical(field_type)) {
+            v[i]->error("Type mismatch in value redirect: A variable of type "
+              "`%s' was expected instead of `%s'",
+              field_type->get_typename().c_str(), var_type->get_typename().c_str());
+          }
+        }
+      }
+      else {
+        // the whole value is redirected to the referenced variable
+        if (var_type != NULL && !var_type->is_identical(p_type)) {
+          v[i]->error("Type mismatch in value redirect: A variable of type "
+            "`%s' was expected instead of `%s'", p_type->get_typename().c_str(),
+            var_type->get_typename().c_str());
+        }
+      }
+    }
+  }
+  
+  void ValueRedirect::generate_code(expression_struct* expr,
+                                    string base_class_prefix)
+  {
+    // a value redirect class is generated for this redirect in the expression's
+    // preamble and instantiated in the expression
+    
+    // the base class (interface) is type-specific, and is defined in the entity
+    // the new class instance is passed to (the port type for receive operations,
+    // the signature's reply redirect class for the return value, the signature
+    // exception template class for catch operations, and in the value type's
+    // module for done operations)
+    Scope* scope = v[0]->get_var_ref()->get_my_scope();
+    string tmp_id = scope->get_scope_mod_gen()->get_temporary_id();
+    expr->expr = mputprintf(expr->expr, "new Value_Redirect_%s(", tmp_id.c_str());
+    
+    // go through the value redirect and gather the necessary data for the class
+    char* members_str = NULL;
+    char* constr_params_str = NULL;
+    char* constr_init_list_str = NULL;
+    char* set_values_str = NULL;
+    for (size_t i = 0; i < v.size(); ++i) {
+      if (i > 0) {
+        expr->expr = mputstr(expr->expr, ", ");
+        constr_params_str = mputstr(constr_params_str, ", ");
+        constr_init_list_str = mputstr(constr_init_list_str, ", ");
+      }
+      // pass the variable references to the new instance's constructor
+      expr->expr = mputstr(expr->expr, "&(");
+      v[i]->get_var_ref()->generate_code(expr);
+      expr->expr = mputc(expr->expr, ')');
+      Type* redir_type = v[i]->get_subrefs() == NULL ? value_type :
+        value_type->get_field_type(v[i]->get_subrefs(), Type::EXPECTED_DYNAMIC_VALUE);
+      Type* member_type = v[i]->is_decoded() ? v[i]->get_dec_type() : redir_type;
+      string type_str = member_type->get_genname_value(scope);
+      members_str = mputprintf(members_str, "%s* ptr_%d;\n", type_str.c_str(), (int)i);
+      constr_params_str = mputprintf(constr_params_str, "%s* par_%d",
+        type_str.c_str(), (int)i);
+      constr_init_list_str = mputprintf(constr_init_list_str,
+        "ptr_%d(par_%d)", (int)i, (int)i);
+      // generate the sub-references' code in a separate expression structure and
+      // insert it into the set_values function
+      expression_struct subrefs_expr;
+      Code::init_expr(&subrefs_expr);
+      if (v[i]->get_subrefs() != NULL) {
+        v[i]->get_subrefs()->generate_code(&subrefs_expr, value_type);
+        if (redir_type->get_ownertype() == Type::OT_COMP_FIELD) {
+          CompField* cf = (CompField*)redir_type->get_owner();
+          if (cf->get_is_optional()) {
+            subrefs_expr.expr = mputstr(subrefs_expr.expr, "()");
+          }
+        }
+      }
+      if (subrefs_expr.preamble != NULL) {
+        set_values_str = mputstr(set_values_str, subrefs_expr.preamble);
+      }
+      const char* subrefs_str = (subrefs_expr.expr != NULL) ? subrefs_expr.expr : "";
+      if (v[i]->is_decoded()) {
+        switch (redir_type->get_type_refd_last()->get_typetype_ttcn3()) {
+        case Type::T_OSTR:
+        case Type::T_CSTR:
+          set_values_str = mputprintf(set_values_str,
+            "TTCN_Buffer buff_%d(par%s);\n", (int)i, subrefs_str);
+          break;
+        case Type::T_BSTR:
+          set_values_str = mputprintf(set_values_str,
+            "OCTETSTRING os(bit2oct(par%s));\n"
+            "TTCN_Buffer buff_%d(os);\n", subrefs_str, (int)i);
+          break;
+        case Type::T_HSTR:
+          set_values_str = mputprintf(set_values_str,
+            "OCTETSTRING os(hex2oct(par%s));\n"
+            "TTCN_Buffer buff_%d(os);\n", subrefs_str, (int)i);
+          break;
+        case Type::T_USTR:
+          set_values_str = mputprintf(set_values_str, "TTCN_Buffer buff_%d;\n",
+            (int)i);
+          if (v[i]->get_str_enc() == NULL || !v[i]->get_str_enc()->is_unfoldable()) {
+            // if the encoding format is missing or is known at compile-time, then
+            // use the appropriate string encoding function
+            string str_enc = (v[i]->get_str_enc() != NULL) ?
+              v[i]->get_str_enc()->get_val_str() : string("UTF-8");
+            if (str_enc == "UTF-8") {
+              set_values_str = mputprintf(set_values_str,
+                "par%s.encode_utf8(buff_%d, false);\n", subrefs_str, (int)i);
+            }
+            else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
+                     str_enc == "UTF-16BE") {
+              set_values_str = mputprintf(set_values_str,
+                "par%s.encode_utf16(buff_%d, CharCoding::UTF16%s);\n", subrefs_str,
+                (int)i, (str_enc == "UTF-16LE") ? "LE" : "BE");
+            }
+            else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
+                     str_enc == "UTF-32BE") {
+              set_values_str = mputprintf(set_values_str,
+                "par%s.encode_utf32(buff_%d, CharCoding::UTF32%s);\n", subrefs_str,
+                (int)i, (str_enc == "UTF-32LE") ? "LE" : "BE");
+            }
+          }
+          else {
+            // the encoding format is not known at compile-time, so an extra
+            // member and constructor parameter is needed to store it
+            expr->expr = mputstr(expr->expr, ", ");
+            v[i]->get_str_enc()->generate_code_expr(expr);
+            members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
+              (int)i);
+            constr_params_str = mputprintf(constr_params_str,
+              ", CHARSTRING par_fmt_%d", (int)i);
+            constr_init_list_str = mputprintf(constr_init_list_str,
+              ", enc_fmt_%d(par_fmt_%d)", (int)i, (int)i);
+            set_values_str = mputprintf(set_values_str,
+              "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
+              "get_character_coding(enc_fmt_%d, \"decoded value redirect\");\n"
+              "switch (coding) {\n"
+              "case CharCoding::UTF_8:\n"
+              "par%s.encode_utf8(buff_%d, false);\n"
+              "break;\n"
+              "case CharCoding::UTF16:\n"
+              "case CharCoding::UTF16LE:\n"
+              "case CharCoding::UTF16BE:\n"
+              "par%s.encode_utf16(buff_%d, coding);\n"
+              "break;\n"
+              "case CharCoding::UTF32:\n"
+              "case CharCoding::UTF32LE:\n"
+              "case CharCoding::UTF32BE:\n"
+              "par%s.encode_utf32(buff_%d, coding);\n"
+              "break;\n"
+              "default:\n"
+              "break;\n"
+              "}\n", (int)i, subrefs_str, (int)i, subrefs_str, (int)i,
+              subrefs_str, (int)i);
+          }
+          break;
+        default:
+          FATAL_ERROR("ValueRedirect::generate_code");
+        }
+        set_values_str = mputprintf(set_values_str,
+          "ptr_%d->decode(%s_descr_, buff_%d, TTCN_EncDec::CT_%s);\n"
+          "if (buff_%d.get_read_len() != 0) {\n"
+          "TTCN_error(\"Parameter redirect #%d failed, because the buffer was "
+          "not empty after decoding. Remaining octets: %%d.\", "
+          "(int)buff_%d.get_read_len());\n"
+          "}\n",
+          (int)i, member_type->get_genname_typedescriptor(scope).c_str(), (int)i,
+          member_type->get_coding(false).c_str(), (int)i, (int)(i + 1), (int)i);
+      }
+      else {
+        set_values_str = mputprintf(set_values_str, "*ptr_%d = par%s;\n",
+          (int)i, subrefs_str);
+      }
+      if (subrefs_expr.postamble != NULL) {
+        set_values_str = mputstr(set_values_str, subrefs_expr.postamble);
+      }
+      Code::free_expr(&subrefs_expr);
+    }
+    expr->expr = mputc(expr->expr, ')');
+    if (!base_class_prefix.empty()) {
+      base_class_prefix += "::";
+    }
+    // generate the new class with the gathered data
+    expr->preamble = mputprintf(expr->preamble,
+      "class Value_Redirect_%s : public %s%s_Redirect_Interface {\n"
+      // member declarations; one for each variable reference
+      "%s"
+      "public:\n"
+      // constructor:
+      // stores the pointers to the target variables in the class' members
+      "Value_Redirect_%s(%s)\n"
+      ": %s { }\n"
+      // set_values function: assigns the whole value or a part of it to each
+      // variable; the redirects marked with the '@decoded' modifier are decoded
+      // here before they are assigned
+      "void set_values(const %s& par)\n"
+      "{\n"
+      "%s"
+      "}\n"
+      "};\n", tmp_id.c_str(),
+      base_class_prefix.empty() ? "" : base_class_prefix.c_str(),
+      value_type->get_genname_value(value_type->get_my_scope()).c_str(),
+      members_str, tmp_id.c_str(), constr_params_str, constr_init_list_str,
+      value_type->get_genname_value(scope).c_str(), set_values_str);
+    Free(members_str);
+    Free(constr_params_str);
+    Free(constr_init_list_str);
+    Free(set_values_str);
   }
 
   // =================================

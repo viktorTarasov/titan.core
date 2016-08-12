@@ -1816,6 +1816,8 @@ namespace Ttcn {
         pdef.msg_in.elements[i].name =
           pool.add(type->get_genname_value(my_scope));
         pdef.msg_in.elements[i].dispname = pool.add(type->get_typename());
+        pdef.msg_in.elements[i].name_w_no_prefix = pool.add(type->get_genname_value(
+          type->get_type_refd_last()->get_my_scope()));
       }
     } else {
       pdef.msg_in.nElements = 0;

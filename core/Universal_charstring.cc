@@ -2911,6 +2911,36 @@ int UNIVERSAL_CHARSTRING::check_BOM(CharCoding::CharCodingType expected_coding,
   return 0;
 }
 
+CharCoding::CharCodingType UNIVERSAL_CHARSTRING::get_character_coding
+  (const char* coding_str, const char* context_str)
+{
+  CharCoding::CharCodingType new_coding = CharCoding::UTF_8;
+  if (coding_str != NULL && strcmp(coding_str, "UTF-8") != 0) {
+    if (strcmp(coding_str, "UTF-16") == 0) {
+      new_coding = CharCoding::UTF16;
+    }
+    else if (strcmp(coding_str, "UTF-16LE") == 0) {
+      new_coding = CharCoding::UTF16LE;
+    }
+    else if (strcmp(coding_str, "UTF-16BE") == 0) {
+      new_coding = CharCoding::UTF16BE;
+    }
+    else if (strcmp(coding_str, "UTF-32") == 0) {
+      new_coding = CharCoding::UTF32;
+    }
+    else if (strcmp(coding_str, "UTF-32LE") == 0) {
+      new_coding = CharCoding::UTF32LE;
+    }
+    else if (strcmp(coding_str, "UTF-32BE") == 0) {
+      new_coding = CharCoding::UTF32BE;
+    }
+    else {
+      TTCN_error("Invalid string serialization for %s.", context_str);
+    }
+  }
+  return new_coding;
+}
+
 // member functions of class UNIVERSAL_CHARSTRING_ELEMENTS
 
 UNIVERSAL_CHARSTRING_ELEMENT::UNIVERSAL_CHARSTRING_ELEMENT
@@ -4167,30 +4197,8 @@ void UNIVERSAL_CHARSTRING_template::set_decmatch(Dec_Match_Interface* new_instan
     TTCN_error("Setting the decoded content matching mechanism of a non-decmatch "
       "universal charstring template.");
   }
-  CharCoding::CharCodingType new_coding = CharCoding::UTF_8;
-  if (coding_str != NULL && strcmp(coding_str, "UTF-8") != 0) {
-    if (strcmp(coding_str, "UTF-16") == 0) {
-      new_coding = CharCoding::UTF16;
-    }
-    else if (strcmp(coding_str, "UTF-16LE") == 0) {
-      new_coding = CharCoding::UTF16LE;
-    }
-    else if (strcmp(coding_str, "UTF-16BE") == 0) {
-      new_coding = CharCoding::UTF16BE;
-    }
-    else if (strcmp(coding_str, "UTF-32") == 0) {
-      new_coding = CharCoding::UTF32;
-    }
-    else if (strcmp(coding_str, "UTF-32LE") == 0) {
-      new_coding = CharCoding::UTF32LE;
-    }
-    else if (strcmp(coding_str, "UTF-32BE") == 0) {
-      new_coding = CharCoding::UTF32BE;
-    }
-    else {
-      TTCN_error("Invalid string serialization for decoded content matching.");
-    }
-  }
+  CharCoding::CharCodingType new_coding = UNIVERSAL_CHARSTRING::get_character_coding(
+    coding_str, "decoded content match");
   dec_match = new unichar_decmatch_struct;
   dec_match->ref_count = 1;
   dec_match->instance = new_instance;

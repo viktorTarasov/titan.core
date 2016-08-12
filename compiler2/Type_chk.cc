@@ -5770,18 +5770,7 @@ bool Type::chk_this_template_Str(Template *t, namedbool implicit_omit,
             "universal charstring templates");
           break;
         }
-        Error_Context cntxt(t, "In encoding format");
-        str_enc->set_lowerid_to_ref();
-        get_pooltype(T_CSTR)->chk_this_value(str_enc, lhs, EXPECTED_DYNAMIC_VALUE,
-          INCOMPLETE_NOT_ALLOWED, OMIT_NOT_ALLOWED, NO_SUB_CHK);
-        if (!str_enc->is_unfoldable()) {
-          string enc_name = str_enc->get_val_str();
-          if (enc_name != "UTF-8" && enc_name != "UTF-16" && enc_name != "UTF-32"
-              && enc_name != "UTF-16LE" && enc_name != "UTF-16BE"
-              && enc_name != "UTF-32LE" && enc_name != "UTF-32BE") {
-            str_enc->error("'%s' is not a valid encoding format", enc_name.c_str());
-          }
-        }
+        self_ref |= str_enc->chk_string_encoding(lhs);
       }
     }
     break;

@@ -333,6 +333,13 @@ namespace Ttcn {
       FATAL_ERROR("FieldOrArrayRefs::generate_code()");
       type = 0;
     }
+    generate_code(expr, type, is_template, nof_subrefs);
+  }
+  
+  void FieldOrArrayRefs::generate_code(expression_struct* expr, Type* type,
+                                       bool is_template, /* = false */
+                                       size_t nof_subrefs /* = UINT_MAX */)
+  {
     size_t n_refs = (nof_subrefs != UINT_MAX) ? nof_subrefs : refs.size();
     for (size_t i = 0; i < n_refs; i++) {
       if (type) type = type->get_type_refd_last();

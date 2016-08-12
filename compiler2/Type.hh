@@ -1171,6 +1171,9 @@ namespace Common {
                                            map<typetype_t, void>& not_allowed);
     /** Set the owner and its type type */
     void set_ownertype(TypeOwner_t ot, Node *o) { ownertype = ot; owner = o; }
+    
+    TypeOwner_t get_ownertype() const { return ownertype; }
+    Node* get_owner() const { return owner; }
 
     bool is_untagged() const;
     

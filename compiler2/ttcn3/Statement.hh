@@ -42,6 +42,7 @@ namespace Ttcn {
   class VariableEntry;
   class VariableEntries;
   class ParamRedirect;
+  class ValueRedirect;
   class LogArgument;
   class LogArguments;
   class IfClause;
@@ -293,7 +294,7 @@ namespace Ttcn {
 	    TemplateInstance *rcvpar;
 	    TemplateInstance *fromclause;
 	    struct {
-	      Reference *value;
+	      ValueRedirect *value;
 	      ParamRedirect *param;
 	      Reference *sender;
 	    } redirect;
@@ -334,7 +335,7 @@ namespace Ttcn {
           /**< used if S_DONE, S_KILLED and compref==0 */
           struct {
             TemplateInstance *donematch;
-            Reference *redirect;
+            ValueRedirect *redirect;
           } donereturn; /**< used if S_DONE and compref!=0 */
           Ref_base *funcinstref; /**< used if S_START_COMP */
           struct {/** used if S_START_COMP_REFD */
@@ -513,7 +514,7 @@ namespace Ttcn {
      *  S_TRIGGER. p_ref==0 means any port. */
     Statement(statementtype_t p_st, Reference *p_ref,
               TemplateInstance *p_templinst, TemplateInstance *p_fromclause,
-              Reference *p_redirectval, Reference *p_redirectsender);
+              ValueRedirect *p_redirectval, Reference *p_redirectsender);
     /** Constructor used by S_GETCALL and S_CHECK_GETCALL. p_ref==0
      *  means any port. */
     Statement(statementtype_t p_st, Reference *p_ref,
@@ -524,14 +525,14 @@ namespace Ttcn {
     Statement(statementtype_t p_st, Reference *p_ref,
               TemplateInstance *p_templinst, TemplateInstance *p_valuematch,
               TemplateInstance *p_fromclause,
-              Reference *p_redirectval, ParamRedirect *p_redirectparam,
+              ValueRedirect *p_redirectval, ParamRedirect *p_redirectparam,
               Reference *p_redirectsender);
     /** Constructor used by S_CATCH and S_CHECK_CATCH. p_ref==0 means
      *  any port. */
     Statement(statementtype_t p_st, Reference *p_ref,
               Reference *p_sig, TemplateInstance *p_templinst,
               bool p_timeout, TemplateInstance *p_fromclause,
-              Reference *p_redirectval, Reference *p_redirectsender);
+              ValueRedirect *p_redirectval, Reference *p_redirectsender);
     /** Constructor used by S_CHECK. p_ref==0 means any port. */
     Statement(statementtype_t p_st, Reference *p_ref,
               TemplateInstance *p_fromclause, Reference *p_redirectsender);
@@ -546,7 +547,7 @@ namespace Ttcn {
               ParsedActualParameters *p_ap_list);
     /** Constructor used by S_DONE */
     Statement(statementtype_t p_st, Value *p_compref,
-              TemplateInstance *p_donematch, Reference *p_redirect);
+              TemplateInstance *p_donematch, ValueRedirect *p_redirect);
     /** Constructor used by S_DONE, S_KILLED */
     Statement(statementtype_t p_st, component_t p_anyall);
     /** Constructor used by S_CONNECT, S_DISCONNECT, S_MAP, S_UNMAP */
@@ -692,16 +693,8 @@ namespace Ttcn {
     static Type *get_outgoing_type(TemplateInstance *p_ti);
     /** Determines and returns the type of the incoming message or
      *  signature based on a template instance \a p_ti and an optional
-     *  value redirect \a p_val_redir. Flag \a p_val_redir_checked is
-     *  set to true if the value redirect was analyzed during this
-     *  operation. */
-    Type *get_incoming_type(TemplateInstance *p_ti, Reference *p_val_redir,
-                            bool& p_val_redir_checked);
-    /** Checks the variable reference of a value redirect.  If
-     *  parameter \a p_type is not NULL it points to the type that the
-     *  variable reference should match. The type of variable is
-     *  returned. */
-    Type *chk_value_redirect(Reference *p_ref, Type *p_type);
+     *  value redirect \a p_val_redir. */
+    Type *get_incoming_type(TemplateInstance *p_ti, ValueRedirect *p_val_redir);
     /** Checks the variable reference of a sender redirect.  The type
      *  of the variable (or NULL in case of non-existent sender clause
      *  or error) is returned.  The type of the variable is also
@@ -880,11 +873,19 @@ namespace Ttcn {
   private:
     Identifier *id;
     Reference *ref;
+    /** indicates whether the redirected parameter should be decoded */
+    bool decoded;
+    /** encoding format for decoded universal charstring parameter redirects */
+    Value* str_enc;
+    /** pointer to the type the redirected parameter is decoded into, if the
+      * '@decoded' modifier is used (not owned) */
+    Type* dec_type;
 
     ParamAssignment(const ParamAssignment& p);
     ParamAssignment& operator=(const ParamAssignment& p);
   public:
-    ParamAssignment(Identifier *p_id, Reference *p_ref);
+    ParamAssignment(Identifier *p_id, Reference *p_ref, bool p_decoded,
+      Value* p_str_enc);
     virtual ~ParamAssignment();
     virtual ParamAssignment* clone() const;
     virtual void set_my_scope(Scope *p_scope);
@@ -892,6 +893,11 @@ namespace Ttcn {
     const Identifier& get_id() const { return *id; }
     Reference *get_ref() const;
     Reference *steal_ref();
+    bool is_decoded() const { return decoded; }
+    Value* get_str_enc() const;
+    Value* steal_str_enc();
+    void set_dec_type(Type* p_dec_type) { dec_type = p_dec_type; }
+    Type* get_dec_type() const { return dec_type; }
   };
 
   /**
@@ -922,18 +928,32 @@ namespace Ttcn {
   class VariableEntry : public Node, public Location {
   private:
     Reference *ref; /**< varref or notused if NULL. */
+    /** indicates whether the redirected parameter should be decoded */
+    bool decoded;
+    /** encoding format for decoded universal charstring parameter redirects
+      * (is only set when the AssignmentList is converted to a VariableList) */
+    Value* str_enc;
+    /** pointer to the type the redirected parameter is decoded into, if the
+      * '@decoded' modifier is used
+      * (is only set when the AssignmentList is converted to a VariableList,
+      * not owned) */
+    Type* dec_type;
 
     VariableEntry(const VariableEntry& p);
     VariableEntry& operator=(const VariableEntry& p);
   public:
     /** Creates a notused entry */
-    VariableEntry() : Node(), Location(), ref(0) { }
+    VariableEntry() : Node(), Location(), ref(0), decoded(false), str_enc(NULL), dec_type(NULL) { }
     VariableEntry(Reference *p_ref);
+    VariableEntry(Reference* p_ref, bool p_decoded, Value* p_str_enc, Type* p_dec_type);
     virtual ~VariableEntry();
     virtual VariableEntry* clone() const;
     virtual void set_my_scope(Scope *p_scope);
     virtual void set_fullname(const string& p_fullname);
     Reference *get_ref() const { return ref; }
+    bool is_decoded() const { return decoded; }
+    Value* get_str_enc() const { return str_enc; }
+    Type* get_dec_type() const { return dec_type; }
   };
 
   /**
@@ -1006,6 +1026,98 @@ namespace Ttcn {
      * to \a p_code_section. */
     void set_code_section(GovernedSimple::code_section_t p_code_section);
     void generate_code(expression_struct_t *expr);
+    /** generates a new redirect class, inherited from the signature type's
+      * original redirect class, which extends its functionality to also
+      * decode the redirected parameters that have the '@decoded' modifier */
+    char* generate_code_decoded(char* str, Type* sig_type, const char* tmp_id,
+      bool is_out);
+    /** returns true if at least one of the parameter redirects has the 
+      * '@decoded' modifier */
+    bool has_decoded_modifier() const;
+  };
+  
+  /** 
+    * Class for storing a single element of a value redirect
+    * Each of these elements can be:
+    * - a lone variable reference (in this case the whole value is redirected to
+    *   the referenced variable), or
+    * - the assignment of a field or a field's sub-reference to a variable
+    *   (in this case one of the value's fields, or a sub-reference of one of the
+    *   fields is redirected to the referenced variable; this can only happen if
+    *   the value is a record or set).
+    */
+  class SingleValueRedirect : public Node, public Location {    
+  private:
+    /** reference to the variable the value is redirected to */
+    Reference* var_ref;
+    /** indicates which part (record field or array element) of the value is 
+      * redirected (optional) */
+    FieldOrArrayRefs* subrefs;
+    /** indicates whether the redirected field or element should be decoded 
+      * (only used if subrefs is not null) */
+    bool decoded;
+    /** encoding format for decoded universal charstring value redirects
+      * (only used if subrefs is not null and decoded is true) */
+    Value* str_enc;
+    /** pointer to the type the redirected field or element is decoded into
+      * (only used if subrefs is not null and decoded is true), not owned*/
+    Type* dec_type;
+    
+    SingleValueRedirect(const SingleValueRedirect&);
+    SingleValueRedirect& operator=(const SingleValueRedirect&);
+  public:
+    SingleValueRedirect(Reference* p_var_ref);
+    SingleValueRedirect(Reference* p_var_ref, FieldOrArrayRefs* p_subrefs,
+      bool p_decoded, Value* p_str_enc);
+    virtual ~SingleValueRedirect();
+    virtual SingleValueRedirect* clone() const;
+    virtual void set_my_scope(Scope *p_scope);
+    virtual void set_fullname(const string& p_fullname);
+    Reference *get_var_ref() const { return var_ref; }
+    FieldOrArrayRefs *get_subrefs() const { return subrefs; }
+    bool is_decoded() const { return decoded; }
+    Value* get_str_enc() const { return str_enc; }
+    void set_dec_type(Type* p_dec_type) { dec_type = p_dec_type; }
+    Type* get_dec_type() const { return dec_type; }
+  };
+  
+  /**
+    * Class for storing a value redirect
+    */
+  class ValueRedirect : public Node, public Location {
+    /** list of single value redirect elements */
+    vector<SingleValueRedirect> v;
+    /** pointer to the type of the redirected value, not owned */
+    Type* value_type;
+    
+    ValueRedirect(const ValueRedirect&);
+    ValueRedirect& operator=(const ValueRedirect&);
+  public:
+    ValueRedirect(): v(), value_type(NULL) { }
+    virtual ~ValueRedirect();
+    virtual ValueRedirect* clone() const;
+    virtual void set_my_scope(Scope* p_scope);
+    virtual void set_fullname(const string& p_fullname);
+    void set_code_section(GovernedSimple::code_section_t p_code_section);
+    void add(SingleValueRedirect* ptr);
+    /** Attempts to identify the type of the redirected value. Only those single
+      * redirects are checked, which redirect the whole value, not just a field.
+      * If multiple whole-value-redirects of separate types are found, then an
+      * error is displayed. */
+    Type* get_type() const;
+    /** Performs semantic analysis on the value redirect without knowing the
+      * type of the redirected value. Called when the value's type cannot be
+      * determined or is erroneous. */
+    void chk_erroneous();
+    /** Performs the full semantic analysis on the value redirect.
+      * @param p_type the type of the redirected value */
+    void chk(Type* p_type);
+    /** Generates code for the value redirect in the specified expression
+      * structure. A new class is generated for every value redirect, which
+      * handles the redirecting.
+      * @param base_class_prefix the namespace and/or class prefix of the
+      * base value redirect class of the appropriate type */
+    void generate_code(expression_struct* expr, string base_class_prefix);
   };
 
   /**

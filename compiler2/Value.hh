@@ -700,6 +700,10 @@ namespace Common {
     /** Checks that the value (expression) evals to a default value */
     inline void chk_expr_default(Type::expected_value_t exp_val)
       { chk_expr_type(Type::T_DEFAULT, "default", exp_val); }
+    
+    /** Checks that the value is (or evaluates to) a valid universal charstring
+      * encoding format. */
+    bool chk_string_encoding(Common::Assignment* lhs);
 
     /* if "infinity" or "-infinity" was parsed then this is a real value or
        a unary - expression containing a real value, where the real value is

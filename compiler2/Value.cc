@@ -9193,6 +9193,24 @@ error:
     if (error_flag) set_valuetype(V_ERROR);
     else if (!my_governor) set_my_governor(Type::get_pooltype(p_tt));
   }
+  
+  bool Value::chk_string_encoding(Common::Assignment* lhs)
+  {
+    Error_Context cntxt(this, "In encoding format");
+    set_lowerid_to_ref();
+    bool self_ref = Type::get_pooltype(Type::T_CSTR)->chk_this_value(this, lhs,
+      Type::EXPECTED_DYNAMIC_VALUE, INCOMPLETE_NOT_ALLOWED, OMIT_NOT_ALLOWED,
+      NO_SUB_CHK);
+    if (!is_unfoldable()) {
+      string enc_name = get_val_str();
+      if (enc_name != "UTF-8" && enc_name != "UTF-16" && enc_name != "UTF-32"
+          && enc_name != "UTF-16LE" && enc_name != "UTF-16BE"
+          && enc_name != "UTF-32LE" && enc_name != "UTF-32BE") {
+        error("'%s' is not a valid encoding format", enc_name.c_str());
+      }
+    }
+    return self_ref;
+  }
 
   int Value::is_parsed_infinity()
   {

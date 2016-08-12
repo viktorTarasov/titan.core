@@ -211,6 +211,8 @@ static const string anyname("anytype");
   CompTypeRefList *comprefs;
   ComponentTypeBody *compbody;
   template_restriction_t template_restriction;
+  ValueRedirect* value_redirect;
+  SingleValueRedirect* single_value_redirect;
 
   struct {
     bool is_raw;
@@ -344,7 +346,7 @@ static const string anyname("anytype");
   } portraiseop;
 
   struct {
-    Ttcn::Reference *redirectval;
+    ValueRedirect *redirectval;
     Ttcn::Reference *redirectsender;
   } portredirect;
 
@@ -354,7 +356,7 @@ static const string anyname("anytype");
   } portredirectwithparam;
 
   struct {
-    Ttcn::Reference *redirectval;
+    ValueRedirect *redirectval;
     ParamRedirect *redirectparam;
     Ttcn::Reference *redirectsender;
   } portredirectwithvalueandparam;
@@ -367,7 +369,7 @@ static const string anyname("anytype");
   struct {
     TemplateInstance *templ_inst;
     TemplateInstance *fromclause;
-    Ttcn::Reference *redirectval;
+    ValueRedirect *redirectval;
     Ttcn::Reference *redirectsender;
   } portreceiveop;
 
@@ -382,7 +384,7 @@ static const string anyname("anytype");
     TemplateInstance *templ_inst;
     TemplateInstance *valuematch;
     TemplateInstance *fromclause;
-    Ttcn::Reference *redirectval;
+    ValueRedirect *redirectval;
     ParamRedirect *redirectparam;
     Ttcn::Reference *redirectsender;
   } portgetreplyop;
@@ -398,7 +400,7 @@ static const string anyname("anytype");
     TemplateInstance *templ_inst;
     bool timeout;
     TemplateInstance *fromclause;
-    Ttcn::Reference *redirectval;
+    ValueRedirect *redirectval;
     Ttcn::Reference *redirectsender;
   } portcatchop;
 
@@ -409,7 +411,7 @@ static const string anyname("anytype");
     TemplateInstance *valuematch;
     bool timeout;
     TemplateInstance *fromclause;
-    Ttcn::Reference *redirectval;
+    ValueRedirect *redirectval;
     ParamRedirect *redirectparam;
     Ttcn::Reference *redirectsender;
   } portcheckop;
@@ -428,7 +430,7 @@ static const string anyname("anytype");
 
   struct {
     TemplateInstance *donematch;
-    Ttcn::Reference *redirect;
+    ValueRedirect *redirect;
   } donepar;
 
   struct {
@@ -540,6 +542,16 @@ static const string anyname("anytype");
     Value* string_encoding;
     TemplateInstance* target_template;
   } decode_match;
+
+  struct {
+    bool is_decoded;
+    Value* string_encoding;
+  } decoded_modifier;
+
+  struct {
+    size_t nElements;
+    SingleValueRedirect** elements;
+  } single_value_redirect_list;
 }
 
 /* Tokens of TTCN-3 */
@@ -972,7 +984,7 @@ static const string anyname("anytype");
 %type <refbase> DerivedRefWithParList TemplateRefWithParList DecValueArg
 %type <refpard> FunctionInstance AltstepInstance
 %type <reference> PortType optDerivedDef DerivedDef Signature VariableRef
-  TimerRef TimerRefOrAny Port PortOrAny PortOrAll ValueSpec
+  TimerRef TimerRefOrAny Port PortOrAny PortOrAll ValueStoreSpec
   SenderSpec ComponentType optRunsOnSpec RunsOnSpec optSystemSpec
 %type <valuerange> Range
 %type <type> NestedEnumDef NestedRecordDef NestedRecordOfDef NestedSetDef
@@ -1059,6 +1071,10 @@ static const string anyname("anytype");
 %type <erroneous_indicator> ErroneousIndicator
 %type <imptype> ImportSpec ImportElement
 %type <decode_match> DecodedContentMatch
+%type <decoded_modifier> optDecodedModifier
+%type <value_redirect> ValueSpec
+%type <single_value_redirect> SingleValueSpec
+%type <single_value_redirect_list> SingleValueSpecList
 
 /*********************************************************************
  * Destructors
@@ -1291,6 +1307,7 @@ SingleExpression
 SingleLowerBound
 SingleTimerInstance
 SingleValueOrAttrib
+SingleValueSpec
 SingleWithAttrib
 DecValueArg
 StartStatement
@@ -1350,6 +1367,7 @@ ValueMatchSpec
 ValueOrAttribList
 ValueOrRange
 ValueSpec
+ValueStoreSpec
 ValueofOp
 VariableAssignment
 VariableEntry
@@ -1423,6 +1441,7 @@ ModulePar
 ModuleParDef
 MultiTypedModuleParList
 PortInstance
+SingleValueSpecList
 TimerInstance
 TimerList
 VarInstance
@@ -1756,6 +1775,13 @@ optRunsOnComprefOrSelf
   delete $$.target_template;
 }
 DecodedContentMatch
+
+%destructor {
+  if ($$.string_encoding != NULL) {
+    delete $$.string_encoding;
+  }
+}
+optDecodedModifier
 
 /*********************************************************************
  * Operator precedences (lowest first)
@@ -6203,8 +6229,66 @@ optPortRedirect: // [387]
 ;
 
 ValueSpec: // 389
+  ValueStoreSpec 
+  {
+    $$ = new ValueRedirect();
+    SingleValueRedirect* p = new SingleValueRedirect($1);
+    p->set_location(infile, @$);
+    $$->add(p);
+    $$->set_location(infile, @$);
+  }
+| ValueKeyword '(' SingleValueSpecList ')'
+  {
+    $$ = new ValueRedirect();
+    for (size_t i = 0; i < $3.nElements; ++i) {
+      $$->add($3.elements[i]);
+    }
+    Free($3.elements);
+    $$->set_location(infile, @$);
+  }
+;
+
+ValueStoreSpec:
   ValueKeyword VariableRef { $$ = $2; }
 | ValueKeyword error { $$ = 0; }
+;
+
+SingleValueSpecList:
+  SingleValueSpec
+  {
+    $$.nElements = 1;
+    $$.elements = (SingleValueRedirect**)Malloc(sizeof(SingleValueRedirect*));
+    $$.elements[0] = $1;
+  }
+| SingleValueSpecList ',' SingleValueSpec
+  {
+    $$.nElements = $1.nElements + 1;
+    $$.elements = (SingleValueRedirect**)Realloc($1.elements,
+      $$.nElements * sizeof(SingleValueRedirect*));
+    $$.elements[$$.nElements - 1] = $3;
+  }
+;
+
+SingleValueSpec:
+  VariableRef
+  {
+    $$ = new SingleValueRedirect($1);
+    $$->set_location(infile, @$);
+  }
+| VariableRef AssignmentChar optDecodedModifier PredefOrIdentifier
+  optExtendedFieldReference
+  {
+    FieldOrArrayRef* field_ref = new FieldOrArrayRef($4);
+    field_ref->set_location(infile, @4);
+    FieldOrArrayRefs* subrefs = new FieldOrArrayRefs;
+    subrefs->add(field_ref);
+    for (size_t i = 0; i < $5.nElements; ++i) {
+      subrefs->add($5.elements[i]);
+    }
+    Free($5.elements);
+    $$ = new SingleValueRedirect($1, subrefs, $3.is_decoded, $3.string_encoding);
+    $$->set_location(infile, @$);
+  }
 ;
 
 SenderSpec: // 391
@@ -6213,7 +6297,7 @@ SenderSpec: // 391
 ;
 
 IndexSpec:
-  IndexKeyword ValueSpec
+  IndexKeyword ValueStoreSpec
   {
     Location loc(infile, @1);
     loc.error("Modifier '@index' is not currently supported.");
@@ -6352,23 +6436,26 @@ AssignmentList: // 404
 VariableAssignment: // 405
   VariableRef AssignmentChar optDecodedModifier IDentifier
   {
-    $$ = new ParamAssignment($4, $1);
+    $$ = new ParamAssignment($4, $1, $3.is_decoded, $3.string_encoding);
     $$->set_location(infile, @$);
   }
 ;
 
 optDecodedModifier:
   /* empty */
+  {
+    $$.is_decoded = false;
+    $$.string_encoding = NULL;
+  }
 | DecodedKeyword
   {
-    Location loc(infile, @1);
-    loc.error("Modifier '@decoded' is not currently supported.");
+    $$.is_decoded = true;
+    $$.string_encoding = NULL;
   }
 | DecodedKeyword '(' SingleExpression ')'
   {
-    Location loc(infile, @1);
-    loc.error("Modifier '@decoded' is not currently supported.");
-    delete $3;
+    $$.is_decoded = true;
+    $$.string_encoding = $3;
   }
 ;
 

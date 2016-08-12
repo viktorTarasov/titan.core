@@ -565,12 +565,12 @@ static void generate_receive(char **def_ptr, char **src_ptr,
   }
 
   def = mputprintf(def, "alt_status %s(const %s_template& value_template, "
-    "%s *value_ptr, const %s_template& sender_template, %s "
+    "%s_Redirect_Interface *value_redirect, const %s_template& sender_template, %s "
     "*sender_ptr);\n", function_name, message_type->name,
-    message_type->name, sender_type, sender_type);
+    message_type->name_w_no_prefix, sender_type, sender_type);
 
   src = mputprintf(src, "alt_status %s::%s(const %s_template& "
-    "value_template, %s *value_ptr, const %s_template& "
+    "value_template, %s_Redirect_Interface *value_redirect, const %s_template& "
     "sender_template, %s *sender_ptr)\n"
     "{\n"
     "msg_queue_item *my_head = (msg_queue_item*)msg_queue_head;\n"
@@ -583,7 +583,7 @@ static void generate_receive(char **def_ptr, char **src_ptr,
     "return ALT_NO;\n"
     "}\n"
     "} else ", class_name, function_name, message_type->name,
-    message_type->name, sender_type, sender_type);
+    message_type->name_w_no_prefix, sender_type, sender_type);
   if (is_address) {
     src = mputprintf(src, "if (my_head->sender_component != "
       "SYSTEM_COMPREF) {\n"
@@ -658,7 +658,10 @@ static void generate_receive(char **def_ptr, char **src_ptr,
   if (is_trigger) src = mputstr(src, "remove_msg_queue_head();\n");
   src = mputprintf(src, "return %s;\n"
     "} else {\n"
-    "if (value_ptr != NULL) *value_ptr = *my_head->message_%lu;\n"
+    "if (value_redirect != NULL) {\n"
+    "value_redirect->set_values(*my_head->message_%lu);\n"
+    "delete value_redirect;\n"
+    "}\n"
     "if (sender_ptr != NULL) *sender_ptr = %smy_head->%s;\n",
     failed_status, (unsigned long) message_index, is_address ? "*" : "",
       is_address ? "sender_address" : "sender_component");
@@ -1561,6 +1564,20 @@ void defPortClass(const port_def* pdef, output_struct* output)
 
 
   def = mputstr(def, "public:\n");
+  
+  /* value redirect base classes (interfaces) */
+  if (has_msg_queue) {
+    for (i = 0; i < pdef->msg_in.nElements; ++i) {
+      def = mputprintf(def, 
+        "class %s_Redirect_Interface {\n"
+        "public:\n"
+        "virtual void set_values(const %s&) = 0;\n"
+        "virtual ~%s_Redirect_Interface() { }\n"
+        "};\n", pdef->msg_in.elements[i].name_w_no_prefix,
+        pdef->msg_in.elements[i].name,
+        pdef->msg_in.elements[i].name_w_no_prefix);
+    }
+  }
 
   /* constructor */
   def = mputprintf(def, "%s(const char *par_port_name", class_name);
