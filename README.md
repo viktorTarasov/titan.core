@@ -104,8 +104,8 @@ Compressed update site and SHA512 checksum:
 * https://github.com/eclipse/titan.ProtocolModules.UDP
 * https://github.com/eclipse/titan.ProtocolModules.WebSocket
 * https://github.com/eclipse/titan.ProtocolModules.XMPP
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.CoAP
-* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MQTT
+* http://git.eclipse.org/c/titan/titan.ProtocolModules.CoAP.git
+* http://git.eclipse.org/c/titan/titan.ProtocolModules.MQTT.git
 
 ## Libraries:
 
