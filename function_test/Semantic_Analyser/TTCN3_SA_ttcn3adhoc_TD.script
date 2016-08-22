@@ -6817,7 +6817,7 @@ control {
 <RESULT IF_PASS COUNT 2>
 (?im)error: Reference to a string element of type `octetstring' cannot be used in this context
 <END_RESULT>
-<RESULT COUNT 17>
+<RESULT COUNT 15>
 (?is)\berror:
 <END_RESULT>
 <END_TC>
