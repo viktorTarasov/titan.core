@@ -39,6 +39,28 @@ char* str2;
 struct string2_list* next;
 };
 
+// This contains a project's configuration and the 
+// data that are important for determining the required configurations.
+struct config_struct {
+char* project_name; // Name of the project
+char* project_conf; // Configuration of the project
+boolean is_active; // True if this configuration is an active configuration
+struct string_list* dependencies; // Projects that references this project
+struct string2_list* requirements; // Configuration requirements (Project, Config)
+struct string_list* children; // Projects that are being referenced by this project
+boolean processed; // True if this project is already processed.
+struct config_struct* next; // Pointer to the next element
+};
+
+// This contains a Project with it's configuration and the 
+// flag to determine if this configuration is the active one.
+struct config_list {
+char* str1; // Project name
+char* str2; // Configuration
+boolean is_active; // Is active configuration?
+struct config_list* next; // Pointer to the next element
+};
+
 #ifdef __cplusplus
 extern "C"
 #endif
@@ -144,6 +166,15 @@ extern "C"
 #endif
 boolean buildObjects(const char* projName, boolean add_referenced);
 
+#ifdef __cplusplus
+extern "C" 
+#endif
+void free_string_list(struct string_list* act_elem);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+void free_string2_list(struct string2_list* act_elem);
 
 /**
  *

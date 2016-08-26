@@ -621,6 +621,549 @@ const char* get_act_config(struct string2_list* cfg, const char* project_name) {
   return NULL;
 }
 
+void free_string_list(struct string_list* act_elem)
+{
+  while (act_elem) {
+    struct string_list* next_elem = act_elem->next;
+    Free(act_elem->str);
+    Free(act_elem);
+    act_elem = next_elem;
+  }
+}
+
+void free_string2_list(struct string2_list* act_elem)
+{
+  while (act_elem) {
+    struct string2_list* next_elem = act_elem->next;
+    Free(act_elem->str1);
+    Free(act_elem->str2);
+    Free(act_elem);
+    act_elem = next_elem;
+  }
+}
+
+void free_config_list(struct config_list* act_elem) {
+  while (act_elem) {
+    struct config_list* next_elem = act_elem->next;
+    Free(act_elem->str1);
+    Free(act_elem->str2);
+    Free(act_elem);
+    act_elem = next_elem;
+  }
+}
+
+void free_config_struct(struct config_struct* act_elem) {
+  while (act_elem) {
+    struct config_struct* next_elem = act_elem->next;
+    Free(act_elem->project_name);
+    Free(act_elem->project_conf);
+    free_string_list(act_elem->dependencies);
+    free_string2_list(act_elem->requirements);
+    free_string_list(act_elem->children);
+    Free(act_elem);
+    act_elem = next_elem;
+  }
+}
+
+// Initialize a config_struct to NULL-s
+static void config_struct_init(struct config_struct* const list) {
+  list->project_name = list->project_conf = NULL;
+  list->is_active = FALSE;
+  list->dependencies = (struct string_list*)Malloc(sizeof(struct string_list));
+  list->dependencies->str = NULL;
+  list->dependencies->next = NULL;
+  list->requirements = (struct string2_list*)Malloc(sizeof(struct string2_list));
+  list->requirements->str1 = NULL;
+  list->requirements->str2 = NULL;
+  list->requirements->next = NULL;
+  list->children = (struct string_list*)Malloc(sizeof(struct string_list));
+  list->children->str = NULL;
+  list->children->next = NULL;
+  list->processed = FALSE;
+  list->next = NULL;
+}
+
+// This function fills up the dependencies field of the config_structs
+// using the children fields.
+static void config_struct_fillup_deps(struct config_struct* const list) {
+  struct config_struct* last = list;
+  while (last && last->project_name != NULL) {  // Go through the projects
+    struct config_struct* lastest = list;
+    while (lastest && lastest->project_name != NULL) { // Go through the projects again n^2 complexity
+      struct string_list* lastest_child = lastest->children;
+      while (lastest_child && lastest_child->str != NULL) {
+        if (strcmp(last->project_name, lastest_child->str) == 0) { // If a project is a child of another project
+          // Add the other project to the project's dependencies
+          // But first check if it is already in the dependencies
+          boolean already_in = FALSE;
+          struct string_list* last_dep = last->dependencies;
+          while (last_dep && last_dep->str != NULL) {
+            if (strcmp(last_dep->str, lastest->project_name) == 0) {
+              already_in = TRUE;
+              break;
+            }
+            last_dep = last_dep->next;
+          }
+          if (already_in == FALSE) {
+            last_dep->str = mcopystr(lastest->project_name);
+            struct string_list* last_dep_next = (struct string_list*)Malloc(sizeof(string_list));
+            last_dep_next->str = NULL;
+            last_dep_next->next = NULL;
+            last_dep->next = last_dep_next;
+            break;
+          }
+        }
+        lastest_child = lastest_child->next;
+      }
+      lastest = lastest->next;
+    }
+    last = last->next;
+  }
+}
+
+// This function inserts project_name project's project_config configuration
+// into the required configurations. This function can detect errors.
+// If an error is detected FALSE is returned, otherwise TRUE.
+static boolean insert_to_required_config(const struct config_struct* all_configs, const char* project_name, const char* project_config, struct string2_list* const required_configs) {
+
+  boolean found_project = FALSE;
+  boolean found_config = FALSE;
+  boolean result = TRUE;
+  
+  //Check that it is a valid configuration for a valid project
+  const struct config_struct* last = all_configs;
+  while(last && last->project_name != NULL && last->project_conf != NULL) {
+    if (strcmp(last->project_name, project_name) == 0) {
+      found_project = TRUE;
+      if (strcmp(last->project_conf, project_config) == 0) {
+        found_config = TRUE;
+        break;
+      }
+    }
+    last = last->next;
+  }
+  // If the project or the configuration is not found
+  if (found_project == FALSE || found_config == FALSE) {
+    result = FALSE;
+  }
+  
+  // Check if the project is already in the required configurations
+  // or if the project is present with a different configuration
+  boolean already_in = FALSE;
+  struct string2_list* last_required_config = required_configs;
+  while (last_required_config && last_required_config->str1 != NULL && last_required_config->str2 != NULL) {
+    // If we have a record of this project
+    if (strcmp(last_required_config->str1, project_name) == 0) {
+      if (strcmp(last_required_config->str2, project_config) == 0) {
+        // This project configuration is already in the required_configs
+        already_in = TRUE;
+      } else {
+        // This project configuration is different than it is in the required_configs
+        result = FALSE;
+      }
+    }
+    last_required_config = last_required_config->next;
+  }
+  // If the project's configuration is not already present in the required
+  // configs then we insert it. We insert it even when the result is FALSE.
+  if (last_required_config && already_in == FALSE) {
+    // Make copies of strings
+    last_required_config->str1 = mcopystr(project_name);
+    last_required_config->str2 = mcopystr(project_config);
+    // Init next required configuration
+    struct string2_list* last_required_config_next = (struct string2_list*)Malloc(sizeof(struct string2_list));
+    last_required_config_next->str1 = NULL;
+    last_required_config_next->str2 = NULL;
+    last_required_config_next->next = NULL;
+    last_required_config->next = last_required_config_next;
+  }
+  return result;
+}
+
+// Inserts project_name project with project_config configuration to the tmp_configs
+// Return TRUE if the configuration is inserted
+// Returns FALSE if the configuration is not inserted
+// Returns 2 if the configuration is already in the tmp_configs (still inserted)
+static boolean insert_to_tmp_config(struct config_list* const tmp_configs, const char* project_name, const char* project_config, const boolean is_active) {
+  //First we check that it is a valid configuration for a valid project
+  boolean found_project = FALSE;
+  boolean found_config = FALSE;
+  boolean active = FALSE;
+  boolean result = TRUE;
+  
+  //Check if we have the same project with same configuration in the tmp_configs
+  struct config_list* last = tmp_configs;
+  while(last && last->str1 != NULL && last->str2 != NULL) {
+    if (strcmp(last->str1, project_name) == 0) {
+      found_project = TRUE;
+      active = last->is_active;
+      if (strcmp(last->str2, project_config) == 0) {
+        found_config = TRUE;
+        break;
+      }
+    }
+    last = last->next;
+  }
+  
+  //The case of same project with same configuration
+  if (found_project == TRUE && found_config == TRUE) {
+    result = 2;
+    
+  // The case of same project different configuration and the configuration
+  // is not default
+  } else if(found_project == TRUE && active == FALSE) {
+    return FALSE;
+  }
+  // Go to the end of list
+  while (last->next) {
+    last = last->next;
+  }
+  // Insert new config into the tmp_configs
+  last->str1 = mcopystr(project_name); 
+  last->str2 = mcopystr(project_config);
+  last->is_active = is_active;
+  last->next = (struct config_list*)Malloc(sizeof(config_list));
+  last->next->str1 = NULL;
+  last->next->str2 = NULL;
+  last->next->is_active = FALSE;
+  last->next->next = NULL;
+
+  return result;
+}
+
+// Removes the last element from the tmp_configs
+static void remove_from_tmp_config(struct config_list* const tmp_configs, const char* /*project_name*/, const char* /*project_config*/) {
+  struct config_list* last = tmp_configs;
+  while (last->next && last->next->next != NULL) {
+    last = last->next;
+  }
+
+  Free(last->str1);
+  Free(last->str2);
+  last->str1 = NULL;
+  last->str2 = NULL;
+  last->is_active = FALSE;
+  Free(last->next);
+  last->next = NULL;
+}
+
+// This function detects a circle originating from start_project.
+// act_project is the next project which might be in the circle
+// needed_in is a project that is needed to be inside the circle
+// list is a temporary list which contains the elements of circle
+static boolean is_circular_dep(const struct config_struct* all_configs, const char* start_project, const char* act_project, const char* needed_in, struct string_list** list) {
+  if (*list == NULL) {
+    *list = (struct string_list*)Malloc(sizeof(string_list));
+    (*list)->str = mcopystr(start_project);
+    (*list)->next = (struct string_list*)Malloc(sizeof(string_list));
+    (*list)->next->str = NULL;
+    (*list)->next->next = NULL;
+  }
+  //Circle detection
+  struct string_list* last_list = *list;
+  while (last_list && last_list->str != NULL) {
+    struct string_list* last_list2 = last_list;
+    while (last_list2 && last_list2->str != NULL) {
+      // If the pointers are different but the project name is the same
+      if (last_list != last_list2 && strcmp(last_list->str, last_list2->str) == 0) {
+        // We look for the circle which starts from the start_project
+        if (strcmp(last_list->str, start_project) != 0) {
+          return FALSE;
+        } else {
+          // Check if needed_in is inside the circle
+          while (last_list != last_list2) {
+            if (needed_in != NULL && strcmp(last_list->str, needed_in) == 0) {
+              return TRUE;
+            }
+            last_list = last_list->next;
+          }
+          return FALSE;
+        }
+      }
+      last_list2 = last_list2->next;
+    }
+    last_list = last_list->next;
+  }
+  // Insert next element and call recursively for all the referenced projects
+  const struct config_struct* last = all_configs;
+  while (last && last->project_name) {
+    //Find an act_project configuration
+    if (strcmp(last->project_name, act_project) == 0) {
+      // Go through its children
+      struct string_list* children = last->children;
+      while (children && children->str != NULL) {
+        // Insert child into list
+        last_list->str = mcopystr(children->str);
+        last_list->next = (struct string_list*)Malloc(sizeof(string_list));
+        last_list->next->str = NULL;
+        last_list->next->next = NULL;
+        // Call recursively
+        if (is_circular_dep(all_configs, start_project, children->str, needed_in, list) == TRUE) {
+          return TRUE;
+        }
+        // Remove child
+        last_list = *list;
+        while(last_list && last_list->str) {
+          last_list = last_list->next;
+        }
+        Free(last_list->str);
+        Free(last_list->next);
+        last_list->str = NULL;
+        last_list->next = NULL;
+        children = children->next;
+      }
+    }
+    last = last->next;
+  }
+  return FALSE;
+}
+
+// check if project_name project does not exists todo
+// Project config == NULL means that we need to analyse the children of the project, todo why
+// This function analyses project_name project to get the required configuration
+// of this project.
+// project_config may be NULL. It is not null when we are not certain of the
+// project_name project's configuration.
+// tmp_configs acts like a stack. It contains the history calls of anal_child. It
+// is used to detect circles therefore prevents infinite recursions.
+static boolean analyse_child(struct config_struct* const all_configs, const char* project_name, const char* project_config, struct string2_list* const required_configs, struct config_list* const tmp_configs) {
+  boolean result = TRUE;
+  const char* act_config = get_act_config(required_configs, project_name);
+  // If the required configuration is known of project_name project
+  if (act_config != NULL) {
+    struct config_struct* tmp = all_configs;
+    // Get the project_name's act_config config_struct (tmp holds it)
+    while (tmp && tmp->project_name != NULL && tmp->project_conf != NULL) {
+      if (strcmp(tmp->project_name, project_name) == 0 && strcmp(tmp->project_conf, act_config) == 0) {
+        break;
+      }
+      tmp = tmp->next;
+    }
+    if (tmp->processed == TRUE) {
+      // We already processed this project there is nothing to be done
+      return result;
+    }
+    // Set the project to processed
+    tmp->processed = TRUE;
+    // Get the last (empty) required configuration
+    struct string2_list* last_required_config = required_configs;
+    while (last_required_config->next != NULL) {
+      last_required_config = last_required_config->next;
+    }
+    // Insert all required config of project_name project's act_config configuration
+    struct string2_list* last_proj_config = tmp->requirements;
+    while (last_proj_config && last_proj_config->str1 != NULL && last_proj_config->str2 != NULL) {
+      result = insert_to_required_config(all_configs, last_proj_config->str1, last_proj_config->str2, required_configs);
+      last_proj_config = last_proj_config->next;
+    }
+    // Analyse the children of this project too.
+    result = insert_to_tmp_config(tmp_configs, project_name, act_config, TRUE);
+    struct string_list* last_child = tmp->children;
+    while (last_child && last_child->str != NULL) {
+      result = analyse_child(all_configs, last_child->str, NULL, required_configs, tmp_configs);
+      if (result == FALSE) return result;
+      last_child = last_child->next;
+    }
+    remove_from_tmp_config(tmp_configs, project_name, act_config);
+    
+  } else {
+    
+    // The required configuration of the project_name project is unknown
+    boolean found = FALSE; // True if someone requires a configuration about project_name project
+    boolean is_active = FALSE;
+    
+    // Go through every required configuration to check if someone requires
+    // something about project_name project.
+    struct config_struct* last = all_configs;
+    while (last && last->requirements != NULL) {
+      struct string2_list* req_config = last->requirements;
+      while (req_config && req_config->str1 != NULL && req_config->str2 != NULL) {
+        // If someone requires something about project_name project
+        if (strcmp(req_config->str1, project_name) == 0) {
+          const struct config_struct* tmp = all_configs;
+          // Get the active configuration of project_name project
+          while (tmp && tmp->project_name != NULL && tmp->project_conf != NULL) {
+            if (strcmp(tmp->project_name, project_name) == 0 && tmp->is_active == TRUE) {
+              act_config = tmp->project_conf;
+              is_active = TRUE;
+              break;
+            }
+            tmp = tmp->next;
+          }
+          found = TRUE;
+          
+          // Insert the project_name with its active configuration
+          result = insert_to_tmp_config(tmp_configs, project_name, act_config, is_active);
+          if (result == FALSE) {
+            return FALSE;
+          } else if (result == 2) { // result is 2 if a circle is detected (this will cause error later)
+            result = insert_to_required_config(all_configs, project_name, act_config, required_configs);
+            if (result == FALSE) return result;
+          }
+          
+          // Analyse the project that requires something about project_name project
+          result = analyse_child(all_configs, last->project_name, last->project_conf, required_configs, tmp_configs);
+          remove_from_tmp_config(tmp_configs, project_name, act_config);
+          // If some errors happened during the analysis of last->project_conf project
+          if (result == FALSE) {
+            req_config = req_config->next;
+            continue;
+          }
+
+          // If we still don't know anything about the project_name project's configuration
+          if (get_act_config(required_configs, project_name) == NULL) {
+            // Go to the next required config
+            req_config = req_config->next;
+            continue;
+          }
+          
+          // Get the project_name's act_config config_struct (tmp holds it)
+          tmp = all_configs;
+          while (tmp && tmp->project_name != NULL && tmp->project_conf != NULL) {
+            if (strcmp(tmp->project_name, project_name) == 0 && strcmp(tmp->project_conf, act_config) == 0) {
+              break;
+            }
+            tmp = tmp->next;
+          }
+
+          // We know for sure that the project_name project's configuration is
+          // act_config, so we insert all the required configs of project_name 
+          // project's act_config configuration
+          struct string2_list* last_proj_config = tmp->requirements;
+          while (last_proj_config && last_proj_config->str1 != NULL && last_proj_config->str2 != NULL) {
+            result = insert_to_required_config(all_configs, last_proj_config->str1, last_proj_config->str2, required_configs);
+            if (result == FALSE) return result;
+            last_proj_config = last_proj_config->next;
+          }
+          insert_to_tmp_config(tmp_configs, project_name, act_config, is_active);
+          
+          // Analyse referenced project's of project_name project
+          struct string_list* last_child = tmp->children;
+          while (last_child && last_child->str != NULL) {
+            result = analyse_child(all_configs, last_child->str, NULL, required_configs, tmp_configs);
+            if (result == FALSE) return result;
+            last_child = last_child->next;
+          }
+          remove_from_tmp_config(tmp_configs, tmp->project_name, tmp->project_conf);
+        }
+        req_config = req_config->next;
+      }
+      last = last->next;
+    }
+    
+    if (found == FALSE) { // No one said anything about this project's configuration
+      //Get the active configuration of this project
+      last = all_configs;
+      while (last && last->project_name != NULL && last->project_conf != NULL) {
+        if (strcmp(last->project_name, project_name) == 0 && last->is_active) {
+          act_config = last->project_conf;
+          break;
+        }
+        last = last->next;
+      }
+      if (last->processed == TRUE) {
+        // We already processed this project
+        return TRUE;
+      }
+      
+      last->processed = TRUE;
+      // Insert the active configuration to the required_configs
+      result = insert_to_required_config(all_configs, project_name, act_config, required_configs);
+      if (result == FALSE) return result;
+   
+      //Insert the project requirements of the project_name project's active configuration
+      struct string2_list* last_proj_config = last->requirements;
+      while (last_proj_config && last_proj_config->str1 != NULL && last_proj_config->str2 != NULL) {
+        struct config_list* tmp_tmp = tmp_configs;
+        // Detect circle in all_configs, which is started from last_proj_config->str1 and
+        // project_name is an element of the circle
+        struct string_list* list = NULL;
+        boolean circular = is_circular_dep(all_configs, last_proj_config->str1, last_proj_config->str1, project_name, &list);
+        free_string_list(list);
+        // Go through the tmp_configs to check inconsistency
+        while (tmp_tmp && tmp_tmp->str1 != NULL && tmp_tmp->str2 != NULL) {
+          if (strcmp(tmp_tmp->str1, last_proj_config->str1) == 0 && 
+             (strcmp(tmp_tmp->str2, last_proj_config->str2) != 0 &&
+             (!tmp_tmp->is_active || circular))) {
+            // Insert the configuration. This will cause an error later.
+            insert_to_required_config(all_configs, tmp_tmp->str1, tmp_tmp->str2, required_configs);
+            result = FALSE;
+          }
+          tmp_tmp = tmp_tmp->next;
+        }
+        // Important to && the result at the end. If the result is FALSE from the
+        // while cycle above, then it must remain FALSE
+        result = insert_to_required_config(all_configs, last_proj_config->str1, last_proj_config->str2, required_configs) && result;
+        if (result == FALSE) return result;
+        last_proj_config = last_proj_config->next;
+      }
+      insert_to_tmp_config(tmp_configs, project_name, act_config, last->is_active);
+      // Analyse children of the project_name project
+      struct string_list* last_child = last->children;
+      while (last_child && last_child->str != NULL) {
+        result = analyse_child(all_configs, last_child->str, NULL, required_configs, tmp_configs);
+        if (result == FALSE) return result;
+        last_child = last_child->next;
+      }
+      remove_from_tmp_config(tmp_configs, project_name, act_config);
+    }
+  }
+  return result;
+}
+
+static tpd_result config_struct_get_required_configs(struct config_struct* const all_configs, struct string2_list* const required_configs, struct config_list** tmp_configs) {
+  // Init tmp_configs, which will be used to detect circularity
+  *tmp_configs = (struct config_list*)Malloc(sizeof(config_list));
+  (*tmp_configs)->str1 = NULL;
+  (*tmp_configs)->str2 = NULL;
+  (*tmp_configs)->is_active = FALSE;
+  (*tmp_configs)->next = NULL;
+  
+  // Fill up dependencies of the configurations
+  config_struct_fillup_deps(all_configs);
+  struct config_struct* last = all_configs;
+  // The top level project is always the first project and we need the active configuration of the project
+  while (last) {
+    if (last->project_name != NULL && all_configs->project_name != NULL) {
+      if (strcmp(all_configs->project_name, last->project_name) == 0 && last->is_active == TRUE && last->processed == FALSE) {
+        boolean result = TRUE;
+        
+        // Insert the top level project's active configuration to the required configs.
+        result = insert_to_required_config(all_configs, last->project_name, last->project_conf, required_configs);
+        if (result == FALSE) return TPD_FAILED;
+        insert_to_tmp_config(*tmp_configs, last->project_name, last->project_conf, TRUE);
+        
+        // last variable holds the top level project's active configuration which needed to be analysed
+        // Insert every required config of the top level project active configuration
+        struct string2_list* last_proj_config = last->requirements;
+        while (last_proj_config && last_proj_config->str1 != NULL && last_proj_config->str2 != NULL) { // todo ezek a null cuccok mindenhova, every param should not be null
+          struct string_list* children = last->children;
+          // This if allows that a top level project can require an other project's configuration
+          // without referencing it.
+          if (children->str != NULL || strcmp(last_proj_config->str1, last->project_name) == 0) {
+            result = insert_to_required_config(all_configs, last_proj_config->str1, last_proj_config->str2, required_configs);
+            if (result == FALSE) return TPD_FAILED;
+          }
+          last_proj_config = last_proj_config->next;
+        }
+        last->processed = TRUE;
+        
+        //Analyse the referenced project of the top level project
+        struct string_list* last_child = last->children;
+        while (last_child && last_child->str != NULL) {
+          result = analyse_child(all_configs, last_child->str, NULL, required_configs, *tmp_configs); // todo check if everywhere is handled
+          if (result == FALSE) return TPD_FAILED;
+          last_child = last_child->next;
+        }
+        remove_from_tmp_config(*tmp_configs, last->project_name, last->project_conf);
+        break; // No more needed
+      }
+    }
+    last = last->next;
+  }
+  return TPD_SUCCESS;
+}
+
 static tpd_result process_tpd_internal(const char *p_tpd_name, char* tpdName, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
   int *p_optind, char **p_ets_name, char **p_project_name,
@@ -639,7 +1182,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char* tpdName, co
   struct string_list* linkerlibs, struct string_list* additionalObjects, struct string_list* linkerlibsearchp, boolean Vflag, boolean Dflag,
   boolean *p_Zflag, boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, 
   struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list,
-  const char **search_paths, size_t n_search_paths);
+  const char **search_paths, size_t n_search_paths, struct config_struct * const all_configs);
 
 extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
@@ -666,6 +1209,12 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   projGenHelper.setZflag(*p_Zflag);
   projGenHelper.setWflag(prefix_workdir);
   projGenHelper.setHflag(*p_Hflag);
+
+  struct config_struct* all_configs = (struct config_struct*)Malloc(sizeof(struct config_struct));
+  config_struct_init(all_configs);
+  
+  // The first round only collects the configurations about the tpd-s into the
+  // all_configs variable. It does not do anything else.
   tpd_result success = process_tpd_internal(p_tpd_name, tpdName,
       actcfg, file_list_path, p_argc, p_argv, p_optind, p_ets_name, p_project_name,
       p_gflag, p_sflag, p_cflag, p_aflag, preprocess,
@@ -682,9 +1231,39 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
       linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag, p_Zflag,
       p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
       run_command_list, seen_tpd_files, required_configs, profiled_file_list,
-      search_paths, n_search_paths);
-
-  if (TPD_FAILED == success) exit(EXIT_FAILURE);
+      search_paths, n_search_paths, all_configs);
+  
+  if (success == TPD_SUCCESS) {
+    struct config_list* tmp_configs = NULL;
+    config_struct_get_required_configs(all_configs, required_configs, &tmp_configs);
+    free_config_list(tmp_configs);
+    free_config_struct(all_configs);
+    all_configs = NULL;
+    
+    // In the second round every configuration is known for every project in the
+    // optimal case. In the not optimal case errors are produced.
+    // This round does get the information from the tpd to generate the makefile.
+    success = process_tpd_internal(p_tpd_name, tpdName,
+      actcfg, file_list_path, p_argc, p_argv, p_optind, p_ets_name, p_project_name,
+      p_gflag, p_sflag, p_cflag, p_aflag, preprocess,
+      p_Rflag, p_lflag, p_mflag, p_Pflag,
+      p_Lflag, recursive, force_overwrite, gen_only_top_level,
+      output_file, abs_work_dir_p, sub_project_dirs,
+      program_name, prj_graph_fp, create_symlink_list, ttcn3_prep_includes,
+      ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines,
+      prep_undefines, p_csflag, p_quflag, p_dsflag, cxxcompiler,
+      optlevel, optflags, p_dbflag, p_drflag, p_dtflag, p_dxflag, p_djflag,
+      p_fxflag, p_doflag, p_gfflag, p_lnflag, p_isflag,
+      p_asflag, p_swflag, p_Yflag, p_Mflag, p_Eflag, p_nflag, p_diflag, solspeclibs, sol8speclibs,
+      linuxspeclibs, freebsdspeclibs, win32speclibs, ttcn3prep,
+      linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag, p_Zflag,
+      p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
+      run_command_list, seen_tpd_files, required_configs, profiled_file_list,
+      search_paths, n_search_paths, all_configs);
+  }
+  if (TPD_FAILED == success){
+    exit(EXIT_FAILURE);
+  }
 
   if (false == projGenHelper.sanityCheck()) {
     fprintf (stderr, "makefilegen exits\n");
@@ -732,7 +1311,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
   boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir,
   struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list,
-  const char **search_paths, size_t n_search_paths)
+  const char **search_paths, size_t n_search_paths, struct config_struct * const all_configs)
 {
   tpd_result result = TPD_SUCCESS;
   // read-only non-pointer aliases
@@ -740,6 +1319,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   int const& local_argc = *p_argc;
   int const& local_optind = *p_optind;
   *abs_work_dir_p = NULL;
+  const boolean get_config_mode = all_configs != NULL;
 
   assert(local_optind >= 2 // at least '-ttpd_name' must be in the args
     || local_optind == 0); // if called for a referenced project
@@ -823,7 +1403,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
     return TPD_FAILED;
   }
 
-  if (!Vflag) {
+  if (!Vflag && get_config_mode) {
     // try schema validation if tpd schema file was found
     bool tpd_is_valid = false;
     const char* ttcn3_dir = getenv("TTCN3_DIR");
@@ -856,12 +1436,94 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   // This is because the keys (not the values) are owned by the XmlDoc.
 
   map<cstring, const char> path_vars;
+  
+  autostring workdir;
+  
+  autostring proj_abs_workdir;
+
+  autostring abs_workdir;
 
   XPathContext xpathCtx(xmlXPathNewContext(doc));
   if (xpathCtx == NULL) {
     fprintf(stderr,"Error: unable to create new XPath context\n");
     return TPD_FAILED;
   }
+  
+    /////////////////////////////////////////////////////////////////////////////
+  {
+    char *projectNameXpath = mprintf("/TITAN_Project_File_Information/ProjectName/text()");
+    XPathObject projectNameObj(run_xpath(xpathCtx, projectNameXpath));
+    Free(projectNameXpath);
+    if (projectNameObj->nodesetval && projectNameObj->nodesetval->nodeNr > 0) {
+      *p_project_name = mcopystr((const char*)projectNameObj->nodesetval->nodeTab[0]->content);
+      projGenHelper.addTarget(*p_project_name);
+      projGenHelper.setToplevelProjectName(*p_project_name);
+      ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
+      if (projDesc) projDesc->setProjectAbsTpdDir((const char*)abs_tpd_dir);
+    }
+  }
+  
+  /////////////////////////////////////////////////////////////////////////////
+  
+  if (!actcfg && !get_config_mode) {
+    actcfg = get_act_config(required_configs, *p_project_name);
+  }
+
+  if (actcfg == NULL) {
+    // Find out the active config
+    XPathObject  activeConfig(run_xpath(xpathCtx,
+      "/TITAN_Project_File_Information/ActiveConfiguration/text()"));
+    if (activeConfig->nodesetval && activeConfig->nodesetval->nodeNr == 1) {
+      // there is one node
+      actcfg = (const char*)activeConfig->nodesetval->nodeTab[0]->content;
+    }
+  }
+  
+  if (actcfg == NULL) {
+    ERROR("Can not find the active build configuration.");
+    for (size_t i = 0; i < folders.size(); ++i) {
+      Free(const_cast<char*>(folders.get_nth_elem(i)));
+    }
+    folders.clear();
+    return TPD_FAILED;
+  }
+
+  { // check if the active configuration exists
+    expstring_t xpathActCfg= mprintf(
+      "/TITAN_Project_File_Information/Configurations/"
+        "Configuration[@name='%s']/text()", actcfg); // todo
+    XPathObject theConfigEx(run_xpath(xpathCtx, xpathActCfg));
+    Free(xpathActCfg);
+
+    xmlNodeSetPtr nodes = theConfigEx->nodesetval;
+    if (nodes == NULL) {
+      ERROR("The active build configuration named '%s' does not exist",
+          actcfg);
+      for (size_t i = 0; i < folders.size(); ++i) {
+        Free(const_cast<char*>(folders.get_nth_elem(i)));
+      }
+      folders.clear();
+      return TPD_FAILED;
+    }
+  }
+
+  if (!get_config_mode) {
+    struct string2_list* last_elem = required_configs;
+    //                        To ensure that the first elem is checked too if last_elem->next is null
+    while (last_elem && last_elem->str1 != NULL && last_elem->str2 != NULL) {
+      if (!strcmp(last_elem->str1, *p_project_name) && strcmp(last_elem->str2, actcfg)) {
+        ERROR("Required configuration is inconsistent : Project '%s' cannot have 2 "
+              "different configuration '%s' and '%s'",
+              last_elem->str1, actcfg, last_elem->str2);
+        for (size_t i = 0; i < folders.size(); ++i) {
+          Free(const_cast<char*>(folders.get_nth_elem(i)));
+        }
+        folders.clear();
+        return TPD_FAILED;
+      }
+      last_elem = last_elem->next;
+    }
+
   // Collect path variables
   {
     XPathObject pathsObj(run_xpath(xpathCtx,
@@ -933,63 +1595,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
     } // next FolderResource
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  {
-    char *projectNameXpath = mprintf("/TITAN_Project_File_Information/ProjectName/text()");
-    XPathObject projectNameObj(run_xpath(xpathCtx, projectNameXpath));
-    Free(projectNameXpath);
-    if (projectNameObj->nodesetval && projectNameObj->nodesetval->nodeNr > 0) {
-      *p_project_name = mcopystr((const char*)projectNameObj->nodesetval->nodeTab[0]->content);
-      projGenHelper.addTarget(*p_project_name);
-      projGenHelper.setToplevelProjectName(*p_project_name);
-      ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
-      if (projDesc) projDesc->setProjectAbsTpdDir((const char*)abs_tpd_dir);
-    }
-  }
-  /////////////////////////////////////////////////////////////////////////////
-
-  if (!actcfg) {
-    actcfg = get_act_config(required_configs,*p_project_name);
-  }
-  if (actcfg == NULL) {
-    // Find out the active config
-    XPathObject  activeConfig(run_xpath(xpathCtx,
-      "/TITAN_Project_File_Information/ActiveConfiguration/text()"));
-    if (activeConfig->nodesetval && activeConfig->nodesetval->nodeNr == 1) {
-      // there is one node
-      actcfg = (const char*)activeConfig->nodesetval->nodeTab[0]->content;
-    }
-  }
-
-  if (actcfg == NULL) {
-    ERROR("Can not find the active build configuration.");
-    for (size_t i = 0; i < folders.size(); ++i) {
-      Free(const_cast<char*>(folders.get_nth_elem(i)));
-    }
-    folders.clear();
-    return TPD_FAILED;
-  }
-
-  { // check if the active configuration exists
-    expstring_t xpathActCfg= mprintf(
-      "/TITAN_Project_File_Information/Configurations/"
-        "Configuration[@name='%s']/text()", actcfg);
-    XPathObject theConfigEx(run_xpath(xpathCtx, xpathActCfg));
-    Free(xpathActCfg);
-
-    xmlNodeSetPtr nodes = theConfigEx->nodesetval;
-    if (nodes == NULL) {
-      ERROR("The active build configuration named '%s' does not exist",
-          actcfg);
-      for (size_t i = 0; i < folders.size(); ++i) {
-        Free(const_cast<char*>(folders.get_nth_elem(i)));
-      }
-      folders.clear();
-      return TPD_FAILED;
-    }
-  }
   // working directory stuff
-  autostring workdir;
   {
     const char* workdirFromTpd = "bin"; // default value
     char *workdirXpath = mprintf(
@@ -1019,9 +1625,6 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   const char *real_workdir = folders[workdir]; // This is relative to the location of the tpd file
   excluded_folders.add(real_workdir); // excluded by convention
 
-  autostring proj_abs_workdir;
-
-  autostring abs_workdir;
   // If -D flag was specified then we ignore the workdir
   // in the TPD (the current dir is considered the work dir).
   if (!Dflag) {
@@ -1959,64 +2562,90 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
       }
     }
   }
-
+  } // If get_config_mode
 // collect the required configurations
+  
+  struct config_struct* config_elem = all_configs;
   {
-    if (required_configs) {
-      char* cfgReqsXpath(mprintf(
-        "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
-        "/ProjectProperties/ConfigurationRequirements/configurationRequirement",
-        actcfg));
-      XPathObject reqcfgObjects(run_xpath(xpathCtx, cfgReqsXpath));
-      Free (cfgReqsXpath);
-      xmlNodeSetPtr configs = reqcfgObjects->nodesetval;
-      if (configs) for (int i = 0; i < configs->nodeNr; ++i) {
-        xmlNodePtr curNodePtr = configs->nodeTab[i]->children;
-        const char* projectName = NULL;
-        const char* reqConfig = NULL;
-        while(curNodePtr) {
-          if (!strcmp((const char*)curNodePtr->name, "projectName")) {
-            projectName = (const char*)curNodePtr->children->content;
+    if (required_configs && get_config_mode) {
+
+      char* cfgConfigsXpath(mprintf(
+        "/TITAN_Project_File_Information/Configurations/Configuration"));
+      XPathObject cfgConfigsObjects(run_xpath(xpathCtx, cfgConfigsXpath));
+      Free(cfgConfigsXpath);
+      xmlNodeSetPtr configs = cfgConfigsObjects->nodesetval;
+      if (configs) {
+        // Go through configurations
+        for (int i = 0; i < configs->nodeNr; ++i) {
+          xmlAttrPtr currentNode = configs->nodeTab[i]->properties;
+          const char* configName = NULL;
+          
+          for (xmlAttrPtr attr = currentNode; attr; attr = attr->next) {
+            if (!strcmp((const char*)attr->name, "name")) {
+              configName = (const char*)attr->children->content;
+            }
           }
-          if (!strcmp((const char*)curNodePtr->name, "rerquiredConfiguration") || // backward compatibility
-              !strcmp((const char*)curNodePtr->name, "requiredConfiguration")) {
-              reqConfig = (const char*)curNodePtr->children->content;
+          char* cfgReqsXpath(mprintf(
+            "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
+            "/ProjectProperties/ConfigurationRequirements/configurationRequirement"
+            , configName));
+
+          while(config_elem->next != NULL) {
+            config_elem = config_elem->next;
           }
-          curNodePtr = curNodePtr->next;
-        }
-        struct string2_list* last_elem = required_configs;
-        bool duplicate = false;
-        while (last_elem->next) {
-          if (!strcmp(last_elem->str1, projectName) && !strcmp(last_elem->str2, reqConfig)) {
-            duplicate = true;
-          }
-          else if (!strcmp(last_elem->str1, projectName) && strcmp(last_elem->str2, reqConfig)) {
-            ERROR("Required configuration is inconsistent : Project '%s' cannot have 2 "
-                  "different configuration '%s' '%s'",
-                  last_elem->str1, last_elem->str2, reqConfig);
-            result = TPD_FAILED;
-          }
-          last_elem = last_elem->next;
-        }
-        // add string to last element if empty or create new last element and add it to that
-        if (last_elem->str1 && !duplicate) {
-          if (strcmp(last_elem->str1, projectName) || strcmp(last_elem->str2, reqConfig)) {
-            last_elem->next = (struct string2_list*)Malloc(sizeof(struct string2_list));
-            last_elem = last_elem->next;
-            last_elem->next = NULL;
-          }
-          else {
-            duplicate = true;
-          }
-        }
-        if (!duplicate) {
-          last_elem->str1 = mcopystr(projectName);
-          last_elem->str2 = mcopystr(reqConfig);
-        }
-      }
+          config_elem->project_name = mcopystr(*p_project_name);
+          config_elem->project_conf = mcopystr(configName);
+          config_elem->is_active = strcmp(configName, actcfg) == 0;
+          struct config_struct* next_elem = (struct config_struct*)Malloc(sizeof(struct config_struct));
+          config_struct_init(next_elem);
+          config_elem->next = next_elem;
+
+          XPathObject reqcfgObjects(run_xpath(xpathCtx, cfgReqsXpath));
+          Free (cfgReqsXpath);
+          xmlNodeSetPtr reqConfigs = reqcfgObjects->nodesetval;
+          // Go through the required configurations of configurations
+          if (reqConfigs) for (int j = 0; j < reqConfigs->nodeNr; ++j) {
+            xmlNodePtr curNodePtr = reqConfigs->nodeTab[j]->children;
+            const char* projectName = NULL;
+            const char* reqConfig = NULL;
+            while(curNodePtr) {
+              if (!strcmp((const char*)curNodePtr->name, "projectName")) {
+                projectName = (const char*)curNodePtr->children->content;
+              }
+              if (!strcmp((const char*)curNodePtr->name, "rerquiredConfiguration") || // backward compatibility
+                  !strcmp((const char*)curNodePtr->name, "requiredConfiguration")) {
+                  reqConfig = (const char*)curNodePtr->children->content;
+              }
+              curNodePtr = curNodePtr->next;
+            }
+            
+            // Check if the required configuration is already inserted.
+            struct string2_list* last_req = config_elem->requirements;
+            boolean already_in = FALSE;
+            while (last_req && last_req->str1 != NULL && last_req->str2 != NULL && already_in == FALSE) {
+              if (strcmp(last_req->str1, projectName) == 0 && strcmp(last_req->str2, reqConfig) == 0) {
+                already_in = TRUE;
+                break;
+              }
+              last_req = last_req->next;
+            }
+            // If not, insert into the requirements of the configuration
+            if (already_in == FALSE) {
+              last_req->str1 = mcopystr(projectName);
+              last_req->str2 = mcopystr(reqConfig);
+              struct string2_list* next_req = (struct string2_list*)Malloc(sizeof(struct string2_list));
+              next_req->str1 = NULL;
+              next_req->str2 = NULL;
+              next_req->next = NULL;
+              last_req->next = next_req;
+              last_req = next_req;
+            }
+
+          } // ReqConfigs
+        } // Configs
+      } // If configs
     }
   }
-
   // Referenced projects
   {
     XPathObject subprojects(run_xpath(xpathCtx,
@@ -2077,7 +2706,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
 
         ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
         if (projDesc) projDesc->addToReferencedProjects(name);
-
+         
         const char *my_actcfg = NULL;
         int my_argc = 0;
         char *my_args[] = { NULL };
@@ -2104,6 +2733,33 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
 
         char* sub_proj_abs_work_dir = NULL;
         
+        //Insert children of the project
+        if (get_config_mode && config_elem->project_name != NULL) {
+          struct config_struct* tmp = all_configs;
+          boolean already_in = FALSE;
+          while (tmp && tmp->project_name != NULL && already_in == FALSE) {
+            if (strcmp(tmp->project_name, config_elem->project_name) == 0) {
+              struct string_list* last_child = tmp->children;
+              while(last_child && last_child->str != NULL) {
+                if (strcmp(last_child->str, name) == 0) {
+                  already_in = TRUE;
+                  break;
+                }
+                last_child = last_child->next;
+              }
+              if (already_in == FALSE) {
+                last_child->str = mcopystr(name);
+                struct string_list* next_child = (struct string_list*)Malloc(sizeof(string_list));
+                next_child->str = NULL;
+                next_child->next = NULL;
+                last_child->next = next_child;
+                last_child = next_child;
+              }
+            }
+            tmp = tmp->next;
+          }
+        }
+      
         tpd_result success = process_tpd_internal((const char*)abs_projectLocationURI, tpdName_loc,
           my_actcfg, file_list_path, &my_argc, &my_argv, &my_optind, &my_ets, &my_proj_name,
           &my_gflag, &my_sflag, &my_cflag, &my_aflag, preprocess, &my_Rflag, &my_lflag,
@@ -2116,11 +2772,11 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
           solspeclibs, sol8speclibs, linuxspeclibs, freebsdspeclibs, win32speclibs,
           ttcn3prep, linkerlibs, additionalObjects, linkerlibsearchp, Vflag, FALSE, &my_Zflag, 
           &my_Hflag, NULL, NULL, prefix_workdir, run_command_list, seen_tpd_files, required_configs, profiled_file_list,
-          search_paths, n_search_paths);
-
+          search_paths, n_search_paths, all_configs);
+        
         autostring sub_proj_abs_work_dir_as(sub_proj_abs_work_dir); // ?!
 
-        if (success == TPD_SUCCESS) {
+        if (success == TPD_SUCCESS && !get_config_mode) {
           my_actcfg = get_act_config(required_configs, my_proj_name);
           if (recursive) { // call ttcn3_makefilegen on referenced project's tpd file
             // -r is not needed any more because top level process traverses all projects recursively
@@ -2332,10 +2988,14 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   if (local_argc > 0) { // it is the outermost call
     clear_seen_tpd_files(seen_tpd_files);
   }
-  // replace argv
-  *p_argv = new_argv;
-  *p_argc = new_argc;
-  *p_optind = 0;
+  // replace argv only if not config mode
+  if (!get_config_mode) {
+    *p_argv = new_argv;
+    *p_argc = new_argc;
+    *p_optind = 0;
+  } else {
+    Free(*p_project_name);
+  }
 
   // finally...
   for (size_t i = 0, e = files.size(); i < e; ++i) {

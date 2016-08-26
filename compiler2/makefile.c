@@ -4156,27 +4156,6 @@ static void usage(void)
     error_flag = TRUE;\
     } else x##flag = TRUE
 
-void free_string_list(struct string_list* act_elem)
-{
-  while (act_elem) {
-    struct string_list* next_elem = act_elem->next;
-    Free(act_elem->str);
-    Free(act_elem);
-    act_elem = next_elem;
-  }
-}
-
-void free_string2_list(struct string2_list* act_elem)
-{
-  while (act_elem) {
-    struct string2_list* next_elem = act_elem->next;
-    Free(act_elem->str1);
-    Free(act_elem->str2);
-    Free(act_elem);
-    act_elem = next_elem;
-  }
-}
-
 int main(int argc, char *argv[])
 {
   boolean
