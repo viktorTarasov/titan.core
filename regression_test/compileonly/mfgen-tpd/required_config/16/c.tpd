@@ -25,12 +25,8 @@
         </LocalBuildSettings>
         <ConfigurationRequirements>
           <configurationRequirement>
-            <projectName>d</projectName>
-            <rerquiredConfiguration>1</rerquiredConfiguration>
-          </configurationRequirement>
-          <configurationRequirement>
             <projectName>b</projectName>
-            <rerquiredConfiguration>1</rerquiredConfiguration>
+            <requiredConfiguration>1</requiredConfiguration>
           </configurationRequirement>
         </ConfigurationRequirements>
       </ProjectProperties>

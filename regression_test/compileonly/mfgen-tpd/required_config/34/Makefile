@@ -22,14 +22,14 @@ endif
 # then fail on every subsequent invocation until a 'make clean' is done. 
 
 # Hierarchy
-#            a--->e-------->
-#            |    |        |
-#            |    |        |
-#            b<---<---<    |
-#    b:2=>d:1|    |   |    |f:1
-#            c    |   |b:2 |
-#            |    |   |    |
-#            d>--->   <----f
+#            a--->e------------->
+#            |    |             |
+#            |    |             |
+#            b<---<---<         |
+#    b:2=>d:1|    |   |         |f:1
+#            c    |   |f:1=>b:2 |
+#            |    |   |         |
+#            d>--->   <---------f
 #           d:1=>b:1
 #
 #Result will be: Error
@@ -42,7 +42,7 @@ BuildTpd:
 	-t a.tpd -r -c -W -g 2>&1 | tee output
 
 CheckTpd: BuildTpd
-	if [ `grep -c "error: Required configuration is inconsistent : Project 'b' cannot have 2 different configuration '2' and '1'" ./output` -ne 1 ]; \
+	if [ `grep -c "error: Required configuration is inconsistent or circular : Project 'b' cannot have 2 different configuration '2' and '1'" ./output` -ne 1 ]; \
 	then echo "Makefilegen required config test 34 failed: Overall verdict: fail" && exit 1; fi
 
 clean:

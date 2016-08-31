@@ -36,7 +36,7 @@
         <ConfigurationRequirements>
           <configurationRequirement>
             <projectName>d</projectName>
-            <rerquiredConfiguration>2</rerquiredConfiguration>
+            <requiredConfiguration>2</requiredConfiguration>
           </configurationRequirement>
         </ConfigurationRequirements>
       </ProjectProperties>

@@ -21,7 +21,7 @@ endif
 # If we used ${MAKE} in the rules below, 'make -n' would succeed once,
 # then fail on every subsequent invocation until a 'make clean' is done. 
 
-#This tests that the -b badConfig does not exists and an error is produced
+#This tests that the -b goodConfig exists and it is being used.
 
 MAKEPROG := ${MAKE}
 
@@ -29,14 +29,14 @@ all: CheckTpd
 
 BuildTpd:
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -f $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
-	-t a.tpd -r -c -b goodConfig  2>&1 | tee output
+	-t a.tpd -r -c -b goodConfig
 
 CheckTpd: BuildTpd
 	if [ `grep -c "EXECUTABLE = binGood" ./binGood/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 1 failed: Overall verdict: fail" && exit 1; fi
 
 clean:
-	-rm -rf binDefault binGood output
+	-rm -rf binGood
 
 distclean: clean
 	-rm -f *.out

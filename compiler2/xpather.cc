@@ -903,7 +903,7 @@ static boolean is_circular_dep(const struct config_struct* all_configs, const ch
         }
         // Remove child
         last_list = *list;
-        while(last_list && last_list->str) {
+        while(last_list && last_list->next != NULL && last_list->next->next != NULL) {
           last_list = last_list->next;
         }
         Free(last_list->str);
@@ -953,11 +953,11 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
     // Insert all required config of project_name project's act_config configuration
     struct string2_list* last_proj_config = tmp->requirements;
     while (last_proj_config && last_proj_config->str1 != NULL && last_proj_config->str2 != NULL) {
-      result = insert_to_required_config(all_configs, last_proj_config->str1, last_proj_config->str2, required_configs);
+      insert_to_required_config(all_configs, last_proj_config->str1, last_proj_config->str2, required_configs);
       last_proj_config = last_proj_config->next;
     }
     // Analyse the children of this project too.
-    result = insert_to_tmp_config(tmp_configs, project_name, act_config, TRUE);
+    insert_to_tmp_config(tmp_configs, project_name, act_config, TRUE);
     struct string_list* last_child = tmp->children;
     while (last_child && last_child->str != NULL) {
       result = analyse_child(all_configs, last_child->str, NULL, required_configs, tmp_configs);
@@ -981,14 +981,18 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
         // If someone requires something about project_name project
         if (strcmp(req_config->str1, project_name) == 0) {
           const struct config_struct* tmp = all_configs;
-          // Get the active configuration of project_name project
-          while (tmp && tmp->project_name != NULL && tmp->project_conf != NULL) {
-            if (strcmp(tmp->project_name, project_name) == 0 && tmp->is_active == TRUE) {
-              act_config = tmp->project_conf;
-              is_active = TRUE;
-              break;
+          if (project_config == NULL) {
+            // Get the active configuration of project_name project
+            while (tmp && tmp->project_name != NULL && tmp->project_conf != NULL) {
+              if (strcmp(tmp->project_name, project_name) == 0 && tmp->is_active == TRUE) {
+                act_config = tmp->project_conf;
+                is_active = TRUE;
+                break;
+              }
+              tmp = tmp->next;
             }
-            tmp = tmp->next;
+          } else {
+            act_config = project_config;
           }
           found = TRUE;
           
@@ -1070,7 +1074,7 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
       // Insert the active configuration to the required_configs
       result = insert_to_required_config(all_configs, project_name, act_config, required_configs);
       if (result == FALSE) return result;
-   
+      
       //Insert the project requirements of the project_name project's active configuration
       struct string2_list* last_proj_config = last->requirements;
       while (last_proj_config && last_proj_config->str1 != NULL && last_proj_config->str2 != NULL) {
@@ -1079,12 +1083,44 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
         // project_name is an element of the circle
         struct string_list* list = NULL;
         boolean circular = is_circular_dep(all_configs, last_proj_config->str1, last_proj_config->str1, project_name, &list);
+        boolean need_circular_error = FALSE;
+        // Find the last_proj_config->str1 project in the circle, and 
+        // determine if it has parent projects other than that are in the circle
+        if (circular) {
+          // Find the config struct of last_proj_config->str1
+          struct config_struct* tmp2 = all_configs;
+          while (tmp2 && tmp2->project_name != NULL) {
+            if (strcmp(tmp2->project_name, last_proj_config->str1) == 0) {
+              break;
+            }
+            tmp2 = tmp2->next;
+          }
+          if (list && tmp2 && tmp2->dependencies != NULL) {
+            struct string_list* deps = tmp2->dependencies;
+            while (deps && deps->str != NULL) {
+              struct string_list* tmp_list = list;
+              boolean tmp_error = FALSE;
+              while (tmp_list && tmp_list->str != NULL) {
+                if (strcmp(tmp_list->str, deps->str) == 0) {
+                  tmp_error = TRUE;
+                  break;
+                }
+                tmp_list = tmp_list->next;
+              }
+              if (tmp_error == FALSE) {
+                need_circular_error = TRUE;
+                break;
+              }
+              deps = deps->next;
+            }
+          }
+        }
         free_string_list(list);
         // Go through the tmp_configs to check inconsistency
         while (tmp_tmp && tmp_tmp->str1 != NULL && tmp_tmp->str2 != NULL) {
           if (strcmp(tmp_tmp->str1, last_proj_config->str1) == 0 && 
-             (strcmp(tmp_tmp->str2, last_proj_config->str2) != 0 &&
-             (!tmp_tmp->is_active || circular))) {
+              strcmp(tmp_tmp->str2, last_proj_config->str2) != 0 && 
+              circular && need_circular_error) {
             // Insert the configuration. This will cause an error later.
             insert_to_required_config(all_configs, tmp_tmp->str1, tmp_tmp->str2, required_configs);
             result = FALSE;
@@ -1491,14 +1527,14 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   { // check if the active configuration exists
     expstring_t xpathActCfg= mprintf(
       "/TITAN_Project_File_Information/Configurations/"
-        "Configuration[@name='%s']/text()", actcfg); // todo
+        "Configuration[@name='%s']/text()", actcfg);
     XPathObject theConfigEx(run_xpath(xpathCtx, xpathActCfg));
     Free(xpathActCfg);
 
     xmlNodeSetPtr nodes = theConfigEx->nodesetval;
     if (nodes == NULL) {
-      ERROR("The active build configuration named '%s' does not exist",
-          actcfg);
+      ERROR("The active build configuration named '%s' of project '%s' does not exist",
+        actcfg, *p_project_name);
       for (size_t i = 0; i < folders.size(); ++i) {
         Free(const_cast<char*>(folders.get_nth_elem(i)));
       }
@@ -1512,7 +1548,25 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
     //                        To ensure that the first elem is checked too if last_elem->next is null
     while (last_elem && last_elem->str1 != NULL && last_elem->str2 != NULL) {
       if (!strcmp(last_elem->str1, *p_project_name) && strcmp(last_elem->str2, actcfg)) {
-        ERROR("Required configuration is inconsistent : Project '%s' cannot have 2 "
+        { // check if the other configuration exists
+          expstring_t xpathActCfg= mprintf(
+            "/TITAN_Project_File_Information/Configurations/"
+              "Configuration[@name='%s']/text()", last_elem->str2);
+          XPathObject theConfigEx(run_xpath(xpathCtx, xpathActCfg));
+          Free(xpathActCfg);
+
+          xmlNodeSetPtr nodes = theConfigEx->nodesetval;
+          if (nodes == NULL) {
+            ERROR("The active build configuration named '%s' of project '%s' does not exist",
+              last_elem->str2, *p_project_name);
+            for (size_t i = 0; i < folders.size(); ++i) {
+              Free(const_cast<char*>(folders.get_nth_elem(i)));
+            }
+            folders.clear();
+            return TPD_FAILED;
+          }
+        }
+        ERROR("Required configuration is inconsistent or circular : Project '%s' cannot have 2 "
               "different configuration '%s' and '%s'",
               last_elem->str1, actcfg, last_elem->str2);
         for (size_t i = 0; i < folders.size(); ++i) {

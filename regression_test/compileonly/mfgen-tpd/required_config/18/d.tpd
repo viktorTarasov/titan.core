@@ -23,12 +23,6 @@
         <LocalBuildSettings>
           <workingDirectory>binDefault</workingDirectory>
         </LocalBuildSettings>
-        <ConfigurationRequirements>
-          <configurationRequirement>
-            <projectName>b</projectName>
-            <rerquiredConfiguration>1</rerquiredConfiguration>
-          </configurationRequirement>
-        </ConfigurationRequirements>
       </ProjectProperties>
     </Configuration>
     <Configuration name="1">
@@ -39,12 +33,6 @@
         <LocalBuildSettings>
           <workingDirectory>bin1</workingDirectory>
         </LocalBuildSettings>
-        <ConfigurationRequirements>
-          <configurationRequirement>
-            <projectName>b</projectName>
-            <rerquiredConfiguration>1</rerquiredConfiguration>
-          </configurationRequirement>
-        </ConfigurationRequirements>
       </ProjectProperties>
     </Configuration>
   </Configurations>

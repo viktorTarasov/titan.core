@@ -39,7 +39,7 @@ BuildTpd:
 	-t a.tpd -r -c -W -g  2>&1 | tee output
 
 CheckTpd: BuildTpd
-	if [ `grep -c "error: The active build configuration named '2' does not exist" ./output` -ne 1 ]; \
+	if [ `grep -c "error: The active build configuration named '2' of project 'b' does not exist" ./output` -ne 1 ]; \
 	then echo "Makefilegen required config test 4 failed: Overall verdict: fail" && exit 1; fi
 
 clean:

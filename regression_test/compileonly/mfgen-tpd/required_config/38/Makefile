@@ -29,7 +29,7 @@ endif
 #            c    |d:1=>b:1
 #    c:1=>d:1|    |
 #            d>--->
-#Result will be: a:Default, b:Default, c:Default, d:Default
+#Result will be: a:Default, b:1, c:1, d:1
 MAKEPROG := ${MAKE}
 
 all: CheckTpd 
@@ -41,15 +41,15 @@ BuildTpd:
 CheckTpd: BuildTpd
 	if [ `grep -c "EXECUTABLE = binDefault" ./a_binDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 38 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = binDefault" ./b_binDefault/Makefile` -ne 1 ]; \
+	if [ `grep -c "EXECUTABLE = bin1" ./b_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 38 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = binDefault" ./c_binDefault/Makefile` -ne 1 ]; \
+	if [ `grep -c "EXECUTABLE = bin1" ./c_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 38 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = binDefault" ./d_binDefault/Makefile` -ne 1 ]; \
+	if [ `grep -c "EXECUTABLE = bin1" ./d_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 38 failed: Overall verdict: fail" && exit 1; fi
 
 clean:
-	-rm -rf a_binDefault b_binDefault c_binDefault d_binDefault
+	-rm -rf a_binDefault b_bin1 c_bin1 d_bin1
 
 distclean: clean
 	-rm -f *.out

@@ -24,10 +24,10 @@ endif
 #This tests that 'a' references 'b' and 'b' references 'c' and every project
 #has the Default configuration. Nobody requires anything from anyone.
 #      a
-#     / \
-#    /   \
-#   /     \
-#  b       c
+#     / 
+#    /   
+#   /     
+#  b------->c
 
 MAKEPROG := ${MAKE}
 

@@ -26,11 +26,11 @@
         <ConfigurationRequirements>
           <configurationRequirement>
             <projectName>b</projectName>
-            <rerquiredConfiguration>1</rerquiredConfiguration>
+            <requiredConfiguration>1</requiredConfiguration>
           </configurationRequirement>
           <configurationRequirement>
             <projectName>c</projectName>
-            <rerquiredConfiguration>2</rerquiredConfiguration>
+            <requiredConfiguration>2</requiredConfiguration>
           </configurationRequirement>
         </ConfigurationRequirements>
       </ProjectProperties>

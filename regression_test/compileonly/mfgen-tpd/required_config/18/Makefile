@@ -29,21 +29,27 @@ endif
 #            c    |b:1
 #    c:1=>d:1|    |
 #            d>--->
-#Result will be: Error
+#Result will be: a:Default, b:Default, c:1, d:1
 MAKEPROG := ${MAKE}
 
 all: CheckTpd 
 
 BuildTpd:
-	$(TTCN3_DIR)/bin/ttcn3_makefilegen -f $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
-	-t a.tpd -r -c -W -g 2>&1 | tee output
+	$(TTCN3_DIR)/bin/ttcn3_makefilegen -F $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
+	-t a.tpd -r -c -W -g
 
 CheckTpd: BuildTpd
-	if [ `grep -c "error: Required configuration is inconsistent : Project 'b' cannot have 2 different configuration 'Default' and '1'" ./output` -ne 1 ]; \
-	then echo "Makefilegen required config test 18 failed: Overall verdict: fail" && exit 1; fi
+	if [ `grep -c "EXECUTABLE = binDefault" ./a_binDefault/Makefile` -ne 1 ]; \
+	then echo "Makefilegen required config test 52 failed: Overall verdict: fail" && exit 1; fi
+	if [ `grep -c "EXECUTABLE = binDefault" ./b_binDefault/Makefile` -ne 1 ]; \
+	then echo "Makefilegen required config test 52 failed: Overall verdict: fail" && exit 1; fi
+	if [ `grep -c "EXECUTABLE = bin1" ./c_bin1/Makefile` -ne 1 ]; \
+	then echo "Makefilegen required config test 52 failed: Overall verdict: fail" && exit 1; fi
+	if [ `grep -c "EXECUTABLE = bin1" ./d_bin1/Makefile` -ne 1 ]; \
+	then echo "Makefilegen required config test 52 failed: Overall verdict: fail" && exit 1; fi
 
 clean:
-	-rm -rf output a_binDefault
+	-rm -rf a_binDefault b_binDefault c_bin1 d_bin1
 
 distclean: clean
 	-rm -f *.out

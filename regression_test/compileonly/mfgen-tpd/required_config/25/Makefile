@@ -39,11 +39,11 @@ BuildTpd:
 	-t a.tpd -r -c -W -g 2>&1 | tee output
 
 CheckTpd: BuildTpd
-	if [ `grep -c "error: Required configuration is inconsistent : Project 'b' cannot have 2 different configuration 'Default' and '1'" ./output` -ne 1 ]; \
+	if [ `grep -c "error: Required configuration is inconsistent or circular : Project 'e' cannot have 2 different configuration 'Default' and '1'" ./output` -ne 1 ]; \
 	then echo "Makefilegen required config test 25 failed: Overall verdict: fail" && exit 1; fi
 
 clean:
-	-rm -rf output a_binDefault e_binDefault
+	-rm -rf output a_binDefault b_bin1 c_bin1 d_bin1 e_binDefault
 
 distclean: clean
 	-rm -f *.out

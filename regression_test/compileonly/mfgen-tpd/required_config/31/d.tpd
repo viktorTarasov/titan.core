@@ -12,7 +12,6 @@
   <ProjectName>d</ProjectName>
   <ReferencedProjects>
     <ReferencedProject name="b" projectLocationURI="b.tpd"/>
-    <ReferencedProject name="e" projectLocationURI="e.tpd"/>
   </ReferencedProjects>
   <ActiveConfiguration>Default</ActiveConfiguration>
   <Configurations>

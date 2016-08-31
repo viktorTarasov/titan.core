@@ -30,7 +30,7 @@ endif
 #                
 
 
-#Result will be: a:Default, b:Default, c:1, d:Default, e:Default
+#Result will be: a:Default, b:Default, c:Default, d:Default, e:Default
 MAKEPROG := ${MAKE}
 
 all: CheckTpd 

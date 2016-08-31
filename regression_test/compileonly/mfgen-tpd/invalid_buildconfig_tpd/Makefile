@@ -34,7 +34,7 @@ BuildHelloTpd:
 	 -t ../HelloTpd.tpd 2>&1 | tee ../../output
 
 CheckHelloTpd: BuildHelloTpd
-	if [ `grep -c "error: The active build configuration named 'notExistingBuildConfig' does not exist" ./output` -ne 1 ] \
+	if [ `grep -c "error: The active build configuration named 'notExistingBuildConfig' of project 'Hello000' does not exist" ./output` -ne 1 ] \
 	  || [ `grep -c "error: Failed to process .*../Hello000/Hello000.tpd" ./output` -ne 1 ]; \
 	then exit 1; fi
 

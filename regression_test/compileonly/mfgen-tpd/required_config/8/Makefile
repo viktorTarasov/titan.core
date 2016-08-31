@@ -24,9 +24,9 @@ endif
 #This tests that 'a' references 'b' and 'b' references 'c' and 'a' requires
 #'b''s '1' configuration and 'b''s '1' configuration requires 'c''s '1' config.
 #      a
-#     / \
-# b:1/   \
-#   /     \
+#     / 
+# b:1/   
+#   /     
 #  b------>c
 #   b:1=>c:1
 

@@ -27,7 +27,7 @@
         <ConfigurationRequirements>
           <configurationRequirement>
             <projectName>b</projectName>
-            <rerquiredConfiguration>Default</rerquiredConfiguration>
+            <requiredConfiguration>Default</requiredConfiguration>
           </configurationRequirement>
         </ConfigurationRequirements>
       </ProjectProperties>

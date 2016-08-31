@@ -26,9 +26,19 @@
         <ConfigurationRequirements>
           <configurationRequirement>
             <projectName>b</projectName>
-            <rerquiredConfiguration>1</rerquiredConfiguration>
+            <requiredConfiguration>1</requiredConfiguration>
           </configurationRequirement>
         </ConfigurationRequirements>
+      </ProjectProperties>
+    </Configuration>
+     <Configuration name="1">
+      <ProjectProperties>
+        <MakefileSettings>
+          <targetExecutable>bin1</targetExecutable>
+        </MakefileSettings>
+        <LocalBuildSettings>
+          <workingDirectory>bin1</workingDirectory>
+        </LocalBuildSettings>
       </ProjectProperties>
     </Configuration>
   </Configurations>
