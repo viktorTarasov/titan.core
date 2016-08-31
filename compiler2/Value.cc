@@ -6722,6 +6722,16 @@ error:
         tt2=v2->get_expr_returntype(exp_val);
         chk_expr_operandtype_charstr(tt2, second, opname, v2);
         chk_expr_eval_value(v2, t_chk, refch, exp_val);
+        if (!u.expr.v2->is_unfoldable()) {
+          const string& type_param = u.expr.v2->get_val_str();
+          if (type_param != "UTF-8" && type_param != "UTF-16" && type_param != "UTF-16LE" &&
+              type_param != "UTF-16BE" && type_param != "UTF-32" &&
+              type_param != "UTF-32LE" && type_param != "UTf-32BE") {
+            error("Incorrect second parameter (%s) was passed to encvalue_unichar.",
+              type_param.c_str());
+            set_valuetype(V_ERROR);
+          }
+        }
       }
       break;
     case OPTYPE_DECVALUE_UNICHAR:
@@ -6734,6 +6744,16 @@ error:
         tt3=v3->get_expr_returntype(exp_val);
         chk_expr_operandtype_charstr(tt3, third, opname, v3);
         chk_expr_eval_value(v3, t_chk, refch, exp_val);
+        if (!u.expr.v3->is_unfoldable()) {
+          const string& type_param = u.expr.v3->get_val_str();
+          if (type_param != "UTF-8" && type_param != "UTF-16" && type_param != "UTF-16LE" &&
+              type_param != "UTF-16BE" && type_param != "UTF-32" &&
+              type_param != "UTF-32LE" && type_param != "UTf-32BE") {
+            error("Incorrect third parameter (%s) was passed to decvalue_unichar.",
+              type_param.c_str());
+            set_valuetype(V_ERROR);
+          }
+        }
       }
       break;
     case OPTYPE_ADD: // v1 v2
@@ -11663,6 +11683,10 @@ error:
         str = u.expr.v2->rearrange_init_code(str, usage_mod);
         str = u.expr.v3->rearrange_init_code(str, usage_mod);
         str = u.expr.ti4->rearrange_init_code(str, usage_mod);
+        break;
+      case OPTYPE_ISTEMPLATEKIND:
+        str = u.expr.ti1->rearrange_init_code(str, usage_mod);
+        str = u.expr.v2->rearrange_init_code(str, usage_mod);
         break;
       case OPTYPE_LENGTHOF:
       case OPTYPE_SIZEOF:
