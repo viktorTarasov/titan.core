@@ -3359,7 +3359,9 @@ static void print_makefile(struct makefile_struct *makefile)
         }
       }
     }
-    fputs("\n\n.cc.o .c.o:\n"
+    fputs("\n\n%.o: %.c $(GENERATED_HEADERS)\n"
+          "\t$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<\n\n", fp);
+    fputs("%.o: %.cc $(GENERATED_HEADERS)\n"
           "\t$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<\n\n", fp);
 
     if (makefile->gcc_dep) {
