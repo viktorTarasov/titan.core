@@ -32,7 +32,7 @@ BuildTpd:
 	-t a.tpd -r -c -b goodConfig
 
 CheckTpd: BuildTpd
-	if [ `grep -c "EXECUTABLE = binGood" ./binGood/Makefile` -ne 1 ]; \
+	if [ ! -e "./binGood/Makefile" ] || [ `grep -c "EXECUTABLE = binGood" ./binGood/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 1 failed: Overall verdict: fail" && exit 1; fi
 
 clean:

@@ -43,21 +43,21 @@ BuildTpd:
 	-t a.tpd -r -c -W -g
 
 CheckTpd: BuildTpd
-	if [ `grep -c "EXECUTABLE = binDefault" ./a_binDefault/Makefile` -ne 1 ]; \
+	if [ ! -e "./a_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./a_binDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 43 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = binDefault" ./b_binDefault/Makefile` -ne 1 ]; \
+	if [ ! -e "./b_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./b_binDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 43 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = binDefault" ./c_binDefault/Makefile` -ne 1 ]; \
+	if [ ! -e "./c_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./c_binDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 43 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = binDefault" ./d_binDefault/Makefile` -ne 1 ]; \
+	if [ ! -e "./d_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./d_binDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 43 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = bin1" ./e_bin1/Makefile` -ne 1 ]; \
+	if [ ! -e "./e_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./e_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 43 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = bin1" ./f_bin1/Makefile` -ne 1 ]; \
+	if [ ! -e "./f_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./f_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 43 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = bin1" ./g_bin1/Makefile` -ne 1 ]; \
+	if [ ! -e "./g_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./g_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 43 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = bin1" ./h_bin1/Makefile` -ne 1 ]; \
+	if [ ! -e "./h_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./h_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 43 failed: Overall verdict: fail" && exit 1; fi
 
 clean:

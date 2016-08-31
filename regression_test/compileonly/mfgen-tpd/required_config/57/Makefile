@@ -21,32 +21,29 @@ endif
 # If we used ${MAKE} in the rules below, 'make -n' would succeed once,
 # then fail on every subsequent invocation until a 'make clean' is done. 
 
-#This tests that 'a' references 'b' and 'b' references 'c' and every project
-#has the Default configuration. Nobody requires anything from anyone.
-#      a
-#     / 
-#    /   
-#   /     
-#  b------->c
-
+# Hierarchy
+#            a--->e------<
+#         b:2|    |(b:1) |
+#            b<---<      |
+#    b:1=>c:1|    |      |
+#            c    |      |d:1=>e:1
+#    c:1=>d:1|    |      |
+#            d>--->------>
+#Result will be: Error
 MAKEPROG := ${MAKE}
 
 all: CheckTpd 
 
 BuildTpd:
-	$(TTCN3_DIR)/bin/ttcn3_makefilegen -F $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
-	-t a.tpd -r -c -W -g
+	$(TTCN3_DIR)/bin/ttcn3_makefilegen -f $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
+	-t a.tpd -r -c -W -g 2>&1 | tee output
 
 CheckTpd: BuildTpd
-	if [ ! -e "./a_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./a_binDefault/Makefile` -ne 1 ]; \
-	then echo "Makefilegen required config test 6 failed: Overall verdict: fail" && exit 1; fi
-	if [ ! -e "./b_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./b_binDefault/Makefile` -ne 1 ]; \
-	then echo "Makefilegen required config test 6 failed: Overall verdict: fail" && exit 1; fi
-	if [ ! -e "./c_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./c_binDefault/Makefile` -ne 1 ]; \
-	then echo "Makefilegen required config test 6 failed: Overall verdict: fail" && exit 1; fi
+	if [ `grep -c "error: Required configuration is inconsistent or circular : Project 'b' cannot have 2 different configuration '2' and '1'" ./output` -ne 1 ]; \
+	then echo "Makefilegen required config test 55 failed: Overall verdict: fail" && exit 1; fi
 
 clean:
-	-rm -rf a_binDefault b_binDefault c_binDefault
+	-rm -rf output a_binDefault e_bin1
 
 distclean: clean
 	-rm -f *.out

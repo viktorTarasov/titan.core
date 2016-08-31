@@ -39,15 +39,15 @@ BuildTpd:
 	-t a.tpd -r -c -W -g 2>&1 | tee output
 
 CheckTpd: BuildTpd
-	if [ `grep -c "EXECUTABLE = binDefault" ./a_binDefault/Makefile` -ne 1 ]; \
+	if [ ! -e "./a_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./a_binDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 42 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = bin1" ./b_bin1/Makefile` -ne 1 ]; \
+	if [ ! -e "./b_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./b_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 42 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = bin1" ./c_bin1/Makefile` -ne 1 ]; \
+	if [ ! -e "./c_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./c_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 42 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = bin1" ./d_bin1/Makefile` -ne 1 ]; \
+	if [ ! -e "./d_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./d_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 42 failed: Overall verdict: fail" && exit 1; fi
-	if [ `grep -c "EXECUTABLE = binDefault" ./e_binDefault/Makefile` -ne 1 ]; \
+	if [ ! -e "./e_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./e_binDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 42 failed: Overall verdict: fail" && exit 1; fi
 
 clean:
