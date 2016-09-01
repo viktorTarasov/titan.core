@@ -38,9 +38,9 @@ BuildTpd:
 	-t a.tpd -b NotDefault -r -c -W -g
 
 CheckTpd: BuildTpd
-	if [ ! -e "./a_binNotDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binNotDefault" ./a_binNotDefault/Makefile` -ne 1 ]; \
+	if [ ! -f "./a_binNotDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binNotDefault" ./a_binNotDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 5 failed: Overall verdict: fail" && exit 1; fi
-	if [ ! -e "./b_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./b_bin1/Makefile` -ne 1 ]; \
+	if [ ! -f "./b_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./b_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 5 failed: Overall verdict: fail" && exit 1; fi
 
 clean:
