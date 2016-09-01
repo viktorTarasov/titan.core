@@ -127,7 +127,7 @@ compile:: $(TTCN3_MODULES) $(ASN1_MODULES)
 clean:
 	-$(RM) $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
 	$(GENERATED_SOURCES) compile $(DEPFILES) \
-	tags *.log
+	tags *.log *.log.orig
 
 distclean: clean
 	-$(RM) $(DEPFILES)

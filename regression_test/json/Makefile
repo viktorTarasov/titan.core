@@ -57,8 +57,8 @@ compile: $(TTCN3_MODULES) $(ASN1_MODULES)
 	touch compile
 	
 clean distclean:
-	-rm -f $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
-	$(GENERATED_SOURCES) *.log Makefile.bak
+	-rm -rf $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
+	$(GENERATED_SOURCES) *.log Makefile.bak compile logs
 
 dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)

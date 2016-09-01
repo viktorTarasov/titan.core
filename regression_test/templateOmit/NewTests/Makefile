@@ -54,7 +54,7 @@ compile: $(TTCN3_MODULES)
 	touch $@
 
 clean distclean:
-	-rm -f $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
+	-rm -f $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) $(SYMLINK_MODULES) \
 	$(GENERATED_SOURCES) *.log Makefile.bak compile
 
 dep: $(GENERATED_SOURCES)

@@ -24,5 +24,5 @@ all:
 		else echo OK; fi  ; \
 	fi
 
-clean:
+clean distclean:
 	$(RM) bin/output.txt

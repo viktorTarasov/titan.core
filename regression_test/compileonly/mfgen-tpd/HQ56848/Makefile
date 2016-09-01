@@ -24,5 +24,5 @@ all:
 	  echo Symlink bin/counter.ttcn does not exist; exit 1; \
 	fi ; \
 
-clean:
+clean distclean:
 	$(RM) bin/*

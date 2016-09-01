@@ -111,7 +111,8 @@ clean:
 	-rm -rf consumer/bin supplier/bin subplier/bin HP35732 COMMON/bin NAS_EPS_v9.7.0_CNL113729/bin HQ60308/Makefile search_paths/main/bin
 
 distclean: clean
-	-rm -f *.out
+	-rm -f *.out || exit; done
+	@for dir in $(DIRLIST); do $(MAKE) -C $$dir $@ || exit; done
 
 .PHONY: all clean distclean run BuildDirs BuildConsumer BuildSupplier BuildSubplier HP35732 HQ56829 HQ56834 HQ56848 COMMON NAS HQ60308 SearchPaths 
 

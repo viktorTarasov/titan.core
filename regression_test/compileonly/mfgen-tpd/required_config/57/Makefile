@@ -40,7 +40,7 @@ BuildTpd:
 
 CheckTpd: BuildTpd
 	if [ `grep -c "error: Required configuration is inconsistent or circular : Project 'b' cannot have 2 different configuration '2' and '1'" ./output` -ne 1 ]; \
-	then echo "Makefilegen required config test 55 failed: Overall verdict: fail" && exit 1; fi
+	then echo "Makefilegen required config test 57 failed: Overall verdict: fail" && exit 1; fi
 
 clean:
 	-rm -rf output a_binDefault e_bin1

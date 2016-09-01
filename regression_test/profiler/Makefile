@@ -78,7 +78,7 @@ compile: $(TTCN3_MODULES)
 	
 clean distclean:
 	-rm -f $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
-	$(GENERATED_SOURCES) *.log Makefile.bak $(TEMP_FILES)
+	$(GENERATED_SOURCES) *.log Makefile.bak $(TEMP_FILES) compile
 
 dep: $(GENERATED_SOURCES) $(PROF_GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $^

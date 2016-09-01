@@ -41,7 +41,7 @@ OBJECTS = $(GENERATED_SOURCES:.cc=.o) $(USER_SOURCES:.cc=.o)
 
 TARGET = ttcn2json$(EXESUFFIX)
 
-TEMP_FILES = General_Types.json one.json two.json three.json Main.json SubType.json
+TEMP_FILES = General_Types.json one.json two.json three.json Main.json SubType.json MiniRanap.json
 
 all: $(TARGET)
 
@@ -57,7 +57,7 @@ compile: $(TTCN3_MODULES) $(ASN1_MODULES)
 	
 clean distclean:
 	-rm -f $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
-	$(GENERATED_SOURCES) *.log Makefile.bak $(TEMP_FILES)
+	$(GENERATED_SOURCES) *.log Makefile.bak $(TEMP_FILES) compile
 
 dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
