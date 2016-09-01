@@ -6726,7 +6726,7 @@ error:
           const string& type_param = u.expr.v2->get_val_str();
           if (type_param != "UTF-8" && type_param != "UTF-16" && type_param != "UTF-16LE" &&
               type_param != "UTF-16BE" && type_param != "UTF-32" &&
-              type_param != "UTF-32LE" && type_param != "UTf-32BE") {
+              type_param != "UTF-32LE" && type_param != "UTF-32BE") {
             error("Incorrect second parameter (%s) was passed to encvalue_unichar.",
               type_param.c_str());
             set_valuetype(V_ERROR);
@@ -6748,7 +6748,7 @@ error:
           const string& type_param = u.expr.v3->get_val_str();
           if (type_param != "UTF-8" && type_param != "UTF-16" && type_param != "UTF-16LE" &&
               type_param != "UTF-16BE" && type_param != "UTF-32" &&
-              type_param != "UTF-32LE" && type_param != "UTf-32BE") {
+              type_param != "UTF-32LE" && type_param != "UTF-32BE") {
             error("Incorrect third parameter (%s) was passed to decvalue_unichar.",
               type_param.c_str());
             set_valuetype(V_ERROR);
