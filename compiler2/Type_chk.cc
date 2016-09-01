@@ -2216,16 +2216,19 @@ void Type::chk_xer() { // XERSTUFF semantic check
     > (unsigned long)NamespaceSpecification::LOWERCASED) {
     // Now both are proper non-NULL strings
     if (*xerattrib->namespace_.prefix != 0) { // there is a prefix, check it
-      char first[4] = {0,0,0,0};
-      strncpy(first, xerattrib->namespace_.prefix, 3);
+      char first[5] = {0,0,0,0,0};
+      strncpy(first, xerattrib->namespace_.prefix, 4);
+      bool xml_start = !memcmp(first, "xml", 3);
       first[0] = toupper(first[0]);
       first[1] = toupper(first[1]);
       first[2] = toupper(first[2]);
-      if (!memcmp(first, "XML", 3) // It _is_ "xml"
+      if ((xml_start // It _is_ "xml" or starts with "xml"
+        // Or it matches (('X'|'x') ('M'|'m') ('L'|'l'))
+        || (first[3] == 0 && !memcmp(first, "XML", 3)))
         // but the W3C XML namespace gets an exemption
         && strcmp(xerattrib->namespace_.uri, xml98)) error(
-          "Prefix shall not commence with characters that"
-          " when uppercased are 'XML'");
+          "Prefix shall not start with 'xml' and shall not match the pattern"
+          " (('X'|'x')('M'|'m')('L'|'l'))");
         // X.693 (11/2008), clause 29.1.7
     }
 
