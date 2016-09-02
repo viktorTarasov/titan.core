@@ -2035,7 +2035,7 @@ static void print_makefile(struct makefile_struct *makefile)
 #endif
           "# The path of your libxml2 installation:\n"
           "# If you do not have your own one, leave it unchanged.\n"
-          "XMLDIR = $(TTCN3_DIR)\n\n"
+          "%sXMLDIR = $(TTCN3_DIR)\n\n"
           "# Directory to store the archived source files:\n",
           makefile->dynamic ? "-Wall -fPIC" : "-Wall", /* CXXFLAGS */
           makefile->coverage ? " -fprofile-arcs -ftest-coverage -g" : "", /* CXXFLAGS COVERAGE */
@@ -2069,10 +2069,11 @@ static void print_makefile(struct makefile_struct *makefile)
           /* end of COMPILER FLAGS */
           (makefile->use_runtime_2 ? "-rt2"    : ""), /* TTCN3_LIB */
           (makefile->single_mode   ? ""        : "-parallel"),
-          (makefile->dynamic       ? "-dynamic": "")
+          (makefile->dynamic       ? "-dynamic": ""),
 #ifdef LICENSE
-          ,(makefile->disable_predef_ext_folder ? "# " : "")
+          (makefile->disable_predef_ext_folder ? "# " : ""),
 #endif 
+          (makefile->disable_predef_ext_folder ? "# " : "")
           );
     if (!makefile->gnu_make) {
       fputs("# Note: you can set any directory except ./archive\n", fp);
