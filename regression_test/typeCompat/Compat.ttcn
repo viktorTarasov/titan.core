@@ -19,6 +19,7 @@ import from Std all
 type component Empty {
   timer T
   port MyPort1 P, Q
+  port MyPort2 X
 }
 
 //** MODULEPARS **//
@@ -34,6 +35,10 @@ type port MyPort1 message {
   inout myrec2
   inout integer
   inout intlist4
+} with { extension "internal" }
+
+type port MyPort2 procedure {
+  inout mysig
 } with { extension "internal" }
 
 
@@ -111,6 +116,9 @@ type union myuni2 {
   intlist2 f1,
   intlist1 f2
 }
+
+//** SIGNATURES **//
+signature mysig() return intlist4 exception (intlist4, myrec5);
 
 
 //** TEMPLATES **//
@@ -195,7 +203,7 @@ altstep myAltStep(in myrec1 p1) runs on Empty {
   [p1.f1 > 0] T.timeout { }
 }
 
-testcase tc_PortOps() runs on Empty system Empty {
+testcase tc_MsgPortOps() runs on Empty system Empty {
   var myrec1 rec1 :=  { 1, 2 }
   var myrec2 rec2 :=  { 1, 2 }
   var intlist4 il4 := { 1, 2 }
@@ -204,7 +212,6 @@ testcase tc_PortOps() runs on Empty system Empty {
   template myrec2 tl_r2 :=    { 1, 2 }
   connect(self:P, self:Q)
   timer MyTimer := 0.5
-  /* type compatibility in value redirects no longer works
   MyTimer.start
   P.send(il4)
   alt {
@@ -256,10 +263,60 @@ testcase tc_PortOps() runs on Empty system Empty {
   alt {
     [] Q.receive(tl_il4) -> value il4 { if (il4 == { 1, 2 }) { setverdict(pass) } else { setverdict(fail) } }
     [] MyTimer.timeout { setverdict(inconc) }
-  }*/
+  }
   if (rec1 == { 1, 2 } and valueof(tl_il4) == rec1) { setverdict(pass) } else { setverdict(fail) }
   if (match(rec2, tl_il4)) { setverdict(pass) } else { setverdict(fail) }
   disconnect(self:P, self:Q)
+}
+
+testcase tc_ProcPortOps() runs on Empty {
+  connect(self:X, self:X);
+  var intlist4 v_il4;
+  var myrec2 v_rec2;
+  var myrec6 v_rec6;
+  var template myrec6 vt_rec6 := tp_rec5(t_rec1, t_rec2);
+  timer tmr;
+  X.reply(mysig: { } value valueof(t_il4));
+  tmr.start(0.5);
+  alt {
+    [] X.getreply(mysig: { } value t_il4) -> value v_rec2 { if (match(v_rec2, t_rec2)) { setverdict(pass); } else { setverdict(fail, 1); } }
+    [] tmr.timeout { setverdict(fail, -1); }
+  }
+  X.reply(mysig: { } value valueof(t_il4));
+  tmr.start(0.5);
+  alt {
+    [] X.getreply(mysig: { } value intlist4: t_rec2) -> value v_il4 { if (match(v_il4, t_il4)) { setverdict(pass); } else { setverdict(fail, 2); } }
+    [] tmr.timeout { setverdict(fail, -2); }
+  }
+  X.reply(mysig: { } value valueof(t_il4));
+  tmr.start(0.5);
+  alt {
+    [] X.getreply(mysig: { } value intlist4: t_rec2) -> value v_rec2 { if (match(v_rec2, t_rec2)) { setverdict(pass); } else { setverdict(fail, 3); } }
+    [] tmr.timeout { setverdict(fail, -3); }
+  }
+  X.raise(mysig, valueof(t_il4));
+  tmr.start(0.5);
+  alt {
+    [] X.catch(mysig, t_il4) -> value v_rec2 { if (match(v_rec2, t_rec2)) { setverdict(pass); } else { setverdict(fail, 4); } }
+    [] tmr.timeout { setverdict(fail, -4); }
+  }
+  X.raise(mysig, valueof(t_il4));
+  tmr.start(0.5);
+  alt {
+    [] X.catch(mysig, intlist4: t_rec2) -> value v_il4 { if (match(v_il4, t_il4)) { setverdict(pass); } else { setverdict(fail, 5); } }
+    [] tmr.timeout { setverdict(fail, -5); }
+  }
+  X.raise(mysig, valueof(tp_rec5(t_rec1, t_rec2)));
+  tmr.start(0.5);
+  alt {
+    [] X.catch(mysig, myrec5: vt_rec6) -> value (v_rec6, v_il4 := f1, v_rec2 := f2) {
+      if (match(v_rec6, vt_rec6)) { setverdict(pass); } else { setverdict(fail, 6); }
+      if (match(v_il4, t_rec1)) { setverdict(pass); } else { setverdict(fail, 7); }
+      if (match(v_rec2, t_rec2)) { setverdict(pass); } else { setverdict(fail, 8); }
+    }
+    [] tmr.timeout { setverdict(fail, -678); }
+  }
+  disconnect(self:X, self:X);
 }
 
 testcase tc_Params() runs on Empty {
@@ -462,7 +519,8 @@ testcase tc_Templates() runs on Empty {
 control {
   var myrec1 rec1 := { 66, 77 }
   var myrec2 rec2 := { 88, 99 }
-  execute(tc_PortOps())
+  execute(tc_MsgPortOps())
+  execute(tc_ProcPortOps())
   execute(tc_EqNeAss())
   execute(tc_Params())
   execute(tc_DefPar(rec2, rec1))

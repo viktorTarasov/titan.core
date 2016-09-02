@@ -4903,20 +4903,21 @@ error:
     ValueRedirect *p_val_redir)
   {
     // first analyze the template instance
-    Type *ret_val = p_ti->get_expr_governor(Type::EXPECTED_TEMPLATE);
+    Type *ret_val = p_ti->get_expr_governor(Type::EXPECTED_TEMPLATE);    
     // return if this step was successful
     if (ret_val) return ret_val;
-    // try to determine the type from the value redirect in the next step
-    if (p_val_redir != NULL) {
-      ret_val = p_val_redir->get_type();
-    }
-    // return if this step was successful
-    if (ret_val) return ret_val;
-    // finally try to convert the undef identifier in the template instance to
+    // try to convert the undef identifier in the template instance to
     // a reference because it cannot be an enum value anymore
     Template *t_templ = p_ti->get_Template();
     t_templ->set_lowerid_to_ref();
-    return t_templ->get_expr_governor(Type::EXPECTED_TEMPLATE);
+    ret_val = t_templ->get_expr_governor(Type::EXPECTED_TEMPLATE);
+    // return if this step was successful
+    if (ret_val) return ret_val;
+    // finally try to determine the type from the value redirect
+    if (p_val_redir != NULL) {
+      ret_val = p_val_redir->get_type();
+    }
+    return ret_val;
   }
 
   Type *Statement::chk_sender_redirect(Type *address_type)
@@ -8795,6 +8796,7 @@ error:
       Type* var_type = v[i]->get_var_ref()->chk_variable_ref();
       FieldOrArrayRefs* subrefs = v[i]->get_subrefs();
       Error_Context cntxt2(v[i], "In redirect #%d", (int)(i + 1));
+      Type* exp_type = NULL;
       if (subrefs != NULL) {
         // a field of the value is redirected to the referenced variable
         Type* field_type = p_type->get_field_type(subrefs, Type::EXPECTED_DYNAMIC_VALUE);
@@ -8828,19 +8830,45 @@ error:
               v[i]->get_dec_type()->chk_coding(false);
             }
           }
-          else if (var_type != NULL && !var_type->is_identical(field_type)) {
-            v[i]->error("Type mismatch in value redirect: A variable of type "
-              "`%s' was expected instead of `%s'",
-              field_type->get_typename().c_str(), var_type->get_typename().c_str());
+          else {
+            exp_type = field_type;
           }
         }
       }
       else {
         // the whole value is redirected to the referenced variable
-        if (var_type != NULL && !var_type->is_identical(p_type)) {
+        exp_type = p_type;
+      }
+      if (exp_type != NULL && var_type != NULL) {
+        if (use_runtime_2) {
+          // check for type compatibility in RT2
+          TypeCompatInfo info(v[i]->get_var_ref()->get_my_scope()->get_scope_mod(),
+            exp_type, var_type, true, false);
+          FieldOrArrayRefs* var_subrefs = v[i]->get_var_ref()->get_subrefs();
+          if (var_subrefs != NULL) {
+            info.set_str2_elem(var_subrefs->refers_to_string_element());
+          }
+          TypeChain l_chain;
+          TypeChain r_chain;
+          if (!exp_type->is_compatible(var_type, &info, &l_chain, &r_chain)) {
+            if (info.is_subtype_error()) {
+              v[i]->error("%s", info.get_subtype_error().c_str());
+            }
+            else if (!info.is_erroneous()) {
+              v[i]->error("Type mismatch in value redirect: A variable of type "
+                "`%s' or of a compatible type was expected instead of `%s'",
+                exp_type->get_typename().c_str(), var_type->get_typename().c_str());
+            }
+            else {
+              v[i]->error("%s", info.get_error_str_str().c_str());
+            }
+          }
+        }
+        else if (!var_type->is_identical(exp_type)) {
+          // the types have to be identical in RT1
           v[i]->error("Type mismatch in value redirect: A variable of type "
-            "`%s' was expected instead of `%s'", p_type->get_typename().c_str(),
-            var_type->get_typename().c_str());
+            "`%s' was expected instead of `%s'",
+            exp_type->get_typename().c_str(), var_type->get_typename().c_str());
         }
       }
     }
@@ -8878,7 +8906,9 @@ error:
       expr->expr = mputc(expr->expr, ')');
       Type* redir_type = v[i]->get_subrefs() == NULL ? value_type :
         value_type->get_field_type(v[i]->get_subrefs(), Type::EXPECTED_DYNAMIC_VALUE);
-      Type* member_type = v[i]->is_decoded() ? v[i]->get_dec_type() : redir_type;
+      redir_type = redir_type->get_type_refd_last();
+      Type* ref_type = v[i]->get_var_ref()->chk_variable_ref()->get_type_refd_last();
+      Type* member_type = v[i]->is_decoded() ? v[i]->get_dec_type() : ref_type;
       string type_str = member_type->get_genname_value(scope);
       members_str = mputprintf(members_str, "%s* ptr_%d;\n", type_str.c_str(), (int)i);
       constr_params_str = mputprintf(constr_params_str, "%s* par_%d",
@@ -8984,7 +9014,7 @@ error:
         set_values_str = mputprintf(set_values_str,
           "ptr_%d->decode(%s_descr_, buff_%d, TTCN_EncDec::CT_%s);\n"
           "if (buff_%d.get_read_len() != 0) {\n"
-          "TTCN_error(\"Parameter redirect #%d failed, because the buffer was "
+          "TTCN_error(\"Value redirect #%d failed, because the buffer was "
           "not empty after decoding. Remaining octets: %%d.\", "
           "(int)buff_%d.get_read_len());\n"
           "}\n",
@@ -8992,8 +9022,24 @@ error:
           member_type->get_coding(false).c_str(), (int)i, (int)(i + 1), (int)i);
       }
       else {
-        set_values_str = mputprintf(set_values_str, "*ptr_%d = par%s;\n",
-          (int)i, subrefs_str);
+        // if the variable reference and the received value (or its specified field)
+        // are not of the same type, then a type conversion is needed (RT2 only)
+        if (use_runtime_2 && !ref_type->is_identical(redir_type)) {
+          Common::Module* mod = scope->get_scope_mod();
+          mod->add_type_conv(new TypeConv(redir_type, ref_type, false));
+          set_values_str = mputprintf(set_values_str,
+            "if (!%s(*ptr_%d, par%s)) {\n"
+            "TTCN_error(\"Failed to convert redirected value #%d from type `%s' "
+            "to type `%s'.\");\n"
+            "}\n",
+            TypeConv::get_conv_func(redir_type, ref_type, mod).c_str(), (int)i,
+            subrefs_str, (int)(i + 1), redir_type->get_typename().c_str(),
+            ref_type->get_typename().c_str());
+        }
+        else {
+          set_values_str = mputprintf(set_values_str, "*ptr_%d = par%s;\n",
+            (int)i, subrefs_str);
+        }
       }
       if (subrefs_expr.postamble != NULL) {
         set_values_str = mputstr(set_values_str, subrefs_expr.postamble);

@@ -95,15 +95,10 @@ public:
    *  types declared in other modules.  */
   static string get_conv_func(Type *p_from, Type *p_to, Module *p_mod);
   static bool needs_conv_refd(GovernedSimple *p_val_or_temp);
-  static bool needs_conv_redir(Ttcn::TemplateInstance *p_ti, Reference *p_ref);
   /** Generate initial conversion code for a given value or template
    *  reference.  */
   static char *gen_conv_code_refd(char *str, const char *name,
                                   GovernedSimple *p_val_or_temp);
-  /** Generate conversion code for value redirect constructs.  */
-  static void gen_conv_code_redir(struct expression_struct_t *expr,
-                                  Ttcn::TemplateInstance *p_ti,
-                                  Reference *p_ref);
   void gen_conv_func(char **p_prototypes, char **p_bodies, Module *p_mod);
   void gen_conv_func_record_set(char **p_bodies, Module *p_mod);
   void gen_conv_func_array_record(char **p_bodies, Module *p_mod);
