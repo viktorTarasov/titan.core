@@ -47,7 +47,7 @@ CheckTpd: BuildTpd
 	then echo "Makefilegen required config test 6 failed: Overall verdict: fail" && exit 1; fi
 	if [ ! -L "./binDefault/d1.ttcn" ] || [ -L "./binDefault/dDefault.ttcn" ]; \
 	then echo "Makefilegen required config test 6 failed: Overall verdict: fail" && exit 1; fi
-	if [ ! -f "./binDefault/Makefile" ] || [ ! -L "./binDefault/eDefault.ttcn" ] || [ -L "./binDefault/e1.ttcn" ]; \
+	if [ ! -L "./binDefault/eDefault.ttcn" ] || [ -L "./binDefault/e1.ttcn" ]; \
 	then echo "Makefilegen required config test 6 failed: Overall verdict: fail" && exit 1; fi
 
 clean:

@@ -123,6 +123,10 @@ void TIMER::start(double start_val)
     if (start_val < 0.0)
       TTCN_error("Starting timer %s with a negative duration (%g).",
         timer_name, start_val);
+    if (FLOAT::is_special(start_val)) {
+      TTCN_error("Starting timer %s with "
+        "a non-numeric float value (%g).", timer_name, start_val);
+    }
     if (is_started) {
       TTCN_warning("Re-starting timer %s, which is already active (running "
         "or expired).", timer_name);
@@ -136,6 +140,10 @@ void TIMER::start(double start_val)
     if (start_val < 0.0)
       TTCN_error("Using a negative duration (%g) for the guard timer of the "
         "test case.", start_val);
+    if (FLOAT::is_special(start_val)) {
+      TTCN_error("Using a non-numeric float value (%g) for the"
+        " guard timer of the test case.", start_val);
+    }
     is_started = TRUE;
     TTCN_Logger::log_timer_guard(start_val);
   }

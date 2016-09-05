@@ -13,7 +13,7 @@
   <ReferencedProjects>
     <ReferencedProject name="e" projectLocationURI="e.tpd"/>
     <ReferencedProject name="b" projectLocationURI="b.tpd"/>
-        <ReferencedProject name="f" projectLocationURI="f.tpd"/>
+    <ReferencedProject name="f" projectLocationURI="f.tpd"/>
   </ReferencedProjects>
   <Folders>
     <FolderResource projectRelativePath="../source_files" relativeURI="../source_files"/>

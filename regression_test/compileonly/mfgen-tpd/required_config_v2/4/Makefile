@@ -26,7 +26,7 @@ endif
 #            |
 #            b<---<
 #         c:1|    |
-#            c    |b:1
+#            c    |d:Default=>b:1
 #    c:1=>d:1|    |
 #            d>--->
 #Result will be: a:Default, b:Default, c:1, d:1

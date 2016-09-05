@@ -22,14 +22,14 @@ endif
 # then fail on every subsequent invocation until a 'make clean' is done. 
 
 # Hierarchy
-#            a--->e-------->
-#            |    |        |
-#            |    |        |
-#            b<---<---<    |
-#            |    |   |    |f:1
-#            c    |   |b:2 |
-#            |    |   |    |
-#            d>--->   <----f
+#            a--->e------------->
+#            |    |             |
+#            |    |             |
+#            b<---<---<         |
+#            |    |   |         |f:1
+#            c    |   |f:1=>b:2 |
+#            |    |   |         |
+#            d>--->   <---------f
 #              b:1
 #
 #Result will be: Error
