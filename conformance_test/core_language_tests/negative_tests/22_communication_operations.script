@@ -1,0 +1,5611 @@
+.******************************************************************************
+.* Copyright (c) 2000-2016 Ericsson Telecom AB
+.* All rights reserved. This program and the accompanying materials
+.* are made available under the terms of the Eclipse Public License v1.0
+.* which accompanies this distribution, and is available at
+.* http://www.eclipse.org/legal/epl-v10.html
+.*
+.* Contributors:
+.*   Adrien Kirjak – initial implementation
+.*
+.******************************************************************************/
+text.
+:lang eng.
+.*
+:docname.Test Description
+:docno.xz/152 91-CRL 113 200 Uen
+:rev.PA1
+:date.2016-04-04
+.*
+:prep.ETH/XZ EADRKIR
+:subresp.EADRKIR
+:appr.ETH/XZ (Elemer Lelik)
+:checked.
+.*
+:title.ETSI TTCN3 Negative Conformance Test
+:contents level=3.
+.*---------------------------------------------------------------------*
+:h1.PREREQUISITES AND PREPARATIONS
+.*---------------------------------------------------------------------*	
+.*---------------------------------------------------------------------*
+:h2.Scope of the Test Object
+.*---------------------------------------------------------------------*
+:xmp tab=1 nokeep.
+This TD contains negative tests from ETSI TTCN3 Conformance Test's 22_communication_operations folder. 
+
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h2.Test Tools
+.*---------------------------------------------------------------------*
+:p.:us.Software Tools:eus.
+:xmp tab=2 nokeep.
+
+	SAtester.pl
+
+:exmp.
+:np.
+
+.*---------------------------------------------------------------------*
+:h1.REQUIREMENT-BASED TESTS
+.*---------------------------------------------------------------------*
+.*---------------------------------------------------------------------*
+:h2. 2202_message_based_communication folder
+.*---------------------------------------------------------------------*
+*---------------------------------------------------------------------*
+:h3. NegSem_220201_SendOperation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles message sending operations >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220201_SendOperation_001 NegSem_220201_SendOperation_001.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.1, Ensure that the IUT correctly handles message sending operations 
+ ** @verdict  pass reject
+ ***************************************************/
+
+module NegSem_220201_SendOperation_001 { 
+
+	type enumerated EnumeratedType {e_black, e_white};
+
+	type record RecordType { 
+	 	integer  a optional, 
+	 	integer  b optional, 
+	 	boolean  c 
+	} 
+
+	type set SetType { 
+	 	integer  a optional, 
+	 	integer  b optional, 
+	 	boolean  c 
+	} 
+
+	type record length (1..2) of integer IntegerList;
+
+	type set length (1..2) of integer IntegerUList;
+
+	type union UnionType { 
+ 	 	integer  a, 
+ 	 	EnumeratedType  b, 
+ 	 	boolean  c 
+	} 
+
+	type record MessageType {
+	  	integer  		field1, 
+	  	charstring  	field2, 
+	  	boolean  		field3, 
+	  	integer  		field4[4],
+	  	EnumeratedType field5,
+	  	RecordType		field6,
+	  	SetType		field7,
+	  	UnionType		field8,
+	  	IntegerList	field9,
+	  	IntegerUList	field10
+	}
+
+    type port loopbackPort message {
+	  	inout MessageType
+	} with {extension "internal"}
+	
+
+	type component GeneralComp {	    	    
+	  	port loopbackPort messagePort
+	}	
+
+	testcase TC_NegSem_220201_SendOperation_001() runs on GeneralComp {
+
+    	var MessageType v_testMessage;
+
+		template MessageType mw_matchingTemplate:= 
+		{  
+		  	field1 := 1,
+		  	field2 := "test string", 
+		  	field3 := true, 
+		  	field4 := {1,2,3,4},
+		  	field5 := e_black,
+		  	field6 := {a:=1,b:=2,c:=true}, 
+		  	field7 := {a:=1,b:=2,c:=true}, 
+		  	field8 := {a:=1},
+		  	field9 := {1},
+		  	field10 := {1,2}
+		 } 
+
+		 template MessageType mw_sendingTemplate:= 
+		 {  
+		  	field1 := 1,
+		  	field2 := "test string", 
+		  	field3 := true, 
+		  	field4 := {1,2,3,4},
+		  	field5 := e_black,
+		  	field6 := {a:=*,b:=2,c:=true}, 
+		  	field7 := {a:=1,b:=*,c:=true}, 
+		  	field8 := {a:=1},
+		  	field9 := {1},
+		  	field10 := {1,2}
+		 } 
+
+		connect(self:messagePort, self:messagePort);
+
+	 	messagePort.send(mw_sendingTemplate);  //can only send specific values
+
+		alt {
+		 	[] messagePort.receive(mw_matchingTemplate) {
+		    	setverdict(pass);
+		 	}
+		 	[] messagePort.receive {
+		    	setverdict(fail);
+		 	}
+		}
+	}
+
+	control{
+		execute(TC_NegSem_220201_SendOperation_001());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 2>
+error: A specific value was expected instead of any or omit
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220201_SendOperation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles message sending operations  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220201_SendOperation_002 NegSem_220201_SendOperation_002.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.1, Ensure that the IUT correctly handles message sending operations 
+ ** @verdict  pass reject
+ ***************************************************/
+
+module NegSem_220201_SendOperation_002 { 
+
+	type enumerated EnumeratedType {e_black, e_white};
+
+	type record RecordType { 
+ 	 	integer  a optional, 
+ 	 	integer  b optional, 
+ 	 	boolean  c 
+	} 
+
+	type set SetType { 
+ 	 	integer  a optional, 
+ 	 	integer  b optional, 
+ 	 	boolean  c 
+	} 
+
+	type record length (1..2) of integer IntegerList;
+
+	type set length (1..2) of integer IntegerUList;
+
+	type union UnionType { 
+ 	 	integer  a, 
+ 	 	EnumeratedType  b, 
+ 	 	boolean  c 
+	} 
+
+	type record MessageType {
+  	 	integer  		field1, 
+  	 	charstring  	field2, 
+  	 	boolean  		field3, 
+  	 	integer  		field4[4],
+  	 	EnumeratedType field5,
+  	 	RecordType		field6,
+  	 	SetType		field7,
+  	 	UnionType		field8,
+  	 	IntegerList	field9,
+  	 	IntegerUList	field10
+	}
+
+    type port loopbackPort message {
+	  	inout MessageType
+	} with {extension "internal"}
+	
+
+	type component GeneralComp {	    	    
+	  	port loopbackPort messagePort
+	}	
+
+	testcase TC_NegSem_220201_SendOperation_002() runs on GeneralComp {
+
+    	var MessageType v_testMessage;
+
+ 		template MessageType mw_matchingTemplate:= 
+ 		{  
+  			field1 := 1,
+  			field2 := "test string", 
+  			field3 := true, 
+  			field4 := {1,2,3,4},
+  			field5 := e_black,
+  			field6 := {a:=1,b:=2,c:=true}, 
+  			field7 := {a:=1,b:=2,c:=true}, 
+  			field8 := {a:=1},
+  			field9 := {1},
+  			field10 := {1,2}
+ 		} 
+
+		template MessageType mw_sendingTemplate:= 
+		{  
+		  	field1 := 1,
+		  	field2 := "test string", 
+		  	field3 := true, 
+		  	field4 := {1,2,3,4},
+		  	field5 := e_black,
+		  	field6 := {a:=?,b:=2,c:=true}, 
+		  	field7 := {a:=1,b:=?,c:=true}, 
+		  	field8 := {a:=1},
+		  	field9 := {1},
+		  	field10 := {1,2}
+		} 
+
+		connect(self:messagePort, self:messagePort);
+
+ 		messagePort.send(mw_sendingTemplate);  //can only send specific values
+
+    	alt {
+     		[] messagePort.receive(mw_matchingTemplate) {
+        		setverdict(pass);
+     		}
+     		[] messagePort.receive {
+        		setverdict(fail);
+     		}
+    	}	
+	}
+
+	control{
+		execute(TC_NegSem_220201_SendOperation_002());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 2>
+error: A specific value was expected instead of any value
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220201_SendOperation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles message sending operations  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220201_SendOperation_003 NegSem_220201_SendOperation_003.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.1, Ensure that the IUT correctly handles message sending operations 
+ ** @verdict  pass reject
+ ***************************************************/
+
+module NegSem_220201_SendOperation_003 { 
+
+
+    type port loopbackPort message {
+	  	inout integer
+	} with {extension "internal"}
+	
+
+	type component GeneralComp {	    	    
+		port loopbackPort messagePort
+	}	
+
+	testcase TC_NegSem_220201_SendOperation_003() runs on GeneralComp {
+
+		connect(self:messagePort, self:messagePort);
+
+	 	messagePort.send(float:2.0);  //sent type does not match port specification
+
+		alt {
+		 	[] messagePort.receive(2) {
+		    	setverdict(pass);
+		 	}
+		 	[] messagePort.receive {
+		    	setverdict(fail);
+		 	}
+		}
+	}
+
+	control{
+		execute(TC_NegSem_220201_SendOperation_003());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Incompatible explicit type specification: `integer' was expected instead of `float'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220201_SendOperation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles message sending operations  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220201_SendOperation_004 NegSem_220201_SendOperation_004.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.1, Ensure that the IUT correctly handles message sending operations 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_220201_SendOperation_004 {
+ 
+signature p_NegSem_220201_SendOperation_004(in integer p_par1, out integer p_par2, inout integer p_par3) return integer;
+
+	/*template p_NegSem_220201_SendOperation_004 s_baseTemplate := { 
+		p_par1 := -,
+		p_par2 := 4,
+		p_par3 := ?
+	}
+
+	template p_NegSem_220201_SendOperation_004 s_returnTemplate modifies s_baseTemplate := { 
+		p_par3 := 5
+	}
+
+	template p_NegSem_220201_SendOperation_004 s_wrongTemplate modifies s_baseTemplate := { 
+		p_par3 := 3
+	}*/
+
+	template p_NegSem_220201_SendOperation_004 s_callTemplate := { 
+		p_par1 := 1,
+		p_par2 := -,
+		p_par3 := 3
+	}
+
+	type port remotePort procedure {
+		out p_NegSem_220201_SendOperation_004;
+	} with {extension "internal"}
+
+	type component GeneralComp {	    	    
+		  port remotePort PCO;
+	}	
+
+	testcase NegSem_220201_SendOperation_004() runs on GeneralComp {
+
+		//connect(self:PCO,self:PCO);
+	
+		PCO.send(p_NegSem_220201_SendOperation_004:s_callTemplate); 
+	
+		//cannot use send operation on a procedure based port
+	 	/*PCO.send(p_NegSem_220201_SendOperation_004:s_callTemplate, 5.0) {  
+			[] PCO.getreply(p_NegSem_220201_SendOperation_004:s_wrongTemplate value 1) {		
+				setverdict(fail);
+			} 
+			[] PCO.getreply(p_NegSem_220201_SendOperation_004:s_returnTemplate value 2) {		
+				setverdict(fail);
+			} 
+			[] PCO.getreply(p_NegSem_220201_SendOperation_004:s_returnTemplate value 1) {	
+				setverdict(pass);
+			} 
+			[] PCO.catch (timeout) {
+				setverdict(fail);
+			}
+	 	}*/
+	}
+
+	control{
+		execute(NegSem_220201_SendOperation_004());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Message-based operation `send' is not applicable to a procedure-based port of type `@NegSem_220201_SendOperation_004.remotePort'
+<END_RESULT>
+<RESULT COUNT 1>
+error: The type of send parameter is signature `@NegSem_220201_SendOperation_004.p_NegSem_220201_SendOperation_004', which cannot be a message type
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220201_SendOperation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - missing to clause in case of one-to-many connections  >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220201_SendOperation_005 NegSem_220201_SendOperation_005.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.1, missing to clause in case of one-to-many connections
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Unicast, multicast and broadcast communication can be determined by the optional to clause
+// in the send operation.  A to clause can be omitted in case of a one-to-one connection where
+// unicast communication is used and the message receiver is uniquely determined by the test
+// system structure.
+// A to clause shall be present in case of one-to-many connections.
+
+module NegSem_220201_SendOperation_005 {
+	
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f(integer p_expected) runs on GeneralComp
+	{
+        alt {
+            [] p.receive(p_expected) { setverdict(pass); }
+            [] p.receive { setverdict(fail); }
+        }
+	}
+    
+    const integer c_ptcCount := 2;
+	
+    testcase TC_NegSem_220201_SendOperation_005() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptcs[c_ptcCount];
+
+        for (var integer i := 0; i < c_ptcCount; i := i + 1) {
+            v_ptcs[i] := GeneralComp.create;
+            connect(self:p, v_ptcs[i]:p);
+            v_ptcs[i].start(f(0));
+        }
+
+		p.send(0);
+        all component.done;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220201_SendOperation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Port p has more than one active connections. Message can be sent on it only with explicit addressing.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220201_SendOperation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - partially initialized template  >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220201_SendOperation_006 NegSem_220201_SendOperation_006.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.1, partially initialized template
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The TemplateInstance (and all parts of it) shall have a specific value i.e. the use 
+// of matching mechanisms such as AnyValue is not allowed.
+
+module NegSem_220201_SendOperation_006 {
+	
+    type record of integer RoI;    
+    
+	type port P message {
+		inout RoI;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+		
+    testcase TC_NegSem_220201_SendOperation_006() runs on GeneralComp {
+        var template RoI vm_msg := {1, -, 2};
+
+		connect(self:p,self:p);
+
+        p.send(vm_msg);
+        p.receive;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220201_SendOperation_006(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Text encoder: Encoding an unbound integer value.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220201_SendOperation_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - no type prefix in inline template  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220201_SendOperation_007 NegSem_220201_SendOperation_007.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.1, no type prefix in inline template
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// When defining the message in-line, the optional type part shall be used if there is 
+// ambiguity of the type of the message being sent.
+
+
+module NegSem_220201_SendOperation_007 {
+	
+    type record R1 
+    {
+        integer field1,
+        integer field2
+    }
+    
+    type record of integer RoI;    
+    
+	type port P message {
+		inout R1, RoI;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+    testcase TC_NegSem_220201_SendOperation_007() runs on GeneralComp {
+
+		connect(self:p,self:p);
+
+        p.send({1, 2});
+        p.receive;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220201_SendOperation_007(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Cannot determine the type of the outgoing message
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220201_SendOperation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component in the to clause of send operation  >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220201_SendOperation_010 NegSem_220201_SendOperation_010.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.1, null component in the to clause of send operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220201_SendOperation_010 {
+	
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+    testcase TC_NegSem_220201_SendOperation_010() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_comp := null;
+        connect(self:p, v_comp:p);
+		
+		p.send(0) to v_comp;
+        p.receive(integer:?);
+
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220201_SendOperation_010(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220201_SendOperation_011 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - send operation on disconnected and unmapped ports  >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220201_SendOperation_011 NegSem_220201_SendOperation_011.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.1, send operation on disconnected and unmapped ports
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Applying a send operation to an unmapped or disconnected port shall cause a test case 
+// error.
+
+module NegSem_220201_SendOperation_011 {
+	
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+    testcase TC_NegSem_220201_SendOperation_011() runs on GeneralComp system GeneralComp {
+		p.send(0);
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220201_SendOperation_011(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Port p has neither connections nor mappings. Message cannot be sent on it.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles message receiving operations  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_001 NegSem_220202_ReceiveOperation_001.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, Ensure that the IUT correctly handles message receiving operations 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_220202_ReceiveOperation_001 {
+ 
+signature p_NegSem_220202_ReceiveOperation_001(in integer p_par1, out integer p_par2, inout integer p_par3) return integer;
+
+	template p_NegSem_220202_ReceiveOperation_001 s_baseTemplate := { 
+		p_par1 := -,
+		p_par2 := 4,
+		p_par3 := ?
+	}
+
+	template p_NegSem_220202_ReceiveOperation_001 s_returnTemplate modifies s_baseTemplate := { 
+		p_par3 := 5
+	}
+
+	/*template p_NegSem_220202_ReceiveOperation_001 s_wrongTemplate modifies s_baseTemplate := { 
+		p_par3 := 3
+	}
+
+	template p_NegSem_220202_ReceiveOperation_001 s_callTemplate := { 
+		p_par1 := 1,
+		p_par2 := -,
+		p_par3 := 3
+	}*/
+
+    type port remotePort procedure {
+    	out p_NegSem_220202_ReceiveOperation_001;
+	} with {extension "internal"}
+
+	type component GeneralComp {	    	    
+	  	port remotePort PCO;
+	}	
+
+	testcase NegSem_220202_ReceiveOperation_001() runs on GeneralComp {
+
+		PCO.receive(s_returnTemplate);
+	
+ 	/*	PCO.call(p_NegSem_220202_ReceiveOperation_001:s_callTemplate, 5.0) {
+			[] PCO.receive(p_NegSem_220202_ReceiveOperation_001:s_wrongTemplate value 1) {	 
+			//cannot receive from procedure based port	
+				setverdict(fail);
+			} 
+			[] PCO.receive(p_NegSem_220202_ReceiveOperation_001:s_returnTemplate value 2) {		
+				setverdict(fail);
+			} 
+			[] PCO.receive(p_NegSem_220202_ReceiveOperation_001:s_returnTemplate value 1) {	
+				setverdict(pass);
+			} 
+			[] PCO.catch (timeout) {
+				setverdict(fail);
+			}
+ 		}*/
+	}
+
+	control{
+		execute(NegSem_220202_ReceiveOperation_001());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Message-based operation `receive' is not applicable to a procedure-based port of type `@NegSem_220202_ReceiveOperation_001.remotePort'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - no type prefix in ambiguous inline template  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_002 NegSem_220202_ReceiveOperation_002.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, no type prefix in ambiguous inline template
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// An optional type field in the matching criteria to the receive operation shall 
+// be used to avoid any ambiguity of the type of the value being received.
+
+module NegSem_220202_ReceiveOperation_002 {
+	
+    type record of integer RoI;
+    type record R {
+        integer field1,
+        integer field2
+    }
+    
+	type port P message {
+		inout R, RoI;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+		
+    testcase TC_NegSem_220202_ReceiveOperation_002() runs on GeneralComp {
+
+		connect(self:p, self:p);
+
+        p.send(R:{1, 2});
+        alt {
+            [] p.receive({?, 2}) { setverdict(pass); } // error (ambiguous type)
+            [] p.receive { setverdict(pass); }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Cannot determine the type of the incoming message
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - type mismatch in redirect value assignment  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_003 NegSem_220202_ReceiveOperation_003.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, type mismatch in redirect value assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The variable or formal parameter shall be type compatible with the received message.
+
+module NegSem_220202_ReceiveOperation_003 {
+	    
+	type port P message {
+		inout integer, charstring;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+		
+    testcase TC_NegSem_220202_ReceiveOperation_003() runs on GeneralComp {
+        var charstring v_str;
+
+		connect(self:p, self:p);
+
+        p.send(1);
+        alt {
+            [] p.receive(integer:?) -> value v_str { setverdict(pass); } 
+			// error (type mismatch in redirect assignment)
+            [] p.receive { setverdict(pass); }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch in value redirect: A variable of type `integer' was expected instead of `charstring'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - decoding error in @decoded redirect assignment  >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_006 NegSem_220202_ReceiveOperation_006.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, decoding error in @decoded redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Failure of this decoding shall cause a test case error. 
+
+module NegSem_220202_ReceiveOperation_006 {
+
+	type integer I with { variant "32 bit"};
+
+	type record R {
+        integer id,
+        charstring payload
+    }
+    
+	type port P message {
+		inout R;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+    testcase TC_NegSem_220202_ReceiveOperation_006() runs on GeneralComp {
+        var I v_src := 1953719668;
+		var I v_res ;
+        var charstring v_str := oct2char(bit2oct(encvalue(v_src))) & "abcdefgij";
+
+		connect(self:p, self:p);
+        p.send(R:{ id := 1, payload := v_str });
+
+        alt {
+            [] p.receive(R:?) -> value (v_res := @decoded payload) { 
+                setverdict (pass);
+            }
+            [] p.receive { setverdict(pass); }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_006(), 5.0);
+    }
+
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT>
+Dynamic test case error: Value redirect #1 failed, because the buffer was not empty after decoding. Remaining octets: 9.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - invalid format value in @decoded redirect assignment  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_007 NegSem_220202_ReceiveOperation_007.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, invalid format value in @decoded redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220202_ReceiveOperation_007 {
+
+	type integer I with { variant "32 bit"};
+
+	type record R {
+        integer id,
+        universal charstring payload
+    }
+    
+	type port P message {
+		inout R;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+    testcase TC_NegSem_220202_ReceiveOperation_007() runs on GeneralComp {
+        var I v_src := 1953719668;
+		var I v_res;
+        var universal charstring v_str := encvalue_unichar(v_src);
+
+		connect(self:p, self:p);
+        p.send(R:{ id := 1, payload := v_str });
+
+        alt {
+            [] p.receive(R:?) -> value (v_res := @decoded("proprietary") payload) { 
+                setverdict (pass);
+            }
+            [] p.receive { setverdict(pass); }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_007(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT>
+error: 'proprietary' is not a valid encoding format
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_008 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - value of wrong type in @decoded redirect assignment  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_008 NegSem_220202_ReceiveOperation_008.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, value of wrong type in @decoded redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220202_ReceiveOperation_008 {
+
+	type integer I with { variant "32 bit"};
+
+	type record R {
+        integer id,
+        universal charstring payload
+    }
+    
+	type port P message {
+		inout R;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+    testcase TC_NegSem_220202_ReceiveOperation_008() runs on GeneralComp {
+        var I v_src := 1953719668;
+		var I v_res;
+        var universal charstring v_str := encvalue_unichar(v_src);
+
+		connect(self:p, self:p);
+        p.send(R:{ id := 1, payload := v_str });
+
+        alt {
+            [] p.receive(R:?) -> value (v_res := @decoded(v_src) payload) { 
+                setverdict (pass);
+            }
+            [] p.receive { setverdict(pass); }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_008(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT>
+error: Type mismatch: a value of type `charstring' was expected instead of `integer'  
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_009 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - value of wrong type in @decoded redirect assignment  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_009 NegSem_220202_ReceiveOperation_009.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, encoding parameter of @decoded redirect assignment applied to incorrect type
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// In case the referenced field is not a universal charstring, the optional
+// parameter shall not be present.
+
+module NegSem_220202_ReceiveOperation_009 {
+
+	type charstring CS with { variant ""};
+
+	type record R {
+        integer id,
+        octetstring payload
+    }
+    
+	type port P message {
+		inout R;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+    testcase TC_NegSem_220202_ReceiveOperation_009() runs on GeneralComp {
+        var CS v_src := "abc";
+		var CS v_res;
+        var octetstring v_os := bit2oct(encvalue(v_src));
+
+		connect(self:p, self:p);
+        p.send(R:{ id := 1, payload := v_os });
+
+        alt {
+            [] p.receive(R:?) -> value (v_res := @decoded("UTF-8") payload) { 
+                setverdict (pass);
+            }
+            [] p.receive { setverdict(pass); }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_009(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT>
+error: The encoding format parameter for the '@decoded' modifier is only available to value redirects of universal charstrings  
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - attempting to store component name in redirect assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_010 NegSem_220202_ReceiveOperation_010.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, attempting to store component name in redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// When the message is received on a connected port, only the component reference is 
+// stored in the following the sender keyword, but the test system shall internally 
+// store the component name too, if any (to be used in logging).
+
+module NegSem_220202_ReceiveOperation_010 {
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_010() runs on GeneralComp system GeneralComp {
+        var charstring v_name;
+        connect(self:p, self:p);
+        p.send(10);
+        p.receive(integer:?) -> sender v_name;
+        if (v_name == "MTC") { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_010(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type of the variable should be a component type instead of `charstring'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_011 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - attempting to receive a type missing from the port list >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_011 NegSem_220202_ReceiveOperation_011.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, attempting to receive a type missing from the port list
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The receive operation shall only be used on message-based ports and the type of the 
+// value to be received shall be included in the list of incoming types of the port type 
+// definition.
+
+
+module NegSem_220202_ReceiveOperation_011 {
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_011() runs on GeneralComp {
+        var integer v_index;
+
+		connect(self:p, self:p);
+        p.send(10);
+
+        alt {
+            [] p.receive(charstring:?) { setverdict(pass); }
+            [] any port.receive { setverdict(pass); }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_011(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Incompatible explicit type specification: `integer' was expected instead of `charstring'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_012 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - value redirect assignment in receive any message statement >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_012 NegSem_220202_ReceiveOperation_012.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, value redirect assignment in receive any message statement
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// AddressRef for retrieving the sending entity shall be of type address, component or 
+// of the type provided in the address declaration of the port type of the port instance 
+// referenced in the receive operation.
+
+module NegSem_220202_ReceiveOperation_012 {
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_012() runs on GeneralComp {
+        var integer v_val;
+
+		connect(self:p, self:p);
+        p.send(10);
+
+        p.receive -> value v_val;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_012(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Value redirect cannot be used without receive parameter
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_014 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - type mismatch in sender redirect assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_014 NegSem_220202_ReceiveOperation_014.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, type mismatch in sender redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// AddressRef for retrieving the sending entity shall be of type address, component or 
+// of the type provided in the address declaration of the port type of the port instance 
+// referenced in the receive operation.
+
+module NegSem_220202_ReceiveOperation_014 {
+
+	type port P message {
+		inout integer;
+       // address integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_014() runs on GeneralComp {
+        var charstring v_addr;
+		connect(self:p, self:p);
+        p.send(10);
+        p.receive -> sender v_addr;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_014(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type of the variable should be a component type instead of `charstring'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_015 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component reference in from clause of receive operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_015 NegSem_220202_ReceiveOperation_015.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, null component reference in from clause of receive operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220202_ReceiveOperation_015 {
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_015() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_comp := null;
+        connect(self:p, v_comp:p);
+        p.send(10);
+        alt {
+            [] p.receive from v_comp {}
+            [] p.receive {}
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_015(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_022 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - incompatible from and sender clause  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_022 NegSem_220202_ReceiveOperation_022.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, incompatible from and sender clause 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the receive operation contains both from and sender clause, the variable or parameter
+// referenced in the sender clause shall be type compatible with the template in the from 
+// clause.
+
+module NegSem_220202_ReceiveOperation_022 {
+
+    type integer address;
+    
+    type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_022() runs on GeneralComp {
+        var address v_addr;
+
+		connect(self:p, self:p);
+        p.send(100);
+        alt {
+            [] p.receive(integer:?) from GeneralComp:? -> sender v_addr { }
+            [] p.receive {}
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_022(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type of the variable should be a component type instead of `integer'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles message trigger operations >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_001 NegSem_220203_TriggerOperation_001.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, Ensure that the IUT correctly handles message trigger operations 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_220203_TriggerOperation_001 {
+ 
+signature p_NegSem_220203_TriggerOperation_001(in integer p_par1, out integer p_par2, inout integer p_par3) return integer;
+
+	template p_NegSem_220203_TriggerOperation_001 s_baseTemplate := { 
+		p_par1 := -,
+		p_par2 := 4,
+		p_par3 := ?
+	}
+
+	/*template p_NegSem_220203_TriggerOperation_001 s_returnTemplate modifies s_baseTemplate := { 
+		p_par3 := 5
+	}*/
+
+	template p_NegSem_220203_TriggerOperation_001 s_wrongTemplate modifies s_baseTemplate := { 
+		p_par3 := 3
+	}
+
+	/*template p_NegSem_220203_TriggerOperation_001 s_callTemplate := { 
+		p_par1 := 1,
+		p_par2 := -,
+		p_par3 := 3
+	}*/
+
+    type port remotePort procedure {
+    	out p_NegSem_220203_TriggerOperation_001;
+	}
+
+	type component GeneralComp {	    	    
+	  	port remotePort PCO;
+	}	
+
+	testcase NegSem_220203_TriggerOperation_001() runs on GeneralComp {
+
+		PCO.trigger(p_NegSem_220203_TriggerOperation_001:s_wrongTemplate);
+	
+ 		/*PCO.call(p_NegSem_220203_TriggerOperation_001:s_callTemplate, 5.0) {
+	
+			[] PCO.trigger(p_NegSem_220203_TriggerOperation_001:s_wrongTemplate value 1) {	 
+				//cannot trigger from procedure based port	
+				setverdict(fail);
+			} 
+			[] PCO.trigger(p_NegSem_220203_TriggerOperation_001:s_returnTemplate value 2) {		
+				setverdict(fail);
+			} 
+			[] PCO.trigger(p_NegSem_220203_TriggerOperation_001:s_returnTemplate value 1) {	
+				setverdict(pass);
+			} 
+			[] PCO.catch (timeout) {
+				setverdict(fail);
+			}
+ 		}*/
+	}
+
+	control{
+		execute(NegSem_220203_TriggerOperation_001());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Message-based operation `trigger' is not applicable to a procedure-based port of type `@NegSem_220203_TriggerOperation_001.remotePort'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - no type prefix in ambiguous inline template >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_002 NegSem_220203_TriggerOperation_002.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, no type prefix in ambiguous inline template
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The matching criteria as defined in clause 22.2.2 apply also to the trigger operation.
+// An optional type field in the matching criteria to the [trigger] operation shall 
+// be used to avoid any ambiguity of the type of the value being received.
+
+module NegSem_220203_TriggerOperation_002 {
+	
+    type record of integer RoI;
+    type record R {
+        integer field1,
+        integer field2
+    }
+    
+	type port P message {
+		inout R, RoI;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+		
+    testcase TC_NegSem_220203_TriggerOperation_002() runs on GeneralComp {
+
+		connect(self:p, self:p);
+        p.send(R:{1, 2});
+
+        alt {
+            [] p.trigger({?, 2}) { setverdict(pass); } // error (ambiguous type)
+            [else] { setverdict(pass); }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Cannot determine the type of the incoming message
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - type mismatch in redirect value assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_003 NegSem_220203_TriggerOperation_003.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, type mismatch in redirect value assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Rules in clause 22.2.2 shall apply.
+// The variable or formal parameter shall be type compatible with the received message.
+
+module NegSem_220203_TriggerOperation_003 {
+	    
+	type port P message {
+		inout integer, charstring;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+		
+    testcase TC_NegSem_220203_TriggerOperation_003() runs on GeneralComp {
+        var charstring v_str;
+
+		connect(self:p, self:p);
+        p.send(1);
+        alt {
+            [] p.trigger(integer:?) -> value v_str { setverdict(pass); } 
+			// error (type mismatch in redirect assignment)
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch in value redirect: A variable of type `integer' was expected instead of `charstring'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - decoding error in @decoded redirect assignment >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_006 NegSem_220203_TriggerOperation_006.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, decoding error in @decoded redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Rules in clause 22.2.2 shall apply.
+// Failure of this decoding shall cause a test case error. 
+
+module NegSem_220203_TriggerOperation_006 {
+
+	type integer I with { variant "32 bit"};
+
+	type record R {
+        integer id,
+        charstring payload
+    }
+    
+	type port P message {
+		inout R;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+    testcase TC_NegSem_220203_TriggerOperation_006() runs on GeneralComp {
+        var I v_src := 1953719668;
+		var I v_res;
+        var charstring v_str := oct2char(bit2oct(encvalue(v_src))) & "abcdefgij";
+
+		connect(self:p, self:p);
+        p.send(R:{ id := 1, payload := v_str });
+        alt {
+            [] p.trigger(R:?) -> value (v_res := @decoded payload) { 
+                setverdict (pass);
+            }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_006(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Value redirect #1 failed, because the buffer was not empty after decoding. Remaining octets: 9.
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - invalid format value in @decoded redirect assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_007 NegSem_220203_TriggerOperation_007.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, invalid format value in @decoded redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Rules in clause 22.2.2 shall apply.
+// Any other value shall cause an error.
+
+module NegSem_220203_TriggerOperation_007 {
+
+	type integer I with { variant "32 bit"};
+
+	type record R {
+        integer id,
+        universal charstring payload
+    }
+    
+	type port P message {
+		inout R;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+    testcase TC_NegSem_220203_TriggerOperation_007() runs on GeneralComp {
+        var I v_src := 1953719668;
+		var I v_res;
+        var universal charstring v_str := encvalue_unichar(v_src);
+
+		connect(self:p, self:p);
+        p.send(R:{ id := 1, payload := v_str });
+        alt {
+            [] p.trigger(R:?) -> value (v_res := @decoded("proprietary") payload) { 
+                setverdict (pass);
+            }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_007(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: 'proprietary' is not a valid encoding format
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_008 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - value of wrong type in @decoded redirect assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_008 NegSem_220203_TriggerOperation_008.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, value of wrong type in @decoded redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Rules in clause 22.2.2 shall apply.
+// Any other value shall cause an error.
+
+module NegSem_220203_TriggerOperation_008 {
+
+	type integer I with { variant "32 bit"};
+
+	type record R {
+        integer id,
+        universal charstring payload
+    }
+    
+	type port P message {
+		inout R;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+    testcase TC_NegSem_220203_TriggerOperation_008() runs on GeneralComp {
+        var I v_src := 1953719668;
+		var I v_res;
+        var universal charstring v_str := encvalue_unichar(v_src);
+
+		connect(self:p, self:p);
+        p.send(R:{ id := 1, payload := v_str });
+        alt {
+            [] p.trigger(R:?) -> value (v_res := @decoded(v_src) payload) { 
+                setverdict (pass);
+            }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_008(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: Type mismatch: a value of type `charstring' was expected instead of `integer'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_009 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - encoding parameter of @decoded redirect assignment applied to incorrect type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_009 NegSem_220203_TriggerOperation_009.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, encoding parameter of @decoded redirect assignment applied to incorrect type
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Rules in clause 22.2.2 shall apply.
+// In case the referenced field is not a universal charstring, the optional
+// parameter shall not be present.
+
+module NegSem_220203_TriggerOperation_009 {
+
+	type charstring CS with { variant ""};
+
+	type record R {
+        integer id,
+        octetstring payload
+    }
+    
+	type port P message {
+		inout R;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+    testcase TC_NegSem_220203_TriggerOperation_009() runs on GeneralComp {
+        var CS v_src := "abc";
+		var CS v_res;
+        var octetstring v_os := bit2oct(encvalue(v_src));
+
+		connect(self:p, self:p);
+        p.send(R:{ id := 1, payload := v_os });
+        alt {
+            [] p.trigger(R:?) -> value (v_res := @decoded("UTF-8") payload) { 
+                setverdict (pass);
+            }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_009(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: The encoding format parameter for the '@decoded' modifier is only available to value redirects of universal charstrings
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - attempting to store component name in redirect assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_010 NegSem_220203_TriggerOperation_010.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, attempting to store component name in redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Rules in clause 22.2.2 shall apply.
+// When the message is received on a connected port, only the component reference is 
+// stored in the following the sender keyword, but the test system shall internally 
+// store the component name too, if any (to be used in logging).
+
+module NegSem_220203_TriggerOperation_010 {
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_010() runs on GeneralComp system GeneralComp {
+        var charstring v_name;
+
+        connect(self:p, self:p);
+        p.send(10);
+        p.trigger(integer:?) -> sender v_name;
+
+        if (v_name == "MTC") { setverdict(pass); }
+        else { setverdict(fail); }
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_010(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type of the variable should be a component type instead of `charstring'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_011 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - attempting to receive a type missing from the port list >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_011 NegSem_220203_TriggerOperation_011.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, attempting to receive a type missing from the port list
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The trigger operation shall only be used on message-based ports and the type of the 
+// value to be received shall be included in the list of incoming types of the port type 
+// definition.
+
+
+module NegSem_220203_TriggerOperation_011 {
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_011() runs on GeneralComp {
+        var integer v_index;
+
+		connect(self:p, self:p);
+        p.send(10);
+        alt {
+            [] p.trigger(charstring:?) { setverdict(pass); }
+            [else] { setverdict(pass); }
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_011(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Incompatible explicit type specification: `integer' was expected instead of `charstring'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_012 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - value redirect assignment in receive any message statement >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_012 NegSem_220203_TriggerOperation_012.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, value redirect assignment in receive any message statement
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// AddressRef for retrieving the sending entity shall be of type address, component or 
+// of the type provided in the address declaration of the port type of the port instance 
+// referenced in the receive operation.
+
+module NegSem_220203_TriggerOperation_012 {
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_012() runs on GeneralComp {
+        var integer v_val;
+
+		connect(self:p, self:p);
+        p.send(10);
+        p.trigger -> value v_val;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_012(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Value redirect cannot be used without receive parameter
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_014 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - type mismatch in sender redirect assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_014 NegSem_220203_TriggerOperation_014.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, type mismatch in sender redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// AddressRef for retrieving the sending entity shall be of type address, component or 
+// of the type provided in the address declaration of the port type of the port instance 
+// referenced in the receive operation.
+
+
+module NegSem_220203_TriggerOperation_014 {
+
+	type port P message {
+		inout integer;
+        //address integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_014() runs on GeneralComp {
+        var charstring v_addr;
+
+		connect(self:p, self:p);
+        p.send(10);
+        p.trigger -> sender v_addr;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_014(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type of the variable should be a component type instead of `charstring'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_015 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component reference in from clause of trigger operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_015 NegSem_220203_TriggerOperation_015.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, null component reference in from clause of trigger operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220203_TriggerOperation_015 {
+
+	type port P message {
+		inout integer;
+        //address integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_015() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_comp := null;
+
+        connect(self:p, v_comp:p);
+        p.send(10);
+        alt {
+            [] p.trigger from v_comp {}
+            [else] {}
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_015(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_022 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - incompatible from and sender clause  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_022 NegSem_220203_TriggerOperation_022.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, incompatible from and sender clause 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the trigger operation contains both from and sender clause, the variable or parameter
+// referenced in the sender clause shall be type compatible with the template in the from 
+// clause.
+
+module NegSem_220203_TriggerOperation_022 {
+
+    type integer address;
+    
+    type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_022() runs on GeneralComp {
+        var address v_addr;
+
+		connect(self:p, self:p);
+        p.send(100);
+        alt {
+            [] p.trigger(integer:?) from GeneralComp:? -> sender v_addr { }
+            [else] {}
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_022(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type of the variable should be a component type instead of `integer'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h2. 2203_procedure_based_communication folder
+.*---------------------------------------------------------------------*
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles procedure call operations  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_001 NegSem_220301_CallOperation_001.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, Ensure that the IUT correctly handles procedure call operations 
+ ** @verdict  pass reject
+ ***************************************************/
+
+module NegSem_220301_CallOperation_001 {
+
+    type port loopbackPort message {
+        inout integer
+    } with {extension "internal"}
+	
+
+    type component GeneralComp {
+        port loopbackPort messagePort
+    }
+
+    testcase TC_NegSem_220301_CallOperation_001() runs on GeneralComp {
+
+		connect(self:messagePort, self:messagePort);
+
+        messagePort.call(2);   //cannot use call on a message based port
+
+        alt {
+            [] messagePort.receive {
+                setverdict(pass);
+            }
+            [] messagePort.receive {
+                setverdict(fail);
+            }
+        }
+    }
+
+    control{
+        execute(TC_NegSem_220301_CallOperation_001());
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Procedure-based operation `call' is not applicable to a message-based port of type `@NegSem_220301_CallOperation_001.loopbackPort'
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly procedure calls >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220301_CallOperation_002 NegSem_220301_CallOperation_002.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, Ensure that the IUT correctly procedure calls
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_220301_CallOperation_002 {
+
+    /**
+    * @desc testing of inline return template for remote procedure call
+    * @param p_par1 only input parameter
+    * @param p_par2 must have value 4 at return
+    * @param p_par3 must have value 5 at return
+    * @return must return value 1
+    */
+    signature p_NegSem_220301_CallOperation_002(in integer p_par1, out integer p_par2, inout integer p_par3) return integer;
+
+    template p_NegSem_220301_CallOperation_002 s_returnTemplate := {
+        p_par1 := -,
+        p_par2 := 4,
+        p_par3 := 5
+    }
+
+    template p_NegSem_220301_CallOperation_002 s_wrongTemplate := {
+        p_par1 := -,
+        p_par2 := 2,
+        p_par3 := 3
+    }
+
+    template p_NegSem_220301_CallOperation_002 s_callTemplate := {
+        p_par1 := 1,
+        p_par2 := -,
+        p_par3 := 3
+    }
+
+    type port remotePort procedure {
+        inout p_NegSem_220301_CallOperation_002;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port remotePort PCO;
+    }
+
+    function f_ClientQuery() runs on GeneralComp {
+	  	var integer v_zero:=0;
+	  	var integer v_one:=1;
+	
+        //nowait cannot be used in this construct with timeout checking
+        PCO.call(p_NegSem_220301_CallOperation_002:s_callTemplate, nowait) { 
+	
+            [] PCO.getreply(p_NegSem_220301_CallOperation_002:s_wrongTemplate value 1) {
+                setverdict(fail);
+            }
+            [] PCO.getreply(p_NegSem_220301_CallOperation_002:s_returnTemplate value 2) {
+                setverdict(fail);
+            }
+            [] PCO.getreply(p_NegSem_220301_CallOperation_002:s_returnTemplate value 1) {	
+                setverdict(pass);
+            }
+            [] PCO.catch (timeout) {
+                setverdict(fail);
+            }
+        }
+    }
+
+    function f_ServerResponses() runs on GeneralComp {
+	
+		var integer v_par1;
+		var integer v_par3;
+		timer t_timeout:=30.0;
+		
+		template p_NegSem_220301_CallOperation_002 s_acceptTemplate := {
+        	p_par1 := ?,
+        	p_par2 := ?,
+        	p_par3 := ?
+    	};
+
+		
+		t_timeout.start;
+	
+	 	alt {
+      		[] PCO.getcall(p_NegSem_220301_CallOperation_002:s_acceptTemplate) -> param(v_par1, v_par3) 			{
+        		PCO.reply(p_NegSem_220301_CallOperation_002:{p_par1 := -, p_par2 := v_par1+v_par3, p_par3 := v_par1+v_par3+1} value v_par1);  	//procedure return values are sent
+				repeat;
+	  		}
+      		[] t_timeout.timeout {
+        		setverdict(fail);
+      		}
+	 	}
+	 
+    }
+
+	
+	testcase TC_NegSem_220301_CallOperation_002() runs on GeneralComp system GeneralComp {
+       	var GeneralComp server := GeneralComp.create("RemoteProcedure Service");
+       	var GeneralComp client := GeneralComp.create("RemoteProcedure Client");
+       	// map the PTCs to the system port
+       	connect(server:PCO, client:PCO);
+
+       	server.start(f_ServerResponses());
+       	client.start(f_ClientQuery());
+
+       	alt {
+           	[] client.done {
+               	server.stop;
+           	}
+       	}
+
+       	alt {
+           	[] all component.done {}
+       	}
+
+       	disconnect(server:PCO, client:PCO);
+   	}
+
+    control{
+        execute(TC_NegSem_220301_CallOperation_002());
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A call with `nowait' keyword cannot have response and exception handling part
+<END_RESULT>
+<RESULT COUNT 1>
+error: Catching of `timeout' exception is not allowed because the previous `call' operation does not have timer
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220301_CallOperation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component in the to clause of the call operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+
+<MODULE TTCN NegSem_220301_CallOperation_003 NegSem_220301_CallOperation_003.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.1, null component in the to clause of the call operation 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220301_CallOperation_003 {
+
+    signature S();
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+
+    testcase TC_NegSem_220301_CallOperation_003() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC"), v_compRef := null;
+        connect(self:p, v_compRef:p);
+        p.call(S:{}, nowait) to v_compRef;
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220301_CallOperation_003(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that getcall operations are only used on procedure based ports  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_001 NegSem_220302_GetcallOperation_001.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, Ensure that getcall operations are only used on procedure based ports 
+ ** @verdict  pass reject
+ ***************************************************/
+
+module NegSem_220302_GetcallOperation_001 {
+
+    type port loopbackPort message {
+        inout integer
+    } with {extension "internal"}
+	
+    type component GeneralComp {
+        port loopbackPort messagePort
+    }
+
+    testcase TC_NegSem_220302_GetcallOperation_001() runs on GeneralComp {
+
+		connect(self:messagePort, self:messagePort);
+
+        messagePort.send(2);
+
+        alt {
+            [] messagePort.getcall {		//cannot use getcall on a message based port
+                setverdict(pass);
+            }
+            [] messagePort.receive {
+                setverdict(fail);
+            }
+        }
+    }
+
+    control{
+        execute(TC_NegSem_220302_GetcallOperation_001());
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Procedure-based operation `getcall' is not applicable to a message-based port of type `@NegSem_220302_GetcallOperation_001.loopbackPort'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that getcall operation does not allow value assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_002 NegSem_220302_GetcallOperation_002.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, Ensure that getcall operation does not allow value assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_220302_GetcallOperation_002 {
+
+    /**
+    * @desc testing of inline return template for remote procedure call
+    * @param p_par1 only input parameter
+    * @param p_par2 must have value 4 at return
+    * @param p_par3 must have value 5 at return
+    * @return must return value 1
+    */
+    signature p_NegSem_220302_GetcallOperation_002(in integer p_par1, out integer p_par2, inout integer p_par3) return integer;
+
+    template p_NegSem_220302_GetcallOperation_002 s_returnTemplate := {
+        p_par1 := 0, // p_par1 := -, core dump
+        p_par2 := 4,
+        p_par3 := 5
+    }
+
+    template p_NegSem_220302_GetcallOperation_002 s_wrongTemplate := {
+        p_par1 := 0, // p_par1 := -, core dump
+        p_par2 := 2,
+        p_par3 := 3
+    }
+
+    template p_NegSem_220302_GetcallOperation_002 s_callTemplate := {
+        p_par1 := 1,
+        p_par2 := 0, // p_par2 := -, core dump
+        p_par3 := 3
+    }
+
+    type port remotePort procedure {
+        inout p_NegSem_220302_GetcallOperation_002;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port remotePort PCO;
+    } 
+
+    function f_ClientQuery() runs on GeneralComp {
+	  	var integer v_zero:=0;
+	  	var integer v_one:=1;
+	
+        PCO.call(p_NegSem_220302_GetcallOperation_002:s_callTemplate, 5.0) {
+	
+            [] PCO.getreply(p_NegSem_220302_GetcallOperation_002:s_wrongTemplate value 1) {
+                setverdict(fail);
+            }
+            [] PCO.getreply(p_NegSem_220302_GetcallOperation_002:s_returnTemplate value 2) {
+                setverdict(fail);
+            }
+            [v_one>v_zero] PCO.getreply(p_NegSem_220302_GetcallOperation_002:s_returnTemplate value 1) 				{ //check that boolean guard is correctly evaluated
+                setverdict(pass);
+            }
+            [] PCO.catch (timeout) {
+                setverdict(fail);
+            }
+        }
+    }
+
+    function f_ServerResponses() runs on GeneralComp {
+	
+		var integer v_par1;
+		var integer v_par3;
+		var integer v_return;
+		timer t_timeout:=30.0;
+
+ 		template p_NegSem_220302_GetcallOperation_002 s_acceptTemplate := {
+        	p_par1 := ?,
+        	p_par2 := ?,
+        	p_par3 := ?
+    	};
+
+			
+		t_timeout.start;
+	
+		alt {
+     		[] PCO.getcall(p_NegSem_220302_GetcallOperation_001:s_acceptTemplate) -> value v_return { 
+				//not allowed assignment
+      		}
+      		[] t_timeout.timeout {
+      		}
+	 	}	
+	 
+    }
+
+	
+	testcase TC_NegSem_220302_GetcallOperation_002() runs on GeneralComp system GeneralComp {
+       	var GeneralComp server := GeneralComp.create("RemoteProcedure Service");
+       	var GeneralComp client := GeneralComp.create("RemoteProcedure Client");
+       	timer t_wait:=1.0;
+       
+
+       connect(server:PCO, client:PCO);
+
+       server.start(f_ServerResponses());
+       client.start(f_ClientQuery());
+
+       alt {
+           [] client.done {
+             t_wait.start;
+             while(t_wait.running) {	
+				//this gives a chance for server to still test for second getcall match
+             }
+               server.stop;
+           }
+       }
+
+       alt {
+           [] all component.done {}
+       }
+
+       disconnect(server:PCO, client:PCO);
+   }
+
+    control{
+        execute(TC_NegSem_220302_GetcallOperation_002());
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `value': syntax error, unexpected ValueKeyword, expecting ParamKeyword or SenderKeyword
+<END_RESULT>
+<RESULT COUNT 1>
+error: at or before token `testcase': syntax error, unexpected TestcaseKeyword, expecting \$end
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that getcall for any call does not allow param assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_003 NegSem_220302_GetcallOperation_003.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, Ensure that getcall for any call does not allow param assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_220302_GetcallOperation_003 {
+
+    /**
+    * @desc testing of inline return template for remote procedure call
+    * @param p_par1 only input parameter
+    * @param p_par2 must have value 4 at return
+    * @param p_par3 must have value 5 at return
+    * @return must return value 1
+    */
+    signature p_NegSem_220302_GetcallOperation_003(in integer p_par1, out integer p_par2, inout integer p_par3) return integer;
+
+    template p_NegSem_220302_GetcallOperation_003 s_returnTemplate := {
+        p_par1 := 0, // p_par1 := -, core dump
+        p_par2 := 4,
+        p_par3 := 5
+    }
+
+    template p_NegSem_220302_GetcallOperation_003 s_wrongTemplate := {
+        p_par1 := 0, // p_par1 := -, core dump
+        p_par2 := 2,
+        p_par3 := 3
+    }
+
+    template p_NegSem_220302_GetcallOperation_003 s_callTemplate := {
+        p_par1 := 1,
+        p_par2 := 0, // p_par2 := -, core dump
+        p_par3 := 3
+    }
+
+    type port remotePort procedure {
+        inout p_NegSem_220302_GetcallOperation_003;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port remotePort PCO;
+    }
+
+    function f_ClientQuery() runs on GeneralComp {
+	  var integer v_zero:=0;
+	  var integer v_one:=1;
+	
+        PCO.call(p_NegSem_220302_GetcallOperation_003:s_callTemplate, 5.0) {
+	
+            [] PCO.getreply(p_NegSem_220302_GetcallOperation_003:s_wrongTemplate value 1) {
+                setverdict(fail);
+            }
+            [] PCO.getreply(p_NegSem_220302_GetcallOperation_003:s_returnTemplate value 2) {
+                setverdict(fail);
+            }
+            [v_one>v_zero] PCO.getreply(p_NegSem_220302_GetcallOperation_003:s_returnTemplate value 1) {		//check that boolean guard is correctly evaluated
+                setverdict(pass);
+            }
+            [] PCO.catch (timeout) {
+                setverdict(fail);
+            }
+        }
+    }
+
+    function f_ServerResponses() runs on GeneralComp {
+	
+		var integer v_par1;
+		var integer v_par3;
+		timer t_timeout:=30.0;
+
+ 		template p_NegSem_220302_GetcallOperation_003 s_acceptTemplate := {
+        	p_par1 := ?,
+        	p_par2 := ?,
+        	p_par3 := ?
+    	};
+
+			
+		t_timeout.start;
+	
+	 	alt {
+      		[] PCO.getcall -> param(v_par1, v_par3) {  //not allowed param assignment for any call
+      		}
+      		[] t_timeout.timeout {
+      		}
+	 	}
+	 
+    }
+
+	
+	testcase TC_NegSem_220302_GetcallOperation_003() runs on GeneralComp system GeneralComp {
+       	var GeneralComp server := GeneralComp.create("RemoteProcedure Service");
+       	var GeneralComp client := GeneralComp.create("RemoteProcedure Client");
+       	timer t_wait:=1.0;
+       
+       // map the PTCs to the system port
+       connect(server:PCO, client:PCO);
+
+       server.start(f_ServerResponses());
+       client.start(f_ClientQuery());
+
+       alt {
+           [] client.done {
+             t_wait.start;
+             while(t_wait.running) {	
+				//this gives a chance for server to still test for second getcall match
+             }
+               server.stop;
+           }
+       }
+
+       alt {
+           [] all component.done {}
+       }
+
+       disconnect(server:PCO, client:PCO);
+   }
+
+    control{
+        execute(TC_NegSem_220302_GetcallOperation_003());
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Parameter redirect cannot be used without signature template
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_009 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component in the from clause of the getcall operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_009 NegSem_220302_GetcallOperation_009.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, null component in the from clause of the getcall operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220302_GetcallOperation_009 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+        var GeneralComp v_compRef := null;
+		connect(self:p, v_compRef:p);
+
+        alt {
+	        [] p.getcall(S:{}) from v_compRef { setverdict(pass, "first branch");} // error expected
+            [] p.getcall(S:{}) { setverdict(fail, "second branch"); }
+        }
+	}
+	
+    testcase TC_NegSem_220302_GetcallOperation_009() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}, nowait);
+		v_ptc.start(f());
+		v_ptc.done;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_009(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_012 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - decoding error in @decoded redirect assignment >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_012 NegSem_220302_GetcallOperation_012.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, decoding error in @decoded redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Failure of this decoding shall cause a test case error. 
+
+module NegSem_220302_GetcallOperation_012 {
+	signature S(charstring p_par);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_res;        
+        alt {
+            [] p.getcall(S:{ p_par := ?}) -> param (v_res := @decoded p_par) { 
+                setverdict (pass);
+            }
+            [] p.getcall { setverdict(pass); }
+        }        
+    }
+	
+    testcase TC_NegSem_220302_GetcallOperation_012() runs on GeneralComp system GeneralComp {
+        var I v_src := 1953719668;
+        var charstring v_str := oct2char(bit2oct(encvalue(v_src))) & "abcdefgij";
+
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{ p_par := v_str }, nowait);
+
+        v_ptc.done;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_012(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT>
+Dynamic test case error: Parameter redirect failed, because the buffer was not empty after decoding. Remaining octets: 9.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_013 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - invalid format value in @decoded redirect assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_013 NegSem_220302_GetcallOperation_013.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, invalid format value in @decoded redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220302_GetcallOperation_013 {
+	signature S(universal charstring p_par);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_res;        
+        alt {
+            [] p.getcall(S:{ p_par := ?}) -> param (v_res := @decoded("proprietary") p_par) { 
+                setverdict(pass);
+            }
+            [] p.getcall { setverdict(pass); }
+        }        
+    }
+	
+    testcase TC_NegSem_220302_GetcallOperation_013() runs on GeneralComp system GeneralComp {
+        var I v_src := 1953719668;
+        var universal charstring v_str := encvalue_unichar(v_src);
+
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{ p_par := v_str }, nowait);
+        v_ptc.done;
+
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_013(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: 'proprietary' is not a valid encoding format
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_014 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - decoding error in @decoded redirect assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_014 NegSem_220302_GetcallOperation_014.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, value of wrong type in @decoded redirect assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220302_GetcallOperation_014 {
+	signature S(universal charstring p_par);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_res, v_enc := 32;        
+        alt {
+            [] p.getcall(S:{ p_par := ?}) -> param (v_res := @decoded(v_enc) p_par) { 
+                setverdict (pass);
+            }
+            [] p.getcall { setverdict(pass); }
+        }        
+    }
+	
+    testcase TC_NegSem_220302_GetcallOperation_014() runs on GeneralComp system GeneralComp {
+        var I v_src := 1953719668;
+        var universal charstring v_str := encvalue_unichar(v_src);
+
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{ p_par := v_str }, nowait);
+        v_ptc.done;
+
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_014(), 5.0);
+    }
+}  with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: Type mismatch: a value of type `charstring' was expected instead of `integer'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_015 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - encoding parameter of @decoded redirect assignment applied to incorrect type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_015 NegSem_220302_GetcallOperation_015.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, encoding parameter of @decoded redirect assignment applied to incorrect type
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// In case the referenced field is not a universal charstring, the optional
+// parameter shall not be present.
+
+module NegSem_220302_GetcallOperation_015 {
+	signature S(octetstring p_par);
+
+	type charstring CS with { variant ""};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	} 
+    
+    function f_server() runs on GeneralComp {
+        var CS v_res;        
+        alt {
+            [] p.getcall(S:{ p_par := ?}) -> param (v_res := @decoded("UTF-8") p_par) { 
+                setverdict(pass);
+            }
+            [] p.getcall { setverdict(pass); }
+        }        
+    }
+	
+    testcase TC_NegSem_220302_GetcallOperation_015() runs on GeneralComp system GeneralComp {
+        var CS v_src := "abc";
+        var octetstring v_os := bit2oct(encvalue(v_src));
+
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{ p_par := v_os }, nowait);
+        v_ptc.done;
+
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_015(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: The encoding format parameter for the '@decoded' modifier is only available to parameter redirects of universal charstrings
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_016 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - incompatible from and sender clause in getcall operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_016 NegSem_220302_GetcallOperation_016.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, incompatible from and sender clause in getcall operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the getcall operation contains both from and sender clause, the variable or parameter 
+// referenced in the sender clause shall be type compatible with the template in the from 
+// clause.
+
+module NegSem_220302_GetcallOperation_016 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+        var integer vc_int;
+		port P p;
+	}
+    
+    type component AltComp {
+		var charstring vc_str;
+        port P px;
+	}
+	
+	function f() runs on GeneralComp {
+        var GeneralComp v_compRef := null;
+        alt {
+	        [] p.getcall(S:{}) from AltComp:? -> sender v_compRef { } // error expected
+            [] p.getcall(S:{}) { }
+        }
+        setverdict (pass);
+	}
+	
+    testcase TC_NegSem_220302_GetcallOperation_016() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}, nowait);
+		v_ptc.start(f());
+		v_ptc.done;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_016(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The types in `from' clause and `sender' redirect are not the same: `@NegSem_220302_GetcallOperation_016.AltComp' was expected instead of `@NegSem_220302_GetcallOperation_016.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220303_ReplyOperation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that reply operations are only used on procedure based ports >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220303_ReplyOperation_001 NegSem_220303_ReplyOperation_001.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.3, Ensure that reply operations are only used on procedure based ports 
+ ** @verdict  pass reject
+ ***************************************************/
+
+module NegSem_220303_ReplyOperation_001 { 
+
+    type port loopbackPort message {
+	  	inout integer
+	} with {extension "internal"}
+	
+
+	type component GeneralComp {	    	    
+	  	port loopbackPort messagePort
+	}	
+
+	testcase TC_NegSem_220303_ReplyOperation_001() runs on GeneralComp {
+
+		connect(self:messagePort, self:messagePort);
+
+ 		messagePort.send(2);  
+
+    	alt {
+     		[] messagePort.receive(2) {	 
+        		messagePort.reply(3);		//cannot use reply on a message based port
+        		setverdict(pass);
+     		}
+     		[] messagePort.receive {
+        		setverdict(fail);
+     		}
+    	}
+	}
+
+	control{
+		execute(TC_NegSem_220303_ReplyOperation_001());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Procedure-based operation `reply' is not applicable to a message-based port of type `@NegSem_220303_ReplyOperation_001.loopbackPort'
+<END_RESULT>
+<RESULT COUNT 1>
+error: The type of parameter is `integer', which is not a signature
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220303_ReplyOperation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component in the to clause of the reply operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220303_ReplyOperation_002 NegSem_220303_ReplyOperation_002.ttcn >
+/***************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.3, null component in the to clause of the reply operation
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220303_ReplyOperation_002 { 
+
+
+    signature S();
+
+    type port P procedure {
+        inout S;
+    } with {extension "internal"}
+
+    type component GeneralComp {
+        port P p;
+    }
+
+    function f_server() runs on GeneralComp {
+        var GeneralComp v_compRef := null;
+		connect(self:p, v_compRef:p);
+        p.getcall(S:{});
+        p.reply(S:{}) to v_compRef;
+    }
+    
+    testcase TC_NegSem_220303_ReplyOperation_002() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create("PTC");        
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+        p.call(S:{}, 1.0) {
+            [] p.getreply(S:{}) { }
+            [] p.catch(timeout) { }
+        }
+        setverdict(pass);
+    }
+
+    control{
+        execute(TC_NegSem_220303_ReplyOperation_002(), 5.0);
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component in the from clause of the getreply operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220304_getreply_operation_006 NegSem_220304_getreply_operation_006.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, null component in the from clause of the getreply operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220304_getreply_operation_006 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+        p.getcall(S:{});
+        p.reply(S:{});
+	}
+	
+    testcase TC_NegSem_220304_getreply_operation_006() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_compRef := null;
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		connect(self:p, v_compRef:p);
+ 
+		v_ptc.start(f());
+		p.call(S:{}) {
+            [] p.getreply(S:{}) from v_compRef {} // error expected
+            [] p.getreply(S:{}) {}
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_006(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component in the multicast list of the from clause of the getreply operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220304_getreply_operation_007 NegSem_220304_getreply_operation_007.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, null component in the multicast list of the from clause of the getreply operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220304_getreply_operation_007 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f() runs on GeneralComp {
+        p.getcall(S:{});
+        p.reply(S:{});
+	}
+	
+    testcase TC_NegSem_220304_getreply_operation_007() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_compRef := null;
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		connect(self:p, v_compRef:p);
+
+		v_ptc.start(f());
+		p.call(S:{}) {
+            [] p.getreply(S:{}) from (mtc, v_compRef) {} // error expected
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_007(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_008 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - applying @decoded to a forbidden parameter field >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_008 NegSem_220304_getreply_operation_008.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, applying @decoded to a forbidden parameter field
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// When assigning individual fields of a reply, encoded parameters can be decoded 
+// prior to assignment using the @decoded modifier. In this case, the referenced 
+// parameter on the right hand sided of the assignment shall be one of the 
+// bitstring, hexstring, octetstring, charstring or universal charstring types. It 
+// shall be decoded into a value of the same type as the variable on the left hand 
+// side of the assignment.
+
+module NegSem_220304_getreply_operation_008 {
+    type record of integer RoI (0..255);
+    
+	signature S(out RoI p_par);
+
+	type integer I with { variant "32 bit" };
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        p.getcall(S:{ p_par := {} });
+        p.reply(S:{ p_par := { 0, 0, 0, 0 } });
+    }
+    
+    testcase TC_NegSem_220304_getreply_operation_008() runs on GeneralComp system GeneralComp {
+        var I v_res;      
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{ p_par := { 0, 0, 0, 0 } }) {
+            [] p.getreply(S: {p_par := ?}) -> param (v_res := @decoded p_par) { 
+                setverdict (pass);
+            }
+            [] p.getreply { setverdict(fail); }
+            
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_008(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: The '@decoded' modifier is only available to parameter redirects of string types.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_009 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - decoding error in @decoded redirect parameter assignment >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220304_getreply_operation_009 NegSem_220304_getreply_operation_009.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, decoding error in @decoded redirect parameter assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Failure of this decoding shall cause a test case error. 
+
+module NegSem_220304_getreply_operation_009 {
+	signature S(out charstring p_par);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_src := 1953719668;
+        var charstring v_str := oct2char(bit2oct(encvalue(v_src))) & "abcdefgij";
+        p.getcall( S: { p_par := ?} );
+        p.reply(S:{ p_par := v_str });
+    }
+	
+    testcase TC_NegSem_220304_getreply_operation_009() runs on GeneralComp system GeneralComp {
+        var I v_res;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{ p_par := - }) {
+            [] p.getreply(S: { p_par := ?}) -> param (v_res := @decoded p_par) { 
+                setverdict (pass);
+            }
+            [] p.getreply { setverdict(pass); }            
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_009(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+Dynamic test case error: Parameter redirect failed, because the buffer was not empty after decoding. Remaining octets: 9.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - invalid format value in @decoded redirect parameter assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_010 NegSem_220304_getreply_operation_010.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, invalid format value in @decoded redirect parameter assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220304_getreply_operation_010 {
+	signature S(out universal charstring p_par);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_src := 1953719668;
+        var universal charstring v_str := encvalue_unichar(v_src);
+        p.getcall(S: {p_par := ?});
+        p.reply(S:{ p_par := v_str }); 
+    }
+	
+    testcase TC_NegSem_220304_getreply_operation_010() runs on GeneralComp system GeneralComp {
+        var I v_res;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{ p_par := - }) {
+            [] p.getreply(S: { p_par := ? }) -> param (v_res := @decoded("proprietary") p_par) { 
+                setverdict(pass);
+            }
+            [] p.getreply { setverdict(pass); }
+        }   
+        v_ptc.done;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_010(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: 'proprietary' is not a valid encoding format
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_011 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - value of wrong type in @decoded redirect parameter assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_011 NegSem_220304_getreply_operation_011.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, value of wrong type in @decoded redirect parameter assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220304_getreply_operation_011 {
+	signature S(out universal charstring p_par);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_src := 1953719668;
+        var universal charstring v_str := encvalue_unichar(v_src);
+        p.getcall(S: {p_par := ?});
+        p.reply(S:{ p_par := v_str });
+    }
+	
+    testcase TC_NegSem_220304_getreply_operation_011() runs on GeneralComp system GeneralComp {
+        var I v_res, v_enc := 32;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{ p_par := - }) {
+            [] p.getreply(S: {p_par := ?}) -> param (v_res := @decoded(v_enc) p_par) { 
+                setverdict (pass);
+            }
+            [] p.getreply { setverdict(pass); }
+        }        
+
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_011(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: Type mismatch: a value of type `charstring' was expected instead of `integer'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_012 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - encoding parameter of @decoded redirect parameter assignment applied to incorrect type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_012 NegSem_220304_getreply_operation_012.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, encoding parameter of @decoded redirect parameter assignment applied to incorrect type
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// In case the referenced field is not a universal charstring, the optional
+// parameter shall not be present.
+
+module NegSem_220304_getreply_operation_012 {
+	signature S(out octetstring p_par);
+
+	type charstring CS with { variant ""};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var CS v_src := "abc";
+        var octetstring v_os := bit2oct(encvalue(v_src));
+        p.getcall(S: {p_par := ?});
+        p.reply(S:{ p_par := v_os });
+    }
+	
+    testcase TC_NegSem_220304_getreply_operation_012() runs on GeneralComp system GeneralComp {
+        var CS v_res;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{ p_par := - }) {
+            [] p.getreply(S: {p_par := ?}) -> param (v_res := @decoded("UTF-8") p_par) { 
+                setverdict(pass);
+            }
+            [] p.getreply { setverdict(pass); }
+        }        
+
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_012(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: The encoding format parameter for the '@decoded' modifier is only available to parameter redirects of universal charstrings
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_013 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - incompatible from and sender clause in getreply operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_013 NegSem_220304_getreply_operation_013.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, incompatible from and sender clause in getreply operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the getreply operation contains both from and sender clause, the variable or parameter 
+// referenced in the sender clause shall be type compatible with the template in the from 
+// clause.
+
+module NegSem_220304_getreply_operation_013 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+        var integer vc_int;
+		port P p;
+	}
+    
+    type component AltComp {
+		var charstring vc_str;
+        port P px;
+	}
+	
+	function f() runs on GeneralComp {
+        p.getcall(S:{});
+        p.reply(S:{});
+	}
+	
+    testcase TC_NegSem_220304_getreply_operation_013() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_compRef := null;
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}) {
+	        [] p.getreply(S:{}) from AltComp:? -> sender v_compRef { } // error expected
+            [] p.getreply(S:{}) { }
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_013(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The types in `from' clause and `sender' redirect are not the same: `@NegSem_220304_getreply_operation_013.AltComp' was expected instead of `@NegSem_220304_getreply_operation_013.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_015 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - applying @decoded to a forbidden parameter field >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_015 NegSem_220304_getreply_operation_015.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, applying @decoded to a forbidden parameter field
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// When assigning individual fields of a reply, encoded parameters can be decoded 
+// prior to assignment using the @decoded modifier. In this case, the referenced 
+// parameter on the right hand sided of the assignment shall be one of the 
+// bitstring, hexstring, octetstring, charstring or universal charstring types. It 
+// shall be decoded into a value of the same type as the variable on the left hand 
+// side of the assignment.
+
+module NegSem_220304_getreply_operation_015 {
+    type record R {
+        integer id,
+        record of integer payload(0..255)
+    }    
+    
+	signature S() return R;
+
+	type integer I with {variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var R v_rec := { id := 6, payload := { 0, 0, 0, 0 }}
+        p.getcall(S: {});
+        p.reply(S:{} value v_rec);
+    }
+    
+    testcase TC_NegSem_220304_getreply_operation_015() runs on GeneralComp system GeneralComp {
+        var I v_res;      
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{}) {
+            [] p.getreply(S: {} value R:?) -> value (v_res := @decoded payload) { 
+                setverdict (pass);
+            }
+            [] p.getreply { setverdict(fail); }
+            
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_015(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: The '@decoded' modifier is only available to value redirects of string types.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_016 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - decoding error in @decoded redirect value assignment >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220304_getreply_operation_016 NegSem_220304_getreply_operation_016.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, decoding error in @decoded redirect value assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Failure of this decoding shall cause a test case error. 
+
+module NegSem_220304_getreply_operation_016 {
+	type record R {
+        integer id,
+        charstring payload
+    }
+    
+    signature S() return R;
+
+	type integer I with {variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_src := 1953719668;
+        var R v_rec := { id := 4, payload := oct2char(bit2oct(encvalue(v_src))) & "abcdefgij" };
+        p.getcall(S:{});
+        p.reply(S:{} value v_rec);
+    }
+	
+    testcase TC_NegSem_220304_getreply_operation_016() runs on GeneralComp system GeneralComp {
+        var I v_res;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{}) {
+            [] p.getreply(S: {} value R:?) -> value (v_res := @decoded payload) { 
+                setverdict (pass);
+            }
+            [] p.getreply { setverdict(pass); }            
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_016(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+Dynamic test case error: Value redirect #1 failed, because the buffer was not empty after decoding. Remaining octets: 9.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_017 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - invalid format value in @decoded redirect value assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_017 NegSem_220304_getreply_operation_017.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, invalid format value in @decoded redirect value assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220304_getreply_operation_017 {
+	type record R {
+        integer id,
+        universal charstring payload
+    }
+    
+    signature S() return R;
+
+	type integer I with {variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_src := 1953719668;
+        var R v_rec := { id := 5, payload := encvalue_unichar(v_src) };
+        p.getcall(S: {});
+        p.reply(S:{} value v_rec); 
+    }
+	
+    testcase TC_NegSem_220304_getreply_operation_017() runs on GeneralComp system GeneralComp {
+        var I v_res;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{}) {
+            [] p.getreply(S: {} value R:?) -> value (v_res := @decoded("proprietary") payload) { 
+                setverdict(pass);
+            }
+            [] p.getreply { setverdict(pass); }
+        }   
+        v_ptc.done;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_017(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+ error: 'proprietary' is not a valid encoding format
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_018 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - value of wrong type in @decoded redirect value assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_018 NegSem_220304_getreply_operation_018.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, value of wrong type in @decoded redirect value assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220304_getreply_operation_018 {
+	type record R {
+        integer id,
+        universal charstring payload
+    }
+    
+    signature S() return R;
+
+	type integer I with {variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_src := 1953719668;
+        var R v_rec := { id := 5, payload := encvalue_unichar(v_src) };
+        p.getcall(S: {});
+        p.reply(S:{} value v_rec);
+    }
+	
+    testcase TC_NegSem_220304_getreply_operation_018() runs on GeneralComp system GeneralComp {
+        var I v_res, v_enc := 32;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+        p.call(S:{}) {
+            [] p.getreply(S: {} value R:?) -> value (v_res := @decoded(v_enc) payload) { 
+                setverdict (pass);
+            }
+            [] p.getreply { setverdict(pass); }
+        }        
+
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_018(), 5.0);
+    }
+}  with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: Type mismatch: a value of type `charstring' was expected instead of `integer'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_019 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - encoding parameter of @decoded redirect value assignment applied to incorrect type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_019 NegSem_220304_getreply_operation_019.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, encoding parameter of @decoded redirect value assignment applied to incorrect type
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// In case the referenced field is not a universal charstring, the optional
+// parameter shall not be present.
+
+module NegSem_220304_getreply_operation_019 {
+	type record R {
+        integer id,
+        octetstring payload
+    }
+    
+    signature S() return R;
+
+	type charstring CS with {variant ""};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var CS v_src := "abc";
+        var R v_rec := { id := 3, payload := bit2oct(encvalue(v_src)) };
+        p.getcall(S: {});
+        p.reply(S:{} value v_rec);
+    }
+	
+    testcase TC_NegSem_220304_getreply_operation_019() runs on GeneralComp system GeneralComp {
+        var CS v_res;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{}) {
+            [] p.getreply(S:{} value R:?) -> value (v_res := @decoded("UTF-8") payload) { 
+                setverdict(pass);
+            }
+            [] p.getreply { setverdict(pass); }
+        }        
+
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_019(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: The encoding format parameter for the '@decoded' modifier is only available to value redirects of universal charstrings
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - raised exception type not in the list of available exceptions >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220305_raise_operation_001 NegSem_220305_raise_operation_001.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, raised exception type not in the list of available exceptions
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Exceptions are specified as types. Therefore the exception value may either be derived 
+// from a template or be the value resulting from an expression (which of course can be 
+// an explicit value). The optional type field in the value specification to the raise 
+// operation shall be used in cases where it is necessary to avoid any ambiguity of the type
+// of the value being sent.
+
+module NegSem_220305_raise_operation_001 {
+	signature S() exception(charstring, octetstring);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p.getcall(S:{});
+		p.raise(S, 1);
+        setverdict(pass);
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_001() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+        v_ptc.start(f());
+	    p.call(S:{}, nowait); 
+		// no processing of the exception to avoid possible errors in the catch operation
+        v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type `integer' is not present on the exception list of signature `@NegSem_220305_raise_operation_001.S'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - exception raised for a signature with no exception list >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220305_raise_operation_002 NegSem_220305_raise_operation_002.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, exception raised for a signature with no exception list
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Exceptions are specified as types. Therefore the exception value may either be derived 
+// from a template or be the value resulting from an expression (which of course can be 
+// an explicit value). The optional type field in the value specification to the raise 
+// operation shall be used in cases where it is necessary to avoid any ambiguity of the type
+// of the value being sent.
+
+module NegSem_220305_raise_operation_002 {
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p.getcall(S:{});
+		p.raise(S, 1);
+        setverdict(pass);
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_002() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+        v_ptc.start(f());
+	    p.call(S:{}, nowait); 
+		// no processing of the exception to avoid possible errors in the catch operation
+        v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Signature `@NegSem_220305_raise_operation_002.S' does not have exceptions
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - raised exception type is ambiguous >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220305_raise_operation_003 NegSem_220305_raise_operation_003.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, raised exception type is ambiguous
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Exceptions are specified as types. Therefore the exception value may either be derived 
+// from a template or be the value resulting from an expression (which of course can be 
+// an explicit value). The optional type field in the value specification to the raise 
+// operation shall be used in cases where it is necessary to avoid any ambiguity of the type
+// of the value being sent.
+
+module NegSem_220305_raise_operation_003 {
+    type integer MyInt1 (1..10);
+    type integer MyInt2 (1..20);
+    
+	signature S() exception(MyInt1, MyInt2);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p.getcall(S:{});
+		p.raise(S, 1);
+        setverdict(pass);
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_003() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+        v_ptc.start(f());
+	    p.call(S:{}, nowait); 
+		// no processing of the exception to avoid possible errors in the catch operation
+        v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type of the exception is ambiguous: `integer' is compatible with more than one exception types of signature `@NegSem_220305_raise_operation_003.S'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - missing to clause in case of 1 to n connection >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220305_raise_operation_004 NegSem_220305_raise_operation_004.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, missing to clause in case of 1 to n connection
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// In case of one-to-one connections, the to clause may be omitted, because the receiving 
+// entity is uniquely identified by the system structure.
+
+module NegSem_220305_raise_operation_004 {
+	signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f(integer p_expected) runs on GeneralComp
+	{
+        p.call(S:{}) {
+            [] p.catch(S, p_expected) { setverdict(pass); }
+            [] p.catch { setverdict(fail); }
+        }
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_004() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc1 := GeneralComp.create, v_ptc2 := GeneralComp.create;
+		connect(self:p, v_ptc1:p);
+        connect(self:p, v_ptc2:p);
+        v_ptc1.start(f(1));
+        v_ptc2.start(f(1));
+        p.getcall(S:{});
+        p.getcall(S:{}); // call from both components expected
+		p.raise(S, 1); // missing to clause: error expected
+        all component.done;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Port p has more than one active connections. Message can be sent on it only with explicit addressing.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - exception on a message port >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220305_raise_operation_005 NegSem_220305_raise_operation_005.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, exception on a message port
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// An exception shall only be raised at a procedure-based port. An exception is a reaction 
+// to an accepted procedure call the result of which leads to an exceptional event.
+
+module NegSem_220305_raise_operation_005 {
+	signature S() exception(integer);
+	
+	type port PSig procedure {
+		inout S;
+	} with {extension "internal"}
+    
+    type port PMsg message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port PSig p1;
+        port PMsg p2;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p1.getcall(S:{});
+		p2.raise(S, 1);
+        setverdict(pass);
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_005() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p1, v_ptc:p1);
+        connect(self:p2, v_ptc:p2);
+        v_ptc.start(f());
+	    p1.call(S:{}, nowait); 
+		// no processing of the exception to avoid possible errors in the catch operation
+        v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Procedure-based operation `raise' is not applicable to a message-based port of type `@NegSem_220305_raise_operation_005.PMsg'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - exception procedure signature not in the port list >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220305_raise_operation_006 NegSem_220305_raise_operation_006.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, exception procedure signature not in the port list
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// The type definition of the port shall include in its list of accepted procedure calls the
+// name of the procedure to which the exception belongs.
+
+module NegSem_220305_raise_operation_006 {
+	signature S1() exception(integer);
+    signature S2() exception(integer);
+	
+	type port P procedure {
+		inout S1;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p.getcall(S1:{});
+		p.raise(S2, 1);
+        setverdict(pass);
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_006() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+        v_ptc.start(f());
+	    p.call(S1:{}, nowait); 
+		// no processing of the exception to avoid possible errors in the catch operation
+        v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_006(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Signature `@NegSem_220305_raise_operation_006.S2' is not present on the incoming list of port type `@NegSem_220305_raise_operation_006.P'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - value of incorrect type in the to clause of the raise operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220305_raise_operation_007 NegSem_220305_raise_operation_007.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, value of incorrect type in the to clause of the raise operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// AddressRef shall be of type address, component or of the type provided in the address 
+// declaration of the port type of the port instance referenced in the raise operation.
+
+module NegSem_220305_raise_operation_007 {
+	signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+    const charstring c_ptcName := "PTC";
+    
+	function f() runs on GeneralComp
+	{
+		p.getcall(S:{});
+		p.raise(S, 1) to c_ptcName;
+        setverdict(pass);
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_007() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create(c_ptcName);
+		connect(self:p, v_ptc:p);
+        v_ptc.start(f());
+	    p.call(S:{}, nowait); 
+		// no processing of the exception to avoid possible errors in the catch operation
+        v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_007(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A component reference was expected as operand
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_008 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null in the to clause of the raise operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220305_raise_operation_008 NegSem_220305_raise_operation_008.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, null in the to clause of the raise operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220305_raise_operation_008 {
+	signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+        var GeneralComp v_compRef := null;
+		connect(self:p, v_compRef:p);
+		p.getcall(S:{});
+		p.raise(S, 1) to v_compRef;
+        setverdict(pass);
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_008() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+        v_ptc.start(f());
+	    p.call(S:{}, nowait); 
+		// no processing of the exception to avoid possible errors in the catch operation
+        v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_008(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220305_raise_operation_009 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - raise operation on disconnected and unmapped ports >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220305_raise_operation_009 NegSem_220305_raise_operation_009.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.5, raise operation on disconnected and unmapped ports
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Applying a raise operation to an unmapped or disconnected port shall cause a test case 
+// error.
+
+module NegSem_220305_raise_operation_009 {
+	signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p.getcall(S:{});
+        disconnect(self:p, mtc:p);
+		p.raise(S, 1);
+        setverdict(pass);
+	}
+	
+    testcase TC_NegSem_220305_raise_operation_009() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+        v_ptc.start(f());
+	    p.call(S:{}, nowait); 
+		// no processing of the exception to avoid possible errors in the catch operation
+        v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220305_raise_operation_009(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Port p has neither connections nor mappings. Message cannot be sent on it.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component in the from clause of the catch operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220306_catch_operation_006 NegSem_220306_catch_operation_006.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, null component in the from clause of the catch operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220306_catch_operation_006 {
+
+	signature S() exception (charstring);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+        p.getcall(S:{});
+        p.raise(S, "exc");
+	}
+	
+    testcase TC_NegSem_220306_catch_operation_006() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_compRef := null;
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		connect(self:p, v_compRef:p);
+		v_ptc.start(f());
+		p.call(S:{}) {
+            [] p.catch(S, charstring:?) from v_compRef {} // error expected
+            [] p.catch {}
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_006(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component in the multicast list of the from clause of the catch operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220306_catch_operation_007 NegSem_220306_catch_operation_007.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, null component in the multicast list of the from clause of the catch operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_220306_catch_operation_007 {
+
+	signature S() exception (charstring);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+        p.getcall(S:{});
+        p.raise(S, "exc");
+	}
+	
+    testcase TC_NegSem_220306_catch_operation_007() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_compRef := null;
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		connect(self:p, v_compRef:p);
+		v_ptc.start(f());
+		p.call(S:{}) {
+            [] p.catch(S, charstring:?) from (mtc, v_compRef) {} // error expected
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_007(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_008 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - applying @decoded to a forbidden exception field >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_008 NegSem_220306_catch_operation_008.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, applying @decoded to a forbidden exception field
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// When assigning individual fields of an exception, encoded payload fields can be 
+// decoded prior to assignment using the @decoded modifier. In this case, the 
+// referenced field on the right hand sided of the assignment shall be one of the 
+// bitstring, hexstring, octetstring, charstring or universal charstring types. It 
+// shall be decoded into a value of the same type as the variable on the left hand 
+// side of the assignment.
+
+module NegSem_220306_catch_operation_008 {
+    type record R {
+        integer id,
+        record of integer payload(0..255)
+    }    
+    
+	signature S() exception (R);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var R v_rec := { id := 6, payload := { 0, 0, 0, 0 }}
+        p.getcall(S: {});
+        p.raise(S, v_rec);
+    }
+    
+    testcase TC_NegSem_220306_catch_operation_008() runs on GeneralComp system GeneralComp {
+        var I v_res;      
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{}) {
+            [] p.catch(S, R:?) -> value (v_res := @decoded payload) { 
+                setverdict (pass);
+            }
+            [] p.catch { setverdict(pass); }
+            
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_008(), 5.0);
+    }
+} with {encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT>
+error: The '@decoded' modifier is only available to value redirects of string types.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_009 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - decoding error in @decoded redirect value assignment >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_220306_catch_operation_009 NegSem_220306_catch_operation_009.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, decoding error in @decoded redirect value assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Failure of this decoding shall cause a test case error. 
+
+module NegSem_220306_catch_operation_009 {
+	type record R {
+        integer id,
+        charstring payload
+    }
+    
+    signature S() exception (R);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_src := 1953719668;
+        var R v_rec := { id := 4, payload := oct2char(bit2oct(encvalue(v_src))) & "abcdefgij" };
+        p.getcall(S: {});
+        p.raise(S, v_rec);
+    }
+	
+    testcase TC_NegSem_220306_catch_operation_009() runs on GeneralComp system GeneralComp {
+        var I v_res;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+        p.call(S:{}) {
+            [] p.catch(S, R:?) -> value (v_res := @decoded payload) { 
+                setverdict (pass);
+            }
+            [] p.catch { setverdict(pass); }            
+        }
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_009(), 5.0);
+    }
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+Dynamic test case error: Value redirect #1 failed, because the buffer was not empty after decoding. Remaining octets: 9.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - invalid format value in @decoded redirect value assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_010 NegSem_220306_catch_operation_010.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, invalid format value in @decoded redirect value assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220306_catch_operation_010 {
+	type record R {
+        integer id,
+        universal charstring payload
+    }
+    
+    signature S() exception (R);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_src := 1953719668;
+        var R v_rec := { id := 5, payload := encvalue_unichar(v_src) };
+        p.getcall(S: {});
+        p.raise(S, v_rec); 
+    }
+	
+    testcase TC_NegSem_220306_catch_operation_010() runs on GeneralComp system GeneralComp {
+        var I v_res;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{}) {
+            [] p.catch(S, R:?) -> value (v_res := @decoded("proprietary") payload) { 
+                setverdict(pass);
+            }
+            [] p.catch { setverdict(pass); }
+        }   
+        v_ptc.done;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_010(), 5.0);
+    }
+} with {encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: 'proprietary' is not a valid encoding format
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_011 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - value of wrong type in @decoded redirect value assignment >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_011 NegSem_220306_catch_operation_011.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, value of wrong type in @decoded redirect value assignment
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Any other value shall cause an error.
+
+module NegSem_220306_catch_operation_011 {
+	type record R {
+        integer id,
+        universal charstring payload
+    } 
+    
+    signature S() exception (R);
+
+	type integer I with { variant "32 bit"};
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var I v_src := 1953719668;
+        var R v_rec := { id := 5, payload := encvalue_unichar(v_src) };
+        p.getcall(S: {});
+        p.raise(S, v_rec);
+    }
+	
+    testcase TC_NegSem_220306_catch_operation_011() runs on GeneralComp system GeneralComp {
+        var I v_res, v_enc := 32;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{}) {
+            [] p.catch(S, R:?) -> value (v_res := @decoded(v_enc) payload) { 
+                setverdict (pass);
+            }
+            [] p.catch { setverdict(pass); }
+        }        
+
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_011(), 5.0);
+    }
+} with {encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: Type mismatch: a value of type `charstring' was expected instead of `integer'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_012 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - encoding parameter of @decoded redirect value assignment applied to incorrect type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_012 NegSem_220306_catch_operation_012.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, encoding parameter of @decoded redirect value assignment applied to incorrect type
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// In case the referenced field is not a universal charstring, the optional
+// parameter shall not be present.
+
+module NegSem_220306_catch_operation_012 {
+	type record R {
+        integer id,
+        octetstring payload
+    }
+    
+    signature S() exception (R);
+
+	type charstring CS with {variant ""}
+    
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+    
+    function f_server() runs on GeneralComp {
+        var CS v_src := "abc";
+        var R v_rec := { id := 3, payload := bit2oct(encvalue(v_src)) };
+        p.getcall(S: {});
+        p.raise(S, v_rec);
+    }
+	
+    testcase TC_NegSem_220306_catch_operation_012() runs on GeneralComp system GeneralComp {
+        var CS v_res;        
+        var GeneralComp v_ptc := GeneralComp.create("PTC");
+        connect(self:p, v_ptc:p);
+        v_ptc.start(f_server());
+
+        p.call(S:{}) {
+            [] p.catch(S, R:?) -> value (v_res := @decoded("UTF-8") payload) { 
+                setverdict(pass);
+            }
+            [] p.catch { setverdict(pass); }
+        }        
+
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_012(), 5.0);
+    }
+} with {encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT >
+error: The encoding format parameter for the '@decoded' modifier is only available to value redirects of universal charstrings
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_013 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - incompatible from and sender clause in catch operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_013 NegSem_220306_catch_operation_013.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, incompatible from and sender clause in catch operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the catch operation contains both from and sender clause, the variable or parameter 
+// referenced in the sender clause shall be type compatible with the template in the from 
+// clause.
+
+module NegSem_220306_catch_operation_013 {
+
+	signature S() exception (charstring);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+        var integer vc_int;
+		port P p;
+	}
+    
+    type component AltComp {
+		var charstring vc_str;
+        port P px;
+	}
+	
+	function f() runs on GeneralComp {
+        p.getcall(S:{});
+        p.raise(S, "exc");
+	}
+	
+    testcase TC_NegSem_220306_catch_operation_013() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_compRef := null;
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+
+		p.call(S:{}) {
+	        [] p.catch(S, charstring:?) from AltComp:? -> sender v_compRef { } // error expected
+            [] p.catch { }
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_013(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The types in `from' clause and `sender' redirect are not the same: `@NegSem_220306_catch_operation_013.AltComp' was expected instead of `@NegSem_220306_catch_operation_013.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h2. 2204_the_check_operation folder
+.*---------------------------------------------------------------------*
+
+*---------------------------------------------------------------------*
+:h3. NegSem_2204_the_check_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - null component reference in from clause of check operation >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_2204_the_check_operation_001 NegSem_2204_the_check_operation_001.ttcn >
+/*****************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.4, null component reference in from clause of check operation
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// No AddressRef shall contain the special value null at the time of the operation.
+
+module NegSem_2204_the_check_operation_001 {
+
+	type port P message {
+		inout integer;
+        //address integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_2204_the_check_operation_001() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_comp := null;
+        connect(self:p, self:p);
+		connect(self:p, v_comp:p);
+        p.send(10);
+        alt {
+            [] p.check (from v_comp) {}
+            [] p.check {}
+        }
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_2204_the_check_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+.*---------------------------------------------------------------------*
+:h1.References
+.*---------------------------------------------------------------------*
+:list.
+:li D='[1]'.1/174 02-CRL 113 200/5 Uen
+:nl.Statement of Compliance for TITAN project
+:li D='[2]'.ETSI ES 201 873-1, v4.7.1 Mockup v1 (2015-06):
+:nl.Testing and Test Control Notation version 3.,
+:nl.Part 1: TTCN-3 Core Language
+:elist.
