@@ -1218,7 +1218,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char* tpdName, co
   struct string_list* linkerlibs, struct string_list* additionalObjects, struct string_list* linkerlibsearchp, boolean Vflag, boolean Dflag,
   boolean *p_Zflag, boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, 
   struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list,
-  const char **search_paths, size_t n_search_paths, struct config_struct * const all_configs);
+  const char **search_paths, size_t n_search_paths, char** makefileScript, struct config_struct * const all_configs);
 
 extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv,
@@ -1238,7 +1238,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
   boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir,
   struct string2_list* run_command_list, struct string2_list* required_configs, struct string_list** profiled_file_list,
-  const char **search_paths, size_t n_search_paths) {
+  const char **search_paths, size_t n_search_paths, char** makefileScript) {
 
   map<cstring, int> seen_tpd_files;
   char *tpdName = NULL;
@@ -1267,7 +1267,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
       linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag, p_Zflag,
       p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
       run_command_list, seen_tpd_files, required_configs, profiled_file_list,
-      search_paths, n_search_paths, all_configs);
+      search_paths, n_search_paths, makefileScript, all_configs);
   
   if (success == TPD_SUCCESS) {
     struct config_list* tmp_configs = NULL;
@@ -1295,7 +1295,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
       linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag, p_Zflag,
       p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
       run_command_list, seen_tpd_files, required_configs, profiled_file_list,
-      search_paths, n_search_paths, all_configs);
+      search_paths, n_search_paths, makefileScript, all_configs);
   }
   if (TPD_FAILED == success){
     exit(EXIT_FAILURE);
@@ -1347,7 +1347,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
   boolean *p_Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir,
   struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list,
-  const char **search_paths, size_t n_search_paths, struct config_struct * const all_configs)
+  const char **search_paths, size_t n_search_paths, char** makefileScript, struct config_struct * const all_configs)
 {
   tpd_result result = TPD_SUCCESS;
   // read-only non-pointer aliases
@@ -1931,6 +1931,27 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
         // GNU make but no incremental deps
         *p_mflag = true;
       }
+    }
+  }
+  
+  // Extract the makefileScript only for top level
+  // In the recursive case the subsequent makefile calls will process the 
+  // makefileScript
+  if (local_argc != 0)
+  {
+    char *makefileScriptXpath = mprintf(
+      "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
+      "/ProjectProperties/LocalBuildSettings/MakefileScript/text()",
+      actcfg);
+    XPathObject makefileScriptObj(run_xpath(xpathCtx, makefileScriptXpath));
+    Free(makefileScriptXpath);
+    if (makefileScriptObj->nodesetval && makefileScriptObj->nodesetval->nodeNr > 0) {
+      const char* file_path = (const char*)makefileScriptObj->nodesetval->nodeTab[0]->content;
+      expstring_t rel_file_dir = get_dir_from_path(file_path);
+      expstring_t file_name = get_file_from_path(file_path);
+      expstring_t abs_dir_path = get_absolute_dir(rel_file_dir, abs_tpd_dir, TRUE);
+      expstring_t abs_file_name = compose_path_name(abs_dir_path, file_name);
+      *makefileScript = mcopystr(abs_file_name);
     }
   }
 
@@ -2826,7 +2847,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
           solspeclibs, sol8speclibs, linuxspeclibs, freebsdspeclibs, win32speclibs,
           ttcn3prep, linkerlibs, additionalObjects, linkerlibsearchp, Vflag, FALSE, &my_Zflag, 
           &my_Hflag, NULL, NULL, prefix_workdir, run_command_list, seen_tpd_files, required_configs, profiled_file_list,
-          search_paths, n_search_paths, all_configs);
+          search_paths, n_search_paths, makefileScript, all_configs);
         
         autostring sub_proj_abs_work_dir_as(sub_proj_abs_work_dir); // ?!
 

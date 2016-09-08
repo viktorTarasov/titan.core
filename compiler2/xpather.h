@@ -246,6 +246,7 @@ void free_string2_list(struct string2_list* act_elem);
  * @param run_command_list contains the working directories and the makefilegen commands to be called there
  * @param search_paths contains the paths that can be tried if a file is not found
  * @param n_search_paths contains the size of relative_prefixes
+ * @param makefileScript contains the script that can modify the makefile
  * @return TPD_SUCCESS if parsing successful, TPD_SKIPPED if the tpd
  *         was seen already, or TPD_FAILED on error.
  */
@@ -275,6 +276,6 @@ tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs,
   char** ttcn3preprocessor, struct string_list* linkerlibs, struct string_list* additionalObjects, struct string_list* linkerlibsearchpath, boolean Vflag, boolean Dflag,
   boolean *Zflag, boolean *Hflag, char** generatorCommandOutput, struct string2_list* target_placement_list, boolean prefix_workdir, struct string2_list* run_command_list,
-  struct string2_list* required_configs, struct string_list** profiled_file_list, const char **search_paths, size_t n_search_paths);
+  struct string2_list* required_configs, struct string_list** profiled_file_list, const char **search_paths, size_t n_search_paths, char** makefileScript);
 
 #endif /* XPATHER_H_ */

@@ -3880,6 +3880,48 @@ static void run_makefilegen_commands(struct string2_list* run_command_list)
   }
 }
 
+/** execute makefileScript */
+static void executeMakefileScript(const char* makefileScript, const char* output_file) {
+  char* output_file_name = NULL;
+  if (output_file != NULL) {
+    if (get_path_status(output_file) == PS_DIRECTORY)
+      output_file_name = mprintf("%s/Makefile", output_file);
+    else {
+      output_file_name = mcopystr(output_file);
+    }
+  } else {
+    output_file_name = mcopystr("Makefile");
+  }
+  char* tmp_output_file_name = mprintf("%s.tmp", output_file_name);
+  
+  char* command = mprintf("%s %s %s", makefileScript, output_file_name, tmp_output_file_name);
+  fprintf(stderr, "Executing '%s' command\n", command);
+  int rv = system(command);
+  if (rv) ERROR("MakefileScript execution failed with error code %d", rv);
+  
+  if(access(output_file_name, W_OK) == -1) {
+    ERROR("%s does not exist, needed by makefile modifier script", output_file_name);
+    goto free_str;
+  }
+  if(access(tmp_output_file_name, W_OK) == -1) {
+    ERROR("%s does not exist, needed by makefile modifier script", tmp_output_file_name);
+    goto free_str;
+  }
+  // Replace old file with new
+  rv = rename(tmp_output_file_name, output_file_name);
+  if (rv != 0) {
+    ERROR("Moving makefile contents is unsuccessful");
+    goto free_str;
+  }
+  
+  fprintf(stderr, "makefile modifier script executed successfully.\n");
+ 
+free_str:
+  Free(output_file_name);
+  Free(tmp_output_file_name);
+  Free(command);
+}
+
 /** create symlinks and delete list */
 static void generate_symlinks(struct string2_list* create_symlink_list)
 {
@@ -4215,6 +4257,7 @@ int main(int argc, char *argv[])
   struct string2_list* target_placement_list = NULL;
   struct string2_list* run_command_list = NULL;
   struct string2_list* required_configs = NULL;
+  char* makefileScript = NULL;
 
 #ifdef LICENSE
   license_struct lstr;
@@ -4595,7 +4638,7 @@ int main(int argc, char *argv[])
       &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
       &asflag, &temp_wflag, &Yflag, &Mflag, &Eflag, &nflag, &diflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
       linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &Zflag, &Hflag,
-      &generatorCommandOutput, target_placement_list, Wflag, run_command_list, required_configs, &profiled_file_list, search_paths, n_search_paths);
+      &generatorCommandOutput, target_placement_list, Wflag, run_command_list, required_configs, &profiled_file_list, search_paths, n_search_paths, &makefileScript);
     
     // wflag overrides temp_wflag
     if (!wflag) {
@@ -4640,6 +4683,9 @@ int main(int argc, char *argv[])
       drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, wflag, Yflag, Mflag, Eflag, nflag, diflag, solspeclibraries,
       sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, ttcn3prep, linkerlibraries, additionalObjects,
       linkerlibsearchpath, generatorCommandOutput, target_placement_list);
+    if (makefileScript != NULL) {
+      executeMakefileScript(makefileScript, output_file);
+    }
   }
 
   free_string_list(sub_project_dirs);
@@ -4664,6 +4710,7 @@ int main(int argc, char *argv[])
   Free(generatorCommandOutput);
   free_string2_list(target_placement_list);
   free_string2_list(required_configs);
+  Free(makefileScript);
 
   Free(other_files);
   if (tpd_processed == TPD_SUCCESS) {

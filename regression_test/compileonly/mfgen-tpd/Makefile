@@ -31,7 +31,8 @@ MAKEPROG := ${MAKE}
 
 DIRLIST := buildconfig_param invalid_buildconfig_param invalid_buildconfig_tpd \
 	HP79745 HQ56829 HQ56834 HQ56848 library HR30356 flagTest HR30365 dependency_check \
-	required_config required_config_v2 required_config_v3 disablePredefinedExternalFolder
+	required_config required_config_v2 required_config_v3 disablePredefinedExternalFolder \
+	makefileScript
 
 # The default target.
 ifeq ($(findstring c,$(MFGEN_FLAGS)),) # no -c
