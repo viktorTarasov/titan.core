@@ -12,5 +12,5 @@ done
 echo "Batch execution of SA tests: creating 1 report for each script file"
 echo "You must have a symlink in this directory named perl and pointing to perl 5.6.0 or higher"
 
-echo "./perl ../Tools/SAtester.pl $SCRIPTFLAGS -log SA_log.report *.script"
-./perl ../../function_test/Tools/SAtester.pl $SCRIPTFLAGS -log SA_log.report *.script
+echo "./perl ../../Tools/SAtester.pl $SCRIPTFLAGS -log SA_log.report *.script"
+./perl ../../../function_test/Tools/SAtester.pl $SCRIPTFLAGS -log SA_log.report *.script
