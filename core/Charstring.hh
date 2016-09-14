@@ -430,6 +430,8 @@ public:
   void set_max(const CHARSTRING& max_value);
   
   void set_decmatch(Dec_Match_Interface* new_instance);
+  
+  void* get_decmatch_dec_res() const;
 
   void log() const;
   void log_match(const CHARSTRING& match_value, boolean legacy = FALSE) const;

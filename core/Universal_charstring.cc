@@ -4205,6 +4205,24 @@ void UNIVERSAL_CHARSTRING_template::set_decmatch(Dec_Match_Interface* new_instan
   dec_match->coding = new_coding;
 }
 
+void* UNIVERSAL_CHARSTRING_template::get_decmatch_dec_res() const
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Retrieving the decoding result of a non-decmatch universal "
+      "charstring template.");
+  }
+  return dec_match->instance->get_dec_res();
+}
+
+CharCoding::CharCodingType UNIVERSAL_CHARSTRING_template::get_decmatch_str_enc() const
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Retrieving the encoding format of a non-decmatch universal "
+      "charstring template.");
+  }
+  return dec_match->coding;
+}
+
 void UNIVERSAL_CHARSTRING_template::log() const
 {
   switch (template_selection) {

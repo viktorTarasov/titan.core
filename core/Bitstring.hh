@@ -299,6 +299,8 @@ public:
   BITSTRING_template& list_item(unsigned int list_index);
   
   void set_decmatch(Dec_Match_Interface* new_instance);
+  
+  void* get_decmatch_dec_res() const;
 
   void log() const;
   void log_match(const BITSTRING& match_value, boolean legacy = FALSE) const;

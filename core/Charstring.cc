@@ -2445,6 +2445,15 @@ void CHARSTRING_template::set_decmatch(Dec_Match_Interface* new_instance)
   dec_match->coding = CharCoding::UTF_8;
 }
 
+void* CHARSTRING_template::get_decmatch_dec_res() const
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Retrieving the decoding result of a non-decmatch charstring "
+      "template.");
+  }
+  return dec_match->instance->get_dec_res();
+}
+
 void CHARSTRING_template::log_pattern(int n_chars, const char *chars_ptr)
 {
   TTCN_Logger::log_event_str("pattern \"");

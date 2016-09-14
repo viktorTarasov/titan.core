@@ -1095,8 +1095,14 @@ public:
   * functions when the template object's match() or log() functions are called. */
 class Dec_Match_Interface {
 public:
-  virtual boolean match(TTCN_Buffer&) const = 0;
+  virtual boolean match(TTCN_Buffer&) = 0;
   virtual void log() const = 0;
+  /** this returns the decoding result of the last successfully matched value,
+    * which may be used by value and parameter redirect classes for optimization
+    * (so they don't have to decode the same value again)
+    * the function returns a void pointer (since the decoding could result in a
+    * value of any type), which is converted to the required type when used */
+  virtual void* get_dec_res() const = 0;
   virtual ~Dec_Match_Interface() {}
 };
 

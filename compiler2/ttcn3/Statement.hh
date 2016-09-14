@@ -1025,12 +1025,13 @@ namespace Ttcn {
     /** Sets the code section selector of all embedded values and templates
      * to \a p_code_section. */
     void set_code_section(GovernedSimple::code_section_t p_code_section);
-    void generate_code(expression_struct_t *expr);
+    void generate_code(expression_struct_t *expr, TemplateInstance* matched_ti,
+      bool is_out);
     /** generates a new redirect class, inherited from the signature type's
       * original redirect class, which extends its functionality to also
       * decode the redirected parameters that have the '@decoded' modifier */
-    char* generate_code_decoded(char* str, Type* sig_type, const char* tmp_id,
-      bool is_out);
+    char* generate_code_decoded(char* str, TemplateInstance* matched_ti,
+      const char* tmp_id, bool is_out);
     /** returns true if at least one of the parameter redirects has the 
       * '@decoded' modifier */
     bool has_decoded_modifier() const;
@@ -1115,9 +1116,15 @@ namespace Ttcn {
     /** Generates code for the value redirect in the specified expression
       * structure. A new class is generated for every value redirect, which
       * handles the redirecting.
+      * @param matched_ti the template instance used for matching the redirected
+      * value
       * @param base_class_prefix the namespace and/or class prefix of the
       * base value redirect class of the appropriate type */
-    void generate_code(expression_struct* expr, string base_class_prefix);
+    void generate_code(expression_struct* expr, TemplateInstance* matched_ti,
+      string base_class_prefix);
+    /** returns true if at least one of the value redirects has the 
+      * '@decoded' modifier*/
+    bool has_decoded_modifier() const;
   };
 
   /**

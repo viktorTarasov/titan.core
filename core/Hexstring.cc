@@ -1713,6 +1713,15 @@ void HEXSTRING_template::set_decmatch(Dec_Match_Interface* new_instance)
   dec_match->instance = new_instance;
 }
 
+void* HEXSTRING_template::get_decmatch_dec_res() const
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Retrieving the decoding result of a non-decmatch hexstring "
+      "template.");
+  }
+  return dec_match->instance->get_dec_res();
+}
+
 void HEXSTRING_template::log() const
 {
   switch (template_selection) {

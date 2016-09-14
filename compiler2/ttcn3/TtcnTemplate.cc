@@ -1225,6 +1225,15 @@ namespace Ttcn {
       FATAL_ERROR("Template::get_namedtemp_byIndex()");
     return u.named_templates->get_nt_byIndex(n);
   }
+  
+  NamedTemplate* Template::get_namedtemp_byName(const Identifier& name) const
+  {
+    if (templatetype != NAMED_TEMPLATE_LIST) {
+      FATAL_ERROR("Template::get_namedtemp_byName()");
+    }
+    return u.named_templates->has_nt_withName(name) ?
+      u.named_templates->get_nt_byName(name) : NULL;
+  }
 
   Template *Template::get_all_from() const
   {
@@ -4519,38 +4528,50 @@ compile_time:
     Type* target_type = u.dec_match.target->get_expr_governor(
       Type::EXPECTED_TEMPLATE)->get_type_refd_last();
     // use the name of the type at the end of the reference chain for logging
+    string type_name;
     const char* type_name_ptr = target_type->get_typename_builtin(
       target_type->get_typetype_ttcn3());
     if (type_name_ptr == NULL) {
-      type_name_ptr = target_type->get_type_refd_last()->get_dispname().c_str();
+      type_name = target_type->get_type_refd_last()->get_dispname();
     }
-    // copy the character pointer returned by Type::get_dispname() as it might
-    // change before its use
-    char* type_name = mcopystr(type_name_ptr);
+    else {
+      type_name = type_name_ptr;
+    }
     str = mputprintf(str,
       "class Dec_Match_%s : public Dec_Match_Interface {\n"
-      // store the decoding target as a member, since both functions use it
+      // store the decoding target as a member, since 2 functions use it
       "%s target;\n"
+      // store the decoding result from the last successful match() call
+      "%s* dec_val;\n"
       "public:\n"
-      "Dec_Match_%s(%s p_target): target(p_target) { }\n"
+      "Dec_Match_%s(%s p_target): target(p_target), dec_val(NULL) { }\n"
+      "~Dec_Match_%s() { if (dec_val != NULL) delete dec_val; }\n"
       // called when matching, the buffer parameter contains the string to be matched
-      "virtual boolean match(TTCN_Buffer& buff) const\n"
+      "virtual boolean match(TTCN_Buffer& buff)\n"
       "{\n"
-      "%s val;\n"
+      "if (dec_val != NULL) delete dec_val;\n"
+      "dec_val = new %s;\n"
       // decode the value
-      "val.decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
+      "dec_val->decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
+      "boolean ret_val;\n"
       // make sure no errors occurred (these already displayed warnings during
       // decoding)
       "if (TTCN_EncDec::get_last_error_type() != TTCN_EncDec::ET_NONE) "
-      "return FALSE;\n"
+      "ret_val = FALSE;\n"
       // make sure the buffer is empty after decoding, display a warning otherwise
-      "if (buff.get_read_len() != 0) {\n"
+      "else if (buff.get_read_len() != 0) {\n"
       "TTCN_warning(\"Decoded content matching failed, because the buffer was not "
       "empty after decoding. Remaining octets: %%d.\", (int)buff.get_read_len());\n"
-      "return FALSE;\n"
+      "ret_val = FALSE;\n"
       "}\n"
       // finally, match the decoded value against the target template
-      "return target.match(val%s);\n"
+      "else ret_val = target.match(*dec_val%s);\n"
+      // delete the decoded value if matching was not successful
+      "if (!ret_val) {\n"
+      "delete dec_val;\n"
+      "dec_val = NULL;\n"
+      "}\n"
+      "return ret_val;\n"
       "}\n"
       "virtual void log() const\n"
       "{\n"
@@ -4558,16 +4579,19 @@ compile_time:
       "TTCN_Logger::log_event_str(\"%s: \");\n"
       "target.log();\n"
       "}\n"
+      // retrieves the decoding result from the last successful matching
+      // (used for optimizing decoded value and parameter redirects)
+      "void* get_dec_res() const { return dec_val; }\n"
       "};\n"
       "%s.set_type(DECODE_MATCH);\n"
       "{\n", class_tmp_id.c_str(),
-      target_type->get_genname_template(my_scope).c_str(), class_tmp_id.c_str(),
       target_type->get_genname_template(my_scope).c_str(),
+      target_type->get_genname_value(my_scope).c_str(), class_tmp_id.c_str(),
+      target_type->get_genname_template(my_scope).c_str(), class_tmp_id.c_str(),
       target_type->get_genname_value(my_scope).c_str(),
       target_type->get_genname_typedescriptor(my_scope).c_str(),
       target_type->get_coding(false).c_str(),
-      omit_in_value_list ? ", TRUE" : "", type_name, name);
-    Free(type_name);
+      omit_in_value_list ? ", TRUE" : "", type_name.c_str(), name);
     
     // generate the decoding target into a temporary
     string target_tmp_id = my_scope->get_scope_mod_gen()->get_temporary_id();
@@ -4988,7 +5012,7 @@ compile_time:
 
   TemplateInstance::TemplateInstance(Type *p_type, Ref_base *p_ref,
     Template *p_body) : Node(), Location(), type(p_type),
-    derived_reference(p_ref), template_body(p_body)
+    derived_reference(p_ref), template_body(p_body), last_gen_expr(NULL)
   {
     if (!p_body) FATAL_ERROR("TemplateInstance::TemplateInstance()");
     if (type) type->set_ownertype(Type::OT_TEMPLATE_INST, this);
@@ -4999,6 +5023,7 @@ compile_time:
      delete type;
      delete derived_reference;
      delete template_body;
+     Free(last_gen_expr);
    }
 
    void TemplateInstance::release()
@@ -5252,8 +5277,9 @@ compile_time:
   }
 
   void TemplateInstance::generate_code(expression_struct *expr,
-    template_restriction_t template_restriction)
+    template_restriction_t template_restriction, bool has_decoded_redirect)
   {
+    size_t start_pos = mstrlen(expr->expr);
     if (derived_reference) {
       // preserve the target expression
       char *expr_backup = expr->expr;
@@ -5280,7 +5306,31 @@ compile_time:
       // restore the target expression append the name of the temporary
       // variable to it
       expr->expr = mputstr(expr_backup, tmp_id_str);
-    } else template_body->generate_code_expr(expr, template_restriction);
+    } else {
+      char *expr_backup;
+      if (has_decoded_redirect) {
+        // preserve the target expression
+        expr_backup = expr->expr;
+        // reset the space for the target expression
+        expr->expr = NULL;
+      }
+      template_body->generate_code_expr(expr, template_restriction);
+      if (has_decoded_redirect) {
+        // create a temporary variable and move the template's initialization code
+        // after it
+        const string& tmp_id = template_body->get_temporary_id();
+        const char *tmp_id_str = tmp_id.c_str();
+        expr->preamble = mputprintf(expr->preamble, "%s %s(%s);\n",
+          template_body->get_my_governor()->get_genname_template(
+          template_body->get_my_scope()).c_str(), tmp_id_str, expr->expr);
+        Free(expr->expr);
+        // restore the target expression and append the name of the temporary
+        // variable to it
+        expr->expr = mputstr(expr_backup, tmp_id_str);
+      }
+    }
+    size_t end_pos = mstrlen(expr->expr);
+    last_gen_expr = mcopystrn(expr->expr + start_pos, end_pos - start_pos);
   }
 
   char *TemplateInstance::rearrange_init_code(char *str, Common::Module* usage_mod)

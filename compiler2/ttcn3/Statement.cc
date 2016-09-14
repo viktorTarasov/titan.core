@@ -6851,7 +6851,7 @@ error:
         expr->expr = mputstr(expr->expr, ", ");
         if (port_op.r.redirect.value) {
           // Value redirect is also present.
-          port_op.r.redirect.value->generate_code(expr,
+          port_op.r.redirect.value->generate_code(expr, port_op.r.rcvpar,
             port_op.portref->get_refd_assignment()->get_Type()->get_genname_value(my_sb));
         } else expr->expr = mputstr(expr->expr, "NULL");
         expr->expr = mputstr(expr->expr, ", ");
@@ -6874,19 +6874,20 @@ error:
       port_op.portref->generate_code(expr);
       expr->expr = mputprintf(expr->expr, ".%s(", opname);
       if (port_op.r.rcvpar) {
+        bool has_decoded_redirect = port_op.r.redirect.param != NULL &&
+          port_op.r.redirect.param->has_decoded_modifier();
 	// the signature template is present
-        port_op.r.rcvpar->generate_code(expr);
+        port_op.r.rcvpar->generate_code(expr, TR_NONE, has_decoded_redirect);
 	expr->expr = mputstr(expr->expr, ", ");
 	generate_code_expr_fromclause(expr);
 	// a temporary object is needed for parameter redirect
 	Type *signature = port_op.r.rcvpar->get_Template()->get_my_governor();
-  if (port_op.r.redirect.param != NULL &&
-      port_op.r.redirect.param->has_decoded_modifier()) {
+  if (has_decoded_redirect) {
     // a new redirect class (inheriting the old one) is needed if any of the
     // redirects have the '@decoded' modifier
     string tmp_id = my_sb->get_scope_mod_gen()->get_temporary_id();
     expr->preamble = port_op.r.redirect.param->generate_code_decoded(
-      expr->preamble, signature, tmp_id.c_str(), false);
+      expr->preamble, port_op.r.rcvpar, tmp_id.c_str(), false);
     expr->expr = mputprintf(expr->expr, ", %s_call_redirect_%s(",
       signature->get_genname_value(signature->get_type_refd_last()->get_my_scope()
       ).c_str(), tmp_id.c_str());
@@ -6896,7 +6897,7 @@ error:
       signature->get_genname_value(my_sb).c_str());
   }
 	if (port_op.r.redirect.param)
-	  port_op.r.redirect.param->generate_code(expr);
+	  port_op.r.redirect.param->generate_code(expr, port_op.r.rcvpar, false);
 	expr->expr = mputstr(expr->expr, "), ");
 	generate_code_expr_senderredirect(expr);
       } else {
@@ -6923,8 +6924,13 @@ error:
       port_op.portref->generate_code(expr);
       expr->expr = mputprintf(expr->expr, ".%s(", opname);
       if (port_op.r.rcvpar) {
+        bool has_decoded_param_redirect = port_op.r.redirect.param != NULL &&
+          port_op.r.redirect.param->has_decoded_modifier();
+        bool has_decoded_value_redirect = port_op.r.redirect.value != NULL &&
+          port_op.r.redirect.value->has_decoded_modifier();
 	// the signature template is present
-        port_op.r.rcvpar->generate_code(expr);
+        port_op.r.rcvpar->generate_code(expr, TR_NONE,
+          has_decoded_param_redirect || has_decoded_value_redirect);
 	Type *signature = port_op.r.rcvpar->get_Template()->get_my_governor();
 	Type *return_type =
 	  signature->get_type_refd_last()->get_signature_return_type();
@@ -6944,13 +6950,12 @@ error:
 	expr->expr = mputstr(expr->expr, ", ");
 	generate_code_expr_fromclause(expr);
 	// a temporary object is needed for value and parameter redirect
-  if (port_op.r.redirect.param != NULL &&
-      port_op.r.redirect.param->has_decoded_modifier()) {
+  if (has_decoded_param_redirect) {
     // a new redirect class (inheriting the old one) is needed if any of the
     // redirects have the '@decoded' modifier
     string tmp_id = my_sb->get_scope_mod_gen()->get_temporary_id();
     expr->preamble = port_op.r.redirect.param->generate_code_decoded(
-      expr->preamble, signature, tmp_id.c_str(), true);
+      expr->preamble, port_op.r.rcvpar, tmp_id.c_str(), true);
     expr->expr = mputprintf(expr->expr, ", %s_reply_redirect_%s(",
       signature->get_genname_value(signature->get_type_refd_last()->get_my_scope()
       ).c_str(), tmp_id.c_str());
@@ -6963,13 +6968,13 @@ error:
 	  // the first argument of the constructor must contain
 	  // the value redirect
 	  if (port_op.r.redirect.value) {
-	    port_op.r.redirect.value->generate_code(expr,
+	    port_op.r.redirect.value->generate_code(expr, port_op.r.getreply_valuematch,
         signature->get_genname_value(my_sb) + "_reply_redirect");
 	  } else expr->expr = mputstr(expr->expr, "NULL");
 	  if (port_op.r.redirect.param) expr->expr = mputstr(expr->expr, ", ");
 	}
 	if (port_op.r.redirect.param)
-	  port_op.r.redirect.param->generate_code(expr);
+	  port_op.r.redirect.param->generate_code(expr, port_op.r.rcvpar, true);
 	expr->expr = mputstr(expr->expr, "), ");
 	generate_code_expr_senderredirect(expr);
       } else {
@@ -7004,11 +7009,13 @@ error:
 	// the signature reference and the exception template is present
 	expr->expr = mputprintf(expr->expr, "%s_exception_template(",
 	  port_op.r.ctch.signature->get_genname_value(my_sb).c_str());
-	port_op.r.rcvpar->generate_code(expr);
+  bool has_decoded_redirect = port_op.r.redirect.value != NULL &&
+    port_op.r.redirect.value->has_decoded_modifier();
+	port_op.r.rcvpar->generate_code(expr, TR_NONE, has_decoded_redirect);
 	expr->expr = mputstr(expr->expr, ", ");
 	if (port_op.r.redirect.value) {
 	  // value redirect is also present
-	  port_op.r.redirect.value->generate_code(expr,
+	  port_op.r.redirect.value->generate_code(expr, port_op.r.rcvpar,
       port_op.r.ctch.signature->get_genname_value(my_sb) + "_exception_template");
 	} else expr->expr = mputstr(expr->expr, "NULL");
 	expr->expr = mputstr(expr->expr, "), ");
@@ -7063,11 +7070,13 @@ error:
 	expr->expr = mputstr(expr->expr, "done(");
 	comp_op.compref->generate_code_expr(expr);
 	expr->expr = mputstr(expr->expr, ", ");
-	comp_op.donereturn.donematch->generate_code(expr);
+  bool has_decoded_redirect = comp_op.donereturn.redirect != NULL &&
+    comp_op.donereturn.redirect->has_decoded_modifier();
+	comp_op.donereturn.donematch->generate_code(expr, TR_NONE, has_decoded_redirect);
 	expr->expr = mputstr(expr->expr, ", ");
 	if (comp_op.donereturn.redirect) {
 	  // value redirect is present
-	  comp_op.donereturn.redirect->generate_code(expr,
+	  comp_op.donereturn.redirect->generate_code(expr, comp_op.donereturn.donematch,
       t_mod != my_sb->get_scope_mod_gen() ? t_mod->get_modid().get_name() :
       string(""));
 	} else {
@@ -8263,13 +8272,6 @@ error:
 	  }
 	}
   if (t_parass->is_decoded()) {
-    // the redirected parameter could be decoded into any type
-    Type *t_var_type = t_parass->get_ref()->chk_variable_ref();
-    if (t_var_type != NULL) {
-      // make sure the variable's type has a decoding type set, and store it
-      t_parass->set_dec_type(t_var_type->get_type_refd());
-      t_parass->get_dec_type()->chk_coding(false);
-    }
     Value* str_enc = t_parass->get_str_enc();
     switch (t_par->get_type()->get_type_refd_last()->get_typetype_ttcn3()) {
     case Type::T_BSTR:
@@ -8292,6 +8294,13 @@ error:
         "redirects of string types.");
       error_flag = true;
       break;
+    }
+    // the redirected parameter could be decoded into any type
+    Type *t_var_type = t_parass->get_ref()->chk_variable_ref();
+    if (!error_flag && t_var_type != NULL) {
+      // make sure the variable's type has a decoding type set, and store it
+      t_parass->set_dec_type(t_var_type->get_type_refd());
+      t_parass->get_dec_type()->chk_coding(false);
     }
   }
   else {
@@ -8389,10 +8398,14 @@ error:
     }
   }
 
-  void ParamRedirect::generate_code(expression_struct_t *expr)
+  void ParamRedirect::generate_code(expression_struct_t *expr,
+                                    TemplateInstance* matched_ti, bool is_out)
   {
     // AssignmentList is converted to VariableList during checking
     if (parredirtype != P_VAR) FATAL_ERROR("ParamRedirect::generate_code()");
+    if (has_decoded_modifier()) {
+      expr->expr = mputprintf(expr->expr, "&(%s), ", matched_ti->get_last_gen_expr());
+    }
     for (size_t i = 0; i < ves->get_nof_ves(); i++) {
       if (i > 0) expr->expr = mputstr(expr->expr, ", ");
       VariableEntry* ve = ves->get_ve_byIndex(i);
@@ -8420,7 +8433,7 @@ error:
     }
   }
   
-  char* ParamRedirect::generate_code_decoded(char* str, Type* sig_type,
+  char* ParamRedirect::generate_code_decoded(char* str, TemplateInstance* matched_ti,
                                              const char* tmp_id, bool is_out)
   {
     // AssignmentList is converted to VariableList during checking
@@ -8444,14 +8457,22 @@ error:
     char* base_constr_params_str = NULL;
     char* constr_init_list_str = NULL;
     char* set_params_str = NULL;
+    Type* sig_type = matched_ti->get_Template()->get_my_governor()->get_type_refd_last();
     Type* return_type = sig_type->get_signature_return_type();
     if (return_type != NULL && is_out) {
       // the return type's value redirect object must be passed through this
       // class
-      constr_params_str = mprintf("%s_Redirect_Interface* return_redirect",
+      constr_params_str = mprintf("%s_Redirect_Interface* return_redirect, ",
         return_type->get_genname_value(return_type->get_my_scope()).c_str());
       base_constr_params_str = mcopystr("return_redirect");
     }
+    // store a pointer to the matched template, the decoding results from
+    // decmatch templates might be reused to optimize decoded parameter redirects
+    members_str = mprintf("%s* ptr_matched_temp;\n",
+      sig_type->get_genname_template(scope).c_str());
+    constr_params_str = mputprintf(constr_params_str, "%s* par_matched_temp",
+      sig_type->get_genname_template(scope).c_str());
+    constr_init_list_str = mcopystr(", ptr_matched_temp(par_matched_temp)");
     SignatureParamList* parlist = sig_type->get_signature_parameters();
     for (size_t i = 0; i < ves->get_nof_ves(); i++) {
       VariableEntry* ve = ves->get_ve_byIndex(i);
@@ -8460,6 +8481,8 @@ error:
       const char* par_name = par->get_id().get_name().c_str();
       if (constr_params_str != NULL) {
         constr_params_str = mputstr(constr_params_str, ", ");
+      }
+      if (base_constr_params_str != NULL) {
         base_constr_params_str = mputstr(base_constr_params_str, ", ");
       }
       if (ve->is_decoded()) {
@@ -8472,89 +8495,242 @@ error:
           ", ptr_%s_dec(par_%s_dec)", par_name, par_name);
         set_params_str = mputprintf(set_params_str,
           "if (ptr_%s_dec != NULL) {\n", par_name);
-        switch (par->get_type()->get_type_refd_last()->get_typetype_ttcn3()) {
-        case Type::T_OSTR:
-        case Type::T_CSTR:
-          set_params_str = mputprintf(set_params_str,
-            "TTCN_Buffer buff(par.%s());\n", par_name);
-          break;
-        case Type::T_BSTR:
-          set_params_str = mputprintf(set_params_str,
-            "OCTETSTRING os(bit2oct(par.%s()));\n"
-            "TTCN_Buffer buff(os);\n", par_name);
-          break;
-        case Type::T_HSTR:
-          set_params_str = mputprintf(set_params_str,
-            "OCTETSTRING os(hex2oct(par.%s()));\n"
-            "TTCN_Buffer buff(os);\n", par_name);
-          break;
-        case Type::T_USTR:
-          set_params_str = mputstr(set_params_str, "TTCN_Buffer buff;\n");
+        NamedTemplate* matched_named_temp = 
+          matched_ti->get_Template()->get_templatetype() == Template::NAMED_TEMPLATE_LIST ?
+          matched_ti->get_Template()->get_namedtemp_byName(par->get_id()) : NULL;
+        Template* matched_temp = matched_named_temp != NULL ?
+          matched_named_temp->get_template()->get_template_refd_last() : NULL;
+        bool use_decmatch_result = matched_temp != NULL &&
+          matched_temp->get_templatetype() == Template::DECODE_MATCH;
+        bool needs_decode = true;
+        expression_struct redir_coding_expr;
+        Code::init_expr(&redir_coding_expr);
+        if (par->get_type()->get_type_refd_last()->get_typetype_ttcn3() == Type::T_USTR) {
           if (ve->get_str_enc() == NULL || !ve->get_str_enc()->is_unfoldable()) {
-            // if the encoding format is missing or is known at compile-time, then
-            // use the appropriate string encoding function
-            string str_enc = (ve->get_str_enc() != NULL) ?
-              ve->get_str_enc()->get_val_str() : string("UTF-8");
-            if (str_enc == "UTF-8") {
-              set_params_str = mputprintf(set_params_str,
-                "par.%s().encode_utf8(buff, false);\n", par_name);
+            const char* redir_coding_str;
+            if (ve->get_str_enc() == NULL ||
+                ve->get_str_enc()->get_val_str() == "UTF-8") {
+              redir_coding_str = "UTF_8";
             }
-            else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
-                     str_enc == "UTF-16BE") {
-              set_params_str = mputprintf(set_params_str,
-                "par.%s().encode_utf16(buff, CharCoding::UTF16%s);\n", par_name,
-                (str_enc == "UTF-16LE") ? "LE" : "BE");
+            else if (ve->get_str_enc()->get_val_str() == "UTF-16" ||
+                     ve->get_str_enc()->get_val_str() == "UTF-16BE") {
+              redir_coding_str = "UTF16BE";
             }
-            else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
-                     str_enc == "UTF-32BE") {
-              set_params_str = mputprintf(set_params_str,
-                "par.%s().encode_utf32(buff, CharCoding::UTF32%s);\n", par_name,
-                (str_enc == "UTF-32LE") ? "LE" : "BE");
+            else if (ve->get_str_enc()->get_val_str() == "UTF-16LE") {
+              redir_coding_str = "UTF16LE";
             }
+            else if (ve->get_str_enc()->get_val_str() == "UTF-32LE") {
+              redir_coding_str = "UTF32LE";
+            }
+            else {
+              redir_coding_str = "UTF32BE";
+            }
+            redir_coding_expr.expr = mprintf("CharCoding::%s", redir_coding_str);
           }
           else {
-            // the encoding format is not known at compile-time, so an extra
-            // member and constructor parameter is needed to store it
-            members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%s;\n",
-              par_name);
-            constr_params_str = mputprintf(constr_params_str,
-              ", CHARSTRING par_fmt_%s = CHARSTRING()", par_name);
-            constr_init_list_str = mputprintf(constr_init_list_str,
-              ", enc_fmt_%s(par_fmt_%s)", par_name, par_name);
-            set_params_str = mputprintf(set_params_str,
+            redir_coding_expr.preamble = mprintf(
               "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
-              "get_character_coding(enc_fmt_%s, \"decoded parameter redirect\");\n"
-              "switch (coding) {\n"
-              "case CharCoding::UTF_8:\n"
-              "par.%s().encode_utf8(buff, false);\n"
-              "break;\n"
-              "case CharCoding::UTF16:\n"
-              "case CharCoding::UTF16LE:\n"
-              "case CharCoding::UTF16BE:\n"
-              "par.%s().encode_utf16(buff, coding);\n"
-              "break;\n"
-              "case CharCoding::UTF32:\n"
-              "case CharCoding::UTF32LE:\n"
-              "case CharCoding::UTF32BE:\n"
-              "par.%s().encode_utf32(buff, coding);\n"
-              "break;\n"
-              "default:\n"
-              "break;\n"
-              "}\n", par_name, par_name, par_name, par_name);
+              "get_character_coding(enc_fmt_%s, \"decoded parameter redirect\");\n",
+              par_name);
+            redir_coding_expr.expr = mcopystr("coding");
           }
-          break;
-        default:
-          FATAL_ERROR("ParamRedirect::generate_code_decoded");
         }
-        set_params_str = mputprintf(set_params_str,
-          "ptr_%s_dec->decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
-          "if (buff.get_read_len() != 0) {\n"
-          "TTCN_error(\"Parameter redirect failed, because the buffer was not "
-          "empty after decoding. Remaining octets: %%d.\", (int)buff.get_read_len());\n"
-          "}\n"
-          "}\n", par_name,
-          ve->get_dec_type()->get_genname_typedescriptor(scope).c_str(),
-          ve->get_dec_type()->get_coding(false).c_str());
+        if (use_decmatch_result) {
+          // if the redirected parameter was matched using a decmatch template,
+          // then the parameter redirect class should use the decoding result 
+          // from the template instead of decoding the parameter again
+          needs_decode = false;
+          if (par->get_type()->get_type_refd_last()->get_typetype_ttcn3() == Type::T_USTR) {
+            // for universal charstrings the situation could be trickier
+            // compare the string encodings
+            bool different_ustr_encodings = false;
+            bool unknown_ustr_encodings = false;
+            if (ve->get_str_enc() == NULL) {
+              if (matched_temp->get_string_encoding() != NULL) {
+                if (matched_temp->get_string_encoding()->is_unfoldable()) {
+                  unknown_ustr_encodings = true;
+                }
+                else if (matched_temp->get_string_encoding()->get_val_str() != "UTF-8") {
+                  different_ustr_encodings = true;
+                }
+              }
+            }
+            else if (ve->get_str_enc()->is_unfoldable()) {
+              unknown_ustr_encodings = true;
+            }
+            else if (matched_temp->get_string_encoding() == NULL) {
+              if (ve->get_str_enc()->get_val_str() != "UTF-8") {
+                different_ustr_encodings = true;
+              }
+            }
+            else if (matched_temp->get_string_encoding()->is_unfoldable()) {
+              unknown_ustr_encodings = true;
+            }
+            else if (ve->get_str_enc()->get_val_str() !=
+                     matched_temp->get_string_encoding()->get_val_str()) {
+              different_ustr_encodings = true;
+            }
+            if (unknown_ustr_encodings) {
+              // the decision of whether to use the decmatch result or to decode
+              // the value is made at runtime
+              needs_decode = true;
+              set_params_str = mputprintf(set_params_str,
+                "%sif (%s == ptr_matched_temp->%s().get_decmatch_str_enc()) {\n",
+                redir_coding_expr.preamble != NULL ? redir_coding_expr.preamble : "",
+                redir_coding_expr.expr, par_name);
+            }
+            else if (different_ustr_encodings) {
+              // if the encodings are different, then ignore the decmatch result
+              // and just generate the decoding code as usual
+              needs_decode = true;
+              use_decmatch_result = false;
+            }
+          }
+        }
+        else {
+          // it might still be a decmatch template if it's not known at compile-time
+          bool unfoldable = matched_temp == NULL;
+          if (!unfoldable) {
+            switch (matched_temp->get_templatetype()) {
+            case Template::ANY_VALUE:
+            case Template::ANY_OR_OMIT:
+            case Template::BSTR_PATTERN:
+            case Template::CSTR_PATTERN:
+            case Template::HSTR_PATTERN:
+            case Template::OSTR_PATTERN:
+            case Template::USTR_PATTERN:
+            case Template::COMPLEMENTED_LIST:
+            case Template::VALUE_LIST:
+            case Template::VALUE_RANGE:
+            case Template::OMIT_VALUE:
+              // it's known at compile-time, and not a decmatch template
+              break;
+            default:
+              // needs runtime check
+              unfoldable = true;
+              break;
+            }
+          }
+          if (unfoldable) {
+            // the decmatch-check must be done at runtime
+            use_decmatch_result = true;
+            if (redir_coding_expr.preamble != NULL) {
+              set_params_str = mputstr(set_params_str, redir_coding_expr.preamble);
+            }
+            set_params_str = mputprintf(set_params_str,
+              "if (ptr_matched_temp->%s().get_selection() == DECODE_MATCH",
+              par_name);
+            if (redir_coding_expr.expr != NULL) {
+              set_params_str = mputprintf(set_params_str,
+                " && %s == ptr_matched_temp->%s().get_decmatch_str_enc()",
+                redir_coding_expr.expr, par_name);
+            }
+            set_params_str = mputstr(set_params_str, ") {\n");
+          }
+        }
+        Code::free_expr(&redir_coding_expr);
+        if (use_decmatch_result) {
+          set_params_str = mputprintf(set_params_str,
+            "*ptr_%s_dec = *((%s*)ptr_matched_temp->%s().get_decmatch_dec_res());\n",
+            par_name, ve->get_dec_type()->get_genname_value(scope).c_str(), par_name);
+        }
+        if (needs_decode) {
+          if (use_decmatch_result) {
+            set_params_str = mputstr(set_params_str, "}\nelse {\n");
+          }
+          switch (par->get_type()->get_type_refd_last()->get_typetype_ttcn3()) {
+          case Type::T_OSTR:
+          case Type::T_CSTR:
+            set_params_str = mputprintf(set_params_str,
+              "TTCN_Buffer buff(par.%s());\n", par_name);
+            break;
+          case Type::T_BSTR:
+            set_params_str = mputprintf(set_params_str,
+              "OCTETSTRING os(bit2oct(par.%s()));\n"
+              "TTCN_Buffer buff(os);\n", par_name);
+            break;
+          case Type::T_HSTR:
+            set_params_str = mputprintf(set_params_str,
+              "OCTETSTRING os(hex2oct(par.%s()));\n"
+              "TTCN_Buffer buff(os);\n", par_name);
+            break;
+          case Type::T_USTR:
+            set_params_str = mputstr(set_params_str, "TTCN_Buffer buff;\n");
+            if (ve->get_str_enc() == NULL || !ve->get_str_enc()->is_unfoldable()) {
+              // if the encoding format is missing or is known at compile-time, then
+              // use the appropriate string encoding function
+              string str_enc = (ve->get_str_enc() != NULL) ?
+                ve->get_str_enc()->get_val_str() : string("UTF-8");
+              if (str_enc == "UTF-8") {
+                set_params_str = mputprintf(set_params_str,
+                  "par.%s().encode_utf8(buff, false);\n", par_name);
+              }
+              else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
+                       str_enc == "UTF-16BE") {
+                set_params_str = mputprintf(set_params_str,
+                  "par.%s().encode_utf16(buff, CharCoding::UTF16%s);\n", par_name,
+                  (str_enc == "UTF-16LE") ? "LE" : "BE");
+              }
+              else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
+                       str_enc == "UTF-32BE") {
+                set_params_str = mputprintf(set_params_str,
+                  "par.%s().encode_utf32(buff, CharCoding::UTF32%s);\n", par_name,
+                  (str_enc == "UTF-32LE") ? "LE" : "BE");
+              }
+            }
+            else {
+              // the encoding format is not known at compile-time, so an extra
+              // member and constructor parameter is needed to store it
+              members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%s;\n",
+                par_name);
+              constr_params_str = mputprintf(constr_params_str,
+                ", CHARSTRING par_fmt_%s = CHARSTRING()", par_name);
+              constr_init_list_str = mputprintf(constr_init_list_str,
+                ", enc_fmt_%s(par_fmt_%s)", par_name, par_name);
+              if (!use_decmatch_result) {
+                // if the decmatch result code is generated too, then this variable
+                // was already generated before the main 'if'
+                set_params_str = mputprintf(set_params_str,
+                  "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
+                  "get_character_coding(enc_fmt_%s, \"decoded parameter redirect\");\n",
+                  par_name);
+              }
+              set_params_str = mputprintf(set_params_str,
+                "switch (coding) {\n"
+                "case CharCoding::UTF_8:\n"
+                "par.%s().encode_utf8(buff, false);\n"
+                "break;\n"
+                "case CharCoding::UTF16:\n"
+                "case CharCoding::UTF16LE:\n"
+                "case CharCoding::UTF16BE:\n"
+                "par.%s().encode_utf16(buff, coding);\n"
+                "break;\n"
+                "case CharCoding::UTF32:\n"
+                "case CharCoding::UTF32LE:\n"
+                "case CharCoding::UTF32BE:\n"
+                "par.%s().encode_utf32(buff, coding);\n"
+                "break;\n"
+                "default:\n"
+                "break;\n"
+                "}\n", par_name, par_name, par_name);
+            }
+            break;
+          default:
+            FATAL_ERROR("ParamRedirect::generate_code_decoded");
+          }
+          set_params_str = mputprintf(set_params_str,
+            "ptr_%s_dec->decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
+            "if (buff.get_read_len() != 0) {\n"
+            "TTCN_error(\"Parameter redirect failed, because the buffer was not "
+            "empty after decoding. Remaining octets: %%d.\", (int)buff.get_read_len());\n"
+            "}\n", par_name,
+            ve->get_dec_type()->get_genname_typedescriptor(scope).c_str(),
+            ve->get_dec_type()->get_coding(false).c_str());
+          if (use_decmatch_result) {
+            set_params_str = mputstr(set_params_str, "}\n");
+          }
+        }
+        set_params_str = mputstr(set_params_str, "}\n");
       }
       else {
         constr_params_str = mputprintf(constr_params_str, "%s* par_%s = NULL",
@@ -8803,6 +8979,7 @@ error:
         if (field_type != NULL) {
           if (v[i]->is_decoded()) {
             Value* str_enc = v[i]->get_str_enc();
+            bool erroneous = false;
             switch (field_type->get_type_refd_last()->get_typetype_ttcn3()) {
             case Type::T_BSTR:
             case Type::T_HSTR:
@@ -8811,6 +8988,7 @@ error:
               if (str_enc != NULL) {
                 str_enc->error("The encoding format parameter for the '@decoded' modifier "
                   "is only available to value redirects of universal charstrings");
+                erroneous = true;
               }
               break;
             case Type::T_USTR:
@@ -8821,9 +8999,10 @@ error:
             default:
               v[i]->error("The '@decoded' modifier is only available to value "
                 "redirects of string types.");
+              erroneous = true;
               break;
             }
-            if (var_type != NULL) {
+            if (!erroneous && var_type != NULL) {
               // store the variable type in case it's decoded (since this cannot
               // be extracted from the value type with the sub-references)
               v[i]->set_dec_type(var_type->get_type_refd());
@@ -8875,6 +9054,7 @@ error:
   }
   
   void ValueRedirect::generate_code(expression_struct* expr,
+                                    TemplateInstance* matched_ti,
                                     string base_class_prefix)
   {
     // a value redirect class is generated for this redirect in the expression's
@@ -8894,6 +9074,16 @@ error:
     char* constr_params_str = NULL;
     char* constr_init_list_str = NULL;
     char* set_values_str = NULL;
+    if (has_decoded_modifier()) {
+      // store a pointer to the matched template, the decoding results from
+      // decmatch templates might be reused to optimize decoded value redirects
+      expr->expr = mputprintf(expr->expr, "&(%s), ", matched_ti->get_last_gen_expr());
+      members_str = mprintf("%s* ptr_matched_temp;\n",
+        value_type->get_genname_template(scope).c_str());
+      constr_params_str = mputprintf(constr_params_str, "%s* par_matched_temp, ",
+        value_type->get_genname_template(scope).c_str());
+      constr_init_list_str = mcopystr("ptr_matched_temp(par_matched_temp), ");
+    }
     for (size_t i = 0; i < v.size(); ++i) {
       if (i > 0) {
         expr->expr = mputstr(expr->expr, ", ");
@@ -8919,12 +9109,13 @@ error:
       // insert it into the set_values function
       expression_struct subrefs_expr;
       Code::init_expr(&subrefs_expr);
+      const char* opt_suffix = "";
       if (v[i]->get_subrefs() != NULL) {
         v[i]->get_subrefs()->generate_code(&subrefs_expr, value_type);
         if (redir_type->get_ownertype() == Type::OT_COMP_FIELD) {
           CompField* cf = (CompField*)redir_type->get_owner();
           if (cf->get_is_optional()) {
-            subrefs_expr.expr = mputstr(subrefs_expr.expr, "()");
+            opt_suffix = "()";
           }
         }
       }
@@ -8933,93 +9124,268 @@ error:
       }
       const char* subrefs_str = (subrefs_expr.expr != NULL) ? subrefs_expr.expr : "";
       if (v[i]->is_decoded()) {
-        switch (redir_type->get_type_refd_last()->get_typetype_ttcn3()) {
-        case Type::T_OSTR:
-        case Type::T_CSTR:
-          set_values_str = mputprintf(set_values_str,
-            "TTCN_Buffer buff_%d(par%s);\n", (int)i, subrefs_str);
-          break;
-        case Type::T_BSTR:
-          set_values_str = mputprintf(set_values_str,
-            "OCTETSTRING os(bit2oct(par%s));\n"
-            "TTCN_Buffer buff_%d(os);\n", subrefs_str, (int)i);
-          break;
-        case Type::T_HSTR:
-          set_values_str = mputprintf(set_values_str,
-            "OCTETSTRING os(hex2oct(par%s));\n"
-            "TTCN_Buffer buff_%d(os);\n", subrefs_str, (int)i);
-          break;
-        case Type::T_USTR:
-          set_values_str = mputprintf(set_values_str, "TTCN_Buffer buff_%d;\n",
-            (int)i);
+        // set the usedInIsbound parameter to true so get_refd_sub_template does not
+        // report errors for missing fields/elements
+        Template* matched_temp = matched_ti->get_Template()->get_refd_sub_template(
+          v[i]->get_subrefs(), true, NULL);
+        if (matched_temp != NULL) {
+          matched_temp = matched_temp->get_template_refd_last();
+        }
+        bool use_decmatch_result = matched_temp != NULL &&
+          matched_temp->get_templatetype() == Template::DECODE_MATCH;
+        bool needs_decode = true;
+        expression_struct redir_coding_expr;
+        Code::init_expr(&redir_coding_expr);
+        if (redir_type->get_type_refd_last()->get_typetype_ttcn3() == Type::T_USTR) {
           if (v[i]->get_str_enc() == NULL || !v[i]->get_str_enc()->is_unfoldable()) {
-            // if the encoding format is missing or is known at compile-time, then
-            // use the appropriate string encoding function
-            string str_enc = (v[i]->get_str_enc() != NULL) ?
-              v[i]->get_str_enc()->get_val_str() : string("UTF-8");
-            if (str_enc == "UTF-8") {
-              set_values_str = mputprintf(set_values_str,
-                "par%s.encode_utf8(buff_%d, false);\n", subrefs_str, (int)i);
+            const char* redir_coding_str;
+            if (v[i]->get_str_enc() == NULL ||
+                v[i]->get_str_enc()->get_val_str() == "UTF-8") {
+              redir_coding_str = "UTF_8";
             }
-            else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
-                     str_enc == "UTF-16BE") {
-              set_values_str = mputprintf(set_values_str,
-                "par%s.encode_utf16(buff_%d, CharCoding::UTF16%s);\n", subrefs_str,
-                (int)i, (str_enc == "UTF-16LE") ? "LE" : "BE");
+            else if (v[i]->get_str_enc()->get_val_str() == "UTF-16" ||
+                     v[i]->get_str_enc()->get_val_str() == "UTF-16BE") {
+              redir_coding_str = "UTF16BE";
             }
-            else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
-                     str_enc == "UTF-32BE") {
-              set_values_str = mputprintf(set_values_str,
-                "par%s.encode_utf32(buff_%d, CharCoding::UTF32%s);\n", subrefs_str,
-                (int)i, (str_enc == "UTF-32LE") ? "LE" : "BE");
+            else if (v[i]->get_str_enc()->get_val_str() == "UTF-16LE") {
+              redir_coding_str = "UTF16LE";
             }
+            else if (v[i]->get_str_enc()->get_val_str() == "UTF-32LE") {
+              redir_coding_str = "UTF32LE";
+            }
+            else {
+              redir_coding_str = "UTF32BE";
+            }
+            redir_coding_expr.expr = mprintf("CharCoding::%s", redir_coding_str);
           }
           else {
-            // the encoding format is not known at compile-time, so an extra
-            // member and constructor parameter is needed to store it
-            expr->expr = mputstr(expr->expr, ", ");
-            v[i]->get_str_enc()->generate_code_expr(expr);
-            members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
-              (int)i);
-            constr_params_str = mputprintf(constr_params_str,
-              ", CHARSTRING par_fmt_%d", (int)i);
-            constr_init_list_str = mputprintf(constr_init_list_str,
-              ", enc_fmt_%d(par_fmt_%d)", (int)i, (int)i);
-            set_values_str = mputprintf(set_values_str,
+            redir_coding_expr.preamble = mprintf(
               "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
-              "get_character_coding(enc_fmt_%d, \"decoded value redirect\");\n"
-              "switch (coding) {\n"
-              "case CharCoding::UTF_8:\n"
-              "par%s.encode_utf8(buff_%d, false);\n"
-              "break;\n"
-              "case CharCoding::UTF16:\n"
-              "case CharCoding::UTF16LE:\n"
-              "case CharCoding::UTF16BE:\n"
-              "par%s.encode_utf16(buff_%d, coding);\n"
-              "break;\n"
-              "case CharCoding::UTF32:\n"
-              "case CharCoding::UTF32LE:\n"
-              "case CharCoding::UTF32BE:\n"
-              "par%s.encode_utf32(buff_%d, coding);\n"
-              "break;\n"
-              "default:\n"
-              "break;\n"
-              "}\n", (int)i, subrefs_str, (int)i, subrefs_str, (int)i,
-              subrefs_str, (int)i);
+              "get_character_coding(enc_fmt_%d, \"decoded parameter redirect\");\n",
+              (int)i);
+            redir_coding_expr.expr = mcopystr("coding");
           }
-          break;
-        default:
-          FATAL_ERROR("ValueRedirect::generate_code");
         }
-        set_values_str = mputprintf(set_values_str,
-          "ptr_%d->decode(%s_descr_, buff_%d, TTCN_EncDec::CT_%s);\n"
-          "if (buff_%d.get_read_len() != 0) {\n"
-          "TTCN_error(\"Value redirect #%d failed, because the buffer was "
-          "not empty after decoding. Remaining octets: %%d.\", "
-          "(int)buff_%d.get_read_len());\n"
-          "}\n",
-          (int)i, member_type->get_genname_typedescriptor(scope).c_str(), (int)i,
-          member_type->get_coding(false).c_str(), (int)i, (int)(i + 1), (int)i);
+        if (use_decmatch_result) {
+          // if the redirected value was matched using a decmatch template,
+          // then the value redirect class should use the decoding result 
+          // from the template instead of decoding the value again
+          needs_decode = false;
+          if (redir_type->get_type_refd_last()->get_typetype_ttcn3() == Type::T_USTR) {
+            // for universal charstrings the situation could be trickier
+            // compare the string encodings
+            bool different_ustr_encodings = false;
+            bool unknown_ustr_encodings = false;
+            if (v[i]->get_str_enc() == NULL) {
+              if (matched_temp->get_string_encoding() != NULL) {
+                if (matched_temp->get_string_encoding()->is_unfoldable()) {
+                  unknown_ustr_encodings = true;
+                }
+                else if (matched_temp->get_string_encoding()->get_val_str() != "UTF-8") {
+                  different_ustr_encodings = true;
+                }
+              }
+            }
+            else if (v[i]->get_str_enc()->is_unfoldable()) {
+              unknown_ustr_encodings = true;
+            }
+            else if (matched_temp->get_string_encoding() == NULL) {
+              if (v[i]->get_str_enc()->get_val_str() != "UTF-8") {
+                different_ustr_encodings = true;
+              }
+            }
+            else if (matched_temp->get_string_encoding()->is_unfoldable()) {
+              unknown_ustr_encodings = true;
+            }
+            else if (v[i]->get_str_enc()->get_val_str() !=
+                     matched_temp->get_string_encoding()->get_val_str()) {
+              different_ustr_encodings = true;
+            }
+            if (unknown_ustr_encodings) {
+              // the decision of whether to use the decmatch result or to decode
+              // the value is made at runtime
+              needs_decode = true;
+              set_values_str = mputprintf(set_values_str,
+                "%sif (%s == (*ptr_matched_temp)%s.get_decmatch_str_enc()) {\n",
+                redir_coding_expr.preamble != NULL ? redir_coding_expr.preamble : "",
+                redir_coding_expr.expr, subrefs_str);
+            }
+            else if (different_ustr_encodings) {
+              // if the encodings are different, then ignore the decmatch result
+              // and just generate the decoding code as usual
+              needs_decode = true;
+              use_decmatch_result = false;
+            }
+          }
+        }
+        else {
+          // it might still be a decmatch template if it's not known at compile-time
+          bool unfoldable = matched_temp == NULL;
+          if (!unfoldable) {
+            switch (matched_temp->get_templatetype()) {
+            case Template::ANY_VALUE:
+            case Template::ANY_OR_OMIT:
+            case Template::BSTR_PATTERN:
+            case Template::CSTR_PATTERN:
+            case Template::HSTR_PATTERN:
+            case Template::OSTR_PATTERN:
+            case Template::USTR_PATTERN:
+            case Template::COMPLEMENTED_LIST:
+            case Template::VALUE_LIST:
+            case Template::VALUE_RANGE:
+            case Template::OMIT_VALUE:
+              // it's known at compile-time, and not a decmatch template
+              break;
+            default:
+              // needs runtime check
+              unfoldable = true;
+              break;
+            }
+          }
+          if (unfoldable) {
+            // the decmatch-check must be done at runtime
+            use_decmatch_result = true;
+            if (redir_coding_expr.preamble != NULL) {
+              set_values_str = mputstr(set_values_str, redir_coding_expr.preamble);
+            }
+            // before we can check whether the template at the end of the
+            // subreferences is a decmatch template, we must make sure that
+            // every prior subreference points to a specific value template
+            // (otherwise accessing the template at the end will result in a DTE)
+            set_values_str = mputstr(set_values_str,
+              "if (ptr_matched_temp->get_selection() == SPECIFIC_VALUE && ");
+            char* current_ref = mcopystr("(*ptr_matched_temp)");
+            size_t len = strlen(subrefs_str);
+            size_t start = 0;
+            // go through the already generated subreference string, append
+            // one reference at a time, and check if the referenced template
+            // is a specific value
+            for (size_t j = 1; j < len; ++j) {
+              if (subrefs_str[j] == '.' || subrefs_str[j] == '[') {
+                current_ref = mputstrn(current_ref, subrefs_str + start, j - start);
+                set_values_str = mputprintf(set_values_str,
+                  "%s.get_selection() == SPECIFIC_VALUE && ", current_ref);
+                start = j;
+              }
+            }
+            Free(current_ref);
+            set_values_str = mputprintf(set_values_str,
+              "(*ptr_matched_temp)%s.get_selection() == DECODE_MATCH", subrefs_str);
+            if (redir_coding_expr.expr != NULL) {
+              set_values_str = mputprintf(set_values_str,
+                " && %s == (*ptr_matched_temp)%s.get_decmatch_str_enc()",
+                redir_coding_expr.expr, subrefs_str);
+            }
+            set_values_str = mputstr(set_values_str, ") {\n");
+          }
+        }
+        Code::free_expr(&redir_coding_expr);
+        if (use_decmatch_result) {
+          set_values_str = mputprintf(set_values_str,
+            "*ptr_%d = *((%s*)((*ptr_matched_temp)%s.get_decmatch_dec_res()));\n",
+            (int)i, type_str.c_str(), subrefs_str);
+        }
+        if (needs_decode) {
+          if (use_decmatch_result) {
+            set_values_str = mputstr(set_values_str, "}\nelse {\n");
+          }
+          switch (redir_type->get_type_refd_last()->get_typetype_ttcn3()) {
+          case Type::T_OSTR:
+          case Type::T_CSTR:
+            set_values_str = mputprintf(set_values_str,
+              "TTCN_Buffer buff_%d(par%s%s);\n", (int)i, subrefs_str, opt_suffix);
+            break;
+          case Type::T_BSTR:
+            set_values_str = mputprintf(set_values_str,
+              "OCTETSTRING os(bit2oct(par%s%s));\n"
+              "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
+            break;
+          case Type::T_HSTR:
+            set_values_str = mputprintf(set_values_str,
+              "OCTETSTRING os(hex2oct(par%s%s));\n"
+              "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
+            break;
+          case Type::T_USTR:
+            set_values_str = mputprintf(set_values_str, "TTCN_Buffer buff_%d;\n",
+              (int)i);
+            if (v[i]->get_str_enc() == NULL || !v[i]->get_str_enc()->is_unfoldable()) {
+              // if the encoding format is missing or is known at compile-time, then
+              // use the appropriate string encoding function
+              string str_enc = (v[i]->get_str_enc() != NULL) ?
+                v[i]->get_str_enc()->get_val_str() : string("UTF-8");
+              if (str_enc == "UTF-8") {
+                set_values_str = mputprintf(set_values_str,
+                  "par%s%s.encode_utf8(buff_%d, false);\n", subrefs_str, opt_suffix, (int)i);
+              }
+              else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
+                       str_enc == "UTF-16BE") {
+                set_values_str = mputprintf(set_values_str,
+                  "par%s%s.encode_utf16(buff_%d, CharCoding::UTF16%s);\n", subrefs_str,
+                  opt_suffix, (int)i, (str_enc == "UTF-16LE") ? "LE" : "BE");
+              }
+              else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
+                       str_enc == "UTF-32BE") {
+                set_values_str = mputprintf(set_values_str,
+                  "par%s%s.encode_utf32(buff_%d, CharCoding::UTF32%s);\n", subrefs_str,
+                  opt_suffix, (int)i, (str_enc == "UTF-32LE") ? "LE" : "BE");
+              }
+            }
+            else {
+              // the encoding format is not known at compile-time, so an extra
+              // member and constructor parameter is needed to store it
+              expr->expr = mputstr(expr->expr, ", ");
+              v[i]->get_str_enc()->generate_code_expr(expr);
+              members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
+                (int)i);
+              constr_params_str = mputprintf(constr_params_str,
+                ", CHARSTRING par_fmt_%d", (int)i);
+              constr_init_list_str = mputprintf(constr_init_list_str,
+                ", enc_fmt_%d(par_fmt_%d)", (int)i, (int)i);
+              if (!use_decmatch_result) {
+                // if the decmatch result code is generated too, then this variable
+                // was already generated before the main 'if'
+                set_values_str = mputprintf(set_values_str,
+                  "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
+                  "get_character_coding(enc_fmt_%d, \"decoded value redirect\");\n",
+                  (int)i);
+              }
+              set_values_str = mputprintf(set_values_str,
+                "switch (coding) {\n"
+                "case CharCoding::UTF_8:\n"
+                "par%s%s.encode_utf8(buff_%d, false);\n"
+                "break;\n"
+                "case CharCoding::UTF16:\n"
+                "case CharCoding::UTF16LE:\n"
+                "case CharCoding::UTF16BE:\n"
+                "par%s%s.encode_utf16(buff_%d, coding);\n"
+                "break;\n"
+                "case CharCoding::UTF32:\n"
+                "case CharCoding::UTF32LE:\n"
+                "case CharCoding::UTF32BE:\n"
+                "par%s%s.encode_utf32(buff_%d, coding);\n"
+                "break;\n"
+                "default:\n"
+                "break;\n"
+                "}\n", subrefs_str, opt_suffix, (int)i, subrefs_str, opt_suffix,
+                (int)i, subrefs_str, opt_suffix, (int)i);
+            }
+            break;
+          default:
+            FATAL_ERROR("ValueRedirect::generate_code");
+          }
+          set_values_str = mputprintf(set_values_str,
+            "ptr_%d->decode(%s_descr_, buff_%d, TTCN_EncDec::CT_%s);\n"
+            "if (buff_%d.get_read_len() != 0) {\n"
+            "TTCN_error(\"Value redirect #%d failed, because the buffer was "
+            "not empty after decoding. Remaining octets: %%d.\", "
+            "(int)buff_%d.get_read_len());\n"
+            "}\n",
+            (int)i, member_type->get_genname_typedescriptor(scope).c_str(), (int)i,
+            member_type->get_coding(false).c_str(), (int)i, (int)(i + 1), (int)i);
+          if (use_decmatch_result) {
+            set_values_str = mputstr(set_values_str, "}\n");
+          }
+        }
       }
       else {
         // if the variable reference and the received value (or its specified field)
@@ -9028,17 +9394,17 @@ error:
           Common::Module* mod = scope->get_scope_mod();
           mod->add_type_conv(new TypeConv(redir_type, ref_type, false));
           set_values_str = mputprintf(set_values_str,
-            "if (!%s(*ptr_%d, par%s)) {\n"
+            "if (!%s(*ptr_%d, par%s%s)) {\n"
             "TTCN_error(\"Failed to convert redirected value #%d from type `%s' "
             "to type `%s'.\");\n"
             "}\n",
             TypeConv::get_conv_func(redir_type, ref_type, mod).c_str(), (int)i,
-            subrefs_str, (int)(i + 1), redir_type->get_typename().c_str(),
+            subrefs_str, opt_suffix, (int)(i + 1), redir_type->get_typename().c_str(),
             ref_type->get_typename().c_str());
         }
         else {
-          set_values_str = mputprintf(set_values_str, "*ptr_%d = par%s;\n",
-            (int)i, subrefs_str);
+          set_values_str = mputprintf(set_values_str, "*ptr_%d = par%s%s;\n",
+            (int)i, subrefs_str, opt_suffix);
         }
       }
       if (subrefs_expr.postamble != NULL) {
@@ -9076,6 +9442,16 @@ error:
     Free(constr_params_str);
     Free(constr_init_list_str);
     Free(set_values_str);
+  }
+  
+  bool ValueRedirect::has_decoded_modifier() const
+  {
+    for (size_t i = 0; i < v.size(); ++i) {
+      if (v[i]->is_decoded()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // =================================

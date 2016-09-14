@@ -610,6 +610,9 @@ public:
   void set_max(const UNIVERSAL_CHARSTRING& max_value);
   
   void set_decmatch(Dec_Match_Interface* new_instance, const char* coding_str = NULL);
+  
+  void* get_decmatch_dec_res() const;
+  CharCoding::CharCodingType get_decmatch_str_enc() const;
 
   void log() const;
   void log_match(const UNIVERSAL_CHARSTRING& match_value, boolean legacy = FALSE) const;

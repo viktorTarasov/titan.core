@@ -285,6 +285,7 @@ namespace Ttcn {
     size_t get_nof_comps() const;
     Template *get_temp_byIndex(size_t n) const;
     NamedTemplate *get_namedtemp_byIndex(size_t n) const;
+    NamedTemplate* get_namedtemp_byName(const Identifier& name) const;
     IndexedTemplate *get_indexedtemp_byIndex(size_t n) const;
     Template *get_all_from() const;
     /** Returns the number of elements in a VALUE_LIST. The elements of
@@ -517,6 +518,8 @@ namespace Ttcn {
     Type     *type; // type before the colon, may be null
     Ref_base *derived_reference; // base template, may be null
     Template *template_body; // must not be null
+    char* last_gen_expr; // last expression generated from this template instance
+    // (used if this template needs to be used multiple times)
 
     /** Copy constructor disabled. */
     TemplateInstance(const TemplateInstance& p);
@@ -539,6 +542,7 @@ namespace Ttcn {
     Type*     get_Type()       const { return type; }
     Ref_base* get_DerivedRef() const { return derived_reference; }
     Template* get_Template()   const { return template_body; }
+    char* get_last_gen_expr()  const { return last_gen_expr; }
     // it can return null pointer
     Def_Template* get_Referenced_Base_Template();
 
@@ -577,7 +581,8 @@ namespace Ttcn {
     void set_code_section(GovernedSimple::code_section_t p_code_section);
     bool needs_temp_ref();
     void generate_code(expression_struct *expr,
-                       template_restriction_t template_restriction = TR_NONE);
+                       template_restriction_t template_restriction = TR_NONE,
+                       bool has_decoded_redirect = false);
     /** Appends the initialization sequence of the referred templates
      *  and their default values to \a str.  Only templates from module
      *  \a usage_mod are considered. */

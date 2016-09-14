@@ -5756,7 +5756,7 @@ bool Type::chk_this_template_Str(Template *t, namedbool implicit_omit,
         target->error("Type of template instance cannot be determined");
         break;
       }
-      if (target->get_Type() != NULL) {
+      if (target->get_Type() != NULL && target_type->is_ref()) {
         target_type = target_type->get_type_refd();
       }
       self_ref = target_type->chk_this_template_generic(
