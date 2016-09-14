@@ -1235,7 +1235,7 @@ module NegSem_210302_Start_test_component_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-Dynamic test case error: PTC with component reference 3 is not alive anymore. Start operation cannot be performed on it.
+Dynamic test case error: 
 <END_RESULT>
 
 <END_TC>
