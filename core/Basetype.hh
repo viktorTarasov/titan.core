@@ -1103,6 +1103,10 @@ public:
     * the function returns a void pointer (since the decoding could result in a
     * value of any type), which is converted to the required type when used */
   virtual void* get_dec_res() const = 0;
+  /** this returns the decoded type's descriptor, which may be used by value and
+    * parameter redirect classes to determine whether the redirected value would
+    * be decoded into the same type as the type used in this decmatch template */
+  virtual const TTCN_Typedescriptor_t* get_type_descr() const = 0;
   virtual ~Dec_Match_Interface() {}
 };
 

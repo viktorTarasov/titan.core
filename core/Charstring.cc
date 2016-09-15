@@ -2454,6 +2454,15 @@ void* CHARSTRING_template::get_decmatch_dec_res() const
   return dec_match->instance->get_dec_res();
 }
 
+const TTCN_Typedescriptor_t* CHARSTRING_template::get_decmatch_type_descr() const
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Retrieving the decoded type's descriptor in a non-decmatch "
+      "charstring template.");
+  }
+  return dec_match->instance->get_type_descr();
+}
+
 void CHARSTRING_template::log_pattern(int n_chars, const char *chars_ptr)
 {
   TTCN_Logger::log_event_str("pattern \"");

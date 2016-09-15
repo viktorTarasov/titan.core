@@ -8540,7 +8540,16 @@ error:
           // then the parameter redirect class should use the decoding result 
           // from the template instead of decoding the parameter again
           needs_decode = false;
-          if (par->get_type()->get_type_refd_last()->get_typetype_ttcn3() == Type::T_USTR) {
+          Type* decmatch_type = matched_temp->get_decode_target()->get_expr_governor(
+            Type::EXPECTED_TEMPLATE)->get_type_refd_last();
+          if (ve->get_dec_type() != decmatch_type) {
+            // the decmatch template and this parameter redirect decode two
+            // different types, so just decode the parameter
+            needs_decode = true;
+            use_decmatch_result = false;
+          }
+          else if (par->get_type()->get_type_refd_last()->get_typetype_ttcn3() ==
+                   Type::T_USTR) {
             // for universal charstrings the situation could be trickier
             // compare the string encodings
             bool different_ustr_encodings = false;
@@ -8618,7 +8627,12 @@ error:
               set_params_str = mputstr(set_params_str, redir_coding_expr.preamble);
             }
             set_params_str = mputprintf(set_params_str,
-              "if (ptr_matched_temp->%s().get_selection() == DECODE_MATCH",
+              "if (ptr_matched_temp->%s().get_selection() == DECODE_MATCH && "
+              // the type the parameter was decoded to in the template must be the same
+              // as the type this parameter redirect would decode the redirected parameter to
+              // (this is checked by comparing the addresses of the type descriptors)
+              "&%s_descr_ == ptr_matched_temp->%s().get_decmatch_type_descr()",
+              par_name, ve->get_dec_type()->get_genname_typedescriptor(scope).c_str(),
               par_name);
             if (redir_coding_expr.expr != NULL) {
               set_params_str = mputprintf(set_params_str,
@@ -9171,7 +9185,16 @@ error:
           // then the value redirect class should use the decoding result 
           // from the template instead of decoding the value again
           needs_decode = false;
-          if (redir_type->get_type_refd_last()->get_typetype_ttcn3() == Type::T_USTR) {
+          Type* decmatch_type = matched_temp->get_decode_target()->get_expr_governor(
+            Type::EXPECTED_TEMPLATE)->get_type_refd_last();
+          if (v[i]->get_dec_type() != decmatch_type) {
+            // the decmatch template and this value redirect decode two
+            // different types, so just decode the value
+            needs_decode = true;
+            use_decmatch_result = false;
+          }
+          else if (redir_type->get_type_refd_last()->get_typetype_ttcn3() ==
+                   Type::T_USTR) {
             // for universal charstrings the situation could be trickier
             // compare the string encodings
             bool different_ustr_encodings = false;
@@ -9270,7 +9293,14 @@ error:
             }
             Free(current_ref);
             set_values_str = mputprintf(set_values_str,
-              "(*ptr_matched_temp)%s.get_selection() == DECODE_MATCH", subrefs_str);
+              "(*ptr_matched_temp)%s.get_selection() == DECODE_MATCH && "
+              // the type the value was decoded to in the template must be the same
+              // as the type this value redirect would decode the redirected value to
+              // (this is checked by comparing the addresses of the type descriptors)
+              "&%s_descr_ == (*ptr_matched_temp)%s.get_decmatch_type_descr()",
+              subrefs_str,
+              v[i]->get_dec_type()->get_genname_typedescriptor(scope).c_str(),
+              subrefs_str);
             if (redir_coding_expr.expr != NULL) {
               set_values_str = mputprintf(set_values_str,
                 " && %s == (*ptr_matched_temp)%s.get_decmatch_str_enc()",

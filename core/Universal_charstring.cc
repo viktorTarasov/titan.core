@@ -4223,6 +4223,15 @@ CharCoding::CharCodingType UNIVERSAL_CHARSTRING_template::get_decmatch_str_enc()
   return dec_match->coding;
 }
 
+const TTCN_Typedescriptor_t* UNIVERSAL_CHARSTRING_template::get_decmatch_type_descr() const
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Retrieving the decoded type's descriptor in a non-decmatch "
+      "universal charstring template.");
+  }
+  return dec_match->instance->get_type_descr();
+}
+
 void UNIVERSAL_CHARSTRING_template::log() const
 {
   switch (template_selection) {

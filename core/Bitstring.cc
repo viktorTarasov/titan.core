@@ -1836,6 +1836,15 @@ void* BITSTRING_template::get_decmatch_dec_res() const
   return dec_match->instance->get_dec_res();
 }
 
+const TTCN_Typedescriptor_t* BITSTRING_template::get_decmatch_type_descr() const
+{
+  if (template_selection != DECODE_MATCH) {
+    TTCN_error("Retrieving the decoded type's descriptor in a non-decmatch "
+      "bitstring template.");
+  }
+  return dec_match->instance->get_type_descr();
+}
+
 static const char patterns[] = { '0', '1', '?', '*' };
 
 void BITSTRING_template::log() const

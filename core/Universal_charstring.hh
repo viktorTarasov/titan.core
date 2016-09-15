@@ -613,6 +613,7 @@ public:
   
   void* get_decmatch_dec_res() const;
   CharCoding::CharCodingType get_decmatch_str_enc() const;
+  const TTCN_Typedescriptor_t* get_decmatch_type_descr() const;
 
   void log() const;
   void log_match(const UNIVERSAL_CHARSTRING& match_value, boolean legacy = FALSE) const;

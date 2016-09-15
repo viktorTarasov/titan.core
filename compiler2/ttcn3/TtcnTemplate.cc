@@ -4582,6 +4582,9 @@ compile_time:
       // retrieves the decoding result from the last successful matching
       // (used for optimizing decoded value and parameter redirects)
       "void* get_dec_res() const { return dec_val; }\n"
+      // returns a pointer to the type descriptor used in the decoding
+      // (used for the runtime type check for decoded value and parameter redirects)
+      "const TTCN_Typedescriptor_t* get_type_descr() const { return &%s_descr_; }\n"
       "};\n"
       "%s.set_type(DECODE_MATCH);\n"
       "{\n", class_tmp_id.c_str(),
@@ -4591,7 +4594,8 @@ compile_time:
       target_type->get_genname_value(my_scope).c_str(),
       target_type->get_genname_typedescriptor(my_scope).c_str(),
       target_type->get_coding(false).c_str(),
-      omit_in_value_list ? ", TRUE" : "", type_name.c_str(), name);
+      omit_in_value_list ? ", TRUE" : "", type_name.c_str(),
+      target_type->get_genname_typedescriptor(my_scope).c_str(), name);
     
     // generate the decoding target into a temporary
     string target_tmp_id = my_scope->get_scope_mod_gen()->get_temporary_id();
