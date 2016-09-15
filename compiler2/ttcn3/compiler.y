@@ -3872,11 +3872,7 @@ FunctionDef: // 164
 
 optDeterministicModifier:
   /* empty */
-| DeterministicKeyword
-  {
-    Location loc(infile, @1);
-    loc.error("Modifier '@deterministic' is not currently supported.");
-  }
+| DeterministicKeyword /* just ignore it for now */
 ;
 
 optFunctionFormalParList: // [167]
