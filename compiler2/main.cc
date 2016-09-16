@@ -924,14 +924,17 @@ int main(int argc, char *argv[])
     if (fp != NULL) {
       if (module->module_type == Module::MOD_UNKNOWN) {
         // try the ASN.1 and TTCN-3 preparsers
-  boolean asn1_module = is_asn1_module(module->file_name, fp, NULL);
+  // To display the module name in the error message
+  char *module_name = NULL;
+  boolean asn1_module = is_asn1_module(module->file_name, fp, &module_name);
   boolean ttcn3_module = is_ttcn3_module(module->file_name, fp, NULL);
   if (asn1_module) {
     if (!is_valid_asn1_filename (module->file_name)) {
-      ERROR("The file name (without suffix) shall be identical to the module name.\n"
+      ERROR("The file name '%s' (without suffix) shall be identical to the module name '%s'.\n"
             "If the name of the ASN.1 module contains a hyphen, the corresponding "
-            "file name shall contain an underscore character instead.");
+            "file name shall contain an underscore character instead.", module->file_name, module_name);
     }
+    Free(module_name);
     if (ttcn3_module) {
             ERROR("File `%s' looks so strange that it can contain both an "
         "ASN.1 and a TTCN-3 module. Use the command-line switch `-A' or "

@@ -4028,7 +4028,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
     if (file_name != NULL) {
       FILE *fp = fopen(file_name, "r");
       if (fp != NULL) {
-        char *module_name;
+        char *module_name = NULL;
         if (is_ttcn3_module(file_name, fp, &module_name)) {
           if (is_asn1_module(file_name, fp, NULL)) {
             ERROR("File `%s' looks so strange that it can be both ASN.1 and "
@@ -4041,9 +4041,10 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
            if (is_valid_asn1_filename(file_name)) {
              add_asn1_module(&makefile, file_name, module_name);
            } else {
-               ERROR("The file name (without suffix) shall be identical to the module name.\n"
+               ERROR("The file name '%s' (without suffix) shall be identical to the module name '%s'.\n"
                      "If the name of the ASN.1 module contains a hyphen, the corresponding "
-                     "file name shall contain an underscore character instead.");
+                     "file name shall contain an underscore character instead.", file_name, module_name);
+               Free(module_name);
            }
        } else {
            add_user_file(&makefile, file_name);

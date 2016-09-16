@@ -29,8 +29,13 @@ BuildTpd:
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -f $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
 	-t a.tpd
 
+# when licensing is off then the OPENSSL_DIR is not generated into the makefile
+RES := 0
+ifeq ($(LICENSING), yes)
+	RES := 1
+endif
 CheckTpd: BuildTpd
-	if [ ! -f "./bin/Makefile" ] || [ `grep -c "# OPENSSL_DIR = \\$$(TTCN3_DIR)" ./bin/Makefile` -ne 1 ] \
+	if [ ! -f "./bin/Makefile" ] || [ `grep -c "# OPENSSL_DIR = \\$$(TTCN3_DIR)" ./bin/Makefile` -ne $(RES) ] \
 	|| [ `grep -c "# XMLDIR = \\$$(TTCN3_DIR)" ./bin/Makefile` -ne 1 ]; \
 	then echo "Makefilegen disablePredefinedExternalFolder test: Overall verdict: fail" && exit 1; fi
 
