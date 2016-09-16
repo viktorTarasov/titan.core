@@ -5012,6 +5012,7 @@ compile_time:
     type = p.type ? p.type->clone() : 0;
     derived_reference = p.derived_reference ? p.derived_reference->clone() : 0;
     template_body = p.template_body->clone();
+    last_gen_expr = p.last_gen_expr ? mcopystr(p.last_gen_expr) : NULL;
   }
 
   TemplateInstance::TemplateInstance(Type *p_type, Ref_base *p_ref,
@@ -5334,6 +5335,7 @@ compile_time:
       }
     }
     size_t end_pos = mstrlen(expr->expr);
+    Free(last_gen_expr);
     last_gen_expr = mcopystrn(expr->expr + start_pos, end_pos - start_pos);
   }
 
