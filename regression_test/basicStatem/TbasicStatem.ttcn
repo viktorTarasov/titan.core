@@ -103,6 +103,11 @@ select (int1) {
  case (11,int2,4) { setverdict(pass); }
  case else { setverdict(inconc); }
 }
+select (int1 + int2) {
+ case (3,0) { setverdict(fail); }
+ case (11,4) { setverdict(pass); }
+ case else { setverdict(inconc); }
+}
 var octetstring octet1, octet2;
 octet1:= 'A9'O;
 octet2:= '1267FD'O;

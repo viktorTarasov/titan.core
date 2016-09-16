@@ -6006,7 +6006,25 @@ error:
       str = mputstr(str, "{\n");
       str = mputstr(str, expr_init);
     }
-    str=select.scs->generate_code(str, tmp_prefix.c_str(), expr_name);
+    
+    // Calculate the head expression only once
+    const string& tmp_id = my_sb->get_scope_mod_gen()->get_temporary_id();
+    str = mputprintf(str, "const %s &%s = %s;\n",
+      select.expr->get_my_governor()->get_genname_value(select.expr->get_my_scope()).c_str(),
+      tmp_id.c_str(),
+      expr_name);
+    // We generate different code if the head is an integer and all the branches
+    // are foldable
+    bool int_gen_code = false;
+    if (select.expr->get_my_governor()->is_compatible_tt(Type::T_INT, select.expr->is_asn1())) {
+      int_gen_code = select.scs->foldable_branches();
+    }
+    if (int_gen_code) {
+      str=select.scs->generate_code_switch(str, tmp_id.c_str());
+    }
+    else {
+      str=select.scs->generate_code(str, tmp_prefix.c_str(), tmp_id.c_str());
+    }
     Free(expr_name);
     if (expr_init[0]) str=mputstr(str, "}\n");
     Free(expr_init);
@@ -6358,8 +6376,28 @@ error:
     const string& tmp_prefix = my_sb->get_scope_mod_gen()->get_temporary_id();
     char *expr_init=memptystr();
     char *expr_name=select.expr->generate_code_tmp(0, expr_init);
-    select.scs->ilt_generate_code(ilt, tmp_prefix.c_str(),
-                                  expr_init, expr_name);
+    
+    // Calculate the head expression only once
+    const string& tmp_id = my_sb->get_scope_mod_gen()->get_temporary_id();
+    char * head_expr = mputprintf(head_expr, "const %s &%s = %s;\n",
+      select.expr->get_my_governor()->get_genname_value(select.expr->get_my_scope()).c_str(),
+      tmp_id.c_str(),
+      expr_name);
+
+    // We generate different code if the head is an integer and all the branches
+    // are foldable
+    bool int_gen_code = false;
+    if (select.expr->get_my_governor()->is_compatible_tt(Type::T_INT, select.expr->is_asn1())) {
+      int_gen_code = select.scs->foldable_branches();
+    }
+    if (int_gen_code) {
+      select.scs->ilt_generate_code_switch(ilt, expr_init, head_expr, tmp_id.c_str());
+    }
+    else {
+      select.scs->ilt_generate_code(ilt, tmp_prefix.c_str(),
+                                  expr_init, head_expr, tmp_id.c_str());
+    }
+    Free(head_expr);
     Free(expr_name);
     Free(expr_init);
   }
@@ -10632,6 +10670,27 @@ error:
     }
     return str;
   }
+  
+  char* SelectCase::generate_code_case(char *str, bool&else_branch) {
+    if (tis != NULL) {
+      for (size_t i = 0; i < tis->get_nof_tis(); i++) {
+        str = mputprintf(str, "case(");
+        expression_struct expr;
+        Code::init_expr(&expr);
+        tis->get_ti_byIndex(i)->get_specific_value()->generate_code_expr(&expr);
+        str = mputprintf(str, "%s):\n", expr.expr);
+        Code::free_expr(&expr);
+      }
+    } else {
+      else_branch = true;
+      str = mputstr(str, "default:\n"); // The else branch
+    }
+    
+    str = mputstr(str, "{\n");
+    str = block->generate_code(str);
+    str = mputstr(str, "break;\n}\n");
+    return str;
+  }
 
   /** \todo review */
   char* SelectCase::generate_code_stmt(char *str, const char *tmp_prefix,
@@ -10763,6 +10822,22 @@ error:
       if(scs[i]->get_block()->has_receiving_stmt()) return true;
     return false;
   }
+  
+  bool SelectCases::foldable_branches() const {
+    for(size_t i=0; i<scs.size(); i++) {
+      TemplateInstances* tis = scs[i]->get_tis();
+      if (tis == NULL) { // the else brach
+        continue;
+      }
+      for(size_t j=0; j<tis->get_nof_tis(); j++) {
+        Value * v = tis->get_ti_byIndex(j)->get_specific_value();
+        if (v == NULL || v->is_unfoldable()) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 
   /** \todo review */
   void SelectCases::chk(Type *p_gov)
@@ -10802,9 +10877,22 @@ error:
     str=mputprintf(str, "%s_end: /* empty */;\n", tmp_prefix);
     return str;
   }
+  
+  char* SelectCases::generate_code_switch(char *str, const char *expr_name)
+  {
+    bool else_branch=false;
+    str=mputprintf(str, "switch(%s.get_long_long_val()) {\n", expr_name);
+    for(size_t i=0; i<scs.size(); i++) {
+      str=scs[i]->generate_code_case(str, else_branch);
+      if(else_branch) break;
+    }
+    str=mputprintf(str, "};");
+    return str;
+  }
 
   void SelectCases::ilt_generate_code(ILT *ilt, const char *tmp_prefix,
                                       const char *expr_init,
+                                      const char *head_expr,
                                       const char *expr_name)
   {
     char*& str=ilt->get_out_branches();
@@ -10812,6 +10900,7 @@ error:
       str=mputstr(str, "{\n"); // (1)
       str=mputstr(str, expr_init);
     }
+    str=mputstr(str, head_expr);
     bool unreach=false;
     for(size_t i=0; i<scs.size(); i++) {
       if(unreach) break;
@@ -10825,6 +10914,24 @@ error:
       scs[i]->ilt_generate_code_stmt(ilt, tmp_prefix, i, unreach);
     }
     str=mputprintf(str, "%s_end:\n", tmp_prefix);
+  }
+  
+  void SelectCases::ilt_generate_code_switch(ILT *ilt, const char *expr_init, const char *head_expr, const char *expr_name)
+  {
+    char*& str=ilt->get_out_branches();
+    if(expr_init[0]) {
+        str=mputstr(str, "{\n");
+        str=mputstr(str, expr_init);
+    }
+    str=mputstr(str, head_expr);
+    bool else_branch=false;
+    str=mputprintf(str, "switch(%s.get_long_long_val()) {\n", expr_name);
+    for(size_t i=0; i<scs.size(); i++) {
+      str=scs[i]->generate_code_case(str, else_branch);
+      if(else_branch) break;
+    }
+    str=mputprintf(str, "};");
+    if (expr_init[0]) str=mputstr(str, "}\n");
   }
 
   void SelectCases::set_parent_path(WithAttribPath* p_path) {
