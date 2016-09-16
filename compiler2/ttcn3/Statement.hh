@@ -14,6 +14,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -49,6 +50,8 @@ namespace Ttcn {
   class IfClauses;
   class SelectCase;
   class SelectCases;
+  class SelectUnion;
+  class SelectUnions;
   class AltGuard;
   class AltGuards;
   class WithAttribPath;
@@ -186,6 +189,7 @@ namespace Ttcn {
       S_CONTINUE, // brk_cnt
       S_IF, // if_stmt
       S_SELECT, // select
+      S_SELECTUNION, // select union
       S_FOR, // loop
       S_WHILE, // loop
       S_DOWHILE, // loop
@@ -415,6 +419,11 @@ namespace Ttcn {
         Value *expr;
         SelectCases *scs;
       } select;
+      
+      struct {
+        Value *expr;
+        SelectUnions *sus;
+      } select_union;
 
       struct {
         Value *v;
@@ -482,6 +491,8 @@ namespace Ttcn {
               Location *p_loc);
     /** Constructor used by S_SELECT */
     Statement(statementtype_t p_st, Value *p_expr, SelectCases *p_scs);
+    /** Constructor used by S_SELECTUNION */
+    Statement(statementtype_t p_st, Value *p_expr, SelectUnions *p_sus);
     /** Constructor used by S_FOR */
     Statement(statementtype_t p_st, Definitions *p_defs, Assignment *p_ass,
               Value *p_final, Assignment *p_step, StatementBlock *p_block);
@@ -623,6 +634,7 @@ namespace Ttcn {
     void chk_goto();
     void chk_if();
     void chk_select();
+    void chk_select_union();
     void chk_for();
     void chk_while();
     void chk_do_while();
@@ -748,6 +760,7 @@ namespace Ttcn {
     char *generate_code_goto(char *str);
     char *generate_code_if(char *str);
     char *generate_code_select(char *str);
+    char *generate_code_select_union(char *str);
     char *generate_code_for(char *str);
     char *generate_code_while(char *str);
     char *generate_code_dowhile(char *str);
@@ -761,6 +774,7 @@ namespace Ttcn {
     void ilt_generate_code_def(ILT *ilt);
     void ilt_generate_code_if(ILT *ilt);
     void ilt_generate_code_select(ILT *ilt);
+    void ilt_generate_code_select_union(ILT *ilt);
     void ilt_generate_code_call(ILT *ilt);
     void ilt_generate_code_for(ILT *ilt);
     void ilt_generate_code_while(ILT *ilt);
@@ -1373,6 +1387,77 @@ namespace Ttcn {
      */
     virtual void set_parent_path(WithAttribPath* p_path);
   };
+  
+   /**
+   * Class to represent a select-union branch: the identifier list and
+   * the statement block.
+   */
+  class SelectUnion : public Node, public Location {
+  private:
+    vector<Identifier> ids;
+    StatementBlock *block;
+
+    SelectUnion(const SelectUnion& p);
+    SelectUnion& operator=(const SelectUnion& p);
+  public:
+    /** ids.empty() == true means "else" case */
+    SelectUnion(StatementBlock *p_block);
+    virtual ~SelectUnion();
+    virtual SelectUnion* clone() const;
+    virtual void set_my_scope(Scope *p_scope);
+    virtual void set_fullname(const string& p_fullname);
+    const vector<Identifier>& get_ids() const { return ids; }
+    Identifier* get_id_byIndex(size_t index) const { return ids[index]; }
+    StatementBlock *get_block() const { return block; }
+    void add_id(Identifier* id);
+    /* checking functions */
+    void chk(Type *p_gov);
+    void set_code_section(GovernedSimple::code_section_t p_code_section);
+    char* generate_code_case(char *str, const char *type_name, bool &else_branch);
+
+    /** Needed by implicit omit. Pushes attrib path down to definitions
+     */
+    virtual void set_parent_path(WithAttribPath* p_path);
+  };
+
+  /**
+   * Class to represent SelectUnions.
+   */
+  class SelectUnions : public Node {
+  private:
+    vector<SelectUnion> sus;
+
+    SelectUnions(const SelectUnions& p);
+    SelectUnions& operator=(const SelectUnions& p);
+  public:
+    SelectUnions() : Node() { }
+    virtual ~SelectUnions();
+    virtual SelectUnions* clone() const;
+    void add_su(SelectUnion *p_su);
+    size_t get_nof_sus() const {return sus.size();}
+    SelectUnion *get_su_byIndex(size_t p_i) const {return sus[p_i];}
+    virtual void set_my_scope(Scope *p_scope);
+    virtual void set_fullname(const string& p_fullname);
+    void set_my_sb(StatementBlock *p_sb, size_t p_index);
+    void set_my_def(Definition *p_def);
+    void set_my_ags(AltGuards *p_ags);
+    void set_my_laic_stmt(AltGuards *p_ags, Statement *p_loop_stmt);
+    StatementBlock::returnstatus_t has_return() const;
+    bool has_receiving_stmt() const;
+    /* checking functions */
+    /** p_gov is the governor type of select expression */
+    void chk(Type *p_gov);
+    /** checks whether all embedded statements are allowed in an interleaved
+     * construct */
+    void chk_allowed_interleave();
+    void set_code_section(GovernedSimple::code_section_t p_code_section);
+    char *generate_code(char *str, const char *type_name, const char* loc);
+
+    /** Needed by implicit omit. Pushes attrib path down to definitions
+     */
+    virtual void set_parent_path(WithAttribPath* p_path);
+  };
+
 
   /**
    * Class to represent an alt guard.

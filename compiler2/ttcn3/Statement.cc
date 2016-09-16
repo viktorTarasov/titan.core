@@ -16,6 +16,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -527,6 +528,10 @@ namespace Ttcn {
       delete select.expr;
       delete select.scs;
       break;
+    case S_SELECTUNION:
+      delete select_union.expr;
+      delete select_union.sus;
+      break;
     case S_FOR:
       if(loop.for_stmt.varinst)
         delete loop.for_stmt.init_varinst;
@@ -886,6 +891,21 @@ namespace Ttcn {
         FATAL_ERROR("Statement::Statement()");
       select.expr=p_expr;
       select.scs=p_scs;
+      break;
+    default:
+      FATAL_ERROR("Statement::Statement()");
+    } // switch statementtype
+  }
+  
+    Statement::Statement(statementtype_t p_st, Value *p_expr, SelectUnions *p_sus)
+    : statementtype(p_st), my_sb(0)
+  {
+    switch(statementtype) {
+    case S_SELECTUNION:
+      if(!p_expr || !p_sus)
+        FATAL_ERROR("Statement::Statement()");
+      select_union.expr=p_expr;
+      select_union.sus=p_sus;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -1426,6 +1446,7 @@ namespace Ttcn {
     case S_GOTO: return "goto";
     case S_IF: return "if";
     case S_SELECT: return "select-case";
+    case S_SELECTUNION: return "select-union";
     case S_FOR: return "for";
     case S_WHILE: return "while";
     case S_DOWHILE: return "do-while";
@@ -1597,6 +1618,10 @@ namespace Ttcn {
     case S_SELECT:
       select.expr->set_my_scope(p_scope);
       select.scs->set_my_scope(p_scope);
+      break;
+    case S_SELECTUNION:
+      select_union.expr->set_my_scope(p_scope);
+      select_union.sus->set_my_scope(p_scope);
       break;
     case S_FOR:
       if (loop.for_stmt.varinst) {
@@ -1830,6 +1855,10 @@ namespace Ttcn {
       select.expr->set_fullname(p_fullname+".expr");
       select.scs->set_fullname(p_fullname+".scs");
       break;
+    case S_SELECTUNION:
+      select_union.expr->set_fullname(p_fullname+".expr");
+      select_union.sus->set_fullname(p_fullname+".sus");
+      break;
     case S_FOR:
       if(loop.for_stmt.varinst)
         loop.for_stmt.init_varinst->set_fullname(p_fullname+".init");
@@ -2048,6 +2077,9 @@ namespace Ttcn {
     case S_SELECT:
       select.scs->set_my_sb(p_sb, p_index);
       break;
+    case S_SELECTUNION:
+      select_union.sus->set_my_sb(p_sb, p_index);
+      break;
     case S_FOR:
     case S_WHILE:
     case S_DOWHILE:
@@ -2077,6 +2109,9 @@ namespace Ttcn {
       break;
     case S_SELECT:
       select.scs->set_my_def(p_def);
+      break;
+    case S_SELECTUNION:
+      select_union.sus->set_my_def(p_def);
       break;
     case S_FOR:
     case S_WHILE:
@@ -2108,6 +2143,9 @@ namespace Ttcn {
     case S_SELECT:
       select.scs->set_my_ags(p_ags);
       break;
+    case S_SELECTUNION:
+      select_union.sus->set_my_ags(p_ags);
+      break;
     case S_FOR:
     case S_WHILE:
     case S_DOWHILE:
@@ -2134,6 +2172,9 @@ namespace Ttcn {
       break;
     case S_SELECT:
       select.scs->set_my_laic_stmt(p_ags, p_loop_stmt);
+      break;
+    case S_SELECTUNION:
+      select_union.sus->set_my_laic_stmt(p_ags, p_loop_stmt);
       break;
     case S_ALT:
     case S_INTERLEAVE:
@@ -2205,6 +2246,8 @@ namespace Ttcn {
       return if_stmt.ics->has_return(if_stmt.elseblock);
     case S_SELECT:
       return select.scs->has_return();
+    case S_SELECTUNION:
+      return select_union.sus->has_return();
     case S_FOR:
     case S_WHILE:
       if (loop.block->has_return() == StatementBlock::RS_NO)
@@ -2324,6 +2367,8 @@ namespace Ttcn {
         || (if_stmt.elseblock && if_stmt.elseblock->has_receiving_stmt());
     case S_SELECT:
       return select.scs->has_receiving_stmt();
+    case S_SELECTUNION:
+      return select_union.sus->has_receiving_stmt();
     case S_FOR:
     case S_WHILE:
     case S_DOWHILE:
@@ -2411,6 +2456,9 @@ namespace Ttcn {
       break;
     case S_SELECT:
       chk_select();
+      break;
+    case S_SELECTUNION:
+      chk_select_union();
       break;
     case S_FOR:
       chk_for();
@@ -2623,6 +2671,9 @@ namespace Ttcn {
       break;
     case S_SELECT:
       select.scs->chk_allowed_interleave();
+      break;
+    case S_SELECTUNION:
+      select_union.sus->chk_allowed_interleave();
       break;
     case S_FOR:
     case S_WHILE:
@@ -2988,7 +3039,47 @@ error:
       INCOMPLETE_NOT_ALLOWED, OMIT_NOT_ALLOWED, SUB_CHK);
     select.scs->chk(t_gov);
   }
-
+  
+  void Statement::chk_select_union()
+  {
+    Error_Context cntxt(this, "In select union statement");
+    select_union.expr->set_lowerid_to_ref();
+    Type *t_gov=select_union.expr->get_expr_governor_last();
+    
+    if (t_gov == NULL || t_gov->get_typetype() == Type::T_ERROR) {
+      select.expr->error("Cannot determine the type of the head expression");
+      return;
+    }
+    
+    Type::typetype_t tt=t_gov->get_typetype();
+    if (tt != Type::T_CHOICE_T && tt != Type::T_CHOICE_A && tt != Type::T_ANYTYPE) {
+      select.expr->error("The head must be of a union type or anytype");
+      return;
+    }
+    
+    for(size_t i=0; i<select_union.sus->get_nof_sus(); i++) {
+      size_t size = select_union.sus->get_su_byIndex(i)->get_ids().size();
+      for(size_t j=0; j<size; j++) {
+        const Identifier *id = select_union.sus->get_su_byIndex(i)->get_id_byIndex(j);
+        if (!t_gov->has_comp_withName(*id)) {
+          select_union.sus->get_su_byIndex(i)->error("In the %lu. branch: '%s' is not an alternative of union type '%s'", i+1, id->get_ttcnname().c_str(), t_gov->get_typename().c_str());
+          continue;
+        }
+        for(size_t i2=i; i2<select_union.sus->get_nof_sus(); i2++) {
+          size_t size = select_union.sus->get_su_byIndex(i2)->get_ids().size();
+          for(size_t j2=j; j2<size; j2++) {
+            if (i == i2 && j == j2) continue;
+            const Identifier *id2 = select_union.sus->get_su_byIndex(i2)->get_id_byIndex(j2);
+            if (id->get_ttcnname() == id2->get_ttcnname()) {
+              select_union.sus->get_su_byIndex(i2)->error("The '%s' is already present in the %lu. branch of select union", id->get_ttcnname().c_str(), i+1);
+            }
+          }
+        }
+      }
+    }
+    
+    select_union.sus->chk(t_gov);
+  }
   void Statement::chk_for()
   {
     Error_Context cntxt(this, "In for statement");
@@ -5165,6 +5256,10 @@ error:
       select.expr->set_code_section(p_code_section);
       select.scs->set_code_section(p_code_section);
       break;
+    case S_SELECTUNION:
+      select_union.expr->set_code_section(p_code_section);
+      select_union.sus->set_code_section(p_code_section);
+      break;
     case S_ALT:
     case S_INTERLEAVE:
       ags->set_code_section(p_code_section);
@@ -5347,6 +5442,7 @@ error:
     case S_BLOCK:
     case S_IF:
     case S_SELECT:
+    case S_SELECTUNION:
     case S_FOR:
     case S_WHILE:
     case S_DOWHILE:
@@ -5389,6 +5485,9 @@ error:
       break;
     case S_SELECT:
       str=generate_code_select(str);
+      break;
+    case S_SELECTUNION:
+      str=generate_code_select_union(str);
       break;
     case S_FOR:
       str=generate_code_for(str);
@@ -5679,6 +5778,9 @@ error:
     case S_SELECT:
       ilt_generate_code_select(ilt);
       break;
+    case S_SELECTUNION:
+      ilt_generate_code_select_union(ilt);
+      break;
     case S_CALL:
       ilt_generate_code_call(ilt);
       break;
@@ -5910,7 +6012,29 @@ error:
     Free(expr_init);
     return str;
   }
-
+  
+  char* Statement::generate_code_select_union(char *str)
+  {
+    expression_struct expr;
+    Code::init_expr(&expr);
+    select_union.expr->generate_code_expr(&expr);
+    if (expr.preamble) {
+      str = mputstr(str, expr.preamble);
+    }
+    str = mputprintf(str, "switch(%s.get_selection()) {\n", expr.expr);
+    const char* type_name = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope()).c_str();
+    char* loc = NULL;
+    loc = select_union.expr->update_location_object(loc);
+    str = select_union.sus->generate_code(str, type_name, loc);
+    str = mputstr(str, "}\n");
+    if (expr.postamble) {
+      str = mputstr(str, expr.postamble);
+    }
+    Code::free_expr(&expr);
+    Free(loc);
+    return str;
+  }
+  
   char *Statement::generate_code_for(char *str)
   {
     /** \todo initial does not have its own location */
@@ -6238,6 +6362,35 @@ error:
                                   expr_init, expr_name);
     Free(expr_name);
     Free(expr_init);
+  }
+  
+  void Statement::ilt_generate_code_select_union(ILT *ilt)
+  {
+    char*& str = ilt->get_out_branches();
+    expression_struct expr;
+    Code::init_expr(&expr);
+    select_union.expr->generate_code_expr(&expr);
+    bool has_recv = select_union.sus->has_receiving_stmt();
+    if (has_recv) {
+      str = mputstr(str, "{\n");
+    }
+    if (expr.preamble) {
+      str = mputstr(str, expr.preamble);
+    }
+    str = mputprintf(str, "switch(%s.get_selection()) {\n", expr.expr);
+    const char* type_name = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope()).c_str();
+    char* loc = NULL;
+    loc = select_union.expr->update_location_object(loc);
+    str = select_union.sus->generate_code(str, type_name, loc);
+    str = mputstr(str, "}\n");
+    if (expr.postamble) {
+      str = mputstr(str, expr.postamble);
+    }
+    Code::free_expr(&expr);
+    Free(loc);
+    if (has_recv) {
+      str = mputstr(str, "}\n");
+    }
   }
 
   void Statement::ilt_generate_code_call(ILT *ilt)
@@ -7227,6 +7380,9 @@ error:
           break;
         case S_SELECT:
           select.scs->set_parent_path(p_path);
+          break;
+        case S_SELECTUNION:
+          select_union.sus->set_parent_path(p_path);
           break;
         case S_FOR:
           loop.block->set_parent_path(p_path);
@@ -10674,6 +10830,231 @@ error:
   void SelectCases::set_parent_path(WithAttribPath* p_path) {
     for (size_t i = 0; i < scs.size(); i++)
       scs[i]->set_parent_path(p_path);
+  }
+  
+  // =================================
+  // ===== SelectUnion
+  // =================================
+  
+  SelectUnion::SelectUnion(StatementBlock *p_block)
+    : block(p_block)
+  {
+    if(!block)
+      FATAL_ERROR("SelectUnion::SelectUnion()");
+  }
+
+  SelectUnion::~SelectUnion()
+  {
+    for(size_t i = 0; i < ids.size(); i++) {
+      delete ids[i];
+    }
+    ids.clear();
+    delete block;
+  }
+
+  SelectUnion *SelectUnion::clone() const
+  {
+    FATAL_ERROR("SelectUnion::clone");
+  }
+
+  void SelectUnion::set_my_scope(Scope *p_scope)
+  {
+    block->set_my_scope(p_scope);
+  }
+
+  void SelectUnion::set_fullname(const string& p_fullname)
+  {
+    Node::set_fullname(p_fullname);
+    block->set_fullname(p_fullname+".block");
+  }
+  
+  void SelectUnion::add_id(Identifier *id) {
+    if (!id) {
+      FATAL_ERROR("SelectUnion::add_id()");
+    }
+    ids.add(id);
+  }
+
+  void SelectUnion::chk(Type *p_gov)
+  {
+    Error_Context cntxt(this, "In select union statement");
+    block->chk();
+  }
+
+  void SelectUnion::set_code_section(GovernedSimple::code_section_t p_code_section)
+  {
+    block->set_code_section(p_code_section);
+  }
+
+  char* SelectUnion::generate_code_case(char *str, const char *type_name, bool &else_branch)
+  {
+    if (ids.size() != 0) {
+      for (size_t i = 0; i < ids.size(); i++) {
+        str = mputprintf(str, "case(%s::ALT_%s):\n",
+          type_name, ids[i]->get_name().c_str());
+      }
+    } else {
+      else_branch = true;
+      str = mputstr(str, "default:\n"); // The else branch
+    }
+    
+    str = mputstr(str, "{\n");
+    str = block->generate_code(str);
+    str = mputstr(str, "break;\n}\n");
+    return str;
+  }
+
+  void SelectUnion::set_parent_path(WithAttribPath* p_path) {
+    block->set_parent_path(p_path);
+  }
+  
+  // =================================
+  // ===== SelectUnions
+  // =================================
+
+  SelectUnions::~SelectUnions()
+  {
+    for(size_t i=0; i<sus.size(); i++) {
+      delete sus[i];
+    }
+    sus.clear();
+  }
+
+  SelectUnions *SelectUnions::clone() const
+  {
+    FATAL_ERROR("SelectUnions::clone");
+  }
+
+  void SelectUnions::add_su(SelectUnion *p_su)
+  {
+    if(!p_su) {
+      FATAL_ERROR("SelectUnions::add_su()");
+    }
+    sus.add(p_su);
+  }
+
+  void SelectUnions::set_my_scope(Scope *p_scope)
+  {
+    for(size_t i=0; i<sus.size(); i++) {
+      sus[i]->set_my_scope(p_scope);
+    }
+  }
+
+  void SelectUnions::set_fullname(const string& p_fullname)
+  {
+    Node::set_fullname(p_fullname);
+    for(size_t i = 0; i < sus.size(); i++) {
+      sus[i]->set_fullname(p_fullname+".su_"+Int2string(i+1));
+    }
+  }
+
+  void SelectUnions::set_my_sb(StatementBlock *p_sb, size_t p_index)
+  {
+    for(size_t i=0; i<sus.size(); i++) {
+      sus[i]->get_block()->set_my_sb(p_sb, p_index);
+    }
+  }
+
+  void SelectUnions::set_my_def(Definition *p_def)
+  {
+    for(size_t i=0; i<sus.size(); i++) {
+      sus[i]->get_block()->set_my_def(p_def);
+    }
+  }
+
+  void SelectUnions::set_my_ags(AltGuards *p_ags)
+  {
+    for(size_t i=0; i<sus.size(); i++) {
+      sus[i]->get_block()->set_my_ags(p_ags);
+    }
+  }
+
+  void SelectUnions::set_my_laic_stmt(AltGuards *p_ags, Statement *p_loop_stmt)
+  {
+    for(size_t i=0; i<sus.size(); i++) {
+      sus[i]->get_block()->set_my_laic_stmt(p_ags, p_loop_stmt);
+    }
+  }
+
+  StatementBlock::returnstatus_t SelectUnions::has_return() const
+  {
+    StatementBlock::returnstatus_t ret_val = StatementBlock::RS_MAYBE;
+    bool has_else = false;
+    for (size_t i = 0; i < sus.size(); i++) {
+      SelectUnion *su = sus[i];
+      switch (su->get_block()->has_return()) {
+      case StatementBlock::RS_NO:
+        if (ret_val == StatementBlock::RS_YES) return StatementBlock::RS_MAYBE;
+        else ret_val = StatementBlock::RS_NO;
+        break;
+      case StatementBlock::RS_YES:
+        if (ret_val == StatementBlock::RS_NO) return StatementBlock::RS_MAYBE;
+        else ret_val = StatementBlock::RS_YES;
+        break;
+      default:
+        return StatementBlock::RS_MAYBE;
+      }
+      if (su->get_ids().empty()) { // The else branch
+        has_else = true;
+        break;
+      }
+    }
+    if (!has_else && ret_val == StatementBlock::RS_YES)
+      return StatementBlock::RS_MAYBE;
+    else return ret_val;
+  }
+
+  bool SelectUnions::has_receiving_stmt() const
+  {
+    for(size_t i=0; i<sus.size(); i++) {
+      if(sus[i]->get_block()->has_receiving_stmt()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void SelectUnions::chk(Type *p_gov)
+  {
+    for(size_t i = 0; i < sus.size(); i++) {
+      sus[i]->chk(p_gov);
+    }
+  }
+
+  void SelectUnions::chk_allowed_interleave()
+  {
+    for (size_t i = 0; i < sus.size(); i++) {
+      sus[i]->get_block()->chk_allowed_interleave();
+    }
+  }
+
+  void SelectUnions::set_code_section(GovernedSimple::code_section_t p_code_section)
+  {
+    for(size_t i=0; i<sus.size(); i++) {
+      sus[i]->set_code_section(p_code_section);
+    }
+  }
+
+  char* SelectUnions::generate_code(char *str, const char *type_name, const char *loc)
+  {
+    str = mputprintf(str, "case(%s::UNBOUND_VALUE):\n", type_name);
+    str = mputprintf(str, "%s", loc);
+    str = mputstr(str, "TTCN_error(\"The union in the head shall be initialized\");\n");
+    str = mputstr(str, "break;\n");
+    bool else_branch = false;
+    for (size_t i = 0; i < sus.size(); i++) {
+      str = sus[i]->generate_code_case(str, type_name, else_branch);
+    }
+    if (!else_branch) {
+      str = mputstr(str, "default:\nbreak;\n");
+    }
+    return str;
+  }
+
+  void SelectUnions::set_parent_path(WithAttribPath* p_path) {
+    for (size_t i = 0; i < sus.size(); i++) {
+      sus[i]->set_parent_path(p_path);
+    }
   }
 
   // =================================

@@ -46,7 +46,8 @@ assignmentNotation omitdef anytype RAW implicitMsgEncoding pattern_quadruples \
 macros visibility hexstrOper ucharstrOper objidOper CRTR00015758 slider \
 XML ipv6 implicitOmit testcase_defparam transparent HQ16404 cfgFile \
 all_from lazyEval tryCatch text2ttcn json junitlogger ttcn2json profiler templateOmit \
-customEncoding makefilegen uidChars checkstate hostid templateIstemplatekind
+customEncoding makefilegen uidChars checkstate hostid templateIstemplatekind \
+selectUnion
 
 ifdef DYN
 DIRS += loggerplugin

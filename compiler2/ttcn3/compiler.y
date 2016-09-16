@@ -185,6 +185,8 @@ static const string anyname("anytype");
   Qualifiers *qualifiers;
   SelectCase *selectcase;
   SelectCases *selectcases;
+  SelectUnion *selectunion;
+  SelectUnions *selectunions;
   SignatureExceptions *signexc;
   SignatureParam *signparam;
   SignatureParamList *signparamlist;
@@ -945,6 +947,8 @@ static const string anyname("anytype");
 %type <qualifiers> DefOrFieldRefList optAttribQualifier
 %type <selectcase> SelectCase
 %type <selectcases> seqSelectCase SelectCaseBody
+%type <selectunion> SelectUnion SelectunionElse
+%type <selectunions> seqSelectUnion SelectUnionBody
 %type <signexc> ExceptionTypeList optExceptionSpec
 %type <signparam> SignatureFormalPar
 %type <signparamlist> SignatureFormalParList optSignatureFormalParList
@@ -962,6 +966,7 @@ static const string anyname("anytype");
   StartTimerStatement StopExecutionStatement StopStatement StopTCStatement
   StopTimerStatement TimeoutStatement TimerStatements TriggerStatement
   UnmapStatement VerdictStatements WhileStatement SelectCaseConstruct
+  SelectUnionConstruct
   StopTestcaseStatement String2TtcnStatement ProfilerStatement int2enumStatement
 %type <statementblock> StatementBlock optElseClause FunctionStatementOrDefList
   ControlStatementOrDefList ModuleControlBody
@@ -1051,7 +1056,7 @@ static const string anyname("anytype");
 %type <configspec> ConfigSpec
 %type <createpar> optCreateParameter
 %type <applyop> ApplyOp
-%type <identifier_list> IdentifierList
+%type <identifier_list> IdentifierList IdentifierListOrPredefType
 %type <singlevarinst> SingleConstDef SingleVarInstance
 %type <singlevarinst_list> ConstList VarList
 %type <singletempvarinst> SingleTempVarInstance
@@ -1692,6 +1697,7 @@ ApplyOp
   Free($$.elements);
 }
 IdentifierList
+IdentifierListOrPredefType
 
 %destructor {
   delete $$.id;
@@ -8266,6 +8272,7 @@ BasicStatements: // 578
 | LoopConstruct { $$ = $1; }
 | ConditionalConstruct { $$ = $1; }
 | SelectCaseConstruct { $$ = $1; }
+| SelectUnionConstruct { $$ = $1; }
 ;
 
 Expression: // 579
@@ -9480,6 +9487,117 @@ seqTemplateInstance:
   }
 | seqTemplateInstance optError ',' error { $$ = $1; }
 ;
+
+
+IdentifierListOrPredefType:
+  optError IDentifier
+  {
+    $$.nElements = 1;
+    $$.elements = (YYSTYPE::extconstidentifier_t*)Malloc(sizeof(*$$.elements));
+    $$.elements[0].id = $2;
+    $$.elements[0].yyloc = @2;
+  }
+| IdentifierListOrPredefType ',' optError IDentifier
+  {
+    $$.nElements = $1.nElements + 1;
+    $$.elements = (YYSTYPE::extconstidentifier_t*)
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements[$1.nElements].id = $4;
+    $$.elements[$1.nElements].yyloc = @4;
+  }
+| optError PredefinedType /* shall not be "anytype" */
+  {
+    // Construct an identifier "on the fly" ($2 here is just a typetype_t)
+    const char* builtin_typename = Type::get_typename_builtin($2);
+    if (0 == builtin_typename) FATAL_ERROR("Unexpected type %d", $2);
+    const string& at_field = anytype_field(string(builtin_typename));
+    Identifier* type_id = new Identifier(Identifier::ID_TTCN, at_field);
+
+    $$.nElements = 1;
+    $$.elements = (YYSTYPE::extconstidentifier_t*)Malloc(sizeof(*$$.elements));
+    $$.elements[0].id = type_id;
+    $$.elements[0].yyloc = @2;
+  }
+| IdentifierListOrPredefType ',' optError PredefinedType
+  {
+     // Construct an identifier "on the fly" ($2 here is just a typetype_t)
+    const char* builtin_typename = Type::get_typename_builtin($4);
+    if (0 == builtin_typename) FATAL_ERROR("Unexpected type %d", $4);
+    const string& at_field = anytype_field(string(builtin_typename));
+    Identifier* type_id = new Identifier(Identifier::ID_TTCN, at_field);
+
+    $$.nElements = $1.nElements + 1;
+    $$.elements = (YYSTYPE::extconstidentifier_t*)
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements[$1.nElements].id = type_id;
+    $$.elements[$1.nElements].yyloc = @4;
+  }
+| IdentifierListOrPredefType ',' error { $$ = $1; }
+;
+
+
+SelectUnionConstruct:
+  SelectKeyword UnionKeyword '(' SingleExpression optError ')' SelectUnionBody
+  {
+    $$=new Statement(Statement::S_SELECTUNION, $4, $7);
+    $$->set_location(infile, @$);
+  }
+| SelectKeyword UnionKeyword '(' error ')' SelectUnionBody
+  {
+    Value *v = new Value(Value::V_ERROR);
+    v->set_location(infile, @3);
+    $$=new Statement(Statement::S_SELECTUNION, v, $6);
+    $$->set_location(infile, @$);
+  }
+;
+
+SelectUnionBody:
+  '{' seqSelectUnion optError '}' {$$=$2;}
+| '{' seqSelectUnion optError SelectunionElse optError '}'
+  {
+    $$=$2;
+    $$->add_su($4);
+  }
+| '{' error '}' {$$=new SelectUnions();}
+;
+
+seqSelectUnion:
+  optError SelectUnion
+  {
+    $$=new SelectUnions();
+    $$->add_su($2);
+  }
+| seqSelectUnion optError SelectUnion
+  {
+    $$=$1;
+    $$->add_su($3);
+  }
+;
+
+SelectUnion:
+  CaseKeyword '(' IdentifierListOrPredefType optError ')' StatementBlock optSemiColon
+  {
+    $$=new SelectUnion($6);
+    for (size_t i = 0; i < $3.nElements; i++) {
+      $$->add_id($3.elements[i].id);
+    }
+    $$->set_location(infile, @3);
+  }
+| CaseKeyword '(' error ')' StatementBlock optSemiColon
+  {
+    $$ = new SelectUnion($5);
+    $$->set_location(infile, @$);
+  }
+;
+
+SelectunionElse:
+  CaseKeyword ElseKeyword StatementBlock optSemiColon
+  {
+    $$=new SelectUnion($3);  // The else branch, ids is empty
+    $$->set_location(infile, @2);
+  }
+
+
 
 /* A.1.6.9 Miscellaneous productions */
 
