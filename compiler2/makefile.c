@@ -4041,7 +4041,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
            if (is_valid_asn1_filename(file_name)) {
              add_asn1_module(&makefile, file_name, module_name);
            } else {
-               ERROR("The file name '%s' (without suffix) shall be identical to the module name '%s'.\n"
+               ERROR("The file name `%s' (without suffix) shall be identical to the module name `%s'.\n"
                      "If the name of the ASN.1 module contains a hyphen, the corresponding "
                      "file name shall contain an underscore character instead.", file_name, module_name);
                Free(module_name);

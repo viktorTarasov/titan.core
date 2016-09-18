@@ -930,7 +930,7 @@ int main(int argc, char *argv[])
   boolean ttcn3_module = is_ttcn3_module(module->file_name, fp, NULL);
   if (asn1_module) {
     if (!is_valid_asn1_filename (module->file_name)) {
-      ERROR("The file name '%s' (without suffix) shall be identical to the module name '%s'.\n"
+      ERROR("The file name `%s' (without suffix) shall be identical to the module name `%s'.\n"
             "If the name of the ASN.1 module contains a hyphen, the corresponding "
             "file name shall contain an underscore character instead.", module->file_name, module_name);
     }
