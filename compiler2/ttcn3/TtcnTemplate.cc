@@ -1332,7 +1332,8 @@ namespace Ttcn {
 
   Template* Template::get_refd_sub_template(Ttcn::FieldOrArrayRefs *subrefs,
                                             bool usedInIsbound,
-                                            ReferenceChain *refch)
+                                            ReferenceChain *refch,
+                                            bool silent)
   {
     if (!subrefs) return this;
     Template *t=this;
@@ -1349,7 +1350,7 @@ namespace Ttcn {
         return this;
       case SPECIFIC_VALUE:
         (void)t->u.specific_value->get_refd_sub_value(
-          subrefs, i, usedInIsbound, refch); // only to report errors
+          subrefs, i, usedInIsbound, refch, silent); // only to report errors
         break;
       default:
         break;
@@ -1357,8 +1358,9 @@ namespace Ttcn {
       Ttcn::FieldOrArrayRef *ref=subrefs->get_ref(i);
       if(ref->get_type() == Ttcn::FieldOrArrayRef::FIELD_REF)
         t=t->get_refd_field_template(*ref->get_id(), *ref, usedInIsbound,
-            refch);
-      else t=t->get_refd_array_template(ref->get_val(), usedInIsbound, refch);
+            refch, silent);
+      else t=t->get_refd_array_template(ref->get_val(), usedInIsbound, refch,
+        silent);
     }
     return t;
   }
@@ -1426,7 +1428,7 @@ namespace Ttcn {
   }
 
   Template* Template::get_refd_field_template(const Identifier& field_id,
-    const Location& loc, bool usedInIsbound, ReferenceChain *refch)
+    const Location& loc, bool usedInIsbound, ReferenceChain *refch, bool silent)
   {
     switch (templatetype) {
     case OMIT_VALUE:
@@ -1436,9 +1438,11 @@ namespace Ttcn {
     case COMPLEMENTED_LIST:
       // the above template types are valid matching mechanisms,
       // but they cannot be sub-referenced
-      loc.error("Reference to field `%s' of %s `%s'",
-        field_id.get_dispname().c_str(), get_templatetype_str(),
-        get_fullname().c_str());
+      if (!silent) {
+        loc.error("Reference to field `%s' of %s `%s'",
+          field_id.get_dispname().c_str(), get_templatetype_str(),
+          get_fullname().c_str());
+      }
       break;
     default:
       break;
@@ -1455,8 +1459,10 @@ namespace Ttcn {
     case Type::T_OPENTYPE:
     case Type::T_ANYTYPE:
       if (!t->has_comp_withName(field_id)) {
-        loc.error("Reference to non-existent union field `%s' in type `%s'",
-          field_id.get_dispname().c_str(), t->get_typename().c_str());
+        if (!silent) {
+          loc.error("Reference to non-existent union field `%s' in type `%s'",
+            field_id.get_dispname().c_str(), t->get_typename().c_str());
+        }
         return 0;
       } else if (templatetype != NAMED_TEMPLATE_LIST) {
         // this is an invalid matching mechanism, the error is already reported
@@ -1470,7 +1476,7 @@ namespace Ttcn {
       } else {
         NamedTemplate *nt = u.named_templates->get_nt_byIndex(0);
         if (nt->get_name() != field_id) {
-          if (!usedInIsbound) {
+          if (!usedInIsbound && !silent) {
             loc.error("Reference to inactive field `%s' in a template of"
                     " union type `%s'. The active field is `%s'.",
                     field_id.get_dispname().c_str(),
@@ -1490,9 +1496,11 @@ namespace Ttcn {
     case Type::T_SET_A:
     case Type::T_SET_T:
       if (!t->has_comp_withName(field_id)) {
-        loc.error("Reference to non-existent %s field `%s' in type `%s'",
-          typetype_str, field_id.get_dispname().c_str(),
-          t->get_typename().c_str());
+        if (!silent) {
+          loc.error("Reference to non-existent %s field `%s' in type `%s'",
+            typetype_str, field_id.get_dispname().c_str(),
+            t->get_typename().c_str());
+        }
         return 0;
       } else if (templatetype != NAMED_TEMPLATE_LIST) {
         // this is an invalid matching mechanism
@@ -1504,9 +1512,9 @@ namespace Ttcn {
       } else if (base_template) {
         // take the field from the base template (recursively)
         return base_template->get_template_refd_last(refch)
-          ->get_refd_field_template(field_id, loc, usedInIsbound, refch);
+          ->get_refd_field_template(field_id, loc, usedInIsbound, refch, silent);
       } else {
-        if (!usedInIsbound) {
+        if (!usedInIsbound && !silent) {
           // this should not happen unless there is an error
           // (e.g. missing field)
           loc.error("Reference to an unbound field `%s'",
@@ -1515,16 +1523,19 @@ namespace Ttcn {
         return 0;
       }
     default:
-      loc.error("Invalid field reference `%s': type `%s' "
-        "does not have fields", field_id.get_dispname().c_str(),
-        t->get_typename().c_str());
+      if (!silent) {
+        loc.error("Invalid field reference `%s': type `%s' "
+          "does not have fields", field_id.get_dispname().c_str(),
+          t->get_typename().c_str());
+      }
       return 0;
     }
   }
 
   Template* Template::get_refd_array_template(Value *array_index,
                                               bool usedInIsbound,
-                                              ReferenceChain *refch)
+                                              ReferenceChain *refch,
+                                              bool silent)
   {
     switch (templatetype) {
     case OMIT_VALUE:
@@ -1536,8 +1547,10 @@ namespace Ttcn {
     case SUBSET_MATCH:
       // the above template types are valid matching mechanisms,
       // but they cannot be sub-referenced
-      array_index->error("Reference with index to an element of %s `%s'",
-        get_templatetype_str(), get_fullname().c_str());
+      if (!silent) {
+        array_index->error("Reference with index to an element of %s `%s'",
+          get_templatetype_str(), get_fullname().c_str());
+      }
       break;
     default:
       break;
@@ -1549,7 +1562,7 @@ namespace Ttcn {
       if (v_index->get_valuetype() == Value::V_INT) {
         index = v_index->get_val_Int()->get_val();
         index_available = true;
-      } else {
+      } else if (!silent) {
         array_index->error("An integer value was expected as index");
       }
     }
@@ -1566,10 +1579,12 @@ namespace Ttcn {
     case Type::T_SETOF:
       if (index_available) {
         if(index < 0) {
-          array_index->error("A non-negative integer value was expected "
-            "instead of %s for indexing a template of `%s of' type `%s'",
-            Int2string(index).c_str(), typetype_str,
-            t->get_typename().c_str());
+          if (!silent) {
+            array_index->error("A non-negative integer value was expected "
+              "instead of %s for indexing a template of `%s of' type `%s'",
+              Int2string(index).c_str(), typetype_str,
+              t->get_typename().c_str());
+          }
           return 0;
         } else if (templatetype != TEMPLATE_LIST) {
           // remain silent the error has been already reported
@@ -1577,10 +1592,12 @@ namespace Ttcn {
         } else {
           size_t nof_elements = get_nof_listitems();
           if (index >= static_cast<Int>(nof_elements)) {
-            array_index->error("Index overflow in a template of `%s of' type "
-              "`%s': the index is %s, but the template has only %lu elements",
-              typetype_str, t->get_typename().c_str(),
-              Int2string(index).c_str(), (unsigned long) nof_elements);
+            if (!silent) {
+              array_index->error("Index overflow in a template of `%s of' type "
+                "`%s': the index is %s, but the template has only %lu elements",
+                typetype_str, t->get_typename().c_str(),
+                Int2string(index).c_str(), (unsigned long) nof_elements);
+            }
             return 0;
           }
         }
@@ -1609,8 +1626,10 @@ namespace Ttcn {
       }
       break;
     default:
-      array_index->error("Invalid array element reference: type `%s' cannot "
-                         "be indexed", t->get_typename().c_str());
+      if (!silent) {
+        array_index->error("Invalid array element reference: type `%s' cannot "
+                           "be indexed", t->get_typename().c_str());
+      }
       return 0;
     }
     Template *ret_val = get_listitem_byIndex(index);
@@ -1618,9 +1637,9 @@ namespace Ttcn {
       if (base_template) {
         // take the referred element from the base template
         return base_template->get_template_refd_last(refch)
-          ->get_refd_array_template(v_index, usedInIsbound, refch);
+          ->get_refd_array_template(v_index, usedInIsbound, refch, silent);
       } else {
-        if(ret_val->get_templatetype() == TEMPLATE_NOTUSED)
+        if(!silent && ret_val->get_templatetype() == TEMPLATE_NOTUSED)
                 error("Not used symbol is not allowed in this context");
         return 0;
       }
@@ -5325,7 +5344,7 @@ compile_time:
         // after it
         const string& tmp_id = template_body->get_temporary_id();
         const char *tmp_id_str = tmp_id.c_str();
-        expr->preamble = mputprintf(expr->preamble, "%s %s(%s);\n",
+        expr->preamble = mputprintf(expr->preamble, "%s %s = %s;\n",
           template_body->get_my_governor()->get_genname_template(
           template_body->get_my_scope()).c_str(), tmp_id_str, expr->expr);
         Free(expr->expr);

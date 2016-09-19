@@ -298,15 +298,16 @@ namespace Ttcn {
     Template* get_template_refd_last(ReferenceChain *refch=0);
     Template* get_refd_sub_template(Ttcn::FieldOrArrayRefs *subrefs,
                                     bool usedInIsbound,
-                                    ReferenceChain *refch);
+                                    ReferenceChain *refch,
+                                    bool silent = false);
     Value* get_string_encoding() const;
     TemplateInstance* get_decode_target() const;
   private:
     Template* get_template_refd(ReferenceChain *refch);
     Template* get_refd_field_template(const Identifier& field_id,
-      const Location& loc, bool usedInIsbound, ReferenceChain *refch);
+      const Location& loc, bool usedInIsbound, ReferenceChain *refch, bool silent);
     Template* get_refd_array_template(Value *array_index, bool usedInIsbound,
-                                      ReferenceChain *refch);
+                                      ReferenceChain *refch, bool silent);
 
     bool compile_time() const;
   public:

@@ -8831,7 +8831,8 @@ error:
 
   Value* Value::get_refd_sub_value(Ttcn::FieldOrArrayRefs *subrefs,
                                    size_t start_i, bool usedInIsbound,
-                                   ReferenceChain *refch)
+                                   ReferenceChain *refch,
+                                   bool silent)
   {
     if (!subrefs) return this;
     Value *v = this;
@@ -8849,18 +8850,21 @@ error:
       } // switch
       Ttcn::FieldOrArrayRef *ref = subrefs->get_ref(i);
       if (ref->get_type() == Ttcn::FieldOrArrayRef::FIELD_REF)
-        v = v->get_refd_field_value(*ref->get_id(), usedInIsbound, *ref);
-      else v = v->get_refd_array_value(ref->get_val(), usedInIsbound, refch);
+        v = v->get_refd_field_value(*ref->get_id(), usedInIsbound, *ref, silent);
+      else v = v->get_refd_array_value(ref->get_val(), usedInIsbound, refch, silent);
     }
     return v;
   }
 
   Value *Value::get_refd_field_value(const Identifier& field_id,
-                                     bool usedInIsbound, const Location& loc)
+                                     bool usedInIsbound, const Location& loc,
+                                     bool silent)
   {
     if (valuetype == V_OMIT) {
-      loc.error("Reference to field `%s' of omit value `%s'",
-	field_id.get_dispname().c_str(), get_fullname().c_str());
+      if (!silent) {
+        loc.error("Reference to field `%s' of omit value `%s'",
+          field_id.get_dispname().c_str(), get_fullname().c_str());
+      }
       return 0;
     }
     if (!my_governor) FATAL_ERROR("Value::get_refd_field_value()");
@@ -8874,9 +8878,11 @@ error:
     case Type::T_OPENTYPE:
     case Type::T_ANYTYPE:
       if (!t->has_comp_withName(field_id)) {
-        loc.error("Reference to non-existent union field `%s' in type `%s'",
-	  field_id.get_dispname().c_str(), t->get_typename().c_str());
-	return 0;
+        if (!silent) {
+          loc.error("Reference to non-existent union field `%s' in type `%s'",
+            field_id.get_dispname().c_str(), t->get_typename().c_str());
+        }
+        return 0;
       } else if (valuetype != V_CHOICE) {
         // remain silent, the error is already reported
         return 0;
@@ -8884,7 +8890,7 @@ error:
         // everything is OK
         return u.choice.alt_value;
       }else {
-        if (!usedInIsbound) {
+        if (!usedInIsbound && !silent) {
           loc.error("Reference to inactive field `%s' in a value of union type "
 	  "`%s'. The active field is `%s'",
 	  field_id.get_dispname().c_str(), t->get_typename().c_str(),
@@ -8895,9 +8901,11 @@ error:
     case Type::T_SEQ_A:
     case Type::T_SEQ_T:
       if (!t->has_comp_withName(field_id)) {
-        loc.error("Reference to non-existent record field `%s' in type `%s'",
-	  field_id.get_dispname().c_str(), t->get_typename().c_str());
-	return 0;
+        if (!silent) {
+          loc.error("Reference to non-existent record field `%s' in type `%s'",
+            field_id.get_dispname().c_str(), t->get_typename().c_str());
+        }
+        return 0;
       } else if (valuetype != V_SEQ) {
         // remain silent, the error has been already reported
         return 0;
@@ -8905,17 +8913,21 @@ error:
     case Type::T_SET_A:
     case Type::T_SET_T:
       if (!t->has_comp_withName(field_id)) {
-        loc.error("Reference to non-existent set field `%s' in type `%s'",
-	  field_id.get_dispname().c_str(), t->get_typename().c_str());
-	return 0;
+        if (!silent) {
+          loc.error("Reference to non-existent set field `%s' in type `%s'",
+            field_id.get_dispname().c_str(), t->get_typename().c_str());
+        }
+        return 0;
       } else if (valuetype != V_SET) {
         // remain silent, the error has been already reported
         return 0;
       } else break;
     default:
-      loc.error("Invalid field reference `%s': type `%s' "
-	"does not have fields", field_id.get_dispname().c_str(),
-	t->get_typename().c_str());
+      if (!silent) {
+        loc.error("Invalid field reference `%s': type `%s' "
+          "does not have fields", field_id.get_dispname().c_str(),
+          t->get_typename().c_str());
+      }
       return 0;
     }
     // the common end for record & set types
@@ -8923,7 +8935,7 @@ error:
       // everything is OK
       return u.val_nvs->get_nv_byName(field_id)->get_value();
     } else if (!is_asn1()) {
-      if (!usedInIsbound) {
+      if (!usedInIsbound && !silent) {
         loc.error("Reference to unbound field `%s'",
 	  field_id.get_dispname().c_str());
         // this is an error in TTCN-3, which has been already reported
@@ -8949,7 +8961,7 @@ error:
   }
 
   Value *Value::get_refd_array_value(Value *array_index, bool usedInIsbound,
-                                     ReferenceChain *refch)
+                                     ReferenceChain *refch, bool silent)
   {
     Value *v_index = array_index->get_value_refd_last(refch);
     Int index = 0;
@@ -8958,13 +8970,15 @@ error:
       if (v_index->valuetype == V_INT) {
         index = v_index->get_val_Int()->get_val();
         index_available = true;
-      } else {
+      } else if (!silent) {
         array_index->error("An integer value was expected as index");
       }
     }
     if (valuetype == V_OMIT) {
-      array_index->error("Accessing an element with index of omit value `%s'",
-        get_fullname().c_str());
+      if (!silent) {
+        array_index->error("Accessing an element with index of omit value `%s'",
+          get_fullname().c_str());
+      }
       return 0;
     }
     if (!my_governor) FATAL_ERROR("Value::get_refd_field_value()");
@@ -8976,17 +8990,19 @@ error:
     case Type::T_SEQOF:
       if (index_available) {
         if (index < 0) {
-          array_index->error("A non-negative integer value was expected "
-                             "instead of %s for indexing a value of `record "
-                             "of' type `%s'", Int2string(index).c_str(),
-                             t->get_typename().c_str());
+          if (!silent) {
+            array_index->error("A non-negative integer value was expected "
+                               "instead of %s for indexing a value of `record "
+                               "of' type `%s'", Int2string(index).c_str(),
+                               t->get_typename().c_str());
+          }
           return 0;
         }
         switch (valuetype) {
         case V_SEQOF:
           if (!is_indexed()) {
             if (index >= static_cast<Int>(u.val_vs->get_nof_vs())) {
-              if (!usedInIsbound) {
+              if (!usedInIsbound && !silent) {
                 array_index->error("Index overflow in a value of `record of' "
                                  "type `%s': the index is %s, but the value "
                                  "has only %lu elements",
@@ -8997,7 +9013,7 @@ error:
               return 0;
             } else {
               Value* temp = u.val_vs->get_v_byIndex(index);
-              if(temp->get_value_refd_last()->get_valuetype() == V_NOTUSED)
+              if(!silent && temp->get_value_refd_last()->get_valuetype() == V_NOTUSED)
                 temp->error("Not used symbol is not allowed in this context");
               return u.val_vs->get_v_byIndex(index);
             }
@@ -9024,16 +9040,18 @@ error:
     case Type::T_SETOF:
       if (index_available) {
         if (index < 0) {
-          array_index->error("A non-negative integer value was expected "
-            "instead of %s for indexing a value of `set of' type `%s'",
-          Int2string(index).c_str(), t->get_typename().c_str());
+          if (!silent) {
+            array_index->error("A non-negative integer value was expected "
+              "instead of %s for indexing a value of `set of' type `%s'",
+              Int2string(index).c_str(), t->get_typename().c_str());
+          }
           return 0;
         }
         switch (valuetype) {
         case V_SETOF:
           if (!is_indexed()) {
             if (index >= static_cast<Int>(u.val_vs->get_nof_vs())) {
-              if (!usedInIsbound) {
+              if (!usedInIsbound && !silent) {
                 array_index->error("Index overflow in a value of `set of' type "
                                  "`%s': the index is %s, but the value has "
                                  "only %lu elements",
@@ -9044,7 +9062,7 @@ error:
               return 0;
             } else {
               Value* temp = u.val_vs->get_v_byIndex(index);
-              if(temp->get_value_refd_last()->get_valuetype() == V_NOTUSED)
+              if(!silent && temp->get_value_refd_last()->get_valuetype() == V_NOTUSED)
                 temp->error("Not used symbol is not allowed in this context");
               return temp;
             }
@@ -9123,8 +9141,10 @@ error:
       if (index_available) return get_string_element(index, *array_index);
       else return 0;
     default:
-      array_index->error("Invalid array element reference: type `%s' cannot "
-	"be indexed", t->get_typename().c_str());
+      if (!silent) {
+        array_index->error("Invalid array element reference: type `%s' cannot "
+          "be indexed", t->get_typename().c_str());
+      }
       return 0;
     }
   }

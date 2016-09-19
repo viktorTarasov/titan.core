@@ -486,7 +486,8 @@ namespace Common {
      Type::expected_value_t exp_val=Type::EXPECTED_DYNAMIC_VALUE);
     Value *get_refd_sub_value(Ttcn::FieldOrArrayRefs *subrefs,
                               size_t start_i, bool usedInIsbound,
-                              ReferenceChain *refch);
+                              ReferenceChain *refch,
+                              bool silent = false);
     /** Returns true if the value is unknown at compile-time. */
     bool is_unfoldable
     (ReferenceChain *refch=0,
@@ -674,9 +675,9 @@ namespace Common {
     bool evaluate_isvalue(bool from_sequence);
 
     Value *get_refd_field_value(const Identifier& field_id, bool usedInIsbound,
-                                const Location& loc);
+                                const Location& loc, bool silent);
     Value *get_refd_array_value(Value *array_index, bool usedInIsbound,
-                                ReferenceChain *refch);
+                                ReferenceChain *refch, bool silent);
     Value *get_string_element(const Int& index, const Location& loc);
 
   public:

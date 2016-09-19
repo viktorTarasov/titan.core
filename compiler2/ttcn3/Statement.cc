@@ -6379,7 +6379,7 @@ error:
     
     // Calculate the head expression only once
     const string& tmp_id = my_sb->get_scope_mod_gen()->get_temporary_id();
-    char * head_expr = mputprintf(head_expr, "const %s &%s = %s;\n",
+    char * head_expr = mprintf("const %s &%s = %s;\n",
       select.expr->get_my_governor()->get_genname_value(select.expr->get_my_scope()).c_str(),
       tmp_id.c_str(),
       expr_name);
@@ -7038,7 +7038,9 @@ error:
       expr->expr = mputprintf(expr->expr, ".%s(", opname);
       if (port_op.r.rcvpar) {
         // The receive parameter is present.
-        port_op.r.rcvpar->generate_code(expr);
+        bool has_decoded_redirect = port_op.r.redirect.value != NULL &&
+          port_op.r.redirect.value->has_decoded_modifier();
+        port_op.r.rcvpar->generate_code(expr, TR_NONE, has_decoded_redirect);
         expr->expr = mputstr(expr->expr, ", ");
         if (port_op.r.redirect.value) {
           // Value redirect is also present.
@@ -7117,11 +7119,8 @@ error:
       if (port_op.r.rcvpar) {
         bool has_decoded_param_redirect = port_op.r.redirect.param != NULL &&
           port_op.r.redirect.param->has_decoded_modifier();
-        bool has_decoded_value_redirect = port_op.r.redirect.value != NULL &&
-          port_op.r.redirect.value->has_decoded_modifier();
 	// the signature template is present
-        port_op.r.rcvpar->generate_code(expr, TR_NONE,
-          has_decoded_param_redirect || has_decoded_value_redirect);
+        port_op.r.rcvpar->generate_code(expr, TR_NONE, has_decoded_param_redirect);
 	Type *signature = port_op.r.rcvpar->get_Template()->get_my_governor();
 	Type *return_type =
 	  signature->get_type_refd_last()->get_signature_return_type();
@@ -7129,7 +7128,10 @@ error:
 	  expr->expr = mputstr(expr->expr, ".set_value_template(");
 	  if (port_op.r.getreply_valuematch) {
 	    // the value match is also present
-	    port_op.r.getreply_valuematch->generate_code(expr);
+      bool has_decoded_value_redirect = port_op.r.redirect.value != NULL &&
+        port_op.r.redirect.value->has_decoded_modifier();
+	    port_op.r.getreply_valuematch->generate_code(expr, TR_NONE,
+        has_decoded_value_redirect);
 	  } else {
 	    // the value match is not present
 	    // we must substitute it with ? in the signature template
@@ -9332,10 +9334,9 @@ error:
       }
       const char* subrefs_str = (subrefs_expr.expr != NULL) ? subrefs_expr.expr : "";
       if (v[i]->is_decoded()) {
-        // set the usedInIsbound parameter to true so get_refd_sub_template does not
-        // report errors for missing fields/elements
+        // set the silent parameter to 'true', so no errors are displayed
         Template* matched_temp = matched_ti->get_Template()->get_refd_sub_template(
-          v[i]->get_subrefs(), true, NULL);
+          v[i]->get_subrefs(), false, NULL, true);
         if (matched_temp != NULL) {
           matched_temp = matched_temp->get_template_refd_last();
         }
