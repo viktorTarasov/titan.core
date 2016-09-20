@@ -10689,12 +10689,8 @@ error:
         used_numbers.add(&val->get_val());
         if (!already_present) {
           already_present_all = false;
-          str = mputprintf(str, "case(");
-          expression_struct expr;
-          Code::init_expr(&expr);
-          tis->get_ti_byIndex(i)->get_specific_value()->generate_code_expr(&expr);
-          str = mputprintf(str, "%s):\n", expr.expr);
-          Code::free_expr(&expr);
+          str = mputprintf(str, "case(%ld):\n", 
+          (long int)(tis->get_ti_byIndex(i)->get_specific_value()->get_val_Int()->get_val()));
         }
       }
     } else {
