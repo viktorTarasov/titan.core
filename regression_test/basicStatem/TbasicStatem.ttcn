@@ -108,6 +108,24 @@ select (int1 + int2) {
  case (11,4) { setverdict(pass); }
  case else { setverdict(inconc); }
 }
+select (int1 + int2) {
+ case (3,0) { setverdict(fail); }
+ case (3) { setverdict(fail); }
+ case (0,3) { setverdict(fail); }
+ case (0,4) { setverdict(fail); }
+ case (99999999999999999999999999999999999) { setverdict(fail); }
+ case (11,4) { setverdict(pass); }
+ case else { setverdict(inconc); }
+ case else { setverdict(inconc); }
+}
+select (int1 + int2) {
+ case (3,0) { setverdict(fail); }
+ case (3) { setverdict(fail); }
+ case (0,3) { setverdict(fail); }
+ case (0,4) { setverdict(fail); }
+ case (11,4) { setverdict(pass); }
+ case else { setverdict(inconc); }
+}
 var octetstring octet1, octet2;
 octet1:= 'A9'O;
 octet2:= '1267FD'O;

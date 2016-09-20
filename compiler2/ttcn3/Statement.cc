@@ -6014,12 +6014,12 @@ error:
       tmp_id.c_str(),
       expr_name);
     // We generate different code if the head is an integer and all the branches
-    // are foldable
-    bool int_gen_code = false;
+    // are foldable and not big integers
+    bool gen_switch_code = false;
     if (select.expr->get_my_governor()->is_compatible_tt(Type::T_INT, select.expr->is_asn1())) {
-      int_gen_code = select.scs->foldable_branches();
+      gen_switch_code = select.scs->can_generate_switch();
     }
-    if (int_gen_code) {
+    if (gen_switch_code) {
       str=select.scs->generate_code_switch(str, tmp_id.c_str());
     }
     else {
@@ -6386,11 +6386,11 @@ error:
 
     // We generate different code if the head is an integer and all the branches
     // are foldable
-    bool int_gen_code = false;
+    bool gen_switch_code = false;
     if (select.expr->get_my_governor()->is_compatible_tt(Type::T_INT, select.expr->is_asn1())) {
-      int_gen_code = select.scs->foldable_branches();
+      gen_switch_code = select.scs->can_generate_switch();
     }
-    if (int_gen_code) {
+    if (gen_switch_code) {
       select.scs->ilt_generate_code_switch(ilt, expr_init, head_expr, tmp_id.c_str());
     }
     else {
@@ -10672,24 +10672,40 @@ error:
     return str;
   }
   
-  char* SelectCase::generate_code_case(char *str, bool&else_branch) {
+  char* SelectCase::generate_code_case(char *str, bool &else_branch,
+    vector<const Int>& used_numbers) {
+    bool already_present_all = true; // to decide if we need to generate the block
     if (tis != NULL) {
       for (size_t i = 0; i < tis->get_nof_tis(); i++) {
-        str = mputprintf(str, "case(");
-        expression_struct expr;
-        Code::init_expr(&expr);
-        tis->get_ti_byIndex(i)->get_specific_value()->generate_code_expr(&expr);
-        str = mputprintf(str, "%s):\n", expr.expr);
-        Code::free_expr(&expr);
+        int_val_t* val = tis->get_ti_byIndex(i)->get_specific_value()->get_val_Int();
+        bool already_present = false; // to decide if we need to generate the case
+        for (size_t j = 0; j < used_numbers.size(); j++) {
+          if (*(used_numbers[j]) == val->get_val()) {
+            already_present = true;
+            break;
+          }
+        }
+        used_numbers.add(&val->get_val());
+        if (!already_present) {
+          already_present_all = false;
+          str = mputprintf(str, "case(");
+          expression_struct expr;
+          Code::init_expr(&expr);
+          tis->get_ti_byIndex(i)->get_specific_value()->generate_code_expr(&expr);
+          str = mputprintf(str, "%s):\n", expr.expr);
+          Code::free_expr(&expr);
+        }
       }
     } else {
       else_branch = true;
+      already_present_all = false;
       str = mputstr(str, "default:\n"); // The else branch
     }
-    
-    str = mputstr(str, "{\n");
-    str = block->generate_code(str);
-    str = mputstr(str, "break;\n}\n");
+    if (!already_present_all) {
+      str = mputstr(str, "{\n");
+      str = block->generate_code(str);
+      str = mputstr(str, "break;\n}\n");
+    }
     return str;
   }
 
@@ -10824,7 +10840,7 @@ error:
     return false;
   }
   
-  bool SelectCases::foldable_branches() const {
+  bool SelectCases::can_generate_switch() const {
     for(size_t i=0; i<scs.size(); i++) {
       TemplateInstances* tis = scs[i]->get_tis();
       if (tis == NULL) { // the else brach
@@ -10832,9 +10848,9 @@ error:
       }
       for(size_t j=0; j<tis->get_nof_tis(); j++) {
         Value * v = tis->get_ti_byIndex(j)->get_specific_value();
-        if (v == NULL || v->is_unfoldable()) {
-          return false;
-        }
+        if (v == NULL) return false;
+        if (v->is_unfoldable()) return false;
+        if (!v->get_val_Int()->is_native()) return false;
       }
     }
     return true;
@@ -10882,12 +10898,14 @@ error:
   char* SelectCases::generate_code_switch(char *str, const char *expr_name)
   {
     bool else_branch=false;
+    vector<const Int> used_numbers; // store the case values to remove duplicates
     str=mputprintf(str, "switch(%s.get_long_long_val()) {\n", expr_name);
     for(size_t i=0; i<scs.size(); i++) {
-      str=scs[i]->generate_code_case(str, else_branch);
+      str=scs[i]->generate_code_case(str, else_branch, used_numbers);
       if(else_branch) break;
     }
     str=mputprintf(str, "};");
+    used_numbers.clear();
     return str;
   }
 
@@ -10926,12 +10944,14 @@ error:
     }
     str=mputstr(str, head_expr);
     bool else_branch=false;
+    vector<const Int> used_numbers; // store the case values to remove duplicates
     str=mputprintf(str, "switch(%s.get_long_long_val()) {\n", expr_name);
     for(size_t i=0; i<scs.size(); i++) {
-      str=scs[i]->generate_code_case(str, else_branch);
+      str=scs[i]->generate_code_case(str, else_branch, used_numbers);
       if(else_branch) break;
     }
     str=mputprintf(str, "};");
+    used_numbers.clear();
     if (expr_init[0]) str=mputstr(str, "}\n");
   }
 

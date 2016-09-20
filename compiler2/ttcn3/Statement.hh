@@ -1335,7 +1335,8 @@ namespace Ttcn {
     void set_code_section(GovernedSimple::code_section_t p_code_section);
     char* generate_code_if(char *str, const char *tmp_prefix,
                            const char *expr_name, size_t idx, bool& unreach);
-    char* generate_code_case(char *str, bool& else_branch);
+    char* generate_code_case(char *str, bool& else_branch,
+                             vector<const Int>& used_numbers);
     char* generate_code_stmt(char *str, const char *tmp_prefix,
                              size_t idx, bool& unreach);
     void ilt_generate_code_stmt(ILT *ilt, const char *tmp_prefix,
@@ -1370,7 +1371,7 @@ namespace Ttcn {
     void set_my_laic_stmt(AltGuards *p_ags, Statement *p_loop_stmt);
     StatementBlock::returnstatus_t has_return() const;
     bool has_receiving_stmt() const;
-    bool foldable_branches() const;
+    bool can_generate_switch() const;
     /* checking functions */
     /** p_gov is the governor type of select expression */
     void chk(Type *p_gov);
