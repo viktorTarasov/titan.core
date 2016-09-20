@@ -1131,7 +1131,7 @@ namespace Ttcn {
       * structure. A new class is generated for every value redirect, which
       * handles the redirecting.
       * @param matched_ti the template instance used for matching the redirected
-      * value
+      * value (if NULL, then the template instance is an 'any value' template)
       * @param base_class_prefix the namespace and/or class prefix of the
       * base value redirect class of the appropriate type */
     void generate_code(expression_struct* expr, TemplateInstance* matched_ti,

@@ -9284,7 +9284,7 @@ error:
     char* constr_params_str = NULL;
     char* constr_init_list_str = NULL;
     char* set_values_str = NULL;
-    if (has_decoded_modifier()) {
+    if (matched_ti != NULL && has_decoded_modifier()) {
       // store a pointer to the matched template, the decoding results from
       // decmatch templates might be reused to optimize decoded value redirects
       expr->expr = mputprintf(expr->expr, "&(%s), ", matched_ti->get_last_gen_expr());
@@ -9335,8 +9335,9 @@ error:
       const char* subrefs_str = (subrefs_expr.expr != NULL) ? subrefs_expr.expr : "";
       if (v[i]->is_decoded()) {
         // set the silent parameter to 'true', so no errors are displayed
-        Template* matched_temp = matched_ti->get_Template()->get_refd_sub_template(
-          v[i]->get_subrefs(), false, NULL, true);
+        Template* matched_temp = matched_ti != NULL ?
+          matched_ti->get_Template()->get_refd_sub_template(v[i]->get_subrefs(),
+          false, NULL, true) : NULL;
         if (matched_temp != NULL) {
           matched_temp = matched_temp->get_template_refd_last();
         }
@@ -9460,7 +9461,7 @@ error:
               break;
             }
           }
-          if (unfoldable) {
+          if (unfoldable && matched_ti != NULL) {
             // the decmatch-check must be done at runtime
             use_decmatch_result = true;
             if (redir_coding_expr.preamble != NULL) {
