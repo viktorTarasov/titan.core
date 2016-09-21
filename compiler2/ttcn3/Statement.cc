@@ -10688,8 +10688,8 @@ error:
         used_numbers.add(&val->get_val());
         if (!already_present) {
           already_present_all = false;
-          str = mputprintf(str, "case(%ld):\n", 
-          (long int)(tis->get_ti_byIndex(i)->get_specific_value()->get_val_Int()->get_val()));
+          str = mputprintf(str, "case(%lld):\n", 
+          tis->get_ti_byIndex(i)->get_specific_value()->get_val_Int()->get_val());
         }
       }
     } else {
