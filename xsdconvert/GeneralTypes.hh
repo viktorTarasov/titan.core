@@ -172,4 +172,6 @@ enum wanted {
   want_CT, want_ST, want_BOTH
 };
 
+static const Mstring XMLSchema("http://www.w3.org/2001/XMLSchema");
+
 #endif /*GENERAL_TYPES_H_*/

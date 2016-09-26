@@ -65,6 +65,8 @@ public:
   bool hasUserHeader(const char* userHeaderName) const;
   void addTtcn3PP(const char* name) { ttcnPP.push_back(name); };
   bool hasTtcn3PP(const char* ttcnPPName) const;
+  void addXSDModuleName(const char* name) { xsdModuleNames.push_back(name); };
+  bool hasXSDModuleName(const char* xsdName) const;
   std::string setRelativePathTo(const std::string& absPathTo);
 
 private:
@@ -86,6 +88,7 @@ private:
   std::vector<std::string> userSources; // *.cc ; *.cpp
   std::vector<std::string> userHeaders; // *.hh ; *.h ; *.hpp
   std::vector<std::string> ttcnPP; // *.ttcnpp
+  std::vector<std::string> xsdModuleNames; // .xsd
   bool initialized;
 };
 
@@ -110,11 +113,13 @@ public:
   void addUserSourceToProject(const char* projName, const char* userSourceName);
   void addUserHeaderToProject(const char* projName, const char* userHeaderName);
   void addTtcnPPToProject(const char* projName, const char* ttcnPPName);
+  void addXSDModuleToProject(const char* projName, const char* xsdModuleName);
   bool isTtcn3ModuleInLibrary(const char* moduleName) const;
   bool isAsn1ModuleInLibrary(const char* moduleName) const;
   bool isSourceFileInLibrary(const char* fileName) const;
   bool isHeaderFileInLibrary(const char* fileName) const;
   bool isTtcnPPFileInLibrary(const char* fileName) const;
+  bool isXSDModuleInLibrary(const char* fileName) const;
   ProjectDescriptor* getTargetOfProject(const char* projName);
   const ProjectDescriptor* getTargetOfProject(const char* projName) const;
   ProjectDescriptor* getProjectDescriptor(const char* targetName); //target_executable_name

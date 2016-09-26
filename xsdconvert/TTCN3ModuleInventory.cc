@@ -290,6 +290,23 @@ void TTCN3ModuleInventory::moduleGeneration() {
   }
 }
 
+void TTCN3ModuleInventory::printModuleNames() const {
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+    if (module->Data->getModulename() == XMLSchema) continue;
+    if (module->Data->isnotIntoFile()) continue;
+    
+    fprintf(stdout, "%s", module->Data->getModulename().c_str());
+    // Now search for other modules with the same module name.
+    // They must have had the same targetNamespace.
+    for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next) {
+      if (module2->Data->getModulename() != module->Data->getModulename()) {
+        continue;
+      }
+      module2->Data->notIntoFile();
+    }
+  }
+}
+
 RootType * TTCN3ModuleInventory::lookup(const RootType* ref, const Mstring& reference, wanted w) const {
   Mstring uri = reference.getPrefix(':');
   const Mstring& name = reference.getValueWithoutPrefix(':');

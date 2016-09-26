@@ -487,6 +487,11 @@ extern "C" boolean isTtcnPPFileInLibrary(const char* fileName)
   return (boolean)projGenHelper.isTtcnPPFileInLibrary(fileName);
 }
 
+extern "C" boolean isXSDModuleInLibrary(const char* fileName)
+{
+  if (!projGenHelper.getZflag()) return FALSE;
+  return (boolean)projGenHelper.isXSDModuleInLibrary(fileName);
+}
 
 extern "C" boolean buildObjects(const char* projName, boolean add_referenced)
 {
@@ -601,6 +606,49 @@ void replacechar(char** content) {
     s.replace(found,1, "}");
   }
   *content = mcopystr(s.c_str());
+}
+
+/** Determines the suffix (i.e. the character sequence following the last dot)
+ * of file or path name \a file_name. NULL pointer is returned if \a file_name
+ * does not contain any dot character or the last character of it is a dot.
+ * The suffix is not copied, the returned pointer points to the tail of
+ * \a file_name. */
+const char *get_suffix(const char *file_name)
+{
+  size_t last_dot = (size_t)-1;
+  size_t i;
+  for (i = 0; file_name[i] != '\0'; i++)
+    if (file_name[i] == '.') last_dot = i;
+  if (last_dot == (size_t)-1 || file_name[last_dot + 1] == '\0') return NULL;
+  else return file_name + last_dot + 1;
+}
+
+int is_xsd_module(const char *file_name, char **module_name) {
+  const char * extension = get_suffix(file_name);
+  if (extension == NULL) {
+    return 0;
+  }
+  if (strcmp(extension, "xsd") != 0) {
+    return 0;
+  }
+  if (module_name != NULL) *module_name = NULL;
+  FILE *fp;
+  char line[1024];
+  char *command = NULL;
+  command = mputprintf(command, "xsd2ttcn -q -n %s", file_name);
+  fp = popen(command, "r");
+  if (fp == NULL) {
+    ERROR("Could not get the module names of the XSD modules");
+    return 0;
+  }
+  while (fgets(line, sizeof(line)-1, fp) != NULL) {
+    *module_name = mputstr(*module_name, line);
+  }
+  int rv= pclose(fp);
+  if (rv > 0) {
+    return 0;
+  }
+  return *module_name != NULL;
 }
 
 static void clear_seen_tpd_files(map<cstring, int>& seen_tpd_files) {
@@ -1841,6 +1889,11 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
                   projGenHelper.addAsn1ModuleToProject(*p_project_name, asn1_module_name);
                 }
                 Free(asn1_module_name);
+                char* xsd_module_name = NULL;
+                if (is_xsd_module(abs_file_name, &xsd_module_name)) {
+                  projGenHelper.addXSDModuleToProject(*p_project_name, xsd_module_name);
+                }
+                Free(xsd_module_name);
                 if (projGenHelper.isCPPSourceFile(file_name)) {
                    projGenHelper.addUserSourceToProject(*p_project_name, file_name);
                 }

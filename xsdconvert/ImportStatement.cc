@@ -53,8 +53,6 @@ void ImportStatement::loadWithValues() {
   }
 }
 
-const Mstring XMLSchema("http://www.w3.org/2001/XMLSchema");
-
 void ImportStatement::referenceResolving(void) {
   if (from_namespace == XMLSchema) {
     visible = false;

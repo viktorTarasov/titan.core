@@ -34,6 +34,8 @@ bool e_flag_used = false;
 bool f_flag_used = false;
 bool g_flag_used = true;
 bool h_flag_used = false;
+bool m_flag_used = false;
+bool n_flag_used = false; // Undocumented. Internal use only with makefilegen
 bool p_flag_used = false;
 bool s_flag_used = false;
 bool t_flag_used = false;
@@ -52,6 +54,8 @@ static int checkSyntax(const bool not_verbose, const int first_module, const int
   const char * const * const module_names);
 static int validate(int const first_module, int const last_module,
   const char * const * const module_names);
+static int get_xsd_module_names(const bool quiet, const int first_module, 
+  const int last_module, const char * const * const module_names);
 static int generateCode(const bool quiet, const bool need_predefined,
   const int first_module, const int last_module,
   const char * const * const module_names);
@@ -68,7 +72,7 @@ int main(int argc, char **argv) {
   char c;
   opterr = 0;
 
-  while ((c = getopt(argc, argv, "cdef:ghpqstvwxz")) != -1) {
+  while ((c = getopt(argc, argv, "cdef:ghmnpqstvwxz")) != -1) {
     switch (c) {
       case 'c':
         c_flag_used = true;
@@ -88,6 +92,12 @@ int main(int argc, char **argv) {
         break;
       case 'h':
         h_flag_used = true;
+        break;
+      case 'm':
+        m_flag_used = true;
+        break;
+      case 'n':
+        n_flag_used = true;
         break;
       case 'p':
         p_flag_used = true;
@@ -137,6 +147,11 @@ int main(int argc, char **argv) {
         throw 1;
       }
     }
+    
+    if (m_flag_used) {
+      generatePredefinedModules();
+      return EXIT_SUCCESS;
+    }
 
     if (last_module - first_module <= 0) {
       fprintf(stderr, "ERROR:\nNo module name was specified!\n");
@@ -182,6 +197,11 @@ int main(int argc, char **argv) {
       }
       return EXIT_SUCCESS;
     }
+    
+    if (n_flag_used) {
+      get_xsd_module_names(q_flag_used, first_module, last_module, module_names);
+      return EXIT_SUCCESS;
+    }
 
     if (generateCode(q_flag_used, p_flag_used, first_module, last_module,
       module_names) == EXIT_FAILURE) {
@@ -214,7 +234,7 @@ static void printProductinfo() {
 
 static void printUsage(const char * argv0) {
   fprintf(stderr, "\n"
-    "usage: %s [-ceghpstVwx] [-f file] schema.xsd ...\n"
+    "usage: %s [-ceghmpstVwx] [-f file] schema.xsd ...\n"
     "	or %s -v\n"
     "\n"
     "OPTIONS:\n"
@@ -223,6 +243,7 @@ static void printUsage(const char * argv0) {
     "	-f file:	the names of XSD files are taken from file instead of the command line\n"
     "	-g:		generate TTCN-3 code disallowing element substitution\n"
     "	-h:		generate TTCN-3 code allowing type substitution\n"
+    "	-m:		generate only the UsefulTtcn3Types and XSD predefined modules"
     "	-p:		do not generate the UsefulTtcn3Types and XSD predefined modules\n"
     "	-q:		quiet mode - disable the issue of status messages\n"
     "	-s:		parse and validate only - no TTCN-3 module generation\n"
@@ -363,6 +384,36 @@ static int checkSyntax(const bool not_verbose, const int first_module, const int
   if (XMLParser::getNumErrors() > 0) {
     printErrorStatistics(XMLParser::getNumErrors(),
       XMLParser::getNumWarnings());
+    return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
+}
+
+static int get_xsd_module_names(const bool quiet, const int first_module, 
+  const int last_module, const char * const * const module_names) {
+  TTCN3ModuleInventory& modules = TTCN3ModuleInventory::getInstance();
+  for (int i = first_module; i < last_module; ++i) {
+    XMLParser parser(module_names[i]);
+    TTCN3Module *module = modules.addModule(module_names[i], &parser);
+    parser.startConversion(module);
+    module->goodbyeParser(); // the parser is going away, don't use it
+  }
+
+  if (XMLParser::getNumErrors() > 0) {
+    printErrorStatistics(XMLParser::getNumErrors(),
+      XMLParser::getNumWarnings());
+    return EXIT_FAILURE;
+  }
+
+  if (d_flag_used > 1) {
+    modules.dump();
+    fputs("+++++++++++++++++++++++++++++\n", stderr);
+  }
+
+  modules.modulenameConversion();
+  modules.printModuleNames();
+  
+  if (checkFailure()) {
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;

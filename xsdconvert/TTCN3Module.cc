@@ -102,7 +102,7 @@ void TTCN3Module::loadValuesFromSchemaTag(const Mstring& a_targetNamespace,
   if (a_targetNamespace.empty()) {
     targetNamespace = "NoTargetNamespace";
   } else {
-    if (a_targetNamespace == "http://www.w3.org/2001/XMLSchema") {
+    if (a_targetNamespace == XMLSchema) {
       notIntoFile();
     }
     targetNamespace = a_targetNamespace;
@@ -294,7 +294,7 @@ void TTCN3Module::generate_with_statement(FILE * file, List<NamespaceType> used_
   bool xsi = false;
 
   for (List<NamespaceType>::iterator usedNS = used_namespaces.begin(); usedNS; usedNS = usedNS->Next) {
-    if (usedNS->Data.uri == "http://www.w3.org/2001/XMLSchema") {
+    if (usedNS->Data.uri == XMLSchema) {
       xsi = true;
       continue;
     }
@@ -323,7 +323,7 @@ void TTCN3Module::generate_with_statement(FILE * file, List<NamespaceType> used_
 
   if (xsi) {
     fprintf(file,
-      "  variant \"controlNamespace \'http://www.w3.org/2001/XMLSchema-instance\' prefix \'xsi\'\";\n");
+      "  variant \"controlNamespace \'%s-instance\' prefix \'xsi\'\";\n", XMLSchema.c_str());
   }
   if (attributeFormDefault == qualified) {
     fprintf(file,

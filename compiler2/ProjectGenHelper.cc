@@ -210,6 +210,16 @@ bool ProjectDescriptor::hasTtcn3PP(const char* ttcnPPName) const
   return false;
 }
 
+bool ProjectDescriptor::hasXSDModuleName(const char* xsdName) const
+{
+  std::string modName(xsdName);
+  std::vector<std::string>::const_iterator it;
+  for (it = xsdModuleNames.begin(); it != xsdModuleNames.end(); ++it) {
+    if (*it == modName) return true;
+  }
+  return false;
+}
+
 std::string ProjectDescriptor::setRelativePathTo(const std::string& absPathTo)
 {
   if (projectAbsWorkingDir.empty()) return std::string();
@@ -430,6 +440,16 @@ void ProjectGenHelper::addTtcnPPToProject(const char* projName, const char* ttcn
   }
 }
 
+void ProjectGenHelper::addXSDModuleToProject(const char* projName, const char* xsdModuleName)
+{
+  if (!Zflag) return;
+  if (projs.end() == projs.find(std::string(projName))) return;
+  ProjectDescriptor* proj = getProject(projName);
+  if (proj && !proj->hasXSDModuleName(xsdModuleName)) {
+    proj->addXSDModuleName(xsdModuleName);
+  }
+}
+
 void ProjectGenHelper::generateRefProjectWorkingDirsTo(const char* projName)
 {
   if (!Zflag) return;
@@ -565,6 +585,16 @@ bool ProjectGenHelper::isTtcnPPFileInLibrary(const char* fileName) const
 
   for (std::map<std::string, ProjectDescriptor>::const_iterator it = projs.begin(); it != projs.end(); ++it) {
     if ((it->second).hasTtcn3PP(fileName) && (it->second).isLibrary()) return true;
+  }
+  return false;
+}
+
+bool ProjectGenHelper::isXSDModuleInLibrary(const char* fileName) const
+{
+  if (!Zflag || NULL == fileName) return false;
+
+  for (std::map<std::string, ProjectDescriptor>::const_iterator it = projs.begin(); it != projs.end(); ++it) {
+    if ((it->second).hasXSDModuleName(fileName) && (it->second).isLibrary()) return true;
   }
   return false;
 }

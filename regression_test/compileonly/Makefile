@@ -22,7 +22,7 @@ include $(TOPDIR)/Makefile.regression
 CODIRS := dynamicTemplate styleGuide topLevelPdu \
 	circularImport circularImport2 typeInstantiation \
 	compareImported compoundif \
-	centralstorage mfgen-tpd \
+	centralstorage mfgen-tpd mfgen-xsd \
 	openType optionalAssignCompare portConstructor \
 	isbound namedActualParameters assignmentNotation \
 	attribQualif HT48786 selectCase openTypeNames \

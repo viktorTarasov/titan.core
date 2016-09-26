@@ -164,6 +164,11 @@ boolean isTtcnPPFileInLibrary(const char* fileName);
 #ifdef __cplusplus
 extern "C" 
 #endif
+boolean isXSDModuleInLibrary(const char* fileName);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
 boolean buildObjects(const char* projName, boolean add_referenced);
 
 #ifdef __cplusplus
@@ -175,6 +180,16 @@ void free_string_list(struct string_list* act_elem);
 extern "C" 
 #endif
 void free_string2_list(struct string2_list* act_elem);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+int is_xsd_module(const char *file_name, char **module_name);
+
+#ifdef __cplusplus
+extern "C" 
+#endif
+const char *get_suffix(const char *file_name);
 
 /**
  *

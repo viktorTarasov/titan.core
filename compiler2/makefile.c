@@ -204,6 +204,10 @@ struct makefile_struct {
   struct module_struct *ASN1Modules;
   boolean ASN1ModulesRegular;
   boolean BaseASN1ModulesRegular;
+  
+  size_t nXSDModules;
+  struct module_struct *XSDModules;
+  // No XSDModulesRegular and BaseXSDModulesRegular: it would be always false
 
   size_t nUserFiles;
   struct user_struct *UserFiles;
@@ -294,6 +298,8 @@ static void init_makefile_struct(struct makefile_struct *makefile)
   makefile->ASN1Modules = NULL;
   makefile->ASN1ModulesRegular = TRUE;
   makefile->BaseASN1ModulesRegular = TRUE;
+  makefile->nXSDModules = 0;
+  makefile->XSDModules = NULL;
   makefile->nUserFiles = 0;
   makefile->UserFiles = NULL;
   makefile->UserHeadersRegular = TRUE;
@@ -367,6 +373,12 @@ static void free_makefile_struct(const struct makefile_struct *makefile)
     Free(makefile->ASN1Modules[i].module_name);
   }
   Free(makefile->ASN1Modules);
+  for (i = 0; i < makefile->nXSDModules; i++) {
+    Free(makefile->XSDModules[i].dir_name);
+    Free(makefile->XSDModules[i].file_name);
+    Free(makefile->XSDModules[i].module_name);
+  }
+  Free(makefile->XSDModules);
   for (i = 0; i < makefile->nUserFiles; i++) {
     Free(makefile->UserFiles[i].dir_name);
     Free(makefile->UserFiles[i].file_prefix);
@@ -608,21 +620,6 @@ static boolean is_same_module(const char *module1, const char *module2)
   return FALSE; /* to avoid warnings */
 }
 
-/** Determines the suffix (i.e. the character sequence following the last dot)
- * of file or path name \a file_name. NULL pointer is returned if \a file_name
- * does not contain any dot character or the last character of it is a dot.
- * The suffix is not copied, the returned pointer points to the tail of
- * \a file_name. */
-static const char *get_suffix(const char *file_name)
-{
-  size_t last_dot = (size_t)-1;
-  size_t i;
-  for (i = 0; file_name[i] != '\0'; i++)
-    if (file_name[i] == '.') last_dot = i;
-  if (last_dot == (size_t)-1 || file_name[last_dot + 1] == '\0') return NULL;
-  else return file_name + last_dot + 1;
-}
-
 /** Truncates the suffix (i.e. the last dot and the characters following it)
  * from \a file_name and returns a copy of the prefix of \a file_name.
  * If \a file_name does not have a suffix an exact copy of it is returned.
@@ -723,6 +720,24 @@ static void check_preprocessed_filename_collision(
 	  module->file_name);
 	ERROR("Preprocessed intermediate file of `%s' (module `%s') clashes "
 	  "with file `%s' containing ASN.1 module `%s'.", pp_pathname,
+	  pp_module->module_name, m_pathname, module->module_name);
+	Free(pp_pathname);
+	Free(m_pathname);
+      }
+    }
+    for (j = 0; j < makefile->nXSDModules; j++) {
+      struct module_struct *module = makefile->XSDModules + j;
+      if (module->dir_name == NULL || module->file_name == NULL) {
+        continue;
+      }
+      if (is_same_file(pp_module->dir_name, preprocessed_name,
+	module->dir_name, module->file_name)) {
+	char *pp_pathname = compose_path_name(pp_module->dir_name,
+	  pp_module->file_name);
+	char *m_pathname = compose_path_name(module->dir_name,
+	  module->file_name);
+	ERROR("Preprocessed intermediate file of `%s' (module `%s') clashes "
+	  "with file `%s' containing TTCN-3 module `%s'.", pp_pathname,
 	  pp_module->module_name, m_pathname, module->module_name);
 	Free(pp_pathname);
 	Free(m_pathname);
@@ -851,6 +866,10 @@ static void add_ttcn3_module(struct makefile_struct *makefile,
       if (check_module_clash_same(makefile->TTCN3PPModules + i, "TTCN-3",
           path_name, dir_name, file_name, module_name)) return;
     }
+    for (i = 0; i < makefile->nXSDModules; i++) {
+      if (check_module_clash_different(makefile->XSDModules + i, "TTCN-3",
+        dir_name, file_name, module_name, "TTCN-3")) return;
+    }
     /* clashes with normal TTCN-3 modules will be checked (and maybe resolved)
      * in \a check_preprocessed_filename_collision() */
     /* add it to the list of TTCN-3 modules to be preprocessed */
@@ -930,6 +949,10 @@ static void add_asn1_module(struct makefile_struct *makefile,
 	dir_name, file_name, module_name, "ASN.1")) return;
     }
   }
+  for (i = 0; i < makefile->nXSDModules; i++) {
+    if (check_module_clash_different(makefile->XSDModules + i, "TTCN-3",
+      dir_name, file_name, module_name, "ASN.1")) return;
+  }
   makefile->ASN1Modules = (struct module_struct*)
     Realloc(makefile->ASN1Modules,
       (makefile->nASN1Modules + 1) * sizeof(*makefile->ASN1Modules));
@@ -949,6 +972,76 @@ static void add_asn1_module(struct makefile_struct *makefile,
   } else {
     module->is_regular = FALSE;
   }
+}
+
+/** Adds an XSD module to Makefile descriptor structure \a makefile.
+ * The name of the XSD source file is \a path_name, the module identifier
+ * is \a module_name. It is checked whether a file or module with the same name
+ * already exists in \a makefile and an appropriate warning or error is
+ * reported. */
+static void add_xsd_module(struct makefile_struct *makefile,
+  const char *path_name, char *module_name)
+{
+  struct module_struct *module;
+  char *dir_name = get_dir_name(path_name, makefile->working_dir);
+  char *file_name = get_file_from_path(path_name);
+  const char *suffix = get_suffix(file_name);
+  size_t i;
+  for (i = 0; i < makefile->nXSDModules; i++) { 
+    if (strcmp(makefile->XSDModules[i].module_name, module_name) == 0) {
+      WARNING("The XSD file `%s' containing TTCN-3 module `%s' and XSD "
+      "file `%s' containing XSD module `%s' could cause problems.",
+      makefile->XSDModules[i].file_name,
+      makefile->XSDModules[i].module_name,
+      path_name, module_name);
+      break;
+    }
+  }
+  for (i = 0; i < makefile->nXSDModules; i++) {
+    if (makefile->XSDModules[i].file_name == NULL) continue;
+    if (strcmp(makefile->XSDModules[i].file_name, file_name) == 0) {
+      WARNING("File `%s' was given more than once for the Makefile.",
+              path_name);
+      break;
+    }
+  }
+  for (i = 0; i < makefile->nASN1Modules; i++) {
+    if (check_module_clash_different(makefile->ASN1Modules + i, "ASN.1",
+      dir_name, file_name, module_name, "TTCN-3")) return;
+  }
+  if (makefile->preprocess) {
+    for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+      if (check_module_clash_different(makefile->TTCN3PPModules + i, "TTCN-3",
+	        dir_name, file_name, module_name, "TTCN-3")) return;
+    }
+  }
+  // The first XSD module, insert UsefulTtcn3Types.ttcn and XSD.ttcn too
+  if (makefile->nXSDModules == 0) {
+    makefile->XSDModules = (struct module_struct*)
+    Realloc(makefile->XSDModules,
+      (makefile->nXSDModules + 2) * sizeof(*makefile->XSDModules));
+    module = makefile->XSDModules + makefile->nXSDModules;
+    makefile->nXSDModules++;
+    module->dir_name = NULL;
+    module->file_name = NULL;
+    module->module_name = mprintf("UsefulTtcn3Types");
+    module->is_regular = FALSE; // Always false
+    module = makefile->XSDModules + makefile->nXSDModules;
+    makefile->nXSDModules++;
+    module->dir_name = NULL;
+    module->file_name = NULL;
+    module->module_name = mprintf("XSD");
+    module->is_regular = FALSE; // Always false
+  }
+  makefile->XSDModules = (struct module_struct*)
+    Realloc(makefile->XSDModules,
+      (makefile->nXSDModules + 1) * sizeof(*makefile->XSDModules));
+  module = makefile->XSDModules + makefile->nXSDModules;
+  makefile->nXSDModules++;
+  module->dir_name = dir_name;
+  module->file_name = file_name;
+  module->module_name = module_name;
+  module->is_regular = FALSE; // Always false
 }
 
 /** Adds the file named \a path_name to the list of files pointed by \a list_ptr
@@ -1010,6 +1103,9 @@ static void add_user_file(struct makefile_struct *makefile,
       /* The file content was already checked. Since it doesn't look like
        * a valid ASN.1 file, these suffixes are suspect */
       WARNING("File `%s' does not contain a valid ASN.1 module. "
+              "It will be added to the Makefile as other file.", path_name);
+    } else if (!strcmp(suffix, "xsd")) {
+      WARNING("File `%s' does not contain a valid XSD module. "
               "It will be added to the Makefile as other file.", path_name);
     }
     else if (!strcmp(suffix, "cc") || !strcmp(suffix, "c") || !strcmp(suffix, "cpp")) {
@@ -1204,8 +1300,49 @@ static void drop_generated_files(struct makefile_struct *makefile,
   Free(module_name);
 }
 
+static void drop_generated_TTCN3_files(struct makefile_struct *makefile,
+  const struct module_struct *module) {
+  size_t i;
+  for (i = 0; i < makefile->nTTCN3Modules; i++) {
+    struct module_struct *ttcn_module = makefile->TTCN3Modules + i;
+    char *module_file_name = NULL;
+    module_file_name = mputprintf(module_file_name, "%s.ttcn", module->module_name);
+    /** Note: if central storage is used the generated C++ files are placed
+     * into the same directory as the TTCN-3/ASN.1 modules, otherwise the
+     * files are generated into the working directory. */
+    if (strcmp(ttcn_module->file_name, module_file_name) == 0) {
+      char *m_pathname = compose_path_name(module->dir_name, module->file_name);
+      boolean is_same_dir = is_same_directory(ttcn_module->dir_name,
+        makefile->central_storage ? module->dir_name : NULL);
+      char *u_pathname = compose_path_name(ttcn_module->dir_name,
+        ttcn_module->file_name);
+      if (is_same_dir) {
+        WARNING("TTCN-3 file `%s' is generated from XSD file `%s'."
+          " Removing it from the list of user files.", u_pathname,
+          m_pathname);
+      } else {
+        ERROR("TTCN-3 file `%s' cannot be used together with module "
+          "`%s' in the same Makefile.", u_pathname,
+          m_pathname);
+      }
+      Free(u_pathname);
+      Free(module_file_name);
+      Free(m_pathname);
+      makefile->nTTCN3Modules--;
+      memmove(ttcn_module, ttcn_module + 1, (makefile->nTTCN3Modules - i) *
+        sizeof(*makefile->TTCN3Modules));
+      makefile->TTCN3Modules = (struct module_struct*)Realloc(makefile->TTCN3Modules,
+        makefile->nTTCN3Modules * sizeof(*makefile->TTCN3Modules));
+      break;
+    } else {
+      Free(module_file_name);
+    }
+  }
+}
+
 /** Drops all C++ header and source files of the Makefile descriptor structure
- * \a makefile that are generated from its TTCN-3 or ASN.1 modules. */
+ * \a makefile that are generated from its TTCN-3 or ASN.1 modules.
+ * in the case of XSD modules the generated TTCN-3 file will be dropped. */
 static void filter_out_generated_files(struct makefile_struct *makefile)
 {
   size_t i;
@@ -1219,6 +1356,9 @@ static void filter_out_generated_files(struct makefile_struct *makefile)
   }
   for (i = 0; i < makefile->nASN1Modules; i++) {
     drop_generated_files(makefile, makefile->ASN1Modules + i);
+  }
+  for (i = 0; i < makefile->nXSDModules; i++) {
+    drop_generated_TTCN3_files(makefile, makefile->XSDModules + i);
   }
 }
 
@@ -1319,6 +1459,10 @@ static void convert_dirs_to_relative(struct makefile_struct *makefile)
     replace_dir_with_relative(&makefile->ASN1Modules[i].dir_name,
       makefile->working_dir);
   }
+  for (i = 0; i < makefile->nXSDModules; i++) {
+    replace_dir_with_relative(&makefile->XSDModules[i].dir_name,
+      makefile->working_dir);
+  }
   for (i = 0; i < makefile->nUserFiles; i++) {
     replace_dir_with_relative(&makefile->UserFiles[i].dir_name,
       makefile->working_dir);
@@ -1410,6 +1554,10 @@ static void check_special_chars(const struct makefile_struct *makefile)
     check_special_chars_in_path(makefile->ASN1Modules[i].dir_name,
       makefile->ASN1Modules[i].file_name, "ASN.1 file");
   }
+  for (i = 0; i < makefile->nXSDModules; i++) {
+    check_special_chars_in_path(makefile->XSDModules[i].dir_name,
+      makefile->XSDModules[i].file_name, "XSD file");
+  }
   for (i = 0; i < makefile->nUserFiles; i++) {
     const struct user_struct *user = makefile->UserFiles + i;
     if (user->source_name != NULL)
@@ -1425,7 +1573,7 @@ static void check_special_chars(const struct makefile_struct *makefile)
 
 /** Adds base directory \a dir_name to Makefile descriptor structure
  * \a makefile. Flag \a has_modules indicates whether \a dir_name contains
- * TTCN-3 and/or ASN.1 modules. The new directory is ignored if it is already
+ * TTCN-3 and/or ASN.1 modules or XSD modules. The new directory is ignored if it is already
  * added to \a makefile. */
 static void add_base_dir(struct makefile_struct *makefile,
   const char *dir_name, boolean has_modules)
@@ -1464,6 +1612,9 @@ static void collect_base_dirs(struct makefile_struct *makefile)
   }
   for (i = 0; i < makefile->nASN1Modules; i++) {
     add_base_dir(makefile, makefile->ASN1Modules[i].dir_name, TRUE);
+  }
+  for (i = 0; i < makefile->nXSDModules; i++) {
+    add_base_dir(makefile, makefile->XSDModules[i].dir_name, TRUE);
   }
   for (i = 0; i < makefile->nUserFiles; i++) {
     add_base_dir(makefile, makefile->UserFiles[i].dir_name, FALSE);
@@ -1605,9 +1756,9 @@ static void print_preprocessed_file_name(FILE *fp,
   Free(preprocessed_name);
 }
 
-/** Prints the name of the generated header, source or object file of module
+/** Prints the name of the generated TTCN-3, header, source or object file of module
  * \a module to file \a fp. The name of the directory is added only if
- * \a add_directory is TRUE. Parameter \a suffix shall be "hh", "cc", "hpp", "cpp" or "o". */
+ * \a add_directory is TRUE. Parameter \a suffix shall be 'ttcn", "hh", "cc", "hpp", "cpp" or "o". */
 static void print_generated_file_name(FILE *fp,
   const struct module_struct *module, boolean add_directory, const char *suffix)
 {
@@ -1728,7 +1879,8 @@ static void print_makefile(struct makefile_struct *makefile)
     const char *rm_command = makefile->gnu_make ? "$(RM)" : "rm -f";
     FILE *fp;
     boolean run_compiler = (makefile->nASN1Modules > 0)
-      || (makefile->nTTCN3Modules) || (makefile->nTTCN3PPModules > 0);
+      || (makefile->nTTCN3Modules) || (makefile->nTTCN3PPModules > 0)
+      || (makefile->nXSDModules > 0);
 
     expstring_t titan_dir = 0;
     const char * last_slash = strrchr(program_name, '/');
@@ -2093,6 +2245,19 @@ static void print_makefile(struct makefile_struct *makefile)
         print_file_name(fp, module);
     }
     fprint_extra_targets(fp, makefile->target_placement_list, "TTCN3_MODULES");
+    if (makefile->nXSDModules) {
+      fputs("\n\nXSD_MODULES =", fp);
+      for (i = 0; i < makefile->nXSDModules; i++) {
+        const struct module_struct *module = makefile->XSDModules + i;
+        if (module->file_name != NULL && (module->dir_name == NULL || !makefile->central_storage)) {
+          /* If the file is in the current directory or
+           * is not in the current directory but central directory is not used,
+           * it goes into XSD_MODULES */
+          print_file_name(fp, module);
+        }
+      }
+      fprint_extra_targets(fp, makefile->target_placement_list, "XSD_MODULES");
+    }
     if (makefile->preprocess) {
       fputs("\n\n"
       "# TTCN-3 modules to preprocess:\n"
@@ -2122,6 +2287,16 @@ static void print_makefile(struct makefile_struct *makefile)
             const struct module_struct *module = makefile->TTCN3PPModules + i;
             if (module->dir_name != NULL && !isTtcnPPFileInLibrary(module->file_name))
               print_file_name(fp, module);
+          }
+        }
+        if (makefile->nXSDModules) {
+          fputs("\n\n"
+          "# XSD modules used from central project(s):\n"
+          "BASE_XSD_MODULES =", fp);
+          for (i = 0; i < makefile->nXSDModules; i++) {
+            const struct module_struct *module = makefile->XSDModules + i;
+            /* Central storage used AND file is not in the current directory => it goes into BASE_XSD_MODULES */
+            if (module->dir_name != NULL) print_file_name(fp, module);
           }
         }
       }
@@ -2156,6 +2331,28 @@ static void print_makefile(struct makefile_struct *makefile)
           for (i = 0; i < makefile->nTTCN3PPModules; i++) {
             const struct module_struct *module = makefile->TTCN3PPModules + i;
             if (module->dir_name != NULL && isTtcnPPFileInLibrary(module->file_name))
+              print_file_name(fp, module);
+          }
+        }
+        if (makefile->nXSDModules) {
+          fputs("\n\n"
+          "# XSD modules used from central project(s):\n"
+          "BASE_XSD_MODULES =", fp);
+          for (i = 0; i < makefile->nXSDModules; i++) {
+            const struct module_struct *module = makefile->XSDModules + i;
+            /* Central storage used AND file is not in the current directory => it goes into BASE_XSD_MODULES */
+            if (module->dir_name != NULL && !isXSDModuleInLibrary(module->module_name))
+              print_file_name(fp, module);
+          }
+        }
+        if (makefile->nXSDModules) {
+          fputs("\n\n"
+          "# XSD library linked modules used from central project(s):\n"
+          "BASE2_XSD_MODULES =", fp);
+          for (i = 0; i < makefile->nXSDModules; i++) {
+            const struct module_struct *module = makefile->XSDModules + i;
+            /* Central storage used AND file is not in the current directory => it goes into BASE_TTCN3_MODULES */
+            if (module->dir_name != NULL && isXSDModuleInLibrary(module->module_name))
               print_file_name(fp, module);
           }
         }
@@ -2264,12 +2461,61 @@ static void print_makefile(struct makefile_struct *makefile)
                 "PROFILED_FILE_LIST = %s", makefile->profiled_file_list->str);
       }
     }
+    
+    boolean has_xsd_module = FALSE;
+    boolean has_base_xsd_module = FALSE;
+    if (makefile->nXSDModules) {
+      fputs("\n\n"
+             "XSD2TTCN_GENERATED_MODULES =", fp);
+      for (i = 0; i < makefile->nXSDModules; i++) {
+        const struct module_struct *module = makefile->XSDModules + i;
+        if (module->dir_name == NULL || !makefile->central_storage) {
+          if (strcmp(module->module_name, "XSD") != 0 &&
+              strcmp(module->module_name, "UsefulTtcn3Types") != 0) {
+            has_xsd_module = TRUE;
+          }
+        }
+        if (module->dir_name != NULL && makefile->central_storage) {
+          has_base_xsd_module = TRUE;
+        }
+      }
+
+      for (i = 0; i < makefile->nXSDModules; i++) {
+        const struct module_struct *module = makefile->XSDModules + i;
+        if (module->dir_name == NULL || !makefile->central_storage)
+          /* If the file is in the current directory or
+           * is not in the current directory but central directory is not used,
+           * it goes into XSD_MODULES */
+          print_generated_file_name(fp, module, FALSE, ".ttcn");
+      }
+      fputs("\n\nTTCN3_MODULES += $(XSD2TTCN_GENERATED_MODULES)", fp);
+      if (makefile->central_storage) {
+        fputs("\n\n"
+              "BASE_XSD2TTCN_GENERATED_MODULES =", fp);
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
+          if (module->dir_name != NULL && !isXSDModuleInLibrary(module->module_name))
+            print_generated_file_name(fp, module, TRUE, ".ttcn");
+        }
+        fputs("\n\nBASE_TTCN3_MODULES += $(BASE_XSD2TTCN_GENERATED_MODULES)", fp);
+        if (makefile->linkingStrategy) {
+          fputs("\n\n"
+              "BASE2_XSD2TTCN_GENERATED_MODULES =", fp);
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
+          if (module->dir_name != NULL && isXSDModuleInLibrary(module->module_name))
+            print_generated_file_name(fp, module, TRUE, ".ttcn");
+        }
+        fputs("\n\nBASE2_TTCN3_MODULES += $(BASE2_XSD2TTCN_GENERATED_MODULES)", fp);
+        }
+      }
+    }
     fputs("\n\n"
           "# C++ source & header files generated from the TTCN-3 & ASN.1 "
           "modules of\n"
           "# this project:\n"
           "GENERATED_SOURCES =", fp);
-    if (makefile->gnu_make && makefile->TTCN3ModulesRegular) {
+    if (makefile->gnu_make && ((makefile->TTCN3ModulesRegular) || (!makefile->nTTCN3Modules && makefile->nXSDModules))) {
       fputs(" $(TTCN3_MODULES:.ttcn=.cc)", fp);
       if (makefile->code_splitting_mode) {
         for (i = 0; i < makefile->nTTCN3Modules; i++) {
@@ -2288,6 +2534,15 @@ static void print_makefile(struct makefile_struct *makefile)
           }
         }
       }
+      if (makefile->nXSDModules) {
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
+          if (module->dir_name == NULL || !makefile->central_storage) {
+            if (makefile->code_splitting_mode)
+              print_splitted_file_names(fp, makefile, module, FALSE);
+          }
+        }
+      }
     } else {
       for (i = 0; i < makefile->nTTCN3Modules; i++) {
         const struct module_struct *module = makefile->TTCN3Modules + i;
@@ -2300,6 +2555,16 @@ static void print_makefile(struct makefile_struct *makefile)
       if (makefile->preprocess) {
         for (i = 0; i < makefile->nTTCN3PPModules; i++) {
           const struct module_struct *module = makefile->TTCN3PPModules + i;
+          if (module->dir_name == NULL || !makefile->central_storage) {
+            print_generated_file_name(fp, module, FALSE, ".cc");
+            if (makefile->code_splitting_mode)
+              print_splitted_file_names(fp, makefile, module, FALSE);
+          }
+        }
+      }
+      if (makefile->nXSDModules) {
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
           if (module->dir_name == NULL || !makefile->central_storage) {
             print_generated_file_name(fp, module, FALSE, ".cc");
             if (makefile->code_splitting_mode)
@@ -2327,7 +2592,7 @@ static void print_makefile(struct makefile_struct *makefile)
             print_splitted_file_names(fp, makefile, module, FALSE);
         }
       }
-    }
+    }    
 
     fputs("\nGENERATED_HEADERS =", fp);
     if (makefile->gnu_make) {
@@ -2351,6 +2616,13 @@ static void print_makefile(struct makefile_struct *makefile)
         if (module->dir_name == NULL || !makefile->central_storage)
           print_generated_file_name(fp, module, FALSE, ".hh");
       }
+      if (makefile->nXSDModules) {
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
+          if (module->dir_name == NULL || !makefile->central_storage)
+            print_generated_file_name(fp, module, FALSE, ".hh");
+        }
+      }
     }
     if (makefile->central_storage) {
       fputs("\n\n"
@@ -2358,7 +2630,7 @@ static void print_makefile(struct makefile_struct *makefile)
             "modules of\n"
             "# central project(s):\n"
             "BASE_GENERATED_SOURCES =", fp);
-      if (makefile->gnu_make && makefile->BaseTTCN3ModulesRegular) {
+      if (makefile->gnu_make && ((makefile->BaseTTCN3ModulesRegular) || (!makefile->BaseTTCN3ModulesRegular && makefile->nXSDModules))) {
         fputs(" $(BASE_TTCN3_MODULES:.ttcn=.cc)", fp);
         if (makefile->code_splitting_mode) {
           for (i = 0; i < makefile->nTTCN3Modules; i++) {
@@ -2379,6 +2651,14 @@ static void print_makefile(struct makefile_struct *makefile)
             }
           }
         }
+        if (makefile->code_splitting_mode) {
+          for (i = 0; i < makefile->nXSDModules; i++) {
+            const struct module_struct *module = makefile->XSDModules + i;
+            if (module->dir_name != NULL) {
+              print_splitted_file_names(fp, makefile, module, TRUE);
+            }
+          }
+        }
       } else {
         for (i = 0; i < makefile->nTTCN3Modules; i++) {
           const struct module_struct *module = makefile->TTCN3Modules + i;
@@ -2396,6 +2676,14 @@ static void print_makefile(struct makefile_struct *makefile)
               if (makefile->code_splitting_mode)
                 print_splitted_file_names(fp, makefile, module, TRUE);
             }
+          }
+        }
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
+          if (module->dir_name != NULL) {
+            print_generated_file_name(fp, module, TRUE, ".cc");
+            if (makefile->code_splitting_mode)
+              print_splitted_file_names(fp, makefile, module, TRUE);
           }
         }
       }
@@ -2440,6 +2728,11 @@ static void print_makefile(struct makefile_struct *makefile)
           if (module->dir_name != NULL)
             print_generated_file_name(fp, module, TRUE, ".hh");
         }
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
+          if (module->dir_name != NULL)
+            print_generated_file_name(fp, module, TRUE, ".hh");
+        }
       }
     }
 
@@ -2468,6 +2761,12 @@ static void print_makefile(struct makefile_struct *makefile)
             if (module->dir_name != NULL && isTtcnPPFileInLibrary(module->file_name)) {
               print_generated_file_name(fp, module, TRUE, ".cc");
             }
+          }
+        }
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
+          if (module->dir_name != NULL && isXSDModuleInLibrary(module->module_name)) {
+            print_generated_file_name(fp, module, TRUE, ".cc");
           }
         }
       }
@@ -2645,6 +2944,28 @@ static void print_makefile(struct makefile_struct *makefile)
             }
           }
         }
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
+          if (module->dir_name == NULL || !makefile->central_storage) {
+            print_generated_file_name(fp, module, FALSE, ".so");
+            if (makefile->code_splitting_mode != NULL) {
+              int n_slices;
+              if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                print_generated_file_name(fp, module, FALSE, "_seq.so");
+                print_generated_file_name(fp, module, FALSE, "_set.so");
+                print_generated_file_name(fp, module, FALSE, "_seqof.so");
+                print_generated_file_name(fp, module, FALSE, "_setof.so");
+                print_generated_file_name(fp, module, FALSE, "_union.so");
+              } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                for (int i = 1; i < n_slices; i++) {
+                char buffer[16]; // 6 digits + 4 chars + _part
+                sprintf(buffer, "_part_%i.so", i);
+                  print_generated_file_name(fp, module, FALSE, buffer);
+                }
+              }
+            }
+          }
+        }
       }
       if (makefile->gnu_make && makefile->UserSourcesRegular) {
         fputs(" $(USER_SOURCES:.cc=.so)", fp);
@@ -2733,6 +3054,30 @@ static void print_makefile(struct makefile_struct *makefile)
           }
         }
       }
+      if (makefile->nXSDModules) {
+        for (i = 0; i < makefile->nXSDModules; i++) {
+          const struct module_struct *module = makefile->XSDModules + i;
+          if (module->dir_name == NULL || !makefile->central_storage) {
+            print_generated_file_name(fp, module, FALSE, ".o");
+            if (makefile->code_splitting_mode != NULL) {
+              int n_slices;
+              if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                print_generated_file_name(fp, module, FALSE, "_seq.o");
+                print_generated_file_name(fp, module, FALSE, "_set.o");
+                print_generated_file_name(fp, module, FALSE, "_seqof.o");
+                print_generated_file_name(fp, module, FALSE, "_setof.o");
+                print_generated_file_name(fp, module, FALSE, "_union.o");
+              } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                for (int i = 1; i < n_slices; i++) {
+                  char buffer[16]; // 6 digits + 4 chars + _part
+                  sprintf(buffer, "_part_%i.o", i);
+                  print_generated_file_name(fp, module, FALSE, buffer);
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     fputs("\n\nUSER_OBJECTS =", fp);
@@ -2783,6 +3128,11 @@ static void print_makefile(struct makefile_struct *makefile)
               if (module->dir_name != NULL)
                 print_generated_file_name(fp, module, TRUE, ".so");
             }
+            for (i = 0; i < makefile->nXSDModules; i++) {
+              const struct module_struct *module = makefile->XSDModules + i;
+              if (module->dir_name != NULL)
+                print_generated_file_name(fp, module, TRUE, ".so");
+            }
           }
           if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
             fputs(" $(BASE_USER_SOURCES:.cc=.so)", fp);
@@ -2827,16 +3177,6 @@ static void print_makefile(struct makefile_struct *makefile)
             const struct module_struct *module = makefile->TTCN3Modules + i;
             if (module->dir_name != NULL) {
               print_generated_file_name(fp, module, TRUE, ".o");
-              if (makefile->code_splitting_mode != NULL) {
-                int n_slices;
-                if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-                  for (int i = 1; i < n_slices; i++) {
-                    char buffer[16]; // 6 digits + 4 chars + _part
-                sprintf(buffer, "_part_%i.o", i);
-                    print_generated_file_name(fp, module, TRUE, buffer);
-                  }
-                }
-              }
             }
           }
           if (makefile->preprocess) {
@@ -2844,23 +3184,20 @@ static void print_makefile(struct makefile_struct *makefile)
               const struct module_struct *module = makefile->TTCN3PPModules + i;
               if (module->dir_name != NULL) {
                 print_generated_file_name(fp, module, TRUE, ".o");
-                if (makefile->code_splitting_mode != NULL) {
-                  int n_slices;
-                  if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-                    for (int i = 1; i < n_slices; i++) {
-                      char buffer[16]; // 6 digits + 4 chars + _part
-                      sprintf(buffer, "_part_%i.o", i);
-                      print_generated_file_name(fp, module, TRUE, buffer);
-                    }
-                  }
-                }
               }
             }
           }
           for (i = 0; i < makefile->nASN1Modules; i++) {
             const struct module_struct *module = makefile->ASN1Modules + i;
-            if (module->dir_name != NULL)
+            if (module->dir_name != NULL) {
               print_generated_file_name(fp, module, TRUE, ".o");
+            }
+          }
+          for (i = 0; i < makefile->nXSDModules; i++) {
+            const struct module_struct *module = makefile->XSDModules + i;
+            if (module->dir_name != NULL) {
+              print_generated_file_name(fp, module, TRUE, ".o");
+            }
           }
         }
         if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
@@ -3311,7 +3648,7 @@ static void print_makefile(struct makefile_struct *makefile)
         fputs(" $(BASE_OBJECTS)", fp);
       }
       if (makefile->linkingStrategy) {
-        if ( makefile->library) {
+        if (makefile->library) {
           struct string2_list* head = getLinkerLibs(makefile->project_name);
           struct string2_list* act_elem = head;
           while (act_elem) {
@@ -3423,11 +3760,15 @@ static void print_makefile(struct makefile_struct *makefile)
         "check:%s $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
         "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
         "%s\\\n"
+        "%s"
+        "%s"
         "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\n"
         "\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ",
         rm_command, add_refd_prjs?" referenced-check":"",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
+        makefile->nXSDModules ? "\t$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) \\\n" : "",
+        makefile->nXSDModules && makefile->linkingStrategy ? "\t$(BASE2_XSD2TTCN_GENERATED_MODULES) \\\n" : "",
         makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
         if (makefile->gnu_make) {
           if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
@@ -3451,10 +3792,14 @@ static void print_makefile(struct makefile_struct *makefile)
         fprintf(fp, "\n\n"
         "port: $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
         "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
+        "%s"
+        "%s"
         "%s\n"
         "\t$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) ",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
-        makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"");
+        makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
+        makefile->nXSDModules ? "\\\n\t$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) " : "",
+        makefile->nXSDModules && makefile->linkingStrategy ? "\\\n\t$(BASE2_XSD2TTCN_GENERATED_MODULES) " : "");
         if (makefile->gnu_make) {
           if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
             fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
@@ -3474,6 +3819,7 @@ static void print_makefile(struct makefile_struct *makefile)
         if (makefile->linkingStrategy && makefile->hierarchical) {
           fputs("\n\n"
           "update: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
+          "\t$(BASE_XSD2TTCN_GENERATED_MODULES) $(BASE2_XSD2TTCN_GENERATED_MODULES) \\\n"
           "\t$(BASE2_TTCN3_MODULES) $(BASE2_ASN1_MODULES) $(BASE2_PREPROCESSED_TTCN3_MODULES)\n"
           "ifneq ($(wildcard $(GENERATED_SOURCES)), ) \n"
           "ifeq ($(wildcard $?), ) \n"
@@ -3490,7 +3836,7 @@ static void print_makefile(struct makefile_struct *makefile)
         }
         fprintf(fp, "\n\n"
         "compile:%s $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) "
-        "$(ASN1_MODULES)\n"
+        "$(ASN1_MODULES) %s%s\n"
         "\t@echo \"compiling \"'$(patsubst %%.tpd, %%, $(TPD))';\n"
         "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
         "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
@@ -3498,12 +3844,15 @@ static void print_makefile(struct makefile_struct *makefile)
         "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s - $?\n"
         "\ttouch $@\n\n",
         makefile->profiled_file_list ? ":" : "",
+        makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) " : "",
+        makefile->nXSDModules && makefile->linkingStrategy ? "$(BASE2_XSD2TTCN_GENERATED_MODULES) " : "",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES)":"");
         fprintf (fp,
         "compile-all: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
-        "%s"
+        "%s%s"
+        "%s\n"
         "\t$(MAKE) preprocess\n"
         "\t@echo \"compiling all \"'$(patsubst %%.tpd, %%, $(TPD))';\n"
         "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
@@ -3513,8 +3862,10 @@ static void print_makefile(struct makefile_struct *makefile)
         "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\\\n"
         "\t- $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) $(ASN1_MODULES)\n"
         "\ttouch $@ compile\n\n",
+        makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) " : "",
+        makefile->nXSDModules && makefile->linkingStrategy ? "$(BASE2_XSD2TTCN_GENERATED_MODULES) " : "",
         makefile->linkingStrategy ? "\\\n\t$(BASE2_TTCN3_MODULES) $(BASE2_ASN1_MODULES) "
-                                    "$(BASE2_PREPROCESSED_TTCN3_MODULES) \n":"\n",
+                                    "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
@@ -3524,9 +3875,11 @@ static void print_makefile(struct makefile_struct *makefile)
         "\t@if [ ! -f $@ ]; then %s compile-all; $(MAKE) compile-all; fi\n", rm_command);
         fprintf(fp, "\n"
         "check:%s $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
-        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\n"
+        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s%s %s\n"
         "\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ",
         add_refd_prjs?" referenced-check":"",
+        makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) " : "",
+        makefile->nXSDModules && makefile->linkingStrategy ? "$(BASE2_XSD2TTCN_GENERATED_MODULES) " : "",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
         if (makefile->gnu_make) {
@@ -3545,8 +3898,10 @@ static void print_makefile(struct makefile_struct *makefile)
         }
         
         fprintf(fp, "\n\n"
-        "port: $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\n"
+        "port: $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s%s%s\n"
         "\t$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) ",
+        makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) " : "",
+        makefile->nXSDModules && makefile->linkingStrategy ? "$(BASE2_XSD2TTCN_GENERATED_MODULES) " : "",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"");
         if (makefile->gnu_make) {
           if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
@@ -3563,6 +3918,7 @@ static void print_makefile(struct makefile_struct *makefile)
         if (makefile->linkingStrategy && makefile->hierarchical) {
           fputs("\n\n"
           "update: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
+          "\t$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) $(BASE2_XSD2TTCN_GENERATED_MODULES) \\\n"
           "\t$(BASE2_TTCN3_MODULES) $(BASE2_ASN1_MODULES) $(BASE2_PREPROCESSED_TTCN3_MODULES)\n"
           "ifneq ($(wildcard $(GENERATED_SOURCES)), ) \n"
           "ifeq ($(wildcard $?), ) \n"
@@ -3578,7 +3934,7 @@ static void print_makefile(struct makefile_struct *makefile)
             "\ttouch $(TTCN3_MODULES) $(ASN1_MODULES)", fp);
         }
         fprintf(fp, "\n\n"
-        "compile:%s $(TTCN3_MODULES) $(ASN1_MODULES)\n"
+        "compile:%s $(TTCN3_MODULES) $(ASN1_MODULES) %s%s\n"
         "\t@echo \"compiling \"'$(patsubst %%.tpd, %%, $(TPD))';\n"
         "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
         "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
@@ -3586,11 +3942,15 @@ static void print_makefile(struct makefile_struct *makefile)
         "\t- $?\n"
         "\ttouch $@\n\n",
         makefile->profiled_file_list ? ":" : "",
+        makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) " : "",
+        makefile->nXSDModules && makefile->linkingStrategy ? "$(BASE2_XSD2TTCN_GENERATED_MODULES) " : "",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) " : "",
         makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) " : "");
         fprintf(fp,
-        "compile-all: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) %s\n",
-        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) $(BASE2_ASN1_MODULES)" : "");
+        "compile-all: $(BASE_TTCN3_MODULES) $(BASE_ASN1_MODULES) %s%s%s\n",
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) $(BASE2_ASN1_MODULES)" : "",
+        makefile->nXSDModules ? " $(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) " : "",
+        makefile->nXSDModules && makefile->linkingStrategy ? "$(BASE2_XSD2TTCN_GENERATED_MODULES) " : "");
         fputs("\t@echo \"compiling all \"'$(patsubst %.tpd, %, $(TPD))';\n", fp);
         fprintf(fp,"\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) \\\n"
         "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
@@ -3600,7 +3960,7 @@ static void print_makefile(struct makefile_struct *makefile)
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) " : "",
         makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) " : "");
       }
-      if (!makefile->hierarchical)
+      if (!makefile->hierarchical) {
         for (i = 0; i < makefile->nBaseDirs; i++) {
           const struct base_dir_struct *base_dir = makefile->BaseDirs + i;
           if (base_dir->has_modules) {
@@ -3624,19 +3984,27 @@ static void print_makefile(struct makefile_struct *makefile)
                   !strcmp(base_dir->dir_name, module->dir_name))
                 print_file_name(fp, module);
             }
+            for (j = 0; j < makefile->nXSDModules; j++) {
+              const struct module_struct *module = makefile->XSDModules + j;
+              if (module->dir_name != NULL &&
+                  !strcmp(base_dir->dir_name, module->dir_name))
+                print_generated_file_name(fp, module, TRUE, ".ttcn");
+            }
             fprintf(fp, "\n"
                     "\t@echo 'Central directory %s is not up-to-date!'\n"
                     "\t@exit 2\n\n", base_dir->dir_name);
           }
         }
+      }
     }
     else { /* not central storage */
       fprintf(fp, "$(GENERATED_SOURCES) $(GENERATED_HEADERS): compile\n"
               "\t@if [ ! -f $@ ]; then %s compile; $(MAKE) compile; fi\n\n"
               "%s"
-              "check:%s $(TTCN3_MODULES) ", rm_command,
+              "check:%s $(TTCN3_MODULES) %s", rm_command,
               merge_profiled_file_lists ? "check:: $(PROFILED_FILE_LIST)\n\n" : "",
-              merge_profiled_file_lists ? ":" : "");
+              merge_profiled_file_lists ? ":" : "",
+              makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) " : "");
       if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
       fputs("$(ASN1_MODULES)\n"
             "\t$(TTCN3_DIR)/bin/compiler -s $(COMPILER_FLAGS) ", fp);
@@ -3648,7 +4016,8 @@ static void print_makefile(struct makefile_struct *makefile)
       }
       
       fputs("\n\n", fp);
-      fprintf(fp, "port: $(TTCN3_MODULES) ");
+      fprintf(fp, "port: $(TTCN3_MODULES) %s ",
+        makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) " : "");
       if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
       fputs("\n", fp);
       fputs("\t$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) ", fp);
@@ -3666,7 +4035,8 @@ static void print_makefile(struct makefile_struct *makefile)
         fputs("$(ASN1_MODULES)", fp);
       }
       fprintf(fp, "\n\n"
-            "compile:%s $(TTCN3_MODULES) ", makefile->profiled_file_list ? ":" : "");
+            "compile:%s $(TTCN3_MODULES) %s ", makefile->profiled_file_list ? ":" : "",
+            makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) " : "");
       if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
       fputs("$(ASN1_MODULES)\n"
             "\t$(TTCN3_DIR)/bin/compiler $(COMPILER_FLAGS) ", fp);
@@ -3683,6 +4053,28 @@ static void print_makefile(struct makefile_struct *makefile)
       if (merge_profiled_file_lists) {
         fputs("$(PROFILED_FILE_LIST): $(PROFILED_FILE_LIST_SEGMENTS)\n"
               "\tcat $(PROFILED_FILE_LIST_SEGMENTS) > $(PROFILED_FILE_LIST)\n\n", fp);
+      }
+    }
+// XSD conversion:
+    if (makefile->nXSDModules) {
+      fputs("$(XSD2TTCN_GENERATED_MODULES): $(XSD_MODULES)\n"
+            "\t$(TTCN3_DIR)/bin/xsd2ttcn", fp);
+      if (!has_xsd_module && has_base_xsd_module) {
+        fputs(" -m", fp);
+      }else {
+        fputs(" $(XSD_MODULES)", fp);
+      }
+      fputs("\n\ttouch $@ \n\n", fp);
+      if (makefile->central_storage) {
+        fprintf(fp, "$(BASE_XSD2TTCN_GENERATED_MODULES) %s: $(BASE_XSD_MODULES) ",
+          makefile->linkingStrategy ? "$(BASE2_XSD2TTCN_GENERATED_MODULES)" : "");
+        if (add_refd_prjs) {
+          fputs("\n", fp);
+          fputs("\t@for dir in $(REFERENCED_PROJECT_DIRS); do \\\n"
+                "\t$(MAKE) -C $$dir compile || exit; \\\n"
+                "\tdone;", fp);
+        }
+        fputs("\n\n", fp);
       }
     }
 // clean:
@@ -3703,6 +4095,7 @@ static void print_makefile(struct makefile_struct *makefile)
       if (merge_profiled_file_lists) {
         fputs(" $(PROFILED_FILE_LIST)", fp);
       }
+      if (makefile->nXSDModules) fputs(" $(XSD2TTCN_GENERATED_MODULES)", fp);
       fprintf(fp, " \\\n"
         "\ttags *.log%s%s\n\n",
         add_refd_prjs?" referenced*":"",
@@ -3720,6 +4113,7 @@ static void print_makefile(struct makefile_struct *makefile)
       if (merge_profiled_file_lists) {
         fputs(" $(PROFILED_FILE_LIST)", fp);
       }
+      if (makefile->nXSDModules) fputs(" $(XSD2TTCN_GENERATED_MODULES)", fp);
       fprintf(fp, " \\\n"
         "\ttags *.log%s",
         add_refd_prjs?" referenced*":"");
@@ -3768,8 +4162,16 @@ static void print_makefile(struct makefile_struct *makefile)
         "\tmkdir -p $(ARCHIVE_DIR)\n"
         "\ttar -cvhf - ", fp);
       if (makefile->central_storage) {
-        fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n", 
-        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) " : "");
+        if (makefile->nXSDModules) {
+          fputs("$(filter-out $(XSD2TTCN_GENERATED_MODULES), $(TTCN3_MODULES)) \\\n", fp);
+          fputs("\t$(filter-out $(BASE_XSD2TTCN_GENERATED_MODULES), $(BASE_TTCN3_MODULES)) \\\n", fp);
+          fprintf(fp, "%s",
+          makefile->linkingStrategy ? "\t$(filter-out $(BASE2_XSD2TTCN_GENERATED_MODULES), $(BASE2_TTCN3_MODULES)) \\\n" : "");
+          fputs("\t$(XSD_MODULES) $(BASE_XSD_MODULES) \\\n", fp);
+        } else {
+          fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n", 
+          makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) " : "");
+        }
         if (makefile->preprocess) {
           fprintf(fp, "\t$(TTCN3_PP_MODULES) $(BASE_TTCN3_PP_MODULES) "
           "%s $(TTCN3_INCLUDES) \\\n",
@@ -3783,7 +4185,12 @@ static void print_makefile(struct makefile_struct *makefile)
         makefile->linkingStrategy ? "$(BASE2_USER_SOURCES)" : "");
       }
       else {
-        fputs("$(TTCN3_MODULES) ", fp);
+        if (makefile->nXSDModules) {
+          fputs("$(filter-out $(XSD2TTCN_GENERATED_MODULES), $(TTCN3_MODULES)) ", fp);
+          fputs("$(XSD_MODULES) ", fp);
+        } else {
+          fputs("$(TTCN3_MODULES) ", fp);
+        }
         if (makefile->preprocess) {
           fputs("$(TTCN3_PP_MODULES) \\\n"
           "\t$(TTCN3_INCLUDES) ", fp);
@@ -4046,6 +4453,8 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
                      "file name shall contain an underscore character instead.", file_name, module_name);
                Free(module_name);
            }
+       } else if (is_xsd_module(file_name, &module_name)) {
+         add_xsd_module(&makefile, file_name, module_name);
        } else {
            add_user_file(&makefile, file_name);
        }
@@ -4106,8 +4515,12 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
     WARNING("No TTCN-3 module was given for the Makefile.");
     if (makefile.ets_name == NULL)
       makefile.ets_name = mcopystr(makefile.ASN1Modules[0].module_name);
+  } else if (makefile.nXSDModules >= 1) {
+    WARNING("No TTCN-3 or ASN.1 or XSD module was given for the Makefile.");
+    if (makefile.ets_name == NULL)
+      makefile.ets_name = mcopystr(makefile.XSDModules[0].module_name);
   } else if (makefile.nUserFiles > 0) {
-    WARNING("No TTCN-3 or ASN.1 module was given for the Makefile.");
+    WARNING("No TTCN-3 or ASN.1 or XSD module was given for the Makefile.");
     if (makefile.ets_name == NULL)
       makefile.ets_name = mcopystr(makefile.UserFiles[0].file_prefix);
   } else {
@@ -4121,7 +4534,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   } else makefile.output_file = mcopystr("Makefile");
   add_path_to_list(&makefile.nOtherFiles, &makefile.OtherFiles,
     makefile.output_file, makefile.working_dir, FALSE);
-
+  
   if (preprocess) check_preprocessed_filename_collision(&makefile);
   filter_out_generated_files(&makefile);
   complete_user_files(&makefile);
@@ -4635,7 +5048,7 @@ int main(int argc, char *argv[])
       &argc, &argv, &optind, &ets_name, &project_name,
       &gflag, &sflag, &cflag, &aflag, &pflag,
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
-      create_symlink_list,ttcn3_prep_includes, ttcn3_prep_defines,ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csflag, 
+      create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csflag,
       &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
       &asflag, &temp_wflag, &Yflag, &Mflag, &Eflag, &nflag, &diflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
       linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &Zflag, &Hflag,

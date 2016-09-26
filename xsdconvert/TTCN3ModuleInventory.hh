@@ -85,6 +85,11 @@ public:
    * Generate TTCN-3 files
    */
   void moduleGeneration();
+  /**
+   * Prints the generated module names to the output.
+   * Used by makefilegen tool.
+   */
+  void printModuleNames() const;
 
   List<TTCN3Module*> & getModules() {
     return definedModules;
