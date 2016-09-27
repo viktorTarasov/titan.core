@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include "../common/memory.h"
 #include "../common/pattern.hh"
+#include "../common/UnicharPattern.hh"
 #include <iostream>
 
 // used by regex
@@ -606,7 +607,7 @@ namespace Common {
   }
 
   string* regexp(const string& instr, const string& expression,
-                 const Int& groupno)
+                 const Int& groupno, bool nocase)
   {
     string *retval=0;
 
@@ -627,7 +628,8 @@ namespace Common {
     }
 
     regex_t posix_regexp;
-    int ret_val=regcomp(&posix_regexp, posix_str, REG_EXTENDED);
+    int ret_val=regcomp(&posix_regexp, posix_str, REG_EXTENDED |
+      (nocase ? REG_ICASE : 0));
     Free(posix_str);
     if(ret_val!=0) {
       /* regexp error */
@@ -671,7 +673,7 @@ namespace Common {
   }
 
   ustring* regexp(const ustring& instr, const ustring& expression,
-    const Int& groupno)
+    const Int& groupno, bool nocase)
   {
     ustring *retval=0;
 
@@ -685,7 +687,7 @@ namespace Common {
     verb_level &= ~(1|2);
     int* user_groups;
     char *posix_str = TTCN_pattern_to_regexp_uni(
-      expression.get_stringRepr_for_pattern().c_str(), &user_groups);
+      expression.get_stringRepr_for_pattern().c_str(), nocase, &user_groups);
     if (user_groups == 0)
       FATAL_ERROR("regexp(): Cannot find any groups in the second argument.");
     verb_level = orig_verb_level;
@@ -718,15 +720,18 @@ namespace Common {
 
     regmatch_t* pmatch = (regmatch_t*)Malloc((nmatch+1)*sizeof(regmatch_t));
     char* tmp = instr.convert_to_regexp_form();
+    
+    if (nocase) {
+      unichar_pattern.convert_regex_str_to_lowercase(tmp);
+    }
+    
     string instr_conv(tmp);
     Free(tmp);
     ret_val = regexec(&posix_regexp, instr_conv.c_str(), nmatch+1, pmatch, 0);
     if(ret_val == 0) {
       if(pmatch[nmatch].rm_so != -1 && pmatch[nmatch].rm_eo != -1) {
-        retval = new ustring(
-          instr_conv.substr(pmatch[nmatch].rm_so,
-            pmatch[nmatch].rm_eo - pmatch[nmatch].rm_so)
-            .convert_stringRepr_for_pattern());
+        retval = new ustring(instr.extract_matched_section(pmatch[nmatch].rm_so,
+          pmatch[nmatch].rm_eo));
       } else { retval = new ustring(); }
     }
     Free(pmatch);

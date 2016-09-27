@@ -173,26 +173,30 @@ extern double str2float(const CHARSTRING& value);
 
 // C.33 - regexp
 extern CHARSTRING regexp(const CHARSTRING& instr, const CHARSTRING& expression,
-    int groupno);
+    int groupno, boolean nocase);
 extern CHARSTRING regexp(const CHARSTRING& instr, const CHARSTRING& expression,
-    const INTEGER& groupno);
+    const INTEGER& groupno, boolean nocase);
 extern UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
     const UNIVERSAL_CHARSTRING* expression_val,
     const UNIVERSAL_CHARSTRING_template* expression_tmpl,
-    int groupno);
+    int groupno, boolean nocase);
 extern UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
-    const UNIVERSAL_CHARSTRING& expression, int groupno);
+    const UNIVERSAL_CHARSTRING& expression, int groupno, boolean nocase);
 extern UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
-    const UNIVERSAL_CHARSTRING& expression, const INTEGER& groupno);
+    const UNIVERSAL_CHARSTRING& expression, const INTEGER& groupno,
+    boolean nocase);
 // regexp on templates
 extern CHARSTRING regexp(const CHARSTRING_template& instr,
-    const CHARSTRING_template& expression, int groupno);
+    const CHARSTRING_template& expression, int groupno, boolean nocase);
 extern CHARSTRING regexp(const CHARSTRING_template& instr,
-    const CHARSTRING_template& expression, const INTEGER& groupno);
+    const CHARSTRING_template& expression, const INTEGER& groupno,
+    boolean nocase);
 extern UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING_template& instr,
-    const UNIVERSAL_CHARSTRING_template& expression, int groupno);
+    const UNIVERSAL_CHARSTRING_template& expression, int groupno,
+    boolean nocase);
 extern UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING_template& instr,
-    const UNIVERSAL_CHARSTRING_template& expression, const INTEGER& groupno);
+    const UNIVERSAL_CHARSTRING_template& expression, const INTEGER& groupno,
+    boolean nocase);
 
 // C.34 - substr
 extern void check_substr_arguments(int value_length, int index,

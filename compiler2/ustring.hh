@@ -118,6 +118,11 @@ public:
    */
   char* convert_to_regexp_form() const;
   
+  /** extracts the section matched by a regexp and returns it
+    * (the starting and ending indexes refer to the hex representation of the
+    * string, which is 8 times longer) */
+  ustring extract_matched_section(int start, int end) const;
+  
   /** Assignment operator. */
   ustring& operator=(const ustring&);
 

@@ -848,6 +848,24 @@ testcase templateCharstrDecmatchSelfRef() runs on templateCharstr_mycomp {
   else { setverdict(fail, 5); }
 }
 
+modulepar template charstring mpt_cs;
+  
+// case-insensitive pattern
+testcase templateCharstrPatternNocase() runs on templateCharstr_mycomp {
+  // pattern in template variable
+  var template charstring vt_cs := pattern @nocase "ab[A-e]?xyz";
+  var charstring val := "aBE5XYz";
+  if (not match(val, vt_cs)) {
+    setverdict(fail, "Var template pattern failed: ", match(val, vt_cs));
+  }
+  
+  // pattern in template module parameter
+  if (not match(val, mpt_cs)) {
+    setverdict(fail, "Var template pattern failed: ", match(val, mpt_cs));
+  }
+  setverdict(pass);
+}
+
 control {
  execute(templateCharstrSpec());
  execute(templateCharstrList());
@@ -881,5 +899,6 @@ control {
  execute(CR_TR00018474());
  execute(templateCharstrDecmatch());
  execute(templateCharstrDecmatchSelfRef());
+ execute(templateCharstrPatternNocase());
 }
 }

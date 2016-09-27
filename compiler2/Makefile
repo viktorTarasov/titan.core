@@ -107,7 +107,7 @@ TCOV2LCOV_OBJECTS := $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(TCOV2LCOV_SOURCES)
 OBJECTS := $(COMPILER_OBJECTS) $(MFGEN_OBJECTS) $(TCOV2LCOV_OBJECTS)
 
 # Used by both the compiler and makefilegen
-COMMON_OBJECTS := $(addprefix ../common/, memory.o path.o userinfo.o JSON_Tokenizer.o)
+COMMON_OBJECTS := $(addprefix ../common/, memory.o path.o userinfo.o)
 
 TCOV2LCOV_COMMON_OBJECTS := ../common/memory.o
 
@@ -121,7 +121,8 @@ ifdef REGEX_DIR
 endif
 
 COMPILER_COMMON_OBJECTS := $(COMMON_OBJECTS) \
-$(addprefix ../common/, new.o pattern_la.o pattern_p.o pattern_uni.o Quadruple.o ModuleVersion.o)
+$(addprefix ../common/, new.o pattern_la.o pattern_p.o pattern_uni.o Quadruple.o \
+ModuleVersion.o JSON_Tokenizer.o UnicharPattern.o)
 
 ifeq ($(USAGE_STATS), yes)
 COMPILER_COMMON_OBJECTS += ../common/usage_stats.o

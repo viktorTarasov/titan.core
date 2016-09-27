@@ -508,7 +508,7 @@ tribool StringPatternConstraint::match(const string& str) const
 {
   string patt = pattern->get_full_str();
   if (patt.size()==0) return TRIBOOL(str.size()==0);
-  string *result = regexp(str, string('(')+patt+string(')'), 0);
+  string *result = regexp(str, string('(')+patt+string(')'), 0, pattern->get_nocase());
   bool rv = (result->size()!=0);
   delete result;
   return TRIBOOL(rv);
@@ -517,7 +517,11 @@ tribool StringPatternConstraint::match(const string& str) const
 string StringPatternConstraint::to_string() const
 {
   string ret_val;
-  ret_val += "pattern(";
+  ret_val += "pattern ";
+  if (pattern->get_nocase()) {
+    ret_val += "@nocase ";
+  }
+  ret_val += "(";
   ret_val += pattern->get_full_str();
   ret_val += ')';
   return ret_val;

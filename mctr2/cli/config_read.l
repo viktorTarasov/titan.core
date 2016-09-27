@@ -441,6 +441,7 @@ permutation RETURN(PermutationKeyword);
 length      RETURN(LengthKeyword);
 ifpresent   RETURN(IfpresentKeyword);
 infinity    RETURN(InfinityKeyword);
+"@nocase"   RETURN(NocaseKeyword);
 }
 
 <SC_MODULE_PARAMETERS,SC_LOGGING,SC_PROFILER>

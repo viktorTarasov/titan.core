@@ -279,7 +279,11 @@ namespace Ttcn {
       break;
     case CSTR_PATTERN:
     case USTR_PATTERN:
-      ret_val += "pattern \"";
+      ret_val += "pattern ";
+      if (u.pstring->get_nocase()) {
+        ret_val += "@nocase ";
+      }
+      ret_val += "\"";
       ret_val += u.pstring->get_full_str();
       ret_val += "\"";
       break;

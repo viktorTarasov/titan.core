@@ -566,6 +566,7 @@ permutation return PermutationKeyword;
 length      return LengthKeyword;
 ifpresent   return IfpresentKeyword;
 infinity    return InfinityKeyword;
+"@nocase"   return NocaseKeyword;
 }
 
 <SC_MODULE_PARAMETERS,SC_LOGGING,SC_PROFILER>
