@@ -45,6 +45,7 @@
 #include "pattern.hh"
 
 #include "Quadruple.hh"
+#include "UnicharPattern.hh"
 
   union YYSTYPE;
 /* defined in lexer c-file: */
@@ -65,6 +66,8 @@
   static void pattern_unierror(const char *error_str);
 
   static int user_groups;
+
+  static bool nocase;
 
 #define YYERROR_VERBOSE
 
@@ -381,12 +384,13 @@ RE_OneCharPos:
   {
     unsigned char c = $1;
     if ($1 <= 0) TTCN_pattern_error("Character with code %u "
-      "(0x%02x) cannot be used in a pattern for type charstring.", $1, $1);
-    $$ = Quad::get_hexrepr(c);
+      "(0x%02x) cannot be used in a pattern for type universal charstring.", $1, $1);
+    $$ = Quad::get_hexrepr(nocase ? tolower(c) : c);
   }
 | RE_Quadruple
   {
-    $$ = Quad::get_hexrepr($1.value);
+    $$ = Quad::get_hexrepr(nocase ?
+      unichar_pattern.convert_quad_to_lowercase($1.value).get_value() : $1.value);
   }
 | RE_Set
   {
@@ -513,10 +517,11 @@ RE_Set_Range_Char:
 | TOK_Char
   {
     if ($1 <= 0) TTCN_pattern_error("Character with code %u "
-      "(0x%02x) cannot be used in a pattern for type charstring.", $1, $1);
-    $$.value = $1;
+      "(0x%02x) cannot be used in a pattern for type universal charstring.", $1, $1);
+    $$.value = nocase ? tolower($1) : $1;
   }
-| RE_Quadruple { $$.value = $1.value; }
+| RE_Quadruple { $$.value = nocase ?
+    unichar_pattern.convert_quad_to_lowercase($1.value).get_value() : $1.value; }
 ;
 
 RE_Set_NoRange_Char:
@@ -582,13 +587,14 @@ RE_Quadruple:
  * Interface
  *********************************************************************/
 
-char* TTCN_pattern_to_regexp_uni(const char* p_pattern, int** groups)
+char* TTCN_pattern_to_regexp_uni(const char* p_pattern, bool p_nocase, int** groups)
 {
   /* if you want to debug */
   //pattern_unidebug=1;
 
   ret_val=NULL;
   user_groups = 0;
+  nocase = p_nocase;
 
   yy_buffer_state *flex_buffer = pattern_yy_scan_string(p_pattern);
   if(flex_buffer == NULL) {

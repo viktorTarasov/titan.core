@@ -213,7 +213,7 @@ namespace Common {
       OPTYPE_DECODE, // r1 r2
 
       OPTYPE_SUBSTR, // ti1 v2 v3
-      OPTYPE_REGEXP, // ti1 t2 v3
+      OPTYPE_REGEXP, // ti1 t2 v3 b4
       OPTYPE_DECOMP, // v1 v2 v3     66
 
       OPTYPE_REPLACE, // ti1 v2 v3 ti4
@@ -428,8 +428,9 @@ namespace Common {
     Value(operationtype_t p_optype, TemplateInstance *p_ti1, Value *p_v2);
     /** Constructor used by V_EXPR "ti1 v2 v3" */
     Value(operationtype_t p_optype, TemplateInstance *p_ti1, Value *p_v2, Value *p_v3);
-    /** Constructor used by V_EXPR "ti1 t2 v3" */
-    Value(operationtype_t p_optype, TemplateInstance *p_ti1, TemplateInstance *p_t2, Value *p_v3);
+    /** Constructor used by V_EXPR "ti1 t2 v3 b4" */
+    Value(operationtype_t p_optype, TemplateInstance *p_ti1, TemplateInstance *p_t2,
+      Value *p_v3, bool p_b4);
     /** Constructor used by V_EXPR "ti1 v2 v3 ti4" */
     Value(operationtype_t p_optype, TemplateInstance *p_ti1, Value *p_v2,
       Value *p_v3, TemplateInstance *p_ti4);

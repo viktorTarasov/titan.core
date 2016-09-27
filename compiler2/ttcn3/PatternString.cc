@@ -380,7 +380,7 @@ namespace Ttcn {
         posix_str = TTCN_pattern_to_regexp(str.c_str());
         break;
       case USTR_PATTERN:
-        posix_str = TTCN_pattern_to_regexp_uni(str.c_str());
+        posix_str = TTCN_pattern_to_regexp_uni(str.c_str(), nocase);
     }
     Free(posix_str);
   }
@@ -496,12 +496,17 @@ namespace Ttcn {
       // empty pattern: create an empty string literal for it
       s += p_mod->add_charstring_literal(string());
     }
+    s += ", ";
+    s += nocase ? "TRUE" : "FALSE";
     s += ')';
     return s;
   }
 
   void PatternString::dump(unsigned level) const
   {
+    if (nocase) {
+      DEBUG(level, "@nocase");
+    }
     DEBUG(level, "%s", get_full_str().c_str());
   }
 

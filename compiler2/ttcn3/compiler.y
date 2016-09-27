@@ -3524,9 +3524,9 @@ CharStringMatch: // 124
   }
 | PatternKeyword NocaseKeyword PatternChunkList
   {
-    // @nocase is ignored for now
     Location loc(infile, @3);
     $$ = parse_pattern($3, loc);
+    $$->set_nocase(true);
     Free($3);
   }
 ;
@@ -8862,13 +8862,13 @@ PredefinedOps:
 | regexpKeyword '(' optError TemplateInstance optError ',' optError
   TemplateInstance optError ',' optError Expression optError ')'
   {
-    $$ = new Value(Value::OPTYPE_REGEXP, $4, $8, $12);
+    $$ = new Value(Value::OPTYPE_REGEXP, $4, $8, $12, false);
     $$->set_location(infile, @$);
   }
 | regexpKeyword NocaseKeyword '(' optError TemplateInstance optError ',' optError
   TemplateInstance optError ',' optError Expression optError ')'
   {
-    $$ = new Value(Value::OPTYPE_REGEXP, $5, $9, $13);
+    $$ = new Value(Value::OPTYPE_REGEXP, $5, $9, $13, true);
     $$->set_location(infile, @$);
   }
 | regexpKeyword '(' error ')'
@@ -8883,7 +8883,7 @@ PredefinedOps:
     ti2->set_location(infile, @3);
     Value *v3 = new Value(Value::V_ERROR);
     v3->set_location(infile, @3);
-    $$ = new Value(Value::OPTYPE_REGEXP, ti1, ti2, v3);
+    $$ = new Value(Value::OPTYPE_REGEXP, ti1, ti2, v3, false);
     $$->set_location(infile, @$);
   }
 | regexpKeyword NocaseKeyword '(' error ')'
@@ -8898,7 +8898,7 @@ PredefinedOps:
     ti2->set_location(infile, @4);
     Value *v3 = new Value(Value::V_ERROR);
     v3->set_location(infile, @4);
-    $$ = new Value(Value::OPTYPE_REGEXP, ti1, ti2, v3);
+    $$ = new Value(Value::OPTYPE_REGEXP, ti1, ti2, v3, true);
     $$->set_location(infile, @$);
   }
 | encvalueKeyword '(' optError TemplateInstance optError ')'

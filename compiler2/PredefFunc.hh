@@ -62,9 +62,9 @@ namespace Common {
   extern int_val_t* float2int(const Real& value, const Location& loc);
   extern string* float2str(const Real& value);
   extern string* regexp(const string& instr, const string& expression,
-                        const Int& groupno);
+                        const Int& groupno, bool nocase);
   extern ustring* regexp(const ustring& instr, const ustring& expression,
-                        const Int& groupno);
+                        const Int& groupno, bool nocase);
   extern string* remove_bom(const string& encoded_value);
   extern string* get_stringencoding(const string& encoded_value);
   extern ustring decode_utf8(const string & ostr, CharCoding::CharCodingType expected_coding);

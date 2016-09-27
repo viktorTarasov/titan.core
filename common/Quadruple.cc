@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Raduly, Csaba
  *   Zalanyi, Balazs Andor
  *
@@ -62,6 +63,13 @@ void Quad::set(unsigned char group, unsigned char plane, unsigned char row,
   u.comp.plane = plane;
   u.comp.row = row;
   u.comp.cell = cell;
+}
+
+void Quad::set_hexrepr(const char* hex_repr) {
+  u.comp.group = ((hex_repr[0] - 'A') << 4) + (hex_repr[1] - 'A');
+  u.comp.plane = ((hex_repr[2] - 'A') << 4) + (hex_repr[3] - 'A');
+  u.comp.row =   ((hex_repr[4] - 'A') << 4) + (hex_repr[5] - 'A');
+  u.comp.cell =  ((hex_repr[6] - 'A') << 4) + (hex_repr[7] - 'A');
 }
 
 const Quad Quad::operator-(const Quad& rhs) const {

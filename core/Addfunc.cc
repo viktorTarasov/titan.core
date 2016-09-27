@@ -33,6 +33,7 @@
 #include "Logger.hh"
 #include "Snapshot.hh"
 #include "TitanLoggerApi.hh"
+#include "../common/UnicharPattern.hh"
 
 #include <openssl/bn.h>
 
@@ -1355,7 +1356,7 @@ double str2float(const CHARSTRING& value)
 // C.33 - regexp
 
 CHARSTRING regexp(const CHARSTRING& instr, const CHARSTRING& expression,
-  int groupno)
+  int groupno, boolean nocase)
 {
   instr.must_bound("The first argument (instr) of function regexp() is an "
     "unbound charstring value.");
@@ -1402,13 +1403,14 @@ CHARSTRING regexp(const CHARSTRING& instr, const CHARSTRING& expression,
   if (TTCN_Logger::log_this_event(TTCN_Logger::DEBUG_UNQUALIFIED)) {
     TTCN_Logger::begin_event(TTCN_Logger::DEBUG_UNQUALIFIED);
     TTCN_Logger::log_event_str("regexp(): POSIX ERE equivalent of ");
-    CHARSTRING_template(STRING_PATTERN, expression).log();
+    CHARSTRING_template(STRING_PATTERN, expression, nocase).log();
     TTCN_Logger::log_event_str(" is: ");
     CHARSTRING(posix_str).log();
     TTCN_Logger::end_event();
   }
   regex_t posix_regexp;
-  int ret_val = regcomp(&posix_regexp, posix_str, REG_EXTENDED);
+  int ret_val = regcomp(&posix_regexp, posix_str, REG_EXTENDED |
+    (nocase ? REG_ICASE : 0));
   Free(posix_str);
   if (ret_val != 0) {
     char msg[ERRMSG_BUFSIZE];
@@ -1464,42 +1466,17 @@ CHARSTRING regexp(const CHARSTRING& instr, const CHARSTRING& expression,
 }
 
 CHARSTRING regexp(const CHARSTRING& instr, const CHARSTRING& expression,
-  const INTEGER& groupno)
+  const INTEGER& groupno, boolean nocase)
 {
   groupno.must_bound("The third argument (groupno) of function regexp() is an "
     "unbound integer value.");
-  return regexp(instr, expression, (int)groupno);
-}
-
-/* Needed by regexp() */
-UNIVERSAL_CHARSTRING convert_from_pattern_form(char* str, int num) {
-  if (num % 8 != 0)
-    TTCN_error("Internal error: Cannot convert string from pattern form.");
-
-  unsigned char c1, c2;
-  universal_char * const res = new universal_char[num/8];
-  unsigned char* ptr = (unsigned char*)res;
-  int index = 0;
-  while (index < num) {
-    for (int j = 0; j < 4; j++) {
-      c1 = str[index++];
-      c2 = str[index++];
-      if (c1 >= 'A' && c1 <= 'P' && c2 >= 'A' && c2 <= 'P') {
-        *(ptr++) = ((c1 - 'A') << 4) | (c2 - 'A');
-      } else
-        TTCN_error("Internal error: Cannot convert string containing illegal "
-          "character.");
-    }
-  }
-  UNIVERSAL_CHARSTRING retval(num / 8, res);
-  delete[] res;
-  return retval;
+  return regexp(instr, expression, (int)groupno, nocase);
 }
 
 UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
   const UNIVERSAL_CHARSTRING* expression_val,
   const UNIVERSAL_CHARSTRING_template* expression_tmpl,
-  int groupno)
+  int groupno, boolean nocase)
 {
   if ( (expression_val && expression_tmpl) ||
     (!expression_val && !expression_tmpl) )
@@ -1524,7 +1501,7 @@ UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
   else
     expression_str = expression_tmpl->get_single_value();
   char *posix_str = TTCN_pattern_to_regexp_uni((const char*)expression_str,
-    &user_groups);
+    nocase, &user_groups);
   if (user_groups == 0) {
     Free(user_groups);
     Free(posix_str);
@@ -1540,12 +1517,12 @@ UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
   if (TTCN_Logger::log_this_event(TTCN_Logger::DEBUG_UNQUALIFIED)) {
     TTCN_Logger::begin_event(TTCN_Logger::DEBUG_UNQUALIFIED);
     TTCN_Logger::log_event_str("regexp(): POSIX ERE equivalent of ");
-    CHARSTRING_template(STRING_PATTERN, expression_str).log();
+    CHARSTRING_template(STRING_PATTERN, expression_str, nocase).log();
     TTCN_Logger::log_event_str(" is: ");
     CHARSTRING(posix_str).log();
     TTCN_Logger::end_event();
   }
-
+  
   regex_t posix_regexp;
   int ret_val = regcomp(&posix_regexp, posix_str, REG_EXTENDED);
   Free(posix_str);
@@ -1588,8 +1565,13 @@ UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
 
   char* instr_conv = instr.convert_to_regexp_form();
   int instr_len = instr.lengthof() * 8;
+  
+  if (nocase) {
+    unichar_pattern.convert_regex_str_to_lowercase(instr_conv);
+  }
 
   ret_val = regexec(&posix_regexp, instr_conv, nmatch + 1, pmatch, 0);
+  Free(instr_conv);
   if (ret_val == 0) {
     int begin_index = pmatch[nmatch].rm_so, end_index = pmatch[nmatch].rm_eo;
     Free(pmatch);
@@ -1600,12 +1582,8 @@ UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
     if (begin_index > end_index) TTCN_error("Internal error: The start index "
       "of the substring (%d) to be returned in function regexp() is greater "
       "than the end index (%d).", begin_index, end_index);
-    UNIVERSAL_CHARSTRING res = convert_from_pattern_form(
-      instr_conv + begin_index, end_index - begin_index);
-    Free(instr_conv);
-    return res;
+    return instr.extract_matched_section(begin_index, end_index);
   } else {
-    Free(instr_conv);
     Free(pmatch);
     if (ret_val != REG_NOMATCH) {
       char msg[ERRMSG_BUFSIZE];
@@ -1619,65 +1597,66 @@ UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
 }
 
 UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
-  const UNIVERSAL_CHARSTRING& expression, int groupno)
+  const UNIVERSAL_CHARSTRING& expression, int groupno, boolean nocase)
 {
-  return regexp(instr, &expression, NULL, groupno);
+  return regexp(instr, &expression, NULL, groupno, nocase);
 }
 
 UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
-  const UNIVERSAL_CHARSTRING& expression, const INTEGER& groupno)
+  const UNIVERSAL_CHARSTRING& expression, const INTEGER& groupno, boolean nocase)
 {
   groupno.must_bound("The third argument (groupno) of function regexp() is an "
     "unbound integer value.");
-  return regexp(instr, expression, (int)groupno);
+  return regexp(instr, expression, (int)groupno, nocase);
 }
 
 // regexp() on templates
 
 CHARSTRING regexp(const CHARSTRING_template& instr,
-  const CHARSTRING_template& expression, int groupno)
+  const CHARSTRING_template& expression, int groupno, boolean nocase)
 {
   if (!instr.is_value())
     TTCN_error("The first argument of function regexp() is a "
       "template with non-specific value.");
   if (expression.is_value())
-    return regexp(instr.valueof(), expression.valueof(), groupno);
+    return regexp(instr.valueof(), expression.valueof(), groupno, nocase);
   // pattern matching to specific value
   if (expression.get_selection()==STRING_PATTERN)
-    return regexp(instr.valueof(), expression.get_single_value(), groupno);
+    return regexp(instr.valueof(), expression.get_single_value(), groupno, nocase);
   TTCN_error("The second argument of function regexp() should be "
     "specific value or pattern matching template.");
 }
 
 CHARSTRING regexp(const CHARSTRING_template& instr,
-  const CHARSTRING_template& expression, const INTEGER& groupno)
+  const CHARSTRING_template& expression, const INTEGER& groupno, boolean nocase)
 {
   groupno.must_bound("The third argument (groupno) of function regexp() is an "
     "unbound integer value.");
-  return regexp(instr, expression, (int)groupno);
+  return regexp(instr, expression, (int)groupno, nocase);
 }
 
 UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING_template& instr,
-  const UNIVERSAL_CHARSTRING_template& expression, int groupno)
+  const UNIVERSAL_CHARSTRING_template& expression, int groupno, boolean nocase)
 {
   if (!instr.is_value())
     TTCN_error("The first argument of function regexp() is a "
       "template with non-specific value.");
   if (expression.is_value())
-    return regexp(instr.valueof(), expression.valueof(), groupno);
+    return regexp(instr.valueof(), expression.valueof(), groupno, nocase);
   // pattern matching to specific value
   if (expression.get_selection()==STRING_PATTERN)
-    return regexp(instr.valueof(), NULL, &expression, groupno);
+    return regexp(instr.valueof(), NULL, &expression, groupno, nocase);
   TTCN_error("The second argument of function regexp() should be "
     "specific value or pattern matching template.");
 }
 
 UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING_template& instr,
-  const UNIVERSAL_CHARSTRING_template& expression, const INTEGER& groupno)
+  const UNIVERSAL_CHARSTRING_template& expression, const INTEGER& groupno,
+  boolean nocase)
 {
   groupno.must_bound("The third argument (groupno) of function regexp() is an "
     "unbound integer value.");
-  return regexp(instr, expression, (int)groupno);
+  return regexp(instr, expression, (int)groupno, nocase);
 }
 
 // C.34 - substr

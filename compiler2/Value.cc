@@ -262,6 +262,7 @@ namespace Common {
         u.expr.ti1=p.u.expr.ti1->clone();
         u.expr.t2=p.u.expr.t2->clone();
         u.expr.v3=p.u.expr.v3->clone();
+        u.expr.b4=p.u.expr.b4;
         break;
       case OPTYPE_DECOMP: // v1 v2 v3
         u.expr.v1=p.u.expr.v1->clone();
@@ -1184,8 +1185,9 @@ namespace Common {
     } // switch
   }
 
-  // ti1 t2 v3
-  Value::Value(operationtype_t p_optype, TemplateInstance *p_ti1, TemplateInstance *p_t2, Value *p_v3)
+  // ti1 t2 v3 b4
+  Value::Value(operationtype_t p_optype, TemplateInstance *p_ti1,
+               TemplateInstance *p_t2, Value *p_v3, bool p_b4)
     : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
   {
     u.expr.v_optype=p_optype;
@@ -1195,7 +1197,8 @@ namespace Common {
       if(!p_ti1 || !p_t2 || !p_v3) FATAL_ERROR("Value::Value()");
       u.expr.ti1 = p_ti1;
       u.expr.t2 = p_t2;
-      u.expr.v3=p_v3;
+      u.expr.v3 = p_v3;
+      u.expr.b4 = p_b4;
       break;
     default:
       FATAL_ERROR("Value::Value()");
@@ -8128,14 +8131,14 @@ error:
       if (v1->valuetype == V_CSTR) {
         const string& s1 = v1->get_val_str();
         const string& s2 = v2->get_val_str();
-	string *result = regexp(s1, s2, i3);
+	string *result = regexp(s1, s2, i3, u.expr.b4);
 	clean_up();
 	valuetype = V_CSTR;
 	set_val_str(result);
       } if (v1->valuetype == V_USTR) {
         const ustring& s1 = v1->get_val_ustr();
         const ustring& s2 = v2->get_val_ustr();
-        ustring *result = regexp(s1, s2, i3);
+        ustring *result = regexp(s1, s2, i3, u.expr.b4);
         clean_up();
         valuetype = V_USTR;
         set_val_ustr(result);
@@ -10783,7 +10786,11 @@ error:
         return ret_val;
       }
       case OPTYPE_REGEXP: {
-        string ret_val("regexp(");
+        string ret_val("regexp");
+        if (u.expr.b4) {
+          ret_val += " @nocase ";
+        }
+        ret_val += "(";
         u.expr.ti1->append_stringRepr(ret_val);
         ret_val += ", ";
         u.expr.t2->append_stringRepr(ret_val);
@@ -12545,7 +12552,7 @@ error:
     else u.expr.t2->generate_code(expr);
     expr->expr = mputstr(expr->expr, ", ");
     u.expr.v3->generate_code_expr_mandatory(expr);
-    expr->expr = mputc(expr->expr, ')');
+    expr->expr = mputprintf(expr->expr, ", %s)", u.expr.b4 ? "TRUE" : "FALSE");
   }
 
   void Value::generate_code_expr_replace(expression_struct *expr)

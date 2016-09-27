@@ -80,7 +80,7 @@ class UNIVERSAL_CHARSTRING : public Base_Type {
   friend UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
     const UNIVERSAL_CHARSTRING* expression_val,
     const UNIVERSAL_CHARSTRING_template* expression_tmpl,
-    int groupno);
+    int groupno, boolean nocase);
 
   friend boolean operator==(const universal_char& uchar_value,
     const UNIVERSAL_CHARSTRING& other_value);
@@ -113,7 +113,8 @@ class UNIVERSAL_CHARSTRING : public Base_Type {
     * the second parameter is set (needed by UNIVERSAL_CHARSTRING_template to
     * concatenate string patterns). 
     * @return TRUE, if the module parameter was a string pattern, otherwise FALSE */
-  boolean set_param_internal(Module_Param& param, boolean allow_pattern);
+  boolean set_param_internal(Module_Param& param, boolean allow_pattern,
+    boolean* is_nocase_pattern = NULL);
 
 public:
 
@@ -266,6 +267,8 @@ public:
 private:
   // convert this string to character string for pattern matching: ([A-P]{8})*
   char* convert_to_regexp_form() const;
+  
+  UNIVERSAL_CHARSTRING extract_matched_section(int start, int end) const;
 
   /* returns the CHARSTRING representation of this. Quadruples are converted
      into the form: \q{group,plane,row,cell} */
@@ -548,6 +551,7 @@ private:
     mutable struct {
       boolean regexp_init;
       regex_t posix_regexp;
+      boolean nocase;
     } pattern_value;
     unichar_decmatch_struct* dec_match;
   };
@@ -570,7 +574,8 @@ public:
     (const CHARSTRING_template& other_value);
   UNIVERSAL_CHARSTRING_template
     (const UNIVERSAL_CHARSTRING_template& other_value);
-  UNIVERSAL_CHARSTRING_template(template_sel p_sel, const CHARSTRING& p_str);
+  UNIVERSAL_CHARSTRING_template(template_sel p_sel, const CHARSTRING& p_str,
+    boolean p_nocase);
 
   ~UNIVERSAL_CHARSTRING_template();
   void clean_up();

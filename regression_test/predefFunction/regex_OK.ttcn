@@ -153,9 +153,31 @@ testcase  regexp_degen() runs on PDTestComponent {
   }
 }
 
+const charstring c_cs_val := "aBc5XYz";
+const charstring c_cs_pattern := "(abc?xyz)";
+
+// case-insensitive regexp
+testcase regexp_nocase() runs on PDTestComponent {
+  // regexp with constants (calculated at compile-time)
+  var charstring v_res_const := regexp @nocase (c_cs_val, c_cs_pattern, 0);
+  if (v_res_const != c_cs_val) {
+    setverdict(fail, "Const regexp failed. Got: ", v_res_const, ", expected: ", c_cs_val);
+  }
+  
+  // regexp with variables (calculated at runtime)
+  var charstring v_cs_val := "aBE5XYz";
+  var charstring v_cs_pattern := "(ab[A-e]?xyz)";
+  var charstring v_res_var := regexp @nocase (v_cs_val, v_cs_pattern, 0);
+  if (v_res_var != v_cs_val) {
+    setverdict(fail, "Var regexp failed. Got: ", v_res_var, ", expected: ", v_cs_val);
+  }
+  setverdict(pass);
+}
+
 control {
 	execute (regexp_char());
 	execute (regexp_degen());
+	execute (regexp_nocase());
 }
 
 }

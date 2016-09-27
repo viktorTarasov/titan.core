@@ -94,11 +94,52 @@ module pattern_quadruples
     if (not match(foobar_u, t_us)) { setverdict(fail, "ustr mismatch,", match(foobar_u, t_us)); }
     setverdict(pass);
   }
+  
+  const universal charstring c_ucs_val := "AÍ";
+  const universal charstring c_ucs_pattern := "([abc][é-ű])";
+  
+  // case-insensitive regexp
+  testcase univ_regexp_nocase() runs on univchar_comp {
+    // regexp with constants (calculated at compile-time)
+    var universal charstring v_res_const := regexp @nocase (c_ucs_val, c_ucs_pattern, 0);
+    if (v_res_const != c_ucs_val) {
+      setverdict(fail, "Const regexp failed. Got: ", v_res_const, ", expected: ", c_ucs_val);
+    }
+    
+    // regexp with variables (calculated at runtime)
+    var universal charstring v_ucs_val := "aÁű";
+    var universal charstring v_ucs_pattern := "(Aá[É-Ű])";
+    var universal charstring v_res_var := regexp @nocase (v_ucs_val, v_ucs_pattern, 0);
+    if (v_res_var != v_ucs_val) {
+      setverdict(fail, "Var regexp failed. Got: ", v_res_var, ", expected: ", v_ucs_val);
+    }
+    setverdict(pass);
+  }
+  
+  modulepar template universal charstring mpt_ucs;
+  
+  // case-insensitive pattern
+  testcase univ_pattern_nocase() runs on univchar_comp {
+    // pattern in template variable
+    var template universal charstring vt_ucs := pattern @nocase "A\q{0,0,0,225}[\q{0,0,0,201}-\q{0,0,1,113}]"; // "Aá[É-ű]"
+    var universal charstring val := "aÁű";
+    if (not match(val, vt_ucs)) {
+      setverdict(fail, "Var template pattern failed: ", match(val, vt_ucs));
+    }
+    
+    // pattern in template module parameter
+    if (not match(val, mpt_ucs)) {
+      setverdict(fail, "Var template pattern failed: ", match(val, mpt_ucs));
+    }
+    setverdict(pass);
+  }
 
   control {
     execute(univ_match());
     execute(univ_match_neg());
     execute(univ_regexp());
     execute(univ_from_charstr_pattern());
+    execute(univ_regexp_nocase());
+    execute(univ_pattern_nocase());
   }
 }

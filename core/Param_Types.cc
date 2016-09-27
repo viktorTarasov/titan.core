@@ -245,6 +245,11 @@ char* Module_Param::get_pattern() const {
   return NULL;
 }
 
+boolean Module_Param::get_nocase() const {
+  TTCN_error("Internal error: Module_Param::get_nocase()");
+  return FALSE;
+}
+
 verdicttype Module_Param::get_verdict() const {
   TTCN_error("Internal error: Module_Param::get_verdict()");
   return NONE;
@@ -542,7 +547,11 @@ void Module_Param_StringRange::log_value() const {
 }
 
 void Module_Param_Pattern::log_value() const {
-  TTCN_Logger::log_event_str("pattern \"");
+  TTCN_Logger::log_event_str("pattern ");
+  if (nocase) {
+    TTCN_Logger::log_event_str("@nocase ");
+  }
+  TTCN_Logger::log_event_str("\"");
   TTCN_Logger::log_event_str(pattern);
   TTCN_Logger::log_event_str("\"");
 }
