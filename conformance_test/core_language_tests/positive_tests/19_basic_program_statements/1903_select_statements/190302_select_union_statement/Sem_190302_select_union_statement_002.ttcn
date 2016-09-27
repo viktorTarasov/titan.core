@@ -9,15 +9,16 @@
  *   Adrien Kirjak – initial implementation
  *
  ** @version  0.0.1
- ** @purpose  1:19.3.2, verify that partially initialized value can be used in select union header
+ ** @purpose  1:19.3.2, verify that it is possible to use comma separated list of alternatives in case branches
  ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
 
 // The following requirement is tested:
-// [The TemplateInstance in the header of the select union statement] shall be 
-// at least partially initialized.
+// Each branch shall start with the case keyword followed by one or more identifiers 
+// of the alternatives (fields) of the union type (a list branch) or the else keyword 
+// (an else branch) and a statement block.
 
-module Sem_190301_select_union_statement_006 { 
+module Sem_190302_select_union_statement_002 { 
 
     type component GeneralComp {
 	}	
@@ -25,26 +26,22 @@ module Sem_190301_select_union_statement_006 {
     type union U {
         integer intOption,
         charstring strOption,
-        record {
-            integer field1,
-            integer field2
-        } recOption
+        boolean boolOption,
+        bitstring bitOption
     }
 
-    testcase TC_Sem_190301_select_union_statement_006() runs on GeneralComp {
-        var U v_un := { recOption := { field1 := 1, field2 := - } }
+    testcase TC_Sem_190302_select_union_statement_002() runs on GeneralComp {
+        var U v_un := { strOption := "abc" }
         select union (v_un) {
-            case (intOption) {
-                setverdict(fail);
-            } case (strOption) {
-                setverdict(fail);
-            } case (recOption) {
+            case (intOption, boolOption, strOption) {
                 setverdict(pass);
+            } case (bitOption) {
+                setverdict(fail);
             }
         }
 	}
 
 	control {
-		execute(TC_Sem_190301_select_union_statement_006());
+		execute(TC_Sem_190302_select_union_statement_002());
 	}
 }

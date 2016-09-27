@@ -17,7 +17,7 @@
 // In the header part of the select union statement a template instance of union 
 // type shall be given.
 
-module NegSem_190301_select_union_statement_001 { 
+module NegSem_190302_select_union_statement_001 { 
 
     type component GeneralComp {
 	}	
@@ -28,7 +28,7 @@ module NegSem_190301_select_union_statement_001 {
         boolean boolOption optional
     }
 
-    testcase TC_NegSem_190301_select_union_statement_001() runs on GeneralComp {
+    testcase TC_NegSem_190302_select_union_statement_001() runs on GeneralComp {
         var R v_rec := { intOption := omit, strOption := "abc", boolOption := omit }
 
         select union (v_rec) {
@@ -43,6 +43,6 @@ module NegSem_190301_select_union_statement_001 {
 	}
 
 	control {
-		execute(TC_NegSem_190301_select_union_statement_001());
+		execute(TC_NegSem_190302_select_union_statement_001());
 	}
 }

@@ -9,16 +9,14 @@
  *   Adrien Kirjak – initial implementation
  *
  ** @version  0.0.1
- ** @purpose  1:19.3.2, verify that it is possible to use an else branches
- ** @verdict  pass accept, ttcn3verdict:pass
+ ** @purpose  1:19.3.2, verify that the same alternative cannot be used in two case statements (list item)
+ ** @verdict  pass reject
  ***************************************************/
 
 // The following requirement is tested:
-// Each branch shall start with the case keyword followed by one or more identifiers 
-// of the alternatives (fields) of the union type (a list branch) or the else keyword 
-// (an else branch) and a statement block.
+// No two cases in a select union statement shall have the same case Identifier.
 
-module Sem_190301_select_union_statement_003 { 
+module NegSem_190302_select_union_statement_005 { 
 
     type component GeneralComp {
 	}	
@@ -26,24 +24,24 @@ module Sem_190301_select_union_statement_003 {
     type union U {
         integer intOption,
         charstring strOption,
-        boolean boolOption,
-        bitstring bitOption
+        record {
+            integer field1,
+            integer field2
+        } recOption
     }
 
-    testcase TC_Sem_190301_select_union_statement_003() runs on GeneralComp {
-        var U v_un := { strOption := "abc" }
+    testcase TC_NegSem_190302_select_union_statement_005() runs on GeneralComp {
+        var U v_un := { intOption := 10 }
         select union (v_un) {
-            case (strOption) {
+            case (intOption, strOption) {
                 setverdict(pass);
-            } case (bitOption) {
-                setverdict(fail);
-            } case else {
+            } case (recOption, intOption) {
                 setverdict(fail);
             }
         }
 	}
 
 	control {
-		execute(TC_Sem_190301_select_union_statement_003());
+		execute(TC_NegSem_190302_select_union_statement_005());
 	}
 }

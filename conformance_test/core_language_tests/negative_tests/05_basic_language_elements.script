@@ -310,6 +310,320 @@ error: There is no local or imported definition with name `v_statement'
 <END_TC>
 :exmp
 
+*---------------------------------------------------------------------*
+:h3. NegSem_050202_Uniqueness_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050202_Uniqueness_001 NegSem_050202_Uniqueness_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.2.2, Ensure that the IUT correctly handles the uniqueness of variable names in its scope
+ ** @verdict  pass reject
+ ***************************************************/
+module NegSem_050202_Uniqueness_001 {
+	type component GeneralComp {
+		const integer cl_int := 0;
+	}
+
+	testcase TC_NegSem_050202_Uniqueness_001() runs on GeneralComp {
+		const integer cl_int := 0;
+	}
+	control {
+		execute(TC_NegSem_050202_Uniqueness_001());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Definition with identifier `cl_int' is not unique in the scope hierarchy
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050202_Uniqueness_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050202_Uniqueness_004 NegSem_050202_Uniqueness_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.2.2, Ensure that the IUT correctly handles the uniqueness of variable names in its scope
+ ** @verdict  pass reject
+ ***************************************************/
+module NegSem_050202_Uniqueness_004 {
+	const integer c_int := 0;
+
+	type component GeneralComp {
+	}
+
+	function f_funcScope() {}
+
+	testcase TC_NegSem_050202_Uniqueness_004() runs on GeneralComp {
+		const integer c_int := 0;
+		f_funcScope();
+	}
+	control {
+		execute(TC_NegSem_050202_Uniqueness_004());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Definition with identifier `c_int' is not unique in the scope hierarchy
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050202_Uniqueness_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050202_Uniqueness_005 NegSem_050202_Uniqueness_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.2.2, Ensure that the IUT correctly handles the uniqueness of variable names in its scope
+ ** @verdict  pass reject
+ ***************************************************/
+module NegSem_050202_Uniqueness_005 {
+	const integer c_int := 0;
+
+	type component GeneralComp {
+	}
+
+	function f_funcScope() {
+		const integer c_int := 0;
+	}
+
+	testcase TC_NegSem_050202_Uniqueness_005() runs on GeneralComp {
+		f_funcScope();
+	}
+	control {
+		execute(TC_NegSem_050202_Uniqueness_005());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Definition with identifier `c_int' is not unique in the scope hierarchy
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050202_Uniqueness_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050202_Uniqueness_006 NegSem_050202_Uniqueness_006.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.2.2, Ensure that the IUT correctly handles the uniqueness of variable names in its scope
+ ** @verdict  pass reject
+ ***************************************************/
+module NegSem_050202_Uniqueness_006 {
+	type component GeneralComp {
+		const integer repeatedIdentifier := 0;
+	}
+
+	testcase TC_NegSem_050202_Uniqueness_006() runs on GeneralComp {
+		var boolean repeatedIdentifier := true;
+	}
+	control {
+		execute(TC_NegSem_050202_Uniqueness_006());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Definition with identifier `repeatedIdentifier' is not unique in the scope hierarchy
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050202_Uniqueness_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050202_Uniqueness_007 NegSem_050202_Uniqueness_007.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.2.2, Ensure that the IUT correctly handles the uniqueness of variable names in its scope
+ ** @verdict  pass reject
+ ***************************************************/
+module NegSem_050202_Uniqueness_007 {
+	type component GeneralComp {
+		const integer repeatedIdentifier := 0;
+	}
+
+	function f_funcScope() runs on GeneralComp {
+		var boolean repeatedIdentifier := true;
+	}
+
+	testcase TC_NegSem_050202_Uniqueness_007() runs on GeneralComp {
+		f_funcScope();
+	}
+	control {
+		execute(TC_NegSem_050202_Uniqueness_007());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Definition with identifier `repeatedIdentifier' is not unique in the scope hierarchy
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050202_Uniqueness_008 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050202_Uniqueness_008 NegSem_050202_Uniqueness_008.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.2.2, Ensure that the IUT correctly handles the uniqueness of variable names in its scope
+ ** @verdict  pass reject
+ ***************************************************/
+module NegSem_050202_Uniqueness_008 {
+	type component GeneralComp {
+	}
+
+	function f_funcScope(boolean repeatedIdentifier) {
+		const integer repeatedIdentifier := 0;
+	}
+
+	testcase TC_NegSem_050202_Uniqueness_008() runs on GeneralComp {
+		var boolean v_boolean := true;
+		f_funcScope(v_boolean);
+	}
+	control {
+		execute(TC_NegSem_050202_Uniqueness_008());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Definition with identifier `repeatedIdentifier' is not unique in the scope hierarchy
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050202_Uniqueness_009 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050202_Uniqueness_009 NegSem_050202_Uniqueness_009.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.2.2, Ensure that the IUT correctly handles the uniqueness of variable names in its scope
+ ** @verdict  pass reject
+ ***************************************************/
+module NegSem_050202_Uniqueness_009 {
+	const integer repeatedIdentifier := 0;
+
+	type component GeneralComp {
+	}
+
+	function f_funcScope() {}
+
+	testcase TC_NegSem_050202_Uniqueness_009() runs on GeneralComp {
+		var boolean repeatedIdentifier := true;
+		f_funcScope();
+	}
+	control {
+		execute(TC_NegSem_050202_Uniqueness_009());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Definition with identifier `repeatedIdentifier' is not unique in the scope hierarchy
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_050202_Uniqueness_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_050202_Uniqueness_010 NegSem_050202_Uniqueness_010.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:5.2.2, Ensure that the IUT correctly handles the uniqueness of variable names in its scope
+ ** @verdict  pass reject
+ ***************************************************/
+module NegSem_050202_Uniqueness_010 {
+	const integer repeatedIdentifier := 0;
+
+	type component GeneralComp {
+	}
+
+	function f_funcScope() {
+		var boolean repeatedIdentifier := true;
+	}
+
+	testcase TC_NegSem_050202_Uniqueness_010() runs on GeneralComp {
+		f_funcScope();
+	}
+	control {
+		execute(TC_NegSem_050202_Uniqueness_010());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Definition with identifier `repeatedIdentifier' is not unique in the scope hierarchy
+<END_RESULT>
+
+<END_TC>
+:exmp
+
 .*---------------------------------------------------------------------*
 :h2. 0503_ordering_of_declarations folder
 .*---------------------------------------------------------------------*

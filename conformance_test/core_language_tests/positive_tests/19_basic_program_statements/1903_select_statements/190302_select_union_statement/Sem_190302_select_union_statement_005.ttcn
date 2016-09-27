@@ -9,16 +9,15 @@
  *   Adrien Kirjak – initial implementation
  *
  ** @version  0.0.1
- ** @purpose  1:19.3.2, verify that unknown alternatives cannot be use in case statements
- ** @verdict  pass reject
+ ** @purpose  1:19.3.2, verify that no branch is executed if the's no suitable case branch
+ ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
 
 // The following requirement is tested:
-// Every Identifier in a case of the select union statement shall be an identifier 
-// of an alternative of the union type of the template instance given to the 
-// statement's header.
+// Otherwise [if no case exists for the chosen alternative and the else branch 
+// is not present], the select union statement has no effect.
 
-module NegSem_190301_select_union_statement_003 { 
+module Sem_190302_select_union_statement_005 { 
 
     type component GeneralComp {
 	}	
@@ -26,28 +25,23 @@ module NegSem_190301_select_union_statement_003 {
     type union U {
         integer intOption,
         charstring strOption,
-        record {
-            integer field1,
-            integer field2
-        } recOption
+        boolean boolOption,
+        bitstring bitOption
     }
 
-    testcase TC_NegSem_190301_select_union_statement_003() runs on GeneralComp {
-        var U v_un := { intOption := 5 }
+    testcase TC_Sem_190302_select_union_statement_005() runs on GeneralComp {
+        var U v_un := { strOption := "abc" }
         select union (v_un) {
             case (intOption) {
                 setverdict(pass);
-            } case (strOption) {
-                setverdict(fail);
-            } case (recOption) {
-                setverdict(fail);
-            } case (boolOption) {
+            } case (bitOption) {
                 setverdict(fail);
             }
         }
+        setverdict(pass);
 	}
 
 	control {
-		execute(TC_NegSem_190301_select_union_statement_003());
+		execute(TC_Sem_190302_select_union_statement_005());
 	}
 }

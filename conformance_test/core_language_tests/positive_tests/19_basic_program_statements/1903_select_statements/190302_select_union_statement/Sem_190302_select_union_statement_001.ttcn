@@ -9,14 +9,14 @@
  *   Adrien Kirjak – initial implementation
  *
  ** @version  0.0.1
- ** @purpose  1:19.3.2, verify that the same alternative cannot be used in two case statements (list item)
- ** @verdict  pass reject
+ ** @purpose  1:19.3.2, verify that it is possible to use a select union statement with several branches
+ ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
 
 // The following requirement is tested:
-// No two cases in a select union statement shall have the same case Identifier.
+// The statement contains a header part and zero or more branches. 
 
-module NegSem_190301_select_union_statement_005 { 
+module Sem_190302_select_union_statement_001 { 
 
     type component GeneralComp {
 	}	
@@ -24,24 +24,23 @@ module NegSem_190301_select_union_statement_005 {
     type union U {
         integer intOption,
         charstring strOption,
-        record {
-            integer field1,
-            integer field2
-        } recOption
+        boolean boolOption
     }
 
-    testcase TC_NegSem_190301_select_union_statement_005() runs on GeneralComp {
-        var U v_un := { intOption := 10 }
+    testcase TC_Sem_190302_select_union_statement_001() runs on GeneralComp {
+        var U v_un := { strOption := "abc" }
         select union (v_un) {
-            case (intOption, strOption) {
+            case (intOption) {
+                setverdict(fail);
+            } case (strOption) {
                 setverdict(pass);
-            } case (recOption, intOption) {
+            } case (boolOption) {
                 setverdict(fail);
             }
         }
 	}
 
 	control {
-		execute(TC_NegSem_190301_select_union_statement_005());
+		execute(TC_Sem_190302_select_union_statement_001());
 	}
 }
