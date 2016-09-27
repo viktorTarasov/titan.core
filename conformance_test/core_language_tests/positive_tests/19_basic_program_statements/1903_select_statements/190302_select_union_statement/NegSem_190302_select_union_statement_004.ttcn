@@ -16,7 +16,7 @@
 // The following requirement is tested:
 // No two cases in a select union statement shall have the same case Identifier.
 
-module NegSem_190301_select_union_statement_004 { 
+module NegSem_190302_select_union_statement_004 { 
 
     type component GeneralComp {
 	}	
@@ -30,7 +30,7 @@ module NegSem_190301_select_union_statement_004 {
         } recOption
     }
 
-    testcase TC_NegSem_190301_select_union_statement_004() runs on GeneralComp {
+    testcase TC_NegSem_190302_select_union_statement_004() runs on GeneralComp {
         var U v_un := { recOption := { field1 := 1, field2 := 2 } }
 
         select union (v_un) {
@@ -47,6 +47,6 @@ module NegSem_190301_select_union_statement_004 {
 	}
 
 	control {
-		execute(TC_NegSem_190301_select_union_statement_004());
+		execute(TC_NegSem_190302_select_union_statement_004());
 	}
 }

@@ -27,7 +27,7 @@ module NegSem_220304_getreply_operation_020 {
     }
     signature S() return R;
 
-	type integer I with {variant ""};
+	type integer I with {variant "32 bit"};
     
 	type port P procedure {
 		inout S;
@@ -39,7 +39,7 @@ module NegSem_220304_getreply_operation_020 {
     
     type record Wrapped {
         integer num
-    }
+    } with { variant ""}
     
     function f_server() runs on GeneralComp {
         var I v_src := 5;
@@ -54,7 +54,7 @@ module NegSem_220304_getreply_operation_020 {
         connect(self:p, v_ptc:p);
         v_ptc.start(f_server());
         p.call(S:{}) {
-            [] p.getreply(S:{} value R:{ id := ?, payload := decmatch integer:? }) -> value (v_res := @decoded payload) { 
+            [] p.getreply(S:{} value R:{ id := ?, payload := decmatch I:? }) -> value (v_res := @decoded payload) { 
                 setverdict (pass);
             }
             [] p.getreply { setverdict(pass); }

@@ -9,15 +9,16 @@
  *   Adrien Kirjak – initial implementation
  *
  ** @version  0.0.1
- ** @purpose  1:19.3.2, verify that no branch is executed if the's no suitable case branch
+ ** @purpose  1:19.3.2, verify that it is possible to use an else branches
  ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
 
 // The following requirement is tested:
-// Otherwise [if no case exists for the chosen alternative and the else branch 
-// is not present], the select union statement has no effect.
+// Each branch shall start with the case keyword followed by one or more identifiers 
+// of the alternatives (fields) of the union type (a list branch) or the else keyword 
+// (an else branch) and a statement block.
 
-module Sem_190301_select_union_statement_005 { 
+module Sem_190302_select_union_statement_003 { 
 
     type component GeneralComp {
 	}	
@@ -29,19 +30,20 @@ module Sem_190301_select_union_statement_005 {
         bitstring bitOption
     }
 
-    testcase TC_Sem_190301_select_union_statement_005() runs on GeneralComp {
+    testcase TC_Sem_190302_select_union_statement_003() runs on GeneralComp {
         var U v_un := { strOption := "abc" }
         select union (v_un) {
-            case (intOption) {
+            case (strOption) {
                 setverdict(pass);
             } case (bitOption) {
                 setverdict(fail);
+            } case else {
+                setverdict(fail);
             }
         }
-        setverdict(pass);
 	}
 
 	control {
-		execute(TC_Sem_190301_select_union_statement_005());
+		execute(TC_Sem_190302_select_union_statement_003());
 	}
 }

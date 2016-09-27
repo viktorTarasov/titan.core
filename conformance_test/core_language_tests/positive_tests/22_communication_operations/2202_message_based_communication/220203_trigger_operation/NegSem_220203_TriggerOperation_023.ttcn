@@ -30,7 +30,7 @@ module NegSem_220203_TriggerOperation_023 {
     
     type record Wrapped {
         integer num
-    }
+    } with { variant ""};
     
     type port P message {
 		inout R;
@@ -49,7 +49,7 @@ module NegSem_220203_TriggerOperation_023 {
 		connect(self:p, self:p);
         p.send(v_rec);
         alt {
-            [] p.trigger(R:{ id := ?, payload := decmatch integer:? }) -> value (v_res := @decoded payload) 			{}
+            [] p.trigger(R:{ id := ?, payload := decmatch I:? }) -> value (v_res := @decoded payload) 			{}
             [else] {}
         }
         setverdict(pass);

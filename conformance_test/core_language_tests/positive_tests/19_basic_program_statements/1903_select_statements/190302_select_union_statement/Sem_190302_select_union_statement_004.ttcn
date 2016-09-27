@@ -17,7 +17,7 @@
 // If no case exists for the chosen alternative, the StatementBlock of the else 
 // branch, if it is present, is executed.
 
-module Sem_190301_select_union_statement_004 { 
+module Sem_190302_select_union_statement_004 { 
 
     type component GeneralComp {
 	}	
@@ -29,7 +29,7 @@ module Sem_190301_select_union_statement_004 {
         bitstring bitOption
     }
 
-    testcase TC_Sem_190301_select_union_statement_004() runs on GeneralComp {
+    testcase TC_Sem_190302_select_union_statement_004() runs on GeneralComp {
         var U v_un := { strOption := "abc" }
         select union (v_un) {
             case (intOption) {
@@ -43,6 +43,6 @@ module Sem_190301_select_union_statement_004 {
 	}
 
 	control {
-		execute(TC_Sem_190301_select_union_statement_004());
+		execute(TC_Sem_190302_select_union_statement_004());
 	}
 }

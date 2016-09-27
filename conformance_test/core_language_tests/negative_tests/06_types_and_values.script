@@ -54,7 +54,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 06_types_and_
 .*---------------------------------------------------------------------*
 
 *---------------------------------------------------------------------*
-:h3. NegSem_0501_Identifier_001 negative test
+:h3. NegSyn_060100_SimpleBasicTypes_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -62,7 +62,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 06_types_and_
 
 <COMPILE>
 
-<MODULE TTCN NegSem_0501_Identifier_001 NegSem_0501_Identifier_001.ttcn >
+<MODULE TTCN NegSyn_060100_SimpleBasicTypes_001 NegSyn_060100_SimpleBasicTypes_001.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:6.1.0, Assign float to integer values
@@ -81,7 +81,7 @@ error: integer value was expected
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_0501_Identifier_002 negative test
+:h3. NegSyn_060100_SimpleBasicTypes_002 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -89,7 +89,7 @@ error: integer value was expected
 
 <COMPILE>
 
-<MODULE TTCN NegSem_0501_Identifier_002 NegSem_0501_Identifier_002.ttcn >
+<MODULE TTCN NegSyn_060100_SimpleBasicTypes_002 NegSyn_060100_SimpleBasicTypes_002.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:6.1.0, Assign boolean to integer values
@@ -108,7 +108,7 @@ error: integer value was expected
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_0501_Identifier_003 negative test
+:h3. NegSyn_060100_SimpleBasicTypes_003 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -116,7 +116,7 @@ error: integer value was expected
 
 <COMPILE>
 
-<MODULE TTCN NegSem_0501_Identifier_003 NegSem_0501_Identifier_003.ttcn >
+<MODULE TTCN NegSyn_060100_SimpleBasicTypes_003 NegSyn_060100_SimpleBasicTypes_003.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:6.1.0, Assign integer to float values
@@ -135,7 +135,7 @@ error: float value was expected
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_0501_Identifier_004 negative test
+:h3. NegSyn_060100_SimpleBasicTypes_004 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -143,7 +143,7 @@ error: float value was expected
 
 <COMPILE>
 
-<MODULE TTCN NegSem_0501_Identifier_004 NegSem_0501_Identifier_004.ttcn >
+<MODULE TTCN NegSyn_060100_SimpleBasicTypes_004 NegSyn_060100_SimpleBasicTypes_004.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:6.1.0, Assign boolean to float values
@@ -162,7 +162,7 @@ error: float value was expected
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_0501_Identifier_005 negative test
+:h3. NegSyn_060100_SimpleBasicTypes_005 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -170,7 +170,7 @@ error: float value was expected
 
 <COMPILE>
 
-<MODULE TTCN NegSem_0501_Identifier_005 NegSem_0501_Identifier_005.ttcn >
+<MODULE TTCN NegSyn_060100_SimpleBasicTypes_005 NegSyn_060100_SimpleBasicTypes_005.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:6.1.0, Assign verdicttype to float values
@@ -189,7 +189,7 @@ error: float value was expected
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_0501_Identifier_006 negative test
+:h3. NegSyn_060100_SimpleBasicTypes_006 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -197,7 +197,7 @@ error: float value was expected
 
 <COMPILE>
 
-<MODULE TTCN NegSem_0501_Identifier_006 NegSem_0501_Identifier_006.ttcn >
+<MODULE TTCN NegSyn_060100_SimpleBasicTypes_006 NegSyn_060100_SimpleBasicTypes_006.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:6.1.0, Assign integer to verdicttype values
@@ -2137,6 +2137,45 @@ module NegSem_06010205_StringPattern_001 {
 
 <RESULT COUNT 1>
 error: "abcyz" is not a valid value for type `charstring' which has subtype pattern\(\?bc\*xyz\)
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_06010205_StringPattern_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Assign values to pattern restricted character strings without @nocase modifier. >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_06010205_StringPattern_001 NegSyn_06010205_StringPattern_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.1.2.5, Assign values to pattern restricted character strings without @nocase modifier.
+ ** @verdict  pass reject, noexecution
+ ***************************************************/
+
+module NegSyn_06010205_StringPattern_001 {
+    type charstring MyString (pattern "abc*xyz"); //without @nocase
+
+    type component GeneralComp {}
+    
+    testcase TC_NegSyn_06010205_StringPattern_001() runs on GeneralComp {
+        var MyString v_c;
+        v_c := "ABc1234xYz";    //error value is out of constraint: ABc
+    }
+    
+    control{
+        execute(TC_NegSyn_06010205_StringPattern_001());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: "ABc1234xYz" is not a valid value for type `charstring' which has subtype pattern\(abc\*xyz\)
 <END_RESULT>
 
 <END_TC>
@@ -4409,7 +4448,7 @@ error: union value was expected for type `@NegSem_060205_top_level_005.U'
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_060205_top_level_005 negative test
+:h3. NegSyn_060205_top_level_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -5009,7 +5048,7 @@ error: Type `address' is not defined in this module
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_060206_anytype_002 negative test
+:h3. NegSyn_060206_anytype_002 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -5017,7 +5056,7 @@ error: Type `address' is not defined in this module
 
 <COMPILE>
 
-<MODULE TTCN NegSem_060206_anytype_002 NegSem_060206_anytype_002.ttcn >
+<MODULE TTCN NegSyn_060206_anytype_002 NegSyn_060206_anytype_002.ttcn >
 /****************************************************
  ** @version  0.0.1
  ** @purpose  1:6.2.0.6, ensure that anytype cannot be port type

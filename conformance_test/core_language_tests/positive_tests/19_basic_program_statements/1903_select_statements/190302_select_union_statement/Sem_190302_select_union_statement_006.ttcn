@@ -9,14 +9,15 @@
  *   Adrien Kirjak – initial implementation
  *
  ** @version  0.0.1
- ** @purpose  1:19.3.2, verify that it is possible to use a select union statement with several branches
+ ** @purpose  1:19.3.2, verify that partially initialized value can be used in select union header
  ** @verdict  pass accept, ttcn3verdict:pass
  ***************************************************/
 
 // The following requirement is tested:
-// The statement contains a header part and zero or more branches. 
+// [The TemplateInstance in the header of the select union statement] shall be 
+// at least partially initialized.
 
-module Sem_190301_select_union_statement_001 { 
+module Sem_190302_select_union_statement_006 { 
 
     type component GeneralComp {
 	}	
@@ -24,23 +25,26 @@ module Sem_190301_select_union_statement_001 {
     type union U {
         integer intOption,
         charstring strOption,
-        boolean boolOption
+        record {
+            integer field1,
+            integer field2
+        } recOption
     }
 
-    testcase TC_Sem_190301_select_union_statement_001() runs on GeneralComp {
-        var U v_un := { strOption := "abc" }
+    testcase TC_Sem_190302_select_union_statement_006() runs on GeneralComp {
+        var U v_un := { recOption := { field1 := 1, field2 := - } }
         select union (v_un) {
             case (intOption) {
                 setverdict(fail);
             } case (strOption) {
-                setverdict(pass);
-            } case (boolOption) {
                 setverdict(fail);
+            } case (recOption) {
+                setverdict(pass);
             }
         }
 	}
 
 	control {
-		execute(TC_Sem_190301_select_union_statement_001());
+		execute(TC_Sem_190302_select_union_statement_006());
 	}
 }

@@ -53,7 +53,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 21_configurat
 :h2. 2101_connection_operations folder
 .*---------------------------------------------------------------------*
 *---------------------------------------------------------------------*
-:h3. NegSem_1601_toplevel_001 negative test
+:h3. NegSem_2101_TopLevel_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -61,7 +61,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 21_configurat
 
 <COMPILE>
 
-<MODULE TTCN NegSem_1601_toplevel_001 NegSem_1601_toplevel_001.ttcn >
+<MODULE TTCN NegSem_2101_TopLevel_001 NegSem_2101_TopLevel_001.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:21.1, Verify that connect operation cannot contain a system port
@@ -99,7 +99,7 @@ error: The `system' component reference shall not be used in `connect' operation
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_1601_toplevel_002 negative test
+:h3. NegSem_2101_TopLevel_002 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -108,7 +108,7 @@ error: The `system' component reference shall not be used in `connect' operation
 <COMPILE>
 <EXECUTE_PARALLEL>
 
-<MODULE TTCN NegSem_1601_toplevel_002 NegSem_1601_toplevel_002.ttcn >
+<MODULE TTCN NegSem_2101_TopLevel_002 NegSem_2101_TopLevel_002.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:21.1, Verify that map operation fails if both operands are component ports
@@ -684,7 +684,7 @@ error: The connection between port types `@NegSem_210101_connect_operation_001.m
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_210101_connect_operation_001 negative test
+:h3. NegSem_210101_map_operation_002 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -692,7 +692,7 @@ error: The connection between port types `@NegSem_210101_connect_operation_001.m
 
 <COMPILE>
 
-<MODULE TTCN NegSem_210101_connect_operation_001 NegSem_210101_connect_operation_001.ttcn >
+<MODULE TTCN NegSem_210101_map_operation_002 NegSem_210101_map_operation_002.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:21.1.1, Ensure that IUT cannot map input port with output port
