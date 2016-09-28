@@ -87,22 +87,33 @@ delete @files{ @excluded };
 
 my @files = keys %files;
 
+
 # Filter out files which are in the current directory.
 # They should not be symlinked
 my @symlinkfiles = $local_prj ? @files : grep { $_ !~ m(^./) } @files;
+
+my @xsdfiles = grep(/.xsd/, @files);
+
+#filter xsd files from all files
+my %in_xsdfiles = map {$_ => 1} @xsdfiles;
+my @files_without_xsd  = grep {not $in_xsdfiles{$_}} @files;
 
 # Symlink all files into bin/
 print "Symlinking " . scalar @symlinkfiles . " files\n";
 system("ln -s @symlinkfiles ./");
 
 # Remove the path from the filenames
-map { s!.+/!!g } @files;
+map { s!.+/!!g } @files_without_xsd;
+map { s!.+/!!g } @xsdfiles;
+#add the xsd files as other files
+my $prefix = "-O ";
+my $xsdfiles2 = join " ", map { $prefix . $_ } @xsdfiles;
 
 # Generate the makefile
 print("LD_LIBRARY_PATH is $ENV{LD_LIBRARY_PATH}\n");#temporary debug printout
-print("$ENV{TTCN3_DIR}/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest @files\n");
+print("$ENV{TTCN3_DIR}/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest @files_without_xsd $xsdfiles2 \n");
 
-system(   "\$TTCN3_DIR/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -o Makefile.1 @files");
+system(   "\$TTCN3_DIR/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -o Makefile.1 @files_without_xsd $xsdfiles2");
 
 # Post-process the generated makefile
 open(MAKEFILE_IN , '<' . 'Makefile.1') or die "open input: $!";

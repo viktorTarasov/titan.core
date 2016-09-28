@@ -196,7 +196,7 @@ void CodeGenHelper::update_intervals(output_struct* const output) {
   tmp = mstrlen(output->source.function_bodies);
   if (output->intervals.function_bodies[output->intervals.function_bodies_size] < tmp) {
     output->intervals.function_bodies_size++;
-    if (output->intervals.function_bodies_size > output->intervals.function_bodies_max_size) {
+    if (output->intervals.function_bodies_size >= output->intervals.function_bodies_max_size) {
       output->intervals.function_bodies_max_size *= 2;
       output->intervals.function_bodies = (size_t*)Realloc(output->intervals.function_bodies, output->intervals.function_bodies_max_size * sizeof(size_t));
     }
@@ -205,7 +205,7 @@ void CodeGenHelper::update_intervals(output_struct* const output) {
   tmp = mstrlen(output->source.methods);
   if (output->intervals.methods[output->intervals.methods_size] < tmp) {
     output->intervals.methods_size++;
-    if (output->intervals.methods_size > output->intervals.methods_max_size) {
+    if (output->intervals.methods_size >= output->intervals.methods_max_size) {
       output->intervals.methods_max_size *= 2;
       output->intervals.methods = (size_t*)Realloc(output->intervals.methods, output->intervals.methods_max_size * sizeof(size_t));
     }
@@ -214,7 +214,7 @@ void CodeGenHelper::update_intervals(output_struct* const output) {
   tmp = mstrlen(output->source.static_conversion_function_bodies);
   if (output->intervals.static_conversion_function_bodies[output->intervals.static_conversion_function_bodies_size] < tmp) {
     output->intervals.static_conversion_function_bodies_size++;
-    if (output->intervals.static_conversion_function_bodies_size > output->intervals.static_conversion_function_bodies_max_size) {
+    if (output->intervals.static_conversion_function_bodies_size >= output->intervals.static_conversion_function_bodies_max_size) {
       output->intervals.static_conversion_function_bodies_max_size *= 2;
       output->intervals.static_conversion_function_bodies = (size_t*)Realloc(output->intervals.static_conversion_function_bodies, output->intervals.static_conversion_function_bodies_max_size * sizeof(size_t));
     }
@@ -223,7 +223,7 @@ void CodeGenHelper::update_intervals(output_struct* const output) {
   tmp = mstrlen(output->source.static_function_bodies);
   if (output->intervals.static_function_bodies[output->intervals.static_function_bodies_size] < tmp) {
     output->intervals.static_function_bodies_size++;
-    if (output->intervals.static_function_bodies_size > output->intervals.static_function_bodies_max_size) {
+    if (output->intervals.static_function_bodies_size >= output->intervals.static_function_bodies_max_size) {
       output->intervals.static_function_bodies_max_size *= 2;
       output->intervals.static_function_bodies = (size_t*)Realloc(output->intervals.static_function_bodies, output->intervals.static_function_bodies_max_size * sizeof(size_t));
     }
