@@ -35,7 +35,7 @@ module NegSem_220304_getreply_operation_014 {
     
     type record Wrapped {
         integer num
-    }
+    } with {variant ""}
     
     function f_server() runs on GeneralComp {
         var I v_src := 5;
@@ -52,7 +52,7 @@ module NegSem_220304_getreply_operation_014 {
         v_ptc.start(f_server());
 
         p.call(S:{ p_par := - }) {
-            [] p.getreply(S:{ p_par := decmatch integer:? }) -> param (v_res := @decoded p_par) { 
+            [] p.getreply(S:{ p_par := decmatch I:? }) -> param (v_res := @decoded p_par) { 
                 setverdict (pass);
             }
             [] p.getreply { setverdict(pass); }

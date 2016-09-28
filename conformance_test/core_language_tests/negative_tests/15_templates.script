@@ -1071,60 +1071,7 @@ Dynamic test case error: Accessing field f1 of a non-specific template of type @
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_006 negative test
-.*---------------------------------------------------------------------*
-:xmp tab=0.
-
-<TC - Ensure that referencing a field of an address type, which actual value is null shall cause rejection. >
-
-<COMPILE>
-
-<MODULE TTCN NegSem_150602_ReferencingRecordAndSetFields_006 NegSem_150602_ReferencingRecordAndSetFields_006.ttcn >
-/*****************************************************************
- ** @version  0.0.1
- ** @purpose  1:15.6.2, Ensure that referencing a field of an address type, which actual value is null shall cause rejection.
- ** @verdict  pass reject
- *****************************************************************/
-
-//Restriction d)
-/*Special value null: referencing a field of an address type, which actual value is null shall cause an error.*/
-
-module NegSem_150602_ReferencingRecordAndSetFields_006 {
-
-	type component GeneralComp { }
-
-	type integer address;
-
-	type record MyRecordOne {
-		address f1 
-	}
-
-	testcase TC_NegSem_150602_ReferencingRecordAndSetFields_006() runs on GeneralComp {
-		var template MyRecordOne m_R1 := {
-			f1 := null
-		}
-		var template MyRecordOne m_R2 := {
-			f1 := m_R1.f1 // access to a field with null shall cause an error!
-		}
-		setverdict(pass);
-	}
-
-	control{
-		execute(TC_NegSem_150602_ReferencingRecordAndSetFields_006());
-	}
-
-}
-<END_MODULE>
-
-<RESULT COUNT 1>
-error: integer value was expected
-<END_RESULT>
-
-<END_TC>
-:exmp
-
-*---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_001 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1173,7 +1120,7 @@ Dynamic test case error: Accessing an element of a non-specific template for typ
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_002 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_002 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1221,7 +1168,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_003 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_003 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1268,7 +1215,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_004 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_004 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1315,7 +1262,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_005 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_005 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1370,7 +1317,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_006 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_006 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1423,7 +1370,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_008 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_008 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1470,7 +1417,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_009 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_009 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1519,7 +1466,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_010 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_010 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1578,7 +1525,7 @@ Dynamic test case error: Matching with an uninitialized/unsupported integer temp
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_011 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_011 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1636,7 +1583,7 @@ Dynamic test case error: Copying an uninitialized/unsupported integer template.
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_012 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_012 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1694,7 +1641,7 @@ Dynamic test case error: Copying an uninitialized/unsupported integer template.
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_013 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_013 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1751,7 +1698,7 @@ Dynamic test case error: Assignment of an unbound integer value.
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_014 negative test
+:h3. NegSem_150603_ReferencingRecordOfAndSetElements_014 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1794,56 +1741,6 @@ module NegSem_150603_ReferencingRecordOfAndSetElements_014 {
 
 <RESULT COUNT 1>
 Dynamic test case error: Accessing an element of a non-specific template for type @NegSem_150603_ReferencingRecordOfAndSetElements_014.SoSoI.
-<END_RESULT>
-
-<END_TC>
-:exmp
-
-*---------------------------------------------------------------------*
-:h3. NegSem_150602_ReferencingRecordAndSetFields_015 negative test
-.*---------------------------------------------------------------------*
-:xmp tab=0.
-
-<TC - Ensure that referencing an element of an address type, which actual value is null shall cause an error. >
-
-<COMPILE>
-
-<MODULE TTCN NegSem_150603_ReferencingRecordOfAndSetElements_015 NegSem_150603_ReferencingRecordOfAndSetElements_015.ttcn >
-/*****************************************************************
- ** @version  0.0.1
- ** @purpose  1:15.6.3, Ensure that referencing an element of an address type, which actual value is null shall cause an error.
- ** @verdict  pass reject
- *****************************************************************/
-
- //Restriction h)	
-/*Special value null: referencing an element of an address type, which actual value is null shall cause an error.*/
-
-module NegSem_150603_ReferencingRecordOfAndSetElements_015 {
-
-    type component GeneralComp { }
-
-    type set of integer RoI;
-    type integer address;
-
-    testcase TC_NegSem_150603_ReferencingRecordOfAndSetElements_015() runs on GeneralComp {
-        var address v_add := null;
-        var template RoI m_one;
-
-        
-        m_one := {v_add, 1}; // // shall cause an error as we access a value list
-
-        setverdict(pass);
-    }
-
-    control{
-        execute(TC_NegSem_150603_ReferencingRecordOfAndSetElements_015());
-    }
-
-}
-<END_MODULE>
-
-<RESULT COUNT 1>
-error: integer value was expected
 <END_RESULT>
 
 <END_TC>

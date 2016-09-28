@@ -30,7 +30,7 @@ module NegSem_220202_ReceiveOperation_023 {
     
     type record Wrapped {
         integer num
-    }
+    } with { variant ""}
     
     type port P message {
 		inout R;
@@ -45,11 +45,14 @@ module NegSem_220202_ReceiveOperation_023 {
 
         var Wrapped v_res;
         var R v_rec := { id := 0, payload := bit2oct(encvalue(input)) };
+
+		connect(self:p, self:p);
+
         p.send(v_rec);
         alt {
-            [] p.receive(R:{ id := ?, payload := decmatch integer:? }) -> value (v_res := @decoded payload) 			{}
+            [] p.receive(R:{ id := ?, payload := decmatch I:? }) -> value (v_res := @decoded payload) 			{}
             [] p.receive {}
-        }
+        } 
         setverdict(pass);
     }
 

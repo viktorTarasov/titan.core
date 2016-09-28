@@ -25,7 +25,7 @@ module NegSem_220306_catch_operation_014 {
         integer id,
         bitstring payload
     }
-    signature S() return R;
+    signature S() exception (R);
 
 	type integer I with {variant "32 bit"};
     
@@ -39,13 +39,13 @@ module NegSem_220306_catch_operation_014 {
     
     type record Wrapped {
         integer num
-    }
+    } with { variant ""}
     
     function f_server() runs on GeneralComp {
         var I v_src := 5;
         var R v_rec := { id := 1, payload := encvalue(v_src) };
         p.getcall(S:{});
-        p.reply(S:{} value v_rec);
+        p.raise(S, v_rec);
     }
 	
     testcase TC_NegSem_220306_catch_operation_014() runs on GeneralComp system GeneralComp {
@@ -53,11 +53,12 @@ module NegSem_220306_catch_operation_014 {
         var GeneralComp v_ptc := GeneralComp.create("PTC");
         connect(self:p, v_ptc:p);
         v_ptc.start(f_server());
+
         p.call(S:{}) {
-            [] p.getreply(S:{} value R:{ id := ?, payload := decmatch integer:? }) -> value (v_res := @decoded payload) { 
+            [] p.catch(S, R:{ id := ?, payload := decmatch I:? }) -> value (v_res := @decoded payload) { 
                 setverdict (pass);
             }
-            [] p.getreply { setverdict(pass); }
+            [] p.catch { setverdict(pass); }
         }        
     }
 

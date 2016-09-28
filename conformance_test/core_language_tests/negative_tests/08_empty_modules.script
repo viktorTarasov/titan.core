@@ -276,6 +276,38 @@ error
 <END_TC>
 :exmp
 
+*---------------------------------------------------------------------*
+:h3. Syn_0803_ModuleControlPart_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that an empty control part is accepted. >
+
+<COMPILE>
+
+<MODULE TTCN Syn_0803_ModuleControlPart_003 Syn_0803_ModuleControlPart_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:8.3, Ensure that an empty control part is accepted.
+ ** @verdict  pass accept, noexecution
+ *****************************************************************/
+
+module Syn_0803_ModuleControlPart_003 {
+
+	control {
+	
+	}
+
+}
+<END_MODULE>
+
+<RESULT IF_PASS NEGATIVE>
+error
+<END_RESULT>
+
+<END_TC>
+:exmp
+
 .*---------------------------------------------------------------------*
 :h1.References
 .*---------------------------------------------------------------------*

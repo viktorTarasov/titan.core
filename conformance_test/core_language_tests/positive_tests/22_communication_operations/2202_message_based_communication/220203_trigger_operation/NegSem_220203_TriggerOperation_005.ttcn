@@ -51,4 +51,4 @@ module NegSem_220203_TriggerOperation_005 {
     control {
         execute(TC_NegSem_220203_TriggerOperation_005(), 5.0);
     }
-}
+} with {encode "RAW"}
