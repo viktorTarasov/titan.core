@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Raduly, Csaba
  *   Zalanyi, Balazs Andor
  *
@@ -72,6 +73,8 @@ public:
    * @param c Value to set.
    */
   void set(int field, unsigned char c);
+  
+  void set_hexrepr(const char* hex_repr);
 
   const Quad operator-(const Quad& rhs) const;
   const Quad& operator=(const Quad& rhs);

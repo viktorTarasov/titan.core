@@ -54,10 +54,12 @@ namespace Ttcn {
     Value* cstr_value;
 
     pstr_type_t pattern_type;
+    
+    bool nocase;
 
   public:
     PatternString(): Node(), my_scope(0), cstr_value(0),
-      pattern_type(CSTR_PATTERN) { }
+      pattern_type(CSTR_PATTERN), nocase(false) { }
     virtual ~PatternString();
     virtual PatternString* clone() const;
     virtual void set_fullname(const string& p_fullname);
@@ -94,6 +96,10 @@ namespace Ttcn {
     
     /** Converts this string pattern into a JSON schema string pattern. */
     char* convert_to_json();
+    
+    void set_nocase(bool p_nocase) { nocase = p_nocase; }
+    
+    bool get_nocase() const { return nocase; }
   };
 
 } // namespace Ttcn

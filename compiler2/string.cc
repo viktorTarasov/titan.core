@@ -405,31 +405,6 @@ string string::get_stringRepr() const
   return ret_val;
 }
 
-ustring string::convert_stringRepr_for_pattern() const {
-  ustring ret_val;
-
-  if (val_ptr->n_chars % 8 != 0)
-    FATAL_ERROR("string::convert_stringRepr_for_pattern(): Cannot create"
-      "universal string. Length must be a multiple of 8.");
-
-  unsigned char c1, c2;
-  unsigned char array[4];
-  size_t index = 0;
-  while (index < val_ptr->n_chars) {
-    for (size_t j = 0; j < 4; j++) {
-      c1 = (unsigned char)val_ptr->chars_ptr[index++];
-      c2 = (unsigned char)val_ptr->chars_ptr[index++];
-      if (c1 >= 'A' && c1 <= 'P' && c2 >= 'A' && c2 <= 'P') {
-        array[j] = ((c1 - 'A') << 4) | (c2 - 'A');
-      } else
-        FATAL_ERROR("string::convert_stringRepr_for_pattern(): Cannot create"
-          "universal string. Source contains illegal character.");
-    }
-    ret_val += ustring(array[0], array[1], array[2], array[3]);
-  }
-  return ret_val;
-}
-
 string& string::operator=(const string& s)
 {
   if (&s != this) {

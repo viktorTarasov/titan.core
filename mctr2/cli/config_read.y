@@ -123,6 +123,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token LengthKeyword "length"
 %token IfpresentKeyword "ifpresent"
 %token InfinityKeyword "infinity"
+%token NocaseKeyword "@nocase"
 
 %token LogFile "LogFile of FileName"
 %token EmergencyLogging
@@ -347,6 +348,7 @@ SimpleParameterValue:
 | FloatRange
 | StringRange
 | PatternKeyword PatternChunk
+| PatternKeyword NocaseKeyword PatternChunk
 | BstringMatch
 | HstringMatch
 | OstringMatch

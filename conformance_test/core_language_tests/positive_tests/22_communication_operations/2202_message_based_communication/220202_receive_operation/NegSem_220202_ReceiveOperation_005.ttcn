@@ -53,4 +53,4 @@ module NegSem_220202_ReceiveOperation_005 {
     control {
         execute(TC_NegSem_220202_ReceiveOperation_005(), 5.0);
     }
-}
+} with {encode "RAW"}

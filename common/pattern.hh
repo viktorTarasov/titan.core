@@ -36,7 +36,7 @@
  *  to true, so no errors are reported for the extended ASCII characters. */
 extern char* TTCN_pattern_to_regexp(const char* p_pattern, bool utf8 = false);
 
-extern char* TTCN_pattern_to_regexp_uni(const char* p_pattern,
+extern char* TTCN_pattern_to_regexp_uni(const char* p_pattern, bool p_nocase,
   int** groups = 0);
 
 /* defined elsewhere (can be different in compiler/runtime) */

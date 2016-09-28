@@ -281,6 +281,7 @@ public:
   virtual int_val_t* get_integer() const;
   virtual double get_float() const;
   virtual char* get_pattern() const;
+  virtual boolean get_nocase() const;
   virtual verdicttype get_verdict() const;
   virtual char* get_enumerated() const;
   virtual Module_Param_Ptr get_referenced_param() const;
@@ -573,11 +574,13 @@ public:
 
 class Module_Param_Pattern : public Module_Param {
   char* pattern;
+  boolean nocase;
 public:
   type_t get_type() const { return MP_Pattern; }
-  Module_Param_Pattern(char* p_p): pattern(p_p) {}
+  Module_Param_Pattern(char* p_p, boolean p_nc): pattern(p_p), nocase(p_nc) {}
   ~Module_Param_Pattern() { Free(pattern); }
   char* get_pattern() const { return pattern; }
+  boolean get_nocase() const { return nocase; }
   const char* get_type_str() const { return "pattern"; }
   void log_value() const;
 };

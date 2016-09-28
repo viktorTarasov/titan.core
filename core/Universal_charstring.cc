@@ -27,6 +27,7 @@
 #include "../common/memory.h"
 #include "../common/pattern.hh"
 #include "../common/Quadruple.hh"
+#include "../common/UnicharPattern.hh"
 #include "Integer.hh"
 #include "Octetstring.hh"
 #include "String_struct.hh"
@@ -817,6 +818,18 @@ static inline boolean is_printable(const universal_char& uchar)
     TTCN_Logger::is_printable(uchar.uc_cell);
 }
 
+UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::extract_matched_section(int start, int end) const
+{
+  // the indexes refer to the string's regexp form, which contains 8 characters
+  // for every universal character in the original string
+  start /= 8;
+  end /= 8;
+  if (charstring) {
+    return UNIVERSAL_CHARSTRING(end - start, cstr.val_ptr->chars_ptr + start);
+  }
+  return UNIVERSAL_CHARSTRING(end - start, val_ptr->uchars_ptr + start);
+}
+
 CHARSTRING UNIVERSAL_CHARSTRING::get_stringRepr_for_pattern() const {
   must_bound("Performing pattern conversion operation on an unbound"
     "universal charstring value.");
@@ -949,7 +962,8 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::from_UTF8_buffer(TTCN_Buffer& p_buff)
   }
 }
 
-boolean UNIVERSAL_CHARSTRING::set_param_internal(Module_Param& param, boolean allow_pattern) {
+boolean UNIVERSAL_CHARSTRING::set_param_internal(Module_Param& param, boolean allow_pattern,
+                                                 boolean* is_nocase_pattern) {
   boolean is_pattern = FALSE;
   param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, "universal charstring value");
   Module_Param_Ptr mp = &param;
@@ -994,7 +1008,8 @@ boolean UNIVERSAL_CHARSTRING::set_param_internal(Module_Param& param, boolean al
   case Module_Param::MP_Expression:
     if (mp->get_expr_type() == Module_Param::EXPR_CONCATENATE) {
       UNIVERSAL_CHARSTRING operand1, operand2;
-      is_pattern = operand1.set_param_internal(*mp->get_operand1(), allow_pattern);
+      is_pattern = operand1.set_param_internal(*mp->get_operand1(), allow_pattern,
+        is_nocase_pattern);
       operand2.set_param(*mp->get_operand2());
       if (param.get_operation_type() == Module_Param::OT_CONCAT) {
         *this = *this + operand1 + operand2;
@@ -1011,6 +1026,9 @@ boolean UNIVERSAL_CHARSTRING::set_param_internal(Module_Param& param, boolean al
     if (allow_pattern) {
       *this = CHARSTRING(mp->get_pattern());
       is_pattern = TRUE;
+      if (is_nocase_pattern != NULL) {
+        *is_nocase_pattern = mp->get_nocase();
+      }
       break;
     }
     // else fall through
@@ -3664,6 +3682,7 @@ void UNIVERSAL_CHARSTRING_template::copy_template
   case STRING_PATTERN:
     pattern_string = new CHARSTRING(other_value.single_value);
     pattern_value.regexp_init=FALSE;
+    pattern_value.nocase = other_value.pattern_value.nocase;
     break;
   case DECODE_MATCH:
     dec_match = other_value.dec_match;
@@ -3706,6 +3725,7 @@ void UNIVERSAL_CHARSTRING_template::copy_template
   case STRING_PATTERN:
     pattern_string = new CHARSTRING(*(other_value.pattern_string));
     pattern_value.regexp_init=FALSE;
+    pattern_value.nocase = other_value.pattern_value.nocase;
     break;
   case DECODE_MATCH:
     dec_match = other_value.dec_match;
@@ -3802,7 +3822,7 @@ UNIVERSAL_CHARSTRING_template::UNIVERSAL_CHARSTRING_template
 }
 
 UNIVERSAL_CHARSTRING_template::UNIVERSAL_CHARSTRING_template
-  (template_sel p_sel, const CHARSTRING& p_str)
+  (template_sel p_sel, const CHARSTRING& p_str, boolean p_nocase)
 : Restricted_Length_Template(STRING_PATTERN)
 {
   if(p_sel!=STRING_PATTERN)
@@ -3810,6 +3830,7 @@ UNIVERSAL_CHARSTRING_template::UNIVERSAL_CHARSTRING_template
       "pattern template with invalid selection.");
   pattern_string = new CHARSTRING(p_str);
   pattern_value.regexp_init=FALSE;
+  pattern_value.nocase = p_nocase;
 }
 
 UNIVERSAL_CHARSTRING_template::~UNIVERSAL_CHARSTRING_template()
@@ -3993,7 +4014,8 @@ boolean UNIVERSAL_CHARSTRING_template::match
   case STRING_PATTERN: {
     if (!pattern_value.regexp_init) {
       char *posix_str =
-        TTCN_pattern_to_regexp_uni((const char*)(*pattern_string));
+        TTCN_pattern_to_regexp_uni((const char*)(*pattern_string),
+          pattern_value.nocase);
       if(posix_str==NULL) {
         TTCN_error("Cannot convert pattern \"%s\" to POSIX-equivalent.",
           (const char*)(*pattern_string));
@@ -4011,6 +4033,9 @@ boolean UNIVERSAL_CHARSTRING_template::match
       pattern_value.regexp_init=TRUE;
     }
     char* other_value_converted = other_value.convert_to_regexp_form();
+    if (pattern_value.nocase) {
+      unichar_pattern.convert_regex_str_to_lowercase(other_value_converted);
+    }
     int ret_val=regexec(&pattern_value.posix_regexp, other_value_converted, 0,
       NULL, 0);
     Free(other_value_converted);
@@ -4237,7 +4262,7 @@ void UNIVERSAL_CHARSTRING_template::log() const
   switch (template_selection) {
   case STRING_PATTERN:
     CHARSTRING_template::log_pattern(pattern_string->lengthof(),
-      (const char*)*pattern_string);
+      (const char*)*pattern_string, pattern_value.nocase);
     break;
   case SPECIFIC_VALUE:
     single_value.log();
@@ -4382,12 +4407,15 @@ void UNIVERSAL_CHARSTRING_template::set_param(Module_Param& param) {
     clean_up();
     pattern_string = new CHARSTRING(mp->get_pattern());
     pattern_value.regexp_init = FALSE;
+    pattern_value.nocase = mp->get_nocase();
     set_selection(STRING_PATTERN);
     break;
   case Module_Param::MP_Expression:
     if (mp->get_expr_type() == Module_Param::EXPR_CONCATENATE) {
       UNIVERSAL_CHARSTRING operand1, operand2, result;
-      boolean is_pattern = operand1.set_param_internal(*mp->get_operand1(), TRUE);
+      boolean nocase;
+      boolean is_pattern = operand1.set_param_internal(*mp->get_operand1(),
+        TRUE, &nocase);
       operand2.set_param(*mp->get_operand2());
       result = operand1 + operand2;
       if (is_pattern) {
@@ -4399,6 +4427,7 @@ void UNIVERSAL_CHARSTRING_template::set_param(Module_Param& param) {
           pattern_string = new CHARSTRING(result.get_stringRepr_for_pattern());
         }
         pattern_value.regexp_init = FALSE;
+        pattern_value.nocase = nocase;
         set_selection(STRING_PATTERN);
       }
       else {
@@ -4456,7 +4485,7 @@ Module_Param* UNIVERSAL_CHARSTRING_template::get_param(Module_Param_Name& param_
     mp = new Module_Param_StringRange(value_range.min_value, value_range.max_value);
     break;
   case STRING_PATTERN:
-    mp = new Module_Param_Pattern(mcopystr(*pattern_string));
+    mp = new Module_Param_Pattern(mcopystr(*pattern_string), pattern_value.nocase);
     break;
   case DECODE_MATCH:
     mp->error("Referencing a decoded content matching template is not supported.");
@@ -4504,6 +4533,10 @@ void UNIVERSAL_CHARSTRING_template::encode_text(Text_Buf& text_buf) const
     buf[7] = value_range.max_value.uc_cell;
     text_buf.push_raw(8, buf);
     break; }
+  case STRING_PATTERN:
+    text_buf.push_int(pattern_value.nocase);
+    pattern_string->encode_text(text_buf);
+    break;
   default:
     TTCN_error("Text encoder: Encoding an uninitialized/unsupported universal "
       "charstring template.");
@@ -4547,6 +4580,12 @@ void UNIVERSAL_CHARSTRING_template::decode_text(Text_Buf& text_buf)
     value_range.min_is_set = TRUE;
     value_range.max_is_set = TRUE;
     break; }
+  case STRING_PATTERN:
+    pattern_value.regexp_init = FALSE;
+    pattern_value.nocase = text_buf.pull_int().get_val();
+    pattern_string = new CHARSTRING;
+    pattern_string->decode_text(text_buf);
+    break;
   default:
     TTCN_error("Text decoder: An unknown/unsupported selection was "
       "received for a universal charstring template.");

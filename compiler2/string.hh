@@ -160,11 +160,6 @@ public:
    * returned string. */
   string get_stringRepr() const;
 
-  /** Creates universal string from pattern form: ([A-P]{8})*
-   *
-   */
-  ustring convert_stringRepr_for_pattern() const;
-
   /** Assignment operator. */
   string& operator=(const string&);
 

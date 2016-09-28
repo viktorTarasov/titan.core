@@ -350,6 +350,18 @@ char* ustring::convert_to_regexp_form() const {
   return res;
 }
 
+ustring ustring::extract_matched_section(int start, int end) const
+{
+  // the indexes refer to the string's regexp form, which contains 8 characters
+  // for every universal character in the original string
+  start /= 8;
+  end /= 8;
+  ustring ret_val(end - start);
+  memcpy(ret_val.val_ptr->uchars_ptr, val_ptr->uchars_ptr + start, (end - start) *
+    sizeof(universal_char));
+  return ret_val;
+}
+
 ustring& ustring::operator=(const ustring& s)
 {
   if(&s != this) {

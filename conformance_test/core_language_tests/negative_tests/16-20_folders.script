@@ -1482,6 +1482,60 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_160102_predefined_functions_034 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that an error is detected when the parameter of the encvalue function contains a partially initialized value >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_160102_predefined_functions_034 NegSem_160102_predefined_functions_034.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:16.1.2, Ensure that an error is detected when the parameter of the encvalue function contains a partially initialized value
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// 16.1.2, restriction a.3: all actual in and inout parameters shall be initialized
+
+module NegSem_160102_predefined_functions_034 {
+	
+	type record R 
+	{
+		integer field1,
+		integer field2
+	} with { variant "" }
+	
+	type component GeneralComp {	
+	}
+	
+
+	testcase TC_NegSem_160102_predefined_functions_034 () runs on GeneralComp {
+		template R v_test := { field1 := 1, field2 := - }
+		var bitstring v_res := encvalue(v_test);
+		setverdict(fail, "The previous encvalue call should have caused an error"); 
+	}
+
+	control{
+
+		execute(TC_NegSem_160102_predefined_functions_034());
+
+	}
+
+} with { encode "RAW"}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: While RAW-encoding type '@NegSem_160102_predefined_functions_034.R': Encoding an unbound value.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_160102_predefined_functions_035 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -2430,6 +2484,313 @@ module NegSyn_1902_if_else_statement_001 {
 
 <RESULT COUNT 1>
 error: at or before token `setverdict': syntax error, unexpected SetVerdictKeyword, expecting '\{'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_190302_select_union_statement_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - verify that header part of select-union statements cannot contain anything else than union instances >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_190302_select_union_statement_001 NegSem_190302_select_union_statement_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:19.3.2, verify that header part of select-union statements cannot contain anything else than union instances
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// In the header part of the select union statement a template instance of union 
+// type shall be given.
+
+module NegSem_190302_select_union_statement_001 { 
+
+    type component GeneralComp {
+	}	
+    
+    type record R {
+        integer intOption optional,
+        charstring strOption optional,
+        boolean boolOption optional
+    }
+
+    testcase TC_NegSem_190302_select_union_statement_001() runs on GeneralComp {
+        var R v_rec := { intOption := omit, strOption := "abc", boolOption := omit }
+
+        select union (v_rec) {
+            case (intOption) {
+                setverdict(pass);
+            } case (strOption) {
+                setverdict(pass);
+            } case (boolOption) {
+                setverdict(pass);
+            }
+        }
+	}
+
+	control {
+		execute(TC_NegSem_190302_select_union_statement_001());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The head must be of a union type or anytype
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_190302_select_union_statement_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - verify that uninitialized value cannot be used in select union header >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_190302_select_union_statement_002 NegSem_190302_select_union_statement_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:19.3.2, verify that uninitialized value cannot be used in select union header
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// [The TemplateInstance in the header of the select union statement] shall be 
+// at least partially initialized.
+
+module NegSem_190302_select_union_statement_002 { 
+
+    type component GeneralComp {
+	}	
+    
+    type union U {
+        integer intOption,
+        charstring strOption,
+        record {
+            integer field1,
+            integer field2
+        } recOption
+    }
+    
+    type record R {
+        U field1,
+        integer field2
+    }
+
+    testcase TC_NegSem_190302_select_union_statement_002() runs on GeneralComp {
+        var R v_rec;
+        v_rec.field2 := 3;
+        select union (v_rec.field1) {
+            case (intOption) {
+                setverdict(fail);
+            } case (strOption) {
+                setverdict(fail);
+            } case (recOption) {
+                setverdict(pass);
+            }
+        }
+	}
+
+	control {
+		execute(TC_NegSem_190302_select_union_statement_002());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: The union in the head shall be initialized
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_190302_select_union_statement_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - verify that unknown alternatives cannot be use in case statements >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_190302_select_union_statement_003 NegSem_190302_select_union_statement_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:19.3.2, verify that unknown alternatives cannot be use in case statements
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// Every Identifier in a case of the select union statement shall be an identifier 
+// of an alternative of the union type of the template instance given to the 
+// statement's header.
+
+module NegSem_190302_select_union_statement_003 { 
+
+    type component GeneralComp {
+	}	
+    
+    type union U {
+        integer intOption,
+        charstring strOption,
+        record {
+            integer field1,
+            integer field2
+        } recOption
+    }
+
+    testcase TC_NegSem_190302_select_union_statement_003() runs on GeneralComp {
+        var U v_un := { intOption := 5 }
+        select union (v_un) {
+            case (intOption) {
+                setverdict(pass);
+            } case (strOption) {
+                setverdict(fail);
+            } case (recOption) {
+                setverdict(fail);
+            } case (boolOption) {
+                setverdict(fail);
+            }
+        }
+	}
+
+	control {
+		execute(TC_NegSem_190302_select_union_statement_003());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: In the 4. branch: 'boolOption' is not an alternative of union type '@NegSem_190302_select_union_statement_003.U'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_190302_select_union_statement_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - verify that the same alternative cannot be used in two case statements (simple case) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_190302_select_union_statement_004 NegSem_190302_select_union_statement_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:19.3.2, verify that the same alternative cannot be used in two case statements (simple case)
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// No two cases in a select union statement shall have the same case Identifier.
+
+module NegSem_190302_select_union_statement_004 { 
+
+    type component GeneralComp {
+	}	
+    
+    type union U {
+        integer intOption,
+        charstring strOption,
+        record {
+            integer field1,
+            integer field2
+        } recOption
+    }
+
+    testcase TC_NegSem_190302_select_union_statement_004() runs on GeneralComp {
+        var U v_un := { recOption := { field1 := 1, field2 := 2 } }
+
+        select union (v_un) {
+            case (intOption) {
+                setverdict(pass);
+            } case (strOption) {
+                setverdict(fail);
+            } case (recOption) {
+                setverdict(fail);
+            } case (intOption) {
+                setverdict(pass);
+            }
+        }
+	}
+
+	control {
+		execute(TC_NegSem_190302_select_union_statement_004());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The 'intOption' is already present in the 1. branch of select union
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_190302_select_union_statement_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - verify that the same alternative cannot be used in two case statements (list item) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_190302_select_union_statement_005 NegSem_190302_select_union_statement_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:19.3.2, verify that the same alternative cannot be used in two case statements (list item)
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// No two cases in a select union statement shall have the same case Identifier.
+
+module NegSem_190302_select_union_statement_005 { 
+
+    type component GeneralComp {
+	}	
+    
+    type union U {
+        integer intOption,
+        charstring strOption,
+        record {
+            integer field1,
+            integer field2
+        } recOption
+    }
+
+    testcase TC_NegSem_190302_select_union_statement_005() runs on GeneralComp {
+        var U v_un := { intOption := 10 }
+        select union (v_un) {
+            case (intOption, strOption) {
+                setverdict(pass);
+            } case (recOption, intOption) {
+                setverdict(fail);
+            }
+        }
+	}
+
+	control {
+		execute(TC_NegSem_190302_select_union_statement_005());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The 'intOption' is already present in the 1. branch of select union
 <END_RESULT>
 
 <END_TC>

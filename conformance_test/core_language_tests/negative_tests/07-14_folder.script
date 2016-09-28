@@ -1104,6 +1104,54 @@ error: Incompatible explicit type specification: `integer' was expected instead 
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_08020301_GeneralFormatOfImport_038 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that definition from inside an imported function cannot be referenced  >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_08020301_GeneralFormatOfImport_038 NegSem_08020301_GeneralFormatOfImport_038.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:8.2.3.1, Verify that definition from inside an imported function cannot be referenced
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// Restriction f:
+// When importing a function, altstep or test case the corresponding behaviour 
+// specifications and all definitions used inside the behaviour specifications 
+// remain invisible for the importing module.
+
+module NegSem_08020301_GeneralFormatOfImport_038 {
+	import from NegSem_08020301_GeneralFormatOfImport_038_import { function f_test };
+	// c_test should be undefined, because it is invisible for the importing module
+	const integer c_test2 := c_test;
+}
+
+<END_MODULE>
+
+<MODULE TTCN NegSem_08020301_GeneralFormatOfImport_038_import NegSem_08020301_GeneralFormatOfImport_038_import.ttcn >
+
+module NegSem_08020301_GeneralFormatOfImport_038_import {
+	function f_test() {
+		const integer c_test := 1;
+	}
+}
+
+<END_MODULE>
+
+
+<RESULT COUNT 1>
+error: There is no local or imported definition with name `c_test'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSyn_08020301_GeneralFormatOfImport_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -1715,7 +1763,7 @@ error: There is no local or imported definition with name `c_myconst'
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_080205_VisibilityOfDefinitions_005 negative test
+:h3. NegSyn_0803_ModuleControlPart_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1723,7 +1771,7 @@ error: There is no local or imported definition with name `c_myconst'
 
 <COMPILE>
 
-<MODULE TTCN NegSem_080205_VisibilityOfDefinitions_005 NegSem_080205_VisibilityOfDefinitions_005.ttcn >
+<MODULE TTCN NegSyn_0803_ModuleControlPart_001 NegSyn_0803_ModuleControlPart_001.ttcn >
 /*****************************************************************
  ** @version  0.0.1
  ** @purpose  1:8.3, Ensure that there is not more than one control part.
@@ -2936,7 +2984,7 @@ error: at or before token `1.0': syntax error, unexpected FloatValue, expecting 
 :h2. 14_procedure_signatures folder
 .*---------------------------------------------------------------------*
 *---------------------------------------------------------------------*
-:h3. egSem_1400_procedure_signatures_001 negative test
+:h3. NegSem_1400_procedure_signatures_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -2944,7 +2992,7 @@ error: at or before token `1.0': syntax error, unexpected FloatValue, expecting 
 
 <COMPILE>
 
-<MODULE TTCN egSem_1400_procedure_signatures_001 egSem_1400_procedure_signatures_001.ttcn >
+<MODULE TTCN NegSem_1400_procedure_signatures_001 NegSem_1400_procedure_signatures_001.ttcn >
 /*****************************************************************
  ** @version  0.0.1
  ** @purpose  1:22.3.1, Ensure that nonblocking signature contains in parameter
@@ -3006,7 +3054,7 @@ error: A non-blocking signature cannot have `out' parameter
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. egSem_1400_procedure_signatures_002 negative test
+:h3. NegSem_1400_procedure_signatures_002 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -3014,7 +3062,7 @@ error: A non-blocking signature cannot have `out' parameter
 
 <COMPILE>
 
-<MODULE TTCN egSem_1400_procedure_signatures_002 egSem_1400_procedure_signatures_002.ttcn >
+<MODULE TTCN NegSem_1400_procedure_signatures_002 NegSem_1400_procedure_signatures_002.ttcn >
 /*****************************************************************
  ** @version  0.0.1
  ** @purpose  1:14, Ensure that blocking calls needs response or exception handling

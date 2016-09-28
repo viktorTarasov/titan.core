@@ -9,15 +9,16 @@
  *   Adrien Kirjak – initial implementation
  *
  ** @version  0.0.1
- ** @purpose  1:19.3.2, verify that uninitialized value cannot be used in select union header
+ ** @purpose  1:19.3.2, verify that unknown alternatives cannot be use in case statements
  ** @verdict  pass reject
  ***************************************************/
 
 // The following requirement is tested:
-// [The TemplateInstance in the header of the select union statement] shall be 
-// at least partially initialized.
+// Every Identifier in a case of the select union statement shall be an identifier 
+// of an alternative of the union type of the template instance given to the 
+// statement's header.
 
-module NegSem_190301_select_union_statement_002 { 
+module NegSem_190302_select_union_statement_003 { 
 
     type component GeneralComp {
 	}	
@@ -30,27 +31,23 @@ module NegSem_190301_select_union_statement_002 {
             integer field2
         } recOption
     }
-    
-    type record R {
-        U field1,
-        integer field2
-    }
 
-    testcase TC_NegSem_190301_select_union_statement_002() runs on GeneralComp {
-        var R v_rec;
-        v_rec.field2 := 3;
-        select union (v_rec.field1) {
+    testcase TC_NegSem_190302_select_union_statement_003() runs on GeneralComp {
+        var U v_un := { intOption := 5 }
+        select union (v_un) {
             case (intOption) {
-                setverdict(fail);
+                setverdict(pass);
             } case (strOption) {
                 setverdict(fail);
             } case (recOption) {
-                setverdict(pass);
+                setverdict(fail);
+            } case (boolOption) {
+                setverdict(fail);
             }
         }
 	}
 
 	control {
-		execute(TC_NegSem_190301_select_union_statement_002());
+		execute(TC_NegSem_190302_select_union_statement_003());
 	}
 }

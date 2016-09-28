@@ -35,7 +35,7 @@ module Sem_220304_getreply_operation_014 {
     function f_server() runs on GeneralComp {
         var I v_src := 1953719668;
         var universal charstring v_str := encvalue_unichar(v_src, "UTF-16LE");      
-        p.getcall(S: {});
+        p.getcall(S: { p_par := -});
         p.reply(S:{ p_par := v_str });
     }
 	

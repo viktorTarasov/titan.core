@@ -38,6 +38,8 @@ import_part module_param port_type signature template testcase ttcn3_module))
 
 XSD_FILES := $(addprefix xsd/, TPD.xsd)
 
+CASE_FOLDINGS := CaseFolding.txt
+
 install:
 ifdef MINGW
 	@echo Skipped ${CURDIR} for MinGW
@@ -48,4 +50,5 @@ else
 #	cp asciiart/*.txt $(ETCDIR)/asciiart
 	mkdir -p $(ETCDIR)/scripts
 	cp scripts/*.py $(ETCDIR)/scripts
+	cp $(CASE_FOLDINGS) $(ETCDIR)
 endif

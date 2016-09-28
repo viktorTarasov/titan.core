@@ -106,7 +106,8 @@ class CHARSTRING : public Base_Type {
     * the second parameter is set (needed by CHARSTRING_template to concatenate
     * string patterns). 
     * @return TRUE, if the module parameter was a string pattern, otherwise FALSE */
-  boolean set_param_internal(Module_Param& param, boolean allow_pattern);
+  boolean set_param_internal(Module_Param& param, boolean allow_pattern,
+    boolean* is_nocase_pattern = NULL);
   
 public:
   /** Construct an unbound CHARSTRING object */
@@ -368,12 +369,13 @@ private:
     mutable struct {
       boolean regexp_init;
       regex_t posix_regexp;
+      boolean nocase;
     } pattern_value;
     unichar_decmatch_struct* dec_match;
   };
 
   void copy_template(const CHARSTRING_template& other_value);
-  static void log_pattern(int n_chars, const char *chars_ptr);
+  static void log_pattern(int n_chars, const char *chars_ptr, boolean nocase);
 
 public:
   CHARSTRING_template();
@@ -400,7 +402,7 @@ public:
    * @param p_sel must be STRING_PATTERN or else Dynamic Testcase Error
    * @param p_str pattern string
    */
-  CHARSTRING_template(template_sel p_sel, const CHARSTRING& p_str);
+  CHARSTRING_template(template_sel p_sel, const CHARSTRING& p_str, boolean p_nocase);
   /// Copy constructor
   CHARSTRING_template(const CHARSTRING_template& other_value);
 

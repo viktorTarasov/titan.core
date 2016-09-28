@@ -644,7 +644,8 @@ void CHARSTRING::log() const
   }
 }
 
-boolean CHARSTRING::set_param_internal(Module_Param& param, boolean allow_pattern) {
+boolean CHARSTRING::set_param_internal(Module_Param& param, boolean allow_pattern,
+                                       boolean* is_nocase_pattern) {
   boolean is_pattern = FALSE;
   param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, "charstring value");
   Module_Param_Ptr mp = &param;
@@ -697,7 +698,8 @@ boolean CHARSTRING::set_param_internal(Module_Param& param, boolean allow_patter
     if (mp->get_expr_type() == Module_Param::EXPR_CONCATENATE) {
       // only allow string patterns for the first operand
       CHARSTRING operand1, operand2;
-      is_pattern = operand1.set_param_internal(*mp->get_operand1(), allow_pattern);
+      is_pattern = operand1.set_param_internal(*mp->get_operand1(), allow_pattern,
+        is_nocase_pattern);
       operand2.set_param(*mp->get_operand2());
       if (param.get_operation_type() == Module_Param::OT_CONCAT) {
         *this = *this + operand1 + operand2;
@@ -714,6 +716,9 @@ boolean CHARSTRING::set_param_internal(Module_Param& param, boolean allow_patter
     if (allow_pattern) {
       *this = CHARSTRING(mp->get_pattern());
       is_pattern = TRUE;
+      if (is_nocase_pattern != NULL) {
+        *is_nocase_pattern = mp->get_nocase();
+      }
       break;
     }
     // else fall through
@@ -2031,6 +2036,7 @@ void CHARSTRING_template::copy_template(const CHARSTRING_template& other_value)
   switch (other_value.template_selection) {
   case STRING_PATTERN:
     pattern_value.regexp_init = FALSE;
+    pattern_value.nocase = other_value.pattern_value.nocase;
     /* no break */
   case SPECIFIC_VALUE:
     single_value = other_value.single_value;
@@ -2101,13 +2107,15 @@ CHARSTRING_template::CHARSTRING_template(const OPTIONAL<CHARSTRING>& other_value
 }
 
 CHARSTRING_template::CHARSTRING_template(template_sel p_sel,
-                                         const CHARSTRING& p_str)
+                                         const CHARSTRING& p_str,
+                                         boolean p_nocase)
   : Restricted_Length_Template(STRING_PATTERN), single_value(p_str)
 {
   if(p_sel!=STRING_PATTERN)
     TTCN_error("Internal error: Initializing a charstring pattern template "
                "with invalid selection.");
   pattern_value.regexp_init=FALSE;
+  pattern_value.nocase = p_nocase;
 }
 
 CHARSTRING_template::CHARSTRING_template(const CHARSTRING_template& other_value)
@@ -2233,8 +2241,11 @@ boolean CHARSTRING_template::match(const CHARSTRING& other_value,
       TTCN_Logger::log_event(" is: \"%s\"", posix_str);
       //TTCN_Logger::end_event();
       */
-      int ret_val=regcomp(&pattern_value.posix_regexp, posix_str,
-                      REG_EXTENDED|REG_NOSUB);
+      int flags = REG_EXTENDED|REG_NOSUB;
+      if (pattern_value.nocase) {
+        flags |= REG_ICASE;
+      }
+      int ret_val=regcomp(&pattern_value.posix_regexp, posix_str, flags);
       Free(posix_str);
       if(ret_val!=0) {
         /* regexp error */
@@ -2463,9 +2474,14 @@ const TTCN_Typedescriptor_t* CHARSTRING_template::get_decmatch_type_descr() cons
   return dec_match->instance->get_type_descr();
 }
 
-void CHARSTRING_template::log_pattern(int n_chars, const char *chars_ptr)
+void CHARSTRING_template::log_pattern(int n_chars, const char *chars_ptr,
+                                      boolean nocase)
 {
-  TTCN_Logger::log_event_str("pattern \"");
+  TTCN_Logger::log_event_str("pattern ");
+  if (nocase) {
+    TTCN_Logger::log_event_str("@nocase ");
+  }
+  TTCN_Logger::log_event_str("\"");
   enum { INITIAL, BACKSLASH, BACKSLASH_Q, QUADRUPLE, HASHMARK, REPETITIONS }
     state = INITIAL;
   for (int i = 0; i < n_chars; i++) {
@@ -2590,7 +2606,8 @@ void CHARSTRING_template::log() const
 {
   switch (template_selection) {
   case STRING_PATTERN:
-    log_pattern(single_value.lengthof(), (const char*)single_value);
+    log_pattern(single_value.lengthof(), (const char*)single_value,
+      pattern_value.nocase);
     break;
   case SPECIFIC_VALUE:
     single_value.log();
@@ -2698,19 +2715,23 @@ void CHARSTRING_template::set_param(Module_Param& param) {
     clean_up();
     single_value = CHARSTRING(mp->get_pattern());
     pattern_value.regexp_init = FALSE;
+    pattern_value.nocase = mp->get_nocase();
     set_selection(STRING_PATTERN);
     break;
   case Module_Param::MP_Expression:
     if (mp->get_expr_type() == Module_Param::EXPR_CONCATENATE) {
       // only allow string patterns for the first operand
       CHARSTRING operand1, operand2, result;
-      boolean is_pattern = operand1.set_param_internal(*mp->get_operand1(), TRUE);
+      boolean nocase;
+      boolean is_pattern = operand1.set_param_internal(*mp->get_operand1(),
+        TRUE, &nocase);
       operand2.set_param(*mp->get_operand2());
       result = operand1 + operand2;
       if (is_pattern) {
         clean_up();
         single_value = result;
         pattern_value.regexp_init = FALSE;
+        pattern_value.nocase = nocase;
         set_selection(STRING_PATTERN);
       }
       else {
@@ -2770,7 +2791,7 @@ Module_Param* CHARSTRING_template::get_param(Module_Param_Name& param_name) cons
     mp = new Module_Param_StringRange(lower_bound, upper_bound);
     break; }
   case STRING_PATTERN:
-    mp = new Module_Param_Pattern(mcopystr(single_value));
+    mp = new Module_Param_Pattern(mcopystr(single_value), pattern_value.nocase);
     break;
   case DECODE_MATCH:
     mp->error("Referencing a decoded content matching template is not supported.");
@@ -2793,8 +2814,10 @@ void CHARSTRING_template::encode_text(Text_Buf& text_buf) const
   case ANY_VALUE:
   case ANY_OR_OMIT:
     break;
-  case SPECIFIC_VALUE:
   case STRING_PATTERN:
+    text_buf.push_int(pattern_value.nocase);
+    // no break;
+  case SPECIFIC_VALUE:
     single_value.encode_text(text_buf);
     break;
   case VALUE_LIST:
@@ -2828,6 +2851,7 @@ void CHARSTRING_template::decode_text(Text_Buf& text_buf)
     break;
   case STRING_PATTERN:
     pattern_value.regexp_init=FALSE;
+    pattern_value.nocase = text_buf.pull_int().get_val();
     /* no break */
   case SPECIFIC_VALUE:
     single_value.decode_text(text_buf);

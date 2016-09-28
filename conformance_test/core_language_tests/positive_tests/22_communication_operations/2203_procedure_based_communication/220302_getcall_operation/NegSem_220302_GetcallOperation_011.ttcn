@@ -56,4 +56,4 @@ module NegSem_220302_GetcallOperation_011 {
     control {
         execute(TC_NegSem_220302_GetcallOperation_011(), 5.0);
     }
-}
+} with {encode "RAW"}

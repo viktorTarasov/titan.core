@@ -183,6 +183,7 @@ string_map_t *config_defines;
 %token LengthKeyword "length"
 %token IfpresentKeyword "ifpresent"
 %token InfinityKeyword "infinity"
+%token NocaseKeyword "@nocase"
 %token AssignmentChar ":= or ="
 %token ConcatChar "&="
 %token LogFile "LogFile or FileName"
@@ -658,7 +659,11 @@ SimpleParameterValue:
   }
 | PatternKeyword PatternChunk
   {
-    $$ = new Module_Param_Pattern($2);
+    $$ = new Module_Param_Pattern($2, FALSE);
+  }
+| PatternKeyword NocaseKeyword PatternChunk
+  {
+    $$ = new Module_Param_Pattern($3, TRUE);
   }
 | BstringMatch
   {
