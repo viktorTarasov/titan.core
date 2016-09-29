@@ -108,12 +108,19 @@ map { s!.+/!!g } @xsdfiles;
 #add the xsd files as other files
 my $prefix = "-O ";
 my $xsdfiles2 = join " ", map { $prefix . $_ } @xsdfiles;
+my $outfile = 'files.txt';
+open (FILE, ">> $outfile") || die "problem opening $outfile\n";
+my $files_without_xsd_string = join(' ', @files_without_xsd);
+print FILE $files_without_xsd_string;
+close FILE;
 
 # Generate the makefile
 print("LD_LIBRARY_PATH is $ENV{LD_LIBRARY_PATH}\n");#temporary debug printout
-print("$ENV{TTCN3_DIR}/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest @files_without_xsd $xsdfiles2 \n");
+print("$ENV{TTCN3_DIR}/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -j files.txt $xsdfiles2 \n");
 
-system(   "\$TTCN3_DIR/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -o Makefile.1 @files_without_xsd $xsdfiles2");
+system(   "\$TTCN3_DIR/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -o Makefile.1 -j files.txt $xsdfiles2");
+
+unlink $outfile;
 
 # Post-process the generated makefile
 open(MAKEFILE_IN , '<' . 'Makefile.1') or die "open input: $!";

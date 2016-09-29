@@ -985,7 +985,6 @@ static void add_xsd_module(struct makefile_struct *makefile,
   struct module_struct *module;
   char *dir_name = get_dir_name(path_name, makefile->working_dir);
   char *file_name = get_file_from_path(path_name);
-  const char *suffix = get_suffix(file_name);
   size_t i;
   for (i = 0; i < makefile->nXSDModules; i++) { 
     if (strcmp(makefile->XSDModules[i].module_name, module_name) == 0) {
@@ -1234,6 +1233,48 @@ static void add_user_file(struct makefile_struct *makefile,
   /* treat the file as other file if it was not handled yet */
   add_path_to_list(&makefile->nOtherFiles, &makefile->OtherFiles, path_name,
     makefile->working_dir, TRUE);
+}
+
+static void add_file_to_makefile(struct makefile_struct *makefile, char *argument) {
+  char *file_name = get_file_name_for_argument(argument);
+  if (file_name != NULL) {
+    FILE *fp = fopen(file_name, "r");
+    if (fp != NULL) {
+      char *module_name = NULL;
+      if (is_ttcn3_module(file_name, fp, &module_name)) {
+        if (is_asn1_module(file_name, fp, NULL)) {
+          ERROR("File `%s' looks so strange that it can be both ASN.1 and "
+          "TTCN-3 module. Add it to the Makefile manually.", file_name);
+          Free(module_name);
+        } else {
+            add_ttcn3_module(makefile, file_name, module_name);
+          }
+     } else if (is_asn1_module(file_name, fp, &module_name)) {
+         if (is_valid_asn1_filename(file_name)) {
+           add_asn1_module(makefile, file_name, module_name);
+         } else {
+             ERROR("The file name `%s' (without suffix) shall be identical to the module name `%s'.\n"
+                   "If the name of the ASN.1 module contains a hyphen, the corresponding "
+                   "file name shall contain an underscore character instead.", file_name, module_name);
+             Free(module_name);
+         }
+     } else if (is_xsd_module(file_name, &module_name)) {
+       add_xsd_module(makefile, file_name, module_name);
+     } else {
+       add_user_file(makefile, file_name);
+     }
+     fclose(fp);
+    } else {
+       ERROR("Cannot open file `%s' for reading: %s", file_name,
+       strerror(errno));
+       errno = 0;
+      }
+    Free(file_name);
+  } else if (get_path_status(argument) == PS_DIRECTORY) {
+    ERROR("Argument `%s' is a directory.", argument);
+  } else {
+    ERROR("Cannot find any source file for argument `%s'.", argument);
+  }
 }
 
 /** Removes the generated C++ header and/or source files of module \a module
@@ -4356,7 +4397,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   boolean central_storage, boolean absolute_paths, boolean preprocess,
   boolean dump_makefile_data, boolean force_overwrite, boolean use_runtime_2,
   boolean dynamic, boolean makedepend, boolean coverage,
-  const char *code_splitting_mode, const char *tcov_file_name, struct string_list* profiled_file_list,
+  const char *code_splitting_mode, const char *tcov_file_name, struct string_list* profiled_file_list, const char* file_list_file_name,
   boolean Lflag, boolean Zflag, boolean Hflag, struct string_list* sub_project_dirs, struct string_list* ttcn3_prep_includes,
   struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
   struct string_list* prep_defines, struct string_list* prep_undefines, boolean codesplittpd, boolean quietly, boolean disablesubtypecheck,
@@ -4429,47 +4470,32 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   makefile.linkerlibsearchpath = linkerlibsearchpath;
   makefile.generatorCommandOutput = generatorCommandOutput;
   makefile.target_placement_list = target_placement_list;
-
-  for (i = 0; i < n_arguments; i++) {
-    char *file_name = get_file_name_for_argument(arguments[i]);
-    if (file_name != NULL) {
-      FILE *fp = fopen(file_name, "r");
-      if (fp != NULL) {
-        char *module_name = NULL;
-        if (is_ttcn3_module(file_name, fp, &module_name)) {
-          if (is_asn1_module(file_name, fp, NULL)) {
-            ERROR("File `%s' looks so strange that it can be both ASN.1 and "
-            "TTCN-3 module. Add it to the Makefile manually.", file_name);
-            Free(module_name);
-          } else {
-              add_ttcn3_module(&makefile, file_name, module_name);
-            }
-       } else if (is_asn1_module(file_name, fp, &module_name)) {
-           if (is_valid_asn1_filename(file_name)) {
-             add_asn1_module(&makefile, file_name, module_name);
-           } else {
-               ERROR("The file name `%s' (without suffix) shall be identical to the module name `%s'.\n"
-                     "If the name of the ASN.1 module contains a hyphen, the corresponding "
-                     "file name shall contain an underscore character instead.", file_name, module_name);
-               Free(module_name);
-           }
-       } else if (is_xsd_module(file_name, &module_name)) {
-         add_xsd_module(&makefile, file_name, module_name);
-       } else {
-           add_user_file(&makefile, file_name);
-       }
-       fclose(fp);
-      } else {
-         ERROR("Cannot open file `%s' for reading: %s", file_name,
-         strerror(errno));
-         errno = 0;
-        }
-      Free(file_name);
-    } else if (get_path_status(arguments[i]) == PS_DIRECTORY) {
-      ERROR("Argument `%s' is a directory.", arguments[i]);
+  
+  char ** files_from_file = NULL;
+  size_t n_files_from_file = 0;
+  if (file_list_file_name != NULL) {
+    FILE *fp = fopen(file_list_file_name, "r");
+    if (fp != NULL) {
+      char buff[1024];
+      while (fscanf(fp, "%s", buff) == 1) {
+        n_files_from_file++;
+        files_from_file = (char**)
+        Realloc(files_from_file, n_files_from_file * sizeof(*files_from_file));
+        files_from_file[n_files_from_file - 1] = mcopystr(buff);
+      }
+      
+      fclose(fp);
     } else {
-      ERROR("Cannot find any source file for argument `%s'.", arguments[i]);
+      ERROR("Cannot open file `%s' for reading: %s", file_list_file_name,
+      strerror(errno));
+      errno = 0;
     }
+  }
+  for (i = 0; i < n_files_from_file; i++) {
+    add_file_to_makefile(&makefile, files_from_file[i]);
+  }
+  for (i = 0; i < n_arguments; i++) {
+    add_file_to_makefile(&makefile, arguments[i]);
   }
   for (i = 0; i < n_other_files; i++) {
     char *file_name = get_file_name_for_argument(other_files[i]);
@@ -4546,6 +4572,10 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   if (dump_makefile_data) dump_makefile_struct(&makefile, 0);
 
   if (error_count == 0) print_makefile(&makefile);
+  for (i = 0; i < n_files_from_file; i++) {
+    Free(files_from_file[i]);
+  }
+  Free(files_from_file);
   free_makefile_struct(&makefile);
 }
 
@@ -4560,7 +4590,7 @@ static void usage(void)
 {
   fprintf(stderr, "\n"
     "usage: %s [-abc" C_flag "dDEfFglLmMnprRsStTVwWXZ] [-K file] [-z file ] [-P dir]"
-    " [-U none|type|'number'] [-e ets_name] [-o dir|file]\n"
+    " [-j file] [-U none|type|'number'] [-e ets_name] [-o dir|file]\n"
     "        [-t project_descriptor.tpd [-b buildconfig]]\n"
     "        [-O file] ... module_name ... testport_name ...\n"
     "   or  %s -v\n"
@@ -4577,6 +4607,7 @@ static void usage(void)
     "	-f:		force overwriting of the output Makefile\n"
     "	-g:		generate Makefile for use with GNU make\n"
     "	-I path:	Add path to the search paths when using TPD files\n"
+    "	-j file:	The names of files taken from file instead of command line"
     "	-K file:	enable selective code coverage\n"
     "	-l:		use dynamic linking\n"
     "	-L:		create makefile with library archive as the default target\n"
@@ -4641,6 +4672,7 @@ int main(int argc, char *argv[])
   const char *tpd_file_name = NULL;
   const char *tpd_build_config = NULL;
   const char *tcov_file_name = NULL;
+  const char *file_list_file_name = NULL;
   size_t n_search_paths = 0;
   const char **search_paths = NULL;
   struct string_list* profiled_file_list = NULL;
@@ -4688,7 +4720,7 @@ int main(int argc, char *argv[])
   }
 
   for ( ; ; ) {
-    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:EfFgI:K:o:lLmMnpP:rRsSt:TU:vVwWXYz:ZH");
+    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:EfFgI:j:K:o:lLmMnpP:rRsSt:TU:vVwWXYz:ZH");
     if (c == -1) break;
     switch (c) {
     case 'O':
@@ -4746,6 +4778,9 @@ int main(int argc, char *argv[])
       break;
     case 'H':
       SET_FLAG(H);
+      break;
+    case 'j':
+      file_list_file_name = optarg;
       break;
     case 'o':
       SET_FLAG(o);
@@ -5092,7 +5127,7 @@ int main(int argc, char *argv[])
     generate_makefile(argc - optind, argv + optind, n_other_files, other_files,
       output_file, ets_name, project_name, gflag, sflag, cflag, aflag, pflag, dflag, fflag||Fflag,
       Rflag, lflag, mflag, Cflag, code_splitting_mode, tcov_file_name, profiled_file_list,
-      Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
+      file_list_file_name, Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
       ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, csflag, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
       drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, wflag, Yflag, Mflag, Eflag, nflag, diflag, solspeclibraries,
       sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, ttcn3prep, linkerlibraries, additionalObjects,

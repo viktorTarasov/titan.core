@@ -26,7 +26,7 @@ CODIRS := dynamicTemplate styleGuide topLevelPdu \
 	openType optionalAssignCompare portConstructor \
 	isbound namedActualParameters assignmentNotation \
 	attribQualif HT48786 selectCase openTypeNames \
-	defaultParamUsageBeforeDecl deterministic
+	defaultParamUsageBeforeDecl deterministic readFromFile
 
 all dep clean distclean:
 	for dir in $(CODIRS); do $(MAKE) -C $$dir $@ || exit; done

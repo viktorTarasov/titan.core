@@ -1,0 +1,5 @@
+   ../src/Definitions.xsd				../src/MainNormal.ttcn
+
+
+
+   			  ../src/MainExtNormal.ttcn
