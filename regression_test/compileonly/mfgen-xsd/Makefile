@@ -97,7 +97,7 @@ normal:
 centralstorage:
 	#Centralstorage tests with various switches
 	#First build normal
-	cd normal && $(MFGEN) $(MFGEN_FLAGS) $(NORMAL_FILES) && $(MAKEPROG)
+	cd normal && $(MFGEN) $(MFGEN_FLAGS) -l $(NORMAL_FILES) && $(MAKEPROG)
 
 	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS) -c $(EXT_FILES) $(EXT_NORMAL_FILES) \
 	&& $(MAKEPROG) && ./MainExt config.cfg \
@@ -129,7 +129,7 @@ centralstorage:
 	&& make shared_objects && make clean
 
 	# For the tests with -U type the 'base' should be compiled with -U type
-	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS) -U type $(NORMAL_FILES) && $(MAKEPROG)
+	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS) -U type -l $(NORMAL_FILES) && $(MAKEPROG)
 
 	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS) -c -U type $(EXT_FILES) $(EXT_NORMAL_FILES) \
 	&& $(MAKEPROG) && ./MainExt config.cfg \
