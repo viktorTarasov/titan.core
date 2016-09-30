@@ -27,7 +27,7 @@ endif
 
 CURRENT_DIR := $(shell pwd)
 
-LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(CURRENT_DIR)/normal:$(CURRENT_DIR)/centralstorage
+LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(CURRENT_DIR)/normal:$(CURRENT_DIR)/centralstorage:$(CURRENT_DIR)/bin:$(CURRENT_DIR)/top_bin:$(CURRENT_DIR)/centralstorage_bin:$(CURRENT_DIR)/normal_bin
 
 NORMAL_NORMAL_FILES := MainNormal.ttcn
 
