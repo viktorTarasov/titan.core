@@ -23,6 +23,7 @@
     <Configuration name="Default">
       <ProjectProperties>
         <MakefileSettings>
+          <dynamicLinking>true</dynamicLinking>
           <targetExecutable>bin</targetExecutable>
         </MakefileSettings>
         <LocalBuildSettings>

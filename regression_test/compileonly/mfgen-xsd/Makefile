@@ -17,7 +17,13 @@ COVERAGE_FLAG := -C
 endif
 
 MFGEN := $(TTCN3_DIR)/bin/ttcn3_makefilegen
-MFGEN_FLAGS := -sf $(RT2_FLAG) $(SPLIT_FLAG)
+MFGEN_FLAGS_WL := -sf $(RT2_FLAG) $(SPLIT_FLAG)
+
+ifdef DYNAMIC_SUFFIX
+MFGEN_FLAGS += $(MFGEN_FLAGS_WL) -l 
+else
+MFGEN_FLAGS := $(MFGEN_FLAGS_WL)
+endif
 
 CURRENT_DIR := $(shell pwd)
 
@@ -67,7 +73,7 @@ normal:
 	&& ./Main normal.cfg && make clean && make port && make check \
 	&& make clean
 
-	cd normal && $(MFGEN) $(MFGEN_FLAGS) -l $(NORMAL_FILES) && $(MAKEPROG) \
+	cd normal && $(MFGEN) $(MFGEN_FLAGS_WL) -l $(NORMAL_FILES) && $(MAKEPROG) \
 	&& ./Main normal.cfg && make clean && make port && make check \
 	&& make clean && make shared_objects && make clean
 
@@ -79,15 +85,15 @@ normal:
 	&& ./Main normal.cfg && make clean && make port && make check \
 	&& make clean
 
-	cd normal && $(MFGEN) $(MFGEN_FLAGS) -pl -U type $(NORMAL_FILES) && $(MAKEPROG) \
+	cd normal && $(MFGEN) $(MFGEN_FLAGS_WL) -pl -U type $(NORMAL_FILES) && $(MAKEPROG) \
 	&& ./Main normal.cfg && make clean && make port && make check \
 	&& make clean && make shared_objects && make clean
 
-	cd normal && $(MFGEN) $(MFGEN_FLAGS) -pgl $(NORMAL_FILES) && $(MAKEPROG) \
+	cd normal && $(MFGEN) $(MFGEN_FLAGS_WL) -pgl $(NORMAL_FILES) && $(MAKEPROG) \
 	&& ./Main normal.cfg && make clean && make port && make check \
 	&& make clean && make shared_objects && make clean
 
-	cd normal && $(MFGEN) $(MFGEN_FLAGS) -pgl -U type $(NORMAL_FILES) && $(MAKEPROG) \
+	cd normal && $(MFGEN) $(MFGEN_FLAGS_WL) -pgl -U type $(NORMAL_FILES) && $(MAKEPROG) \
 	&& ./Main normal.cfg && make clean && make port && make check \
 	&& make clean && make shared_objects && make clean
 
@@ -111,9 +117,9 @@ centralstorage:
 	&& $(MAKEPROG) && ./MainExt config.cfg \
 	&& make clean && make port && make check && make clean
 
-	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS) -l $(NORMAL_FILES) && $(MAKEPROG)
+	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS_WL) -l $(NORMAL_FILES) && $(MAKEPROG)
 
-	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS) -cl $(EXT_FILES) $(EXT_NORMAL_FILES) \
+	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS_WL) -cl $(EXT_FILES) $(EXT_NORMAL_FILES) \
 	&& $(MAKEPROG) && ./MainExt config.cfg \
 	&& make clean && make port && make check && make clean \
 	&& make shared_objects && make clean
@@ -125,9 +131,9 @@ centralstorage:
 	&& $(MAKEPROG) && ./MainExt config.cfg \
 	&& make clean && make port && make check && make clean
 
-	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS) -l $(NORMAL_FILES) && $(MAKEPROG)
+	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS_WL) -l $(NORMAL_FILES) && $(MAKEPROG)
 
-	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS) -cpgl $(EXT_FILES) $(EXT_NORMAL_FILES) \
+	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS_WL) -cpgl $(EXT_FILES) $(EXT_NORMAL_FILES) \
 	&& $(MAKEPROG) && ./MainExt config.cfg \
 	&& make clean && make port && make check && make clean \
 	&& make shared_objects && make clean
@@ -139,16 +145,16 @@ centralstorage:
 	&& $(MAKEPROG) && ./MainExt config.cfg \
 	&& make clean && make port && make check && make clean
 
-	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS) -U type -l $(NORMAL_FILES) && $(MAKEPROG)
+	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS_WL) -U type -l $(NORMAL_FILES) && $(MAKEPROG)
 
-	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS) -cpl -U type $(EXT_FILES) $(EXT_NORMAL_FILES) \
+	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS_WL) -cpl -U type $(EXT_FILES) $(EXT_NORMAL_FILES) \
 	&& $(MAKEPROG) && ./MainExt config.cfg \
 	&& make clean && make port && make check && make clean \
 	&& make shared_objects && make clean
 
-	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS) -U type -l $(NORMAL_FILES) && $(MAKEPROG)
+	cd normal && make clean && $(MFGEN) $(MFGEN_FLAGS_WL) -U type -l $(NORMAL_FILES) && $(MAKEPROG)
 
-	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS) -cpgl -U type $(EXT_FILES) $(EXT_NORMAL_FILES) \
+	cd centralstorage && $(MFGEN) $(MFGEN_FLAGS_WL) -cpgl -U type $(EXT_FILES) $(EXT_NORMAL_FILES) \
 	&& $(MAKEPROG) && ./MainExt config.cfg \
 	&& make clean && make port && make check && make clean \
 	&& make shared_objects && make clean
@@ -192,20 +198,16 @@ centralstorage_with_normal:
 
 recursive_tpd:
 	# Makefile generation from tpd tests
-	$(MFGEN) $(MFGEN_FLAGS) -t normal.tpd && cd bin && $(MAKEPROG) \
+	$(MFGEN) $(MFGEN_FLAGS) -g -t normal.tpd && cd bin && $(MAKEPROG) \
 	&& ./bin ../normal/normal.cfg && make clean && make port && make check && cd .. \
 	&& rm -rf bin
 
 	# Recursive makefile generation
-	$(MFGEN) $(MFGEN_FLAGS) -FrcW -t top.tpd && cd top_bin && $(MAKEPROG) \
-	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
-	&& rm -rf top_bin centralstorage_bin normal_bin
-
-	$(MFGEN) $(MFGEN_FLAGS) -FrcWp -t top.tpd && cd top_bin && $(MAKEPROG) \
-	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
-	&& rm -rf top_bin centralstorage_bin normal_bin
-
 	$(MFGEN) $(MFGEN_FLAGS) -FrcWg -t top.tpd && cd top_bin && $(MAKEPROG) \
+	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
+	&& rm -rf top_bin centralstorage_bin normal_bin
+
+	$(MFGEN) $(MFGEN_FLAGS) -FrcgWp -t top.tpd && cd top_bin && $(MAKEPROG) \
 	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
 	&& rm -rf top_bin centralstorage_bin normal_bin
 
@@ -216,7 +218,7 @@ recursive_tpd:
 	
 improved_linking:
 	#Improved linking
-	$(MFGEN) $(MFGEN_FLAGS) -FrWZ -t top.tpd -b Library && cd top_bin && $(MAKEPROG) \
+	$(MFGEN) $(MFGEN_FLAGS) -FrWZg -t top.tpd -b Library && cd top_bin && $(MAKEPROG) \
 	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
 	&& rm -rf top_bin centralstorage_bin normal_bin
 
@@ -224,11 +226,11 @@ improved_linking:
 	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
 	&& rm -rf top_bin centralstorage_bin normal_bin
 
-	$(MFGEN) $(MFGEN_FLAGS) -FrWZH -t top.tpd -b Library && cd top_bin && $(MAKEPROG) \
+	$(MFGEN) $(MFGEN_FLAGS) -FrWZHg -t top.tpd -b Library && cd top_bin && $(MAKEPROG) \
 	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
 	&& rm -rf top_bin centralstorage_bin normal_bin
 
-	$(MFGEN) $(MFGEN_FLAGS) -FrWZHc -t top.tpd -b Library && cd top_bin && $(MAKEPROG) \
+	$(MFGEN) $(MFGEN_FLAGS) -FrWZHcg -t top.tpd -b Library && cd top_bin && $(MAKEPROG) \
 	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
 	&& rm -rf top_bin centralstorage_bin normal_bin
 
@@ -236,7 +238,7 @@ improved_linking:
 	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
 	&& rm -rf top_bin centralstorage_bin normal_bin
 
-	$(MFGEN) $(MFGEN_FLAGS) -FrWZHclgp -t top.tpd -b Library && cd top_bin && $(MAKEPROG) \
+	$(MFGEN) $(MFGEN_FLAGS_WL) -FrWZHclgp -t top.tpd -b Library && cd top_bin && $(MAKEPROG) \
 	&& ./bin ../config.cfg && make clean && make port && make check && cd .. \
 	&& rm -rf top_bin centralstorage_bin normal_bin
 
