@@ -29,7 +29,7 @@ module Sem_060203_records_and_sets_of_single_types_009 {
 
 		var SoI v_set := { 0, 1, - }; 
 		if (match(v_set[0], 0) and match(v_set[1], 1) and not isbound(v_set[2])
-			and lengthof (v_set) == 3) {
+			and lengthof (v_set) == 2) {
 			setverdict(pass);
 		}
 		else {

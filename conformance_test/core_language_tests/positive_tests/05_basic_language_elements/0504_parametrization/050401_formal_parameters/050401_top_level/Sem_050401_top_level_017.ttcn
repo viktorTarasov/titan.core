@@ -40,8 +40,8 @@ module Sem_050401_top_level_017 {
 	testcase TC_Sem_050401_top_level_017() runs on GeneralComp {
         var R1 v_rec;
 		f(v_rec);
-        if (match(v_rec, {1, 2})) { setverdict(pass); }
-        else { setverdict(fail, "v_rec value not matching ", v_rec, {1, 2}); }
+        if (match(v_rec, R1:{1, 2})) { setverdict(pass); }
+        else { setverdict(fail, "v_rec value not matching ", v_rec, R1:{1, 2}); }
 	}
 
 	control{

@@ -40,12 +40,12 @@ module Sem_B010506_case_sensitive_pattern_matching_002 {
   
  
  		template MessageType mw_matchingTemplate:= {  	
-  			field1 := pattern @nocase "{m_Ref} \q{0,0,1,113}",  // expected value: abc Å±
+  			field1 := pattern @nocase "{m_Ref} \q{0,0,0,233}",  // expected value: abc é
   			field2 := pattern @nocase "\N{MyCons}"              // expected value: A
  		} 
 
  		v_testMessage:=  {  
-  			field1 := "aBc Å°",        // with @nocase - this is also valid
+  			field1 := "aBc é",        // with @nocase - this is also valid
   			field2 := "a"             // with @nocase - this is also valid
  		}     
  
