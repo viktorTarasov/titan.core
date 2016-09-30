@@ -29,11 +29,11 @@ module Sem_060203_records_and_sets_of_single_types_008 {
 
 		var RoI v_rec := { 0, 1, - }; 
 		if (match(v_rec[0], 0) and match(v_rec[1], 1) and not isbound(v_rec[2])
-			and lengthof (v_rec) == 3) {
+			and lengthof (v_rec) == 2) {
 			setverdict(pass);
 		}
 		else {
-			setverdict(fail);
+			setverdict(fail, "Reason: ", lengthof(v_rec));
 		}
 	}
 	

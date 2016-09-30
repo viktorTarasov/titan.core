@@ -33,8 +33,8 @@ module Sem_050401_top_level_016 {
     }
 	
 	function f(R2 p_rec) {
-        if (match(p_rec, {1, 2})) { setverdict(pass); }
-        else { setverdict(fail, "p_rec value not matching ", p_rec, {1, 2}); }
+        if (match(p_rec, R2:{1, 2})) { setverdict(pass); }
+        else { setverdict(fail, "p_rec value not matching ", p_rec, R2:{1, 2}); }
 	}
 	
 	testcase TC_Sem_050401_top_level_016() runs on GeneralComp {

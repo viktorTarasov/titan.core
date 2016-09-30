@@ -43,7 +43,8 @@ module Sem_060302_structured_types_006 {
         var ShortUnorderedIntegerList v_ulist2;
         var SetType v_set1;
 
-        var integer v_matcher[2] := {1,-};
+        var integer v_matcher[2];
+		v_matcher[0] := 1;
 	
         var boolean v_check1;
     
