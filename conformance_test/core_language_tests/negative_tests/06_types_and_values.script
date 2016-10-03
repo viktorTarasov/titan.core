@@ -2136,7 +2136,7 @@ module NegSem_06010205_StringPattern_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: "abcyz" is not a valid value for type `charstring' which has subtype pattern\(\?bc\*xyz\)
+error: "abcyz" is not a valid value for type `charstring' which has subtype pattern \(\?bc\*xyz\)
 <END_RESULT>
 
 <END_TC>
@@ -2175,7 +2175,7 @@ module NegSyn_06010205_StringPattern_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: "ABc1234xYz" is not a valid value for type `charstring' which has subtype pattern\(abc\*xyz\)
+error: "ABc1234xYz" is not a valid value for type `charstring' which has subtype pattern \(abc\*xyz\)
 <END_RESULT>
 
 <END_TC>
@@ -2214,7 +2214,7 @@ module NegSyn_06010205_StringPattern_002 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: char\(0, 0, 0, 197\) & char\(0, 0, 0, 180\) \& "abc" is not a valid value for type `charstring' which has subtype pattern\(\\q\{0,0,1,116\}abc\)
+error: char\(0, 0, 0, 197\) & char\(0, 0, 0, 180\) \& "abc" is not a valid value for type `charstring' which has subtype pattern \(\\q\{0,0,1,116\}abc\)
 <END_RESULT>
 
 <END_TC>
@@ -2328,7 +2328,7 @@ module NegSem_0601020602_StringMixing_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: "abcyz" is not a valid value for type `charstring' which has subtype \(pattern\(\?bc\*xyz\) intersection length\(5..8\)\)
+error: "abcyz" is not a valid value for type `charstring' which has subtype \(pattern \(\?bc\*xyz\) intersection length\(5..8\)\)
 <END_RESULT>
 
 <END_TC>
@@ -2366,7 +2366,7 @@ module NegSem_0601020602_StringMixing_002 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: "abc123xyz" is not a valid value for type `charstring' which has subtype \(pattern\(\?bc\*xyz\) intersection length\(5..8\)\)
+error: "abc123xyz" is not a valid value for type `charstring' which has subtype \(pattern \(\?bc\*xyz\) intersection length\(5..8\)\)
 <END_RESULT>
 
 <END_TC>
