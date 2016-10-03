@@ -129,7 +129,7 @@ namespace Ttcn {
      * Flag \a copy_needed indicates whether to add an extra copy constructor
      * call if \a this contains a referenced value or template to avoid
      * aliasing problems with other out/inout parameters. */
-    void generate_code(expression_struct *expr, bool copy_needed, bool lazy_param=false, bool used_as_lvalue=false) const;
+    void generate_code(expression_struct *expr, bool copy_needed, FormalPar* formal_par) const;
     /** Appends the initialization sequence of all (directly or indirectly)
      * referred non-parameterized templates and the default values of all
      *  parameterized templates to \a str and returns the resulting string. 

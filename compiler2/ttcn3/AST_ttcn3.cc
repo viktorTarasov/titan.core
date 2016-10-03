@@ -8257,17 +8257,33 @@ namespace Ttcn {
         FieldOrArrayRefs *t_subrefs = ref->get_subrefs();
         Type *ref_type = ass->get_Type()->get_field_type(t_subrefs, exp_val);
         if (ref_type) {
-          if (!type->is_identical(ref_type)) {
-            ref->error("Type mismatch: Reference to a %s of type "
-              "`%s' was expected instead of `%s'", expected_string,
+          TypeCompatInfo info(my_scope->get_scope_mod(), type, ref_type, true,
+            false, is_template);
+          TypeChain l_chain_base;
+          TypeChain r_chain_base;
+          if (!type->is_compatible(ref_type, &info, &l_chain_base, &r_chain_base)) {
+            if (info.is_subtype_error()) {
+              ref->error("%s", info.get_subtype_error().c_str());
+            }
+            else if (!info.is_erroneous()) {
+              ref->error("Type mismatch: Reference to a %s of type "
+                "`%s' was expected instead of `%s'", expected_string,
               type->get_typename().c_str(), ref_type->get_typename().c_str());
-          } else if (type->get_sub_type() && ref_type->get_sub_type() &&
-      (type->get_sub_type()->get_subtypetype()==ref_type->get_sub_type()->get_subtypetype()) &&
-      (!type->get_sub_type()->is_compatible(ref_type->get_sub_type()))) {
-        ref->error("Subtype mismatch: subtype %s has no common value with subtype %s",
-                   type->get_sub_type()->to_string().c_str(),
-                   ref_type->get_sub_type()->to_string().c_str());
-    }
+            }
+            else {
+              // Always use the format string.
+              ref->error("%s", info.get_error_str_str().c_str());
+            }
+          }
+          else if ((asstype == A_PAR_VAL_OUT || asstype == A_PAR_VAL_INOUT ||
+                   asstype == A_PAR_TEMPL_OUT || asstype == A_PAR_TEMPL_INOUT) &&
+                   !ref_type->is_compatible(type, &info, &l_chain_base, &r_chain_base)) {
+            // run the type compatibility check in the reverse order, too, for 
+            // 'out' and 'inout' parameters (they need to be converted back after
+            // the function call)
+            // this should never fail if the first type compatibility succeeded
+            FATAL_ERROR("FormalPar::chk_actual_par_by_ref");
+          }
           if (t_subrefs && t_subrefs->refers_to_string_element()) {
             ref->error("Reference to a string element of type `%s' cannot be "
               "used in this context", ref_type->get_typename().c_str());
@@ -9563,8 +9579,11 @@ namespace Ttcn {
     }
   }
 
-  void ActualPar::generate_code(expression_struct *expr, bool copy_needed, bool lazy_param, bool used_as_lvalue) const
+  void ActualPar::generate_code(expression_struct *expr, bool copy_needed,
+                                FormalPar* formal_par) const
   {
+    bool lazy_param = formal_par != NULL ? formal_par->get_lazy_eval() : false;
+    bool used_as_lvalue = formal_par != NULL ? formal_par->get_used_as_lvalue() : false;
     switch (selection) {
     case AP_VALUE:
       if (lazy_param) { // copy_needed doesn't matter in this case
@@ -9631,25 +9650,71 @@ namespace Ttcn {
         if (copy_needed) expr->expr = mputc(expr->expr, ')');
       }
       break;
-    case AP_REF:
+    case AP_REF: {
       if (lazy_param) FATAL_ERROR("ActualPar::generate_code()"); // syntax error should have already happened
       if (copy_needed) FATAL_ERROR("ActualPar::generate_code()");
-      if (gen_restriction_check != TR_NONE ||
-          gen_post_restriction_check != TR_NONE) {
-        // generate runtime check for restricted templates
-        // code for reference + restriction check
-        Common::Assignment *ass = ref->get_refd_assignment();
+      bool is_restricted_template = gen_restriction_check != TR_NONE ||
+        gen_post_restriction_check != TR_NONE;
+      Common::Assignment *ass = ref->get_refd_assignment();
+      bool is_template_par = false;
+      Type* actual_par_type = NULL;
+      Type* formal_par_type = NULL;
+      bool needs_conversion = false;
+      if (formal_par != NULL &&
+          formal_par->get_asstype() != Common::Assignment::A_PAR_TIMER &&
+          formal_par->get_asstype() != Common::Assignment::A_PAR_PORT) {
+        if (formal_par->get_asstype() == Common::Assignment::A_PAR_TEMPL_INOUT ||
+            formal_par->get_asstype() == Common::Assignment::A_PAR_TEMPL_OUT) {
+          is_template_par = true;
+        }
+        actual_par_type = ass->get_Type()->get_field_type(ref->get_subrefs(),
+          is_template_par ? Type::EXPECTED_TEMPLATE : Type::EXPECTED_DYNAMIC_VALUE)->
+          get_type_refd_last();
+        formal_par_type = formal_par->get_Type()->get_type_refd_last();
+        needs_conversion = use_runtime_2 && my_scope->get_scope_mod()->
+          needs_type_conv(actual_par_type, formal_par_type);
+      }
+      if (is_restricted_template || needs_conversion) {
+        // generate runtime check for restricted templates and/or generate
+        // type conversion to the formal parameter's type and back
         const string& tmp_id= my_scope->get_scope_mod_gen()->get_temporary_id();
         const char *tmp_id_str = tmp_id.c_str();
         expression_struct ref_expr;
         Code::init_expr(&ref_expr);
         ref->generate_code_const_ref(&ref_expr);
         ref_expr.preamble = mputprintf(ref_expr.preamble, "%s& %s = %s;\n",
-          ass->get_Type()->get_genname_template(ref->get_my_scope()).c_str(),
-          tmp_id_str, ref_expr.expr);
+          is_template_par ? actual_par_type->get_genname_template(my_scope).c_str() :
+          actual_par_type->get_genname_value(my_scope).c_str(), tmp_id_str, ref_expr.expr);
         if (gen_restriction_check != TR_NONE) {
           ref_expr.preamble = Template::generate_restriction_check_code(
             ref_expr.preamble, tmp_id_str, gen_restriction_check);
+        }
+        if (needs_conversion) {
+          // create another temporary, this time of the formal parameter's type,
+          // containing the converted parameter
+          const string& tmp_id2 = my_scope->get_scope_mod_gen()->get_temporary_id();
+          const char *tmp_id2_str = tmp_id2.c_str();
+          ref_expr.preamble = mputprintf(ref_expr.preamble,
+            "%s %s;\n"
+            "if (%s.is_bound() && !%s(%s, %s)) TTCN_error(\"Values or templates "
+            "of types `%s' and `%s' are not compatible at run-time\");\n",
+            is_template_par ? formal_par_type->get_genname_template(my_scope).c_str() :
+            formal_par_type->get_genname_value(my_scope).c_str(), tmp_id2_str,
+            tmp_id_str, TypeConv::get_conv_func(actual_par_type, formal_par_type,
+            my_scope->get_scope_mod()).c_str(), tmp_id2_str, tmp_id_str,
+            actual_par_type->get_typename().c_str(), formal_par_type->get_typename().c_str());
+          // pass the new temporary to the function instead of the original reference
+          expr->expr = mputprintf(expr->expr, "%s", tmp_id2_str);
+          // convert the temporary's new value back to the actual parameter's type
+          ref_expr.postamble = mputprintf(ref_expr.postamble,
+            "if (%s.is_bound() && !%s(%s, %s)) TTCN_error(\"Values or templates "
+            "of types `%s' and `%s' are not compatible at run-time\");\n",
+            tmp_id2_str, TypeConv::get_conv_func(formal_par_type, actual_par_type, 
+            my_scope->get_scope_mod()).c_str(), tmp_id_str, tmp_id2_str,
+            formal_par_type->get_typename().c_str(), actual_par_type->get_typename().c_str());
+        }
+        else { // is_restricted_template
+          expr->expr = mputprintf(expr->expr, "%s", tmp_id_str);
         }
         if (gen_post_restriction_check != TR_NONE) {
           ref_expr.postamble = Template::generate_restriction_check_code(
@@ -9657,13 +9722,12 @@ namespace Ttcn {
         }
         // copy content of ref_expr to expr
         expr->preamble = mputstr(expr->preamble, ref_expr.preamble);
-        expr->expr = mputprintf(expr->expr, "%s", tmp_id_str);
         expr->postamble = mputstr(expr->postamble, ref_expr.postamble);
         Code::free_expr(&ref_expr);
       } else {
         ref->generate_code(expr);
       }
-      break;
+      break; }
     case AP_DEFAULT:
       if (copy_needed) FATAL_ERROR("ActualPar::generate_code()");
       switch (act->selection) {
@@ -9838,7 +9902,7 @@ namespace Ttcn {
     size_t nof_pars = params.size();
     for (size_t i = 0; i < nof_pars; i++) {
       if (i > 0) expr->expr = mputstr(expr->expr, ", ");
-      params[i]->generate_code(expr, false, p_fpl && p_fpl->get_fp_byIndex(i)->get_lazy_eval(), p_fpl && p_fpl->get_fp_byIndex(i)->get_used_as_lvalue());
+      params[i]->generate_code(expr, false, p_fpl != NULL ? p_fpl->get_fp_byIndex(i) : NULL);
     }
   }
 
@@ -10009,7 +10073,7 @@ namespace Ttcn {
         } // if (subrefs != NULL)
       } // if (ActualPar::AP_REF == par->get_selection())
       
-      par->generate_code(expr, copy_needed, p_fpl && p_fpl->get_fp_byIndex(i)->get_lazy_eval(), p_fpl && p_fpl->get_fp_byIndex(i)->get_used_as_lvalue());
+      par->generate_code(expr, copy_needed, p_fpl != NULL ? p_fpl->get_fp_byIndex(i) : NULL);
     }
     value_refs.clear();
     template_refs.clear();

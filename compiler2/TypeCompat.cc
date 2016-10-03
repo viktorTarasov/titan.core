@@ -482,7 +482,9 @@ void TypeConv::gen_conv_func_array_record_of(char **p_bodies, Module *p_mod)
   else if (m_to_tt == Type::T_SEQOF)
     *p_bodies = mputprintf(*p_bodies, "p_to_v.set_size(%lu);\n",
       (long unsigned)m_from->get_dimension()->get_size());
-  for (size_t i = 0; i < m_from->get_dimension()->get_size(); i++) {
+  size_t dim = m_from_tt == Type::T_ARRAY ? m_from->get_dimension()->get_size() :
+    m_to->get_dimension()->get_size();
+  for (size_t i = 0; i < dim; i++) {
     if (!p_mod->needs_type_conv(of_type_from, of_type_to)) {
       *p_bodies = mputprintf(*p_bodies,
         "if (p_from_v[%lu].is_bound()) p_to_v[%lu] = p_from_v[%lu];\n",

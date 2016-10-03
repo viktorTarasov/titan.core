@@ -208,17 +208,22 @@ CHARSTRING& CHARSTRING::operator=(const UNIVERSAL_CHARSTRING& other_value)
 {
   other_value.must_bound("Assignment of an unbound universal charstring to "
                          "a charstring.");
-  clean_up();
-  int n_chars = other_value.val_ptr->n_uchars;
-  init_struct(n_chars);
-  for (int i = 0; i < n_chars; ++i) {
-    const universal_char& uc = other_value.val_ptr->uchars_ptr[i];
-    if (uc.uc_group != 0 || uc.uc_plane != 0 || uc.uc_row != 0) {
-      TTCN_error("Multiple-byte characters cannot be assigned to a charstring, "
-        "invalid character char(%u, %u, %u, %u) at index %d.", 
-        uc.uc_group, uc.uc_plane, uc.uc_row, uc.uc_cell, i);
+  if (other_value.charstring) {
+    *this = other_value.cstr;
+  }
+  else {
+    clean_up();
+    int n_chars = other_value.val_ptr->n_uchars;
+    init_struct(n_chars);
+    for (int i = 0; i < n_chars; ++i) {
+      const universal_char& uc = other_value.val_ptr->uchars_ptr[i];
+      if (uc.uc_group != 0 || uc.uc_plane != 0 || uc.uc_row != 0) {
+        TTCN_error("Multiple-byte characters cannot be assigned to a charstring, "
+          "invalid character char(%u, %u, %u, %u) at index %d.", 
+          uc.uc_group, uc.uc_plane, uc.uc_row, uc.uc_cell, i);
+      }
+      val_ptr->chars_ptr[i] = other_value.val_ptr->uchars_ptr[i].uc_cell;
     }
-    val_ptr->chars_ptr[i] = other_value.val_ptr->uchars_ptr[i].uc_cell;
   }
   return *this;
 }

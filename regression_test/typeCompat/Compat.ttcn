@@ -153,6 +153,15 @@ function f3(in template myrec1 p1) return template myrec2 {
   return p1
 }
 function f4(in template intlist4 p1) { }
+function f5(inout myrec1 p1, out intlist4 p2) {
+  p1.f1 := p1.f1 + 1;
+  p2 := { p1.f2, p1.f1 };
+}
+function f6(inout template intlist4 p1, out template myrec2 p2) {
+  p1 := { p1[1], p1[0] };
+  p2 := p1;
+}
+
 // A very nice use of type compatibility!  Return a different type on each
 // branch.  Both f2() and ReturnMeAll() returns "{ 2, 3 }".
 function ReturnMeAll() return myrec1 {
@@ -373,6 +382,53 @@ testcase tc_Params() runs on Empty {
   f4(myrec1 : { 1, 2 })
 }
 
+// testing type compatibility for 'out' and 'inout' parameters
+testcase tc_Params2() runs on Empty {
+  // testing value parameters
+  var myrec1 v_rec1 := { 1, 4 };
+  var myrec2 v_rec2;
+  var intlist1 v_il1 := { 1, 4 };
+  var intlist4 v_il4;
+  
+  // only the 2nd parameter needs conversion
+  f5(v_rec1, v_rec2);
+  if (v_rec1 == { 2, 4 }) { setverdict(pass); } else { setverdict(fail, 1); }
+  if (v_rec2 == { 4, 2 }) { setverdict(pass); } else { setverdict(fail, v_rec2); }
+  
+  // only the 1st parameter needs conversion
+  f5(v_il1, v_il4);
+  if (v_il1 == { 2, 4 }) { setverdict(pass); } else { setverdict(fail, 3); }
+  if (v_il4 == { 4, 2 }) { setverdict(pass); } else { setverdict(fail, 4); }
+  
+  // both parameters need conversion
+  v_rec2 := { 1, 4 };
+  f5(v_rec2, v_il1);
+  if (v_rec2 == { 2, 4 }) { setverdict(pass); } else { setverdict(fail, 5); }
+  if (v_il1 == { 4, 2 }) { setverdict(pass); } else { setverdict(fail, 6); }
+  
+  // testing template parameters
+  var template myrec1 vt_rec1;
+  var template (value) myrec2 vt_rec2;
+  var template intlist1 vt_il1 := { 1, 3 };
+  var template intlist4 vt_il4 := { 1, 3 };
+  
+  // only the 2nd parameter needs conversion
+  f6(vt_il4, vt_rec1);
+  if (isvalue(vt_il4) and valueof(vt_il4) == { 3, 1 }) { setverdict(pass); } else { setverdict(fail, 7); }
+  if (isvalue(vt_rec1) and valueof(vt_rec1) == { 3, 1 }) { setverdict(pass); } else { setverdict(fail, 8); }
+  
+  // only the 1st parameter needs conversion
+  f6(vt_il1, vt_rec2);
+  if (isvalue(vt_il1) and valueof(vt_il1) == { 3, 1 }) { setverdict(pass); } else { setverdict(fail, 9); }
+  if (isvalue(vt_il4) and valueof(vt_il4) == { 3, 1 }) { setverdict(pass); } else { setverdict(fail, 10); }
+  
+  // both parameters need conversion
+  vt_rec2 := { 1, 3 };
+  f6(vt_rec2, vt_il4);
+  if (isvalue(vt_rec2) and valueof(vt_rec2) == { 3, 1 }) { setverdict(pass); } else { setverdict(fail, 11); }
+  if (isvalue(vt_il4) and valueof(vt_il4) == { 3, 1 }) { setverdict(pass); } else { setverdict(fail, 12); }
+}
+
 testcase tc_EqNeAss() runs on Empty {
   var myrec1 rec1 := { 1, 2 }
   var myrec1Ext rece1 := { 1, 2 }
@@ -523,6 +579,7 @@ control {
   execute(tc_ProcPortOps())
   execute(tc_EqNeAss())
   execute(tc_Params())
+  execute(tc_Params2())
   execute(tc_DefPar(rec2, rec1))
   execute(tc_Exprs())
   execute(tc_Templates())

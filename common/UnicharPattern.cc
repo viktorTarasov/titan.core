@@ -98,6 +98,7 @@ UnicharPattern::UnicharPattern() : mappings_head(NULL)
       "Case-insensitive universal charstring patterns are disabled.\n", mappings_file);
     return;
   }
+  Free(mappings_file);
   
   // this always points to the last element of the list
   mapping_t* mappings_tail = NULL;
