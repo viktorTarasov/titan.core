@@ -689,7 +689,6 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
     /* value redirect base classes (interfaces) */
     for (i = 0; i < sdef->exceptions.nElements; i++) {
       def = mputprintf(def,
-        "public:\n"
         "class %s_Redirect_Interface {\n"
         "public:\n"
         "virtual void set_values(const %s&) = 0;\n"
@@ -851,6 +850,27 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
       "}\n"
       "TTCN_error(\"Internal error: Invalid selector when performing "
       "value redirect on an exception of signature %s.\");\n"
+      "}\n\n", dispname);
+    
+    /* is_any_or_omit function */
+    def = mputprintf(def, "boolean is_any_or_omit() const;\n");
+    src = mputprintf(src, 
+      "boolean %s_exception_template::is_any_or_omit() const\n"
+      "{\n"
+      "switch (exception_selection) {\n", name);
+    for (i = 0; i < sdef->exceptions.nElements; i++) {
+      src = mputprintf(src,
+        "case %s_%s:\n"
+        "return field_%s->get_selection() == ANY_OR_OMIT;\n",
+        selection_prefix, sdef->exceptions.elements[i].altname,
+        sdef->exceptions.elements[i].altname);
+    }
+    src = mputprintf(src,
+      "default:\n"
+      "break;\n"
+      "}\n"
+      "TTCN_error(\"Internal error: Invalid selector when checking for '*' in "
+      "an exception template of signature %s.\");\n"
       "}\n\n", dispname);
 
     def = mputstr(def, "};\n\n");

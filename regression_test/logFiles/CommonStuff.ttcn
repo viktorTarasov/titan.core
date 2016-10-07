@@ -729,7 +729,7 @@ private altstep as_EPTF_Base_stopAllComponents() runs on EPTF_Base_CT_private {
 private altstep as_handle_main_EPTF_Base_MgmtIf() runs on EPTF_Base_CT_private {
   var EPTF_Base_MgmtMsg vl_EPTF_Base_MgmtIf_msg;
   var EPTF_Base_CT vl_EPTF_Base_MgmtIf_msg_sender;
-  [] EPTF_Base_MgmtIf.receive(*) -> value vl_EPTF_Base_MgmtIf_msg sender vl_EPTF_Base_MgmtIf_msg_sender {
+  [] EPTF_Base_MgmtIf.receive(?) -> value vl_EPTF_Base_MgmtIf_msg sender vl_EPTF_Base_MgmtIf_msg_sender {
     if (f_handle_main_EPTF_Base_MgmtIf(vl_EPTF_Base_MgmtIf_msg,vl_EPTF_Base_MgmtIf_msg_sender)) {repeat;}
   }
   [] as_EPTF_Base_stopAllComponents();

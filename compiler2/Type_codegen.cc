@@ -2254,6 +2254,8 @@ void Type::generate_code_done(output_struct *target)
      "if (!component_reference.is_bound()) "
      "TTCN_error(\"Performing a done operation on an unbound component "
      "reference.\");\n"
+     "if (value_template.get_selection() == ANY_OR_OMIT) "
+     "TTCN_error(\"Done operation using '*' as matching template\");\n"
      "Text_Buf *text_buf;\n"
      "alt_status ret_val = TTCN_Runtime::component_done("
        "(component)component_reference, \"%s\", text_buf);\n"

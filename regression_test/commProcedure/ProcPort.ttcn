@@ -172,6 +172,11 @@ type port ProcPort4 procedure {
 }
 with { extension "internal" }
 
+type port ProcPort5 procedure {
+  inout MyProc;
+}
+with { extension "internal" }
+
 type component ProcComponent
 {
   port ProcPort1 Port0;
@@ -207,6 +212,10 @@ type component ProcComponent3 {
 
 type component ProcComponent4 {
   port ProcPort4 Port4;
+}
+
+type component ProcComponent5 {
+  port ProcPort5 Port5;
 }
 
 function GetCall_behav1() runs on ProcComponent2 {
@@ -1090,6 +1099,82 @@ testcase tc_DecodedRedirect4() runs on ProcComponent4 {
   setverdict(pass);
 }
 
+// '*' is not allowed as a matching template for the return value
+// in getreply operations or for the exception in catch operations
+testcase tc_MatchingWithAnyOrOmit() runs on ProcComponent5 {
+  connect(self:Port5, self:Port5);
+  var template boolean vt_bool := *;
+  var template integer vt_int := *;
+  
+  // getreply
+  Port5.reply(MyProc: { -, "a", 0.1 } value false);
+  @try {
+    alt {
+      [] Port5.getreply(MyProc: { ?, ?, ? } value vt_bool) { }
+    }
+    setverdict(fail, "Getreply operation succeeded. Expected error.");
+  }
+  @catch (msg) {
+    if (match(msg, pattern "*Getreply operation using '\*' as return value matching template")) {
+      setverdict(pass);
+    }
+    else {
+      setverdict(fail, "Incorrect error message received (getreply test): ", msg);
+    }
+  }
+  
+  // check-getreply
+  Port5.reply(MyProc: { -, "a", 0.1 } value false);
+  @try {
+    alt {
+      [] Port5.check(getreply(MyProc: { ?, ?, ? } value vt_bool)) { }
+    }
+    setverdict(fail, "Check-getreply operation succeeded. Expected error.");
+  }
+  @catch (msg) {
+    if (match(msg, pattern "*Check-getreply operation using '\*' as return value matching template")) {
+      setverdict(pass);
+    }
+    else {
+      setverdict(fail, "Incorrect error message received (check-getreply test): ", msg);
+    }
+  }
+  
+  // catch
+  Port5.raise(MyProc, 10);
+  @try {
+    alt {
+      [] Port5.catch(MyProc, vt_int) { }
+    }
+    setverdict(fail, "Catch operation succeeded. Expected error.");
+  }
+  @catch (msg) {
+    if (match(msg, pattern "*Catch operation using '\*' as matching template")) {
+      setverdict(pass);
+    }
+    else {
+      setverdict(fail, "Incorrect error message received (catch test): ", msg);
+    }
+  }
+  
+  // check-catch
+  Port5.raise(MyProc, 10);
+  @try {
+    alt {
+      [] Port5.check(catch(MyProc, vt_int)) { }
+    }
+    setverdict(fail, "Check-catch operation succeeded. Expected error.");
+  }
+  @catch (msg) {
+    if (match(msg, pattern "*Check-catch operation using '\*' as matching template")) {
+      setverdict(pass);
+    }
+    else {
+      setverdict(fail, "Incorrect error message received (check-catch test): ", msg);
+    }
+  }
+}
+
 control {
   execute(tc1_Call());
   execute(tc2_Call());
@@ -1109,5 +1194,6 @@ control {
   execute(tc_DecodedRedirect2());
   execute(tc_DecodedRedirect3());
   execute(tc_DecodedRedirect4());
+  execute(tc_MatchingWithAnyOrOmit());
 }
 }
