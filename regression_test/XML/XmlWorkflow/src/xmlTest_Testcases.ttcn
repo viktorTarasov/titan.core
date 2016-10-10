@@ -1812,6 +1812,23 @@ group ComplexType {
     }
   }//tc_
 
+  testcase tc_ambiguous_type_namespace_prefix() runs on xmlTest_CT {
+    f_shellCommandWithVerdict(xsd2ttcn_command & " www_example_org_pref1.xsd www_example_org_pref2.xsd www_example_org_pref3.xsd","",c_shell_successWithoutWarningAndError);
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_pref1_e.ttcn","www_example_org_pref1.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_pref2_e.ttcn","www_example_org_pref2.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_pref3_e.ttcn","www_example_org_pref3.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+  }//tc_
+
 
   //=========================================================================
   //  tc_complex_any_pos1_encDec
@@ -2683,6 +2700,7 @@ control {
   execute(tc_complex_import_nameCollision2_converter());
   execute(tc_complex_any_pos_converter());
   execute(tc_imported_type_prefix());
+  execute(tc_ambiguous_type_namespace_prefix());
   execute(tc_complex_any_pos1_encDec()); //Failed, TR: HL37887
   execute(tc_complex_any_pos2_encDec());
   execute(tc_complex_any_pos3_encDec());//failed, TR:

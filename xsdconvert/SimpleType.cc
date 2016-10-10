@@ -775,18 +775,6 @@ void SimpleType::finalModification() {
   }
 
   isOptional = isOptional || (getMinOccurs() == 0 && getMaxOccurs() == 0);
-
-  // If the type name is the same as the identifier then we have to prefix it 
-  // with the module identifier.
-  if (type.convertedValue == name.convertedValue && !outside_reference.empty()) {
-    List<const TTCN3Module*>::iterator import_module = module->getImportedModules().begin();
-    for (; import_module; import_module = import_module->Next) {
-      if (import_module->Data->getTargetNamespace() == outside_reference.get_uri()) {
-        type.upload(import_module->Data->getModulename() + Mstring(".") + type.convertedValue);
-        break;
-      }
-    }
-  }
 }
 
 bool SimpleType::hasUnresolvedReference() {
@@ -835,8 +823,8 @@ void SimpleType::printToFile(FILE * file) {
 
     int multiplicity = multi(module, outside_reference, this);
     const RootType *type_ref = outside_reference.get_ref();
-    if ((multiplicity > 1) && type_ref
-      && type_ref->getModule() != module) {
+    if ((multiplicity > 1 && type_ref && type_ref->getModule() != module)
+       || name.convertedValue == type.convertedValue) {
       fprintf(file, "%s.", type_ref->getModule()->getModulename().c_str());
     }
 
