@@ -9,25 +9,6 @@
  *   Szabo, Bence Janos
  *
  ******************************************************************************/
-module MainNormal {
-
-
-type component EmptyCT {}
-
-const integer myInt := 5;
-
-testcase tc_test() runs on EmptyCT {
-	var integer tempInt := myInt;
-	if (tempInt == 5) {
-		setverdict(pass);
-	} else {
-		setverdict(fail);
-	}
+ module Module5{
+	const integer module5 := 5;
 }
-
-control {
-	execute(tc_test());
-}
-
-}
-
