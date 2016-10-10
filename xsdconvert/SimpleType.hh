@@ -331,7 +331,11 @@ public:
   const ReferenceData& getReference() const {
     return outside_reference;
   }
-
+  
+  ReferenceData& getReference() {
+    return outside_reference;
+  }
+    
   EnumerationType & getEnumeration() {
     return enumeration;
   }
