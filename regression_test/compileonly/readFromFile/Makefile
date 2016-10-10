@@ -17,7 +17,9 @@ COVERAGE_FLAG := -C
 endif
 
 MFGEN := $(TTCN3_DIR)/bin/ttcn3_makefilegen
-MFGEN_FLAGS := -f $(RT2_FLAG) $(SPLIT_FLAG)
+MFGEN_FLAGS := -fs $(RT2_FLAG) $(SPLIT_FLAG) -e Main
+COMPILER := $(TTCN3_DIR)/bin/ttcn3_compiler
+COMPILER_FLAGS := $(RT2_FLAG) $(SPLIT_FLAG)
 
 # ${MAKEPROG} has the same content as the built-in ${MAKE},
 # except the special handling of ${MAKE} does not apply.
@@ -25,8 +27,24 @@ MFGEN_FLAGS := -f $(RT2_FLAG) $(SPLIT_FLAG)
 # then fail on every subsequent invocation until a 'make clean' is done. 
 MAKEPROG := ${MAKE}
 
-all: 
-	mkdir -p bin && cp files.txt bin/files.txt && cd bin && $(MFGEN) $(MFGEN_FLAGS) -j files.txt \
-	&& $(MAKEPROG) && make clean && cd .. && rm -rf bin
+all: compiler makefile
 
-.PHONY: all clean distclean run
+compiler:
+	mkdir -p bin && cp compiler_files1.txt bin/files.txt && cd bin \
+	&& $(COMPILER) $(COMPILER_FLAGS) -J files.txt ../src/ASN1Module3.asn \
+	&& cd .. && rm -rf bin
+
+	mkdir -p bin && cp compiler_files2.txt bin/files.txt && cd bin \
+	&& $(COMPILER) $(COMPILER_FLAGS) -J files.txt ../src/ASN1Module3.asn \
+	&& cd .. && rm -rf bin
+
+makefile:
+	mkdir -p bin && cp mfgen_files1.txt bin/files.txt && cd bin \
+	&& $(MFGEN) $(MFGEN_FLAGS) -J files.txt ../src/ASN1Module3.asn \
+	&& $(MAKEPROG) && ./Main && make clean && cd .. && rm -rf bin
+
+	mkdir -p bin && cp mfgen_files2.txt bin/files.txt && cd bin \
+	&& $(MFGEN) $(MFGEN_FLAGS) -J files.txt ../src/ASN1Module3.asn \
+	&& $(MAKEPROG) && ./Main && make clean && cd .. && rm -rf bin
+
+.PHONY: all clean distclean run compiler makefile

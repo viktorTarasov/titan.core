@@ -9,32 +9,6 @@
  *   Szabo, Bence Janos
  *
  ******************************************************************************/
-module MainExtNormal {
-
-import from MainNormal all;
-
-type component EmptyCT {}
-
-const universal charstring myString := "almafa";
-
-testcase tc_test() runs on EmptyCT {
-	var universal charstring tempString := myString;
-	if (tempString == "almafa") {
-		setverdict(pass);
-	} else {
-		setverdict(fail);
-	}
-	var integer tempInt := 5;
-	if (tempInt == 5) {
-		setverdict(pass);
-	} else {
-		setverdict(fail);
-	}
+ module Module3{
+	const integer module3 := 3;
 }
-
-control {
-	execute(tc_test());
-}
-
-}
-

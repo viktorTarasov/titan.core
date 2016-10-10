@@ -4590,7 +4590,7 @@ static void usage(void)
 {
   fprintf(stderr, "\n"
     "usage: %s [-abc" C_flag "dDEfFglLmMnprRsStTVwWXZ] [-K file] [-z file ] [-P dir]"
-    " [-j file] [-U none|type|'number'] [-e ets_name] [-o dir|file]\n"
+    " [-J file] [-U none|type|'number'] [-e ets_name] [-o dir|file]\n"
     "        [-t project_descriptor.tpd [-b buildconfig]]\n"
     "        [-O file] ... module_name ... testport_name ...\n"
     "   or  %s -v\n"
@@ -4607,7 +4607,7 @@ static void usage(void)
     "	-f:		force overwriting of the output Makefile\n"
     "	-g:		generate Makefile for use with GNU make\n"
     "	-I path:	Add path to the search paths when using TPD files\n"
-    "	-j file:	The names of files taken from file instead of command line"
+    "	-J file:	The names of files taken from file instead of command line"
     "	-K file:	enable selective code coverage\n"
     "	-l:		use dynamic linking\n"
     "	-L:		create makefile with library archive as the default target\n"
@@ -4720,7 +4720,7 @@ int main(int argc, char *argv[])
   }
 
   for ( ; ; ) {
-    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:EfFgI:j:K:o:lLmMnpP:rRsSt:TU:vVwWXYz:ZH");
+    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:EfFgI:J:K:o:lLmMnpP:rRsSt:TU:vVwWXYz:ZH");
     if (c == -1) break;
     switch (c) {
     case 'O':
@@ -4779,7 +4779,7 @@ int main(int argc, char *argv[])
     case 'H':
       SET_FLAG(H);
       break;
-    case 'j':
+    case 'J':
       file_list_file_name = optarg;
       break;
     case 'o':
