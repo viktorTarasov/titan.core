@@ -34,9 +34,9 @@ const char * moduleUsefulTtcn3Types = {
 
   "    type integer unsignedlong (0 .. 4294967295) with { variant \"/*unsigned 32 bit*/\" };\n\n"
 
-  "    type integer longlong /* (  -9223372036854775808 .. 9223372036854775807 ) */ with { variant \"/*64 bit*/\" };\n\n"
+  "    type integer longlong ( -9223372036854775808 .. 9223372036854775807 ) with { variant \"/*64 bit*/\" };\n\n"
 
-  "    type integer unsignedlonglong /* ( 0 .. 18446744073709551615 ) */ with { variant \"/*unsigned 64 bit*/\" };\n\n"
+  "    type integer unsignedlonglong ( 0 .. 18446744073709551615 ) with { variant \"/*unsigned 64 bit*/\" };\n\n"
 
   "    type float IEEE754float with { variant \"/*IEEE754 float*/\" };\n\n"
 
