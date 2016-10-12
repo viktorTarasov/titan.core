@@ -26,7 +26,7 @@
 // Author:                Janos Zoltan Szabo
 // mail:                  tmpjsz@eth.ericsson.se
 //
-// Copyright (c) 2000-2015 Ericsson Telecom AB
+// Copyright (c) 2000-2016 Ericsson Telecom AB
 //
 #ifndef MCTR_MAINCONTROLLER_H
 #define MCTR_MAINCONTROLLER_H
