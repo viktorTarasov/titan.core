@@ -1250,7 +1250,8 @@ static void add_file_to_makefile(struct makefile_struct *makefile, char *argumen
             add_ttcn3_module(makefile, file_name, module_name);
           }
      } else if (is_asn1_module(file_name, fp, &module_name)) {
-         if (is_valid_asn1_filename(file_name)) {
+         expstring_t only_file_name = get_file_from_path(file_name);
+         if (is_valid_asn1_filename(only_file_name)) {
            add_asn1_module(makefile, file_name, module_name);
          } else {
              ERROR("The file name `%s' (without suffix) shall be identical to the module name `%s'.\n"
@@ -1258,6 +1259,7 @@ static void add_file_to_makefile(struct makefile_struct *makefile, char *argumen
                    "file name shall contain an underscore character instead.", file_name, module_name);
              Free(module_name);
          }
+         Free(only_file_name);
      } else if (is_xsd_module(file_name, &module_name)) {
        add_xsd_module(makefile, file_name, module_name);
      } else {
