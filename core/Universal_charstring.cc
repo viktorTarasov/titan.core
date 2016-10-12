@@ -967,9 +967,11 @@ boolean UNIVERSAL_CHARSTRING::set_param_internal(Module_Param& param, boolean al
   boolean is_pattern = FALSE;
   param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, "universal charstring value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Charstring: {
     switch (param.get_operation_type()) {
@@ -1042,6 +1044,7 @@ void UNIVERSAL_CHARSTRING::set_param(Module_Param& param) {
   set_param_internal(param, FALSE);
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* UNIVERSAL_CHARSTRING::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -1054,6 +1057,7 @@ Module_Param* UNIVERSAL_CHARSTRING::get_param(Module_Param_Name& param_name) con
   memcpy(val_cpy, val_ptr->uchars_ptr, val_ptr->n_uchars * sizeof(universal_char));
   return new Module_Param_Universal_Charstring(val_ptr->n_uchars, val_cpy);
 }
+#endif
 
 void UNIVERSAL_CHARSTRING::encode_text(Text_Buf& text_buf) const
 {
@@ -4362,9 +4366,11 @@ void UNIVERSAL_CHARSTRING_template::log_match
 void UNIVERSAL_CHARSTRING_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE|Module_Param::BC_LIST, "universal charstring template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -4450,6 +4456,7 @@ void UNIVERSAL_CHARSTRING_template::set_param(Module_Param& param) {
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* UNIVERSAL_CHARSTRING_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -4499,6 +4506,7 @@ Module_Param* UNIVERSAL_CHARSTRING_template::get_param(Module_Param_Name& param_
   mp->set_length_restriction(get_length_range());
   return mp;
 }
+#endif
 
 void UNIVERSAL_CHARSTRING_template::encode_text(Text_Buf& text_buf) const
 {

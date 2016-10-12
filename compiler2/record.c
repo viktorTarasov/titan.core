@@ -3411,31 +3411,27 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
      "param.error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
      "  }\n"
      "  param.basic_check(Module_Param::BC_VALUE, \"%s value\");\n"
-     "  Module_Param_Ptr m_p = &param;\n"
-     "  if (param.get_type() == Module_Param::MP_Reference) {\n"
-     "    m_p = param.get_referenced_param();\n"
-     "  }\n"
-     "  switch (m_p->get_type()) {\n"
+     "  switch (param.get_type()) {\n"
      "  case Module_Param::MP_Value_List:\n"
-     "    if (%lu<m_p->get_size()) {\n"
-     "      param.error(\"%s value of type %s has %lu fields but list value has %%d fields\", (int)m_p->get_size());\n"
+     "    if (%lu<param.get_size()) {\n"
+     "      param.error(\"%s value of type %s has %lu fields but list value has %%d fields\", (int)param.get_size());\n"
      "    }\n",
      kind_str, dispname, kind_str, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
 
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    if (m_p->get_size()>%lu && m_p->get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*m_p->get_elem(%lu));\n",
+      "    if (param.get_size()>%lu && param.get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*param.get_elem(%lu));\n",
       (unsigned long)i, (unsigned long)i, sdef->elements[i].name, (unsigned long)i);
   } 
   src = mputstr(src,
       "    break;\n"
       "  case Module_Param::MP_Assignment_List: {\n"
-      "    Vector<bool> value_used(m_p->get_size());\n"
-      "    value_used.resize(m_p->get_size(), false);\n");
+      "    Vector<bool> value_used(param.get_size());\n"
+      "    value_used.resize(param.get_size(), false);\n");
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    for (size_t val_idx=0; val_idx<m_p->get_size(); val_idx++) {\n"
-      "      Module_Param* const curr_param = m_p->get_elem(val_idx);\n"
+      "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {\n"
+      "      Module_Param* const curr_param = param.get_elem(val_idx);\n"
       "      if (!strcmp(curr_param->get_id()->get_name(), \"%s\")) {\n"
       "        if (curr_param->get_type()!=Module_Param::MP_NotUsed) {\n"
       "          %s().set_param(*curr_param);\n"
@@ -3446,8 +3442,8 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       , sdef->elements[i].dispname, sdef->elements[i].name);
   }
   src = mputprintf(src,
-      "    for (size_t val_idx=0; val_idx<m_p->get_size(); val_idx++) if (!value_used[val_idx]) {\n"
-      "      m_p->get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", m_p->get_elem(val_idx)->get_id()->get_name());\n"
+      "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {\n"
+      "      param.get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", param.get_elem(val_idx)->get_id()->get_name());\n"
       "      break;\n"
       "    }\n"
       "  } break;\n"
@@ -3455,48 +3451,6 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "    param.type_error(\"%s value\", \"%s\");\n"
       "  }\n"
       "}\n\n", dispname, kind_str, dispname);
-  
-  /* get param function */
-  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-  src = mputprintf(src,
-    "Module_Param* %s::get_param(Module_Param_Name& param_name) const\n"
-    "{\n"
-    "  if (!is_bound()) {\n"
-    "    return new Module_Param_Unbound();\n"
-    "  }\n"
-    "  if (param_name.next_name()) {\n"
-    // Haven't reached the end of the module parameter name
-    // => the name refers to one of the fields, not to the whole record
-    "    char* param_field = param_name.get_current_name();\n"
-    "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
-    "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
-    "        \"expected a valid field name for %s type `%s'\");\n"
-    "    }\n"
-    "    ", name, kind_str, dispname);
-  for (i = 0; i < sdef->nElements; i++) {
-    src = mputprintf(src,
-      "if (strcmp(\"%s\", param_field) == 0) {\n"
-      "      return %s().get_param(param_name);\n"
-      "    } else ",
-      sdef->elements[i].dispname, sdef->elements[i].name);
-  }
-  src = mputprintf(src,
-    "TTCN_error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
-    "  }\n"
-    "  Module_Param_Assignment_List* m_p = new Module_Param_Assignment_List();\n"
-    , kind_str, dispname);
-  for (i = 0; i < sdef->nElements; i++) {
-    src = mputprintf(src,
-      "  Module_Param* mp_field_%s = field_%s.get_param(param_name);\n"
-      "  mp_field_%s->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
-      "  m_p->add_elem(mp_field_%s);\n"
-      , sdef->elements[i].name, sdef->elements[i].name
-      , sdef->elements[i].name, sdef->elements[i].dispname
-      , sdef->elements[i].name);
-  }
-  src = mputstr(src,
-    "  return m_p;\n"
-    "  }\n\n");
 
   /* set implicit omit function, recursive */
   def = mputstr(def, "  void set_implicit_omit();\n");
@@ -5675,11 +5629,7 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     "param.error(\"Field `%%s' not found in %s template type `%s'\", param_field);\n"
     "  }\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"%s template\");\n"
-    "  Module_Param_Ptr m_p = &param;\n"
-    "  if (param.get_type() == Module_Param::MP_Reference) {\n"
-    "    m_p = param.get_referenced_param();\n"
-    "  }\n"
-    "  switch (m_p->get_type()) {\n"
+    "  switch (param.get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
     "    break;\n"
@@ -5692,32 +5642,32 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     "  case Module_Param::MP_List_Template:\n"
     "  case Module_Param::MP_ComplementList_Template: {\n"
     "    %s_template new_temp;\n"
-    "    new_temp.set_type(m_p->get_type()==Module_Param::MP_List_Template ? "
-    "VALUE_LIST : COMPLEMENTED_LIST, m_p->get_size());\n"
-    "    for (size_t p_i=0; p_i<m_p->get_size(); p_i++) {\n"
-    "      new_temp.list_item(p_i).set_param(*m_p->get_elem(p_i));\n"
+    "    new_temp.set_type(param.get_type()==Module_Param::MP_List_Template ? "
+    "VALUE_LIST : COMPLEMENTED_LIST, param.get_size());\n"
+    "    for (size_t p_i=0; p_i<param.get_size(); p_i++) {\n"
+    "      new_temp.list_item(p_i).set_param(*param.get_elem(p_i));\n"
     "    }\n"
     "    *this = new_temp;\n"
     "    break; }\n"
     "  case Module_Param::MP_Value_List:\n"
-    "    if (%lu<m_p->get_size()) {\n"
-    "      param.error(\"%s template of type %s has %lu fields but list value has %%d fields\", (int)m_p->get_size());\n"
+    "    if (%lu<param.get_size()) {\n"
+    "      param.error(\"%s template of type %s has %lu fields but list value has %%d fields\", (int)param.get_size());\n"
     "    }\n",
     kind_str, dispname, kind_str, name, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    if (m_p->get_size()>%lu && m_p->get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*m_p->get_elem(%lu));\n",
+      "    if (param.get_size()>%lu && param.get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*param.get_elem(%lu));\n",
       (unsigned long)i, (unsigned long)i, sdef->elements[i].name, (unsigned long)i);
   }
   src = mputstr(src,
     "    break;\n"
     "  case Module_Param::MP_Assignment_List: {\n"
-    "    Vector<bool> value_used(m_p->get_size());\n"
-    "    value_used.resize(m_p->get_size(), false);\n");
+    "    Vector<bool> value_used(param.get_size());\n"
+    "    value_used.resize(param.get_size(), false);\n");
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "    for (size_t val_idx=0; val_idx<m_p->get_size(); val_idx++) {\n"
-      "      Module_Param* const curr_param = m_p->get_elem(val_idx);\n"
+      "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {\n"
+      "      Module_Param* const curr_param = param.get_elem(val_idx);\n"
       "      if (!strcmp(curr_param->get_id()->get_name(), \"%s\")) {\n"
       "        if (curr_param->get_type()!=Module_Param::MP_NotUsed) {\n"
       "          %s().set_param(*curr_param);\n"
@@ -5728,89 +5678,16 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
       , sdef->elements[i].dispname, sdef->elements[i].name);
   }
   src = mputprintf(src,
-    "    for (size_t val_idx=0; val_idx<m_p->get_size(); val_idx++) if (!value_used[val_idx]) {\n"
-    "      m_p->get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", m_p->get_elem(val_idx)->get_id()->get_name());\n"
+    "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) if (!value_used[val_idx]) {\n"
+    "      param.get_elem(val_idx)->error(\"Non existent field name in type %s: %%s\", param.get_elem(val_idx)->get_id()->get_name());\n"
     "      break;\n"
     "    }\n"
     "  } break;\n"
     "  default:\n"
     "    param.type_error(\"%s template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent() || m_p->get_ifpresent();\n"
+    "  is_ifpresent = param.get_ifpresent();\n"
     "}\n\n", dispname, kind_str, dispname);
-  
-  /* get_param() */
-  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-  src = mputprintf(src,
-    "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
-    "{\n"
-    "  if (param_name.next_name()) {\n"
-    // Haven't reached the end of the module parameter name
-    // => the name refers to one of the fields, not to the whole record
-    "    char* param_field = param_name.get_current_name();\n"
-    "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
-    "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
-    "        \"expected a valid field name for %s template type `%s'\");\n"
-    "    }\n"
-    "    ", name, kind_str, dispname);
-  for (i = 0; i < sdef->nElements; i++) {
-    src = mputprintf(src,
-      "if (strcmp(\"%s\", param_field) == 0) {\n"
-      "      return %s().get_param(param_name);\n"
-      "    } else ",
-      sdef->elements[i].dispname, sdef->elements[i].name);
-  }
-  src = mputprintf(src,
-    "TTCN_error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
-    "  }\n"
-    "  Module_Param* m_p = NULL;\n"
-    "  switch (template_selection) {\n"
-    "  case UNINITIALIZED_TEMPLATE:\n"
-    "    m_p = new Module_Param_Unbound();\n"
-    "    break;\n"
-    "  case OMIT_VALUE:\n"
-    "    m_p = new Module_Param_Omit();\n"
-    "    break;\n"
-    "  case ANY_VALUE:\n"
-    "    m_p = new Module_Param_Any();\n"
-    "    break;\n"
-    "  case ANY_OR_OMIT:\n"
-    "    m_p = new Module_Param_AnyOrNone();\n"
-    "    break;\n"
-    "  case SPECIFIC_VALUE: {\n"
-    "    m_p = new Module_Param_Assignment_List();\n"
-    , kind_str, dispname);
-  for (i = 0; i < sdef->nElements; i++) {
-    src = mputprintf(src,
-      "    Module_Param* mp_field_%s = single_value->field_%s.get_param(param_name);\n"
-      "    mp_field_%s->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
-      "    m_p->add_elem(mp_field_%s);\n"
-      , sdef->elements[i].name, sdef->elements[i].name
-      , sdef->elements[i].name, sdef->elements[i].dispname
-      , sdef->elements[i].name);
-  }
-  src = mputstr(src,
-    "    break; }\n"
-    "  case VALUE_LIST:\n"
-    "  case COMPLEMENTED_LIST: {\n"
-    "    if (template_selection == VALUE_LIST) {\n"
-    "      m_p = new Module_Param_List_Template();\n"
-    "    }\n"
-    "    else {\n"
-    "      m_p = new Module_Param_ComplementList_Template();\n"
-    "    }\n"
-    "    for (size_t i_i = 0; i_i < value_list.n_values; ++i_i) {\n"
-    "      m_p->add_elem(value_list.list_value[i_i].get_param(param_name));\n"
-    "    }\n"
-    "    break; }\n"
-    "  default:\n"
-    "    break;\n"
-    "  }\n"
-    "  if (is_ifpresent) {\n"
-    "    m_p->set_ifpresent();\n"
-    "  }\n"
-    "  return m_p;\n"
-    "}\n\n");
 
     /* check template restriction */
     def = mputstr(def, "void check_restriction(template_res t_res, "
@@ -5981,26 +5858,11 @@ static void defEmptyRecordClass(const struct_def *sdef,
     src = mputprintf(src, "void %s::set_param(Module_Param& param)\n"
       "{\n"
       "  param.basic_check(Module_Param::BC_VALUE, \"empty record/set value (i.e. { })\");\n"
-      "  Module_Param_Ptr mp = &param;\n"
-      "  if (param.get_type() == Module_Param::MP_Reference) {\n"
-      "    mp = param.get_referenced_param();\n"
-      "  }\n"
-      "  if (mp->get_type()!=Module_Param::MP_Value_List || mp->get_size()>0) {\n"
+      "  if (param.get_type()!=Module_Param::MP_Value_List || param.get_size()>0) {\n"
       "    param.type_error(\"empty record/set value (i.e. { })\", \"%s\");\n"
       "  }\n"
       "  bound_flag = TRUE;\n"
       "}\n\n", name, dispname);
-    
-    /* get param function */
-    def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-    src = mputprintf(src,
-      "Module_Param* %s::get_param(Module_Param_Name& /* param_name */) const\n"
-      "{\n"
-      "  if (!is_bound()) {\n"
-      "    return new Module_Param_Unbound();\n"
-      "  }\n"
-      "  return new Module_Param_Value_List();\n"
-      "}\n\n", name);
 
     /* encode_text function */
     def = mputstr(def, "void encode_text(Text_Buf& text_buf) const;\n");
@@ -6628,11 +6490,7 @@ static void defEmptyRecordTemplate(const char *name, const char *dispname,
     "void %s_template::set_param(Module_Param& param)\n"
     "{\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"empty record/set template\");\n"
-    "  Module_Param_Ptr mp = &param;\n"
-    "  if (param.get_type() == Module_Param::MP_Reference) {\n"
-    "    mp = param.get_referenced_param();\n"
-    "  }\n"
-    "  switch (mp->get_type()) {\n"
+    "  switch (param.get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
     "    break;\n"
@@ -6645,65 +6503,22 @@ static void defEmptyRecordTemplate(const char *name, const char *dispname,
     "  case Module_Param::MP_List_Template:\n"
     "  case Module_Param::MP_ComplementList_Template: {\n"
     "    %s_template temp;\n"
-    "    temp.set_type(mp->get_type()==Module_Param::MP_List_Template ? "
-    "VALUE_LIST : COMPLEMENTED_LIST, mp->get_size());\n"
-    "    for (size_t p_i=0; p_i<mp->get_size(); p_i++) {\n"
-    "      temp.list_item(p_i).set_param(*mp->get_elem(p_i));\n"
+    "    temp.set_type(param.get_type()==Module_Param::MP_List_Template ? "
+    "VALUE_LIST : COMPLEMENTED_LIST, param.get_size());\n"
+    "    for (size_t p_i=0; p_i<param.get_size(); p_i++) {\n"
+    "      temp.list_item(p_i).set_param(*param.get_elem(p_i));\n"
     "    }\n"
     "    *this = temp;\n"
     "    break; }\n"
     "  case Module_Param::MP_Value_List:\n"
-    "    if (mp->get_size()>0) param.type_error(\"empty record/set template\", \"%s\");\n"
+    "    if (param.get_size()>0) param.type_error(\"empty record/set template\", \"%s\");\n"
     "    *this = NULL_VALUE;\n"
     "    break;\n"
     "  default:\n"
     "    param.type_error(\"empty record/set template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();\n"
+    "  is_ifpresent = param.get_ifpresent();\n"
     "}\n\n", name, name, dispname, dispname);
-  
-  /* get_param() */
-  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-  src = mputprintf(src,
-    "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
-    "{\n"
-    "  Module_Param* mp = NULL;\n"
-    "  switch (template_selection) {\n"
-    "  case UNINITIALIZED_TEMPLATE:\n"
-    "    mp = new Module_Param_Unbound();\n"
-    "    break;\n"
-    "  case OMIT_VALUE:\n"
-    "    mp = new Module_Param_Omit();\n"
-    "    break;\n"
-    "  case ANY_VALUE:\n"
-    "    mp = new Module_Param_Any();\n"
-    "    break;\n"
-    "  case ANY_OR_OMIT:\n"
-    "    mp = new Module_Param_AnyOrNone();\n"
-    "    break;\n"
-    "  case SPECIFIC_VALUE:\n"
-    "    mp = new Module_Param_Value_List();\n"
-    "    break;\n"
-    "  case VALUE_LIST:\n"
-    "  case COMPLEMENTED_LIST: {\n"
-    "    if (template_selection == VALUE_LIST) {\n"
-    "      mp = new Module_Param_List_Template();\n"
-    "    }\n"
-    "    else {\n"
-    "      mp = new Module_Param_ComplementList_Template();\n"
-    "    }\n"
-    "    for (size_t i = 0; i < value_list.n_values; ++i) {\n"
-    "      mp->add_elem(value_list.list_value[i].get_param(param_name));\n"
-    "    }\n"
-    "    break; }\n"
-    "  default:\n"
-    "    break;\n"
-    "  }\n"
-    "  if (is_ifpresent) {\n"
-    "    mp->set_ifpresent();\n"
-    "  }\n"
-    "  return mp;\n"
-    "}\n\n", name);
 
     /* check template restriction */
     def = mputstr(def, "void check_restriction(template_res t_res, "

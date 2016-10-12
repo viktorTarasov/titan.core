@@ -389,9 +389,11 @@ void CHARACTER_STRING_identification::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "union value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   if (mp->get_type()==Module_Param::MP_Value_List && mp->get_size()==0) return;
   if (mp->get_type()!=Module_Param::MP_Assignment_List) {
     param.error("union value with field name was expected");
@@ -424,6 +426,7 @@ void CHARACTER_STRING_identification::set_param(Module_Param& param)
   mp_last->error("Field %s does not exist in type CHARACTER STRING.identification.", mp_last->get_id()->get_name());
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARACTER_STRING_identification::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -462,14 +465,17 @@ Module_Param* CHARACTER_STRING_identification::get_param(Module_Param_Name& para
   mp->add_elem(mp_field);
   return mp;
 }
+#endif
 
 void CHARACTER_STRING_identification_template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "union template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -528,6 +534,7 @@ void CHARACTER_STRING_identification_template::set_param(Module_Param& param)
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARACTER_STRING_identification_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -597,6 +604,7 @@ Module_Param* CHARACTER_STRING_identification_template::get_param(Module_Param_N
   }
   return mp;
 }
+#endif
 
 void CHARACTER_STRING_identification::encode_text(Text_Buf& text_buf) const
 {
@@ -1661,9 +1669,11 @@ void CHARACTER_STRING_identification_syntaxes::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()==0) return;
@@ -1700,6 +1710,7 @@ void CHARACTER_STRING_identification_syntaxes::set_param(Module_Param& param)
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARACTER_STRING_identification_syntaxes::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -1714,6 +1725,7 @@ Module_Param* CHARACTER_STRING_identification_syntaxes::get_param(Module_Param_N
   mp->add_elem(mp_field_transfer);
   return mp;
 }
+#endif
 
 void CHARACTER_STRING_identification_syntaxes::encode_text(Text_Buf& text_buf) const
 {
@@ -1821,9 +1833,11 @@ void CHARACTER_STRING_identification_syntaxes_template::set_param(Module_Param& 
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "record template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -1880,6 +1894,7 @@ void CHARACTER_STRING_identification_syntaxes_template::set_param(Module_Param& 
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARACTER_STRING_identification_syntaxes_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -1925,6 +1940,7 @@ Module_Param* CHARACTER_STRING_identification_syntaxes_template::get_param(Modul
   }
   return mp;
 }
+#endif
 
 void CHARACTER_STRING_identification_syntaxes_template::clean_up()
 {
@@ -2384,9 +2400,11 @@ void CHARACTER_STRING_identification_context__negotiation::set_param(Module_Para
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()==0) return;
@@ -2423,6 +2441,7 @@ void CHARACTER_STRING_identification_context__negotiation::set_param(Module_Para
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARACTER_STRING_identification_context__negotiation::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -2437,6 +2456,7 @@ Module_Param* CHARACTER_STRING_identification_context__negotiation::get_param(Mo
   mp->add_elem(mp_field_transfer_syntax);
   return mp;
 }
+#endif
 
 void CHARACTER_STRING_identification_context__negotiation::encode_text(Text_Buf& text_buf) const
 {
@@ -2546,9 +2566,11 @@ void CHARACTER_STRING_identification_context__negotiation_template::set_param(Mo
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "record template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -2605,6 +2627,7 @@ void CHARACTER_STRING_identification_context__negotiation_template::set_param(Mo
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARACTER_STRING_identification_context__negotiation_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -2650,6 +2673,7 @@ Module_Param* CHARACTER_STRING_identification_context__negotiation_template::get
   }
   return mp;
 }
+#endif
 
 void CHARACTER_STRING_identification_context__negotiation_template::clean_up()
 {
@@ -3118,9 +3142,11 @@ void CHARACTER_STRING::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()==0) return;
@@ -3165,6 +3191,7 @@ void CHARACTER_STRING::set_param(Module_Param& param)
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARACTER_STRING::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -3182,6 +3209,7 @@ Module_Param* CHARACTER_STRING::get_param(Module_Param_Name& param_name) const
   mp->add_elem(mp_field_string_value);
   return mp;
 }
+#endif
 
 void CHARACTER_STRING::encode_text(Text_Buf& text_buf) const
 {
@@ -3402,9 +3430,11 @@ void CHARACTER_STRING_template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "record template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -3469,6 +3499,7 @@ void CHARACTER_STRING_template::set_param(Module_Param& param)
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARACTER_STRING_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -3517,6 +3548,7 @@ Module_Param* CHARACTER_STRING_template::get_param(Module_Param_Name& param_name
   }
   return mp;
 }
+#endif
 
 void CHARACTER_STRING_template::clean_up()
 {

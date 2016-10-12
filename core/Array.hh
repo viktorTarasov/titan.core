@@ -225,9 +225,9 @@ public:
   int lengthof() const;
 
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
 
 #ifdef TITAN_RUNTIME_2
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   boolean is_equal(const Base_Type* other_value) const { return *this == *(static_cast<const VALUE_ARRAY*>(other_value)); }
   void set_value(const Base_Type* other_value) { *this = *(static_cast<const VALUE_ARRAY*>(other_value)); }
   Base_Type* clone() const { return new VALUE_ARRAY(*this); }
@@ -392,9 +392,11 @@ void VALUE_ARRAY<T_type,array_size,index_offset>::set_param(
   
   param.basic_check(Module_Param::BC_VALUE, "array value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()!=array_size) {
@@ -418,6 +420,7 @@ void VALUE_ARRAY<T_type,array_size,index_offset>::set_param(
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 template <typename T_type, unsigned int array_size, int index_offset>
 Module_Param* VALUE_ARRAY<T_type,array_size,index_offset>::get_param
   (Module_Param_Name& param_name) const
@@ -449,6 +452,7 @@ Module_Param* VALUE_ARRAY<T_type,array_size,index_offset>::get_param
   values.clear();
   return mp;
 }
+#endif
 
 template <typename T_type, unsigned int array_size, int index_offset>
 void VALUE_ARRAY<T_type,array_size,index_offset>::encode_text
@@ -726,7 +730,6 @@ public:
                  match_value, boolean legacy = FALSE) const;
 
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
 
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
@@ -735,6 +738,7 @@ public:
   boolean match_omit(boolean legacy = FALSE) const;
 
 #ifdef TITAN_RUNTIME_2
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void valueofv(Base_Type* value) const { *(static_cast<VALUE_ARRAY<T_value_type, array_size, index_offset>*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const VALUE_ARRAY<T_value_type, array_size, index_offset>*>(other_value)); }
@@ -1531,9 +1535,11 @@ void TEMPLATE_ARRAY<T_value_type,T_template_type,array_size,index_offset>::set_p
   param.basic_check(Module_Param::BC_TEMPLATE, "array template");
   
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
@@ -1576,6 +1582,7 @@ void TEMPLATE_ARRAY<T_value_type,T_template_type,array_size,index_offset>::set_p
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 template <typename T_value_type, typename T_template_type,
           unsigned int array_size, int index_offset>
 Module_Param* TEMPLATE_ARRAY<T_value_type,T_template_type,array_size,index_offset>::
@@ -1639,6 +1646,7 @@ Module_Param* TEMPLATE_ARRAY<T_value_type,T_template_type,array_size,index_offse
   }
   return mp;
 }
+#endif
 
 template <typename T_value_type, typename T_template_type,
           unsigned int array_size, int index_offset>

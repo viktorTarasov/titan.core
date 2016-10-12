@@ -49,12 +49,12 @@ all: $(GENERATED_DIRS)
 $(DIR_SINGLE):
 	mkdir $@
 	cd $@ && for file in $(FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) -s ./* && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) $(RT2_FLAG) -s ./* && $(MAKE_PROG)
 
 $(DIR_PARALLEL):
 	mkdir $@
 	cd $@ && for file in $(FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) ./* && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) $(RT2_FLAG) ./* && $(MAKE_PROG)
 
 run: $(GENERATED_DIRS)
 	cd $(DIR_SINGLE) && ./$(RUNNABLE) $(CFG) 

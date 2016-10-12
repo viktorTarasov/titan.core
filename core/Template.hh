@@ -115,10 +115,13 @@ public:
     * templates, as the list of templates might contain a reference to this object.
     * @param param module parameter value (its ID specifies which object is to be set) */
   VIRTUAL_IF_RUNTIME_2 void set_param(Module_Param& param);
+  
+#ifdef TITAN_RUNTIME_2
   /** Create a module parameter value equivalent to this object (or one of its
     * fields/elements)
     * @param param_name module parameter ID, specifies which object to convert */
-  VIRTUAL_IF_RUNTIME_2 Module_Param* get_param(Module_Param_Name& param_name) const;
+  virtual Module_Param* get_param(Module_Param_Name& param_name) const;
+#endif
   
   /** not a component by default (component templates will return true) */
   inline boolean is_component() { return FALSE; }

@@ -1000,7 +1000,7 @@ namespace Common {
     } else has_set_param = false;
     // get_param function
     bool has_get_param;
-    if (output->functions.get_param) {
+    if (use_runtime_2 && output->functions.get_param) {
       output->source.static_function_prototypes = mputprintf(output->source.static_function_prototypes,
         "%sModule_Param* get_module_param(Module_Param_Name& param_name);\n", split_to_slices ? "extern " : "static ");
       output->source.static_function_bodies = mputprintf(output->source.static_function_bodies,

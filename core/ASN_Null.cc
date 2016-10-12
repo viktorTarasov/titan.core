@@ -89,13 +89,16 @@ void ASN_NULL::log() const
 void ASN_NULL::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "NULL value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   if (mp->get_type()!=Module_Param::MP_Asn_Null) param.type_error("NULL value");
   bound_flag = TRUE;
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* ASN_NULL::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!is_bound()) {
@@ -103,6 +106,7 @@ Module_Param* ASN_NULL::get_param(Module_Param_Name& /* param_name */) const
   }
   return new Module_Param_Asn_Null();
 }
+#endif
 
 void ASN_NULL::encode_text(Text_Buf&) const
 {
@@ -548,9 +552,11 @@ void ASN_NULL_template::log_match(const ASN_NULL& match_value,
 void ASN_NULL_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "NULL template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -580,6 +586,7 @@ void ASN_NULL_template::set_param(Module_Param& param) {
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* ASN_NULL_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -619,6 +626,7 @@ Module_Param* ASN_NULL_template::get_param(Module_Param_Name& param_name) const
   }
   return mp;
 }
+#endif
 
 void ASN_NULL_template::encode_text(Text_Buf& text_buf) const
 {

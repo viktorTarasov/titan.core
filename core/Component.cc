@@ -138,9 +138,11 @@ void COMPONENT::kill() const
 void COMPONENT::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "component reference (integer or null) value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   if (Ttcn_String_Parsing::happening() || Debugger_Value_Parsing::happening()) {
     // accept all component values in case it's a string2ttcn operation or
     // an overwrite operation through the debugger
@@ -170,6 +172,7 @@ void COMPONENT::set_param(Module_Param& param) {
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* COMPONENT::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!is_bound()) {
@@ -177,6 +180,7 @@ Module_Param* COMPONENT::get_param(Module_Param_Name& /* param_name */) const
   }
   return new Module_Param_Ttcn_Null();
 }
+#endif
 
 void COMPONENT::encode_text(Text_Buf& text_buf) const
 {
@@ -653,9 +657,11 @@ void COMPONENT_template::log_match(const COMPONENT& match_value,
 void COMPONENT_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "component reference (integer or null) template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -694,6 +700,7 @@ void COMPONENT_template::set_param(Module_Param& param) {
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* COMPONENT_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -746,6 +753,7 @@ Module_Param* COMPONENT_template::get_param(Module_Param_Name& param_name) const
   }
   return mp;
 }
+#endif
 
 void COMPONENT_template::encode_text(Text_Buf& text_buf) const
 {

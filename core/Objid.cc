@@ -231,9 +231,11 @@ void OBJID::log() const
 void OBJID::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "objid value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   if (mp->get_type()!=Module_Param::MP_Objid) param.type_error("objid value");
   if (sizeof(objid_element)!=sizeof(int)) TTCN_error("Internal error: OBJID::set_param()");
   clean_up();
@@ -241,15 +243,17 @@ void OBJID::set_param(Module_Param& param) {
   memcpy(val_ptr->components_ptr, mp->get_string_data(), val_ptr->n_components * sizeof(objid_element));
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* OBJID::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!is_bound()) {
     return new Module_Param_Unbound();
   }
-  int* val_cpy = (int *)Malloc(val_ptr->n_components);
+  int* val_cpy = (int *)Malloc(val_ptr->n_components * sizeof(int));
   memcpy(val_cpy, val_ptr->components_ptr, val_ptr->n_components * sizeof(int));
   return new Module_Param_Objid(val_ptr->n_components, val_cpy);
 }
+#endif
 
 void OBJID::encode_text(Text_Buf& text_buf) const
 {
@@ -901,9 +905,11 @@ void OBJID_template::log_match(const OBJID& match_value,
 void OBJID_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "objid template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -937,6 +943,7 @@ void OBJID_template::set_param(Module_Param& param) {
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* OBJID_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -976,6 +983,7 @@ Module_Param* OBJID_template::get_param(Module_Param_Name& param_name) const
   }
   return mp;
 }
+#endif
 
 void OBJID_template::encode_text(Text_Buf& text_buf) const
 {

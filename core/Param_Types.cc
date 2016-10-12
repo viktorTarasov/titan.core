@@ -260,10 +260,12 @@ char* Module_Param::get_enumerated() const {
   return NULL;
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param_Ptr Module_Param::get_referenced_param() const {
   TTCN_error("Internal error: Module_Param::get_referenced_param()");
   return NULL;
 }
+#endif
 
 Module_Param::expression_operand_t Module_Param::get_expr_type() const { 
   TTCN_error("Internal error: Module_Param::get_expr_type()");
@@ -317,6 +319,7 @@ Module_Param_Ptr& Module_Param_Ptr::operator=(const Module_Param_Ptr& r) {
   return *this;
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param_Reference::Module_Param_Reference(Module_Param_Name* p): mp_ref(p) {
   if (mp_ref == NULL) {
     TTCN_error("Internal error: Module_Param_Reference::Module_Param_Reference()");
@@ -347,6 +350,7 @@ void Module_Param_Reference::log_value() const {
 void Module_Param_Unbound::log_value() const {
   TTCN_Logger::log_event_str("<unbound>");
 }
+#endif
 
 Module_Param_Expression::Module_Param_Expression(expression_operand_t p_type,
   Module_Param* p_op1, Module_Param* p_op2)
@@ -725,11 +729,23 @@ void Module_Param::type_error(const char* expected, const char* type_name /* = N
     }
     // either use this parameter's or the referenced parameter's type string
     // (but never the head's type string)
-    reporter->error("Type mismatch: %s or reference to %s was expected%s%s instead of %s%s.",
-      expected, expected,
+    reporter->error("Type mismatch: %s "
+#ifdef TITAN_RUNTIME_2
+    "or reference to %s "
+#endif
+    "was expected%s%s instead of %s%s.",
+      expected,
+#ifdef TITAN_RUNTIME_2
+      expected,
+#endif
       (type_name != NULL) ? " for type " : "", (type_name != NULL) ? type_name : "",
+#ifdef TITAN_RUNTIME_2
       (get_type() == MP_Reference) ? "reference to " : "",
-      (get_type() == MP_Reference) ? get_referenced_param()->get_type_str() : get_type_str());
+      (get_type() == MP_Reference) ? get_referenced_param()->get_type_str() : get_type_str()
+#else
+      "", get_type_str()
+#endif
+      );
   }
 }
 

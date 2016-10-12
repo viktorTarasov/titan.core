@@ -186,11 +186,13 @@ void Base_Template::set_param(Module_Param& /*param*/)
   TTCN_error("Internal error: Base_Template::set_param()");
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* Base_Template::get_param(Module_Param_Name& /* param_name */) const
 {
   TTCN_error("Internal error: Base_Template::get_param()");
   return NULL;
 }
+#endif
 
 Restricted_Length_Template::Restricted_Length_Template()
 {
