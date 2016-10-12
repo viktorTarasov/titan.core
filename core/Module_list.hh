@@ -52,7 +52,9 @@ public:
     const char *component_type, boolean init_base_comps);
 
   static void set_param(Module_Param& param);
+#ifdef TITAN_RUNTIME_2
   static Module_Param* get_param(Module_Param_Name& param_name);
+#endif
   static void log_param();
 
   static void execute_control(const char *module_name);

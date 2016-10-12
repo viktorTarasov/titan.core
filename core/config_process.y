@@ -572,7 +572,18 @@ ParameterReference:
   // these will be sorted out later during set_param()
   ParameterNameSegment
   {
+#ifdef TITAN_RUNTIME_2
     $$ = new Module_Param_Reference(new Module_Param_Name(*$1));
+#else
+    // no references allowed in RT1, so the name segment must be an enumerated value
+    // (which means it can only contain 1 name)
+    if ($1->size() != 1) {
+      config_process_error("Module parameter references are not allowed in the "
+        "Load Test Runtime.");
+    }
+    $$ = new Module_Param_Enumerated($1->front());
+#endif
+    delete $1;
   }
 ;
 

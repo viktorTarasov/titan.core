@@ -16,7 +16,10 @@ include $(TOPDIR)/Makefile.regression
 unexport ABS_SRC
 unexport SRCDIR
 
-DIRS := assignment concat references
+DIRS := assignment concat
+ifdef RT2
+DIRS += references
+endif
 
 # List of fake targets:
 .PHONY: all dep clean run $(DIRS) $(addsuffix /, $(DIRS)) profile

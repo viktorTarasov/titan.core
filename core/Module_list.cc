@@ -203,6 +203,7 @@ void Module_List::set_param(Module_Param& param)
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* Module_List::get_param(Module_Param_Name& param_name)
 {
   // The first segment in the parameter name can either be the module name,
@@ -258,6 +259,7 @@ Module_Param* Module_List::get_param(Module_Param_Name& param_name)
 
   return param;
 }
+#endif
 
 void Module_List::log_param()
 {

@@ -381,7 +381,9 @@ void defEnumClass(const enum_def *edef, output_struct *output)
     (src,
      "void %s::set_param(Module_Param& param)\n"
      "{\n"
-     "  param.basic_check(Module_Param::BC_VALUE, \"enumerated value\");\n"
+     "  param.basic_check(Module_Param::BC_VALUE, \"enumerated value\");\n", name);
+  if (use_runtime_2) {
+    src = mputprintf(src,
      "  Module_Param_Ptr m_p = &param;\n"
      "  if (param.get_type() == Module_Param::MP_Reference) {\n"
      /* enumerated values are also treated as references (containing only 1 name) by the parser;
@@ -394,24 +396,29 @@ void defEnumClass(const enum_def *edef, output_struct *output)
      "    }\n"
      /* it's not a valid enum value => dereference it! */
      "    m_p = param.get_referenced_param();\n"
-     "  }\n"
-     "  if (m_p->get_type()!=Module_Param::MP_Enumerated) param.type_error(\"enumerated value\", \"%s\");\n"
-     "  enum_value = str_to_enum(m_p->get_enumerated());\n"
+     "  }\n", unknown_value);
+  }
+  src = mputprintf(src,
+     "  if (%sget_type()!=Module_Param::MP_Enumerated) param.type_error(\"enumerated value\", \"%s\");\n"
+     "  enum_value = str_to_enum(%sget_enumerated());\n"
      "  if (!is_valid_enum(enum_value)) {\n"
      "    param.error(\"Invalid enumerated value for type %s.\");\n"
      "  }\n"
-     "}\n\n", name, unknown_value, dispname, dispname);
+     "}\n\n", use_runtime_2 ? "m_p->" : "param.", dispname,
+     use_runtime_2 ? "m_p->" : "param.", dispname);
   
-  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-  src = mputprintf
-    (src,
-    "Module_Param* %s::get_param(Module_Param_Name& /* param_name */) const\n"
-    "{\n"
-    "  if (!is_bound()) {\n"
-    "    return new Module_Param_Unbound();\n"
-    "  }\n"
-    "  return new Module_Param_Enumerated(mcopystr(enum_to_str(enum_value)));\n"
-    "}\n\n", name);
+  if (use_runtime_2) {
+    def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+    src = mputprintf
+      (src,
+      "Module_Param* %s::get_param(Module_Param_Name& /* param_name */) const\n"
+      "{\n"
+      "  if (!is_bound()) {\n"
+      "    return new Module_Param_Unbound();\n"
+      "  }\n"
+      "  return new Module_Param_Enumerated(mcopystr(enum_to_str(enum_value)));\n"
+      "}\n\n", name);
+  }
 
   /* encoders/decoders */
   def = mputstr(def, "void encode_text(Text_Buf& text_buf) const;\n");
@@ -1359,7 +1366,9 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "void %s_template::set_param(Module_Param& param)\n"
     "{\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"enumerated template\");\n"
-    "  Module_Param_Ptr m_p = &param;\n"
+    "  Module_Param_Ptr m_p = &param;\n", name);
+  if (use_runtime_2) {
+    src = mputprintf(src,
     "  if (param.get_type() == Module_Param::MP_Reference) {\n"
     /* enumerated values are also treated as references (containing only 1 name) by the parser;
        first check if the reference name is a valid enumerated value */
@@ -1373,7 +1382,9 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "    }\n"
     /* it's not a valid enum value => dereference it! */
     "    m_p = param.get_referenced_param();\n"
-    "  }\n"
+    "  }\n", enum_type, name, unknown_value, name);
+  }
+  src = mputprintf(src,
     "  switch (m_p->get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
@@ -1404,53 +1415,55 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
     "  default:\n"
     "    param.type_error(\"enumerated template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent() || m_p->get_ifpresent();\n"
-    "}\n\n", name, enum_type, name, unknown_value, name
-    , name, enum_type, name, name, dispname, dispname);
+    "  is_ifpresent = param.get_ifpresent()%s;\n"
+    "}\n\n", name, enum_type, name, name, dispname, dispname,
+    use_runtime_2 ? " || m_p->get_ifpresent()" : "");
 
-  /* get_param() */
-  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-  src = mputprintf
-    (src,
-    "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
-    "{\n"
-    "  Module_Param* m_p = NULL;\n"
-    "  switch (template_selection) {\n"
-    "  case UNINITIALIZED_TEMPLATE:\n"
-    "    m_p = new Module_Param_Unbound();\n"
-    "    break;\n"
-    "  case OMIT_VALUE:\n"
-    "    m_p = new Module_Param_Omit();\n"
-    "    break;\n"
-    "  case ANY_VALUE:\n"
-    "    m_p = new Module_Param_Any();\n"
-    "    break;\n"
-    "  case ANY_OR_OMIT:\n"
-    "    m_p = new Module_Param_AnyOrNone();\n"
-    "    break;\n"
-    "  case SPECIFIC_VALUE:\n"
-    "    m_p = new Module_Param_Enumerated(mcopystr(%s::enum_to_str(single_value)));\n"
-    "    break;\n"
-    "  case VALUE_LIST:\n"
-    "  case COMPLEMENTED_LIST: {\n"
-    "    if (template_selection == VALUE_LIST) {\n"
-    "      m_p = new Module_Param_List_Template();\n"
-    "    }\n"
-    "    else {\n"
-    "      m_p = new Module_Param_ComplementList_Template();\n"
-    "    }\n"
-    "    for (size_t i_i = 0; i_i < value_list.n_values; ++i_i) {\n"
-    "      m_p->add_elem(value_list.list_value[i_i].get_param(param_name));\n"
-    "    }\n"
-    "    break; }\n"
-    "  default:\n"
-    "    break;\n"
-    "  }\n"
-    "  if (is_ifpresent) {\n"
-    "    m_p->set_ifpresent();\n"
-    "  }\n"
-    "  return m_p;\n"
-    "}\n\n", name, name);
+  /* get_param(), RT2 only */
+  if (use_runtime_2) {
+    def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+    src = mputprintf
+      (src,
+      "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
+      "{\n"
+      "  Module_Param* m_p = NULL;\n"
+      "  switch (template_selection) {\n"
+      "  case UNINITIALIZED_TEMPLATE:\n"
+      "    m_p = new Module_Param_Unbound();\n"
+      "    break;\n"
+      "  case OMIT_VALUE:\n"
+      "    m_p = new Module_Param_Omit();\n"
+      "    break;\n"
+      "  case ANY_VALUE:\n"
+      "    m_p = new Module_Param_Any();\n"
+      "    break;\n"
+      "  case ANY_OR_OMIT:\n"
+      "    m_p = new Module_Param_AnyOrNone();\n"
+      "    break;\n"
+      "  case SPECIFIC_VALUE:\n"
+      "    m_p = new Module_Param_Enumerated(mcopystr(%s::enum_to_str(single_value)));\n"
+      "    break;\n"
+      "  case VALUE_LIST:\n"
+      "  case COMPLEMENTED_LIST: {\n"
+      "    if (template_selection == VALUE_LIST) {\n"
+      "      m_p = new Module_Param_List_Template();\n"
+      "    }\n"
+      "    else {\n"
+      "      m_p = new Module_Param_ComplementList_Template();\n"
+      "    }\n"
+      "    for (size_t i_i = 0; i_i < value_list.n_values; ++i_i) {\n"
+      "      m_p->add_elem(value_list.list_value[i_i].get_param(param_name));\n"
+      "    }\n"
+      "    break; }\n"
+      "  default:\n"
+      "    break;\n"
+      "  }\n"
+      "  if (is_ifpresent) {\n"
+      "    m_p->set_ifpresent();\n"
+      "  }\n"
+      "  return m_p;\n"
+      "}\n\n", name, name);
+  }
 
   if (!use_runtime_2) {
     /* check template restriction */

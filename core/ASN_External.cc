@@ -1000,9 +1000,11 @@ void EXTERNAL_identification::log() const
 void EXTERNAL_identification::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "union value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   if (mp->get_type()==Module_Param::MP_Value_List && mp->get_size()==0) return;
   if (mp->get_type()!=Module_Param::MP_Assignment_List) {
     param.error("union value with field name was expected");
@@ -1035,6 +1037,7 @@ void EXTERNAL_identification::set_param(Module_Param& param) {
   mp_last->error("Field %s does not exist in type EXTERNAL.identification.", mp_last->get_id()->get_name());
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EXTERNAL_identification::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -1074,14 +1077,17 @@ Module_Param* EXTERNAL_identification::get_param(Module_Param_Name& param_name) 
   mp->add_elem(mp_field);
   return mp;
 }
+#endif
 
 void EXTERNAL_identification_template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "union template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -1140,6 +1146,7 @@ void EXTERNAL_identification_template::set_param(Module_Param& param)
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EXTERNAL_identification_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -1209,6 +1216,7 @@ Module_Param* EXTERNAL_identification_template::get_param(Module_Param_Name& par
   }
   return mp;
 }
+#endif
 
 void EXTERNAL_identification::encode_text(Text_Buf& text_buf) const
 {
@@ -2047,9 +2055,11 @@ void EXTERNAL_identification_syntaxes::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()==0) return;
@@ -2086,6 +2096,7 @@ void EXTERNAL_identification_syntaxes::set_param(Module_Param& param)
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EXTERNAL_identification_syntaxes::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -2100,6 +2111,7 @@ Module_Param* EXTERNAL_identification_syntaxes::get_param(Module_Param_Name& par
   mp->add_elem(mp_field_transfer);
   return mp;
 }
+#endif
 
 void EXTERNAL_identification_syntaxes::encode_text(Text_Buf& text_buf) const
 {
@@ -2122,9 +2134,11 @@ void EXTERNAL_identification_syntaxes_template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "record template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -2181,6 +2195,7 @@ void EXTERNAL_identification_syntaxes_template::set_param(Module_Param& param)
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EXTERNAL_identification_syntaxes_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -2226,6 +2241,7 @@ Module_Param* EXTERNAL_identification_syntaxes_template::get_param(Module_Param_
   }
   return mp;
 }
+#endif
 
 void EXTERNAL_identification_syntaxes_template::clean_up()
 {
@@ -2685,9 +2701,11 @@ void EXTERNAL_identification_context__negotiation::set_param(Module_Param& param
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()==0) return;
@@ -2724,6 +2742,7 @@ void EXTERNAL_identification_context__negotiation::set_param(Module_Param& param
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EXTERNAL_identification_context__negotiation::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -2738,6 +2757,7 @@ Module_Param* EXTERNAL_identification_context__negotiation::get_param(Module_Par
   mp->add_elem(mp_field_transfer_syntax);
   return mp;
 }
+#endif
 
 void EXTERNAL_identification_context__negotiation::encode_text(Text_Buf& text_buf) const
 {
@@ -2760,9 +2780,11 @@ void EXTERNAL_identification_context__negotiation_template::set_param(Module_Par
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "record template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -2819,6 +2841,7 @@ void EXTERNAL_identification_context__negotiation_template::set_param(Module_Par
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EXTERNAL_identification_context__negotiation_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -2864,6 +2887,7 @@ Module_Param* EXTERNAL_identification_context__negotiation_template::get_param(M
   }
   return mp;
 }
+#endif
 
 void EXTERNAL_identification_context__negotiation_template::clean_up()
 {
@@ -3332,9 +3356,11 @@ void EXTERNAL::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()==0) return;
@@ -3379,6 +3405,7 @@ void EXTERNAL::set_param(Module_Param& param)
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EXTERNAL::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -3396,6 +3423,7 @@ Module_Param* EXTERNAL::get_param(Module_Param_Name& param_name) const
   mp->add_elem(mp_field_data_value);
   return mp;
 }
+#endif
 
 void EXTERNAL::encode_text(Text_Buf& text_buf) const
 {
@@ -3508,9 +3536,11 @@ void EXTERNAL_template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "record template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -3575,6 +3605,7 @@ void EXTERNAL_template::set_param(Module_Param& param)
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EXTERNAL_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -3623,6 +3654,7 @@ Module_Param* EXTERNAL_template::get_param(Module_Param_Name& param_name) const
   }
   return mp;
 }
+#endif
 
 void EXTERNAL_template::clean_up()
 {

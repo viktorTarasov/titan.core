@@ -376,9 +376,11 @@ void EMBEDDED_PDV_identification::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "union value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   if (mp->get_type()==Module_Param::MP_Value_List && mp->get_size()==0) return;
   if (mp->get_type()!=Module_Param::MP_Assignment_List) {
     param.error("union value with field name was expected");
@@ -411,6 +413,7 @@ void EMBEDDED_PDV_identification::set_param(Module_Param& param)
   mp_last->error("Field %s does not exist in type EMBEDDED PDV.identification.", mp_last->get_id()->get_name());
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EMBEDDED_PDV_identification::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -449,14 +452,17 @@ Module_Param* EMBEDDED_PDV_identification::get_param(Module_Param_Name& param_na
   mp->add_elem(mp_field);
   return mp;
 }
+#endif
 
 void EMBEDDED_PDV_identification_template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "union template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -515,6 +521,7 @@ void EMBEDDED_PDV_identification_template::set_param(Module_Param& param)
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EMBEDDED_PDV_identification_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -584,6 +591,7 @@ Module_Param* EMBEDDED_PDV_identification_template::get_param(Module_Param_Name&
   }
   return mp;
 }
+#endif
 
 void EMBEDDED_PDV_identification::encode_text(Text_Buf& text_buf) const
 {
@@ -1656,9 +1664,11 @@ void EMBEDDED_PDV_identification_syntaxes::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()==0) return;
@@ -1695,6 +1705,7 @@ void EMBEDDED_PDV_identification_syntaxes::set_param(Module_Param& param)
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EMBEDDED_PDV_identification_syntaxes::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -1709,6 +1720,7 @@ Module_Param* EMBEDDED_PDV_identification_syntaxes::get_param(Module_Param_Name&
   mp->add_elem(mp_field_transfer);
   return mp;
 }
+#endif
 
 void EMBEDDED_PDV_identification_syntaxes::encode_text(Text_Buf& text_buf) const
 {
@@ -1825,9 +1837,11 @@ void EMBEDDED_PDV_identification_syntaxes_template::set_param(Module_Param& para
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "record template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -1884,6 +1898,7 @@ void EMBEDDED_PDV_identification_syntaxes_template::set_param(Module_Param& para
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EMBEDDED_PDV_identification_syntaxes_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -1929,6 +1944,7 @@ Module_Param* EMBEDDED_PDV_identification_syntaxes_template::get_param(Module_Pa
   }
   return mp;
 }
+#endif
 
 void EMBEDDED_PDV_identification_syntaxes_template::clean_up()
 {
@@ -2388,9 +2404,11 @@ void EMBEDDED_PDV_identification_context__negotiation::set_param(Module_Param& p
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()==0) return;
@@ -2427,6 +2445,7 @@ void EMBEDDED_PDV_identification_context__negotiation::set_param(Module_Param& p
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EMBEDDED_PDV_identification_context__negotiation::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -2441,6 +2460,7 @@ Module_Param* EMBEDDED_PDV_identification_context__negotiation::get_param(Module
   mp->add_elem(mp_field_transfer_syntax);
   return mp;
 }
+#endif
 
 void EMBEDDED_PDV_identification_context__negotiation::encode_text(Text_Buf& text_buf) const
 {
@@ -2558,9 +2578,11 @@ void EMBEDDED_PDV_identification_context__negotiation_template::set_param(Module
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "record template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -2617,6 +2639,7 @@ void EMBEDDED_PDV_identification_context__negotiation_template::set_param(Module
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EMBEDDED_PDV_identification_context__negotiation_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -2662,6 +2685,7 @@ Module_Param* EMBEDDED_PDV_identification_context__negotiation_template::get_par
   }
   return mp;
 }
+#endif
 
 void EMBEDDED_PDV_identification_context__negotiation_template::clean_up()
 {
@@ -3130,9 +3154,11 @@ void EMBEDDED_PDV::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "record value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Value_List:
     if (mp->get_size()==0) return;
@@ -3177,6 +3203,7 @@ void EMBEDDED_PDV::set_param(Module_Param& param)
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EMBEDDED_PDV::get_param(Module_Param_Name& param_name) const
 {
   if (!is_bound()) {
@@ -3194,6 +3221,7 @@ Module_Param* EMBEDDED_PDV::get_param(Module_Param_Name& param_name) const
   mp->add_elem(mp_field_data_value);
   return mp;
 }
+#endif
 
 void EMBEDDED_PDV::encode_text(Text_Buf& text_buf) const
 {
@@ -3419,9 +3447,11 @@ void EMBEDDED_PDV_template::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_TEMPLATE, "record template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -3486,6 +3516,7 @@ void EMBEDDED_PDV_template::set_param(Module_Param& param)
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* EMBEDDED_PDV_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -3534,6 +3565,7 @@ Module_Param* EMBEDDED_PDV_template::get_param(Module_Param_Name& param_name) co
   }
   return mp;
 }
+#endif
 
 void EMBEDDED_PDV_template::clean_up()
 {

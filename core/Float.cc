@@ -262,9 +262,11 @@ void FLOAT::log() const
 void FLOAT::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "float value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Float: {
     clean_up();
@@ -316,6 +318,7 @@ void FLOAT::set_param(Module_Param& param) {
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* FLOAT::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!bound_flag) {
@@ -323,6 +326,7 @@ Module_Param* FLOAT::get_param(Module_Param_Name& /* param_name */) const
   }
   return new Module_Param_Float(float_value);
 }
+#endif
 
 void FLOAT::encode_text(Text_Buf& text_buf) const
 {
@@ -1431,9 +1435,11 @@ void FLOAT_template::log_match(const FLOAT& match_value,
 void FLOAT_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "float template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -1507,6 +1513,7 @@ void FLOAT_template::set_param(Module_Param& param) {
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* FLOAT_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -1551,6 +1558,7 @@ Module_Param* FLOAT_template::get_param(Module_Param_Name& param_name) const
   }
   return mp;
 }
+#endif
 
 void FLOAT_template::encode_text(Text_Buf& text_buf) const
 {

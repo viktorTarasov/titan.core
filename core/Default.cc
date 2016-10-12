@@ -153,13 +153,16 @@ void DEFAULT::log() const
 void DEFAULT::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "default reference (null) value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   if (mp->get_type()!=Module_Param::MP_Ttcn_Null) param.type_error("default reference (null) value");
   default_ptr = NULL;
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* DEFAULT::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!is_bound()) {
@@ -167,6 +170,7 @@ Module_Param* DEFAULT::get_param(Module_Param_Name& /* param_name */) const
   }
   return new Module_Param_Ttcn_Null();
 }
+#endif
 
 void DEFAULT::encode_text(Text_Buf&) const
 {
@@ -464,9 +468,11 @@ void DEFAULT_template::log_match(const DEFAULT& match_value,
 void DEFAULT_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "default reference (null) template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -496,6 +502,7 @@ void DEFAULT_template::set_param(Module_Param& param) {
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* DEFAULT_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -535,6 +542,7 @@ Module_Param* DEFAULT_template::get_param(Module_Param_Name& param_name) const
   }
   return mp;
 }
+#endif
 
 void DEFAULT_template::encode_text(Text_Buf&) const
 {

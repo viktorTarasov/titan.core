@@ -87,11 +87,11 @@ public:
   void set_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL_identification*>(other_value)); }
   Base_Type* clone() const { return new EXTERNAL_identification(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &EXTERNAL_descr_; }
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 #else
   inline boolean is_present() const { return is_bound(); }
 #endif
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 };
@@ -157,8 +157,8 @@ public:
   boolean is_present(boolean legacy = FALSE) const;
   boolean match_omit(boolean legacy = FALSE) const;
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
 #ifdef TITAN_RUNTIME_2
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void valueofv(Base_Type* value) const { *(static_cast<EXTERNAL_identification*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL_identification*>(other_value)); }
@@ -200,11 +200,11 @@ public:
   void set_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL_identification_syntaxes*>(other_value)); }
   Base_Type* clone() const { return new EXTERNAL_identification_syntaxes(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &EXTERNAL_descr_; }
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 #else
   inline boolean is_present() const { return is_bound(); }
 #endif
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 };
@@ -258,8 +258,8 @@ public:
   boolean is_present(boolean legacy = FALSE) const;
   boolean match_omit(boolean legacy = FALSE) const;
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
 #ifdef TITAN_RUNTIME_2
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void valueofv(Base_Type* value) const { *(static_cast<EXTERNAL_identification_syntaxes*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL_identification_syntaxes*>(other_value)); }
@@ -301,11 +301,11 @@ public:
   void set_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL_identification_context__negotiation*>(other_value)); }
   Base_Type* clone() const { return new EXTERNAL_identification_context__negotiation(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &EXTERNAL_descr_; }
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 #else
   inline boolean is_present() const { return is_bound(); }
 #endif
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 };
@@ -359,8 +359,8 @@ public:
   boolean is_present(boolean legacy = FALSE) const;
   boolean match_omit(boolean legacy = FALSE) const;
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
 #ifdef TITAN_RUNTIME_2
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void valueofv(Base_Type* value) const { *(static_cast<EXTERNAL_identification_context__negotiation*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL_identification_context__negotiation*>(other_value)); }
@@ -410,11 +410,11 @@ public:
   void set_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL*>(other_value)); }
   Base_Type* clone() const { return new EXTERNAL(*this); }
   const TTCN_Typedescriptor_t* get_descriptor() const { return &EXTERNAL_descr_; }
+  Module_Param* get_param(Module_Param_Name& param_name) const;
 #else
   inline boolean is_present() const { return is_bound(); }
 #endif
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
   void encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTCN_EncDec::coding_t p_coding, ...) const;
@@ -478,8 +478,8 @@ public:
   boolean is_present(boolean legacy = FALSE) const;
   boolean match_omit(boolean legacy = FALSE) const;
   void set_param(Module_Param& param);
-  Module_Param* get_param(Module_Param_Name& param_name) const;
 #ifdef TITAN_RUNTIME_2
+  Module_Param* get_param(Module_Param_Name& param_name) const;
   void valueofv(Base_Type* value) const { *(static_cast<EXTERNAL*>(value)) = valueof(); }
   void set_value(template_sel other_value) { *this = other_value; }
   void copy_value(const Base_Type* other_value) { *this = *(static_cast<const EXTERNAL*>(other_value)); }

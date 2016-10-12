@@ -3845,10 +3845,12 @@ namespace Ttcn {
       "modulepar_%s.set_param(param);\n"
       "return TRUE;\n"
       "} else ", dispname, name);
-    target->functions.get_param = mputprintf(target->functions.get_param,
-      "if (!strcmp(par_name, \"%s\")) {\n"
-      "return modulepar_%s.get_param(param_name);\n"
-      "} else ", dispname, name);
+    if (use_runtime_2) {
+      target->functions.get_param = mputprintf(target->functions.get_param,
+        "if (!strcmp(par_name, \"%s\")) {\n"
+        "return modulepar_%s.get_param(param_name);\n"
+        "} else ", dispname, name);
+    }
 
     if (target->functions.log_param) {
       // this is not the first modulepar

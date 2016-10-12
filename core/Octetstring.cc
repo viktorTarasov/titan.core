@@ -517,9 +517,11 @@ void OCTETSTRING::log() const
 void OCTETSTRING::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, "octetstring value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Octetstring:
     switch (param.get_operation_type()) {
@@ -561,6 +563,7 @@ void OCTETSTRING::set_param(Module_Param& param) {
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* OCTETSTRING::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!is_bound()) {
@@ -570,6 +573,7 @@ Module_Param* OCTETSTRING::get_param(Module_Param_Name& /* param_name */) const
   memcpy(val_cpy, val_ptr->octets_ptr, val_ptr->n_octets);
   return new Module_Param_Octetstring(val_ptr->n_octets, val_cpy);
 }
+#endif
 
 void OCTETSTRING::encode_text(Text_Buf& text_buf) const
 {
@@ -2025,9 +2029,11 @@ void OCTETSTRING_template::log_match(const OCTETSTRING& match_value,
 void OCTETSTRING_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE|Module_Param::BC_LIST, "octetstring template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -2077,6 +2083,7 @@ void OCTETSTRING_template::set_param(Module_Param& param) {
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* OCTETSTRING_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -2127,6 +2134,7 @@ Module_Param* OCTETSTRING_template::get_param(Module_Param_Name& param_name) con
   mp->set_length_restriction(get_length_range());
   return mp;
 }
+#endif
 
 void OCTETSTRING_template::encode_text(Text_Buf& text_buf) const
 {

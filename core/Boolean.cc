@@ -181,14 +181,17 @@ void BOOLEAN::decode_text(Text_Buf& text_buf)
 void BOOLEAN::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE, "boolean value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   if (mp->get_type()!=Module_Param::MP_Boolean) param.type_error("boolean value");
   bound_flag = TRUE;
   boolean_value = mp->get_boolean();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* BOOLEAN::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!is_bound()) {
@@ -196,6 +199,7 @@ Module_Param* BOOLEAN::get_param(Module_Param_Name& /* param_name */) const
   }
   return new Module_Param_Boolean(boolean_value);
 }
+#endif
 
 void BOOLEAN::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
                      TTCN_EncDec::coding_t p_coding, ...) const
@@ -1037,9 +1041,11 @@ void BOOLEAN_template::log_match(const BOOLEAN& match_value,
 void BOOLEAN_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "boolean template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -1069,6 +1075,7 @@ void BOOLEAN_template::set_param(Module_Param& param) {
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* BOOLEAN_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -1108,6 +1115,7 @@ Module_Param* BOOLEAN_template::get_param(Module_Param_Name& param_name) const
   }
   return mp;
 }
+#endif
 
 void BOOLEAN_template::encode_text(Text_Buf& text_buf) const
 {

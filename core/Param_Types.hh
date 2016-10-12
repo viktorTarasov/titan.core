@@ -284,7 +284,9 @@ public:
   virtual boolean get_nocase() const;
   virtual verdicttype get_verdict() const;
   virtual char* get_enumerated() const;
+#ifdef TITAN_RUNTIME_2
   virtual Module_Param_Ptr get_referenced_param() const;
+#endif
   virtual expression_operand_t get_expr_type() const;
   virtual const char* get_expr_type_str() const;
   virtual Module_Param* get_operand1() const;
@@ -311,6 +313,7 @@ public:
   Module_Param* operator->() { return ptr->mp_ptr; }
 };
 
+#ifdef TITAN_RUNTIME_2
 /** Module parameter reference (and enumerated value)
   * Stores a reference to another module parameter, that can be retrieved with the
   * method get_referenced_param().
@@ -336,6 +339,7 @@ class Module_Param_Unbound : public Module_Param {
   const char* get_type_str() const { return "<unbound>"; }
   void log_value() const;
 };
+#endif
 
 /** Module parameter expression
   * Contains an unprocessed module parameter expression with one or two operands.

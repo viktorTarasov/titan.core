@@ -654,9 +654,11 @@ boolean CHARSTRING::set_param_internal(Module_Param& param, boolean allow_patter
   boolean is_pattern = FALSE;
   param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, "charstring value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Universal_Charstring:
   case Module_Param::MP_Charstring:
@@ -738,6 +740,7 @@ void CHARSTRING::set_param(Module_Param& param) {
   set_param_internal(param, FALSE);
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARSTRING::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!is_bound()) {
@@ -745,6 +748,7 @@ Module_Param* CHARSTRING::get_param(Module_Param_Name& /* param_name */) const
   }
   return new Module_Param_Charstring(val_ptr->n_chars, mcopystr(val_ptr->chars_ptr));
 }
+#endif
 
 void CHARSTRING::encode_text(Text_Buf& text_buf) const
 {
@@ -2678,9 +2682,11 @@ void CHARSTRING_template::log_match(const CHARSTRING& match_value,
 void CHARSTRING_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE|Module_Param::BC_LIST, "charstring template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -2759,6 +2765,7 @@ void CHARSTRING_template::set_param(Module_Param& param) {
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* CHARSTRING_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -2810,6 +2817,7 @@ Module_Param* CHARSTRING_template::get_param(Module_Param_Name& param_name) cons
   mp->set_length_restriction(get_length_range());
   return mp;
 }
+#endif
 
 void CHARSTRING_template::encode_text(Text_Buf& text_buf) const
 {

@@ -287,12 +287,14 @@ void defFunctionrefClass(const funcref_def *fdef, output_struct *output)
     "  param.error(\"Not supported.\");\n"
     "}\n\n", name);
   
-  /* get_param */
-  def = mputstr(def,"Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-  src = mputprintf(src,"Module_Param* %s::get_param(Module_Param_Name& /* param_name */) const\n"
-    "{\n"
-    "  return NULL;\n"
-    "}\n\n", name);
+  /* get_param, RT2 only */
+  if (use_runtime_2) {
+    def = mputstr(def,"Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+    src = mputprintf(src,"Module_Param* %s::get_param(Module_Param_Name& /* param_name */) const\n"
+      "{\n"
+      "  return NULL;\n"
+      "}\n\n", name);
+  }
 
   /* encode_text / decode_text */
   def = mputstr(def,"void encode_text(Text_Buf& text_buf) const;\n");
@@ -777,12 +779,14 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
     "  param.error(\"Not supported.\");\n"
     "}\n\n", name);
   
-  /* get_param */
-  def = mputstr(def,"Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-  src = mputprintf(src,"Module_Param* %s_template::get_param(Module_Param_Name& /* param_name */) const\n"
-    "{\n"
-    "  return NULL;\n"
-    "}\n\n", name);
+  /* get_param, RT2 only */
+  if (use_runtime_2) {
+    def = mputstr(def,"Module_Param* get_param(Module_Param_Name& param_name) const;\n");
+    src = mputprintf(src,"Module_Param* %s_template::get_param(Module_Param_Name& /* param_name */) const\n"
+      "{\n"
+      "  return NULL;\n"
+      "}\n\n", name);
+  }
 
   if (!use_runtime_2) {
     /* check template restriction */

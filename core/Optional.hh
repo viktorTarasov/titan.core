@@ -271,7 +271,9 @@ public:
 
   void log() const;
   void set_param(Module_Param& param);
+#ifdef TITAN_RUNTIME_2
   Module_Param* get_param(Module_Param_Name& param_name) const;
+#endif
   void encode_text(Text_Buf& text_buf) const;
   void decode_text(Text_Buf& text_buf);
 
@@ -765,6 +767,7 @@ void OPTIONAL<T_type>::set_param(Module_Param& param) {
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 template <typename T_type>
 Module_Param* OPTIONAL<T_type>::get_param(Module_Param_Name& param_name) const
 {
@@ -781,6 +784,7 @@ Module_Param* OPTIONAL<T_type>::get_param(Module_Param_Name& param_name) const
     return new Module_Param_Unbound();
   }
 }
+#endif
 
 template<typename T_type>
 void OPTIONAL<T_type>::encode_text(Text_Buf& text_buf) const

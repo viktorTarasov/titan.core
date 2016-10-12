@@ -600,9 +600,11 @@ void HEXSTRING::decode_text(Text_Buf& text_buf)
 void HEXSTRING::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, "hexstring value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Hexstring:
     switch (param.get_operation_type()) {
@@ -646,6 +648,7 @@ void HEXSTRING::set_param(Module_Param& param) {
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* HEXSTRING::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!is_bound()) {
@@ -656,6 +659,7 @@ Module_Param* HEXSTRING::get_param(Module_Param_Name& /* param_name */) const
   memcpy(val_cpy, val_ptr->nibbles_ptr, n_bytes);
   return new Module_Param_Hexstring(val_ptr->n_nibbles, val_cpy);
 }
+#endif
 
 void HEXSTRING::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
   TTCN_EncDec::coding_t p_coding, ...) const
@@ -1795,9 +1799,11 @@ void HEXSTRING_template::log_match(const HEXSTRING& match_value,
 void HEXSTRING_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE|Module_Param::BC_LIST, "hexstring template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -1847,6 +1853,7 @@ void HEXSTRING_template::set_param(Module_Param& param) {
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* HEXSTRING_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -1895,6 +1902,7 @@ Module_Param* HEXSTRING_template::get_param(Module_Param_Name& param_name) const
   mp->set_length_restriction(get_length_range());
   return mp;
 }
+#endif
 
 void HEXSTRING_template::encode_text(Text_Buf& text_buf) const
 {

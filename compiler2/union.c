@@ -385,15 +385,19 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
      "param.error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
      "  }\n"
      "  param.basic_check(Module_Param::BC_VALUE, \"union value\");\n"
-     "  Module_Param_Ptr m_p = &param;\n"
+     "  Module_Param_Ptr m_p = &param;\n", dispname);
+  if (use_runtime_2) {
+    src = mputstr(src,
      "  if (param.get_type() == Module_Param::MP_Reference) {\n"
      "    m_p = param.get_referenced_param();\n"
-     "  }\n"
+     "  }\n");
+  }
+  src = mputstr(src,
      "  if (m_p->get_type()==Module_Param::MP_Value_List && m_p->get_size()==0) return;\n"
      "  if (m_p->get_type()!=Module_Param::MP_Assignment_List) {\n"
      "    param.error(\"union value with field name was expected\");\n"
      "  }\n"
-     "  Module_Param* mp_last = m_p->get_elem(m_p->get_size()-1);\n", dispname);
+     "  Module_Param* mp_last = m_p->get_elem(m_p->get_size()-1);\n");
 
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, 
@@ -420,53 +424,55 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "  mp_last->error(\"Field %%s does not exist in type %s.\", mp_last->get_id()->get_name());\n"
     "}\n\n", dispname);
   
-  /* get param function */
-  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-  src = mputprintf(src,
-    "Module_Param* %s::get_param(Module_Param_Name& param_name) const\n"
-    "{\n"
-    "  if (!is_bound()) {\n"
-    "    return new Module_Param_Unbound();\n"
-    "  }\n"
-    "  if (param_name.next_name()) {\n"
-    // Haven't reached the end of the module parameter name
-    // => the name refers to one of the fields, not to the whole union
-    "    char* param_field = param_name.get_current_name();\n"
-    "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
-    "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
-    "        \"expected a valid field name for union type `%s'\");\n"
-    "    }\n"
-    "    ", name, dispname);
-  for (i = 0; i < sdef->nElements; i++) {
+  /* get param function, RT2 only */
+  if (use_runtime_2) {
+    def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
     src = mputprintf(src,
-     "if (strcmp(\"%s\", param_field) == 0) {\n"
-     "      return %s%s().get_param(param_name);\n"
-     "    } else ",
-     sdef->elements[i].dispname, at_field, sdef->elements[i].name);
-  }
-  src = mputprintf(src,
-    "TTCN_error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
-    "  }\n"
-    "  Module_Param* mp_field = NULL;\n"
-    "  switch(union_selection) {\n"
-    , name);
-    for (i = 0; i < sdef->nElements; ++i) {
-      src = mputprintf(src, 
-        "  case %s_%s:\n"
-        "    mp_field = field_%s->get_param(param_name);\n"
-        "    mp_field->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
-        "    break;\n"
-        , selection_prefix, sdef->elements[i].name
-        , sdef->elements[i].name, sdef->elements[i].dispname);
+      "Module_Param* %s::get_param(Module_Param_Name& param_name) const\n"
+      "{\n"
+      "  if (!is_bound()) {\n"
+      "    return new Module_Param_Unbound();\n"
+      "  }\n"
+      "  if (param_name.next_name()) {\n"
+      // Haven't reached the end of the module parameter name
+      // => the name refers to one of the fields, not to the whole union
+      "    char* param_field = param_name.get_current_name();\n"
+      "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
+      "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
+      "        \"expected a valid field name for union type `%s'\");\n"
+      "    }\n"
+      "    ", name, dispname);
+    for (i = 0; i < sdef->nElements; i++) {
+      src = mputprintf(src,
+       "if (strcmp(\"%s\", param_field) == 0) {\n"
+       "      return %s%s().get_param(param_name);\n"
+       "    } else ",
+       sdef->elements[i].dispname, at_field, sdef->elements[i].name);
     }
-  src = mputstr(src,
-    "  default:\n"
-    "    break;\n"
-    "  }\n"
-    "  Module_Param_Assignment_List* m_p = new Module_Param_Assignment_List();\n"
-    "  m_p->add_elem(mp_field);\n"
-    "  return m_p;\n"
-    "}\n\n");
+    src = mputprintf(src,
+      "TTCN_error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
+      "  }\n"
+      "  Module_Param* mp_field = NULL;\n"
+      "  switch(union_selection) {\n"
+      , name);
+      for (i = 0; i < sdef->nElements; ++i) {
+        src = mputprintf(src, 
+          "  case %s_%s:\n"
+          "    mp_field = field_%s->get_param(param_name);\n"
+          "    mp_field->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
+          "    break;\n"
+          , selection_prefix, sdef->elements[i].name
+          , sdef->elements[i].name, sdef->elements[i].dispname);
+      }
+    src = mputstr(src,
+      "  default:\n"
+      "    break;\n"
+      "  }\n"
+      "  Module_Param_Assignment_List* m_p = new Module_Param_Assignment_List();\n"
+      "  m_p->add_elem(mp_field);\n"
+      "  return m_p;\n"
+      "}\n\n");
+  }
 
   /* set implicit omit function, recursive */
   def = mputstr(def, "  void set_implicit_omit();\n");
@@ -2902,10 +2908,14 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "param.error(\"Field `%%s' not found in union template type `%s'\", param_field);\n"
     "  }\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"union template\");\n"
-    "  Module_Param_Ptr m_p = &param;\n"
+    "  Module_Param_Ptr m_p = &param;\n", dispname);
+ if (use_runtime_2) {
+   src = mputstr(src,
     "  if (param.get_type() == Module_Param::MP_Reference) {\n"
     "    m_p = param.get_referenced_param();\n"
-    "  }\n"
+    "  }\n");
+ }
+ src = mputprintf(src,
     "  switch (m_p->get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
     "    *this = OMIT_VALUE;\n"
@@ -2932,7 +2942,7 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "    break;\n"
     "  case Module_Param::MP_Assignment_List: {\n"
     "    Module_Param* mp_last = m_p->get_elem(m_p->get_size()-1);\n",
-    dispname, name, dispname);
+    name, dispname);
   for (i = 0; i < sdef->nElements; i++) {
     src = mputprintf(src, 
     "    if (!strcmp(mp_last->get_id()->get_name(), \"%s\")) {\n"
@@ -2946,87 +2956,89 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "  default:\n"
     "    param.type_error(\"union template\", \"%s\");\n"
     "  }\n"
-    "  is_ifpresent = param.get_ifpresent() || m_p->get_ifpresent();\n"
-    "}\n\n", dispname, dispname);
+    "  is_ifpresent = param.get_ifpresent()%s;\n"
+    "}\n\n", dispname, dispname, use_runtime_2 ? " || m_p->get_ifpresent()" : "");
   
-  /* get_param() */
-  def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
-  src = mputprintf(src,
-    "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
-    "{\n"
-    "  if (param_name.next_name()) {\n"
-    // Haven't reached the end of the module parameter name
-    // => the name refers to one of the fields, not to the whole union
-    "    char* param_field = param_name.get_current_name();\n"
-    "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
-    "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
-    "        \"expected a valid field name for union template type `%s'\");\n"
-    "    }\n"
-    "    ", name, dispname);
-  for (i = 0; i < sdef->nElements; i++) {
+  /* get_param(), RT2 only */
+  if (use_runtime_2) {
+    def = mputstr(def, "Module_Param* get_param(Module_Param_Name& param_name) const;\n");
     src = mputprintf(src,
-     "if (strcmp(\"%s\", param_field) == 0) {\n"
-     "      return %s%s().get_param(param_name);\n"
-     "    } else ",
-     sdef->elements[i].dispname, at_field, sdef->elements[i].name);
-  }
-  src = mputprintf(src,
-    "TTCN_error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
-    "  }\n"
-    "  Module_Param* m_p = NULL;\n"
-    "  switch (template_selection) {\n"
-    "  case UNINITIALIZED_TEMPLATE:\n"
-    "    m_p = new Module_Param_Unbound();\n"
-    "    break;\n"
-    "  case OMIT_VALUE:\n"
-    "    m_p = new Module_Param_Omit();\n"
-    "    break;\n"
-    "  case ANY_VALUE:\n"
-    "    m_p = new Module_Param_Any();\n"
-    "    break;\n"
-    "  case ANY_OR_OMIT:\n"
-    "    m_p = new Module_Param_AnyOrNone();\n"
-    "    break;\n"
-    "  case SPECIFIC_VALUE: {\n"
-    "    Module_Param* mp_field = NULL;\n"
-    "    switch(single_value.union_selection) {\n"
-    , name);
-    for (i = 0; i < sdef->nElements; ++i) {
-      src = mputprintf(src, 
-        "    case %s_%s:\n"
-        "      mp_field = single_value.field_%s->get_param(param_name);\n"
-        "      mp_field->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
-        "      break;\n"
-        , selection_prefix, sdef->elements[i].name
-        , sdef->elements[i].name, sdef->elements[i].dispname);
+      "Module_Param* %s_template::get_param(Module_Param_Name& param_name) const\n"
+      "{\n"
+      "  if (param_name.next_name()) {\n"
+      // Haven't reached the end of the module parameter name
+      // => the name refers to one of the fields, not to the whole union
+      "    char* param_field = param_name.get_current_name();\n"
+      "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
+      "      TTCN_error(\"Unexpected array index in module parameter reference, \"\n"
+      "        \"expected a valid field name for union template type `%s'\");\n"
+      "    }\n"
+      "    ", name, dispname);
+    for (i = 0; i < sdef->nElements; i++) {
+      src = mputprintf(src,
+       "if (strcmp(\"%s\", param_field) == 0) {\n"
+       "      return %s%s().get_param(param_name);\n"
+       "    } else ",
+       sdef->elements[i].dispname, at_field, sdef->elements[i].name);
     }
-  src = mputstr(src,
-    "    default:\n"
-    "      break;\n"
-    "    }\n"
-    "    m_p = new Module_Param_Assignment_List();\n"
-    "    m_p->add_elem(mp_field);\n"
-    "    break; }\n"
-    "  case VALUE_LIST:\n"
-    "  case COMPLEMENTED_LIST: {\n"
-    "    if (template_selection == VALUE_LIST) {\n"
-    "      m_p = new Module_Param_List_Template();\n"
-    "    }\n"
-    "    else {\n"
-    "      m_p = new Module_Param_ComplementList_Template();\n"
-    "    }\n"
-    "    for (size_t i_i = 0; i_i < value_list.n_values; ++i_i) {\n"
-    "      m_p->add_elem(value_list.list_value[i_i].get_param(param_name));\n"
-    "    }\n"
-    "    break; }\n"
-    "  default:\n"
-    "    break;\n"
-    "  }\n"
-    "  if (is_ifpresent) {\n"
-    "    m_p->set_ifpresent();\n"
-    "  }\n"
-    "  return m_p;\n"
-    "}\n\n");
+    src = mputprintf(src,
+      "TTCN_error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
+      "  }\n"
+      "  Module_Param* m_p = NULL;\n"
+      "  switch (template_selection) {\n"
+      "  case UNINITIALIZED_TEMPLATE:\n"
+      "    m_p = new Module_Param_Unbound();\n"
+      "    break;\n"
+      "  case OMIT_VALUE:\n"
+      "    m_p = new Module_Param_Omit();\n"
+      "    break;\n"
+      "  case ANY_VALUE:\n"
+      "    m_p = new Module_Param_Any();\n"
+      "    break;\n"
+      "  case ANY_OR_OMIT:\n"
+      "    m_p = new Module_Param_AnyOrNone();\n"
+      "    break;\n"
+      "  case SPECIFIC_VALUE: {\n"
+      "    Module_Param* mp_field = NULL;\n"
+      "    switch(single_value.union_selection) {\n"
+      , name);
+      for (i = 0; i < sdef->nElements; ++i) {
+        src = mputprintf(src, 
+          "    case %s_%s:\n"
+          "      mp_field = single_value.field_%s->get_param(param_name);\n"
+          "      mp_field->set_id(new Module_Param_FieldName(mcopystr(\"%s\")));\n"
+          "      break;\n"
+          , selection_prefix, sdef->elements[i].name
+          , sdef->elements[i].name, sdef->elements[i].dispname);
+      }
+    src = mputstr(src,
+      "    default:\n"
+      "      break;\n"
+      "    }\n"
+      "    m_p = new Module_Param_Assignment_List();\n"
+      "    m_p->add_elem(mp_field);\n"
+      "    break; }\n"
+      "  case VALUE_LIST:\n"
+      "  case COMPLEMENTED_LIST: {\n"
+      "    if (template_selection == VALUE_LIST) {\n"
+      "      m_p = new Module_Param_List_Template();\n"
+      "    }\n"
+      "    else {\n"
+      "      m_p = new Module_Param_ComplementList_Template();\n"
+      "    }\n"
+      "    for (size_t i_i = 0; i_i < value_list.n_values; ++i_i) {\n"
+      "      m_p->add_elem(value_list.list_value[i_i].get_param(param_name));\n"
+      "    }\n"
+      "    break; }\n"
+      "  default:\n"
+      "    break;\n"
+      "  }\n"
+      "  if (is_ifpresent) {\n"
+      "    m_p->set_ifpresent();\n"
+      "  }\n"
+      "  return m_p;\n"
+      "}\n\n");
+  }
 
   /* check template restriction */
   def = mputstr(def, "void check_restriction(template_res t_res, "

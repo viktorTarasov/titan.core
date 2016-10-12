@@ -657,9 +657,11 @@ void INTEGER::set_param(Module_Param& param)
 {
   param.basic_check(Module_Param::BC_VALUE, "integer value");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Integer: {
     clean_up();
@@ -717,6 +719,7 @@ void INTEGER::set_param(Module_Param& param)
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* INTEGER::get_param(Module_Param_Name& /* param_name */) const
 {
   if (!bound_flag) {
@@ -727,6 +730,7 @@ Module_Param* INTEGER::get_param(Module_Param_Name& /* param_name */) const
   }
   return new Module_Param_Integer(new int_val_t(BN_dup(val.openssl)));
 }
+#endif
 
 void INTEGER::encode_text(Text_Buf& text_buf) const
 {
@@ -2343,9 +2347,11 @@ void INTEGER_template::log_match(const INTEGER& match_value,
 void INTEGER_template::set_param(Module_Param& param) {
   param.basic_check(Module_Param::BC_TEMPLATE, "integer template");
   Module_Param_Ptr mp = &param;
+#ifdef TITAN_RUNTIME_2
   if (param.get_type() == Module_Param::MP_Reference) {
     mp = param.get_referenced_param();
   }
+#endif
   switch (mp->get_type()) {
   case Module_Param::MP_Omit:
     *this = OMIT_VALUE;
@@ -2429,6 +2435,7 @@ void INTEGER_template::set_param(Module_Param& param) {
   is_ifpresent = param.get_ifpresent() || mp->get_ifpresent();
 }
 
+#ifdef TITAN_RUNTIME_2
 Module_Param* INTEGER_template::get_param(Module_Param_Name& param_name) const
 {
   Module_Param* mp = NULL;
@@ -2494,6 +2501,7 @@ Module_Param* INTEGER_template::get_param(Module_Param_Name& param_name) const
   }
   return mp;
 }
+#endif
 
 void INTEGER_template::encode_text(Text_Buf& text_buf) const
 {
