@@ -193,7 +193,7 @@ module TimplicitEnc
     P.send(3.14);
     f_PReceiveCharstring("3.140000", 1.0);
     P.send(mypdu);
-    P.receive(?) -> value mypdu;
+    P.receive(MyPDU: ?) -> value mypdu;
 
 
 

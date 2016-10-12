@@ -116,9 +116,9 @@ close FILE;
 
 # Generate the makefile
 print("LD_LIBRARY_PATH is $ENV{LD_LIBRARY_PATH}\n");#temporary debug printout
-print("$ENV{TTCN3_DIR}/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -j files.txt $xsdfiles2 \n");
+print("$ENV{TTCN3_DIR}/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -J files.txt $xsdfiles2 \n");
 
-system(   "\$TTCN3_DIR/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -o Makefile.1 -j files.txt $xsdfiles2");
+system(   "\$TTCN3_DIR/bin/ttcn3_makefilegen -gs $split $rt2 -e XmlTest -o Makefile.1 -J files.txt $xsdfiles2");
 
 unlink $outfile;
 

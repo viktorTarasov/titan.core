@@ -6863,7 +6863,7 @@ module ModuleA {
       var MyCompType MyVar2;
    }
    // others should be covered in 'VariableRef'
-   altstep MyAltstep41() runs on MyCompType {[] MyPort2.catch(MyProc2, ?) -> value MyVar1 sender Nonexi41 {}}
+   altstep MyAltstep41() runs on MyCompType {[] MyPort2.catch(MyProc2, MyType1: ?) -> value MyVar1 sender Nonexi41 {}}
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>

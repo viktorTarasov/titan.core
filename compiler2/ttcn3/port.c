@@ -573,6 +573,8 @@ static void generate_receive(char **def_ptr, char **src_ptr,
     "value_template, %s_Redirect_Interface *value_redirect, const %s_template& "
     "sender_template, %s *sender_ptr)\n"
     "{\n"
+    "if (value_template.get_selection() == ANY_OR_OMIT) "
+    "TTCN_error(\"%s operation using '*' as matching template\");\n"
     "msg_queue_item *my_head = (msg_queue_item*)msg_queue_head;\n"
     "if (msg_queue_head == NULL) {\n"
     "if (is_started) return ALT_MAYBE;\n"
@@ -583,7 +585,7 @@ static void generate_receive(char **def_ptr, char **src_ptr,
     "return ALT_NO;\n"
     "}\n"
     "} else ", class_name, function_name, message_type->name,
-    message_type->name_w_no_prefix, sender_type, sender_type);
+    message_type->name_w_no_prefix, sender_type, sender_type, operation_name);
   if (is_address) {
     src = mputprintf(src, "if (my_head->sender_component != "
       "SYSTEM_COMPREF) {\n"
@@ -1099,16 +1101,23 @@ static void generate_getreply(char **def_ptr, char **src_ptr,
   src = mputprintf(src, "alt_status %s::%s(const %s_template& "
     "getreply_template, const %s_template& sender_template, "
     "const %s_reply_redirect& param_ref, %s *sender_ptr)\n"
-    "{\n"
+    "{\n", class_name, function_name, signature->name, sender_type,
+    signature->name, sender_type);
+  if (signature->has_return_value) {
+    src = mputprintf(src, 
+      "if (getreply_template.return_value().get_selection() == ANY_OR_OMIT) "
+      "TTCN_error(\"%s operation using '*' as return value matching template\");\n",
+      operation_name);
+  }
+  src = mputstr(src,
     "if (proc_queue_head == NULL) {\n"
     "if (is_started) return ALT_MAYBE;\n"
     "else {\n"
     "TTCN_Logger::log(TTCN_Logger::MATCHING_PROBLEM, \"Matching on "
-    "port %%s failed: Port is not started and the queue is empty.\", "
+    "port %s failed: Port is not started and the queue is empty.\", "
     "port_name);\n"
     "return ALT_NO;\n"
-    "}\n", class_name, function_name, signature->name, sender_type,
-    signature->name, sender_type);
+    "}\n");
   if (is_address) {
     src = mputprintf(src,
       "} else if (proc_queue_head->sender_component != SYSTEM_COMPREF) "
@@ -1221,6 +1230,8 @@ static void generate_catch(char **def_ptr, char **src_ptr,
     "catch_template, const %s_template& sender_template, "
     "%s *sender_ptr)\n"
     "{\n"
+    "if (catch_template.is_any_or_omit()) TTCN_error(\"%s operation using '*' "
+    "as matching template\");\n"
     "if (proc_queue_head == NULL) {\n"
     "if (is_started) return ALT_MAYBE;\n"
     "else {\n"
@@ -1229,7 +1240,7 @@ static void generate_catch(char **def_ptr, char **src_ptr,
     "port_name);\n"
     "return ALT_NO;\n"
     "}\n", class_name, function_name, signature->name, sender_type,
-    sender_type);
+    sender_type, operation_name);
   if (is_address) {
     src = mputprintf(src,
       "} else if (proc_queue_head->sender_component != SYSTEM_COMPREF) "

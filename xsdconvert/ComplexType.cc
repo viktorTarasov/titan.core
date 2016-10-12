@@ -1616,7 +1616,8 @@ void ComplexType::resolveAttribute(AttributeType* attr) {
         if (st->getType().convertedValue == "record" || st->getType().convertedValue == "union") {
             st->addToNameDepList(attr);
           }
-        }
+      }
+      attr->getReference().set_resolved(st);
     } else {
       printError(module->getSchemaname(), name.convertedValue,
         "Reference for a non-defined type: " + attr->getReference().repr());

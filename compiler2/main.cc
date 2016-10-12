@@ -78,6 +78,7 @@ using namespace Common;
 const char *output_dir = NULL;
 const char *tcov_file_name = NULL;
 const char *profiler_file_name = NULL;
+const char *file_list_file_name = NULL;
 tcov_file_list *tcov_files = NULL;
 expstring_t effective_module_lines = NULL;
 expstring_t effective_module_functions = NULL;
@@ -384,7 +385,7 @@ static boolean is_valid_asn1_filename(const char* file_name)
 static void usage()
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abcdEfgijlLMnOpqrRsStuwxXyY] [-K file] [-z file] [-V verb_level]\n"
+    "usage: %s [-abcdEfgijlLMnOpqrRsStuwxXyY] [-J file] [-K file] [-z file] [-V verb_level]\n"
     "	[-o dir] [-U none|type|'number'] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
     "	[-T] module.ttcn [-A] module.asn ...\n"
     "	or  %s -v\n"
@@ -401,6 +402,7 @@ static void usage()
     "	-g:		emulate GCC error/warning message format\n"
     "	-i:		use only line numbers in error/warning messages\n"
     "	-j:		disable JSON encoder/decoder functions\n"
+    "	-J file:	read input files from file\n"
     "	-K file:	enable selective code coverage\n"
     "	-l:		include source line info in C++ code\n"
     "	-L:		add source line info for logging\n"
@@ -494,6 +496,8 @@ int main(int argc, char *argv[])
   size_t n_modules = 0;
   module_struct *module_list = NULL;
   char* json_schema_name = NULL;
+  size_t n_files_from_file = 0;
+  char ** files_from_file = NULL;
   
   if (0 == strcmp(argv[1], "--ttcn2json")) {
     ttcn2json = true;
@@ -575,7 +579,7 @@ int main(int argc, char *argv[])
 
   if (!ttcn2json) {
     for ( ; ; ) {
-      int c = getopt(argc, argv, "aA:bBcC:dEfFgijK:lLMno:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
+      int c = getopt(argc, argv, "aA:bBcC:dEfFgijJ:K:lLMno:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
       if (c == -1) break;
       switch (c) {
       case 'a':
@@ -644,6 +648,9 @@ int main(int argc, char *argv[])
       case 'i':
         SET_FLAG(i);
         output_only_linenum = TRUE;
+        break;
+      case 'J':
+        file_list_file_name = optarg;
         break;
       case 'K':
         SET_FLAG(K);
@@ -832,7 +839,70 @@ int main(int argc, char *argv[])
       output_dir);
         errflag = true;
       }
-      if (optind == argc && n_modules == 0) {
+      
+      if (file_list_file_name != NULL) {
+        FILE *fp = fopen(file_list_file_name, "r");
+        if (fp != NULL) {
+          char buff[1024];
+          // We store the -A and -T here too
+          while (fscanf(fp, "%s", buff) == 1) {
+            n_files_from_file++;
+            files_from_file = (char**)
+            Realloc(files_from_file, n_files_from_file * sizeof(*files_from_file));
+            files_from_file[n_files_from_file - 1] = mcopystr(buff);
+          }
+          fclose(fp);
+        } else {
+          ERROR("Cannot open file `%s' for reading: %s", file_list_file_name,
+          strerror(errno));
+          errno = 0;
+          errflag = true;
+        }
+        bool next_is_asn1 = false;
+        bool next_is_ttcn = false;
+        for (size_t i = 0; i < n_files_from_file; i++) {
+          // Check if -A or -T is present and continue to the next word if yes
+          if (next_is_ttcn == false && next_is_asn1 == false) {
+            if (strcmp(files_from_file[i], "-A") == 0) {
+              next_is_asn1 = true;
+              continue;
+            } else if (strcmp(files_from_file[i], "-T") == 0) {
+              next_is_ttcn = true;
+              continue;
+            }
+          }
+          Module::moduletype_t module_type = Module::MOD_UNKNOWN;
+          const char* file = files_from_file[i];
+          if (next_is_asn1) {
+            module_type = Module::MOD_ASN; 
+            next_is_asn1 = false;
+          } else if(next_is_ttcn) {
+            module_type = Module::MOD_TTCN;
+            next_is_ttcn = false;
+          } else if (strlen(files_from_file[i]) > 2) {
+            // The -A or -T can be given as -TMyTtcnfile.ttcn too
+            if (files_from_file[i][0] == '-') {
+              if (files_from_file[i][1] == 'A') {
+                file = files_from_file[i] + 2;
+                module_type = Module::MOD_ASN; 
+              } else if (files_from_file[i][1] == 'T') {
+                file = files_from_file[i] + 2;
+                module_type = Module::MOD_TTCN; 
+              }
+            }
+          }
+          if (module_type == Module::MOD_TTCN) {
+#ifdef LICENSE
+            ttcn3_modules_present = true;
+#endif
+          } else if (module_type == Module::MOD_ASN) {
+            asn1_modules_present = true;
+          }
+          add_module(n_modules, module_list, file, module_type);
+        }
+      }
+      
+      if (optind == argc && n_modules == 0 && n_files_from_file == 0) {
         ERROR("No input TTCN-3 or ASN.1 module was given.");
         errflag = true;
       }
@@ -1156,6 +1226,10 @@ int main(int argc, char *argv[])
   if (zflag) {
     free_profiler_data();
   }
+  for (size_t i = 0; i < n_files_from_file; i++) {
+    Free(files_from_file[i]);
+  }
+  Free(files_from_file);
 
   // dbgnew.hh already does it: check_mem_leak(argv[0]);
 

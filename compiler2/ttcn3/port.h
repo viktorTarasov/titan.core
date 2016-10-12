@@ -76,6 +76,7 @@ typedef struct port_proc_signature_tag {
   const char *dispname;
   boolean is_noblock;
   boolean has_exceptions;
+  boolean has_return_value;
 } port_proc_signature;
 
 typedef struct port_proc_signature_list_tag {

@@ -565,14 +565,14 @@ testcase TC() runs on MyComponent {
   var float F;
   alt {
     []any port.receive(integer:?) -> value I { }
-    []any port.check(receive(integer:*) -> value I) { }
+    []any port.check(receive(integer:?) -> value I) { }
 
     []any port.getcall(Sig:{0}) -> param(I) { }
     []any port.getreply(Sig:{0}) -> value J param(I) { }
-    []any port.catch(Sig, float:*) -> value F { }
+    []any port.catch(Sig, float:?) -> value F { }
     []any port.check(getcall(Sig:{0}) -> param(I)) { }
     []any port.check(getreply(Sig:{0}) -> value J param(I)) { }
-    []any port.check(catch(Sig, float:*) -> value F) { }
+    []any port.check(catch(Sig, float:?) -> value F) { }
   }
 }
 
@@ -1369,6 +1369,80 @@ testcase TC() runs on MyComponent {
 <END_MODULE>
 <RESULT IF_PASS NEGATIVE>
 (?is)\berror:
+<END_RESULT>
+<END_TC>
+
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h3.Adhoc - port operation: '*' in matching template
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Adhoc - port operation: '*' in matching template>
+
+<COMPILE>
+<VERDICT_LEAF PASS>
+<MODULE TTCN Temp Temp.ttcn>
+module Temp {
+
+type port PT message {
+  inout integer, charstring
+}
+
+signature sig() return integer exception (integer, charstring);
+
+type port PT2 procedure {
+  inout sig
+}
+
+type component CT {
+  port PT pt;
+  port PT2 pt2;
+}
+
+template integer t := *;
+
+testcase TC() runs on CT {
+  var integer x;
+  alt {
+    [] pt.receive(*) { }
+    [] pt.receive(integer: *) -> value x { }
+    [] pt.receive(t) { }
+    [] pt2.getreply(sig: { } value *) -> value x { }
+    [] pt2.getreply(sig: { } value integer: *) { }
+    [] pt2.getreply(sig: { } value t) -> value x { }
+    [] pt2.catch(sig, *) { }
+    [] pt2.catch(sig, integer: *) -> value x { }
+    [] pt2.catch(sig, t) { }
+    [] pt.check(receive(*) -> value x) { }
+    [] pt.check(receive(integer: *)) { }
+    [] pt.check(receive(t) -> value x) { }
+    [] pt2.check(getreply(sig: { } value *)) { }
+    [] pt2.check(getreply(sig: { } value integer: *) -> value x) { }
+    [] pt2.check(getreply(sig: { } value t)) { }
+    [] pt2.check(catch(sig, *) -> value x) { }
+    [] pt2.check(catch(sig, integer: *)) { }
+    [] pt2.check(catch(sig, t) -> value x) { }
+  }
+}
+
+}
+<END_MODULE>
+<RESULT COUNT 2>
+(?im)Cannot.+?\bdetermine\b.+?the.+?\btype\b.+?of.+?the\b.+?incoming\b.+?message
+<END_RESULT>
+<RESULT COUNT 2>
+(?im)Cannot.+?\bdetermine\b.+?the.+?\btype\b.+?of.+?the\b.+?exception
+<END_RESULT>
+<RESULT COUNT 18>
+(?im)\'\*\'.+?\bcannot\b.+?be.+?\bused\b.+?as.+?matching\b.+?template\b.+?for\b.+?operation
+<END_RESULT>
+<RESULT COUNT 22>
+(?is)\berror:
+<END_RESULT>
+<RESULT>
+(?im)\bnotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
 <END_RESULT>
 <END_TC>
 

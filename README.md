@@ -104,8 +104,8 @@ Compressed update site and SHA512 checksum:
 * https://github.com/eclipse/titan.ProtocolModules.UDP
 * https://github.com/eclipse/titan.ProtocolModules.WebSocket
 * https://github.com/eclipse/titan.ProtocolModules.XMPP
-* http://git.eclipse.org/c/titan/titan.ProtocolModules.CoAP.git
-* http://git.eclipse.org/c/titan/titan.ProtocolModules.MQTT.git
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.CoAP
+* http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MQTT
 
 ## Libraries:
 
@@ -114,4 +114,4 @@ Compressed update site and SHA512 checksum:
 ## Miscellaneous projects: 
 
 * https://github.com/eclipse/titan.misc
-(VSBOT, SIP_ETSI,DIAMETER_Rx_ETSI, CoAP and MQTT protocol modules for IOT,  more to come...) 
+(VSBOT, SIP_ETSI,DIAMETER_Rx_ETSI, CoAP Conformance test cases,  CoAP and MQTT protocol modules for IOT-moved to Eclipse git,  more to come...) 

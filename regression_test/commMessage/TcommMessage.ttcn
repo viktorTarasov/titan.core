@@ -1609,6 +1609,46 @@ testcase commMessageDecodedValueRedirect() runs on commMessage_comp_dec {
   setverdict(pass);
 }
 
+// '*' is not allowed as a matching template in receive operations
+testcase commMessageReceiveAnyOrOmit() runs on commMessage_comp1 {
+  connect(self:Port1, self:Port1);
+  var template integer vt := *;
+  
+  // receive
+  Port1.send(5);
+  @try {
+    alt {
+      [] Port1.receive(vt) { }
+    }
+    setverdict(fail, "Receive operation succeeded. Expected error.");
+  }
+  @catch (msg) {
+    if (match(msg, pattern "*Receive operation using '\*' as matching template")) {
+      setverdict(pass);
+    }
+    else {
+      setverdict(fail, "Incorrect error message received (receive test): ", msg);
+    }
+  }
+  
+  // check-receive
+  Port1.send(5);
+  @try {
+    alt {
+      [] Port1.check(receive(vt)) { }
+    }
+    setverdict(fail, "Check-receive operation succeeded. Expected error.");
+  }
+  @catch (msg) {
+    if (match(msg, pattern "*Check-receive operation using '\*' as matching template")) {
+      setverdict(pass);
+    }
+    else {
+      setverdict(fail, "Incorrect error message received (check-receive test): ", msg);
+    }
+  }
+}
+
 control {
  execute(commMessageIntegerEncode());
  execute(commMessageValue());
@@ -1650,5 +1690,6 @@ control {
  execute(commMessageDualFacedPorts2());
  execute(commMessageMultiValueRedirect());
  execute(commMessageDecodedValueRedirect());
+ execute(commMessageReceiveAnyOrOmit());
 }
 }

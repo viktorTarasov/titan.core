@@ -729,7 +729,10 @@ int multi(const TTCN3Module *module, ReferenceData const& outside_reference,
   RootType * ct = ::lookup1(module, outside_reference.get_val(), outside_reference.get_uri(), obj, want_CT);
   if (st || ct) {
     multiplicity = 1; // locally defined, no qualif needed
-  } else for (List<const TTCN3Module*>::iterator it = module->getImportedModules().begin(); it; it = it->Next) {
+    // means that outside_reference.get_uri() == module->getTargetNamespace())
+  } else {
+    // Look for definitions in the imported modules
+    for (List<const TTCN3Module*>::iterator it = module->getImportedModules().begin(); it; it = it->Next) {
       // Artificial lookup
       st = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_ST);
       ct = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_CT);
@@ -737,6 +740,17 @@ int multi(const TTCN3Module *module, ReferenceData const& outside_reference,
         ++multiplicity;
       }
     }
+    // If multiplicity > 1 then the qualif needed
+    // But if == 1 we need to check this module for a type definition with
+    // the same name as outsize_reference.get_val()
+    if (multiplicity == 1) {
+      st = ::lookup1(module, outside_reference.get_val(), module->getTargetNamespace(), obj, want_ST);
+      ct = ::lookup1(module, outside_reference.get_val(), module->getTargetNamespace(), obj, want_CT);
+      if (st || ct) {
+        ++multiplicity;
+      }
+    }
+  }
   return multiplicity;
 }
 

@@ -1867,6 +1867,7 @@ namespace Ttcn {
           signature->is_nonblocking_signature();
         pdef.proc_in.elements[i].has_exceptions =
           signature->get_signature_exceptions() ? TRUE : FALSE;
+        pdef.proc_in.elements[i].has_return_value = FALSE;
       }
     } else {
       pdef.proc_in.nElements = 0;
@@ -1886,6 +1887,8 @@ namespace Ttcn {
           signature->is_nonblocking_signature();
         pdef.proc_out.elements[i].has_exceptions =
           signature->get_signature_exceptions() ? TRUE : FALSE;
+        pdef.proc_out.elements[i].has_return_value =
+          signature->get_signature_return_type() != NULL ? TRUE : FALSE;
       }
     } else {
       pdef.proc_out.nElements = 0;
