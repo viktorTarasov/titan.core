@@ -223,8 +223,8 @@ testcase tc_encode_decode() runs on CT {
 
 testcase tc_decode() runs on CT {
   const charstring result := 
-"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/'"&
-"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/'"&
+"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/' "&
+"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/' "&
 "xmlns:mc='http://schemas.ericsson.com/mtas/mmtel/cai3g'>"&
 "<S:Body>"&
 "<ns2:GetResponse>"&
@@ -253,10 +253,11 @@ testcase tc_decode() runs on CT {
 "</ns2:GetResponse>"&
 "</S:Body>"&
 "</S:Envelope>";
+log(result);
 
 const charstring result_omit_attr :=
-"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/'"&
-"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/'"&
+"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/' "&
+"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/' "&
 "xmlns:mc='http://schemas.ericsson.com/mtas/mmtel/cai3g'>"&
 "<S:Body>"&
 "<ns2:GetResponse>"&
@@ -287,8 +288,8 @@ const charstring result_omit_attr :=
 "</S:Envelope>";
 
 const charstring result_omit_attr2 :=
-"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/'"&
-"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/'"&
+"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/' "&
+"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/' "&
 "xmlns:mc='http://schemas.ericsson.com/mtas/mmtel/cai3g'>"&
 "<S:Body>"&
 "<ns2:GetResponse>"&
@@ -318,8 +319,8 @@ const charstring result_omit_attr2 :=
 "</S:Envelope>";
 
 const charstring result_single :=
-"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/'"&
-"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/'"&
+"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/' "&
+"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/' "&
 "xmlns:mc='http://schemas.ericsson.com/mtas/mmtel/cai3g'>"&
 "<S:Body>"&
 "<ns2:GetResponse>"&
@@ -344,8 +345,8 @@ const charstring result_single :=
 "</S:Envelope>";
 
 const charstring result_single_omit_attr :=
-"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/'"&
-"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/'"&
+"<S:Envelope xmlns:S='http://schemas.xmlsoap.org/soap/envelope/' "&
+"xmlns:ns2='http://schemas.ericsson.com/cai3g1.2/' "&
 "xmlns:mc='http://schemas.ericsson.com/mtas/mmtel/cai3g'>"&
 "<S:Body>"&
 "<ns2:GetResponse>"&

@@ -843,6 +843,10 @@ int FLOAT::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   return decode_length + prepaddlength;
 }
 
+const char* XER_POS_INF_STR = "INF";
+const char* XER_NEG_INF_STR = "-INF";
+const char* XER_NAN_STR = "NaN";
+
 int FLOAT::XER_encode(const XERdescriptor_t& p_td,
   TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
@@ -859,11 +863,29 @@ int FLOAT::XER_encode(const XERdescriptor_t& p_td,
 
   if (exer && (p_td.xer_bits & XER_DECIMAL)) {
     char buf[312];
-    int n = snprintf(buf, sizeof(buf), "%f", (double)float_value);
+    int n = 0;
+    if (isnan((double)float_value)) {
+      n = snprintf(buf, sizeof(buf), "%s", XER_NAN_STR);
+    } else if ((double)float_value == (double)INFINITY) {
+      n = snprintf(buf, sizeof(buf), "%s", XER_POS_INF_STR);
+    } else if ((double)float_value == -(double)INFINITY) {
+      n = snprintf(buf, sizeof(buf), "%s", XER_NEG_INF_STR);
+    } else {
+      n = snprintf(buf, sizeof(buf), "%f", (double)float_value);
+    }
     p_buf.put_s((size_t)n, (const unsigned char*)buf);
   }
   else {
-    CHARSTRING value = float2str(float_value);
+    CHARSTRING value;
+    if (isnan((double)float_value)) {
+      value = XER_NAN_STR;
+    } else if ((double)float_value == (double)INFINITY) {
+      value = XER_POS_INF_STR;
+    } else if ((double)float_value == -(double)INFINITY) {
+      value = XER_NEG_INF_STR;
+    } else {
+      value = float2str(float_value);
+    }
     p_buf.put_string(value);
   }
 
@@ -942,12 +964,25 @@ int FLOAT::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     verify_name(reader, p_td, exer);
 tagless:
     const char * value = (const char *)reader.Value();
-
-    if (value && is_float(value)) {
-      bound_flag = true;
-      sscanf(value, "%lf", &float_value);
+    if (value) {
+      if (is_float(value)) {
+        bound_flag = true;
+        sscanf(value, "%lf", &float_value);
+      } else if (strcmp(XER_NAN_STR, value) == 0 ) {
+        bound_flag = true;
+#ifdef NAN
+        float_value = NAN;
+#else
+        float_value = INFINITY + (-INFINITY);
+#endif
+      } else if (strcmp(XER_POS_INF_STR, value) == 0) {
+        bound_flag = true;
+        float_value = (double)INFINITY;
+      } else if (strcmp(XER_NEG_INF_STR, value) == 0) {
+        bound_flag = true;
+        float_value = -(double)INFINITY;
+      }
     }
-
     // Let the caller do reader.AdvanceAttribute();
   }
   else {
@@ -966,9 +1001,24 @@ tagless:
       }
       else if (XML_READER_TYPE_TEXT == type && depth != -1) {
         const char * value = (const char*)reader.Value();
-        if (value && is_float(value)) {
-          bound_flag = true;
-          sscanf(value, "%lf", &float_value);
+        if (value) {
+          if (is_float(value)) {
+            bound_flag = true;
+            sscanf(value, "%lf", &float_value);
+          } else if (strcmp("NaN", value) == 0 ) {
+            bound_flag = true;
+#ifdef NAN
+            float_value = NAN;
+#else
+            float_value = INFINITY + (-INFINITY);
+#endif
+          } else if (strcmp("INF", value) == 0) {
+            bound_flag = true;
+            float_value = (double)INFINITY;
+          } else if (strcmp("-INF", value) == 0) {
+            bound_flag = true;
+            float_value = -(double)INFINITY;
+          }
         }
       }
       else if (XML_READER_TYPE_END_ELEMENT == type) {

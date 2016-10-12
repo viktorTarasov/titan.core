@@ -165,9 +165,9 @@
 		<File path="../xsd/list_complextype.xsd" />
 		<File path="../xsd/enumeration_restriction3.xsd" />
 		<File path="../xsd/MyXMLSchema.xsd" />
-        <File path="../xsd/www_example_org_pref1.xsd" />
-        <File path="../xsd/www_example_org_pref2.xsd" />
-        <File path="../xsd/www_example_org_pref3.xsd" />
+		<File path="../xsd/www_example_org_pref1.xsd" />
+		<File path="../xsd/www_example_org_pref2.xsd" />
+		<File path="../xsd/www_example_org_pref3.xsd" />
             </File_Group>
             <File_Group name="XmlTest_xsds" >
                 <File path="../XmlTest_xsds/XmlTest_boolean.xsd" />
@@ -403,9 +403,9 @@
 	        <File path="../XmlTest_expectedTtcns/www_example_org_list_complextype_e.ttcn" />
 	        <File path="../XmlTest_expectedTtcns/www_example_org_enumeration_restriction3_e.ttcn" />
 	        <File path="../XmlTest_expectedTtcns/http_www_example_org_2001_XMLSchema_e.ttcn" />
-            <File path="../XmlTest_expectedTtcns/www_example_org_pref1_e.ttcn" />
-            <File path="../XmlTest_expectedTtcns/www_example_org_pref2_e.ttcn" />
-            <File path="../XmlTest_expectedTtcns/www_example_org_pref3_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_pref1_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_pref2_e.ttcn" />
+	        <File path="../XmlTest_expectedTtcns/www_example_org_pref3_e.ttcn" />
             </File_Group>
             <File_Group name="XmlTest_src" >
                 <File path="xmlTest_Shell.ttcn" />
