@@ -565,12 +565,13 @@ static void generate_receive(char **def_ptr, char **src_ptr,
   }
 
   def = mputprintf(def, "alt_status %s(const %s_template& value_template, "
-    "%s_Redirect_Interface *value_redirect, const %s_template& sender_template, %s "
+    "%s%s *value_redirect, const %s_template& sender_template, %s "
     "*sender_ptr);\n", function_name, message_type->name,
-    message_type->name_w_no_prefix, sender_type, sender_type);
+    use_runtime_2 ? message_type->name_w_no_prefix : message_type->name,
+    use_runtime_2 ? "_Redirect_Interface" : "", sender_type, sender_type);
 
   src = mputprintf(src, "alt_status %s::%s(const %s_template& "
-    "value_template, %s_Redirect_Interface *value_redirect, const %s_template& "
+    "value_template, %s%s *value_redirect, const %s_template& "
     "sender_template, %s *sender_ptr)\n"
     "{\n"
     "if (value_template.get_selection() == ANY_OR_OMIT) "
@@ -585,7 +586,9 @@ static void generate_receive(char **def_ptr, char **src_ptr,
     "return ALT_NO;\n"
     "}\n"
     "} else ", class_name, function_name, message_type->name,
-    message_type->name_w_no_prefix, sender_type, sender_type, operation_name);
+    use_runtime_2 ? message_type->name_w_no_prefix : message_type->name,
+    use_runtime_2 ? "_Redirect_Interface" : "", sender_type, sender_type,
+    operation_name);
   if (is_address) {
     src = mputprintf(src, "if (my_head->sender_component != "
       "SYSTEM_COMPREF) {\n"
@@ -660,13 +663,20 @@ static void generate_receive(char **def_ptr, char **src_ptr,
   if (is_trigger) src = mputstr(src, "remove_msg_queue_head();\n");
   src = mputprintf(src, "return %s;\n"
     "} else {\n"
-    "if (value_redirect != NULL) {\n"
-    "value_redirect->set_values(*my_head->message_%lu);\n"
-    "delete value_redirect;\n"
+    "if (value_redirect != NULL) {\n", failed_status);
+  if (use_runtime_2) {
+    src = mputprintf(src,
+      "value_redirect->set_values(*my_head->message_%lu);\n"
+      "delete value_redirect;\n", (unsigned long) message_index);
+  }
+  else {
+    src = mputprintf(src,
+      "*value_redirect = *my_head->message_%lu;\n", (unsigned long) message_index);
+  }
+  src = mputprintf(src,
     "}\n"
     "if (sender_ptr != NULL) *sender_ptr = %smy_head->%s;\n",
-    failed_status, (unsigned long) message_index, is_address ? "*" : "",
-      is_address ? "sender_address" : "sender_component");
+    is_address ? "*" : "", is_address ? "sender_address" : "sender_component");
 
   if (is_address) {
     src = mputprintf(src,
@@ -1577,7 +1587,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
   def = mputstr(def, "public:\n");
   
   /* value redirect base classes (interfaces) */
-  if (has_msg_queue) {
+  if (use_runtime_2 && has_msg_queue) {
     for (i = 0; i < pdef->msg_in.nElements; ++i) {
       def = mputprintf(def, 
         "class %s_Redirect_Interface {\n"

@@ -7,6 +7,7 @@
 #
 # Contributors:
 #   Balasko, Jeno
+#   Baranyi, Botond
 #   Delic, Adam
 #   Kovacs, Ferenc
 #   Raduly, Csaba
@@ -25,6 +26,10 @@ include $(TOPDIR)/Makefile.regression
 TTCN3_LIB := ttcn3$(RT2_SUFFIX)-parallel$(DYNAMIC_SUFFIX)
 
 TTCN3_MODULES := ProcPort.ttcn
+
+ifdef RT2
+TTCN3_MODULES += AdvancedRedirects.ttcn
+endif
 
 GENERATED_SOURCES := $(TTCN3_MODULES:.ttcn=.cc)
 GENERATED_HEADERS := $(GENERATED_SOURCES:.cc=.hh)
@@ -75,7 +80,7 @@ dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(USER_SOURCES) $(GENERATED_SOURCES)
 
 run: $(TARGET)
-	$(TTCN3_DIR)/bin/ttcn3_start $(TARGET)
+	$(TTCN3_DIR)/bin/ttcn3_start $(TARGET) config$(RT2_SUFFIX).cfg
 
 
 ExtProcPort.o: ExtProcPort.hh ProcPort.hh

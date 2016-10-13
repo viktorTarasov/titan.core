@@ -2232,24 +2232,26 @@ void Type::generate_code_done(output_struct *target)
   const string& dispname = get_typename();
   const char *dispname_str = dispname.c_str();
   // value redirect base class (interface)
-  target->header.class_decls = mputprintf(target->header.class_decls,
-    "class %s_Redirect_Interface;\n", genname_str);
-  target->header.class_defs = mputprintf(target->header.class_defs,
-    "class %s_Redirect_Interface {\n"
-    "public:\n"
-    "virtual void set_values(const %s&) = 0;\n"
-    "virtual ~%s_Redirect_Interface() { }\n"
-    "};\n\n", genname_str, genname_str, genname_str);
+  if (use_runtime_2) {
+    target->header.class_decls = mputprintf(target->header.class_decls,
+      "class %s_Redirect_Interface;\n", genname_str);
+    target->header.class_defs = mputprintf(target->header.class_defs,
+      "class %s_Redirect_Interface {\n"
+      "public:\n"
+      "virtual void set_values(const %s&) = 0;\n"
+      "virtual ~%s_Redirect_Interface() { }\n"
+      "};\n\n", genname_str, genname_str, genname_str);
+  }
   // the done function
   target->header.function_prototypes = mputprintf
     (target->header.function_prototypes,
      "extern alt_status done(const COMPONENT& component_reference, "
-     "const %s_template& value_template, %s_Redirect_Interface *value_redirect);\n",
-     genname_str, genname_str);
+     "const %s_template& value_template, %s%s *value_redirect);\n",
+     genname_str, genname_str, use_runtime_2 ? "_Redirect_Interface" : "");
   target->source.function_bodies = mputprintf
     (target->source.function_bodies,
      "alt_status done(const COMPONENT& component_reference, "
-     "const %s_template& value_template, %s_Redirect_Interface *value_redirect)\n"
+     "const %s_template& value_template, %s%s *value_redirect)\n"
      "{\n"
      "if (!component_reference.is_bound()) "
      "TTCN_error(\"Performing a done operation on an unbound component "
@@ -2263,9 +2265,18 @@ void Type::generate_code_done(output_struct *target)
      "%s return_value;\n"
      "return_value.decode_text(*text_buf);\n"
      "if (value_template.match(return_value)) {\n"
-     "if (value_redirect != NULL) {\n"
-     "value_redirect->set_values(return_value);\n"
-     "delete value_redirect;\n"
+     "if (value_redirect != NULL) {\n", genname_str, genname_str,
+     use_runtime_2 ? "_Redirect_Interface" : "", dispname_str, genname_str);
+  if (use_runtime_2) {
+    target->source.function_bodies = mputstr(target->source.function_bodies,
+      "value_redirect->set_values(return_value);\n"
+      "delete value_redirect;\n");
+  }
+  else {
+    target->source.function_bodies = mputstr(target->source.function_bodies,
+      "*value_redirect = return_value;\n");
+  }
+  target->source.function_bodies = mputprintf(target->source.function_bodies,
      "}\n"
      "TTCN_Logger::begin_event(TTCN_Logger::PARALLEL_PTC);\n"
      "TTCN_Logger::log_event_str(\"PTC with component reference \");\n"
@@ -2289,8 +2300,7 @@ void Type::generate_code_done(output_struct *target)
      "}\n"
      "} else return ret_val;\n"
      "}\n\n",
-     genname_str, genname_str, dispname_str, genname_str, dispname_str,
-     dispname_str, omit_in_value_list ? ", TRUE" : "");
+     dispname_str, dispname_str, omit_in_value_list ? ", TRUE" : "");
 }
 
 bool Type::ispresent_anyvalue_embedded_field(Type* t,

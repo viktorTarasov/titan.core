@@ -29,6 +29,10 @@ TTCN3_LIB_SINGLE = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
 TTCN3_MODULES = TcommMessage.ttcn HS41022.ttcn
 
+ifdef RT2
+TTCN3_MODULES += TmultipleRedirects.ttcn
+endif
+
 ASN1_MODULES = ImplMsgEncData.asn
 
 GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc) $(ASN1_MODULES:.asn=.cc)
@@ -70,9 +74,9 @@ dep: $(GENERATED_SOURCES)
 
 run: run-single run-parallel
 
-run-single: $(TARGET_SINGLE) config.cfg
+run-single: $(TARGET_SINGLE) config$(RT2_SUFFIX).cfg
 	./$^
 
 run-parallel: $(TARGET)
-	$(TTCN3_DIR)/bin/ttcn3_start $(TARGET) config_parallel.cfg
+	$(TTCN3_DIR)/bin/ttcn3_start $(TARGET) config_parallel$(RT2_SUFFIX).cfg
 
