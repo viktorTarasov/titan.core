@@ -10,6 +10,7 @@
  *   Baranyi, Botond
  *   Ormandi, Matyas
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 #define DEFINE_XER_STRUCT
@@ -84,8 +85,10 @@ const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, int 
       }
       else {
         if (nsuri == 0) { // XML node has no namespace
-          TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_TAG,
-            "Missing namespace '%s'", expected_ns->ns);
+          if (p_td.my_module->get_ns(p_td.ns_index)->px[0] != 0) { // and module has namespace prefix
+            TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_TAG,
+              "Missing namespace '%s'", expected_ns->ns);
+          }
         }
         else { // and there is one, but is it the right one ?
           if (strcmp(nsuri, expected_ns->ns)) {
