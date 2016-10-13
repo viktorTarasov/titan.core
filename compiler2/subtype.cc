@@ -17,6 +17,7 @@
  *   Raduly, Csaba
  *   Szabados, Kristof
  *   Szabo, Janos Zoltan – initial implementation
+ *   Szabo, Bence Janos
  *   Szalai, Gabor
  *   Tatarka, Gabor
  *   Zalanyi, Balazs Andor
@@ -1978,6 +1979,8 @@ void SubType::chk_this_template(Template *templ)
   case Template::USTR_PATTERN:
 	  chk_this_template_pattern("universal charstring", templ);
 	  break;
+  case Template::TEMPLATE_NOTUSED:
+    break;
   case Template::TEMPLATE_ERROR:
     break;
   default:

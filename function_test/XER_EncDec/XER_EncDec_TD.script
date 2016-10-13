@@ -8,6 +8,7 @@
 .* Contributors:
 .*   Balasko, Jeno
 .*   Baranyi, Botond
+.*   Szabo, Bence Janos
 .*
 .******************************************************************************/
 :text.
@@ -66,6 +67,9 @@ A     2014-04-29   EBOTBAR    New document
 .*---------------------------------------------------------------------*
 .*---------------------------------------------------------------------*
 :h3. Encoding record with any element from unqualified namespace
+.*---------------------------------------------------------------------*
+.*---------------------------------------------------------------------*
+:h4. Encoding record template with explicitly unspecified field
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
@@ -1224,6 +1228,51 @@ control {
 <RESULT>
 
 Dynamic test case error: While XER-decoding type '@Temp.any_elem_rec_of': Index 0: While checking anyElement: XML namespace "http://www.somewhereelse.com" is in the excluded namespace list.
+
+<END_TC>  
+  
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4. Encoding record template with explicitly unspecified field
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Encoding record template with explicitly unspecified field>
+
+<STATIC>
+
+type component Test_CT{};
+
+<TTCN_TC:PURE_EXEC>
+
+type record MyType
+{
+  universal charstring foo
+}
+with {
+  encode "XML";
+  variant "element";
+};
+
+external function ef_xer_enc(in MyType par) return octetstring
+  with { extension "prototype(convert) encode (XER:XER_EXTENDED) errorbehavior(ALL:ERROR)" }
+
+testcase tc_enc_explicitly_unspecified() runs on Test_CT {
+  template MyType myTemp := { foo := - };
+
+  var octetstring v_res := ef_xer_enc(valueof(myTemp));
+
+  setverdict(pass);
+}
+
+control {
+  execute(tc_enc_explicitly_unspecified());
+}
+
+<RESULT>
+
+Dynamic test case error: Performing valueof or send operation on a non-specific template of type @Temp.MyType
 
 <END_TC>  
   
