@@ -25,17 +25,19 @@
 #define TTCN3_MAJOR 6
 #define TTCN3_MINOR 1
 #define TTCN3_PATCHLEVEL 0   //0-> x=A, 1-> x=B, ... 
-#define TTCN3_BUILDNUMBER 0  //0=R5x, 1=R5x01, 2=R5x02, ...
+//#define TTCN3_BUILDNUMBER 0  //0=R5x, 1=R5x01, 2=R5x02, ...
 
 /* The aggregated version number must be set manually since some stupid
  * 'makedepend' programs cannot calculate arithmetic expressions.
  * In official releases:
+ * To display the correct version comment out TTCN3_BUILDNUMBER
  * TTCN3_VERSION = TTCN3_MAJOR * 10000 + TTCN3_MINOR * 100 + TTCN3_PATCHLEVEL
  * In pre-release builds:
+ * To display the correct version uncomment TTCN3_BUILDNUMBER
  * TTCN3_VERSION = TTCN3_MAJOR * 1000000 + TTCN3_MINOR * 10000 +
  *                 TTCN3_PATCHLEVEL * 100 + TTCN3_BUILDNUMBER
  */
-#define TTCN3_VERSION 6010000
+#define TTCN3_VERSION 60100
 
 /* A monotonically increasing version number.
  * An official release is deemed to have the highest possible build number (99)
