@@ -14,6 +14,7 @@
  *   Pandi, Krisztian
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *
@@ -41,6 +42,7 @@
 
 /* A monotonically increasing version number.
  * An official release is deemed to have the highest possible build number (99)
+ * The revisions R1A01, R1A02 ... R1A, R1B01, R1B02 ... R1B
  */
 #ifdef TTCN3_BUILDNUMBER
 #define TTCN3_VERSION_MONOTONE TTCN3_VERSION
