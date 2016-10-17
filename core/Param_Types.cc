@@ -331,7 +331,7 @@ Module_Param_Ptr Module_Param_Reference::get_referenced_param() const {
     error("References to other variables are not allowed.");
   }
   mp_ref->reset();
-  Module_Param_Ptr ptr = Module_List::get_param(*mp_ref);
+  Module_Param_Ptr ptr = Module_List::get_param(*mp_ref, this);
   ptr.set_temporary();
   return ptr;
 }

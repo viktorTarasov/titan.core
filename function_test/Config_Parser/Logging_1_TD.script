@@ -1585,74 +1585,71 @@ tsp_union := ENUM_1
 Temp.control
 <END_MODULE>
 
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_integer'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_float'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_boolean'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_objid'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_verdict'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_bitstring'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_hexstring'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_octetstring'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_charstring'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_universal_charstring'
 <END_RESULT>
 <RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_enumerated'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_record'
 <END_RESULT>
 <RESULT COUNT 2>
 (?im)Error while setting parameter field 'tsp_record.nonexistent1'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_record_of'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_set'
 <END_RESULT>
 <RESULT COUNT 2>
 (?im)Error while setting parameter field 'tsp_set.nonexistent1'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_set_of'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_anytype'
 <END_RESULT>
 <RESULT COUNT 2>
 (?im)Error while setting parameter field 'tsp_anytype.field3'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_union'
 <END_RESULT>
 <RESULT COUNT 2>
 (?im)Error while setting parameter field 'tsp_union.field3'
 <END_RESULT>
 <RESULT COUNT 1>
-(?im)Test execution summary: 0 test case was executed. Overall verdict: error
-<END_RESULT>
-<RESULT COUNT 16>
-Dynamic test case error: Referenced module parameter cannot be found.
+(?im)Test execution summary: 0 test case was executed. Overall verdict: none
 <END_RESULT>
 <RESULT COUNT 1>
 
@@ -1810,7 +1807,7 @@ tsp_anytype &= {integer := 3}
 [EXECUTE]
 Temp.control
 <END_MODULE>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while concatenating parameter field 'tsp_ROI'
 <END_RESULT>
 <RESULT COUNT 4>
@@ -1822,7 +1819,7 @@ Temp.control
 <RESULT COUNT 2>
 (?im)Error while setting parameter field 'tsp_ROROI\[0\]'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while concatenating parameter field 'tsp_SOI'
 <END_RESULT>
 <RESULT COUNT 4>
@@ -1875,9 +1872,6 @@ Temp.control
 <END_RESULT>
 <RESULT COUNT 4>
 (?im)Error while concatenating parameter field 'tsp_anytype'
-<END_RESULT>
-<RESULT COUNT 2>
-Dynamic test case error: Referenced module parameter cannot be found.
 <END_RESULT>
 
 <END_TC>
@@ -2224,69 +2218,66 @@ tsp_union := ENUM_1
 Temp.control
 <END_MODULE>
 
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_integer'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_float'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_boolean'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_objid'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_verdict'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_bitstring'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_hexstring'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_octetstring'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_charstring'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_universal_charstring'
 <END_RESULT>
 <RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_enumerated'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_record'
 <END_RESULT>
 <RESULT COUNT 2>
 (?im)Error while setting parameter field 'tsp_record.nonexistent1'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_record_of'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while setting parameter field 'tsp_set'
 <END_RESULT>
 <RESULT COUNT 2>
 (?im)Error while setting parameter field 'tsp_set.nonexistent1'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_set_of'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_anytype'
 <END_RESULT>
-<RESULT COUNT 24>
+<RESULT COUNT 26>
 (?im)Error while setting parameter field 'tsp_union'
 <END_RESULT>
 
 <RESULT COUNT 1>
 (?im)There were errors during configuring HCs.
-<END_RESULT>
-<RESULT COUNT 16>
-Dynamic test case error: Referenced module parameter cannot be found.
 <END_RESULT>
 <RESULT COUNT 1>
 
@@ -2444,7 +2435,7 @@ tsp_anytype &= {integer := 3}
 [EXECUTE]
 Temp.control
 <END_MODULE>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while concatenating parameter field 'tsp_ROI'
 <END_RESULT>
 <RESULT COUNT 4>
@@ -2456,7 +2447,7 @@ Temp.control
 <RESULT COUNT 2>
 (?im)Error while setting parameter field 'tsp_ROROI\[0\]'
 <END_RESULT>
-<RESULT COUNT 26>
+<RESULT COUNT 28>
 (?im)Error while concatenating parameter field 'tsp_SOI'
 <END_RESULT>
 <RESULT COUNT 4>
@@ -2509,9 +2500,6 @@ Temp.control
 <END_RESULT>
 <RESULT COUNT 4>
 (?im)Error while concatenating parameter field 'tsp_anytype'
-<END_RESULT>
-<RESULT COUNT 2>
-Dynamic test case error: Referenced module parameter cannot be found.
 <END_RESULT>
 
 <END_TC>

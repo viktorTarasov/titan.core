@@ -1302,8 +1302,8 @@ control{}
 [EXECUTE]
 Temp.control
 <END_MODULE>
-<RESULT IF_PASS COUNT 1>
-Dynamic test case error: Referenced module parameter cannot be found.
+<RESULT IF_PASS COUNT 2>
+Error while setting parameter field
 <END_RESULT>
 
 <END_TC>
@@ -1333,8 +1333,8 @@ DEF_1:={ f3:=${DEF_1_f} }
 [MODULE_PARAMETERS]
   tsp_1 := ${DEF_1}
 <END_MODULE>
-<RESULT IF_PASS COUNT 1>
-Dynamic test case error: Referenced module parameter cannot be found.
+<RESULT IF_PASS COUNT 2>
+Error while setting parameter field
 <END_RESULT>
  
 <END_TC>
@@ -1680,8 +1680,8 @@ control{}
 [EXECUTE]
 Temp.control
 <END_MODULE>
-<RESULT IF_PASS COUNT 1>
-Dynamic test case error: Referenced module parameter cannot be found.
+<RESULT IF_PASS COUNT 2>
+Error while setting parameter field
 <END_RESULT>
 
 <END_TC>
@@ -1711,8 +1711,8 @@ DEF_1:={ f3:=${DEF_1_f} }
 [MODULE_PARAMETERS]
   tsp_1 := ${DEF_1}
 <END_MODULE>
-<RESULT IF_PASS COUNT 1>
-Dynamic test case error: Referenced module parameter cannot be found.
+<RESULT IF_PASS COUNT 2>
+Error while setting parameter field
 <END_RESULT>
  
 <END_TC>

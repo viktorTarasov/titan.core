@@ -53,7 +53,8 @@ public:
 
   static void set_param(Module_Param& param);
 #ifdef TITAN_RUNTIME_2
-  static Module_Param* get_param(Module_Param_Name& param_name);
+  static Module_Param* get_param(Module_Param_Name& param_name,
+    const Module_Param* caller);
 #endif
   static void log_param();
 

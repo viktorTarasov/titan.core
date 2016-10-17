@@ -204,7 +204,8 @@ void Module_List::set_param(Module_Param& param)
 }
 
 #ifdef TITAN_RUNTIME_2
-Module_Param* Module_List::get_param(Module_Param_Name& param_name)
+Module_Param* Module_List::get_param(Module_Param_Name& param_name,
+                                     const Module_Param* caller)
 {
   // The first segment in the parameter name can either be the module name,
   // or the module parameter name - both must be checked
@@ -239,22 +240,22 @@ Module_Param* Module_List::get_param(Module_Param_Name& param_name)
   // Still not found -> error
   if (param == NULL) {
     if (module_ptr == NULL) {
-      TTCN_error("Referenced module parameter cannot be found. Module `%s' does not exist, "
+      caller->error("Referenced module parameter cannot be found. Module `%s' does not exist, "
         "and no parameter with name `%s' exists in any module.", 
         first_name, first_name);
     } else if (module_ptr->get_param_func == NULL) {
-      TTCN_error("Referenced module parameter cannot be found. Module `%s' does not have "
+      caller->error("Referenced module parameter cannot be found. Module `%s' does not have "
         "parameters, and no parameter with name `%s' exists in other modules.", 
         first_name, first_name);
     } else {
-      TTCN_error("Referenced module parameter cannot be found. No parameter with name `%s' "
+      caller->error("Referenced module parameter cannot be found. No parameter with name `%s' "
         "exists in module `%s', and no parameter with name `%s' exists in any module.",
         second_name, first_name, first_name);
     }
   }
   else if (param->get_type() == Module_Param::MP_Unbound) {
     delete param;
-    TTCN_error("Referenced module parameter '%s' is unbound.", param_name.get_str());
+    caller->error("Referenced module parameter '%s' is unbound.", param_name.get_str());
   }
 
   return param;
