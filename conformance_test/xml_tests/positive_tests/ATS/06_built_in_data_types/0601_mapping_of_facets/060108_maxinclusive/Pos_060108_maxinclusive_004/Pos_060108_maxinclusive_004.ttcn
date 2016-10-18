@@ -43,7 +43,7 @@ module Pos_060108_maxinclusive_004 {
     testcase TC_Pos_060108_maxinclusive_004() runs on C system C {
         var Raw v_rcv;
 
-        var Raw  v_Raw:="<ns057:e1 xmlns:ns057='schema:Pos_060108_maxinclusive_004'>nan</ns057:e1>\n";
+        var Raw  v_Raw:="<ns057:e1 xmlns:ns057='schema:Pos_060108_maxinclusive_004'>NaN</ns057:e1>\n";
 
         connect(self:p, self:p1);
 
