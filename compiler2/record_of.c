@@ -1506,7 +1506,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       /* The call to the non-const operator[] creates the element */
       "            (*this)[val_ptr->n_elements].XER_decode(*p_td.oftype_descr, p_reader, p_flavor, p_flavor2, emb_val);\n"    
       "          }\n"
-      "          if (0 != emb_val && !own_tag && val_ptr->n_elements > 1) {\n"
+      "          if (0 != emb_val && !own_tag && val_ptr->n_elements > 1 && !(p_td.oftype_descr->xer_bits & UNTAGGED)) {\n"
       "            ++emb_val->embval_index;\n"
       "          }\n"
       "        }\n"
@@ -1527,6 +1527,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "            (*emb_val->embval_array_opt)[emb_val->embval_index] = emb_ustr;\n"
       "          }\n"
       "          rd_ok = p_reader.Read();\n"
+      "          if (p_td.oftype_descr->xer_bits & UNTAGGED) ++emb_val->embval_index;\n"
       "        }\n"
       "        else {\n"
       "          rd_ok = p_reader.Read();\n"

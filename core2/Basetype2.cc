@@ -2400,7 +2400,7 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
             /* The call to the non-const get_at() creates the element */
             get_at(get_nof_elements())->XER_decode(*p_td.oftype_descr, reader, flavor, flavor2, emb_val);
           }
-          if (0 != emb_val && !own_tag && get_nof_elements() > 1) {
+          if (0 != emb_val && !own_tag && get_nof_elements() > 1 && !(p_td.oftype_descr->xer_bits & UNTAGGED)) {
             ++emb_val->embval_index;
           }
         }
@@ -2413,11 +2413,12 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
             reader.Read(); // move forward one last time
           }
           break;
-        }
+        } 
         else if (XML_READER_TYPE_TEXT == type && 0 != emb_val && !own_tag && get_nof_elements() > 0) {
           UNIVERSAL_CHARSTRING emb_ustr((const char*)reader.Value());
           emb_val->embval_array->get_at(emb_val->embval_index)->set_value(&emb_ustr);
           success = reader.Read();
+          if (p_td.oftype_descr->xer_bits & UNTAGGED) ++emb_val->embval_index;
         }
         else {
           success = reader.Read();
@@ -4114,7 +4115,7 @@ int Record_Type::get_index_byname(const char *name, const char *uri) const {
 }
 
 int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-  unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+  unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val_parent) const
 {
   if (err_descr) {
     return XER_encode_negtest(err_descr, p_td, p_buf, flavor, indent, 0);
@@ -4414,7 +4415,13 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
           uoe = use_order->get_at(i - begin);
           enm = static_cast<const Enum_Type *>(uoe);
         }
-
+        if (p_td.xer_bits & UNTAGGED && i > 0 && exer && embed_values == NULL && 0 != emb_val_parent &&
+          emb_val_parent->embval_index < emb_val_parent->embval_array->size_of()) {
+          emb_val_parent->embval_array->get_at(emb_val_parent->embval_index)->XER_encode(UNIVERSAL_CHARSTRING_xer_
+            , p_buf, flavor | EMBED_VALUES, indent+1, 0);
+          ++emb_val_parent->embval_index;
+        }
+        
         // "actual" index, may be perturbed by USE-ORDER
         int ai = !(exer && (p_td.xer_bits & USE_ORDER)) ? i :
         enm->as_int() + useorder_base;
@@ -5127,7 +5134,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
 }
 
 int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
-                            unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
+                            unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t* emb_val_parent)
 {
   int exer = is_exer(flavor);
   int success, type;
@@ -5601,6 +5608,15 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
               ++emb_val->embval_index;
             }
             last_embval_index = emb_val->embval_index;
+          } else if (p_td.xer_bits & UNTAGGED && 0 != emb_val_parent) {
+            if (reader.NodeType()==XML_READER_TYPE_TEXT) {
+              UNIVERSAL_CHARSTRING emb_ustr((const char*)reader.Value());
+              emb_val_parent->embval_array->get_at(emb_val_parent->embval_index)->set_value(&emb_ustr);
+            }
+            if (last_embval_index == emb_val_parent->embval_index) {
+              ++emb_val_parent->embval_index;
+            }
+            last_embval_index = emb_val_parent->embval_index;
           }
           ec_1.set_msg("%s': ", fld_name(i));
           if (exer && i==field_cnt-1 && p_td.dfeValue && reader.IsEmptyElement()) {

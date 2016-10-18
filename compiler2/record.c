@@ -1915,7 +1915,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   /* * * * * * * * * * XER_encode * * * * * * * * * * * * * * */
   src = mputprintf(src,
     "int %s::XER_encode(const XERdescriptor_t& p_td, "
-    "TTCN_Buffer& p_buf, unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const\n"
+    "TTCN_Buffer& p_buf, unsigned int p_flavor, int p_indent, embed_values_enc_struct_t* emb_val_parent) const\n"
     "{\n"
     "  if (!is_bound()) TTCN_EncDec_ErrorContext::error"
     "(TTCN_EncDec::ET_UNBOUND, \"Encoding an unbound value.\");\n"
@@ -2076,7 +2076,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     /* If the first component is a record-of with ANY-ATTRIBUTES,
      * it has been taken care of because it looked like an EMBED-VALUES */
     if (i==0 && sdef->xerEmbedValuesPossible && (sdef->elements[i].xerAnyKind & ANY_ATTRIB_BIT)) continue ;
-    src = mputprintf(src,
+    src = mputprintf(src, 
       "  ec_1.set_msg(\"%s': \");\n"
       "  tmp_len = field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1, 0);\n"
       "  %ssub_len += tmp_len;\n" /* do not add if attribute and EXER */
@@ -2288,6 +2288,29 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         "  ec_1.set_msg(\"%s': \");\n"
         , sdef->elements[i].dispname
       );
+      if (i > start_at + num_attributes) { // First field's embed value is already processed
+        src = mputprintf(src, 
+          "if (e_xer && (p_td.xer_bits & UNTAGGED && !(p_td.xer_bits & EMBED_VALUES) && 0 != emb_val_parent\n"
+          "  %s%s%s)) {\n"
+          "  if (0 != emb_val_parent->embval_array_reg) {\n"
+          "    if (emb_val_parent->embval_index < emb_val_parent->embval_array_reg->size_of()) {\n"
+          "      (*emb_val_parent->embval_array_reg)[emb_val_parent->embval_index].XER_encode(UNIVERSAL_CHARSTRING_xer_"
+          "      , p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+          "      ++emb_val_parent->embval_index;\n"
+          "    }\n"
+          "  } else {\n"
+           "   if (emb_val_parent->embval_index < emb_val_parent->embval_array_opt->size_of()) {\n"
+          "      (*emb_val_parent->embval_array_opt)[emb_val_parent->embval_index].XER_encode(UNIVERSAL_CHARSTRING_xer_"
+          "      , p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+          "      ++emb_val_parent->embval_index;\n"
+          "    }\n"
+          "  }\n"
+          "}\n"
+          , sdef->elements[0].isOptional ? "&& field_" : ""
+          , sdef->elements[0].isOptional ? sdef->elements[0].name : ""
+          , sdef->elements[0].isOptional ? ".ispresent()" : ""
+        );
+      }
       src = mputprintf(src,
         "  sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor%s, p_indent+!omit_tag, %s);\n"
         , sdef->elements[i].name, sdef->elements[i].typegen
@@ -2383,7 +2406,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
 
   src = mputprintf(src, /* XERSTUFF decodegen for record/SEQUENCE*/
     "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,"
-    " unsigned int p_flavor, unsigned int p_flavor2, embed_values_dec_struct_t*)\n"
+    " unsigned int p_flavor, unsigned int p_flavor2, embed_values_dec_struct_t* emb_val_parent)\n"
     "{\n"
     /* Remove XER_LIST, XER_RECOF from p_flavor. This is not required
      * for is_exer (which tests another bit), but for subsequent code. */
@@ -2968,6 +2991,19 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  {\n"
       "    ec_1.set_msg(\"%s': \");\n"
       , sdef->elements[i].dispname);
+    
+    src = mputprintf(src, 
+      "  if (p_td.xer_bits & UNTAGGED && 0 != emb_val_parent) {\n"
+      "    if (p_reader.NodeType() == XML_READER_TYPE_TEXT) {\n"
+      "      UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
+      "      if (0 != emb_val_parent->embval_array_reg) {\n"
+      "        (*emb_val_parent->embval_array_reg)[emb_val_parent->embval_index] = emb_ustr;\n"
+      "      } else {\n"
+      "        (*emb_val_parent->embval_array_opt)[emb_val_parent->embval_index] = emb_ustr;\n"
+      "      }\n"
+      "      ++emb_val_parent->embval_index;\n"
+      "    }\n"
+      "  }\n");
     
     if ( (sdef->elements[i].xerAnyKind & ANY_ELEM_BIT)
          && !strcmp(sdef->elements[i].type,"UNIVERSAL_CHARSTRING") ) {

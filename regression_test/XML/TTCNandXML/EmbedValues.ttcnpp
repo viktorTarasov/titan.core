@@ -389,6 +389,142 @@ testcase dec_emb_opt() runs on Embedder
   CHECK_DECODE(exer_dec_eo, estr_test2, EmOpt, expected);
 }
 
+
+
+/****************** EMBED-VALUES and record of record fields untagged ******************/
+
+type record EmbRecordOrRecordUntagged {
+  record of universal charstring embed,
+  record of record {
+    universal charstring a,
+    boolean b
+  } sequence_list
+}
+with {
+  variant "embedValues"
+  variant "element";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
+}
+
+DECLARE_XER_ENCODERS(EmbRecordOrRecordUntagged, erecofrecuntagged);
+DECLARE_EXER_ENCODERS(EmbRecordOrRecordUntagged, erecofrecuntagged);
+
+const EmbRecordOrRecordUntagged c_testingrecofrecuntagged := {
+  embed := { "a1", "b1", "a2", "b2", "end" },
+  sequence_list := {
+    {
+      a := "firsta",
+      b := false
+    },
+    {
+      a := "seconda",
+      b := false
+    }
+  }
+}
+
+const universal charstring bstr_test7 :=
+"<EmbRecordOrRecordUntagged>\n" &
+"\t<embed>\n" &
+"\t\t<UNIVERSAL_CHARSTRING>a1</UNIVERSAL_CHARSTRING>\n" &
+"\t\t<UNIVERSAL_CHARSTRING>b1</UNIVERSAL_CHARSTRING>\n" &
+"\t\t<UNIVERSAL_CHARSTRING>a2</UNIVERSAL_CHARSTRING>\n" &
+"\t\t<UNIVERSAL_CHARSTRING>b2</UNIVERSAL_CHARSTRING>\n" &
+"\t\t<UNIVERSAL_CHARSTRING>end</UNIVERSAL_CHARSTRING>\n" &
+"\t</embed>\n" &
+"\t<sequence_list>\n" &
+"\t\t<SEQUENCE>\n" &
+"\t\t\t<a>firsta</a>\n" &
+"\t\t\t<b><false/></b>\n" &
+"\t\t</SEQUENCE>\n" &
+"\t\t<SEQUENCE>\n" &
+"\t\t\t<a>seconda</a>\n" &
+"\t\t\t<b><false/></b>\n" &
+"\t\t</SEQUENCE>\n" &
+"\t</sequence_list>\n" &
+"</EmbRecordOrRecordUntagged>\n\n";
+
+const universal charstring estr_test7 :=
+"<EmbRecordOrRecordUntagged>a1" &
+"<a>firsta</a>b1"&
+"<b>false</b>a2"&
+"<a>seconda</a>b2"&
+"<b>false</b>end"&
+"</EmbRecordOrRecordUntagged>\n"
+
+
+const universal charstring bstr_test8 :=
+"<EmbRecordOrRecordUntagged>\n"&
+"\t<embed>\n"&
+"\t\t<UNIVERSAL_CHARSTRING>first</UNIVERSAL_CHARSTRING>\n"&
+"\t\t<UNIVERSAL_CHARSTRING>second</UNIVERSAL_CHARSTRING>\n"&
+"\t\t<UNIVERSAL_CHARSTRING>third</UNIVERSAL_CHARSTRING>\n"&
+"\t</embed>\n"&
+"\t<sequence_list>\n"&
+"\t\t<SEQUENCE>\n"&
+"\t\t\t<a>firsta</a>\n"&
+"\t\t\t<b><false/></b>\n"&
+"\t\t</SEQUENCE>\n"&
+"\t</sequence_list>\n"&
+"</EmbRecordOrRecordUntagged>\n"&
+"\n"
+
+const universal charstring estr_test8 :=
+"<EmbRecordOrRecordUntagged>first"&
+"<a>firsta</a>second"&
+"<b>false</b>third"&
+"</EmbRecordOrRecordUntagged>\n"
+
+const universal charstring bstr_test9 :=
+"<EmbRecordOrRecordUntagged>\n"&
+"\t<embed>\n"&
+"\t\t<UNIVERSAL_CHARSTRING>first</UNIVERSAL_CHARSTRING>\n"&
+"\t\t<UNIVERSAL_CHARSTRING/>\n"&
+"\t</embed>\n"&
+"\t<sequence_list/>\n"&
+"</EmbRecordOrRecordUntagged>\n"&
+"\n"
+
+const universal charstring estr_test9 :=
+"<EmbRecordOrRecordUntagged>first"&
+"</EmbRecordOrRecordUntagged>\n"
+
+testcase enc_emb_record_of_record_untagged() runs on Embedder
+{
+  var EmbRecordOrRecordUntagged testing := c_testingrecofrecuntagged;
+  CHECK_METHOD(bxer_enc_erecofrecuntagged, testing, bstr_test7);
+  CHECK_METHOD(exer_enc_erecofrecuntagged, testing, estr_test7);
+  
+  testing.sequence_list := { { a := "firsta", b := false } }
+  testing.embed := {"first", "second", "third"}
+  CHECK_METHOD(bxer_enc_erecofrecuntagged, testing, bstr_test8);
+  CHECK_METHOD(exer_enc_erecofrecuntagged, testing, estr_test8);
+  
+  testing.sequence_list := { }
+  testing.embed := {"first", ""}
+  CHECK_METHOD(bxer_enc_erecofrecuntagged, testing, bstr_test9);
+  CHECK_METHOD(exer_enc_erecofrecuntagged, testing, estr_test9);
+}
+
+testcase dec_emb_record_of_record_untagged() runs on Embedder
+{
+  var EmbRecordOrRecordUntagged expected := c_testingrecofrecuntagged;
+  CHECK_DECODE(bxer_dec_erecofrecuntagged, bstr_test7, EmbRecordOrRecordUntagged, expected);
+  CHECK_DECODE(exer_dec_erecofrecuntagged, estr_test7, EmbRecordOrRecordUntagged, expected);
+
+  expected.sequence_list := { { a := "firsta", b := false } }
+  expected.embed := {"first", "second", "third"}
+  CHECK_DECODE(bxer_dec_erecofrecuntagged, bstr_test8, EmbRecordOrRecordUntagged, expected);
+  CHECK_DECODE(exer_dec_erecofrecuntagged, estr_test8, EmbRecordOrRecordUntagged, expected);
+
+  expected.sequence_list := { }
+  expected.embed := {"first", ""}
+  CHECK_DECODE(bxer_dec_erecofrecuntagged, bstr_test9, EmbRecordOrRecordUntagged, expected);
+  CHECK_DECODE(exer_dec_erecofrecuntagged, estr_test9, EmbRecordOrRecordUntagged, expected);
+}
+
+
 /********************** Control part **********************/
 
 control {
@@ -403,8 +539,10 @@ control {
 
     execute(enc_emb_opt());
     execute(dec_emb_opt());
-}
 
+    execute(enc_emb_record_of_record_untagged());
+    execute(dec_emb_record_of_record_untagged());
+  }
 }
 with {
   encode "XML"
