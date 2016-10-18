@@ -20,7 +20,31 @@ module Custom1 {
 import from Custom2 all;
 import from Custom3 all;
 
-type component CT {}
+type record Msg {
+  octetstring data optional,
+  RecOf list
+}
+
+signature Sig(inout universal charstring p);
+
+type port PT_Msg message {
+  inout Msg
+}
+with {
+  extension "internal";
+}
+
+type port PT_Proc procedure {
+  inout Sig
+}
+with {
+  extension "internal";
+}
+
+type component CT {
+  port PT_Msg pt_msg;
+  port PT_Proc pt_proc;
+}
 
 // Test 1.
 // The encoded type is a record defined in another module
@@ -133,11 +157,94 @@ testcase tc_custom_temp() runs on CT
   setverdict(pass);
 }
 
+// Test 5.
+// Same as test 2, but with encvalue_unichar and decvalue_unichar.
+// The input RecOf has also been adjusted, so it doesn't cause problems for the UTF-8 decoder.
+testcase tc_custom_unichar() runs on CT
+{
+  var RecOf x := { '0110'B, '0100'B, '01110101'B };
+  var universal charstring enc_exp := oct2unichar(bit2oct(x[0] & c_separator & x[1] & c_separator & x[2]), "UTF-8");
+  var RecOf dec_exp := x;
+  
+  var universal charstring enc := encvalue_unichar(x, "UTF-8");
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  var RecOf dec;
+  var integer res := decvalue_unichar(enc_exp, dec, "UTF-8");
+  if (res != 0) {
+    setverdict(fail, "Failed to decode ", enc_exp);
+  }
+  if (dec != dec_exp) {
+    setverdict(fail, "Expected: ", dec_exp, ", got: ", dec);
+  }
+  setverdict(pass);
+}
+
+// Test 6.
+// Using custom encoding on a decoded parameter redirect.
+// Same input value as in test 5.
+testcase tc_custom_param_redirect() runs on CT
+{
+  connect(self:pt_proc, self:pt_proc);
+  var RecOf val := { '0110'B, '0100'B, '01110101'B };
+  var charstring str_fmt := "UTF-8";
+  var universal charstring val_enc := encvalue_unichar(val, str_fmt);
+  var RecOf res;
+  pt_proc.reply(Sig: { p := val_enc });
+  timer tmr := 1.0;
+  tmr.start;
+  alt {
+    [] pt_proc.getreply(Sig: { p := val_enc }) -> param (res := @decoded(str_fmt) p) {
+      if (res != val) {
+        setverdict(fail, "Invalid decoded parameter. Expected: ", val, ", got: ", res);
+      }
+      else {
+        setverdict(pass);
+      }
+    }
+    [] pt_proc.getreply(Sig: { p := ?}) {
+      setverdict(fail, "Invalid reply received.");
+    }
+    [] tmr.timeout {
+      setverdict(fail, "Timed out.");
+    }
+  }
+}
+
+// Test 7.
+// Using custom encoding in a template with decoded content matching.
+// Same input as test 3.
+testcase tc_custom_decmatch() runs on CT
+{
+  connect(self:pt_msg, self:pt_msg);
+  var Uni val := { i := 16 };
+  var Msg msg := { data := omit, list := { encvalue(val) } };
+  var Uni res;
+  pt_msg.send(msg);
+  timer tmr := 1.0;
+  tmr.start;
+  alt {
+    [] pt_msg.receive(Msg: { data := omit, list := { decmatch val } }) {
+      setverdict(pass);
+    }
+    [] pt_msg.receive(?) {
+      setverdict(fail, "Invalid message received or decoded content matching failed.");
+    }
+    [] tmr.timeout {
+      setverdict(fail, "Timed out.");
+    }
+  }
+}
+
 control {
   execute(tc_custom1());
   execute(tc_custom2());
   execute(tc_custom3());
   execute(tc_custom_temp());
+  execute(tc_custom_unichar());
+  execute(tc_custom_param_redirect());
+  execute(tc_custom_decmatch());
 }
 
 }

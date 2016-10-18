@@ -12939,6 +12939,11 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       is_templ = true;
       break;
     }
+    
+    const char * v2_code = NULL;
+    if(u.expr.v2) {
+      v2_code = generate_code_char_coding_check(expr, u.expr.v2, "encvalue_unichar");
+    }
 
     if (!gov_last->is_coding_by_function()) {
       const string& tmp_id = get_temporary_id();
@@ -12974,10 +12979,6 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
         tmp_buf_id.c_str(),
         tmp_id.c_str()
       );
-      const char * v2_code = NULL;
-      if(u.expr.v2) {
-        v2_code = generate_code_char_coding_check(expr, u.expr.v2, "encvalue_unichar");
-      }
       expr->expr = mputprintf(expr->expr, "oct2unichar(%s", tmp_id.c_str());
       if(u.expr.v2) {
         expr->expr = mputprintf(expr->expr, ", %s", v2_code);
@@ -12987,10 +12988,17 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       expr->expr = mputprintf(expr->expr, ")");
       if (expr2.postamble)
         expr->postamble = mputstr(expr->postamble, expr2.postamble);
-    } else
-      expr->expr = mputprintf(expr->expr, "%s(%s%s)",
+    } else {
+      expr->expr = mputprintf(expr->expr, "oct2unichar(bit2oct(%s(%s%s))",
         gov_last->get_coding(true).c_str(), expr2.expr,
         is_templ ? ".valueof()" : "");
+      if(u.expr.v2) {
+        expr->expr = mputprintf(expr->expr, ", %s", v2_code);
+      } else {
+        expr->expr = mputprintf(expr->expr, ", \"UTF-8\"");  //default
+      }
+      expr->expr = mputprintf(expr->expr, ")");
+    }
     Code::free_expr(&expr2);
   }
 
@@ -13010,6 +13018,10 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       expr->preamble = mputprintf(expr->preamble, "%s", expr1.preamble);
     if (expr2.preamble)
       expr->preamble = mputprintf(expr->preamble, "%s", expr2.preamble);
+    const char* v3_code = NULL;
+    if(u.expr.v3) {
+      v3_code = generate_code_char_coding_check(expr, u.expr.v3, "decvalue_unichar");
+    }
 
     if (!_type->is_coding_by_function()) {
       const string& tmp_id = get_temporary_id();
@@ -13018,10 +13030,6 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       const bool optional = u.expr.r2->get_refd_assignment()->get_Type()->
         field_is_optional(u.expr.r2->get_subrefs());
 
-      const char* v3_code = NULL;
-      if(u.expr.v3) {
-        v3_code = generate_code_char_coding_check(expr, u.expr.v3, "decvalue_unichar");
-      }
       expr->preamble = mputprintf(expr->preamble,
         "TTCN_Buffer %s(unichar2oct(%s, %s));\n"
         "INTEGER %s;\n"
@@ -13074,9 +13082,21 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
         retval_id.c_str()
       );
       expr->expr = mputprintf(expr->expr, "%s", retval_id.c_str());
-    } else
-      expr->expr = mputprintf(expr->expr, "%s(%s, %s)",
-        _type->get_coding(false).c_str(), expr1.expr, expr2.expr);
+    } else {
+      const string& ustr_ref_id = get_temporary_id();
+      const string& bstr_id = get_temporary_id();
+      const string& ret_val_id = get_temporary_id();
+      expr->preamble = mputprintf(expr->preamble,
+        "UNIVERSAL_CHARSTRING& %s = %s;\n"
+        "BITSTRING %s(oct2bit(unichar2oct(%s, %s)));\n"
+        "INTEGER %s(%s(%s, %s));\n"
+        "%s = oct2unichar(bit2oct(%s), %s);\n",
+        ustr_ref_id.c_str(), expr1.expr,
+        bstr_id.c_str(), ustr_ref_id.c_str(), u.expr.v3 ? v3_code : "\"UTF-8\"",
+        ret_val_id.c_str(), _type->get_coding(false).c_str(), bstr_id.c_str(), expr2.expr,
+        ustr_ref_id.c_str(), bstr_id.c_str(), u.expr.v3 ? v3_code : "\"UTF-8\"");
+      expr->expr = mputprintf(expr->expr, "%s", ret_val_id.c_str());
+    }
     if (expr1.postamble)
       expr->postamble = mputprintf(expr->postamble, "%s", expr1.postamble);
     if (expr2.postamble)

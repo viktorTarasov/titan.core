@@ -8852,94 +8852,154 @@ error:
           if (use_decmatch_result) {
             set_params_str = mputstr(set_params_str, "}\nelse {\n");
           }
-          switch (par->get_type()->get_type_refd_last()->get_typetype_ttcn3()) {
-          case Type::T_OSTR:
-          case Type::T_CSTR:
-            set_params_str = mputprintf(set_params_str,
-              "TTCN_Buffer buff(par.%s());\n", par_name);
-            break;
-          case Type::T_BSTR:
-            set_params_str = mputprintf(set_params_str,
-              "OCTETSTRING os(bit2oct(par.%s()));\n"
-              "TTCN_Buffer buff(os);\n", par_name);
-            break;
-          case Type::T_HSTR:
-            set_params_str = mputprintf(set_params_str,
-              "OCTETSTRING os(hex2oct(par.%s()));\n"
-              "TTCN_Buffer buff(os);\n", par_name);
-            break;
-          case Type::T_USTR:
-            set_params_str = mputstr(set_params_str, "TTCN_Buffer buff;\n");
-            if (ve->get_str_enc() == NULL || !ve->get_str_enc()->is_unfoldable()) {
-              // if the encoding format is missing or is known at compile-time, then
-              // use the appropriate string encoding function
-              string str_enc = (ve->get_str_enc() != NULL) ?
-                ve->get_str_enc()->get_val_str() : string("UTF-8");
-              if (str_enc == "UTF-8") {
-                set_params_str = mputprintf(set_params_str,
-                  "par.%s().encode_utf8(buff, false);\n", par_name);
-              }
-              else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
-                       str_enc == "UTF-16BE") {
-                set_params_str = mputprintf(set_params_str,
-                  "par.%s().encode_utf16(buff, CharCoding::UTF16%s);\n", par_name,
-                  (str_enc == "UTF-16LE") ? "LE" : "BE");
-              }
-              else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
-                       str_enc == "UTF-32BE") {
-                set_params_str = mputprintf(set_params_str,
-                  "par.%s().encode_utf32(buff, CharCoding::UTF32%s);\n", par_name,
-                  (str_enc == "UTF-32LE") ? "LE" : "BE");
-              }
-            }
-            else {
-              // the encoding format is not known at compile-time, so an extra
-              // member and constructor parameter is needed to store it
-              members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%s;\n",
+          Type::typetype_t tt = par->get_type()->get_type_refd_last()->get_typetype_ttcn3();
+          if (ve->get_dec_type()->is_coding_by_function()) {
+            set_params_str = mputstr(set_params_str, "BITSTRING buff(");
+            switch (tt) {
+            case Type::T_BSTR:
+              set_params_str = mputprintf(set_params_str, "par.%s()", par_name);
+              break;
+            case Type::T_HSTR:
+              set_params_str = mputprintf(set_params_str, "hex2bit(par.%s())",
                 par_name);
-              constr_params_str = mputprintf(constr_params_str,
-                ", CHARSTRING par_fmt_%s = CHARSTRING()", par_name);
-              constr_init_list_str = mputprintf(constr_init_list_str,
-                ", enc_fmt_%s(par_fmt_%s)", par_name, par_name);
-              if (!use_decmatch_result) {
-                // if the decmatch result code is generated too, then this variable
-                // was already generated before the main 'if'
-                set_params_str = mputprintf(set_params_str,
-                  "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
-                  "get_character_coding(enc_fmt_%s, \"decoded parameter redirect\");\n",
-                  par_name);
-              }
+              break;
+            case Type::T_OSTR:
+              set_params_str = mputprintf(set_params_str, "oct2bit(par.%s())",
+                par_name);
+              break;
+            case Type::T_CSTR:
               set_params_str = mputprintf(set_params_str,
-                "switch (coding) {\n"
-                "case CharCoding::UTF_8:\n"
-                "par.%s().encode_utf8(buff, false);\n"
-                "break;\n"
-                "case CharCoding::UTF16:\n"
-                "case CharCoding::UTF16LE:\n"
-                "case CharCoding::UTF16BE:\n"
-                "par.%s().encode_utf16(buff, coding);\n"
-                "break;\n"
-                "case CharCoding::UTF32:\n"
-                "case CharCoding::UTF32LE:\n"
-                "case CharCoding::UTF32BE:\n"
-                "par.%s().encode_utf32(buff, coding);\n"
-                "break;\n"
-                "default:\n"
-                "break;\n"
-                "}\n", par_name, par_name, par_name);
+                "oct2bit(char2oct(par.%s()))", par_name);
+              break;
+            case Type::T_USTR:
+              set_params_str = mputprintf(set_params_str,
+                "oct2bit(unichar2oct(par.%s(), ", par_name);
+              if (ve->get_str_enc() == NULL || !ve->get_str_enc()->is_unfoldable()) {
+                // encoding format is missing or is known at compile-time
+                set_params_str = mputprintf(set_params_str, "\"%s\"",
+                  ve->get_str_enc() != NULL ?
+                  ve->get_str_enc()->get_val_str().c_str() : "UTF-8");
+              }
+              else {
+                // the encoding format is not known at compile-time, so an extra
+                // member and constructor parameter is needed to store it
+                members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%s;\n",
+                  par_name);
+                constr_params_str = mputprintf(constr_params_str,
+                  ", CHARSTRING par_fmt_%s = CHARSTRING()", par_name);
+                constr_init_list_str = mputprintf(constr_init_list_str,
+                  ", enc_fmt_%s(par_fmt_%s)", par_name, par_name);
+                set_params_str = mputprintf(set_params_str, "enc_fmt_%s", par_name);
+              }
+              set_params_str = mputstr(set_params_str, "))");
+              break;
+            default:
+              FATAL_ERROR("ParamRedirect::generate_code_decoded");
             }
-            break;
-          default:
-            FATAL_ERROR("ParamRedirect::generate_code_decoded");
+            set_params_str = mputprintf(set_params_str,
+              ");\n"
+              "if (%s(buff, *ptr_%s_dec) != 0) {\n"
+              "TTCN_error(\"Decoding failed in parameter redirect "
+              "(for parameter '%s').\");\n"
+              "}\n"
+              "if (buff.lengthof() != 0) {\n"
+              "TTCN_error(\"Parameter redirect (for parameter '%s') failed, "
+              "because the buffer was not empty after decoding. "
+              "Remaining bits: %%d.\", buff.lengthof());\n"
+              "}\n", ve->get_dec_type()->get_coding(false).c_str(),
+              par_name, par_name, par_name);
           }
-          set_params_str = mputprintf(set_params_str,
-            "ptr_%s_dec->decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
-            "if (buff.get_read_len() != 0) {\n"
-            "TTCN_error(\"Parameter redirect failed, because the buffer was not "
-            "empty after decoding. Remaining octets: %%d.\", (int)buff.get_read_len());\n"
-            "}\n", par_name,
-            ve->get_dec_type()->get_genname_typedescriptor(scope).c_str(),
-            ve->get_dec_type()->get_coding(false).c_str());
+          else { // built-in decoding
+            switch (tt) {
+            case Type::T_OSTR:
+            case Type::T_CSTR:
+              set_params_str = mputprintf(set_params_str,
+                "TTCN_Buffer buff(par.%s());\n", par_name);
+              break;
+            case Type::T_BSTR:
+              set_params_str = mputprintf(set_params_str,
+                "OCTETSTRING os(bit2oct(par.%s()));\n"
+                "TTCN_Buffer buff(os);\n", par_name);
+              break;
+            case Type::T_HSTR:
+              set_params_str = mputprintf(set_params_str,
+                "OCTETSTRING os(hex2oct(par.%s()));\n"
+                "TTCN_Buffer buff(os);\n", par_name);
+              break;
+            case Type::T_USTR:
+              set_params_str = mputstr(set_params_str, "TTCN_Buffer buff;\n");
+              if (ve->get_str_enc() == NULL || !ve->get_str_enc()->is_unfoldable()) {
+                // if the encoding format is missing or is known at compile-time, then
+                // use the appropriate string encoding function
+                string str_enc = (ve->get_str_enc() != NULL) ?
+                  ve->get_str_enc()->get_val_str() : string("UTF-8");
+                if (str_enc == "UTF-8") {
+                  set_params_str = mputprintf(set_params_str,
+                    "par.%s().encode_utf8(buff, false);\n", par_name);
+                }
+                else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
+                         str_enc == "UTF-16BE") {
+                  set_params_str = mputprintf(set_params_str,
+                    "par.%s().encode_utf16(buff, CharCoding::UTF16%s);\n", par_name,
+                    (str_enc == "UTF-16LE") ? "LE" : "BE");
+                }
+                else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
+                         str_enc == "UTF-32BE") {
+                  set_params_str = mputprintf(set_params_str,
+                    "par.%s().encode_utf32(buff, CharCoding::UTF32%s);\n", par_name,
+                    (str_enc == "UTF-32LE") ? "LE" : "BE");
+                }
+              }
+              else {
+                // the encoding format is not known at compile-time, so an extra
+                // member and constructor parameter is needed to store it
+                members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%s;\n",
+                  par_name);
+                constr_params_str = mputprintf(constr_params_str,
+                  ", CHARSTRING par_fmt_%s = CHARSTRING()", par_name);
+                constr_init_list_str = mputprintf(constr_init_list_str,
+                  ", enc_fmt_%s(par_fmt_%s)", par_name, par_name);
+                if (!use_decmatch_result) {
+                  // if the decmatch result code is generated too, then this variable
+                  // was already generated before the main 'if'
+                  set_params_str = mputprintf(set_params_str,
+                    "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
+                    "get_character_coding(enc_fmt_%s, \"decoded parameter redirect\");\n",
+                    par_name);
+                }
+                set_params_str = mputprintf(set_params_str,
+                  "switch (coding) {\n"
+                  "case CharCoding::UTF_8:\n"
+                  "par.%s().encode_utf8(buff, false);\n"
+                  "break;\n"
+                  "case CharCoding::UTF16:\n"
+                  "case CharCoding::UTF16LE:\n"
+                  "case CharCoding::UTF16BE:\n"
+                  "par.%s().encode_utf16(buff, coding);\n"
+                  "break;\n"
+                  "case CharCoding::UTF32:\n"
+                  "case CharCoding::UTF32LE:\n"
+                  "case CharCoding::UTF32BE:\n"
+                  "par.%s().encode_utf32(buff, coding);\n"
+                  "break;\n"
+                  "default:\n"
+                  "break;\n"
+                  "}\n", par_name, par_name, par_name);
+              }
+              break;
+            default:
+              FATAL_ERROR("ParamRedirect::generate_code_decoded");
+            }
+            set_params_str = mputprintf(set_params_str,
+              "ptr_%s_dec->decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
+              "if (buff.get_read_len() != 0) {\n"
+              "TTCN_error(\"Parameter redirect (for parameter '%s') failed, "
+              "because the buffer was not empty after decoding. "
+              "Remaining octets: %%d.\", (int)buff.get_read_len());\n"
+              "}\n", par_name,
+              ve->get_dec_type()->get_genname_typedescriptor(scope).c_str(),
+              ve->get_dec_type()->get_coding(false).c_str(), par_name);
+          }
           if (use_decmatch_result) {
             set_params_str = mputstr(set_params_str, "}\n");
           }
@@ -9541,99 +9601,161 @@ error:
             if (use_decmatch_result) {
               set_values_str = mputstr(set_values_str, "}\nelse {\n");
             }
-            switch (redir_type->get_type_refd_last()->get_typetype_ttcn3()) {
-            case Type::T_OSTR:
-            case Type::T_CSTR:
-              set_values_str = mputprintf(set_values_str,
-                "TTCN_Buffer buff_%d(par%s%s);\n", (int)i, subrefs_str, opt_suffix);
-              break;
-            case Type::T_BSTR:
-              set_values_str = mputprintf(set_values_str,
-                "OCTETSTRING os(bit2oct(par%s%s));\n"
-                "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
-              break;
-            case Type::T_HSTR:
-              set_values_str = mputprintf(set_values_str,
-                "OCTETSTRING os(hex2oct(par%s%s));\n"
-                "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
-              break;
-            case Type::T_USTR:
-              set_values_str = mputprintf(set_values_str, "TTCN_Buffer buff_%d;\n",
+            Type::typetype_t tt = redir_type->get_type_refd_last()->get_typetype_ttcn3();
+            if (member_type->is_coding_by_function()) {
+              set_values_str = mputprintf(set_values_str, "BITSTRING buff_%d(",
                 (int)i);
-              if (v[i]->get_str_enc() == NULL || !v[i]->get_str_enc()->is_unfoldable()) {
-                // if the encoding format is missing or is known at compile-time, then
-                // use the appropriate string encoding function
-                string str_enc = (v[i]->get_str_enc() != NULL) ?
-                  v[i]->get_str_enc()->get_val_str() : string("UTF-8");
-                if (str_enc == "UTF-8") {
-                  set_values_str = mputprintf(set_values_str,
-                    "par%s%s.encode_utf8(buff_%d, false);\n", subrefs_str, opt_suffix, (int)i);
-                }
-                else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
-                         str_enc == "UTF-16BE") {
-                  set_values_str = mputprintf(set_values_str,
-                    "par%s%s.encode_utf16(buff_%d, CharCoding::UTF16%s);\n", subrefs_str,
-                    opt_suffix, (int)i, (str_enc == "UTF-16LE") ? "LE" : "BE");
-                }
-                else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
-                         str_enc == "UTF-32BE") {
-                  set_values_str = mputprintf(set_values_str,
-                    "par%s%s.encode_utf32(buff_%d, CharCoding::UTF32%s);\n", subrefs_str,
-                    opt_suffix, (int)i, (str_enc == "UTF-32LE") ? "LE" : "BE");
-                }
-              }
-              else {
-                // the encoding format is not known at compile-time, so an extra
-                // member and constructor parameter is needed to store it
-                expr->expr = mputstr(expr->expr, ", ");
-                v[i]->get_str_enc()->generate_code_expr(expr);
-                members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
-                  (int)i);
-                constr_params_str = mputprintf(constr_params_str,
-                  ", CHARSTRING par_fmt_%d", (int)i);
-                constr_init_list_str = mputprintf(constr_init_list_str,
-                  ", enc_fmt_%d(par_fmt_%d)", (int)i, (int)i);
-                if (!use_decmatch_result) {
-                  // if the decmatch result code is generated too, then this variable
-                  // was already generated before the main 'if'
-                  set_values_str = mputprintf(set_values_str,
-                    "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
-                    "get_character_coding(enc_fmt_%d, \"decoded value redirect\");\n",
-                    (int)i);
-                }
+              switch (tt) {
+              case Type::T_BSTR:
+                set_values_str = mputprintf(set_values_str, "par%s%s",
+                  subrefs_str, opt_suffix);
+                break;
+              case Type::T_HSTR:
+                set_values_str = mputprintf(set_values_str, "hex2bit(par%s%s)",
+                  subrefs_str, opt_suffix);
+                break;
+              case Type::T_OSTR:
+                set_values_str = mputprintf(set_values_str, "oct2bit(par%s%s)",
+                  subrefs_str, opt_suffix);
+                break;
+              case Type::T_CSTR:
                 set_values_str = mputprintf(set_values_str,
-                  "switch (coding) {\n"
-                  "case CharCoding::UTF_8:\n"
-                  "par%s%s.encode_utf8(buff_%d, false);\n"
-                  "break;\n"
-                  "case CharCoding::UTF16:\n"
-                  "case CharCoding::UTF16LE:\n"
-                  "case CharCoding::UTF16BE:\n"
-                  "par%s%s.encode_utf16(buff_%d, coding);\n"
-                  "break;\n"
-                  "case CharCoding::UTF32:\n"
-                  "case CharCoding::UTF32LE:\n"
-                  "case CharCoding::UTF32BE:\n"
-                  "par%s%s.encode_utf32(buff_%d, coding);\n"
-                  "break;\n"
-                  "default:\n"
-                  "break;\n"
-                  "}\n", subrefs_str, opt_suffix, (int)i, subrefs_str, opt_suffix,
-                  (int)i, subrefs_str, opt_suffix, (int)i);
+                  "oct2bit(char2oct(par%s%s))", subrefs_str, opt_suffix);
+                break;
+              case Type::T_USTR:
+                set_values_str = mputprintf(set_values_str,
+                  "oct2bit(unichar2oct(par%s%s, ", subrefs_str, opt_suffix);
+                if (v[i]->get_str_enc() == NULL || !v[i]->get_str_enc()->is_unfoldable()) {
+                  // encoding format is missing or is known at compile-time
+                  set_values_str = mputprintf(set_values_str, "\"%s\"",
+                    v[i]->get_str_enc() != NULL ?
+                    v[i]->get_str_enc()->get_val_str().c_str() : "UTF-8");
+                }
+                else {
+                  // the encoding format is not known at compile-time, so an extra
+                  // member and constructor parameter is needed to store it
+                  expr->expr = mputstr(expr->expr, ", ");
+                  v[i]->get_str_enc()->generate_code_expr(expr);
+                  members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
+                    (int)i);
+                  constr_params_str = mputprintf(constr_params_str,
+                    ", CHARSTRING par_fmt_%d", (int)i);
+                  constr_init_list_str = mputprintf(constr_init_list_str,
+                    ", enc_fmt_%d(par_fmt_%d)", (int)i, (int)i);
+                  set_values_str = mputprintf(set_values_str, "enc_fmt_%d", (int)i);
+                }
+                set_values_str = mputstr(set_values_str, "))");
+                break;
+              default:
+                FATAL_ERROR("ValueRedirect::generate_code");
               }
-              break;
-            default:
-              FATAL_ERROR("ValueRedirect::generate_code");
+              set_values_str = mputprintf(set_values_str,
+                ");\n"
+                "if (%s(buff_%d, *ptr_%d) != 0) {\n"
+                "TTCN_error(\"Decoding failed in value redirect #%d.\");\n"
+                "}\n"
+                "if (buff_%d.lengthof() != 0) {\n"
+                "TTCN_error(\"Value redirect #%d failed, because the buffer was "
+                "not empty after decoding. Remaining bits: %%d.\", "
+                "buff_%d.lengthof());\n"
+                "}\n", member_type->get_coding(false).c_str(),
+                (int)i, (int)i, (int)(i + 1), (int)i, (int)(i + 1), (int)i);
             }
-            set_values_str = mputprintf(set_values_str,
-              "ptr_%d->decode(%s_descr_, buff_%d, TTCN_EncDec::CT_%s);\n"
-              "if (buff_%d.get_read_len() != 0) {\n"
-              "TTCN_error(\"Value redirect #%d failed, because the buffer was "
-              "not empty after decoding. Remaining octets: %%d.\", "
-              "(int)buff_%d.get_read_len());\n"
-              "}\n",
-              (int)i, member_type->get_genname_typedescriptor(scope).c_str(), (int)i,
-              member_type->get_coding(false).c_str(), (int)i, (int)(i + 1), (int)i);
+            else { // built-in decoding
+              switch (tt) {
+              case Type::T_OSTR:
+              case Type::T_CSTR:
+                set_values_str = mputprintf(set_values_str,
+                  "TTCN_Buffer buff_%d(par%s%s);\n", (int)i, subrefs_str, opt_suffix);
+                break;
+              case Type::T_BSTR:
+                set_values_str = mputprintf(set_values_str,
+                  "OCTETSTRING os(bit2oct(par%s%s));\n"
+                  "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
+                break;
+              case Type::T_HSTR:
+                set_values_str = mputprintf(set_values_str,
+                  "OCTETSTRING os(hex2oct(par%s%s));\n"
+                  "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
+                break;
+              case Type::T_USTR:
+                set_values_str = mputprintf(set_values_str, "TTCN_Buffer buff_%d;\n",
+                  (int)i);
+                if (v[i]->get_str_enc() == NULL || !v[i]->get_str_enc()->is_unfoldable()) {
+                  // if the encoding format is missing or is known at compile-time, then
+                  // use the appropriate string encoding function
+                  string str_enc = (v[i]->get_str_enc() != NULL) ?
+                    v[i]->get_str_enc()->get_val_str() : string("UTF-8");
+                  if (str_enc == "UTF-8") {
+                    set_values_str = mputprintf(set_values_str,
+                      "par%s%s.encode_utf8(buff_%d, false);\n", subrefs_str, opt_suffix, (int)i);
+                  }
+                  else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
+                           str_enc == "UTF-16BE") {
+                    set_values_str = mputprintf(set_values_str,
+                      "par%s%s.encode_utf16(buff_%d, CharCoding::UTF16%s);\n", subrefs_str,
+                      opt_suffix, (int)i, (str_enc == "UTF-16LE") ? "LE" : "BE");
+                  }
+                  else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
+                           str_enc == "UTF-32BE") {
+                    set_values_str = mputprintf(set_values_str,
+                      "par%s%s.encode_utf32(buff_%d, CharCoding::UTF32%s);\n", subrefs_str,
+                      opt_suffix, (int)i, (str_enc == "UTF-32LE") ? "LE" : "BE");
+                  }
+                }
+                else {
+                  // the encoding format is not known at compile-time, so an extra
+                  // member and constructor parameter is needed to store it
+                  expr->expr = mputstr(expr->expr, ", ");
+                  v[i]->get_str_enc()->generate_code_expr(expr);
+                  members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
+                    (int)i);
+                  constr_params_str = mputprintf(constr_params_str,
+                    ", CHARSTRING par_fmt_%d", (int)i);
+                  constr_init_list_str = mputprintf(constr_init_list_str,
+                    ", enc_fmt_%d(par_fmt_%d)", (int)i, (int)i);
+                  if (!use_decmatch_result) {
+                    // if the decmatch result code is generated too, then this variable
+                    // was already generated before the main 'if'
+                    set_values_str = mputprintf(set_values_str,
+                      "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
+                      "get_character_coding(enc_fmt_%d, \"decoded value redirect\");\n",
+                      (int)i);
+                  }
+                  set_values_str = mputprintf(set_values_str,
+                    "switch (coding) {\n"
+                    "case CharCoding::UTF_8:\n"
+                    "par%s%s.encode_utf8(buff_%d, false);\n"
+                    "break;\n"
+                    "case CharCoding::UTF16:\n"
+                    "case CharCoding::UTF16LE:\n"
+                    "case CharCoding::UTF16BE:\n"
+                    "par%s%s.encode_utf16(buff_%d, coding);\n"
+                    "break;\n"
+                    "case CharCoding::UTF32:\n"
+                    "case CharCoding::UTF32LE:\n"
+                    "case CharCoding::UTF32BE:\n"
+                    "par%s%s.encode_utf32(buff_%d, coding);\n"
+                    "break;\n"
+                    "default:\n"
+                    "break;\n"
+                    "}\n", subrefs_str, opt_suffix, (int)i, subrefs_str, opt_suffix,
+                    (int)i, subrefs_str, opt_suffix, (int)i);
+                }
+                break;
+              default:
+                FATAL_ERROR("ValueRedirect::generate_code");
+              }
+              set_values_str = mputprintf(set_values_str,
+                "ptr_%d->decode(%s_descr_, buff_%d, TTCN_EncDec::CT_%s);\n"
+                "if (buff_%d.get_read_len() != 0) {\n"
+                "TTCN_error(\"Value redirect #%d failed, because the buffer was "
+                "not empty after decoding. Remaining octets: %%d.\", "
+                "(int)buff_%d.get_read_len());\n"
+                "}\n",
+                (int)i, member_type->get_genname_typedescriptor(scope).c_str(), (int)i,
+                member_type->get_coding(false).c_str(), (int)i, (int)(i + 1), (int)i);
+            }
             if (use_decmatch_result) {
               set_values_str = mputstr(set_values_str, "}\n");
             }
