@@ -1913,7 +1913,6 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
           if(abs_dir_path != NULL && !drop){
             files.add(cpath, ruri); // relativeURI to the TPD location
           }else {
-            cpath.destroy();
             result = TPD_FAILED;
           }
           { // set the *preprocess value if .ttcnpp file was found
