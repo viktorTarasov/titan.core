@@ -21,6 +21,10 @@ TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
 TTCN3_MODULES = Custom1.ttcn Custom2.ttcn Custom3.ttcn
 
+ifdef RT2
+TTCN3_MODULES += Custom4.ttcn
+endif
+
 USER_SOURCES = Coders.cc
 
 GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc)
@@ -57,7 +61,7 @@ clean distclean:
 dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
 
-run: $(TARGET) config.cfg
+run: $(TARGET) config$(RT2_SUFFIX).cfg
 	./$^
 
 .NOTPARALLEL:

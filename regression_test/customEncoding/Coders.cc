@@ -26,6 +26,7 @@ INTEGER f__dec__rec(BITSTRING& b, Custom3::Rec& x)
 {
   x.num() = bit2int(b);
   x.str() = "c++";
+  b = BITSTRING(0, NULL);
   return 0;
 }
 
@@ -49,6 +50,7 @@ INTEGER f__dec__uni(BITSTRING& b, Custom1::Uni& x)
     if (b_len > 2 * sep_len) {
       x.i() = bit2int(substr(b, sep_len, b_len - 2 * sep_len));
     }
+    b = BITSTRING(0, NULL);
     return 0;
   }
   else {
@@ -92,6 +94,7 @@ INTEGER f__dec__recof(BITSTRING& b, RecOf& x)
     end = find_bitstring(b, start, c__separator);
   }
   x[index] = substr(b, start, b.lengthof() - start);
+  b = BITSTRING(0, NULL);
   return 0;
 }
 
