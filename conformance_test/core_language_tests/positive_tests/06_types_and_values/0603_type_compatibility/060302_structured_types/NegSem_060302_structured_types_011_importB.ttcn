@@ -18,4 +18,7 @@ module NegSem_060302_structured_types_011_importB {
   type integer F; 
   type anytype Atype;
 } 
+with {
+	extension "anytype F"
+}
 

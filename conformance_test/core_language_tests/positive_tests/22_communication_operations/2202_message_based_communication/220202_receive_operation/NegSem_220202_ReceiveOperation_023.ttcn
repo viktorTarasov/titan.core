@@ -23,13 +23,13 @@ module NegSem_220202_ReceiveOperation_023 {
 
     type record R {
         integer id,
-        octetstring payload
+        bitstring payload
     }
 
 	type integer I with { variant "32 bit"};
     
     type record Wrapped {
-        integer num
+        octetstring num
     } with { variant ""}
     
     type port P message {
@@ -44,7 +44,7 @@ module NegSem_220202_ReceiveOperation_023 {
 		var I input := 5;
 
         var Wrapped v_res;
-        var R v_rec := { id := 0, payload := bit2oct(encvalue(input)) };
+        var R v_rec := { id := 0, payload := encvalue(input) };
 
 		connect(self:p, self:p);
 

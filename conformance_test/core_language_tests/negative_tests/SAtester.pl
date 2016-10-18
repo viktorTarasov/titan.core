@@ -669,7 +669,7 @@ sub sa_compileTC(\@) {
       return (1, '');
    }
    sa_log( "Compiling sources...\n");
-   my $runtimeOption = '';
+   my $runtimeOption = '-R';
    if ($sa_titanRuntime2) { $runtimeOption = '-R'; }
    do {
       if ($cycles) { sleep(60 * 10); }
