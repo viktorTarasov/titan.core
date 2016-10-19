@@ -44,14 +44,22 @@ module www_example_org_simpletype_base {
 import from XSD all;
 
 
-type record SimpleTypebase
+type enumerated Isknown
 {
-	enumerated {
-		unknown
-	} base
+	known,
+	unknown
 }
 with {
-  variant (base) "untagged";
+  variant "name as uncapitalized";
+};
+
+
+type enumerated SimpleTypebase
+{
+	unknown
+}
+with {
+  variant "element";
 };
 
 

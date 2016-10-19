@@ -6,7 +6,7 @@
 
 <xsd:import namespace="www.example.org/substitutiongroup/main"/>
 
-<xsd:element name="replace" type="string" substitutionGroup="A:subsgroup"/>
+<xsd:element name="replace" type="xsd:string" substitutionGroup="A:subsgroup"/>
 
 </xsd:schema>
 

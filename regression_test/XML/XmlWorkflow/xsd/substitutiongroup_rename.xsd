@@ -18,9 +18,9 @@
 	</xsd:complexContent>
 </xsd:complexType>
 
-<xsd:element name="Case" type="integer" abstract="true"/>
+<xsd:element name="Case" type="xsd:integer" abstract="true"/>
 
-<xsd:element name="BaseElement__" type="string" abstract="true"/>
+<xsd:element name="BaseElement__" type="xsd:string" abstract="true"/>
 
 <xsd:element name="BaseElement" type="this:BaseElement_" abstract="true"/>
 

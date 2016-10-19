@@ -488,10 +488,19 @@ void SimpleType::setReference(const Mstring& ref, bool only_name_dependency) {
       name.upload(ref);
     }
     if (type.convertedValue.empty() || type.convertedValue == "anySimpleType") {
-      type.upload(ref.getValueWithoutPrefix(':'));
+      type.upload(ref);
+    }
+    bool found = false;
+    for (List<NamespaceType>::iterator ns = getModule()->getDeclaredNamespaces().begin(); ns; ns = ns->Next) {
+      if (ns->Data.uri != XMLSchema && type.refPrefix == ns->Data.prefix.c_str()) {
+        found = true;
+        break;
+      }
     }
     fromRef = true;
-    return;
+    if (!found) {
+      return;
+    }
   }
 
   Mstring refPrefix = ref.getPrefix(':');
@@ -547,7 +556,7 @@ void SimpleType::referenceResolving() {
   }
   if(outside_reference.empty() && substitutionGroup.empty()) return;
   if (outside_reference.is_resolved()) return;
-
+  
   if(!outside_reference.empty()){
     SimpleType * found_ST = static_cast<SimpleType*> (
       TTCN3ModuleInventory::getInstance().lookup(this, want_ST));
@@ -587,19 +596,18 @@ void SimpleType::referenceResolving() {
 
 void SimpleType::referenceForST(SimpleType * found_ST) {
   outside_reference.set_resolved(found_ST);
-
   if (in_name_only)
     return;
+
+  if (!found_ST->builtInBase.empty()) {
+    builtInBase = found_ST->builtInBase;
+  }
 
   if (construct == c_element)
     return;
 
   if (mode == listMode || mode == restrictionAfterListMode)
     return;
-
-  if (!found_ST->builtInBase.empty()) {
-    builtInBase = found_ST->builtInBase;
-  }
 
   length.applyReference(found_ST->length);
   pattern.applyReference(found_ST->pattern);

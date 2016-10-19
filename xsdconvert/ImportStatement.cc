@@ -31,13 +31,13 @@ void ImportStatement::loadWithValues() {
   switch (parser->getActualTagName()) {
     case n_import:
       name.upload(Mstring("import"));
-      type.upload(Mstring("import"));
+      type.upload(Mstring("import"), false);
       from_namespace = attr.namespace_;
       from_schemaLocation = attr.schemaLocation;
       break;
     case n_include:
       name.upload(Mstring("include"));
-      type.upload(Mstring("include"));
+      type.upload(Mstring("include"), false);
       from_namespace = attr.namespace_;
       from_schemaLocation = attr.schemaLocation;
       break;

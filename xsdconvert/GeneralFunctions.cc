@@ -519,7 +519,7 @@ bool matchDates(const char * string, const char * type) {
   const Mstring second("([0-5][0-9])");
   const Mstring endofdayext("24:00:00(.0?)?");
   const Mstring yearext("((-)([1-9][0-9]*)?)?");
-  const Mstring timezone("(Z|[+-]((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?");
+  const Mstring time_zone("(Z|[+-]((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?");
   const Mstring fraction("(.[0-9]+)?");
   const Mstring nums("[0-9]+");
   const Mstring durtime("(T[0-9]+"
@@ -528,24 +528,24 @@ bool matchDates(const char * string, const char * type) {
 
   Mstring pattern;
   if (strcmp(type, "gDay") == 0) {
-    pattern = Mstring("(---)") + day + timezone;
+    pattern = Mstring("(---)") + day + time_zone;
   } else if (strcmp(type, "gMonth") == 0) {
-    pattern = Mstring("(--)") + month + timezone;
+    pattern = Mstring("(--)") + month + time_zone;
   } else if (strcmp(type, "gYear") == 0) {
-    pattern = yearext + year + timezone;
+    pattern = yearext + year + time_zone;
   } else if (strcmp(type, "gYearMonth") == 0) {
-    pattern = yearext + year + Mstring("(-)") + month + timezone;
+    pattern = yearext + year + Mstring("(-)") + month + time_zone;
   } else if (strcmp(type, "gMonthDay") == 0) {
-    pattern = Mstring("(--)") + month + Mstring("(-)") + day + timezone;
+    pattern = Mstring("(--)") + month + Mstring("(-)") + day + time_zone;
   } else if (strcmp(type, "date") == 0) {
-    pattern = yearext + year + Mstring("(-)") + month + Mstring("(-)") + day + timezone;
+    pattern = yearext + year + Mstring("(-)") + month + Mstring("(-)") + day + time_zone;
   } else if (strcmp(type, "time") == 0) {
     pattern = Mstring("(") + hour + Mstring(":") + minute + Mstring(":") + second +
-      fraction + Mstring("|") + endofdayext + Mstring(")") + timezone;
+      fraction + Mstring("|") + endofdayext + Mstring(")") + time_zone;
   } else if (strcmp(type, "dateTime") == 0) {
     pattern = yearext + year + Mstring("(-)") + month + Mstring("(-)") + day +
       Mstring("T(") + hour + Mstring(":") + minute + Mstring(":") + second +
-      fraction + Mstring("|") + endofdayext + Mstring(")") + timezone;
+      fraction + Mstring("|") + endofdayext + Mstring(")") + time_zone;
   } else if (strcmp(type, "duration") == 0) {
     pattern = Mstring("(-)?P(") + nums + Mstring("(Y(") + nums + Mstring("(M(") +
       nums + Mstring("D") + durtime + Mstring("?|") + durtime + Mstring("?|D") +

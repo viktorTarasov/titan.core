@@ -25,7 +25,7 @@
   </xsd:documentation>
 </xsd:annotation>
 
-<xsd:element name="NameA" type="Name"/>
+<xsd:element name="NameA" type="strng:Name"/>
 
 <xsd:simpleType name="Name">
   <xsd:restriction base="xsd:string">

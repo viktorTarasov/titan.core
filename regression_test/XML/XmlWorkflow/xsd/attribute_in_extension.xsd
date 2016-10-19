@@ -4,7 +4,7 @@ xmlns:ns45="attribute_in_extension"
 targetNamespace="attribute_in_extension" elementFormDefault="qualified" attributeFormDefault="unqualified">	
 <xs:complexType name="BaseType">
 	<xs:sequence>
-		<xs:element name="Base-variable" type="integer" nillable="false">
+		<xs:element name="Base-variable" type="xs:integer" nillable="false">
 		</xs:element>
 	</xs:sequence>
 </xs:complexType>
@@ -14,7 +14,7 @@ targetNamespace="attribute_in_extension" elementFormDefault="qualified" attribut
 			<xs:complexType>
 				<xs:complexContent>
 					<xs:extension base="ns45:BaseType">
-        					<xs:attribute name="extension" type="integer">
+        					<xs:attribute name="extension" type="xs:integer">
 						</xs:attribute>
 					</xs:extension>
 				</xs:complexContent>

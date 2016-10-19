@@ -4,7 +4,7 @@
 
 <xsd:import namespace="www.example.org/substitutiongroup/ref"/>
 
-<xsd:element name="subsgroup" type="string" abstract="true" />
+<xsd:element name="subsgroup" type="xsd:string" abstract="true" />
 
 <xsd:element name="refgroup" type="A:subsgroup" />
 

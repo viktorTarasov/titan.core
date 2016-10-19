@@ -49,7 +49,9 @@
 			<xsd:complexType>
 					<xsd:complexContent>
 						<xsd:restriction base="other:bar">
-							<xsd:element name="something" type="string" minOccurs="1"/>
+							<xsd:sequence>
+								<xsd:element name="something" type="string" minOccurs="1"/>
+							</xsd:sequence>
 					</xsd:restriction>
 				</xsd:complexContent>
 			</xsd:complexType>

@@ -20,7 +20,7 @@ RootType::RootType(XMLParser * a_parser, TTCN3Module * a_module, const Construct
 : parser(a_parser)
 , module(a_module)
 , name()
-, type()
+, type(a_module, a_parser)
 , variant()
 , variant_ref()
 , comment()
@@ -42,30 +42,30 @@ RootType::RootType(XMLParser * a_parser, TTCN3Module * a_module, const Construct
     case c_unknown: // because when using fields in complextypes we set construct to c_unknown
     case c_simpleType:
       origin = from_simpleType;
-      type.upload(Mstring("anySimpleType"));
+      type.upload(Mstring("anySimpleType"), false);
       break;
     case c_element:
       origin = from_element;
-      type.upload(Mstring("anyType"));
+      type.upload(Mstring("anyType"), false);
       addVariant(V_element);
       break;
     case c_attribute:
       origin = from_attribute;
-      type.upload(Mstring("anySimpleType"));
+      type.upload(Mstring("anySimpleType"), false);
       addVariant(V_attribute);
       break;
     case c_complexType:
       origin = from_complexType;
-      type.upload(Mstring("record"));
+      type.upload(Mstring("record"), false);
       break;
     case c_group:
       origin = from_group;
-      type.upload(Mstring("record"));
+      type.upload(Mstring("record"), false);
       addVariant(V_untagged);
       break;
     case c_attributeGroup:
       origin = from_attributeGroup;
-      type.upload(Mstring("record"));
+      type.upload(Mstring("record"), false);
       addVariant(V_attributeGroup);
       visible = false;
       break;
