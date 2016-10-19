@@ -1529,7 +1529,7 @@ module NegSem_160102_predefined_functions_034 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-Dynamic test case error: While RAW-encoding type '@NegSem_160102_predefined_functions_034.R': Encoding an unbound value.
+Dynamic test case error: Performing a valueof or send operation on a non-specific integer template.
 <END_RESULT>
 
 <END_TC>

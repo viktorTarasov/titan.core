@@ -842,7 +842,7 @@ module NegSem_050401_top_level_001 {
 		if (match(p_rec, {1, 2})) {
 			setverdict(pass);
 		} else {
-			setverdict(fail, "p_rec value not matching ", p_rec, {1, 2});
+			setverdict(fail, "p_rec value not matching ", p_rec, R1:{1, 2});
 		}
 	}
 	
@@ -858,7 +858,7 @@ module NegSem_050401_top_level_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: Type mismatch: a value of type `@NegSem_050401_top_level_001.R2' was expected instead of `@NegSem_050401_top_level_001.R1'
+error: Type mismatch: `@NegSem_050401_top_level_001.R2.option2' of type `integer' and `@NegSem_050401_top_level_001.R1.field2' of type `integer' are not compatible: The optionality of fields in record/SEQUENCE types must be the same
 <END_RESULT>
 
 <END_TC>
@@ -908,7 +908,7 @@ module NegSem_050401_top_level_002 {
         var R1 v_rec;
 		f(v_rec);
         if ( match(v_rec, {1, 2})) { setverdict(pass); } 
-        else { setverdict(fail, "p_rec value not matching ", v_rec, {1, 2}); }
+        else { setverdict(fail, "p_rec value not matching ", v_rec, R1:{1, 2}); }
 	}
 
 	control{
@@ -918,65 +918,7 @@ module NegSem_050401_top_level_002 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: Type mismatch: Reference to a variable or value parameter of type `@NegSem_050401_top_level_002.R2' was expected instead of `@NegSem_050401_top_level_002.R1'
-<END_RESULT>
-
-<END_TC>
-:exmp
-
-*---------------------------------------------------------------------*
-:h3. NegSem_050401_top_level_003 negative test
-.*---------------------------------------------------------------------*
-:xmp tab=0.
-
-<TC - verify that error is generated if actual inout parameter doesn't adhere to strong typing rules >
-
-<COMPILE>
-
-<MODULE TTCN NegSem_050401_top_level_003 NegSem_050401_top_level_003.ttcn >
-/***************************************************
- ** @version  0.0.1
- ** @purpose  1:5.4.1, verify that error is generated if actual inout parameter doesn't adhere to strong typing rules
- ** @verdict  pass reject
- ***************************************************/
-
-// The following requirement is tested:
-// When parameters are passed by reference, strong typing is required. Both the actual and formal 
-// parameter shall be of the same type.
-
-module NegSem_050401_top_level_003 { 
-
-	type component GeneralComp {
-	}
-    
-    type record R1 {
-        integer field1,
-        integer field2
-    }
-    
-    type record R2 {
-        integer option1,
-        integer option2
-    }
-	
-	function f(inout R2 p_rec) {
-        if (match(p_rec, {1, 2})) { setverdict(pass); }
-        else { setverdict(fail, "p_rec value not matching ", p_rec, {1, 2}); }
-	}
-	
-	testcase TC_NegSem_050401_top_level_003() runs on GeneralComp {
-        var R1 v_rec := { field1 := 1, field2 := 2 };
-		f(v_rec); // R1 and R2 are compatible types, but not the same. Strong typing requires exactly the same types.
-	}
-
-	control{
-		execute(TC_NegSem_050401_top_level_003());
-	}
-}
-<END_MODULE>
-
-<RESULT COUNT 1>
-error: Type mismatch: Reference to a variable or value parameter of type `@NegSem_050401_top_level_003.R2' was expected instead of `@NegSem_050401_top_level_003.R1'
+error: Type mismatch: `@NegSem_050401_top_level_002.R2.option2' of type `integer' and `@NegSem_050401_top_level_002.R1.field2' of type `integer' are not compatible: The optionality of fields in record/SEQUENCE types must be the same
 <END_RESULT>
 
 <END_TC>
@@ -8272,7 +8214,7 @@ module NegSem_050402_actual_parameters_107 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: Type mismatch: a value of type `@NegSem_050402_actual_parameters_107.R1' was expected instead of `@NegSem_050402_actual_parameters_107.R2'
+error: Type mismatch: `@NegSem_050402_actual_parameters_107.R1.field2' of type `integer' and `@NegSem_050402_actual_parameters_107.R2.elem2' of type `integer' are not compatible: The optionality of fields in record/SEQUENCE types must be the same
 <END_RESULT>
 
 <END_TC>
@@ -8332,7 +8274,7 @@ module NegSem_050402_actual_parameters_108 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: Type mismatch: Reference to a variable or value parameter of type `@NegSem_050402_actual_parameters_108.R1' was expected instead of `@NegSem_050402_actual_parameters_108.R2'
+error: Type mismatch: `@NegSem_050402_actual_parameters_108.R1.field2' of type `integer' and `@NegSem_050402_actual_parameters_108.R2.elem2' of type `integer' are not compatible: The optionality of fields in record/SEQUENCE types must be the same
 <END_RESULT>
 
 <END_TC>
@@ -8389,7 +8331,7 @@ module NegSem_050402_actual_parameters_109 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: Type mismatch: Reference to a variable or value parameter of type `@NegSem_050402_actual_parameters_109.R1' was expected instead of `@NegSem_050402_actual_parameters_109.R2'
+error: Type mismatch: `@NegSem_050402_actual_parameters_109.R1.field2' of type `integer' and `@NegSem_050402_actual_parameters_109.R2.elem2' of type `integer' are not compatible: The optionality of fields in record/SEQUENCE types must be the same
 <END_RESULT>
 
 <END_TC>
