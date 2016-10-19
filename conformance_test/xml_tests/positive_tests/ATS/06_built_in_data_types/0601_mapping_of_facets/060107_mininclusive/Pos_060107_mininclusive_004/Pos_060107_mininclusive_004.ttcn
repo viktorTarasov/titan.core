@@ -43,7 +43,7 @@ module Pos_060107_mininclusive_004 {
     testcase TC_Pos_060107_mininclusive_004() runs on C system C {
         var Raw v_rcv;
 
-        var Raw  v_Raw:="<ns052:e1 xmlns:ns052='schema:Pos_060107_mininclusive_004'>inf</ns052:e1>\n";
+        var Raw  v_Raw:="<ns052:e1 xmlns:ns052='schema:Pos_060107_mininclusive_004'>INF</ns052:e1>\n";
 
         connect(self:p, self:p1);
 

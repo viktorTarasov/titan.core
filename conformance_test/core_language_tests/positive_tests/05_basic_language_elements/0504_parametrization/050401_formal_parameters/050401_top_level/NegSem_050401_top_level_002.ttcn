@@ -41,7 +41,7 @@ module NegSem_050401_top_level_002 {
         var R1 v_rec;
 		f(v_rec);
         if ( match(v_rec, {1, 2})) { setverdict(pass); } 
-        else { setverdict(fail, "p_rec value not matching ", v_rec, {1, 2}); }
+        else { setverdict(fail, "p_rec value not matching ", v_rec, R1:{1, 2}); }
 	}
 
 	control{

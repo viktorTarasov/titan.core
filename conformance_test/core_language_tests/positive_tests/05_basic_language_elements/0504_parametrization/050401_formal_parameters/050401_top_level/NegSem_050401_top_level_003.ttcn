@@ -34,7 +34,7 @@ module NegSem_050401_top_level_003 {
 	
 	function f(inout R2 p_rec) {
         if (match(p_rec, {1, 2})) { setverdict(pass); }
-        else { setverdict(fail, "p_rec value not matching ", p_rec, {1, 2}); }
+        else { setverdict(fail, "p_rec value not matching ", p_rec, R1:{1, 2}); }
 	}
 	
 	testcase TC_NegSem_050401_top_level_003() runs on GeneralComp {
