@@ -41,7 +41,7 @@ my $sa_printHelp_cmd = 0;
 # Whether to show detailed info or not
 my $sa_printHelp_doc = 0;
 # Use function-test runtime or not
-my $sa_titanRuntime2 = 0;
+my $sa_titanRuntime2 = 1;
 # Enable coverage or not
 my $sa_coverageEnabled = 0;
 # Files existed before a test case execution
@@ -669,7 +669,7 @@ sub sa_compileTC(\@) {
       return (1, '');
    }
    sa_log( "Compiling sources...\n");
-   my $runtimeOption = '-R';
+   my $runtimeOption = '';
    if ($sa_titanRuntime2) { $runtimeOption = '-R'; }
    do {
       if ($cycles) { sleep(60 * 10); }
