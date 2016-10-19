@@ -3406,7 +3406,7 @@ module NegSem_220302_GetcallOperation_012 {
 <END_MODULE>
 
 <RESULT COUNT>
-Dynamic test case error: Parameter redirect failed, because the buffer was not empty after decoding. Remaining octets: 9.
+Dynamic test case error: Parameter redirect \(for parameter 'p__par'\) failed, because the buffer was not empty after decoding. Remaining octets: 9.
 <END_RESULT>
 
 <END_TC>
@@ -3486,7 +3486,7 @@ error: 'proprietary' is not a valid encoding format
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - decoding error in @decoded redirect assignment >
+<TC - value of wrong type in @decoded redirect assignment >
 
 <COMPILE>
 
@@ -4079,7 +4079,7 @@ module NegSem_220304_getreply_operation_009 {
 <END_MODULE>
 
 <RESULT COUNT >
-Dynamic test case error: Parameter redirect failed, because the buffer was not empty after decoding. Remaining octets: 9.
+Dynamic test case error: Parameter redirect \(for parameter 'p__par'\) failed, because the buffer was not empty after decoding. Remaining octets: 9.
 <END_RESULT>
 
 <END_TC>
