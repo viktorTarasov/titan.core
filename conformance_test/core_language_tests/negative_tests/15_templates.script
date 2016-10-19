@@ -860,7 +860,7 @@ module NegSem_150602_ReferencingRecordAndSetFields_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-Dynamic test case error: Copying an uninitialized/unsupported template of type @NegSem_150602_ReferencingRecordAndSetFields_001.MyRecordTwo.
+Dynamic test case error: Copying an uninitialized/unsupported record/set template.
 <END_RESULT>
 
 <END_TC>
@@ -938,7 +938,7 @@ module NegSem_150602_ReferencingRecordAndSetFields_003 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-Dynamic test case error: Copying an uninitialized/unsupported template of type @NegSem_150602_ReferencingRecordAndSetFields_003.MyRecordTwo.
+Dynamic test case error: Copying an uninitialized/unsupported record/set template.
 <END_RESULT>
 
 <END_TC>
@@ -949,7 +949,7 @@ Dynamic test case error: Copying an uninitialized/unsupported template of type @
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that complement lists on the right-hand side of an assignment are not acceped. >
+<TC - Ensure that complement lists on the right-hand side of an assignment are not accepted. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -957,7 +957,7 @@ Dynamic test case error: Copying an uninitialized/unsupported template of type @
 <MODULE TTCN NegSem_150602_ReferencingRecordAndSetFields_004 NegSem_150602_ReferencingRecordAndSetFields_004.ttcn >
 /*****************************************************************
  ** @version  0.0.1
- ** @purpose  1:15.6.2, Ensure that complement lists on the right-hand side of an assignment are not acceped. 
+ ** @purpose  1:15.6.2, Ensure that complement lists on the right-hand side of an assignment are not accepted. 
  ** @verdict  pass reject
  *****************************************************************/
 
@@ -1015,7 +1015,7 @@ module NegSem_150602_ReferencingRecordAndSetFields_004 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-Dynamic test case error: Copying an uninitialized/unsupported template of type @NegSem_150602_ReferencingRecordAndSetFields_004.MyRecordTwo.
+Dynamic test case error: Copying an uninitialized/unsupported record/set template.
 <END_RESULT>
 
 <END_TC>

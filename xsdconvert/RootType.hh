@@ -117,40 +117,8 @@ public:
   {}
   // Default copy constructor, assignment operator and destructor are used
 
-  void upload(const Mstring& input, bool prefixCheck = true) {
-    if (input.empty()) return;
-    convertedValue = input;
-    originalValueWoPrefix = input.getValueWithoutPrefix(':');
-    if (isBuiltInType(input)) {
-      refPrefix = input.getPrefix(':');
-      if (prefixCheck) {
-        checkBuintInTypeReference();
-      }
-    }
-  }
-  
-  void checkBuintInTypeReference() {
-  bool found = false;
-  for (List<Mstring>::iterator px = t_module->getxmlSchemaPrefixes().begin(); px; px = px->Next) {
-    if (refPrefix == px->Data) {
-      found = true;
-      break;
-    }
-  }
-  // Second chance. It may be a prefix from one of the xsd-s.
-  if (!found) {
-    for (List<NamespaceType>::iterator ns = t_module->getDeclaredNamespaces().begin(); ns; ns = ns->Next) {
-      if (refPrefix == ns->Data.prefix.c_str()) {
-        found = true;
-        break;
-      }
-    }
-  }
-  if (!found) {
-    printError(t_module->getSchemaname(), t_parser->getActualLineNumber(), Mstring("Cannot find the namespace of type: ") + originalValueWoPrefix);
-    t_parser->incrNumErrors();
-  }
-}
+  void upload(const Mstring& input, bool prefixCheck = true);  
+  void checkBuintInTypeReference();
 };
 
 class SimpleType;
