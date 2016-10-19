@@ -53,6 +53,7 @@ TTCN3Module::TTCN3Module(const char * a_filename, XMLParser * a_parser)
 , element_types()
 //, importedModules()
 , variant()
+, xmlSchemaPrefixes()
 , moduleNotIntoFile(false)
 , moduleNotIntoNameConversion(false) {
 #if defined(WIN32) && !defined(MINGW)
@@ -118,6 +119,15 @@ void TTCN3Module::loadValuesFromSchemaTag(const Mstring& a_targetNamespace,
     if (ns->Data.uri == targetNamespace) {
       targetNamespace_connectedPrefix = ns->Data.prefix;
       break;
+    }
+  }
+  
+  for (List<NamespaceType>::iterator ns = declaredNamespaces.begin(); ns; ns = ns->Next) {
+    if (ns->Data.uri == XMLSchema) {
+      Mstring prefix = ns->Data.prefix;
+      prefix.removeWSfromBegin();
+      prefix.removeWSfromEnd();
+      xmlSchemaPrefixes.push_back(prefix);
     }
   }
 }

@@ -5,8 +5,8 @@
 
 
 <xsd:element name="request" type="requestType" />
-<xsd:element name="myProductionRequestType_" type="string" />
-<xsd:element name="myProductionRequestType2_" type="string" />
+<xsd:element name="myProductionRequestType_" type="xsd:string" />
+<xsd:element name="myProductionRequestType2_" type="xsd:string" />
 
 <!-- The generic base type -->
 <xsd:complexType name="requestType">

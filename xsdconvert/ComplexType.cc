@@ -160,20 +160,20 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
 
   switch (c) {
     case fromTagUnion:
-      type.upload(Mstring("union"));
+      type.upload(Mstring("union"), false);
       with_union = true;
       xsdtype = n_union;
       break;
     case fromTagNillable:
       addVariant(V_useNil);
-      type.upload(Mstring("record"));
+      type.upload(Mstring("record"), false);
       break;
     case fromTagComplexType:
-      type.upload(Mstring("record"));
+      type.upload(Mstring("record"), false);
       xsdtype = n_complexType;
       break;
     case fromTagSubstitution:
-      type.upload(Mstring("union"));
+      type.upload(Mstring("union"), false);
       name.upload(getName().originalValueWoPrefix + Mstring("_group"));
       xsdtype = n_union;
       subsGroup = this;
@@ -186,7 +186,7 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
       whitespace.modified = false;
       break;
     case fromTypeSubstitution:
-      type.upload(Mstring("union"));
+      type.upload(Mstring("union"), false);
       name.upload(getName().originalValueWoPrefix + Mstring("_derivations"));
       xsdtype = n_union;
       substitutionGroup = empty_string;
@@ -229,7 +229,7 @@ void ComplexType::loadWithValues() {
       if (!top && xsdtype != n_sequence && xsdtype != n_complexType && xsdtype != n_extension && xsdtype != n_restriction && xsdtype != n_element) {
         //Create new record
         ComplexType * rec = new ComplexType(this);
-        rec->type.upload(Mstring("record"));
+        rec->type.upload(Mstring("record"), false);
         rec->name.upload(Mstring("sequence"));
         rec->addVariant(V_untagged);
         rec->setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
@@ -241,7 +241,7 @@ void ComplexType::loadWithValues() {
         if (xsdtype == n_sequence && atts.minOccurs == 1 && atts.maxOccurs == 1) {
           skipback += 1;
         }
-        type.upload(Mstring("record"));
+        type.upload(Mstring("record"), false);
         xsdtype = n_sequence;
         setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
       }
@@ -250,7 +250,7 @@ void ComplexType::loadWithValues() {
       if (!top || xsdtype != n_group) {
         //Create new union field
         ComplexType * choice = new ComplexType(this);
-        choice->type.upload(Mstring("union"));
+        choice->type.upload(Mstring("union"), false);
         choice->name.upload(Mstring("choice"));
         choice->setXsdtype(n_choice);
         choice->addVariant(V_untagged);
@@ -259,7 +259,7 @@ void ComplexType::loadWithValues() {
         complexfields.push_back(choice);
       } else {
         xsdtype = n_choice;
-        type.upload(Mstring("union"));
+        type.upload(Mstring("union"), false);
       }
       break;
     case n_all:
@@ -332,7 +332,7 @@ void ComplexType::loadWithValues() {
           //If a simple top level element is nillable
           ComplexType * nilrec = new ComplexType(this);
           if (atts.type.empty()) {
-            nilrec->type.upload(Mstring("record"));
+            nilrec->type.upload(Mstring("record"), false);
           } else {
             nilrec->type.upload(atts.type);
           }
@@ -341,7 +341,7 @@ void ComplexType::loadWithValues() {
           nilrec->nillable = true;
           setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
           complexfields.push_back(nilrec);
-          type.upload(Mstring("record"));
+          type.upload(Mstring("record"), false);
           name.upload(atts.name);
           actfield = nilrec;
           nillable_field = nilrec;
@@ -350,12 +350,12 @@ void ComplexType::loadWithValues() {
           ComplexType * record = new ComplexType(this);
           ComplexType * nilrec = new ComplexType(record);
           if (atts.type.empty()) {
-            nilrec->type.upload(Mstring("record"));
+            nilrec->type.upload(Mstring("record"), false);
           } else {
             nilrec->type.upload(atts.type);
           }
           record->name.upload(atts.name);
-          record->type.upload(Mstring("record"));
+          record->type.upload(Mstring("record"), false);
           record->complexfields.push_back(nilrec);
           record->addVariant(V_useNil);
           record->nillable_field = nilrec;
@@ -451,7 +451,7 @@ void ComplexType::loadWithValues() {
     {
       ComplexType * any = new ComplexType(this);
       any->name.upload(Mstring("elem"));
-      any->type.upload(Mstring("xsd:string"));
+      any->type.upload(Mstring("string"), false);
       any->applyNamespaceAttribute(V_anyElement, atts.namespace_);
       any->setMinMaxOccurs(atts.minOccurs, atts.maxOccurs);
       any->setXsdtype(n_any);
@@ -463,7 +463,7 @@ void ComplexType::loadWithValues() {
       AttributeType * anyattr = new AttributeType(this);
       anyattr->setXsdtype(n_anyAttribute);
       anyattr->setNameOfField(Mstring("attr"));
-      anyattr->setTypeValue(Mstring("xsd:string"));
+      anyattr->setTypeValue(Mstring("string"));
       anyattr->setToAnyAttribute();
       anyattr->applyMinMaxOccursAttribute(0, ULLONG_MAX);
       anyattr->addNameSpaceAttribute(atts.namespace_);
@@ -516,7 +516,7 @@ void ComplexType::loadWithValues() {
     {
       with_union = true;
       xsdtype = n_union;
-      type.upload(Mstring("union"));
+      type.upload(Mstring("union"), false);
       addVariant(V_useUnion);
       if (!atts.memberTypes.empty()) {
         List<Mstring> types;
@@ -567,7 +567,7 @@ void ComplexType::loadWithValues() {
     }
     case n_complexType:
       name.upload(atts.name);
-      type.upload(Mstring("record"));
+      type.upload(Mstring("record"), false);
       applyAbstractAttribute(atts.abstract);
       applySubstitionGroupAttribute(atts.substitionGroup);
       applyBlockAttribute(atts.block);
@@ -578,7 +578,7 @@ void ComplexType::loadWithValues() {
       if (atts.mixed) {
         ComplexType * mixed = new ComplexType(this);
         mixed->name.upload(Mstring("embed_values"));
-        mixed->type.upload(Mstring("xsd:string"));
+        mixed->type.upload(Mstring("string"), false);
         mixed->setMinMaxOccurs(0, ULLONG_MAX, false);
         mixed->embed = true;
         complexfields.push_back(mixed);
@@ -1411,7 +1411,7 @@ void ComplexType::setMinMaxOccurs(const unsigned long long min, const unsigned l
       first_child = false;
     } else if (xsdtype == n_sequence) {
       ComplexType * rec = new ComplexType(this);
-      rec->type.upload(Mstring("record"));
+      rec->type.upload(Mstring("record"), false);
       rec->name.upload(Mstring("sequence"));
       rec->setXsdtype(n_sequence);
       rec->addVariant(V_untagged);

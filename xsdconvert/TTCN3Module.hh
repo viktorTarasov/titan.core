@@ -87,6 +87,8 @@ class TTCN3Module {
   List<typeNameDepList> element_types;
 
   List<Mstring> variant;
+  
+  List<Mstring> xmlSchemaPrefixes;
 
   bool moduleNotIntoFile;
   bool moduleNotIntoNameConversion;
@@ -222,6 +224,10 @@ public:
 
   List<typeNameDepList> & getElementTypes() {
     return element_types;
+  }
+  
+  const List<Mstring> & getxmlSchemaPrefixes() const {
+    return xmlSchemaPrefixes;
   }
 
   void addElementType(const Mstring& type, SimpleType* st) {

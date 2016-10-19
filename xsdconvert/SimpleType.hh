@@ -381,8 +381,8 @@ public:
       return block;
   }
   
-  void setList(const bool value) {
-      inList = value;
+  void setList(const bool list) {
+      inList = list;
   }
   
   void addToNameDepList(SimpleType * t) {

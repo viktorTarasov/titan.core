@@ -15,8 +15,11 @@
 #define BASETYPE_HH_
 
 #include "GeneralTypes.hh"
+#include "GeneralFunctions.hh"
 #include "Mstring.hh"
 #include "List.hh"
+#include "TTCN3Module.hh"
+#include "XMLParser.hh"
 
 #include <cmath> // for using "pow" function
 #include <cfloat>
@@ -93,10 +96,32 @@ public:
   }
 };
 
-class SimpleType;
-class XMLParser;
-class TTCN3Module;
+class TypeType {
+public:
+  const TTCN3Module * const t_module; // Not owned
+  const XMLParser * t_parser; // Not owned
+  Mstring originalValueWoPrefix;
+  Mstring convertedValue;
+  Mstring refPrefix;
+  bool list_extension;
+  bool no_replace;
 
+  TypeType(const TTCN3Module * const module, const XMLParser * parser) : 
+  t_module(module),
+  t_parser(parser),
+  originalValueWoPrefix(),
+  convertedValue(),
+  refPrefix(),
+  list_extension(false),
+  no_replace(false)
+  {}
+  // Default copy constructor, assignment operator and destructor are used
+
+  void upload(const Mstring& input, bool prefixCheck = true);  
+  void checkBuintInTypeReference();
+};
+
+class SimpleType;
 /**
  * This type is used as the base class for the used classes
  * that represent the main datatypes in the generated TTCN-3 modules
@@ -111,7 +136,7 @@ protected:
   TTCN3Module * module; // no responsibility for this member
 
   NameType name;
-  NameType type;
+  TypeType type;
   List<Mstring> variant;
   List<Mstring> variant_ref;
   List<Mstring> hidden_variant;
@@ -202,7 +227,7 @@ public:
     return name;
   }
 
-  const NameType & getType() const {
+  const TypeType & getType() const {
     return type;
   }
 

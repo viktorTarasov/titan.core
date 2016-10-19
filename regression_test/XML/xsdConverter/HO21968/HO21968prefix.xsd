@@ -17,7 +17,7 @@
 
 <xs:complexType name="MySeqPrefix">
   <xs:sequence>
-    <xs:element name="i" type="integer" minOccurs="0" maxOccurs="unbounded"/>
+    <xs:element name="i" type="xs:integer" minOccurs="0" maxOccurs="unbounded"/>
   </xs:sequence>
 </xs:complexType>
 

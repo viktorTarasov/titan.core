@@ -7,7 +7,7 @@
 
 <xsd:complexType name="java-attribute" abstract="true">
 	<xsd:attribute name="java-attribute" type="xsd:string"/>
-	<xsd:attribute name="xml-accessor-type" type="string"/>
+	<xsd:attribute name="xml-accessor-type" type="xsd:string"/>
 </xsd:complexType>
 
 </xsd:schema>

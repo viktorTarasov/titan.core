@@ -3,17 +3,17 @@
  targetNamespace="www.example.org/imported2">
 
 <xsd:simpleType name="foobar">
-	<xsd:restriction base="integer"/>
+	<xsd:restriction base="xsd:integer"/>
 </xsd:simpleType>
 
 <xsd:simpleType name="ding">
-	<xsd:restriction base="integer"/>
+	<xsd:restriction base="xsd:integer"/>
 </xsd:simpleType>
 
 <xsd:element name="bar">
 	<xsd:complexType>
 		<xsd:sequence>
-			<xsd:element name="something" type="string" minOccurs="0"/>
+			<xsd:element name="something" type="xsd:string" minOccurs="0"/>
 		</xsd:sequence>
 	</xsd:complexType>
 </xsd:element>
