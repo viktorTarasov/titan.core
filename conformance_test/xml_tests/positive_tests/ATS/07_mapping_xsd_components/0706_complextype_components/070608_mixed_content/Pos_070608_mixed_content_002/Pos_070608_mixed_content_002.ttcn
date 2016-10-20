@@ -60,7 +60,7 @@ module Pos_070608_mixed_content_002 {
     testcase TC_Pos_070608_mixed_content_002() runs on C system C {
         var Raw v_rcv;
 
-        var Raw  v_Raw:= "<ns205:MyType xmlns:ns205='schema:Pos_070608_mixed_content_002'>The ordered <a>car</a> has arrived <b>false</b> the ordered <a>bycicle</a> has arrived! <b>true</b>Wait for further information.</ns205:MyType>\n";
+        var Raw  v_Raw:= "<ns205:MyType xmlns:ns205='schema:Pos_070608_mixed_content_002'>The ordered <a>car</a> has arrived <b>false</b>, the ordered <a>bicycle</a> has arrived! <b>true</b>Wait for further information.</ns205:MyType>\n";
 
         connect(self:p, self:p1);
 
