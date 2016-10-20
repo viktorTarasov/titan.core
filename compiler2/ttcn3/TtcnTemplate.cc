@@ -2649,7 +2649,7 @@ end:
         u.templates = new_templates;
       }
       break; }
-
+    
     case TEMPLATE_ERROR: case TEMPLATE_NOTUSED:
     case OMIT_VALUE:     case ANY_VALUE: case ANY_OR_OMIT:
     case SPECIFIC_VALUE:
@@ -3439,7 +3439,6 @@ end:
     switch (templatetype) {
     case ALL_FROM:
     case VALUE_LIST_ALL_FROM:
-    case DECODE_MATCH:
       return false;
     case TEMPLATE_ERROR: /**< erroneous template */
     case TEMPLATE_NOTUSED: /**< not used symbol (-) */
@@ -3455,6 +3454,7 @@ end:
     case CSTR_PATTERN: /**< character string pattern */
     case USTR_PATTERN:  /**< universal charstring pattern */
     case TEMPLATE_INVOKE:
+    case DECODE_MATCH:
       // Simple templates can be computed at compile time
       return true;
 
@@ -3510,10 +3510,9 @@ end:
       const char *oftype_name_str = oftype_name.c_str();
 
       ReferenceChain refch (this, "While searching template");
-      if (!flattened || my_scope->get_statementblock_scope()) { // this "if" may be redundant if all non-var templates are flattened
-        str = mputstr(str, "// this is a var template\n");
-
-        if (compile_time()) goto compile_time;
+      
+      if (compile_time()) goto compile_time;
+      {
         // run-time, variable sized init
 
         // This is a record-of var template, like this:

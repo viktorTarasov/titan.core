@@ -104,7 +104,7 @@ testcase tc_all_from_with_functions() runs on CT_Empty {
   else { setverdict(fail) }
 }
 
-// all from with function parameters
+// all from with function (formal) parameters
 function f_all_from_params(in RoI p_in, inout RoI p_inout,
                            in template RoI pt_in, inout template RoI pt_inout)
                            runs on CT_Empty
@@ -165,11 +165,31 @@ testcase tc_all_from_with_functions2() runs on CT_Empty
   setverdict(pass);
 }
 
+// all from used in function actual parameters
+template RoI t := { 6, 8 };
+template RoI t_func_par := f_dummy( { 1, 2, all from t });
+template RoI t_func_par_exp := { 1, 2, 6, 8 };
+
+testcase tc_all_from_func_params2() runs on CT_Empty
+{
+  if (log2str(t_func_par) != log2str(t_func_par_exp)) {
+    setverdict(fail, "Template test failed. Expected: ", t_func_par_exp, ", got: ", t_func_par);
+  }
+  
+  var template RoI vt_func_par := f_dummy( { 1, 2, all from t });
+  if (log2str(vt_func_par) != log2str(t_func_par_exp)) {
+    setverdict(fail, "Var template test failed. Expected: ", t_func_par_exp, ", got: ", vt_func_par);
+  }
+  
+  setverdict(pass);
+}
+
 
 control {
   execute(tc_all_from_with_functions());
   execute(tc_all_from_func_params());
   execute(tc_all_from_with_functions2());
+  execute(tc_all_from_func_params2());
 }
 
 }
