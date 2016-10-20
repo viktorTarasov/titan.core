@@ -4437,7 +4437,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 
         // Now the next embed-values string (NOT affected by USE-ORDER!)
         if (exer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&
-            embed_values != NULL && emb_val->embval_index < embed_values->size_of()) {
+            embed_values != NULL && emb_val->embval_index < embed_values->size_of() && ordered->get_at(ai)->is_present()) {
           embed_values->get_at(emb_val->embval_index)->XER_encode(UNIVERSAL_CHARSTRING_xer_
             , p_buf, flavor | EMBED_VALUES, indent+1, 0);
           ++emb_val->embval_index;

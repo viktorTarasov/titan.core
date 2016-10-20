@@ -472,6 +472,148 @@ testcase dec_enil_opt() runs on EMBO
   CHECK_DECODE(exer_dec_en_opt, estr_gone_opt_omit, ENil_opt, gone_opt_omit);
 }
 
+
+/********************* EMBED-VALUES and Optional fields *********************/
+
+
+type record EmbedValuesOptFields {
+  record of universal charstring embed,
+  integer first optional,
+  integer second optional,
+  integer third optional
+}
+with {
+  variant "embedValues";
+}
+
+const EmbedValuesOptFields c_opt_fields := {
+  embed := { "She was ", "or", "!" },
+  first := omit,
+  second := 17,
+  third := 18
+}
+
+const universal charstring bstr_opt_fields_first :=
+"<EmbedValuesOptFields>"&
+"\n\t<embed>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>She was </UNIVERSAL_CHARSTRING>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>or</UNIVERSAL_CHARSTRING>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>!</UNIVERSAL_CHARSTRING>"&
+"\n\t</embed>"&
+"\n\t<second>17</second>"&
+"\n\t<third>18</third>"&
+"\n</EmbedValuesOptFields>"&
+"\n"&
+"\n";
+
+const universal charstring estr_opt_fields_first :=
+"<EmbedValuesOptFields>She was "&
+"<second>17</second>or"&
+"<third>18</third>!"&
+"</EmbedValuesOptFields>\n";
+
+const universal charstring bstr_opt_fields_second :=
+"<EmbedValuesOptFields>"&
+"\n\t<embed>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>She was </UNIVERSAL_CHARSTRING>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>or</UNIVERSAL_CHARSTRING>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>!</UNIVERSAL_CHARSTRING>"&
+"\n\t</embed>"&
+"\n\t<first>16</first>"&
+"\n\t<third>18</third>"&
+"\n</EmbedValuesOptFields>"&
+"\n"&
+"\n";
+
+const universal charstring estr_opt_fields_second :=
+"<EmbedValuesOptFields>She was "&
+"<first>16</first>or"&
+"<third>18</third>!"&
+"</EmbedValuesOptFields>\n";
+
+const universal charstring bstr_opt_fields_third :=
+"<EmbedValuesOptFields>"&
+"\n\t<embed>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>She was </UNIVERSAL_CHARSTRING>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>or</UNIVERSAL_CHARSTRING>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>!</UNIVERSAL_CHARSTRING>"&
+"\n\t</embed>"&
+"\n\t<first>16</first>"&
+"\n\t<second>17</second>"&
+"\n</EmbedValuesOptFields>"&
+"\n"&
+"\n";
+
+const universal charstring estr_opt_fields_third :=
+"<EmbedValuesOptFields>She was "&
+"<first>16</first>or"&
+"<second>17</second>!"&
+"</EmbedValuesOptFields>\n";
+
+const universal charstring bstr_opt_fields_all :=
+"<EmbedValuesOptFields>"&
+"\n\t<embed>"&
+"\n\t\t<UNIVERSAL_CHARSTRING>She was </UNIVERSAL_CHARSTRING>"&
+"\n\t</embed>"&
+"\n</EmbedValuesOptFields>"&
+"\n"&
+"\n";
+
+const universal charstring estr_opt_fields_all :=
+"<EmbedValuesOptFields>She was "&
+"</EmbedValuesOptFields>\n";
+
+DECLARE_XER_ENCODERS(EmbedValuesOptFields, opt_fields);
+DECLARE_EXER_ENCODERS(EmbedValuesOptFields, opt_fields);
+
+testcase enc_opt_fields() runs on EMBO
+{
+  CHECK_METHOD(bxer_enc_opt_fields, c_opt_fields, bstr_opt_fields_first);
+  CHECK_METHOD(exer_enc_opt_fields, c_opt_fields, estr_opt_fields_first);
+
+  var EmbedValuesOptFields local_opt_fields := c_opt_fields;
+  local_opt_fields.first := 16;
+  local_opt_fields.second := omit;
+  CHECK_METHOD(bxer_enc_opt_fields, local_opt_fields, bstr_opt_fields_second);
+  CHECK_METHOD(exer_enc_opt_fields, local_opt_fields, estr_opt_fields_second);
+
+  local_opt_fields.second := 17;
+  local_opt_fields.third := omit;
+  CHECK_METHOD(bxer_enc_opt_fields, local_opt_fields, bstr_opt_fields_third);
+  CHECK_METHOD(exer_enc_opt_fields, local_opt_fields, estr_opt_fields_third);
+
+  local_opt_fields.embed := { "She was " };
+  local_opt_fields.first := omit;
+  local_opt_fields.second := omit;
+  local_opt_fields.third := omit;
+  CHECK_METHOD(bxer_enc_opt_fields, local_opt_fields, bstr_opt_fields_all);
+  CHECK_METHOD(exer_enc_opt_fields, local_opt_fields, estr_opt_fields_all);
+}
+
+testcase dec_opt_fields() runs on EMBO
+{
+  CHECK_DECODE(bxer_dec_opt_fields, bstr_opt_fields_first, EmbedValuesOptFields, c_opt_fields);
+  CHECK_DECODE(exer_dec_opt_fields, estr_opt_fields_first, EmbedValuesOptFields, c_opt_fields);
+
+  var EmbedValuesOptFields local_opt_fields := c_opt_fields;
+  local_opt_fields.first := 16;
+  local_opt_fields.second := omit;
+  CHECK_DECODE(bxer_dec_opt_fields, bstr_opt_fields_second, EmbedValuesOptFields, local_opt_fields);
+  CHECK_DECODE(exer_dec_opt_fields, estr_opt_fields_second, EmbedValuesOptFields, local_opt_fields);
+
+  local_opt_fields.second := 17;
+  local_opt_fields.third := omit;
+  CHECK_DECODE(bxer_dec_opt_fields, bstr_opt_fields_third, EmbedValuesOptFields, local_opt_fields);
+  CHECK_DECODE(exer_dec_opt_fields, estr_opt_fields_third, EmbedValuesOptFields, local_opt_fields);
+
+  local_opt_fields.embed := { "She was " };
+  local_opt_fields.first := omit;
+  local_opt_fields.second := omit;
+  local_opt_fields.third := omit;
+  CHECK_DECODE(bxer_dec_opt_fields, bstr_opt_fields_all, EmbedValuesOptFields, local_opt_fields);
+  CHECK_DECODE(exer_dec_opt_fields, estr_opt_fields_all, EmbedValuesOptFields, local_opt_fields);
+}
+
 control
 {
     execute(encode_emb_all_opt());
@@ -494,6 +636,9 @@ control
 
     execute(enc_enil_opt());
     execute(dec_enil_opt());
+
+    execute(enc_opt_fields());
+    execute(dec_opt_fields());
 }
 
 }

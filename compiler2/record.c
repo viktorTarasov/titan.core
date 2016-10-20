@@ -2321,7 +2321,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       if (sdef->xerEmbedValuesPossible) {
         src = mputprintf(src,
           "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&\n"
-          "      %s%s%s emb_val->embval_index < field_%s%s.size_of()) {\n"
+          "      %s%s%s %s%s%s emb_val->embval_index < field_%s%s.size_of()) {\n"
           "    field_%s%s[emb_val->embval_index].XER_encode(\n"
           "      UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
           "    ++emb_val->embval_index;\n"
@@ -2329,12 +2329,19 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
           , sdef->elements[0].isOptional ? "field_" : ""
           , sdef->elements[0].isOptional ? sdef->elements[0].name : ""
           , sdef->elements[0].isOptional ? ".ispresent() &&" : ""
+          , sdef->elements[i].isOptional ? "field_" : ""
+          , sdef->elements[i].isOptional ? sdef->elements[i].name : ""
+          , sdef->elements[i].isOptional ? ".ispresent() &&" : ""
           , sdef->elements[0].name
           , sdef->elements[0].isOptional ? "()" : "", sdef->elements[0].name
           , sdef->elements[0].isOptional ? "()" : "");
       }
     } /* next field when not USE-ORDER */
-
+  
+  if (i <= start_at + num_attributes + 1 || sdef->xerUseOrderPossible) {
+    src = mputprintf(src, "  (void)emb_val_parent;\n"); // Silence unused warning
+  }
+  
   if (sdef->xerEmbedValuesPossible) {
     src = mputprintf(src,
       "  if (0 != emb_val) {\n"
@@ -3035,6 +3042,10 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         , sdef->elements[i].name);
     }
   } /* next field */
+  
+  if (i == start_at + num_attributes) {
+    src = mputprintf(src, "  (void)emb_val_parent;\n"); // Silence unused warning
+  }
   
   if (sdef->xerEmbedValuesPossible) {
     /* read and store embedValues text if present */
