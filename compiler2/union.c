@@ -362,7 +362,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   /* set_param function */
   def = mputstr(def, "void set_param(Module_Param& param);\n");
   src = mputprintf(src, "void %s::set_param(Module_Param& param)\n"
-     "{\n"
+     "{\n", name);
+  if (use_runtime_2) {
+    src = mputprintf(src,
      "  if (dynamic_cast<Module_Param_Name*>(param.get_id()) != NULL &&\n"
      "      param.get_id()->next_name()) {\n"
     // Haven't reached the end of the module parameter name
@@ -372,20 +374,22 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
      "      param.error(\"Unexpected array index in module parameter, expected a valid field\"\n"
      "        \" name for union type `%s'\");\n"
      "    }\n"
-     "    ", name, dispname);
-  for (i = 0; i < sdef->nElements; i++) {
+     "    ", dispname);
+    for (i = 0; i < sdef->nElements; i++) {
+      src = mputprintf(src,
+       "if (strcmp(\"%s\", param_field) == 0) {\n"
+       "      %s%s().set_param(param);\n"
+       "      return;\n"
+       "    } else ",
+       sdef->elements[i].dispname, at_field, sdef->elements[i].name);
+    }
     src = mputprintf(src,
-     "if (strcmp(\"%s\", param_field) == 0) {\n"
-     "      %s%s().set_param(param);\n"
-     "      return;\n"
-     "    } else ",
-     sdef->elements[i].dispname, at_field, sdef->elements[i].name);
-  }
-  src = mputprintf(src,
      "param.error(\"Field `%%s' not found in union type `%s'\", param_field);\n"
-     "  }\n"
+     "  }\n", dispname);
+  }
+  src = mputstr(src,
      "  param.basic_check(Module_Param::BC_VALUE, \"union value\");\n"
-     "  Module_Param_Ptr m_p = &param;\n", dispname);
+     "  Module_Param_Ptr m_p = &param;\n");
   if (use_runtime_2) {
     src = mputstr(src,
      "  if (param.get_type() == Module_Param::MP_Reference) {\n"

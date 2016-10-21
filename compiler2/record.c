@@ -3436,34 +3436,13 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   src = mputprintf
     (src,
      "void %s::set_param(Module_Param& param)\n{\n"
-     "  if (dynamic_cast<Module_Param_Name*>(param.get_id()) != NULL &&\n"
-     "      param.get_id()->next_name()) {\n"
-    // Haven't reached the end of the module parameter name
-    // => the name refers to one of the fields, not to the whole record
-     "    char* param_field = param.get_id()->get_current_name();\n"
-     "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
-     "      param.error(\"Unexpected array index in module parameter, expected a valid field\"\n"
-     "        \" name for %s type `%s'\");\n"
-     "    }\n"
-     "    ", name, kind_str, dispname);
-  for (i = 0; i < sdef->nElements; i++) {
-    src = mputprintf(src,
-     "if (strcmp(\"%s\", param_field) == 0) {\n"
-     "      %s().set_param(param);\n"
-     "      return;\n"
-     "    } else ",
-     sdef->elements[i].dispname, sdef->elements[i].name);
-  }
-  src = mputprintf(src,
-     "param.error(\"Field `%%s' not found in %s type `%s'\", param_field);\n"
-     "  }\n"
      "  param.basic_check(Module_Param::BC_VALUE, \"%s value\");\n"
      "  switch (param.get_type()) {\n"
      "  case Module_Param::MP_Value_List:\n"
      "    if (%lu<param.get_size()) {\n"
      "      param.error(\"%s value of type %s has %lu fields but list value has %%d fields\", (int)param.get_size());\n"
      "    }\n",
-     kind_str, dispname, kind_str, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
+     name, kind_str, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
 
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
@@ -5654,27 +5633,6 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
   src = mputprintf(src,
     "void %s_template::set_param(Module_Param& param)\n"
     "{\n"
-    "  if (dynamic_cast<Module_Param_Name*>(param.get_id()) != NULL &&\n"
-    "      param.get_id()->next_name()) {\n"
-   // Haven't reached the end of the module parameter name
-   // => the name refers to one of the fields, not to the whole record
-    "    char* param_field = param.get_id()->get_current_name();\n"
-    "    if (param_field[0] >= '0' && param_field[0] <= '9') {\n"
-    "      param.error(\"Unexpected array index in module parameter, expected a valid field\"\n"
-    "        \" name for %s template type `%s'\");\n"
-    "    }\n"
-    "    ", name, kind_str, dispname);
- for (i = 0; i < sdef->nElements; i++) {
-   src = mputprintf(src,
-    "if (strcmp(\"%s\", param_field) == 0) {\n"
-    "      %s().set_param(param);\n"
-    "      return;\n"
-    "    } else ",
-    sdef->elements[i].dispname, sdef->elements[i].name);
- }
- src = mputprintf(src,
-    "param.error(\"Field `%%s' not found in %s template type `%s'\", param_field);\n"
-    "  }\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE, \"%s template\");\n"
     "  switch (param.get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
@@ -5700,7 +5658,7 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     "    if (%lu<param.get_size()) {\n"
     "      param.error(\"%s template of type %s has %lu fields but list value has %%d fields\", (int)param.get_size());\n"
     "    }\n",
-    kind_str, dispname, kind_str, name, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
+    name, kind_str, name, (unsigned long)sdef->nElements, kind_str, dispname, (unsigned long)sdef->nElements);
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
       "    if (param.get_size()>%lu && param.get_elem(%lu)->get_type()!=Module_Param::MP_NotUsed) %s().set_param(*param.get_elem(%lu));\n",

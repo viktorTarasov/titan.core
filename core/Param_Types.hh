@@ -65,6 +65,7 @@ public:
   virtual char* get_name() const;
   virtual char* get_current_name() const;
   virtual bool next_name(int offset = 1);
+  virtual size_t get_nof_names() const;
   virtual char* get_str() const = 0; // returns an expstring that must be deallocated
 };
 
@@ -87,7 +88,7 @@ public:
     return true;
   }
   void reset() { pos = 0; }
-  boolean is_single_name() const { return names.size() == 1; }
+  size_t get_nof_names() const { return names.size(); }
   char* get_str() const;
 };
 

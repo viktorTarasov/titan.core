@@ -604,20 +604,6 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
   src = mputprintf(src,
     "void %s::set_param(Module_Param& param)\n"
     "{\n"
-    "  if (dynamic_cast<Module_Param_Name*>(param.get_id()) != NULL &&\n"
-    "      param.get_id()->next_name()) {\n"
-    // Haven't reached the end of the module parameter name
-    // => the name refers to one of the elements, not to the whole record of
-    "    char* param_field = param.get_id()->get_current_name();\n"
-    "    if (param_field[0] < '0' || param_field[0] > '9') {\n"
-    "      param.error(\"Unexpected record field name in module parameter, expected a valid\"\n"
-    "        \" index for %s type `%s'\");\n"
-    "    }\n"
-    "    int param_index = -1;\n"
-    "    sscanf(param_field, \"%%d\", &param_index);\n"
-    "    (*this)[param_index].set_param(param);\n"
-    "    return;\n"
-    "  }\n"
     "  param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, \"%s value\");\n"
     "  switch (param.get_operation_type()) {\n"
     "  case Module_Param::OT_ASSIGN:\n"
@@ -676,7 +662,6 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "    TTCN_error(\"Internal error: Unknown operation type.\");\n"
     "  }\n"
     "}\n\n", name, sdef->kind == RECORD_OF ? "record of" : "set of",
-    dispname, sdef->kind == RECORD_OF ? "record of" : "set of",
     sdef->kind == RECORD_OF ? "record of" : "set of", dispname,
     sdef->kind == RECORD_OF ? "record of" : "set of", dispname);
 
@@ -2129,20 +2114,6 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
   src = mputprintf(src,
     "void %s::set_param(Module_Param& param)\n"
     "{\n"
-    "  if (dynamic_cast<Module_Param_Name*>(param.get_id()) != NULL &&\n"
-    "      param.get_id()->next_name()) {\n"
-    // Haven't reached the end of the module parameter name
-    // => the name refers to one of the elements, not to the whole record of
-    "    char* param_field = param.get_id()->get_current_name();\n"
-    "    if (param_field[0] < '0' || param_field[0] > '9') {\n"
-    "      param.error(\"Unexpected record field name in module parameter, expected a valid\"\n"
-    "        \" index for %s type `%s'\");\n"
-    "    }\n"
-    "    int param_index = -1;\n"
-    "    sscanf(param_field, \"%%d\", &param_index);\n"
-    "    (*this)[param_index].set_param(param);\n"
-    "    return;\n"
-    "  }\n"
     "  param.basic_check(Module_Param::BC_VALUE|Module_Param::BC_LIST, \"%s value\");\n"
     "  switch (param.get_operation_type()) {\n"
     "  case Module_Param::OT_ASSIGN:\n"
@@ -2192,8 +2163,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
     "  default:\n"
     "    TTCN_error(\"Internal error: Unknown operation type.\");\n"
     "  }\n"
-    "}\n", name, sdef->kind == RECORD_OF ? "record of" : "set of", dispname,
-    sdef->kind == RECORD_OF ? "record of" : "set of",
+    "}\n", name, sdef->kind == RECORD_OF ? "record of" : "set of",
     sdef->kind == RECORD_OF ? "record of" : "set of", dispname,
     sdef->kind == RECORD_OF ? "record of" : "set of", dispname);
 
@@ -4404,20 +4374,6 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
   src = mputprintf(src,
     "void %s_template::set_param(Module_Param& param)\n"
     "{\n"
-    "  if (dynamic_cast<Module_Param_Name*>(param.get_id()) != NULL &&\n"
-    "      param.get_id()->next_name()) {\n"
-    // Haven't reached the end of the module parameter name
-    // => the name refers to one of the elements, not to the whole record of
-    "    char* param_field = param.get_id()->get_current_name();\n"
-    "    if (param_field[0] < '0' || param_field[0] > '9') {\n"
-    "      param.error(\"Unexpected record field name in module parameter, expected a valid\"\n"
-    "        \" index for %s template type `%s'\");\n"
-    "    }\n"
-    "    int param_index = -1;\n"
-    "    sscanf(param_field, \"%%d\", &param_index);\n"
-    "    (*this)[param_index].set_param(param);\n"
-    "    return;\n"
-    "  }\n"
     "  param.basic_check(Module_Param::BC_TEMPLATE|Module_Param::BC_LIST, \"%s of template\");\n"
     "  switch (param.get_type()) {\n"
     "  case Module_Param::MP_Omit:\n"
@@ -4445,7 +4401,7 @@ void defRecordOfTemplate1(const struct_of_def *sdef, output_struct *output)
     "      (*this)[(int)(param.get_elem(p_i)->get_id()->get_index())].set_param(*param.get_elem(p_i));\n"
     "    }\n"
     "    break;\n",
-    name, sdef->kind==RECORD_OF?"record":"set", dispname, sdef->kind==RECORD_OF?"record":"set", name);
+    name, sdef->kind==RECORD_OF?"record":"set", name);
   if (sdef->kind == RECORD_OF) {
     src = mputstr(src,
     "  case Module_Param::MP_Value_List: {\n"

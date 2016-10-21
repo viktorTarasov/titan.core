@@ -44,13 +44,6 @@ modulepar SOI tsp_SOI_4;
 modulepar SOSOI tsp_SOSOI_1;
 modulepar SOSOI tsp_SOSOI_2;
 
-// Nested
-modulepar Rec tsp_Rec := { { 1, 2, 3 }, { 1, 2, 3 } };
-modulepar RoRec tsp_RoRec := {
-  { {  1,  2,  3 }, {  1,  2,  3 } },
-  { { 11, 12, 13 }, { 11, 12, 13 } }
-};
-
 
 type component MyComp_CT {
 }
@@ -89,19 +82,8 @@ testcase tc_set_of() runs on MyComp_CT {
   else { setverdict(fail, "tsp_SOSOI_2"); }
 }
 
-testcase tc_nested() runs on MyComp_CT {
-  if (tsp_Rec == { { 1, 2, 3, 4, 5 }, { 1, 2, 3, 6, 7, 8 } }) { setverdict(pass); }
-  else { setverdict(fail, "tsp_Rec = ", tsp_Rec); }
-
-  if (tsp_RoRec == { { {  1,  2,  3,  4,  5 }, {  1,  2,  3,  6,  7,  8 } },
-                     { { 11, 12, 13, 14, 15 }, { 11, 12, 13, 16, 17, 18 } },
-                     { { 21, 22, 23, 24, 25 }, { 21, 22, 23, 26, 27, 28 } } }) { setverdict(pass); }
-  else { setverdict(fail, "tsp_RoRec = ", tsp_RoRec); }
-}
-
 control {
   execute(tc_record_of());
   execute(tc_set_of());
-  execute(tc_nested());
 }
 }

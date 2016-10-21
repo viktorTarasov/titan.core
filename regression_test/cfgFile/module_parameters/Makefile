@@ -18,7 +18,7 @@ unexport SRCDIR
 
 DIRS := assignment concat
 ifdef RT2
-DIRS += references
+DIRS += references nested
 endif
 
 # List of fake targets:

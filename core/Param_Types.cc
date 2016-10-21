@@ -57,6 +57,11 @@ bool Module_Param_Id::next_name(int offset) {
   return false;
 }
 
+size_t Module_Param_Id::get_nof_names() const {
+  TTCN_error("Internal error: Module_Param_Id::get_nof_names()");
+  return 0;
+}
+
 char* Module_Param_Name::get_str() const {
   char* result = NULL;
   for (size_t i = 0; i < names.size(); ++i) {
@@ -337,7 +342,7 @@ Module_Param_Ptr Module_Param_Reference::get_referenced_param() const {
 }
 
 char* Module_Param_Reference::get_enumerated() const {
-  if (mp_ref->is_single_name()) {
+  if (mp_ref->get_nof_names() == (size_t)1) {
     return mp_ref->get_current_name();
   }
   return NULL;

@@ -157,6 +157,12 @@ void Module_List::initialize_component(const char *module_name,
 
 void Module_List::set_param(Module_Param& param)
 {
+#ifndef TITAN_RUNTIME_2
+    if (param.get_id()->get_nof_names() > (size_t)2) {
+      param.error("Module parameter cannot be set. Field names and array "
+        "indexes are not supported in the Load Test Runtime.");
+    }
+#endif
   // The first segment in the parameter name can either be the module name,
   // or the module parameter name - both must be checked
   const char* const first_name = param.get_id()->get_current_name();
@@ -175,6 +181,25 @@ void Module_List::set_param(Module_Param& param)
   // If not found, check if the first name segment was the module parameter name
   // (even if it matched a module name)
   if (!param_found) {
+#ifndef TITAN_RUNTIME_2
+    if (param.get_id()->get_nof_names() == (size_t)2) {
+      const char* note = "(Note: field names and array indexes are not "
+        "supported in the Load Test Runtime).";
+      if (module_ptr == NULL) {
+        param.error("Module parameter cannot be set, because module '%s' "
+          "does not exist. %s", first_name, note);
+      }
+      else if (module_ptr->set_param_func == NULL) {
+        param.error("Module parameter cannot be set, because module '%s' "
+          "does not have parameters. %s", first_name, note);
+      }
+      else {
+        param.error("Module parameter cannot be set, because no parameter with "
+          " name '%s' exists in module '%s'. %s", second_name, first_name, note);
+      }
+    }
+#endif
+    
     param.get_id()->next_name(-1); // set the position back to the first segment
     for (TTCN_Module *list_iter = list_head; list_iter != NULL;
       list_iter = list_iter->list_next) {

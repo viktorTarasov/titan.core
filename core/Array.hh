@@ -372,6 +372,7 @@ template <typename T_type, unsigned int array_size, int index_offset>
 void VALUE_ARRAY<T_type,array_size,index_offset>::set_param(
   Module_Param& param)
 {
+#ifdef TITAN_RUNTIME_2
   if (dynamic_cast<Module_Param_Name*>(param.get_id()) != NULL &&
       param.get_id()->next_name()) {
     // Haven't reached the end of the module parameter name
@@ -389,6 +390,7 @@ void VALUE_ARRAY<T_type,array_size,index_offset>::set_param(
     array_elements[param_index].set_param(param);
     return;
   }
+#endif
   
   param.basic_check(Module_Param::BC_VALUE, "array value");
   Module_Param_Ptr mp = &param;
