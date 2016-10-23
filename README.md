@@ -12,6 +12,10 @@ ASN.1 (Abstract Syntax Notation One).
 
 * https://projects.eclipse.org/projects/tools.titan
 
+# Community forum:
+
+* https://www.eclipse.org/forums/index.php/f/297/
+
 ##Introductory video of a presentation about Titan held at EclipseCon 2014: 
 * https://www.youtube.com/watch?v=2knzZuwzn-Y.
 
