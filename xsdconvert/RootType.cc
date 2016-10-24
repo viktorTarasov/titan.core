@@ -168,7 +168,7 @@ void RootType::addVariant(const VariantMode var, const Mstring& var_value, const
       variantstring = "\"whiteSpace " + var_value + "\"";
       break;
     case V_fractionDigits:
-      //variantstring = "\"fractionDigits " + var_value + "\"";
+      variantstring = "\"fractionDigits " + var_value + "\"";
       break;
   }
 

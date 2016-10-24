@@ -505,7 +505,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
   int atrib=0, any_atr=0, any_elem=0, base64=0, decimal=0, embed=0, list=0,
   text=0, untagged=0, use_nil=0, use_number=0, use_order=0, use_qname=0,
   use_type_attr=0, ws=0, has_1untag=0, form_qualified=0, any_from=0, 
-  any_except=0, nof_ns_uris=0, blocked=0;
+  any_except=0, nof_ns_uris=0, blocked=0, fractionDigits=-1;
   const char* dfe_str = 0;
   char** ns_uris = 0;
   char* oftype_descr_name = 0;
@@ -527,6 +527,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     embed   = xerattrib->embedValues_;
     form_qualified = (xerattrib->form_ & XerAttributes::QUALIFIED)
       || (xerattrib->element_); // a global element is always qualified
+    fractionDigits = xerattrib->has_fractionDigits_ ? xerattrib->fractionDigits_ : -1;
     list    = xerattrib->list_;
     untagged= xerattrib->untagged_;
     ws      = xerattrib->whitespace_;
@@ -619,12 +620,12 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     }
     target->source.global_vars = mputstrn(target->source.global_vars, "};\n", 3);
   }
-
+    
   // Generate the XER descriptor itself
   target->source.global_vars = mputprintf(target->source.global_vars,
     "const XERdescriptor_t       %s_xer_ = { {\"%s>\\n\", \"%s>\\n\"},"
     " {%lu, %lu}, %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s, WHITESPACE_%s, %c%s, "
-    "&%s, %ld, %u, %s, %s };\n",
+    "&%s, %ld, %u, %s, %s, %i };\n",
     gennameown_str,
     bxer_name.c_str(), last_s.c_str(), // names
     (unsigned long)bxer_len, (unsigned long)last_len, // lengths
@@ -654,7 +655,8 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     ns_index,
     nof_ns_uris,
     (ns_uris_var ? ns_uris_var : "NULL"),
-    (oftype_descr_name ? oftype_descr_name : "NULL")
+    (oftype_descr_name ? oftype_descr_name : "NULL"),
+    fractionDigits
     );
   
   Free(ns_uris_var);

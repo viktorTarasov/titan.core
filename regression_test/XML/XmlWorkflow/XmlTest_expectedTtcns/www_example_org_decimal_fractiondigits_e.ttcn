@@ -47,6 +47,7 @@ import from XSD all;
 type XSD.Decimal CelsiusBodyTemp (-9999.0 .. 9999.0)
 with {
   variant "name as uncapitalized";
+  variant "fractionDigits 1";
 };
 
 
@@ -60,6 +61,7 @@ with {
   variant "name as uncapitalized";
   variant "useUnion";
   variant "element";
+  variant (alt_) "fractionDigits 1";
   variant (alt_) "name as ''";
   variant (alt_1) "name as ''";
   variant (alt_2) "name as ''";

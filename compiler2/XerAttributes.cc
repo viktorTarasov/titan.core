@@ -10,6 +10,7 @@
  *   Baranyi, Botond
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 /*
@@ -44,6 +45,8 @@ XerAttributes::XerAttributes()
 , element_(false)
 , embedValues_(false)
 , form_(UNSET)
+, has_fractionDigits_(false)
+, fractionDigits_(0)
 , hex_(false)
 , list_(false)
 , name_(nochange)
@@ -171,6 +174,7 @@ void XerAttributes::print(const char *type_name) const {
     if (element_) fputs("ELEMENT\n", stderr);
     fputs(embedValues_ ? "EMBED-VALUES\n" : "", stderr);
     fputs((form_ & QUALIFIED) ? "FORM AS QUALIFIED\n" : "", stderr);
+    if (has_fractionDigits_) fprintf(stderr, "FRACTIONDIGITS '%i'\n", fractionDigits_);
     fputs(hex_ ? "hexBinary" : "", stderr);
     fputs(list_ ? "LIST\n" : "", stderr);
 
@@ -283,6 +287,8 @@ other.print("other");
   element_ |= other.element_;
   embedValues_ |= other.embedValues_;
   form_ = other.form_;
+  has_fractionDigits_ = other.has_fractionDigits_;
+  fractionDigits_ = other.fractionDigits_;
   hex_  |= other.hex_;
   list_ |= other.list_;
   if (other.name_.kw_ != NamespaceSpecification::NO_MANGLING) {
@@ -386,6 +392,7 @@ bool XerAttributes::empty() const
   && !element_
   && !embedValues_
   && !(form_ & LOCALLY_SET)
+  && !has_fractionDigits_
   && !hex_
   && !list_
   && name_.kw_ == NamespaceSpecification::NO_MANGLING

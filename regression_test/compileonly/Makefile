@@ -13,6 +13,7 @@
 #   Kovacs, Ferenc
 #   Raduly, Csaba
 #   Szabados, Kristof
+#   Szabo, Bence Janos
 #   Szabo, Janos Zoltan – initial implementation
 #
 ##############################################################################
@@ -26,7 +27,8 @@ CODIRS := dynamicTemplate styleGuide topLevelPdu \
 	openType optionalAssignCompare portConstructor \
 	isbound namedActualParameters assignmentNotation \
 	attribQualif HT48786 selectCase openTypeNames \
-	defaultParamUsageBeforeDecl deterministic readFromFile
+	defaultParamUsageBeforeDecl deterministic readFromFile \
+	asn1_hyphen
 
 all dep clean distclean:
 	for dir in $(CODIRS); do $(MAKE) -C $$dir $@ || exit; done

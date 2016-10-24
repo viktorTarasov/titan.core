@@ -357,6 +357,7 @@ element 	RETURN(XKWelement);
 elementFormQualified  RETURN(XKWelementFormQualified);
 embedValues     RETURN(XKWembedValues);
 form            RETURN(XKWform);
+fractionDigits RETURN(XKWfractionDigits);
 list		RETURN(XKWlist);
 name		RETURN(XKWname);
 namespace	RETURN(XKWnamespace);

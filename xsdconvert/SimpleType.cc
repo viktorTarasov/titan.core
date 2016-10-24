@@ -227,7 +227,7 @@ void SimpleType::loadWithValues() {
       value.modified = true;
       break;
     case n_fractionDigits:
-      //addVariant(V_fractionDigits, atts.value);
+      addVariant(V_fractionDigits, atts.value);
       break;
     case n_label:
       addComment(Mstring("LABEL:"));

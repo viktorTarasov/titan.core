@@ -872,6 +872,14 @@ int FLOAT::XER_encode(const XERdescriptor_t& p_td,
       n = snprintf(buf, sizeof(buf), "%s", XER_NEG_INF_STR);
     } else {
       n = snprintf(buf, sizeof(buf), "%f", (double)float_value);
+      if (p_td.fractionDigits != -1) {
+        char *p = strchr(buf, '.');
+        if (p != NULL) {
+          int offset = p_td.fractionDigits == 0 ? 0 : p_td.fractionDigits + 1;
+          p[offset] = 0;
+          n = strlen(buf);
+        }
+      }
     }
     p_buf.put_s((size_t)n, (const unsigned char*)buf);
   }
@@ -966,6 +974,18 @@ tagless:
     const char * value = (const char *)reader.Value();
     if (value) {
       if (is_float(value)) {
+        if (exer && (p_td.xer_bits & XER_DECIMAL) && p_td.fractionDigits != -1) {
+          char *p = strchr((char*)value, '.');
+          if (p != NULL) {
+            unsigned int fraction_digits_pos = (int)(p - value) + 1 + p_td.fractionDigits;
+            if (fraction_digits_pos < strlen(value)) {
+              TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_FLOAT_TR,
+                "The float value (%s) contains too many fractionDigits. Expected %i or less.",
+                value,
+                p_td.fractionDigits);
+            }
+          }
+        }
         bound_flag = true;
         sscanf(value, "%lf", &float_value);
       } else if (strcmp(XER_NAN_STR, value) == 0 ) {
@@ -1008,6 +1028,18 @@ tagless:
         const char * value = (const char*)reader.Value();
         if (value) {
           if (is_float(value)) {
+            if (exer && (p_td.xer_bits & XER_DECIMAL) && p_td.fractionDigits != -1) {
+              char *p = strchr((char*)value, '.');
+              if (p != NULL) {
+                unsigned int fraction_digits_pos = (int)(p - value) + 1 + p_td.fractionDigits;
+                if (fraction_digits_pos < strlen(value)) {
+                  TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_FLOAT_TR,
+                    "The float value (%s) contains too many fractionDigits. Expected %i or less.",
+                    value,
+                    p_td.fractionDigits);
+                }
+              }
+            }
             bound_flag = true;
             sscanf(value, "%lf", &float_value);
           } else if (strcmp("NaN", value) == 0 ) {

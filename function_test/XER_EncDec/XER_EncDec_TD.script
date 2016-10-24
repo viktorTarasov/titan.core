@@ -71,6 +71,189 @@ A     2014-04-29   EBOTBAR    New document
 .*---------------------------------------------------------------------*
 :h4. Encoding record template with explicitly unspecified field
 .*---------------------------------------------------------------------*
+
+.*---------------------------------------------------------------------*
+:h4. Too many fraction digits when fractionDigits is 2
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Too many fraction digits when fractionDigits is 2>
+
+<STATIC>
+
+type component Test_CT{};
+
+<TTCN_TC:PURE_EXEC>
+
+type float MyFloat
+with {
+  encode "XML";
+  variant "fractionDigits 2";
+  variant "XSD:decimal";
+};
+
+external function ef_xer_dec(in octetstring par) return MyFloat
+  with { extension "prototype(convert) decode (XER:XER_EXTENDED) errorbehavior(ALL:ERROR)" }
+
+testcase tc_dec_fractiondigits() runs on Test_CT {
+  var universal charstring xml := "<MyFloat>1234567890.111</MyFloat>\n";
+  ef_xer_dec(unichar2oct(xml));
+  setverdict(pass);
+}
+
+control {
+  execute(tc_dec_fractiondigits());
+}
+
+<RESULT>
+
+Dynamic test case error: While XER-decoding type '@Temp.MyFloat': The float value (1234567890.111) contains too many fractionDigits. Expected 2 or less
+
+<END_TC>  
+  
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4. Too many fraction digits when fractionDigits is 0
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Too many fraction digits when fractionDigits is 0>
+
+<STATIC>
+
+type component Test_CT{};
+
+<TTCN_TC:PURE_EXEC>
+
+type float MyFloat
+with {
+  encode "XML";
+  variant "fractionDigits 0";
+  variant "XSD:decimal";
+};
+
+external function ef_xer_dec(in octetstring par) return MyFloat
+  with { extension "prototype(convert) decode (XER:XER_EXTENDED) errorbehavior(ALL:ERROR)" }
+
+testcase tc_dec_fractiondigits() runs on Test_CT {
+  var universal charstring xml := "<MyFloat>1234567890.1</MyFloat>\n";
+  ef_xer_dec(unichar2oct(xml));
+  setverdict(pass);
+}
+
+control {
+  execute(tc_dec_fractiondigits());
+}
+
+<RESULT>
+
+Dynamic test case error: While XER-decoding type '@Temp.MyFloat': The float value (1234567890.1) contains too many fractionDigits. Expected 0 or less
+
+<END_TC>  
+  
+:exmp.
+
+
+.*---------------------------------------------------------------------*
+:h4. Too many fraction digits when fractionDigits is 2 in attribute
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Too many fraction digits when fractionDigits is 2 in attribute>
+
+<STATIC>
+
+type component Test_CT{};
+
+<TTCN_TC:PURE_EXEC>
+
+type float MyFloat
+with {
+  encode "XML";
+  variant "XSD:decimal";
+};
+
+type record MyRec {
+  MyFloat myfloat
+} 
+with {
+  encode "XML";
+  variant (myfloat) "fractionDigits 2";
+  variant (myfloat) "attribute";
+};
+
+external function ef_xer_dec(in octetstring par) return MyRec
+  with { extension "prototype(convert) decode (XER:XER_EXTENDED) errorbehavior(ALL:ERROR)" }
+
+testcase tc_dec_fractiondigits_attr() runs on Test_CT {
+  var universal charstring xml := "<MyRec myfloat='1234567890.111'></MyRec>\n";
+  ef_xer_dec(unichar2oct(xml));
+  setverdict(pass);
+}
+
+control {
+  execute(tc_dec_fractiondigits_attr());
+}
+
+<RESULT>
+
+Dynamic test case error: While XER-decoding type '@Temp.MyRec': Component 'myfloat': The float value (1234567890.111) contains too many fractionDigits. Expected 2 or less.
+
+<END_TC>  
+  
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4. Too many fraction digits when fractionDigits is 0 in attribute
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Too many fraction digits when fractionDigits is 0 in attribute>
+
+<STATIC>
+
+type component Test_CT{};
+
+<TTCN_TC:PURE_EXEC>
+
+type float MyFloat
+with {
+  encode "XML";
+  variant "XSD:decimal";
+};
+
+type record MyRec {
+  MyFloat myfloat
+} 
+with {
+  encode "XML";
+  variant (myfloat) "fractionDigits 0";
+  variant (myfloat) "attribute";
+};
+
+external function ef_xer_dec(in octetstring par) return MyRec
+  with { extension "prototype(convert) decode (XER:XER_EXTENDED) errorbehavior(ALL:ERROR)" }
+
+testcase tc_dec_fractiondigits_attr() runs on Test_CT {
+  var universal charstring xml := "<MyRec myfloat='1234567890.1'></MyRec>\n";
+  ef_xer_dec(unichar2oct(xml));
+  setverdict(pass);
+}
+
+control {
+  execute(tc_dec_fractiondigits_attr());
+}
+
+<RESULT>
+
+Dynamic test case error: While XER-decoding type '@Temp.MyRec': Component 'myfloat': The float value (1234567890.1) contains too many fractionDigits. Expected 0 or less.
+
+<END_TC>  
+  
+:exmp.
+
+
 :xmp tab=0.
 
 <TC - Encoding record with any element from unqualified namespace>

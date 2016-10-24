@@ -279,6 +279,12 @@ struct XERdescriptor_t
   
   /** Points to the element type's XER descriptor in case of 'record of' and 'set of' types */
   const XERdescriptor_t* oftype_descr;
+  
+  /** Fraction digits value
+    * It is already checked that is must not be a negative number.
+    * The -1 value is used to determine if fractionDigits encoding instruction is present,
+    * so if the value is -1, no checks will be made. */
+  const int fractionDigits;
 };
 
 /** Information related to the embedded values in XML encoding
@@ -448,7 +454,7 @@ void check_namespace_restrictions(const XERdescriptor_t& p_td, const char* p_xml
   extern const XERdescriptor_t type_name##_xer_ = { \
     { xmlname ">\n", xmlname ">\n" }, \
     { 2+sizeof(xmlname)-1, 2+sizeof(xmlname)-1 }, \
-    0UL, WHITESPACE_PRESERVE, NULL, NULL, 0, 0, NULL, NULL }
+    0UL, WHITESPACE_PRESERVE, NULL, NULL, 0, 0, NULL, NULL, -1 }
 // The compiler should fold the two identical strings into one
 
 # define XER_STRUCT_COPY(cpy,original) \

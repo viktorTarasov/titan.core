@@ -2188,7 +2188,14 @@ void Type::chk_xer() { // XERSTUFF semantic check
     if (last->typetype != T_REAL) {
       error("DECIMAL shall only be assigned to a real type");
     }
-  } // if DECIMAL
+    if (xerattrib->has_fractionDigits_) {
+      if (xerattrib->fractionDigits_ < 0) {
+        error("The value of fractionDigits must be equal or greater than zero");
+      }
+    }
+  } else if (xerattrib->has_fractionDigits_) {
+    error("The fractionDigits encoding instruction shall be used with XSD.Decimal types.");
+  } // if DECIMAL 
 
   if (xerattrib->defaultForEmpty_ != 0) {
     chk_xer_dfe();

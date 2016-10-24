@@ -194,6 +194,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token XKWelementFormQualified          "elementFormQualified"
 %token XKWembedValues      "embedValues"
 %token XKWform             "form"
+%token XKWfractionDigits   "fractionDigits"
 %token XKWlist             "list"
 %token XKWname             "name"
 %token XKWnamespace        "namespace"
@@ -333,7 +334,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 
 %type <nsspec> namespace namespacespecification controlNamespace text
 
-%type <intval> whiteSpace
+%type <intval> whiteSpace fractionDigits
 
     /* destructors */
 %destructor { Free($$); }
@@ -1311,6 +1312,7 @@ XERattribute:
     | XKWelementFormQualified { xerstruct->form_ |= XerAttributes::ELEMENT_DEFAULT_QUALIFIED; }
     | XKWembedValues { xerstruct->embedValues_ = true; }
     | form { xerstruct->form_ |= $1; }
+    | fractionDigits { xerstruct->fractionDigits_ = $1; xerstruct->has_fractionDigits_ = true; }
     | XKWlist { xerstruct->list_ = true; }
     | name
       { /* overwrites any previous name */
@@ -1468,6 +1470,10 @@ defaultForEmpty:
     XKWdefaultForEmpty XKWas Xstring
     { $$ = $3; }
 ;
+
+fractionDigits:
+   XKWfractionDigits XNumber
+   { $$ = $2; } 
 
 
 

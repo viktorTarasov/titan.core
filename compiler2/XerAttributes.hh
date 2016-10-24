@@ -9,6 +9,7 @@
  *   Balasko, Jeno
  *   Baranyi, Botond
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 /*
@@ -161,6 +162,10 @@ public:
   bool embedValues_;
   /// Qualified or unqualified form for local elements and attributes
   unsigned short form_;
+  // True if there was fractionDigits variant
+  bool has_fractionDigits_;
+  // fractionDigits on float number
+  int fractionDigits_;
   /// XSD:hexBinary
   bool hex_;
   /// space-separated values for record-of/set-of
