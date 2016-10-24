@@ -1102,7 +1102,8 @@ OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
           found_it:
           set_to_present();
           //success = reader.Read(); // move to next thing TODO should it loop till an element ?
-          optional_value->XER_decode(p_td, reader, flavor, flavor2, emb_val);
+          // Pass XER_OPTIONAL to flavor, to sign that we are optional
+          optional_value->XER_decode(p_td, reader, flavor | XER_OPTIONAL, flavor2, emb_val);
           if (!optional_value->is_bound()) {
             set_to_omit();
           }

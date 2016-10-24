@@ -663,6 +663,11 @@ int BOOLEAN::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
       type = reader.NodeType();
       if (!notag && depth == -1) {
         if (XML_READER_TYPE_ELEMENT == type) {
+          // If our parent is optional and there is an unexpected tag then return and
+          // we stay unbound.
+          if ((flavor & XER_OPTIONAL) && !check_name((const char*)reader.LocalName(), p_td, exer)) {
+            return -1;
+          }
           verify_name(reader, p_td, exer);
           depth = reader.Depth();
 

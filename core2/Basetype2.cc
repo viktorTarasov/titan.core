@@ -2399,6 +2399,9 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
             ec_1.set_msg("%d: ", get_nof_elements());
             /* The call to the non-const get_at() creates the element */
             get_at(get_nof_elements())->XER_decode(*p_td.oftype_descr, reader, flavor, flavor2, emb_val);
+            if (get_at(get_nof_elements()-1)->is_bound()) {
+              flavor &= ~XER_OPTIONAL;
+            }
           }
           if (0 != emb_val && !own_tag && get_nof_elements() > 1 && !(p_td.oftype_descr->xer_bits & UNTAGGED)) {
             ++emb_val->embval_index;
@@ -5589,7 +5592,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
         }
       } // not empty element
     }
-    else { // not USE-ORDER, simpler code      
+    else { // not USE-ORDER, simpler code   
       if (usenil_attribute) {
         reader.MoveToElement(); // value absent, nothing more to do
       } else {
@@ -5642,6 +5645,10 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
               if (tag_closed)       new_flavor |= PARENT_CLOSED;
 
               get_at(i)->XER_decode(*xer_descr(i), reader, new_flavor, flavor2, emb_val);
+              if (!get_at(i)->is_optional() && get_at(i)->is_bound()) {
+                // Remove XER_OPTIONAL when we found a non optional field which is bound
+                flavor &= ~XER_OPTIONAL;
+              }
             }
           }
           if (!get_at(i)->is_present()) {
@@ -5683,6 +5690,12 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   // Check if every non-optional field has been set
   for (i = 0; i < field_cnt; ++i) {
     if (!get_at(i)->is_optional() && !get_at(i)->is_bound()) {
+      if (flavor & XER_OPTIONAL) {
+        // If there is a non optional field which is unbound and we are optional
+        // then set to omit. Test: RecordOmit
+        clean_up();
+        return -1;
+      }
       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INCOMPL_MSG,
         "No data found for non-optional field '%s'", fld_name(i));
     }

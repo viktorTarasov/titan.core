@@ -57,7 +57,6 @@ enum XER_flavor {
   XER_EXTENDED        = 1U << 2, /**< Extended XER */
   DEF_NS_PRESENT      = 1U << 3, // 0x08
   DEF_NS_SQUASHED     = 1U << 4, // 0x10
-  XER_MASK            = 0x1FU,   /**< All the "real" XER flavors plus DEF_NS */
 
   /* Additional flags, for the parent to pass information to its children
    * (when the parent affects the child, e.g. LIST) */
@@ -100,7 +99,10 @@ enum XER_flavor {
   EXIT_ON_ERROR  = 1U << 29, /* 0x20000000 clean up and exit instead of throwing
   a decoding error, used on alternatives of a union with USE-UNION */
   XER_OPTIONAL   = 1U << 30, // 0x40000000 is an optional field of a record or set
-  BLOCKED        = 1U << 31  // 0x80000000 either ABSTRACT or BLOCK
+  BLOCKED        = 1U << 31,  // 0x80000000 either ABSTRACT or BLOCK
+  
+  /**< All the "real" XER flavors plus DEF_NS + XER_OPTIONAL*/
+  XER_MASK            = 0x1FU | XER_OPTIONAL
 };
 
 enum XER_flavor2 {

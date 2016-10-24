@@ -1428,6 +1428,9 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       /* The call to the non-const operator[] creates a new element object,
        * then we call its XER_decode with the temporary XML reader. */
       "      (*this)[val_ptr->n_elements].XER_decode(*p_td.oftype_descr, reader_2, p_flavor, p_flavor2, 0);\n"
+      "      if ((*this)[val_ptr->n_elements - 1].is_bound()) {\n"
+      "        p_flavor &= ~XER_OPTIONAL;\n"
+      "      }\n"
       "      if (p_flavor & EXIT_ON_ERROR && !(*this)[val_ptr->n_elements - 1].is_bound()) {\n"
       "        if (1 == val_ptr->n_elements) {\n"
       // Failed to decode even the first element

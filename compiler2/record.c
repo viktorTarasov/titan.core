@@ -3041,6 +3041,13 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         "  }\n"
         , sdef->elements[i].name);
     }
+    if (!sdef->elements[i].isOptional) {
+      src = mputprintf(src,
+        "  if (field_%s.is_bound()) {\n"
+        "    p_flavor &= ~XER_OPTIONAL;\n"
+        "  }\n"
+        , sdef->elements[i].name);
+    }
   } /* next field */
   
   if (i == start_at + num_attributes) {
@@ -3117,6 +3124,10 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     if (!sdef->elements[i].isOptional) {
       src = mputprintf(src,
         "  if (!field_%s.is_bound()) {\n"
+        "    if (p_flavor & XER_OPTIONAL) {\n"
+        "      clean_up();\n"
+        "      return -1;\n"
+        "    }\n"
         "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INCOMPL_MSG,\n"
         "      \"No data found for non-optional field '%s'\");\n"
         "  }\n"

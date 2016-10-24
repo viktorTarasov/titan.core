@@ -3394,6 +3394,11 @@ int CHARACTER_STRING::XER_decode(const XERdescriptor_t& p_td,
   for (; success == 1; success = reader.Read()) {
     type = reader.NodeType();
     if (XML_READER_TYPE_ELEMENT == type) {
+      // If our parent is optional and there is an unexpected tag then return and
+      // we stay unbound.
+      if ((flavor & XER_OPTIONAL) && !check_name((const char*)reader.LocalName(), p_td, exer)) {
+        return -1;
+      }
       verify_name(reader, p_td, exer);
       depth = reader.Depth();
       reader.Read();

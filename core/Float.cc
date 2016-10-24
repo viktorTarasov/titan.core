@@ -989,6 +989,11 @@ tagless:
     for (; success == 1; success = reader.Read()) {
       int type = reader.NodeType();
       if (XML_READER_TYPE_ELEMENT == type) {
+        // If our parent is optional and there is an unexpected tag then return and
+        // we stay unbound.
+        if ((flavor & XER_OPTIONAL) && !check_name((const char*)reader.LocalName(), p_td, exer)) {
+          return -1;
+        }
         verify_name(reader, p_td, exer);
         if (reader.IsEmptyElement()) {
           if (exer && p_td.dfeValue != 0) {

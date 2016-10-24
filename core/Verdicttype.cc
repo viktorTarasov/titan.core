@@ -332,6 +332,12 @@ int VERDICTTYPE::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader
     if (name_tag)      for (; rd_ok == 1; rd_ok = p_reader.Read()) {
         type = p_reader.NodeType();
         if (XML_READER_TYPE_ELEMENT == type) {
+          // If our parent is optional and there is an unexpected tag then return and
+          // we stay unbound.
+          if ((p_flavor & XER_OPTIONAL) && !check_name((const char*)p_reader.LocalName(), p_td, e_xer)) {
+            return -1;
+          }
+          verify_name(p_reader, p_td, e_xer);
           rd_ok = p_reader.Read();
           break;
         }
