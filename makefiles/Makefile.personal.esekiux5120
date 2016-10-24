@@ -18,6 +18,6 @@ CXX := $(GCCDIR)/bin/g++
 FLEX    := /proj/TTCN/Tools/flex-2.5.35/bin/flex
 BISON   := /proj/TTCN/Tools/bison-2.4.3/bin/bison
 JDKDIR  := /proj/TTCN/Tools/jdk1.6.0_23
-XMLDIR  := /proj/TTCN/Tools/libxml2-2.7.8
+XMLDIR  := /app/libxml/2.9.1
 
 OPENSSL_DIR := /proj/TTCN/Tools/openssl-0.9.8r
