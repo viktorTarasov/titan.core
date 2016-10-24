@@ -17,7 +17,9 @@
 
 # Flags for the TTCN-3 and ASN.1 compiler:
 COMPILER_FLAGS := -s -g
-
+ifeq ($(RT2), yes)
+COMPILER_FLAGS += -R
+endif
 
 # TTCN-3 modules of this project:
 TTCN3_MODULES := $(sort $(wildcard *A.ttcn *S[WE].ttcn *OK.ttcn))

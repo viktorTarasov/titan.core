@@ -3419,7 +3419,7 @@ namespace Common {
     if (v1_gov) {
       if (v2_gov) { // both have governors
         // return the type that is compatible with both (if there is no type mismatch)
-        if (v1_gov->is_compatible(v2_gov, NULL))
+        if (v1_gov->is_compatible(v2_gov, NULL, NULL))
           return v1_gov;
         else return v2_gov;
       } else return v1_gov;
@@ -3857,7 +3857,7 @@ namespace Common {
     TypeChain l_chain;
     TypeChain r_chain;
     if (my_governor && my_governor->is_list_type(allow_array)
-        && !my_governor->is_compatible(t, &info, &l_chain, &r_chain)) {
+        && !my_governor->is_compatible(t, &info, this, &l_chain, &r_chain)) {
       if (info.is_subtype_error()) {
         // this is ok.
         if (info.needs_conversion()) set_needs_conversion();
@@ -4099,8 +4099,8 @@ namespace Common {
                              u.expr.v_optype == OPTYPE_REPLACE);
         TypeChain l_chain1, l_chain2;
         TypeChain r_chain1, r_chain2;
-        bool compat_t1 = t1->is_compatible(t2, &info1, &l_chain1, &r_chain1);
-        bool compat_t2 = t2->is_compatible(t1, &info2, &l_chain2, &r_chain2);
+        bool compat_t1 = t1->is_compatible(t2, &info1, this, &l_chain1, &r_chain1);
+        bool compat_t2 = t2->is_compatible(t1, &info2, NULL, &l_chain2, &r_chain2);
         if (!compat_t1 && !compat_t2) {
           if (!info1.is_erroneous() && !info2.is_erroneous()) {
             // the subtypes don't need to be compatible here
@@ -4235,7 +4235,7 @@ namespace Common {
         if (my_governor) {
           Type *my_governor_last = my_governor->get_type_refd_last();
           if (my_governor_last->get_typetype() == Type::T_COMPONENT &&
-              !my_governor_last->is_compatible(t_type, NULL)) {
+              !my_governor_last->is_compatible(t_type, NULL, NULL)) {
                 u.expr.r1->error("Incompatible component types: operation "
                                  "`create' should refer to `%s' instead of "
                                  "`%s'",
@@ -4284,7 +4284,7 @@ namespace Common {
       break;
     }
     if (t_comptype
-        && !my_governor_last->is_compatible(t_comptype, NULL)) {
+        && !my_governor_last->is_compatible(t_comptype, NULL, NULL)) {
       error("Incompatible component types: a component reference of "
             "type `%s' was expected, but `%s' has type `%s'",
             my_governor_last->get_typename().c_str(), get_opname(),
@@ -6859,8 +6859,8 @@ error:
           chk_expr_operandtype_list(v2_gov, right, opname, v2, false);
           if (valuetype == V_ERROR) return;
           // 7.1.2 says that we shouldn't allow type compatibility.
-          if (!v1_gov->is_compatible(v2_gov, NULL)
-              && !v2_gov->is_compatible(v1_gov, NULL)) {
+          if (!v1_gov->is_compatible(v2_gov, NULL, this)
+              && !v2_gov->is_compatible(v1_gov, NULL, NULL)) {
             error("The operands of operation `%s' should be of compatible "
                   "types", get_opname());
           }
@@ -11129,8 +11129,8 @@ error:
     Type *right_governor = right->get_my_governor();
     if (right_governor) right_governor = right_governor->get_type_refd_last();
     if (left_governor && right_governor
-        && !left_governor->is_compatible(right_governor, NULL)
-        && !right_governor->is_compatible(left_governor, NULL))
+        && !left_governor->is_compatible(right_governor, NULL, NULL)
+        && !right_governor->is_compatible(left_governor, NULL, NULL))
       FATAL_ERROR("Value::operator==");
 
     // Not-A-Value is not equal to anything (NaN analogy:)

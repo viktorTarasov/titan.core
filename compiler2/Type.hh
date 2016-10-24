@@ -573,6 +573,7 @@ namespace Common {
      * \p p_is_inline_template indicates that the conversion is requested for an
      * inline template. Type conversion code is not needed in this case. */
     bool is_compatible(Type *p_type, TypeCompatInfo *p_info,
+                       Location* p_loc,
                        TypeChain *p_left_chain = NULL,
                        TypeChain *p_right_chain = NULL,
                        bool p_is_inline_template = false);
@@ -600,26 +601,32 @@ namespace Common {
      *  \p p_is_inline_template indicates that the conversion is requested for an
      *  inline template. Type conversion code is not needed in this case. */
     bool is_compatible_record(Type *p_type, TypeCompatInfo *p_info,
+                              Location* p_loc,
                               TypeChain *p_left_chain = NULL,
                               TypeChain *p_right_chain = NULL,
                               bool p_is_inline_template = false);
     bool is_compatible_record_of(Type *p_type, TypeCompatInfo *p_info,
+                                 Location* p_loc,
                                  TypeChain *p_left_chain = NULL,
                                  TypeChain *p_right_chain = NULL,
                                  bool p_is_inline_template = false);
     bool is_compatible_set(Type *p_type, TypeCompatInfo *p_info,
+                           Location* p_loc,
                            TypeChain *p_left_chain = NULL,
                            TypeChain *p_right_chain = NULL,
                            bool p_is_inline_template = false);
     bool is_compatible_set_of(Type *p_type, TypeCompatInfo *p_info,
+                              Location* p_loc,
                               TypeChain *p_left_chain = NULL,
                               TypeChain *p_right_chain = NULL,
                               bool p_is_inline_template = false);
     bool is_compatible_array(Type *p_type, TypeCompatInfo *p_info,
+                             Location* p_loc,
                              TypeChain *p_left_chain = NULL,
                              TypeChain *p_right_chain = NULL,
                              bool p_is_inline_template = false);
     bool is_compatible_choice_anytype(Type *p_type, TypeCompatInfo *p_info,
+                                      Location* p_loc,
                                       TypeChain *p_left_chain = NULL,
                                       TypeChain *p_right_chain = NULL,
                                       bool p_is_inline_template = false);

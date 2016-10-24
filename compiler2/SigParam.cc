@@ -226,7 +226,7 @@ size_t SignatureExceptions::get_nof_compatible_types(Type *p_type)
     size_t ret_val = 0;
     for (size_t i = 0; i < exc_v.size(); i++)
       // Don't allow type compatibility.  The types must match exactly.
-      if (exc_v[i]->is_compatible(p_type, NULL))
+      if (exc_v[i]->is_compatible(p_type, NULL, NULL))
         ret_val++;
     return ret_val;
   }

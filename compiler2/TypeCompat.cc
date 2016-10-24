@@ -700,7 +700,7 @@ void TypeConv::gen_conv_func_choice_anytype(char **p_bodies, Module *p_mod)
             get_conv_func(cf_type_from, cf_type_to, p_mod).c_str(),
             tmp_id_str, anytype_prefix, cf_id_from.get_name().c_str(),
             tmp_id_str, tmp_id_str);
-        } else if (cf_type_from->is_compatible(cf_type_to, NULL)) {  // E.g. basic types.
+        } else if (cf_type_from->is_compatible(cf_type_to, NULL, NULL)) {  // E.g. basic types.
           // The same module + field name is required for anytype field
           // types.  Only for structured types.
           bool both_structured = cf_type_from->is_structured_type()

@@ -5146,7 +5146,7 @@ compile_time:
     TypeChain l_chain;
     TypeChain r_chain;
     if (!governor) return type;
-    else if (governor->is_compatible(type, &info, &l_chain, &r_chain, true)) {
+    else if (governor->is_compatible(type, &info, NULL, &l_chain, &r_chain, true)) {
       return governor;
     } else {
       if (info.is_subtype_error()) {
@@ -5193,7 +5193,7 @@ compile_time:
                             true, false);
         TypeChain l_chain;
         TypeChain r_chain;
-        if (!governor->is_compatible(base_template_type, &info, &l_chain,
+        if (!governor->is_compatible(base_template_type, &info, this, &l_chain,
                                      &r_chain)) {
           if (info.is_subtype_error()) {
             derived_reference->error("%s", info.get_subtype_error().c_str());

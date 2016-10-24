@@ -4291,7 +4291,7 @@ error:
     // checking the 'runs on' clause against the type of component reference
     Type *runs_on_type = t_func->get_RunsOnType();
     if (!comp_type || !runs_on_type) return;
-    if (!runs_on_type->is_compatible(comp_type, NULL))
+    if (!runs_on_type->is_compatible(comp_type, NULL, NULL))
       comp_op.compref->error("Component type mismatch: The component reference "
         "is of type `%s', but %s runs on `%s'",
 	comp_type->get_typename().c_str(), t_func->get_description().c_str(),
@@ -4363,7 +4363,7 @@ error:
     if(!f_type->chk_startability()) return;
     Type *runs_on_type = f_type->get_fat_runs_on_type();
     if (!comp_type || !runs_on_type) return;
-    if (!runs_on_type->is_compatible(comp_type, NULL))
+    if (!runs_on_type->is_compatible(comp_type, NULL, NULL))
       comp_op.compref->error("Component type mismatch: The component reference "
         "is of type `%s', but functions of type `%s' run on `%s'",
         comp_type->get_typename().c_str(), f_type->get_typename().c_str(),
@@ -4790,7 +4790,7 @@ error:
       bool is_address;
       Type *t_governor =
 	port_op.s.toclause->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE);
-      if (t_governor) is_address = address_type->is_compatible(t_governor, NULL);
+      if (t_governor) is_address = address_type->is_compatible(t_governor, NULL, this);
       else is_address =
         port_op.s.toclause->get_expr_returntype(Type::EXPECTED_DYNAMIC_VALUE)
 	  != Type::T_COMPONENT;
@@ -4883,7 +4883,7 @@ error:
 	// the type of from clause is known
 	port_op.r.fromclause->chk(from_clause_type);
 	if (!address_type
-	    || !address_type->is_compatible(from_clause_type, NULL)) {
+	    || !address_type->is_compatible(from_clause_type, NULL, this)) {
 	  // from_clause_type must be a component type
 	  switch (from_clause_type->get_type_refd_last()->get_typetype()) {
 	  case Type::T_ERROR:
@@ -4969,7 +4969,7 @@ error:
 	  if (t_stmt->port_op.r.rcvpar) {
 	    Type *t_sig = t_stmt->port_op.r.rcvpar
 	      ->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE);
-	    if (!signature->is_compatible(t_sig, NULL))
+	    if (!signature->is_compatible(t_sig, NULL, NULL))
 	      t_stmt->port_op.r.rcvpar->error("The `getreply' operation refers "
 		"to a different signature than the previous `call' statement: "
 		"`%s' was expected instead of `%s'",
@@ -4979,7 +4979,7 @@ error:
 	  break;
 	case S_CATCH:
 	  if (t_stmt->port_op.r.ctch.signature
-	      && !signature->is_compatible(t_stmt->port_op.r.ctch.signature, NULL))
+	      && !signature->is_compatible(t_stmt->port_op.r.ctch.signature, NULL, NULL))
 	    t_stmt->port_op.r.ctch.signature_ref->error("The `catch' "
 	      "operation refers to a different signature than the previous "
 	      "`call' statement: `%s' was expected instead of `%s'",
@@ -9324,7 +9324,7 @@ error:
           }
           TypeChain l_chain;
           TypeChain r_chain;
-          if (!exp_type->is_compatible(var_type, &info, &l_chain, &r_chain)) {
+          if (!exp_type->is_compatible(var_type, &info, this, &l_chain, &r_chain)) {
             if (info.is_subtype_error()) {
               v[i]->error("%s", info.get_subtype_error().c_str());
             }
@@ -9764,7 +9764,7 @@ error:
         else {
           // if the variable reference and the received value (or its specified field)
           // are not of the same type, then a type conversion is needed (RT2 only)
-          if (use_runtime_2 && !ref_type->is_identical(redir_type)) {
+          if (!ref_type->is_identical(redir_type)) {
             Common::Module* mod = scope->get_scope_mod();
             mod->add_type_conv(new TypeConv(redir_type, ref_type, false));
             set_values_str = mputprintf(set_values_str,

@@ -63,6 +63,7 @@ ifndef PLATFORM
 endif # ifndef PLATFORM
 
 export PLATFORM
+export RT2
 
 all check run: $(DIRS)
 
