@@ -3833,23 +3833,28 @@ static void print_makefile(struct makefile_struct *makefile)
           "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)", fp);
         }
         fprintf(fp, "\n\n"
-        "port: $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+        "port:%s $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
         "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
+        "%s\\\n"
         "%s"
         "%s"
-        "%s\n"
+        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\n"
         "\t$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) ",
+        add_refd_prjs?" referenced-check":"",
         makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
         makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
-        makefile->nXSDModules ? "\\\n\t$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) " : "",
-        makefile->nXSDModules && makefile->linkingStrategy ? "\\\n\t$(BASE2_XSD2TTCN_GENERATED_MODULES) " : "");
+        makefile->nXSDModules ? "\t$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) \\\n" : "",
+        makefile->nXSDModules && makefile->linkingStrategy ? "\t$(BASE2_XSD2TTCN_GENERATED_MODULES) \\\n" : "",
+        makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
         if (makefile->gnu_make) {
           if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
             fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
                         "\t$(PREPROCESSED_TTCN3_MODULES) $(BASE_PREPROCESSED_TTCN3_MODULES) "
-                        "%s\n",
+                        "%s\\\n"
+                        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\n",
                     makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
-                    makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"");
+                    makefile->linkingStrategy ? "$(BASE2_PREPROCESSED_TTCN3_MODULES) ":"",
+                    makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
           else
             fputs("$^", fp);
         }
@@ -3857,7 +3862,8 @@ static void print_makefile(struct makefile_struct *makefile)
           fputs("\\\n"
           "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
           "\t$(PREPROCESSED_TTCN3_MODULES) "
-          "$(BASE_PREPROCESSED_TTCN3_MODULES) \n", fp);
+          "$(BASE_PREPROCESSED_TTCN3_MODULES) \\\n"
+          "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)", fp);
         }
         if (makefile->linkingStrategy && makefile->hierarchical) {
           fputs("\n\n"
@@ -3941,21 +3947,27 @@ static void print_makefile(struct makefile_struct *makefile)
         }
         
         fprintf(fp, "\n\n"
-        "port: $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s%s%s\n"
+        "port:%s $(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s%s %s\n"
         "\t$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) ",
+        add_refd_prjs?" referenced-check":"",
         makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) $(BASE_XSD2TTCN_GENERATED_MODULES) " : "",
         makefile->nXSDModules && makefile->linkingStrategy ? "$(BASE2_XSD2TTCN_GENERATED_MODULES) " : "",
-        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"");
+        makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+        makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
         if (makefile->gnu_make) {
           if (add_refd_prjs) // referenced-check cannot be compiled it is not a ttcn modul
-            fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\n",
-                    makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"");
+            fprintf(fp, "$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) %s\\\n"
+                        "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES) %s\n",
+                    makefile->linkingStrategy ? "$(BASE2_TTCN3_MODULES) ":"",
+                    makefile->linkingStrategy ? "$(BASE2_ASN1_MODULES) ":"");
           else
             fputs("$^", fp);
         }
         else {
           fputs("\\\n"
-          "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \n", fp);
+          "\t$(TTCN3_MODULES) $(BASE_TTCN3_MODULES) \\\n"
+          "\t$(ASN1_MODULES) $(BASE_ASN1_MODULES)", fp);
         }
 
         if (makefile->linkingStrategy && makefile->hierarchical) {
@@ -4062,12 +4074,12 @@ static void print_makefile(struct makefile_struct *makefile)
       fprintf(fp, "port: $(TTCN3_MODULES) %s ",
         makefile->nXSDModules ? "$(XSD2TTCN_GENERATED_MODULES) " : "");
       if (makefile->preprocess) fputs("$(PREPROCESSED_TTCN3_MODULES) ", fp);
-      fputs("\n", fp);
+      fputs("$(ASN1_MODULES)\n", fp);
       fputs("\t$(TTCN3_DIR)/bin/compiler -t $(COMPILER_FLAGS) ", fp);
       if (makefile->gnu_make) fputs("$^", fp);
       else {
         fputs("\\\n"
-              "\t$(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES)",
+              "\t$(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) $(ASN1_MODULES)",
               fp);
       }
       
