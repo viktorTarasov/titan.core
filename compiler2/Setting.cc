@@ -609,7 +609,7 @@ namespace Common {
     Ttcn::RunsOnScope *t_ros = get_scope_runs_on();
     if (t_ros) {
       Type *local_comptype = t_ros->get_component_type();
-      if (!refd_comptype->is_compatible(local_comptype, NULL)) {
+      if (!refd_comptype->is_compatible(local_comptype, NULL, NULL)) {
 	// the 'runs on' clause of the referred definition is not compatible
 	// with that of the current scope (i.e. the referring definition)
 	p_loc.error("Runs on clause mismatch: A definition that runs on "
@@ -650,7 +650,7 @@ namespace Common {
     Ttcn::RunsOnScope *t_ros = get_scope_runs_on();
     if (t_ros) {
       Type *local_comptype = t_ros->get_component_type();
-      if (!refd_comptype->is_compatible(local_comptype, NULL)) {
+      if (!refd_comptype->is_compatible(local_comptype, NULL, NULL)) {
 	// the 'runs on' clause of the function/altstep type is not compatible
 	// with that of the current scope (i.e. the referring definition)
 	p_loc.error("Runs on clause mismatch: A definition that runs on "

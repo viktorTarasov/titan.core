@@ -4302,7 +4302,7 @@ namespace Ttcn {
                              false, true);
     TypeChain l_chain_base;
     TypeChain r_chain_base;
-    if (!type->is_compatible(base_type, &info_base, &l_chain_base,
+    if (!type->is_compatible(base_type, &info_base, this, &l_chain_base,
                              &r_chain_base)) {
       if (info_base.is_subtype_error()) {
         type->error("%s", info_base.get_subtype_error().c_str());
@@ -4358,8 +4358,8 @@ namespace Ttcn {
                               local_fp_type, true, false);
       TypeChain l_chain_par;
       TypeChain r_chain_par;
-      if (!base_fp_type->is_compatible(local_fp_type, &info_par, &l_chain_par,
-                                       &r_chain_par)) {
+      if (!base_fp_type->is_compatible(local_fp_type, &info_par, this,
+                                       &l_chain_par, &r_chain_par)) {
         if (info_par.is_subtype_error()) {
           local_fp_type->error("%s", info_par.get_subtype_error().c_str());
         } else
@@ -8263,7 +8263,8 @@ namespace Ttcn {
             false, is_template);
           TypeChain l_chain_base;
           TypeChain r_chain_base;
-          if (!type->is_compatible(ref_type, &info, &l_chain_base, &r_chain_base)) {
+          if (!type->is_compatible(ref_type, &info, actual_par,
+              &l_chain_base, &r_chain_base)) {
             if (info.is_subtype_error()) {
               ref->error("%s", info.get_subtype_error().c_str());
             }
@@ -8279,7 +8280,8 @@ namespace Ttcn {
           }
           else if ((asstype == A_PAR_VAL_OUT || asstype == A_PAR_VAL_INOUT ||
                    asstype == A_PAR_TEMPL_OUT || asstype == A_PAR_TEMPL_INOUT) &&
-                   !ref_type->is_compatible(type, &info, &l_chain_base, &r_chain_base)) {
+                   !ref_type->is_compatible(type, &info, NULL,
+                   &l_chain_base, &r_chain_base)) {
             // run the type compatibility check in the reverse order, too, for 
             // 'out' and 'inout' parameters (they need to be converted back after
             // the function call)

@@ -3228,7 +3228,7 @@ namespace Common {
     }
   }
 
-  bool Type::is_compatible(Type *p_type, TypeCompatInfo *p_info,
+  bool Type::is_compatible(Type *p_type, TypeCompatInfo *p_info, Location* p_loc,
                            TypeChain *p_left_chain, TypeChain *p_right_chain,
                            bool p_is_inline_template)
   {
@@ -3374,25 +3374,25 @@ namespace Common {
       break;
     case T_SEQ_A:
     case T_SEQ_T:
-      is_type_comp = t1->is_compatible_record(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
+      is_type_comp = t1->is_compatible_record(t2, p_info, p_loc, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_SEQOF:
-      is_type_comp = t1->is_compatible_record_of(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
+      is_type_comp = t1->is_compatible_record_of(t2, p_info, p_loc, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_SET_A:
     case T_SET_T:
-      is_type_comp = t1->is_compatible_set(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
+      is_type_comp = t1->is_compatible_set(t2, p_info, p_loc, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_SETOF:
-      is_type_comp = t1->is_compatible_set_of(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
+      is_type_comp = t1->is_compatible_set_of(t2, p_info, p_loc, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_ARRAY:
-      is_type_comp = t1->is_compatible_array(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
+      is_type_comp = t1->is_compatible_array(t2, p_info, p_loc, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_CHOICE_T:
     case T_CHOICE_A:
     case T_ANYTYPE:
-      is_type_comp = t1->is_compatible_choice_anytype(t2, p_info, p_left_chain, p_right_chain, p_is_inline_template);
+      is_type_comp = t1->is_compatible_choice_anytype(t2, p_info, p_loc, p_left_chain, p_right_chain, p_is_inline_template);
       break;
     case T_ENUM_A:
     case T_ENUM_T:
@@ -3447,6 +3447,24 @@ namespace Common {
               p_type->sub_type->to_string());
           }
         }
+      }
+    }
+    if (is_type_comp && p_loc != NULL) {
+      // issue a warning for deprecated compatibilities:
+      // - records and record ofs/arrays
+      // - sets and set ofs
+      bool is_record = t1->typetype == T_SEQ_T || t1->typetype == T_SEQ_A ||
+        t2->typetype == T_SEQ_T || t2->typetype == T_SEQ_A;
+      bool is_record_of = t1->typetype == T_SEQOF || t2->typetype == T_SEQOF;
+      bool is_array = t1->typetype == T_ARRAY || t2->typetype == T_ARRAY;
+      bool is_set = t1->typetype == T_SET_T || t1->typetype == T_SET_A ||
+        t2->typetype == T_SET_T || t2->typetype == T_SET_A;
+      bool is_set_of = t1->typetype == T_SETOF || t2->typetype == T_SETOF;
+      if ((is_record && (is_record_of || is_array)) ||
+          (is_set && is_set_of)) {
+        p_loc->warning("Compatibility between %s types and %s types is "
+          "deprecated.", is_record ? "record" : "set",
+          is_record_of ? "record of" : (is_set_of ? "set of" : "array"));
       }
     }
     return is_type_comp;
@@ -3516,6 +3534,7 @@ namespace Common {
   // Errors and warnings are reported in an upper level.  We just make a
   // simple decision here.
   bool Type::is_compatible_record(Type *p_type, TypeCompatInfo *p_info,
+                                  Location* p_loc,
                                   TypeChain *p_left_chain,
                                   TypeChain *p_right_chain,
                                   bool p_is_inline_template)
@@ -3566,7 +3585,7 @@ namespace Common {
         p_right_chain->add(p_cf_type);
         if (cf_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
-            && !cf_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
+            && !cf_type->is_compatible(p_cf_type, &info_tmp, p_loc, p_left_chain,
                                        p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "." + cf_name + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf_name + info_tmp.get_ref_str(1));
@@ -3623,7 +3642,7 @@ namespace Common {
         p_right_chain->add(p_of_type);
         if (cf_type != p_of_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
-            && !cf_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
+            && !cf_type->is_compatible(p_of_type, &info_tmp, p_loc, p_left_chain,
                                        p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "." + get_comp_byIndex(i)
             ->get_name().get_dispname() + info_tmp.get_ref_str(0));
@@ -3678,6 +3697,7 @@ namespace Common {
   }
 
   bool Type::is_compatible_record_of(Type *p_type, TypeCompatInfo *p_info,
+                                     Location* p_loc,
                                      TypeChain *p_left_chain,
                                      TypeChain *p_right_chain,
                                      bool p_is_inline_template)
@@ -3722,7 +3742,7 @@ namespace Common {
         p_right_chain->add(p_cf_type);
         if (of_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
-            && !of_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
+            && !of_type->is_compatible(p_cf_type, &info_tmp, p_loc, p_left_chain,
                                        p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "[]" + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf->get_name().get_dispname() +
@@ -3761,7 +3781,7 @@ namespace Common {
       p_right_chain->add(p_of_type);
       if (of_type == p_of_type
           || (p_left_chain->has_recursion() && p_right_chain->has_recursion())
-          || of_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
+          || of_type->is_compatible(p_of_type, &info_tmp, p_loc, p_left_chain,
                                     p_right_chain, p_is_inline_template)) {
         if (!p_is_inline_template) {
           p_info->set_needs_conversion(true);
@@ -3800,6 +3820,7 @@ namespace Common {
   }
 
   bool Type::is_compatible_array(Type *p_type, TypeCompatInfo *p_info,
+                                 Location* p_loc,
                                  TypeChain *p_left_chain,
                                  TypeChain *p_right_chain,
                                  bool p_is_inline_template)
@@ -3809,7 +3830,7 @@ namespace Common {
     // the dimension of the array must be the same.
     if (this == p_type) return true;
     if (p_type->typetype == T_ARRAY && u.array.element_type
-        ->is_compatible(p_type->u.array.element_type, NULL, NULL, NULL, p_is_inline_template)
+        ->is_compatible(p_type->u.array.element_type, NULL, p_loc, NULL, NULL, p_is_inline_template)
         && u.array.dimension->is_identical(p_type->u.array.dimension))
       return true;
     else if (!use_runtime_2 || !p_info
@@ -3849,7 +3870,7 @@ namespace Common {
         p_right_chain->add(p_cf_type);
         if (of_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
-            && !of_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
+            && !of_type->is_compatible(p_cf_type, &info_tmp, p_loc, p_left_chain,
                                        p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf->get_name().get_dispname() +
@@ -3893,7 +3914,7 @@ namespace Common {
       p_right_chain->add(p_of_type);
       if (of_type == p_of_type
           || (p_left_chain->has_recursion() && p_right_chain->has_recursion())
-          || of_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
+          || of_type->is_compatible(p_of_type, &info_tmp, p_loc, p_left_chain,
                                     p_right_chain, p_is_inline_template)) {
         if (!p_is_inline_template) {
           p_info->set_needs_conversion(true);
@@ -3931,6 +3952,7 @@ namespace Common {
   }
 
   bool Type::is_compatible_set(Type *p_type, TypeCompatInfo *p_info,
+                               Location* p_loc,
                                TypeChain *p_left_chain,
                                TypeChain *p_right_chain,
                                bool p_is_inline_template)
@@ -3979,7 +4001,7 @@ namespace Common {
         p_right_chain->add(p_cf_type);
         if (cf_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
-            && !cf_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
+            && !cf_type->is_compatible(p_cf_type, &info_tmp, p_loc, p_left_chain,
                                        p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "." + cf_name + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf_name + info_tmp.get_ref_str(1));
@@ -4016,7 +4038,7 @@ namespace Common {
         p_right_chain->add(p_of_type);
         if (cf_type != p_of_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
-            && !cf_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
+            && !cf_type->is_compatible(p_of_type, &info_tmp, p_loc, p_left_chain,
                                        p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "." + get_comp_byIndex(i)
             ->get_name().get_dispname() + info_tmp.get_ref_str(0));
@@ -4056,6 +4078,7 @@ namespace Common {
   }
 
   bool Type::is_compatible_set_of(Type *p_type, TypeCompatInfo *p_info,
+                                  Location* p_loc,
                                   TypeChain *p_left_chain,
                                   TypeChain *p_right_chain,
                                   bool p_is_inline_template)
@@ -4100,7 +4123,7 @@ namespace Common {
         p_right_chain->add(p_cf_type);
         if (of_type != p_cf_type
             && !(p_left_chain->has_recursion() && p_right_chain->has_recursion())
-            && !of_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
+            && !of_type->is_compatible(p_cf_type, &info_tmp, p_loc, p_left_chain,
                                        p_right_chain, p_is_inline_template)) {
           p_info->append_ref_str(0, "[]" + info_tmp.get_ref_str(0));
           p_info->append_ref_str(1, "." + p_cf->get_name().get_dispname() +
@@ -4136,7 +4159,7 @@ namespace Common {
       p_right_chain->add(p_of_type);
       if (of_type == p_of_type
           || (p_left_chain->has_recursion() && p_right_chain->has_recursion())
-          || of_type->is_compatible(p_of_type, &info_tmp, p_left_chain,
+          || of_type->is_compatible(p_of_type, &info_tmp, p_loc, p_left_chain,
                                     p_right_chain, p_is_inline_template)) {
         if (!p_is_inline_template) {
           p_info->set_needs_conversion(true);
@@ -4175,6 +4198,7 @@ namespace Common {
 
   bool Type::is_compatible_choice_anytype(Type *p_type,
                                           TypeCompatInfo *p_info,
+                                          Location* p_loc,
                                           TypeChain *p_left_chain,
                                           TypeChain *p_right_chain,
                                           bool p_is_inline_template)
@@ -4239,7 +4263,7 @@ namespace Common {
           p_right_chain->add(p_cf_type);
           if (cf_type == p_cf_type
               || (p_left_chain->has_recursion() && p_right_chain->has_recursion())
-              || cf_type->is_compatible(p_cf_type, &info_tmp, p_left_chain,
+              || cf_type->is_compatible(p_cf_type, &info_tmp, p_loc, p_left_chain,
                                         p_right_chain, p_is_inline_template)) {
             if (cf_type != p_cf_type && cf_type->is_structured_type()
                 && p_cf_type->is_structured_type()) {

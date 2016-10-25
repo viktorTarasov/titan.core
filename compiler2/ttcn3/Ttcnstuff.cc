@@ -925,7 +925,7 @@ namespace Ttcn {
       size_t nof_types = types_v.size();
       for (size_t i = 0; i < nof_types; i++) {
         // Don't allow type compatibility.
-        if (types_v[i]->is_compatible(p_type, NULL)) ret_val++;
+        if (types_v[i]->is_compatible(p_type, NULL, NULL)) ret_val++;
       }
       return ret_val;
     }

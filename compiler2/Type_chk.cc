@@ -3435,7 +3435,7 @@ bool Type::chk_this_refd_value(Value *value, Common::Assignment *lhs, expected_v
   if (ref->get_subrefs()) info.set_str2_elem(ref->get_subrefs()->refers_to_string_element());
   TypeChain l_chain;
   TypeChain r_chain;
-  if (!is_compatible(governor, &info, &l_chain, &r_chain)) {
+  if (!is_compatible(governor, &info, value, &l_chain, &r_chain)) {
     // Port or signature values do not exist at all.  These errors are
     // already reported at those definitions.  Extra errors should not be
     // reported here.
@@ -3512,7 +3512,7 @@ void Type::chk_this_invoked_value(Value *value, Common::Assignment *,
   if (!t)
     value->error("The type `%s' has no return type, `%s' expected",
                  invoked_t->get_typename().c_str(), get_typename().c_str());
-  else if (!is_compatible(t, NULL)) {
+  else if (!is_compatible(t, NULL, value)) {
     value->error("Incompatible value: `%s' value was expected",
                   get_typename().c_str());
   }
@@ -4951,7 +4951,7 @@ void Type::chk_this_value_FAT(Value *value)
         Ttcn::RunsOnScope *t_ros = value_scope->get_scope_runs_on();
         if (t_ros) {
           Type *scope_comptype = t_ros->get_component_type();
-          if (!t_runs_on_type->is_compatible(scope_comptype, NULL)) {
+          if (!t_runs_on_type->is_compatible(scope_comptype, NULL, NULL)) {
             value->error("Runs on clause mismatch: type `%s' has a "
               "'runs on self' clause and the current scope expects component "
               "type `%s', but %s runs on `%s'", get_typename().c_str(),
@@ -4965,7 +4965,7 @@ void Type::chk_this_value_FAT(Value *value)
           ComponentTypeBody* ct_body =
             dynamic_cast<ComponentTypeBody*>(value_scope);
           if (ct_body) {
-            if (!t_runs_on_type->is_compatible(ct_body->get_my_type(), NULL)) {
+            if (!t_runs_on_type->is_compatible(ct_body->get_my_type(), NULL, NULL)) {
               value->error("Runs on clause mismatch: type `%s' has a "
                 "'runs on self' clause and the current component definition "
                 "is of type `%s', but %s runs on `%s'",
@@ -4986,7 +4986,7 @@ void Type::chk_this_value_FAT(Value *value)
     } else {
       if (u.fatref.runs_on.ref) {
         if (u.fatref.runs_on.type &&
-            !t_runs_on_type->is_compatible(u.fatref.runs_on.type, NULL)) {
+            !t_runs_on_type->is_compatible(u.fatref.runs_on.type, NULL, NULL)) {
           value->error("Runs on clause mismatch: type `%s' expects component "
             "type `%s', but %s runs on `%s'", get_typename().c_str(),
             u.fatref.runs_on.type->get_typename().c_str(),
@@ -5011,7 +5011,7 @@ void Type::chk_this_value_FAT(Value *value)
     Type *my_system_type =
       u.fatref.system.ref ? u.fatref.system.type : u.fatref.runs_on.type;
     if (t_system_type && my_system_type &&
-        !t_system_type->is_compatible(my_system_type, NULL)) {
+        !t_system_type->is_compatible(my_system_type, NULL, NULL)) {
       value->error("System clause mismatch: testcase type `%s' expects "
         "component type `%s', but %s has `%s'", get_typename().c_str(),
         my_system_type->get_typename().c_str(),
@@ -5521,7 +5521,7 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
     Type *governor = t->get_expr_governor(EXPECTED_DYNAMIC_VALUE);
     if(!governor)
       t->set_templatetype(Ttcn::Template::TEMPLATE_ERROR);
-    else if (!is_compatible(governor, NULL)) {
+    else if (!is_compatible(governor, NULL, t)) {
       t->error("Type mismatch: a value or template of type `%s' was "
         "expected instead of `%s'", get_typename().c_str(),
         governor->get_typename().c_str());
@@ -5564,7 +5564,7 @@ bool Type::chk_this_refd_template(Template *t, Common::Assignment *lhs)
     if (ref->get_subrefs()) info.set_str2_elem(ref->get_subrefs()->refers_to_string_element());
     TypeChain l_chain;
     TypeChain r_chain;
-    if (!is_compatible(governor, &info, &l_chain, &r_chain)) {
+    if (!is_compatible(governor, &info, t, &l_chain, &r_chain)) {
       Type *type = get_type_refd_last();
       switch (type->typetype) {
       case T_PORT:
