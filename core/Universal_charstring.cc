@@ -2309,7 +2309,18 @@ int UNIVERSAL_CHARSTRING::RAW_encode(const TTCN_Typedescriptor_t& p_td,
     return cstr.RAW_encode(p_td, myleaf);
   }
   TTCN_Buffer buff;
-  encode_utf8(buff);
+  switch (p_td.raw->stringformat) {
+  case CharCoding::UNKNOWN: // default is UTF-8
+  case CharCoding::UTF_8:
+    encode_utf8(buff);
+    break;
+  case CharCoding::UTF16:
+    encode_utf16(buff, CharCoding::UTF16);
+    break;
+  default:
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INTERNAL,
+      "Invalid string serialization type.");
+  }
   int buff_len = buff.get_len();
   int bl = buff_len * 8; // bit length
   int align_length = p_td.raw->fieldlength ? p_td.raw->fieldlength - bl : 0;
@@ -2343,11 +2354,29 @@ int UNIVERSAL_CHARSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td,
         break;
       }
     }
-    if (charstring) {
-      cstr = buff_str;
-    }
-    else {
-      decode_utf8(buff_str.val_ptr->n_chars, (const unsigned char*)buff_str.val_ptr->chars_ptr);
+    switch (p_td.raw->stringformat) {
+    case CharCoding::UNKNOWN: // default is UTF-8
+    case CharCoding::UTF_8:
+      if (charstring) {
+        cstr = buff_str;
+      }
+      else {
+        decode_utf8(buff_str.val_ptr->n_chars, (const unsigned char*)buff_str.val_ptr->chars_ptr);
+      }
+      break;
+    case CharCoding::UTF16:
+      if (!charstring) {
+        decode_utf16(buff_str.val_ptr->n_chars,
+          (const unsigned char*)buff_str.val_ptr->chars_ptr, CharCoding::UTF16);
+      }
+      else {
+        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,
+          "Invalid string format. Buffer contains only ASCII characters.");
+      }
+      break;
+    default:
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INTERNAL,
+        "Invalid string serialization type.");
     }
   }
   return dec_len;

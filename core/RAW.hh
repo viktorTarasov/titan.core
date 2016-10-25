@@ -20,6 +20,7 @@
 
 #include "Types.h"
 #include "Encdec.hh"
+#include "CharCoding.hh"
 
 struct bignum_st;
 typedef bignum_st BIGNUM;
@@ -114,6 +115,7 @@ struct TTCN_RAWdescriptor_t{
   int padding_pattern_length;
   const unsigned char* padding_pattern;
   int length_restrition;
+  CharCoding::CharCodingType stringformat;
 };
 
 enum calc_type {
