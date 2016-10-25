@@ -287,8 +287,10 @@ other.print("other");
   element_ |= other.element_;
   embedValues_ |= other.embedValues_;
   form_ = other.form_;
-  has_fractionDigits_ = other.has_fractionDigits_;
-  fractionDigits_ = other.fractionDigits_;
+  if (other.has_fractionDigits_) {
+    has_fractionDigits_ = other.has_fractionDigits_;
+    fractionDigits_ = other.fractionDigits_;
+  }
   hex_  |= other.hex_;
   list_ |= other.list_;
   if (other.name_.kw_ != NamespaceSpecification::NO_MANGLING) {
