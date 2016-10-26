@@ -111,6 +111,22 @@
 	</xsd:simpleType>
 </xsd:element>
 
+<xsd:element name="MyType">
+	<xsd:simpleType>
+		<xsd:union>
+			<xsd:simpleType>
+				<xsd:restriction base="boolean" />
+			</xsd:simpleType>
+			<xsd:simpleType>
+				<xsd:list itemType="integer" />
+			</xsd:simpleType>
+			<xsd:simpleType>
+				<xsd:list itemType="float" />
+			</xsd:simpleType>
+		</xsd:union>
+	</xsd:simpleType>
+</xsd:element> 
+
 
 
 </xsd:schema>
