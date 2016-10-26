@@ -54,7 +54,8 @@ XMLParser::XMLParser(const char * a_filename)
 , actualTagName(n_NOTSET)
 , actualTagAttributes(this)
 , parentTagNames()
-, inside_annotation(){
+, inside_annotation()
+, lastWasListEnd(false){
   xmlSetExternalEntityLoader(xmlNoNetExternalEntityLoader);
 
   parserCheckingXML = (xmlSAXHandler *) malloc(sizeof (xmlSAXHandler));
@@ -302,9 +303,13 @@ void XMLParser::startelementHandler(const xmlChar * localname,
 
     default:
       if (module->hasDefinedMainType()) {
-         if(actualTagName == n_annotation ||
-            actualTagName == n_appinfo ||
-            actualTagName == n_documentation){
+        if (lastWasListEnd) {
+          ((SimpleType&)(module->getLastMainType())).modifyList();
+          lastWasListEnd = false;
+        }
+        if(actualTagName == n_annotation ||
+          actualTagName == n_appinfo ||
+          actualTagName == n_documentation){
           inside_annotation.push_back(actualTagName);
           module->getLastMainType().loadWithValues();
         }else if(inside_annotation.empty()){
@@ -323,6 +328,9 @@ void XMLParser::startelementHandler(const xmlChar * localname,
 
   ++actualDepth;
   parentTagNames.push_back(actualTagName);
+  if (lastWasListEnd) {
+    lastWasListEnd = false;
+  }
 }
 
 void XMLParser::endelementHandler(const xmlChar * localname) {
@@ -355,12 +363,15 @@ void XMLParser::endelementHandler(const xmlChar * localname) {
   }
   
   if(tag == n_list) {
-      if(module->hasDefinedMainType()) {
-          SimpleType& st = (SimpleType&)(module->getLastMainType());
-          if(st.getXsdtype() == n_NOTSET){
-            st.setMode(SimpleType::restrictionAfterListMode);
-          }
+    lastWasListEnd = true;
+    if(module->hasDefinedMainType()) {
+      SimpleType& st = (SimpleType&)(module->getLastMainType());
+      if(st.getXsdtype() == n_NOTSET){
+        st.setMode(SimpleType::restrictionAfterListMode);
       }
+    }
+  } else if (tag != n_simpleType){
+    lastWasListEnd = false;
   }
 
   --actualDepth;

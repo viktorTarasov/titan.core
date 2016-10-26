@@ -587,7 +587,6 @@ void ComplexType::loadWithValues() {
       break;
     case n_list:
       if (parent != NULL && parent->basefield == this) {
-        parent->inList = true;
         parent->SimpleType::loadWithValues();
         parent->basefield = NULL;
         setInvisible();
@@ -659,6 +658,17 @@ void ComplexType::modifyValues() {
   }
   if (xsdtype == n_simpleType) {
     inList = false;
+  }
+}
+
+void ComplexType::modifyList() {
+  if (this != actfield) {
+    ((SimpleType*)actfield)->modifyList();
+    return;
+  }
+  if (!inList && mode == listMode && parent != NULL) {
+    parent->actfield = parent;
+    parent->lastType = xsdtype;
   }
 }
 

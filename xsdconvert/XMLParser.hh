@@ -172,6 +172,8 @@ private:
 
   // Stack for keeping track if we are inside an annotation tag
   List<TagName> inside_annotation;
+  
+  bool lastWasListEnd;
 
   static bool suspended;
 

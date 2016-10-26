@@ -278,6 +278,7 @@ public:
   void nameConversion(const NameConversionMode mode, const List<NamespaceType> & ns);
   void finalModification();
   virtual bool hasUnresolvedReference();
+  virtual void modifyList();
   void dump(const unsigned int depth) const;
 
   void applyDefaultAttribute(const Mstring& default_value);

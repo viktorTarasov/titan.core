@@ -793,6 +793,10 @@ bool SimpleType::hasUnresolvedReference() {
   }
 }
 
+void SimpleType::modifyList() {
+  // Intentional empty
+}
+
 void SimpleType::applyRefAttribute(const Mstring& ref_value) {
   if (!ref_value.empty()) {
     setReference(ref_value);

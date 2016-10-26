@@ -141,6 +141,7 @@ public:
   void nameConversion(NameConversionMode mode, const List<NamespaceType> & ns);
   void finalModification();
   bool hasUnresolvedReference(){ return resolved == No; }
+  void modifyList();
   void setNameDep(SimpleType * dep) { nameDep = dep; }
   void setParentTypeSubsGroup(ComplexType * dep) { parentTypeSubsGroup = dep; }
 
