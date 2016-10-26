@@ -21,6 +21,7 @@
 #include "rawASTspec.h"
 #include "../Setting.hh"
 #include "../Identifier.hh"
+#include "../../common/CharCoding.hh"
 
 class XerAttributes;
 class TextAST;
@@ -115,6 +116,8 @@ public:
     rawAST_toplevel toplevel;      /**< Toplevel attributes */
     int length_restrition;
     bool intx; /**< IntX encoding for integers */
+    CharCoding::CharCodingType stringformat; /**< String serialization type for
+                                               * universal charstrings */
     /** Default constructor.
      *  Calls \c init_rawast(false).
      *  \todo should be merged with the next one */

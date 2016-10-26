@@ -712,7 +712,10 @@ void Type::generate_code_rawdescriptor(output_struct *target)
     str = mputprintf(str, "%s,", my_scope->get_scope_mod_gen()
       ->add_padding_pattern(string(rawattrib->padding_pattern)).c_str());
   else str = mputstr(str, "NULL,");
-  str = mputprintf(str, "%d};\n", rawattrib->length_restrition);
+  str = mputprintf(str, "%d,", rawattrib->length_restrition);
+  str = mputprintf(str, "CharCoding::%s};\n",
+      rawattrib->stringformat == CharCoding::UTF_8 ? "UTF_8" :
+      (rawattrib->stringformat == CharCoding::UTF16 ? "UTF16" : "UNKNOWN"));
   target->source.global_vars = mputstr(target->source.global_vars, str);
   Free(str);
 }

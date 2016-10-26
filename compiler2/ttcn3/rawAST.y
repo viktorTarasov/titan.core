@@ -163,6 +163,10 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token XIntXKeyword
 %token XBitKeyword
 %token XUnsignedKeyword
+%token XUTF8Keyword
+%token XUTF16Keyword
+%token XIEEE754FloatKeyword
+%token XIEEE754DoubleKeyword
 
        /* XER attributes */
 %token XKWall           "all"
@@ -477,6 +481,10 @@ XSingleEncodingDef : XPaddingDef
     | XIntXKeyword
         { rawstruct->intx = true; raw_f = true; }
     | XBitDef
+        { raw_f = true; }
+    | XUTFDef
+        { raw_f = true; }
+    | XIEEE754Def
         { raw_f = true; }
     /* TEXT encoder keywords */
     | XBeginDef
@@ -869,6 +877,14 @@ XBitDef:
     rawstruct->byteorder = XDEFLAST;
   }
 ;
+
+XUTFDef:
+  XUTF8Keyword { rawstruct->stringformat = CharCoding::UTF_8; }
+| XUTF16Keyword { rawstruct->stringformat = CharCoding::UTF16; }
+
+XIEEE754Def:
+  XIEEE754FloatKeyword { rawstruct->fieldlength = 32; }
+| XIEEE754DoubleKeyword { rawstruct->fieldlength = 64; }
 
 /* Text encoder */
 XBeginDef:

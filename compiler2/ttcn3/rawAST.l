@@ -299,6 +299,10 @@ TOPLEVEL    { BEGIN(rawcodec); RETURN(XToplevelKeyword); }
 IntX        { RETURN(XIntXKeyword); }
 bit         { RETURN(XBitKeyword); }
 unsigned    { RETURN(XUnsignedKeyword); }
+"UTF-8"     { RETURN(XUTF8Keyword); }
+"UTF-16"    { RETURN(XUTF16Keyword); }
+"IEEE754 float"  { RETURN(XIEEE754FloatKeyword); }
+"IEEE754 double" { RETURN(XIEEE754DoubleKeyword); }
 
 <rawcodec>{
 yes         { yylval.enumval = XDEFYES; RETURN(XYes); }

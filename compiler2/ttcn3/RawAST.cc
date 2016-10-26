@@ -65,6 +65,7 @@ RawAST::RawAST(RawAST *other,bool int_type){
     toplevel.bitorder=other->toplevel.bitorder;
     length_restrition=other->length_restrition;
     intx = other->intx;
+    stringformat = other->stringformat;
     }
     else init_rawast(int_type);
 }
@@ -104,6 +105,7 @@ void RawAST::init_rawast(bool int_type){
     presence.keyList=NULL;
     topleveleind=0;
     intx = false;
+    stringformat = CharCoding::UNKNOWN;
 }
 
 RawAST::~RawAST(){
@@ -193,6 +195,8 @@ void RawAST::print_RawAST(){
       }
     }
     printf("%sIntX encoding\n\r", intx ? "" : "not ");
+    printf("String format: %s\n\r", stringformat == CharCoding::UTF_8 ? "UTF-8" :
+      (stringformat == CharCoding::UTF16 ? "UTF-16" : "unknown"));
 }
 
 void copy_rawAST_to_struct(RawAST *from, raw_attrib_struct *to){

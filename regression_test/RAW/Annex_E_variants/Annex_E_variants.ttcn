@@ -14,11 +14,17 @@
 // This module contains tests for the variant attributes defined in Annex E of the
 // TTCN-3 language standard.
 // The encoding of the types with the new variants are compared to the encoding of
-// types declared using traditional RAW variant attributes.
+// types declared using traditional RAW variant attributes (whenever possible).
 
 // New attributes and their equivalents:
 // "N bit" == "FIELDLENGTH(N), COMP(signbit), BYTEORDER(last)"
 // "unsigned N bit" == "FIELDLENGTH(N), COMP(nosign), BYTEORDER(last)"
+// "IEEE754 float" == "FORMAT(IEEE754 float)"
+// "IEEE754 double" == "FORMAT(IEEE754 double)"
+
+// Other new attributes and their meaning:
+// "UTF-8", "UTF-16" - universal charstring encoding types, they are equivalent to calling
+// oct2unichar or unichar2oct
 module Annex_E_variants {
 
 // E.2.1.0 Signed and unsigned single byte integers
@@ -88,6 +94,19 @@ type charstring CStr64Eq with { variant "FIELDLENGTH(8), BYTEORDER(last)" };
 
 type universal charstring UStr80 with { variant "80 bit" }; // 80 bits = 10 UTF-8 characters
 type universal charstring UStr80Eq with { variant "FIELDLENGTH(10), BYTEORDER(last)" };
+
+// E.2.1.4 IEEE 754 (TM) floats
+type float IEEE754Float with { variant "IEEE754 float" };
+type float IEEE754FloatEq with { variant "FORMAT(IEEE754 float)" };
+
+type float IEEE754Double with { variant "IEEE754 double" };
+type float IEEE754DoubleEq with { variant "FORMAT(IEEE754 double)" };
+
+// E.2.2.0 UTF-8 characters string
+type universal charstring UTF8String with { variant "UTF-8" };
+
+// E.2.2.1 and E.2.2.2 UTF-16 characters string
+type universal charstring UTF16String with { variant "UTF-16" };
 
 // Component type
 type component CT {}
@@ -515,6 +534,90 @@ testcase tc_ustr80() runs on CT
   setverdict(pass);
 }
 
+testcase tc_ieee754_float() runs on CT
+{
+  var IEEE754Float x := -391.582;
+  var IEEE754FloatEq x_eq := x;
+  var bitstring enc := encvalue(x);
+  var bitstring enc_exp := encvalue(x_eq);
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  else {
+    var IEEE754Float dec;
+    var float eps := 0.0001;
+    if (decvalue(enc, dec) != 0) {
+      setverdict(fail, "Could not decode ", enc);
+    }
+    else if (dec - x > eps or dec - x < -eps) {
+      setverdict(fail, "Expected: ", x, ", got: ", dec);
+    }
+  }
+  setverdict(pass);
+}
+
+testcase tc_ieee754_double() runs on CT
+{
+  var IEEE754Double x := 1165.141997;
+  var IEEE754DoubleEq x_eq := x;
+  var bitstring enc := encvalue(x);
+  var bitstring enc_exp := encvalue(x_eq);
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  else {
+    var IEEE754Double dec;
+    var float eps := 0.000001;
+    if (decvalue(enc, dec) != 0) {
+      setverdict(fail, "Could not decode ", enc);
+    }
+    else if (dec - x > eps or dec - x < -eps) {
+      setverdict(fail, "Expected: ", x, ", got: ", dec);
+    }
+  }
+  setverdict(pass);
+}
+
+testcase tc_utf8() runs on CT
+{
+  var UTF8String x := "árvíztűrő tükörfúrógép";
+  var bitstring enc := encvalue(x);
+  var bitstring enc_exp := oct2bit(unichar2oct(x, "UTF-8"));
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  else {
+    var UTF8String dec;
+    if (decvalue(enc, dec) != 0) {
+      setverdict(fail, "Could not decode ", enc);
+    }
+    else if (dec != x) {
+      setverdict(fail, "Expected: ", x, ", got: ", dec);
+    }
+  }
+  setverdict(pass);
+}
+
+testcase tc_utf16() runs on CT
+{
+  var UTF16String x := "árvíztűrő tükörfúrógép";
+  var bitstring enc := encvalue(x);
+  var bitstring enc_exp := oct2bit(unichar2oct(x, "UTF-16"));
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  else {
+    var UTF16String dec;
+    if (decvalue(enc, dec) != 0) {
+      setverdict(fail, "Could not decode ", enc);
+    }
+    else if (dec != x) {
+      setverdict(fail, "Expected: ", x, ", got: ", dec);
+    }
+  }
+  setverdict(pass);
+}
+
 // Control part
 control {
   execute(tc_byte());
@@ -537,6 +640,10 @@ control {
   execute(tc_ostr32());
   execute(tc_cstr64());
   execute(tc_ustr80());
+  execute(tc_ieee754_float());
+  execute(tc_ieee754_double());
+  execute(tc_utf8());
+  execute(tc_utf16());
 }
 
 }
