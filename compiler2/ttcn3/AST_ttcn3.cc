@@ -6573,6 +6573,10 @@ namespace Ttcn {
               function_type = EXTFUNC_MANUAL;
             }
           }
+          else if (input_type->is_ref() && input_type->get_type_refd()->is_asn1()) {
+            // let the input ASN.1 type know that this is its encoding type
+            input_type->get_type_refd()->set_asn_coding(true, encoding_type);
+          }
         }
       }
       if (output_type) {
@@ -6648,6 +6652,11 @@ namespace Ttcn {
             // treat this as a manual external function during code generation
             function_type = EXTFUNC_MANUAL;
           }
+        }
+        else if (output_type != NULL && output_type->is_ref() &&
+                 output_type->get_type_refd()->is_asn1()) {
+          // let the output ASN.1 type know that this is its decoding type
+          output_type->get_type_refd()->set_asn_coding(false, encoding_type);
         }
       }
       if (eb_list) eb_list->chk();

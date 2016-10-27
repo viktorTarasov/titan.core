@@ -201,7 +201,8 @@ namespace Common {
       CT_TEXT,  /**< TTCN-3 TEXT */
       CT_XER,    /**< ASN.1 XER */
       CT_JSON,   /**< TTCN-3 JSON */
-      CT_CUSTOM /**< user defined encoding */
+      CT_CUSTOM, /**< user defined encoding */
+      CT_MULTIPLE /**< multiple codings defined for an ASN.1 type */
     };
 
     /** selector for value checking algorithms */
@@ -307,6 +308,8 @@ namespace Common {
     string encoding_str;  // needed by codegen for encvalue() and decvalue()
     string decoding_str;
     bool coding_by_function;  // false - coding attribute is set, true - coding via coding function
+    MessageEncodingType_t asn_encoding; // set by the semantic analysis of encoding
+    MessageEncodingType_t asn_decoding; // and decoding external functions for ASN.1 types
     /** What kind of AST element owns the type.
      *  It may not be known at creation type, so it's initially OT_UNKNOWN.
      *  We want this information so we don't have to bother with XER
@@ -649,6 +652,7 @@ namespace Common {
     /** Sets the encoding or decoding function for the type (in case of custom
       * encoding). */
     void set_coding_function(bool encode, const string& function_name);
+    void set_asn_coding(bool encode, MessageEncodingType_t new_coding);
     void chk_coding(bool encode, bool delayed = false);
     bool is_coding_by_function() const;
     const string& get_coding(bool encode) const;

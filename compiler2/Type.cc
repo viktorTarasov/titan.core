@@ -604,6 +604,8 @@ namespace Common {
     owner = 0;
     chk_finished = false;
     pard_type_instance = false;
+    asn_encoding = CT_UNDEF;
+    asn_decoding = CT_UNDEF;
   }
 
   void Type::clean_up()
@@ -4402,98 +4404,134 @@ namespace Common {
     coding_str = function_name;
     coding_by_function = true;
   }
+  
+  void Type::set_asn_coding(bool encode, Type::MessageEncodingType_t new_coding)
+  {
+    MessageEncodingType_t& coding = encode ? asn_encoding : asn_decoding;
+    if (coding == CT_UNDEF) {
+      // this is the first encoding/decoding function for this type, store it
+      coding = new_coding;
+    }
+    else if (coding != new_coding) {
+      // there are several encoding/decoding functions declared for this type
+      // with different codings (encvalue/decvalue cannot be used in this case)
+      coding = CT_MULTIPLE;
+    }
+  }
 
   void Type::chk_coding(bool encode, bool delayed /* = false */) {
     string& coding_str = encode ? encoding_str : decoding_str;
     if (!coding_str.empty())
       return;
     coding_by_function = false;
-
-    if (!w_attrib_path) {
-      error("No coding rule specified for type '%s'", get_typename().c_str());
-      return;
-    }
     Type::MessageEncodingType_t coding = CT_UNDEF;
 
-    // Checking extension attributes
-    Ttcn::ExtensionAttributes * extatrs = parse_extattributes(w_attrib_path);
-    if (extatrs != 0) { // NULL means parsing error
-      for (size_t k = 0; k < extatrs->size(); ++k) {
-        Ttcn::ExtensionAttribute &ea = extatrs->get(k);
-        Ttcn::TypeMappings *inmaps = 0, *maps = 0;
-        Ttcn::TypeMapping* mapping = 0;
-        Ttcn::TypeMappingTarget* target = 0;
-        Type* t = 0;
-        switch (ea.get_type()) {
-        case Ttcn::ExtensionAttribute::ENCDECVALUE:
-          ea.get_encdecvalue_mappings(inmaps, maps);
-          maps = encode ? maps : inmaps;
-          maps->set_my_scope(this->get_my_scope());
-          maps->chk();
-          // look for coding settings
-          t = encode ? this : Type::get_pooltype(T_BSTR);
-          mapping = maps->get_mapping_byType(t);
-          if (mapping->get_nof_targets() == 0)
-            goto end_ext;
-          else {
-            for (size_t ind = 0; ind < mapping->get_nof_targets(); ind++) {
-              target = mapping->get_target_byIndex(ind);
-              t = target->get_target_type();
-              if ((encode && (t->get_typetype() == T_BSTR)) ||
-                (!encode && (t->get_typename() == this->get_typename())))
-              {
-                if (target->get_mapping_type() ==
-                  Ttcn::TypeMappingTarget::TM_FUNCTION) {
-                  if (!coding_str.empty())
-                    target->error("Multiple definition of this target");
-                  coding_str = target->get_function()->
-                    get_genname_from_scope(my_scope);
-                  coding_by_function = true;
-                } else {
-                  target->error("Only function is supported to do this mapping");
+    if (!is_asn1()) {
+      if (!w_attrib_path) {
+        error("No coding rule specified for type '%s'", get_typename().c_str());
+        return;
+      }
+
+      // Checking extension attributes
+      Ttcn::ExtensionAttributes * extatrs = parse_extattributes(w_attrib_path);
+      if (extatrs != 0) { // NULL means parsing error
+        for (size_t k = 0; k < extatrs->size(); ++k) {
+          Ttcn::ExtensionAttribute &ea = extatrs->get(k);
+          Ttcn::TypeMappings *inmaps = 0, *maps = 0;
+          Ttcn::TypeMapping* mapping = 0;
+          Ttcn::TypeMappingTarget* target = 0;
+          Type* t = 0;
+          switch (ea.get_type()) {
+          case Ttcn::ExtensionAttribute::ENCDECVALUE:
+            ea.get_encdecvalue_mappings(inmaps, maps);
+            maps = encode ? maps : inmaps;
+            maps->set_my_scope(this->get_my_scope());
+            maps->chk();
+            // look for coding settings
+            t = encode ? this : Type::get_pooltype(T_BSTR);
+            mapping = maps->get_mapping_byType(t);
+            if (mapping->get_nof_targets() == 0)
+              goto end_ext;
+            else {
+              for (size_t ind = 0; ind < mapping->get_nof_targets(); ind++) {
+                target = mapping->get_target_byIndex(ind);
+                t = target->get_target_type();
+                if ((encode && (t->get_typetype() == T_BSTR)) ||
+                  (!encode && (t->get_typename() == this->get_typename())))
+                {
+                  if (target->get_mapping_type() ==
+                    Ttcn::TypeMappingTarget::TM_FUNCTION) {
+                    if (!coding_str.empty())
+                      target->error("Multiple definition of this target");
+                    coding_str = target->get_function()->
+                      get_genname_from_scope(my_scope);
+                    coding_by_function = true;
+                  } else {
+                    target->error("Only function is supported to do this mapping");
+                  }
                 }
               }
+              if (coding_str.empty()) {
+                ea.warning("Extension attribute is found for %s but without "
+                "typemappings", encode ? "encvalue" : "decvalue");
+              }
             }
-            if (coding_str.empty()) {
-              ea.warning("Extension attribute is found for %s but without "
-              "typemappings", encode ? "encvalue" : "decvalue");
-            }
+            break;
+
+          case Ttcn::ExtensionAttribute::ANYTYPELIST:
+            break; // ignore (may be inherited from the module)
+
+          case Ttcn::ExtensionAttribute::NONE:
+            break; // ignore erroneous attribute
+
+          default:
+            ea.error("A type can only have type mapping extension attribute: "
+              "in(...) or out(...)");
+            break;
           }
-          break;
+        }
+        delete extatrs;
+      }
 
-        case Ttcn::ExtensionAttribute::ANYTYPELIST:
-          break; // ignore (may be inherited from the module)
+      if (!coding_str.empty())
+        return;
+  end_ext:
 
-        case Ttcn::ExtensionAttribute::NONE:
-          break; // ignore erroneous attribute
-
-        default:
-          ea.error("A type can only have type mapping extension attribute: "
-            "in(...) or out(...)");
-          break;
+      const vector<SingleWithAttrib>& real_attribs
+                  = w_attrib_path->get_real_attrib();
+      bool found = false;
+      for (size_t i = real_attribs.size(); i > 0 && !found; i--) {
+        if (real_attribs[i-1]->get_attribKeyword()
+                                                == SingleWithAttrib::AT_ENCODE) {
+          found = true;
+          coding = get_enc_type(*real_attribs[i-1]);
         }
       }
-      delete extatrs;
-    }
-
-    if (!coding_str.empty())
-      return;
-end_ext:
-
-    const vector<SingleWithAttrib>& real_attribs
-                = w_attrib_path->get_real_attrib();
-    bool found = false;
-    for (size_t i = real_attribs.size(); i > 0 && !found; i--) {
-      if (real_attribs[i-1]->get_attribKeyword()
-                                              == SingleWithAttrib::AT_ENCODE) {
-        found = true;
-        coding = get_enc_type(*real_attribs[i-1]);
+      if (coding == CT_UNDEF) {
+        // no "encode" attribute found
+        error("No coding rule specified for type '%s'", get_typename().c_str());
+        return;
       }
     }
-    if (coding == CT_UNDEF) {
-      // no "encode" attribute found
-      error("No coding rule specified for type '%s'", get_typename().c_str());
-      return;
+    else { // ASN.1 type
+      coding = encode ? asn_encoding : asn_decoding;
+      if ((coding == CT_UNDEF && delayed) || coding == CT_MULTIPLE) {
+        // either this is the delayed call and no external function has been
+        // found, or there was already more than one function
+        error("Cannot determine the %s rules for ASN.1 type `%s'. "
+          "%s %s external function%s found%s", encode ? "encoding" : "decoding",
+          get_typename().c_str(), coding == CT_UNDEF ? "No" : "Multiple",
+          encode ? "encoding" : "decoding", coding == CT_UNDEF ? "" : "s",
+          coding == CT_UNDEF ? "" : " with different rules");
+        return;
+      }
+      if (coding == CT_UNDEF && !delayed) {
+        // the coding type is set by the external function's checker in this case;
+        // it's possible, that the function exists, but has not been reached yet;
+        // delay this function until everything else has been checked
+        Modules::delay_type_encode_check(this, encode);
+        return;
+      }
     }
     if (coding != CT_CUSTOM && !has_encoding(coding)) {
       error("Type '%s' cannot be coded with the selected method '%s'",

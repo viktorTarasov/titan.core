@@ -1928,9 +1928,9 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       
       // Put this attribute in a dummy element and walk through it to check its validity
       TTCN_Buffer check_buf;
-      check_buf.put_s(2, (unsigned char*)"<a");
+      check_buf.put_s(2, (const unsigned char*)"<a");
       check_buf.put_s(p_buf.get_len() - buf_start, p_buf.get_data() + buf_start);
-      check_buf.put_s(2, (unsigned char*)"/>");
+      check_buf.put_s(2, (const unsigned char*)"/>");
       XmlReaderWrap checker(check_buf);
       while (1 == checker.Read());
     }

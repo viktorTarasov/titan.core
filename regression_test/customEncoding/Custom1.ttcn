@@ -11,14 +11,17 @@
  *
  ******************************************************************************/
 
-// This module tests custom encoding
-// (encvalue and decvalue encode and decode values using manually written
-// external functions, as long as they have the same encoding name as the 
-// value's type)
+// This module tests custom encoding for TTCN-3 types and encoding for ASN.1 types
+// (Encvalue and decvalue encode and decode values of TTCN-3 types using manually written
+// external functions, as long as they have the same encoding name as the value's type.
+// A similar technique is used when using encvalue or decvalue on a value of
+// and ASN.1 type: an encoding/decoding external function, of a built-in encoding type,
+// must be declared for the ASN.1 type).
 module Custom1 {
 
 import from Custom2 all;
 import from Custom3 all;
+import from Types all;
 
 type record Msg {
   octetstring data optional,
@@ -237,6 +240,92 @@ testcase tc_custom_decmatch() runs on CT
   }
 }
 
+// these let encvalue and decvalue know which encoding to use for the ASN.1 type
+external function f_enc_seq(in Seq x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" };
+  
+external function f_dec_seq(in octetstring x) return Seq
+  with { extension "prototype(convert) decode(JSON)" };
+  
+// Test 8.
+// Using encvalue and decvalue on the ASN.1 type Seq (with JSON encoding).
+testcase tc_asn() runs on CT
+{
+  var Seq x := { num := 10, str := "abc" };
+  var bitstring enc_exp := oct2bit(char2oct("{\n\t\"num\" : 10,\n\t\"str\" : \"abc\"\n}"));
+  var Seq dec_exp := x;
+  
+  var bitstring enc := encvalue(x);
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  var Seq dec;
+  var integer res := decvalue(enc_exp, dec);
+  if (res != 0) {
+    setverdict(fail, "Failed to decode ", enc_exp);
+  }
+  if (dec != dec_exp) {
+    setverdict(fail, "Expected: ", dec_exp, ", got: ", dec);
+  }
+  setverdict(pass);
+}
+
+// Test 9.
+// The redirected parameter is decoded into a value of ASN.1 type Seq.
+// Same input value as in test 8.
+testcase tc_asn_param_redirect() runs on CT
+{
+  connect(self:pt_proc, self:pt_proc);
+  var Seq val := { num := 10, str := "abc" };
+  var charstring str_fmt := "UTF-8";
+  var universal charstring val_enc := encvalue_unichar(val, str_fmt);
+  var Seq res;
+  pt_proc.reply(Sig: { p := val_enc });
+  timer tmr := 1.0;
+  tmr.start;
+  alt {
+    [] pt_proc.getreply(Sig: { p := val_enc }) -> param (res := @decoded(str_fmt) p) {
+      if (res != val) {
+        setverdict(fail, "Invalid decoded parameter. Expected: ", val, ", got: ", res);
+      }
+      else {
+        setverdict(pass);
+      }
+    }
+    [] pt_proc.getreply(Sig: { p := ?}) {
+      setverdict(fail, "Invalid reply received.");
+    }
+    [] tmr.timeout {
+      setverdict(fail, "Timed out.");
+    }
+  }
+}
+
+// Test 10.
+// Decoded content matching against a value of ASN.1 type Seq.
+// Same input value as in test 8.
+testcase tc_asn_decmatch() runs on CT
+{
+  connect(self:pt_msg, self:pt_msg);
+  var Seq val := { num := 10, str := "abc" };
+  var Msg msg := { data := omit, list := { encvalue(val) } };
+  var Seq res;
+  pt_msg.send(msg);
+  timer tmr := 1.0;
+  tmr.start;
+  alt {
+    [] pt_msg.receive(Msg: { data := omit, list := { decmatch val } }) {
+      setverdict(pass);
+    }
+    [] pt_msg.receive(?) {
+      setverdict(fail, "Invalid message received or decoded content matching failed.");
+    }
+    [] tmr.timeout {
+      setverdict(fail, "Timed out.");
+    }
+  }
+}
+
 control {
   execute(tc_custom1());
   execute(tc_custom2());
@@ -245,6 +334,9 @@ control {
   execute(tc_custom_unichar());
   execute(tc_custom_param_redirect());
   execute(tc_custom_decmatch());
+  execute(tc_asn());
+  execute(tc_asn_param_redirect());
+  execute(tc_asn_decmatch());
 }
 
 }

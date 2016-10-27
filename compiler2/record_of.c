@@ -1240,9 +1240,9 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         "        after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent, 0);\n"
         // Put this attribute in a dummy element and walk through it to check its validity
         "        TTCN_Buffer check_buf;\n"
-        "        check_buf.put_s(2, (unsigned char*)\"<a\");\n"
+        "        check_buf.put_s(2, (const unsigned char*)\"<a\");\n"
         "        check_buf.put_s(p_buf.get_len() - buf_start, p_buf.get_data() + buf_start);\n"
-        "        check_buf.put_s(2, (unsigned char*)\"/>\");"
+        "        check_buf.put_s(2, (const unsigned char*)\"/>\");"
         "        XmlReaderWrap checker(check_buf);\n"
         "        while (1 == checker.Read()) ;\n"
         "      }\n"
