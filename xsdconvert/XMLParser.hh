@@ -192,12 +192,16 @@ private:
   void endelementHandler(const xmlChar * localname);
   void characterdataHandler(const xmlChar * text, const int length);
   void commentHandler(const xmlChar * text);
+  void startelementHandlerWhenXSDRead(const xmlChar * localname, const int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, const xmlChar ** attributes);
 
   /** Callbacks cannot be member functions, use these static members as wrappers */
   static void wrapper_to_call_startelement_h(XMLParser *self, const xmlChar * localname, const xmlChar * prefix, const xmlChar * URI, int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, int nb_defaulted, const xmlChar ** attributes);
   static void wrapper_to_call_endelement_h(XMLParser *self, const xmlChar * localname, const xmlChar * prefix, const xmlChar * URI);
   static void wrapper_to_call_characterdata_h(XMLParser *self, const xmlChar * ch, int len);
   static void wrapper_to_call_comment_h(XMLParser *self, const xmlChar * value);
+  
+  /** Callback for start element handler when we read the namespace of the xsd files only, */
+  static void wrapper_to_call_startelement_when_xsd_read_h(XMLParser *self, const xmlChar * localname, const xmlChar * prefix, const xmlChar * URI, int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, int nb_defaulted, const xmlChar ** attributes);
 
   static void warningHandler(void * ctx, const char * msg, ...);
   static void errorHandler(void * ctx, const char * msg, ...);

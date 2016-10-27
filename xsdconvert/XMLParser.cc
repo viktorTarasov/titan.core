@@ -34,6 +34,7 @@
 #define LLONG_MAX 9223372036854775807LL
 #endif
 
+extern bool n_flag_used;
 extern bool V_flag_used;
 extern bool w_flag_used;
 extern bool x_flag_used;
@@ -63,6 +64,9 @@ XMLParser::XMLParser(const char * a_filename)
   parserCheckingXML->initialized = XML_SAX2_MAGIC;
   parserCheckingXML->warning = warningHandler;
   parserCheckingXML->error = errorHandler;
+  if (n_flag_used) {
+    parserCheckingXML->startElementNs = (startElementNsSAX2Func) wrapper_to_call_startelement_when_xsd_read_h;
+  }
   contextCheckingXML = xmlCreateFileParserCtxt(a_filename);
   if (!contextCheckingXML) {
     fprintf(stderr,
@@ -72,6 +76,9 @@ XMLParser::XMLParser(const char * a_filename)
     return;
   }
   contextCheckingXML->sax = parserCheckingXML;
+  if (n_flag_used) {
+    contextCheckingXML->userData = this;
+  }
 
   if (!x_flag_used) {
     contextCheckingXSD = xmlSchemaNewParserCtxt(a_filename);
@@ -127,7 +134,7 @@ void XMLParser::checkSyntax() {
 }
 
 void XMLParser::validate() {
-  if (!x_flag_used) {
+  if (!x_flag_used && !n_flag_used) {
     xmlSchemaPtr schema = xmlSchemaParse(contextCheckingXSD);
     if (schema) {
       xmlSchemaValidCtxtPtr validator = xmlSchemaNewValidCtxt(schema);
@@ -169,6 +176,11 @@ void XMLParser::wrapper_to_call_comment_h(XMLParser *self, const xmlChar * value
 
 void XMLParser::wrapper_to_call_characterdata_h(XMLParser *self, const xmlChar * ch, int len) {
   self->characterdataHandler(ch, len);
+}
+
+void XMLParser::wrapper_to_call_startelement_when_xsd_read_h(XMLParser *self, const xmlChar * localname, const xmlChar *, const xmlChar *,
+  int nb_namespaces, const xmlChar ** namespaces, const int nb_attributes, int, const xmlChar ** attributes) {
+  self->startelementHandlerWhenXSDRead(localname, nb_namespaces, namespaces, nb_attributes, attributes);
 }
 
 void XMLParser::warningHandler(void *, const char *, ...) {
@@ -260,6 +272,10 @@ void XMLParser::startelementHandler(const xmlChar * localname,
           module->loadValuesFromSchemaTag(actualTagAttributes.targetNamespace, declaredNamespaces,
             actualTagAttributes.elementFormDefault, actualTagAttributes.attributeFormDefault,
             actualTagAttributes.blockDefault);
+          // Only need the targetNamespace. Stop.
+          if (n_flag_used) {
+            xmlStopParser(context);
+          }
           break;
         }
         default:
@@ -330,6 +346,14 @@ void XMLParser::startelementHandler(const xmlChar * localname,
   parentTagNames.push_back(actualTagName);
   if (lastWasListEnd) {
     lastWasListEnd = false;
+  }
+}
+
+void XMLParser::startelementHandlerWhenXSDRead(const xmlChar * localname,
+  int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, const xmlChar ** attributes) {
+  if (strcmp((const char*)localname, "schema") == 0) {
+    // Don't parse beyond the schema tag.
+    xmlStopParser(contextCheckingXML);
   }
 }
 
@@ -480,11 +504,6 @@ void XMLParser::fillUpActualTagName(const char * localname, const tagMode mode) 
     }
   } else if (name_s == "fractionDigits") {
     actualTagName = n_fractionDigits;
-    if (mode == startElement) {
-      printWarning(filename, xmlSAX2GetLineNumber(context),
-        Mstring("The 'fractionDigits' tag is currently not supported."));
-      ++num_warnings;
-    }
   } else if (name_s == "group")
     actualTagName = n_group;
   else if (name_s == "import")

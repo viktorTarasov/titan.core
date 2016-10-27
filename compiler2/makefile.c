@@ -4556,7 +4556,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
     if (makefile.ets_name == NULL)
       makefile.ets_name = mcopystr(makefile.ASN1Modules[0].module_name);
   } else if (makefile.nXSDModules >= 1) {
-    WARNING("No TTCN-3 or ASN.1 or XSD module was given for the Makefile.");
+    WARNING("No TTCN-3 or ASN.1 was given for the Makefile.");
     if (makefile.ets_name == NULL)
       makefile.ets_name = mcopystr(makefile.XSDModules[0].module_name);
   } else if (makefile.nUserFiles > 0) {
