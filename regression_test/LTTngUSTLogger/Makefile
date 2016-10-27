@@ -47,6 +47,6 @@ dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
 
 run: $(TARGET)
-	./test_ctflog.sh
+	./test_LTTngUSTLogger.sh
 
 .NOTPARALLEL:

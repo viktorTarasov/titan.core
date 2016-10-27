@@ -7,8 +7,8 @@
 #
 # Contributors:
 #   
-#   >
 #   Balasko, Jeno
+#   Baranyi, Botond
 #   Beres, Szabolcs
 #   Delic, Adam
 #   Kovacs, Ferenc
@@ -47,6 +47,9 @@ TTCN3_COMPILER += -g -L
 
 # Use the alternative runtime when running the tests
 #RT2 := true
+
+# Enable tests for the LTTng UST Logger plug-in
+LTTNGUSTLOGGER := no
 
 # Use code splitting when running the tests
 # DO NOT enable both CODE_SPLIT and SPLIT_TO_SLICES
