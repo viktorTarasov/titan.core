@@ -835,7 +835,7 @@ group DecimalTest {
   }
 
   testcase tc_decimal_fractiondigits() runs on xmlTest_CT {
-    f_shellCommandWithVerdict(xsd2ttcn_command & "  decimal_fractiondigits.xsd","",c_shell_successWithWarning)
+    f_shellCommandWithVerdict(xsd2ttcn_command & "  decimal_fractiondigits.xsd","",c_shell_successWithoutWarningAndError)
 
     if(getverdict==pass) {
       f_compareFiles(
