@@ -19,7 +19,7 @@ modulepar boolean UseNil_verbose := false;
 
 type component Nil {}
 
-type enumerated ProductColor0 { red(0), green(1), blue(2) }
+type enumerated ProductColor0 { red(0), green('01'B), blue(2), yellow('12'O), black('AB'H) }
 
 // useNil on the type (record)
 type record Size {
@@ -48,6 +48,24 @@ const NilProduct absent := {
 const NilProduct present_ := {
   name  := "shirt",
   color := red,
+  size  := { 10 }
+}
+
+const NilProduct present_green := {
+  name  := "shirt",
+  color := green,
+  size  := { 10 }
+}
+
+const NilProduct present_yellow := {
+  name  := "shirt",
+  color := yellow,
+  size  := { 10 }
+}
+
+const NilProduct present_black := {
+  name  := "shirt",
+  color := black,
   size  := { 10 }
 }
 
@@ -102,6 +120,60 @@ const universal charstring str_present_b :=
 "</NilProduct>\n" &
 "\n";
 
+const universal charstring str_present_green_e :=
+"<NilProduct>\n" &
+"\t<name>shirt</name>\n" &
+"\t<color>green</color>\n" &
+"\t<size>10</size>\n" &
+"</NilProduct>\n" &
+"\n";
+
+const universal charstring str_present_green_b :=
+"<NilProduct>\n" &
+"\t<name>shirt</name>\n" &
+"\t<color><green/></color>\n" &
+"\t<size>\n" &
+"\t\t<sizeval>10</sizeval>\n" &
+"\t</size>\n" &
+"</NilProduct>\n" &
+"\n";
+
+const universal charstring str_present_yellow_e :=
+"<NilProduct>\n" &
+"\t<name>shirt</name>\n" &
+"\t<color>yellow</color>\n" &
+"\t<size>10</size>\n" & // HO37920: no \t after 10
+"</NilProduct>\n" &
+"\n";
+
+const universal charstring str_present_yellow_b :=
+"<NilProduct>\n" &
+"\t<name>shirt</name>\n" &
+"\t<color><yellow/></color>\n" &
+"\t<size>\n" &
+"\t\t<sizeval>10</sizeval>\n" &
+"\t</size>\n" &
+"</NilProduct>\n" &
+"\n";
+
+const universal charstring str_present_black_e :=
+"<NilProduct>\n" &
+"\t<name>shirt</name>\n" &
+"\t<color>black</color>\n" &
+"\t<size>10</size>\n" & // HO37920: no \t after 10
+"</NilProduct>\n" &
+"\n";
+
+const universal charstring str_present_black_b :=
+"<NilProduct>\n" &
+"\t<name>shirt</name>\n" &
+"\t<color><black/></color>\n" &
+"\t<size>\n" &
+"\t\t<sizeval>10</sizeval>\n" &
+"\t</size>\n" &
+"</NilProduct>\n" &
+"\n";
+
 testcase encode_nil_absent() runs on Nil
 {
   CHECK_METHOD(bxer_enc_nilp, absent, str_absent_b);
@@ -124,6 +196,30 @@ testcase decode_nil_present() runs on Nil
 {
   CHECK_DECODE(bxer_dec_nilp, str_present_b, NilProduct, present_);
   CHECK_DECODE(exer_dec_nilp, str_present_e, NilProduct, present_);
+}
+
+testcase encode_enum_nil() runs on Nil
+{
+  CHECK_METHOD(bxer_enc_nilp, present_green, str_present_green_b);
+  CHECK_METHOD(exer_enc_nilp, present_green, str_present_green_e);
+
+  CHECK_METHOD(bxer_enc_nilp, present_yellow, str_present_yellow_b);
+  CHECK_METHOD(exer_enc_nilp, present_yellow, str_present_yellow_e);
+
+  CHECK_METHOD(bxer_enc_nilp, present_black, str_present_black_b);
+  CHECK_METHOD(exer_enc_nilp, present_black, str_present_black_e);
+}
+
+testcase decode_enum_nil() runs on Nil
+{
+  CHECK_DECODE(bxer_dec_nilp, str_present_green_b, NilProduct, present_green);
+  CHECK_DECODE(exer_dec_nilp, str_present_green_e, NilProduct, present_green);
+
+  CHECK_DECODE(bxer_dec_nilp, str_present_yellow_b, NilProduct, present_yellow);
+  CHECK_DECODE(exer_dec_nilp, str_present_yellow_e, NilProduct, present_yellow);
+
+  CHECK_DECODE(bxer_dec_nilp, str_present_black_b, NilProduct, present_black);
+  CHECK_DECODE(exer_dec_nilp, str_present_black_e, NilProduct, present_black);
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -800,6 +896,10 @@ control {
 
   execute(encode_NilTypeRecAttr());
   execute(decode_NilTypeRecAttr());
+
+  execute(encode_enum_nil());
+
+  execute(decode_enum_nil());
 }
 
 }

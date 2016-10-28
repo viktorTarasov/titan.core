@@ -3342,6 +3342,72 @@ type enumerated Enum { ONE(1), TWO(2), THREE(1) };
 :exmp.
 
 .*---------------------------------------------------------------------*
+:h4.Value notations - A value notation shall assign a value to a specific element only once with binary, octetstring, hexstring
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - A value notation shall assign a value to a specific element only once with binary, octetstring, hexstring>
+<COMPILE>
+<VERDICT_LEAF PASS>
+<MODULE TTCN x x.ttcn>
+module x {
+
+type enumerated Enum { ONE(1), TWO('01'B), THREE('01'O), FOUR('01'H) };
+
+}
+<END_MODULE>
+<RESULT IF_PASS COUNT 3>
+(?im)Duplicate.+?value.+?enumeration
+<END_RESULT>
+<RESULT IF_PASS COUNT 3>
+(?im)already.+?assigned
+<END_RESULT>
+<RESULT IF_PASS COUNT 1>
+(?im)\bNotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
+<END_RESULT>
+<RESULT IF_PASS COUNT 3>
+(?is)\berror:
+<END_RESULT>
+<END_TC>
+:exmp.
+
+.*---------------------------------------------------------------------*
+:h4.Enumeration allowed defining values: number, hexa, octet, binary in compile time
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - Enumeration allowed defining values: number, hexa, octet, binary in compile time>
+<COMPILE>
+<VERDICT_LEAF PASS>
+<MODULE TTCN x x.ttcn>
+module x {
+
+type enumerated Enum { ONE(1), TWO('11'B), THREE('AB'O), FOUR('AC'H), FIVE("STR"), SIX(f()), SEVEN(c_int), EIGHT(c_bit) };
+
+const integer c_int := 4;
+const bitrstring c_bit := '010110'B;
+
+function f() return integer {
+	return 123;
+}
+
+}
+<END_MODULE>
+<RESULT IF_PASS COUNT 1>
+(?im)INTEGER.+?BITSTRING.+?OCTETSTRING.+?HEXSTRING.+?expected.+?FIVE
+<END_RESULT>
+<RESULT IF_PASS COUNT 1>
+(?im)compile.+?time.+?was.+?expected.+?SIX
+<END_RESULT>
+<RESULT IF_PASS COUNT 1>
+(?im)\bNotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
+<END_RESULT>
+<RESULT IF_PASS COUNT 3>
+(?is)\berror:
+<END_RESULT>
+<END_TC>
+:exmp.
+
+
+.*---------------------------------------------------------------------*
 :h2.Allowed values (each evaluated expression shall conform to the context-specific rules)
 .*---------------------------------------------------------------------*
 .*---------------------------------------------------------------------*

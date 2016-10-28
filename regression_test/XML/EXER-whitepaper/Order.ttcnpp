@@ -156,7 +156,7 @@ testcase dec_uo_emb() runs on Ord
 
 // Example 3: USE-ORDER and USE-NIL
 type record UOProductNil {
-  record of enumerated { id, name, price, color } order,
+  record of enumerated { id, name('01'O), price('10'B), color('3'H) } order,
   boolean available, // not in the whitepaper
   UOProductInfo info optional
 }

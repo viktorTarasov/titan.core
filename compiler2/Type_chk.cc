@@ -1653,8 +1653,7 @@ void Type::chk_xer_use_nil()
             complaint = BAD_ENUM;
             break;
           }
-          Value *v = ei->get_value();
-          const int_val_t *ival = v->get_val_Int();
+          const int_val_t *ival = ei->get_int_val();
           const Int enumval = ival->get_val();
           if ((size_t)enumval != enum_index) {
             complaint = ENUM_GAP; // 35.2.2.3
@@ -1867,8 +1866,7 @@ void Type::chk_xer_use_order(int num_attributes)
           complaint = BAD_ENUM;
           break;
         }
-        Value *v = ei->get_value();
-        const int_val_t *ival = v->get_val_Int();
+        const int_val_t *ival = ei->get_int_val();
         const Int enumval = ival->get_val();
         if ((size_t)enumval != enum_index) {
           complaint = ENUM_GAP; // 35.2.2.3
@@ -2491,6 +2489,8 @@ void Type::chk_Enum_A()
       ei->set_value(new Value(Value::V_INT, first_unused));
       value_map.add(first_unused, ei);
       while (value_map.has_key(++first_unused)) ;
+    } else {
+      ei->calculate_int_value();
     }
   }
   /* checking values after the ellipsis */
@@ -2532,6 +2532,7 @@ void Type::chk_Enum_item(EnumItem *ei, bool after_ellipsis,
   Int& first_unused=u.enums.first_unused;
   Value *value = ei->get_value();
   if (value) {
+    ei->calculate_int_value();
     Value *v;
     {
       Error_Context cntxt(ei, "In enumeration `%s'", dispname_str);
@@ -2547,6 +2548,10 @@ void Type::chk_Enum_item(EnumItem *ei, bool after_ellipsis,
                    dispname_str);
       return;
     }
+    // This function is only called for ASN1 enumerated types.
+    // The enum_value can be get by calling v->get_int_val() which also supports
+    // binary, hex, oct values. ASN1 enumerated fields cannot have  
+    // binary, hex, or oct value.
     Int enum_value = v->get_val_Int()->get_val();
     if (static_cast<Int>(static_cast<int>(enum_value)) != enum_value) {
       value->error("The numeric value of enumeration `%s' (%s) is too "
@@ -2608,33 +2613,37 @@ void Type::chk_Enum_T()
     if (value) {
       /* Handle the error node created by the parser.  */
       if (value->get_valuetype() == Value::V_ERROR) {
-        value->error("INTEGER value was expected for enumeration `%s'",
+        value->error("INTEGER or BITSTRING or OCTETSTRING or HEXSTRING value was expected for enumeration `%s'",
           id.get_dispname().c_str());
         error_flag = true;
       } else {
-        const int_val_t *enum_value_int = value->get_val_Int();
-        // It used to be the same check.
-        if (*enum_value_int > INT_MAX ||
-            static_cast<Int>(static_cast<int>(enum_value_int->get_val()))
-            != enum_value_int->get_val()) {
-          value->error("The numeric value of enumeration `%s' (%s) is "
-            "too large for being represented in memory",
-            id.get_dispname().c_str(), (enum_value_int->t_str()).c_str());
-          error_flag = true;
-        } else {
-          Int enum_value = enum_value_int->get_val();
-          if (value_map.has_key(enum_value)) {
-            const char *dispname_str = id.get_dispname().c_str();
-            value->error("Duplicate numeric value %s for enumeration `%s'",
-              Int2string(enum_value).c_str(), dispname_str);
-            EnumItem *ei2 = value_map[enum_value];
-            ei2->note("Value %s is already assigned to `%s'",
-              Int2string(enum_value).c_str(),
-              ei2->get_name().get_dispname().c_str());
+        if (ei->calculate_int_value()) {
+          const int_val_t *enum_value_int = ei->get_int_val();
+          // It used to be the same check.
+          if (*enum_value_int > INT_MAX ||
+              static_cast<Int>(static_cast<int>(enum_value_int->get_val()))
+              != enum_value_int->get_val()) {
+            value->error("The numeric value of enumeration `%s' (%s) is "
+              "too large for being represented in memory",
+              id.get_dispname().c_str(), (enum_value_int->t_str()).c_str());
             error_flag = true;
           } else {
-            value_map.add(enum_value, ei);
+            Int enum_value = enum_value_int->get_val();
+            if (value_map.has_key(enum_value)) {
+              const char *dispname_str = id.get_dispname().c_str();
+              value->error("Duplicate numeric value %s for enumeration `%s'",
+                Int2string(enum_value).c_str(), dispname_str);
+              EnumItem *ei2 = value_map[enum_value];
+              ei2->note("Value %s is already assigned to `%s'",
+                Int2string(enum_value).c_str(),
+                ei2->get_name().get_dispname().c_str());
+              error_flag = true;
+            } else {
+              value_map.add(enum_value, ei);
+            }
           }
+        } else {
+          error_flag = true;
         }
       }
     }
@@ -2649,6 +2658,8 @@ void Type::chk_Enum_T()
         ei->set_value(new Value(Value::V_INT, first_unused));
         value_map.add(first_unused, ei);
         while (value_map.has_key(++first_unused)) ;
+      } else {
+        ei->calculate_int_value();
       }
     }
     Int& second_unused = u.enums.second_unused;

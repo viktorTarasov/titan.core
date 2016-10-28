@@ -9,6 +9,7 @@
  *   Balasko, Jeno
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 #ifndef ENUM_HH_
@@ -19,6 +20,8 @@
 
 namespace Common {
 
+class int_val_t;
+  
 /**
  * Class to represent an Enumeration item. Is like a NamedValue, but
  * the value can be NULL, and a(n integer) value can be assigned
@@ -29,6 +32,7 @@ private:
   Identifier *name;
   Value *value;
   string text; ///< for TEXT encoding instruction
+  int_val_t *int_value;
   /** Copy constructor not implemented */
   EnumItem(const EnumItem&);
   /** Assignment disabled */
@@ -44,6 +48,8 @@ public:
   const string& get_text() const { return text; }
   void set_text(const string& p_text);
   virtual void set_my_scope(Scope *p_scope);
+  bool calculate_int_value();
+  int_val_t* get_int_val() const;
   virtual void dump(unsigned level) const;
 };
 

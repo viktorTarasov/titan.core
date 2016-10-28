@@ -9,10 +9,12 @@
  *   Balasko, Jeno
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 #include "EnumItem.hh"
 #include "Value.hh"
+#include "Int.hh"
 
 namespace Common {
 
@@ -21,7 +23,7 @@ namespace Common {
 // =================================
 
 EnumItem::EnumItem(Identifier *p_name, Value *p_value)
-: Node(), Location(), name(p_name), value(p_value)
+: Node(), Location(), name(p_name), value(p_value), int_value(NULL)
 {
   if (!p_name) FATAL_ERROR("NULL parameter: Common::EnumItem::EnumItem()");
 }
@@ -31,12 +33,18 @@ EnumItem::EnumItem(const EnumItem& p)
 {
   name=p.name->clone();
   value=p.value?p.value->clone():0;
+  if (p.int_value) {
+    int_value = new int_val_t(*p.int_value);
+  } else {
+    int_value = 0;
+  }
 }
 
 EnumItem::~EnumItem()
 {
   delete name;
   delete value;
+  delete int_value;
 }
 
 EnumItem *EnumItem::clone() const
@@ -60,11 +68,65 @@ void EnumItem::set_value(Value *p_value)
   if(!p_value) FATAL_ERROR("NULL parameter: Common::EnumItem::set_value()");
   if(value) FATAL_ERROR("Common::EnumItem::set_value()");
   value=p_value;
+  delete int_value;
+  int_value = NULL;
+  calculate_int_value();
 }
 
 void EnumItem::set_text(const string& p_text)
 {
   text = p_text;
+}
+
+bool EnumItem::calculate_int_value() {
+  if (int_value) {
+    return true;
+  }
+  Value *v = NULL;
+  value->set_lowerid_to_ref();
+  if (value->get_valuetype() == Value::V_REFD || value->get_valuetype() == Value::V_EXPR) {
+    v = value->get_value_refd_last();
+  } else {
+    v = value;
+  }
+  
+  if (v->is_unfoldable()) {
+    value->error("A value known at compile time was expected for enumeration `%s'",
+      name->get_dispname().c_str());
+    return false;
+  }
+  
+  switch (v->get_valuetype()) {
+    case Value::V_INT:
+      int_value = new int_val_t(v->get_val_Int()->get_val());
+      break;
+    case Value::V_BSTR: {
+      long int res = strtol(v->get_val_str().c_str(), NULL, 2);
+      int_value = new int_val_t(res);
+      break;
+    }
+    case Value::V_OSTR:
+    case Value::V_HSTR: {
+      long int res = strtol(v->get_val_str().c_str(), NULL, 16);
+      int_value = new int_val_t(res);
+      break;
+    }
+    default:
+      value->error("INTEGER or BITSTRING or OCTETSTRING or HEXSTRING value was expected for enumeration `%s'",
+        name->get_dispname().c_str());
+      return false;
+  }
+  return true;
+}
+
+int_val_t * EnumItem::get_int_val() const {
+  if (value == NULL) {
+    FATAL_ERROR("NULL value in Common::EnumItem::calculate_int_value()");
+  }
+  if (int_value == NULL) {
+    FATAL_ERROR("Not calculated value in Common::EnumItem::calculate_int_value()");
+  }
+  return int_value;
 }
 
 void EnumItem::dump(unsigned level) const

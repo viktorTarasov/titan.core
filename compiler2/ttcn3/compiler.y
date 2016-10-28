@@ -2542,19 +2542,9 @@ Enumeration: // 45
     $$ = new EnumItem($1, NULL);
     $$->set_location(infile, @$);
   }
-| IDentifier '(' Number optError ')'
+| IDentifier '(' SingleExpression optError ')'
   {
-    Value *value = new Value(Value::V_INT, $3);
-    value->set_location(infile, @3);
-    $$ = new EnumItem($1, value);
-    $$->set_location(infile, @$);
-  }
-| IDentifier '(' '-' Number optError ')'
-  {
-    *$4 = -*$4;
-    Value *value = new Value(Value::V_INT, $4);
-    value->set_location(infile, @3, @4);
-    $$ = new EnumItem($1, value);
+    $$ = new EnumItem($1, $3);
     $$->set_location(infile, @$);
   }
 | IDentifier '(' error ')'

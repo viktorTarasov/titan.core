@@ -50,7 +50,7 @@ type set SET {
 }
 
 type set of charstring SOCS
-type enumerated EN { first, second, third }
+type enumerated EN { first, second ('111'B), third }
 type union UNION {
   integer i,
   ROI roi,

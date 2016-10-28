@@ -1110,7 +1110,7 @@ void Type::generate_code_Enum(output_struct *target)
       e_def.xerText = TRUE;
       e_def.elements[i].text = ei->get_text().c_str();
     }
-    e_def.elements[i].value = ei->get_value()->get_val_Int()->get_val();
+    e_def.elements[i].value = ei->get_int_val()->get_val();
   }
 
   defEnumClass(&e_def, target);
@@ -3000,7 +3000,7 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
       json.put_next_token(JSON_TOKEN_NAME, "numericValues");
       json.put_next_token(JSON_TOKEN_ARRAY_START);
       for (size_t i = 0; i < last->u.enums.eis->get_nof_eis(); ++i) {
-        char* num_val_str = mprintf("%lli", last->get_ei_byIndex(i)->get_value()->get_val_Int()->get_val());
+        char* num_val_str = mprintf("%lli", last->get_ei_byIndex(i)->get_int_val()->get_val());
         json.put_next_token(JSON_TOKEN_NUMBER, num_val_str);
         Free(num_val_str);
       }

@@ -22,6 +22,7 @@
  *   Raduly, Csaba
  *   Szabados, Kristof
  *   Szabo, Janos Zoltan – initial implementation
+ *   Szabo, Bence Janos
  *   Szalai, Gabor
  *   Tatarka, Gabor
  *   Zalanyi, Balazs Andor
@@ -1870,8 +1871,7 @@ namespace Common {
         int min_bits=0;
         int max_val=u.enums.first_unused;
         for(size_t a=0;a<u.enums.eis->get_nof_eis();a++){
-          int val=u.enums.eis->get_ei_byIndex(a)->get_value()->get_val_Int()
-            ->get_val();
+          int val=u.enums.eis->get_ei_byIndex(a)->get_int_val()->get_val();
           if((max_val<0?-max_val:max_val)<(val<0?-val:val)) max_val=val;
         }
         if(max_val<0){ min_bits=1;max_val=-max_val;}
@@ -4790,8 +4790,7 @@ namespace Common {
     default:
       FATAL_ERROR("Type::get_enum_val_byId()");
     }
-    return u.enums.eis->get_ei_byName(p_name)->get_value()
-      ->get_value_refd_last()->get_val_Int()->get_val();
+    return u.enums.eis->get_ei_byName(p_name)->get_int_val()->get_val();
   }
 
   size_t Type::get_nof_root_comps()
