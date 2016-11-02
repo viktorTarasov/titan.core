@@ -1878,7 +1878,30 @@ int UNIVERSAL_CHARSTRING::XER_encode(const XERdescriptor_t& p_td,
           if (checker.NodeType() == XML_READER_TYPE_ELEMENT &&
               (p_td.xer_bits & (ANY_FROM | ANY_EXCEPT))) {
             const char* xmlns = (const char*)checker.NamespaceUri();
-            check_namespace_restrictions(p_td, xmlns);
+            // If no xmlns attribute found, and only one namespace is allowed then
+            // append the xmlns attribute with the namespace.
+            if (xmlns == NULL && (p_td.xer_bits & ANY_FROM) && p_td.nof_ns_uris == 1 &&
+                p_td.ns_uris[0] != NULL && strlen(p_td.ns_uris[0]) != 0) {
+              // Find the position of the '>' character
+              const char * pos = strchr((const char*)(other_buf.get_data()), '>');
+              int index = (int)(pos - (const char*)other_buf.get_data());
+              
+              // Create a new TTCN_Buffer which will contain the anyelement with
+              // the xmlns attribute.
+              TTCN_Buffer new_buf;
+              new_buf.put_s(index, other_buf.get_data());
+              new_buf.put_s(8, (const unsigned char*)" xmlns='");
+              size_t len = strlen(p_td.ns_uris[0]);
+              new_buf.put_s(len, (const unsigned char*)p_td.ns_uris[0]);
+              new_buf.put_c('\'');
+              
+              other_buf.set_pos(index);
+              len = strlen((const char*)other_buf.get_read_data());
+              new_buf.put_s(len, other_buf.get_read_data());
+              other_buf = new_buf;
+            } else {
+              check_namespace_restrictions(p_td, xmlns);
+            }
           }
         }
           

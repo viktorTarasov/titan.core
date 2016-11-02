@@ -351,6 +351,59 @@ testcase decode_only() runs on AE
   CHECK_DECODE(exer_dec_aaoa, estr_marx, anys_and_only_anys, marx_dec);
 }
 
+/* * * * * * * * * * * * */
+// ANY-ELEMENT with only one allowed namespace.
+
+type record AEProductSingle {
+  charstring name,
+  integer    price,
+  universal charstring info
+}
+with {
+  variant (info) "anyElement from 'http://www.example.com/A'"
+}
+
+DECLARE_XER_ENCODERS(AEProductSingle, aes);
+DECLARE_EXER_ENCODERS(AEProductSingle, aes);
+
+const AEProductSingle aesp := {
+  name  := "Trousers",
+  price := 20,
+  info  := "<color available=""true"">red</color>"
+}
+
+const AEProductSingle aesp_e := {
+  name  := "Trousers",
+  price := 20,
+  info  := "<color xmlns=\"http://www.example.com/A\" available=\"true\">red</color>"
+}
+
+const universal charstring str_aes_e :=
+"<AEProductSingle>\n" &
+"\t<name>Trousers</name>\n" &
+"\t<price>20</price>\n" &
+"\t<color available=\"true\" xmlns='http://www.example.com/A'>red</color>\n" &
+"</AEProductSingle>\n\n";
+
+const universal charstring str_aes_b :=
+"<AEProductSingle>\n" &
+"\t<name>Trousers</name>\n" &
+"\t<price>20</price>\n" &
+"\t<info>&lt;color available=&quot;true&quot;&gt;red&lt;/color&gt;</info>\n" &
+"</AEProductSingle>\n\n";
+
+testcase encode_aes() runs on AE
+{
+  CHECK_METHOD(bxer_enc_aes, aesp, str_aes_b);
+  CHECK_METHOD(exer_enc_aes, aesp, str_aes_e);
+}
+
+testcase decode_aes() runs on AE
+{
+  CHECK_DECODE(bxer_dec_aes, str_aes_b, AEProductSingle, aesp);
+  CHECK_DECODE(exer_dec_aes, str_aes_e, AEProductSingle, aesp_e);
+}
+
 control
 {
   execute(encode_ae())
@@ -367,6 +420,9 @@ control
   
   execute(encode_only())
   execute(decode_only())
+
+  execute(encode_aes())
+  execute(decode_aes())
 }
 
 }
