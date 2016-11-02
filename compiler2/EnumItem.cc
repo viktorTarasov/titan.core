@@ -15,6 +15,7 @@
 #include "EnumItem.hh"
 #include "Value.hh"
 #include "Int.hh"
+#include <stdlib.h>
 
 namespace Common {
 
