@@ -43,7 +43,7 @@ module Pos_060112_fraction_digits_002 {
     testcase TC_Pos_060112_fraction_digits_002() runs on C system C {
         var Raw v_rcv;
 
-        var Raw  v_Raw:="<ns069:actualTemp xmlns:ns069='schema:Pos_060112_fraction_digits_002'>0.999900</ns069:actualTemp>\n";
+        var Raw  v_Raw:="<ns069:actualTemp xmlns:ns069='schema:Pos_060112_fraction_digits_002'>0.9</ns069:actualTemp>\n";
 
         connect(self:p, self:p1);
 
@@ -55,8 +55,8 @@ module Pos_060112_fraction_digits_002 {
                 log("XML message ", v_rcv);
                 if (match(v_rcv, v_Raw) ) {
 					alt {
-                     	[] p1.receive(Raw:?) {
-							if(match(dec_MyType(unichar2oct(v_rcv)),m_msg))	{
+                     	[] p1.receive(Raw:?) { // titan prints extra 0s during decoding
+							if(match(dec_MyType(unichar2oct(v_rcv)),0.900000))	{ 
 								setverdict(pass, "Decoded value matches encoded template and reference XML");
 							}
 							else 

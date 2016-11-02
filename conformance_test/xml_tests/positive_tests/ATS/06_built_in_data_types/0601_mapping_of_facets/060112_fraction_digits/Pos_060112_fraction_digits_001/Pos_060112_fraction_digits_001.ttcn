@@ -43,7 +43,7 @@ module Pos_060112_fraction_digits_001 {
     testcase TC_Pos_060112_fraction_digits_001() runs on C system C {
         var Raw v_rcv;
 
-        var Raw  v_Raw:="<ns068:actualTemp xmlns:ns068='schema:Pos_060112_fraction_digits_001'>99.900000</ns068:actualTemp>\n";
+        var Raw  v_Raw:="<ns068:actualTemp xmlns:ns068='schema:Pos_060112_fraction_digits_001'>99.9</ns068:actualTemp>\n";
 
         connect(self:p, self:p1);
 
