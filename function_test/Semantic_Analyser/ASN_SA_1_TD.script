@@ -672,7 +672,7 @@ END
 <RESULT IF_PASS COUNT 1>
 (?im)\berror\b.+?no.+?assignment.+?Nonexi
 <END_RESULT>
-<RESULT IF_PASS COUNT 1>
+<RESULT IF_PASS COUNT 3>
 (?is)\berror:
 <END_RESULT>
 <RESULT IF_PASS POSITIVE>

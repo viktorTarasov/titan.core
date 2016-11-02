@@ -99,7 +99,7 @@ bool EnumItem::calculate_int_value() {
   
   switch (v->get_valuetype()) {
     case Value::V_INT:
-      int_value = new int_val_t(v->get_val_Int()->get_val());
+      int_value = new int_val_t(*(v->get_val_Int()));
       break;
     case Value::V_BSTR: {
       long int res = strtol(v->get_val_str().c_str(), NULL, 2);
