@@ -1894,10 +1894,9 @@ int UNIVERSAL_CHARSTRING::XER_encode(const XERdescriptor_t& p_td,
               size_t len = strlen(p_td.ns_uris[0]);
               new_buf.put_s(len, (const unsigned char*)p_td.ns_uris[0]);
               new_buf.put_c('\'');
-              
+
               other_buf.set_pos(index);
-              len = strlen((const char*)other_buf.get_read_data());
-              new_buf.put_s(len, other_buf.get_read_data());
+              new_buf.put_s(other_buf.get_len() - index, other_buf.get_read_data());
               other_buf = new_buf;
             } else {
               check_namespace_restrictions(p_td, xmlns);
