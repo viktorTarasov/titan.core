@@ -2122,7 +2122,7 @@ CHARSTRING_template::CHARSTRING_template(const OPTIONAL<CHARSTRING>& other_value
 
 CHARSTRING_template::CHARSTRING_template(template_sel p_sel,
                                          const CHARSTRING& p_str,
-                                         boolean p_nocase)
+                                         boolean p_nocase /* = FALSE */)
   : Restricted_Length_Template(STRING_PATTERN), single_value(p_str)
 {
   if(p_sel!=STRING_PATTERN)

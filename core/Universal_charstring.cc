@@ -3882,7 +3882,7 @@ UNIVERSAL_CHARSTRING_template::UNIVERSAL_CHARSTRING_template
 }
 
 UNIVERSAL_CHARSTRING_template::UNIVERSAL_CHARSTRING_template
-  (template_sel p_sel, const CHARSTRING& p_str, boolean p_nocase)
+  (template_sel p_sel, const CHARSTRING& p_str, boolean p_nocase /* = FALSE */)
 : Restricted_Length_Template(STRING_PATTERN)
 {
   if(p_sel!=STRING_PATTERN)

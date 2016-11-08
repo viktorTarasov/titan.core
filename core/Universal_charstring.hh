@@ -575,7 +575,7 @@ public:
   UNIVERSAL_CHARSTRING_template
     (const UNIVERSAL_CHARSTRING_template& other_value);
   UNIVERSAL_CHARSTRING_template(template_sel p_sel, const CHARSTRING& p_str,
-    boolean p_nocase);
+    boolean p_nocase = FALSE);
 
   ~UNIVERSAL_CHARSTRING_template();
   void clean_up();

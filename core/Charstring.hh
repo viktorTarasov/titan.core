@@ -401,8 +401,10 @@ public:
   /** Constructor for STRING_PATTERN
    * @param p_sel must be STRING_PATTERN or else Dynamic Testcase Error
    * @param p_str pattern string
+   * @param p_nocase case sensitivity (FALSE = case sensitive)
    */
-  CHARSTRING_template(template_sel p_sel, const CHARSTRING& p_str, boolean p_nocase);
+  CHARSTRING_template(template_sel p_sel, const CHARSTRING& p_str,
+    boolean p_nocase = FALSE);
   /// Copy constructor
   CHARSTRING_template(const CHARSTRING_template& other_value);
 
