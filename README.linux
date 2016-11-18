@@ -90,7 +90,9 @@ XMLDIR := /usr
 JNI := yes
 GEN_PDF := no
 
+Note: For Raspberry Pi "-fsigned-char" needs to be added to compiler flags in Makefile.personal:
 
+COMPILERFLAGS := -Wall -fsigned-char
 
 4. Run make
 
