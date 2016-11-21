@@ -15,7 +15,7 @@
 #ifndef XER_HH_
 #define XER_HH_
 
-#include "Types.h"
+//#include "Types.h"
 #include "Encdec.hh"
 #include <stddef.h> // for size_t
 #include <string.h> // strncmp for the inline function
@@ -117,6 +117,60 @@ enum XER_whitespace_action {
   WHITESPACE_REPLACE,
   WHITESPACE_COLLAPSE
 };
+
+/**
+ * XSD type variants. For example: XSD:integer XSD:binary etc.
+ * A field can only have one of these variants.
+ * This enum should be in sync with the XSD_types enum in XSD_Types.hh
+ */
+typedef enum {
+  XSD_NONE = 0,
+  XSD_ANYSIMPLETYPE,
+  XSD_ANYTYPE,
+  XSD_STRING,
+  XSD_NORMALIZEDSTRING,
+  XSD_TOKEN,
+  XSD_NAME,
+  XSD_NMTOKEN,
+  XSD_NCName,
+  XSD_ID,
+  XSD_IDREF,
+  XSD_ENTITY,
+  XSD_HEXBINARY,
+  XSD_BASE64BINARY,
+  XSD_ANYURI,
+  XSD_LANGUAGE,
+  XSD_INTEGER,
+  XSD_POSITIVEINTEGER,
+  XSD_NONPOSITIVEINTEGER,
+  XSD_NEGATIVEINTEGER,
+  XSD_NONNEGATIVEINTEGER,
+  XSD_LONG,
+  XSD_UNSIGNEDLONG,
+  XSD_INT,
+  XSD_UNSIGNEDINT,
+  XSD_SHORT,
+  XSD_UNSIGNEDSHORT,
+  XSD_BYTE,
+  XSD_UNSIGNEDBYTE,
+  XSD_DECIMAL,
+  XSD_FLOAT,
+  XSD_DOUBLE,
+  XSD_DURATION,
+  XSD_DATETIME,
+  XSD_TIME,
+  XSD_DATE,
+  XSD_GYEARMONTH,
+  XSD_GYEAR,
+  XSD_GMONTHDAY,
+  XSD_GDAY,
+  XSD_GMONTH,
+  XSD_NMTOKENS,
+  XSD_IDREFS,
+  XSD_ENTITIES,
+  XSD_QNAME,
+  XSD_BOOLEAN
+} XSD_types;
 
 /// Check that \p f has the canonical flavor.
 inline bool is_canonical(unsigned int f)
@@ -285,6 +339,9 @@ struct XERdescriptor_t
     * The -1 value is used to determine if fractionDigits encoding instruction is present,
     * so if the value is -1, no checks will be made. */
   const int fractionDigits;
+  
+  /** XSD type of field */
+  const XSD_types xsd_type;
 };
 
 /** Information related to the embedded values in XML encoding
@@ -454,7 +511,7 @@ void check_namespace_restrictions(const XERdescriptor_t& p_td, const char* p_xml
   extern const XERdescriptor_t type_name##_xer_ = { \
     { xmlname ">\n", xmlname ">\n" }, \
     { 2+sizeof(xmlname)-1, 2+sizeof(xmlname)-1 }, \
-    0UL, WHITESPACE_PRESERVE, NULL, NULL, 0, 0, NULL, NULL, -1 }
+    0UL, WHITESPACE_PRESERVE, NULL, NULL, 0, 0, NULL, NULL, -1, XSD_NONE }
 // The compiler should fold the two identical strings into one
 
 # define XER_STRUCT_COPY(cpy,original) \

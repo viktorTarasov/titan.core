@@ -15,6 +15,7 @@
  *   Raduly, Csaba
  *   Szabados, Kristof
  *   Szabo, Janos Zoltan – initial implementation
+ *   Szabo, Bence Janos
  *   Szalai, Gabor
  *
  ******************************************************************************/
@@ -23,6 +24,7 @@
 
 #include "asn1/asn1p_old.h"
 #include "ttcn3/rawASTspec.h"
+#include "XSD_Types.hh"
 /* Common types */
 
 typedef int boolean;
@@ -87,6 +89,7 @@ typedef struct {
   const char* jsonDefaultValue;
   /** true if the field is a record-of or set-of with optimized memory allocation */
   boolean optimizedMemAlloc;
+  XSD_types xsd_type;
 } struct_field;
 
 /** Structure (record, set, union, anytype) descriptor for code generation */

@@ -88,7 +88,7 @@ const universal charstring str_39_b :=
 "</Int_or_boolean_u>\n\n";
 
 const universal charstring str_39_e :=
-"<Int_or_boolean_u xmlns:p='cns' p:type='int'>39</Int_or_boolean_u>\n\n";
+"<Int_or_boolean_u xmlns:p='cns' xmlns:xsd='http://www.w3.org/2001/XMLSchema' p:type='xsd:integer'>39</Int_or_boolean_u>\n\n";
 
 // Second alternative (bool)
 const Int_or_boolean_u so_true := { boolean_ := true };
@@ -99,7 +99,7 @@ const universal charstring str_true_b :=
 "</Int_or_boolean_u>\n\n";
 
 const universal charstring str_true_e :=
-"<Int_or_boolean_u xmlns:p='cns' p:type='boolean'>true</Int_or_boolean_u>\n\n";
+"<Int_or_boolean_u xmlns:p='cns' xmlns:xsd='http://www.w3.org/2001/XMLSchema' p:type='xsd:boolean'>true</Int_or_boolean_u>\n\n";
 
 
 testcase enc_uu() runs on ice

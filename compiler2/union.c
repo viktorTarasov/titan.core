@@ -32,6 +32,7 @@
 #include "datatypes.h"
 #include "union.h"
 #include "encdec.h"
+#include "XSD_Types.hh"
 
 #include "main.hh"
 #include "ttcn3/compiler.h"
@@ -1374,9 +1375,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         , sdef->elements[i].typegen
       );
       /* Type id attribute not needed for the first field in case of USE-TYPE */
+      // TODO: if USE-UNION there is no need to check the namelens
       if (sdef->xerUseUnion || i > 0) src = mputprintf(src,
-        "      need_type = (%s_xer_.namelens[1] > 2);\n"
-        , sdef->elements[i].typegen);
+          "      need_type = (%s_xer_.namelens[1] > 2) || %s_xer_.xsd_type != XSD_NONE;\n"
+          , sdef->elements[i].typegen
+          , sdef->elements[i].typegen);
       src = mputstr(src, "      break;\n");
     }
 
@@ -1423,6 +1426,26 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     if (sdef->xerUseTypeAttr) {
       src = mputstr(src,
         "  const boolean e_xer = is_exer(p_flavor);\n"
+        "  boolean need_schema = FALSE;\n"
+        "  char *schema_prefix = mprintf(\"xsd\");\n"
+        "  int counter = 0;\n"
+        "  // Find a unique prefix for the xsd schema\n"
+        "  while (1) {\n"
+        "    boolean changed = FALSE;\n"
+        "    for (size_t i = 0; i < p_td.my_module->get_num_ns(); i++) {\n"
+        "      if (p_td.my_module->get_ns(i)->px != NULL &&\n"
+        "          strcmp(p_td.my_module->get_ns(i)->px, schema_prefix) == 0) {\n"
+        "        Free(schema_prefix);\n"
+        "        schema_prefix = mprintf(\"xsd%i\", counter);\n"
+        "        counter++;\n"
+        "        changed = TRUE;\n"
+        "        break; // new maybe unique prefix found\n"
+        "      }\n"
+        "    }\n"
+        "    if (!changed) {\n"
+        "      break; //break when a unique prefix found\n"
+        "    }\n"
+        "  }\n"
         "  char *type_atr = NULL;\n"
         "  if (e_xer && (p_td.xer_bits & USE_TYPE_ATTR)) {\n"
         "    char *type_name = 0;\n"
@@ -1433,29 +1456,44 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       for (i = start_at; i < sdef->nElements; i++) {
         src = mputprintf(src,
           "    case %s_%s:\n"
-          "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
-          "          %s_xer_.namelens[1] > 2) {\n"
-          /* add the namespace prefix to the type attribute (if the name is not empty) */
-          "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
-          "        if (my_ns->px[0] != 0) {\n"
-          "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
-          "        }\n"
-          "      }\n"
-          "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
+          , selection_prefix, sdef->elements[i].name);
+        if (!sdef->xerUseUnion) { // UseType
+          src = mputprintf(src,
+            "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
+            "          %s_xer_.namelens[1] > 2) {\n"
+            /* add the namespace prefix to the type attribute (if the name is not empty) */
+            "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
+            "        if (my_ns->px[0] != 0) {\n"
+            "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
+            "        }\n"
+            "      }\n"
+            "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
+            , sdef->elements[i].typegen, sdef->elements[i].typegen
+            , sdef->elements[i].typegen, sdef->elements[i].typegen
+            , sdef->elements[i].typegen, sdef->elements[i].typegen
+            , sdef->elements[i].typegen);
+        }
+        if (sdef->elements[i].xsd_type != XSD_NONE) {
+          src = mputprintf(src,
+            "      if (type_name == NULL) {\n"
+            "        type_name = mputprintf(type_name, \"%%s:%s\", schema_prefix);\n"
+            "        need_schema = TRUE;\n"
+            "      }\n"
+            , XSD_type_to_xml_type(sdef->elements[i].xsd_type));
+        }
+        src = mputprintf(src,
           "      %s\n"
-          , selection_prefix, sdef->elements[i].name
-          , sdef->elements[i].typegen, sdef->elements[i].typegen
-          , sdef->elements[i].typegen, sdef->elements[i].typegen
-          , sdef->elements[i].typegen, sdef->elements[i].typegen
-          , sdef->elements[i].typegen
           , i < sdef->nElements - 1 ? "goto write_atr;" : "" /* no break */
         );
       }
       src = mputprintf(src,
         "%s" /* label only if more than two elements total */
-        "      if (mstrlen(type_name) > 0) {\n" /* 38.3.8, no atr if NAME AS "" */
+        "      if (mstrlen(type_name) > 0) {\n"
         "        control_ns = p_td.my_module->get_controlns();\n"
         "        type_atr = mcopystr(\" \");\n"
+        "        if (need_schema) {\n"
+        "          type_atr = mputprintf(type_atr, \"xmlns:%%s=\'http://www.w3.org/2001/XMLSchema\' \", schema_prefix);\n"
+        "        }\n"
         "        type_atr = mputstr(type_atr, control_ns->px);\n"
         "        type_atr = mputstr(type_atr, \":type='\");\n"
         "        type_atr = mputstr(type_atr, type_name);\n"
@@ -1466,6 +1504,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "    default: break;\n"
         "    }\n" /* switch */
         "  p_flavor &= ~XER_RECOF;\n"
+        "  Free(schema_prefix);\n"
         "  }\n" /* if e_xer */
         , (sdef->nElements > start_at + 1 ? "write_atr:\n" : "")
 
@@ -1529,6 +1568,26 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       if (sdef->xerUseTypeAttr) {
         src = mputstr(src,
           "  const boolean e_xer = is_exer(p_flavor);\n"
+          "  boolean need_schema = FALSE;\n"
+          "  char *schema_prefix = mprintf(\"xsd\");\n"
+          "  int counter = 0;\n"
+          "  // Find a unique prefix for the xsd schema\n"
+          "  while (1) {\n"
+          "    boolean changed = FALSE;\n"
+          "    for (size_t i = 0; i < p_td.my_module->get_num_ns(); i++) {\n"
+          "      if (p_td.my_module->get_ns(i)->px != NULL &&\n"
+          "          strcmp(p_td.my_module->get_ns(i)->px, schema_prefix) == 0) {\n"
+          "        Free(schema_prefix);\n"
+          "        schema_prefix = mprintf(\"xsd%i\", counter);\n"
+          "        counter++;\n"
+          "        changed = TRUE;\n"
+          "        break; // new maybe unique prefix found\n"
+          "      }\n"
+          "    }\n"
+          "    if (!changed) {\n"
+          "      break; //break when a unique prefix found\n"
+          "    }\n"
+          "  }\n"
           "  char *type_atr = NULL;\n"
           "  if (e_xer && (p_td.xer_bits & USE_TYPE_ATTR)) {\n"
           "    char *type_name = 0;\n"
@@ -1538,21 +1597,33 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         for (i = start_at; i < sdef->nElements; i++) {
           src = mputprintf(src,
             "    case %s_%s:\n"
-            "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
-            "          %s_xer_.namelens[1] > 2) {\n"
-            /* add the namespace prefix to the type attribute (if the name is not empty) */
-            "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
-            "        if (my_ns->px[0] != 0) {\n"
-            "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
-            "        }\n"
-            "      }\n"
-            "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
+            , selection_prefix, sdef->elements[i].name);
+          if (!sdef->xerUseUnion) { // UseType
+            src = mputprintf(src,
+              "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
+              "          %s_xer_.namelens[1] > 2) {\n"
+              /* add the namespace prefix to the type attribute (if the name is not empty) */
+              "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
+              "        if (my_ns->px[0] != 0) {\n"
+              "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
+              "        }\n"
+              "      }\n"
+              "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
+              , sdef->elements[i].typegen, sdef->elements[i].typegen
+              , sdef->elements[i].typegen, sdef->elements[i].typegen
+              , sdef->elements[i].typegen, sdef->elements[i].typegen
+              , sdef->elements[i].typegen);
+          }
+          if (sdef->elements[i].xsd_type != XSD_NONE) {
+            src = mputprintf(src,
+              "      if (type_name == NULL) {\n"
+              "        type_name = mputprintf(type_name, \"%%s:%s\", schema_prefix);\n"
+              "        need_schema = TRUE;\n"
+              "      }\n"
+              , XSD_type_to_xml_type(sdef->elements[i].xsd_type));
+          }
+          src = mputprintf(src,
             "      %s\n"
-            , selection_prefix, sdef->elements[i].name
-            , sdef->elements[i].typegen, sdef->elements[i].typegen
-            , sdef->elements[i].typegen, sdef->elements[i].typegen
-            , sdef->elements[i].typegen, sdef->elements[i].typegen
-            , sdef->elements[i].typegen
             , i < sdef->nElements - 1 ? "goto write_atr;" : "" /* no break */
           );
         }
@@ -1561,6 +1632,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "      if (mstrlen(type_name) > 0) {\n" /* 38.3.8, no atr if NAME AS "" */
           "        control_ns = p_td.my_module->get_controlns();\n"
           "        type_atr = mcopystr(\" \");\n"
+          "        if (need_schema) {\n"
+          "          type_atr = mputprintf(type_atr, \"xmlns:%%s=\'http://www.w3.org/2001/XMLSchema\' \", schema_prefix);\n"
+          "        }\n"
           "        type_atr = mputstr(type_atr, control_ns->px);\n"
           "        type_atr = mputstr(type_atr, \":type='\");\n"
           "        type_atr = mputstr(type_atr, type_name);\n"
@@ -1571,6 +1645,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "    default: break;\n"
           "    }\n" /* switch */
           "  p_flavor &= ~XER_RECOF;\n"
+          "  Free(schema_prefix);\n"
           "  }\n" /* if e_xer */
           , (sdef->nElements > start_at + 1 ? "write_atr:\n" : "")
           );
@@ -1762,7 +1837,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
            *
            */
           "    if ((e_xer && (typeatr == NULL || !(p_td.xer_bits & USE_TYPE_ATTR))) "
-          "|| can_start(elem_name, ns_uri, %s_xer_, flavor_1)) {\n"
+          "|| can_start(elem_name, ns_uri, %s_xer_, flavor_1) || strcmp(elem_name, \"%s\") == 0) {\n"
           "      ec_2.set_msg(\"%s': \");\n"
           "      if (%s==union_selection) {\n"
           "        matched = %d;\n"
@@ -1771,6 +1846,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "      if (field_%s->is_bound()) break; else clean_up();\n"
           "    }\n",
           sdef->elements[i].typegen,
+          XSD_type_to_xml_type(sdef->elements[i].xsd_type),
           sdef->elements[i].dispname,
           unbound_value, (int)i,
           sdef->elements[i].name,    sdef->elements[i].typegen,
@@ -1817,7 +1893,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       for (i = 0; i < sdef->nElements; i++) {
         if(sdef->exerMaybeEmptyIndex != i){
           src = mputprintf(src,
-            "    %sif (%s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT)) {\n"
+            "    %sif (%s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT) || strcmp(elem_name, \"%s\") == 0) {\n"
             "      ec_2.set_msg(\"%s': \");\n"
             "      if (e_xer && (%s_xer_.xer_bits & BLOCKED)) {\n"
             "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
@@ -1830,6 +1906,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
             "    }\n",
             i && !(i==1 && sdef->exerMaybeEmptyIndex==0) ? "else " : "",  /*  print "if(" if generate code for the first field or if the first field is the MaybeEmpty field and we generate the code for the second one*/
             sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typegen,
+            XSD_type_to_xml_type(sdef->elements[i].xsd_type),
             sdef->elements[i].dispname,
             sdef->elements[i].typegen,
             at_field, sdef->elements[i].name,    sdef->elements[i].typegen,
@@ -1839,7 +1916,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       if(sdef->exerMaybeEmptyIndex>=0 ){
         i=sdef->exerMaybeEmptyIndex;
         src = mputprintf(src,
-          "    %sif ((e_xer && (type==XML_READER_TYPE_END_ELEMENT || !own_tag)) || %s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT)) {\n"
+          "    %sif ((e_xer && (type==XML_READER_TYPE_END_ELEMENT || !own_tag)) || %s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT) || strcmp(elem_name, \"%s\") == 0) {\n"
           "empty_xml:  ec_2.set_msg(\"%s': \");\n"
           "      if (e_xer && (%s_xer_.xer_bits & BLOCKED)) {\n"
           "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
@@ -1852,6 +1929,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "    }\n",
           sdef->nElements>0 ? "else " : "",
           sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typegen,
+          XSD_type_to_xml_type(sdef->elements[i].xsd_type),
           sdef->elements[i].dispname,
           sdef->elements[i].typegen,
           at_field, sdef->elements[i].name,    sdef->elements[i].typegen,

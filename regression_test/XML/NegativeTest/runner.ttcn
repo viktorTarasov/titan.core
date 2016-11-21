@@ -48,7 +48,7 @@ control // the only control part in the system
   execute(u_replace());
   execute(u_before_embedded());
 
-  // testcases imporeted from exer_rec_of
+  // testcases imported from exer_rec_of
   execute(exer_recof_plain());
   execute(exer_recof_before0());
 

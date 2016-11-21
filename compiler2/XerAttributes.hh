@@ -25,6 +25,7 @@
 #include <stddef.h>
 #include <limits.h>
 #include "../common/memory.h"
+#include "datatypes.h"
 
 namespace Common {
 class Value;
@@ -187,6 +188,7 @@ public:
   bool useType_;
   bool useUnion_;
   WhitespaceAction whitespace_;
+  XSD_types xsd_type;
 
   void print(const char *type_name) const;
 

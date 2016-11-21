@@ -19,7 +19,10 @@ type component C {}
 external function enc_imsi(in ImsiType i) return octetstring
 with { extension "prototype(convert) encode(XER:XER_EXTENDED)" }
 
-const charstring  c_cali := "<imsiType xmlns='http://schemas.ericsson.com/pg/hlr/13.5/'>califragilistic</imsiType>\n\n";
+external function dec_imsi(in octetstring stream) return ImsiType
+with { extension "prototype (convert) decode(XER:XER_EXTENDED)" }
+
+const charstring  c_cali := "<imsiType xmlns='http://schemas.ericsson.com/pg/hlr/13.5/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:string'>califragilistic</imsiType>\n\n";
 const octetstring o_cali := char2oct(c_cali);
 
 const charstring  c_all  := "<imsiType xmlns='http://schemas.ericsson.com/pg/hlr/13.5/'>ALL</imsiType>\n\n";
@@ -29,17 +32,28 @@ const octetstring o_all  := char2oct(c_all);
 // The point of this test is to chec that xsd2ttcn does not crash.
 testcase tc1() runs on C
 {
+  var ImsiType v_result;
   var ImsiType v_imsi := { alt_ := "califragilistic" };
   var octetstring o := enc_imsi(v_imsi);
   action(o);
   if (match(o, o_cali)) { setverdict(pass); }
   else { setverdict(fail, match(o, o_cali)); }
+  v_result := dec_imsi(o);
+  if (match(v_result, v_imsi)) { setverdict(pass); }
+  else { setverdict(fail, match(v_result, v_imsi)); }
+
   
   v_imsi := { alt_1 := aLL }
   o := enc_imsi(v_imsi);
   action(o);
   if (match(o, o_all)) { setverdict(pass); }
   else { setverdict(fail, match(o, o_all)); }
+  v_result := dec_imsi(o);
+  // Will be encoded into the first field (alt_)
+  var charstring all_ := "ALL";
+  v_imsi := { alt_ := all_ }
+  if (match(v_result, v_imsi)) { setverdict(pass); }
+  else { setverdict(fail, match(v_result, v_imsi)); }
 }
 
 control {

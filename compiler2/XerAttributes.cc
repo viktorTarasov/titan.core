@@ -62,6 +62,7 @@ XerAttributes::XerAttributes()
 , useType_(false)
 , useUnion_(false)
 , whitespace_(PRESERVE)
+, xsd_type(XSD_NONE)
 {
   //__asm("int3");
   //fprintf(stderr, "XER attributes(%p) new\n", (void*)this);
@@ -378,6 +379,10 @@ other.print("other");
   useType_ |= other.useType_;
   useUnion_ |= other.useUnion_;
   whitespace_ = other.whitespace_;
+
+  if (other.xsd_type != XSD_NONE) {
+    xsd_type = other.xsd_type;
+  }
   return *this;
 }
 
@@ -407,6 +412,7 @@ bool XerAttributes::empty() const
   && !useQName_
   && !useType_
   && !useUnion_
-  && whitespace_ == PRESERVE;
+  && whitespace_ == PRESERVE
+  && xsd_type == XSD_NONE;
 }
 

@@ -26,6 +26,9 @@ type union ProductId {
 }
 with {
   variant "useUnion"
+  variant (c1) "XSD:integer";
+  variant (c2) "XSD:integer";
+  variant (c3) "XSD:integer";
 }
 
 type record ProductUU {
@@ -44,12 +47,18 @@ const ProductUU uuval := {
   color := "green"
 }
 
+const ProductUU uuval_decoded := {
+  id := { c1 := 100 },
+  price := 25.34,
+  color := "green"
+}
+
 DECLARE_XER_ENCODERS(ProductUU, uu);
 DECLARE_EXER_ENCODERS(ProductUU, uu);
 
 const universal charstring str_uu_e :=
 "<exm:ProductUU xmlns:exm=\'http://www.example.com\' xmlns:xsi=\'http://www.w3.org/2001/XMLSchema-instance\'>\n" &
-"\t<id xsi:type=\'c2\'>100</id>\n" &
+"\t<id xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:integer'>100</id>\n" &
 "\t<price>25.340000</price>\n" &
 "\t<color>green</color>\n" &
 "</exm:ProductUU>\n" &
@@ -74,7 +83,7 @@ testcase encode_uu() runs on UU
 testcase decode_uu() runs on UU
 {
   CHECK_DECODE(bxer_dec_uu, str_uu_b, ProductUU, uuval);
-  CHECK_DECODE(exer_dec_uu, str_uu_e, ProductUU, uuval);
+  CHECK_DECODE(exer_dec_uu, str_uu_e, ProductUU, uuval_decoded); // 100 is decoded into c1
 }
 
 /* * * * * * * * HM81496 * * * * * * * * */
@@ -94,8 +103,10 @@ with {
   variant "useUnion";
   variant (integer_) "name as 'integer'";
   variant (boolean_) "name as 'boolean'";
+  variant (integer_) "XSD:integer";
   variant (boolean_) "text 'true' as '1'";
   variant (boolean_) "text 'false' as '0'";
+  variant (boolean_) "XSD:boolean";
 };
 
 DECLARE_XER_ENCODERS(E21named, e21n);
@@ -106,10 +117,10 @@ const E21named e21_b := { boolean_ := true }
 
 
 const universal charstring estr_e21_i :=
-"<E21named xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:type='integer'>1</E21named>\n\n";
+"<E21named xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:integer'>1</E21named>\n\n";
 
 const universal charstring estr_e21_b :=
-"<E21named xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:type='boolean'>1</E21named>\n\n";
+"<E21named xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:boolean'>1</E21named>\n\n";
 
 
 testcase encode_e21n() runs on UU
@@ -341,6 +352,14 @@ type union UUVal {
 } with {
   variant "name as 'UU'";
   variant "useUnion";
+  variant (i) "XSD:integer";
+  variant (b) "XSD:boolean";
+  variant (os) "XSD:hexBinary";
+  variant (hs) "XSD:token";
+  variant (f) "XSD:float";
+  variant (size) "XSD:string";
+  variant (cs) "XSD:normalizedString";
+  variant (ucs) "XSD:Name";
 }
 
 type record of UUVal UURec;
@@ -380,17 +399,17 @@ const UUList c_uu_list := {
 
 const universal charstring str_uu_rec :=
 "<UURec xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>\n" &
-"\t<UU xsi:type='i'>19</UU>\n" &
-"\t<UU xsi:type='cs'>xyz</UU>\n" &
-"\t<UU xsi:type='size'>Small</UU>\n" &
-"\t<UU xsi:type='bs'>1101</UU>\n" &
-"\t<UU xsi:type='b'>true</UU>\n" &
-"\t<UU xsi:type='vt'>inconc</UU>\n" &
-"\t<UU xsi:type='f'>1.600000</UU>\n" &
-"\t<UU xsi:type='hs'>164FA</UU>\n" &
-"\t<UU xsi:type='os'>1BC6</UU>\n" &
-"\t<UU xsi:type='ucs'>ab" & char(0, 0, 1, 113) & "</UU>\n" &
-"\t<UU xsi:type='roi'>1 4 5 7 6 6 4</UU>\n" &
+"\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:integer'>19</UU>\n" &
+"\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:normalizedString'>xyz</UU>\n" &
+"\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:string'>Small</UU>\n" &
+"\t<UU>1101</UU>\n" &
+"\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:boolean'>true</UU>\n" &
+"\t<UU>inconc</UU>\n" &
+"\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:float'>1.600000</UU>\n" &
+"\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:token'>164FA</UU>\n" &
+"\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:hexBinary'>1BC6</UU>\n" &
+"\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:Name'>ab" & char(0, 0, 1, 113) & "</UU>\n" &
+"\t<UU>1 4 5 7 6 6 4</UU>\n" &
 "</UURec>\n\n";
 
 const universal charstring str_uu_list :=

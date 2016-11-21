@@ -254,6 +254,8 @@ type union UU
 }
 with {
   variant "useUnion";
+  variant (i) "XSD:integer";
+  variant (s) "XSD:string";
 }
 
 external function encUU(in UU u) return octetstring
@@ -269,8 +271,9 @@ template Nodes t_uu_i := {
   { XML_READER_TYPE_ELEMENT    , 0, "UU", "", "" },
   { XML_READER_TYPE_ATTRIBUTE  , 1, "xmlns:xsi",      "http://www.w3.org/2001/XMLSchema-instance", "http://www.w3.org/2000/xmlns/" },
   // this is the value     for "xmlns:xsi" ------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  { XML_READER_TYPE_ATTRIBUTE  , 1, "xmlns:xsd",      "http://www.w3.org/2001/XMLSchema",          "http://www.w3.org/2000/xmlns/" },
   // this is the namespace for "xsi:type"  ------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  { XML_READER_TYPE_ATTRIBUTE  , 1, "xsi:type" , "i", "http://www.w3.org/2001/XMLSchema-instance" },
+  { XML_READER_TYPE_ATTRIBUTE  , 1, "xsi:type" , "xsd:integer", "http://www.w3.org/2001/XMLSchema-instance" },
   { XML_READER_TYPE_TEXT       , 1, "#text", "42", "" },
   { XML_READER_TYPE_END_ELEMENT, 0, "UU", "", "" }
 }
@@ -284,8 +287,9 @@ template Nodes t_uu_s := {
   { XML_READER_TYPE_ELEMENT    , 0, "UU", "", "" },
   { XML_READER_TYPE_ATTRIBUTE  , 1, "xmlns:xsi",      "http://www.w3.org/2001/XMLSchema-instance", "http://www.w3.org/2000/xmlns/" },
   // this is the value     for "xmlns:xsi" ------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  { XML_READER_TYPE_ATTRIBUTE  , 1, "xmlns:xsd",      "http://www.w3.org/2001/XMLSchema",          "http://www.w3.org/2000/xmlns/" },
   // this is the namespace for "xsi:type"  ------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  { XML_READER_TYPE_ATTRIBUTE  , 1, "xsi:type" , "s", "http://www.w3.org/2001/XMLSchema-instance" },
+  { XML_READER_TYPE_ATTRIBUTE  , 1, "xsi:type" , "xsd:string", "http://www.w3.org/2001/XMLSchema-instance" },
   { XML_READER_TYPE_TEXT       , 1, "#text", "Hello, world!", "" },
   { XML_READER_TYPE_END_ELEMENT, 0, "UU", "", "" }
 }

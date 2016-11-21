@@ -28,6 +28,7 @@
 #include "union.h"
 #include "record_of.h"
 #include "functionref.h"
+#include "XSD_Types.hh"
 
 
 #include "ttcn3/Ttcnstuff.hh"
@@ -506,6 +507,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
   text=0, untagged=0, use_nil=0, use_number=0, use_order=0, use_qname=0,
   use_type_attr=0, ws=0, has_1untag=0, form_qualified=0, any_from=0, 
   any_except=0, nof_ns_uris=0, blocked=0, fractionDigits=-1;
+  const char* xsd_type = "XSD_NONE";
   const char* dfe_str = 0;
   char** ns_uris = 0;
   char* oftype_descr_name = 0;
@@ -541,6 +543,8 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     // (encoder's choice) for USE-UNION. However, TTCN-3 removes this choice:
     // it is mandatory to use it when possible (valid choice for ASN.1 too).
     use_type_attr = xerattrib->useType_ || xerattrib->useUnion_;
+    
+    xsd_type = XSD_type_to_string(xerattrib->xsd_type);
 
     if (xerattrib->defaultValue_) {
       Type *t = xerattrib->defaultValue_->get_my_governor();
@@ -625,7 +629,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
   target->source.global_vars = mputprintf(target->source.global_vars,
     "const XERdescriptor_t       %s_xer_ = { {\"%s>\\n\", \"%s>\\n\"},"
     " {%lu, %lu}, %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s, WHITESPACE_%s, %c%s, "
-    "&%s, %ld, %u, %s, %s, %i };\n",
+    "&%s, %ld, %u, %s, %s, %i, %s };\n",
     gennameown_str,
     bxer_name.c_str(), last_s.c_str(), // names
     (unsigned long)bxer_len, (unsigned long)last_len, // lengths
@@ -656,7 +660,8 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     nof_ns_uris,
     (ns_uris_var ? ns_uris_var : "NULL"),
     (oftype_descr_name ? oftype_descr_name : "NULL"),
-    fractionDigits
+    fractionDigits,
+    xsd_type
     );
   
   Free(ns_uris_var);
@@ -1182,6 +1187,10 @@ void Type::generate_code_Choice(output_struct *target)
     if (xerattrib) {
       if (cftype->has_empty_xml()) sdef.exerMaybeEmptyIndex = i;
       // This will overwrite lower values, which is what we want.
+      
+      if (cftype->xerattrib != NULL) {
+        sdef.elements[i].xsd_type = cftype->xerattrib->xsd_type;
+      }
     }
     if (sdef.jsonAsValue) {
       // Determine the JSON value type of each field to make decoding faster
@@ -1336,7 +1345,7 @@ void Type::generate_code_Choice(output_struct *target)
     sdef.control_ns_prefix = prefix;
     sdef.xerUseUnion = xerattrib->useUnion_;
     sdef.xerUseTypeAttr  = xerattrib->useType_ || xerattrib->useUnion_;
-  }
+        }
   defUnionClass(&sdef, target);
   defUnionTemplate(&sdef, target);
 

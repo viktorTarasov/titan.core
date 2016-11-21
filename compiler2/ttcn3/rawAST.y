@@ -10,6 +10,7 @@
  *   Baranyi, Botond
  *   Raduly, Csaba
  *   Szabo, Janos Zoltan – initial implementation
+ *   Szabo, Bence Janos
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
  *
@@ -1502,60 +1503,64 @@ whiteSpace:
 xsddata: /* XSD:something */
     XSDbase64Binary {
       xerstruct->base64_ = true;
+      xerstruct->xsd_type = XSD_BASE64BINARY;
     }
     | XSDdecimal {
       xerstruct->decimal_ = true;
+      xerstruct->xsd_type = XSD_DECIMAL;
     }
     | XSDhexBinary {
       xerstruct->hex_ = true;
+      xerstruct->xsd_type = XSD_HEXBINARY;
     }
     | XSDQName {
       xerstruct->useQName_ = true;
+      xerstruct->xsd_type = XSD_QNAME;
     }
-    /* everything below is recognized and ignored */
-    | XKWshort {}
-    | XKWlong {}
-    | XSDstring           {}
-    | XSDnormalizedString {}
-    | XSDtoken            {}
-    | XSDName             {}
-    | XSDNMTOKEN          {}
-    | XSDNCName           {}
-    | XSDID               {}
-    | XSDIDREF            {}
-    | XSDENTITY           {}
-    | XSDanyURI           {}
-    | XSDlanguage         {}
+    /* everything below is recognized */
+    | XKWshort { xerstruct->xsd_type = XSD_SHORT; }
+    | XKWlong { xerstruct->xsd_type = XSD_LONG; }
+    | XSDstring           { xerstruct->xsd_type = XSD_STRING; }
+    | XSDnormalizedString { xerstruct->xsd_type = XSD_NORMALIZEDSTRING; }
+    | XSDtoken            { xerstruct->xsd_type = XSD_TOKEN; }
+    | XSDName             { xerstruct->xsd_type = XSD_NAME; }
+    | XSDNMTOKEN          { xerstruct->xsd_type = XSD_NMTOKEN; }
+    | XSDNCName           { xerstruct->xsd_type = XSD_NCName; }
+    | XSDID               { xerstruct->xsd_type = XSD_ID; }
+    | XSDIDREF            { xerstruct->xsd_type = XSD_IDREF; }
+    | XSDENTITY           { xerstruct->xsd_type = XSD_ENTITY; }
+    | XSDanyURI           { xerstruct->xsd_type = XSD_ANYURI; }
+    | XSDlanguage         { xerstruct->xsd_type = XSD_LANGUAGE; }
     /* TODO apply subtype to the types below */
-    | XSDinteger          {}
-    | XSDpositiveInteger  {}
-    | XSDnonPositiveInteger {}
-    | XSDnegativeInteger {}
-    | XSDnonNegativeInteger {}
-    | XSDunsignedLong     {}
-    | XSDint              {}
-    | XSDunsignedInt      {}
-    | XSDunsignedShort    {}
-    | XSDbyte             {}
-    | XSDunsignedByte     {}
-    | XSDfloat            {}
-    | XSDdouble           {}
-    | XSDduration         {}
-    | XSDdateTime         {}
-    | XSDtime             {}
-    | XSDdate             {}
-    | XSDgYearMonth       {}
-    | XSDgYear            {}
-    | XSDgMonthDay        {}
-    | XSDgDay             {}
-    | XSDgMonth           {}
-    | XSDNMTOKENS         {}
-    | XSDIDREFS           {}
-    | XSDENTITIES         {}
-    | XSDboolean          {}
+    | XSDinteger          { xerstruct->xsd_type = XSD_INTEGER; }
+    | XSDpositiveInteger  { xerstruct->xsd_type = XSD_POSITIVEINTEGER; }
+    | XSDnonPositiveInteger { xerstruct->xsd_type = XSD_NONPOSITIVEINTEGER; }
+    | XSDnegativeInteger { xerstruct->xsd_type = XSD_NEGATIVEINTEGER; }
+    | XSDnonNegativeInteger { xerstruct->xsd_type = XSD_NONNEGATIVEINTEGER; }
+    | XSDunsignedLong     { xerstruct->xsd_type = XSD_UNSIGNEDLONG; }
+    | XSDint              { xerstruct->xsd_type = XSD_INT; }
+    | XSDunsignedInt      { xerstruct->xsd_type = XSD_UNSIGNEDINT; }
+    | XSDunsignedShort    { xerstruct->xsd_type = XSD_UNSIGNEDSHORT; }
+    | XSDbyte             { xerstruct->xsd_type = XSD_BYTE; }
+    | XSDunsignedByte     { xerstruct->xsd_type = XSD_UNSIGNEDBYTE; }
+    | XSDfloat            { xerstruct->xsd_type = XSD_FLOAT; }
+    | XSDdouble           { xerstruct->xsd_type = XSD_DOUBLE; }
+    | XSDduration         { xerstruct->xsd_type = XSD_DURATION; }
+    | XSDdateTime         { xerstruct->xsd_type = XSD_DATETIME; }
+    | XSDtime             { xerstruct->xsd_type = XSD_TIME; }
+    | XSDdate             { xerstruct->xsd_type = XSD_DATE; }
+    | XSDgYearMonth       { xerstruct->xsd_type = XSD_GYEARMONTH; }
+    | XSDgYear            { xerstruct->xsd_type = XSD_GYEAR; }
+    | XSDgMonthDay        { xerstruct->xsd_type = XSD_GMONTHDAY; }
+    | XSDgDay             { xerstruct->xsd_type = XSD_GDAY; }
+    | XSDgMonth           { xerstruct->xsd_type = XSD_GMONTH; }
+    | XSDNMTOKENS         { xerstruct->xsd_type = XSD_NMTOKENS; }
+    | XSDIDREFS           { xerstruct->xsd_type = XSD_IDREFS; }
+    | XSDENTITIES         { xerstruct->xsd_type = XSD_ENTITIES; }
+    | XSDboolean          { xerstruct->xsd_type = XSD_BOOLEAN; }
 
-    | XSDanySimpleType    {}
-    | XSDanyType          {}
+    | XSDanySimpleType    { xerstruct->xsd_type = XSD_ANYSIMPLETYPE; }
+    | XSDanyType          { xerstruct->xsd_type = XSD_ANYTYPE; }
 
 ;
 

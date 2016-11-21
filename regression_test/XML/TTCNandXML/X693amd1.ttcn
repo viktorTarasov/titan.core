@@ -38,7 +38,9 @@ type union Int_or_boolean_u {
 }
 with {
   variant "useUnion";
-  variant (boolean_) "name as 'boolean'"
+  variant (int) "XSD:integer";
+  variant (boolean_) "name as 'boolean'";
+  variant (boolean_) "XSD:boolean";
 }
 
 //---------- C.3.2  USE-TYPE
