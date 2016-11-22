@@ -54,7 +54,7 @@ static int checkSyntax(const bool not_verbose, const int first_module, const int
   const char * const * const module_names);
 static int validate(int const first_module, int const last_module,
   const char * const * const module_names);
-static int get_xsd_module_names(const bool quiet, const int first_module, 
+static int get_xsd_module_names(const int first_module, 
   const int last_module, const char * const * const module_names);
 static int generateCode(const bool quiet, const bool need_predefined,
   const int first_module, const int last_module,
@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
     }
     
     if (n_flag_used) {
-      get_xsd_module_names(q_flag_used, first_module, last_module, module_names);
+      get_xsd_module_names(first_module, last_module, module_names);
       return EXIT_SUCCESS;
     }
 
@@ -215,6 +215,13 @@ int main(int argc, char **argv) {
       Free(module_names);
     }
     return EXIT_FAILURE;
+  }
+  
+  if (f_flag_used) {
+    for (int i = 0; i < last_module; ++i) {
+      Free(module_names[i]);
+    }
+    Free(module_names);
   }
 
   if (XMLParser::getNumWarnings() > 0 ||
@@ -389,7 +396,7 @@ static int checkSyntax(const bool not_verbose, const int first_module, const int
   return EXIT_SUCCESS;
 }
 
-static int get_xsd_module_names(const bool quiet, const int first_module, 
+static int get_xsd_module_names(const int first_module, 
   const int last_module, const char * const * const module_names) {
   TTCN3ModuleInventory& modules = TTCN3ModuleInventory::getInstance();
   for (int i = first_module; i < last_module; ++i) {

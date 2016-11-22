@@ -33,6 +33,9 @@ ComplexType::ComplexType(XMLParser * a_parser, TTCN3Module * a_module, Construct
 , with_union(false)
 , first_child(false)
 , fromAll(false)
+, listPrint(false)
+, listMinOccurs(1)
+, listMaxOccurs(1)
 , max_alt(0)
 , skipback(0)
 , lastType()
@@ -60,6 +63,9 @@ ComplexType::ComplexType(ComplexType & other)
 , with_union(other.with_union)
 , first_child(other.first_child)
 , fromAll(other.fromAll)
+, listPrint(other.listPrint)
+, listMinOccurs(other.listMinOccurs)
+, listMaxOccurs(other.listMaxOccurs)
 , max_alt(other.max_alt)
 , skipback(other.skipback)
 , lastType(other.lastType)
@@ -107,6 +113,9 @@ ComplexType::ComplexType(ComplexType * other)
 , with_union(false)
 , first_child(false)
 , fromAll(false)
+, listPrint(false)
+, listMinOccurs(1)
+, listMaxOccurs(1)
 , max_alt(0)
 , skipback(0)
 , lastType()
@@ -136,6 +145,9 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
 , with_union(false)
 , first_child(false)
 , fromAll(false)
+, listPrint(false)
+, listMinOccurs(1)
+, listMaxOccurs(1)
 , max_alt(0)
 , skipback(0)
 , lastType()
@@ -283,7 +295,7 @@ void ComplexType::loadWithValues() {
     case n_restriction:
       mode = restrictionMode;
       //If it is an xsd:union then call SimpleType::loadWithValues
-      if (parent != NULL && parent->with_union) {
+      if (parent != NULL && parent->with_union && parent->hasVariant(Mstring("useUnion"))) {
         SimpleType::loadWithValues();
         break;
       }
@@ -549,11 +561,13 @@ void ComplexType::loadWithValues() {
       xsdtype = parser->getActualTagName();
       cmode = CT_simpletype_mode;
       Mstring fieldname;
-      if (with_union) {
+      if (with_union && hasVariant(Mstring("useUnion"))) {
         if (max_alt == 0) {
           fieldname = Mstring("alt_");
         } else {
-          fieldname = mprintf("alt_%d", max_alt);
+          expstring_t new_name = mprintf("alt_%d", max_alt);
+          fieldname = new_name;
+          Free(new_name);
         }
         max_alt++;
         ComplexType * field = new ComplexType(this);
@@ -587,10 +601,38 @@ void ComplexType::loadWithValues() {
       break;
     case n_list:
       if (parent != NULL && parent->basefield == this) {
-        parent->SimpleType::loadWithValues();
+        if (parent->getMaxOccurs() == 1) { // optional or minOccurs = maxOccurs = 1
+          if (parent->getMinOccurs() == 0) {
+            parent->isOptional = true;
+            if (parent->parent != NULL && parent->parent->getXsdtype() == n_choice) {
+              parent->listPrint = true;
+              parent->listMinOccurs = parent->getMinOccurs();
+              parent->listMaxOccurs = parent->getMaxOccurs();
+            }
+          }
+        } else if (parent->parent != NULL){
+          parent->listPrint = true;
+          parent->listMinOccurs = parent->getMinOccurs();
+          parent->listMaxOccurs = parent->getMaxOccurs();
+        }
         parent->basefield = NULL;
+        parent->SimpleType::loadWithValues();
         setInvisible();
       } else if(parent != NULL) {
+        if (getMaxOccurs() == 1) { // optional or minOccurs = maxOccurs = 1
+          if (getMinOccurs() == 0) {
+            isOptional = true;
+            if (parent->getXsdtype() == n_choice) {
+              listPrint = true;
+              listMinOccurs = getMinOccurs();
+              listMaxOccurs = getMaxOccurs();
+            }
+          }
+        } else {
+          listPrint = true;
+          listMinOccurs = getMinOccurs();
+          listMaxOccurs = getMaxOccurs();
+        }
         SimpleType::loadWithValues();
       }
       break;
@@ -628,7 +670,6 @@ void ComplexType::modifyValues() {
   if (xsdtype == n_sequence) {
     skipback = skipback - 1;
   }
-  
 
   if ( parent != NULL && 
       (xsdtype == n_element || 
@@ -969,7 +1010,7 @@ void ComplexType::setFieldPaths(Mstring path) {
 void ComplexType::finalModification2() {  
   //Call SimpleType finalModification
   SimpleType::finalModification();
-
+  
   //Set isOptional field
   isOptional = isOptional || (getMinOccurs() == 0 && getMaxOccurs() == 1);
   
@@ -1034,7 +1075,9 @@ void ComplexType::finalModification2() {
         if (number == 0) {
           field->Data->name.upload(Mstring("alt_"));
         } else {
-          field->Data->name.upload(Mstring(mprintf("alt_%d", number)));
+          expstring_t new_name = mprintf("alt_%d", number);
+          field->Data->name.upload(Mstring(new_name));
+          Free(new_name);
         }
         number++;
       }
@@ -1191,24 +1234,39 @@ void ComplexType::printToFile(FILE * file, const unsigned level, const bool is_u
         if ((multiplicity > 1) && getReference().get_ref()) {
           fprintf(file, "%s.", getReference().get_ref()->getModule()->getModulename().c_str());
         }
-        if (field_is_record || field_is_union) {
-          printMinOccursMaxOccurs(file, with_union, !first_child || parent->getXsdtype() != n_choice);
-          fprintf(file, "%s {\n", getType().convertedValue.c_str());
-          for (List<AttributeType*>::iterator f = attribfields.begin(); f; f = f->Next) {
-            f->Data->printToFile(file, level + 1);
-            if (f->Next != NULL || !complexfields.empty()) {
-              fprintf(file, ",\n");
-            } else {
-              fprintf(file, "\n");
-            }
+        if (field_is_record || field_is_union || listPrint) {
+          unsigned long long int tempMin = getMinOccurs();
+          unsigned long long int tempMax = getMaxOccurs();
+          if (listPrint) {
+            setMinOccurs(listMinOccurs);
+            setMaxOccurs(listMaxOccurs);
           }
+          printMinOccursMaxOccurs(file, with_union, !first_child || parent->getXsdtype() != n_choice);
+          if (listPrint) {
+            setMinOccurs(tempMin);
+            setMaxOccurs(tempMax);
+          }
+          if (listPrint && complexfields.size() == 0) {
+            printMinOccursMaxOccurs(file, false);
+            fprintf(file, "%s ",getType().convertedValue.c_str());
+          } else {
+            fprintf(file, "%s {\n", getType().convertedValue.c_str());
+            for (List<AttributeType*>::iterator f = attribfields.begin(); f; f = f->Next) {
+              f->Data->printToFile(file, level + 1);
+              if (f->Next != NULL || !complexfields.empty()) {
+                fprintf(file, ",\n");
+              } else {
+                fprintf(file, "\n");
+              }
+            }
 
-          for (List<ComplexType*>::iterator c = complexfields.begin(); c; c = c->Next) {
-            c->Data->printToFile(file, level + 1, is_union);
-            if (c->Next != NULL) {
-              fprintf(file, ",\n");
-            } else {
-              fprintf(file, "\n");
+            for (List<ComplexType*>::iterator c = complexfields.begin(); c; c = c->Next) {
+              c->Data->printToFile(file, level + 1, is_union);
+              if (c->Next != NULL) {
+                fprintf(file, ",\n");
+              } else {
+                fprintf(file, "\n");
+              }
             }
           }
         } else {
@@ -1230,7 +1288,7 @@ void ComplexType::printToFile(FILE * file, const unsigned level, const bool is_u
           }
         }
       }
-      if (field_is_record || field_is_union) {
+      if ((field_is_record || field_is_union) && !listPrint) {
         indent(file, level);
         fprintf(file, "} ");
       }
@@ -1443,16 +1501,14 @@ void ComplexType::setMinMaxOccurs(const unsigned long long min, const unsigned l
       }
       if (parent != NULL && parent->getXsdtype() == n_choice) {
         name.list_extension = true;
-        if ((parent != NULL && parent->getXsdtype() == n_choice)) {
-          if (parent->first_child == false && getMinOccurs() == 0) {
-            parent->first_child = true;
-            with_union = true;
-            first_child = false;
-          } else {
-            with_union = true;
-            first_child = true;
-          }
-        }
+        if (parent->first_child == false && getMinOccurs() == 0) {
+          parent->first_child = true;
+          with_union = true;
+          first_child = false;
+        } else {
+          with_union = true;
+          first_child = true;
+        }       
       }
     }
   }
@@ -1481,8 +1537,8 @@ void ComplexType::applyNamespaceAttribute(VariantMode varLabel, const Mstring& n
   // of XML Schema. It is either ##any, ##other, ##local, ##targetNamespace,
   // or a list of (namespace reference | ##local | ##targetNamespace).
   for (List<Mstring>::iterator ns = namespaces.begin(); ns; ns = ns->Next) {
-    static const Mstring xxany("##any"), xxother("##other"), xxlocal("##local"),
-      xxtargetNamespace("##targetNamespace");
+    static char xxany[] = "##any", xxother[] = "##other", xxlocal[] = "##local",
+      xxtargetNamespace[] = "##targetNamespace";
     if (!first) any_ns += ',';
 
     if (ns->Data == xxany) {
@@ -1662,14 +1718,14 @@ void ComplexType::resolveAttributeGroup(SimpleType * st) {
       }
     }
     for (List<AttributeType*>::iterator attr = ct->attribfields.begin(); attr; attr = attr->Next) {
-      AttributeType * attrib = new AttributeType(*attr->Data);
-      attr->Data->setOrigModule(ct->getModule());
-      if (addNameSpaceas) {
-        attrib->addVariant(V_namespaceAs, ct->getModule()->getTargetNamespace());
-      }
       if (anyAttrib != NULL && attr->Data->isAnyAttribute()) {
         anyAttrib->Data->addNameSpaceAttribute(attr->Data->getNameSpaceAttribute());
       } else {
+        AttributeType * attrib = new AttributeType(*attr->Data);
+        attr->Data->setOrigModule(ct->getModule());
+        if (addNameSpaceas) {
+          attrib->addVariant(V_namespaceAs, ct->getModule()->getTargetNamespace());
+        }
         //Nillable attribute placement is hard...
         if (parent->nillable && parent->parent != NULL) {
           parent->parent->attribfields.push_back(attrib);

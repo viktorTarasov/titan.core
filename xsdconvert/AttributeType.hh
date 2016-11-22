@@ -43,7 +43,6 @@ public:
   explicit AttributeType(ComplexType * a_complextype);
   AttributeType(const AttributeType & other);
   AttributeType & operator=(const AttributeType & rhs);
-  virtual ~AttributeType();
   void setTypeOfField(const Mstring& in);
   void setNameOfField(const Mstring& in);
 

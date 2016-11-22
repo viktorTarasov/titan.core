@@ -69,7 +69,12 @@ private:
   bool with_union;
   bool first_child;
   bool fromAll;
-  unsigned max_alt;
+  bool listPrint; // true if embeddedList was true or wasInEmbeddedList was true
+                  // both will be changed to false during the conversion. This
+                  // variable remembers.
+  unsigned long long int listMinOccurs; // MinOccurs of the list when in an element
+  unsigned long long int listMaxOccurs; // MaxOccurs of the list when in an element
+  unsigned int max_alt;
   int skipback;
   TagName lastType;
   Mstring actualPath;

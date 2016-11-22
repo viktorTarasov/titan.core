@@ -31,10 +31,6 @@ AttributeType::AttributeType(const AttributeType & other)
 , origModule(other.getModule()) {
 }
 
-AttributeType::~AttributeType() {
-
-}
-
 void AttributeType::modifyValues() {
   if (parser->getActualTagName() == n_attribute || parser->getActualTagName() == n_anyAttribute) {
     ((ComplexType*) parent)->modifyAttributeParent();

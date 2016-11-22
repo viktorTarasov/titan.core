@@ -333,7 +333,7 @@ void TTCN3Module::generate_with_statement(FILE * file, List<NamespaceType> used_
 
   if (xsi) {
     fprintf(file,
-      "  variant \"controlNamespace \'%s-instance\' prefix \'xsi\'\";\n", XMLSchema.c_str());
+      "  variant \"controlNamespace \'%s-instance\' prefix \'xsi\'\";\n", XMLSchema);
   }
   if (attributeFormDefault == qualified) {
     fprintf(file,

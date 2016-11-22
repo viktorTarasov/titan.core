@@ -350,7 +350,7 @@ void XMLParser::startelementHandler(const xmlChar * localname,
 }
 
 void XMLParser::startelementHandlerWhenXSDRead(const xmlChar * localname,
-  int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, const xmlChar ** attributes) {
+  int /*nb_namespaces*/, const xmlChar ** /*namespaces*/, int /*nb_attributes*/, const xmlChar ** /*attributes*/) {
   if (strcmp((const char*)localname, "schema") == 0) {
     // Don't parse beyond the schema tag.
     xmlStopParser(contextCheckingXML);

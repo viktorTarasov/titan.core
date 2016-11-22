@@ -646,6 +646,7 @@ void SimpleType::referenceForCT(ComplexType * found_CT) {
           expstring_t tmp_string = mprintf("{%s:=%d}",
             field->Data->getName().convertedValue.c_str(), val);
           value.items_with_value.push_back(Mstring(tmp_string));
+          Free(tmp_string);
           break;
         }
       }
@@ -658,6 +659,7 @@ void SimpleType::referenceForCT(ComplexType * found_CT) {
           expstring_t tmp_string = mprintf("{%s:=%f}",
             field->Data->getName().convertedValue.c_str(), val);
           value.items_with_value.push_back(Mstring(tmp_string));
+          Free(tmp_string);
           break;
         }
       }
@@ -667,6 +669,7 @@ void SimpleType::referenceForCT(ComplexType * found_CT) {
           expstring_t tmp_string = mprintf("{%s:=\"%s\"}",
             field->Data->getName().convertedValue.c_str(), itemMisc->Data.c_str());
           value.items_with_value.push_back(Mstring(tmp_string));
+          Free(tmp_string);
           break;
         }
       }
@@ -675,6 +678,7 @@ void SimpleType::referenceForCT(ComplexType * found_CT) {
         expstring_t tmp_string = mprintf("{%s:=\"%s\"}",
           field->Data->getName().convertedValue.c_str(), itemMisc->Data.c_str());
         value.items_with_value.push_back(Mstring(tmp_string));
+        Free(tmp_string);
         break;
       }
     }
@@ -853,7 +857,7 @@ void SimpleType::printToFile(FILE * file) {
 
 void SimpleType::dump(unsigned int depth) const {
   static const char *modes[] = {
-    "", "restriction", "extension", "list"
+    "", "restriction", "extension", "list", "restrictionAfterList"
   };
   fprintf(stderr, "%*s SimpleType '%s' -> '%s' at %p\n", depth * 2, "",
     name.originalValueWoPrefix.c_str(), name.convertedValue.c_str(),

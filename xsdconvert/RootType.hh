@@ -215,11 +215,11 @@ public:
       max_mod = true;
   }
   
-  const bool getMinMod() const {
+  bool getMinMod() const {
       return min_mod;
   }
   
-  const bool getMaxMod() const {
+  bool getMaxMod() const {
       return max_mod;
   }
 

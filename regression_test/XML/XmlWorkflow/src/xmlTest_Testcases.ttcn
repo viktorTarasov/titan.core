@@ -1083,6 +1083,17 @@ group ListTest {
     }
 
   }//tc_
+
+  testcase tc_list_minmaxoccurs() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & "  listMinMaxOccurs.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "http_www_example_org_list_minmaxoccurs_e.ttcn","http_www_example_org_list_minmaxoccurs.ttcn", c_numOfDiff_headerAndModuleName);
+    }
+
+  }//tc_
 }//ListTest
 
 group UnionTest {
@@ -2622,6 +2633,7 @@ control {
   execute(tc_integerList());//Passed
   execute(tc_list_simpletype());//Passed
   execute(tc_list_complextype());
+  execute(tc_list_minmaxoccurs());
   //===Float===
   execute(tc_float_not_a_number());
 
