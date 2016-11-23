@@ -26,7 +26,6 @@
 
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
 #include "Error.hh"
 #include "CharCoding.hh"
 
@@ -40,6 +39,9 @@ class UNIVERSAL_CHARSTRING_ELEMENT;
 class UNIVERSAL_CHARSTRING_template;
 class INTEGER;
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 extern boolean operator==(const universal_char& left_value,
   const universal_char& right_value);
@@ -546,6 +548,7 @@ private:
     } value_list;
     struct {
       boolean min_is_set, max_is_set;
+      boolean min_is_exclusive, max_is_exclusive;
       universal_char min_value, max_value;
     } value_range;
     mutable struct {
@@ -613,6 +616,8 @@ public:
 
   void set_min(const UNIVERSAL_CHARSTRING& min_value);
   void set_max(const UNIVERSAL_CHARSTRING& max_value);
+  void set_min_exclusive(boolean min_exclusive);
+  void set_max_exclusive(boolean max_exclusive);
   
   void set_decmatch(Dec_Match_Interface* new_instance, const char* coding_str = NULL);
   

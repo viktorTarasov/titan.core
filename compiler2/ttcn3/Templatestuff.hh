@@ -13,6 +13,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *
  ******************************************************************************/
@@ -41,20 +42,27 @@ namespace Ttcn {
   private:
     Value *min_v;
     Value *max_v;
+    bool min_exclusive;
+    bool max_exclusive;
+    Type::typetype_t type;
 
     /// Copy constructor for clone() only
     ValueRange(const ValueRange& p);
     /// %Assignment disabled
     ValueRange& operator=(const ValueRange& p);
   public:
-    ValueRange(Value *p_min_v, Value *p_max_v)
-      : Node(), min_v(p_min_v), max_v(p_max_v) { }
+    ValueRange(Value *p_min_v, bool lower_excl, Value *p_max_v, bool upper_excl)
+      : Node(), min_v(p_min_v), max_v(p_max_v),
+        min_exclusive(lower_excl), max_exclusive(upper_excl), type() { }
     virtual ~ValueRange();
     virtual ValueRange* clone() const;
     virtual void set_fullname(const string& p_fullname);
     virtual void set_my_scope(Scope *p_scope);
     Value *get_min_v() const { return min_v; }
     Value *get_max_v() const { return max_v; }
+    void set_typetype(Type::typetype_t t);
+    bool is_min_exclusive() const { return min_exclusive; }
+    bool is_max_exclusive() const { return max_exclusive; }
     void set_lowerid_to_ref();
     Type::typetype_t get_expr_returntype(Type::expected_value_t exp_val);
     Type *get_expr_governor(Type::expected_value_t exp_val);

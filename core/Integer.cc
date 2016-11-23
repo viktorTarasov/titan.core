@@ -1742,7 +1742,7 @@ int INTEGER::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_to
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
     // No JSON data in the buffer -> use default value
-    value = (char*)p_td.json->default_value;
+    value = const_cast<char*>(p_td.json->default_value);
     value_len = strlen(value);
   } else {
     dec_len = p_tok.get_next_token(&token, &value, &value_len);
@@ -1930,6 +1930,7 @@ void INTEGER_template::copy_template(const INTEGER_template& other_value)
     break;
   case VALUE_RANGE:
     value_range.min_is_present = other_value.value_range.min_is_present;
+    value_range.min_is_exclusive = other_value.value_range.min_is_exclusive;
     if (value_range.min_is_present) {
       value_range.min_value.native_flag = other_value.value_range.min_value.native_flag;
       if (likely(value_range.min_value.native_flag))
@@ -1940,6 +1941,7 @@ void INTEGER_template::copy_template(const INTEGER_template& other_value)
           BN_dup(other_value.value_range.min_value.val.openssl);
     }
     value_range.max_is_present = other_value.value_range.max_is_present;
+    value_range.max_is_exclusive = other_value.value_range.max_is_exclusive;
     if (value_range.max_is_present) {
       value_range.max_value.native_flag = other_value.value_range.max_value.native_flag;
       if (likely(value_range.max_value.native_flag))
@@ -2101,15 +2103,27 @@ boolean INTEGER_template::match(int other_value, boolean /* legacy */) const
     boolean upper_boundary = !value_range.max_is_present;
     // Lower boundary is set.
     if (!lower_boundary) {
-      lower_boundary = (likely(value_range.min_value.native_flag) ?
+      if (!value_range.min_is_exclusive) {
+        lower_boundary = (likely(value_range.min_value.native_flag) ?
+          int_val_t(value_range.min_value.val.native) :
+            int_val_t(BN_dup(value_range.min_value.val.openssl))) <= other_value;
+      } else {
+        lower_boundary = (likely(value_range.min_value.native_flag) ?
         int_val_t(value_range.min_value.val.native) :
-          int_val_t(BN_dup(value_range.min_value.val.openssl))) <= other_value;
+          int_val_t(BN_dup(value_range.min_value.val.openssl))) < other_value;
+      }
     }
     // Upper boundary is set.
     if (!upper_boundary) {
-      upper_boundary = (likely(value_range.max_value.native_flag) ?
+      if (!value_range.max_is_exclusive) {
+        upper_boundary = (likely(value_range.max_value.native_flag) ?
+          int_val_t(value_range.max_value.val.native) :
+            int_val_t(BN_dup(value_range.max_value.val.openssl))) >= other_value;
+      } else {
+        upper_boundary = (likely(value_range.max_value.native_flag) ?
         int_val_t(value_range.max_value.val.native) :
-          int_val_t(BN_dup(value_range.max_value.val.openssl))) >= other_value;
+          int_val_t(BN_dup(value_range.max_value.val.openssl))) > other_value;
+      }
     }
     return lower_boundary && upper_boundary; }
   default:
@@ -2144,15 +2158,27 @@ boolean INTEGER_template::match(const INTEGER& other_value,
       boolean upper_boundary = !value_range.max_is_present;
       // Lower boundary is set.
       if (!lower_boundary) {
-        lower_boundary = (likely(value_range.min_value.native_flag) ?
-          int_val_t(value_range.min_value.val.native) :
-            int_val_t(BN_dup(value_range.min_value.val.openssl))) <= other_value.get_val();
+        if (!value_range.min_is_exclusive) {
+          lower_boundary = (likely(value_range.min_value.native_flag) ?
+            int_val_t(value_range.min_value.val.native) :
+              int_val_t(BN_dup(value_range.min_value.val.openssl))) <= other_value.get_val();
+        } else {
+          lower_boundary = (likely(value_range.min_value.native_flag) ?
+            int_val_t(value_range.min_value.val.native) :
+              int_val_t(BN_dup(value_range.min_value.val.openssl))) < other_value.get_val();
+        }
       }
       // Upper boundary is set.
       if (!upper_boundary) {
+        if (value_range.max_is_exclusive) {
         upper_boundary = (likely(value_range.max_value.native_flag) ?
           int_val_t(value_range.max_value.val.native) :
-            int_val_t(BN_dup(value_range.max_value.val.openssl))) >= other_value.get_val();
+            int_val_t(BN_dup(value_range.max_value.val.openssl))) > other_value.get_val();
+        } else {
+          upper_boundary = (likely(value_range.max_value.native_flag) ?
+            int_val_t(value_range.max_value.val.native) :
+              int_val_t(BN_dup(value_range.max_value.val.openssl))) >= other_value.get_val();
+        }
       }
       return lower_boundary && upper_boundary; }
     default:
@@ -2186,6 +2212,8 @@ void INTEGER_template::set_type(template_sel template_type,
     set_selection(VALUE_RANGE);
     value_range.min_is_present = FALSE;
     value_range.max_is_present = FALSE;
+    value_range.min_is_exclusive = FALSE;
+    value_range.max_is_exclusive = FALSE;
     break;
   default:
     TTCN_error("Setting an invalid type for an integer template.");
@@ -2215,6 +2243,7 @@ void INTEGER_template::set_min(int min_value)
         "limit in an integer template.");
   }
   value_range.min_is_present = TRUE;
+  value_range.min_is_exclusive = FALSE;
   value_range.min_value.native_flag = TRUE;
   value_range.min_value.val.native = min_value;
 }
@@ -2236,6 +2265,7 @@ void INTEGER_template::set_min(const INTEGER& min_value)
         "limit in an integer template.");
   }
   value_range.min_is_present = TRUE;
+  value_range.min_is_exclusive = FALSE;
   value_range.min_value.native_flag = min_value_int.native_flag;
   if (likely(value_range.min_value.native_flag))
     value_range.min_value.val.native = min_value_int.val.native;
@@ -2255,8 +2285,23 @@ void INTEGER_template::set_max(int max_value)
         "limit in an integer template.");
   }
   value_range.max_is_present = TRUE;
+  value_range.max_is_exclusive = FALSE;
   value_range.max_value.native_flag = TRUE;
   value_range.max_value.val.native = max_value;
+}
+
+void INTEGER_template::set_min_exclusive(boolean min_exclusive)
+{
+  if (template_selection != VALUE_RANGE)
+    TTCN_error("Integer template is not range when setting lower limit exclusiveness.");
+  value_range.min_is_exclusive = min_exclusive;
+}
+
+void INTEGER_template::set_max_exclusive(boolean max_exclusive)
+{
+  if (template_selection != VALUE_RANGE)
+    TTCN_error("Integer template is not range when setting upper limit exclusiveness.");
+  value_range.max_is_exclusive = max_exclusive;
 }
 
 void INTEGER_template::set_max(const INTEGER& max_value)
@@ -2275,6 +2320,7 @@ void INTEGER_template::set_max(const INTEGER& max_value)
         "limit in an integer template.");
   }
   value_range.max_is_present = TRUE;
+  value_range.max_is_exclusive = FALSE;
   value_range.max_value.native_flag = max_value_int.native_flag;
   if (likely(value_range.max_value.native_flag))
     value_range.max_value.val.native = max_value_int.val.native;
@@ -2304,6 +2350,7 @@ void INTEGER_template::log() const
     break;
   case VALUE_RANGE:
     TTCN_Logger::log_char('(');
+    if (value_range.min_is_exclusive) TTCN_Logger::log_char('!');
     if (value_range.min_is_present) {
       int_val_t min_value_int = likely(value_range.min_value.native_flag) ?
         int_val_t(value_range.min_value.val.native) :
@@ -2315,6 +2362,7 @@ void INTEGER_template::log() const
       TTCN_Logger::log_event_str("-infinity");
     }
     TTCN_Logger::log_event_str(" .. ");
+    if (value_range.max_is_exclusive) TTCN_Logger::log_char('!');
     if (value_range.max_is_present) {
       int_val_t max_value_int = likely(value_range.max_value.native_flag) ?
         int_val_t(value_range.max_value.val.native) :
@@ -2389,11 +2437,13 @@ void INTEGER_template::set_param(Module_Param& param) {
       tmp.set_val(*mp->get_lower_int());
       set_min(tmp);
     }
+    set_min_exclusive(mp->get_is_min_exclusive());
     if (mp->get_upper_int()!=NULL) {
       INTEGER tmp;
       tmp.set_val(*mp->get_upper_int());
       set_max(tmp);
     }
+    set_max_exclusive(mp->get_is_max_exclusive());
   } break;
   case Module_Param::MP_Expression:
     switch (mp->get_expr_type()) {
@@ -2496,7 +2546,7 @@ Module_Param* INTEGER_template::get_param(Module_Param_Name& param_name) const
         upper_bound = new int_val_t(BN_dup(value_range.max_value.val.openssl));
       }
     }
-    mp = new Module_Param_IntRange(lower_bound, upper_bound);
+    mp = new Module_Param_IntRange(lower_bound, upper_bound, value_range.min_is_exclusive, value_range.max_is_exclusive);
     break; }
   default:
     break;
@@ -2583,6 +2633,8 @@ void INTEGER_template::decode_text(Text_Buf& text_buf)
         value_range.max_value.val.native = max_value_int.val.native;
       else value_range.max_value.val.openssl = BN_dup(max_value_int.val.openssl);
     }
+    value_range.min_is_exclusive = FALSE;
+    value_range.max_is_exclusive = FALSE;
     break;
   default:
     TTCN_error("Text decoder: An unknown/unsupported selection was received "

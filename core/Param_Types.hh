@@ -11,6 +11,7 @@
  *   Beres, Szabolcs
  *   Delic, Adam
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 #ifndef PARAM_TYPES_H
@@ -273,6 +274,8 @@ public:
   virtual void* get_string_data() const;
   virtual int_val_t* get_lower_int() const;
   virtual int_val_t* get_upper_int() const;
+  virtual bool get_is_min_exclusive() const;
+  virtual bool get_is_max_exclusive() const;
   virtual double get_lower_float() const;
   virtual double get_upper_float() const;
   virtual bool has_lower_float() const;
@@ -538,13 +541,17 @@ public:
 class Module_Param_IntRange : public Module_Param {
   int_val_t* lower_bound; // NULL == -infinity
   int_val_t* upper_bound; // NULL == infinity
+  bool min_exclusive, max_exclusive;
 public:
   type_t get_type() const { return MP_IntRange; }
-  Module_Param_IntRange(int_val_t* p_l, int_val_t* p_u): lower_bound(p_l), upper_bound(p_u) {}
+  Module_Param_IntRange(int_val_t* p_l, int_val_t* p_u, bool min_is_exclusive, bool max_is_exclusive):
+    lower_bound(p_l), upper_bound(p_u), min_exclusive(min_is_exclusive), max_exclusive(max_is_exclusive) {}
   ~Module_Param_IntRange() { Free(lower_bound); Free(upper_bound); }
   int_val_t* get_lower_int() const { return lower_bound; }
   int_val_t* get_upper_int() const { return upper_bound; }
   const char* get_type_str() const { return "integer range"; }
+  bool get_is_min_exclusive() const { return min_exclusive; }
+  bool get_is_max_exclusive() const { return max_exclusive; }
   void log_value() const;
   static void log_bound(int_val_t* bound, bool is_lower);
 };
@@ -554,26 +561,32 @@ class Module_Param_FloatRange : public Module_Param {
   bool has_lower;
   double upper_bound;
   bool has_upper;
+  bool min_exclusive, max_exclusive;
 public:
   type_t get_type() const { return MP_FloatRange; }
-  Module_Param_FloatRange(double p_lb, bool p_hl, double p_ub, bool p_hu): lower_bound(p_lb), has_lower(p_hl), upper_bound(p_ub), has_upper(p_hu) {}
+  Module_Param_FloatRange(double p_lb, bool p_hl, double p_ub, bool p_hu, bool min_is_exclusive, bool max_is_exclusive): lower_bound(p_lb), has_lower(p_hl), upper_bound(p_ub), has_upper(p_hu), min_exclusive(min_is_exclusive), max_exclusive(max_is_exclusive) {}
   double get_lower_float() const { return lower_bound; }
   double get_upper_float() const { return upper_bound; }
   bool has_lower_float() const { return has_lower; }
   bool has_upper_float() const { return has_upper; }
   const char* get_type_str() const { return "float range"; }
+  boolean get_is_min_exclusive() const { return min_exclusive; }
+  boolean get_is_max_exclusive() const { return max_exclusive; }
   void log_value() const;
 };
 
 class Module_Param_StringRange : public Module_Param {
   universal_char lower_bound;
   universal_char upper_bound;
+  bool min_exclusive, max_exclusive;
 public:
   type_t get_type() const { return MP_StringRange; }
-  Module_Param_StringRange(const universal_char& p_lb, const universal_char& p_ub): lower_bound(p_lb), upper_bound(p_ub) {}
+  Module_Param_StringRange(const universal_char& p_lb, const universal_char& p_ub, bool min_is_exclusive, bool max_is_exclusive): lower_bound(p_lb), upper_bound(p_ub), min_exclusive(min_is_exclusive), max_exclusive(max_is_exclusive) {}
   universal_char get_lower_uchar() const { return lower_bound; }
   universal_char get_upper_uchar() const { return upper_bound; }
   const char* get_type_str() const { return "char range"; }
+  boolean get_is_min_exclusive() const { return min_exclusive; }
+  boolean get_is_max_exclusive() const { return max_exclusive; }
   void log_value() const;
 };
 

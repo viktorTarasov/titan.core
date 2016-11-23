@@ -40,6 +40,7 @@
 #include "XER.hh"
 #include "JSON.hh"
 #include "Addfunc.hh"
+#include "Optional.hh"
 
 #include "../common/dbgnew.hh"
 
@@ -1736,7 +1737,7 @@ int CHARSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
     // No JSON data in the buffer -> use default value
-    value = (char*)p_td.json->default_value;
+    value = const_cast<char*>(p_td.json->default_value);
     value_len = strlen(value);
   } else {
     dec_len = p_tok.get_next_token(&token, &value, &value_len);
@@ -2304,9 +2305,13 @@ boolean CHARSTRING_template::match(const CHARSTRING& other_value,
 	"(\"%c\") when matching with a charstring value range template.",
 	value_range.min_value, value_range.max_value);
     const char *chars_ptr = other_value;
+    int min_value_offset = 0;
+    int max_value_offset = 0;
+    if (value_range.min_is_exclusive) min_value_offset = 1;
+    if (value_range.max_is_exclusive) max_value_offset = 1;
     for (int i = 0; i < value_length; i++) {
-      if (chars_ptr[i] < value_range.min_value ||
-        chars_ptr[i] > value_range.max_value) return FALSE;
+      if (chars_ptr[i] < (value_range.min_value + min_value_offset) ||
+        chars_ptr[i] > (value_range.max_value - max_value_offset)) return FALSE;
     }
     return TRUE;
     break; }
@@ -2401,6 +2406,8 @@ void CHARSTRING_template::set_type(template_sel template_type,
     set_selection(VALUE_RANGE);
     value_range.min_is_set = FALSE;
     value_range.max_is_set = FALSE;
+    value_range.min_is_exclusive = FALSE;
+    value_range.max_is_exclusive = FALSE;
     break;
   case DECODE_MATCH:
     set_selection(DECODE_MATCH);
@@ -2432,6 +2439,7 @@ void CHARSTRING_template::set_min(const CHARSTRING& min_value)
   if (length != 1) TTCN_error("The length of the lower bound in a "
     "charstring value range template must be 1 instead of %d.", length);
   value_range.min_is_set = TRUE;
+  value_range.min_is_exclusive = FALSE;
   value_range.min_value = *(const char*)min_value;
   if (value_range.max_is_set && value_range.min_value > value_range.max_value)
     TTCN_error("The lower bound (\"%c\") in a charstring value range template "
@@ -2449,11 +2457,26 @@ void CHARSTRING_template::set_max(const CHARSTRING& max_value)
   if (length != 1) TTCN_error("The length of the upper bound in a "
     "charstring value range template must be 1 instead of %d.", length);
   value_range.max_is_set = TRUE;
+  value_range.max_is_exclusive = FALSE;
   value_range.max_value = *(const char*)max_value;
   if (value_range.min_is_set && value_range.min_value > value_range.max_value)
     TTCN_error("The upper bound (\"%c\") in a charstring value range template "
       "is smaller than the lower bound (\"%c\").", value_range.max_value,
       value_range.min_value);
+}
+
+void CHARSTRING_template::set_min_exclusive(boolean min_exclusive)
+{
+  if (template_selection != VALUE_RANGE)
+    TTCN_error("Setting the lower bound for a non-range charstring template.");
+  value_range.min_is_exclusive = min_exclusive;
+}
+
+void CHARSTRING_template::set_max_exclusive(boolean max_exclusive)
+{
+  if (template_selection != VALUE_RANGE)
+    TTCN_error("Setting the upper bound for a non-range charstring template.");
+  value_range.max_is_exclusive = max_exclusive;
 }
 
 void CHARSTRING_template::set_decmatch(Dec_Match_Interface* new_instance)
@@ -2639,6 +2662,7 @@ void CHARSTRING_template::log() const
     break;
   case VALUE_RANGE:
     TTCN_Logger::log_char('(');
+    if (value_range.min_is_exclusive) TTCN_Logger::log_char('!');
     if (value_range.min_is_set) {
       if (TTCN_Logger::is_printable(value_range.min_value)) {
 	TTCN_Logger::log_char('"');
@@ -2648,6 +2672,7 @@ void CHARSTRING_template::log() const
 	(unsigned char)value_range.min_value);
     } else TTCN_Logger::log_event_str("<unknown lower bound>");
     TTCN_Logger::log_event_str(" .. ");
+    if (value_range.max_is_exclusive) TTCN_Logger::log_char('!');
     if (value_range.max_is_set) {
       if (TTCN_Logger::is_printable(value_range.max_value)) {
 	TTCN_Logger::log_char('"');
@@ -2726,6 +2751,8 @@ void CHARSTRING_template::set_param(Module_Param& param) {
     value_range.max_is_set = TRUE;
     value_range.min_value = (char)(lower_uchar.uc_cell);
     value_range.max_value = (char)(upper_uchar.uc_cell);
+    set_min_exclusive(mp->get_is_min_exclusive());
+    set_max_exclusive(mp->get_is_max_exclusive());
   } break;
   case Module_Param::MP_Pattern:
     clean_up();
@@ -2805,7 +2832,7 @@ Module_Param* CHARSTRING_template::get_param(Module_Param_Name& param_name) cons
   case VALUE_RANGE: {
     universal_char lower_bound = { 0, 0, 0, (unsigned char)value_range.min_value };
     universal_char upper_bound = { 0, 0, 0, (unsigned char)value_range.max_value };
-    mp = new Module_Param_StringRange(lower_bound, upper_bound);
+    mp = new Module_Param_StringRange(lower_bound, upper_bound, value_range.min_is_exclusive, value_range.max_is_exclusive);
     break; }
   case STRING_PATTERN:
     mp = new Module_Param_Pattern(mcopystr(single_value), pattern_value.nocase);
@@ -2889,6 +2916,8 @@ void CHARSTRING_template::decode_text(Text_Buf& text_buf)
       "upper bound in a charstring value range template.");
     value_range.min_is_set = TRUE;
     value_range.max_is_set = TRUE;
+    value_range.min_is_exclusive = FALSE;
+    value_range.max_is_exclusive = FALSE;
     break;
   default:
     TTCN_error("Text decoder: An unknown/unsupported selection was "

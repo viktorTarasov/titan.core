@@ -10,6 +10,7 @@
  *   Baranyi, Botond
  *   Beres, Szabolcs
  *   Delic, Adam
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 #include <string.h>
@@ -52,7 +53,7 @@ char* Module_Param_Id::get_current_name() const {
   return NULL;
 }
 
-bool Module_Param_Id::next_name(int offset) {
+bool Module_Param_Id::next_name(int /*offset*/) {
   TTCN_error("Internal error: Module_Param_Id::next_name()");
   return false;
 }
@@ -203,6 +204,16 @@ int_val_t* Module_Param::get_lower_int() const {
 int_val_t* Module_Param::get_upper_int() const {
   TTCN_error("Internal error: Module_Param::get_upper_int()");
   return NULL;
+}
+
+bool Module_Param::get_is_min_exclusive() const {
+  TTCN_error("Internal error: Module_Param::get_is_min_exclusive()");
+  return false;
+}
+
+bool Module_Param::get_is_max_exclusive() const {
+  TTCN_error("Internal error: Module_Param::get_is_max_exclusive()");
+  return false;
 }
 
 double Module_Param::get_lower_float() const {

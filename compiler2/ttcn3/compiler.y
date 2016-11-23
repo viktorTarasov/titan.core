@@ -3664,7 +3664,13 @@ IfPresentMatch: // 144
 
 Range: // 147
   '(' SingleLowerBound DotDot UpperBound optError ')'
-  { $$ = new ValueRange($2, $4); }
+  { $$ = new ValueRange($2, false, $4, false); }
+| '(' '!' SingleLowerBound DotDot UpperBound optError ')'
+  { $$ = new ValueRange($3, true, $5, false); }
+| '(' SingleLowerBound DotDot '!' UpperBound optError ')'
+  { $$ = new ValueRange($2, false, $5, true); }
+| '(' '!' SingleLowerBound DotDot '!' UpperBound optError ')'
+  { $$ = new ValueRange($3, true, $6, true); }
 ;
 
 SingleLowerBound:
@@ -7327,7 +7333,7 @@ CharStringValue: // 478
   {
     $$ = new Value(Value::V_USTR, new ustring($1.elements, $1.nElements));
     for(size_t i = 0; i < $1.nElements; ++i) {
-      Free((char*)$1.elements[i]);
+      Free(const_cast<char*>($1.elements[i]));
     }
     Free($1.elements);
     $$->set_location(infile, @$);

@@ -15,6 +15,7 @@
  *   Raduly, Csaba
  *   Szabados, Kristof
  *   Szabo, Janos Zoltan – initial implementation
+ *   Szabo, Bence Janos
  *   Tatarka, Gabor
  *
  ******************************************************************************/
@@ -47,6 +48,9 @@ namespace Ttcn {
   : Node(other)
   , min_v(other.min_v ? other.min_v->clone() : 0)
   , max_v(other.max_v ? other.max_v->clone() : 0)
+  , min_exclusive(other.min_exclusive)
+  , max_exclusive(other.max_exclusive)
+  , type(other.type)
   {}
 
   void ValueRange::set_fullname(const string& p_fullname)
@@ -102,6 +106,10 @@ namespace Ttcn {
     if (min_v) min_v->set_code_section(p_code_section);
     if (max_v) max_v->set_code_section(p_code_section);
   }
+  
+  void ValueRange::set_typetype(Type::typetype_t t) {
+    type = t;
+  }
 
   char *ValueRange::generate_code_init(char *str, const char *name)
   {
@@ -112,10 +120,34 @@ namespace Ttcn {
       min_v->generate_code_expr(&expr);
       init_stmt = mputprintf(init_stmt, "%s.set_min(%s);\n", name, expr.expr);
     }
+    if (min_exclusive) {
+      switch (type) {
+        case Type::T_INT:
+        case Type::T_REAL:
+        case Type::T_CSTR:
+        case Type::T_USTR:
+          init_stmt = mputprintf(init_stmt, "%s.set_min_exclusive(true);\n", name);
+          break;
+        default:
+          FATAL_ERROR("ValueRange::generate_code_init()");
+      }
+    }
     if (max_v) {
       Code::clean_expr(&expr);
       max_v->generate_code_expr(&expr);
       init_stmt = mputprintf(init_stmt, "%s.set_max(%s);\n", name, expr.expr);
+    }
+    if (max_exclusive) {
+      switch (type) {
+        case Type::T_INT:
+        case Type::T_REAL:
+        case Type::T_CSTR:
+        case Type::T_USTR:
+          init_stmt = mputprintf(init_stmt, "%s.set_max_exclusive(true);\n", name);
+          break;
+        default:
+          FATAL_ERROR("ValueRange::generate_code_init()");
+      }
     }
     if (expr.preamble || expr.postamble) {
       str = mputstr(str, "{\n");

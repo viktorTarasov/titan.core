@@ -37,6 +37,7 @@
 #include "Encdec.hh"
 #include "Addfunc.hh" // for unichar2int
 #include "TEXT.hh"
+#include "Optional.hh"
 #include <string>
 #include <iostream>
 #include <stdint.h>
@@ -2509,7 +2510,7 @@ boolean UNIVERSAL_CHARSTRING::from_JSON_string(boolean check_quotes)
   return !error;
 }
 
-int UNIVERSAL_CHARSTRING::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok) const
+int UNIVERSAL_CHARSTRING::JSON_encode(const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokenizer& p_tok) const
 {
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
@@ -2539,7 +2540,7 @@ int UNIVERSAL_CHARSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_To
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
     // No JSON data in the buffer -> use default value
-    value = (char*)p_td.json->default_value;
+    value = const_cast<char*>(p_td.json->default_value);
     value_len = strlen(value);
   } else {
     dec_len = p_tok.get_next_token(&token, &value, &value_len);
@@ -2607,7 +2608,7 @@ static void fill_continuing_octets(int n_continuing,
 
 void UNIVERSAL_CHARSTRING::decode_utf8(int n_octets,
                                        const unsigned char *octets_ptr,
-                                       CharCoding::CharCodingType expected_coding /*= UTF8*/,
+                                       CharCoding::CharCodingType /*expected_coding*/ /*= UTF8*/,
                                        bool checkBOM /*= false)*/)
 {
   // approximate the number of characters
@@ -3730,6 +3731,8 @@ void UNIVERSAL_CHARSTRING_template::copy_template
       "charstring template.");
     value_range.min_is_set = TRUE;
     value_range.max_is_set = TRUE;
+    value_range.min_is_exclusive = other_value.value_range.min_is_exclusive;
+    value_range.max_is_exclusive = other_value.value_range.max_is_exclusive;;
     value_range.min_value.uc_group = 0;
     value_range.min_value.uc_plane = 0;
     value_range.min_value.uc_row = 0;
@@ -4068,7 +4071,12 @@ boolean UNIVERSAL_CHARSTRING_template::match
     const universal_char *uchars_ptr = other_value;
     for (int i = 0; i < value_length; i++) {
       if (uchars_ptr[i] < value_range.min_value ||
-        value_range.max_value < uchars_ptr[i]) return FALSE;
+        value_range.max_value < uchars_ptr[i]) {
+        return FALSE;
+      } else if ((value_range.min_is_exclusive && uchars_ptr[i] == value_range.min_value) ||
+                 (value_range.max_is_exclusive && uchars_ptr[i] == value_range.max_value)) {
+        return FALSE;
+      }
     }
     return TRUE; }
   case STRING_PATTERN: {
@@ -4220,6 +4228,8 @@ void UNIVERSAL_CHARSTRING_template::set_type(template_sel template_type,
     set_selection(VALUE_RANGE);
     value_range.min_is_set = FALSE;
     value_range.max_is_set = FALSE;
+    value_range.min_is_exclusive = FALSE;
+    value_range.max_is_exclusive = FALSE;
     break;
   case DECODE_MATCH:
     set_selection(DECODE_MATCH);
@@ -4252,6 +4262,7 @@ void UNIVERSAL_CHARSTRING_template::set_min
   if (length != 1) TTCN_error("The length of the lower bound in a universal "
     "charstring value range template must be 1 instead of %d.", length);
   value_range.min_is_set = TRUE;
+  value_range.min_is_exclusive = FALSE;
   value_range.min_value = *(const universal_char*)min_value;
   if (value_range.max_is_set && value_range.max_value < value_range.min_value)
     TTCN_error("The lower bound in a universal charstring value range template "
@@ -4269,10 +4280,25 @@ void UNIVERSAL_CHARSTRING_template::set_max
   if (length != 1) TTCN_error("The length of the upper bound in a universal "
     "charstring value range template must be 1 instead of %d.", length);
   value_range.max_is_set = TRUE;
+  value_range.max_is_exclusive = FALSE;
   value_range.max_value = *(const universal_char*)max_value;
   if (value_range.min_is_set && value_range.max_value < value_range.min_value)
     TTCN_error("The upper bound in a universal charstring value range template "
       "is smaller than the lower bound.");
+}
+
+void UNIVERSAL_CHARSTRING_template::set_min_exclusive(boolean min_exclusive)
+{
+  if (template_selection != VALUE_RANGE) TTCN_error("Setting the lower bound "
+    " exclusiveness for a non-range universal charstring template.");
+  value_range.min_is_exclusive = min_exclusive;
+}
+
+void UNIVERSAL_CHARSTRING_template::set_max_exclusive(boolean max_exclusive)
+{
+  if (template_selection != VALUE_RANGE) TTCN_error("Setting the upper bound "
+    " exclusiveness for a non-range universal charstring template.");
+  value_range.max_is_exclusive = max_exclusive;
 }
 
 void UNIVERSAL_CHARSTRING_template::set_decmatch(Dec_Match_Interface* new_instance,
@@ -4340,6 +4366,7 @@ void UNIVERSAL_CHARSTRING_template::log() const
     break;
   case VALUE_RANGE:
     TTCN_Logger::log_char('(');
+    if (value_range.min_is_exclusive) TTCN_Logger::log_char('!');
     if (value_range.min_is_set) {
       if (is_printable(value_range.min_value)) {
 	TTCN_Logger::log_char('"');
@@ -4352,6 +4379,7 @@ void UNIVERSAL_CHARSTRING_template::log() const
       }
     } else TTCN_Logger::log_event_str("<unknown lower bound>");
     TTCN_Logger::log_event_str(" .. ");
+    if (value_range.max_is_exclusive) TTCN_Logger::log_char('!');
     if (value_range.max_is_set) {
       if (is_printable(value_range.max_value)) {
 	TTCN_Logger::log_char('"');
@@ -4464,6 +4492,8 @@ void UNIVERSAL_CHARSTRING_template::set_param(Module_Param& param) {
     value_range.max_is_set = TRUE;
     value_range.min_value = lower_uchar;
     value_range.max_value = upper_uchar;
+    set_min_exclusive(mp->get_is_min_exclusive());
+    set_max_exclusive(mp->get_is_max_exclusive());
   } break;
   case Module_Param::MP_Pattern:
     clean_up();
@@ -4545,7 +4575,7 @@ Module_Param* UNIVERSAL_CHARSTRING_template::get_param(Module_Param_Name& param_
     }
     break; }
   case VALUE_RANGE:
-    mp = new Module_Param_StringRange(value_range.min_value, value_range.max_value);
+    mp = new Module_Param_StringRange(value_range.min_value, value_range.max_value, value_range.min_is_exclusive, value_range.max_is_exclusive);
     break;
   case STRING_PATTERN:
     mp = new Module_Param_Pattern(mcopystr(*pattern_string), pattern_value.nocase);
@@ -4643,6 +4673,8 @@ void UNIVERSAL_CHARSTRING_template::decode_text(Text_Buf& text_buf)
       "upper bound in a universal charstring value range template.");
     value_range.min_is_set = TRUE;
     value_range.max_is_set = TRUE;
+    value_range.min_is_exclusive = FALSE;
+    value_range.max_is_exclusive = FALSE;
     break; }
   case STRING_PATTERN:
     pattern_value.regexp_init = FALSE;

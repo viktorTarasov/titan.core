@@ -975,7 +975,7 @@ tagless:
     if (value) {
       if (is_float(value)) {
         if (exer && (p_td.xer_bits & XER_DECIMAL) && p_td.fractionDigits != -1) {
-          char *p = strchr((char*)value, '.');
+          const char *p = strchr(value, '.');
           if (p != NULL) {
             unsigned int fraction_digits_pos = (int)(p - value) + 1 + p_td.fractionDigits;
             if (fraction_digits_pos < strlen(value)) {
@@ -1029,7 +1029,7 @@ tagless:
         if (value) {
           if (is_float(value)) {
             if (exer && (p_td.xer_bits & XER_DECIMAL) && p_td.fractionDigits != -1) {
-              char *p = strchr((char*)value, '.');
+              const char *p = strchr(value, '.');
               if (p != NULL) {
                 unsigned int fraction_digits_pos = (int)(p - value) + 1 + p_td.fractionDigits;
                 if (fraction_digits_pos < strlen(value)) {
@@ -1115,7 +1115,7 @@ int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
     // No JSON data in the buffer -> use default value
-    value = (char*)p_td.json->default_value;
+    value = const_cast<char*>(p_td.json->default_value);
     value_len = strlen(value);
   } else {
     dec_len = p_tok.get_next_token(&token, &value, &value_len);
@@ -1379,10 +1379,21 @@ boolean FLOAT_template::match(double other_value, boolean /* legacy */) const
         return template_selection == VALUE_LIST;
     return template_selection == COMPLEMENTED_LIST;
   case VALUE_RANGE:
-    return (!value_range.min_is_present ||
-            value_range.min_value <= other_value) &&
-      (!value_range.max_is_present ||
-       value_range.max_value >= other_value);
+    
+    return (
+      // Min boundary is -infinity and (not min exclusive            or  the value is larger than -infinity)
+      (!value_range.min_is_present && (!value_range.min_is_exclusive || other_value != MINUS_INFINITY)) ||
+      // Min boundary is a number and not min exclusive           and it is less or equal than the value   or
+      (value_range.min_is_present && !value_range.min_is_exclusive && value_range.min_value <= other_value) ||
+      // Min boundary is a number and min exclusive              and it is less than the value
+      (value_range.min_is_present && value_range.min_is_exclusive && value_range.min_value < other_value))
+      &&
+      // Max boundary is infinity  and  (not min exclusive            or the value is smaller than infinity)
+      ((!value_range.max_is_present && (!value_range.max_is_exclusive || other_value != PLUS_INFINITY)) ||
+      // Max boundary is a number and not max exclusive           and it is more or equal than the value   or
+       (value_range.max_is_present && !value_range.max_is_exclusive && value_range.max_value >= other_value) ||
+      // Max boundary is a number and max exclusive               and it is more than the value
+       (value_range.max_is_present && value_range.max_is_exclusive && value_range.max_value > other_value));
   default:
     TTCN_error("Matching with an uninitialized/unsupported float template.");
   }
@@ -1411,6 +1422,8 @@ void FLOAT_template::set_type(template_sel template_type,
     set_selection(VALUE_RANGE);
     value_range.min_is_present = FALSE;
     value_range.max_is_present = FALSE;
+    value_range.min_is_exclusive = FALSE;
+    value_range.max_is_exclusive = FALSE;
     break;
   default:
     TTCN_error("Setting an invalid type for a float template.");
@@ -1435,6 +1448,7 @@ void FLOAT_template::set_min(double min_value)
     TTCN_error("The lower limit of the range is greater than the "
                "upper limit in a float template.");
   value_range.min_is_present = TRUE;
+  value_range.min_is_exclusive = FALSE;
   value_range.min_value = min_value;
 }
 
@@ -1453,6 +1467,7 @@ void FLOAT_template::set_max(double max_value)
     TTCN_error("The upper limit of the range is smaller than the "
                "lower limit in a float template.");
   value_range.max_is_present = TRUE;
+  value_range.max_is_exclusive = FALSE;
   value_range.max_value = max_value;
 }
 
@@ -1461,6 +1476,20 @@ void FLOAT_template::set_max(const FLOAT& max_value)
   max_value.must_bound("Using an unbound value when setting the upper bound "
                        "in a float range template.");
   set_max(max_value.float_value);
+}
+
+void FLOAT_template::set_min_exclusive(boolean min_exclusive)
+{
+  if (template_selection != VALUE_RANGE)
+    TTCN_error("Float template is not range when setting lower limit exclusiveness.");
+  value_range.min_is_exclusive = min_exclusive;
+}
+
+void FLOAT_template::set_max_exclusive(boolean max_exclusive)
+{
+  if (template_selection != VALUE_RANGE)
+    TTCN_error("Float template is not range when setting upper limit exclusiveness.");
+  value_range.max_is_exclusive = max_exclusive;
 }
 
 double FLOAT_template::valueof() const
@@ -1490,9 +1519,11 @@ void FLOAT_template::log() const
     break;
   case VALUE_RANGE:
     TTCN_Logger::log_char('(');
+    if (value_range.min_is_exclusive) TTCN_Logger::log_char('!');
     if (value_range.min_is_present) log_float(value_range.min_value);
     else TTCN_Logger::log_event_str("-infinity");
     TTCN_Logger::log_event_str(" .. ");
+    if (value_range.max_is_exclusive) TTCN_Logger::log_char('!');
     if (value_range.max_is_present) log_float(value_range.max_value);
     else TTCN_Logger::log_event_str("infinity");
     TTCN_Logger::log_char(')');
@@ -1554,6 +1585,8 @@ void FLOAT_template::set_param(Module_Param& param) {
     set_type(VALUE_RANGE);
     if (mp->has_lower_float()) set_min(mp->get_lower_float());
     if (mp->has_upper_float()) set_max(mp->get_upper_float());
+    set_min_exclusive(mp->get_is_min_exclusive());
+    set_max_exclusive(mp->get_is_max_exclusive());
     break;
   case Module_Param::MP_Expression:
     switch (mp->get_expr_type()) {
@@ -1635,7 +1668,7 @@ Module_Param* FLOAT_template::get_param(Module_Param_Name& param_name) const
   case VALUE_RANGE:
     mp = new Module_Param_FloatRange(
       value_range.min_value, value_range.min_is_present,
-      value_range.max_value, value_range.max_is_present);
+      value_range.max_value, value_range.max_is_present, value_range.min_is_exclusive, value_range.max_is_exclusive);
     break;
   default:
     break;
@@ -1704,6 +1737,8 @@ void FLOAT_template::decode_text(Text_Buf& text_buf)
     value_range.max_is_present = text_buf.pull_int() != 0;
     if (value_range.max_is_present)
       value_range.max_value = text_buf.pull_double();
+    value_range.min_is_exclusive = FALSE;
+    value_range.max_is_exclusive = FALSE;
     break;
   default:
     TTCN_error("Text decoder: An unknown/unsupported selection was "

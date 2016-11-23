@@ -1641,8 +1641,8 @@ void Type::chk_xer_use_nil()
           complaint = NOTHING_TO_ORDER;
         else if (the_enum->u.enums.eis->get_nof_eis() != expected_enum_items)
           complaint = BAD_ENUM;
-        else for (size_t i = 0; i < expected_enum_items; ++i) {
-          CompField *inner_cf = inner->get_comp_byIndex(i);
+        else for (size_t index = 0; index < expected_enum_items; ++index) {
+          CompField *inner_cf = inner->get_comp_byIndex(index);
           Type *inner_cft = inner_cf->get_type();
           if (inner_cft->xerattrib && inner_cft->xerattrib->attribute_) continue;
           // Found a non-attribute component. Its name must match an enumval
@@ -5714,6 +5714,7 @@ bool Type::chk_this_template_Str(Template *t, namedbool implicit_omit,
       Ttcn::ValueRange *vr = t->get_value_range();
       Value *v_lower = chk_range_boundary(vr->get_min_v(), "lower", *t);
       Value *v_upper = chk_range_boundary(vr->get_max_v(), "upper", *t);
+      vr->set_typetype(get_typetype_ttcn3(typetype));
       if (v_lower && v_upper) {
         // both boundaries are available and have correct type
         if (tt == T_CSTR) {
@@ -5902,6 +5903,7 @@ void Type::chk_this_template_Int_Real(Template *t)
     Ttcn::ValueRange *vr = t->get_value_range();
     Value *v_lower = chk_range_boundary(vr->get_min_v(), "lower", *t);
     Value *v_upper = chk_range_boundary(vr->get_max_v(), "upper", *t);
+    vr->set_typetype(get_typetype_ttcn3(typetype));
     if (v_lower && v_upper) {
       // both boundaries are available and have correct type
       switch (get_typetype_ttcn3(typetype)) {
@@ -5922,6 +5924,12 @@ void Type::chk_this_template_Int_Real(Template *t)
     }
     if (!vr->get_min_v() && v_upper) {
       chk_range_boundary_infinity(v_upper, false);
+    }
+    if (!vr->get_min_v() && vr->is_min_exclusive() && get_typetype_ttcn3(typetype) == T_INT) {
+      t->error("invalid lower boundary, -infinity cannot be excluded from an integer template range");
+    }
+    if (!vr->get_max_v() && vr->is_max_exclusive() && get_typetype_ttcn3(typetype) == T_INT) {
+      t->error("invalid upper boundary, infinity cannot be excluded from an integer template range");
     }
     break;}
   default:

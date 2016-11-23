@@ -24,11 +24,13 @@
 
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
 #include "Error.hh"
 #include "ttcn3float.hh"
 
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 // float value class
 
@@ -198,6 +200,7 @@ private:
     struct {
       double min_value, max_value;
       boolean min_is_present, max_is_present;
+      boolean min_is_exclusive, max_is_exclusive;
     } value_range;
   };
 
@@ -230,6 +233,8 @@ public:
   void set_min(const FLOAT& min_value);
   void set_max(double max_value);
   void set_max(const FLOAT& max_value);
+  void set_min_exclusive(boolean min_exclusive);
+  void set_max_exclusive(boolean max_exclusive);
 
   double valueof() const;
 

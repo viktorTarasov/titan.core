@@ -25,7 +25,6 @@
 
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
 #include "Error.hh"
 #include "RInt.hh"
 
@@ -35,6 +34,9 @@ class HEXSTRING;
 class OCTETSTRING;
 
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 class INTEGER : public Base_Type {
   // Private constructor for internal initialization.  It's not part of the
@@ -244,6 +246,7 @@ private:
     } value_list;
     struct {
       boolean min_is_present, max_is_present;
+      boolean min_is_exclusive, max_is_exclusive;
       struct {
         boolean native_flag;
         union {
@@ -321,6 +324,9 @@ public:
    * @pre min_value must be bound; else DTE
    */
   void set_max(const INTEGER& max_value);
+  
+  void set_min_exclusive(boolean min_exclusive);
+  void set_max_exclusive(boolean max_exclusive);
 
   void log() const;
   void log_match(const INTEGER& match_value, boolean legacy = FALSE) const;

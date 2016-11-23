@@ -31,7 +31,7 @@
 #include "Types.h"
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
+#include "Param_Types.hh"
 
 class INTEGER;
 class BITSTRING;
@@ -42,6 +42,9 @@ class UNIVERSAL_CHARSTRING;
 class UNIVERSAL_CHARSTRING_ELEMENT;
 
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 /** Runtime class for character strings.
  *
@@ -364,6 +367,7 @@ private:
     } value_list;
     struct {
       boolean min_is_set, max_is_set;
+      boolean min_is_exclusive, max_is_exclusive;
       char min_value, max_value;
     } value_range;
     mutable struct {
@@ -432,6 +436,8 @@ public:
   
   void set_min(const CHARSTRING& min_value);
   void set_max(const CHARSTRING& max_value);
+  void set_min_exclusive(boolean min_exclusive);
+  void set_max_exclusive(boolean max_exclusive);
   
   void set_decmatch(Dec_Match_Interface* new_instance);
   

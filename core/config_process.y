@@ -148,7 +148,7 @@ string_map_t *config_defines;
 	logging_setting_t logging_param_line;
   struct {
     size_t nElements;
-    const char **elements;
+    char **elements;
   } uid_list;
 }
 
@@ -760,30 +760,86 @@ PatternChunk:
 IntegerRange:
   '(' '-' InfinityKeyword DotDot MPNumber ')'
   {
-    $$ = new Module_Param_IntRange(NULL, $5);
+    $$ = new Module_Param_IntRange(NULL, $5, false, false);
+  }
+|  '(' '-' InfinityKeyword DotDot '!' MPNumber ')'
+  {
+    $$ = new Module_Param_IntRange(NULL, $6, false, true);
   }
 | '(' MPNumber DotDot MPNumber ')'
   {
-    $$ = new Module_Param_IntRange($2, $4);
+    $$ = new Module_Param_IntRange($2, $4, false, false);
+  }
+| '(' '!' MPNumber DotDot MPNumber ')'
+  {
+    $$ = new Module_Param_IntRange($3, $5, true, false);
+  }
+| '(' MPNumber DotDot '!' MPNumber ')'
+  {
+    $$ = new Module_Param_IntRange($2, $5, false, true);
+  }
+| '(' '!' MPNumber DotDot '!' MPNumber ')'
+  {
+    $$ = new Module_Param_IntRange($3, $6, true, true);
   }
 | '(' MPNumber DotDot InfinityKeyword ')'
   {
-    $$ = new Module_Param_IntRange($2, NULL);
+    $$ = new Module_Param_IntRange($2, NULL, false, false);
+  }
+| '(' '!' MPNumber DotDot InfinityKeyword ')'
+  {
+    $$ = new Module_Param_IntRange($3, NULL, true, false);
   }
 ;
 
 FloatRange:
   '(' '-' InfinityKeyword DotDot MPFloat ')'
   {
-    $$ = new Module_Param_FloatRange(0.0, false, $5, true);
+    $$ = new Module_Param_FloatRange(0.0, false, $5, true, false, false);
+  }
+| '(' '!' '-' InfinityKeyword DotDot MPFloat ')'
+  {
+    $$ = new Module_Param_FloatRange(0.0, false, $6, true, true, false);
+  }
+| '(' '-' InfinityKeyword DotDot '!' MPFloat ')'
+  {
+    $$ = new Module_Param_FloatRange(0.0, false, $6, true, false, true);
+  }
+| '(' '!' '-' InfinityKeyword DotDot '!' MPFloat ')'
+  {
+    $$ = new Module_Param_FloatRange(0.0, false, $7, true, true, true);
   }
 | '(' MPFloat DotDot MPFloat ')'
   {
-    $$ = new Module_Param_FloatRange($2, true, $4, true);
+    $$ = new Module_Param_FloatRange($2, true, $4, true, false, false);
+  }
+| '(' '!' MPFloat DotDot MPFloat ')'
+  {
+    $$ = new Module_Param_FloatRange($3, true, $5, true, true, false);
+  }
+| '(' MPFloat DotDot '!' MPFloat ')'
+  {
+    $$ = new Module_Param_FloatRange($2, true, $5, true, false, true);
+  }
+| '(' '!' MPFloat DotDot '!' MPFloat ')'
+  {
+    $$ = new Module_Param_FloatRange($3, true, $6, true, true, true);
   }
 | '(' MPFloat DotDot InfinityKeyword ')'
   {
-    $$ = new Module_Param_FloatRange($2, true, 0.0, false);
+    $$ = new Module_Param_FloatRange($2, true, 0.0, false, false, false);
+  }
+| '(' '!' MPFloat DotDot InfinityKeyword ')'
+  {
+    $$ = new Module_Param_FloatRange($3, true, 0.0, false, true, false);
+  }
+| '(' MPFloat DotDot '!' InfinityKeyword ')'
+  {
+    $$ = new Module_Param_FloatRange($2, true, 0.0, false, false, true);
+  }
+| '(' '!' MPFloat DotDot '!' InfinityKeyword ')'
+  {
+    $$ = new Module_Param_FloatRange($3, true, 0.0, false, true, true);
   }
 ;
 
@@ -806,7 +862,67 @@ StringRange:
     }
     Free($2.uchars_ptr);
     Free($4.uchars_ptr);
-    $$ = new Module_Param_StringRange(lower, upper);
+    $$ = new Module_Param_StringRange(lower, upper, false, false);
+  }
+| '(' '!' UniversalCharstringFragment DotDot UniversalCharstringFragment ')'
+  {
+    universal_char lower; lower.uc_group=lower.uc_plane=lower.uc_row=lower.uc_cell=0;
+    universal_char upper; upper.uc_group=upper.uc_plane=upper.uc_row=upper.uc_cell=0;
+    if ($3.n_uchars!=1) {
+      config_process_error("Lower bound of char range must be 1 character only");
+    } else if ($5.n_uchars!=1) {
+      config_process_error("Upper bound of char range must be 1 character only");
+    } else {
+      lower = *($3.uchars_ptr);
+      upper = *($5.uchars_ptr);
+      if (upper<lower) {
+        config_process_error("Lower bound is larger than upper bound in the char range");
+        lower = upper;
+      }
+    }
+    Free($3.uchars_ptr);
+    Free($5.uchars_ptr);
+    $$ = new Module_Param_StringRange(lower, upper, true, false);
+  }
+| '(' UniversalCharstringFragment DotDot '!' UniversalCharstringFragment ')'
+  {
+    universal_char lower; lower.uc_group=lower.uc_plane=lower.uc_row=lower.uc_cell=0;
+    universal_char upper; upper.uc_group=upper.uc_plane=upper.uc_row=upper.uc_cell=0;
+    if ($2.n_uchars!=1) {
+      config_process_error("Lower bound of char range must be 1 character only");
+    } else if ($5.n_uchars!=1) {
+      config_process_error("Upper bound of char range must be 1 character only");
+    } else {
+      lower = *($2.uchars_ptr);
+      upper = *($5.uchars_ptr);
+      if (upper<lower) {
+        config_process_error("Lower bound is larger than upper bound in the char range");
+        lower = upper;
+      }
+    }
+    Free($2.uchars_ptr);
+    Free($5.uchars_ptr);
+    $$ = new Module_Param_StringRange(lower, upper, false, true);
+  }
+| '(' '!' UniversalCharstringFragment DotDot '!' UniversalCharstringFragment ')'
+  {
+    universal_char lower; lower.uc_group=lower.uc_plane=lower.uc_row=lower.uc_cell=0;
+    universal_char upper; upper.uc_group=upper.uc_plane=upper.uc_row=upper.uc_cell=0;
+    if ($3.n_uchars!=1) {
+      config_process_error("Lower bound of char range must be 1 character only");
+    } else if ($6.n_uchars!=1) {
+      config_process_error("Upper bound of char range must be 1 character only");
+    } else {
+      lower = *($3.uchars_ptr);
+      upper = *($6.uchars_ptr);
+      if (upper<lower) {
+        config_process_error("Lower bound is larger than upper bound in the char range");
+        lower = upper;
+      }
+    }
+    Free($3.uchars_ptr);
+    Free($6.uchars_ptr);
+    $$ = new Module_Param_StringRange(lower, upper, true, true);
   }
 ;
 
@@ -964,7 +1080,7 @@ UniversalCharstringValue:
     $$.uchars_ptr[i].uc_row   = (int_val >> 8) & 0xFF;
     $$.uchars_ptr[i].uc_cell  = int_val & 0xFF;
 
-    Free((char*)$1.elements[i]);
+    Free($1.elements[i]);
   }
   Free($1.elements);
 }
@@ -1059,13 +1175,13 @@ UIDlike:
   UIDval
   {
     $$.nElements = 1;
-    $$.elements = (const char**)
+    $$.elements = (char**)
       Malloc($$.nElements * sizeof(*$$.elements));
     $$.elements[$$.nElements-1] = $1;
   }
 | UIDlike ',' UIDval {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (const char**)
+    $$.elements = (char**)
       Realloc($1.elements, ($$.nElements) * sizeof(*$1.elements));
     $$.elements[$$.nElements-1] = $3;
   }
