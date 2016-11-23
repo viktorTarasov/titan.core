@@ -59,13 +59,13 @@ class Module_Param_Id {
 public:
   Module_Param_Id() {}
   virtual ~Module_Param_Id() {}
-  virtual bool is_explicit() const = 0;
-  virtual bool is_index() const { return false; }
-  virtual bool is_custom() const { return false; }
+  virtual boolean is_explicit() const = 0;
+  virtual boolean is_index() const { return FALSE; }
+  virtual boolean is_custom() const { return FALSE; }
   virtual size_t get_index() const;
   virtual char* get_name() const;
   virtual char* get_current_name() const;
-  virtual bool next_name(int offset = 1);
+  virtual boolean next_name(int offset = 1);
   virtual size_t get_nof_names() const;
   virtual char* get_str() const = 0; // returns an expstring that must be deallocated
 };
@@ -81,12 +81,12 @@ class Module_Param_Name : public Module_Param_Id {
 public:
   Module_Param_Name(const Vector<char*>& p): names(p), pos(0) {}
   ~Module_Param_Name() { for (size_t i = 0; i < names.size(); ++i) Free(names[i]); }
-  bool is_explicit() const { return true; }
+  boolean is_explicit() const { return TRUE; }
   char* get_current_name() const { return names[pos]; }
-  bool next_name(int offset = 1) {
-    if (static_cast<int>(pos) + offset < 0 || pos + offset >= names.size()) return false;
+  boolean next_name(int offset = 1) {
+    if (static_cast<int>(pos) + offset < 0 || pos + offset >= names.size()) return FALSE;
     pos += offset;
-    return true;
+    return TRUE;
   }
   void reset() { pos = 0; }
   size_t get_nof_names() const { return names.size(); }
@@ -99,18 +99,18 @@ public:
   Module_Param_FieldName(char* p): name(p) {}
   ~Module_Param_FieldName() { Free(name); }
   char* get_name() const { return name; }
-  bool is_explicit() const { return true; }
+  boolean is_explicit() const { return TRUE; }
   char* get_str() const;
 };
 
 class Module_Param_Index : public Module_Param_Id {
   size_t index;
-  bool is_expl;
+  boolean is_expl;
 public:
-  Module_Param_Index(size_t p_index, bool p_is_expl): index(p_index), is_expl(p_is_expl) {}
+  Module_Param_Index(size_t p_index, boolean p_is_expl): index(p_index), is_expl(p_is_expl) {}
   size_t get_index() const { return index; }
-  bool is_index() const { return true; }
-  bool is_explicit() const { return is_expl; }
+  boolean is_index() const { return TRUE; }
+  boolean is_explicit() const { return is_expl; }
   char* get_str() const;
 };
 
@@ -126,9 +126,9 @@ public:
   Module_Param_CustomName(char* p): name(p) {}
   ~Module_Param_CustomName() { Free(name); }
   char* get_name() const { return name; }
-  bool is_explicit() const { return true; }
+  boolean is_explicit() const { return TRUE; }
   char* get_str() const;
-  bool is_custom() const { return true; }
+  boolean is_custom() const { return TRUE; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -137,17 +137,17 @@ class Module_Param_Length_Restriction {
   Module_Param_Length_Restriction(const Module_Param_Length_Restriction& p); // copy constructor disabled
   Module_Param_Length_Restriction& operator=(const Module_Param_Length_Restriction& p); // assignment disabled
   size_t min;
-  bool has_max;
+  boolean has_max;
   size_t max;
 public:
-  Module_Param_Length_Restriction(): min(0), has_max(false), max(0) {}
-  void set_single(size_t p_single) { has_max=true; min = max = p_single; }
+  Module_Param_Length_Restriction(): min(0), has_max(FALSE), max(0) {}
+  void set_single(size_t p_single) { has_max=TRUE; min = max = p_single; }
   void set_min(size_t p_min) { min=p_min; }
-  void set_max(size_t p_max) { has_max=true; max=p_max; }
+  void set_max(size_t p_max) { has_max=TRUE; max=p_max; }
   size_t get_min() const { return min; }
-  bool get_has_max() const { return has_max; }
+  boolean get_has_max() const { return has_max; }
   size_t get_max() const { return max; }
-  bool is_single() const { return has_max && min==max; }
+  boolean is_single() const { return has_max && min==max; }
   void log() const;
 };
 
@@ -242,7 +242,7 @@ public:
   const char* get_operation_type_str() const;
   const char* get_operation_type_sign_str() const;
   virtual const char* get_type_str() const = 0;
-  void log(bool log_id = true) const;
+  void log(boolean log_id = TRUE) const;
   virtual void log_value() const = 0;
   char* get_param_context() const;
 
@@ -274,12 +274,12 @@ public:
   virtual void* get_string_data() const;
   virtual int_val_t* get_lower_int() const;
   virtual int_val_t* get_upper_int() const;
-  virtual bool get_is_min_exclusive() const;
-  virtual bool get_is_max_exclusive() const;
+  virtual boolean get_is_min_exclusive() const;
+  virtual boolean get_is_max_exclusive() const;
   virtual double get_lower_float() const;
   virtual double get_upper_float() const;
-  virtual bool has_lower_float() const;
-  virtual bool has_upper_float() const;
+  virtual boolean has_lower_float() const;
+  virtual boolean has_upper_float() const;
   virtual universal_char get_lower_uchar() const;
   virtual universal_char get_upper_uchar() const;
   virtual int_val_t* get_integer() const;
@@ -541,34 +541,34 @@ public:
 class Module_Param_IntRange : public Module_Param {
   int_val_t* lower_bound; // NULL == -infinity
   int_val_t* upper_bound; // NULL == infinity
-  bool min_exclusive, max_exclusive;
+  boolean min_exclusive, max_exclusive;
 public:
   type_t get_type() const { return MP_IntRange; }
-  Module_Param_IntRange(int_val_t* p_l, int_val_t* p_u, bool min_is_exclusive, bool max_is_exclusive):
+  Module_Param_IntRange(int_val_t* p_l, int_val_t* p_u, boolean min_is_exclusive, boolean max_is_exclusive):
     lower_bound(p_l), upper_bound(p_u), min_exclusive(min_is_exclusive), max_exclusive(max_is_exclusive) {}
   ~Module_Param_IntRange() { Free(lower_bound); Free(upper_bound); }
   int_val_t* get_lower_int() const { return lower_bound; }
   int_val_t* get_upper_int() const { return upper_bound; }
   const char* get_type_str() const { return "integer range"; }
-  bool get_is_min_exclusive() const { return min_exclusive; }
-  bool get_is_max_exclusive() const { return max_exclusive; }
+  boolean get_is_min_exclusive() const { return min_exclusive; }
+  boolean get_is_max_exclusive() const { return max_exclusive; }
   void log_value() const;
-  static void log_bound(int_val_t* bound, bool is_lower);
+  static void log_bound(int_val_t* bound, boolean is_lower);
 };
 
 class Module_Param_FloatRange : public Module_Param {
   double lower_bound;
-  bool has_lower;
+  boolean has_lower;
   double upper_bound;
-  bool has_upper;
-  bool min_exclusive, max_exclusive;
+  boolean has_upper;
+  boolean min_exclusive, max_exclusive;
 public:
   type_t get_type() const { return MP_FloatRange; }
-  Module_Param_FloatRange(double p_lb, bool p_hl, double p_ub, bool p_hu, bool min_is_exclusive, bool max_is_exclusive): lower_bound(p_lb), has_lower(p_hl), upper_bound(p_ub), has_upper(p_hu), min_exclusive(min_is_exclusive), max_exclusive(max_is_exclusive) {}
+  Module_Param_FloatRange(double p_lb, boolean p_hl, double p_ub, boolean p_hu, boolean min_is_exclusive, boolean max_is_exclusive): lower_bound(p_lb), has_lower(p_hl), upper_bound(p_ub), has_upper(p_hu), min_exclusive(min_is_exclusive), max_exclusive(max_is_exclusive) {}
   double get_lower_float() const { return lower_bound; }
   double get_upper_float() const { return upper_bound; }
-  bool has_lower_float() const { return has_lower; }
-  bool has_upper_float() const { return has_upper; }
+  boolean has_lower_float() const { return has_lower; }
+  boolean has_upper_float() const { return has_upper; }
   const char* get_type_str() const { return "float range"; }
   boolean get_is_min_exclusive() const { return min_exclusive; }
   boolean get_is_max_exclusive() const { return max_exclusive; }
@@ -578,10 +578,10 @@ public:
 class Module_Param_StringRange : public Module_Param {
   universal_char lower_bound;
   universal_char upper_bound;
-  bool min_exclusive, max_exclusive;
+  boolean min_exclusive, max_exclusive;
 public:
   type_t get_type() const { return MP_StringRange; }
-  Module_Param_StringRange(const universal_char& p_lb, const universal_char& p_ub, bool min_is_exclusive, bool max_is_exclusive): lower_bound(p_lb), upper_bound(p_ub), min_exclusive(min_is_exclusive), max_exclusive(max_is_exclusive) {}
+  Module_Param_StringRange(const universal_char& p_lb, const universal_char& p_ub, boolean min_is_exclusive, boolean max_is_exclusive): lower_bound(p_lb), upper_bound(p_ub), min_exclusive(min_is_exclusive), max_exclusive(max_is_exclusive) {}
   universal_char get_lower_uchar() const { return lower_bound; }
   universal_char get_upper_uchar() const { return upper_bound; }
   const char* get_type_str() const { return "char range"; }
@@ -699,20 +699,20 @@ public:
 
 class Ttcn_String_Parsing {
 private: // only instantiation can set it to true and destruction set it back to false
-  static bool string_parsing;
+  static boolean string_parsing;
 public:
-  Ttcn_String_Parsing() { string_parsing = true; }
-  ~Ttcn_String_Parsing() { string_parsing = false; }
-  static bool happening() { return string_parsing; }
+  Ttcn_String_Parsing() { string_parsing = TRUE; }
+  ~Ttcn_String_Parsing() { string_parsing = FALSE; }
+  static boolean happening() { return string_parsing; }
 };
 
 class Debugger_Value_Parsing {
 private: // only instantiation can set it to true and destruction set it back to false
-  static bool is_happening;
+  static boolean is_happening;
 public:
-  Debugger_Value_Parsing() { is_happening = true; }
-  ~Debugger_Value_Parsing() { is_happening = false; }
-  static bool happening() { return is_happening; }
+  Debugger_Value_Parsing() { is_happening = TRUE; }
+  ~Debugger_Value_Parsing() { is_happening = FALSE; }
+  static boolean happening() { return is_happening; }
 };
 
 /** Use the configuration file parser to convert a string into a TTCN-3 value.
@@ -723,7 +723,7 @@ public:
   * @tricky Component names (given with the "start" command) can contain any characters.
   * This conflicts with several other rules, so certain rules in the parser will only
   * be applied to components. */
-extern Module_Param* process_config_string2ttcn(const char* mp_str, bool is_component);
+extern Module_Param* process_config_string2ttcn(const char* mp_str, boolean is_component);
 
 extern Module_Param* process_config_debugger_value(const char* mp_str);
 

@@ -17,6 +17,7 @@
 #ifndef TITANVECTOR_H_
 #define TITANVECTOR_H_
 
+#include "Types.h"
 #include <stddef.h>
 
 #ifndef PROF_MERGE
@@ -58,7 +59,7 @@ public:
   size_t size() const { return nof_elem; }
   void resize(size_t new_size, T element = T());
   size_t capacity() const { return cap; }
-  bool empty() const { return nof_elem == 0; }
+  boolean empty() const { return nof_elem == 0; }
   void reserve(size_t n);
   void shrink_to_fit();
 

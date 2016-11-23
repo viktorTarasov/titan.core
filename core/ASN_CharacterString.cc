@@ -792,7 +792,7 @@ int CHARACTER_STRING_identification::XER_encode(const XERdescriptor_t& p_td,
 {
   int encoded_length=(int)p_buf.get_len();
 
-  begin_xml(p_td, p_buf, flavor, indent++, false);
+  begin_xml(p_td, p_buf, flavor, indent++, FALSE);
 
   flavor &= XER_MASK;
   switch (union_selection) {
@@ -819,7 +819,7 @@ int CHARACTER_STRING_identification::XER_encode(const XERdescriptor_t& p_td,
     break;
   }
 
-  end_xml(p_td, p_buf, flavor, --indent, false);
+  end_xml(p_td, p_buf, flavor, --indent, FALSE);
 
   return (int)p_buf.get_len() - encoded_length;
 }
@@ -1685,19 +1685,19 @@ void CHARACTER_STRING_identification_syntaxes::set_param(Module_Param& param)
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
         abstract().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
         transfer().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -1791,12 +1791,12 @@ int CHARACTER_STRING_identification_syntaxes::XER_encode(const XERdescriptor_t& 
 {
   int encoded_length=(int)p_buf.get_len();
 
-  begin_xml(p_td, p_buf, flavor, indent++, false);
+  begin_xml(p_td, p_buf, flavor, indent++, FALSE);
 
   field_abstract.XER_encode(CHARACTER_STRING_identification_sxs_abs_xer_, p_buf, flavor, indent, 0);
   field_transfer.XER_encode(CHARACTER_STRING_identification_sxs_xfr_xer_, p_buf, flavor, indent, 0);
 
-  end_xml(p_td, p_buf, flavor, --indent, false);
+  end_xml(p_td, p_buf, flavor, --indent, FALSE);
 
   return p_buf.get_len() - encoded_length;
 }
@@ -1868,19 +1868,19 @@ void CHARACTER_STRING_identification_syntaxes_template::set_param(Module_Param& 
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
         abstract().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
         transfer().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -2416,19 +2416,19 @@ void CHARACTER_STRING_identification_context__negotiation::set_param(Module_Para
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
         presentation__context__id().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
         transfer__syntax().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -2522,12 +2522,12 @@ int CHARACTER_STRING_identification_context__negotiation::XER_encode(const XERde
 {
   int encoded_length=(int)p_buf.get_len();
 
-  begin_xml(p_td, p_buf, flavor, indent++, false);
+  begin_xml(p_td, p_buf, flavor, indent++, FALSE);
 
   field_presentation__context__id.XER_encode(CHARACTER_STRING_identification_pci_xer_, p_buf, flavor, indent, 0);
   field_transfer__syntax         .XER_encode(CHARACTER_STRING_identification_ts_xer_ , p_buf, flavor, indent, 0);
 
-  end_xml(p_td, p_buf, flavor, --indent, false);
+  end_xml(p_td, p_buf, flavor, --indent, FALSE);
 
   return p_buf.get_len() - encoded_length;
 }
@@ -2601,19 +2601,19 @@ void CHARACTER_STRING_identification_context__negotiation_template::set_param(Mo
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
         presentation__context__id().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
         transfer__syntax().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -3159,26 +3159,26 @@ void CHARACTER_STRING::set_param(Module_Param& param)
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
         identification().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
         data__value__descriptor().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "string_value")) {
         string__value().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -3374,14 +3374,14 @@ int CHARACTER_STRING::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf
   int encoded_length=(int)p_buf.get_len();
 
   flavor &= ~XER_RECOF; // ASN.1 character string doesn't care
-  begin_xml(p_td, p_buf, flavor, indent++, false);
+  begin_xml(p_td, p_buf, flavor, indent++, FALSE);
 
   field_identification.XER_encode(CHARACTER_STRING_identification_xer_, p_buf, flavor, indent, 0);
   // data-value-descriptor is OPTIONAL and can never be present.
   // Its encoding is empty.
   field_string__value .XER_encode(CHARACTER_STRING_data_value_xer_    , p_buf, flavor, indent, 0);
 
-  end_xml(p_td, p_buf, flavor, --indent, false);
+  end_xml(p_td, p_buf, flavor, --indent, FALSE);
 
   return (int)p_buf.get_len() - encoded_length;
 }
@@ -3471,26 +3471,26 @@ void CHARACTER_STRING_template::set_param(Module_Param& param)
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
         identification().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
         data__value__descriptor().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "string_value")) {
         string__value().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {

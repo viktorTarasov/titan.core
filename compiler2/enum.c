@@ -241,7 +241,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
   /* Conversion function: enum_to_str */
   def = mputprintf(def, "static const char *enum_to_str(%s enum_par%s);\n",
     enum_type,
-    edef->xerText ? ", boolean txt = false" : "");
+    edef->xerText ? ", boolean txt = FALSE" : "");
   src = mputprintf(src, "const char *%s::enum_to_str(%s enum_par%s)\n"
     "{\n"
     "switch (enum_par) {\n", name, enum_type,
@@ -669,7 +669,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "  int encoded_length=(int)p_buf.get_len();\n"
       "  const boolean e_xer = is_exer(p_flavor);\n"
       "  p_flavor |= (SIMPLE_TYPE | BXER_EMPTY_ELEM);\n"
-      "  if (begin_xml(p_td, p_buf, p_flavor, p_indent, false) == -1) "
+      "  if (begin_xml(p_td, p_buf, p_flavor, p_indent, FALSE) == -1) "
       "--encoded_length;\n"
       "  if (!e_xer) p_buf.put_c('<');\n"
       , name
@@ -690,7 +690,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "    p_buf.put_s(strlen(enumval), (const unsigned char*)enumval);\n"
       "  }\n"
       "  if (!e_xer) p_buf.put_s(2, (const unsigned char*)\"/>\");\n"
-      "  end_xml(p_td, p_buf, p_flavor, p_indent, false);\n"
+      "  end_xml(p_td, p_buf, p_flavor, p_indent, FALSE);\n"
       , edef->xerText ? ", e_xer" : ""
     );
     src = mputstr(src,
@@ -809,7 +809,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "  json_token_t token = JSON_TOKEN_NONE;\n"
       "  char* value = 0;\n"
       "  size_t value_len = 0;\n"
-      "  boolean error = false;\n"
+      "  boolean error = FALSE;\n"
       "  int dec_len = 0;\n"
       "  boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();\n"
       "  if (use_default) {\n"
@@ -829,10 +829,10 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "      enum_value = str_to_enum(value + (use_default ? 0 : 1));\n"
       "      if (!use_default) value[value_len - 1] = '\\\"';\n"
       "      if (%s == enum_value) {\n"
-      "        error = true;\n"
+      "        error = TRUE;\n"
       "      }\n"
       "    } else {\n"
-      "      error = true;\n"
+      "      error = TRUE;\n"
       "    }\n"
       "  } else {\n"
       "    enum_value = %s;\n"

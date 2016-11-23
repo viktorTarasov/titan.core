@@ -35,7 +35,7 @@ class VERDICTTYPE: public Base_Type {
     const VERDICTTYPE& other_value);
 
   verdicttype verdict_value;
-  verdicttype str_to_verdict(const char *v, boolean silent = false);
+  verdicttype str_to_verdict(const char *v, boolean silent = FALSE);
 public:
   /** Default constructor.
    * Initialises \p verdict_value to UNBOUND_VERDICT, a private macro

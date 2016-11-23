@@ -51,7 +51,7 @@ ILoggerPlugin *create_legacy_logger() { return new LegacyLogger(); }
 
 
 static char *event_to_str(const TitanLoggerApi::TitanLogEvent& event,
-                   bool without_header = false);
+                   boolean without_header = FALSE);
 static char *append_header(char *ret_val, const struct timeval& timestamp,
                     const TTCN_Logger::Severity severity,
                     const char *sourceinfo);
@@ -70,16 +70,16 @@ static void statistics_str(char *& ret_val, const TitanLoggerApi::StatisticsType
 namespace API = TitanLoggerApi;
 
 // Defined in Logger.cc.  Compares the name or the component identifier.
-extern bool operator==(const component_id_t& left,
+extern boolean operator==(const component_id_t& left,
                        const component_id_t& right);
 
 LegacyLogger* LegacyLogger::myself = 0;
 
 LegacyLogger::LegacyLogger()
 : log_fp_(NULL), er_(NULL), logfile_bytes_(0), logfile_size_(0), logfile_number_(1),
-  logfile_index_(1), filename_skeleton_(NULL), skeleton_given_(false),
-  append_file_(false), is_disk_full_(false), format_c_present_(false),
-  format_t_present_(false), current_filename_(NULL)
+  logfile_index_(1), filename_skeleton_(NULL), skeleton_given_(FALSE),
+  append_file_(FALSE), is_disk_full_(FALSE), format_c_present_(FALSE),
+  format_t_present_(FALSE), current_filename_(NULL)
 {
   if (myself != 0) {
     // Whoa, déjà vu!
@@ -120,10 +120,10 @@ void LegacyLogger::reset()
   this->logfile_number_ = 1;
   this->logfile_bytes_ = 0;
   this->logfile_index_ = 1;
-  this->is_disk_full_ = false;
-  this->skeleton_given_ = false;
-  this->append_file_ = false;
-  this->is_configured_ = false;
+  this->is_disk_full_ = FALSE;
+  this->skeleton_given_ = FALSE;
+  this->append_file_ = FALSE;
+  this->is_configured_ = FALSE;
 }
 
 void LegacyLogger::init(const char */*options*/)
@@ -174,7 +174,7 @@ void LegacyLogger::fatal_error(const char *err_msg, ...)
     @param [in] log_buffered
 **/
 void LegacyLogger::log(const TitanLoggerApi::TitanLogEvent& event,
-    bool log_buffered, bool separate_file, bool use_emergency_mask)
+    boolean log_buffered, boolean separate_file, boolean use_emergency_mask)
 {
   const TTCN_Logger::Severity& severity = (const TTCN_Logger::Severity)(int)event.severity();
 
@@ -203,13 +203,13 @@ void LegacyLogger::log(const TitanLoggerApi::TitanLogEvent& event,
   }
 }
 
-bool LegacyLogger::log_file_emerg(const TitanLoggerApi::TitanLogEvent& event)
+boolean LegacyLogger::log_file_emerg(const TitanLoggerApi::TitanLogEvent& event)
 {
-  bool write_success = true;
+  boolean write_success = TRUE;
   char *event_str = event_to_str(event);
   if (event_str == NULL) {
     TTCN_warning("No text for event");
-    return true;
+    return TRUE;
   }
   size_t bytes_to_log = mstrlen(event_str);
 
@@ -231,10 +231,10 @@ bool LegacyLogger::log_file_emerg(const TitanLoggerApi::TitanLogEvent& event)
     Free(filename_emergency);
   }
 
-  write_success = true;
+  write_success = TRUE;
 
   if (bytes_to_log > 0 && fwrite(event_str, bytes_to_log, 1, er_) != 1)
-    write_success = false;
+    write_success = FALSE;
 
   fputc('\n', er_);
 
@@ -256,10 +256,10 @@ bool LegacyLogger::log_file_emerg(const TitanLoggerApi::TitanLogEvent& event)
                 possible recursion of log_to_file() -> open_file() ->
                 log_to_file() -> open_file() -> ...
 **/
-bool LegacyLogger::log_file(const TitanLoggerApi::TitanLogEvent& event,
-                            bool log_buffered)
+boolean LegacyLogger::log_file(const TitanLoggerApi::TitanLogEvent& event,
+                            boolean log_buffered)
 {
-  if (!this->log_fp_) return false;
+  if (!this->log_fp_) return FALSE;
 
   struct timeval event_timestamp = { (time_t)event.timestamp().seconds(),
     (suseconds_t)event.timestamp().microSeconds() };
@@ -278,10 +278,10 @@ bool LegacyLogger::log_file(const TitanLoggerApi::TitanLogEvent& event,
           this->disk_full_time_.tv_usec;
       }
       if ((size_t)diff.tv_sec >= this->disk_full_action_.retry_interval)
-        this->is_disk_full_ = false;
-      else return false;
+        this->is_disk_full_ = FALSE;
+      else return FALSE;
     } else {
-      return false;
+      return FALSE;
     }
   }
 
@@ -294,7 +294,7 @@ bool LegacyLogger::log_file(const TitanLoggerApi::TitanLogEvent& event,
   char *event_str = event_to_str(event);
   if (event_str == NULL) {
     TTCN_warning("No text for event");
-    return true;
+    return TRUE;
   }
   size_t bytes_to_log = mstrlen(event_str) + 1;
   if (this->logfile_size_ != 0 && this->logfile_bytes_ != 0 && !log_buffered) {
@@ -311,7 +311,7 @@ bool LegacyLogger::log_file(const TitanLoggerApi::TitanLogEvent& event,
           Free(filename_to_delete);
         }
       }
-      open_file(false);
+      open_file(FALSE);
     }
   }
 
@@ -337,10 +337,10 @@ bool LegacyLogger::log_file(const TitanLoggerApi::TitanLogEvent& event,
         switched_event.severity() = (int)TTCN_Logger::EXECUTOR_RUNTIME;
         switched_event.logEvent().choice().unhandledEvent() =
           CHARSTRING(switched);
-        log_file(switched_event, true);
+        log_file(switched_event, TRUE);
         Free(switched);
         close_file();
-        open_file(false);  // calls get_filename again :(
+        open_file(FALSE);  // calls get_filename again :(
       }
       Free(new_filename);
       break; }
@@ -349,16 +349,16 @@ bool LegacyLogger::log_file(const TitanLoggerApi::TitanLogEvent& event,
 
   // Write out the event_str, if it failed assume that the disk is full, then
   // act according to DiskFullAction.
-  bool print_success = log_to_file(event_str);
+  boolean print_success = log_to_file(event_str);
   if (!print_success) {
     switch (this->disk_full_action_.type) {
     case TTCN_Logger::DISKFULL_ERROR:
       fatal_error("Writing to log file failed.");
     case TTCN_Logger::DISKFULL_STOP:
-      this->is_disk_full_ = true;
+      this->is_disk_full_ = TRUE;
       break;
     case TTCN_Logger::DISKFULL_RETRY:
-      this->is_disk_full_ = true;
+      this->is_disk_full_ = TRUE;
       // Time of failure.  TODO: Find a better way to transfer the timestamp.
       this->disk_full_time_.tv_sec = event.timestamp().seconds();
       this->disk_full_time_.tv_usec = event.timestamp().microSeconds();
@@ -392,16 +392,16 @@ bool LegacyLogger::log_file(const TitanLoggerApi::TitanLogEvent& event,
     this->logfile_bytes_ += bytes_to_log;
   }
   Free(event_str);
-  return true;
+  return TRUE;
 }
 
-bool LegacyLogger::log_console(const TitanLoggerApi::TitanLogEvent& event,
+boolean LegacyLogger::log_console(const TitanLoggerApi::TitanLogEvent& event,
                                const TTCN_Logger::Severity& severity)
 {
-  char *event_str = event_to_str(event, true);
+  char *event_str = event_to_str(event, TRUE);
   if (event_str == NULL) {
     TTCN_warning("No text for event");
-    return false;
+    return FALSE;
   }
   size_t event_str_len = mstrlen(event_str);
   if (!TTCN_Communication::send_log((time_t)event.timestamp().seconds(),
@@ -432,10 +432,10 @@ bool LegacyLogger::log_console(const TitanLoggerApi::TitanLogEvent& event,
   }
   Free(event_str);
   // It's always...
-  return true;
+  return TRUE;
 }
 
-bool LegacyLogger::log_to_file(const char *message_ptr)
+boolean LegacyLogger::log_to_file(const char *message_ptr)
 {
   // Retry and Delete: To avoid writing partial messages remember the initial
   // file position to be able to remove partial message if writing failed.
@@ -446,12 +446,12 @@ bool LegacyLogger::log_to_file(const char *message_ptr)
     fgetpos_ret_val = fgetpos(this->log_fp_, &initial_pos);
   }
   size_t message_len = strlen(message_ptr);
-  bool write_success = true;
+  boolean write_success = TRUE;
   if (message_len > 0 &&
       fwrite(message_ptr, message_len, 1, this->log_fp_) != 1)
-    write_success = false;
-  if (write_success && putc('\n', this->log_fp_) == EOF) write_success = false;
-  if (write_success && fflush(this->log_fp_)) write_success = false;
+    write_success = FALSE;
+  if (write_success && putc('\n', this->log_fp_) == EOF) write_success = FALSE;
+  if (write_success && fflush(this->log_fp_)) write_success = FALSE;
   if ((this->disk_full_action_.type == TTCN_Logger::DISKFULL_RETRY ||
        this->disk_full_action_.type == TTCN_Logger::DISKFULL_DELETE) &&
        !write_success && fgetpos_ret_val == 0) {
@@ -1760,7 +1760,7 @@ void statistics_str(char *& ret_val, const TitanLoggerApi::StatisticsType_choice
 }
 
 char *event_to_str(const TitanLoggerApi::TitanLogEvent& event,
-                                 bool without_header)
+                                 boolean without_header)
 {
   char *ret_val = NULL;
   if (!without_header) {
@@ -1953,7 +1953,7 @@ char *event_to_str(const TitanLoggerApi::TitanLogEvent& event,
 #pragma GCC diagnostic pop
 #endif
 
-void LegacyLogger::open_file(bool is_first)
+void LegacyLogger::open_file(boolean is_first)
 {
   if (is_first) {
     chk_logfile_data();
@@ -1961,7 +1961,7 @@ void LegacyLogger::open_file(bool is_first)
       set_file_name(TTCN_Runtime::is_single()
       ? (this->logfile_number_ == 1 ? "%e.%s"       : "%e-part%i.%s")
       : (this->logfile_number_ == 1 ? "%e.%h-%r.%s" : "%e.%h-%r-part%i.%s"),
-      false);
+      FALSE);
   }
   // Logging_Bits have only effect on the actual plug-in.  (Filtering is
   // implemented at higher level.)
@@ -1981,7 +1981,7 @@ void LegacyLogger::open_file(bool is_first)
     }
   }
 
-  this->is_configured_= true;
+  this->is_configured_= TRUE;
   this->logfile_bytes_ = 0;
 }
 
@@ -2007,10 +2007,10 @@ char *LegacyLogger::get_file_name(size_t idx)
   else if (TTCN_Runtime::is_hc()) whoami = HC;
   else if (TTCN_Runtime::is_mtc()) whoami = MTC;
   else whoami = PTC;
-  bool h_present = false, p_present = false, r_present = false,
-       i_present = false;
-  this->format_c_present_ = false;
-  this->format_t_present_ = false;
+  boolean h_present = FALSE, p_present = FALSE, r_present = FALSE,
+       i_present = FALSE;
+  this->format_c_present_ = FALSE;
+  this->format_t_present_ = FALSE;
   char *ret_val = memptystr();
   for (size_t i = 0; this->filename_skeleton_[i] != '\0'; i++) {
     if (this->filename_skeleton_[i] != '%') {
@@ -2020,14 +2020,14 @@ char *LegacyLogger::get_file_name(size_t idx)
     switch (this->filename_skeleton_[++i]) {
     case 'c': // %c -> name of the current testcase (only on PTCs)
       ret_val = mputstr(ret_val, TTCN_Runtime::get_testcase_name());
-      this->format_c_present_ = true;
+      this->format_c_present_ = TRUE;
       break;
     case 'e': // %e -> name of executable
       ret_val = mputstr(ret_val, TTCN_Logger::get_executable_name());
       break;
     case 'h': // %h -> hostname
       ret_val = mputstr(ret_val, TTCN_Runtime::get_host_name());
-      h_present = true;
+      h_present = TRUE;
       break;
     case 'l': { // %l -> login name
       setpwent();
@@ -2052,7 +2052,7 @@ char *LegacyLogger::get_file_name(size_t idx)
       break;
     case 'p': // %p -> process id
       ret_val = mputprintf(ret_val, "%ld", (long)getpid());
-      p_present = true;
+      p_present = TRUE;
       break;
     case 'r': // %r -> component reference
       switch (whoami) {
@@ -2070,19 +2070,19 @@ char *LegacyLogger::get_file_name(size_t idx)
         ret_val = mputprintf(ret_val, "%d", (component)self);
         break;
       }
-      r_present = true;
+      r_present = TRUE;
       break;
     case 's': // %s -> default suffix (currently: always "log")
       ret_val = mputstr(ret_val, "log");
       break;
     case 't': // %t -> component type (only on PTCs)
       ret_val = mputstr(ret_val, TTCN_Runtime::get_component_type());
-      this->format_t_present_ = true;
+      this->format_t_present_ = TRUE;
       break;
     case 'i': // %i -> log file index
       if (this->logfile_number_ != 1)
         ret_val = mputprintf(ret_val, "%lu", (unsigned long)idx);
-        i_present = true;
+        i_present = TRUE;
         break;
     case '\0': // trailing single %: leave as it is
       i--; // to avoid over-indexing in next iteration
@@ -2097,12 +2097,12 @@ char *LegacyLogger::get_file_name(size_t idx)
     }
   }
 
-  static bool already_warned = false;
+  static boolean already_warned = FALSE;
   if (ret_val[0] == '\0') { // result is empty
     Free(ret_val);
     ret_val = NULL;
   } else if (whoami == HC && !already_warned) {
-    already_warned = true;
+    already_warned = TRUE;
     if (!h_present || (!p_present && !r_present))
       TTCN_warning("Skeleton `%s' does not guarantee unique log file name "
                    "for every test system process. It may cause "
@@ -2131,7 +2131,7 @@ char *LegacyLogger::get_file_name(size_t idx)
 void LegacyLogger::create_parent_directories(const char *path_name)
 {
   char *path_backup = NULL;
-  bool umask_saved = false;
+  boolean umask_saved = FALSE;
   mode_t old_umask = 0;
   size_t i = 0;
   // if path_name is absolute skip the leading '/'(s)
@@ -2151,7 +2151,7 @@ void LegacyLogger::create_parent_directories(const char *path_name)
         errno = 0;
         if (!umask_saved) {
           old_umask = umask(0);
-          umask_saved = true;
+          umask_saved = TRUE;
         }
         if (mkdir(path_backup, 0755) < 0) {
           fatal_error("Creation of directory `%s' failed when trying to open "
@@ -2197,7 +2197,7 @@ void LegacyLogger::chk_logfile_data()
     TTCN_warning("Invalid combination of LogFileNumber (= %lu) and "
                  "AppendFile (= Yes). AppendFile was reset to No.",
                  (unsigned long)this->logfile_number_);
-    this->append_file_ = false;
+    this->append_file_ = FALSE;
   }
 }
 
@@ -2206,32 +2206,32 @@ void LegacyLogger::set_file_name(const char *new_filename_skeleton,
 {
   Free(this->filename_skeleton_);
   this->filename_skeleton_ = mcopystr(new_filename_skeleton);
-  if (from_config) this->skeleton_given_ = true;
+  if (from_config) this->skeleton_given_ = TRUE;
 }
 
-bool LegacyLogger::set_file_size(int p_size)
+boolean LegacyLogger::set_file_size(int p_size)
 {
   this->logfile_size_ = p_size;
-  return  true;
+  return  TRUE;
 }
 
-bool LegacyLogger::set_file_number(int p_number)
+boolean LegacyLogger::set_file_number(int p_number)
 {
   this->logfile_number_ = p_number;
-  return true;
+  return TRUE;
 }
 
-bool LegacyLogger::set_disk_full_action(
+boolean LegacyLogger::set_disk_full_action(
   TTCN_Logger::disk_full_action_t p_disk_full_action)
 {
   this->disk_full_action_ = p_disk_full_action;
-  return true;
+  return TRUE;
 }
 
 // LegacyLogger should be the only provider of log2str().
 CHARSTRING LegacyLogger::log2str(const TitanLoggerApi::TitanLogEvent& event)
 {
-  char *event_str = event_to_str(event, true);
+  char *event_str = event_to_str(event, TRUE);
   // mstrlen can handle NULL; it will result in a bound but empty CHARSTRING
   CHARSTRING ret_val(mstrlen(event_str), event_str);
   if (event_str == NULL) {
@@ -2241,7 +2241,7 @@ CHARSTRING LegacyLogger::log2str(const TitanLoggerApi::TitanLogEvent& event)
   return ret_val;
 }
 
-void LegacyLogger::set_append_file(bool new_append_file)
+void LegacyLogger::set_append_file(boolean new_append_file)
 {
   this->append_file_ = new_append_file;
 }

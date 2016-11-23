@@ -38,12 +38,12 @@ void Logging_Bits::add_sev( TTCN_Logger::Severity sev )
   // Note that the assert and the comparison below are different.
   // 0==LOG_NOTHING which is valid but it means nothing to do.
   if (sev > 0 && sev < TTCN_Logger::NUMBER_OF_LOGSEVERITIES) {
-    bits[sev] = true;
+    bits[sev] = TRUE;
   }
 }
 
 
-bool Logging_Bits::operator==( const Logging_Bits& other ) const
+boolean Logging_Bits::operator==( const Logging_Bits& other ) const
 {
   return memcmp( bits, other.bits, sizeof(bits) ) == 0;
 }
@@ -72,7 +72,7 @@ expstring_t Logging_Bits::describe() const
     size_t low_inc = TTCN_Logger::sev_categories[categ-1] + 1;
     size_t high_inc= TTCN_Logger::sev_categories[categ];
     
-    const bool * first = bits + low_inc;
+    const boolean * first = bits + low_inc;
     size_t length= high_inc - low_inc + 1;
     assert(length < TTCN_Logger::NUMBER_OF_LOGSEVERITIES-1);
     // Comparing a segment of our bits with the "all 1s" of log_everything

@@ -17,12 +17,12 @@
 #include <assert.h>
 #include <dlfcn.h>
 
-bool str_ends_with(const char *str, const char *suffix)
+boolean str_ends_with(const char *str, const char *suffix)
 {
-  if (!str || !suffix) return false;
+  if (!str || !suffix) return FALSE;
   size_t lenstr = strlen(str);
   size_t lensuffix = strlen(suffix);
-  if (lensuffix > lenstr) return false;
+  if (lensuffix > lenstr) return FALSE;
   return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
@@ -42,7 +42,7 @@ void LoggerPlugin::load()
 {
   if (this->filename_) {
     // determine the required library
-    bool single_mode = TTCN_Runtime::is_single();
+    boolean single_mode = TTCN_Runtime::is_single();
     #ifndef TITAN_RUNTIME_2
     const SoType required_so_type = single_mode ? RT1_SINGLE : RT1_PARALLEL;
     const char* required_suffix_str = single_mode ? ".so" : "-parallel.so";

@@ -137,7 +137,7 @@ void UNIVERSAL_CHARSTRING::clean_up()
     cstr.clean_up();
 }
 
-UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING(int n_uchars, bool cstring)
+UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING(int n_uchars, boolean cstring)
 : val_ptr(NULL), cstr(cstring ? n_uchars : 0), charstring(cstring)
 {
   if (!charstring)
@@ -145,12 +145,12 @@ UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING(int n_uchars, bool cstring)
 }
 
 UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING()
-: val_ptr(NULL), cstr(0), charstring(false)
+: val_ptr(NULL), cstr(0), charstring(FALSE)
 {}
 
 UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING(unsigned char uc_group,
   unsigned char uc_plane, unsigned char uc_row, unsigned char uc_cell)
-: charstring(false)
+: charstring(FALSE)
 {
   init_struct(1);
   val_ptr->uchars_ptr[0].uc_group = uc_group;
@@ -161,7 +161,7 @@ UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING(unsigned char uc_group,
 
 UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING
   (const universal_char& other_value)
-: cstr(0), charstring(false)
+: cstr(0), charstring(FALSE)
 {
   init_struct(1);
   val_ptr->uchars_ptr[0] = other_value;
@@ -169,31 +169,31 @@ UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING
 
 UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING(int n_uchars,
   const universal_char *uchars_ptr)
-: cstr(0), charstring(false)
+: cstr(0), charstring(FALSE)
 {
   init_struct(n_uchars);
   memcpy(val_ptr->uchars_ptr, uchars_ptr, n_uchars * sizeof(universal_char));
 }
 
 UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING(const char *chars_ptr)
-: val_ptr(NULL), cstr(chars_ptr), charstring(true)
+: val_ptr(NULL), cstr(chars_ptr), charstring(TRUE)
 {
 }
 
 UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING(int n_chars,
   const char *chars_ptr)
-: val_ptr(NULL), cstr(n_chars, chars_ptr), charstring(true)
+: val_ptr(NULL), cstr(n_chars, chars_ptr), charstring(TRUE)
 {
 }
 
 UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING(const CHARSTRING& other_value)
-: val_ptr(NULL), cstr(other_value), charstring(true)
+: val_ptr(NULL), cstr(other_value), charstring(TRUE)
 {
 }
 
 UNIVERSAL_CHARSTRING::UNIVERSAL_CHARSTRING
   (const CHARSTRING_ELEMENT& other_value)
-: val_ptr(NULL), cstr(other_value), charstring(true)
+: val_ptr(NULL), cstr(other_value), charstring(TRUE)
 {
 }
 
@@ -239,9 +239,9 @@ UNIVERSAL_CHARSTRING& UNIVERSAL_CHARSTRING::operator=
   clean_up();
   if (other_value.is_char()) {
     cstr = CHARSTRING(other_value.uc_cell);
-    charstring = true;
+    charstring = TRUE;
   } else {
-    charstring = false;
+    charstring = FALSE;
     init_struct(1);
     val_ptr->uchars_ptr[0] = other_value;
     cstr.init_struct(0);
@@ -254,7 +254,7 @@ UNIVERSAL_CHARSTRING& UNIVERSAL_CHARSTRING::operator=
 {
   if (!charstring) {
     clean_up();
-    charstring = true;
+    charstring = TRUE;
   }
   cstr = other_value;
   return *this;
@@ -265,7 +265,7 @@ UNIVERSAL_CHARSTRING& UNIVERSAL_CHARSTRING::operator=
 {
   if (!charstring) {
     clean_up();
-    charstring = true;
+    charstring = TRUE;
   }
   cstr = other_value;
   return *this;
@@ -276,7 +276,7 @@ UNIVERSAL_CHARSTRING& UNIVERSAL_CHARSTRING::operator=
 {
   if (!charstring) {
     clean_up();
-    charstring = true;
+    charstring = TRUE;
   }
   cstr = other_value;
   return *this;
@@ -311,13 +311,13 @@ UNIVERSAL_CHARSTRING& UNIVERSAL_CHARSTRING::operator=
     char c = other_value.str_val.cstr.val_ptr->chars_ptr[other_value.uchar_pos];
     clean_up();
     cstr = CHARSTRING(c);
-    charstring = true;
+    charstring = TRUE;
   } else {
     universal_char uchar_value = other_value.get_uchar();
     clean_up();
     init_struct(1);
     val_ptr->uchars_ptr[0] = uchar_value;
-    charstring = false;
+    charstring = FALSE;
   }
   return *this;
 }
@@ -432,7 +432,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+
     "charstring value.");
   if (charstring) {
     if (other_value.is_char()) {
-      UNIVERSAL_CHARSTRING ret_val(cstr.lengthof() + 1, true);
+      UNIVERSAL_CHARSTRING ret_val(cstr.lengthof() + 1, TRUE);
       memcpy(ret_val.cstr.val_ptr->chars_ptr, cstr.val_ptr->chars_ptr,
         cstr.val_ptr->n_chars);
       ret_val.cstr.val_ptr->chars_ptr[cstr.val_ptr->n_chars] =
@@ -466,7 +466,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+
   else other_len = strlen(other_value);
   if (other_len == 0) return *this;
   if (charstring) {
-    UNIVERSAL_CHARSTRING ret_val(cstr.lengthof() + other_len, true);
+    UNIVERSAL_CHARSTRING ret_val(cstr.lengthof() + other_len, TRUE);
     memcpy(ret_val.cstr.val_ptr->chars_ptr, cstr.val_ptr->chars_ptr,
       cstr.val_ptr->n_chars);
     memcpy(ret_val.cstr.val_ptr->chars_ptr + cstr.val_ptr->n_chars,
@@ -495,7 +495,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+
   if (other_value.val_ptr->n_chars == 0) return *this;
   if (charstring) {
     UNIVERSAL_CHARSTRING ret_val(cstr.lengthof() + other_value.val_ptr->n_chars,
-      true);
+      TRUE);
     memcpy(ret_val.cstr.val_ptr->chars_ptr, cstr.val_ptr->chars_ptr,
       cstr.val_ptr->n_chars);
     memcpy(ret_val.cstr.val_ptr->chars_ptr + cstr.val_ptr->n_chars,
@@ -524,7 +524,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+
   other_value.must_bound("The right operand of concatenation is an unbound "
     "charstring element.");
   if (charstring) {
-    UNIVERSAL_CHARSTRING ret_val(cstr.lengthof() + 1, true);
+    UNIVERSAL_CHARSTRING ret_val(cstr.lengthof() + 1, TRUE);
     memcpy(ret_val.cstr.val_ptr->chars_ptr, cstr.val_ptr->chars_ptr,
       cstr.val_ptr->n_chars);
     ret_val.cstr.val_ptr->chars_ptr[cstr.val_ptr->n_chars] =
@@ -556,7 +556,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+
       if (other_value.cstr.val_ptr->n_chars == 0)
         return *this;
       UNIVERSAL_CHARSTRING ret_val(cstr.val_ptr->n_chars +
-        other_value.cstr.val_ptr->n_chars, true);
+        other_value.cstr.val_ptr->n_chars, TRUE);
       memcpy(ret_val.cstr.val_ptr->chars_ptr, cstr.val_ptr->chars_ptr,
         cstr.val_ptr->n_chars);
       memcpy(ret_val.cstr.val_ptr->chars_ptr + cstr.val_ptr->n_chars,
@@ -610,10 +610,10 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+
     "charstring value.");
   other_value.must_bound("The right operand of concatenation is an unbound "
     "universal charstring element.");
-  bool other_ischar = other_value.str_val.charstring;
+  boolean other_ischar = other_value.str_val.charstring;
   if (charstring) {
     if (other_ischar) {
-      UNIVERSAL_CHARSTRING ret_val(cstr.val_ptr->n_chars + 1, true);
+      UNIVERSAL_CHARSTRING ret_val(cstr.val_ptr->n_chars + 1, TRUE);
       memcpy(ret_val.cstr.val_ptr->chars_ptr, cstr.val_ptr->chars_ptr,
         cstr.val_ptr->n_chars);
       ret_val.cstr.val_ptr->chars_ptr[cstr.val_ptr->n_chars] =
@@ -874,7 +874,7 @@ void UNIVERSAL_CHARSTRING::convert_cstr_to_uni() {
     val_ptr->uchars_ptr[i].uc_row = 0;
     val_ptr->uchars_ptr[i].uc_cell = cstr.val_ptr->chars_ptr[i];
   }
-  charstring = false;
+  charstring = FALSE;
   cstr.clean_up();
   cstr.init_struct(0);
 }
@@ -1082,7 +1082,7 @@ void UNIVERSAL_CHARSTRING::decode_text(Text_Buf& text_buf)
   if (n_uchars < 0) TTCN_error("Text decoder: Negative length was received "
     "for a universal charstring.");
   clean_up();
-  charstring = false;
+  charstring = FALSE;
   init_struct(n_uchars);
   for (int i = 0; i < n_uchars; i++) {
     unsigned char buf[4];
@@ -1228,7 +1228,7 @@ void UNIVERSAL_CHARSTRING::decode(const TTCN_Typedescriptor_t& p_td,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -1485,7 +1485,7 @@ int UNIVERSAL_CHARSTRING::TEXT_encode(const TTCN_Typedescriptor_t& p_td,
   return encoded_length;
 }
 
-void UNIVERSAL_CHARSTRING::encode_utf8(TTCN_Buffer& buf, bool addBOM /*= false*/) const
+void UNIVERSAL_CHARSTRING::encode_utf8(TTCN_Buffer& buf, boolean addBOM /*= false*/) const
 {
   // Add BOM
   if (addBOM) {
@@ -1554,14 +1554,14 @@ void UNIVERSAL_CHARSTRING::encode_utf16(TTCN_Buffer& buf,
                                         CharCoding::CharCodingType expected_coding) const
 {
   // add BOM
-  bool isbig = true;
+  boolean isbig = TRUE;
   switch (expected_coding) {
     case CharCoding::UTF16:
     case CharCoding::UTF16BE:
-      isbig = true;
+      isbig = TRUE;
       break;
     case CharCoding::UTF16LE:
-      isbig = false;
+      isbig = FALSE;
       break;
     default:
       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_DEC_UCSTR,
@@ -1634,14 +1634,14 @@ void UNIVERSAL_CHARSTRING::encode_utf16(TTCN_Buffer& buf,
 void UNIVERSAL_CHARSTRING::encode_utf32(TTCN_Buffer& buf,
                                         CharCoding::CharCodingType expected_coding) const
 {
-  bool isbig = true;
+  boolean isbig = TRUE;
   switch (expected_coding) {
     case CharCoding::UTF32:
     case CharCoding::UTF32BE:
-      isbig = true;
+      isbig = TRUE;
       break;
     case CharCoding::UTF32LE:
-      isbig = false;
+      isbig = FALSE;
       break;
     default:
       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_DEC_UCSTR,
@@ -1715,7 +1715,7 @@ boolean UNIVERSAL_CHARSTRING::BER_decode_TLV
  unsigned L_form)
 {
   clean_up();
-  charstring = false;
+  charstring = FALSE;
   TTCN_EncDec_ErrorContext ec("While decoding universal charstring type: ");
   OCTETSTRING ostr;
   if(!ostr.BER_decode_TLV(p_td, p_tlv, L_form)) return FALSE;
@@ -1789,7 +1789,7 @@ int UNIVERSAL_CHARSTRING::XER_encode(const XERdescriptor_t& p_td,
   int exer  = is_exer(flavor |= SIMPLE_TYPE);
   // SIMPLE_TYPE has no influence on is_exer, we set it for later
   int encoded_length=(int)p_buf.get_len();
-  bool do_empty_element = val_ptr==NULL || val_ptr->n_uchars == 0;
+  boolean do_empty_element = val_ptr==NULL || val_ptr->n_uchars == 0;
 
   flavor &= ~XER_RECOF; // universal charstring doesn't care
   if (exer && (p_td.xer_bits & ANY_ELEMENT)) {
@@ -2117,7 +2117,7 @@ int UNIVERSAL_CHARSTRING::XER_decode(const XERdescriptor_t& p_td,
 {
   int exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1;
-  bool omit_tag = exer
+  boolean omit_tag = exer
     && ((p_td.xer_bits & UNTAGGED)
     || (flavor & (EMBED_VALUES|XER_LIST|USE_TYPE_ATTR|ANY_ATTRIBUTES|USE_NIL)));
 
@@ -2129,7 +2129,7 @@ int UNIVERSAL_CHARSTRING::XER_decode(const XERdescriptor_t& p_td,
         xmlChar * value = reader.ReadOuterXml();
         size_t num_chars = strlen((const char*)value);
         clean_up();
-        charstring = false;
+        charstring = FALSE;
         decode_utf8(num_chars, value); // does init_struct
         xmlFree(value);
         
@@ -2155,7 +2155,7 @@ int UNIVERSAL_CHARSTRING::XER_decode(const XERdescriptor_t& p_td,
   }
   else { // not ANY-ELEMENT
     clean_up(); // start with a clean slate
-    charstring = false;
+    charstring = FALSE;
     if (exer && (p_td.xer_bits & XER_ATTRIBUTE)) {
       // we have it easy (but does decode_utf8 handle &nnn; ?)
       const char * name = verify_name(reader, p_td, exer);
@@ -2370,10 +2370,10 @@ int UNIVERSAL_CHARSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td,
   CHARSTRING buff_str;
   int dec_len = buff_str.RAW_decode(p_td, buff, limit, top_bit_ord, no_err);
   if (buff_str.is_bound()) {
-    charstring = true;
+    charstring = TRUE;
     for (int i = 0; i < buff_str.val_ptr->n_chars; ++i) {
       if (buff_str.val_ptr->chars_ptr[i] < 0) {
-        charstring = false;
+        charstring = FALSE;
         break;
       }
     }
@@ -2417,7 +2417,7 @@ boolean UNIVERSAL_CHARSTRING::from_JSON_string(boolean check_quotes)
     end = json_len - 1;
     if (!json_str[0].is_char() || json_str[0].uc_cell != '\"' || 
         !json_str[json_len - 1].is_char() || json_str[json_len - 1].uc_cell != '\"') {
-      return false;
+      return FALSE;
     }
   }
   
@@ -2425,12 +2425,12 @@ boolean UNIVERSAL_CHARSTRING::from_JSON_string(boolean check_quotes)
   universal_char* ustr = (universal_char*)Malloc((json_len - 2) * sizeof(universal_char));
   memset(ustr, 0, sizeof(universal_char) * (json_len - 2));
   int ustr_len = 0;
-  boolean error = false;
+  boolean error = FALSE;
   
   for (int i = start; i < end; ++i) {
     if (json_str[i].is_char() && '\\' == json_str[i].uc_cell) {
       if (i == end - 1 || !json_str[i + 1].is_char()) {
-        error = true;
+        error = TRUE;
         break;
       }
       switch(json_str[i + 1].uc_cell) {
@@ -2474,19 +2474,19 @@ boolean UNIVERSAL_CHARSTRING::from_JSON_string(boolean check_quotes)
           } else {
             // error (encountered something other than a hex digit) -> leave the for cycle
             i = end;
-            error = true;
+            error = TRUE;
           }
         } else {
           // error (not enough characters or the 'hex digits' are not even ascii characters) -> leave the for cycle
           i = end;
-          error = true;
+          error = TRUE;
         }
         break; 
       }
       default:
         // error (invalid escaped character) -> leave the for cycle
         i = end;
-        error = true;
+        error = TRUE;
         break;
       }
       // skip an extra character (the \)
@@ -2497,7 +2497,7 @@ boolean UNIVERSAL_CHARSTRING::from_JSON_string(boolean check_quotes)
     
     if (check_quotes && i == json_len - 1) {
       // Special case: the last 2 characters are double escaped quotes ('\\' and '\"')
-      error = true;
+      error = TRUE;
     }
   }
   
@@ -2551,10 +2551,10 @@ int UNIVERSAL_CHARSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_To
   }
   else if (JSON_TOKEN_STRING == token || use_default) {
     if (cstr.from_JSON_string(value, value_len, !use_default)) {
-      charstring = true;
+      charstring = TRUE;
     }
     else {
-      charstring = false;
+      charstring = FALSE;
       decode_utf8(value_len, (unsigned char*)value);
       if (!from_JSON_string(!use_default)) {
         JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FORMAT_ERROR, "string", "universal charstring");
@@ -2609,7 +2609,7 @@ static void fill_continuing_octets(int n_continuing,
 void UNIVERSAL_CHARSTRING::decode_utf8(int n_octets,
                                        const unsigned char *octets_ptr,
                                        CharCoding::CharCodingType /*expected_coding*/ /*= UTF8*/,
-                                       bool checkBOM /*= false)*/)
+                                       boolean checkBOM /*= false)*/)
 {
   // approximate the number of characters
   int n_uchars = 0;
@@ -2619,7 +2619,7 @@ void UNIVERSAL_CHARSTRING::decode_utf8(int n_octets,
   }
   // allocate enough memory, start from clean state
   clean_up();
-  charstring=false;
+  charstring=FALSE;
   init_struct(n_uchars);
   n_uchars = 0;
 
@@ -2772,14 +2772,14 @@ void UNIVERSAL_CHARSTRING::decode_utf16(int n_octets,
   int n_uchars = n_octets/2;
   init_struct(n_uchars);
   n_uchars = 0;
-  bool isbig = true;
+  boolean isbig = TRUE;
   switch (expected_coding) {
     case CharCoding::UTF16:
     case CharCoding::UTF16BE:
-      isbig = true;
+      isbig = TRUE;
       break;
     case CharCoding::UTF16LE:
-      isbig = false;
+      isbig = FALSE;
       break;
     default:
       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_DEC_UCSTR,
@@ -2860,14 +2860,14 @@ void UNIVERSAL_CHARSTRING::decode_utf32(int n_octets, const unsigned char *octet
   int n_uchars = n_octets/4;
   init_struct(n_uchars);
   n_uchars = 0;
-  bool isbig = true;
+  boolean isbig = TRUE;
   switch (expected_coding) {
     case CharCoding::UTF32:
     case CharCoding::UTF32BE:
-      isbig = true;
+      isbig = TRUE;
       break;
     case CharCoding::UTF32LE:
-      isbig = false;
+      isbig = FALSE;
       break;
     default:
       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_DEC_UCSTR,
@@ -3280,7 +3280,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+
   must_bound("The left operand of concatenation is an unbound universal "
     "charstring element.");
   if (str_val.charstring && other_value.is_char()) {
-    UNIVERSAL_CHARSTRING ret_val(2, true);
+    UNIVERSAL_CHARSTRING ret_val(2, TRUE);
     ret_val.cstr.val_ptr->chars_ptr[0] =
       str_val.cstr.val_ptr->chars_ptr[uchar_pos];
     ret_val.cstr.val_ptr->chars_ptr[1] = other_value.uc_cell;
@@ -3362,7 +3362,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+
   other_value.must_bound("The right operand of concatenation is an unbound "
     "charstring element.");
   if (str_val.charstring) {
-    UNIVERSAL_CHARSTRING ret_val(2, true);
+    UNIVERSAL_CHARSTRING ret_val(2, TRUE);
     ret_val.cstr.val_ptr->chars_ptr[0] =
       str_val.cstr.val_ptr->chars_ptr[uchar_pos];
     ret_val.cstr.val_ptr->chars_ptr[1] = other_value.get_char();
@@ -3387,7 +3387,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+
     "universal charstring value.");
   if (str_val.charstring) {
     if (other_value.charstring) {
-      UNIVERSAL_CHARSTRING ret_val(other_value.cstr.val_ptr->n_chars + 1, true);
+      UNIVERSAL_CHARSTRING ret_val(other_value.cstr.val_ptr->n_chars + 1, TRUE);
       ret_val.cstr.val_ptr->chars_ptr[0] =
         str_val.cstr.val_ptr->chars_ptr[uchar_pos];
       memcpy(ret_val.cstr.val_ptr->chars_ptr + 1,
@@ -3433,7 +3433,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+
     "universal charstring element.");
   if (str_val.charstring) {
     if (other_value.str_val.charstring) {
-      UNIVERSAL_CHARSTRING ret_val(2, true);
+      UNIVERSAL_CHARSTRING ret_val(2, TRUE);
       ret_val.cstr.val_ptr->chars_ptr[0] =
         str_val.cstr.val_ptr->chars_ptr[uchar_pos];
       ret_val.cstr.val_ptr->chars_ptr[1] =
@@ -3527,7 +3527,7 @@ UNIVERSAL_CHARSTRING operator+(const universal_char& uchar_value,
     "universal charstring value.");
   if (other_value.charstring) {
     if (uchar_value.is_char()) {
-      UNIVERSAL_CHARSTRING ret_val(other_value.cstr.val_ptr->n_chars + 1, true);
+      UNIVERSAL_CHARSTRING ret_val(other_value.cstr.val_ptr->n_chars + 1, TRUE);
       ret_val.cstr.val_ptr->chars_ptr[0] = uchar_value.uc_cell;
       memcpy(ret_val.cstr.val_ptr->chars_ptr + 1,
         other_value.cstr.val_ptr->chars_ptr, other_value.cstr.val_ptr->n_chars);
@@ -3631,7 +3631,7 @@ UNIVERSAL_CHARSTRING operator+(const char *string_value,
   else string_len = strlen(string_value);
   if (other_value.charstring) {
     UNIVERSAL_CHARSTRING ret_val(string_len + other_value.cstr.val_ptr->n_chars,
-      true);
+      TRUE);
     memcpy(ret_val.cstr.val_ptr->chars_ptr, string_value, string_len);
     memcpy(ret_val.cstr.val_ptr->chars_ptr + string_len,
       other_value.cstr.val_ptr->chars_ptr, other_value.cstr.val_ptr->n_chars);
@@ -3659,7 +3659,7 @@ UNIVERSAL_CHARSTRING operator+(const char *string_value,
   if (string_value == NULL) string_len = 0;
   else string_len = strlen(string_value);
   if (other_value.str_val.charstring) {
-    UNIVERSAL_CHARSTRING ret_val(string_len + 1, true);
+    UNIVERSAL_CHARSTRING ret_val(string_len + 1, TRUE);
     memcpy(ret_val.cstr.val_ptr->chars_ptr, string_value, string_len);
     ret_val.cstr.val_ptr->chars_ptr[string_len] =
       other_value.str_val.cstr.val_ptr->chars_ptr[other_value.uchar_pos];
@@ -4125,7 +4125,7 @@ boolean UNIVERSAL_CHARSTRING_template::match
     TTCN_Buffer buff;
     switch (dec_match->coding) {
     case CharCoding::UTF_8:
-      other_value.encode_utf8(buff, false);
+      other_value.encode_utf8(buff, FALSE);
       break;
     case CharCoding::UTF16:
     case CharCoding::UTF16LE:

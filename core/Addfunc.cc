@@ -1007,7 +1007,7 @@ UNIVERSAL_CHARSTRING oct2unichar(const OCTETSTRING& invalue)
   UNIVERSAL_CHARSTRING ucstr;
   TTCN_EncDec::error_behavior_t err_behavior = TTCN_EncDec::get_error_behavior(TTCN_EncDec::ET_DEC_UCSTR);
   TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_DEC_UCSTR, TTCN_EncDec::EB_ERROR);
-  ucstr.decode_utf8(invalue.lengthof(), (const unsigned char *)invalue, CharCoding::UTF_8, true);
+  ucstr.decode_utf8(invalue.lengthof(), (const unsigned char *)invalue, CharCoding::UTF_8, TRUE);
   TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_DEC_UCSTR, err_behavior);
   return ucstr;
 }
@@ -1019,7 +1019,7 @@ UNIVERSAL_CHARSTRING oct2unichar(const OCTETSTRING& invalue,
   TTCN_EncDec::error_behavior_t err_behavior = TTCN_EncDec::get_error_behavior(TTCN_EncDec::ET_DEC_UCSTR);
   TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_DEC_UCSTR, TTCN_EncDec::EB_ERROR);
   if ("UTF-8" == string_encoding) {
-    ucstr.decode_utf8(invalue.lengthof(), (const unsigned char *)invalue, CharCoding::UTF_8, true);
+    ucstr.decode_utf8(invalue.lengthof(), (const unsigned char *)invalue, CharCoding::UTF_8, TRUE);
   }
   else if ("UTF-16" == string_encoding) {
     ucstr.decode_utf16(invalue.lengthof(), (const unsigned char *)invalue, CharCoding::UTF16);
@@ -2794,7 +2794,7 @@ HEXSTRING str2hex(const CHARSTRING_ELEMENT& value)
 
 CHARSTRING float2str(double value)
 {
-  bool f = value == 0.0
+  boolean f = value == 0.0
     || (value > -MAX_DECIMAL_FLOAT && value <= -MIN_DECIMAL_FLOAT)
     || (value >= MIN_DECIMAL_FLOAT && value < MAX_DECIMAL_FLOAT);
   // true if decimal representation possible (use %f format)
@@ -2864,10 +2864,10 @@ OCTETSTRING unichar2oct(const UNIVERSAL_CHARSTRING& invalue, const CHARSTRING& s
   TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_DEC_UCSTR, TTCN_EncDec::EB_ERROR);
   TTCN_Buffer buf;
   if ("UTF-8" == string_encoding) {
-    invalue.encode_utf8(buf, false);
+    invalue.encode_utf8(buf, FALSE);
   }
   else if ("UTF-8 BOM" == string_encoding) {
-    invalue.encode_utf8(buf, true);
+    invalue.encode_utf8(buf, TRUE);
   }
   else if ("UTF-16" == string_encoding) {
     invalue.encode_utf16(buf, CharCoding::UTF16);
@@ -2901,7 +2901,7 @@ OCTETSTRING unichar2oct(const UNIVERSAL_CHARSTRING& invalue)
   TTCN_EncDec::error_behavior_t err_behavior = TTCN_EncDec::get_error_behavior(TTCN_EncDec::ET_DEC_UCSTR);
   TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_DEC_UCSTR, TTCN_EncDec::EB_ERROR);
   TTCN_Buffer buf;
-  invalue.encode_utf8(buf, false);
+  invalue.encode_utf8(buf, FALSE);
   TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_DEC_UCSTR, err_behavior);
   return OCTETSTRING (buf.get_len(), buf.get_data());
 }
@@ -3037,7 +3037,7 @@ CHARSTRING encode_base64(const OCTETSTRING& msg)
   return ret_val;
 }
 
-CHARSTRING encode_base64(const OCTETSTRING& msg, bool use_linebreaks)
+CHARSTRING encode_base64(const OCTETSTRING& msg, boolean use_linebreaks)
 {
   const char *code_table = {
     "ABCDEFGHIJKLMNOP"

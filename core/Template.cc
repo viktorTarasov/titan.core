@@ -2889,13 +2889,13 @@ void Record_Template::set_param(Module_Param& param)
     set_specific();
     for (size_t i=0; i<mp->get_size(); ++i) {
       Module_Param* const current = mp->get_elem(i);
-      bool found = false;
+      boolean found = FALSE;
       for (int j=0; j<single_value.n_elements; ++j) {
         if (!strcmp(fld_name(j), current->get_id()->get_name())) {
           if (current->get_type()!=Module_Param::MP_NotUsed) {
             get_at(j)->set_param(*current);
           }
-          found = true;
+          found = TRUE;
           break;
         }
       }

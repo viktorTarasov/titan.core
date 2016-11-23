@@ -115,7 +115,7 @@ void verify_end(XmlReaderWrap& reader, const XERdescriptor_t& p_td, const int de
 }
 
 // This should be called for EXER only
-bool check_namespace(const char *ns_uri, const XERdescriptor_t& p_td)
+boolean check_namespace(const char *ns_uri, const XERdescriptor_t& p_td)
 {
   if (p_td.my_module==0 || p_td.ns_index==-1) {// no namespace in XER descriptor
     return ns_uri==0 || *ns_uri=='\0'; // there should be no ns
@@ -123,7 +123,7 @@ bool check_namespace(const char *ns_uri, const XERdescriptor_t& p_td)
   else {
     const namespace_t *expected_ns = p_td.my_module->get_ns(p_td.ns_index);
     if (ns_uri!=0) return strcmp(ns_uri, expected_ns->ns)==0;
-    else return true; // if no namespace we presume it's the expected one
+    else return TRUE; // if no namespace we presume it's the expected one
   }
 }
 
@@ -156,9 +156,9 @@ void check_namespace_restrictions(const XERdescriptor_t& p_td, const char* p_xml
 {
   // In case of "anyElement from ..." matching namespaces is good
   // in case of "anyElement except ..." matching namespaces is bad
-  bool ns_match_allowed = (p_td.xer_bits & ANY_FROM) ? true : false;
+  boolean ns_match_allowed = (p_td.xer_bits & ANY_FROM) ? TRUE : FALSE;
 
-  bool ns_error = ns_match_allowed;
+  boolean ns_error = ns_match_allowed;
   for (unsigned short idx = 0; idx < p_td.nof_ns_uris; ++idx) {
     if ((p_xmlns == 0 && strlen(p_td.ns_uris[idx]) == 0) ||
         (p_xmlns != 0 && strcmp(p_td.ns_uris[idx], p_xmlns) == 0))

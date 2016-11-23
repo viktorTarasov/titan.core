@@ -173,12 +173,12 @@ typedef enum {
 } XSD_types;
 
 /// Check that \p f has the canonical flavor.
-inline bool is_canonical(unsigned int f)
+inline boolean is_canonical(unsigned int f)
 {
   return (f & XER_CANONICAL) != 0;
 }
 
-inline bool is_exer(unsigned int f)
+inline boolean is_exer(unsigned int f)
 {
   return (f & XER_EXTENDED) != 0;
 }
@@ -188,7 +188,7 @@ inline bool is_exer(unsigned int f)
  * @param f XER flavor
  * @return \c true if \p contains \c XER_RECOF, \c false otherwise
  */
-inline bool is_record_of(unsigned int f)
+inline boolean is_record_of(unsigned int f)
 {
   return (f & XER_RECOF) != 0;
 }
@@ -201,7 +201,7 @@ inline bool is_record_of(unsigned int f)
  * @param f XER flavor
  * @return \c true if \c XER_EXTENDED and either \c XER_LIST or \c USE_NIL is set.
  */
-inline bool is_exerlist(unsigned int f)
+inline boolean is_exerlist(unsigned int f)
 {
   return (f & XER_EXTENDED) && ((f & (XER_LIST|USE_NIL|USE_TYPE_ATTR)) != 0);
 }
@@ -396,7 +396,7 @@ struct embed_values_dec_struct_t
  * @param exer \c true if Extended XER decoding, \c false for Basic and Canonical XER
  * @return \c true if \p name corresponds to the type descriptor, \c false otherwise.
  */
-inline bool check_name(const char *name, const XERdescriptor_t& p_td, int exer)
+inline boolean check_name(const char *name, const XERdescriptor_t& p_td, int exer)
 {
   return strncmp(name, p_td.names[exer], p_td.namelens[exer]-2) == 0
     && name[p_td.namelens[exer]-2] == '\0';
@@ -414,7 +414,7 @@ inline bool check_name(const char *name, const XERdescriptor_t& p_td, int exer)
  * by \p p_td.
  * @return \c false otherwise.
  */
-bool check_namespace(const char *ns_uri, const XERdescriptor_t& p_td);
+boolean check_namespace(const char *ns_uri, const XERdescriptor_t& p_td);
 
 /** Check that the current element matches the XER descriptor
  *

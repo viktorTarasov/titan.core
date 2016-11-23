@@ -242,7 +242,7 @@ void def_encdec(const char *p_classname,
      "      TTCN_EncDec_ErrorContext::error_internal\n"
      "        (\"No JSON descriptor available for type '%%s'.\", p_td.name);\n"
      "    JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());\n"
-     "    if(JSON_decode(p_td, tok, false)<0)\n"
+     "    if(JSON_decode(p_td, tok, FALSE)<0)\n"
      "      ec.error(TTCN_EncDec::ET_INCOMPL_MSG,"
      "\"Can not decode type '%%s', because invalid or incomplete"
      " message was received\", p_td.name);\n"

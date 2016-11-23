@@ -367,7 +367,7 @@ namespace Profiler_Tools {
     }
 
     // use the JSON tokenizer to create a JSON document from the database
-    JSON_Tokenizer json(true);
+    JSON_Tokenizer json(TRUE);
 
     // main array, contains an element for each file
     json.put_next_token(JSON_TOKEN_ARRAY_START, NULL);

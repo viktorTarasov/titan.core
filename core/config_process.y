@@ -2264,7 +2264,7 @@ static void reset_configuration_options()
     end_testcase_command_set = FALSE;
 }
 
-Module_Param* process_config_string2ttcn(const char* mp_str, bool is_component)
+Module_Param* process_config_string2ttcn(const char* mp_str, boolean is_component)
 {
   if (parsed_module_param!=NULL || parsing_error_messages!=NULL) TTCN_error("Internal error: previously parsed ttcn string was not cleared.");
   // add the hidden keyword

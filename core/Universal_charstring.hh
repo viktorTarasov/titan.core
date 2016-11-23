@@ -105,11 +105,11 @@ class UNIVERSAL_CHARSTRING : public Base_Type {
   universal_charstring_struct *val_ptr;
   /** Character string values are stored in an optimal way */
   CHARSTRING cstr;
-  bool charstring;
+  boolean charstring;
 
   void init_struct(int n_uchars);
   void copy_value();
-  UNIVERSAL_CHARSTRING(int n_uchars, bool cstring = false);
+  UNIVERSAL_CHARSTRING(int n_uchars, boolean cstring = FALSE);
   
   /** An extended version of set_param(), which also accepts string patterns if
     * the second parameter is set (needed by UNIVERSAL_CHARSTRING_template to
@@ -372,7 +372,7 @@ public:
    * (otherwise memory leak will occur)
    */
   void decode_utf8(int n_octets, const unsigned char *octets_ptr,
-                   CharCoding::CharCodingType expected_coding = CharCoding::UTF_8, bool checkBOM = false);
+                   CharCoding::CharCodingType expected_coding = CharCoding::UTF_8, boolean checkBOM = FALSE);
   void decode_utf16(int n_octets, const unsigned char *octets_ptr,
                    CharCoding::CharCodingType expected_coding);
   void decode_utf32(int n_octets, const unsigned char *octets_ptr,
@@ -381,7 +381,7 @@ public:
    *
    * @param[out] buf buffer to receive the encoded result
    */
-  void encode_utf8(TTCN_Buffer& buf, bool addBOM = false) const;
+  void encode_utf8(TTCN_Buffer& buf, boolean addBOM = FALSE) const;
   void encode_utf16(TTCN_Buffer& buf, CharCoding::CharCodingType expected_coding) const;
   void encode_utf32(TTCN_Buffer& buf, CharCoding::CharCodingType expected_coding) const;
   

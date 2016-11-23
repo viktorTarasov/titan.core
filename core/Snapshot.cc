@@ -58,7 +58,7 @@ FdMap::Data   * FdMap::items2;
 #ifndef USE_EPOLL
 pollfd          FdMap::pollFds1[ITEM1_CAPACITY];
 pollfd          * FdMap::pollFds2;
-bool            FdMap::needUpdate;
+boolean            FdMap::needUpdate;
 int             FdMap::nPollFdsFrozen;
 #endif
 #ifdef USE_EPOLL
@@ -260,7 +260,7 @@ fd_event_type_enum FdMap::remove(int fd, const Fd_Event_Handler * handler,
         items1[nItems].init(); // not necessary - for debugging
       } else { // The item is frozen; removal is postponed.
         items1[i].d.hnd = 0;
-        needUpdate = true;
+        needUpdate = TRUE;
       }
     }
 #endif
@@ -324,7 +324,7 @@ fd_event_type_enum FdMap::remove(int fd, const Fd_Event_Handler * handler,
         }
       } else { // The item is frozen; removal is postponed.
         items2[fd].hnd = 0;
-        needUpdate = true;
+        needUpdate = TRUE;
       }
     }
 #endif
@@ -363,7 +363,7 @@ void FdMap::copyItems2ToItems1()
   int i = 0;
   for (int m = n - 1; m != 0; ++i) m >>= 1;
   Item    * d, itemsTmp[ITEM1_CAPACITY_LOW];
-  bool f = (i & 1) != 0;
+  boolean f = (i & 1) != 0;
   d = (i == 0 || f) ? items1 : itemsTmp;
   for (int j = 0, k = nItems - 1; j < k; j += 2) {
     pollFds1[j] = pollFds2[j]; pollFds1[j + 1] = pollFds2[j + 1];
@@ -409,18 +409,18 @@ void FdMap::copyItems2ToItems1()
 #endif
 
 #ifdef USE_EPOLL
-bool FdMap::epollMarkFds(int nEvents)
+boolean FdMap::epollMarkFds(int nEvents)
 {
-  bool all_valid = true;
+  boolean all_valid = TRUE;
   for (int i = 0; i < nEvents; ++i) {
     int fd = epollEvents[i].data.fd;
     if (items2 == 0) {
       int j = findInItems1(fd);
       if (j >= 0) items1[j].d.ixE = i;
-      else all_valid = false;
+      else all_valid = FALSE;
     } else {
       if (findInItems2(fd)) items2[fd].ixE = i;
-      else all_valid = false;
+      else all_valid = FALSE;
     }
   }
   return all_valid;
@@ -458,7 +458,7 @@ void FdMap::pollUnfreeze()
       // item at index i is changed and has to be checked if exists
     } else ++i;
   }
-  needUpdate = false;
+  needUpdate = FALSE;
 }
 
 fd_event_type_enum FdMap::getPollREvent(int fd)
@@ -563,7 +563,7 @@ Handler_List Fd_And_Timeout_User::timedList,
 FdSets * Fd_And_Timeout_User::fdSetsReceived;
 FdSets * Fd_And_Timeout_User::fdSetsToHnds;
 int Fd_And_Timeout_User::nOldHandlers;
-bool Fd_And_Timeout_User::is_in_call_handlers;
+boolean Fd_And_Timeout_User::is_in_call_handlers;
 int Fd_And_Timeout_User::curRcvdEvtIx;
 
 inline void Fd_And_Timeout_User::checkFd(int fd)
@@ -812,10 +812,10 @@ void Fd_And_Timeout_User::remove_all_fds(Fd_And_Timeout_Event_Handler * handler)
   }
 }
 
-bool Fd_And_Timeout_User::getTimeout(double * timeout)
+boolean Fd_And_Timeout_User::getTimeout(double * timeout)
 {
   timedList.first();
-  if (timedList.finished()) return false;
+  if (timedList.finished()) return FALSE;
 
   Fd_And_Timeout_Event_Handler * handler = timedList.current();
   double earliestTimeout = handler->last_called + handler->callInterval;
@@ -828,13 +828,13 @@ bool Fd_And_Timeout_User::getTimeout(double * timeout)
     if (nextCall < earliestTimeout) earliestTimeout = nextCall;
   }
   *timeout = earliestTimeout;
-  return true;
+  return TRUE;
 }
 
 void Fd_And_Timeout_User::call_handlers(int nEvents)
 {
   try { // To keep consistency in case of exceptions
-    is_in_call_handlers = true;
+    is_in_call_handlers = TRUE;
     if (nOldHandlers != 0) { fdSetsReceived->clear(); }
     if (nEvents > 0) {
       // Note: FdMap may be modified during event handler calls
@@ -927,7 +927,7 @@ void Fd_And_Timeout_User::call_handlers(int nEvents)
       if (handler->getIsOldApi())
         handler->hasEvent =
           fdSetsToHnds->setAnd(*fdSetsReceived, *handler->fdSets);
-      bool callHandler = (handler->hasEvent && handler->isTimeout) ?
+      boolean callHandler = (handler->hasEvent && handler->isTimeout) ?
         handler->callAnyway :
       current_time > (handler->last_called + handler->callInterval);
       if ( !handler->isPeriodic &&
@@ -948,8 +948,8 @@ void Fd_And_Timeout_User::call_handlers(int nEvents)
         current_time = TTCN_Snapshot::time_now();
       }
     }
-    is_in_call_handlers = false;
-  } catch (...) { oldApiCallList.clear(); is_in_call_handlers = false; throw; }
+    is_in_call_handlers = FALSE;
+  } catch (...) { oldApiCallList.clear(); is_in_call_handlers = FALSE; throw; }
 }
 
 int Fd_And_Timeout_User::receiveEvents(int pollTimeout)
@@ -1066,12 +1066,12 @@ void TTCN_Snapshot::take_new(boolean block_execution)
     // determine the timeout value for epoll()/poll()/select()
     double timeout = 0.0;
     int pollTimeout = 0; // timeout for poll/epoll
-    bool handleTimer = false;
+    boolean handleTimer = FALSE;
     if (block_execution) {
       // find the earliest timeout
       double timer_timeout, handler_timeout = 0.0;
       boolean is_timer_timeout = TIMER::get_min_expiration(timer_timeout);
-      bool is_handler_timeout =
+      boolean is_handler_timeout =
         Fd_And_Timeout_User::getTimeout(&handler_timeout);
       if (is_timer_timeout) {
         if (is_handler_timeout && handler_timeout < timer_timeout)
@@ -1087,7 +1087,7 @@ void TTCN_Snapshot::take_new(boolean block_execution)
           // filling up tv with appropriate values
           if (block_time < (double)MAX_BLOCK_TIME) {
             pollTimeout = static_cast<int>(floor(block_time*1000));
-            handleTimer = true;
+            handleTimer = TRUE;
           } else {
             // issue a warning: the user probably does not want such
             // long waiting
@@ -1101,12 +1101,12 @@ void TTCN_Snapshot::take_new(boolean block_execution)
             // immediately from the while() loop below
             timeout = current_time + (double)MAX_BLOCK_TIME;
             pollTimeout = MAX_BLOCK_TIME * 1000;
-            handleTimer = true;
+            handleTimer = TRUE;
           }
         } else {
           // first timer is already expired: do not block
           // pollTimeout is 0
-          handleTimer = true;
+          handleTimer = TRUE;
         }
       } else {
         // no active timers: infinite timeout
@@ -1195,22 +1195,22 @@ void TTCN_Snapshot::block_for_sending(int send_fd, Fd_Event_Handler * handler)
   for ( ; ; ) {
     int ret_val = Fd_And_Timeout_User::receiveEvents(-1); // epoll / poll
     if (ret_val >= 0) {
-    bool writable = false;
-    bool readable  = false;
+    boolean writable = FALSE;
+    boolean readable  = FALSE;
 #ifdef USE_EPOLL
 
       for (int i = 0; i < ret_val; ++i) {
         if (FdMap::epollEvents[i].data.fd == send_fd) {
-          readable = true;
+          readable = TRUE;
           if ((FdMap::epollEvents[i].events & EPOLLOUT) != 0){
-            writable = true;
+            writable = TRUE;
           }
           break;
         }
       }
 #else
-      if (FdMap::getPollREvent(send_fd) != 0) {readable = true;}
-      if ((FdMap::getPollREvent(send_fd) & FD_EVENT_WR) != 0) {writable = true;}
+      if (FdMap::getPollREvent(send_fd) != 0) {readable = TRUE;}
+      if ((FdMap::getPollREvent(send_fd) & FD_EVENT_WR) != 0) {writable = TRUE;}
 #endif
       if (writable) break;
       Fd_And_Timeout_User::call_handlers(ret_val);

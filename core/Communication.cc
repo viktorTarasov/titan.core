@@ -154,7 +154,7 @@ const IPAddress *TTCN_Communication::get_mc_address()
   return hcnh.get_mc_addr();
 }
 
-bool TTCN_Communication::is_mc_connected()
+boolean TTCN_Communication::is_mc_connected()
 {
   return is_connected;
 }
@@ -572,7 +572,7 @@ void TTCN_Communication::process_all_messages_hc()
       process_error();
       break;
     case MSG_CONFIGURE:
-      process_configure(msg_end, false);
+      process_configure(msg_end, FALSE);
       break;
     case MSG_CREATE_MTC:
       process_create_mtc();
@@ -705,7 +705,7 @@ void TTCN_Communication::process_all_messages_tc()
           process_exit_mtc();
           break;
         case MSG_CONFIGURE:
-          process_configure(msg_end, true);
+          process_configure(msg_end, TRUE);
           break;
         default:
           process_unsupported_message(msg_type, msg_end);
@@ -1266,7 +1266,7 @@ void TTCN_Communication::send_message(Text_Buf& text_buf)
   }
 }
 
-void TTCN_Communication::process_configure(int msg_end, bool to_mtc)
+void TTCN_Communication::process_configure(int msg_end, boolean to_mtc)
 {
   switch (TTCN_Runtime::get_state()) {
   case TTCN_Runtime::HC_IDLE:

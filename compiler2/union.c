@@ -1105,7 +1105,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "  case %s_%s: {\n",
           selection_prefix, sdef->elements[i].name);
         if (t_type && (sdef->raw.taglist.list + t_type - 1)->nElements) {
-          src = mputstr(src, "    bool negtest_confl_tag = false;\n");
+          src = mputstr(src, "    boolean negtest_confl_tag = FALSE;\n");
         }
         src = mputprintf(src,
           "    err_vals = p_err_descr->get_field_err_values(%d);\n"
@@ -1132,7 +1132,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           (unsigned long)i, (unsigned long)i, (unsigned long)i);
         if (t_type && (sdef->raw.taglist.list + t_type - 1)->nElements) {
           /* Avoid TAGs.  */
-          src = mputprintf(src, "      negtest_confl_tag = true;\n");
+          src = mputprintf(src, "      negtest_confl_tag = TRUE;\n");
         }
         src = mputprintf(src,
           "    } else {\n"
@@ -1142,7 +1142,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           (unsigned long)i, (unsigned long)i, sdef->elements[i].typedescrname);
         if (t_type && (sdef->raw.taglist.list + t_type - 1)->nElements) {
           /* Avoid TAGs.  */
-          src = mputprintf(src, "        negtest_confl_tag = true;\n");
+          src = mputprintf(src, "        negtest_confl_tag = TRUE;\n");
         }
         src = mputprintf(src,
           "        encoded_length = field_%s->RAW_encode_negtest(emb_descr, %s_descr_, *myleaf.body.node.nodes[%lu]);\n"
@@ -1286,14 +1286,14 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "  }\n", name, sdef->nElements > 1 ? "  size_t pos = p_buf.get_pos();\n" : "");
     if (sdef->nElements > 0) {
       src = mputprintf(src,
-	"  int str_len = %s().TEXT_decode(%s_descr_, p_buf, limit, true);\n"
+	"  int str_len = %s().TEXT_decode(%s_descr_, p_buf, limit, TRUE);\n"
 	"  if (str_len >= 0) found = TRUE;\n", sdef->elements[0].name,
 	sdef->elements[0].typedescrname);
     }
     for (i = 1; i < sdef->nElements; i++) {
       src = mputprintf(src, "  if (!found) {\n"
 	"    p_buf.set_pos(pos);\n"
-	"    str_len = %s().TEXT_decode(%s_descr_, p_buf, limit, true);\n"
+	"    str_len = %s().TEXT_decode(%s_descr_, p_buf, limit, TRUE);\n"
 	"    if (str_len >= 0) found = TRUE;\n"
 	"  }\n", sdef->elements[i].name, sdef->elements[i].typedescrname);
     }
@@ -1343,11 +1343,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     /* An untagged union can start with the start tag of any alternative */
     for (i = 0; i < sdef->nElements; i++) {
       src=mputprintf(src,
-        "  if (%s::can_start(name, uri, %s_xer_, flavor)) return true;\n"
+        "  if (%s::can_start(name, uri, %s_xer_, flavor)) return TRUE;\n"
         , sdef->elements[i].type, sdef->elements[i].typegen
       );
     }
-    src = mputstr(src, "  return false;\n}\n\n");
+    src = mputstr(src, "  return FALSE;\n}\n\n");
 
     src = mputprintf(src,
       "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const {\n"
@@ -1358,7 +1358,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "  size_t num_new;\n"
       "  boolean need_type = FALSE;\n"
       "  try {\n"
-      "    bool def_ns_1 = false;\n"
+      "    boolean def_ns_1 = FALSE;\n"
       "    switch (union_selection) {\n"
       , name
       );
@@ -1514,7 +1514,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     src = mputprintf(src,
       "  unsigned int flavor_1 = p_flavor;\n"
       "  if (is_exer(p_flavor)) flavor_1 &= ~XER_RECOF;\n"
-      "  bool omit_tag = begin_xml(p_td, p_buf, flavor_1, p_indent, false, "
+      "  boolean omit_tag = begin_xml(p_td, p_buf, flavor_1, p_indent, FALSE, "
       "(collector_fn)&%s::collect_ns%s);\n"
       , sdef->name
       , sdef->xerUseTypeAttr ? ", type_atr" : "");
@@ -1652,7 +1652,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       } /* if UseTypeAttr */
 
       src = mputprintf(src,
-        "  bool omit_tag = begin_xml(p_td, p_buf, p_flavor, p_indent, false, "
+        "  boolean omit_tag = begin_xml(p_td, p_buf, p_flavor, p_indent, FALSE, "
         "(collector_fn)&%s::collect_ns%s);\n"
         , sdef->name
         , sdef->xerUseTypeAttr ? ", type_atr" : "");
@@ -1744,7 +1744,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "      xml_depth = p_reader.Depth();\n"
       , name
       , sdef->xerUseTypeAttr ? "  char * typeatr = 0;\n" : ""
-      , sdef->xerUseUnion ? "  boolean attribute = (p_td.xer_bits & XER_ATTRIBUTE) ? true : false;\n" : ""
+      , sdef->xerUseUnion ? "  boolean attribute = (p_td.xer_bits & XER_ATTRIBUTE) ? TRUE : FALSE;\n" : ""
       , sdef->xerUseUnion ? "if (!attribute) " : ""
     );
     if (sdef->xerUseTypeAttr) {
@@ -2093,7 +2093,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         if (JSON_NUMBER & sdef->elements[i].jsonValueType) {
           src = mputprintf(src,
             "    p_tok.set_buf_pos(buf_pos);\n"
-            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, true);\n"
+            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, TRUE);\n"
             "    if (0 <= ret_val) {\n"
             "      return ret_val;\n"
             "    }\n"
@@ -2110,7 +2110,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         if (JSON_STRING & sdef->elements[i].jsonValueType) {
           src = mputprintf(src,
             "    p_tok.set_buf_pos(buf_pos);\n"
-            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, true);\n"
+            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, TRUE);\n"
             "    if (0 <= ret_val) {\n"
             "      return ret_val;\n"
             "    }\n"
@@ -2128,7 +2128,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         if (JSON_BOOLEAN & sdef->elements[i].jsonValueType) {
           src = mputprintf(src,
             "    p_tok.set_buf_pos(buf_pos);\n"
-            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, true);\n"
+            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, TRUE);\n"
             "    if (0 <= ret_val) {\n"
             "      return ret_val;\n"
             "    }\n"
@@ -2148,7 +2148,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         if (JSON_ARRAY & sdef->elements[i].jsonValueType) {
           src = mputprintf(src,
             "    p_tok.set_buf_pos(buf_pos);\n"
-            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, true);\n"
+            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, TRUE);\n"
             "    if (0 <= ret_val) {\n"
             "      return ret_val;\n"
             "    }\n"
@@ -2165,7 +2165,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         if (JSON_OBJECT & sdef->elements[i].jsonValueType) {
           src = mputprintf(src,
             "    p_tok.set_buf_pos(buf_pos);\n"
-            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, true);\n"
+            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, TRUE);\n"
             "    if (0 <= ret_val) {\n"
             "      return ret_val;\n"
             "    }\n"
@@ -2182,7 +2182,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         if (JSON_NULL & sdef->elements[i].jsonValueType) {
           src = mputprintf(src,
             "    p_tok.set_buf_pos(buf_pos);\n"
-            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, true);\n"
+            "    ret_val = %s%s().JSON_decode(%s_descr_, p_tok, TRUE);\n"
             "    if (0 <= ret_val) {\n"
             "      return ret_val;\n"
             "    }\n"
@@ -2573,7 +2573,7 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
   def = mputstr(def, "boolean is_value() const;");
   src = mputprintf(src, "boolean %s_template::is_value() const\n"
     "{\n"
-    "if (template_selection != SPECIFIC_VALUE || is_ifpresent) return false;\n"
+    "if (template_selection != SPECIFIC_VALUE || is_ifpresent) return FALSE;\n"
     "switch (single_value.union_selection) {\n"
     , name);
   for (i = 0; i < sdef->nElements; i++) {

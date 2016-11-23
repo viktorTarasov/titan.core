@@ -315,7 +315,7 @@ void TTCN_error(const char *err_msg, ...)
     if (TTCN_Logger::SINFO_NONE == TTCN_Logger::get_source_info_format())
     {
       //Always print some location info in case of dynamic testcase error
-      char * loc = TTCN_Location::print_location(false, true, false);
+      char * loc = TTCN_Location::print_location(FALSE, TRUE, FALSE);
       if (loc) {
         TTCN_Logger::log_event_str(loc);
         TTCN_Logger::log_event_str(": ");

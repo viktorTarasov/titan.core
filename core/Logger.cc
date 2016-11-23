@@ -245,7 +245,7 @@ const char* TTCN_Logger::severity_subcategory_names[NUMBER_OF_LOGSEVERITIES] = {
 char* TTCN_Logger::logmatch_buffer = NULL;
 size_t TTCN_Logger::logmatch_buffer_len = 0;
 size_t TTCN_Logger::logmatch_buffer_size = 0;
-boolean TTCN_Logger::logmatch_printed = false;
+boolean TTCN_Logger::logmatch_printed = FALSE;
 
 // TODO: Matching related stuff stays here for now.  It just appends the
 // string to the end of the current (active) event.
@@ -267,7 +267,7 @@ void TTCN_Logger::set_logmatch_buffer_len(size_t new_len)
 void TTCN_Logger::print_logmatch_buffer()
 {
   if (logmatch_printed) TTCN_Logger::log_event_str(" , ");
-  else logmatch_printed = true;
+  else logmatch_printed = TRUE;
   if (logmatch_buffer_size > 0)
     TTCN_Logger::log_event_str(logmatch_buffer);
 }
@@ -331,10 +331,10 @@ the same as component number 3.
 returns \c true.
 
 */
-bool operator==(const component_id_t& left, const component_id_t& right)
+boolean operator==(const component_id_t& left, const component_id_t& right)
 {
   if (left.id_selector != right.id_selector)
-    return false;
+    return FALSE;
 
   // The selectors are the same.
   switch (left.id_selector) {
@@ -343,7 +343,7 @@ bool operator==(const component_id_t& left, const component_id_t& right)
   case COMPONENT_ID_COMPREF:
     return left.id_compref == right.id_compref;
   default: // Should be MTC or SYSTEM; identified by the selector.
-    return true;
+    return TRUE;
   }
 }
 
@@ -562,7 +562,7 @@ void TTCN_Logger::terminate_logger()
   logmatch_buffer = NULL;
 }
 
-bool TTCN_Logger::is_logger_up()
+boolean TTCN_Logger::is_logger_up()
 {
   if (logmatch_buffer == NULL) return FALSE;
   return get_logger_plugin_manager()->plugins_ready();
@@ -605,7 +605,7 @@ void TTCN_Logger::set_executable_name(const char *argv_0)
   } else executable_name = NULL;
 }
 
-bool TTCN_Logger::add_parameter(const logging_setting_t& logging_param)
+boolean TTCN_Logger::add_parameter(const logging_setting_t& logging_param)
 {
   return get_logger_plugin_manager()->add_parameter(logging_param);
 }
@@ -633,17 +633,17 @@ void TTCN_Logger::set_file_name(const char *new_filename_skeleton,
     set_file_name(new_filename_skeleton, from_config);
 }
 
-bool TTCN_Logger::set_file_size(component_id_t const& comp, int p_size)
+boolean TTCN_Logger::set_file_size(component_id_t const& comp, int p_size)
 {
   return get_logger_plugin_manager()->set_file_size(comp, p_size);
 }
 
-bool TTCN_Logger::set_file_number(component_id_t const& comp, int p_number)
+boolean TTCN_Logger::set_file_number(component_id_t const& comp, int p_number)
 {
   return get_logger_plugin_manager()->set_file_number(comp, p_number);
 }
 
-bool TTCN_Logger::set_disk_full_action(component_id_t const& comp,
+boolean TTCN_Logger::set_disk_full_action(component_id_t const& comp,
                                        disk_full_action_t p_disk_full_action)
 {
   return get_logger_plugin_manager()
@@ -799,7 +799,7 @@ char *TTCN_Logger::get_logger_settings_str()
   return new_log_message;
 }
 
-void TTCN_Logger::write_logger_settings(bool /*opening*/)
+void TTCN_Logger::write_logger_settings(boolean /*opening*/)
 {
   expstring_t new_log_message = get_logger_settings_str();
 
@@ -816,17 +816,17 @@ boolean TTCN_Logger::should_log_to_file(TTCN_Logger::Severity sev)
   if (sev > 0 && sev < TTCN_Logger::NUMBER_OF_LOGSEVERITIES) {
     return file_log_mask.mask.bits[sev];
   }
-  return false;
+  return FALSE;
 }
 
 boolean TTCN_Logger::should_log_to_console(TTCN_Logger::Severity sev)
 {
   // CR_TR00015406: Always log external scripts to the console | MCTR.
-  if (sev == TTCN_Logger::EXECUTOR_EXTCOMMAND) return true;
+  if (sev == TTCN_Logger::EXECUTOR_EXTCOMMAND) return TRUE;
   if (sev > 0 && sev < TTCN_Logger::NUMBER_OF_LOGSEVERITIES) {
     return console_log_mask.mask.bits[sev];
   }
-  return false;
+  return FALSE;
 }
 
 boolean TTCN_Logger::should_log_to_emergency(TTCN_Logger::Severity sev)
@@ -834,7 +834,7 @@ boolean TTCN_Logger::should_log_to_emergency(TTCN_Logger::Severity sev)
   if (sev > 0 && sev < TTCN_Logger::NUMBER_OF_LOGSEVERITIES) {
     return emergency_log_mask.mask.bits[sev];
   }
-  return false;
+  return FALSE;
 }
 
 void TTCN_Logger::set_timestamp_format(timestamp_format_t new_timestamp_format)
@@ -872,7 +872,7 @@ void TTCN_Logger::close_file()
   get_logger_plugin_manager()->close_file();
 }
 
-void TTCN_Logger::ring_buffer_dump(bool do_close_file)
+void TTCN_Logger::ring_buffer_dump(boolean do_close_file)
 {
   get_logger_plugin_manager()->ring_buffer_dump(do_close_file);
 }
@@ -939,14 +939,14 @@ void TTCN_Logger::log_str(TTCN_Logger::Severity msg_severity,
     str_ptr = "<NULL pointer>";
   get_logger_plugin_manager()->log_unhandled_event(msg_severity,
                                                    str_ptr, strlen(str_ptr));
-  logmatch_printed = false;
+  logmatch_printed = FALSE;
 }
 
 void TTCN_Logger::log_va_list(TTCN_Logger::Severity msg_severity,
                               const char *fmt_str, va_list p_var)
 {
   get_logger_plugin_manager()->log_va_list(msg_severity, fmt_str, p_var);
-  logmatch_printed = false;
+  logmatch_printed = FALSE;
 }
 
 void TTCN_Logger::begin_event(TTCN_Logger::Severity msg_severity, boolean log2str)
@@ -958,13 +958,13 @@ void TTCN_Logger::end_event()
 {
   get_logger_plugin_manager()->end_event();
   // TODO: Find another place for these...
-  logmatch_printed = false;
+  logmatch_printed = FALSE;
 }
 
 CHARSTRING TTCN_Logger::end_event_log2str()
 {
   CHARSTRING ret_val = get_logger_plugin_manager()->end_event_log2str();
-  logmatch_printed = false;
+  logmatch_printed = FALSE;
   return ret_val;
 }
 
@@ -984,13 +984,13 @@ void TTCN_Logger::log_event(const char *fmt_str, ...)
 void TTCN_Logger::log_event_str(const char *str_ptr)
 {
   get_logger_plugin_manager()->log_event_str(str_ptr);
-  logmatch_printed = false;
+  logmatch_printed = FALSE;
 }
 
 void TTCN_Logger::log_event_va_list(const char *fmt_str, va_list p_var)
 {
   get_logger_plugin_manager()->log_event_va_list(fmt_str, p_var);
-  logmatch_printed = false;
+  logmatch_printed = FALSE;
 }
 
 void TTCN_Logger::log_event_unbound()
@@ -1038,7 +1038,7 @@ void TTCN_Logger::log_event_enum(const char* enum_name_str, int enum_value)
 void TTCN_Logger::log_char(char c)
 {
   get_logger_plugin_manager()->log_char(c);
-  logmatch_printed = false;
+  logmatch_printed = FALSE;
 }
 
 boolean TTCN_Logger::is_printable(unsigned char c)
@@ -1221,7 +1221,7 @@ void TTCN_Logger::log_getverdict(verdicttype verdict)
   get_logger_plugin_manager()->log_getverdict(verdict);
 }
 
-void TTCN_Logger::log_final_verdict(bool is_ptc, verdicttype ptc_verdict,
+void TTCN_Logger::log_final_verdict(boolean is_ptc, verdicttype ptc_verdict,
   verdicttype local_verdict, verdicttype new_verdict,
   const char *verdict_reason, int notification, int ptc_compref,
   const char *ptc_name)
@@ -1288,7 +1288,7 @@ void TTCN_Logger::log_testcase_exec(const char *module, const char *tc)
   get_logger_plugin_manager()->log_testcase_exec(module, tc);
 }
 
-void TTCN_Logger::log_module_init(const char *module, bool finish)
+void TTCN_Logger::log_module_init(const char *module, boolean finish)
 {
   get_logger_plugin_manager()->log_module_init(module, finish);
 }
@@ -1492,14 +1492,14 @@ void TTCN_Location::strip_entity_name(char*& par_str)
 {
   if (!par_str) return;
   char *new_str = NULL;
-  bool in_paren = false;
+  boolean in_paren = FALSE;
   for (char *str_ptr = par_str; *str_ptr != '\0' ; str_ptr++) {
     switch (*str_ptr) {
     case '(':
-      in_paren = true;
+      in_paren = TRUE;
       break;
     case ')':
-      in_paren = false;
+      in_paren = FALSE;
       break;
     default:
       if (!in_paren) new_str = mputc(new_str, *str_ptr);

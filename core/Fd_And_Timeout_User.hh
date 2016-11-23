@@ -68,7 +68,7 @@ public:
 #else
   static void initialize(int fdLimit) {
     nItems = 0; capacity = fdLimit; items2 = 0; pollFds2 = 0;
-    needUpdate = false; nPollFdsFrozen = 0;
+    needUpdate = FALSE; nPollFdsFrozen = 0;
     for (int i = 0; i < ITEM1_CAPACITY; ++i) {
       items1[i].init(); // for debugging
       init(pollFds1[i++]); // for debugging
@@ -84,7 +84,7 @@ public:
 #endif
   // implementation dependent public interface
   // only for better performance
-  static inline bool isItems1Used() { return items2 == 0; }
+  static inline boolean isItems1Used() { return items2 == 0; }
 #ifdef USE_EPOLL
   static inline fd_event_type_enum item1atIndex(int i, int * fd,
     Fd_Event_Handler * * handler) {
@@ -151,7 +151,7 @@ private:
     } while (j - i > 1);
     return (fd <= items1[i].fd) ? i : j;
   }
-  static inline bool findInItems2(int fd) {
+  static inline boolean findInItems2(int fd) {
 #ifdef USE_EPOLL
 return items2[fd].hnd != 0;
 #else
@@ -173,7 +173,7 @@ return items2[fd].hnd != 0;
   static pollfd   * pollFds2;
   // pollFd2, items2 might be rewritten
   static inline void init(pollfd & p) { p.fd = -1; p.events = p.revents = 0; }
-  static bool         needUpdate;
+  static boolean         needUpdate;
   static int          nPollFdsFrozen;
   static void copyItems2ToItems1();
 #endif
@@ -182,7 +182,7 @@ public:
   static const int    MAX_EPOLL_EVENTS = 64;
   static int          epollFd;
   static epoll_event  epollEvents[MAX_EPOLL_EVENTS];
-  static bool epollMarkFds(int nEvents);
+  static boolean epollMarkFds(int nEvents);
   static void epollUnmarkFds(int nEvents);
   static inline __uint32_t eventToEpollEvent(fd_event_type_enum event) {
     __uint32_t epollEvent = 0;
@@ -277,7 +277,7 @@ private:
   //static const int NOI_MAX = (FD_SETSIZE + NOBPI - 1) / NOBPI;
   static const int NORB = FD_SETSIZE % NOBPI; // Remaining Bits
   static const int RBM = (1 << NORB) - 1; // Mask for Remaining Bits
-  static inline bool fdSetOr (fd_set & fdSet, const fd_set & fdSet2) {
+  static inline boolean fdSetOr (fd_set & fdSet, const fd_set & fdSet2) {
     long orV = 0;
     for (int i = 0; i < NOI; ++i)
       orV |= ( ((long*)&fdSet)[i] |= ((const long*)&fdSet2)[i] );
@@ -285,7 +285,7 @@ private:
       orV |= RBM & ( ((long*)&fdSet)[NOI] |= ((const long*)&fdSet2)[NOI]);
     return orV != 0;
   }
-  static inline bool fdSetSubs (fd_set & fdSet, const fd_set & fdSet2) {
+  static inline boolean fdSetSubs (fd_set & fdSet, const fd_set & fdSet2) {
     long orV = 0;
     for (int i = 0; i < NOI; ++i)
       orV |= ( ((long*)&fdSet)[i] &= ~((const long*)&fdSet2)[i] );
@@ -293,7 +293,7 @@ private:
       orV |= RBM & (((long*)&fdSet)[NOI] &= ~((const long*)&fdSet2)[NOI]);
     return orV != 0;
   }
-  static inline bool fdSetAnd (fd_set & fdSet, const fd_set & fdSet2) {
+  static inline boolean fdSetAnd (fd_set & fdSet, const fd_set & fdSet2) {
     long orV = 0;
     for (int i = 0; i < NOI; ++i)
       orV |= ( ((long*)&fdSet)[i] &= ((const long*)&fdSet2)[i] );
@@ -301,7 +301,7 @@ private:
       orV |= RBM & (((long*)&fdSet)[NOI] &= ((const long*)&fdSet2)[NOI]);
     return orV != 0;
   }
-  static inline bool fdSetAnd (fd_set & fdSet,
+  static inline boolean fdSetAnd (fd_set & fdSet,
     const fd_set & fdSet1, const fd_set & fdSet2) {
     long orV = 0;
     for (int i = 0; i < NOI; ++i)
@@ -354,22 +354,22 @@ private:
     return i;
   }
 public:
-  inline bool setOr(const FdSets & fdSet) {
+  inline boolean setOr(const FdSets & fdSet) {
     return fdSetOr(read_fds, fdSet.read_fds) |
       fdSetOr(write_fds, fdSet.write_fds) |
       fdSetOr(error_fds, fdSet.error_fds);
   }
-  inline bool setSubstract(const FdSets & fdSet) {
+  inline boolean setSubstract(const FdSets & fdSet) {
     return fdSetSubs(read_fds, fdSet.read_fds) |
       fdSetSubs(write_fds, fdSet.write_fds) |
       fdSetSubs(error_fds, fdSet.error_fds);
   }
-  inline bool setAnd(const FdSets & fdSet) {
+  inline boolean setAnd(const FdSets & fdSet) {
     return fdSetAnd(read_fds, fdSet.read_fds) |
       fdSetAnd(write_fds, fdSet.write_fds) |
       fdSetAnd(error_fds, fdSet.error_fds);
   }
-  inline bool setAnd(const FdSets & fdSet1, const FdSets & fdSet2) {
+  inline boolean setAnd(const FdSets & fdSet1, const FdSets & fdSet2) {
     return fdSetAnd(read_fds, fdSet1.read_fds, fdSet2.read_fds) |
       fdSetAnd(write_fds, fdSet1.write_fds, fdSet2.write_fds) |
       fdSetAnd(error_fds, fdSet1.error_fds, fdSet2.error_fds);
@@ -467,7 +467,7 @@ public:
   }
   inline void first() { cur = head.next; }
   inline void next() { cur = cur->next; }
-  inline bool finished() const { return cur == &tail; }
+  inline boolean finished() const { return cur == &tail; }
   inline Fd_And_Timeout_Event_Handler * current() const { return cur; }
   inline void add(Fd_And_Timeout_Event_Handler * handler) {
     if (handler->list != 0 || handler->prev != 0 || handler->next != 0)
@@ -503,7 +503,7 @@ class Fd_And_Timeout_User {
 public:
   static void initialize() {
     fdSetsReceived = 0; fdSetsToHnds = 0;
-    nOldHandlers = 0; is_in_call_handlers = false; curRcvdEvtIx = -1;
+    nOldHandlers = 0; is_in_call_handlers = FALSE; curRcvdEvtIx = -1;
   }
   static void terminate() {
     if (fdSetsReceived != 0) { delete fdSetsReceived; fdSetsReceived = 0; }
@@ -522,7 +522,7 @@ public:
     const fd_set *error_fds);
   static void remove_all_fds(Fd_And_Timeout_Event_Handler * handler);
 
-  static bool getTimeout(double * timeout);
+  static boolean getTimeout(double * timeout);
   static void call_handlers(int nEvents);
   static int receiveEvents(int pollTimeout);
   static inline fd_event_type_enum getCurReceivedEvent() {
@@ -540,7 +540,7 @@ public:
     FdMap::pollEventToEvent(FdMap::getPollFds()[curRcvdEvtIx].revents);
 #endif
   }
-  static inline bool get_is_in_call_handlers() { return is_in_call_handlers; }
+  static inline boolean get_is_in_call_handlers() { return is_in_call_handlers; }
 #ifdef USE_EPOLL
   static void reopenEpollFd();
 #else
@@ -552,7 +552,7 @@ private:
   static FdSets * fdSetsReceived; // active events for the old event handlers
   static FdSets * fdSetsToHnds; // temporary storage to pass it to the handler
   static int nOldHandlers;
-  static bool is_in_call_handlers;
+  static boolean is_in_call_handlers;
   static int curRcvdEvtIx; // Current Received Event Index - see call_handlers
 };
 

@@ -121,7 +121,7 @@ int XmlReaderWrap::ReadDbg(const char *where)
 #ifdef NDEBUG
   (void)where;
 #else
-  static bool d = !!getenv("DEBUG_XMLREADER");
+  static boolean d = !!getenv("DEBUG_XMLREADER");
   if(d){
     last_status = xmlTextReaderRead(my_reader);
     if (last_status==1) {
@@ -291,7 +291,7 @@ int XmlReaderWrap::MoveToFirstAttributeDbg(const char *where)
 #ifdef NDEBUG
   (void)where;
 #else
-  static bool d = !!getenv("DEBUG_XMLREADER");
+  static boolean d = !!getenv("DEBUG_XMLREADER");
   if (d) {
     switch (ret) {
     case 1: {//OK
@@ -325,7 +325,7 @@ int XmlReaderWrap::MoveToNextAttributeDbg(const char *where)
 #ifdef NDEBUG
   (void)where;
 #else
-  static bool d = !!getenv("DEBUG_XMLREADER");
+  static boolean d = !!getenv("DEBUG_XMLREADER");
   if (d) {
     switch (ret) {
     case 1: {//OK
@@ -359,7 +359,7 @@ int XmlReaderWrap::MoveToElementDbg(const char *where)
 #ifdef NDEBUG
   (void)where;
 #else
-  static bool d = !!getenv("DEBUG_XMLREADER");
+  static boolean d = !!getenv("DEBUG_XMLREADER");
   if (d) {
     const xmlChar * name = xmlTextReaderConstLocalName(my_reader);
     const xmlChar * val  = xmlTextReaderConstValue(my_reader);

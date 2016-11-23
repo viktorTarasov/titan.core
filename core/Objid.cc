@@ -354,7 +354,7 @@ void OBJID::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -511,7 +511,7 @@ int OBJID::XER_encode(const XERdescriptor_t& p_td,
 
   flavor |= SIMPLE_TYPE;
   flavor &= ~XER_RECOF; // object identifier doesn't care
-  begin_xml(p_td, p_buf, flavor, indent, false);
+  begin_xml(p_td, p_buf, flavor, indent, FALSE);
 
   static char str_buf[64];
   for (int i = 0; i < val_ptr->n_components; ++i ) {
@@ -528,7 +528,7 @@ int OBJID::XER_encode(const XERdescriptor_t& p_td,
     else p_buf.put_s(str_len, (const unsigned char*)str_buf);
   }
 
-  end_xml(p_td, p_buf, flavor, indent, false);
+  end_xml(p_td, p_buf, flavor, indent, FALSE);
 
   return (int)p_buf.get_len() - encoded_length;
 }
@@ -621,7 +621,7 @@ int OBJID::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
   json_token_t token = JSON_TOKEN_NONE;
   char* value = 0;
   size_t value_len = 0;
-  boolean error = false;
+  boolean error = FALSE;
   int dec_len = 0;
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {

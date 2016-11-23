@@ -131,10 +131,10 @@ class RAW_enc_tree{
 public:
   /** indicates that the node is leaf (contains actual data) or not
    *  (contains pointers to other nodes) */
-  bool isleaf;
-  bool must_free;  /**< data_ptr was allocated, must be freed */
-  bool data_ptr_used; /**< Whether data_ptr member is used, not data_array */
-  bool rec_of;
+  boolean isleaf;
+  boolean must_free;  /**< data_ptr was allocated, must be freed */
+  boolean data_ptr_used; /**< Whether data_ptr member is used, not data_array */
+  boolean rec_of;
   RAW_enc_tree *parent;
   RAW_enc_tr_pos curr_pos;
   int length;  /**< Encoded length */
@@ -193,7 +193,7 @@ int RAW_encode_enum_type(const TTCN_Typedescriptor_t&, RAW_enc_tree&,
                             int, int);
 int RAW_decode_enum_type(const TTCN_Typedescriptor_t&,
                             TTCN_Buffer&, int, raw_order_t, int&,
-                            int, bool no_err=false);
+                            int, boolean no_err=FALSE);
 
 /// Allocate \p nodes_num pointers
 RAW_enc_tree** init_nodes_of_enc_tree(int nodes_num);

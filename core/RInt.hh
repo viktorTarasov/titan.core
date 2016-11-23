@@ -14,6 +14,8 @@
 #ifndef RInt_HH
 #define RInt_HH
 
+#include "Types.h"
+
 struct bignum_st;
 typedef bignum_st BIGNUM;
 
@@ -25,7 +27,7 @@ private:
   friend class INTEGER;
   friend class INTEGER_template;
 
-  bool native_flag;
+  boolean native_flag;
   union {
     RInt native;
     BIGNUM *openssl;
@@ -35,8 +37,8 @@ public:
   int_val_t();
   int_val_t(const int_val_t& v);
   explicit int_val_t(const char *s);
-  explicit int_val_t(RInt v) : native_flag(true) { val.native = v; }
-  explicit int_val_t(BIGNUM *v) : native_flag(false) { val.openssl = v; }
+  explicit int_val_t(RInt v) : native_flag(TRUE) { val.native = v; }
+  explicit int_val_t(BIGNUM *v) : native_flag(FALSE) { val.openssl = v; }
   ~int_val_t();
   /** Returns a newly allocated string. Caller must call Free() */
   char *as_string() const;
@@ -44,27 +46,27 @@ public:
   BIGNUM *get_val_openssl() const;
   double to_real() const;
   int_val_t operator&(RInt right) const;
-  bool operator==(const int_val_t& right) const;
-  bool operator<(const int_val_t& right) const;
+  boolean operator==(const int_val_t& right) const;
+  boolean operator<(const int_val_t& right) const;
 
-  inline bool operator!=(const int_val_t& right) const { return !(*this == right); }
-  inline bool operator>(const int_val_t& right) const { return *this != right && !(*this < right); }
-  inline bool operator>=(const int_val_t& right) const { return *this == right || *this > right; }
-  inline bool operator<=(const int_val_t& right) const { return *this == right || *this < right; }
-  inline bool operator==(RInt right) const { return *this == int_val_t(right); }
-  inline bool operator!=(RInt right) const { return !(*this == right); }
-  inline bool operator>(RInt right) const { return *this != right && !(*this < right); }
-  inline bool operator<(RInt right) const { return *this != right && *this < int_val_t(right); }
-  inline bool operator<=(RInt right) const { return *this == right || *this < right; }
-  inline bool operator>=(RInt right) const { return *this == right || *this > right; }
+  inline boolean operator!=(const int_val_t& right) const { return !(*this == right); }
+  inline boolean operator>(const int_val_t& right) const { return *this != right && !(*this < right); }
+  inline boolean operator>=(const int_val_t& right) const { return *this == right || *this > right; }
+  inline boolean operator<=(const int_val_t& right) const { return *this == right || *this < right; }
+  inline boolean operator==(RInt right) const { return *this == int_val_t(right); }
+  inline boolean operator!=(RInt right) const { return !(*this == right); }
+  inline boolean operator>(RInt right) const { return *this != right && !(*this < right); }
+  inline boolean operator<(RInt right) const { return *this != right && *this < int_val_t(right); }
+  inline boolean operator<=(RInt right) const { return *this == right || *this < right; }
+  inline boolean operator>=(RInt right) const { return *this == right || *this > right; }
 
   int_val_t& operator=(const int_val_t& right);
   int_val_t& operator=(RInt right);
   int_val_t& operator+=(RInt right);
   int_val_t& operator<<=(RInt right);
   int_val_t& operator>>=(RInt right);
-  inline bool is_native() const { return native_flag; }
-  bool is_negative() const;
+  inline boolean is_native() const { return native_flag; }
+  boolean is_negative() const;
 };
 
 BIGNUM *to_openssl(RInt other_value);

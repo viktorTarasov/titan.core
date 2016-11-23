@@ -321,7 +321,7 @@ int Record_Of_Type::get_nof_elements() const
   return nof_elements;
 }
 
-bool Record_Of_Type::is_elem_bound(int index) const
+boolean Record_Of_Type::is_elem_bound(int index) const
 {
   return val_ptr->value_elements[index] != NULL && 
          val_ptr->value_elements[index]->is_bound();
@@ -342,17 +342,17 @@ int Record_Of_Type::get_max_refd_index()
   return refd_ind_ptr->max_refd_index;
 }
 
-bool Record_Of_Type::is_index_refd(int index)
+boolean Record_Of_Type::is_index_refd(int index)
 {
   if (NULL == refd_ind_ptr) {
-    return false;
+    return FALSE;
   }
   for (size_t i = 0; i < refd_ind_ptr->refd_indices.size(); ++i) {
     if (index == refd_ind_ptr->refd_indices[i]) {
-      return true;
+      return TRUE;
     }
   }
-  return false;
+  return FALSE;
 }
 
 void Record_Of_Type::set_val(null_type)
@@ -906,7 +906,7 @@ int Record_Of_Type::TEXT_encode(const TTCN_Typedescriptor_t& p_td,
 int Record_Of_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td,
                                 TTCN_Buffer& buff) const
 {
-  bool need_separator=false;
+  boolean need_separator=FALSE;
   int encoded_length=0;
   if(p_td.text->begin_encode) {
     buff.put_cs(*p_td.text->begin_encode);
@@ -945,7 +945,7 @@ int Record_Of_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_desc
         encoded_length += err_vals->before->errval->TEXT_encode(
           *(err_vals->before->type_descr),buff);
       }
-      need_separator=true;
+      need_separator=TRUE;
     }
 
     if (err_vals && err_vals->value) {
@@ -962,7 +962,7 @@ int Record_Of_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_desc
           encoded_length += err_vals->value->errval->TEXT_encode(
             *(err_vals->value->type_descr),buff);
         }
-        need_separator=true;
+        need_separator=TRUE;
       } // else -> omit
     } else {
       if (need_separator && p_td.text->separator_encode) {
@@ -975,7 +975,7 @@ int Record_Of_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_desc
       } else {
         encoded_length += get_at(a)->TEXT_encode(*p_td.oftype_descr,buff);
       }
-      need_separator=true;
+      need_separator=TRUE;
     }
 
     if (err_vals && err_vals->after) {
@@ -993,7 +993,7 @@ int Record_Of_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_desc
         encoded_length += err_vals->after->errval->TEXT_encode(
           *(err_vals->after->type_descr),buff);
       }
-      need_separator=true;
+      need_separator=TRUE;
     }
 
     if ( (p_err_descr->omit_after!=-1) && (a>=p_err_descr->omit_after) ) break;
@@ -1377,7 +1377,7 @@ int Record_Of_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr
       if (err_vals->before->errval == NULL)
         TTCN_error("internal error: erroneous before value missing");
       if (err_vals->before->raw) {
-        myleaf.body.node.nodes[node_pos] = new RAW_enc_tree(true, &myleaf,
+        myleaf.body.node.nodes[node_pos] = new RAW_enc_tree(TRUE, &myleaf,
           &(myleaf.curr_pos), node_pos,
           err_vals->before->errval->get_descriptor()->raw);
         encoded_length += err_vals->before->errval->
@@ -1395,7 +1395,7 @@ int Record_Of_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr
     if (err_vals && err_vals->value) {
       if (err_vals->value->errval) {
         if (err_vals->value->raw) {
-          myleaf.body.node.nodes[node_pos] = new RAW_enc_tree(true, &myleaf,
+          myleaf.body.node.nodes[node_pos] = new RAW_enc_tree(TRUE, &myleaf,
             &(myleaf.curr_pos), node_pos,
             err_vals->value->errval->get_descriptor()->raw);
           encoded_length += err_vals->value->errval->
@@ -1427,7 +1427,7 @@ int Record_Of_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr
       if (err_vals->after->errval == NULL)
         TTCN_error("internal error: erroneous after value missing");
       if (err_vals->after->raw) {
-        myleaf.body.node.nodes[node_pos] = new RAW_enc_tree(true, &myleaf,
+        myleaf.body.node.nodes[node_pos] = new RAW_enc_tree(TRUE, &myleaf,
           &(myleaf.curr_pos), node_pos,
           err_vals->after->errval->get_descriptor()->raw);
         encoded_length += err_vals->after->errval->
@@ -1584,7 +1584,7 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
   } 
   
   set_size(0);
-  for (int nof_elements = 0; true; ++nof_elements) {
+  for (int nof_elements = 0; TRUE; ++nof_elements) {
     // Read value tokens until we reach some other token
     size_t buf_pos = p_tok.get_buf_pos();
     int ret_val;
@@ -1764,7 +1764,7 @@ void Record_Of_Type::decode(const TTCN_Typedescriptor_t& p_td,
     if(!p_td.json) TTCN_EncDec_ErrorContext::error_internal
                      ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,"Can not decode type '%s', "
         "because invalid or incomplete message was received", p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
@@ -1784,7 +1784,7 @@ char **Record_Of_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool
 
   // Then the embedded type
   try {
-    bool def_ns_1 = false;
+    boolean def_ns_1 = FALSE;
     if (val_ptr) for (int i = 0; i < get_nof_elements(); ++i) {
       size_t num_new = 0;
       char **new_namespaces = get_at(i)->collect_ns(
@@ -2697,13 +2697,13 @@ void Record_Type::set_param(Module_Param& param) {
   case Module_Param::MP_Assignment_List:
     for (size_t i=0; i<mp->get_size(); ++i) {
       Module_Param* const current = mp->get_elem(i);
-      bool found = false;
+      boolean found = FALSE;
       for (int j=0; j<get_count(); ++j) {
         if (!strcmp(fld_name(j), current->get_id()->get_name())) {
           if (current->get_type()!=Module_Param::MP_NotUsed) {
             get_at(j)->set_param(*current);
           }
-          found = true;
+          found = TRUE;
           break;
         }
       }
@@ -2958,7 +2958,7 @@ void Record_Type::decode(const TTCN_Typedescriptor_t& p_td,
     if(!p_td.json) TTCN_EncDec_ErrorContext::error_internal
                      ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
         "Can not decode type '%s', because invalid or incomplete"
         " message was received", p_td.name);
@@ -3234,7 +3234,7 @@ int Record_Type::RAW_encode(const TTCN_Typedescriptor_t& p_td,
   }
   int encoded_length = 0;
   int field_cnt = get_count();
-  myleaf.isleaf = false;
+  myleaf.isleaf = FALSE;
   myleaf.body.node.num_of_nodes = field_cnt;
   myleaf.body.node.nodes = init_nodes_of_enc_tree(field_cnt);
   /* init nodes */
@@ -3244,7 +3244,7 @@ int Record_Type::RAW_encode(const TTCN_Typedescriptor_t& p_td,
     boolean is_optional_field = optional_indexes
       && (optional_indexes[next_optional_idx] == i);
     if (!is_optional_field || get_at(i)->ispresent()) {
-      myleaf.body.node.nodes[i] = new RAW_enc_tree(true, &myleaf,
+      myleaf.body.node.nodes[i] = new RAW_enc_tree(TRUE, &myleaf,
         &(myleaf.curr_pos), i, fld_descr(i)->raw);
     }
     else {
@@ -3281,7 +3281,7 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
   }
   int encoded_length = 0;
   int num_fields = get_count();
-  myleaf.isleaf = false;
+  myleaf.isleaf = FALSE;
   myleaf.body.node.num_of_nodes = 0;
   for (int field_idx = 0; field_idx < num_fields; ++field_idx) {
     if ((p_err_descr->omit_before != -1) &&
@@ -3320,7 +3320,7 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
         TTCN_error("internal error: erroneous before value missing");
       if (err_vals->before->raw) {
         myleaf.body.node.nodes[node_pos] =
-          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos), node_pos,
+          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos), node_pos,
                            err_vals->before->errval->get_descriptor()->raw);
         encoded_length += err_vals->before->errval->
           RAW_encode_negtest_raw(*myleaf.body.node.nodes[node_pos++]);
@@ -3328,7 +3328,7 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
         if (err_vals->before->type_descr == NULL)
           TTCN_error("internal error: erroneous before typedescriptor missing");
         myleaf.body.node.nodes[node_pos] =
-          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos), node_pos,
+          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos), node_pos,
                            err_vals->before->type_descr->raw);
         encoded_length += err_vals->before->errval->
           RAW_encode(*(err_vals->before->type_descr),
@@ -3340,7 +3340,7 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
         ec.set_msg("'%s'(erroneous value): ", fld_name(field_idx));
         if (err_vals->value->raw) {
           myleaf.body.node.nodes[node_pos] =
-            new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos), node_pos,
+            new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos), node_pos,
                              err_vals->value->errval->get_descriptor()->raw);
           encoded_length += err_vals->value->errval->
             RAW_encode_negtest_raw(*myleaf.body.node.nodes[node_pos++]);
@@ -3348,7 +3348,7 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
           if (err_vals->value->type_descr == NULL)
             TTCN_error("internal error: erroneous value typedescriptor missing");
           myleaf.body.node.nodes[node_pos] =
-            new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos), node_pos,
+            new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos), node_pos,
                              err_vals->value->type_descr->raw);
           encoded_length += err_vals->value->errval->
             RAW_encode(*(err_vals->value->type_descr),
@@ -3362,7 +3362,7 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
           is_optional_field ? get_at(field_idx)->get_opt_value()
                             : get_at(field_idx);
         myleaf.body.node.nodes[node_pos] =
-          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos), node_pos,
+          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos), node_pos,
                            fld_descr(field_idx)->raw);
         if (emb_descr) {
           encoded_length +=
@@ -3383,7 +3383,7 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
         TTCN_error("internal error: erroneous before value missing");
       if (err_vals->after->raw) {
         myleaf.body.node.nodes[node_pos] =
-          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos), node_pos,
+          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos), node_pos,
                            err_vals->after->errval->get_descriptor()->raw);
         encoded_length += err_vals->after->errval->
           RAW_encode_negtest_raw(*myleaf.body.node.nodes[node_pos++]);
@@ -3391,7 +3391,7 @@ int Record_Type::RAW_encode_negtest(const Erroneous_descriptor_t *p_err_descr,
         if (err_vals->after->type_descr == NULL)
           TTCN_error("internal error: erroneous after typedescriptor missing");
         myleaf.body.node.nodes[node_pos] =
-          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos), node_pos,
+          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos), node_pos,
                            err_vals->after->type_descr->raw);
         encoded_length += err_vals->after->errval->
           RAW_encode(*(err_vals->after->type_descr),
@@ -3539,7 +3539,7 @@ int Record_Type::TEXT_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buf
     TTCN_EncDec_ErrorContext::error
       (TTCN_EncDec::ET_UNBOUND, "Encoding an unbound value.");
   }
-  bool need_separator=false;
+  boolean need_separator=FALSE;
   int encoded_length=0;
   if (p_td.text->begin_encode) {
     buff.put_cs(*p_td.text->begin_encode);
@@ -3556,7 +3556,7 @@ int Record_Type::TEXT_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buf
         encoded_length+=p_td.text->separator_encode->lengthof();
       }
       encoded_length += get_at(i)->TEXT_encode(*fld_descr(i),buff);
-      need_separator=true;
+      need_separator=TRUE;
     }
     if (is_optional_field) next_optional_idx++;
   }
@@ -3576,7 +3576,7 @@ int Record_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr, 
     TTCN_EncDec_ErrorContext::error
       (TTCN_EncDec::ET_UNBOUND, "Encoding an unbound value.");
   }
-  bool need_separator=false;
+  boolean need_separator=FALSE;
   int encoded_length=0;
   if (p_td.text->begin_encode) {
     buff.put_cs(*p_td.text->begin_encode);
@@ -3616,7 +3616,7 @@ int Record_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr, 
         encoded_length += err_vals->before->errval->TEXT_encode(
           *(err_vals->before->type_descr),buff);
       }
-      need_separator=true;
+      need_separator=TRUE;
     }
 
     if (err_vals && err_vals->value) {
@@ -3633,7 +3633,7 @@ int Record_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr, 
           encoded_length += err_vals->value->errval->TEXT_encode(
             *(err_vals->value->type_descr),buff);
         }
-        need_separator=true;
+        need_separator=TRUE;
       } // else -> omit
     } else {
       if (!is_optional_field || get_at(i)->ispresent()) {
@@ -3646,7 +3646,7 @@ int Record_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr, 
         } else {
           encoded_length += get_at(i)->TEXT_encode(*fld_descr(i),buff);
         }
-        need_separator=true;
+        need_separator=TRUE;
       }
     }
 
@@ -3665,7 +3665,7 @@ int Record_Type::TEXT_encode_negtest(const Erroneous_descriptor_t* p_err_descr, 
         encoded_length += err_vals->after->errval->TEXT_encode(
           *(err_vals->after->type_descr),buff);
       }
-      need_separator=true;
+      need_separator=TRUE;
     }
 
     if (is_optional_field) next_optional_idx++;
@@ -3752,7 +3752,7 @@ int Record_Type::TEXT_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buf
             if ( (fld_descr(i)->text->val.parameters->decoding_params.repeatable && field_map[i]<3)
                  || !field_map[i] ) {
               pos=buff.get_pos();
-              decoded_field_length = get_at(i)->TEXT_decode(*fld_descr(i),buff, limit, true,!field_map[i]);
+              decoded_field_length = get_at(i)->TEXT_decode(*fld_descr(i),buff, limit, TRUE,!field_map[i]);
               if (decoded_field_length<0) {
                 buff.set_pos(pos);
                 if (is_optional_field && !field_map[i]) get_at(i)->set_to_omit();
@@ -3770,7 +3770,7 @@ int Record_Type::TEXT_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buf
           } else { // !...->is_seof
             if (!field_map[i]) {
               pos=buff.get_pos();
-              decoded_field_length = get_at(i)->TEXT_decode(*fld_descr(i),buff,limit,true);
+              decoded_field_length = get_at(i)->TEXT_decode(*fld_descr(i),buff,limit,TRUE);
               if (decoded_field_length<0) {
                 buff.set_pos(pos);
                 if (is_optional_field) get_at(i)->set_to_omit();
@@ -4087,7 +4087,7 @@ char ** Record_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& 
     // (Monty Python - Crunchy Frog sketch). This whole thing is O(n^3). Yuck.
     for (int a = start_at; a < field_cnt; ++a) {
       size_t num_new = 0;
-      bool def_ns_1 = false;
+      boolean def_ns_1 = FALSE;
       char **new_namespaces = get_at(a)->collect_ns(*xer_descr(a), num_new, def_ns_1);
       merge_ns(collected_ns, num_collected, new_namespaces, num_new);
       def_ns = def_ns || def_ns_1;
@@ -4162,7 +4162,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 
   size_t num_collected = 0; // we use this to compute delay_close
   char **collected_ns = NULL;
-  bool def_ns = false;
+  boolean def_ns = FALSE;
   if (exer) {
     if (indent == 0) { // top-level type
       collected_ns = collect_ns(p_td, num_collected, def_ns);
@@ -4606,7 +4606,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
 
   size_t num_collected = 0; // we use this to compute delay_close
   char **collected_ns = NULL;
-  bool def_ns = false;
+  boolean def_ns = FALSE;
   if (exer) {
     if (indent == 0) { // top-level type
       collected_ns = collect_ns(p_td, num_collected, def_ns);
@@ -5405,7 +5405,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     
     /* * * * * * * * Non-attributes (elements) * * * * * * * * * * * */
     embed_values_dec_struct_t* emb_val = 0;
-    bool emb_val_optional = false;
+    boolean emb_val_optional = FALSE;
     if (exer && (p_td.xer_bits & EMBED_VALUES)) {
       emb_val = new embed_values_dec_struct_t;
       emb_val->embval_array = dynamic_cast<Record_Of_Type*>(get_at(0));
@@ -5413,7 +5413,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
         OPTIONAL<PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING>* embed_value = static_cast<OPTIONAL<PreGenRecordOf::PREGEN__RECORD__OF__UNIVERSAL__CHARSTRING>*>(get_at(0));
         embed_value->set_to_present();
         emb_val->embval_array = static_cast<Record_Of_Type*>((*embed_value).get_opt_value());
-        emb_val_optional = true;
+        emb_val_optional = TRUE;
       }
       emb_val->embval_array->set_size(0);
       emb_val->embval_index = 0;
@@ -5473,7 +5473,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
         // (if the field is an untagged record of), in this case the next value should
         // be ignored, as it's already been handled by the record of
         int last_embval_index = 0;
-        bool early_exit = false;
+        boolean early_exit = FALSE;
         for (i = begin; i < end; i++) {
           for (success = reader.Ok(); success == 1; success = reader.Read()) {
             type = reader.NodeType();
@@ -5484,7 +5484,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
             // The non-attribute components must not be UNTAGGED
             if (type == XML_READER_TYPE_ELEMENT) break;
             if (type == XML_READER_TYPE_END_ELEMENT) {
-              early_exit = true;
+              early_exit = TRUE;
               break;
             }
           }
@@ -5496,7 +5496,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
           }
           if (success != 1 || early_exit) break;
           const char *name = (const char *)reader.LocalName();
-          bool field_name_found = false;
+          boolean field_name_found = FALSE;
           // Find out which member it is.
           // FIXME some hashing should be implemented
           for (int k = begin; k < end; k++) {
@@ -5520,7 +5520,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
               ->from_int(in_dex);
               Base_Type *b = jumbled->get_at(k);
               b->XER_decode(*jumbled->xer_descr(k), reader, flavor, flavor2, emb_val);
-              field_name_found = true;
+              field_name_found = TRUE;
               break;
             }
           }
@@ -5547,7 +5547,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                 Base_Type *b = jumbled->get_at(k);
                 b->XER_decode(*jumbled->xer_descr(k), reader, flavor, flavor2, emb_val);
                 last_any_elem = k;
-                field_name_found = true;
+                field_name_found = TRUE;
                 break;
               }
             }
@@ -5627,7 +5627,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
           }
           else {
             // In case the field is an optional anyElement -> check if it should be omitted
-            bool optional_any_elem_check = true;
+            boolean optional_any_elem_check = TRUE;
             if (get_at(i)->is_optional() && (xer_descr(i)->xer_bits & ANY_ELEMENT)) {
               // The "anyElement" coding instruction can only be applied to a universal charstring field
               OPTIONAL<UNIVERSAL_CHARSTRING>* opt_field = dynamic_cast<OPTIONAL<UNIVERSAL_CHARSTRING>*>(get_at(i));
@@ -5670,13 +5670,13 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     } // if use-order
 
     if (0 != emb_val) {
-      bool all_unbound = true;
+      boolean all_unbound = TRUE;
       static const UNIVERSAL_CHARSTRING emptystring(0, (const char*)NULL);
       for (int j = 0; j < emb_val->embval_index; ++j) {
         if (!emb_val->embval_array->get_at(j)->is_bound()) {
           emb_val->embval_array->get_at(j)->set_value(&emptystring);
         }else if((static_cast<const UNIVERSAL_CHARSTRING*>(emb_val->embval_array->get_at(j)))->lengthof() !=0) {
-          all_unbound = false;
+          all_unbound = FALSE;
         }
       }
       if(emb_val_optional && all_unbound){
@@ -5909,7 +5909,7 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
       JSON_METAINFO_NONE : JSON_METAINFO_NOT_APPLICABLE;
   }
   
-  while (true) {
+  while (TRUE) {
     // Read name - value token pairs until we reach some other token
     char* name = 0;
     size_t name_len = 0;
@@ -6244,7 +6244,7 @@ void Empty_Record_Type::decode(const TTCN_Typedescriptor_t& p_td,
     if(!p_td.json) TTCN_EncDec_ErrorContext::error_internal
                      ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
         "Can not decode type '%s', because invalid or incomplete"
         " message was received", p_td.name);
@@ -6361,7 +6361,7 @@ int Empty_Record_Type::XER_decode(const XERdescriptor_t& p_td,
   XmlReaderWrap& reader, unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
   int exer = is_exer(flavor);
-  bound_flag = true;
+  bound_flag = TRUE;
   int success, depth = -1;
   for (success=reader.Ok(); success==1; success=reader.Read()) {
     int type = reader.NodeType();
@@ -6418,7 +6418,7 @@ int Empty_Record_Type::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&
     return JSON_ERROR_FATAL;
   }
   
-  bound_flag = true;
+  bound_flag = TRUE;
   
   return dec_len;
 }

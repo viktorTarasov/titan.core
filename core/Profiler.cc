@@ -454,22 +454,22 @@ void TTCN3_Stack_Depth::add_stack(int stack_len, const char* caller_file, const 
   item.start_line = start_line;
   item.elapsed.tv_sec = 0;
   item.elapsed.tv_usec = 0;
-  item.first_call = true;
-  item.recursive_call = false;
+  item.first_call = TRUE;
+  item.recursive_call = FALSE;
 
   if (!net_line_times || !net_func_times) {
     // check if it's a recursive function
     for (int i = current_depth - 1; i >= 0 ; --i) {
       if (call_stack_timer_db[i].start_line == start_line &&
           0 == strcmp(call_stack_timer_db[i].func_file, func_file)) {
-        item.recursive_call = true;
+        item.recursive_call = TRUE;
 
         // check if the caller is new
         if (call_stack_timer_db[i].caller_line == caller_line &&
             ((NULL == call_stack_timer_db[i].caller_file && NULL == caller_file) ||
              (NULL != call_stack_timer_db[i].caller_file && NULL != caller_file &&
              0 == strcmp(call_stack_timer_db[i].caller_file, caller_file)))) {
-          item.first_call = false;
+          item.first_call = FALSE;
           break;
         }
       }

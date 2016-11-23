@@ -79,7 +79,7 @@ struct TTCN_Typedescriptor_t {
 #ifdef TITAN_RUNTIME_2
 
 struct Erroneous_value_t {
-  const bool raw;
+  const boolean raw;
   const Base_Type * const errval; // NULL if `omit'
   const TTCN_Typedescriptor_t* type_descr; // NULL if `omit' or raw
 };
@@ -575,7 +575,7 @@ public:
    *        was shortened by exactly one character.
    */
   VIRTUAL_IF_RUNTIME_2 int begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int& flavor, int indent, bool empty,
+    unsigned int& flavor, int indent, boolean empty,
     collector_fn collector = &Base_Type::collect_ns, const char *type_atr = NULL) const;
   /** Finish the XML representation.
    *
@@ -587,7 +587,7 @@ public:
    * @param[in]  empty true if an empty-element tag is needed
    */
   VIRTUAL_IF_RUNTIME_2 void end_xml  (const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent, bool empty) const;
+    unsigned int flavor, int indent, boolean empty) const;
   
   /** Encode JSON.
    * @return encoded length
@@ -720,14 +720,14 @@ protected:
   int get_nof_elements() const;
   
   /** Returns true if the indexed element is bound */
-  bool is_elem_bound(int index) const;
+  boolean is_elem_bound(int index) const;
   
   /** Returns the highest referenced index (uses \a max_refd_index as its cache)*/
   int get_max_refd_index();
   
   /** Returns true if the element at the given index is referenced by an 'out' or
     * 'inout' parameter. */
-  bool is_index_refd(int index);
+  boolean is_index_refd(int index);
 
 public:
   void set_val(null_type other_value);
@@ -1065,15 +1065,15 @@ extern boolean operator!=(null_type null_value, const Empty_Record_Type& other_v
 template <class EXPR_TYPE>
 class Lazy_Param {
 protected:
-  bool expr_evaluated;
+  boolean expr_evaluated;
   EXPR_TYPE expr_cache;  
   virtual void eval_expr() {}
 public:
-  Lazy_Param(): expr_evaluated(false) {}
+  Lazy_Param(): expr_evaluated(FALSE) {}
   enum evaluated_state_t { EXPR_EVALED };
-  Lazy_Param(evaluated_state_t /*p_es*/, EXPR_TYPE p_cache): expr_evaluated(true), expr_cache(p_cache) {}
+  Lazy_Param(evaluated_state_t /*p_es*/, EXPR_TYPE p_cache): expr_evaluated(TRUE), expr_cache(p_cache) {}
   operator EXPR_TYPE&() {
-    if (!expr_evaluated) { eval_expr(); expr_evaluated=true; }
+    if (!expr_evaluated) { eval_expr(); expr_evaluated=TRUE; }
     return expr_cache;
   }
   virtual ~Lazy_Param() {}

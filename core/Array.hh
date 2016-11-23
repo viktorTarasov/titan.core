@@ -320,10 +320,10 @@ boolean VALUE_ARRAY<T_type,array_size,index_offset>::is_bound() const
 {
   for (unsigned int i = 0; i < array_size; ++i) {
     if (!array_elements[i].is_bound()) {
-    	return false;
+    	return FALSE;
     }
   }
-  return true;
+  return TRUE;
 }
 
 template <typename T_type, unsigned int array_size, int index_offset>
@@ -331,10 +331,10 @@ boolean VALUE_ARRAY<T_type,array_size,index_offset>::is_value() const
 {
   for (unsigned int i = 0; i < array_size; ++i) {
     if (!array_elements[i].is_value()) {
-    	return false;
+    	return FALSE;
     }
   }
-  return true;
+  return TRUE;
 }
 
 template <typename T_type, unsigned int array_size, int index_offset>
@@ -503,7 +503,7 @@ void VALUE_ARRAY<T_type,array_size,index_offset>::decode(
     if(!p_td.json) TTCN_EncDec_ErrorContext::error_internal
                      ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,"Can not decode type '%s', "
         "because invalid or incomplete message was received", p_td.name);
     p_buf.set_pos(tok.get_buf_pos());

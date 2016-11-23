@@ -49,15 +49,15 @@ RingBuffer::~RingBuffer()
   }
 }
 
-bool RingBuffer::get(TitanLoggerApi::TitanLogEvent& data)
+boolean RingBuffer::get(TitanLoggerApi::TitanLogEvent& data)
 {
   if(tail == head)
-    return false;
+    return FALSE;
 
   data = buffer[tail];
   tail = (tail +1) % (size + 1);
 
-  return true;
+  return TRUE;
 }
 
 void RingBuffer::put(TitanLoggerApi::TitanLogEvent data)
@@ -100,7 +100,7 @@ LoggerPluginManager::~LoggerPluginManager()
     LogEntry *next_entry = this->entry_list_->next_entry_;
     for (size_t i = 0; i < this->n_plugins_; ++i) {
       if (this->plugins_[i]->is_configured()) {
-        this->plugins_[i]->log(this->entry_list_->event_, true, false, false);
+        this->plugins_[i]->log(this->entry_list_->event_, TRUE, FALSE, FALSE);
       }
     }
     delete this->entry_list_;
@@ -128,7 +128,7 @@ LoggerPluginManager::~LoggerPluginManager()
   }
 }
 
-void LoggerPluginManager::ring_buffer_dump(bool do_close_file)
+void LoggerPluginManager::ring_buffer_dump(boolean do_close_file)
 {
   // in case of buffer all, flush the content of the ring buffer
   if (TTCN_Logger::get_emergency_logging_behaviour() == TTCN_Logger::BUFFER_ALL) {
@@ -136,7 +136,7 @@ void LoggerPluginManager::ring_buffer_dump(bool do_close_file)
     // get all the events from the ring: buffer
     while (!ring_buffer.isEmpty()) {
       if (ring_buffer.get(ring_event)) {
-        internal_log_to_all(ring_event, true, false, false);  // buffer all: DO NOT log in separate file
+        internal_log_to_all(ring_event, TRUE, FALSE, FALSE);  // buffer all: DO NOT log in separate file
       }
     }
   }
@@ -200,10 +200,10 @@ void LoggerPluginManager::load_plugins(component component_reference,
 void LoggerPluginManager::load_plugin(const char *identifier,
                                       const char *filename)
 {
-  bool is_legacylogger =
-    !strncasecmp(identifier, "LegacyLogger", 12) ? true : false;
-  static bool legacylogger_needed = false;
-  if (!legacylogger_needed && is_legacylogger) legacylogger_needed = true;
+  boolean is_legacylogger =
+    !strncasecmp(identifier, "LegacyLogger", 12) ? TRUE : FALSE;
+  static boolean legacylogger_needed = FALSE;
+  if (!legacylogger_needed && is_legacylogger) legacylogger_needed = TRUE;
   // LegacyLogger was listed explicitly.  Otherwise, it's disabled.  It is
   // always loaded as the first element of the list.
   this->plugins_[0]->set_configured(legacylogger_needed);
@@ -239,19 +239,19 @@ void LoggerPluginManager::load_plugin(const char *identifier,
   this->plugins_[this->n_plugins_ - 1]->load();
 }
 
-extern bool operator==(const component_id_t& left, const component_id_t& right);
+extern boolean operator==(const component_id_t& left, const component_id_t& right);
 
-bool LoggerPluginManager::add_parameter(const logging_setting_t& logging_param)
+boolean LoggerPluginManager::add_parameter(const logging_setting_t& logging_param)
 {
-  bool duplication_warning = false;
+  boolean duplication_warning = FALSE;
 
   for (logging_setting_t *par = logparams_head; par != NULL; par = par->nextparam) {
-    bool for_all_components = logging_param.component.id_selector == COMPONENT_ID_ALL || par->component.id_selector == COMPONENT_ID_ALL;
-    bool for_all_plugins = logging_param.plugin_id == NULL || par->plugin_id == NULL ||
+    boolean for_all_components = logging_param.component.id_selector == COMPONENT_ID_ALL || par->component.id_selector == COMPONENT_ID_ALL;
+    boolean for_all_plugins = logging_param.plugin_id == NULL || par->plugin_id == NULL ||
       !strcmp(logging_param.plugin_id, "*") || !strcmp(par->plugin_id, "*");
-    bool component_overlaps = for_all_components || logging_param.component == par->component;
-    bool plugin_overlaps = for_all_plugins || !strcmp(logging_param.plugin_id, par->plugin_id);
-    bool parameter_overlaps = logging_param.logparam.log_param_selection == par->logparam.log_param_selection;
+    boolean component_overlaps = for_all_components || logging_param.component == par->component;
+    boolean plugin_overlaps = for_all_plugins || !strcmp(logging_param.plugin_id, par->plugin_id);
+    boolean parameter_overlaps = logging_param.logparam.log_param_selection == par->logparam.log_param_selection;
     if (parameter_overlaps && logging_param.logparam.log_param_selection == LP_PLUGIN_SPECIFIC)
       parameter_overlaps = strcmp(logging_param.logparam.param_name, par->logparam.param_name) == 0;
     duplication_warning = component_overlaps && plugin_overlaps && parameter_overlaps;
@@ -333,7 +333,7 @@ void LoggerPluginManager::send_parameter_to_plugin(LoggerPlugin *plugin,
     plugin->set_disk_full_action(logparam.logparam.disk_full_action_value);
     break;
   case LP_LOGFILE:
-    plugin->set_file_name(logparam.logparam.str_val, true);
+    plugin->set_file_name(logparam.logparam.str_val, TRUE);
     break;
   case LP_TIMESTAMPFORMAT:
     TTCN_Logger::set_timestamp_format(logparam.logparam.timestamp_value);
@@ -413,7 +413,7 @@ void LoggerPluginManager::clear_plugin_list()
 }
 
 void LoggerPluginManager::set_file_name(const char *new_filename_skeleton,
-                                        bool from_config)
+                                        boolean from_config)
 {
   for (size_t i = 0; i < this->n_plugins_; ++i)
     this->plugins_[i]->set_file_name(new_filename_skeleton, from_config);
@@ -425,52 +425,52 @@ void LoggerPluginManager::reset()
     this->plugins_[i]->reset();
 }
 
-void LoggerPluginManager::set_append_file(bool new_append_file)
+void LoggerPluginManager::set_append_file(boolean new_append_file)
 {
   for (size_t i = 0; i < this->n_plugins_; ++i)
     this->plugins_[i]->set_append_file(new_append_file);
 }
 
-bool LoggerPluginManager::set_file_size(component_id_t const& /*comp*/, int p_size)
+boolean LoggerPluginManager::set_file_size(component_id_t const& /*comp*/, int p_size)
 {
-  bool ret_val = false;
+  boolean ret_val = FALSE;
   for (size_t i = 0; i < this->n_plugins_; ++i)
     if (this->plugins_[i]->set_file_size(p_size))
-      ret_val = true;
+      ret_val = TRUE;
   return ret_val;
 }
 
-bool LoggerPluginManager::set_file_number(component_id_t const& /*comp*/, int p_number)
+boolean LoggerPluginManager::set_file_number(component_id_t const& /*comp*/, int p_number)
 {
-  bool ret_val = false;
+  boolean ret_val = FALSE;
   for (size_t i = 0; i < this->n_plugins_; ++i)
     if (this->plugins_[i]->set_file_number(p_number))
-      ret_val = true;
+      ret_val = TRUE;
   return ret_val;
 }
 
-bool LoggerPluginManager::set_disk_full_action(component_id_t const& /*comp*/,
+boolean LoggerPluginManager::set_disk_full_action(component_id_t const& /*comp*/,
   TTCN_Logger::disk_full_action_t p_disk_full_action)
 {
-  bool ret_val = false;
+  boolean ret_val = FALSE;
   for (size_t i = 0; i < this->n_plugins_; ++i)
     if (this->plugins_[i]->set_disk_full_action(p_disk_full_action))
-      ret_val = true;
+      ret_val = TRUE;
   return ret_val;
 }
 
 void LoggerPluginManager::open_file()
 {
-  static bool is_first = true;
-  bool free_entry_list = false;
+  static boolean is_first = TRUE;
+  boolean free_entry_list = FALSE;
   assert(this->n_plugins_ > 0);
   // In case of `EXECUTOR_LOGOPTIONS' write updated
-  // `write_logger_settings(true)'.  Try to log the buffered events, they not
+  // `write_logger_settings(TRUE)'.  Try to log the buffered events, they not
   // necessarily be logged otherwise.
   for (size_t i = 0; i < this->n_plugins_; ++i) {
     this->plugins_[i]->open_file(is_first);
     if (this->plugins_[i]->is_configured()) {
-      free_entry_list = true;
+      free_entry_list = TRUE;
       LogEntry *entry = this->entry_list_, *next_entry = NULL;
       while (entry != NULL) {
         next_entry = entry->next_entry_;
@@ -481,7 +481,7 @@ void LoggerPluginManager::open_file()
             CHARSTRING(mstrlen(new_log_message), new_log_message);
           Free(new_log_message);
         }
-        this->plugins_[i]->log(entry->event_, true, false, false);
+        this->plugins_[i]->log(entry->event_, TRUE, FALSE, FALSE);
         entry = next_entry;
       }
     }
@@ -494,7 +494,7 @@ void LoggerPluginManager::open_file()
     }
     this->entry_list_ = NULL;
   }
-  is_first = false;
+  is_first = FALSE;
 }
 
 void LoggerPluginManager::close_file()
@@ -503,7 +503,7 @@ void LoggerPluginManager::close_file()
   while (this->current_event_ != NULL)
     finish_event();
 
-  ring_buffer_dump(true);
+  ring_buffer_dump(TRUE);
 }
 
 void LoggerPluginManager::unload_plugins()
@@ -578,7 +578,7 @@ void LoggerPluginManager::internal_log_prebuff_logevent()
           CHARSTRING(mstrlen(new_log_message), new_log_message);
       Free(new_log_message);
     }
-    internal_log_to_all(entry->event_, true, false, false);
+    internal_log_to_all(entry->event_, TRUE, FALSE, FALSE);
     delete entry;
     entry = next_entry;
   }
@@ -587,7 +587,7 @@ void LoggerPluginManager::internal_log_prebuff_logevent()
 }
 
 void LoggerPluginManager::internal_log_to_all(const TitanLoggerApi::TitanLogEvent& event,
-      bool log_buffered, bool separate_file, bool use_emergency_mask)
+      boolean log_buffered, boolean separate_file, boolean use_emergency_mask)
 {
   for (size_t i = 0; i < this->n_plugins_; ++i) {
     if (this->plugins_[i]->is_configured()) {
@@ -596,14 +596,14 @@ void LoggerPluginManager::internal_log_to_all(const TitanLoggerApi::TitanLogEven
   }
 }
 
-bool LoggerPluginManager::plugins_ready() const
+boolean LoggerPluginManager::plugins_ready() const
 {
   for (size_t i = 0; i < this->n_plugins_; ++i) {
     if (this->plugins_[i]->is_configured()) {
-      return true;
+      return TRUE;
     }
   }
-  return false;
+  return FALSE;
 }
 
 void LoggerPluginManager::log(const API::TitanLogEvent& event)
@@ -619,7 +619,7 @@ void LoggerPluginManager::log(const API::TitanLogEvent& event)
 
   if (TTCN_Logger::get_emergency_logging() == 0) {
     // If emergency buffering is not needed log the event
-    internal_log_to_all(event, false, false, false);
+    internal_log_to_all(event, FALSE, FALSE, FALSE);
     return;
   }
 
@@ -630,7 +630,7 @@ void LoggerPluginManager::log(const API::TitanLogEvent& event)
   if (TTCN_Logger::get_emergency_logging_behaviour() == TTCN_Logger::BUFFER_MASKED) {
     //ToDo: do it nicer
     //if(TTCN_Logger::log_this_event((TTCN_Logger::Severity)(int)event.severity())){
-    internal_log_to_all(event, true, false, false);
+    internal_log_to_all(event, TRUE, FALSE, FALSE);
     if (!TTCN_Logger::should_log_to_file((TTCN_Logger::Severity)(int)event.severity()) &&
         TTCN_Logger::should_log_to_emergency((TTCN_Logger::Severity)(int)event.severity())) {
       ring_buffer.put(event);
@@ -641,7 +641,7 @@ void LoggerPluginManager::log(const API::TitanLogEvent& event)
       // the ring buffer is full, get the the oldest event
       // check does the user want this to be logged
       if (ring_buffer.get(ring_event)) {
-        internal_log_to_all(ring_event, true, false, false);
+        internal_log_to_all(ring_event, TRUE, FALSE, FALSE);
       } else {
         // it is not wanted by the user, throw it away
       }
@@ -658,9 +658,9 @@ void LoggerPluginManager::log(const API::TitanLogEvent& event)
     while (!ring_buffer.isEmpty()) {
       if (ring_buffer.get(ring_event)) {
         if (TTCN_Logger::get_emergency_logging_behaviour() == TTCN_Logger::BUFFER_MASKED) {
-          internal_log_to_all(ring_event, true, true, false);  // log in separate file
+          internal_log_to_all(ring_event, TRUE, TRUE, FALSE);  // log in separate file
         } else if (TTCN_Logger::get_emergency_logging_behaviour() == TTCN_Logger::BUFFER_ALL) {
-          internal_log_to_all(ring_event, true, false, true);  // DO NOT log in separate file
+          internal_log_to_all(ring_event, TRUE, FALSE, TRUE);  // DO NOT log in separate file
         }
       }
     }
@@ -870,7 +870,7 @@ void LoggerPluginManager::log_getverdict(verdicttype verdict)
   log(event);
 }
 
-void LoggerPluginManager::log_final_verdict(bool is_ptc,
+void LoggerPluginManager::log_final_verdict(boolean is_ptc,
   verdicttype ptc_verdict, verdicttype local_verdict, verdicttype new_verdict,
   const char *verdict__reason, int notification, int ptc_compref,
   const char *ptc_name)
@@ -1045,7 +1045,7 @@ void LoggerPluginManager::log_testcase_exec(const char *tc, const char *module)
   log(event);
 }
 
-void LoggerPluginManager::log_module_init(const char *module, bool finish)
+void LoggerPluginManager::log_module_init(const char *module, boolean finish)
 {
   if (!TTCN_Logger::log_this_event(TTCN_Logger::EXECUTOR_RUNTIME) && (TTCN_Logger::get_emergency_logging()<=0))
     return;
@@ -1581,7 +1581,7 @@ char* LoggerPluginManager::get_current_event_str()
 }
 
 void LoggerPluginManager::begin_event(TTCN_Logger::Severity msg_severity,
-                                      bool log2str)
+                                      boolean log2str)
 {
   event_destination_t event_dest;
   if (log2str) event_dest = ED_STRING;
@@ -1799,7 +1799,7 @@ LoggerPlugin *LoggerPluginManager::find_plugin(const char *name)
 #undef new
 #endif
 
-LoggerPluginManager::ActiveEvent::ActiveEvent(bool fake_event, event_destination_t dest)
+LoggerPluginManager::ActiveEvent::ActiveEvent(boolean fake_event, event_destination_t dest)
 : event_()
 , event_str_(NULL)
 , event_str_len_(0)

@@ -35,7 +35,7 @@ void TTCN3_Debugger::switch_state(const char* p_state_str)
       print(DRET_NOTIFICATION, "The debugger is already switched on.");
     }
     else {
-      active = true;
+      active = TRUE;
       print(DRET_SETTING_CHANGE, "Debugger switched on.");
     }
   }
@@ -44,7 +44,7 @@ void TTCN3_Debugger::switch_state(const char* p_state_str)
       print(DRET_NOTIFICATION, "The debugger is already switched off.");
     }
     else {
-      active = false;
+      active = FALSE;
       print(DRET_SETTING_CHANGE, "Debugger switched off.");
     }
   }
@@ -53,15 +53,15 @@ void TTCN3_Debugger::switch_state(const char* p_state_str)
   }
 }
 
-static bool is_numeric(const char* p_str)
+static boolean is_numeric(const char* p_str)
 {
   size_t len = strlen(p_str);
   for (size_t i = 0; i < len; ++i) {
     if (p_str[i] < '0' || p_str[i] > '9') {
-      return false;
+      return FALSE;
     }
   }
-  return true;
+  return TRUE;
 }
 
 void TTCN3_Debugger::set_breakpoint(const char* p_module, const char* p_location,
@@ -129,13 +129,13 @@ void TTCN3_Debugger::set_breakpoint(const char* p_module, const char* p_location
 
 void TTCN3_Debugger::remove_breakpoint(const char* p_module, const char* p_location)
 {
-  bool all_breakpoints = !strcmp(p_module, "all");
+  boolean all_breakpoints = !strcmp(p_module, "all");
   if (p_location != NULL) {
     if (!strcmp(p_location, "all")) {
-      bool found = false;
+      boolean found = FALSE;
       for (size_t i = breakpoints.size(); i > 0; --i) {
         if (!strcmp(breakpoints[i - 1].module, p_module)) {
-          found = true;
+          found = TRUE;
           Free(breakpoints[i - 1].module);
           Free(breakpoints[i - 1].batch_file);
           breakpoints.erase_at(i - 1);
@@ -208,19 +208,19 @@ void TTCN3_Debugger::set_automatic_breakpoint(const char* p_event_str,
                                               const char* p_state_str,
                                               const char* p_batch_file)
 {
-  bool new_state;
+  boolean new_state;
   if (!strcmp(p_state_str, "on")) {
-    new_state = true;
+    new_state = TRUE;
   }
   else if(!strcmp(p_state_str, "off")) {
-    new_state = false;
+    new_state = FALSE;
   }
   else {
     print(DRET_NOTIFICATION, "Argument 2 is invalid. Expected 'on' or 'off'.");
     return;
   }
   const char* sbp_type_str;
-  bool state_changed;
+  boolean state_changed;
   char** old_batch_file_ptr;
   if (!strcmp(p_event_str, "fail")) {
     state_changed = (fail_behavior.trigger != new_state);
@@ -480,7 +480,7 @@ void TTCN3_Debugger::configure_function_calls(const char* p_config,
   }
   FILE* new_fp = NULL;
   char* final_file_name = NULL;
-  bool same_setting = false;
+  boolean same_setting = FALSE;
   int new_size = 0;
   switch (cfg) {
   case CALLS_TO_FILE:
@@ -488,7 +488,7 @@ void TTCN3_Debugger::configure_function_calls(const char* p_config,
       if (function_calls.cfg == CALLS_TO_FILE &&
           strcmp(p_file_name, function_calls.file.name) == 0) {
         // don't reopen it if it's the same file as before
-        same_setting = true;
+        same_setting = TRUE;
       }
       else if (!TTCN_Runtime::is_hc()) {
         // don't open any files on HCs, just store settings for future PTCs
@@ -576,21 +576,21 @@ void TTCN3_Debugger::print_function_calls(const char* p_amount)
                function_calls.buffer.start == (function_calls.buffer.end + 1) %
                function_calls.buffer.size) ?
     function_calls.buffer.size : function_calls.buffer.end + 1;
-  bool invalid_arg = false;
+  boolean invalid_arg = FALSE;
   if (p_amount == NULL || strcmp(p_amount, "all") == 0) {
     amount = limit;
   }
   else if (is_numeric(p_amount)) {
     amount = strtol(p_amount, NULL, 10);
     if (amount == 0) {
-      invalid_arg = true;
+      invalid_arg = TRUE;
     }
     else if (amount > limit) {
       amount = limit;
     }
   }
   else {
-    invalid_arg = true;
+    invalid_arg = TRUE;
   }
   if (invalid_arg) {
     print(DRET_NOTIFICATION, "Argument 1 is invalid. Expected 'all' or non-zero "
@@ -610,21 +610,21 @@ void TTCN3_Debugger::print_function_calls(const char* p_amount)
 void TTCN3_Debugger::set_output(const char* p_output_type, const char* p_file_name)
 {
   FILE* new_fp = NULL;
-  bool file, console;
-  bool same_file = false;
+  boolean file, console;
+  boolean same_file = FALSE;
   char* final_file_name = NULL;
   // check the command's parameters before actually changing anything
   if (!strcmp(p_output_type, "console")) {
-    file = false;
-    console = true;
+    file = FALSE;
+    console = TRUE;
   }
   else if (!strcmp(p_output_type, "file")) {
-    file = true;
-    console = false;
+    file = TRUE;
+    console = FALSE;
   }
   else if (!strcmp(p_output_type, "both")) {
-    file = true;
-    console = true;
+    file = TRUE;
+    console = TRUE;
   }
   else {
     print(DRET_NOTIFICATION, "Argument 1 is invalid. Expected 'console', 'file' or 'both'.");
@@ -637,7 +637,7 @@ void TTCN3_Debugger::set_output(const char* p_output_type, const char* p_file_na
     }
     if (output_file_name != NULL && !strcmp(p_file_name, output_file_name)) {
       // don't reopen it if it's the same file as before
-      same_file = true;
+      same_file = TRUE;
     }
     else if (!TTCN_Runtime::is_hc()) {
       // don't open any files on HCs, just store settings for future PTCs
@@ -675,8 +675,8 @@ void TTCN3_Debugger::set_output(const char* p_output_type, const char* p_file_na
 void TTCN3_Debugger::set_global_batch_file(const char* p_state_str,
                                            const char* p_file_name)
 {
-  bool delete_old = false;
-  bool copy_new = false;
+  boolean delete_old = FALSE;
+  boolean copy_new = FALSE;
   if (!strcmp(p_state_str, "on")) {
     if (p_file_name != NULL) {
       if (global_batch_file != NULL) {
@@ -687,14 +687,14 @@ void TTCN3_Debugger::set_global_batch_file(const char* p_state_str,
         else {
           print(DRET_SETTING_CHANGE, "Global batch file changed from '%s' to '%s'.",
             global_batch_file, p_file_name);
-          delete_old = true;
-          copy_new = true;
+          delete_old = TRUE;
+          copy_new = TRUE;
         }
       }
       else {
         print(DRET_SETTING_CHANGE, "Global batch file switched on and set to '%s'.",
           p_file_name);
-        copy_new = true;
+        copy_new = TRUE;
       }
     }
     else {
@@ -704,7 +704,7 @@ void TTCN3_Debugger::set_global_batch_file(const char* p_state_str,
   else if (!strcmp(p_state_str, "off")) {
     if (global_batch_file != NULL) {
       print(DRET_SETTING_CHANGE, "Global batch file switched off.");
-      delete_old = true;
+      delete_old = TRUE;
     }
     else {
       print(DRET_NOTIFICATION, "Global batch file was already switched off.");
@@ -758,10 +758,10 @@ void TTCN3_Debugger::run_to_cursor(const char* p_module, const char* p_location)
   resume();
 }
 
-void TTCN3_Debugger::halt(const char* p_batch_file, bool p_run_global_batch)
+void TTCN3_Debugger::halt(const char* p_batch_file, boolean p_run_global_batch)
 {
   if (!halted) {
-    halted = true;
+    halted = TRUE;
     Free(temporary_breakpoint.module);
     temporary_breakpoint.module = NULL;
     temporary_breakpoint.line = 0;
@@ -808,7 +808,7 @@ void TTCN3_Debugger::halt(const char* p_batch_file, bool p_run_global_batch)
 void TTCN3_Debugger::resume()
 {
   if (halted) {
-    halted = false;
+    halted = FALSE;
     stack_level = -1;
     print(DRET_NOTIFICATION, "Test execution resumed.");
   }
@@ -820,16 +820,16 @@ void TTCN3_Debugger::resume()
 void TTCN3_Debugger::exit_(const char* p_what)
 {
   if (!strcmp(p_what, "test")) {
-    exiting = false;
+    exiting = FALSE;
   }
   else if (!strcmp(p_what, "all")) {
-    exiting = true;
+    exiting = TRUE;
   }
   else {
     print(DRET_NOTIFICATION, "Argument 1 is invalid. Expected 'test' or 'all'.");
     return;
   }
-  halted = false;
+  halted = FALSE;
   if (!TTCN_Runtime::is_hc()) {
     print((exiting && TTCN_Runtime::is_mtc()) ? DRET_EXIT_ALL : DRET_NOTIFICATION,
       "Exiting %s.", exiting ? "test execution" : "current test");
@@ -944,17 +944,17 @@ void TTCN3_Debugger::test_execution_started()
     function_calls.buffer.start = 0;
     function_calls.buffer.end = -1;
   }
-  exiting = false;
+  exiting = FALSE;
   if (TTCN_Runtime::is_single()) {
     TTCN_Debugger_UI::init();
     if (initial_batch_file) {
-      halt(initial_batch_file, false);
+      halt(initial_batch_file, FALSE);
     }
     else if (halt_at_start) {
-      halt(NULL, false);
+      halt(NULL, FALSE);
     }
   }
-  halt_at_start = true;
+  halt_at_start = TRUE;
 }
 
 void TTCN3_Debugger::test_execution_finished()
@@ -1002,12 +1002,12 @@ void TTCN3_Debugger::print(int return_type, const char* fmt, ...) const
 
 TTCN3_Debugger::TTCN3_Debugger()
 {
-  enabled = false;
-  active = false;
-  halted = false;
+  enabled = FALSE;
+  active = FALSE;
+  halted = FALSE;
   output_file = NULL;
   output_file_name = NULL;
-  send_to_console = true;
+  send_to_console = TRUE;
   function_calls.cfg = CALLS_STORE_ALL;
   function_calls.buffer.size = 0;
   function_calls.buffer.start = 0;
@@ -1017,9 +1017,9 @@ TTCN3_Debugger::TTCN3_Debugger()
   last_breakpoint_entry.line = 0;
   last_breakpoint_entry.stack_size = 0;
   stack_level = -1;
-  fail_behavior.trigger = false;
+  fail_behavior.trigger = FALSE;
   fail_behavior.batch_file = NULL;
-  error_behavior.trigger = false;
+  error_behavior.trigger = FALSE;
   error_behavior.batch_file = NULL;
   global_batch_file = NULL;
   command_result = NULL;
@@ -1030,8 +1030,8 @@ TTCN3_Debugger::TTCN3_Debugger()
   temporary_breakpoint.line = 0;
   temporary_breakpoint.function = NULL;
   temporary_breakpoint.batch_file = NULL; // not used
-  exiting = false;
-  halt_at_start = false;
+  exiting = FALSE;
+  halt_at_start = FALSE;
   initial_batch_file = NULL;
 }
 
@@ -1091,7 +1091,7 @@ void TTCN3_Debugger::breakpoint_entry(int p_line)
 {
   if (active && !call_stack.empty()) {
     const char* module_name = call_stack[call_stack.size() - 1].function->get_module_name();
-    bool trigger = false;
+    boolean trigger = FALSE;
     const char* trigger_type;
     int actual_line;
     const char* batch_file = NULL;
@@ -1119,7 +1119,7 @@ void TTCN3_Debugger::breakpoint_entry(int p_line)
       if (stepping_type == STEP_INTO ||
           (stepping_type == STEP_OVER && call_stack.size() <= stepping_stack_size) ||
           (stepping_type == STEP_OUT && call_stack.size() < stepping_stack_size)) {
-        trigger = true;
+        trigger = TRUE;
         trigger_type = "Stepped to";
         break;
       }
@@ -1132,7 +1132,7 @@ void TTCN3_Debugger::breakpoint_entry(int p_line)
            (temporary_breakpoint.function != NULL &&
             last_breakpoint_entry.stack_size == call_stack.size() - 1 &&
             strcmp(temporary_breakpoint.function, function_name) == 0))) {
-        trigger = true;
+        trigger = TRUE;
         trigger_type = "Ran to";
         break;
       }
@@ -1145,7 +1145,7 @@ void TTCN3_Debugger::breakpoint_entry(int p_line)
         pos = find_breakpoint(module_name, 0, function_name);
       }
       if (pos != breakpoints.size()) {
-        trigger = true;
+        trigger = TRUE;
         batch_file = breakpoints[pos].batch_file;
       }
       trigger_type = "User breakpoint reached at";
@@ -1157,7 +1157,7 @@ void TTCN3_Debugger::breakpoint_entry(int p_line)
       if (!TTCN_Runtime::is_single()) {
         TTCN_Communication::send_debug_halt_req();
       }
-      halt(batch_file, true);
+      halt(batch_file, TRUE);
     }
     last_breakpoint_entry.module = module_name;
     last_breakpoint_entry.line = p_line;
@@ -1413,7 +1413,7 @@ void TTCN3_Debugger::add_scope(TTCN3_Debug_Scope* p_scope)
 void TTCN3_Debugger::remove_function(TTCN3_Debug_Function* p_function)
 {
   if (!call_stack.empty() && call_stack[call_stack.size() - 1].function == p_function) {
-    bool removing_test_case = call_stack[call_stack.size() - 1].function->is_test_case();
+    boolean removing_test_case = call_stack[call_stack.size() - 1].function->is_test_case();
     int caller_line = call_stack[call_stack.size() - 1].caller_line;
     call_stack.erase_at(call_stack.size() - 1);
     if (call_stack.empty()) {
@@ -1551,7 +1551,7 @@ void TTCN3_Debugger::store_function_call(char* p_snapshot)
     fflush(function_calls.file.ptr);
     break;
   case CALLS_RING_BUFFER: {
-    bool first = function_calls.buffer.end == -1;
+    boolean first = function_calls.buffer.end == -1;
     function_calls.buffer.end = (function_calls.buffer.end + 1) %
       function_calls.buffer.size;
     function_calls.buffer.ptr[function_calls.buffer.end] = p_snapshot;
@@ -1665,25 +1665,25 @@ void TTCN3_Debugger::execute_command(int p_command, int p_argument_count,
     print_settings();
     break;
   case D_PRINT_CALL_STACK:
-    CHECK_CALL_STACK(true)
+    CHECK_CALL_STACK(TRUE)
     CHECK_NOF_ARGUMENTS(0)
     print_call_stack();
     break;
   case D_SET_STACK_LEVEL:
-    CHECK_CALL_STACK(true)
+    CHECK_CALL_STACK(TRUE)
     CHECK_NOF_ARGUMENTS(1)
     CHECK_INT_ARGUMENT(0)
     set_stack_level(str2int(p_arguments[0]));
     break;
   case D_LIST_VARIABLES:
-    CHECK_CALL_STACK(true)
+    CHECK_CALL_STACK(TRUE)
     CHECK_NOF_ARGUMENTS_RANGE(0, 2)
     call_stack[STACK_LEVEL].function->list_variables(
       (p_argument_count > 0) ? p_arguments[0] : NULL,
       (p_argument_count == 2) ? p_arguments[1] : NULL);
     break;
   case D_PRINT_VARIABLE:
-    CHECK_CALL_STACK(true)
+    CHECK_CALL_STACK(TRUE)
     CHECK_NOF_ARGUMENTS_MIN(1)
     for (int i = 0; i < p_argument_count; ++i) {
       if (i != 0) {
@@ -1720,7 +1720,7 @@ void TTCN3_Debugger::execute_command(int p_command, int p_argument_count,
     }
     break;
   case D_OVERWRITE_VARIABLE:
-    CHECK_CALL_STACK(true)
+    CHECK_CALL_STACK(TRUE)
     CHECK_NOF_ARGUMENTS_MIN(2)
     overwrite_variable(p_arguments[0], p_argument_count - 1, p_arguments + 1);
     break;
@@ -1729,17 +1729,17 @@ void TTCN3_Debugger::execute_command(int p_command, int p_argument_count,
     print_function_calls((p_argument_count > 0) ? p_arguments[0] : NULL);
     break;
   case D_STEP_OVER:
-    CHECK_CALL_STACK(true)
+    CHECK_CALL_STACK(TRUE)
     CHECK_NOF_ARGUMENTS(0)
     step(STEP_OVER);
     break;
   case D_STEP_INTO:
-    CHECK_CALL_STACK(true)
+    CHECK_CALL_STACK(TRUE)
     CHECK_NOF_ARGUMENTS(0)
     step(STEP_INTO);
     break;
   case D_STEP_OUT:
-    CHECK_CALL_STACK(true)
+    CHECK_CALL_STACK(TRUE)
     CHECK_NOF_ARGUMENTS(0)
     step(STEP_OUT);
     break;
@@ -1755,7 +1755,7 @@ void TTCN3_Debugger::execute_command(int p_command, int p_argument_count,
       CHECK_CALL_STACK(TTCN_Runtime::is_mtc())
     }
     CHECK_NOF_ARGUMENTS(0)
-    halt(NULL, false);
+    halt(NULL, FALSE);
     break;
   case D_CONTINUE:
     CHECK_NOF_ARGUMENTS(0)
@@ -1910,10 +1910,10 @@ void TTCN3_Debug_Scope::list_variables(regex_t* p_posix_regexp, bool& p_first,
   for (size_t i = 0; i < variables.size(); ++i) {
     if (p_posix_regexp == NULL ||
         regexec(p_posix_regexp, variables[i]->name, 0, NULL, 0) == 0) {
-      bool imported = p_module != NULL && strcmp(p_module, variables[i]->module) != 0;
+      boolean imported = p_module != NULL && strcmp(p_module, variables[i]->module) != 0;
       ttcn3_debugger.add_to_result("%s%s%s%s", p_first ? "" : " ",
         imported ? variables[i]->module : "", imported ? "." : "", variables[i]->name);
-      p_first = false;
+      p_first = FALSE;
     }
   }
 }
@@ -2104,23 +2104,23 @@ void TTCN3_Debug_Function::print_function() const
 
 void TTCN3_Debug_Function::list_variables(const char* p_scope, const char* p_filter) const
 {
-  bool first = true;
-  bool list_local = false;
-  bool list_global = false;
-  bool list_comp = false;
+  boolean first = TRUE;
+  boolean list_local = FALSE;
+  boolean list_global = FALSE;
+  boolean list_comp = FALSE;
   if (p_scope == NULL || !strcmp(p_scope, "all")) {
-    list_local = true;
-    list_global = true;
-    list_comp = true;
+    list_local = TRUE;
+    list_global = TRUE;
+    list_comp = TRUE;
   }
   else if (!strcmp(p_scope, "local")) {
-    list_local = true;
+    list_local = TRUE;
   }
   else if (!strcmp(p_scope, "global")) {
-    list_global = true;
+    list_global = TRUE;
   }
   else if (!strcmp(p_scope, "comp")) {
-    list_comp = true;
+    list_comp = TRUE;
   }
   else {
     ttcn3_debugger.print(DRET_NOTIFICATION, "Argument 1 is invalid. "
@@ -2153,7 +2153,7 @@ void TTCN3_Debug_Function::list_variables(const char* p_scope, const char* p_fil
       if (posix_regexp == NULL ||
           regexec(posix_regexp, variables[i]->name, 0, NULL, 0) == 0) {
         ttcn3_debugger.add_to_result("%s%s", first ? "" : " ", variables[i]->name);
-        first = false;
+        first = FALSE;
       }
     }
   }
@@ -2172,12 +2172,12 @@ void TTCN3_Debug_Function::list_variables(const char* p_scope, const char* p_fil
   }
 }
 
-bool TTCN3_Debug_Function::is_control_part() const
+boolean TTCN3_Debug_Function::is_control_part() const
 {
   return !strcmp(function_type, "control");
 }
 
-bool TTCN3_Debug_Function::is_test_case() const
+boolean TTCN3_Debug_Function::is_test_case() const
 {
   return !strcmp(function_type, "testcase");
 }

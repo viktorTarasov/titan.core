@@ -925,7 +925,7 @@ void TTCN_Module::post_init_module()
   post_init_called = TRUE;
   TTCN_Logger::log_module_init(module_name);
   if (post_init_func != NULL) post_init_func();
-  TTCN_Logger::log_module_init(module_name, true);
+  TTCN_Logger::log_module_init(module_name, TRUE);
 }
 
 void TTCN_Module::add_function(const char *function_name,

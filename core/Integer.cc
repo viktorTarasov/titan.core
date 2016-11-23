@@ -592,7 +592,7 @@ long long int INTEGER::get_long_long_val() const
 {
   must_bound("Using the value of an unbound integer variable.");
   if (likely(native_flag)) return val.native;
-  bool is_negative = BN_is_negative(val.openssl);
+  boolean is_negative = BN_is_negative(val.openssl);
   long long int ret_val = 0;
   if (unlikely(BN_is_zero(val.openssl))) return 0;
   // It feels so bad accessing a BIGNUM directly, but faster than string
@@ -629,7 +629,7 @@ void INTEGER::set_long_long_val(long long int other_value)
   val.openssl = BN_new();
   // Make it 0.
   BN_zero(val.openssl);
-  bool is_negative = other_value < 0;
+  boolean is_negative = other_value < 0;
   unsigned long long int tmp = !is_negative ? other_value : -other_value;
   for (int i = sizeof(long long int) - 1; i >= 0; i--) {
     BN_add_word(val.openssl, (tmp >> 8 * i) & 0xff);
@@ -883,7 +883,7 @@ void INTEGER::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -1602,7 +1602,7 @@ int INTEGER::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 
   flavor |= SIMPLE_TYPE;
   flavor &= ~XER_RECOF; // integer doesn't care
-  if (begin_xml(p_td, p_buf, flavor, indent, false) == -1) --encoded_length;
+  if (begin_xml(p_td, p_buf, flavor, indent, FALSE) == -1) --encoded_length;
 
   char *tmp_str;
   if (native_flag)
@@ -1616,7 +1616,7 @@ int INTEGER::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     OPENSSL_free(tmp_str);
   p_buf.put_string(value);
 
-  end_xml(p_td, p_buf, flavor, indent, false);
+  end_xml(p_td, p_buf, flavor, indent, FALSE);
 
   return (int) p_buf.get_len() - encoded_length;
 }
@@ -1754,15 +1754,15 @@ int INTEGER::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_to
   else if (JSON_TOKEN_NUMBER == token || use_default) {
     char* number = mcopystrn(value, value_len);
     if (from_string(number) && (int)value_len == get_nof_digits() + ('-' == value[0] ? 1 : 0)) {
-      bound_flag = true;
+      bound_flag = TRUE;
     } else {
       JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FORMAT_ERROR, "number", "integer");
-      bound_flag = false;
+      bound_flag = FALSE;
       dec_len = JSON_ERROR_FATAL;
     }
     Free(number);
   } else {
-    bound_flag = false;
+    bound_flag = FALSE;
     return JSON_ERROR_INVALID_TOKEN;
   }
   return dec_len;

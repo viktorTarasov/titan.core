@@ -1680,19 +1680,19 @@ void EMBEDDED_PDV_identification_syntaxes::set_param(Module_Param& param)
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
         abstract().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
         transfer().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -1872,19 +1872,19 @@ void EMBEDDED_PDV_identification_syntaxes_template::set_param(Module_Param& para
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "abstract")) {
         abstract().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer")) {
         transfer().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -2420,19 +2420,19 @@ void EMBEDDED_PDV_identification_context__negotiation::set_param(Module_Param& p
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
         presentation__context__id().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
         transfer__syntax().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -2613,19 +2613,19 @@ void EMBEDDED_PDV_identification_context__negotiation_template::set_param(Module
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "presentation_context_id")) {
         presentation__context__id().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "transfer_syntax")) {
         transfer__syntax().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -3171,26 +3171,26 @@ void EMBEDDED_PDV::set_param(Module_Param& param)
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
         identification().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
         data__value__descriptor().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "data_value")) {
         data__value().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {
@@ -3488,26 +3488,26 @@ void EMBEDDED_PDV_template::set_param(Module_Param& param)
     break;
   case Module_Param::MP_Assignment_List: {
     Vector<bool> value_used(mp->get_size());
-    value_used.resize(mp->get_size(), false);
+    value_used.resize(mp->get_size(), FALSE);
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "identification")) {
         identification().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "data_value_descriptor")) {
         data__value__descriptor().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) {
       Module_Param* const curr_param = mp->get_elem(val_idx);
       if (!strcmp(curr_param->get_id()->get_name(), "data_value")) {
         data__value().set_param(*curr_param);
-        value_used[val_idx]=true;
+        value_used[val_idx]=TRUE;
       }
     }
     for (size_t val_idx=0; val_idx<mp->get_size(); val_idx++) if (!value_used[val_idx]) {

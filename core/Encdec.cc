@@ -675,7 +675,7 @@ void TTCN_Buffer::put_b(size_t len, const unsigned char *s,
   unsigned char* st=NULL;
   unsigned char* st2=NULL;
   int loc_align=align<0?-align:align;
-  bool must_align=false;
+  boolean must_align=FALSE;
   raw_order_t local_bitorder=coding_par.bitorder;
   raw_order_t local_fieldorder=coding_par.fieldorder;
   if(current_bitorder) {
@@ -724,7 +724,7 @@ local_fieldorder==ORDER_MSB?"M":"L"
     else{
       if(coding_par.byteorder==ORDER_MSB) align=-align;
       if(align<0) put_zero(loc_align,local_fieldorder);
-      else must_align=true;
+      else must_align=TRUE;
     }
   }
   if(len==0) {

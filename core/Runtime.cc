@@ -555,7 +555,7 @@ int TTCN_Runtime::ptc_main()
       try {
         TTCN_Communication::send_killed(local_verdict, (const char *)verdict_reason);
       } catch (const TC_Error& tc_error) { }
-      TTCN_Logger::log_final_verdict(true, local_verdict, local_verdict,
+      TTCN_Logger::log_final_verdict(TRUE, local_verdict, local_verdict,
                                      local_verdict, (const char *)verdict_reason);
       executor_state = PTC_EXIT;
     }
@@ -755,7 +755,7 @@ void TTCN_Runtime::start_function(const char *module_name,
   terminate_component_type();
   // send a STOPPED_KILLED message without return value
   TTCN_Communication::send_stopped_killed(local_verdict, verdict_reason);
-  TTCN_Logger::log_final_verdict(true, local_verdict, local_verdict,
+  TTCN_Logger::log_final_verdict(TRUE, local_verdict, local_verdict,
                                  local_verdict, (const char *)verdict_reason);
 }
 
@@ -797,7 +797,7 @@ void TTCN_Runtime::send_function_finished(Text_Buf& text_buf)
   // log the final verdict if necessary and update the state variable
   if (is_alive) executor_state = PTC_STOPPED;
   else {
-    TTCN_Logger::log_final_verdict(true, local_verdict, local_verdict,
+    TTCN_Logger::log_final_verdict(TRUE, local_verdict, local_verdict,
                                    local_verdict, (const char *)verdict_reason);
     executor_state = PTC_EXIT;
   }
@@ -2319,7 +2319,7 @@ void TTCN_Runtime::process_create_mtc()
   }
 
   // clean Emergency log buffer before fork, to avoid duplication
-  TTCN_Logger::ring_buffer_dump(false);
+  TTCN_Logger::ring_buffer_dump(FALSE);
 
   pid_t mtc_pid = fork();
   if (mtc_pid < 0) {
@@ -2366,7 +2366,7 @@ void TTCN_Runtime::process_create_ptc(component component_reference,
   }
 
   // clean Emergency log buffer before fork, to avoid duplication
-  TTCN_Logger::ring_buffer_dump(false);
+  TTCN_Logger::ring_buffer_dump(FALSE);
 
   pid_t ptc_pid = fork();
   if (ptc_pid < 0) {
@@ -2497,7 +2497,7 @@ void TTCN_Runtime::process_ptc_verdict(Text_Buf& text_buf)
   if (executor_state != MTC_TERMINATING_TESTCASE)
     TTCN_error("Internal error: Message PTC_VERDICT arrived in invalid state.");
 
-  TTCN_Logger::log_final_verdict(false, local_verdict, local_verdict,
+  TTCN_Logger::log_final_verdict(FALSE, local_verdict, local_verdict,
     local_verdict, (const char *)verdict_reason,
     TitanLoggerApi::FinalVerdictType_choice_notification::setting__final__verdict__of__the__test__case);
   TTCN_Logger::log_final_verdict(false, local_verdict, local_verdict,
@@ -2526,7 +2526,7 @@ void TTCN_Runtime::process_ptc_verdict(Text_Buf& text_buf)
       local_verdict = new_verdict;
     }
   } else {
-    TTCN_Logger::log_final_verdict(false, local_verdict, local_verdict,
+    TTCN_Logger::log_final_verdict(FALSE, local_verdict, local_verdict,
       local_verdict, (const char *)verdict_reason,
       TitanLoggerApi::FinalVerdictType_choice_notification::no__ptcs__were__created);
   }

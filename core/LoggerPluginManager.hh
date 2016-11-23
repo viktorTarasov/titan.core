@@ -53,13 +53,13 @@ public:
     size(TTCN_Logger::get_emergency_logging()) {}
   ~RingBuffer();
 
-  bool get(TitanLoggerApi::TitanLogEvent& data) MUST_CHECK;
+  boolean get(TitanLoggerApi::TitanLogEvent& data) MUST_CHECK;
   void put(TitanLoggerApi::TitanLogEvent data);
   void clear();
   unsigned int get_size() const { return size; }
   void set_size(unsigned int new_size);
-  bool isFull() const { return (head + 1) % (size + 1) == tail; }
-  bool isEmpty() const {return head == tail; }
+  boolean isFull() const { return (head + 1) % (size + 1) == tail; }
+  boolean isEmpty() const {return head == tail; }
 };
 
 class LoggerPluginManager
@@ -67,11 +67,11 @@ class LoggerPluginManager
   friend class ILoggerPlugin;
 
 public:
-  void ring_buffer_dump(bool do_close_file);
+  void ring_buffer_dump(boolean do_close_file);
 
   // Sends a single log event to all logger plugins.
   void internal_log_to_all(const TitanLoggerApi::TitanLogEvent& event,
-      bool log_buffered, bool separate_file, bool use_emergency_mask);
+      boolean log_buffered, boolean separate_file, boolean use_emergency_mask);
   // If an event appears before any logger is configured we have to pre-buffer it.
   void internal_prebuff_logevent(const TitanLoggerApi::TitanLogEvent& event);
   // When the loggers get configured we have to log everything we have buffered so far
@@ -85,24 +85,24 @@ public:
   void unload_plugins();
   void reset();
 
-  bool add_parameter(const logging_setting_t& logging_param);
+  boolean add_parameter(const logging_setting_t& logging_param);
   void set_parameters(component component_reference, const char *component_name);
 
-  bool plugins_ready() const;
+  boolean plugins_ready() const;
 
   /// Backward compatibility functions to handle top level configuration file
   /// parameters.  All logger plug-ins will receive these settings, but they
   /// can simply ignore them.
-  bool set_file_mask(component_id_t const& comp, const Logging_Bits& new_file_mask);
-  bool set_console_mask(component_id_t const& comp,
+  boolean set_file_mask(component_id_t const& comp, const Logging_Bits& new_file_mask);
+  boolean set_console_mask(component_id_t const& comp,
                         const Logging_Bits& new_console_mask);
-  void set_file_name(const char *new_filename_skeleton, bool from_config);
-  void set_append_file(bool new_append_file);
+  void set_file_name(const char *new_filename_skeleton, boolean from_config);
+  void set_append_file(boolean new_append_file);
   /// Return true if the given configuration file parameter was set multiple
   /// times.  (The return value is used by the configuration file parser.)
-  bool set_file_size(component_id_t const& comp, int p_size);
-  bool set_file_number(component_id_t const& cmpt, int p_number);
-  bool set_disk_full_action(component_id_t const& comp,
+  boolean set_file_size(component_id_t const& comp, int p_size);
+  boolean set_file_number(component_id_t const& cmpt, int p_number);
+  boolean set_disk_full_action(component_id_t const& comp,
     TTCN_Logger::disk_full_action_t p_disk_full_action);
   void open_file();
   void close_file();
@@ -120,7 +120,7 @@ public:
   void log_va_list(TTCN_Logger::Severity msg_severity, const char *fmt_str,
                    va_list p_var);
   void buffer_event(const TitanLoggerApi::TitanLogEvent& event);
-  void begin_event(TTCN_Logger::Severity msg_severity, bool log2str);
+  void begin_event(TTCN_Logger::Severity msg_severity, boolean log2str);
   void end_event();
   CHARSTRING end_event_log2str();
   void finish_event();
@@ -151,7 +151,7 @@ public:
   void log_setverdict(verdicttype new_verdict, verdicttype old_verdict,
                       verdicttype local_verdict, const char *old_reason = NULL, const char *new_reason = NULL);
   void log_getverdict(verdicttype verdict);
-  void log_final_verdict(bool is_ptc, verdicttype ptc_verdict,
+  void log_final_verdict(boolean is_ptc, verdicttype ptc_verdict,
     verdicttype local_verdict, verdicttype new_verdict,
     const char *verdict_reason = NULL, int notification = -1,
     int ptc_compref = UNBOUND_COMPREF, const char *ptc_name = NULL);
@@ -173,7 +173,7 @@ public:
   void log_fd_limits(int fd_limit, long fd_set_size);
   void log_not_overloaded(int pid);
   void log_testcase_exec(const char *tc, const char *module);
-  void log_module_init(const char *module, bool finish);
+  void log_module_init(const char *module, boolean finish);
   void log_mtc_created(long pid);
   /// EXECUTOR_CONFIGDATA
   void log_configdata(int reason, const char *str);
@@ -287,7 +287,7 @@ private:
     // element is at num_pieces_-2. The end of the last piece is event_str_len_
 
     /// True if the event is for log2str, in which case @p event_ is blank.
-    bool fake_;
+    boolean fake_;
 
     /** Constructor
      *
@@ -295,7 +295,7 @@ private:
      *                   @p event_ is not initialized.
      * @param dest event destination (logfile, string or none)
      */
-    ActiveEvent(bool fake_event, event_destination_t dest);
+    ActiveEvent(boolean fake_event, event_destination_t dest);
     ~ActiveEvent();
     TitanLoggerApi::TitanLogEvent& get_event()
     {

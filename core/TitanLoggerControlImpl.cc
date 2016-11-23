@@ -32,7 +32,7 @@ void set__log__file(CHARSTRING const& plugin, CHARSTRING const& filename)
 {
   validate_plugin_name(plugin);
 
-  TTCN_Logger::set_file_name(filename, false);
+  TTCN_Logger::set_file_name(filename, FALSE);
   TTCN_Logger::open_file();
 }
 
@@ -154,7 +154,7 @@ void remove__from__console__mask(CHARSTRING const& plugin, Severities const& mas
   for (int B = mask.size_of() - 1; B >= 0; B--) {
     TTCN_Logger::Severity sev = static_cast<TTCN_Logger::Severity>((int)mask[B]);
     if (sev > 0 && sev < TTCN_Logger::NUMBER_OF_LOGSEVERITIES) {
-      lb.bits[sev] = false;
+      lb.bits[sev] = FALSE;
     }
   }
   component_id_t cmpt_id = { COMPONENT_ID_COMPREF, { self } };
@@ -169,7 +169,7 @@ void remove__from__file__mask(CHARSTRING const& plugin, Severities const& mask)
   for (int B = mask.size_of() - 1; B >= 0; B--) {
     TTCN_Logger::Severity sev = static_cast<TTCN_Logger::Severity>((int)mask[B]);
     if (sev > 0 && sev < TTCN_Logger::NUMBER_OF_LOGSEVERITIES) {
-      lb.bits[sev] = false;
+      lb.bits[sev] = FALSE;
     }
   }
   component_id_t cmpt_id = { COMPONENT_ID_COMPREF, { self } };

@@ -53,9 +53,9 @@ char* Module_Param_Id::get_current_name() const {
   return NULL;
 }
 
-bool Module_Param_Id::next_name(int /*offset*/) {
+boolean Module_Param_Id::next_name(int /*offset*/) {
   TTCN_error("Internal error: Module_Param_Id::next_name()");
-  return false;
+  return FALSE;
 }
 
 size_t Module_Param_Id::get_nof_names() const {
@@ -66,7 +66,7 @@ size_t Module_Param_Id::get_nof_names() const {
 char* Module_Param_Name::get_str() const {
   char* result = NULL;
   for (size_t i = 0; i < names.size(); ++i) {
-    bool is_index = names[i][0] >= '0' && names[i][0] <= '9';
+    boolean is_index = names[i][0] >= '0' && names[i][0] <= '9';
     if (i > 0 && !is_index) {
       result = mputc(result, '.');
     }
@@ -133,7 +133,7 @@ void Module_Param::set_length_restriction(Module_Param_Length_Restriction* p_len
   length_restriction = p_length_restriction;
 }
 
-void Module_Param::log(bool log_id) const {
+void Module_Param::log(boolean log_id) const {
   if (log_id && id && id->is_explicit()) {
     char* id_str = id->get_str();
     TTCN_Logger::log_event_str(id_str);
@@ -150,8 +150,8 @@ void Module_Param::log(bool log_id) const {
 }
 
 void Module_Param::basic_check(int check_bits, const char* what) const {
-  bool is_template = check_bits & BC_TEMPLATE;
-  bool is_list = check_bits & BC_LIST;
+  boolean is_template = check_bits & BC_TEMPLATE;
+  boolean is_list = check_bits & BC_LIST;
   if (is_template || !is_list) {
     if (get_operation_type()!=OT_ASSIGN) error("The %s of %ss is not allowed.", get_operation_type_str(), what);
   }
@@ -206,14 +206,14 @@ int_val_t* Module_Param::get_upper_int() const {
   return NULL;
 }
 
-bool Module_Param::get_is_min_exclusive() const {
+boolean Module_Param::get_is_min_exclusive() const {
   TTCN_error("Internal error: Module_Param::get_is_min_exclusive()");
-  return false;
+  return FALSE;
 }
 
-bool Module_Param::get_is_max_exclusive() const {
+boolean Module_Param::get_is_max_exclusive() const {
   TTCN_error("Internal error: Module_Param::get_is_max_exclusive()");
-  return false;
+  return FALSE;
 }
 
 double Module_Param::get_lower_float() const {
@@ -226,14 +226,14 @@ double Module_Param::get_upper_float() const {
   return 0.0;
 }
 
-bool Module_Param::has_lower_float() const {
+boolean Module_Param::has_lower_float() const {
   TTCN_error("Internal error: Module_Param::has_lower_float()");
-  return false;
+  return FALSE;
 }
 
-bool Module_Param::has_upper_float() const {
+boolean Module_Param::has_upper_float() const {
   TTCN_error("Internal error: Module_Param::has_upper_float()");
-  return false;
+  return FALSE;
 }
 
 universal_char Module_Param::get_lower_uchar() const {
@@ -527,7 +527,7 @@ void Module_Param_AnyOrNone::log_value() const {
   TTCN_Logger::log_event_str("*");
 }
 
-void Module_Param_IntRange::log_bound(int_val_t* bound, bool is_lower) {
+void Module_Param_IntRange::log_bound(int_val_t* bound, boolean is_lower) {
   if (bound==NULL) {
     if (is_lower) TTCN_Logger::log_event_str("-");
     TTCN_Logger::log_event_str("infinity");
@@ -542,9 +542,9 @@ void Module_Param_IntRange::log_bound(int_val_t* bound, bool is_lower) {
 
 void Module_Param_IntRange::log_value() const {
   TTCN_Logger::log_event_str("(");
-  log_bound(lower_bound, true);
+  log_bound(lower_bound, TRUE);
   TTCN_Logger::log_event_str("..");
-  log_bound(upper_bound, false);
+  log_bound(upper_bound, FALSE);
   TTCN_Logger::log_event_str(")");
 }
 
@@ -623,7 +623,7 @@ void Module_Param_Compound::add_elem(Module_Param* value) {
 void Module_Param_Compound::add_list_with_implicit_ids(Vector<Module_Param*>* mp_list) {
   for (size_t i=0; i<mp_list->size(); i++) {
     Module_Param* mp_current = mp_list->at(i);
-    mp_current->set_id(new Module_Param_Index(get_size(),false));
+    mp_current->set_id(new Module_Param_Index(get_size(),FALSE));
     add_elem(mp_current);
   }
 }
@@ -720,7 +720,7 @@ void Module_Param::error(const char* err_msg, ...) const {
   case OT_CONCAT: TTCN_Logger::log_event_str(" and '"); break;
   default: TTCN_Logger::log_event_str("' ??? '");
   }
-  log(false);
+  log(FALSE);
   TTCN_Logger::log_event_str("': ");
   va_list p_var;
   va_start(p_var, err_msg);
@@ -765,5 +765,5 @@ void Module_Param::type_error(const char* expected, const char* type_name /* = N
   }
 }
 
-bool Ttcn_String_Parsing::string_parsing = false;
-bool Debugger_Value_Parsing::is_happening = false;
+boolean Ttcn_String_Parsing::string_parsing = FALSE;
+boolean Debugger_Value_Parsing::is_happening = FALSE;

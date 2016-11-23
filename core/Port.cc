@@ -474,7 +474,7 @@ alt_status PORT::receive(const COMPONENT_template&, COMPONENT *)
   TTCN_Logger::log_matching_problem(
     TitanLoggerApi::MatchingProblemType_reason::no__incoming__types,
     TitanLoggerApi::MatchingProblemType_operation::receive__,
-    false, false, port_name);
+    FALSE, FALSE, port_name);
   return ALT_NO;
 }
 
@@ -503,7 +503,7 @@ alt_status PORT::any_receive(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::receive__,
-      true, false);
+      TRUE, FALSE);
     return ALT_NO;
   }
 }
@@ -513,7 +513,7 @@ alt_status PORT::check_receive(const COMPONENT_template&, COMPONENT *)
   TTCN_Logger::log_matching_problem(
     TitanLoggerApi::MatchingProblemType_reason::no__incoming__types,
     TitanLoggerApi::MatchingProblemType_operation::receive__,
-    false, true, port_name);
+    FALSE, TRUE, port_name);
   return ALT_NO;
 }
 
@@ -542,7 +542,7 @@ alt_status PORT::any_check_receive(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::receive__,
-      true, true);
+      TRUE, TRUE);
     return ALT_NO;
   }
 }
@@ -552,7 +552,7 @@ alt_status PORT::trigger(const COMPONENT_template&, COMPONENT *)
   TTCN_Logger::log_matching_problem(
     TitanLoggerApi::MatchingProblemType_reason::no__incoming__types,
     TitanLoggerApi::MatchingProblemType_operation::trigger__,
-    false, false, port_name);
+    FALSE, FALSE, port_name);
   return ALT_NO;
 }
 
@@ -583,7 +583,7 @@ alt_status PORT::any_trigger(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::trigger__,
-      true, false);
+      TRUE, FALSE);
     return ALT_NO;
   }
 }
@@ -624,7 +624,7 @@ alt_status PORT::any_getcall(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::getcall__,
-      true, false);
+      TRUE, FALSE);
     return ALT_NO;
   }
 }
@@ -665,7 +665,7 @@ alt_status PORT::any_check_getcall(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::getcall__,
-      true, true);
+      TRUE, TRUE);
     return ALT_NO;
   }
 }
@@ -706,7 +706,7 @@ alt_status PORT::any_getreply(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::getreply__,
-      true, false);
+      TRUE, FALSE);
     return ALT_NO;
   }
 }
@@ -747,7 +747,7 @@ alt_status PORT::any_check_getreply(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::getreply__,
-      true, true);
+      TRUE, TRUE);
     return ALT_NO;
   }
 }
@@ -788,7 +788,7 @@ alt_status PORT::any_catch(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::catch__,
-      true, false);
+      TRUE, FALSE);
     return ALT_NO;
   }
 }
@@ -801,7 +801,7 @@ alt_status PORT::check_catch(const COMPONENT_template& ,
 //  TTCN_Logger::log_matching_problem(
 //    TitanLoggerApi::MatchingProblemType_reason::no__outgoing__blocking__signatures__that__support__exceptions,
 //    TitanLoggerApi::MatchingProblemType_operation::catch__,
-//    false, true, port_name);
+//    false, TRUE, port_name);
   return ALT_NO;
 }
 
@@ -830,7 +830,7 @@ alt_status PORT::any_check_catch(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::catch__,
-      true, true);
+      TRUE, TRUE);
     return ALT_NO;
   }
 }
@@ -924,7 +924,7 @@ alt_status PORT::any_check(const COMPONENT_template& sender_template,
     TTCN_Logger::log_matching_problem(
       TitanLoggerApi::MatchingProblemType_reason::component__has__no__ports,
       TitanLoggerApi::MatchingProblemType_operation::check__,
-      true, false);
+      TRUE, FALSE);
     return ALT_NO;
   }
 }
@@ -1057,7 +1057,7 @@ void PORT::Install_Handler(const fd_set *read_fds, const fd_set *write_fds,
     "inactive port %s.", port_name);
 
   if ((long) FdMap::getFdLimit() > (long) FD_SETSIZE) {
-    static bool once = true;
+    static boolean once = TRUE;
     if (once) {
       TTCN_warning("The maximum number of open file descriptors (%i)"
         " is greater than FD_SETSIZE (%li)."
@@ -1068,7 +1068,7 @@ void PORT::Install_Handler(const fd_set *read_fds, const fd_set *write_fds,
         FdMap::getFdLimit(), (long) FD_SETSIZE, (long) FD_SETSIZE,
         port_name);
     }
-    once = false;
+    once = FALSE;
   }
 
   Fd_And_Timeout_User::set_fds_with_fd_sets(this, read_fds, write_fds,
@@ -1871,7 +1871,7 @@ void PORT::send_data_local(port_connection *conn_ptr, Text_Buf& outgoing_data)
 boolean PORT::send_data_stream(port_connection *conn_ptr,
   Text_Buf& outgoing_data, boolean ignore_peer_disconnect)
 {
-  bool would_block_warning=false;
+  boolean would_block_warning=FALSE;
   outgoing_data.calculate_length();
   const char *msg_ptr = outgoing_data.get_data();
   size_t msg_len = outgoing_data.get_len(), sent_len = 0;
@@ -1906,7 +1906,7 @@ boolean PORT::send_data_stream(port_connection *conn_ptr,
               "outgoing buffer. Trying to process incoming data to "
               "avoid deadlock.", conn_ptr->remote_port);
             TTCN_warning_end();
-            would_block_warning=true;
+            would_block_warning=TRUE;
           }
           TTCN_Snapshot::block_for_sending(conn_ptr->stream.comm_fd);
         }
@@ -2428,7 +2428,7 @@ void PORT::unmap_port(const char *component_port, const char *system_port)
     TTCN_Communication::send_unmapped(component_port, system_port);
 }
 
-bool PORT::check_port_state(const CHARSTRING& type) const
+boolean PORT::check_port_state(const CHARSTRING& type) const
 {
   if (type == "Started") {
     return is_started;
@@ -2446,21 +2446,21 @@ bool PORT::check_port_state(const CHARSTRING& type) const
   TTCN_error("%s is not an allowed parameter of checkstate().", (const char*)type);
 }
 
-bool PORT::any_check_port_state(const CHARSTRING& type)
+boolean PORT::any_check_port_state(const CHARSTRING& type)
 {
-  bool result = false;
+  boolean result = FALSE;
   for (PORT *port = list_head; port != NULL; port = port->list_next) {
     result = port->check_port_state(type);
     if (result) {
-      return true;
+      return TRUE;
     }
   }
-  return false;
+  return FALSE;
 }
 
-bool PORT::all_check_port_state(const CHARSTRING& type)
+boolean PORT::all_check_port_state(const CHARSTRING& type)
 {
-  bool result = true;
+  boolean result = TRUE;
   for (PORT *port = list_head; port != NULL && result; port = port->list_next) {
     result = port->check_port_state(type);
   }

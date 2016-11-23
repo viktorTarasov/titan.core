@@ -616,7 +616,7 @@ void OCTETSTRING::encode(const TTCN_Typedescriptor_t& p_td,
     RAW_enc_tr_pos rp;
     rp.level=0;
     rp.pos=NULL;
-    RAW_enc_tree root(true,NULL,&rp,1,p_td.raw);
+    RAW_enc_tree root(TRUE,NULL,&rp,1,p_td.raw);
     RAW_encode(p_td, root);
     root.put_to_buf(p_buf);
     break;}
@@ -721,7 +721,7 @@ void OCTETSTRING::decode(const TTCN_Typedescriptor_t& p_td,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -768,8 +768,8 @@ int OCTETSTRING::RAW_encode_negtest_raw(RAW_enc_tree& p_myleaf) const
 {
   if (p_myleaf.must_free)
     Free(p_myleaf.body.leaf.data_ptr);
-  p_myleaf.must_free = false;
-  p_myleaf.data_ptr_used = true;
+  p_myleaf.must_free = FALSE;
+  p_myleaf.data_ptr_used = TRUE;
   p_myleaf.body.leaf.data_ptr = val_ptr->octets_ptr;
   return p_myleaf.length = val_ptr->n_octets * 8;
 }
@@ -1185,18 +1185,18 @@ int OCTETSTRING::RAW_encode(const TTCN_Typedescriptor_t& p_td,
     align_length = 0;
   }
   if (myleaf.must_free) Free(myleaf.body.leaf.data_ptr);
-  myleaf.must_free = false;
-  myleaf.data_ptr_used = true;
+  myleaf.must_free = FALSE;
+  myleaf.data_ptr_used = TRUE;
   if (p_td.raw->extension_bit != EXT_BIT_NO
     && myleaf.coding_par.bitorder == ORDER_MSB) {
     if (blength > RAW_INT_ENC_LENGTH) {
       myleaf.body.leaf.data_ptr = bc = (unsigned char*)Malloc(blength*sizeof(*bc));
-      myleaf.must_free = true;
-      myleaf.data_ptr_used = true;
+      myleaf.must_free = TRUE;
+      myleaf.data_ptr_used = TRUE;
     }
     else {
       bc = myleaf.body.leaf.data_array;
-      myleaf.data_ptr_used = false;
+      myleaf.data_ptr_used = FALSE;
     }
     for (int a = 0; a < blength; a++) bc[a] = val_ptr->octets_ptr[a] << 1;
   }
@@ -1222,12 +1222,12 @@ int OCTETSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td,
       ? (int)buff.unread_len_bit() : limit) / 8) * 8;
   }
   RAW_coding_par cp;
-  bool orders = false;
-  if (p_td.raw->bitorderinoctet == ORDER_MSB) orders = true;
+  boolean orders = FALSE;
+  if (p_td.raw->bitorderinoctet == ORDER_MSB) orders = TRUE;
   if (p_td.raw->bitorderinfield == ORDER_MSB) orders = !orders;
   cp.bitorder = orders ? ORDER_MSB : ORDER_LSB;
-  orders = false;
-  if (p_td.raw->byteorder       == ORDER_MSB) orders = true;
+  orders = FALSE;
+  if (p_td.raw->byteorder       == ORDER_MSB) orders = TRUE;
   if (p_td.raw->bitorderinfield == ORDER_MSB) orders = !orders;
   cp.byteorder = orders ? ORDER_MSB : ORDER_LSB;
   cp.fieldorder = p_td.raw->fieldorder;
@@ -1301,7 +1301,7 @@ int OCTETSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   json_token_t token = JSON_TOKEN_NONE;
   char* value = 0;
   size_t value_len = 0;
-  boolean error = false;
+  boolean error = FALSE;
   int dec_len = 0;
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
@@ -1331,11 +1331,11 @@ int OCTETSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
         if (upper_nibble <= 0x0F && lower_nibble <= 0x0F) {
           val_ptr->octets_ptr[i] = (upper_nibble << 4) | lower_nibble;
         } else {
-          error = true;
+          error = TRUE;
         }      
       }
     } else {
-      error = true;
+      error = TRUE;
     }
   } else {
     return JSON_ERROR_INVALID_TOKEN;

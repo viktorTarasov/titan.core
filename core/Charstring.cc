@@ -332,7 +332,7 @@ UNIVERSAL_CHARSTRING CHARSTRING::operator+
     "universal charstring value.");
   if (val_ptr->n_chars == 0) return other_value;
   if (other_value.charstring) {
-    UNIVERSAL_CHARSTRING ret_val(val_ptr->n_chars + other_value.cstr.val_ptr->n_chars, true);
+    UNIVERSAL_CHARSTRING ret_val(val_ptr->n_chars + other_value.cstr.val_ptr->n_chars, TRUE);
     memcpy(ret_val.cstr.val_ptr->chars_ptr, val_ptr->chars_ptr, val_ptr->n_chars);
     memcpy(ret_val.cstr.val_ptr->chars_ptr + val_ptr->n_chars, other_value.cstr.val_ptr->chars_ptr, other_value.cstr.val_ptr->n_chars);
     return ret_val;
@@ -360,7 +360,7 @@ UNIVERSAL_CHARSTRING CHARSTRING::operator+
   other_value.must_bound("The right operand of concatenation is an unbound "
     "universal charstring element.");
   if (other_value.str_val.charstring) {
-    UNIVERSAL_CHARSTRING ret_val(val_ptr->n_chars + 1, true);
+    UNIVERSAL_CHARSTRING ret_val(val_ptr->n_chars + 1, TRUE);
     memcpy(ret_val.cstr.val_ptr->chars_ptr, val_ptr->chars_ptr, val_ptr->n_chars);
     ret_val.cstr.val_ptr->chars_ptr[val_ptr->n_chars] = other_value.str_val.cstr.val_ptr->chars_ptr[other_value.uchar_pos];
     return ret_val;
@@ -898,7 +898,7 @@ void CHARSTRING::decode(const TTCN_Typedescriptor_t& p_td,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -1238,7 +1238,7 @@ int CHARSTRING::XER_encode(const XERdescriptor_t& p_td,
   int exer  = is_exer(flavor |= SIMPLE_TYPE);
   // SIMPLE_TYPE has no influence on is_exer, we set it for later
   int encoded_length=(int)p_buf.get_len();
-  bool do_empty_element = val_ptr==NULL || val_ptr->n_chars == 0;
+  boolean do_empty_element = val_ptr==NULL || val_ptr->n_chars == 0;
 
   flavor &= ~XER_RECOF; // charstring doesn't care
 
@@ -1368,7 +1368,7 @@ int CHARSTRING::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     // Let the caller do reader.AdvanceAttribute();
   }
   else {
-    bool omit_tag = exer
+    boolean omit_tag = exer
       && (p_td.xer_bits & UNTAGGED || flavor & (EMBED_VALUES|XER_LIST|USE_TYPE_ATTR|USE_NIL));
     for (; success == 1; success = reader.Read()) {
       int type = reader.NodeType();
@@ -1622,23 +1622,23 @@ boolean CHARSTRING::from_JSON_string(const char* p_value, size_t p_value_len, bo
     start = 1;
     end = p_value_len - 1;
     if (p_value[0] != '\"' || p_value[p_value_len - 1] != '\"') {
-      return false;
+      return FALSE;
     }
   }
   
   // The charstring will be shorter than the JSON string, at least by the 2 quotes
   char* str = (char*)Malloc(end - start);
   size_t len = 0;
-  boolean error = false;
+  boolean error = FALSE;
   
   for (size_t i = start; i < end; ++i) {
     if (0 > p_value[i]) {
-      error = true;
+      error = TRUE;
       break;
     }
     if ('\\' == p_value[i]) {
       if (i == end - 1) {
-        error = true;
+        error = TRUE;
         break;
       }
       switch(p_value[i + 1]) {
@@ -1677,19 +1677,19 @@ boolean CHARSTRING::from_JSON_string(const char* p_value, size_t p_value_len, bo
           } else {
             // error (found something other than hex digits) -> leave the for cycle
             i = end;
-            error = true;
+            error = TRUE;
           }
         } else {
           // error (not enough characters left or the first 2 hex digits are non-null) -> leave the for cycle
           i = end;
-          error = true;
+          error = TRUE;
         }
         break; 
       }
       default:
         // error (invalid escaped character) -> leave the for cycle
         i = end;
-        error = true;
+        error = TRUE;
         break;
       }
       // skip an extra character (the \)
@@ -1700,7 +1700,7 @@ boolean CHARSTRING::from_JSON_string(const char* p_value, size_t p_value_len, bo
     
     if (check_quotes && i == p_value_len - 1) {
       // Special case: the last 2 characters are double escaped quotes ('\\' and '\"')
-      error = true;
+      error = TRUE;
     }
   }
   
@@ -1908,7 +1908,7 @@ UNIVERSAL_CHARSTRING CHARSTRING_ELEMENT::operator+
   other_value.must_bound("The right operand of concatenation is an unbound "
     "universal charstring value.");
   if (other_value.charstring) {
-    UNIVERSAL_CHARSTRING ret_val(other_value.cstr.val_ptr->n_chars + 1, true);
+    UNIVERSAL_CHARSTRING ret_val(other_value.cstr.val_ptr->n_chars + 1, TRUE);
     ret_val.cstr.val_ptr->chars_ptr[0] = str_val.val_ptr->chars_ptr[char_pos];
     memcpy(ret_val.cstr.val_ptr->chars_ptr + 1, other_value.cstr.val_ptr->chars_ptr, other_value.cstr.val_ptr->n_chars);
     return ret_val;

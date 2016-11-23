@@ -268,7 +268,7 @@ void VERDICTTYPE::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -289,14 +289,14 @@ int VERDICTTYPE::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   int encoded_length=(int)p_buf.get_len();
   //const boolean e_xer = is_exer(p_flavor);
   p_flavor |= (SIMPLE_TYPE | BXER_EMPTY_ELEM);
-  if (begin_xml(p_td, p_buf, p_flavor, p_indent, false) == -1) --encoded_length;
+  if (begin_xml(p_td, p_buf, p_flavor, p_indent, FALSE) == -1) --encoded_length;
   //if (!e_xer) p_buf.put_c('<');
   {
     const char * enumval = verdict_name[verdict_value];
     p_buf.put_s(strlen(enumval), (const unsigned char*)enumval);
   }
   //if (!e_xer) p_buf.put_s(2, (const unsigned char*)"/>");
-  end_xml(p_td, p_buf, p_flavor, p_indent, false);
+  end_xml(p_td, p_buf, p_flavor, p_indent, FALSE);
   return (int)p_buf.get_len() - encoded_length;
 }
 
@@ -325,7 +325,7 @@ int VERDICTTYPE::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader
     if ((p_td.xer_bits & XER_ATTRIBUTE)) verify_name(p_reader, p_td, e_xer);
     const char * value = (const char *)p_reader.Value();
     if (value) {
-        verdict_value = str_to_verdict(value, (p_flavor & EXIT_ON_ERROR) ? true : false);
+        verdict_value = str_to_verdict(value, (p_flavor & EXIT_ON_ERROR) ? TRUE : FALSE);
     }
   }
   else {
@@ -350,7 +350,7 @@ int VERDICTTYPE::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader
     const char *local_name = /*e_xer ?*/ (const char *)p_reader.Value() /*: (const char *)p_reader.Name()*/;
     if (!local_name) ; else    {
       for (; '\t'==*local_name || '\n'==*local_name; ++local_name) ;
-      verdict_value = str_to_verdict(local_name, (p_flavor & EXIT_ON_ERROR) ? true : false);
+      verdict_value = str_to_verdict(local_name, (p_flavor & EXIT_ON_ERROR) ? TRUE : FALSE);
     }
     if (name_tag)
       for (rd_ok = p_reader.Read(); rd_ok == 1; rd_ok = p_reader.Read()) {
@@ -394,7 +394,7 @@ int VERDICTTYPE::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   } else {
     dec_len = p_tok.get_next_token(&token, &value, &value_len);
   }
-  boolean error = true;
+  boolean error = TRUE;
   if (JSON_TOKEN_ERROR == token) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, "");
     dec_len = JSON_ERROR_FATAL;
@@ -409,13 +409,13 @@ int VERDICTTYPE::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
       for (int i = NONE; i <= ERROR; ++i) {
         if (0 == strncmp(value, verdict_name[i], value_len)) {
           verdict_value = (verdicttype)i;
-          error = false;
+          error = FALSE;
           break;
         }
       }
     }
   } else {
-    error = false;
+    error = FALSE;
     verdict_value = UNBOUND_VERDICT;
     dec_len = JSON_ERROR_INVALID_TOKEN;
   }

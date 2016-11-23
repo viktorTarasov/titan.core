@@ -45,13 +45,13 @@ class TTCN_Communication {
 
 public:
   static const NetworkFamily& get_network_family() { return hcnh.get_family(); }
-  static bool has_local_address() { return local_addr_set; }
+  static boolean has_local_address() { return local_addr_set; }
   static void set_local_address(const char *host_name);
   static const IPAddress *get_local_address();
   static void set_mc_address(const char *host_name,
     unsigned short tcp_port);
   static const IPAddress *get_mc_address();
-  static bool is_mc_connected();
+  static boolean is_mc_connected();
   static void connect_mc();
   static void disconnect_mc();
   static void close_mc_connection();
@@ -182,7 +182,7 @@ private:
   /** @name Handlers of various messages
   *   @{
   */
-  static void process_configure(int msg_end, bool to_mtc);
+  static void process_configure(int msg_end, boolean to_mtc);
   static void process_create_mtc();
   static void process_create_ptc();
   static void process_kill_process();

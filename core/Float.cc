@@ -125,7 +125,7 @@ double FLOAT::operator-() const
   return -float_value;
 }
 
-bool FLOAT::is_special(double flt_val)
+boolean FLOAT::is_special(double flt_val)
 {
   return ( (flt_val!=flt_val) || (flt_val==INFINITY) || (flt_val==-INFINITY) );
 }
@@ -440,7 +440,7 @@ void FLOAT::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -859,7 +859,7 @@ int FLOAT::XER_encode(const XERdescriptor_t& p_td,
   int encoded_length=(int)p_buf.get_len();
   flavor &= ~XER_RECOF; // float doesn't care
 
-  begin_xml(p_td, p_buf, flavor, indent, false);
+  begin_xml(p_td, p_buf, flavor, indent, FALSE);
 
   if (exer && (p_td.xer_bits & XER_DECIMAL)) {
     char buf[312];
@@ -897,17 +897,17 @@ int FLOAT::XER_encode(const XERdescriptor_t& p_td,
     p_buf.put_string(value);
   }
 
-  end_xml(p_td, p_buf, flavor, indent, false);
+  end_xml(p_td, p_buf, flavor, indent, FALSE);
 
   return (int)p_buf.get_len() - encoded_length;
 }
 
 boolean FLOAT::is_float(const char* p_str)
 {
-  bool first_digit = false; // first digit reached
-  bool decimal_point = false; // decimal point (.) reached
-  bool exponent_mark = false; // exponential mark (e or E) reached
-  bool exponent_sign = false; // sign of the exponential (- or +) reached
+  boolean first_digit = FALSE; // first digit reached
+  boolean decimal_point = FALSE; // decimal point (.) reached
+  boolean exponent_mark = FALSE; // exponential mark (e or E) reached
+  boolean exponent_sign = FALSE; // sign of the exponential (- or +) reached
   
   if ('-' == *p_str || '+' == *p_str) {
     ++p_str;
@@ -917,18 +917,18 @@ boolean FLOAT::is_float(const char* p_str)
     switch(*p_str) {
     case '.':
       if (decimal_point || exponent_mark || !first_digit) {
-        return false;
+        return FALSE;
       }
-      decimal_point = true;
-      first_digit = false;
+      decimal_point = TRUE;
+      first_digit = FALSE;
       break;
     case 'e':
     case 'E':
       if (exponent_mark || !first_digit) {
-        return false;
+        return FALSE;
       }
-      exponent_mark = true;
-      first_digit = false;
+      exponent_mark = TRUE;
+      first_digit = FALSE;
       break;
     case '0':
     case '1':
@@ -940,17 +940,17 @@ boolean FLOAT::is_float(const char* p_str)
     case '7':
     case '8':
     case '9':
-      first_digit = true;
+      first_digit = TRUE;
       break;
     case '-':
     case '+':
       if (exponent_sign || !exponent_mark || first_digit) {
-        return false;
+        return FALSE;
       }
-      exponent_sign = true;
+      exponent_sign = TRUE;
       break;
     default:
-      return false;
+      return FALSE;
     }
     
     ++p_str; 
@@ -961,7 +961,7 @@ boolean FLOAT::is_float(const char* p_str)
 int FLOAT::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
-  bound_flag = false;
+  bound_flag = FALSE;
   int exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1;
   if (success <= 0) return 0;
@@ -986,20 +986,20 @@ tagless:
             }
           }
         }
-        bound_flag = true;
+        bound_flag = TRUE;
         sscanf(value, "%lf", &float_value);
       } else if (strcmp(XER_NAN_STR, value) == 0 ) {
-        bound_flag = true;
+        bound_flag = TRUE;
 #ifdef NAN
         float_value = NAN;
 #else
         float_value = INFINITY + (-INFINITY);
 #endif
       } else if (strcmp(XER_POS_INF_STR, value) == 0) {
-        bound_flag = true;
+        bound_flag = TRUE;
         float_value = (double)INFINITY;
       } else if (strcmp(XER_NEG_INF_STR, value) == 0) {
-        bound_flag = true;
+        bound_flag = TRUE;
         float_value = -(double)INFINITY;
       }
     }
@@ -1040,20 +1040,20 @@ tagless:
                 }
               }
             }
-            bound_flag = true;
+            bound_flag = TRUE;
             sscanf(value, "%lf", &float_value);
           } else if (strcmp("NaN", value) == 0 ) {
-            bound_flag = true;
+            bound_flag = TRUE;
 #ifdef NAN
             float_value = NAN;
 #else
             float_value = INFINITY + (-INFINITY);
 #endif
           } else if (strcmp("INF", value) == 0) {
-            bound_flag = true;
+            bound_flag = TRUE;
             float_value = (double)INFINITY;
           } else if (strcmp("-INF", value) == 0) {
-            bound_flag = true;
+            bound_flag = TRUE;
             float_value = -(double)INFINITY;
           }
         }
@@ -1095,7 +1095,7 @@ int FLOAT::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) cons
   }
   
   // true if decimal representation possible (use %f format)
-  bool decimal_repr = (value == 0.0)
+  boolean decimal_repr = (value == 0.0)
     || (value > -MAX_DECIMAL_FLOAT && value <= -MIN_DECIMAL_FLOAT)
     || (value >= MIN_DECIMAL_FLOAT && value < MAX_DECIMAL_FLOAT);
   
@@ -1107,7 +1107,7 @@ int FLOAT::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) cons
 
 int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
 {
-  bound_flag = false;
+  bound_flag = FALSE;
   json_token_t token = JSON_TOKEN_NONE;
   char* value = 0;
   size_t value_len = 0;
@@ -1126,15 +1126,15 @@ int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
   }
   else if (JSON_TOKEN_STRING == token || use_default) {
     if (0 == strncmp(value, POS_INF_STR + (use_default ? 1 : 0), value_len)) {
-      bound_flag = true;
+      bound_flag = TRUE;
       float_value = INFINITY;
     }
     else if (0 == strncmp(value, NEG_INF_STR + (use_default ? 1 : 0), value_len)) {
-      bound_flag = true;
+      bound_flag = TRUE;
       float_value = -INFINITY;
     }
     else if (0 == strncmp(value, NAN_STR + (use_default ? 1 : 0), value_len)) {
-      bound_flag = true;
+      bound_flag = TRUE;
 #ifdef NAN
       float_value = NAN;
 #else
@@ -1145,14 +1145,14 @@ int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
       char* spec_val = mprintf("float (%s, %s or %s)", POS_INF_STR, NEG_INF_STR, NAN_STR);
       JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FORMAT_ERROR, "string", spec_val);
       Free(spec_val);
-      bound_flag = false;
+      bound_flag = FALSE;
       return JSON_ERROR_FATAL;
     }
   }
   else if (JSON_TOKEN_NUMBER == token) {
     char* value2 = mcopystrn(value, value_len);
     sscanf(value2, "%lf", &float_value);
-    bound_flag = true;
+    bound_flag = TRUE;
     Free(value2);
   } else {
     return JSON_ERROR_INVALID_TOKEN;
@@ -1162,7 +1162,7 @@ int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
     // check for a valid number
     char* value2 = mcopystrn(value, value_len);
     sscanf(value2, "%lf", &float_value);
-    bound_flag = true;
+    bound_flag = TRUE;
     Free(value2);
   }
   return dec_len;

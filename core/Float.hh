@@ -105,7 +105,7 @@ public:
     { if (!bound_flag) TTCN_error("%s", err_msg); }
   
   /** special TTCN-3 float values are not_a_number and +/- infinity */
-  static bool is_special(double flt_val);
+  static boolean is_special(double flt_val);
   static void check_numeric(double flt_val, const char *err_msg_begin);
 
   void log() const;

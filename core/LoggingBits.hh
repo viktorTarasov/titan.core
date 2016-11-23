@@ -37,15 +37,15 @@ immediately after constructing.
 */
 struct Logging_Bits
 {
-  bool bits[TTCN_Logger::NUMBER_OF_LOGSEVERITIES];
+  boolean bits[TTCN_Logger::NUMBER_OF_LOGSEVERITIES];
 
   static const Logging_Bits log_nothing;
   static const Logging_Bits log_all;
   static const Logging_Bits log_everything;
   static const Logging_Bits default_console_mask;
 
-  bool operator ==( const Logging_Bits& other ) const;
-  bool operator !=( const Logging_Bits& other ) const
+  boolean operator ==( const Logging_Bits& other ) const;
+  boolean operator !=( const Logging_Bits& other ) const
   {
     return ! operator==( other );
   }

@@ -263,7 +263,7 @@ public:
   /// Frees any resources held by the logger.
   static void terminate_logger();
 
-  static bool is_logger_up();
+  static boolean is_logger_up();
 
   /** @brief Initializes the logger configuration.
 
@@ -297,7 +297,7 @@ public:
   static data_log_format_t get_log_format() { return data_log_format; }
   static void set_log_format(data_log_format_t p_data_log_format) { data_log_format = p_data_log_format; }
 
-  static bool add_parameter(const logging_setting_t& logging_param);
+  static boolean add_parameter(const logging_setting_t& logging_param);
   static void set_plugin_parameters(component component_reference, const char* component_name);
   static void load_plugins(component component_reference, const char* component_name);
 
@@ -378,9 +378,9 @@ public:
   // configuration file.
   static void register_plugin(const component_id_t comp, char *identifier, char *filename);
 
-  static bool set_file_size(component_id_t const& comp, int p_size);
-  static bool set_file_number(component_id_t const& comp, int p_number);
-  static bool set_disk_full_action(component_id_t const& comp,
+  static boolean set_file_size(component_id_t const& comp, int p_size);
+  static boolean set_file_number(component_id_t const& comp, int p_number);
+  static boolean set_disk_full_action(component_id_t const& comp,
                                    disk_full_action_t p_disk_full_action);
 
   /** @brief Whether a message with the given severity should be logged to the
@@ -422,7 +422,7 @@ public:
   @param opening true if called from TTCN_Logger::open_file() while writing
   the buffered messages, false otherwise.
   */
-  static void write_logger_settings(bool opening = false);
+  static void write_logger_settings(boolean opening = false);
 
   /** @brief Opens the log file.
 
@@ -436,7 +436,7 @@ public:
   /** @brief dump all events from ring buffer to log file
       @param do_close_file if true, close the files afterwards
    */
-  static void ring_buffer_dump(bool do_close_file);
+  static void ring_buffer_dump(boolean do_close_file);
 
   /** @brief Should this event be logged?
 
@@ -653,7 +653,7 @@ public:
   // - notification: enumeration value for the two fixed notification messages
   // - ptc_compref: only for detailed PTC statistics
   // - ptc_name: only for detailed PTC statistics
-  static void log_final_verdict(bool is_ptc, verdicttype ptc_verdict,
+  static void log_final_verdict(boolean is_ptc, verdicttype ptc_verdict,
     verdicttype local_verdict, verdicttype new_verdict,
     const char *verdict_reason = NULL, int notification = -1,
     int ptc_compref = UNBOUND_COMPREF, const char *ptc_name = NULL);
@@ -681,7 +681,7 @@ public:
   static void log_HC_start(const char *host);
   static void log_fd_limits(int fd_limit, long fd_set_size);
   static void log_testcase_exec(const char *module, const char *tc);
-  static void log_module_init(const char *module, bool finish = false);
+  static void log_module_init(const char *module, boolean finish = FALSE);
   static void log_mtc_created(long pid);
 
   /// EXECUTOR_CONFIGDATA

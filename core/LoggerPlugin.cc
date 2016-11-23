@@ -27,7 +27,7 @@
 // constructor for dynamic plug-in
 LoggerPlugin::LoggerPlugin(const char *path) :
   ref_(NULL), handle_(NULL), filename_(NULL), create_(NULL),
-  is_log2str_capable_(false)
+  is_log2str_capable_(FALSE)
 {
   assert(path != NULL);
   this->filename_ = mcopystr(path);
@@ -45,7 +45,7 @@ LoggerPlugin::LoggerPlugin(cb_create_plugin *create) :
   // We want the create_ member to be cb_create_plugin, to be able to call
   // this->create_(). Hence the need for this hideous cast.
   create_((cb_create_plugin)(unsigned long)create),
-  is_log2str_capable_(false)
+  is_log2str_capable_(FALSE)
 {
 }
 
@@ -63,7 +63,7 @@ void LoggerPlugin::reset()
   this->ref_->reset();
 }
 
-void LoggerPlugin::open_file(bool is_first)
+void LoggerPlugin::open_file(boolean is_first)
 {
   this->ref_->open_file(is_first);
 }
@@ -74,27 +74,27 @@ void LoggerPlugin::close_file()
 }
 
 void LoggerPlugin::set_file_name(const char *new_filename_skeleton,
-                                bool from_config)
+                                boolean from_config)
 {
   this->ref_->set_file_name(new_filename_skeleton, from_config);
 }
 
-void LoggerPlugin::set_append_file(bool new_append_file)
+void LoggerPlugin::set_append_file(boolean new_append_file)
 {
   this->ref_->set_append_file(new_append_file);
 }
 
-bool LoggerPlugin::set_file_size(int p_size)
+boolean LoggerPlugin::set_file_size(int p_size)
 {
   return this->ref_->set_file_size(p_size);
 }
 
-bool LoggerPlugin::set_file_number(int p_number)
+boolean LoggerPlugin::set_file_number(int p_number)
 {
   return this->ref_->set_file_number(p_number);
 }
 
-bool LoggerPlugin::set_disk_full_action(TTCN_Logger::disk_full_action_t p_disk_full_action)
+boolean LoggerPlugin::set_disk_full_action(TTCN_Logger::disk_full_action_t p_disk_full_action)
 {
   return this->ref_->set_disk_full_action(p_disk_full_action);
 }
@@ -105,7 +105,7 @@ void LoggerPlugin::set_parameter(const char* param_name, const char* param_value
 }
 
 int LoggerPlugin::log(const TitanLoggerApi::TitanLogEvent& event,
-    bool log_buffered, bool separate_file, bool use_emergency_mask)
+    boolean log_buffered, boolean separate_file, boolean use_emergency_mask)
 {
   if (!this->ref_) return 1;
   this->ref_->log(event, log_buffered, separate_file, use_emergency_mask);
@@ -125,12 +125,12 @@ const char *LoggerPlugin::plugin_name() const
   return this->ref_->plugin_name();
 }
 
-bool LoggerPlugin::is_configured() const
+boolean LoggerPlugin::is_configured() const
 {
   return this->ref_ != NULL && this->ref_->is_configured();
 }
 
-void LoggerPlugin::set_configured(bool configured)
+void LoggerPlugin::set_configured(boolean configured)
 {
   if (this->ref_ != NULL)
     this->ref_->set_configured(configured);

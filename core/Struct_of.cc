@@ -1305,7 +1305,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
 
   boolean value_found = FALSE;
   int nof_unmatched_values = 0;
-  bool *unmatched_values = new bool[value_size];
+  boolean *unmatched_values = new bool[value_size];
   for (int i = 0; i < value_size; i++)
   {
     boolean pair_found = FALSE;
@@ -1342,7 +1342,7 @@ void log_match_heuristics(const Base_Type *value_ptr, int value_size,
 
   boolean template_found = FALSE;
   int nof_unmatched_templates = 0;
-  bool *unmatched_templates = new bool[template_size];
+  boolean *unmatched_templates = new bool[template_size];
   for (int i = 0; i < template_size; i++)
   {
     boolean pair_found = FALSE;

@@ -298,7 +298,7 @@ public:
     * @param reader parses the encoded XML
     * @param next_field_name name of the next field in the record, or null if this is the last one
     * @param parent_tag_closed true, if the record's XML tag is closed (is an empty element)*/
-  bool XER_check_any_elem(XmlReaderWrap& reader, const char* next_field_name, bool parent_tag_closed);
+  boolean XER_check_any_elem(XmlReaderWrap& reader, const char* next_field_name, boolean parent_tag_closed);
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t* emb_val);
 
@@ -1022,33 +1022,33 @@ OPTIONAL<T_type>::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
 
 template<typename T_type>
 bool
-OPTIONAL<T_type>::XER_check_any_elem(XmlReaderWrap& reader, const char* next_field_name, bool parent_tag_closed) 
+OPTIONAL<T_type>::XER_check_any_elem(XmlReaderWrap& reader, const char* next_field_name, boolean parent_tag_closed) 
 {
   // If the record has no elements, then it can't have an AnyElement
   if (parent_tag_closed) {
     set_to_omit();
-    return false;
+    return FALSE;
   }
   
   while (reader.Ok()) {
     // Leaving the record before finding an element -> no AnyElement
     if (XML_READER_TYPE_END_ELEMENT == reader.NodeType()) {
       set_to_omit();
-      return false;
+      return FALSE;
     }
     if (XML_READER_TYPE_ELEMENT == reader.NodeType()) {
       // The first element found is either the next field's element or the AnyElement
       if (NULL != next_field_name && 
           0 == strcmp((const char*)reader.LocalName(), next_field_name)) {
         set_to_omit();
-        return false;
+        return FALSE;
       }
       break;
     }
     reader.Read();
   }
    
-  return true;
+  return TRUE;
 }
 
 template<typename T_type>
@@ -1137,7 +1137,7 @@ char ** OPTIONAL<T_type>::collect_ns(const XERdescriptor_t& p_td, size_t& num, b
   case OPTIONAL_PRESENT:
     return optional_value->collect_ns(p_td, num, def_ns);
   case OPTIONAL_OMIT:
-    def_ns = false;
+    def_ns = FALSE;
     num = 0;
     return 0;
   default:

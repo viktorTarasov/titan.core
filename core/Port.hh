@@ -129,9 +129,9 @@ public:
   void halt();
   static void all_halt();
   
-  bool check_port_state(const CHARSTRING& type) const;
-  static bool any_check_port_state(const CHARSTRING& type);
-  static bool all_check_port_state(const CHARSTRING& type);
+  boolean check_port_state(const CHARSTRING& type) const;
+  static boolean any_check_port_state(const CHARSTRING& type);
+  static boolean all_check_port_state(const CHARSTRING& type);
 
   virtual alt_status receive(const COMPONENT_template& sender_template =
     any_compref, COMPONENT *sender_ptr = NULL);

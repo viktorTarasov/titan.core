@@ -174,7 +174,7 @@ void Base_Type::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -231,7 +231,7 @@ void Base_Type::XER_encode_chk_coding(unsigned& p_coding,
 static const cbyte empty_tag_end[4] = "/>\n";
 
 int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-  unsigned int& flavor, int indent, bool empty,
+  unsigned int& flavor, int indent, boolean empty,
   collector_fn collector, const char *type_atr) const
 {
   const int indenting = !is_canonical(flavor);
@@ -259,7 +259,7 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     if (exer) write_ns_prefix(p_td, p_buf);
 
     const namespace_t *ns_info = NULL;
-    bool namespaces_needed = false;
+    boolean namespaces_needed = FALSE;
     if (exer) {
       if (p_td.my_module != NULL && p_td.ns_index != -1) {
         ns_info = p_td.my_module->get_ns(p_td.ns_index);
@@ -274,7 +274,7 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 
     size_t num_collected = 0;
     char **collected_ns = NULL;
-    bool def_ns = false;
+    boolean def_ns = FALSE;
     if (namespaces_needed) {
       collected_ns = (this->*collector)(p_td, num_collected, def_ns);
     }
@@ -331,11 +331,11 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 }
 
 void Base_Type::end_xml  (const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-  unsigned int flavor, int indent, bool empty) const
+  unsigned int flavor, int indent, boolean empty) const
 {
   int exer = is_exer(flavor);
   int indenting = !is_canonical(flavor);
-  bool omit_tag = (indent != 0) // can never omit the tag at the toplevel
+  boolean omit_tag = (indent != 0) // can never omit the tag at the toplevel
     && ( ((flavor & XER_RECOF) // can remove the tag even if not EXER
       && !(exer && (flavor & BXER_EMPTY_ELEM))) // except 26.6, 26.7
       || (exer /*&& */
@@ -511,20 +511,20 @@ ASN_BER_TLV_t *Base_Type::BER_encode_TLV_INTEGER(unsigned,
   unsigned char* bn_as_bin = (unsigned char*) Malloc(num_bytes);
   BN_bn2bin(D, bn_as_bin);
 
-  bool pad = false;
+  boolean pad = FALSE;
   if (BN_is_negative(D)) {
     for(size_t i = 0; i < num_bytes; ++i){
       bn_as_bin[i] = ~bn_as_bin[i];
     }
 
     // add one
-    bool stop = false;
+    boolean stop = FALSE;
     for (int i = num_bytes - 1; i >= 0 && !stop; --i) {
       for (int j = 0; j < 8 && !stop; ++j) {
         unsigned char mask = (0x1 << j);
         if (!(bn_as_bin[i] & mask)) {
           bn_as_bin[i] |= mask;
-          stop = true;
+          stop = TRUE;
         } else {
           bn_as_bin[i] ^= mask;
         }
@@ -747,20 +747,20 @@ boolean Base_Type::BER_decode_TLV_INTEGER(const ASN_BER_TLV_t& p_tlv,
 
   if (Vlen > sizeof(RInt)) { // Bignum
 
-    const bool negative = p_tlv.V.str.Vstr[0] & 0x80;
+    const boolean negative = p_tlv.V.str.Vstr[0] & 0x80;
     BIGNUM *D = BN_new();
 
     if (negative) {
       unsigned char* const Vstr = (unsigned char*) Malloc(Vlen);
       memcpy(Vstr, p_tlv.V.str.Vstr, Vlen);
       // -1 
-      bool stop = false;
+      boolean stop = FALSE;
       for (int i = Vlen - 1; i >= 0 && !stop; --i) {
         for(int j = 0; j < 8 && !stop; ++j) {
           unsigned char mask = (0x1 << j);
           if (Vstr[i] & mask) {
             Vstr[i] ^= mask;
-            stop = true;
+            stop = TRUE;
           } else {
             Vstr[i] |= mask;
           }
@@ -1020,12 +1020,12 @@ boolean Base_Type::can_start(const char *name, const char *uri,
 
 char ** Base_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const
 {
-  def_ns = false;
+  def_ns = FALSE;
   char *tmp = NULL;
   if (p_td.my_module != 0 && p_td.ns_index != -1
     && !(p_td.xer_bits & FORM_UNQUALIFIED)) {
     const namespace_t *my_ns = p_td.my_module->get_ns(p_td.ns_index);
-    if (!*my_ns->px) def_ns = true;
+    if (!*my_ns->px) def_ns = TRUE;
     tmp = mprintf(" xmlns%s%s='%s'",
       ((*my_ns->px) ? ":" : ""), my_ns->px,
       my_ns->ns

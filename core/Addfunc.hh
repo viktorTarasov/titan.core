@@ -478,7 +478,7 @@ extern UNIVERSAL_CHARSTRING oct2unichar(const OCTETSTRING& invalue,
 
 extern CHARSTRING get_stringencoding(const OCTETSTRING& encoded__value);
 extern OCTETSTRING remove_bom(const OCTETSTRING& encoded__value);
-extern CHARSTRING encode_base64(const OCTETSTRING& msg, bool use_linebreaks);
+extern CHARSTRING encode_base64(const OCTETSTRING& msg, boolean use_linebreaks);
 extern CHARSTRING encode_base64(const OCTETSTRING& msg);
 extern OCTETSTRING decode_base64(const CHARSTRING& b64);
 

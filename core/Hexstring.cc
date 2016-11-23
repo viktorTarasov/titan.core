@@ -674,7 +674,7 @@ void HEXSTRING::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     RAW_enc_tr_pos rp;
     rp.level = 0;
     rp.pos = NULL;
-    RAW_enc_tree root(true, NULL, &rp, 1, p_td.raw);
+    RAW_enc_tree root(TRUE, NULL, &rp, 1, p_td.raw);
     RAW_encode(p_td, root);
     root.put_to_buf(p_buf);
     break;}
@@ -742,7 +742,7 @@ void HEXSTRING::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -774,8 +774,8 @@ int HEXSTRING::RAW_encode(const TTCN_Typedescriptor_t& p_td,
 
   if (myleaf.must_free) Free(myleaf.body.leaf.data_ptr);
 
-  myleaf.must_free = false;
-  myleaf.data_ptr_used = true;
+  myleaf.must_free = FALSE;
+  myleaf.data_ptr_used = TRUE;
   myleaf.body.leaf.data_ptr = val_ptr->nibbles_ptr;
 
   if (p_td.raw->endianness == ORDER_MSB)
@@ -802,12 +802,12 @@ int HEXSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
       ? (int)buff.unread_len_bit() : limit) / 4) * 4;
   }
   RAW_coding_par cp;
-  bool orders = false;
-  if (p_td.raw->bitorderinoctet == ORDER_MSB) orders = true;
+  boolean orders = FALSE;
+  if (p_td.raw->bitorderinoctet == ORDER_MSB) orders = TRUE;
   if (p_td.raw->bitorderinfield == ORDER_MSB) orders = !orders;
   cp.bitorder = orders ? ORDER_MSB : ORDER_LSB;
-  orders = false;
-  if (p_td.raw->byteorder == ORDER_MSB) orders = true;
+  orders = FALSE;
+  if (p_td.raw->byteorder == ORDER_MSB) orders = TRUE;
   if (p_td.raw->bitorderinfield == ORDER_MSB) orders = !orders;
   cp.byteorder = orders ? ORDER_MSB : ORDER_LSB;
   cp.fieldorder = p_td.raw->fieldorder;
@@ -1078,7 +1078,7 @@ int HEXSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_
   json_token_t token = JSON_TOKEN_NONE;
   char* value = 0;
   size_t value_len = 0;
-  boolean error = false;
+  boolean error = FALSE;
   int dec_len = 0;
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
@@ -1105,11 +1105,11 @@ int HEXSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_
         if (nibble <= 0x0F) {
           set_nibble(i, nibble);
         } else {
-          error = true;
+          error = TRUE;
         }      
       }
     } else {
-      error = true;
+      error = TRUE;
     }
   } else {
     return JSON_ERROR_INVALID_TOKEN;

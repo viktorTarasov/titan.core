@@ -326,7 +326,7 @@ void BOOLEAN::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
       TTCN_EncDec_ErrorContext::error_internal
         ("No JSON descriptor available for type '%s'.", p_td.name);
     JSON_Tokenizer tok((const char*)p_buf.get_data(), p_buf.get_len());
-    if(JSON_decode(p_td, tok, false)<0)
+    if(JSON_decode(p_td, tok, FALSE)<0)
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,
                "Can not decode type '%s', because invalid or incomplete"
                " message was received"
@@ -623,7 +623,7 @@ int BOOLEAN::XER_encode(const XERdescriptor_t& p_td,
   int exer  = is_exer(flavor);
 
   flavor |= (SIMPLE_TYPE | BXER_EMPTY_ELEM);
-  if (begin_xml(p_td, p_buf, flavor, indent, false) == -1) --encoded_length;
+  if (begin_xml(p_td, p_buf, flavor, indent, FALSE) == -1) --encoded_length;
 
   if (exer) {
     if (p_td.xer_bits & XER_TEXT) {
@@ -639,7 +639,7 @@ int BOOLEAN::XER_encode(const XERdescriptor_t& p_td,
     else               p_buf.put_s(8, (cbyte*)"<false/>");
   }
 
-  end_xml(p_td, p_buf, flavor, indent, false);
+  end_xml(p_td, p_buf, flavor, indent, FALSE);
 
   return (int)p_buf.get_len() - encoded_length;
 }
@@ -702,16 +702,16 @@ int BOOLEAN::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     // extract the data
     if (value[1]=='\0' && (*value & 0x3E) == '0')
     {
-      bound_flag = true;
+      bound_flag = TRUE;
       boolean_value = *value == '1';
     }
     else if (!strcmp(value, "true")) {
-      boolean_value = true;
-      bound_flag    = true;
+      boolean_value = TRUE;
+      bound_flag    = TRUE;
     }
     else if (!strcmp(value, "false")) {
-      boolean_value = false;
-      bound_flag    = true;
+      boolean_value = FALSE;
+      bound_flag    = TRUE;
     }
 
   }
@@ -763,15 +763,15 @@ int BOOLEAN::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_to
     return JSON_ERROR_FATAL;
   }
   else if (JSON_TOKEN_LITERAL_TRUE == token) {
-    bound_flag = true;
-    boolean_value = true;
+    bound_flag = TRUE;
+    boolean_value = TRUE;
   }
   else if (JSON_TOKEN_LITERAL_FALSE == token) {
-    bound_flag = true;
-    boolean_value = false;
+    bound_flag = TRUE;
+    boolean_value = FALSE;
   } 
   else {
-    bound_flag = false;
+    bound_flag = FALSE;
     return JSON_ERROR_INVALID_TOKEN;
   }
   return dec_len;

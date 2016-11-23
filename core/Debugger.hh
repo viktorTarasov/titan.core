@@ -126,7 +126,7 @@ public:
   /** type for storing the settings of automatic breakpoints */
   struct automatic_breakpoint_behavior_t {
     /** indicates whether the breakpoint should be triggered by the associated event */
-    bool trigger;
+    boolean trigger;
     /** batch file to be executed if the breakpoint is triggered (optional), owned */
     char* batch_file;
   };
@@ -192,13 +192,13 @@ private:
   /** indicates whether the debugger has been activated, meaning that the debugger's
     * command line option (-n) was used during the build (switched automatically
     * by generated code) */
-  bool enabled;
+  boolean enabled;
   
   /** the debugger's on/off switch (switched by the user) */
-  bool active;
+  boolean active;
   
   /** true if test execution has been halted (by a breakpoint or by the user) */
-  bool halted;
+  boolean halted;
   
   /** the debugger's output file handler (NULL if the debugger's output is only
     * sent to the console); owned */
@@ -209,7 +209,7 @@ private:
   char* output_file_name;
   
   /** indicates whether the debugger's output should be sent to the console */
-  bool send_to_console;
+  boolean send_to_console;
   
   /** list of all global and component variables, elements are owned */
   Vector<variable_t*> variables;
@@ -266,10 +266,10 @@ private:
   
   /** true if an 'exit all' command was issued
     * switched to false when test execution is restarted */
-  bool exiting;
+  boolean exiting;
   
   /** test execution is automatically halted at start if set to true */
-  bool halt_at_start;
+  boolean halt_at_start;
   
   /** batch file executed automatically at the start of test execution
     * if not set to NULL (not owned) */
@@ -375,7 +375,7 @@ private:
     * @param p_run_global_batch indicates whether the global batch file should
     * be executed after the halt (only if p_batch_file is NULL)
     * handles the D_HALT command */
-  void halt(const char* p_batch_file, bool p_run_global_batch);
+  void halt(const char* p_batch_file, boolean p_run_global_batch);
   
   /** resumes the halted test execution
     * handles the D_CONTINUE command */
@@ -417,7 +417,7 @@ public:
   //////////////////////////////////////////////////////
   
   /** activates the debugger */
-  void activate() { enabled = true; }
+  void activate() { enabled = TRUE; }
   
   /** creates, stores and returns a new global scope for the specified module
     * (this scope contains all global variables visible in the module) */
@@ -519,13 +519,13 @@ public:
   //////////////////////////////////////////////////////
   
   /** returns true if the debugger is activated (through the compiler switch) */
-  bool is_activated() const { return enabled; }
+  boolean is_activated() const { return enabled; }
   
   /** returns true if the debugger is switched on */
-  bool is_on() const { return active; }
+  boolean is_on() const { return active; }
   
   /** returns true if test execution has been halted by the debugger */
-  bool is_halted() const { return halted; }
+  boolean is_halted() const { return halted; }
   
   /** prints the formatted string to the console and/or output file
     * (used for printing notifications or error messages) */
@@ -590,10 +590,10 @@ public:
   
   /** indicates whether an 'exit all' command has been issued 
     * (this causes the execution of tests in the current queue to stop) */
-  bool is_exiting() const { return exiting; }
+  boolean is_exiting() const { return exiting; }
   
   /** sets the debugger to halt test execution at start (only in single mode) */
-  void set_halt_at_start() { halt_at_start = true; }
+  void set_halt_at_start() { halt_at_start = TRUE; }
   
   /** sets the specified batch file to be executed at the start of test execution
     * (only in single mode) */
@@ -656,7 +656,7 @@ public:
   //////////////////////////////////////////////////////
   
   /** returns true if there is at least one variable in the scope object */
-  bool has_variables() const { return !variables.empty(); }
+  boolean has_variables() const { return !variables.empty(); }
   
   /** returns the specified variable, if found, otherwise returns NULL 
     * (the name searched for can also be prefixed with the module name in
@@ -800,10 +800,10 @@ public:
   void list_variables(const char* p_scope, const char* p_filter) const;
   
   /** returns true if this instance belongs to a control part */
-  bool is_control_part() const;
+  boolean is_control_part() const;
   
   /** returns true if this instance belongs to a test case */
-  bool is_test_case() const;
+  boolean is_test_case() const;
 };
 
 /** This macro stores a function's return value in the current function.

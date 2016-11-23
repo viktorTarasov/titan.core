@@ -568,7 +568,7 @@ char* generate_raw_coding(char* src,
     "  if (!is_bound()) TTCN_EncDec_ErrorContext::error"
     "(TTCN_EncDec::ET_UNBOUND, \"Encoding an unbound value.\");\n"
     "  int encoded_length = 0;\n"
-    "  myleaf.isleaf = false;\n"
+    "  myleaf.isleaf = FALSE;\n"
     "  myleaf.body.node.num_of_nodes = %lu;\n"
     "  myleaf.body.node.nodes = init_nodes_of_enc_tree(%lu);\n",
     (unsigned long)sdef->nElements, (unsigned long)sdef->nElements);
@@ -579,7 +579,7 @@ char* generate_raw_coding(char* src,
         "  if (field_%s.ispresent()) {\n", sdef->elements[i].name);
     }
     src = mputprintf(src,
-      "  myleaf.body.node.nodes[%lu] = new RAW_enc_tree(true, &myleaf, "
+      "  myleaf.body.node.nodes[%lu] = new RAW_enc_tree(TRUE, &myleaf, "
       "&(myleaf.curr_pos), %lu, %s_descr_.raw);\n",
       (unsigned long)i, (unsigned long)i, sdef->elements[i].typedescrname);
     if (sdef->elements[i].isOptional) {
@@ -977,7 +977,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
     "  (void)idx_map;\n"
     "  int encoded_length = 0;\n"
     "  int num_fields = get_count();\n"
-    "  myleaf.isleaf = false;\n"
+    "  myleaf.isleaf = FALSE;\n"
     "  myleaf.body.node.num_of_nodes = 0;\n"
     "  for (int field_idx = 0; field_idx < num_fields; ++field_idx) {\n"
     "    if ((p_err_descr->omit_before != -1) &&\n"
@@ -1029,7 +1029,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
     "        TTCN_error(\"internal error: erroneous before value missing\");\n"
     "      if (err_vals->before->raw) {\n"
     "        myleaf.body.node.nodes[node_pos] =\n"
-    "          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos),\n"
+    "          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos),\n"
     "                           node_pos, err_vals->before->errval"
     "->get_descriptor()->raw);\n"
     "      } else {\n"
@@ -1037,7 +1037,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
     "          TTCN_error(\"internal error: erroneous before typedescriptor "
     "missing\");\n"
     "        myleaf.body.node.nodes[node_pos] =\n"
-    "          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos),\n"
+    "          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos),\n"
     "            node_pos, err_vals->before->type_descr->raw);\n"
     "      }\n"
     "      ++node_pos;\n"
@@ -1047,7 +1047,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
     "        e_c.set_msg(\"'%%s'(erroneous value): \", fld_name(field_idx));\n"
     "        if (err_vals->value->raw) {\n"
     "          myleaf.body.node.nodes[node_pos] =\n"
-    "            new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos),\n"
+    "            new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos),\n"
     "                             node_pos, err_vals->value->errval"
     "->get_descriptor()->raw);\n"
     "        } else {\n"
@@ -1055,7 +1055,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
     "            TTCN_error(\"internal error: erroneous value typedescriptor "
     "missing\");\n"
     "          myleaf.body.node.nodes[node_pos] =\n"
-    "            new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos),\n"
+    "            new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos),\n"
     "              node_pos, err_vals->value->type_descr->raw);\n"
     "        }\n"
     "        ++node_pos;\n"
@@ -1064,7 +1064,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
     "      e_c.set_msg(\"'%%s': \", fld_name(field_idx));\n"
     "      if (!is_optional_field || get_at(field_idx)->ispresent()) {\n"
     "        myleaf.body.node.nodes[node_pos] =\n"
-    "          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos),\n"
+    "          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos),\n"
     "                           node_pos, fld_descr(field_idx)->raw);\n"
     "      } else {\n"
     "        // `omitted' field.\n"
@@ -1077,7 +1077,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
     "        TTCN_error(\"internal error: erroneous before value missing\");\n"
     "      if (err_vals->after->raw) {\n"
     "        myleaf.body.node.nodes[node_pos] =\n"
-    "          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos),\n"
+    "          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos),\n"
     "                           node_pos, err_vals->after->errval"
     "->get_descriptor()->raw);\n"
     "      } else {\n"
@@ -1085,7 +1085,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
     "          TTCN_error(\"internal error: erroneous after typedescriptor "
     "missing\");\n"
     "        myleaf.body.node.nodes[node_pos] =\n"
-    "          new RAW_enc_tree(true, &myleaf, &(myleaf.curr_pos),\n"
+    "          new RAW_enc_tree(TRUE, &myleaf, &(myleaf.curr_pos),\n"
     "            node_pos, err_vals->after->type_descr->raw);\n"
     "      }\n"
     "      ++node_pos;\n"
@@ -1105,10 +1105,10 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
     if (sdef->raw.ext_bit_groups[i].ext_bit != XDEFNO) {
       src = mputprintf(src,
         "  {\n"
-        "    bool in_between_modified = false;\n"
+        "    boolean in_between_modified = FALSE;\n"
         "    for (int idx_map_idx = %d; idx_map_idx <= %d; ++idx_map_idx)\n"
         "      if (idx_map[idx_map_idx] < 0) {\n"
-        "        in_between_modified = true;\n"
+        "        in_between_modified = TRUE;\n"
         "        break;\n"
         "      }\n"
         "    if (idx_map[%d] < 0 || idx_map[%d] < 0 ||\n"
@@ -1167,12 +1167,12 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
         "      \"Conflicting negative testing attributes, LENGTHTO "
         "attribute will be ignored\");\n"
         "  } else {\n"
-        "    bool negtest_confl_lengthto = false;\n",
+        "    boolean negtest_confl_lengthto = FALSE;\n",
         (unsigned long)i, sdef->elements[i].name);
       for (a = 0; a < sdef->elements[i].raw.lengthto_num; a++) {
         src = mputprintf(src,
           "    if (idx_map[%lu] < 0) {\n"
-          "      negtest_confl_lengthto = true;\n"
+          "      negtest_confl_lengthto = TRUE;\n"
           "      e_c.set_msg(\"Field '%s': \");\n"
           "      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_NEGTEST_CONFL,\n"
           "        \"Conflicting negative testing attributes, LENGTHTO "
@@ -1238,10 +1238,10 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
           sdef->elements[sdef->elements[i].raw.pointerto].name);
       }
       src = mputprintf(src,
-        "  bool in_between_modified_pointerto_%s = false;\n"
+        "  boolean in_between_modified_pointerto_%s = FALSE;\n"
         "  for (int idx_map_idx = %d; idx_map_idx <= %d; ++idx_map_idx) {\n"
         "    if (idx_map[idx_map_idx] < 0) {\n"
-        "      in_between_modified_pointerto_%s = true;\n"
+        "      in_between_modified_pointerto_%s = TRUE;\n"
         "      break;\n"
         "    }\n"
         "  }\n"
@@ -1324,13 +1324,13 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
         "attribute will be ignored\");\n"
         "  } else {\n"
         "    if (myleaf.body.node.nodes[idx_map[%lu]]->body.node.nodes[%d]) {\n"
-        "      bool negtest_confl_lengthto = false;\n",
+        "      boolean negtest_confl_lengthto = FALSE;\n",
         (unsigned long)i, sdef->elements[i].name, (unsigned long)i,
         sdef->elements[i].raw.lengthindex->nthfield);
       for (a = 0; a < sdef->elements[i].raw.lengthto_num; a++) {
         src = mputprintf(src,
           "      if (idx_map[%lu] < 0) {\n"
-          "        negtest_confl_lengthto = true;\n"
+          "        negtest_confl_lengthto = TRUE;\n"
           "        e_c.set_msg(\"Field '%s': \");\n"
           "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_NEGTEST_CONFL,\n"
           "          \"Conflicting negative testing attributes, LENGTHTO/LENGTHINDEX "
@@ -1412,12 +1412,12 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
         "      \"Conflicting negative testing attributes, LENGTHTO/LENGTHINDEX "
         "attribute will be ignored\");\n"
         "  } else {\n"
-        "    bool negtest_confl_lengthto = false;\n",
+        "    boolean negtest_confl_lengthto = FALSE;\n",
         (unsigned long)i, sdef->elements[i].name);
       for (a = 0; a < sdef->elements[i].raw.lengthto_num; a++) {
         src = mputprintf(src,
           "  if (idx_map[%lu] < 0) {\n"
-          "    negtest_confl_lengthto = true;\n"
+          "    negtest_confl_lengthto = TRUE;\n"
           "    e_c.set_msg(\"Field '%s': \");\n"
           "      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_NEGTEST_CONFL,\n"
           "        \"Conflicting negative testing attributes, LENGTHTO/LENGTHINDEX "
@@ -1486,9 +1486,9 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
       rawAST_coding_taglist *cur_choice =
         sdef->raw.taglist.list + raw_options[i].tag_type - 1;
       src = mputprintf(src,
-        "  bool negtest_confl_tag_%s = false;\n"
+        "  boolean negtest_confl_tag_%s = FALSE;\n"
         "  if (idx_map[%lu] < 0) {\n"
-        "    negtest_confl_tag_%s = true;\n"
+        "    negtest_confl_tag_%s = TRUE;\n"
         "    e_c.set_msg(\"Field '%s': \");\n"
         "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_NEGTEST_CONFL,\n"
         "      \"Conflicting negative testing attributes, TAG attribute will "
@@ -1512,9 +1512,9 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
       int taglist_idx, field_idx;
       /* The optional field itself.  */
       src = mputprintf(src,
-        "  bool negtest_confl_presence_%s = false;\n"
+        "  boolean negtest_confl_presence_%s = FALSE;\n"
         "  if (idx_map[%lu] < 0) {\n"
-        "    negtest_confl_presence_%s = true;\n"
+        "    negtest_confl_presence_%s = TRUE;\n"
         "    e_c.set_msg(\"Field '%s': \");\n"
         "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_NEGTEST_CONFL,\n"
         "      \"Conflicting negative testing attributes, PRESENCE attribute "
@@ -1533,7 +1533,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
             rawAST_coding_fields *field = fields->fields + field_idx;
             src = mputprintf(src,
               "  if (idx_map[%d] < 0) {\n"
-              "    negtest_confl_presence_%s = true;\n"
+              "    negtest_confl_presence_%s = TRUE;\n"
               "    e_c.set_msg(\"Field '%s': \");\n"
               "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_NEGTEST_CONFL,\n"
               "      \"Conflicting negative testing attributes, PRESENCE attribute "
@@ -1585,7 +1585,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
           int taglist_idx, field_idx;
           src = mputprintf(src,
             "  case %s%s%s: {\n"
-            "  bool negtest_confl_crosstag = false;\n",
+            "  boolean negtest_confl_crosstag = FALSE;\n",
             sdef->elements[i].type, "::ALT_",
             cur_choice->fieldName);
           for (taglist_idx = 0;
@@ -1596,7 +1596,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
               if (field_idx == 0) {
                 src = mputprintf(src,
                   "  if (idx_map[%d] < 0) {\n"
-                  "    negtest_confl_crosstag = true;\n"
+                  "    negtest_confl_crosstag = TRUE;\n"
                   "    e_c.set_msg(\"Field '%s': \");\n"
                   "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_NEGTEST_CONFL,\n"
                   "      \"Conflicting negative testing attributes, CROSSTAG attribute "
@@ -1759,7 +1759,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
   if (sdef->hasRaw && sdef->raw.presence.nElements > 0) {
     /* Check the referenced fields.  */
     int taglist_idx, field_idx;
-    src = mputstr(src, "  bool negtest_confl_presence = false;\n");
+    src = mputstr(src, "  boolean negtest_confl_presence = FALSE;\n");
     for (taglist_idx = 0; taglist_idx < sdef->raw.presence.nElements; ++taglist_idx) {
       rawAST_coding_field_list *fields =
         sdef->raw.presence.fields + taglist_idx;
@@ -1768,7 +1768,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
           rawAST_coding_fields *field = fields->fields + field_idx;
           src = mputprintf(src,
             "  if (idx_map[%d] < 0) {\n"
-            "    negtest_confl_presence = true;\n"
+            "    negtest_confl_presence = TRUE;\n"
             "    e_c.set_msg(\"Field '%s': \");\n"
             "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_NEGTEST_CONFL,\n"
             "      \"Conflicting negative testing attributes, PRESENCE attribute "
@@ -1857,7 +1857,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     "  try {\n"
     "  char **new_ns;\n"
     "  size_t num_new;\n"
-    "  bool def_ns_1 = false;\n");
+    "  boolean def_ns_1 = FALSE;\n");
   for (i = start_at; i < sdef->nElements; ++i) {
     src = mputprintf(src,
       "  new_ns = field_%s.collect_ns(%s_xer_, num_new, def_ns);\n"
@@ -1901,7 +1901,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   );
   for (i = start_at; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "  else if (%s::can_start(name, uri, %s_xer_, flavor)) return true;\n"
+      "  else if (%s::can_start(name, uri, %s_xer_, flavor)) return TRUE;\n"
       /* Here we know for sure it's exer */
       , sdef->elements[i].type
       , sdef->elements[i].typegen
@@ -1910,7 +1910,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     /* The last component with which it can begin is the first non-optional.
      * Does that sentence makes sense to you ? */
   }
-  src = mputstr(src, "  return false;\n}\n\n");
+  src = mputstr(src, "  return FALSE;\n}\n\n");
 
   /* * * * * * * * * * XER_encode * * * * * * * * * * * * * * */
   src = mputprintf(src,
@@ -1936,7 +1936,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     src = mputstr(src,
       "  size_t num_collected = 0;\n"
       "  char **collected_ns = NULL;\n"
-      "  bool def_ns = false;\n"
+      "  boolean def_ns = FALSE;\n"
       "  if (e_xer) {\n"
       "    if (p_indent == 0) {\n" /* top-level */
       "      collected_ns = collect_ns(p_td, num_collected, def_ns);\n" /* our own ns */
@@ -2088,7 +2088,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
 
   if (sdef->xerUseNilPossible) {
     src = mputprintf(src,
-      "  bool nil_attribute = e_xer && (p_td.xer_bits & USE_NIL) && !field_%s.ispresent();\n"
+      "  boolean nil_attribute = e_xer && (p_td.xer_bits & USE_NIL) && !field_%s.ispresent();\n"
       "  if (nil_attribute) {\n"
       "    const namespace_t *control_ns = p_td.my_module->get_controlns();\n"
       "    p_buf.put_c(' ');\n"
@@ -2800,7 +2800,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputstr(src, "    int last_embval_index = 0;\n");
     }
     src = mputprintf(src,
-      "    bool early_exit = false;\n"
+      "    boolean early_exit = FALSE;\n"
       "    for (int i=0; i < %lu; ++i) {\n"
       "      for (rd_ok=p_reader.Ok(); rd_ok==1; rd_ok=p_reader.Read()) {\n"
       , (unsigned long)(n_embed));
@@ -2820,7 +2820,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "        type = p_reader.NodeType();\n"
       "        if (type==XML_READER_TYPE_ELEMENT) break;\n"
       "        if (type == XML_READER_TYPE_END_ELEMENT) {\n"
-      "          early_exit = true;\n"
+      "          early_exit = TRUE;\n"
       "          break;\n"
       "        }\n"
       "      }\n"
@@ -2864,7 +2864,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     }
     src = mputstr(src, 
       " {\n"
-      "        boolean any_found = false;\n"
+      "        boolean any_found = FALSE;\n"
       "        if (!any_found)");
     for (i = begin; i < end; ++i) {
       // Check anyElement fields after all other fields
@@ -2874,17 +2874,17 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
           "          e_val = %s::of_type::%s;\n"
           , sdef->elements[uo].typegen, sdef->elements[i].name);
         src = mputprintf(src,
-          "          boolean next_any = false;\n"
+          "          boolean next_any = FALSE;\n"
           "          for (int d_f = 0; d_f < num_seen; ++d_f) {\n"
           "            if (e_val == seen_f[d_f]) {\n"
-          "              next_any = true;\n"
+          "              next_any = TRUE;\n"
           "            }\n"
           "          }\n"
           "          if (!next_any) {\n"
           "            ec_1.set_msg(\"%s': \");\n"
           "            field_%s%s%s%s.XER_decode(%s_xer_, p_reader, p_flavor, p_flavor2, 0);\n"
           "            field_%s[i] = e_val;\n"
-          "            any_found = true;\n"
+          "            any_found = TRUE;\n"
           "          }\n"
           "        }\n"
           "        if (!any_found)"
@@ -3090,7 +3090,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "    }\n"
       "    delete emb_val;\n"
       "  }\n"
-      , sdef->elements[0].isOptional ? "  bool all_unbound = true;\n" : ""
+      , sdef->elements[0].isOptional ? "  boolean all_unbound = TRUE;\n" : ""
       , sdef->elements[0].type
       , sdef->elements[0].name
       , sdef->elements[0].isOptional ? "()" : ""
@@ -3099,7 +3099,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       , sdef->elements[0].isOptional ? " else if(field_" : "\n"
       , sdef->elements[0].isOptional ? sdef->elements[0].name : ""
       , sdef->elements[0].isOptional ? "()" : ""
-      , sdef->elements[0].isOptional ? "[j_j] != empty_string) {\n        all_unbound = false;\n      }\n" : ""
+      , sdef->elements[0].isOptional ? "[j_j] != empty_string) {\n        all_unbound = FALSE;\n      }\n" : ""
     );
     
     if(sdef->elements[0].isOptional) {
@@ -3464,7 +3464,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "    break;\n"
       "  case Module_Param::MP_Assignment_List: {\n"
       "    Vector<bool> value_used(param.get_size());\n"
-      "    value_used.resize(param.get_size(), false);\n");
+      "    value_used.resize(param.get_size(), FALSE);\n");
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
       "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {\n"
@@ -3473,7 +3473,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "        if (curr_param->get_type()!=Module_Param::MP_NotUsed) {\n"
       "          %s().set_param(*curr_param);\n"
       "        }\n"
-      "        value_used[val_idx]=true;\n"
+      "        value_used[val_idx]=TRUE;\n"
       "      }\n"
       "    }\n"
       , sdef->elements[i].dispname, sdef->elements[i].name);
@@ -3834,7 +3834,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       " TTCN_Buffer& p_buf) const{\n"
       "  if (!is_bound()) TTCN_EncDec_ErrorContext::error"
       "(TTCN_EncDec::ET_UNBOUND, \"Encoding an unbound value.\");\n"
-      "  bool need_separator=false;\n"
+      "  boolean need_separator=FALSE;\n"
       "  int encoded_length=0;\n"
       "  if(p_td.text->begin_encode){\n"
       "    p_buf.put_cs(*p_td.text->begin_encode);\n"
@@ -3856,7 +3856,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
         "    encoded_length+=p_td.text->separator_encode->lengthof();\n"
         " }\n"
         " encoded_length+=field_%s%s.TEXT_encode(%s_descr_,p_buf);\n"
-        " need_separator=true;\n"
+        " need_separator=TRUE;\n"
         ,sdef->elements[i].name
         ,sdef->elements[i].isOptional?"()":"",sdef->elements[i].typedescrname
        );
@@ -3959,7 +3959,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           " && field_map[%lu]<3) || !field_map[%lu]){\n"
           "    pos=p_buf.get_pos();\n"
           "    decoded_field_length=field_%s%s.TEXT_decode(%s_descr_,p_buf,"
-          "limit,true,!field_map[%lu]);\n"
+          "limit,TRUE,!field_map[%lu]);\n"
           "    if(decoded_field_length<0){\n"
           "      p_buf.set_pos(pos);\n"
           ,sdef->elements[i].typedescrname,(unsigned long) i,(unsigned long) i
@@ -3993,7 +3993,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           "  if(!field_map[%lu]){\n"
           "    pos=p_buf.get_pos();\n"
           "    decoded_field_length=field_%s%s.TEXT_decode(%s_descr_,p_buf,"
-          "limit,true);\n"
+          "limit,TRUE);\n"
           "    if(decoded_field_length<0){\n"
           "      p_buf.set_pos(pos);\n"
           "%s%s%s"
@@ -4441,7 +4441,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     }
     src = mputstr(src,
       // Read name - value token pairs until we reach some other token
-      "\n  while (true) {\n"
+      "\n  while (TRUE) {\n"
       "    char* fld_name = 0;\n"
       "    size_t name_len = 0;\n"
       "    size_t buf_pos = p_tok.get_buf_pos();\n"
@@ -5679,7 +5679,7 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     "    break;\n"
     "  case Module_Param::MP_Assignment_List: {\n"
     "    Vector<bool> value_used(param.get_size());\n"
-    "    value_used.resize(param.get_size(), false);\n");
+    "    value_used.resize(param.get_size(), FALSE);\n");
   for (i = 0; i < sdef->nElements; ++i) {
     src = mputprintf(src,
       "    for (size_t val_idx=0; val_idx<param.get_size(); val_idx++) {\n"
@@ -5688,7 +5688,7 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
       "        if (curr_param->get_type()!=Module_Param::MP_NotUsed) {\n"
       "          %s().set_param(*curr_param);\n"
       "        }\n"
-      "        value_used[val_idx]=true;\n"
+      "        value_used[val_idx]=TRUE;\n"
       "      }\n"
       "    }\n"
       , sdef->elements[i].dispname, sdef->elements[i].name);
@@ -6018,7 +6018,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
         "boolean %s::can_start(const char *p_name, const char *p_uri, "
         "const XERdescriptor_t& p_td, unsigned int p_flavor) {\n"
         "  boolean e_xer = is_exer(p_flavor);\n"
-        "  if (e_xer && (p_td.xer_bits & UNTAGGED)) return false;\n"
+        "  if (e_xer && (p_td.xer_bits & UNTAGGED)) return FALSE;\n"
         "  else return check_name(p_name, p_td, e_xer) && (!e_xer || check_namespace(p_uri, p_td));\n"
         "}\n\n"
         , name
@@ -6046,7 +6046,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
         "unsigned int p_flavor, unsigned int /*p_flavor2*/, embed_values_dec_struct_t*)\n"
         "{\n"
         "  int e_xer = is_exer(p_flavor);\n"
-        "  bound_flag = true;\n"
+        "  bound_flag = TRUE;\n"
         "  int rd_ok, depth=-1;\n"
         "  for (rd_ok=p_reader.Ok(); rd_ok==1; rd_ok=p_reader.Read()) {\n"
         "    int type = p_reader.NodeType();\n"
@@ -6106,7 +6106,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
       "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_STATIC_OBJECT_END_TOKEN_ERROR, \"\");\n"
       "    return JSON_ERROR_FATAL;\n"
       "  }\n\n"
-      "  bound_flag = true;\n\n"
+      "  bound_flag = TRUE;\n\n"
       "  return dec_len;\n"
       "}\n\n"
       , name);
@@ -6977,11 +6977,11 @@ check_generate_end:
         , name , name, name);
       for (i = 0; i < sdef->nElements; i++) {
         src = mputprintf(src,
-          "  else if (%s::can_start(p_name, p_uri, %s_xer_, p_flavor)) return true;\n"
+          "  else if (%s::can_start(p_name, p_uri, %s_xer_, p_flavor)) return TRUE;\n"
           , sdef->elements[i].type, sdef->elements[i].typegen);
       }
       src = mputstr(src,
-        "  return false;\n"
+        "  return FALSE;\n"
         "}\n\n");
       /* end of antipattern */
 

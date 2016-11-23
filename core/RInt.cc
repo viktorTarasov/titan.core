@@ -26,7 +26,7 @@
 #include <openssl/crypto.h>
 #include <openssl/bn.h>
 
-int_val_t::int_val_t() : native_flag(true)
+int_val_t::int_val_t() : native_flag(TRUE)
 {
   val.openssl = NULL;
 }
@@ -44,10 +44,10 @@ int_val_t::int_val_t(const char *s)
   if (!BN_dec2bn(&n, *s == '+' ? s + 1 : s))
     TTCN_error("Unexpected error when converting `%s' to integer", s);
   if (BN_num_bits(n) > (int)sizeof(int) * 8 - 1) {
-    native_flag = false;
+    native_flag = FALSE;
     val.openssl = n;
   } else {
-    native_flag = true;
+    native_flag = TRUE;
     val.native = string2RInt(s);
     BN_free(n);
   }
@@ -89,7 +89,7 @@ char *int_val_t::as_string() const
 int_val_t& int_val_t::operator=(RInt v)
 {
   if (!native_flag) BN_free(val.openssl);
-  native_flag = true;
+  native_flag = TRUE;
   val.native = v;
   return *this;
 }
@@ -119,7 +119,7 @@ int_val_t& int_val_t::operator<<=(RInt right)
     BN_lshift(result, result, right);
     if (BN_num_bits(result) > (int)sizeof(int) * 8 - 1) {
       val.openssl = result;
-      native_flag = false;
+      native_flag = FALSE;
     } else {
       val.native <<= right;
       BN_free(result);
@@ -143,7 +143,7 @@ int_val_t& int_val_t::operator>>=(RInt right)
       char *result_str = BN_bn2dec(val.openssl);
       RInt result_i = string2RInt(result_str);
       OPENSSL_free(result_str);
-      native_flag = true;
+      native_flag = TRUE;
       BN_free(val.openssl);
       val.native = result_i;
     }
@@ -156,7 +156,7 @@ int_val_t& int_val_t::operator+=(RInt right)
   // Unfortunately we have to check the sign of the "right" operand and
   // perform addition or subtraction accordingly.
   if (right == 0) return *this;
-  bool neg = right < 0;
+  boolean neg = right < 0;
   if (native_flag) {
     BIGNUM *result = BN_new();
     BN_set_word(result, (BN_ULONG)val.native);
@@ -164,7 +164,7 @@ int_val_t& int_val_t::operator+=(RInt right)
     else BN_add_word(result, (BN_ULONG)right);
     if (BN_num_bits(result) > (int)sizeof(int) * 8 - 1) {
       val.openssl = result;
-      native_flag = false;
+      native_flag = FALSE;
     } else {
       val.native += right;
       BN_free(result);
@@ -177,13 +177,13 @@ int_val_t& int_val_t::operator+=(RInt right)
       if (BN_is_negative(val.openssl)) tmp *= -1;
       BN_free(val.openssl);
       val.native = tmp;
-      native_flag = true;
+      native_flag = TRUE;
     }
   }
   return *this;
 }
 
-bool int_val_t::operator==(const int_val_t& right) const
+boolean int_val_t::operator==(const int_val_t& right) const
 {
   if (native_flag) {
     if (right.is_native()) {
@@ -206,7 +206,7 @@ bool int_val_t::operator==(const int_val_t& right) const
   }
 }
 
-bool int_val_t::operator<(const int_val_t& v) const
+boolean int_val_t::operator<(const int_val_t& v) const
 {
   if (native_flag) {
     if (v.is_native()) {
@@ -247,7 +247,7 @@ int_val_t int_val_t::operator&(RInt right) const
 
 // Cannot be inline since bignum_st is just a forward declaration in the
 // header.  The compiler must know bignum_st at this point.
-bool int_val_t::is_negative() const
+boolean int_val_t::is_negative() const
 {
   return (native_flag && val.native < 0) ||
           (!native_flag && BN_is_negative(val.openssl));
