@@ -66,10 +66,10 @@ void Quad::set(unsigned char group, unsigned char plane, unsigned char row,
 }
 
 void Quad::set_hexrepr(const char* hex_repr) {
-  u.comp.group = ((hex_repr[0] - 'A') << 4) + (hex_repr[1] - 'A');
-  u.comp.plane = ((hex_repr[2] - 'A') << 4) + (hex_repr[3] - 'A');
-  u.comp.row =   ((hex_repr[4] - 'A') << 4) + (hex_repr[5] - 'A');
-  u.comp.cell =  ((hex_repr[6] - 'A') << 4) + (hex_repr[7] - 'A');
+  u.comp.group = (unsigned char)(((hex_repr[0] - 'A') << 4) + (hex_repr[1] - 'A'));
+  u.comp.plane = (unsigned char)(((hex_repr[2] - 'A') << 4) + (hex_repr[3] - 'A'));
+  u.comp.row =   (unsigned char)(((hex_repr[4] - 'A') << 4) + (hex_repr[5] - 'A'));
+  u.comp.cell =  (unsigned char)(((hex_repr[6] - 'A') << 4) + (hex_repr[7] - 'A'));
 }
 
 const Quad Quad::operator-(const Quad& rhs) const {
@@ -133,21 +133,21 @@ char* Quad::get_hexrepr(unsigned int value) {
 }
 
 void Quad::get_hexrepr(const Quad& q, char* const str) {
-  str[0] = 'A' + (q.u.comp.group >> 4); // high end
-  str[1] = 'A' + (q.u.comp.group & 15);
-  str[2] = 'A' + (q.u.comp.plane >> 4);
-  str[3] = 'A' + (q.u.comp.plane & 15);
-  str[4] = 'A' + (q.u.comp.row   >> 4);
-  str[5] = 'A' + (q.u.comp.row   & 15);
-  str[6] = 'A' + (q.u.comp.cell  >> 4);
-  str[7] = 'A' + (q.u.comp.cell  & 15); // low end
+  str[0] = (char)('A' + (q.u.comp.group >> 4)); // high end
+  str[1] = (char)('A' + (q.u.comp.group & 15));
+  str[2] = (char)('A' + (q.u.comp.plane >> 4));
+  str[3] = (char)('A' + (q.u.comp.plane & 15));
+  str[4] = (char)('A' + (q.u.comp.row   >> 4));
+  str[5] = (char)('A' + (q.u.comp.row   & 15));
+  str[6] = (char)('A' + (q.u.comp.cell  >> 4));
+  str[7] = (char)('A' + (q.u.comp.cell  & 15)); // low end
 }
 
 char* Quad::char_hexrepr(unsigned char c) {
   char hex[3];
   hex[2] = '\0';
-  hex[1] = (c & 15) + 'A';
-  hex[0] = (c >> 4) + 'A';
+  hex[1] = (char)((c & 15) + 'A');
+  hex[0] = (char)((c >> 4) + 'A');
   return mcopystr(hex);
 }
 
@@ -235,7 +235,7 @@ char* QuadInterval::generate_posix() {
                 Free(str);
                 q1.set(j, 0);
                 if (j > 0 && q1[j-1] < 255)
-                  q1.set(j - 1, q1[j-1] + 1);
+                  q1.set(j - 1, (unsigned char)(q1[j-1] + 1));
                 for (k = j + 1; k < 4; k++) {
                   res = mputprintf(res, "%s",
                     str = generate_hex_interval(0, 255));
@@ -251,7 +251,7 @@ char* QuadInterval::generate_posix() {
               res = mputstr(res, str = Quad::char_hexrepr(lower[j]));
               Free(str);
             }
-            str = generate_hex_interval(lower[c] + 1,
+            str = generate_hex_interval((unsigned char)(lower[c] + 1),
               (unsigned char)(lower[c] + diff[c] - 1));
             res = mputprintf(res, "%s", str);
             Free(str);
@@ -274,7 +274,7 @@ char* QuadInterval::generate_posix() {
               }
               c++;
               if (c < 3)
-                q2.set(c, upper[c] - 1);
+                q2.set(c, (unsigned char)(upper[c] - 1));
               res = mputstr(res, str = generate_hex_interval(q1[c], q2[c]));
               Free(str);
               for (j = c + 1; j < 4; j++) {

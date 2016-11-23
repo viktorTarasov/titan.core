@@ -282,13 +282,14 @@ extern "C" {
    * @return a string which must be Free()-d by the caller
    * @pre b > 0 and b <= 99, or else NULL is returned
    */
-  char * buildstr(int b);
+  char * buildstr(unsigned int b);
 
 #ifdef __cplusplus
   /** Convert a patch level to the "Ericsson letter" */
   inline char eri(unsigned int p) { /* p stands for patch level */
     char   i = (char)('A' + p); /* i stands for "if only it was that simple" */
-    return i + (i >= 'I') + 4 * (i >= 'N') + (i >= 'R');
+    const int result = i + (i >= 'I') + 4 * (i >= 'N') + (i >= 'R');
+    return (char)result; /*check: does not overflow*/
   }
 
 } /* extern "C" */
