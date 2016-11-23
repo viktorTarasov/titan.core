@@ -568,12 +568,14 @@ string RangeListConstraint<LIMITTYPE>::to_string(bool add_brackets) const
 {
   string ret_val;
   if (add_brackets) ret_val += '(';
-  int last = values.size()-1;
-  for (int i=0; i<=last; i++)
-  {
-    ret_val += values[i].to_string();
-    if (intervals[i]) ret_val += "..";
-    else if (i<last) ret_val += ',';
+  if(values.size() > 0) {
+    size_t last = values.size()-1;
+    for (size_t i=0; i<=last; i++)
+    {
+      ret_val += values[i].to_string();
+      if (intervals[i]) ret_val += "..";
+      else if (i<last) ret_val += ',';
+    }
   }
   if (add_brackets) ret_val += ')';
   return ret_val;
