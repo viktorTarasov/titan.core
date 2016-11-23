@@ -1379,7 +1379,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       if (sdef->xerUseUnion || i > 0) src = mputprintf(src,
           "      need_type = (%s_xer_.namelens[1] > 2) || %s_xer_.xsd_type != XSD_NONE;\n"
           , sdef->elements[i].typegen
-          , sdef->elements[i].typegen);
+        , sdef->elements[i].typegen);
       src = mputstr(src, "      break;\n");
     }
 
@@ -1459,18 +1459,18 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           , selection_prefix, sdef->elements[i].name);
         if (!sdef->xerUseUnion) { // UseType
           src = mputprintf(src,
-            "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
-            "          %s_xer_.namelens[1] > 2) {\n"
-            /* add the namespace prefix to the type attribute (if the name is not empty) */
-            "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
-            "        if (my_ns->px[0] != 0) {\n"
-            "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
-            "        }\n"
-            "      }\n"
-            "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
-            , sdef->elements[i].typegen, sdef->elements[i].typegen
-            , sdef->elements[i].typegen, sdef->elements[i].typegen
-            , sdef->elements[i].typegen, sdef->elements[i].typegen
+          "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
+          "          %s_xer_.namelens[1] > 2) {\n"
+          /* add the namespace prefix to the type attribute (if the name is not empty) */
+          "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
+          "        if (my_ns->px[0] != 0) {\n"
+          "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
+          "        }\n"
+          "      }\n"
+          "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
+          , sdef->elements[i].typegen, sdef->elements[i].typegen
+          , sdef->elements[i].typegen, sdef->elements[i].typegen
+          , sdef->elements[i].typegen, sdef->elements[i].typegen
             , sdef->elements[i].typegen);
         }
         if (sdef->elements[i].xsd_type != XSD_NONE) {
@@ -1600,18 +1600,18 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
             , selection_prefix, sdef->elements[i].name);
           if (!sdef->xerUseUnion) { // UseType
             src = mputprintf(src,
-              "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
-              "          %s_xer_.namelens[1] > 2) {\n"
-              /* add the namespace prefix to the type attribute (if the name is not empty) */
-              "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
-              "        if (my_ns->px[0] != 0) {\n"
-              "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
-              "        }\n"
-              "      }\n"
-              "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
-              , sdef->elements[i].typegen, sdef->elements[i].typegen
-              , sdef->elements[i].typegen, sdef->elements[i].typegen
-              , sdef->elements[i].typegen, sdef->elements[i].typegen
+            "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
+            "          %s_xer_.namelens[1] > 2) {\n"
+            /* add the namespace prefix to the type attribute (if the name is not empty) */
+            "        const namespace_t *my_ns = %s_xer_.my_module->get_ns(%s_xer_.ns_index);\n"
+            "        if (my_ns->px[0] != 0) {\n"
+            "          type_name = mprintf(\"%%s:\", my_ns->px);\n"
+            "        }\n"
+            "      }\n"
+            "      type_name = mputstrn(type_name, %s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
+            , sdef->elements[i].typegen, sdef->elements[i].typegen
+            , sdef->elements[i].typegen, sdef->elements[i].typegen
+            , sdef->elements[i].typegen, sdef->elements[i].typegen
               , sdef->elements[i].typegen);
           }
           if (sdef->elements[i].xsd_type != XSD_NONE) {
@@ -2205,7 +2205,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "}\n\n");
     } else { // not "as value"
       src = mputprintf(src,
-        "  int dec_len = p_tok.get_next_token(&j_token, NULL, NULL);\n"
+        "  size_t dec_len = p_tok.get_next_token(&j_token, NULL, NULL);\n"
         "  if (JSON_TOKEN_ERROR == j_token) {\n"
         "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, \"\");\n"
         "    return JSON_ERROR_FATAL;\n"
@@ -2232,7 +2232,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "        }\n"
           "        return JSON_ERROR_FATAL;\n"
           "      } else {\n"
-          "        dec_len += ret_val;\n"
+          "        dec_len += (size_t)ret_val;\n"
           "      }\n"
           "    } else "
           , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname
@@ -2252,7 +2252,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_STATIC_OBJECT_END_TOKEN_ERROR, \"\");\n"
         "    return JSON_ERROR_FATAL;\n"
         "  }\n\n"
-        "  return dec_len;\n"
+        "  return (int)dec_len;\n"
         "}\n\n");
     }
   }

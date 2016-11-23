@@ -385,7 +385,7 @@ int VERDICTTYPE::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   json_token_t token = JSON_TOKEN_NONE;
   char* value = 0;
   size_t value_len = 0;
-  int dec_len = 0;
+  size_t dec_len = 0;
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
     // No JSON data in the buffer -> use default value
@@ -417,14 +417,14 @@ int VERDICTTYPE::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   } else {
     error = FALSE;
     verdict_value = UNBOUND_VERDICT;
-    dec_len = JSON_ERROR_INVALID_TOKEN;
+    return JSON_ERROR_INVALID_TOKEN;
   }
   if (error) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FORMAT_ERROR, "string", "verdicttype");
     verdict_value = UNBOUND_VERDICT;
-    dec_len = JSON_ERROR_FATAL;
+    return JSON_ERROR_FATAL;
   }
-  return dec_len;
+  return (int)dec_len;
 }
 
 

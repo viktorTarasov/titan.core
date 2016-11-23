@@ -4419,7 +4419,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "int %s::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, boolean p_silent)\n"
       "{\n"
       "  json_token_t j_token = JSON_TOKEN_NONE;\n"
-      "  int dec_len = p_tok.get_next_token(&j_token, NULL, NULL);\n"
+      "  size_t dec_len = p_tok.get_next_token(&j_token, NULL, NULL);\n"
       "  if (JSON_TOKEN_ERROR == j_token) {\n"
       "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, \"\");\n"
       "    return JSON_ERROR_FATAL;\n"
@@ -4533,7 +4533,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
         "           }\n"
         "           return JSON_ERROR_FATAL;\n"
         "         }\n"
-        "         dec_len += ret_val;\n"
+        "         dec_len += (size_t)ret_val;\n"
         , sdef->elements[i].dispname);
       if (has_metainfo_enabled) {
         src = mputstr(src, "        }\n");
@@ -4603,7 +4603,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
         "  }\n");
     }
     src = mputstr(src,
-      "\n  return dec_len;\n"
+      "\n  return (int)dec_len;\n"
       "}\n\n");
   }
   
@@ -6093,7 +6093,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
       "int %s::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, boolean p_silent)\n"
       "{\n"
       "  json_token_t token = JSON_TOKEN_NONE;\n"
-      "  int dec_len = p_tok.get_next_token(&token, NULL, NULL);\n"
+      "  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);\n"
       "  if (JSON_TOKEN_ERROR == token) {\n"
       "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, \"\");\n"
       "    return JSON_ERROR_FATAL;\n"
@@ -6107,7 +6107,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
       "    return JSON_ERROR_FATAL;\n"
       "  }\n\n"
       "  bound_flag = TRUE;\n\n"
-      "  return dec_len;\n"
+      "  return (int)dec_len;\n"
       "}\n\n"
       , name);
   }

@@ -1574,7 +1574,7 @@ int Record_Of_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_desc
 int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
 {
   json_token_t token = JSON_TOKEN_NONE;
-  int dec_len = p_tok.get_next_token(&token, NULL, NULL);
+  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);
   if (JSON_TOKEN_ERROR == token) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, "");
     return JSON_ERROR_FATAL;
@@ -1587,7 +1587,7 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
   for (int nof_elements = 0; TRUE; ++nof_elements) {
     // Read value tokens until we reach some other token
     size_t buf_pos = p_tok.get_buf_pos();
-    int ret_val;
+    size_t ret_val;
     if (NULL != p_td.json && p_td.json->metainfo_unbound) {
       // check for metainfo object
       ret_val = p_tok.get_next_token(&token, NULL, NULL);
@@ -1612,14 +1612,14 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
       p_tok.set_buf_pos(buf_pos);
     }
     Base_Type* val = create_elem();
-    ret_val = val->JSON_decode(*p_td.oftype_descr, p_tok, p_silent);
-    if (JSON_ERROR_INVALID_TOKEN == ret_val) {
+    int ret_val2 = val->JSON_decode(*p_td.oftype_descr, p_tok, p_silent);
+    if (JSON_ERROR_INVALID_TOKEN == ret_val2) {
       // undo the last action on the buffer
       p_tok.set_buf_pos(buf_pos);
       delete val;
       break;
     } 
-    else if (JSON_ERROR_FATAL == ret_val) {
+    else if (JSON_ERROR_FATAL == ret_val2) {
       delete val;
       if (p_silent) {
         clean_up();
@@ -1636,7 +1636,7 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
       get_at(nof_elements)->set_value(val);
       delete val;
     }
-    dec_len += ret_val;
+    dec_len += (size_t)ret_val2;
   }
   
   dec_len += p_tok.get_next_token(&token, NULL, NULL);
@@ -1648,7 +1648,7 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
     return JSON_ERROR_FATAL;
   }
   
-  return dec_len;
+  return (int)dec_len;
 }
 
 void Record_Of_Type::encode(const TTCN_Typedescriptor_t& p_td,
@@ -5889,7 +5889,7 @@ int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
 int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
 {
   json_token_t token = JSON_TOKEN_NONE;
-  int dec_len = p_tok.get_next_token(&token, NULL, NULL);
+  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);
   if (JSON_TOKEN_ERROR == token) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, "");
     return JSON_ERROR_FATAL;
@@ -5990,9 +5990,9 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
       }
       else {
         buf_pos = p_tok.get_buf_pos();
-        int ret_val = get_at(field_idx)->JSON_decode(*fld_descr(field_idx), p_tok, p_silent);
-        if (0 > ret_val) {
-          if (JSON_ERROR_INVALID_TOKEN == ret_val) {
+        int ret_val2 = get_at(field_idx)->JSON_decode(*fld_descr(field_idx), p_tok, p_silent);
+        if (0 > ret_val2) {
+          if (JSON_ERROR_INVALID_TOKEN == ret_val2) {
             // undo the last action on the buffer, check if the invalid token was a null token 
             p_tok.set_buf_pos(buf_pos);
             p_tok.get_next_token(&token, NULL, NULL);
@@ -6011,7 +6011,7 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
           }
           return JSON_ERROR_FATAL;
         }
-        dec_len += ret_val;
+        dec_len += (size_t)ret_val2;
       }
     }
   }
@@ -6047,7 +6047,7 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   
   delete[] metainfo;
   
-  return dec_len;
+  return (int)dec_len;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6403,7 +6403,7 @@ int Empty_Record_Type::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&
 int Empty_Record_Type::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, boolean p_silent)
 {
   json_token_t token = JSON_TOKEN_NONE;
-  int dec_len = p_tok.get_next_token(&token, NULL, NULL);
+  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);
   if (JSON_TOKEN_ERROR == token) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, "");
     return JSON_ERROR_FATAL;
@@ -6420,7 +6420,7 @@ int Empty_Record_Type::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&
   
   bound_flag = TRUE;
   
-  return dec_len;
+  return (int)dec_len;
 }
 
 boolean operator==(null_type /*null_value*/, const Empty_Record_Type& other_value)

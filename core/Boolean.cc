@@ -746,7 +746,7 @@ int BOOLEAN::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) co
 int BOOLEAN::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
 {
   json_token_t token = JSON_TOKEN_NONE;
-  int dec_len = 0;
+  size_t dec_len = 0;
   if (p_td.json->default_value && 0 == p_tok.get_buffer_length()) {
     // No JSON data in the buffer -> use default value
     if (strcmp(p_td.json->default_value, "true") == 0) {
@@ -774,7 +774,7 @@ int BOOLEAN::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_to
     bound_flag = FALSE;
     return JSON_ERROR_INVALID_TOKEN;
   }
-  return dec_len;
+  return (int)dec_len;
 }
 
 

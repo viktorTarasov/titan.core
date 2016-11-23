@@ -1139,7 +1139,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         "    if (own_tag)");
     }
     src=mputprintf(src,
-      "    {\n" /* Do empty element tag */
+      " {\n" /* Do empty element tag */
       "%s"
       "      p_buf.put_c('<');\n"
       "      if (e_xer) write_ns_prefix(p_td, p_buf);\n"
@@ -1327,7 +1327,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         , force_gen_seof ? " && (p_td.xer_bits & XER_ATTRIBUTE)" : "");
     }
     src=mputstr(src,
-      "    if (own_tag){\n"
+      "    if (own_tag) {\n"
       "      p_buf.put_c('<');\n"
       "      p_buf.put_c('/');\n"
       "      if (e_xer) write_ns_prefix(p_td, p_buf);\n"
@@ -1565,7 +1565,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)\n"
       "{\n"
       "  json_token_t token = JSON_TOKEN_NONE;\n"
-      "  int dec_len = p_tok.get_next_token(&token, NULL, NULL);\n"
+      "  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);\n"
       "  if (JSON_TOKEN_ERROR == token) {\n"
       "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, \"\");\n"
       "    return JSON_ERROR_FATAL;\n"
@@ -1576,7 +1576,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "  set_size(0);\n"
       "  for (int nof_elements = 0; TRUE; ++nof_elements) {\n"
       "    size_t buf_pos = p_tok.get_buf_pos();\n"
-      "    int ret_val;\n"
+      "    size_t ret_val;\n"
       "    if (NULL != p_td.json && p_td.json->metainfo_unbound) {\n"
       // check for metainfo object
       "      ret_val = p_tok.get_next_token(&token, NULL, NULL);\n"
@@ -1601,13 +1601,13 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "      p_tok.set_buf_pos(buf_pos);\n"
       "    }\n"
       "    %s* val = new %s;\n"
-      "    ret_val = val->JSON_decode(*p_td.oftype_descr, p_tok, p_silent);\n"
-      "    if (JSON_ERROR_INVALID_TOKEN == ret_val) {\n"
+      "    int ret_val2 = val->JSON_decode(*p_td.oftype_descr, p_tok, p_silent);\n"
+      "    if (JSON_ERROR_INVALID_TOKEN == ret_val2) {\n"
       "      p_tok.set_buf_pos(buf_pos);\n"
       "      delete val;\n"
       "      break;\n"
       "    }\n"
-      "    else if (JSON_ERROR_FATAL == ret_val) {\n"
+      "    else if (JSON_ERROR_FATAL == ret_val2) {\n"
       "      delete val;\n"
       "      if (p_silent) {\n"
       "        clean_up();\n"
@@ -1618,7 +1618,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "      (void**)val_ptr->value_elements, val_ptr->n_elements, nof_elements + 1);\n"
       "    val_ptr->value_elements[nof_elements] = val;\n"
       "    val_ptr->n_elements = nof_elements + 1;\n"
-      "    dec_len += ret_val;\n"
+      "    dec_len += (size_t)ret_val2;\n"
       "  }\n\n"
       "  dec_len += p_tok.get_next_token(&token, NULL, NULL);\n"
       "  if (JSON_TOKEN_ARRAY_END != token) {\n"
@@ -1628,7 +1628,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "    }\n"
       "    return JSON_ERROR_FATAL;\n"
       "  }\n\n"
-      "  return dec_len;\n"
+      "  return (int)dec_len;\n"
       "}\n\n"
       , name, type, type, type);
   }
@@ -2607,7 +2607,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
         "    if (own_tag)");
     }
     src=mputprintf(src,
-      "    {\n" /* Do empty element tag */
+      " {\n" /* Do empty element tag */
       "%s"
       "      p_buf.put_c('<');\n"
       "      if (e_xer) write_ns_prefix(p_td, p_buf);\n"
@@ -2790,7 +2790,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
         , force_gen_seof ? " && (p_td.xer_bits & XER_ATTRIBUTE)" : "");
     }
     src=mputstr(src,
-      "    if (own_tag){\n"
+      "    if (own_tag) {\n"
       "      p_buf.put_c('<');\n"
       "      p_buf.put_c('/');\n"
       "      if (e_xer) write_ns_prefix(p_td, p_buf);\n"
@@ -3017,7 +3017,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)\n"
       "{\n"
       "  json_token_t token = JSON_TOKEN_NONE;\n"
-      "  int dec_len = p_tok.get_next_token(&token, NULL, NULL);\n"
+      "  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);\n"
       "  if (JSON_TOKEN_ERROR == token) {\n"
       "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, \"\");\n"
       "    return JSON_ERROR_FATAL;\n"
@@ -3028,7 +3028,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "  set_size(0);\n"
       "  for (int nof_elements = 0; TRUE; ++nof_elements) {\n"
       "    size_t buf_pos = p_tok.get_buf_pos();\n"
-      "    int ret_val;\n"
+      "    size_t ret_val;\n"
       "    if (NULL != p_td.json && p_td.json->metainfo_unbound) {\n"
       // check for metainfo object
       "      ret_val = p_tok.get_next_token(&token, NULL, NULL);\n"
@@ -3053,12 +3053,12 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "      p_tok.set_buf_pos(buf_pos);\n"
       "    }\n"
       "    %s val;\n"
-      "    ret_val = val.JSON_decode(*p_td.oftype_descr, p_tok, p_silent);\n"
-      "    if (JSON_ERROR_INVALID_TOKEN == ret_val) {\n"
+      "    int ret_val2 = val.JSON_decode(*p_td.oftype_descr, p_tok, p_silent);\n"
+      "    if (JSON_ERROR_INVALID_TOKEN == ret_val2) {\n"
       "      p_tok.set_buf_pos(buf_pos);\n"
       "      break;\n"
       "    }\n"
-      "    else if (JSON_ERROR_FATAL == ret_val) {\n"
+      "    else if (JSON_ERROR_FATAL == ret_val2) {\n"
       "      if (p_silent) {\n"
       "        clean_up();\n"
       "      }\n"
@@ -3066,7 +3066,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "    }\n"
       "    set_size(nof_elements + 1);\n"
       "    value_elements[nof_elements] = val;\n"
-      "    dec_len += ret_val;\n"
+      "    dec_len += (size_t)ret_val2;\n"
       "  }\n\n"
       "  dec_len += p_tok.get_next_token(&token, NULL, NULL);\n"
       "  if (JSON_TOKEN_ARRAY_END != token) {\n"
@@ -3076,7 +3076,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "    }\n"
       "    return JSON_ERROR_FATAL;\n"
       "  }\n\n"
-      "  return dec_len;\n"
+      "  return (int)dec_len;\n"
       "}\n\n"
       , name, type);
   }

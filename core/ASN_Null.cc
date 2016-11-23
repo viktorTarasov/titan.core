@@ -307,7 +307,7 @@ int ASN_NULL::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) c
 int ASN_NULL::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, boolean p_silent)
 {
   json_token_t token = JSON_TOKEN_NONE;
-  int dec_len = p_tok.get_next_token(&token, NULL, NULL);
+  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);
   if (JSON_TOKEN_ERROR == token) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, "");
     return JSON_ERROR_FATAL;
@@ -316,7 +316,7 @@ int ASN_NULL::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, b
     return JSON_ERROR_INVALID_TOKEN;
   }
   bound_flag = TRUE;
-  return dec_len;
+  return (int)dec_len;
 }
 
 boolean operator==(asn_null_type, const ASN_NULL& other_value)

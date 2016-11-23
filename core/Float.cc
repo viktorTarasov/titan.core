@@ -1111,7 +1111,7 @@ int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
   json_token_t token = JSON_TOKEN_NONE;
   char* value = 0;
   size_t value_len = 0;
-  int dec_len = 0;
+  size_t dec_len = 0;
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
     // No JSON data in the buffer -> use default value
@@ -1165,7 +1165,7 @@ int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
     bound_flag = TRUE;
     Free(value2);
   }
-  return dec_len;
+  return (int)dec_len;
 }
 
 

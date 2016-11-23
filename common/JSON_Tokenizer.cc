@@ -202,7 +202,7 @@ bool JSON_Tokenizer::check_for_literal(const char* p_literal)
   return false;
 }
 
-int JSON_Tokenizer::get_next_token(json_token_t* p_token, char** p_token_str, size_t* p_str_len)
+size_t JSON_Tokenizer::get_next_token(json_token_t* p_token, char** p_token_str, size_t* p_str_len)
 {
   size_t start_pos = buf_pos;
   *p_token = JSON_TOKEN_NONE;

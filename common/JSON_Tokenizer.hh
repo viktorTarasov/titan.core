@@ -145,7 +145,7 @@ public:
     * @return The number of characters extracted 
     * @note The token data is not copied, *p_token_str will point to the start of the 
     * data in the tokenizer's buffer. */
-  int get_next_token(json_token_t* p_token, char** p_token_str, size_t* p_str_len);
+  size_t get_next_token(json_token_t* p_token, char** p_token_str, size_t* p_str_len);
   
   /** Gets the current read position in the buffer.
     * This is where get_next_token() will read from next. */
