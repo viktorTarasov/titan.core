@@ -2378,8 +2378,11 @@ namespace Ttcn {
 
   ExtensionAttributes::~ExtensionAttributes()
   {
-    for (int i = size()-1; i >= 0; --i)
-      delete operator [](i);
+    if(size() > 0) {
+      for (size_t i = size()-1; i >= 0; --i) {
+        delete operator [](i);
+      }
+    }
     clear();
   }
 
