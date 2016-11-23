@@ -23,7 +23,7 @@ static tcov_file_list *the_files = 0;
 static profiler_data_t *the_data = 0;
 
 /** The current database index for the next get_profiler_code_line() call */
-static int current_index = 0;
+static size_t current_index = 0;
 
 /** The file parameter for the last get_profiler_code_line() call */
 static char* last_file_name = 0;
@@ -58,11 +58,10 @@ boolean is_file_profiled(const char* p_file_name)
 }
 
 void insert_profiler_code_line(const char* p_file_name,
-  const char* p_function_name, int p_line_no)
+  const char* p_function_name, size_t p_line_no)
 {
   /* check if the entry already exists */
-  int i;
-  for (i = 0; i < the_data->nof_lines; ++i) {
+  for (size_t i = 0; i < the_data->nof_lines; ++i) {
     if (0 == strcmp(p_file_name,the_data->lines[i].file_name) &&
         p_line_no == the_data->lines[i].line_no) {
       if (0 == the_data->lines[i].function_name && 0 != p_function_name) {
@@ -113,8 +112,7 @@ boolean get_profiler_code_line(const char *p_file_name,
 
 void free_profiler_data()
 {
-  int i;
-  for (i = 0; i < the_data->nof_lines; ++i) {
+  for (size_t i = 0; i < the_data->nof_lines; ++i) {
     Free(the_data->lines[i].file_name);
     Free(the_data->lines[i].function_name);
   }
