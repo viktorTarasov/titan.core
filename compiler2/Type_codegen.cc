@@ -58,7 +58,7 @@ void Type::generate_code(output_struct *target)
   CodeGenHelper::update_intervals(target);  // TODO: class and template separate everywhere?
   // escape from recursion loops
   if (code_generated) return;
-  code_generated = true;
+  code_generated = TRUE;
   generate_code_typedescriptor(target);
   string sourcefile = get_sourcefile_attribute();
   if (!sourcefile.empty()) {
@@ -243,7 +243,7 @@ void Type::generate_code_embedded_after(output_struct *target)
 
 void Type::generate_code_typedescriptor(output_struct *target)
 {
-  bool force_xer = false;
+  bool force_xer = FALSE;
   switch (get_type_refd_last()->typetype) {
   case T_PORT:
   case T_SIGNATURE:
@@ -543,7 +543,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
     // (encoder's choice) for USE-UNION. However, TTCN-3 removes this choice:
     // it is mandatory to use it when possible (valid choice for ASN.1 too).
     use_type_attr = xerattrib->useType_ || xerattrib->useUnion_;
-    
+
     xsd_type = XSD_type_to_string(xerattrib->xsd_type);
 
     if (xerattrib->defaultValue_) {
@@ -843,7 +843,7 @@ void Type::generate_code_textdescriptor(output_struct *target)
         decode_token = t->u.enums.eis->get_ei_byIndex(i)->get_name()
           .get_dispname().c_str();
         // it is always case sensitive
-        case_sensitive = true;
+        case_sensitive = TRUE;
       }
       char *pstr = make_posix_str_code(decode_token, case_sensitive);
       target->source.global_vars = mputprintf(target->source.global_vars,
@@ -876,14 +876,14 @@ void Type::generate_code_textdescriptor(output_struct *target)
       }
       target->source.global_vars=mputprintf(target->source.global_vars,
            "{%s,%s,%i,%i,%i,%i},{%s,%s,%i,%i,%i,%i}};\n"
-           ,textattrib->coding_params.leading_zero?"true":"false"
-           ,textattrib->coding_params.repeatable?"true":"false"
+           ,textattrib->coding_params.leading_zero?"TRUE":"FALSE"
+           ,textattrib->coding_params.repeatable?"TRUE":"FALSE"
            ,textattrib->coding_params.min_length
            ,textattrib->coding_params.max_length
            ,textattrib->coding_params.convert
            ,textattrib->coding_params.just
-           ,textattrib->decoding_params.leading_zero?"true":"false"
-           ,textattrib->decoding_params.repeatable?"true":"false"
+           ,textattrib->decoding_params.leading_zero?"TRUE":"FALSE"
+           ,textattrib->decoding_params.repeatable?"TRUE":"FALSE"
            ,textattrib->decoding_params.min_length
            ,textattrib->decoding_params.max_length
            ,textattrib->decoding_params.convert
@@ -903,14 +903,14 @@ void Type::generate_code_textdescriptor(output_struct *target)
     }
     target->source.global_vars=mputprintf(target->source.global_vars,
          "{%s,%s,%i,%i,%i,%i},{%s,%s,%i,%i,%i,%i}};\n"
-         ,textattrib->coding_params.leading_zero?"true":"false"
-         ,textattrib->coding_params.repeatable?"true":"false"
+         ,textattrib->coding_params.leading_zero?"TRUE":"FALSE"
+         ,textattrib->coding_params.repeatable?"TRUE":"FALSE"
          ,textattrib->coding_params.min_length
          ,textattrib->coding_params.max_length
          ,textattrib->coding_params.convert
          ,textattrib->coding_params.just
-         ,textattrib->decoding_params.leading_zero?"true":"false"
-         ,textattrib->decoding_params.repeatable?"true":"false"
+         ,textattrib->decoding_params.leading_zero?"TRUE":"FALSE"
+         ,textattrib->decoding_params.repeatable?"TRUE":"FALSE"
          ,textattrib->decoding_params.min_length
          ,textattrib->decoding_params.max_length
          ,textattrib->decoding_params.convert
@@ -1016,7 +1016,7 @@ void Type::generate_code_jsondescriptor(output_struct *target)
   
   if (NULL == jsonattrib) {
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "const TTCN_JSONdescriptor_t %s_json_ = { false, NULL, false, NULL, false };\n"
+      "const TTCN_JSONdescriptor_t %s_json_ = { FALSE, NULL, FALSE, NULL, FALSE };\n"
       , get_genname_own().c_str());
   } else {
     char* alias = jsonattrib->alias ? mputprintf(NULL, "\"%s\"", jsonattrib->alias) : NULL;
@@ -1025,11 +1025,11 @@ void Type::generate_code_jsondescriptor(output_struct *target)
     target->source.global_vars = mputprintf(target->source.global_vars,
       "const TTCN_JSONdescriptor_t %s_json_ = { %s, %s, %s, %s, %s };\n"
       , get_genname_own().c_str() 
-      , jsonattrib->omit_as_null ? "true" : "false"
+      , jsonattrib->omit_as_null ? "TRUE" : "FALSE"
       , alias ? alias : "NULL"
-      , jsonattrib->as_value ? "true" : "false"
+      , jsonattrib->as_value ? "TRUE" : "FALSE"
       , def_val ? def_val : "NULL"
-      , jsonattrib->metainfo_unbound ? "true" : "false");
+      , jsonattrib->metainfo_unbound ? "TRUE" : "FALSE");
     Free(alias);
     Free(def_val);
   }
@@ -1148,7 +1148,7 @@ void Type::generate_code_Choice(output_struct *target)
   sdef.opentype_outermost = get_is_opentype_outermost();
   sdef.ot = generate_code_ot(pool);
   sdef.nElements = get_nof_comps();
-  sdef.isOptional = false;
+  sdef.isOptional = FALSE;
   if (parent_type != NULL) {
     switch (parent_type->typetype) {
     case T_SEQ_T:
@@ -1158,7 +1158,7 @@ void Type::generate_code_Choice(output_struct *target)
       for (size_t x = 0; x < parent_type->get_nof_comps(); ++x) {
         CompField * cf = parent_type->get_comp_byIndex(x);
         if (cf->get_type() == this && cf->get_is_optional()) {
-          sdef.isOptional = true;
+          sdef.isOptional = TRUE;
           break; // from the for loop
         }
       }
@@ -1263,7 +1263,7 @@ void Type::generate_code_Choice(output_struct *target)
   }
   if(rawattrib) {
     copy_rawAST_to_struct(rawattrib,&(sdef.raw));
-    sdef.hasRaw=true;
+    sdef.hasRaw=TRUE;
     // building taglist
     for(int c=0;c<rawattrib->taglist.nElements;c++){
       if(rawattrib->taglist.tag[c].nElements)
@@ -1336,7 +1336,7 @@ void Type::generate_code_Choice(output_struct *target)
         }
       }
     }
-  } else sdef.hasRaw=false;
+  } else sdef.hasRaw=FALSE;
   if (xerattrib) {
     Module *my_module = get_my_scope()->get_scope_mod();
     sdef.xerHasNamespaces = my_module->get_nof_ns() != 0;
@@ -1408,7 +1408,7 @@ Opentype_t *Type::generate_code_ot(stringpool& pool)
   size_t nElements_missing=0;
   Value **val_prev=(Value**)
     Malloc(ans->get_nof_ans()*sizeof(*val_prev));
-  boolean differs_from_prev=true;
+  boolean differs_from_prev=TRUE;
   for(size_t i=0; i<objs->get_nof_objs(); i++) {
     Obj_defn *obj=objs->get_obj_byIndex(i);
     if(!obj->has_fs_withName_dflt(*oc_fieldname_t)) {
@@ -1440,11 +1440,11 @@ Opentype_t *Type::generate_code_ot(stringpool& pool)
       else {
         oa_t->const_valuenames[j] =
           pool.add(t_value->get_genname_own(my_scope));
-        differs_from_prev=true;
+        differs_from_prev=TRUE;
       }
       val_prev[j]=t_value;
     } //j
-    differs_from_prev=false;
+    differs_from_prev=FALSE;
   } // i
   Free(val_prev);
   ot->oal.nElements -= nElements_missing;
@@ -1653,7 +1653,7 @@ void Type::generate_code_Se(output_struct *target)
 
   if(rawattrib) {
     copy_rawAST_to_struct(rawattrib,&(sdef.raw));
-    sdef.hasRaw=true;
+    sdef.hasRaw=TRUE;
     // building taglist
     for(int c=0;c<rawattrib->taglist.nElements;c++) {
       if(rawattrib->taglist.tag[c].nElements)
@@ -1893,18 +1893,18 @@ void Type::generate_code_Se(output_struct *target)
           }
         }
         sdef.elements[i].raw.length = t_field->get_raw_length();
-        sdef.elements[i].hasRaw=true;
+        sdef.elements[i].hasRaw=TRUE;
       }
       else {
-        sdef.elements[i].hasRaw=false;
+        sdef.elements[i].hasRaw=FALSE;
       }
     }
   }
   else {
     for(size_t i = 0; i < sdef.totalElements; i++) {
-      sdef.elements[i].hasRaw=false;
+      sdef.elements[i].hasRaw=FALSE;
     }
-    sdef.hasRaw=false;
+    sdef.hasRaw=FALSE;
   }
 
   defRecordClass(&sdef, target);
@@ -2003,7 +2003,7 @@ void Type::generate_code_SeOf(output_struct *target)
        * a can_start() for the record-of which returns false for XML elements
        * that belong to those following fields. */
       size_t n_parent_comps = parent_type->get_nof_comps();
-      boolean found_self = false;
+      boolean found_self = FALSE;
       /* Go through the fields of the parent; skip everything until we find
        * the field that is this record-of; then collect fields until
        * the first non-disappearing field. */
@@ -2026,7 +2026,7 @@ void Type::generate_code_SeOf(output_struct *target)
           {} // can disappear, continue
           else break;
         }
-        else if (pcft == this) found_self = true;
+        else if (pcft == this) found_self = TRUE;
       } // next field
     } // if parent is record
   } // if A-E
@@ -2047,8 +2047,8 @@ void Type::generate_code_SeOf(output_struct *target)
 
   if(rawattrib) {
     copy_rawAST_to_struct(rawattrib,&(sofdef.raw));
-    sofdef.hasRaw=true;
-  } else sofdef.hasRaw=false;
+    sofdef.hasRaw=TRUE;
+  } else sofdef.hasRaw=FALSE;
 
   if (optimized_memalloc) {
     defRecordOfClassMemAllocOptimized(&sofdef, target);
@@ -2233,9 +2233,9 @@ bool Type::needs_alias()
   const string& full_name = get_fullname();
   size_t fullname_len = full_name.size();
   size_t first_dot = full_name.find('.', 0);
-  if (first_dot >= fullname_len) return true; // no dots
-  else if (full_name.find('.', first_dot + 1) < fullname_len) return false;
-  else return true;
+  if (first_dot >= fullname_len) return TRUE; // no dots
+  else if (full_name.find('.', first_dot + 1) < fullname_len) return FALSE;
+  else return TRUE;
 }
 
 
@@ -2320,7 +2320,7 @@ void Type::generate_code_done(output_struct *target)
 bool Type::ispresent_anyvalue_embedded_field(Type* t,
   Ttcn::FieldOrArrayRefs *subrefs, size_t begin_index)
 {
-  if (!subrefs) return true;
+  if (!subrefs) return TRUE;
   size_t nof_refs = subrefs->get_nof_refs();
   for (size_t i = begin_index; i < nof_refs; i++) {
     t = t->get_type_refd_last();
@@ -2333,12 +2333,12 @@ bool Type::ispresent_anyvalue_embedded_field(Type* t,
       case T_CHOICE_A:
       case T_OPENTYPE:
       case T_ANYTYPE:
-        return false;
+        return FALSE;
       case T_SEQ_T:
       case T_SET_T:
       case T_SEQ_A:
       case T_SET_A:
-        if (cf->get_is_optional()) return false;
+        if (cf->get_is_optional()) return FALSE;
         break;
       default:
         FATAL_ERROR("Type::ispresent_anyvalue_embedded_field()");
@@ -2349,19 +2349,19 @@ bool Type::ispresent_anyvalue_embedded_field(Type* t,
       switch (t->typetype) {
       case T_SEQOF:
       case T_SETOF:
-        return false; // (the existence of a record of element is optional)
+        return FALSE; // (the existence of a record of element is optional)
 	    case T_ARRAY:
 	      t = t->u.array.element_type;
         break;
       default:
-        return true; // string types
+        return TRUE; // string types
       }
       break;
     default:
       FATAL_ERROR("Type::ispresent_anyvalue_embedded_field()");
     }
   }
-  return true;
+  return TRUE;
 }
 
 void Type::generate_code_ispresentbound(expression_struct *expr,
@@ -2385,7 +2385,7 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
     if (t->typetype == T_ERROR) return;
 
     if (is_template) {
-      bool anyval_ret_val = true;
+      bool anyval_ret_val = TRUE;
       if (!isbound) {
         anyval_ret_val = ispresent_anyvalue_embedded_field(t, subrefs, i);
       }
@@ -2393,19 +2393,19 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
       expr->expr = mputprintf(expr->expr,
         "switch (%s.get_selection()) {\n"
         "case UNINITIALIZED_TEMPLATE:\n"
-        "%s = false;\n"
+        "%s = FALSE;\n"
         "break;\n"
         "case ANY_VALUE:\n"
         "%s = %s;\n"
         "break;\n"
         "case SPECIFIC_VALUE: {\n",
         tmp_generalid_str, global_id.c_str(), global_id.c_str(),
-        anyval_ret_val ? "true" : "false");
+        anyval_ret_val ? "TRUE" : "FALSE");
 
       expstring_t closing_brackets_switch = mprintf(
         "break;}\n"
         "default:\n"
-        "%s = false;\n"
+        "%s = FALSE;\n"
         "break;\n"
         "}\n"
         "}\n"
@@ -2464,14 +2464,14 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
           expr->expr = mputprintf(expr->expr,
             "switch (%s.get_selection()) {\n"
             "case OPTIONAL_UNBOUND:\n"
-            "%s = false;\n"
+            "%s = FALSE;\n"
             "break;\n"
             "case OPTIONAL_OMIT:\n"
             "%s = %s;\n"
             "break;\n"
             "default:\n",
             tmp_id_str, global_id.c_str(),global_id.c_str(),
-            isbound ? "true" : "false");
+            isbound ? "TRUE" : "FALSE");
           Free(tmp_generalid_str);
           tmp_generalid_str = mcopystr(tmp_id_str);
 
@@ -2500,7 +2500,7 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
             "switch (%s.get_selection()) {\n"
             "case OPTIONAL_UNBOUND:\n"
             "case OPTIONAL_OMIT:\n"
-            "%s = false;\n"
+            "%s = FALSE;\n"
             "break;\n"
             "default:\n"
             "break;\n"
@@ -2555,17 +2555,17 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
       break; }
     case Ttcn::FieldOrArrayRef::ARRAY_REF: {
       Type *embedded_type = 0;
-      bool is_string = true;
-      bool is_string_element = false;
+      bool is_string = TRUE;
+      bool is_string_element = FALSE;
       switch (t->typetype) {
       case T_SEQOF:
       case T_SETOF:
         embedded_type = t->u.seof.ofType;
-        is_string = false;
+        is_string = FALSE;
         break;
       case T_ARRAY:
         embedded_type = t->u.array.element_type;
-        is_string = false;
+        is_string = FALSE;
         break;
       case T_BSTR:
       case T_BSTR_A:
@@ -2593,7 +2593,7 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
           subrefs->set_string_element_ref();
           // string elements have the same type as the string itself
           embedded_type = t;
-          is_string_element = true;
+          is_string_element = TRUE;
           break;
         }
       default:
@@ -2744,11 +2744,11 @@ bool Type::has_done_attribute()
                   ->get_nof_qualifiers() == 0))
          && temp_single->get_attribSpec().get_spec() == "done")
       {
-            return true;
+            return TRUE;
       }
     }
   }
-  return false;
+  return FALSE;
 }
 
 void Type::generate_code_object(const_def *cdef, Scope *p_scope,
@@ -2778,10 +2778,10 @@ void Type::generate_code_object(const_def *cdef, Scope *p_scope,
 
 void Type::generate_code_object(const_def *cdef, GovernedSimple *p_setting)
 {
-  bool is_template = false;
+  bool is_template = FALSE;
   switch (p_setting->get_st()) {
   case S_TEMPLATE:
-    is_template = true;
+    is_template = TRUE;
     break;
   case S_V:
     break;
@@ -2790,7 +2790,7 @@ void Type::generate_code_object(const_def *cdef, GovernedSimple *p_setting)
   }
   if (p_setting->get_err_descr()) {
     cdef->def = p_setting->get_err_descr()->generate_code_str(cdef->def, cdef->decl,
-      p_setting->get_genname_prefix() + p_setting->get_genname_own(), false);
+      p_setting->get_genname_prefix() + p_setting->get_genname_own(), FALSE);
   }
   generate_code_object(cdef, p_setting->get_my_scope(),
     p_setting->get_genname_own(), p_setting->get_genname_prefix(),
@@ -2901,7 +2901,7 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
         // use a special function that generates the schema segment for both
         // the float type and its restrictions
         sub_type->generate_json_schema_float(json);
-        has_restrictions = false; // so they aren't generated twice
+        has_restrictions = FALSE; // so they aren't generated twice
       }
       else {
         // any of: JSON number or the special values as strings (in an enum)
@@ -2980,7 +2980,7 @@ void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_val
         // the restrictions would only add another JSON enum (after the one
         /// generated below), instead just insert the one with the restrictions
         sub_type->generate_json_schema(json);
-        has_restrictions = false; // so they aren't generated twice
+        has_restrictions = FALSE; // so they aren't generated twice
       }
       else {
         // enumerate the possible values
@@ -3118,7 +3118,7 @@ void Type::generate_json_schema_array(JSON_Tokenizer& json)
   json.put_next_token(JSON_TOKEN_NAME, "items");
   
   // pass the tokenizer to the elements' type object to insert its schema
-  get_ofType()->generate_json_schema(json, true, false);
+  get_ofType()->generate_json_schema(json, TRUE, FALSE);
 }
 
 void Type::generate_json_schema_record(JSON_Tokenizer& json)
@@ -3136,7 +3136,7 @@ void Type::generate_json_schema_record(JSON_Tokenizer& json)
   json.put_next_token(JSON_TOKEN_NAME, "properties");
   json.put_next_token(JSON_TOKEN_OBJECT_START);
   size_t field_count = get_nof_comps();
-  bool has_non_optional = false;
+  bool has_non_optional = FALSE;
   for (size_t i = 0; i < field_count; ++i) {
     Type* field = get_comp_byIndex(i)->get_type();
     
@@ -3158,11 +3158,11 @@ void Type::generate_json_schema_record(JSON_Tokenizer& json)
         json.put_next_token(JSON_TOKEN_OBJECT_END);
       }
     } else if (!has_non_optional) {
-      has_non_optional = true;
+      has_non_optional = TRUE;
     }
     
     // pass the tokenizer to the field's type to insert its schema
-    field->generate_json_schema(json, true, false);
+    field->generate_json_schema(json, TRUE, FALSE);
     
     // for optional fields: specify the presence of the "omit as null" coding instruction
     // and close structures
@@ -3229,7 +3229,7 @@ void Type::generate_json_schema_union(JSON_Tokenizer& json)
     
     if (jsonattrib != NULL && jsonattrib->as_value) {
       // only add the alternative's schema
-      field->generate_json_schema(json, true, true);
+      field->generate_json_schema(json, TRUE, TRUE);
     } else {
       // use a JSON object with one key-value pair for each alternative
       // the schema is the same as a record's with one field
@@ -3247,7 +3247,7 @@ void Type::generate_json_schema_union(JSON_Tokenizer& json)
         field->jsonattrib->alias : get_comp_byIndex(i)->get_name().get_ttcnname().c_str());
       
       // let the alternative's type insert its schema
-      field->generate_json_schema(json, true, false);
+      field->generate_json_schema(json, TRUE, FALSE);
       
       // continue the schema for the record with one field
       json.put_next_token(JSON_TOKEN_OBJECT_END);
