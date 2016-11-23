@@ -129,9 +129,9 @@ JsonOmitCombination::~JsonOmitCombination()
   combinations.clear();
 }
 
-bool JsonOmitCombination::next(int current_value /* = 0 */)
+bool JsonOmitCombination::next(size_t current_value /* = 0 */)
 {
-  if ((size_t)current_value == combinations.size()) {
+  if (current_value == combinations.size()) {
     return false;
   }
   Common::Value* val = combinations.get_nth_key(current_value);
@@ -194,9 +194,9 @@ void JsonOmitCombination::parse_value(Common::Value* p_value)
   }
 }
 
-void JsonOmitCombination::reset_previous(int value_count)
+void JsonOmitCombination::reset_previous(size_t value_count)
 {
-  for (int i = 0; i < value_count; ++i) {
+  for (size_t i = 0; i < value_count; ++i) {
     Common::Value* val = combinations.get_nth_key(i);
     int* omitted_fields = combinations.get_nth_elem(i);
     for (size_t j = 0; j < val->get_nof_comps(); ++j) {
