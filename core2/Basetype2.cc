@@ -4168,7 +4168,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       collected_ns = collect_ns(p_td, num_collected, def_ns);
     }
     else if ((flavor & DEF_NS_SQUASHED) && p_td.my_module && p_td.ns_index != -1) {
-      const namespace_t * ns = p_td.my_module->get_ns(p_td.ns_index);
+      const namespace_t * ns = p_td.my_module->get_ns((size_t)p_td.ns_index);
       // The default namespace has been squashed.
       // If we are in the default namespace, restore it.
       if (*ns->px == '\0') {
@@ -4612,7 +4612,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
       collected_ns = collect_ns(p_td, num_collected, def_ns);
     }
     else if ((flavor & DEF_NS_SQUASHED) && p_td.my_module && p_td.ns_index != -1) {
-      const namespace_t * ns = p_td.my_module->get_ns(p_td.ns_index);
+      const namespace_t * ns = p_td.my_module->get_ns((size_t)p_td.ns_index);
       // The default namespace has been squashed.
       // If we are in the default namespace, restore it.
       if (*ns->px == '\0') {

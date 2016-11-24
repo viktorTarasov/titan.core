@@ -262,7 +262,7 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     boolean namespaces_needed = FALSE;
     if (exer) {
       if (p_td.my_module != NULL && p_td.ns_index != -1) {
-        ns_info = p_td.my_module->get_ns(p_td.ns_index);
+        ns_info = p_td.my_module->get_ns((size_t)p_td.ns_index);
       }
 
       namespaces_needed = exer && //!(p_td.xer_bits & FORM_UNQUALIFIED) &&
@@ -1024,7 +1024,7 @@ char ** Base_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& de
   char *tmp = NULL;
   if (p_td.my_module != 0 && p_td.ns_index != -1
     && !(p_td.xer_bits & FORM_UNQUALIFIED)) {
-    const namespace_t *my_ns = p_td.my_module->get_ns(p_td.ns_index);
+    const namespace_t *my_ns = p_td.my_module->get_ns((size_t)p_td.ns_index);
     if (!*my_ns->px) def_ns = TRUE;
     tmp = mprintf(" xmlns%s%s='%s'",
       ((*my_ns->px) ? ":" : ""), my_ns->px,

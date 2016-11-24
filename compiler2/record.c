@@ -1942,7 +1942,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "      collected_ns = collect_ns(p_td, num_collected, def_ns);\n" /* our own ns */
       "    }\n"
       "    else if ((p_flavor & DEF_NS_SQUASHED) && p_td.my_module && p_td.ns_index != -1){\n"
-      "      const namespace_t * ns = p_td.my_module->get_ns(p_td.ns_index);\n"
+      "      const namespace_t * ns = p_td.my_module->get_ns((size_t)p_td.ns_index);\n"
       "      if (*ns->px == '\\0') {\n"
       "        collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
       "      }\n"
@@ -1956,7 +1956,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  const boolean empty_ns_hack = e_xer && !omit_tag && (p_indent > 0)\n"
       "    && (p_td.xer_bits & FORM_UNQUALIFIED)\n"
       "    && p_td.my_module && p_td.ns_index != -1\n"
-      "    && *p_td.my_module->get_ns(p_td.ns_index)->px == '\\0';\n"
+      "    && *p_td.my_module->get_ns((size_t)p_td.ns_index)->px == '\\0';\n"
     );
 
     src = mputstr(src, "  boolean delay_close = e_xer");

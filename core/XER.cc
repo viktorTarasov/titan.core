@@ -56,7 +56,7 @@ const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, int 
 
   const namespace_t *expected_ns = 0;
   if (p_td.my_module != 0 && p_td.ns_index != -1) {
-    expected_ns = p_td.my_module->get_ns(p_td.ns_index);
+    expected_ns = p_td.my_module->get_ns((size_t)p_td.ns_index);
   }
 
   if (0 == name) {
@@ -85,7 +85,7 @@ const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, int 
       }
       else {
         if (nsuri == 0) { // XML node has no namespace
-          if (p_td.my_module->get_ns(p_td.ns_index)->px[0] != 0) { // and module has namespace prefix
+          if (p_td.my_module->get_ns((size_t)p_td.ns_index)->px[0] != 0) { // and module has namespace prefix
             TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_TAG,
               "Missing namespace '%s'", expected_ns->ns);
           }
@@ -121,7 +121,7 @@ boolean check_namespace(const char *ns_uri, const XERdescriptor_t& p_td)
     return ns_uri==0 || *ns_uri=='\0'; // there should be no ns
   }
   else {
-    const namespace_t *expected_ns = p_td.my_module->get_ns(p_td.ns_index);
+    const namespace_t *expected_ns = p_td.my_module->get_ns((size_t)p_td.ns_index);
     if (ns_uri!=0) return strcmp(ns_uri, expected_ns->ns)==0;
     else return TRUE; // if no namespace we presume it's the expected one
   }
@@ -131,7 +131,7 @@ void write_ns_prefix(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf)
 {
   if (p_td.my_module != 0 && p_td.ns_index != -1
     && !(p_td.xer_bits & FORM_UNQUALIFIED)) {
-    const namespace_t *my_ns = p_td.my_module->get_ns(p_td.ns_index);
+    const namespace_t *my_ns = p_td.my_module->get_ns((size_t)p_td.ns_index);
     if (my_ns->px[0] != 0) { // not an empty prefix
       p_buf.put_s(strlen(my_ns->px), (cbyte*)my_ns->px);
       p_buf.put_c(':');
