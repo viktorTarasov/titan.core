@@ -1093,7 +1093,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "    char **new_ns;\n"
       "    size_t num_new;\n"
       "    for (int i = 0; i < val_ptr->n_elements; ++i) {\n"
-      "      boolean def_ns_1 = FALSE;"
+      "      boolean def_ns_1 = FALSE;\n"
       "      new_ns = (*this)[i].collect_ns(*p_td.oftype_descr, num_new, def_ns_1);\n"
       "      merge_ns(collected_ns, num_collected, new_ns, num_new);\n"
       "      def_ns = def_ns || def_ns_1;\n" /* alas, no ||= */
@@ -2561,7 +2561,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "    char **new_ns;\n"
       "    size_t num_new;\n"
       "    for (int i = 0; i < n_elements; ++i) {\n"
-      "      boolean def_ns_1 = FALSE;"
+      "      boolean def_ns_1 = FALSE;\n"
       "      new_ns = value_elements[i].collect_ns(*p_td.oftype_descr, num_new, def_ns_1);\n"
       "      merge_ns(collected_ns, num_collected, new_ns, num_new);\n"
       "      def_ns = def_ns || def_ns_1;\n" /* alas, no ||= */
