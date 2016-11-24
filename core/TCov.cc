@@ -53,9 +53,11 @@ expstring_t TCov::mycomp_name = TCov::comp(TRUE);
 size_t TCov::has_file_name(const char *file_name)
 {
   size_t i = 0;
-  for (; i < m_file_data.size(); ++i)
-	if (!strcmp(file_name, m_file_data[i]->get_file_name()))
-	  return static_cast<int>(i);
+  for (; i < m_file_data.size(); ++i) {
+    if (!strcmp(file_name, m_file_data[i]->get_file_name())) {
+      return i;
+    }
+  }
   return i;
 }
 
@@ -141,18 +143,24 @@ void FileData::reset()
 size_t FileData::has_function_name(const char *function_name)
 {
   size_t i = 0;
-  for (; i < m_function_data.size(); ++i)
-	if (!strcmp(function_name, m_function_data[i]->get_name()))
-	  return static_cast<int>(i);
+  for (; i < m_function_data.size(); ++i) {
+    if (!strcmp(function_name, m_function_data[i]->get_name())) {
+      return i;
+    }
+  }
+
   return i;
 }
 
 size_t FileData::has_line_no(int line_no)
 {
   size_t i = 0;
-  for (; i < m_line_data.size(); ++i)
-	if (line_no == m_line_data[i]->get_no())
-	  return static_cast<int>(i);
+  for (; i < m_line_data.size(); ++i) {
+    if (line_no == m_line_data[i]->get_no()) {
+      return i;
+    }
+  }
+
   return i;
 }
 
