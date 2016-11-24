@@ -273,7 +273,7 @@ void TTCN3_Profiler::enter_function(const char* filename, int lineno)
   execute_line(filename, lineno);
   
   if (!stopped) {
-    int element = get_element(filename);
+    unsigned int element = get_element(filename);
 
     // store function data
     if (!disable_coverage) {
@@ -310,7 +310,7 @@ void TTCN3_Profiler::execute_line(const char* filename, int lineno)
     // also, several instructions could be in the same line, only count the line once
     if (0 != lineno && !disable_coverage && (lineno != prev_line || NULL == prev_file || 
                                              0 != strcmp(prev_file, filename))) {
-      int element = get_element(filename);
+      unsigned int element = get_element(filename);
 
       // increase line execution count
       ++profiler_db[element].lines[get_line(element, lineno)].exec_count;
@@ -321,7 +321,7 @@ void TTCN3_Profiler::execute_line(const char* filename, int lineno)
   set_prev(disable_profiler ? -1 : TTCN3_Stack_Depth::depth(), filename, lineno);
 }
 
-int TTCN3_Profiler::get_element(const char* filename) 
+unsigned int TTCN3_Profiler::get_element(const char* filename) 
 {
   for (size_t i = 0; i < profiler_db.size(); ++i) {
     if (0 == strcmp(profiler_db[i].filename, filename)) {
@@ -335,27 +335,27 @@ int TTCN3_Profiler::get_element(const char* filename)
   return profiler_db.size() - 1;
 }
 
-int TTCN3_Profiler::get_function(int element, int lineno)
+int TTCN3_Profiler::get_function(unsigned int element, int lineno)
 {
   return Profiler_Tools::get_function(profiler_db, element, lineno);
 }
 
-void TTCN3_Profiler::create_function(int element, int lineno, const char* function_name)
+void TTCN3_Profiler::create_function(unsigned int element, int lineno, const char* function_name)
 {
   Profiler_Tools::create_function(profiler_db, element, lineno, function_name);
 }
 
-int TTCN3_Profiler::get_line(int element, int lineno)
+int TTCN3_Profiler::get_line(unsigned int element, int lineno)
 {
   return Profiler_Tools::get_line(profiler_db, element, lineno);
 }
 
-void TTCN3_Profiler::create_line(int element, int lineno)
+void TTCN3_Profiler::create_line(unsigned int element, int lineno)
 {
   Profiler_Tools::create_line(profiler_db, element, lineno);
 }
 
-void TTCN3_Profiler::add_line_time(timeval elapsed, int element, int lineno) 
+void TTCN3_Profiler::add_line_time(timeval elapsed, unsigned int element, int lineno) 
 {
   if (0 == lineno) {
     return;
@@ -364,7 +364,7 @@ void TTCN3_Profiler::add_line_time(timeval elapsed, int element, int lineno)
     profiler_db[element].lines[get_line(element, lineno)].total_time, elapsed);
 }
 
-void TTCN3_Profiler::add_function_time(timeval elapsed, int element, int lineno)
+void TTCN3_Profiler::add_function_time(timeval elapsed, unsigned int element, int lineno)
 {
   int func = get_function(element, lineno);
   if (-1 == func) {
@@ -382,7 +382,7 @@ void TTCN3_Profiler::update_last()
 
   timeval elapsed = Profiler_Tools::subtract_timeval(get_time(), prev_time);
 
-  int element = get_element(prev_file);
+  unsigned int element = get_element(prev_file);
   
   // add the elapsed time to the total time of the previous line
   add_line_time(elapsed, element, prev_line);

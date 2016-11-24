@@ -82,24 +82,24 @@ public:
   /** Called when a TTCN-3 code line starts execution - stores data */
   void execute_line(const char* filename, int lineno);
   /** Returns the index of a TTCN-3 file's entry in the local database */
-  int get_element(const char* filename);
+  unsigned int get_element(const char* filename);
   /** Returns the index of a TTCN-3 function's entry in the database
     * @param element index of the file (where the function is declared)
     * @param lineno function start line */
-  int get_function(int element, int lineno);
+  int get_function(unsigned int element, int lineno);
   /** Creates a new TTCN-3 function entry and inserts it in the database 
     * @param element file entry's index
     * @param lineno function start line
     * @param function_name name of the function */
-  void create_function(int element, int lineno, const char* function_name);
+  void create_function(unsigned int element, int lineno, const char* function_name);
   /** Returns the index of a TTCN-3 code line's entry in the database */
-  int get_line(int element, int lineno);
+  int get_line(unsigned int element, int lineno);
   /** Creates a new TTCN-3 code line entry and inserts it into the database */
-  void create_line(int element, int lineno);
+  void create_line(unsigned int element, int lineno);
   /** Adds elapsed time to the specified TTCN-3 code line's total time */
-  void add_line_time(timeval elapsed, int element, int lineno);
+  void add_line_time(timeval elapsed, unsigned int element, int lineno);
   /** Adds elapsed time to the specified TTCN-3 function's total time */
-  void add_function_time(timeval elapsed, int element, int lineno);
+  void add_function_time(timeval elapsed, unsigned int element, int lineno);
   /** Called when a TTCN-3 function's execution ends - stores data */
   void update_last();
   /** Stores data related to the previous location */

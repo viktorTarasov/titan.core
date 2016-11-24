@@ -2500,7 +2500,7 @@ void TTCN_Runtime::process_ptc_verdict(Text_Buf& text_buf)
   TTCN_Logger::log_final_verdict(FALSE, local_verdict, local_verdict,
     local_verdict, (const char *)verdict_reason,
     TitanLoggerApi::FinalVerdictType_choice_notification::setting__final__verdict__of__the__test__case);
-  TTCN_Logger::log_final_verdict(false, local_verdict, local_verdict,
+  TTCN_Logger::log_final_verdict(FALSE, local_verdict, local_verdict,
                                  local_verdict, (const char *)verdict_reason);
   int n_ptcs = text_buf.pull_int().get_val();
   if (n_ptcs > 0) {
@@ -2519,7 +2519,7 @@ void TTCN_Runtime::process_ptc_verdict(Text_Buf& text_buf)
         new_verdict = ptc_verdict;
         verdict_reason = CHARSTRING(ptc_verdict_reason);
       }
-      TTCN_Logger::log_final_verdict(true, ptc_verdict, local_verdict,
+      TTCN_Logger::log_final_verdict(TRUE, ptc_verdict, local_verdict,
         new_verdict, ptc_verdict_reason, -1, ptc_compref, ptc_name);
       delete [] ptc_name;
       delete [] ptc_verdict_reason;
@@ -2549,7 +2549,7 @@ void TTCN_Runtime::process_kill()
     // Send a KILLED message so that the value returned by previous behaviour
     // function remains active.
     TTCN_Communication::send_killed(local_verdict);
-    TTCN_Logger::log_final_verdict(true, local_verdict, local_verdict,
+    TTCN_Logger::log_final_verdict(TRUE, local_verdict, local_verdict,
                                    local_verdict, (const char *)verdict_reason);
     executor_state = PTC_EXIT;
   case PTC_EXIT:
