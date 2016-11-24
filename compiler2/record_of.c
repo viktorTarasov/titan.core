@@ -1349,7 +1349,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader, "
       "unsigned int p_flavor, unsigned int p_flavor2, embed_values_dec_struct_t* emb_val)\n{\n"
       "  boolean e_xer = is_exer(p_flavor);\n"
-      "  int xerbits = p_td.xer_bits;\n"
+      "  unsigned long xerbits = p_td.xer_bits;\n"
       "  if (p_flavor & XER_TOPLEVEL) xerbits &= ~UNTAGGED;\n"
       "  boolean own_tag = !(e_xer && ((xerbits & (ANY_ELEMENT|ANY_ATTRIBUTES|UNTAGGED))\n"
       "    || (p_flavor & USE_TYPE_ATTR)));\n" /* incase the parent has USE-UNION */
@@ -2812,7 +2812,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader, "
       "unsigned int p_flavor, unsigned int p_flavor2, embed_values_dec_struct_t* emb_val)\n{\n"
       "  boolean e_xer = is_exer(p_flavor);\n"
-      "  int xerbits = p_td.xer_bits;\n"
+      "  unsigned long xerbits = p_td.xer_bits;\n"
       "  if (p_flavor & XER_TOPLEVEL) xerbits &= ~UNTAGGED;\n"
       "  boolean own_tag = !(e_xer && ((xerbits & (ANY_ELEMENT|ANY_ATTRIBUTES|UNTAGGED))"
       "    || (p_flavor & USE_TYPE_ATTR)));\n" /* incase the parent has USE-UNION */

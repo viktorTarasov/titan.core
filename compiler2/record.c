@@ -2418,7 +2418,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     /* Remove XER_LIST, XER_RECOF from p_flavor. This is not required
      * for is_exer (which tests another bit), but for subsequent code. */
     "  int e_xer = is_exer(p_flavor);\n"
-    "  int xerbits = p_td.xer_bits;\n"
+    "  unsigned long xerbits = p_td.xer_bits;\n"
     "  if (p_flavor & XER_TOPLEVEL) xerbits &= ~UNTAGGED;\n"
     "  const boolean omit_tag = e_xer && ((xerbits & (UNTAGGED|XER_ATTRIBUTE)) "
     "|| (p_flavor & (USE_NIL|USE_TYPE_ATTR)));\n"

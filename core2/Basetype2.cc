@@ -2256,7 +2256,7 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
   XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t* emb_val)
 {
   int exer = is_exer(flavor);
-  int xerbits = p_td.xer_bits;
+  unsigned long xerbits = p_td.xer_bits;
   if (flavor & XER_TOPLEVEL) xerbits &= ~UNTAGGED;
   boolean own_tag =
     !(exer && ((xerbits & (ANY_ELEMENT | ANY_ATTRIBUTES | UNTAGGED))
@@ -5142,7 +5142,7 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   int exer = is_exer(flavor);
   int success, type;
   int depth=-1; // depth of the start tag
-  int xerbits = p_td.xer_bits;
+  unsigned long xerbits = p_td.xer_bits;
   if (flavor & XER_TOPLEVEL) xerbits &= ~UNTAGGED;
   const boolean own_tag = !(exer
     && ( (xerbits & (ANY_ELEMENT | UNTAGGED | XER_ATTRIBUTE))

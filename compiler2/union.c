@@ -1729,7 +1729,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "  int type = 0;\n" /* None */
       "  int rd_ok=1, xml_depth=-1;\n"
       "%s%s"
-      "  int xerbits = p_td.xer_bits;\n"
+      "  unsigned long xerbits = p_td.xer_bits;\n"
       "  if (p_flavor & XER_TOPLEVEL) xerbits &= ~UNTAGGED;\n"
       "  if (xerbits & USE_TYPE_ATTR) p_flavor &= ~XER_RECOF;\n"
       "  boolean own_tag = !(e_xer && ((xerbits & (ANY_ELEMENT | UNTAGGED)) "
