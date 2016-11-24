@@ -1636,7 +1636,7 @@ namespace Ttcn {
       }
       return 0;
     }
-    Template *ret_val = get_listitem_byIndex(index);
+    Template *ret_val = get_listitem_byIndex((size_t)index);
     if (ret_val->templatetype == TEMPLATE_NOTUSED) {
       if (base_template) {
         // take the referred element from the base template
@@ -2147,7 +2147,7 @@ end:
                     tpl = NULL;
                     break;
                   }
-                  tpl = tpl->get_temp_byIndex(index);
+                  tpl = tpl->get_temp_byIndex((size_t)index);
                   // check if the element is initialized
                   if (TEMPLATE_NOTUSED == tpl->get_templatetype()) {
                     subref->error("An uninitialized list element can not be used as target of 'all from'");
@@ -2358,7 +2358,7 @@ end:
                   val = NULL;
                   break;
                 }
-                val = val->get_comp_byIndex(index);
+                val = val->get_comp_byIndex((size_t)index);
                 // check if the element is initialized
                 if (Common::Value::V_NOTUSED == val->get_valuetype()) {
                   subref->error("An unbound list element can not be used as target of 'all from'");
@@ -3408,7 +3408,7 @@ end:
         // index transformation in case of arrays
         if (t->my_governor->get_typetype() == Type::T_ARRAY)
           index -= t->my_governor->get_dimension()->get_offset();
-        t = t->get_listitem_byIndex(index);
+        t = t->get_listitem_byIndex((size_t)index);
       }
       // the topmost sub-reference was processed
       // it can be erased from the stack
@@ -3522,7 +3522,7 @@ end:
         //   are known at compile time, but the length of the "all from"
         //   is only known at run time.
         // Collect the indices where there is an "all from".
-        dynamic_array<int> variables;
+        dynamic_array<size_t> variables;
         size_t fixed_part = 0;
         if (has_permutation) {
           for (size_t i = 0; i < nof_ts; i++) {
@@ -4762,7 +4762,7 @@ compile_time:
             if (t->my_governor->get_typetype() == Type::T_ARRAY)
               index -= t->my_governor->get_dimension()->get_offset();
             // get the template with the given index
-            t = t->get_listitem_byIndex(index);
+            t = t->get_listitem_byIndex((size_t)index);
           }
         }
       }
