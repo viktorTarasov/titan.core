@@ -1056,7 +1056,7 @@ int
 OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t* emb_val)
 {
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
   for (int success = reader.Ok(); success==1; success=reader.Read()) {
     int type = reader.NodeType();
     const char * name; // name of the optional field

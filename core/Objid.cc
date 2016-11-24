@@ -561,7 +561,7 @@ void OBJID::from_string(char* p_str)
 int OBJID::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
 		  unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1;
   for (; success == 1; success = reader.Read()) {
     int type = reader.NodeType();

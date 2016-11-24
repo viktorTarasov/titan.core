@@ -1725,7 +1725,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "int %s::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,"
       " unsigned int p_flavor, unsigned int p_flavor2, embed_values_dec_struct_t*)\n"
       "{\n"
-      "  int e_xer = is_exer(p_flavor);\n"
+      "  boolean e_xer = is_exer(p_flavor);\n"
       "  int type = 0;\n" /* None */
       "  int rd_ok=1, xml_depth=-1;\n"
       "%s%s"

@@ -620,7 +620,7 @@ int BOOLEAN::XER_encode(const XERdescriptor_t& p_td,
   }
   int encoded_length=(int)p_buf.get_len();
 
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
 
   flavor |= (SIMPLE_TYPE | BXER_EMPTY_ELEM);
   if (begin_xml(p_td, p_buf, flavor, indent, FALSE) == -1) --encoded_length;

@@ -962,7 +962,7 @@ int OCTETSTRING::XER_encode(const XERdescriptor_t& p_td,
 int OCTETSTRING::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1, type;
   boolean own_tag = !is_exerlist(flavor) && !(exer && (p_td.xer_bits & UNTAGGED));
 

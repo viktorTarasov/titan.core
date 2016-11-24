@@ -236,7 +236,7 @@ boolean ASN_NULL::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
 int ASN_NULL::XER_encode(const XERdescriptor_t& p_td,
     TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
 {
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
   TTCN_EncDec_ErrorContext ec("While XER encoding NULL type: ");
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error
@@ -260,7 +260,7 @@ int ASN_NULL::XER_encode(const XERdescriptor_t& p_td,
 int ASN_NULL::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
   TTCN_EncDec_ErrorContext ec("While XER decoding NULL type: ");
   int success = reader.Ok(), depth = -1;
   for (; success == 1; success = reader.Read()) {

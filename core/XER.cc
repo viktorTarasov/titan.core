@@ -49,7 +49,7 @@ int do_indent(TTCN_Buffer& buf, int level)
   return level;
 }
 
-const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, int exer)
+const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, boolean exer)
 {
   const char *name = (const char*)reader.LocalName();
   const char *nsuri= (const char*)reader.NamespaceUri(); // NULL if no ns
@@ -103,7 +103,7 @@ const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, int 
   return name;
 }
 
-void verify_end(XmlReaderWrap& reader, const XERdescriptor_t& p_td, const int depth, int exer)
+void verify_end(XmlReaderWrap& reader, const XERdescriptor_t& p_td, const int depth, boolean exer)
 {
   TTCN_EncDec_ErrorContext endcontext("While checking end tag: ");
   verify_name(reader, p_td, exer);

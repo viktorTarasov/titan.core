@@ -15,7 +15,7 @@
 #ifndef XER_HH_
 #define XER_HH_
 
-//#include "Types.h"
+#include "Types.h"
 #include "Encdec.hh"
 #include <stddef.h> // for size_t
 #include <string.h> // strncmp for the inline function
@@ -178,6 +178,8 @@ inline boolean is_canonical(unsigned int f)
   return (f & XER_CANONICAL) != 0;
 }
 
+// exer 0 for Basic/Canonical XER, 1 for EXER
+// TODO: It would be better to have an enum for the exers
 inline boolean is_exer(unsigned int f)
 {
   return (f & XER_EXTENDED) != 0;
@@ -396,7 +398,7 @@ struct embed_values_dec_struct_t
  * @param exer \c true if Extended XER decoding, \c false for Basic and Canonical XER
  * @return \c true if \p name corresponds to the type descriptor, \c false otherwise.
  */
-inline boolean check_name(const char *name, const XERdescriptor_t& p_td, int exer)
+inline boolean check_name(const char *name, const XERdescriptor_t& p_td, boolean exer)
 {
   return strncmp(name, p_td.names[exer], p_td.namelens[exer]-2) == 0
     && name[p_td.namelens[exer]-2] == '\0';
@@ -425,7 +427,7 @@ boolean check_namespace(const char *ns_uri, const XERdescriptor_t& p_td);
  * @param exer 0 for Basic/Canonical XER, 1 for EXER
  * @return the name of the current element
  */
-const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, int exer);
+const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, boolean exer);
 
 /** Check the end tag
  *
@@ -437,7 +439,7 @@ const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, int 
  * @param depth XML tag depth (0 for top-level element)
  * @param exer 0 for Basic/Canonical XER, 1 for EXER
  */
-void verify_end(XmlReaderWrap& reader, const XERdescriptor_t& p_td, const int depth, int exer);
+void verify_end(XmlReaderWrap& reader, const XERdescriptor_t& p_td, const int depth, boolean exer);
 
 class TTCN_Buffer;
 

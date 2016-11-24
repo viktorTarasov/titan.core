@@ -319,7 +319,7 @@ int VERDICTTYPE::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader
   unsigned int p_flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
   int rd_ok = 1, type;
-  const int e_xer = is_exer(p_flavor);
+  const boolean e_xer = is_exer(p_flavor);
   const boolean name_tag = !((!e_xer && is_record_of(p_flavor)) || (e_xer && ((p_td.xer_bits & UNTAGGED) ||(is_record_of(p_flavor) && is_exerlist(p_flavor)))));
   if (e_xer && ((p_td.xer_bits & XER_ATTRIBUTE) || is_exerlist(p_flavor))) {
     if ((p_td.xer_bits & XER_ATTRIBUTE)) verify_name(p_reader, p_td, e_xer);

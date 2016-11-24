@@ -706,7 +706,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "{\n"
       "  int rd_ok = 1, type;\n"
 
-      "  const int e_xer = is_exer(p_flavor);\n"
+      "  const boolean e_xer = is_exer(p_flavor);\n"
       "  const boolean name_tag = !((!e_xer && is_record_of(p_flavor)) || (e_xer && ((p_td.xer_bits & UNTAGGED) ||(is_record_of(p_flavor) && is_exerlist(p_flavor)))));\n"
       "  if (e_xer && ((p_td.xer_bits & XER_ATTRIBUTE) || is_exerlist(p_flavor))) {\n"
       "    if ((p_td.xer_bits & XER_ATTRIBUTE)) verify_name(p_reader, p_td, e_xer);\n"

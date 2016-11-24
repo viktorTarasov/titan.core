@@ -827,7 +827,7 @@ int CHARACTER_STRING_identification::XER_encode(const XERdescriptor_t& p_td,
 int CHARACTER_STRING_identification::XER_decode(const XERdescriptor_t& p_td,
   XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
 {
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
   // we are supposed to be parked on our element
   for (int success = 1; success == 1; success = reader.Read()) {
     int type = reader.NodeType();
@@ -2535,7 +2535,7 @@ int CHARACTER_STRING_identification_context__negotiation::XER_encode(const XERde
 int CHARACTER_STRING_identification_context__negotiation::XER_decode(
   const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
 {
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
   int type = reader.NodeType(), depth = -1;
   const char* name = (const char*)reader.Name();
   int success = reader.Ok();
@@ -3389,7 +3389,7 @@ int CHARACTER_STRING::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf
 int CHARACTER_STRING::XER_decode(const XERdescriptor_t& p_td,
   XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
 {
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1, type;
   for (; success == 1; success = reader.Read()) {
     type = reader.NodeType();

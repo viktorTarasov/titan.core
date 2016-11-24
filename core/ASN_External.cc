@@ -417,7 +417,7 @@ namespace { /* anonymous namespace */
     TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
   {
     int indenting = !is_canonical(flavor);
-    int exer  = is_exer(flavor);
+    boolean exer  = is_exer(flavor);
     int encoded_length=(int)p_buf.get_len();
     if (indenting) do_indent(p_buf, indent);
     p_buf.put_c('<');
@@ -456,7 +456,7 @@ namespace { /* anonymous namespace */
   int EXTERNALtransfer_encoding::XER_decode(const XERdescriptor_t& p_td,
     XmlReaderWrap& reader, unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
   {
-    int exer  = is_exer(flavor);
+    boolean exer  = is_exer(flavor);
     int  success = reader.Ok(), type, depth = -1;
     for (; success==1; success = reader.Read()) {
       type = reader.NodeType();
@@ -574,7 +574,7 @@ namespace { /* anonymous namespace */
     TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
   {
     int indenting = !is_canonical(flavor);
-    int exer  = is_exer(flavor);
+    boolean exer  = is_exer(flavor);
     int encoded_length=(int)p_buf.get_len();
     if (indenting) do_indent(p_buf, indent);
     p_buf.put_c('<');
@@ -598,7 +598,7 @@ namespace { /* anonymous namespace */
   int EXTERNALtransfer::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                                    unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*)
   {
-    int exer  = is_exer(flavor);
+    boolean exer  = is_exer(flavor);
     int success = reader.Ok(), depth = -1;
     for (; success == 1; success = reader.Read()) {
       int type = reader.NodeType();

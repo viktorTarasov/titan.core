@@ -962,7 +962,7 @@ int FLOAT::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
   bound_flag = FALSE;
-  int exer  = is_exer(flavor);
+  boolean exer  = is_exer(flavor);
   int success = reader.Ok(), depth = -1;
   if (success <= 0) return 0;
   boolean own_tag = !(exer && (p_td.xer_bits & UNTAGGED)) && !is_exerlist(flavor);
