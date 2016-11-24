@@ -28,7 +28,7 @@ CODIRS := dynamicTemplate styleGuide topLevelPdu \
 	isbound namedActualParameters assignmentNotation \
 	attribQualif HT48786 selectCase openTypeNames \
 	defaultParamUsageBeforeDecl deterministic readFromFile \
-	asn1_hyphen
+	asn1_hyphen nameClash
 
 all dep clean distclean:
 	for dir in $(CODIRS); do $(MAKE) -C $$dir $@ || exit; done

@@ -1178,7 +1178,21 @@ void Type::generate_code_Choice(output_struct *target)
     CompField *cf = get_comp_byIndex(i);
     const Identifier& id = cf->get_name();
     Type *cftype = cf->get_type();
-    sdef.elements[i].type = pool.add(cftype->get_genname_value(my_scope));
+    string type_name = cftype->get_genname_value(my_scope);
+    if (T_ANYTYPE != typetype &&
+        cftype->get_my_scope()->get_scope_mod_gen() == my_scope->get_scope_mod_gen()) {
+      for (size_t j = 0; j < sdef.nElements; ++j) {
+        if (get_comp_byIndex(j)->get_name().get_name() == type_name) {
+          // the field's type name clashes with the name of a field in this union,
+          // which would cause a C++ compilation error
+          // always prefix the type with the namespace in this case
+          type_name = my_scope->get_scope_mod_gen()->get_modid().get_name() +
+            string("::") + type_name;
+          break;
+        }
+      }
+    }
+    sdef.elements[i].type = pool.add(type_name);
     sdef.elements[i].typedescrname =
       pool.add(cftype->get_genname_typedescriptor(my_scope));
     sdef.elements[i].typegen = pool.add(cftype->get_genname_xerdescriptor());
@@ -1580,7 +1594,20 @@ void Type::generate_code_Se(output_struct *target)
     CompField *cf = se_comps[i];
     const Identifier& id = cf->get_name();
     Type *type = cf->get_type();
-    cur.type    = pool.add(type->get_genname_value(my_scope));
+    string type_name = type->get_genname_value(my_scope);
+    if (type->get_my_scope()->get_scope_mod_gen() == my_scope->get_scope_mod_gen()) {
+      for (size_t j = 0; j < sdef.nElements; ++j) {
+        if (se_comps[j]->get_name().get_name() == type_name) {
+          // the field's type name clashes with the name of a field in this record/set,
+          // which would cause a C++ compilation error
+          // always prefix the type with the namespace in this case
+          type_name = my_scope->get_scope_mod_gen()->get_modid().get_name() +
+            string("::") + type_name;
+          break;
+        }
+      }
+    }
+    cur.type    = pool.add(type_name);
     cur.typegen = pool.add(type->get_genname_own());
     cur.of_type = type->get_type_refd_last()->is_seof();
     cur.typedescrname =
