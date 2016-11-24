@@ -100,7 +100,7 @@ void set_raw_options(const struct_def *sdef,
   struct raw_option_struct *raw_options, boolean *haslengthto,
   boolean *haspointer, boolean *hascrosstag, boolean *has_ext_bit)
 {
-    int i;
+    size_t i;
     for (i = 0; i < sdef->nElements; i++) {
       raw_options[i].lengthto = FALSE;
       raw_options[i].lengthof = 0;
@@ -7169,7 +7169,7 @@ void defRecordTemplate2(const struct_def *sdef, output_struct *output)
     /* list_item(int) function */
 
     def = mputprintf(def,
-	"inline %s_template& list_item(unsigned int list_index) const "
+	"inline %s_template& list_item(int list_index) const "
       "{ return *(static_cast<%s_template*>(get_list_item(list_index))); }\n", name, name);
 
     if (sdef->nElements>0) {
