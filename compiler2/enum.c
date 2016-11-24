@@ -810,7 +810,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "  char* value = 0;\n"
       "  size_t value_len = 0;\n"
       "  boolean error = FALSE;\n"
-      "  int dec_len = 0;\n"
+      "  size_t dec_len = 0;\n"
       "  boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();\n"
       "  if (use_default) {\n"
       // No JSON data in the buffer -> use default value
@@ -843,7 +843,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "    enum_value = %s;\n"
       "    return JSON_ERROR_FATAL;\n"
       "  }\n"
-      "  return dec_len;\n"
+      "  return (int)dec_len;\n"
       "}\n\n"
       , name, unknown_value, unbound_value, unbound_value);
   }

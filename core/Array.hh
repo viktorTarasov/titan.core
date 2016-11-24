@@ -549,7 +549,7 @@ int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_decode(
   const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
 {
   json_token_t token = JSON_TOKEN_NONE;
-  int dec_len = p_tok.get_next_token(&token, NULL, NULL);
+  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);
   if (JSON_TOKEN_ERROR == token) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_BAD_TOKEN_ERROR, "");
     return JSON_ERROR_FATAL;
@@ -560,7 +560,7 @@ int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_decode(
   
   for (unsigned int i = 0; i < array_size; ++i) {
     size_t buf_pos = p_tok.get_buf_pos();
-    int ret_val;
+    size_t ret_val;
     if (NULL != p_td.json && p_td.json->metainfo_unbound) {
       // check for metainfo object
       ret_val = p_tok.get_next_token(&token, NULL, NULL);
@@ -584,19 +584,19 @@ int VALUE_ARRAY<T_type,array_size,index_offset>::JSON_decode(
       // metainfo object not found, jump back and let the element type decode it
       p_tok.set_buf_pos(buf_pos);
     }
-    ret_val = array_elements[i].JSON_decode(*get_elem_descr(), p_tok, p_silent);
-    if (JSON_ERROR_INVALID_TOKEN == ret_val) {
+    int ret_val2 = array_elements[i].JSON_decode(*get_elem_descr(), p_tok, p_silent);
+    if (JSON_ERROR_INVALID_TOKEN == ret_val2) {
       JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_ARRAY_ELEM_TOKEN_ERROR,
         array_size - i, (array_size - i > 1) ? "s" : "");
       return JSON_ERROR_FATAL;
     } 
-    else if (JSON_ERROR_FATAL == ret_val) {
+    else if (JSON_ERROR_FATAL == ret_val2) {
       if (p_silent) {
         clean_up();
       }
       return JSON_ERROR_FATAL;
     }
-    dec_len += ret_val;
+    dec_len += (size_t)ret_val2;
   }
   
   dec_len += p_tok.get_next_token(&token, NULL, NULL);

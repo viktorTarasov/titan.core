@@ -1733,7 +1733,7 @@ int CHARSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p
   json_token_t token = JSON_TOKEN_NONE;
   char* value = 0;
   size_t value_len = 0;
-  int dec_len = 0;
+  size_t dec_len = 0;
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
     // No JSON data in the buffer -> use default value
@@ -1755,7 +1755,7 @@ int CHARSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p
   } else {
     return JSON_ERROR_INVALID_TOKEN;
   }
-  return dec_len;
+  return (int)dec_len;
 }
 
 

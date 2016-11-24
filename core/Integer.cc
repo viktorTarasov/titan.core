@@ -1738,7 +1738,7 @@ int INTEGER::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_to
   json_token_t token = JSON_TOKEN_NONE;
   char* value = 0;
   size_t value_len = 0;
-  int dec_len = 0;
+  size_t dec_len = 0;
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
     // No JSON data in the buffer -> use default value
@@ -1765,7 +1765,7 @@ int INTEGER::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_to
     bound_flag = FALSE;
     return JSON_ERROR_INVALID_TOKEN;
   }
-  return dec_len;
+  return (int)dec_len;
 }
 
 
@@ -2104,9 +2104,9 @@ boolean INTEGER_template::match(int other_value, boolean /* legacy */) const
     // Lower boundary is set.
     if (!lower_boundary) {
       if (!value_range.min_is_exclusive) {
-        lower_boundary = (likely(value_range.min_value.native_flag) ?
-          int_val_t(value_range.min_value.val.native) :
-            int_val_t(BN_dup(value_range.min_value.val.openssl))) <= other_value;
+      lower_boundary = (likely(value_range.min_value.native_flag) ?
+        int_val_t(value_range.min_value.val.native) :
+          int_val_t(BN_dup(value_range.min_value.val.openssl))) <= other_value;
       } else {
         lower_boundary = (likely(value_range.min_value.native_flag) ?
         int_val_t(value_range.min_value.val.native) :
@@ -2116,9 +2116,9 @@ boolean INTEGER_template::match(int other_value, boolean /* legacy */) const
     // Upper boundary is set.
     if (!upper_boundary) {
       if (!value_range.max_is_exclusive) {
-        upper_boundary = (likely(value_range.max_value.native_flag) ?
-          int_val_t(value_range.max_value.val.native) :
-            int_val_t(BN_dup(value_range.max_value.val.openssl))) >= other_value;
+      upper_boundary = (likely(value_range.max_value.native_flag) ?
+        int_val_t(value_range.max_value.val.native) :
+          int_val_t(BN_dup(value_range.max_value.val.openssl))) >= other_value;
       } else {
         upper_boundary = (likely(value_range.max_value.native_flag) ?
         int_val_t(value_range.max_value.val.native) :
@@ -2177,8 +2177,8 @@ boolean INTEGER_template::match(const INTEGER& other_value,
         } else {
           upper_boundary = (likely(value_range.max_value.native_flag) ?
             int_val_t(value_range.max_value.val.native) :
-              int_val_t(BN_dup(value_range.max_value.val.openssl))) >= other_value.get_val();
-        }
+            int_val_t(BN_dup(value_range.max_value.val.openssl))) >= other_value.get_val();
+      }
       }
       return lower_boundary && upper_boundary; }
     default:

@@ -873,13 +873,13 @@ int OPTIONAL<T_type>::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokeni
     // able to decode a "null" value
     p_tok.set_buf_pos(buf_pos);
     json_token_t token = JSON_TOKEN_NONE;
-    dec_len = p_tok.get_next_token(&token, NULL, NULL);
+    p_tok.get_next_token(&token, NULL, NULL);
     if (JSON_TOKEN_LITERAL_NULL == token) {
       set_to_omit();
     }
     else {
       // cannot get JSON_TOKEN_ERROR here, that was already checked by the optional value
-      dec_len = JSON_ERROR_INVALID_TOKEN;
+      return JSON_ERROR_INVALID_TOKEN;
     }
   }
   return dec_len;
