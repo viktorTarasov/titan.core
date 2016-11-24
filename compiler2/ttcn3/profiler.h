@@ -27,7 +27,7 @@ typedef struct profiler_code_line_t {
   /** Name of the function that starts at this line (or null if no function starts here) */
   char* function_name;
   /** Code line number */
-  int line_no;
+  size_t line_no;
 } profiler_code_line_t;
 
 /** Profiler database
@@ -38,8 +38,8 @@ typedef struct profiler_code_line_t {
   * unused lines and functions. */
 typedef struct profiler_data_t {
   profiler_code_line_t *lines;
-  int nof_lines;
-  int size;
+  size_t nof_lines;
+  size_t size;
 } profiler_data_t;
 
 /** Initializes the database (must be called once, at the start of compilation) */
@@ -55,7 +55,7 @@ boolean is_file_profiled(const char* p_file_name);
   * @param p_line_no [in] line number (for lines) or the function's starting line 
   * (for functions) */
 void insert_profiler_code_line(const char* p_file_name,
-  const char* p_function_name, int p_line_no);
+  const char* p_function_name, size_t p_line_no);
 
 /** Retrieves the next code line or function from the specified file. Calling this
   * function with the same file parameter will keep returning the next code line
