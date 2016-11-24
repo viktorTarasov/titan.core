@@ -33,7 +33,6 @@
 #define XDEFHIGH 2
 #define XDEFDEFAULT -1
 
-
 typedef struct {
     int bitorder;               /* Invert bitorder of the encoded data */
 }rawAST_toplevel;
@@ -54,7 +53,7 @@ typedef struct{
    rawAST_coding_fields* fields;
    const char *value;
    int start_pos;
-   int temporal_variable_index;
+   size_t temporal_variable_index;
 }rawAST_coding_field_list;
 
 typedef struct{
