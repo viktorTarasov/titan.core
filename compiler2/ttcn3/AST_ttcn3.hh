@@ -810,8 +810,8 @@ namespace Ttcn {
     virtual Imports* clone() const;
     void add_impmod(ImpMod *p_impmod);
     void set_my_mod(Module *p_mod);
-    int get_imports_size() const {return impmods_v.size();}
-    ImpMod* get_impmod(int index) const {return impmods_v[index];}
+    size_t get_imports_size() const {return impmods_v.size();}
+    ImpMod* get_impmod(size_t index) const {return impmods_v[index];}
     /** Checks the existence of imported modules and detects duplicated imports
      * from the same module. Initializes \a impmods_m. */
     void chk_uniq();

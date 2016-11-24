@@ -2846,7 +2846,7 @@ namespace Ttcn {
     
     // initialize global scope and variables (including imported variables)
     char* str_glob = generate_debugger_global_vars(NULL, this);
-    for (int i = 0; i < imp->get_imports_size(); ++i) {
+    for (size_t i = 0; i < imp->get_imports_size(); ++i) {
       str_glob = imp->get_impmod(i)->get_mod()->generate_debugger_global_vars(str_glob, this);
     }
     if (str_glob != NULL) {
