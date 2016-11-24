@@ -1076,7 +1076,11 @@ Record_Of_Template* Record_Of_Template::get_list_item(int list_index)
   if (template_selection != VALUE_LIST && template_selection != COMPLEMENTED_LIST)
     TTCN_error("Internal error: Accessing a list element of a non-list "
                "template of type %s.", get_descriptor()->name);
-  if (list_index >= value_list.n_values || list_index < 0)
+  if (list_index < 0)
+    TTCN_error("Internal error: Accessing a value list template "
+               "of type %s using a negative index (%d).",
+               get_descriptor()->name, list_index);
+  if (list_index >= value_list.n_values)
     TTCN_error("Internal error: Index overflow in a value list template "
                "of type %s.", get_descriptor()->name);
   return value_list.list_value[list_index];
@@ -1955,7 +1959,11 @@ Set_Of_Template* Set_Of_Template::get_list_item(int list_index)
   if (template_selection != VALUE_LIST && template_selection != COMPLEMENTED_LIST)
     TTCN_error("Internal error: Accessing a list element of a non-list "
                "template of type %s.", get_descriptor()->name);
-  if (list_index >= value_list.n_values || list_index < 0)
+  if (list_index < 0)
+    TTCN_error("Internal error: Accessing a value list template "
+               "of type %s using a negative index (%d).",
+               get_descriptor()->name, list_index);
+  if (list_index >= value_list.n_values)
     TTCN_error("Internal error: Index overflow in a value list template "
                "of type %s.", get_descriptor()->name);
   return value_list.list_value[list_index];
@@ -2474,7 +2482,11 @@ Record_Template* Record_Template::get_list_item(int list_index) const
 {
   if (template_selection != VALUE_LIST && template_selection != COMPLEMENTED_LIST)
     TTCN_error("Accessing a list element of a non-list template of type %s.", get_descriptor()->name);
-  if (list_index >= value_list.n_values || list_index < 0)
+  if (list_index < 0)
+    TTCN_error("Internal error: Accessing a value list template "
+               "of type %s using a negative index (%d).",
+               get_descriptor()->name, list_index);
+  if (list_index >= value_list.n_values)
     TTCN_error("Index overflow in a value list template of type %s.", get_descriptor()->name);
   return value_list.list_value[list_index];
 }
@@ -3084,7 +3096,11 @@ Empty_Record_Template* Empty_Record_Template::get_list_item(int list_index) cons
 {
   if (template_selection != VALUE_LIST && template_selection != COMPLEMENTED_LIST)
     TTCN_error("Accessing a list element of a non-list template of type %s.", get_descriptor()->name);
-  if (list_index >= value_list.n_values || list_index < 0)
+  if (list_index < 0)
+    TTCN_error("Internal error: Accessing a value list template "
+               "of type %s using a negative index (%d).",
+               get_descriptor()->name, list_index);
+  if (list_index >= value_list.n_values)
     TTCN_error("Index overflow in a value list template of type %s.", get_descriptor()->name);
   return value_list.list_value[list_index];
 }
