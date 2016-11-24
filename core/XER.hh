@@ -310,7 +310,7 @@ struct XERdescriptor_t
   /** Length of closing tag string (strlen of names[i]) */
   const unsigned short namelens[2];
   /** Various EXER flags */
-  const unsigned long xer_bits;
+  const unsigned long xer_bits; // TODO which types what flags mean what ?
   /** Whitespace handling */
   const XER_whitespace_action whitespace;
   /** value to compare for DEFAULT-FOR-EMPTY */
