@@ -936,8 +936,8 @@ size_t mstrlen(const expstring_t str)
   } else return 0;
 }
 
-char * buildstr(int b) {
-  if (b < 0 || b > 99) return NULL; /* invalid */
+char * buildstr(unsigned int b) {
+  if (b > 99) return NULL; /* invalid */
   if (b == 99) return memptystr(); /* empty string for full version */
   return mprintf("%02d", b);
 }

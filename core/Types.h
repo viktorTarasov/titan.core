@@ -54,7 +54,7 @@ enum asn_null_type { ASN_NULL_VALUE };
 struct universal_char {
   unsigned char uc_group, uc_plane, uc_row, uc_cell;
 
-  bool is_char() const {
+  boolean is_char() const {
     return uc_group == 0 && uc_plane == 0 && uc_row == 0 && uc_cell < 128;
   }
 };
