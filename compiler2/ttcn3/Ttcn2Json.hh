@@ -101,7 +101,7 @@ namespace Ttcn {
       * 
       * @return true, if the next combination was successfully generated, or
       * false, when called with the last combination */
-    bool next(int current_value = 0);
+    bool next(size_t current_value = 0);
     
     /** Returns the state of the specified record/set field in the current
       * combination. 
@@ -122,7 +122,7 @@ namespace Ttcn {
       * states to OMITTED_ABSENT.
       *
       * @param value_count specifies how many values to reset */
-    void reset_previous(int value_count);
+    void reset_previous(size_t value_count);
 
     /** Map containing the current combination.
       * Key: pointer to a record or set value in the AST (not owned)
