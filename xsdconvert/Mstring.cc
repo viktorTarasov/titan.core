@@ -103,11 +103,11 @@ char * Mstring::foundAt(const char * s) {
 }
 
 void Mstring::setCapitalized() {
-  text[0] = toupper(text[0]);
+  text[0] = (char)toupper(text[0]);
 }
 
 void Mstring::setUncapitalized() {
-  text[0] = tolower(text[0]);
+  text[0] = (char)tolower(text[0]);
 }
 
 Mstring Mstring::getPrefix(const char delimiter) const {

@@ -136,7 +136,7 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
 
     if (type_of_the_name == type_reference_name) {
       if (isBuiltInType(res)) {
-        res[0] = toupper(res[0]);
+        res[0] = (char)toupper(res[0]);
         res = "XSD." + res;
         return;
       }
