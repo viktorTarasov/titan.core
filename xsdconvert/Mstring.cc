@@ -133,7 +133,7 @@ void Mstring::removeWSfromBegin() {
 }
 
 void Mstring::removeWSfromEnd() {
-  int i = mstrlen(text);
+  size_t i = mstrlen(text);
   for (; i > 0; --i)
     if (!isspace((const unsigned char) text[i - 1])) break;
   text = mtruncstr(text, i);
