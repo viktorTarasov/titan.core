@@ -289,7 +289,7 @@ public:
   virtual void printVariant(FILE * file);
 
   virtual void addComment(const Mstring& text);
-  virtual void printComment(FILE * file, int level = 0);
+  virtual void printComment(FILE * file, unsigned int level = 0);
 
   void printMinOccursMaxOccurs(FILE * file, const bool inside_union,
       const bool empty_allowed = true) const;

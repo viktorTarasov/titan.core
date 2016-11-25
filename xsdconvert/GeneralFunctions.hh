@@ -48,7 +48,7 @@ void printWarning(const Mstring& filename, int lineNumber, const Mstring& text);
 void printWarning(const Mstring& filename, const Mstring& typeName, const Mstring& text);
 void printError(const Mstring& filename, int lineNumber, const Mstring& text);
 void printError(const Mstring& filename, const Mstring& typeName, const Mstring& text);
-void indent(FILE * file, const int x);
+void indent(FILE * file, const unsigned int x);
 
 long double stringToLongDouble(const char * input);
 

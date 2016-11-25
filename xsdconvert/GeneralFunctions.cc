@@ -616,8 +616,8 @@ void printWarning(const Mstring& filename, const Mstring& typeName, const Mstrin
     text.c_str());
 }
 
-void indent(FILE* file, const int x) {
-  for (int l = 0; l < x; ++l) {
+void indent(FILE* file, const unsigned int x) {
+  for (unsigned int l = 0; l < x; ++l) {
     fprintf(file, "\t");
   }
 }

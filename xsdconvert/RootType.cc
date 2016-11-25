@@ -203,7 +203,7 @@ void RootType::addComment(const Mstring& text) {
   comment.push_back(Mstring("/* " + text + " */\n"));
 }
 
-void RootType::printComment(FILE * file, int level) {
+void RootType::printComment(FILE * file, unsigned int level) {
   if (!c_flag_used && !comment.empty()) {
     for (List<Mstring>::iterator c = comment.begin(); c; c = c->Next) {
       indent(file, level);
