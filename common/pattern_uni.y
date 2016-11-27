@@ -574,10 +574,10 @@ RE_Quadruple:
     if ($3 == 0 && $5 == 0 && $7 == 0 && $9 == 0) TTCN_pattern_error("Zero "
       "character (i.e. quadruple `\\q{0,0,0,0}') is not supported in a "
       "pattern for type universal charstring.");
-    $$.comp.group = $3;
-    $$.comp.plane = $5;
-    $$.comp.row = $7;
-    $$.comp.cell = $9;
+    $$.comp.group = (unsigned char)$3;
+    $$.comp.plane = (unsigned char)$5;
+    $$.comp.row = (unsigned char)$7;
+    $$.comp.cell = (unsigned char)$9;
   }
 ;
 

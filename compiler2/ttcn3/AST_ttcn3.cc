@@ -200,7 +200,7 @@ namespace Ttcn {
     if (ref_type != FIELD_REF) FATAL_ERROR("FieldOrArrayRef::set_field_name_to_lowercase()");
     string new_name = u.id->get_name();
     if (isupper(new_name[0])) {
-      new_name[0] = tolower(new_name[0]);
+      new_name[0] = (char)tolower(new_name[0]);
       if (new_name[new_name.size() - 1] == '_') {
         // an underscore is inserted at the end of the field name if it's
         // a basic type's name (since it would conflict with the class generated

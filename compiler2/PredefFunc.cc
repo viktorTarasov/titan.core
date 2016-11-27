@@ -766,7 +766,7 @@ string* remove_bom(const string& encoded_value)
   string str_uppercase(encoded_value);
   size_t enough = length > sizeof(utf32be)-1 ? sizeof(utf32be)-1 : length;
   for (size_t i = 0; i < enough; ++i) {
-    str_uppercase[i] = toupper(encoded_value[i]);
+    str_uppercase[i] = (char)toupper(encoded_value[i]);
   }
 
   if      (str_uppercase.find(utf32be, 0) < length) length_of_BOM = sizeof(utf32be)-1;
@@ -833,7 +833,7 @@ string* get_stringencoding(const string& encoded_value)
   string str_uppercase(encoded_value);
   size_t enough = length > sizeof(utf32be)-1 ? sizeof(utf32be)-1 : length;
   for (size_t i = 0; i < enough; ++i) {
-    str_uppercase[i] = toupper(encoded_value[i]);
+    str_uppercase[i] = (char)toupper(encoded_value[i]);
   }
 
   if      (str_uppercase.find(utf32be, 0) < length) return new string("UTF-32BE");

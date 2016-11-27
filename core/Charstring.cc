@@ -1017,12 +1017,12 @@ int CHARSTRING::TEXT_decode(const TTCN_Typedescriptor_t& p_td,
     &&  p_td.text->val.parameters->decoding_params.convert != 0) {
     if (p_td.text->val.parameters->decoding_params.convert == 1) {
       for (int a = 0; a < str_len; a++) {
-        val_ptr->chars_ptr[a] = toupper(val_ptr->chars_ptr[a]);
+        val_ptr->chars_ptr[a] = (char)toupper(val_ptr->chars_ptr[a]);
       }
     }
     else {
       for (int a = 0; a < str_len; a++) {
-        val_ptr->chars_ptr[a] = tolower(val_ptr->chars_ptr[a]);
+        val_ptr->chars_ptr[a] = (char)tolower(val_ptr->chars_ptr[a]);
       }
     }
   }

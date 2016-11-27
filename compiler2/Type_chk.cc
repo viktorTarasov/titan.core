@@ -601,22 +601,22 @@ void change_name(string &name, XerAttributes::NameChange change) {
   case NamespaceSpecification::UPPERCASED:
     // Walking backwards calls size() only once. Loop var must be signed.
     for (int i = name.size()-1; i >= 0; --i) {
-      name[i] = toupper(name[i]);
+      name[i] = (char)toupper(name[i]);
     }
     break;
 
   case NamespaceSpecification::LOWERCASED:
     for (int i = name.size()-1; i >= 0; --i) {
-      name[i] = tolower(name[i]);
+      name[i] = (char)tolower(name[i]);
     }
     break;
 
   case NamespaceSpecification::CAPITALIZED:
-    name[0] = toupper(name[0]);
+    name[0] = (char)toupper(name[0]);
     break;
 
   case NamespaceSpecification::UNCAPITALIZED:
-    name[0] = tolower(name[0]);
+    name[0] = (char)tolower(name[0]);
     break;
 
   default: // explicitly specified name
@@ -778,19 +778,19 @@ void Type::target_of_text(string & text)
 
     switch ((unsigned long)txt.new_text) {
     case NamespaceSpecification::CAPITALIZED: // tARGET -> TARGET
-      target[0] = toupper(target[0]);
+      target[0] = (char)toupper(target[0]);
       break;
     case NamespaceSpecification::UNCAPITALIZED:
-      target[0] = tolower(target[0]); // TARGET -> tARGET
+      target[0] = (char)tolower(target[0]); // TARGET -> tARGET
       break;
     case NamespaceSpecification::UPPERCASED:
       for (int si = target.size() - 1; si >= 0; --si) {
-        target[si] = toupper(target[si]);
+        target[si] = (char)toupper(target[si]);
       }
       break;
     case NamespaceSpecification::LOWERCASED:
       for (int si = target.size() - 1; si >= 0; --si) {
-        target[si] = tolower(target[si]);
+        target[si] = (char)tolower(target[si]);
       }
       break;
 
@@ -2224,9 +2224,9 @@ void Type::chk_xer() { // XERSTUFF semantic check
       char first[5] = {0,0,0,0,0};
       strncpy(first, xerattrib->namespace_.prefix, 4);
       bool xml_start = !memcmp(first, "xml", 3);
-      first[0] = toupper(first[0]);
-      first[1] = toupper(first[1]);
-      first[2] = toupper(first[2]);
+      first[0] = (char)toupper(first[0]);
+      first[1] = (char)toupper(first[1]);
+      first[2] = (char)toupper(first[2]);
       if ((xml_start // It _is_ "xml" or starts with "xml"
         // Or it matches (('X'|'x') ('M'|'m') ('L'|'l'))
         || (first[3] == 0 && !memcmp(first, "XML", 3)))
