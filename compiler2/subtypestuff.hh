@@ -419,10 +419,10 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
       sweep_points.add(sweep_point_t(spi.a_idx, -1));
       spi.a_idx++;
     } else { // both are within the vector, get smaller or get both if equal
-      if (values[spi.a_idx]<other.values[spi.b_idx]) {
+      if (values[(size_t)spi.a_idx]<other.values[(size_t)spi.b_idx]) {
         sweep_points.add(sweep_point_t(spi.a_idx, -1));
         spi.a_idx++;
-      } else if (values[spi.a_idx]==other.values[spi.b_idx]) {
+      } else if (values[(size_t)spi.a_idx]==other.values[(size_t)spi.b_idx]) {
         sweep_points.add(spi);
         spi.a_idx++;
         spi.b_idx++;
@@ -443,7 +443,7 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
     bool a_point = false;
     if (sweep_points[i].a_idx!=-1) { // we are at a value in A
       a_point = true;
-      if (intervals[sweep_points[i].a_idx]) { // this is a starting point of an interval in A
+      if (intervals[(size_t)sweep_points[i].a_idx]) { // this is a starting point of an interval in A
         a_interval = true;
         if (in_a) FATAL_ERROR("RangeListConstraint::set_operation(): invalid double interval");
         in_a = true;
@@ -457,7 +457,7 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
     bool b_point = false;
     if (sweep_points[i].b_idx!=-1) { // we are at a value in B
       b_point = true;
-      if (other.intervals[sweep_points[i].b_idx]) { // this is a starting point of an interval in B
+      if (other.intervals[(size_t)sweep_points[i].b_idx]) { // this is a starting point of an interval in B
         b_interval = true;
         if (in_b) FATAL_ERROR("RangeListConstraint::set_operation(): invalid double interval");
         in_b = true;
@@ -479,15 +479,15 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
     {
       LIMITTYPE first, second;
       if (sweep_points[i-1].a_idx!=-1) {
-        first = values[sweep_points[i-1].a_idx];
+        first = values[(size_t)sweep_points[i-1].a_idx];
       } else {
-        if (sweep_points[i-1].b_idx!=-1) first = other.values[sweep_points[i-1].b_idx];
+        if (sweep_points[i-1].b_idx!=-1) first = other.values[(size_t)sweep_points[i-1].b_idx];
         else FATAL_ERROR("RangeListConstraint::set_operation()");
       }
       if (sweep_points[i].a_idx!=-1) {
-        second = values[sweep_points[i].a_idx];
+        second = values[(size_t)sweep_points[i].a_idx];
       } else {
-        if (sweep_points[i].b_idx!=-1) second = other.values[sweep_points[i].b_idx];
+        if (sweep_points[i].b_idx!=-1) second = other.values[(size_t)sweep_points[i].b_idx];
         else FATAL_ERROR("RangeListConstraint::set_operation()");
       }
       if (first.is_adjacent(second)) {
@@ -506,9 +506,9 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
         } else {
           LIMITTYPE l;
           if (sweep_points[i].a_idx!=-1) {
-            l = values[sweep_points[i].a_idx];
+            l = values[(size_t)sweep_points[i].a_idx];
           } else {
-            if (sweep_points[i].b_idx!=-1) l = other.values[sweep_points[i].b_idx];
+            if (sweep_points[i].b_idx!=-1) l = other.values[(size_t)sweep_points[i].b_idx];
             else FATAL_ERROR("RangeListConstraint::set_operation()");
           }
           ret_val.values.add(l);
@@ -521,9 +521,9 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
         } else {
           LIMITTYPE l;
           if (sweep_points[i].a_idx!=-1) {
-            l = values[sweep_points[i].a_idx];
+            l = values[(size_t)sweep_points[i].a_idx];
           } else {
-            if (sweep_points[i].b_idx!=-1) l = other.values[sweep_points[i].b_idx];
+            if (sweep_points[i].b_idx!=-1) l = other.values[(size_t)sweep_points[i].b_idx];
             else FATAL_ERROR("RangeListConstraint::set_operation()");
           }
           ret_val.values.add(l);
