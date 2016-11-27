@@ -2313,7 +2313,7 @@ void Type::chk_xer() { // XERSTUFF semantic check
     CompFieldMap& cfm = *u.secho.cfm;
     const size_t ncomps = cfm.get_nof_comps();
     CompField *the_one = 0; // ...and only untagged character-encodable field
-    map<int, CompField> empties; // potentially empties
+    map<size_t, CompField> empties; // potentially empties
 
     for (size_t i=0; i < ncomps; ++i) {
       CompField * cf = cfm.get_comp_byIndex(i);
