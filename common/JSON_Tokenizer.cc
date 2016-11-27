@@ -319,7 +319,7 @@ void JSON_Tokenizer::put_separator()
 
 int JSON_Tokenizer::put_next_token(json_token_t p_token, const char* p_token_str)
 {
-  int start_len = buf_len;
+  size_t start_len = buf_len;
   switch(p_token) {
   case JSON_TOKEN_OBJECT_START: 
   case JSON_TOKEN_ARRAY_START: {
