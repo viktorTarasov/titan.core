@@ -2589,10 +2589,10 @@ namespace Common {
         textAST_enum_def **params=(textAST_enum_def**)
                 Malloc(nof_comps*sizeof(textAST_enum_def*));
         memset(params,0,nof_comps*sizeof(textAST_enum_def*));
-        for (int a = 0; a < textattrib->nof_field_params; a++) {
+        for (size_t a = 0; a < textattrib->nof_field_params; a++) {
           const Identifier& id = *textattrib->field_params[a]->name;
           if (t->u.enums.eis->has_ei_withName(id)) {
-            int index = t->get_eis_index_byName(id);
+            size_t index = t->get_eis_index_byName(id);
             if (params[index]) FATAL_ERROR("Type::chk_text(): duplicate " \
               "attribute for enum `%s'", id.get_dispname().c_str());
             params[index] = textattrib->field_params[a];
@@ -6107,9 +6107,9 @@ namespace Common {
     /*
     size_t pos=s.find_if(0, s.size(), isupper);
     if(pos==s.size()) FATAL_ERROR("Type::get_otaltname() (`%s')", s.c_str());
-    s[pos]=tolower(s[pos]);
+    s[pos]=(char)tolower(s[pos]);
     */
-    s[0]=tolower(s[0]);
+    s[0]=(char)tolower(s[0]);
     Identifier tmp_id(Identifier::ID_NAME, s, true);
     /* This is because the origin of the returned ID must be ASN. */
     return Identifier(Identifier::ID_ASN, tmp_id.get_asnname());

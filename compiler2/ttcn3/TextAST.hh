@@ -51,7 +51,7 @@ class TextAST {
     textAST_matching_values *separator_val;
     textAST_param_values coding_params;
     textAST_param_values decoding_params;
-    int nof_field_params;
+    size_t nof_field_params;
     textAST_enum_def **field_params;
     textAST_matching_values *true_params;
     textAST_matching_values *false_params;  
@@ -63,7 +63,7 @@ class TextAST {
     ~TextAST();
     
     void print_TextAST() const;
-    int get_field_param_index(const Common::Identifier *name);
+    size_t get_field_param_index(const Common::Identifier *name);
 };
 
 void copy_textAST_matching_values(textAST_matching_values **to,

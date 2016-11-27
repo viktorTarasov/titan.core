@@ -369,8 +369,8 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::operator~() const
       ret_val.intervals.add(false);
     }
   }
-  int last = values.size()-1;
-  for (int i=0; i<last; i++)
+  size_t last = values.size()-1;
+  for (size_t i=0; i<last; i++)
   {
     if (!intervals[i]) {
       if (values[i].next()==values[i+1].previous()) {
@@ -436,7 +436,7 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
   // sweep (iterate) through both vectors
   bool in_a = false; // we are already in an interval of A
   bool in_b = false;
-  for (int i=0; i<(int)sweep_points.size(); i++)
+  for (size_t i=0; i<sweep_points.size(); i++)
   {
     // set bools for A interval
     bool a_interval = in_a;
@@ -475,7 +475,7 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
   // canonicalization of ret_val
   if (is_union) {
     // connect adjacent limit points with interval: [i,i+1] becomes interval
-    for (int i=1; i<(int)sweep_points.size(); i++)
+    for (size_t i=1; i<sweep_points.size(); i++)
     {
       LIMITTYPE first, second;
       if (sweep_points[i-1].a_idx!=-1) {
@@ -498,9 +498,9 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
   }
   // two adjacent intervals shall be united into one
   RangeListConstraint<LIMITTYPE> ret_val;
-  for (int i=0; i<(int)sweep_points.size(); i++)
+  for (size_t i=0; i<sweep_points.size(); i++)
   {
-    if (is_union) {
+    if (is_union) {//FIXME unnecessary to check in every loop
         if ( (i>0) && sweep_points[i-1].union_interval && sweep_points[i].union_interval) {
           // drop this point, it's in a double interval
         } else {

@@ -55,7 +55,7 @@ TextAST::TextAST(const TextAST *other_val)
     nof_field_params=other_val->nof_field_params;
     if(nof_field_params) field_params=
       (textAST_enum_def**)Malloc(nof_field_params*sizeof(textAST_enum_def*));
-    for(int a=0;a<nof_field_params;a++){
+    for(size_t a=0;a<nof_field_params;a++){
       if(other_val->field_params[a]){
         field_params[a]=(textAST_enum_def*)Malloc(sizeof(textAST_enum_def));
         field_params[a]->name=
@@ -106,7 +106,8 @@ TextAST::~TextAST()
     Free(separator_val);
   }
   if(field_params){
-    for(int a=0;a<nof_field_params;a++){
+    for(size_t a=0;a<nof_field_params;a++){
+      //TODO: lets extract field_params[a] for speed
       if(field_params[a]){
         delete field_params[a]->name;
         Free(field_params[a]->value.encode_token);
@@ -195,9 +196,9 @@ void TextAST::print_TextAST() const
     else printf("  case_insensitive\n\r");
   }
   else printf("NULL\n\r");
-  printf("Number of fields:%i\n\r",nof_field_params);
-  for(int a=0;a<nof_field_params;a++){
-    printf("Field %i:\n\r",a);
+  printf("Number of fields:%lu\n\r",nof_field_params);
+  for(size_t a=0;a<nof_field_params;a++){
+    printf("Field %lu:\n\r",a);
     if(field_params[a]){
     printf("  Name: %s\n\r",field_params[a]->name->get_name().c_str());
     printf("  Encode token:");
@@ -223,9 +224,9 @@ void TextAST::print_TextAST() const
     printf("  Convert: %i\n\r  Just:%i\n\r",decoding_params.convert,decoding_params.just);
 }
 
-int TextAST::get_field_param_index(const Common::Identifier *name)
+size_t TextAST::get_field_param_index(const Common::Identifier *name)
 {
-  for(int a=0;a<nof_field_params;a++){
+  for(size_t a=0;a<nof_field_params;a++){
     if(*field_params[a]->name==*name) return a;
   }
   field_params=(textAST_enum_def **)Realloc(field_params,(nof_field_params+1)*sizeof(textAST_enum_def *));

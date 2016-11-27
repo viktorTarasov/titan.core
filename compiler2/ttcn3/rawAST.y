@@ -1139,7 +1139,7 @@ XtokendefList:
 Xtokendef:
   XIdentifierOrReserved ':' XEncodeToken
   {
-    int idx = textstruct->get_field_param_index($1);
+    size_t idx = textstruct->get_field_param_index($1);
     if (textstruct->field_params[idx]->value.encode_token) {
       Free(textstruct->field_params[idx]->value.encode_token);
       Common::Location loc(infile, @3);
@@ -1216,7 +1216,7 @@ XDecodingtokendefList:
 Xdecodingtokendef:
   XIdentifierOrReserved ':' XDecodeToken
   {
-    int idx = textstruct->get_field_param_index($1);
+    size_t idx = textstruct->get_field_param_index($1);
     if (textstruct->field_params[idx]->value.decode_token) {
       Free(textstruct->field_params[idx]->value.decode_token);
       Common::Location loc(infile, @3);
