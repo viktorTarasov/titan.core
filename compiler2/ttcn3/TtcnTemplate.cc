@@ -4121,7 +4121,7 @@ compile_time:
     const string& type_name = my_governor->get_genname_template(my_scope);
     const char *type_name_str = type_name.c_str();
 
-    dynamic_array<int> variables;
+    dynamic_array<size_t> variables;
     size_t fixed_part = 0;
     for (size_t i = 0; i < nof_ts; ++i) {
       Template *t = u.templates->get_t_byIndex(i);
@@ -4341,7 +4341,7 @@ compile_time:
       my_governor->get_ofType()->get_genname_template(my_scope);
     const char *oftype_name_str = oftype_name.c_str();
 
-    dynamic_array<int> variables;
+    dynamic_array<size_t> variables;
     size_t fixed_part = 0;
     for (size_t i = 0; i < nof_ts; ++i) {
       Template *t = u.templates->get_t_byIndex(i);
