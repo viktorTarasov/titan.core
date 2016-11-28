@@ -14,6 +14,8 @@
 #ifndef TTCN3FLOAT_HH_
 #define TTCN3FLOAT_HH_
 
+// TODO: once we can use C++11 as the base platform replace with cmath
+// this way the signedbit will become a defined function instead of a macro
 #include <math.h>
 
 /* TTCN-3 float values that have absolute value smaller than this
