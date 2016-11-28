@@ -22,6 +22,9 @@
 #include "TTCN3Module.hh"
 #include "ComplexType.hh"
 
+#include <cmath> // for using "pow" function
+#include <cfloat>
+
 extern bool g_flag_used;
 extern bool h_flag_used;
 

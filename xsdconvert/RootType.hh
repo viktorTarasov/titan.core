@@ -21,8 +21,6 @@
 #include "TTCN3Module.hh"
 #include "XMLParser.hh"
 
-#include <cmath> // for using "pow" function
-#include <cfloat>
 #include <cctype>
 #include <cerrno>
 #include <climits>
