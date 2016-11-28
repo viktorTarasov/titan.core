@@ -21,7 +21,6 @@
 #include "TTCN3Module.hh"
 #include "XMLParser.hh"
 
-#include <cctype>
 #include <cerrno>
 #include <climits>
 #ifndef ULLONG_MAX

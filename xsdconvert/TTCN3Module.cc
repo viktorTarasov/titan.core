@@ -25,6 +25,8 @@
 
 #include "../common/version_internal.h"
 
+#include <cctype>
+
 #if defined(WIN32) && !defined(MINGW)
 #include <cygwin/version.h>
 #include <sys/cygwin.h>
