@@ -8,6 +8,7 @@
  * Contributors:
  *   Baji, Laszlo
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Delic, Adam
  *   Feher, Csaba
  *   Forstner, Matyas
@@ -469,7 +470,7 @@ void PORT::all_halt()
     port->halt();
 }
 
-alt_status PORT::receive(const COMPONENT_template&, COMPONENT *)
+alt_status PORT::receive(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
 {
   TTCN_Logger::log_matching_problem(
     TitanLoggerApi::MatchingProblemType_reason::no__incoming__types,
@@ -508,7 +509,7 @@ alt_status PORT::any_receive(const COMPONENT_template& sender_template,
   }
 }
 
-alt_status PORT::check_receive(const COMPONENT_template&, COMPONENT *)
+alt_status PORT::check_receive(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
 {
   TTCN_Logger::log_matching_problem(
     TitanLoggerApi::MatchingProblemType_reason::no__incoming__types,
@@ -547,7 +548,7 @@ alt_status PORT::any_check_receive(const COMPONENT_template& sender_template,
   }
 }
 
-alt_status PORT::trigger(const COMPONENT_template&, COMPONENT *)
+alt_status PORT::trigger(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
 {
   TTCN_Logger::log_matching_problem(
     TitanLoggerApi::MatchingProblemType_reason::no__incoming__types,
@@ -588,7 +589,7 @@ alt_status PORT::any_trigger(const COMPONENT_template& sender_template,
   }
 }
 
-alt_status PORT::getcall(const COMPONENT_template&, COMPONENT *)
+alt_status PORT::getcall(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
 {
 //  ToDo:Unnecessary log matching problem warning removed.
 //  Question: does it unnecessary?
@@ -629,7 +630,7 @@ alt_status PORT::any_getcall(const COMPONENT_template& sender_template,
   }
 }
 
-alt_status PORT::check_getcall(const COMPONENT_template&, COMPONENT *)
+alt_status PORT::check_getcall(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
 {
 //  ToDo:Unnecessary log matching problem warning removed.
 //  Question: does it unnecessary
@@ -670,7 +671,7 @@ alt_status PORT::any_check_getcall(const COMPONENT_template& sender_template,
   }
 }
 
-alt_status PORT::getreply(const COMPONENT_template&, COMPONENT *)
+alt_status PORT::getreply(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
 {
 //  ToDo:Unnecessary log matching problem warning removed.
 //  Question: does it unnecessary
@@ -711,7 +712,7 @@ alt_status PORT::any_getreply(const COMPONENT_template& sender_template,
   }
 }
 
-alt_status PORT::check_getreply(const COMPONENT_template&, COMPONENT *)
+alt_status PORT::check_getreply(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
 {
 //  ToDo:Unnecessary log matching problem warning removed.
 //  Question: does it unnecessary
@@ -752,7 +753,7 @@ alt_status PORT::any_check_getreply(const COMPONENT_template& sender_template,
   }
 }
 
-alt_status PORT::get_exception(const COMPONENT_template&, COMPONENT *)
+alt_status PORT::get_exception(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
 {
 //  ToDo:Unnecessary log matching problem warning removed.
 //  Question: does it unnecessary
@@ -794,7 +795,7 @@ alt_status PORT::any_catch(const COMPONENT_template& sender_template,
 }
 
 alt_status PORT::check_catch(const COMPONENT_template& ,
-  COMPONENT *)
+  COMPONENT *, Index_Redirect*)
 {
 //  ToDo:Unnecessary log matching problem warning removed.
 //  Question: does it unnecessary
@@ -836,7 +837,7 @@ alt_status PORT::any_check_catch(const COMPONENT_template& sender_template,
 }
 
 alt_status PORT::check(const COMPONENT_template& sender_template,
-  COMPONENT *sender_ptr)
+  COMPONENT *sender_ptr, Index_Redirect*)
 {
   alt_status ret_val = ALT_NO;
   // the procedure-based queue must have the higher priority

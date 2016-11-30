@@ -34,6 +34,7 @@
 #include "../Int.hh"
 #include "../main.hh"
 #include "Attributes.hh"
+#include "compiler2/Valuestuff.hh"
 
 namespace Ttcn {
 
@@ -597,6 +598,7 @@ namespace Ttcn {
       delete port_op.r.fromclause;
       delete port_op.r.redirect.value;
       delete port_op.r.redirect.sender;
+      delete port_op.r.redirect.index;
       break;
     case S_GETCALL:
     case S_CHECK_GETCALL:
@@ -605,6 +607,7 @@ namespace Ttcn {
       delete port_op.r.fromclause;
       delete port_op.r.redirect.param;
       delete port_op.r.redirect.sender;
+      delete port_op.r.redirect.index;
       break;
     case S_GETREPLY:
     case S_CHECK_GETREPLY:
@@ -615,6 +618,7 @@ namespace Ttcn {
       delete port_op.r.redirect.value;
       delete port_op.r.redirect.param;
       delete port_op.r.redirect.sender;
+      delete port_op.r.redirect.index;
       break;
     case S_CATCH:
     case S_CHECK_CATCH:
@@ -624,11 +628,13 @@ namespace Ttcn {
       delete port_op.r.fromclause;
       delete port_op.r.redirect.value;
       delete port_op.r.redirect.sender;
+      delete port_op.r.redirect.index;
       break;
     case S_CHECK:
       delete port_op.portref;
       delete port_op.r.fromclause;
       delete port_op.r.redirect.sender;
+      delete port_op.r.redirect.index;
       break;
     case S_CLEAR:
     case S_START_PORT:
@@ -649,12 +655,14 @@ namespace Ttcn {
     case S_KILL:
     case S_KILLED:
       delete comp_op.compref;
+      delete comp_op.index_redirect;
       break;
     case S_DONE:
       if (comp_op.compref) {
         delete comp_op.compref;
         delete comp_op.donereturn.donematch;
         delete comp_op.donereturn.redirect;
+        delete comp_op.index_redirect;
       }
       break;
     case S_CONNECT:
@@ -673,6 +681,7 @@ namespace Ttcn {
     case S_STOP_TIMER:
     case S_TIMEOUT:
       delete timer_op.timerref;
+      delete timer_op.index_redirect;
       break;
     case S_SETVERDICT:
       delete setverdict.verdictval;
@@ -1006,16 +1015,30 @@ namespace Ttcn {
     : statementtype(p_st), my_sb(0)
   {
     switch (statementtype) {
-    case S_KILLED:
-      if (!p_val)
-        FATAL_ERROR("Statement::Statement()");
-      // no break
     case S_STOP_COMP:
     case S_KILL:
       comp_op.compref=p_val;
       break;
     case S_DEACTIVATE:
       deactivate=p_val;
+      break;
+    default:
+      FATAL_ERROR("Statement::Statement()");
+    } // switch statementtype
+  }
+  
+  Statement::Statement(statementtype_t p_st, Value *p_val, bool p_any_from,
+                       Reference* p_index_redirect)
+    : statementtype(p_st), my_sb(0)
+  {
+    switch (statementtype) {
+    case S_KILLED:
+      if (p_val == NULL) {
+        FATAL_ERROR("Statement::Statement()");
+      }
+      comp_op.compref = p_val;
+      comp_op.any_from = p_any_from;
+      comp_op.index_redirect = p_index_redirect;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -1109,10 +1132,11 @@ namespace Ttcn {
     } // switch statementtype
   }
 
-  Statement::Statement(statementtype_t p_st, Reference *p_ref,
+  Statement::Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
                        TemplateInstance *p_templinst,
                        TemplateInstance *p_fromclause,
-                       ValueRedirect *p_redirectval, Reference *p_redirectsender)
+                       ValueRedirect *p_redirectval, Reference *p_redirectsender,
+                       Reference* p_redirectindex)
     : statementtype(p_st), my_sb(0)
   {
     switch(statementtype) {
@@ -1120,45 +1144,50 @@ namespace Ttcn {
     case S_CHECK_RECEIVE:
     case S_TRIGGER:
       port_op.portref=p_ref;
+      port_op.anyfrom = p_anyfrom;
       port_op.r.rcvpar=p_templinst;
       port_op.r.fromclause=p_fromclause;
       port_op.r.redirect.value=p_redirectval;
       port_op.r.redirect.param=0;
       port_op.r.redirect.sender=p_redirectsender;
+      port_op.r.redirect.index = p_redirectindex;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
     } // switch statementtype
   }
 
-  Statement::Statement(statementtype_t p_st, Reference *p_ref,
+  Statement::Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
                        TemplateInstance *p_templinst,
                        TemplateInstance *p_fromclause,
                        ParamRedirect *p_redirectparam,
-		       Reference *p_redirectsender)
+                       Reference *p_redirectsender,
+                       Reference* p_redirectindex)
     : statementtype(p_st), my_sb(0)
   {
     switch(statementtype) {
     case S_GETCALL:
     case S_CHECK_GETCALL:
       port_op.portref=p_ref;
+      port_op.anyfrom = p_anyfrom;
       port_op.r.rcvpar=p_templinst;
       port_op.r.fromclause=p_fromclause;
       port_op.r.redirect.value=0;
       port_op.r.redirect.param=p_redirectparam;
       port_op.r.redirect.sender=p_redirectsender;
+      port_op.r.redirect.index = p_redirectindex;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
     } // switch statementtype
   }
 
-  Statement::Statement(statementtype_t p_st, Reference *p_ref,
+  Statement::Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
                        TemplateInstance *p_templinst,
                        TemplateInstance *p_valuematch,
                        TemplateInstance *p_fromclause,
                        ValueRedirect *p_redirectval, ParamRedirect *p_redirectparam,
-                       Reference *p_redirectsender)
+                       Reference *p_redirectsender, Reference* p_redirectindex)
     : statementtype(p_st), my_sb(0)
   {
     switch(statementtype) {
@@ -1166,22 +1195,25 @@ namespace Ttcn {
     case S_CHECK_GETREPLY:
       if (!p_templinst && p_valuematch) FATAL_ERROR("Statement::Statement()");
       port_op.portref=p_ref;
+      port_op.anyfrom = p_anyfrom;
       port_op.r.rcvpar=p_templinst;
       port_op.r.getreply_valuematch=p_valuematch;
       port_op.r.fromclause=p_fromclause;
       port_op.r.redirect.value=p_redirectval;
       port_op.r.redirect.param=p_redirectparam;
       port_op.r.redirect.sender=p_redirectsender;
+      port_op.r.redirect.index = p_redirectindex;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
     } // switch statementtype
   }
 
-  Statement::Statement(statementtype_t p_st, Reference *p_ref,
+  Statement::Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
                        Reference *p_sig, TemplateInstance *p_templinst,
                        bool p_timeout, TemplateInstance *p_fromclause,
-                       ValueRedirect *p_redirectval, Reference *p_redirectsender)
+                       ValueRedirect *p_redirectval, Reference *p_redirectsender,
+                       Reference* p_redirectindex)
     : statementtype(p_st), my_sb(0)
   {
     switch(statementtype) {
@@ -1191,6 +1223,7 @@ namespace Ttcn {
         (p_sig && !p_templinst) || (!p_sig && p_templinst))
 	FATAL_ERROR("Statement::Statement()");
       port_op.portref=p_ref;
+      port_op.anyfrom = p_anyfrom;
       port_op.r.ctch.signature_ref=p_sig;
       port_op.r.ctch.signature=0;
       port_op.r.rcvpar=p_templinst;
@@ -1201,24 +1234,27 @@ namespace Ttcn {
       port_op.r.redirect.value=p_redirectval;
       port_op.r.redirect.param=0;
       port_op.r.redirect.sender=p_redirectsender;
+      port_op.r.redirect.index = p_redirectindex;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
     } // switch statementtype
   }
 
-  Statement::Statement(statementtype_t p_st, Reference *p_ref,
+  Statement::Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
                        TemplateInstance *p_fromclause,
-                       Reference *p_redirectsender)
+                       Reference *p_redirectsender, Reference* p_redirectindex)
     : statementtype(p_st), my_sb(0)
   {
     switch(statementtype) {
     case S_CHECK:
       port_op.portref=p_ref; // may be NULL for "any port.check"
+      port_op.anyfrom = p_anyfrom;
       port_op.r.fromclause=p_fromclause;
       port_op.r.redirect.value=0;
       port_op.r.redirect.param=0;
       port_op.r.redirect.sender=p_redirectsender;
+      port_op.r.redirect.index = p_redirectindex;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -1236,12 +1272,23 @@ namespace Ttcn {
       port_op.portref=p_ref;
       break;
     case S_STOP_TIMER:
-    case S_TIMEOUT:
       timer_op.timerref=p_ref;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
     } // switch statementtype
+  }
+  
+  Statement::Statement(statementtype_t p_st, Reference *p_ref, bool p_any_from,
+                       Reference* p_redirectindex)
+    : statementtype(p_st), my_sb(0)
+  {
+    if (statementtype != S_TIMEOUT) {
+      FATAL_ERROR("Statement::Statement()");
+    }
+    timer_op.timerref = p_ref;
+    timer_op.any_from = p_any_from;
+    timer_op.index_redirect = p_redirectindex;
   }
 
   Statement::Statement(statementtype_t p_st, Value *p_compref,
@@ -1278,7 +1325,8 @@ namespace Ttcn {
   }
 
   Statement::Statement(statementtype_t p_st, Value *p_compref,
-                       TemplateInstance *p_donematch, ValueRedirect *p_redirect)
+                       TemplateInstance *p_donematch, ValueRedirect *p_redirect,
+                       Reference* p_index_redirect, bool p_any_from)
     : statementtype(p_st), my_sb(0)
   {
     switch (statementtype) {
@@ -1287,6 +1335,8 @@ namespace Ttcn {
       comp_op.compref = p_compref;
       comp_op.donereturn.donematch = p_donematch;
       comp_op.donereturn.redirect = p_redirect;
+      comp_op.index_redirect = p_index_redirect;
+      comp_op.any_from = p_any_from;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -1301,6 +1351,8 @@ namespace Ttcn {
     case S_KILLED:
       comp_op.compref = 0;
       comp_op.any_or_all = p_anyall;
+      comp_op.any_from = false;
+      comp_op.index_redirect = NULL;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -1686,6 +1738,9 @@ namespace Ttcn {
         port_op.r.redirect.value->set_my_scope(p_scope);
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_my_scope(p_scope);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_my_scope(p_scope);
+      }
       break;
     case S_GETCALL:
     case S_CHECK_GETCALL:
@@ -1696,6 +1751,9 @@ namespace Ttcn {
         port_op.r.redirect.param->set_my_scope(p_scope);
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_my_scope(p_scope);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_my_scope(p_scope);
+      }
       break;
     case S_GETREPLY:
     case S_CHECK_GETREPLY:
@@ -1710,6 +1768,9 @@ namespace Ttcn {
         port_op.r.redirect.param->set_my_scope(p_scope);
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_my_scope(p_scope);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_my_scope(p_scope);
+      }
       break;
     case S_CATCH:
     case S_CHECK_CATCH:
@@ -1722,12 +1783,18 @@ namespace Ttcn {
         port_op.r.redirect.value->set_my_scope(p_scope);
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_my_scope(p_scope);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_my_scope(p_scope);
+      }
       break;
     case S_CHECK:
       if(port_op.portref) port_op.portref->set_my_scope(p_scope);
       if(port_op.r.fromclause) port_op.r.fromclause->set_my_scope(p_scope);
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_my_scope(p_scope);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_my_scope(p_scope);
+      }
       break;
     case S_CLEAR:
     case S_START_PORT:
@@ -1748,6 +1815,9 @@ namespace Ttcn {
     case S_KILL:
     case S_KILLED:
       if (comp_op.compref) comp_op.compref->set_my_scope(p_scope);
+      if (comp_op.index_redirect != NULL) {
+        comp_op.index_redirect->set_my_scope(p_scope);
+      }
       break;
     case S_DONE:
       if (comp_op.compref) {
@@ -1756,6 +1826,9 @@ namespace Ttcn {
           comp_op.donereturn.donematch->set_my_scope(p_scope);
         if (comp_op.donereturn.redirect)
           comp_op.donereturn.redirect->set_my_scope(p_scope);
+        if (comp_op.index_redirect != NULL) {
+          comp_op.index_redirect->set_my_scope(p_scope);
+        }
       }
       break;
     case S_CONNECT:
@@ -1774,6 +1847,9 @@ namespace Ttcn {
     case S_STOP_TIMER:
     case S_TIMEOUT:
       if (timer_op.timerref) timer_op.timerref->set_my_scope(p_scope);
+      if (timer_op.index_redirect != NULL) {
+        timer_op.index_redirect->set_my_scope(p_scope);
+      }
       break;
     case S_SETVERDICT:
       setverdict.verdictval->set_my_scope(p_scope);
@@ -1927,6 +2003,9 @@ namespace Ttcn {
         port_op.r.redirect.value->set_fullname(p_fullname+".redirval");
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_fullname(p_fullname+".redirsender");
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_fullname(p_fullname+".redirindex");
+      }
       break;
     case S_GETCALL:
     case S_CHECK_GETCALL:
@@ -1939,6 +2018,9 @@ namespace Ttcn {
         port_op.r.redirect.param->set_fullname(p_fullname+".pars");
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_fullname(p_fullname+".redirsender");
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_fullname(p_fullname+".redirindex");
+      }
       break;
     case S_GETREPLY:
     case S_CHECK_GETREPLY:
@@ -1955,6 +2037,9 @@ namespace Ttcn {
         port_op.r.redirect.param->set_fullname(p_fullname+".pars");
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_fullname(p_fullname+".redirsender");
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_fullname(p_fullname+".redirindex");
+      }
       break;
     case S_CATCH:
     case S_CHECK_CATCH:
@@ -1969,6 +2054,9 @@ namespace Ttcn {
         port_op.r.redirect.value->set_fullname(p_fullname+".redirval");
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_fullname(p_fullname+".redirsender");
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_fullname(p_fullname+".redirindex");
+      }
       break;
     case S_CHECK:
       if(port_op.portref) port_op.portref->set_fullname(p_fullname+".portref");
@@ -1976,6 +2064,9 @@ namespace Ttcn {
         port_op.r.fromclause->set_fullname(p_fullname+".from");
       if(port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_fullname(p_fullname+".redirsender");
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_fullname(p_fullname+".redirindex");
+      }
       break;
     case S_CLEAR:
     case S_START_PORT:
@@ -1996,6 +2087,9 @@ namespace Ttcn {
     case S_KILL:
     case S_KILLED:
       if (comp_op.compref) comp_op.compref->set_fullname(p_fullname+".compref");
+      if (comp_op.index_redirect != NULL) {
+        comp_op.index_redirect->set_fullname(p_fullname + ".redirindex");
+      }
       break;
     case S_DONE:
       if(comp_op.compref) {
@@ -2004,6 +2098,9 @@ namespace Ttcn {
           comp_op.donereturn.donematch->set_fullname(p_fullname+".donematch");
         if(comp_op.donereturn.redirect)
           comp_op.donereturn.redirect->set_fullname(p_fullname+".redir");
+        if (comp_op.index_redirect != NULL) {
+          comp_op.index_redirect->set_fullname(p_fullname + ".redirindex");
+        }
       }
       break;
     case S_CONNECT:
@@ -2023,6 +2120,9 @@ namespace Ttcn {
     case S_TIMEOUT:
       if (timer_op.timerref)
         timer_op.timerref->set_fullname(p_fullname+".timerref");
+      if (timer_op.index_redirect != NULL) {
+        timer_op.index_redirect->set_fullname(p_fullname + ".redirindex");
+      }
       break;
     case S_SETVERDICT:
       setverdict.verdictval->set_fullname(p_fullname+".verdictval");
@@ -3689,7 +3789,7 @@ error:
     const char *stmt_name = get_stmt_name();
     Error_Context cntxt(this, "In %s statement", stmt_name);
     // checking the port reference
-    Type *port_type = chk_port_ref(port_op.portref);
+    Type *port_type = chk_port_ref(port_op.portref, port_op.anyfrom);
     // checking the parameter and/or value redirect
     if (port_op.r.rcvpar) {
       // the receive parameter (template instance) is present
@@ -3745,6 +3845,10 @@ error:
 	  port_op.r.redirect.value->error("Operation `any port.%s' cannot have "
 	    "value redirect", stmt_name);
 	}
+        if (port_op.r.redirect.index) {
+          port_op.r.redirect.index->error("Operation `any port.%s' cannot have "
+            "index redirect", stmt_name);
+        }
       }
       if (!msg_type_determined) {
 	msg_type = get_msg_sig_type(port_op.r.rcvpar);
@@ -3786,6 +3890,11 @@ error:
     }
     // checking from clause and sender redirect
     chk_from_clause(port_type);
+    if (port_op.r.redirect.index != NULL && port_op.portref != NULL) {
+      Common::Assignment *t_ass = port_op.portref->get_refd_assignment();
+      chk_index_redirect(port_op.r.redirect.index,
+        t_ass != NULL ? t_ass->get_Dimensions() : NULL, port_op.anyfrom, "port");
+    }
   }
 
   void Statement::chk_getcall()
@@ -3794,7 +3903,7 @@ error:
     const char *stmt_name = get_stmt_name();
     Error_Context cntxt(this, "In %s statement", stmt_name);
     // checking the port reference
-    Type *port_type = chk_port_ref(port_op.portref);
+    Type *port_type = chk_port_ref(port_op.portref, port_op.anyfrom);
     if (port_op.r.rcvpar) {
       // the parameter (signature template) is present
       // determining the signature of the argument
@@ -3890,6 +3999,11 @@ error:
     }
     // checking from clause and sender redirect
     chk_from_clause(port_type);
+    if (port_op.r.redirect.index != NULL && port_op.portref != NULL) {
+      Common::Assignment *t_ass = port_op.portref->get_refd_assignment();
+      chk_index_redirect(port_op.r.redirect.index,
+        t_ass != NULL ? t_ass->get_Dimensions() : NULL, port_op.anyfrom, "port");
+    }
   }
 
   void Statement::chk_getreply()
@@ -3898,7 +4012,7 @@ error:
     const char *stmt_name = get_stmt_name();
     Error_Context cntxt(this, "In %s statement", stmt_name);
     // checking the port reference
-    Type *port_type = chk_port_ref(port_op.portref);
+    Type *port_type = chk_port_ref(port_op.portref, port_op.anyfrom);
     if (port_op.r.rcvpar) {
       // the parameter (signature template) is present
       // determining the signature of the argument
@@ -4041,6 +4155,11 @@ error:
     }
     // checking from clause and sender redirect
     chk_from_clause(port_type);
+    if (port_op.r.redirect.index != NULL && port_op.portref != NULL) {
+      Common::Assignment *t_ass = port_op.portref->get_refd_assignment();
+      chk_index_redirect(port_op.r.redirect.index,
+        t_ass != NULL ? t_ass->get_Dimensions() : NULL, port_op.anyfrom, "port");
+    }
   }
 
   void Statement::chk_catch()
@@ -4049,7 +4168,7 @@ error:
     const char *stmt_name = get_stmt_name();
     Error_Context cntxt(this, "In %s statement", stmt_name);
     // checking the port reference
-    Type *port_type = chk_port_ref(port_op.portref);
+    Type *port_type = chk_port_ref(port_op.portref, port_op.anyfrom);
     // checking the signature reference, parameter and/or value redirect
     if (port_op.r.ctch.signature_ref) {
       // the signature reference is present
@@ -4232,12 +4351,17 @@ error:
     }
     // checking from clause and sender redirect
     chk_from_clause(port_type);
+    if (port_op.r.redirect.index != NULL && port_op.portref != NULL) {
+      Common::Assignment *t_ass = port_op.portref->get_refd_assignment();
+      chk_index_redirect(port_op.r.redirect.index,
+        t_ass != NULL ? t_ass->get_Dimensions() : NULL, port_op.anyfrom, "port");
+    }
   }
 
   void Statement::chk_check()
   {
     Error_Context cntxt(this, "In check statement");
-    Type *port_type = chk_port_ref(port_op.portref);
+    Type *port_type = chk_port_ref(port_op.portref, port_op.anyfrom);
     if (port_type && !port_type->get_PortBody()->has_queue()) {
       // the port type is known and it does not have incoming queue
       port_op.portref->error("Port type `%s' does not have incoming queue "
@@ -4246,6 +4370,11 @@ error:
     }
     // checking from clause and sender redirect
     chk_from_clause(port_type);
+    if (port_op.r.redirect.index != NULL && port_op.portref != NULL) {
+      Common::Assignment *t_ass = port_op.portref->get_refd_assignment();
+      chk_index_redirect(port_op.r.redirect.index,
+        t_ass != NULL ? t_ass->get_Dimensions() : NULL, port_op.anyfrom, "port");
+    }
   }
 
   void Statement::chk_clear()
@@ -4414,7 +4543,7 @@ error:
   void Statement::chk_done()
   {
     Error_Context cntxt(this, "In done statement");
-    chk_comp_ref(comp_op.compref, false, false);
+    Type* ref_type = chk_comp_ref(comp_op.compref, false, false, comp_op.any_from);
     if (!comp_op.compref) return;
     // value returning done can be used only when the statement contains a
     // specific component reference
@@ -4434,6 +4563,9 @@ error:
 		return_type->get_typename().c_str());
 		return_type = Type::get_pooltype(Type::T_ERROR);
 	}
+        if (comp_op.any_from) {
+          return_type->get_type_refd_last()->set_needs_any_from_done();
+        }
       } else {
 	comp_op.donereturn.donematch->error("Cannot determine the return type "
 	  "for value returning done");
@@ -4453,12 +4585,32 @@ error:
 	"return value without a matching template");
       comp_op.donereturn.redirect->chk_erroneous();
     }
+    if (comp_op.index_redirect != NULL && ref_type != NULL) {
+      ArrayDimensions dummy;
+      ref_type = ref_type->get_type_refd_last();
+      while (ref_type->get_typetype() == Type::T_ARRAY) {
+        dummy.add(ref_type->get_dimension()->clone());
+        ref_type = ref_type->get_ofType()->get_type_refd_last();
+      }
+      chk_index_redirect(comp_op.index_redirect, &dummy, comp_op.any_from, 
+        "component");
+    }
   }
 
   void Statement::chk_killed()
   {
     Error_Context cntxt(this, "In killed statement");
-    chk_comp_ref(comp_op.compref, false, false);
+    Type* ref_type = chk_comp_ref(comp_op.compref, false, false, comp_op.any_from);
+    if (comp_op.index_redirect != NULL && ref_type != NULL) {
+      ArrayDimensions dummy;
+      ref_type = ref_type->get_type_refd_last();
+      while (ref_type->get_typetype() == Type::T_ARRAY) {
+        dummy.add(ref_type->get_dimension()->clone());
+        ref_type = ref_type->get_ofType()->get_type_refd_last();
+      }
+      chk_index_redirect(comp_op.index_redirect, &dummy, comp_op.any_from, 
+        "component");
+    }
   }
 
   void Statement::chk_connect()
@@ -4614,7 +4766,12 @@ error:
   void Statement::chk_stop_timer_timeout()
   {
     Error_Context cntxt(this, "In %s statement", get_stmt_name());
-    chk_timer_ref(timer_op.timerref);
+    chk_timer_ref(timer_op.timerref, timer_op.any_from);
+    if (timer_op.index_redirect != NULL && timer_op.timerref != NULL) {
+      Common::Assignment* t_ass = timer_op.timerref->get_refd_assignment();
+      chk_index_redirect(timer_op.index_redirect,
+        t_ass != NULL ? t_ass->get_Dimensions() : NULL, timer_op.any_from, "timer");
+    }
   }
 
   void Statement::chk_setverdict()
@@ -4736,7 +4893,7 @@ error:
     statementtype=S_ERROR;
   }
 
-  Type *Statement::chk_port_ref(Reference *p_ref)
+  Type *Statement::chk_port_ref(Reference *p_ref, bool p_any_from)
   {
     if (!my_sb->get_my_def())
       error("Port operation is not allowed in the control part");
@@ -4747,18 +4904,29 @@ error:
     case Common::Assignment::A_PORT: {
       ArrayDimensions *t_dims = t_ass->get_Dimensions();
       if (t_dims) t_dims->chk_indices(p_ref, "port", false,
-	Type::EXPECTED_DYNAMIC_VALUE);
-      else if (p_ref->get_subrefs()) p_ref->error("Reference to single %s "
+	Type::EXPECTED_DYNAMIC_VALUE, p_any_from);
+      else {
+        if (p_any_from) {
+          p_ref->error("Reference to a port array was expected instead of "
+            "a port");
+        }
+        else if (p_ref->get_subrefs()) p_ref->error("Reference to single %s "
 	"cannot have field or array sub-references",
 	t_ass->get_description().c_str());
+      }
       break; }
     case Common::Assignment::A_PAR_PORT:
+      if (p_any_from) {
+        p_ref->error("Reference to a port array was expected instead of "
+          "a port parameter");
+      }
       if (p_ref->get_subrefs()) p_ref->error("Reference to %s cannot have "
         "field or array sub-references", t_ass->get_description().c_str());
       break;
     default:
-      p_ref->error("Reference to a port or port parameter was expected "
-        "instead of %s", t_ass->get_description().c_str());
+      p_ref->error("Reference to a port %s was expected instead of %s",
+        p_any_from ? "array" : "or port parameter",
+        t_ass->get_description().c_str());
       return 0;
     }
     Type *ret_val = t_ass->get_Type();
@@ -4766,6 +4934,98 @@ error:
     ret_val = ret_val->get_type_refd_last();
     if (ret_val->get_typetype() == Type::T_PORT) return ret_val;
     else return 0;
+  }
+  
+  void Statement::chk_index_redirect(Reference* p_index_ref,
+                                     ArrayDimensions* p_array_dims,
+                                     bool p_any_from, const char* p_array_type)
+  {
+    Error_Context cntxt(p_index_ref, "In index redirect");
+    if (!p_any_from) {
+      p_index_ref->error("Index redirect cannot be used without the "
+        "'any from' clause");
+    }
+    Type* ref_type = p_index_ref->chk_variable_ref();
+    if (ref_type != NULL) {
+      size_t nof_dims = p_array_dims != NULL ? p_array_dims->get_nof_dims() : 0;
+      Type* ref_type_last = ref_type->get_type_refd_last();
+      Type::typetype_t tt = ref_type_last->get_typetype_ttcn3();
+      switch (tt) {
+      case Type::T_INT:
+        if (nof_dims > 1) {
+          p_index_ref->error("Indices of multi-dimensional %s arrays can only be "
+            "redirected to an integer array or a record of integers",
+            p_array_type);
+        }
+        else if (nof_dims == 1 && ref_type->get_sub_type() != NULL) {
+          // make sure all possible indices are allowed by the subtype
+          Ttcn::ArrayDimension* dim = p_array_dims->get_dim_byIndex(0);
+          for (size_t i = 0; i < dim->get_size(); ++i) {
+            Value v(Value::V_INT, dim->get_offset() + (Int)i);
+            ref_type->get_sub_type()->chk_this_value(&v);
+          }
+        }
+        break;
+      case Type::T_ARRAY:
+      case Type::T_SEQOF: {
+        if (nof_dims == 1) {
+          p_index_ref->error("Indices of one-dimensional %s arrays can only be "
+            "redirected to an integer", p_array_type);
+        }
+        else {
+          Type* of_type = ref_type_last->get_ofType();
+          Type::typetype_t tt_elem = of_type->get_type_refd_last()->get_typetype_ttcn3();
+          if (tt_elem == tt) {
+            p_index_ref->error("The 'record of' or array in the index redirect "
+              "must be one-dimensional");
+          }
+          else if (tt_elem != Type::T_INT) {
+            p_index_ref->error("The element type of %s in an index "
+              "redirect must be integer", tt == Type::T_ARRAY ? "an array" :
+              "a 'record of'");
+          }
+          if (nof_dims != 0) {
+            boolean error_flag = FALSE;
+            if (tt == Type::T_ARRAY) {
+              ArrayDimension* dim = ref_type_last->get_dimension();
+              if (dim->get_size() != nof_dims) {
+                p_index_ref->error("Size of integer array is invalid: the %s array"
+                  " has %lu dimensions, but the integer array has %lu element%s",
+                  p_array_type, (unsigned long)nof_dims, (unsigned long)dim->get_size(),
+                  dim->get_size() == 1 ? "" : "s");
+                error_flag = TRUE;
+              }
+            }
+            else if (nof_dims != 0 && ref_type->get_sub_type() != NULL &&
+                     !ref_type->get_sub_type()->length_allowed(nof_dims)) {
+              p_index_ref->error("This index redirect would result in a record "
+                "of integer of length %lu, which is not allowed by the length "
+                "restrictions of type `%s'",
+                nof_dims, ref_type->get_typename().c_str());
+              error_flag = TRUE;
+            }
+            if (!error_flag && of_type->get_sub_type() != NULL) {
+              // make sure all possible indices are allowed by the element 
+              // type's subtype
+              for (size_t i = 0; i < nof_dims; ++i) {
+                Error_Context cntxt(p_index_ref, "In dimension #%lu",
+                  (unsigned long)(i + 1));
+                ArrayDimension* dim = p_array_dims->get_dim_byIndex(i);
+                for (size_t j = 0; j < dim->get_size(); ++j) {
+                  Value v(Value::V_INT, dim->get_offset() + (Int)j);
+                  of_type->get_sub_type()->chk_this_value(&v);
+                }
+              }
+            }
+          }
+        }
+        break; }
+      default:
+        p_index_ref->error("Indices of %s arrays can only be redirected to an "
+          "integer, an integer array or a record of integers", p_array_type);
+        break;
+      }
+    }
   }
 
   void Statement::chk_to_clause(Type *port_type)
@@ -5067,7 +5327,7 @@ error:
     return ret_val;
   }
 
-  void Statement::chk_timer_ref(Reference *p_ref)
+  void Statement::chk_timer_ref(Reference *p_ref, bool p_any_from)
   {
     if (!p_ref) return;
     Common::Assignment *t_ass = p_ref->get_refd_assignment();
@@ -5076,22 +5336,35 @@ error:
     case Common::Assignment::A_TIMER: {
       ArrayDimensions *t_dims = t_ass->get_Dimensions();
       if (t_dims) t_dims->chk_indices(p_ref, "timer", false,
-	Type::EXPECTED_DYNAMIC_VALUE);
-      else if (p_ref->get_subrefs()) p_ref->error("Reference to single %s "
-	"cannot have field or array sub-references",
-	t_ass->get_description().c_str());
+        Type::EXPECTED_DYNAMIC_VALUE, p_any_from);
+      else {
+        if (p_any_from) {
+          p_ref->error("Reference to a timer array was expected instead of "
+            "a timer");
+        }
+        else if (p_ref->get_subrefs()) {
+          p_ref->error("Reference to single %s cannot have field or array "
+            "sub-references", t_ass->get_description().c_str());
+        }
+      }
       break; }
     case Common::Assignment::A_PAR_TIMER:
+      if (p_any_from) {
+        p_ref->error("Reference to a timer array was expected instead of "
+          "a timer parameter");
+      }
       if (p_ref->get_subrefs()) p_ref->error("Reference to %s cannot have "
 	"field or array sub-references", t_ass->get_description().c_str());
       break;
     default:
-      p_ref->error("Reference to a timer or timer parameter was expected "
-        "instead of %s", t_ass->get_description().c_str());
+      p_ref->error("Reference to a timer %s was expected instead of %s",
+        p_any_from ? "array" : "or timer parameter",
+        t_ass->get_description().c_str());
     }
   }
 
-  Type *Statement::chk_comp_ref(Value *p_val, bool allow_mtc, bool allow_system)
+  Type *Statement::chk_comp_ref(Value *p_val, bool allow_mtc, bool allow_system,
+                                bool p_any_from)
   {
     if (!my_sb->get_my_def())
       error("Component operation is not allowed in the control part");
@@ -5101,10 +5374,7 @@ error:
     case Value::V_ERROR:
       return 0;
     case Value::V_REFD:
-      break;
     case Value::V_INVOKE:
-      if(p_val->get_expr_returntype() != Type::T_COMPONENT)
-        p_val->error("A component reference was expected as return value");
       break;
     case Value::V_TTCN3_NULL:
       p_val->error("The `null' component reference shall not be used in `%s' operation", get_stmt_name());
@@ -5141,12 +5411,28 @@ error:
     case Type::T_ERROR:
       return 0;
     case Type::T_COMPONENT:
-      return ret_val;
+      if (!p_any_from) {
+        return ret_val;
+      }
+      break;
+    case Type::T_ARRAY:
+      if (p_any_from) {
+        Type* of_type = ret_val->get_ofType()->get_type_refd_last();
+        while (of_type->get_typetype() == Type::T_ARRAY) {
+          of_type = of_type->get_ofType()->get_type_refd_last();
+        }
+        if (of_type->get_typetype() == Type::T_COMPONENT) {
+          return ret_val;
+        }
+      }
+      break;
     default:
-      p_val->error("Type mismatch: The type of the operand should be a "
-	"component type instead of `%s'", ret_val->get_typename().c_str());
-      return 0;
+      break;
     }
+    p_val->error("Type mismatch: The type of the operand should be a "
+      "component%s type instead of `%s'", p_any_from ? " array" : "",
+      ret_val->get_typename().c_str());
+    return 0;
   }
 
   Type *Statement::chk_conn_endpoint(Value *p_compref, Reference *p_portref,
@@ -5310,6 +5596,9 @@ error:
         port_op.r.redirect.value->set_code_section(p_code_section);
       if (port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_code_section(p_code_section);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_code_section(p_code_section);
+      }
       break;
     case S_GETCALL:
     case S_CHECK_GETCALL:
@@ -5321,6 +5610,9 @@ error:
         port_op.r.redirect.param->set_code_section(p_code_section);
       if (port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_code_section(p_code_section);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_code_section(p_code_section);
+      }
       break;
     case S_GETREPLY:
     case S_CHECK_GETREPLY:
@@ -5336,6 +5628,9 @@ error:
         port_op.r.redirect.param->set_code_section(p_code_section);
       if (port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_code_section(p_code_section);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_code_section(p_code_section);
+      }
       break;
     case S_CATCH:
     case S_CHECK_CATCH:
@@ -5347,6 +5642,9 @@ error:
         port_op.r.redirect.value->set_code_section(p_code_section);
       if (port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_code_section(p_code_section);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_code_section(p_code_section);
+      }
       break;
     case S_CHECK:
       if (port_op.portref) port_op.portref->set_code_section(p_code_section);
@@ -5354,6 +5652,9 @@ error:
         port_op.r.fromclause->set_code_section(p_code_section);
       if (port_op.r.redirect.sender)
         port_op.r.redirect.sender->set_code_section(p_code_section);
+      if (port_op.r.redirect.index != NULL) {
+        port_op.r.redirect.index->set_code_section(p_code_section);
+      }
       break;
     case S_CLEAR:
     case S_START_PORT:
@@ -5373,6 +5674,9 @@ error:
     case S_KILL:
     case S_KILLED:
       if (comp_op.compref) comp_op.compref->set_code_section(p_code_section);
+      if (comp_op.index_redirect != NULL) {
+        comp_op.index_redirect->set_code_section(p_code_section);
+      }
       break;
     case S_DONE:
       if (comp_op.compref) {
@@ -5381,6 +5685,9 @@ error:
           comp_op.donereturn.donematch->set_code_section(p_code_section);
         if (comp_op.donereturn.redirect)
           comp_op.donereturn.redirect->set_code_section(p_code_section);
+        if (comp_op.index_redirect != NULL) {
+          comp_op.index_redirect->set_code_section(p_code_section);
+        }
       }
       break;
     case S_CONNECT:
@@ -5400,6 +5707,9 @@ error:
     case S_TIMEOUT:
       if (timer_op.timerref)
         timer_op.timerref->set_code_section(p_code_section);
+      if (timer_op.index_redirect != NULL) {
+        timer_op.index_redirect->set_code_section(p_code_section);
+      }
       break;
     case S_SETVERDICT:
       setverdict.verdictval->set_code_section(p_code_section);
@@ -7042,8 +7352,7 @@ error:
         expr->expr = mputstr(expr->expr, ", ");
         if (port_op.r.redirect.value) {
           // Value redirect is also present.
-          port_op.r.redirect.value->generate_code(expr, port_op.r.rcvpar,
-            port_op.portref->get_refd_assignment()->get_Type()->get_genname_value(my_sb));
+          port_op.r.redirect.value->generate_code(expr, port_op.r.rcvpar);
         } else expr->expr = mputstr(expr->expr, "NULL");
         expr->expr = mputstr(expr->expr, ", ");
       }
@@ -7054,6 +7363,15 @@ error:
     generate_code_expr_fromclause(expr);
     expr->expr = mputstr(expr->expr, ", ");
     generate_code_expr_senderredirect(expr);
+    if (port_op.portref) {
+      expr->expr = mputstr(expr->expr, ", ");
+      if (port_op.r.redirect.index != NULL) {
+        generate_code_index_redirect(expr, port_op.r.redirect.index, my_sb);
+      }
+      else {
+        expr->expr = mputstr(expr->expr, "NULL");
+      }
+    }
     expr->expr = mputc(expr->expr, ')');
   }
 
@@ -7096,6 +7414,13 @@ error:
 	generate_code_expr_fromclause(expr);
 	expr->expr = mputstr(expr->expr, ", ");
 	generate_code_expr_senderredirect(expr);
+      }
+      expr->expr = mputstr(expr->expr, ", ");
+      if (port_op.r.redirect.index != NULL) {
+        generate_code_index_redirect(expr, port_op.r.redirect.index, my_sb);
+      }
+      else {
+        expr->expr = mputstr(expr->expr, "NULL");
       }
     } else {
       // the operation refers to any port
@@ -7159,8 +7484,7 @@ error:
 	  // the first argument of the constructor must contain
 	  // the value redirect
 	  if (port_op.r.redirect.value) {
-	    port_op.r.redirect.value->generate_code(expr, port_op.r.getreply_valuematch,
-        signature->get_genname_value(my_sb) + "_reply_redirect");
+	    port_op.r.redirect.value->generate_code(expr, port_op.r.getreply_valuematch);
 	  } else expr->expr = mputstr(expr->expr, "NULL");
 	  if (port_op.r.redirect.param) expr->expr = mputstr(expr->expr, ", ");
 	}
@@ -7173,6 +7497,13 @@ error:
 	generate_code_expr_fromclause(expr);
 	expr->expr = mputstr(expr->expr, ", ");
 	generate_code_expr_senderredirect(expr);
+      }
+      expr->expr = mputstr(expr->expr, ", ");
+      if (port_op.r.redirect.index != NULL) {
+        generate_code_index_redirect(expr, port_op.r.redirect.index, my_sb);
+      }
+      else {
+        expr->expr = mputstr(expr->expr, "NULL");
       }
     } else {
       // the operation refers to any port
@@ -7206,8 +7537,7 @@ error:
 	expr->expr = mputstr(expr->expr, ", ");
 	if (port_op.r.redirect.value) {
 	  // value redirect is also present
-	  port_op.r.redirect.value->generate_code(expr, port_op.r.rcvpar,
-      port_op.r.ctch.signature->get_genname_value(my_sb) + "_exception_template");
+	  port_op.r.redirect.value->generate_code(expr, port_op.r.rcvpar);
 	} else expr->expr = mputstr(expr->expr, "NULL");
 	expr->expr = mputstr(expr->expr, "), ");
       }
@@ -7219,6 +7549,15 @@ error:
     generate_code_expr_fromclause(expr);
     expr->expr = mputstr(expr->expr, ", ");
     generate_code_expr_senderredirect(expr);
+    if (port_op.portref) {
+      expr->expr = mputstr(expr->expr, ", ");
+      if (port_op.r.redirect.index != NULL) {
+        generate_code_index_redirect(expr, port_op.r.redirect.index, my_sb);
+      }
+      else {
+        expr->expr = mputstr(expr->expr, "NULL");
+      }
+    }
     expr->expr = mputc(expr->expr, ')');
   }
 
@@ -7236,6 +7575,15 @@ error:
     generate_code_expr_fromclause(expr);
     expr->expr = mputstr(expr->expr, ", ");
     generate_code_expr_senderredirect(expr);
+    if (port_op.portref) {
+      expr->expr = mputstr(expr->expr, ", ");
+      if (port_op.r.redirect.index != NULL) {
+        generate_code_index_redirect(expr, port_op.r.redirect.index, my_sb);
+      }
+      else {
+        expr->expr = mputstr(expr->expr, "NULL");
+      }
+    }
     expr->expr = mputc(expr->expr, ')');
   }
 
@@ -7267,19 +7615,24 @@ error:
 	expr->expr = mputstr(expr->expr, ", ");
 	if (comp_op.donereturn.redirect) {
 	  // value redirect is present
-	  comp_op.donereturn.redirect->generate_code(expr, comp_op.donereturn.donematch,
-      t_mod != my_sb->get_scope_mod_gen() ? t_mod->get_modid().get_name() :
-      string(""));
+	  comp_op.donereturn.redirect->generate_code(expr, comp_op.donereturn.donematch);
 	} else {
 	  // value redirect is omitted
 	  expr->expr = mputstr(expr->expr, "NULL");
 	}
-	expr->expr = mputc(expr->expr, ')');
+  expr->expr = mputstr(expr->expr, ", ");
       } else {
 	// simple done
 	comp_op.compref->generate_code_expr_mandatory(expr);
-	expr->expr = mputstr(expr->expr, ".done()");
+	expr->expr = mputstr(expr->expr, ".done(");
       }
+      if (comp_op.index_redirect != NULL) {
+        generate_code_index_redirect(expr, comp_op.index_redirect, my_sb);
+      }
+      else {
+        expr->expr = mputstr(expr->expr, "NULL");
+      }
+      expr->expr = mputc(expr->expr, ')');
     } else if (comp_op.any_or_all == C_ANY) {
       // any component.done
       expr->expr = mputstr(expr->expr,
@@ -7296,7 +7649,14 @@ error:
     if (comp_op.compref) {
       // compref.killed
       comp_op.compref->generate_code_expr_mandatory(expr);
-      expr->expr = mputstr(expr->expr, ".killed()");
+      expr->expr = mputstr(expr->expr, ".killed(");
+      if (comp_op.index_redirect != NULL) {
+        generate_code_index_redirect(expr, comp_op.index_redirect, my_sb);
+      }
+      else {
+        expr->expr = mputstr(expr->expr, "NULL");
+      }
+      expr->expr = mputc(expr->expr, ')');
     } else if (comp_op.any_or_all == C_ANY) {
       // any component.killed
       expr->expr = mputstr(expr->expr,
@@ -7312,7 +7672,14 @@ error:
   {
     if (timer_op.timerref) {
       timer_op.timerref->generate_code(expr);
-      expr->expr=mputstr(expr->expr, ".timeout()");
+      expr->expr=mputstr(expr->expr, ".timeout(");
+      if (timer_op.index_redirect != NULL) {
+        generate_code_index_redirect(expr, timer_op.index_redirect, my_sb);
+      }
+      else {
+        expr->expr = mputstr(expr->expr, "NULL");
+      }
+      expr->expr = mputc(expr->expr, ')');
     } else expr->expr = mputstr(expr->expr, "TIMER::any_timeout()");
   }
 
@@ -7401,6 +7768,61 @@ error:
     expr_backup = mputstr(expr_backup, expr->expr);
     Free(expr->expr);
     expr->expr = expr_backup;
+  }
+  
+  void Statement::generate_code_index_redirect(expression_struct* expr,
+                                               Reference* p_ref,
+                                               Scope* p_scope)
+  {
+    // A new class is generated into the expression's preamble (inheriting the
+    // Index_Redirect class and implementing its virtual function).
+    // One instance of the class is created and its address is generated into 
+    // the expression proper (expr->expr).
+    expression_struct ref_expr;
+    Code::init_expr(&ref_expr);
+    p_ref->generate_code(&ref_expr);
+    if (ref_expr.preamble != NULL) {
+      expr->preamble = mputstr(expr->preamble, ref_expr.preamble);
+    }
+    string tmp_id_class = p_scope->get_scope_mod_gen()->get_temporary_id();
+    string tmp_id_var = p_scope->get_scope_mod_gen()->get_temporary_id();
+    Type* ref_type = p_ref->chk_variable_ref();
+    expr->preamble = mputprintf(expr->preamble,
+      "class Index_Redirect_%s : public Index_Redirect {\n"
+      "%s* ptr;\n"
+      "public:\n"
+      "Index_Redirect_%s(%s* par): Index_Redirect(), ptr(par) { }\n"
+      "void add_index(int p_index) { ",
+      tmp_id_class.c_str(), ref_type->get_genname_value(p_scope).c_str(),
+      tmp_id_class.c_str(), ref_type->get_genname_value(p_scope).c_str());
+    switch (ref_type->get_type_refd_last()->get_typetype_ttcn3()) {
+    case Type::T_INT:
+      expr->preamble = mputstr(expr->preamble, "*ptr");
+      break;
+    case Type::T_SEQOF:
+      expr->preamble = mputstr(expr->preamble, "(*ptr)[pos]");
+      break;
+    case Type::T_ARRAY: {
+      ArrayDimension* dim = ref_type->get_type_refd_last()->get_dimension();
+      int offset = dim->get_offset();
+      char* offset_str = offset < 0 ? mprintf(" - %d", -offset) :
+        (offset > 0 ? mprintf(" + %d", offset) : memptystr());
+      expr->preamble = mputprintf(expr->preamble, "(*ptr)[pos%s]", offset_str);
+      Free(offset_str);
+      break; }
+    default:
+      FATAL_ERROR("Statement::generate_code_index_redirect");
+    }
+    expr->preamble = mputprintf(expr->preamble,
+      " = p_index; }\n"
+      "};\n"
+      "Index_Redirect_%s %s(&(%s));\n",
+      tmp_id_class.c_str(), tmp_id_var.c_str(),ref_expr.expr);
+    if (ref_expr.postamble != NULL) {
+      expr->preamble = mputstr(expr->preamble, ref_expr.postamble);
+    }
+    Code::free_expr(&ref_expr);
+    expr->expr = mputprintf(expr->expr, "&%s", tmp_id_var.c_str());
   }
 
   void Statement::set_parent_path(WithAttribPath* p_path) {
@@ -8657,8 +9079,7 @@ error:
       // the return type's value redirect object must be passed through this
       // class
       if (use_runtime_2) {
-        constr_params_str = mprintf("%s_Redirect_Interface* return_redirect, ",
-          return_type->get_genname_value(return_type->get_my_scope()).c_str());
+        constr_params_str = mprintf("Value_Redirect_Interface* return_redirect, ");
       }
       else {
         constr_params_str = mprintf("%s* return_redirect, ",
@@ -9349,18 +9770,11 @@ error:
   }
   
   void ValueRedirect::generate_code(expression_struct* expr,
-                                    TemplateInstance* matched_ti,
-                                    string base_class_prefix)
+                                    TemplateInstance* matched_ti)
   {
     if (use_runtime_2) {
       // a value redirect class is generated for this redirect in the expression's
       // preamble and instantiated in the expression
-
-      // the base class (interface) is type-specific, and is defined in the entity
-      // the new class instance is passed to (the port type for receive operations,
-      // the signature's reply redirect class for the return value, the signature
-      // exception template class for catch operations, and in the value type's
-      // module for done operations)
       Scope* scope = v[0]->get_var_ref()->get_my_scope();
       string tmp_id = scope->get_scope_mod_gen()->get_temporary_id();
       expr->expr = mputprintf(expr->expr, "new Value_Redirect_%s(", tmp_id.c_str());
@@ -9380,6 +9794,7 @@ error:
           value_type->get_genname_template(scope).c_str());
         constr_init_list_str = mcopystr("ptr_matched_temp(par_matched_temp), ");
       }
+      boolean need_par = FALSE;
       for (size_t i = 0; i < v.size(); ++i) {
         if (i > 0) {
           expr->expr = mputstr(expr->expr, ", ");
@@ -9598,6 +10013,7 @@ error:
               (int)i, type_str.c_str(), subrefs_str);
           }
           if (needs_decode) {
+            need_par = TRUE;
             if (use_decmatch_result) {
               set_values_str = mputstr(set_values_str, "}\nelse {\n");
             }
@@ -9607,24 +10023,24 @@ error:
                 (int)i);
               switch (tt) {
               case Type::T_BSTR:
-                set_values_str = mputprintf(set_values_str, "par%s%s",
+                set_values_str = mputprintf(set_values_str, "(*par)%s%s",
                   subrefs_str, opt_suffix);
                 break;
               case Type::T_HSTR:
-                set_values_str = mputprintf(set_values_str, "hex2bit(par%s%s)",
+                set_values_str = mputprintf(set_values_str, "hex2bit((*par)%s%s)",
                   subrefs_str, opt_suffix);
                 break;
               case Type::T_OSTR:
-                set_values_str = mputprintf(set_values_str, "oct2bit(par%s%s)",
+                set_values_str = mputprintf(set_values_str, "oct2bit((*par)%s%s)",
                   subrefs_str, opt_suffix);
                 break;
               case Type::T_CSTR:
                 set_values_str = mputprintf(set_values_str,
-                  "oct2bit(char2oct(par%s%s))", subrefs_str, opt_suffix);
+                  "oct2bit(char2oct((*par)%s%s))", subrefs_str, opt_suffix);
                 break;
               case Type::T_USTR:
                 set_values_str = mputprintf(set_values_str,
-                  "oct2bit(unichar2oct(par%s%s, ", subrefs_str, opt_suffix);
+                  "oct2bit(unichar2oct((*par)%s%s, ", subrefs_str, opt_suffix);
                 if (v[i]->get_str_enc() == NULL || !v[i]->get_str_enc()->is_unfoldable()) {
                   // encoding format is missing or is known at compile-time
                   set_values_str = mputprintf(set_values_str, "\"%s\"",
@@ -9666,16 +10082,16 @@ error:
               case Type::T_OSTR:
               case Type::T_CSTR:
                 set_values_str = mputprintf(set_values_str,
-                  "TTCN_Buffer buff_%d(par%s%s);\n", (int)i, subrefs_str, opt_suffix);
+                  "TTCN_Buffer buff_%d((*par)%s%s);\n", (int)i, subrefs_str, opt_suffix);
                 break;
               case Type::T_BSTR:
                 set_values_str = mputprintf(set_values_str,
-                  "OCTETSTRING os(bit2oct(par%s%s));\n"
+                  "OCTETSTRING os(bit2oct((*par)%s%s));\n"
                   "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
                 break;
               case Type::T_HSTR:
                 set_values_str = mputprintf(set_values_str,
-                  "OCTETSTRING os(hex2oct(par%s%s));\n"
+                  "OCTETSTRING os(hex2oct((*par)%s%s));\n"
                   "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
                 break;
               case Type::T_USTR:
@@ -9688,18 +10104,18 @@ error:
                     v[i]->get_str_enc()->get_val_str() : string("UTF-8");
                   if (str_enc == "UTF-8") {
                     set_values_str = mputprintf(set_values_str,
-                      "par%s%s.encode_utf8(buff_%d, false);\n", subrefs_str, opt_suffix, (int)i);
+                      "(*par)%s%s.encode_utf8(buff_%d, false);\n", subrefs_str, opt_suffix, (int)i);
                   }
                   else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
                            str_enc == "UTF-16BE") {
                     set_values_str = mputprintf(set_values_str,
-                      "par%s%s.encode_utf16(buff_%d, CharCoding::UTF16%s);\n", subrefs_str,
+                      "(*par)%s%s.encode_utf16(buff_%d, CharCoding::UTF16%s);\n", subrefs_str,
                       opt_suffix, (int)i, (str_enc == "UTF-16LE") ? "LE" : "BE");
                   }
                   else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
                            str_enc == "UTF-32BE") {
                     set_values_str = mputprintf(set_values_str,
-                      "par%s%s.encode_utf32(buff_%d, CharCoding::UTF32%s);\n", subrefs_str,
+                      "(*par)%s%s.encode_utf32(buff_%d, CharCoding::UTF32%s);\n", subrefs_str,
                       opt_suffix, (int)i, (str_enc == "UTF-32LE") ? "LE" : "BE");
                   }
                 }
@@ -9725,17 +10141,17 @@ error:
                   set_values_str = mputprintf(set_values_str,
                     "switch (coding) {\n"
                     "case CharCoding::UTF_8:\n"
-                    "par%s%s.encode_utf8(buff_%d, false);\n"
+                    "(*par)%s%s.encode_utf8(buff_%d, false);\n"
                     "break;\n"
                     "case CharCoding::UTF16:\n"
                     "case CharCoding::UTF16LE:\n"
                     "case CharCoding::UTF16BE:\n"
-                    "par%s%s.encode_utf16(buff_%d, coding);\n"
+                    "(*par)%s%s.encode_utf16(buff_%d, coding);\n"
                     "break;\n"
                     "case CharCoding::UTF32:\n"
                     "case CharCoding::UTF32LE:\n"
                     "case CharCoding::UTF32BE:\n"
-                    "par%s%s.encode_utf32(buff_%d, coding);\n"
+                    "(*par)%s%s.encode_utf32(buff_%d, coding);\n"
                     "break;\n"
                     "default:\n"
                     "break;\n"
@@ -9762,13 +10178,14 @@ error:
           }
         }
         else {
+          need_par = TRUE;
           // if the variable reference and the received value (or its specified field)
           // are not of the same type, then a type conversion is needed (RT2 only)
           if (!ref_type->is_identical(redir_type)) {
             Common::Module* mod = scope->get_scope_mod();
             mod->add_type_conv(new TypeConv(redir_type, ref_type, false));
             set_values_str = mputprintf(set_values_str,
-              "if (!%s(*ptr_%d, par%s%s)) {\n"
+              "if (!%s(*ptr_%d, (*par)%s%s)) {\n"
               "TTCN_error(\"Failed to convert redirected value #%d from type `%s' "
               "to type `%s'.\");\n"
               "}\n",
@@ -9777,7 +10194,7 @@ error:
               ref_type->get_typename().c_str());
           }
           else {
-            set_values_str = mputprintf(set_values_str, "*ptr_%d = par%s%s;\n",
+            set_values_str = mputprintf(set_values_str, "*ptr_%d = (*par)%s%s;\n",
               (int)i, subrefs_str, opt_suffix);
           }
         }
@@ -9787,12 +10204,9 @@ error:
         Code::free_expr(&subrefs_expr);
       }
       expr->expr = mputc(expr->expr, ')');
-      if (!base_class_prefix.empty()) {
-        base_class_prefix += "::";
-      }
       // generate the new class with the gathered data
       expr->preamble = mputprintf(expr->preamble,
-        "class Value_Redirect_%s : public %s%s_Redirect_Interface {\n"
+        "class Value_Redirect_%s : public Value_Redirect_Interface {\n"
         // member declarations; one for each variable reference
         "%s"
         "public:\n"
@@ -9803,15 +10217,20 @@ error:
         // set_values function: assigns the whole value or a part of it to each
         // variable; the redirects marked with the '@decoded' modifier are decoded
         // here before they are assigned
-        "void set_values(const %s& par)\n"
-        "{\n"
-        "%s"
+        "void set_values(const Base_Type*%s)\n"
+        "{\n", tmp_id.c_str(), members_str, tmp_id.c_str(), constr_params_str,
+        constr_init_list_str, need_par ? " p" : "");
+      if (need_par) {
+        // don't generate the parameter and its casting if it is never used
+        expr->preamble = mputprintf(expr->preamble,
+          "const %s* par = static_cast<const %s*>(p);\n",
+          value_type->get_genname_value(scope).c_str(), 
+          value_type->get_genname_value(scope).c_str());
+      }
+      expr->preamble = mputstr(expr->preamble, set_values_str);
+      expr->preamble = mputstr(expr->preamble,
         "}\n"
-        "};\n", tmp_id.c_str(),
-        base_class_prefix.empty() ? "" : base_class_prefix.c_str(),
-        value_type->get_genname_value(value_type->get_my_scope()).c_str(),
-        members_str, tmp_id.c_str(), constr_params_str, constr_init_list_str,
-        value_type->get_genname_value(scope).c_str(), set_values_str);
+        "};\n");
       Free(members_str);
       Free(constr_params_str);
       Free(constr_init_list_str);

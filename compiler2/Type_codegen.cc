@@ -1359,7 +1359,7 @@ void Type::generate_code_Choice(output_struct *target)
     sdef.control_ns_prefix = prefix;
     sdef.xerUseUnion = xerattrib->useUnion_;
     sdef.xerUseTypeAttr  = xerattrib->useType_ || xerattrib->useUnion_;
-        }
+  }
   defUnionClass(&sdef, target);
   defUnionTemplate(&sdef, target);
 
@@ -2272,27 +2272,17 @@ void Type::generate_code_done(output_struct *target)
   const char *genname_str = t_genname.c_str();
   const string& dispname = get_typename();
   const char *dispname_str = dispname.c_str();
-  // value redirect base class (interface)
-  if (use_runtime_2) {
-    target->header.class_decls = mputprintf(target->header.class_decls,
-      "class %s_Redirect_Interface;\n", genname_str);
-    target->header.class_defs = mputprintf(target->header.class_defs,
-      "class %s_Redirect_Interface {\n"
-      "public:\n"
-      "virtual void set_values(const %s&) = 0;\n"
-      "virtual ~%s_Redirect_Interface() { }\n"
-      "};\n\n", genname_str, genname_str, genname_str);
-  }
+
   // the done function
   target->header.function_prototypes = mputprintf
     (target->header.function_prototypes,
      "extern alt_status done(const COMPONENT& component_reference, "
-     "const %s_template& value_template, %s%s *value_redirect);\n",
-     genname_str, genname_str, use_runtime_2 ? "_Redirect_Interface" : "");
+     "const %s_template& value_template, %s *value_redirect, Index_Redirect*);\n",
+     genname_str, use_runtime_2 ? "Value_Redirect_Interface" : genname_str);
   target->source.function_bodies = mputprintf
     (target->source.function_bodies,
      "alt_status done(const COMPONENT& component_reference, "
-     "const %s_template& value_template, %s%s *value_redirect)\n"
+     "const %s_template& value_template, %s *value_redirect, Index_Redirect*)\n"
      "{\n"
      "if (!component_reference.is_bound()) "
      "TTCN_error(\"Performing a done operation on an unbound component "
@@ -2306,11 +2296,11 @@ void Type::generate_code_done(output_struct *target)
      "%s return_value;\n"
      "return_value.decode_text(*text_buf);\n"
      "if (value_template.match(return_value)) {\n"
-     "if (value_redirect != NULL) {\n", genname_str, genname_str,
-     use_runtime_2 ? "_Redirect_Interface" : "", dispname_str, genname_str);
+     "if (value_redirect != NULL) {\n", genname_str,
+     use_runtime_2 ? "Value_Redirect_Interface" : genname_str, dispname_str, genname_str);
   if (use_runtime_2) {
     target->source.function_bodies = mputstr(target->source.function_bodies,
-      "value_redirect->set_values(return_value);\n"
+      "value_redirect->set_values(&return_value);\n"
       "delete value_redirect;\n");
   }
   else {
@@ -2342,6 +2332,41 @@ void Type::generate_code_done(output_struct *target)
      "} else return ret_val;\n"
      "}\n\n",
      dispname_str, dispname_str, omit_in_value_list ? ", TRUE" : "");
+  if (needs_any_from_done) {
+    // 'done' function for component arrays
+    // this needs to be generated in the header, because it has template parameters
+    target->header.function_prototypes = mputprintf(
+      target->header.function_prototypes,
+      "\ntemplate <typename T_type, unsigned int array_size, int index_offset>\n"
+      "alt_status done(const VALUE_ARRAY<T_type, array_size, index_offset>& "
+      "component_array, const %s_template& value_template, "
+      "%s* value_redirect, Index_Redirect* index_redirect)\n"
+      "{\n"
+      "if (index_redirect != NULL) {\n"
+      "index_redirect->incr_pos();\n"
+      "}\n"
+      "alt_status result = ALT_NO;\n"
+      "for (unsigned int i = 0; i < array_size; ++i) {\n"
+      "alt_status ret_val = done(component_array[i], value_template, value_redirect, "
+      "index_redirect);\n"
+      "if (ret_val == ALT_YES) {\n"
+      "if (index_redirect != NULL) {\n"
+      "index_redirect->add_index((int)i + index_offset);\n"
+      "}\n"
+      "result = ret_val;\n"
+      "break;\n"
+      "}\n"
+      "else if (ret_val == ALT_REPEAT || (ret_val == ALT_MAYBE && result == ALT_NO)) {\n"
+      "result = ret_val;\n"
+      "}\n"
+      "}\n"
+      "if (index_redirect != NULL) {\n"
+      "index_redirect->decr_pos();\n"
+      "}\n"
+      "return result;\n"
+      "}\n\n",
+      genname_str, use_runtime_2 ? "Value_Redirect_Interface" : genname_str);
+  }
 }
 
 bool Type::ispresent_anyvalue_embedded_field(Type* t,

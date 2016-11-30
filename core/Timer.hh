@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Raduly, Csaba
  *   Szabo, Janos Zoltan – initial implementation
  *
@@ -19,6 +20,7 @@
 #include "Types.h"
 
 class FLOAT;
+class Index_Redirect;
 
 /** Runtime class for TTCN-3 timers.
  *  All durations are in seconds with fractional values,
@@ -78,7 +80,7 @@ public:
   /** Is the timer running.
    *  @return \c TRUE if is_started and not yet expired, \c FALSE otherwise.
    */
-  boolean running() const;
+  boolean running(Index_Redirect* p = NULL) const;
   /** Return the alt status.
    *  @return ALT_NO    if the timer is not started.
    *  @return ALT_MAYBE if it's started and the snapshot was taken before the expiration time
@@ -87,7 +89,7 @@ public:
    *  If the answer is ALT_YES, a TIMEROP_TIMEOUT message is written to the log
    *  and \p is_started becomes FALSE.
    */
-  alt_status timeout();
+  alt_status timeout(Index_Redirect* p = NULL);
 
   void log() const;
 

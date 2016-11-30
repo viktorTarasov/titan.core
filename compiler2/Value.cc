@@ -170,6 +170,11 @@ namespace Common {
       case OPTYPE_TESTCASENAME:
       case OPTYPE_PROF_RUNNING:
         break;
+      case OPTYPE_COMP_RUNNING: // v1 [r2] b4
+      case OPTYPE_COMP_ALIVE:
+        u.expr.r2 = p.u.expr.r2 != NULL ? p.u.expr.r2->clone() : NULL;
+        u.expr.b4 = p.u.expr.b4;
+        // no break
       case OPTYPE_UNARYPLUS: // v1
       case OPTYPE_UNARYMINUS:
       case OPTYPE_NOT:
@@ -180,8 +185,6 @@ namespace Common {
       case OPTYPE_BIT2STR:
       case OPTYPE_CHAR2INT:
       case OPTYPE_CHAR2OCT:
-      case OPTYPE_COMP_RUNNING:
-      case OPTYPE_COMP_ALIVE:
       case OPTYPE_FLOAT2INT:
       case OPTYPE_FLOAT2STR:
       case OPTYPE_HEX2BIT:
@@ -249,9 +252,12 @@ namespace Common {
         u.expr.v1=p.u.expr.v1->clone();
         u.expr.v2=p.u.expr.v2?p.u.expr.v2->clone():0;
         break;
-      case OPTYPE_DECODE:
+      case OPTYPE_DECODE: // r1 r2
+      case OPTYPE_UNDEF_RUNNING: // r1 [r2] b4
+      case OPTYPE_TMR_RUNNING: // r1 [r2] b4
         u.expr.r1=p.u.expr.r1->clone();
-        u.expr.r2=p.u.expr.r2->clone();
+        u.expr.r2 = p.u.expr.r2 != NULL ? p.u.expr.r2->clone() : NULL;
+        u.expr.b4 = p.u.expr.b4;
         break;
       case OPTYPE_SUBSTR:
         u.expr.ti1=p.u.expr.ti1->clone();
@@ -292,9 +298,7 @@ namespace Common {
         u.expr.r2 = p.u.expr.r2->clone();
         u.expr.v3=p.u.expr.v3?p.u.expr.v3->clone():0;
         break;
-      case OPTYPE_UNDEF_RUNNING:
       case OPTYPE_TMR_READ:
-      case OPTYPE_TMR_RUNNING:
       case OPTYPE_ACTIVATE:
         u.expr.r1=p.u.expr.r1->clone();
         break;
@@ -493,6 +497,10 @@ namespace Common {
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
       break;
+    case OPTYPE_COMP_RUNNING: // v1 [r2] b4
+    case OPTYPE_COMP_ALIVE:
+      delete u.expr.r2;
+      // no break
     case OPTYPE_UNARYPLUS: // v1
     case OPTYPE_UNARYMINUS:
     case OPTYPE_NOT:
@@ -503,8 +511,6 @@ namespace Common {
     case OPTYPE_BIT2STR:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
-    case OPTYPE_COMP_RUNNING:
-    case OPTYPE_COMP_ALIVE:
     case OPTYPE_FLOAT2INT:
     case OPTYPE_FLOAT2STR:
     case OPTYPE_HEX2BIT:
@@ -567,7 +573,9 @@ namespace Common {
       delete u.expr.v1;
       delete u.expr.v2;
       break;
-    case OPTYPE_DECODE:
+    case OPTYPE_DECODE: // r1 r2
+    case OPTYPE_UNDEF_RUNNING: // r1 [r2] b4
+    case OPTYPE_TMR_RUNNING: // r1 [r2] b4
       delete u.expr.r1;
       delete u.expr.r2;
       break;
@@ -612,9 +620,7 @@ namespace Common {
       delete u.expr.r2;
       delete u.expr.v3;
       break;
-    case OPTYPE_UNDEF_RUNNING:
     case OPTYPE_TMR_READ:
-    case OPTYPE_TMR_RUNNING:
     case OPTYPE_ACTIVATE:
       delete u.expr.r1;
       break;
@@ -896,8 +902,6 @@ namespace Common {
     case OPTYPE_BIT2STR:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
-    case OPTYPE_COMP_RUNNING:
-    case OPTYPE_COMP_ALIVE:
     case OPTYPE_FLOAT2INT:
     case OPTYPE_FLOAT2STR:
     case OPTYPE_HEX2BIT:
@@ -930,6 +934,28 @@ namespace Common {
       break;
     case OPTYPE_HOSTID:
       u.expr.v1=p_v1;
+      break;
+    default:
+      FATAL_ERROR("Value::Value()");
+    } // switch
+  }
+  
+  // v1 [r2] b4
+  Value::Value(operationtype_t p_optype, Value* p_v1, Ttcn::Ref_base *p_r2,
+               bool p_b4)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+  {
+    u.expr.v_optype = p_optype;
+    u.expr.state = EXPR_NOT_CHECKED;
+    switch(p_optype) {
+    case OPTYPE_COMP_RUNNING:
+    case OPTYPE_COMP_ALIVE:
+      if (p_v1 == NULL) {
+        FATAL_ERROR("Value::Value()");
+      }
+      u.expr.v1 = p_v1;
+      u.expr.r2 = p_r2;
+      u.expr.b4 = p_b4;
       break;
     default:
       FATAL_ERROR("Value::Value()");
@@ -969,12 +995,31 @@ namespace Common {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
     switch(p_optype) {
-    case OPTYPE_UNDEF_RUNNING:
     case OPTYPE_TMR_READ:
-    case OPTYPE_TMR_RUNNING:
     case OPTYPE_ACTIVATE:
       if(!p_r1) FATAL_ERROR("Value::Value()");
       u.expr.r1=p_r1;
+      break;
+    default:
+      FATAL_ERROR("Value::Value()");
+    } // switch
+  }
+  
+  // r1 [r2] b4
+  Value::Value(operationtype_t p_optype, Ttcn::Ref_base* p_r1, Ttcn::Ref_base* p_r2,
+               bool p_b4)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+  {
+    u.expr.v_optype = p_optype;
+    u.expr.state = EXPR_NOT_CHECKED;
+    switch (p_optype) {
+    case OPTYPE_UNDEF_RUNNING:
+      if (p_r1 == NULL) {
+        FATAL_ERROR("Value::Value()");
+      }
+      u.expr.r1 = p_r1;
+      u.expr.r2 = p_r2;
+      u.expr.b4 = p_b4;
       break;
     default:
       FATAL_ERROR("Value::Value()");
@@ -1519,8 +1564,6 @@ namespace Common {
     case OPTYPE_BIT2STR:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
-    case OPTYPE_COMP_RUNNING:
-    case OPTYPE_COMP_ALIVE:
     case OPTYPE_FLOAT2INT:
     case OPTYPE_FLOAT2STR:
     case OPTYPE_HEX2BIT:
@@ -1635,9 +1678,7 @@ namespace Common {
       u.expr.r1->set_fullname(p_fullname+".<operand1>");
       u.expr.r2->set_fullname(p_fullname+".<operand2>");
       if (u.expr.v3) u.expr.v3->set_fullname(p_fullname+".<operand3>");
-    case OPTYPE_UNDEF_RUNNING: // r1
-    case OPTYPE_TMR_READ:
-    case OPTYPE_TMR_RUNNING:
+    case OPTYPE_TMR_READ: // r1
     case OPTYPE_ACTIVATE:
       u.expr.r1->set_fullname(p_fullname+".<operand>");
       break;
@@ -1689,6 +1730,20 @@ namespace Common {
     case OPTYPE_CHECKSTATE_ALL:
       u.expr.v2->set_fullname(p_fullname+".<operand1>");
       break;
+    case OPTYPE_UNDEF_RUNNING: // r1 [r2] b4
+    case OPTYPE_TMR_RUNNING:
+      u.expr.r1->set_fullname(p_fullname+".<operand>");
+      if (u.expr.r2 != NULL) {
+        u.expr.r2->set_fullname(p_fullname+".redirindex");
+      }
+      break;
+    case OPTYPE_COMP_RUNNING: // v1 [r2] b4
+    case OPTYPE_COMP_ALIVE:
+      u.expr.v1->set_fullname(p_fullname+".<operand>");
+      if (u.expr.r2 != NULL) {
+        u.expr.r2->set_fullname(p_fullname+".redirindex");
+      }
+      break;
     default:
       FATAL_ERROR("Value::set_fullname_expr()");
     } // switch
@@ -1711,6 +1766,12 @@ namespace Common {
     case OPTYPE_TESTCASENAME:
     case OPTYPE_PROF_RUNNING:
       break;
+    case OPTYPE_COMP_RUNNING: // v1 [r2] b4
+    case OPTYPE_COMP_ALIVE:
+      if (u.expr.r2 != NULL) {
+        u.expr.r2->set_my_scope(p_scope);
+      }
+      // no break
     case OPTYPE_UNARYPLUS: // v1
     case OPTYPE_UNARYMINUS:
     case OPTYPE_NOT:
@@ -1721,8 +1782,6 @@ namespace Common {
     case OPTYPE_BIT2STR:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
-    case OPTYPE_COMP_RUNNING:
-    case OPTYPE_COMP_ALIVE:
     case OPTYPE_FLOAT2INT:
     case OPTYPE_FLOAT2STR:
     case OPTYPE_HEX2BIT:
@@ -1790,9 +1849,13 @@ namespace Common {
       u.expr.v1->set_my_scope(p_scope);
       if(u.expr.v2) u.expr.v2->set_my_scope(p_scope);
       break;
-    case OPTYPE_DECODE:
+    case OPTYPE_DECODE: // r1 r2
+    case OPTYPE_UNDEF_RUNNING: // r1 [r2] b4
+    case OPTYPE_TMR_RUNNING: // r1 [r2] b4
       u.expr.r1->set_my_scope(p_scope);
-      u.expr.r2->set_my_scope(p_scope);
+      if (u.expr.r2 != NULL) {
+        u.expr.r2->set_my_scope(p_scope);
+      }
       break;
     case OPTYPE_SUBSTR:
       u.expr.ti1->set_my_scope(p_scope);
@@ -1838,9 +1901,7 @@ namespace Common {
       u.expr.r2->set_my_scope(p_scope);
       if(u.expr.v3) u.expr.v3->set_my_scope(p_scope);
       break;
-    case OPTYPE_UNDEF_RUNNING: // r1
-    case OPTYPE_TMR_READ:
-    case OPTYPE_TMR_RUNNING:
+    case OPTYPE_TMR_READ: // r1
     case OPTYPE_ACTIVATE:
       u.expr.r1->set_my_scope(p_scope);
       break;
@@ -2043,6 +2104,12 @@ namespace Common {
       case OPTYPE_TESTCASENAME:
       case OPTYPE_PROF_RUNNING:
         break;
+      case OPTYPE_COMP_RUNNING: // v1 [r2] b4
+      case OPTYPE_COMP_ALIVE:
+        if (u.expr.r2 != NULL) {
+          u.expr.r2->set_code_section(p_code_section);
+        }
+        // no break
       case OPTYPE_UNARYPLUS: // v1
       case OPTYPE_UNARYMINUS:
       case OPTYPE_NOT:
@@ -2053,8 +2120,6 @@ namespace Common {
       case OPTYPE_BIT2STR:
       case OPTYPE_CHAR2INT:
       case OPTYPE_CHAR2OCT:
-      case OPTYPE_COMP_RUNNING:
-      case OPTYPE_COMP_ALIVE:
       case OPTYPE_FLOAT2INT:
       case OPTYPE_FLOAT2STR:
       case OPTYPE_HEX2BIT:
@@ -2122,9 +2187,13 @@ namespace Common {
         u.expr.v1->set_code_section(p_code_section);
         if(u.expr.v2) u.expr.v2->set_code_section(p_code_section);
         break;
-      case OPTYPE_DECODE:
+      case OPTYPE_DECODE: // r1 r2
+      case OPTYPE_UNDEF_RUNNING: // r1 [r2] b4
+      case OPTYPE_TMR_RUNNING: // r1 [r2] b4
         u.expr.r1->set_code_section(p_code_section);
-        u.expr.r2->set_code_section(p_code_section);
+        if (u.expr.r2 != NULL) {
+          u.expr.r2->set_code_section(p_code_section);
+        }
         break;
       case OPTYPE_SUBSTR:
         u.expr.ti1->set_code_section(p_code_section);
@@ -2170,9 +2239,7 @@ namespace Common {
         u.expr.r2->set_code_section(p_code_section);
         if (u.expr.v3) u.expr.v3->set_code_section(p_code_section);
         break;
-      case OPTYPE_UNDEF_RUNNING: // r1
-      case OPTYPE_TMR_READ:
-      case OPTYPE_TMR_RUNNING:
+      case OPTYPE_TMR_READ: // r1
       case OPTYPE_ACTIVATE:
         u.expr.r1->set_code_section(p_code_section);
         break;
@@ -4178,7 +4245,8 @@ namespace Common {
   }
 
   void Value::chk_expr_operand_undef_running(Type::expected_value_t exp_val,
-    Ttcn::Ref_base *ref, const char *opnum, const char *opname)
+    Ttcn::Ref_base *ref, bool any_from, Ttcn::Ref_base* index_ref,
+    const char *opnum, const char *opname)
   {
     if(valuetype==V_ERROR) return;
     // if(u.expr.state==EXPR_CHECKING_ERR) return;
@@ -4188,8 +4256,16 @@ namespace Common {
     case Assignment::A_TIMER:
     case Assignment::A_PAR_TIMER:
       u.expr.v_optype=OPTYPE_TMR_RUNNING;
-      chk_expr_operand_tmrref(u.expr.r1, opnum, get_opname());
+      chk_expr_operand_tmrref(ref, opnum, get_opname(), any_from);
       chk_expr_dynamic_part(exp_val, true);
+      if (index_ref != NULL) {
+        Ttcn::Reference* index_ref2 = dynamic_cast<Ttcn::Reference*>(index_ref);
+        if (index_ref2 == NULL) {
+          FATAL_ERROR("Value::chk_expr_operand_undef_running");
+        }
+        Ttcn::Statement::chk_index_redirect(index_ref2, t_ass->get_Dimensions(),
+          any_from, "timer");
+      }
       break;
     case Assignment::A_CONST:
     case Assignment::A_EXT_CONST:
@@ -4201,13 +4277,27 @@ namespace Common {
     case Assignment::A_PAR_VAL_OUT:
     case Assignment::A_PAR_VAL_INOUT: {
       u.expr.v_optype = OPTYPE_COMP_RUNNING;
-      Value* val = new Value(V_REFD, u.expr.r1);
+      Value* val = new Value(V_REFD, ref);
       val->set_my_scope(my_scope);
-      val->set_fullname(u.expr.r1->get_fullname());
-      val->set_location(*u.expr.r1);
+      val->set_fullname(ref->get_fullname());
+      val->set_location(*ref);
       u.expr.v1 = val;
-      chk_expr_operand_compref(val, opnum, get_opname());
+      Type* t = chk_expr_operand_compref(val, opnum, get_opname(), any_from);
       chk_expr_dynamic_part(exp_val, false);
+      if (index_ref != NULL && t != NULL) {
+        t = t->get_type_refd_last();
+        Ttcn::ArrayDimensions dummy;
+        while (t->get_typetype() == Type::T_ARRAY) {
+          dummy.add(t->get_dimension()->clone());
+          t = t->get_ofType()->get_type_refd_last();
+        }
+        Ttcn::Reference* index_ref2 = dynamic_cast<Ttcn::Reference*>(index_ref);
+        if (index_ref2 == NULL) {
+          FATAL_ERROR("Value::chk_expr_operand_undef_running");
+        }
+        Ttcn::Statement::chk_index_redirect(index_ref2, &dummy, any_from,
+          "component");
+      }
       break; }
     default:
       ref->error("%s operand of operation `%s' should be timer or"
@@ -4293,25 +4383,38 @@ namespace Common {
     }
   }
 
-  void Value::chk_expr_operand_compref(Value *val, const char *opnum,
-                                  const char *opname)
+  Type* Value::chk_expr_operand_compref(Value *val, const char *opnum,
+                                       const char *opname, bool any_from)
   {
-    if(valuetype == V_ERROR) return;
+    Type* ret_val;
+    if(valuetype == V_ERROR) return NULL;
     switch(val->get_valuetype()) {
     case V_INVOKE: {
       Error_Context cntxt(this, "In `%s' operation", opname);
       Value *v_last = val->get_value_refd_last();
       if(!v_last) goto error;
-      Type *t = v_last->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE);
-      if(!t) goto error;
-      t = t->get_type_refd_last();
-      if(t->get_typetype() != Type::T_COMPONENT) {
+      ret_val = v_last->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE);
+      if(!ret_val) goto error;
+      Type* t = ret_val->get_type_refd_last();
+      if(t->get_typetype() != (any_from ? Type::T_ARRAY : Type::T_COMPONENT)) {
         v_last->error("%s operand of operation `%s': Type mismatch:"
-                     " component reference was expected instead of `%s'",
-                     opnum, opname, t->get_typename().c_str());
+                      " component%s reference was expected instead of `%s'",
+                      opnum, opname, any_from ? " array" : "",
+                      t->get_typename().c_str());
         goto error;
       }
-      return; }
+      if (any_from) {
+        while (t->get_typetype() == Type::T_ARRAY) {
+          t = t->get_ofType()->get_type_refd_last();
+        }
+        if (t->get_typetype() != Type::T_COMPONENT) {
+          v_last->error("%s operand of operation `%s': Type mismatch:"
+                        " component array reference was expected instead of array"
+                        " of type `%s'", opnum, opname, t->get_typename().c_str());
+          goto error;
+        }
+      }
+      return ret_val; }
     case V_REFD: {
       Reference *ref = val->get_reference();
       Assignment *t_ass = ref->get_refd_assignment();
@@ -4329,15 +4432,27 @@ namespace Common {
       case Assignment::A_PAR_VAL_IN:
       case Assignment::A_PAR_VAL_OUT:
       case Assignment::A_PAR_VAL_INOUT: {
-        Type *t_type=t_ass->get_Type()
+        ret_val=t_ass->get_Type()
           ->get_field_type(ref->get_subrefs(), Type::EXPECTED_DYNAMIC_VALUE);
-        if(!t_type) goto error;
-        t_type=t_type->get_type_refd_last();
-        if(t_type->get_typetype()!=Type::T_COMPONENT) {
+        if(!ret_val) goto error;
+        Type* t_type=ret_val->get_type_refd_last();
+        if(t_type->get_typetype() != (any_from ? Type::T_ARRAY : Type::T_COMPONENT)) {
           ref->error("%s operand of operation `%s': Type mismatch:"
-                     " component reference was expected instead of `%s'",
-                     opnum, opname, t_type->get_typename().c_str());
+                     " component%s reference was expected instead of `%s'",
+                     opnum, opname, any_from ? " array" : "",
+                     t_type->get_typename().c_str());
           goto error;
+        }
+        if (any_from) {
+          while (t_type->get_typetype() == Type::T_ARRAY) {
+            t_type = t_type->get_ofType()->get_type_refd_last();
+          }
+          if (t_type->get_typetype() != Type::T_COMPONENT) {
+            ref->error("%s operand of operation `%s': Type mismatch:"
+                     " component array reference was expected instead of array"
+                     " of type `%s'", opnum, opname, t_type->get_typename().c_str());
+            goto error;
+          }
         }
         break;}
       default:
@@ -4349,9 +4464,9 @@ namespace Common {
       if (t_val) {
         ReferenceChain refch(this, "While searching referenced value");
         t_val = t_val->get_refd_sub_value(ref->get_subrefs(), 0, false, &refch);
-        if (!t_val) return;
+        if (!t_val) return NULL;
         t_val = t_val->get_value_refd_last();
-        if (t_val->valuetype != V_EXPR) return;
+        if (t_val->valuetype != V_EXPR) return NULL;
         switch (t_val->u.expr.v_optype) {
         case OPTYPE_COMP_NULL:
           ref->error("%s operand of operation `%s' refers to `null' component "
@@ -4369,17 +4484,19 @@ namespace Common {
           break;
         }
       }
-      return;}
+      return ret_val;}
     default:
       FATAL_ERROR("Value::chk_expr_operand_compref()");
     }
   error:
     set_valuetype(V_ERROR);
+    return NULL;
   }
 
   void Value::chk_expr_operand_tmrref(Ttcn::Ref_base *ref,
                                       const char *opnum,
-                                      const char *opname)
+                                      const char *opname,
+                                      bool any_from)
   {
     if(valuetype==V_ERROR) return;
     // if(u.expr.state==EXPR_CHECKING_ERR) return;
@@ -4389,16 +4506,26 @@ namespace Common {
     case Assignment::A_TIMER: {
       Ttcn::ArrayDimensions *t_dims = t_ass->get_Dimensions();
       if (t_dims) t_dims->chk_indices(ref, "timer", false,
-	Type::EXPECTED_DYNAMIC_VALUE);
-      else if (ref->get_subrefs()) {
-	ref->error("%s operand of operation `%s': "
-		   "Reference to single timer `%s' cannot have field or array "
-		   "sub-references", opnum, opname,
-		   t_ass->get_id().get_dispname().c_str());
-        goto error;
+	Type::EXPECTED_DYNAMIC_VALUE, any_from);
+      else {
+        if (any_from) {
+          ref->error("%s operand of operation `%s': Reference to a timer "
+            "array was expected instead of a timer", opnum, opname);
+        }
+        else if (ref->get_subrefs()) {
+          ref->error("%s operand of operation `%s': "
+            "Reference to single timer `%s' cannot have field or array "
+            "sub-references", opnum, opname,
+            t_ass->get_id().get_dispname().c_str());
+          goto error;
+        }
       }
       break; }
     case Assignment::A_PAR_TIMER:
+      if (any_from) {
+        ref->error("%s operand of operation `%s': Reference to a timer array "
+          "was expected instead of a timer parameter",  opnum, opname);
+      }
       if (ref->get_subrefs()) {
         ref->error("%s operand of operation `%s': "
 		   "Reference to %s cannot have field or array sub-references",
@@ -4408,8 +4535,9 @@ namespace Common {
       break;
     default:
       ref->error("%s operand of operation `%s' should be timer"
-                 " instead of %s",
-                 opnum, opname, t_ass->get_description().c_str());
+                 "%s instead of %s",
+                 opnum, opname, any_from ? " array" : "",
+                 t_ass->get_description().c_str());
       goto error;
     } // switch
     return;
@@ -7170,14 +7298,28 @@ error:
     case OPTYPE_MATCH: // v1 t2
       chk_expr_operands_match(exp_val);
       break;
-    case OPTYPE_UNDEF_RUNNING: // r1
-      chk_expr_operand_undef_running(exp_val, u.expr.r1, the, opname);
+    case OPTYPE_UNDEF_RUNNING: // r1 [r2] b4
+      chk_expr_operand_undef_running(exp_val, u.expr.r1, u.expr.b4, u.expr.r2,
+        the, opname);
       break;
     case OPTYPE_COMP_ALIVE:
-    case OPTYPE_COMP_RUNNING: //v1
-      chk_expr_operand_compref(u.expr.v1, the, opname);
+    case OPTYPE_COMP_RUNNING: { //v1
+      Type* ref_type = chk_expr_operand_compref(u.expr.v1, the, opname, u.expr.b4);
       chk_expr_dynamic_part(exp_val, false);
-      break;
+      if (u.expr.r2 != NULL && ref_type != NULL) {
+        Ttcn::Reference* index_ref = dynamic_cast<Ttcn::Reference*>(u.expr.r2);
+        if (index_ref == NULL) {
+          FATAL_ERROR("Value::chk_expr_operand_undef_running");
+        }
+        Ttcn::ArrayDimensions dummy;
+        ref_type = ref_type->get_type_refd_last();
+        while (ref_type->get_typetype() == Type::T_ARRAY) {
+          dummy.add(ref_type->get_dimension()->clone());
+          ref_type = ref_type->get_ofType()->get_type_refd_last();
+        }
+        Ttcn::Statement::chk_index_redirect(index_ref, &dummy, u.expr.b4, "component");
+      }
+      break; }
     case OPTYPE_TMR_READ: // r1
     case OPTYPE_TMR_RUNNING: // r1
       chk_expr_operand_tmrref(u.expr.r1, the, opname);
@@ -10289,13 +10431,19 @@ error:
     case OPTYPE_UNICHAR2CHAR: // v1
     case OPTYPE_ENUM2INT: // v1
     case OPTYPE_RNDWITHVAL: // v1
-    case OPTYPE_COMP_RUNNING: // v1
-    case OPTYPE_COMP_ALIVE: // v1
     case OPTYPE_ISCHOSEN_V: // v1 i2; ignore the identifier
     case OPTYPE_GET_STRINGENCODING:
     case OPTYPE_DECODE_BASE64:
     case OPTYPE_REMOVE_BOM:
       self_ref |= chk_expr_self_ref_val(u.expr.v1, lhs);
+      break;
+    case OPTYPE_COMP_RUNNING: // v1 [r2] b4
+    case OPTYPE_COMP_ALIVE: // v1 [r2] b4
+      self_ref |= chk_expr_self_ref_val(u.expr.v1, lhs);
+      if (u.expr.r2 != NULL) {
+        Common::Assignment *ass = u.expr.r2->get_refd_assignment();
+        self_ref |= (ass == lhs);
+      }
       break;
     case OPTYPE_HOSTID: // [v1]
       if (u.expr.v1) self_ref |= chk_expr_self_ref_val(u.expr.v1, lhs);
@@ -10427,7 +10575,12 @@ error:
       }
       label_r1:
       // no break
-    case OPTYPE_UNDEF_RUNNING: // r1
+    case OPTYPE_UNDEF_RUNNING: // r1 [r2] b4
+      if (u.expr.r2 != NULL) {
+        Common::Assignment *ass = u.expr.r2->get_refd_assignment();
+        self_ref |= (ass == lhs);
+      }
+      // no break
     case OPTYPE_TMR_READ: {     // r1
       Common::Assignment *ass = u.expr.r1->get_refd_assignment();
       self_ref |= (ass == lhs);
@@ -10884,8 +11037,22 @@ error:
         ret_val += ')';
         return ret_val;
       }
-      case OPTYPE_UNDEF_RUNNING:
-        return u.expr.r1->get_dispname() + ".running";
+      case OPTYPE_COMP_RUNNING: // v1 [r2] b4
+      case OPTYPE_UNDEF_RUNNING: // r1 [r2] b4
+      case OPTYPE_TMR_RUNNING: // r1 [r2] b4
+      case OPTYPE_COMP_ALIVE: { // v1 [r2] b4
+        string ret_val;
+        if (u.expr.b4) {
+          ret_val = "any from ";
+        }
+        ret_val += (u.expr.v_optype == OPTYPE_COMP_RUNNING ||
+                    u.expr.v_optype == OPTYPE_COMP_ALIVE) ?
+          u.expr.v1->get_stringRepr() : u.expr.r1->get_dispname();
+        ret_val += u.expr.v_optype == OPTYPE_COMP_ALIVE ? ".alive" : ".running";
+        if (u.expr.r2 != NULL) {
+          ret_val += " -> @index value " + u.expr.r2->get_dispname();
+        }
+        return ret_val; }
       case OPTYPE_COMP_NULL:
         return string("null");
       case OPTYPE_COMP_MTC:
@@ -10909,22 +11076,16 @@ error:
 	}
 	if (u.expr.b4) ret_val += " alive";
 	return ret_val; }
-      case OPTYPE_COMP_RUNNING:
-        return u.expr.v1->get_stringRepr() + ".running";
       case OPTYPE_COMP_RUNNING_ANY:
         return string("any component.running");
       case OPTYPE_COMP_RUNNING_ALL:
         return string("all component.running");
-      case OPTYPE_COMP_ALIVE:
-        return u.expr.v1->get_stringRepr() + ".alive";
       case OPTYPE_COMP_ALIVE_ANY:
         return string("any component.alive");
       case OPTYPE_COMP_ALIVE_ALL:
         return string("all component.alive");
       case OPTYPE_TMR_READ:
         return u.expr.r1->get_dispname() + ".read";
-      case OPTYPE_TMR_RUNNING:
-        return u.expr.r1->get_dispname() + ".running";
       case OPTYPE_TMR_RUNNING_ANY:
         return string("any timer.running");
       case OPTYPE_CHECKSTATE_ANY:
@@ -12232,11 +12393,24 @@ error:
       generate_code_expr_create(expr, u.expr.r1, u.expr.v2, u.expr.v3,
 	u.expr.b4);
       break;
-    case OPTYPE_COMP_RUNNING: // v1
+    case OPTYPE_COMP_RUNNING: // v1 [r2] b4
+    case OPTYPE_COMP_ALIVE:
       u.expr.v1->generate_code_expr(expr);
       if(u.expr.v1->get_valuetype() == V_REFD)
         generate_code_expr_optional_field_ref(expr, u.expr.v1->get_reference());
-      expr->expr = mputstr(expr->expr, ".running()");
+      expr->expr = mputstr(expr->expr, u.expr.v_optype == OPTYPE_COMP_ALIVE ?
+        ".alive(" : ".running(");
+      if (u.expr.r2 != NULL) {
+        Ttcn::Reference* index_ref = dynamic_cast<Ttcn::Reference*>(u.expr.r2);
+        if (index_ref == NULL) {
+          FATAL_ERROR("Value::generate_code_expr_expr");
+        }
+        Ttcn::Statement::generate_code_index_redirect(expr, index_ref, my_scope);
+      }
+      else {
+        expr->expr=mputstr(expr->expr, "NULL");
+      }
+      expr->expr = mputc(expr->expr, ')');
       break;
     case OPTYPE_COMP_RUNNING_ANY: // -
       expr->expr=mputstr(expr->expr,
@@ -12246,7 +12420,7 @@ error:
       expr->expr=mputstr(expr->expr,
                          "TTCN_Runtime::component_running(ALL_COMPREF)");
       break;
-    case OPTYPE_COMP_ALIVE: // v1
+     // v1
       u.expr.v1->generate_code_expr(expr);
       if(u.expr.v1->get_valuetype() == V_REFD)
         generate_code_expr_optional_field_ref(expr, u.expr.v1->get_reference());
@@ -12266,7 +12440,18 @@ error:
       break;
     case OPTYPE_TMR_RUNNING: // r1
       u.expr.r1->generate_code(expr);
-      expr->expr = mputstr(expr->expr, ".running()");
+      expr->expr = mputstr(expr->expr, ".running(");
+      if (u.expr.r2 != NULL) {
+        Ttcn::Reference* index_ref = dynamic_cast<Ttcn::Reference*>(u.expr.r2);
+        if (index_ref == NULL) {
+          FATAL_ERROR("Value::generate_code_expr_expr");
+        }
+        Ttcn::Statement::generate_code_index_redirect(expr, index_ref, my_scope);
+      }
+      else {
+        expr->expr=mputstr(expr->expr, "NULL");
+      }
+      expr->expr = mputc(expr->expr, ')');
       break;
     case OPTYPE_TMR_RUNNING_ANY: // -
       expr->expr=mputstr(expr->expr, "TIMER::any_running()");
@@ -13822,6 +14007,12 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     case OPTYPE_ENCVALUE_UNICHAR:
     case OPTYPE_DECVALUE_UNICHAR:
       return false;
+    case OPTYPE_COMP_RUNNING: // v1 [r2] b4
+    case OPTYPE_COMP_ALIVE:
+      if (u.expr.r2 != NULL) {
+        return false;
+      }
+      // no break
     case OPTYPE_UNARYPLUS: // v1
     case OPTYPE_UNARYMINUS:
     case OPTYPE_NOT:
@@ -13857,8 +14048,6 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     case OPTYPE_ENUM2INT:
     case OPTYPE_RNDWITHVAL:
     case OPTYPE_ISCHOSEN_V: // v1 i2
-    case OPTYPE_COMP_RUNNING:
-    case OPTYPE_COMP_ALIVE:
     case OPTYPE_GET_STRINGENCODING:
     case OPTYPE_REMOVE_BOM:
     case OPTYPE_DECODE_BASE64:
@@ -13932,8 +14121,12 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     case OPTYPE_COMP_CREATE: // r1 [v2] [v3] b4
       return (!u.expr.v2 || u.expr.v2->has_single_expr()) &&
              (!u.expr.v3 || u.expr.v3->has_single_expr());
+    case OPTYPE_TMR_RUNNING: // r1 [r2] b4
+      if (u.expr.r2 != NULL) {
+        return false;
+      }
+      // no break
     case OPTYPE_TMR_READ: // r1
-    case OPTYPE_TMR_RUNNING:
     case OPTYPE_ACTIVATE:
       return u.expr.r1->has_single_expr();
     case OPTYPE_EXECUTE: // r1 [v2]

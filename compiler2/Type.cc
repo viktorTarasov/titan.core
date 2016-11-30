@@ -605,6 +605,7 @@ namespace Common {
     owner = 0;
     chk_finished = false;
     pard_type_instance = false;
+    needs_any_from_done = false;
     asn_encoding = CT_UNDEF;
     asn_decoding = CT_UNDEF;
   }

@@ -319,6 +319,8 @@ public:
   Int get_length_restriction() const;
   /// true unless a length restriction prohibits zero elements
   bool zero_length_allowed() const;
+  /// true if the length restriction allows the specified length
+  bool length_allowed(size_t len) const;
 
   bool add_parent_subtype(SubType* st);
 private:

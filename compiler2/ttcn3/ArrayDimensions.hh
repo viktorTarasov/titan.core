@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Beres, Szabolcs
  *   Raduly, Csaba
  *
@@ -101,11 +102,13 @@ namespace Ttcn {
      * dimensions. If parameter \a allow_slicing is false slicing of timer or
      * port arrays are not allowed thus the number of array indices in \a ref
      * must be the same as the number of array dimensions. Otherwise (i.e. if
-     * \a allow_slicing is true \a ref may have fewer indices.
+     * \a allow_slicing is true) \a ref may have fewer indices.
+     * If parameter \a any_from is true, then the reference must point to a
+     * timer or port array instead of a single timer or port.
      * Parameter \a def_name is needed for error messages, it shall be either
      * "timer" or "port". */
     void chk_indices(Common::Reference *ref, const char *def_type, bool allow_slicing,
-      Type::expected_value_t exp_val);
+      Type::expected_value_t exp_val, bool any_from = false);
     /** Returns the total number of elements in the array. */
     size_t get_array_size();
     /** Generates a C++ code fragment, which is a comma separated list of string

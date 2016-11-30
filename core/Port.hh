@@ -32,6 +32,7 @@ class COMPONENT_template;
 class Text_Buf;
 class OCTETSTRING;
 class CHARSTRING;
+class Index_Redirect;
 
 extern const COMPONENT_template& any_compref;
 
@@ -134,48 +135,57 @@ public:
   static boolean all_check_port_state(const CHARSTRING& type);
 
   virtual alt_status receive(const COMPONENT_template& sender_template =
-    any_compref, COMPONENT *sender_ptr = NULL);
+    any_compref, COMPONENT *sender_ptr = NULL,
+    Index_Redirect* index_redirect = NULL);
   static alt_status any_receive(const COMPONENT_template& sender_template =
     any_compref, COMPONENT *sender_ptr = NULL);
   virtual alt_status check_receive(const COMPONENT_template&
-    sender_template = any_compref, COMPONENT *sender_ptr = NULL);
+    sender_template = any_compref, COMPONENT *sender_ptr = NULL,
+    Index_Redirect* index_redirect = NULL);
   static alt_status any_check_receive(const COMPONENT_template&
     sender_template = any_compref, COMPONENT *sender_ptr = NULL);
 
   virtual alt_status trigger(const COMPONENT_template& sender_template =
-    any_compref, COMPONENT *sender_ptr = NULL);
+    any_compref, COMPONENT *sender_ptr = NULL,
+    Index_Redirect* index_redirect = NULL);
   static alt_status any_trigger(const COMPONENT_template& sender_template =
     any_compref, COMPONENT *sender_ptr = NULL);
 
   virtual alt_status getcall(const COMPONENT_template& sender_template =
-    any_compref, COMPONENT *sender_ptr = NULL);
+    any_compref, COMPONENT *sender_ptr = NULL,
+    Index_Redirect* index_redirect = NULL);
   static alt_status any_getcall(const COMPONENT_template& sender_template =
     any_compref, COMPONENT *sender_ptr = NULL);
   virtual alt_status check_getcall(const COMPONENT_template&
-    sender_template = any_compref, COMPONENT *sender_ptr = NULL);
+    sender_template = any_compref, COMPONENT *sender_ptr = NULL,
+    Index_Redirect* index_redirect = NULL);
   static alt_status any_check_getcall(const COMPONENT_template&
     sender_template = any_compref, COMPONENT *sender_ptr = NULL);
 
   virtual alt_status getreply(const COMPONENT_template& sender_template =
-    any_compref, COMPONENT *sender_ptr = NULL);
+    any_compref, COMPONENT *sender_ptr = NULL,
+    Index_Redirect* index_redirect = NULL);
   static alt_status any_getreply(const COMPONENT_template& sender_template =
     any_compref, COMPONENT *sender_ptr = NULL);
   virtual alt_status check_getreply(const COMPONENT_template&
-    sender_template = any_compref, COMPONENT *sender_ptr = NULL);
+    sender_template = any_compref, COMPONENT *sender_ptr = NULL,
+    Index_Redirect* index_redirect = NULL);
   static alt_status any_check_getreply(const COMPONENT_template&
     sender_template = any_compref, COMPONENT *sender_ptr = NULL);
 
   virtual alt_status get_exception(const COMPONENT_template&
-    sender_template = any_compref, COMPONENT *sender_ptr = NULL);
+    sender_template = any_compref, COMPONENT *sender_ptr = NULL,
+    Index_Redirect* index_redirect = NULL);
   static alt_status any_catch(const COMPONENT_template& sender_template =
     any_compref, COMPONENT *sender_ptr = NULL);
   virtual alt_status check_catch(const COMPONENT_template&
-    sender_template = any_compref, COMPONENT *sender_ptr = NULL);
+    sender_template = any_compref, COMPONENT *sender_ptr = NULL,
+    Index_Redirect* index_redirect = NULL);
   static alt_status any_check_catch(const COMPONENT_template&
     sender_template = any_compref, COMPONENT *sender_ptr = NULL);
 
   alt_status check(const COMPONENT_template& sender_template = any_compref,
-    COMPONENT *sender_ptr = NULL);
+    COMPONENT *sender_ptr = NULL, Index_Redirect* index_redirect = NULL);
   static alt_status any_check(const COMPONENT_template& sender_template =
     any_compref, COMPONENT *sender_ptr = NULL);
 

@@ -31,8 +31,93 @@
 #include "Integer.hh"
 #include "Struct_of.hh"
 #include "memory.h"
+#include "Component.hh"
 
 class INTEGER;
+
+/** common code for all port, timer and component operations with at least one
+  * argument, performed on arrays with the help of the 'any from' clause
+  *
+  * returns an alt status, depending on the return values of elements
+  * alt-status priority: ALT_YES (return immediately) > ALT_REPEAT > ALT_MAYBE > ALT_NO
+  */
+#define ANY_FROM_OPERATION(opname, ...) \
+  if (index_redirect != NULL) { \
+    index_redirect->incr_pos(); \
+  } \
+  alt_status result = ALT_NO; \
+  for (unsigned int i = 0; i < array_size; ++i) { \
+    alt_status ret_val = array_elements[i].opname(__VA_ARGS__, index_redirect); \
+    if (ret_val == ALT_YES) { \
+      if (index_redirect != NULL) { \
+        index_redirect->add_index((int)i + index_offset); \
+      } \
+      result = ret_val; \
+      break; \
+    } \
+    else if (ret_val == ALT_REPEAT || \
+             (ret_val == ALT_MAYBE && result == ALT_NO)) { \
+      result = ret_val; \
+    } \
+  } \
+  if (index_redirect != NULL) { \
+    index_redirect->decr_pos(); \
+  } \
+  return result;
+
+/** common code for all timer and component operations with no arguments,
+  * performed on arrays with the help of the 'any from' clause
+  *
+  * returns an alt status, depending on the return values of elements
+  * alt-status priority: ALT_YES (return immediately) > ALT_REPEAT > ALT_MAYBE > ALT_NO
+  */
+#define ANY_FROM_OPERATION_NO_ARGS(opname) \
+  if (index_redirect != NULL) { \
+    index_redirect->incr_pos(); \
+  } \
+  alt_status result = ALT_NO; \
+  for (unsigned int i = 0; i < array_size; ++i) { \
+    alt_status ret_val = array_elements[i].opname(index_redirect); \
+    if (ret_val == ALT_YES) { \
+      if (index_redirect != NULL) { \
+        index_redirect->add_index((int)i + index_offset); \
+      } \
+      result = ret_val; \
+      break; \
+    } \
+    else if (ret_val == ALT_REPEAT || \
+             (ret_val == ALT_MAYBE && result == ALT_NO)) { \
+      result = ret_val; \
+    } \
+  } \
+  if (index_redirect != NULL) { \
+    index_redirect->decr_pos(); \
+  } \
+  return result;
+
+/** common code for all port, timer and component operations with no arguments,
+  * performed on arrays with the help of the 'any from' clause
+  *
+  * returns a boolean: TRUE if at least one of the elements returns TRUE
+  */
+#define ANY_FROM_OPERATION_NO_ARGS_BOOL(opname) \
+  if (index_redirect != NULL) { \
+    index_redirect->incr_pos(); \
+  } \
+  boolean ret_val = FALSE; \
+  for (unsigned int i = 0; i < array_size; ++i) { \
+    ret_val = array_elements[i].opname(index_redirect); \
+    if (ret_val) { \
+      if (index_redirect != NULL) { \
+        index_redirect->add_index((int)i + index_offset); \
+      } \
+      break; \
+    } \
+  } \
+  if (index_redirect != NULL) { \
+    index_redirect->decr_pos(); \
+  } \
+  return ret_val;
 
 extern unsigned int get_timer_array_index(int index_value,
   unsigned int array_size, int index_offset);
@@ -101,6 +186,16 @@ public:
     }
     TTCN_Logger::log_event_str(" }");
   }
+  
+  alt_status timeout(Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION_NO_ARGS(timeout)
+  }
+  
+  boolean running(Index_Redirect* index_redirect) const
+  {
+    ANY_FROM_OPERATION_NO_ARGS_BOOL(running)
+  }
 };
 
 extern unsigned int get_port_array_index(int index_value,
@@ -164,6 +259,196 @@ public:
       array_elements[v_index].log();
     }
     TTCN_Logger::log_event_str(" }");
+  }
+  
+  alt_status receive(const COMPONENT_template& sender_template,
+                     COMPONENT *sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(receive, sender_template, sender_ptr)
+  }
+  
+  template <typename T_template>
+#ifdef TITAN_RUNTIME_2
+  alt_status receive(const T_template& value_template,
+                     Value_Redirect_Interface* value_redirect,
+#else
+  // the C++ compiler cannot determine the type of the template argument
+  // if it's NULL, so a separate function is needed for this case in RT1
+  alt_status receive(const T_template& value_template, int /* NULL */,
+                     const COMPONENT_template& sender_template,
+                     COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(receive, value_template, NULL,
+      sender_template, sender_ptr)
+  }
+  
+  template <typename T_value_redirect, typename T_template>
+  alt_status receive(const T_template& value_template,
+                     T_value_redirect* value_redirect,
+#endif
+                     const COMPONENT_template& sender_template,
+                     COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(receive, value_template, value_redirect,
+      sender_template, sender_ptr)
+  }
+  
+  alt_status check_receive(const COMPONENT_template& sender_template,
+                           COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check_receive, sender_template, sender_ptr)
+  }
+  
+  template <typename T_template>
+#ifdef TITAN_RUNTIME_2
+  alt_status check_receive(const T_template& value_template,
+                           Value_Redirect_Interface* value_redirect,
+#else
+  alt_status check_receive(const T_template& value_template, int /* NULL */,
+                           const COMPONENT_template& sender_template,
+                           COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check_receive, value_template, NULL,
+      sender_template, sender_ptr)
+  }
+  
+  template <typename T_value_redirect, typename T_template>
+  alt_status check_receive(const T_template& value_template,
+                           T_value_redirect* value_redirect,
+#endif
+                           const COMPONENT_template& sender_template,
+                           COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check_receive, value_template, value_redirect,
+      sender_template, sender_ptr)
+  }
+  
+  alt_status trigger(const COMPONENT_template& sender_template,
+                     COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(trigger, sender_template, sender_ptr)
+  }
+  
+  template <typename T_template>
+#ifdef TITAN_RUNTIME_2
+  alt_status trigger(const T_template& value_template,
+                     Value_Redirect_Interface* value_redirect,
+#else
+  alt_status trigger(const T_template& value_template, int /* NULL */,
+                     const COMPONENT_template& sender_template,
+                     COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(trigger, value_template, NULL,
+      sender_template, sender_ptr)
+  }
+  
+  template <typename T_value_redirect, typename T_template>
+  alt_status trigger(const T_template& value_template,
+                     T_value_redirect* value_redirect,
+#endif
+                     const COMPONENT_template& sender_template,
+                     COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(trigger, value_template, value_redirect,
+      sender_template, sender_ptr)
+  }
+  
+  alt_status getcall(const COMPONENT_template& sender_template,
+                     COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(getcall, sender_template, sender_ptr)
+  }
+  
+  template <typename T_template, typename T_parameter_redirect>
+  alt_status getcall(const T_template& getcall_template,
+                     const COMPONENT_template& sender_template,
+                     const T_parameter_redirect& param_ref,
+                     COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(getcall, getcall_template, sender_template,
+      param_ref, sender_ptr)
+  }
+  
+  alt_status check_getcall(const COMPONENT_template& sender_template,
+                           COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check_getcall, sender_template, sender_ptr)
+  }
+  
+  template <typename T_template, typename T_parameter_redirect>
+  alt_status check_getcall(const T_template& getcall_template,
+                           const COMPONENT_template& sender_template,
+                           const T_parameter_redirect& param_ref,
+                           COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check_getcall, getcall_template, sender_template,
+      param_ref, sender_ptr)
+  }
+  
+  alt_status getreply(const COMPONENT_template& sender_template,
+                      COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(getreply, sender_template, sender_ptr)
+  }
+  
+  template <typename T_template, typename T_parameter_redirect>
+  alt_status getreply(const T_template& getreply_template,
+                      const COMPONENT_template& sender_template,
+                      const T_parameter_redirect& param_ref,
+                      COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(getreply, getreply_template, sender_template,
+      param_ref, sender_ptr)
+  }
+  
+  alt_status check_getreply(const COMPONENT_template& sender_template,
+                            COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check_getreply, sender_template, sender_ptr)
+  }
+  
+  template <typename T_template, typename T_parameter_redirect>
+  alt_status check_getreply(const T_template& getreply_template,
+                            const COMPONENT_template& sender_template,
+                            const T_parameter_redirect& param_ref,
+                            COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check_getreply, getreply_template, sender_template,
+      param_ref, sender_ptr)
+  }
+  
+  alt_status get_exception(const COMPONENT_template& sender_template,
+                           COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(get_exception, sender_template, sender_ptr)
+  }
+  
+  template <typename T_template>
+  alt_status get_exception(const T_template& catch_template,
+                           const COMPONENT_template& sender_template,
+                           COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(get_exception, catch_template, sender_template, sender_ptr)
+  }
+  
+  alt_status check_catch(const COMPONENT_template& sender_template,
+                         COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check_catch, sender_template, sender_ptr)
+  }
+  
+  template <typename T_template>
+  alt_status check_catch(const T_template& catch_template,
+                         const COMPONENT_template& sender_template,
+                         COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check_catch, catch_template, sender_template, sender_ptr)
+  }
+  
+  alt_status check(const COMPONENT_template& sender_template,
+                   COMPONENT* sender_ptr, Index_Redirect* index_redirect)
+  {
+    ANY_FROM_OPERATION(check, sender_template, sender_ptr)
   }
 };
 
@@ -254,6 +539,26 @@ public:
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  
+  alt_status done(Index_Redirect* index_redirect) const
+  {
+    ANY_FROM_OPERATION_NO_ARGS(done)
+  }
+  
+  alt_status killed(Index_Redirect* index_redirect) const
+  {
+    ANY_FROM_OPERATION_NO_ARGS(killed)
+  }
+  
+  boolean running(Index_Redirect* index_redirect) const
+  {
+    ANY_FROM_OPERATION_NO_ARGS_BOOL(running)
+  }
+  
+  boolean alive(Index_Redirect* index_redirect) const
+  {
+    ANY_FROM_OPERATION_NO_ARGS_BOOL(alive)
+  }
 };
 
 template <typename T_type, unsigned int array_size, int index_offset>

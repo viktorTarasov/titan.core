@@ -350,17 +350,20 @@ static const string anyname("anytype");
   struct {
     ValueRedirect *redirectval;
     Ttcn::Reference *redirectsender;
+    Ttcn::Reference* redirectindex;
   } portredirect;
 
   struct {
     ParamRedirect *redirectparam;
     Ttcn::Reference *redirectsender;
+    Ttcn::Reference* redirectindex;
   } portredirectwithparam;
 
   struct {
     ValueRedirect *redirectval;
     ParamRedirect *redirectparam;
     Ttcn::Reference *redirectsender;
+    Ttcn::Reference* redirectindex;
   } portredirectwithvalueandparam;
 
   struct {
@@ -373,6 +376,7 @@ static const string anyname("anytype");
     TemplateInstance *fromclause;
     ValueRedirect *redirectval;
     Ttcn::Reference *redirectsender;
+    Ttcn::Reference* redirectindex;
   } portreceiveop;
 
   struct {
@@ -380,6 +384,7 @@ static const string anyname("anytype");
     TemplateInstance *fromclause;
     ParamRedirect *redirectparam;
     Ttcn::Reference *redirectsender;
+    Ttcn::Reference* redirectindex;
   } portgetcallop;
 
   struct {
@@ -389,6 +394,7 @@ static const string anyname("anytype");
     ValueRedirect *redirectval;
     ParamRedirect *redirectparam;
     Ttcn::Reference *redirectsender;
+    Ttcn::Reference* redirectindex;
   } portgetreplyop;
 
   struct {
@@ -404,6 +410,7 @@ static const string anyname("anytype");
     TemplateInstance *fromclause;
     ValueRedirect *redirectval;
     Ttcn::Reference *redirectsender;
+    Ttcn::Reference* redirectindex;
   } portcatchop;
 
   struct {
@@ -416,6 +423,7 @@ static const string anyname("anytype");
     ValueRedirect *redirectval;
     ParamRedirect *redirectparam;
     Ttcn::Reference *redirectsender;
+    Ttcn::Reference* redirectindex;
   } portcheckop;
 
   struct {
@@ -432,7 +440,8 @@ static const string anyname("anytype");
 
   struct {
     TemplateInstance *donematch;
-    ValueRedirect *redirect;
+    ValueRedirect *valueredirect;
+    Ttcn::Reference* indexredirect;
   } donepar;
 
   struct {
@@ -554,6 +563,11 @@ static const string anyname("anytype");
     size_t nElements;
     SingleValueRedirect** elements;
   } single_value_redirect_list;
+
+  struct {
+    Ttcn::Reference* reference;
+    bool any_from;
+  } reference_or_any;
 }
 
 /* Tokens of TTCN-3 */
@@ -988,9 +1002,10 @@ static const string anyname("anytype");
 %type <ass> Assignment Step
 %type <refbase> DerivedRefWithParList TemplateRefWithParList DecValueArg
 %type <refpard> FunctionInstance AltstepInstance
-%type <reference> PortType optDerivedDef DerivedDef Signature VariableRef
-  TimerRef TimerRefOrAny Port PortOrAny PortOrAll ValueStoreSpec
+%type <reference> PortType optDerivedDef DerivedDef IndexSpec Signature
+  VariableRef TimerRef Port PortOrAll ValueStoreSpec
   SenderSpec ComponentType optRunsOnSpec RunsOnSpec optSystemSpec
+%type <reference_or_any> PortOrAny TimerRefOrAny
 %type <valuerange> Range
 %type <type> NestedEnumDef NestedRecordDef NestedRecordOfDef NestedSetDef
   NestedSetOfDef NestedTypeDef NestedUnionDef PortDefAttribs ReferencedType
@@ -1218,6 +1233,7 @@ Hstring
 IDentifier
 IdentifierOrAddressKeyword
 ImportFromSpec
+IndexSpec
 InLineTemplate
 int2enumStatement
 IntegerValue
@@ -1272,7 +1288,6 @@ PortDef
 PortDefAttribs
 PortDefBody
 PortOrAll
-PortOrAny
 PortType
 PredefOrIdentifier
 PredefinedOps
@@ -1351,7 +1366,6 @@ TestcaseTypeDef
 TimeoutStatement
 TimerOps
 TimerRef
-TimerRefOrAny
 TimerStatements
 TimerValue
 TriggerStatement
@@ -1560,12 +1574,14 @@ PortRaiseOp
 %destructor {
   delete $$.redirectval;
   delete $$.redirectsender;
+  delete $$.redirectindex;
 }
 optPortRedirect
 
 %destructor {
   delete $$.redirectparam;
   delete $$.redirectsender;
+  delete $$.redirectindex;
 }
 optPortRedirectWithParam
 
@@ -1573,6 +1589,7 @@ optPortRedirectWithParam
   delete $$.redirectval;
   delete $$.redirectparam;
   delete $$.redirectsender;
+  delete $$.redirectindex;
 }
 optPortRedirectWithValueAndParam
 
@@ -1587,6 +1604,7 @@ optGetReplyParameter
   delete $$.fromclause;
   delete $$.redirectval;
   delete $$.redirectsender;
+  delete $$.redirectindex;
 }
 PortReceiveOp
 PortTriggerOp
@@ -1596,6 +1614,7 @@ PortTriggerOp
   delete $$.fromclause;
   delete $$.redirectparam;
   delete $$.redirectsender;
+  delete $$.redirectindex;
 }
 PortGetCallOp
 
@@ -1606,6 +1625,7 @@ PortGetCallOp
   delete $$.redirectval;
   delete $$.redirectparam;
   delete $$.redirectsender;
+  delete $$.redirectindex;
 }
 PortGetReplyOp
 
@@ -1622,6 +1642,7 @@ CatchOpParameter
   delete $$.fromclause;
   delete $$.redirectval;
   delete $$.redirectsender;
+  delete $$.redirectindex;
 }
 PortCatchOp
 
@@ -1633,6 +1654,7 @@ PortCatchOp
   delete $$.redirectval;
   delete $$.redirectparam;
   delete $$.redirectsender;
+  delete $$.redirectindex;
 }
 optCheckParameter
 CheckParameter
@@ -1658,7 +1680,8 @@ SingleOrMultiConnectionSpec
 
 %destructor {
   delete $$.donematch;
-  delete $$.redirect;
+  delete $$.valueredirect;
+  delete $$.indexredirect;
 }
 optDoneParameter
 
@@ -1773,6 +1796,8 @@ PortElementList
   delete $$.reference;
 }
 optRunsOnComprefOrSelf
+PortOrAny
+TimerRefOrAny
 
 %destructor {
   if ($$.string_encoding != NULL) {
@@ -1808,12 +1833,12 @@ optDecodedModifier
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 53
+%expect 57
 
 %start GrammarRoot
 
 /*
-XXX Source of conflicts (53 S/R):
+XXX Source of conflicts (57 S/R):
 
 1.) 9 conflicts in one state
 The Expression after 'return' keyword is optional in ReturnStatement.
@@ -1859,6 +1884,15 @@ followed by an in-line template. For 26 tokens (after the ')' ) the parser canno
 decide whether the token is the beginning of the in-line template (shift) or
 the brackets are only part of the SingleExpression itself and the conflicting
 token is the next segment in the expression (reduce).
+
+8.) 4 conflicts in 4 states
+In the rules for 'running' and 'alive' operations with the 'any from' clause,
+the redirect operator ("->") after the 'running' or 'alive' keyword can be the
+start of the operation's index redirect (shift) or another expression that starts
+with "->" (reduce).
+TODO: Find out what the index redirect conflicts with. It's probably something
+that would cause a semantic error anyway, but it would be good to know.
+
 
 Note that the parser implemented by bison always chooses to shift instead of
 reduce in case of conflicts.
@@ -5494,7 +5528,14 @@ MTCOp: // 318
 DoneStatement: // 319
   ComponentOrDefaultReference DotDoneKeyword optDoneParameter
   {
-    $$ = new Statement(Statement::S_DONE, $1, $3.donematch, $3.redirect);
+    $$ = new Statement(Statement::S_DONE, $1, $3.donematch, $3.valueredirect,
+      $3.indexredirect, false);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword ComponentOrDefaultReference DotDoneKeyword optDoneParameter
+  {
+    $$ = new Statement(Statement::S_DONE, $3, $5.donematch, $5.valueredirect,
+      $5.indexredirect, true);
     $$->set_location(infile, @$);
   }
 | AnyKeyword ComponentKeyword DotDoneKeyword
@@ -5513,29 +5554,44 @@ optDoneParameter:
   optReceiveParameter
   {
     $$.donematch = $1;
-    $$.redirect = 0;
+    $$.valueredirect = 0;
+    $$.indexredirect = 0;
   }
 | optReceiveParameter PortRedirectSymbol IndexSpec
   {
     $$.donematch = $1;
-    $$.redirect = 0;
+    $$.valueredirect = 0;
+    $$.indexredirect = $3;
   }
 | optReceiveParameter PortRedirectSymbol ValueSpec
   {
     $$.donematch = $1;
-    $$.redirect = $3;
+    $$.valueredirect = $3;
+    $$.indexredirect = 0;
   }
 | optReceiveParameter PortRedirectSymbol ValueSpec IndexSpec
   {
     $$.donematch = $1;
-    $$.redirect = $3;
+    $$.valueredirect = $3;
+    $$.indexredirect = $4;
   }
 ;
 
 KilledStatement: // 320
   ComponentOrDefaultReference DotKilledKeyword
   {
-    $$ = new Statement(Statement::S_KILLED, $1);
+    $$ = new Statement(Statement::S_KILLED, $1, false, NULL);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword ComponentOrDefaultReference DotKilledKeyword
+  {
+    $$ = new Statement(Statement::S_KILLED, $3, true, NULL);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword ComponentOrDefaultReference DotKilledKeyword
+  PortRedirectSymbol IndexSpec
+  {
+    $$ = new Statement(Statement::S_KILLED, $3, true, $6);
     $$->set_location(infile, @$);
   }
 | AnyKeyword ComponentKeyword DotKilledKeyword
@@ -5564,14 +5620,43 @@ RunningOp: // 324
   {
     Value *t_val = new Value(Value::V_REFD, $1);
     t_val->set_location(infile, @1);
-    $$ = new Value(Value::OPTYPE_COMP_RUNNING, t_val);
+    $$ = new Value(Value::OPTYPE_COMP_RUNNING, t_val, NULL, false);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword FunctionInstance DotRunningKeyword
+  {
+    Value *t_val = new Value(Value::V_REFD, $3);
+    t_val->set_location(infile, @3);
+    $$ = new Value(Value::OPTYPE_COMP_RUNNING, t_val, NULL, true);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword FunctionInstance DotRunningKeyword
+  PortRedirectSymbol IndexSpec
+  {
+    Value *t_val = new Value(Value::V_REFD, $3);
+    t_val->set_location(infile, @3);
+    $$ = new Value(Value::OPTYPE_COMP_RUNNING, t_val, $6, true);
     $$->set_location(infile, @$);
   }
 | ApplyOp DotRunningKeyword
   {
     Value *t_val = new Value(Value::V_INVOKE, $1.value, $1.ap_list);
     t_val->set_location(infile, @1);
-    $$ = new Value(Value::OPTYPE_COMP_RUNNING, t_val);
+    $$ = new Value(Value::OPTYPE_COMP_RUNNING, t_val, NULL, false);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword ApplyOp DotRunningKeyword
+  {
+    Value *t_val = new Value(Value::V_INVOKE, $3.value, $3.ap_list);
+    t_val->set_location(infile, @3);
+    $$ = new Value(Value::OPTYPE_COMP_RUNNING, t_val, NULL, true);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword ApplyOp DotRunningKeyword PortRedirectSymbol IndexSpec
+  {
+    Value *t_val = new Value(Value::V_INVOKE, $3.value, $3.ap_list);
+    t_val->set_location(infile, @3);
+    $$ = new Value(Value::OPTYPE_COMP_RUNNING, t_val, $6, true);
     $$->set_location(infile, @$);
   }
 | AnyKeyword ComponentKeyword DotRunningKeyword
@@ -5589,7 +5674,18 @@ RunningOp: // 324
 AliveOp: // 326
   ComponentOrDefaultReference DotAliveKeyword
   {
-    $$ = new Value(Value::OPTYPE_COMP_ALIVE, $1);
+    $$ = new Value(Value::OPTYPE_COMP_ALIVE, $1, NULL, false);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword ComponentOrDefaultReference DotAliveKeyword
+  {
+    $$ = new Value(Value::OPTYPE_COMP_ALIVE, $3, NULL, true);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword ComponentOrDefaultReference DotAliveKeyword
+  PortRedirectSymbol IndexSpec
+  {
+    $$ = new Value(Value::OPTYPE_COMP_ALIVE, $3, $6, true);
     $$->set_location(infile, @$);
   }
 | AnyKeyword ComponentKeyword DotAliveKeyword
@@ -6131,15 +6227,17 @@ PortRaiseOp: // 378
 ReceiveStatement: // 380
   PortOrAny DotReceiveOpKeyword PortReceiveOp
   {
-    $$ = new Statement(Statement::S_RECEIVE, $1, $3.templ_inst,
-                       $3.fromclause, $3.redirectval, $3.redirectsender);
+    $$ = new Statement(Statement::S_RECEIVE, $1.reference, $1.any_from,
+                       $3.templ_inst, $3.fromclause, $3.redirectval,
+                       $3.redirectsender, $3.redirectindex);
     $$->set_location(infile, @$);
   }
 ;
 
 PortOrAny: // 381
-  Port { $$ = $1; }
-| AnyKeyword PortKeyword { $$ = 0; }
+  Port { $$.reference = $1; $$.any_from = false; }
+| AnyKeyword PortKeyword { $$.reference = 0; $$.any_from = false; }
+| AnyKeyword FromKeyword Port { $$.reference = $3; $$.any_from = true; }
 ;
 
 PortReceiveOp: // 382
@@ -6149,6 +6247,7 @@ PortReceiveOp: // 382
     $$.fromclause = $2;
     $$.redirectval = $3.redirectval;
     $$.redirectsender = $3.redirectsender;
+    $$.redirectindex = $3.redirectindex;
   }
 ;
 
@@ -6183,46 +6282,55 @@ optPortRedirect: // [387]
   {
     $$.redirectval=0;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ValueSpec
   {
     $$.redirectval=$2;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol SenderSpec
   {
     $$.redirectval=0;
     $$.redirectsender=$2;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol IndexSpec
   {
     $$.redirectval=0;
     $$.redirectsender=0;
+    $$.redirectindex=$2;
   }
 | PortRedirectSymbol ValueSpec SenderSpec
   {
     $$.redirectval=$2;
     $$.redirectsender=$3;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ValueSpec IndexSpec
   {
     $$.redirectval=$2;
     $$.redirectsender=0;
+    $$.redirectindex=$3;
   }
 | PortRedirectSymbol SenderSpec IndexSpec
   {
     $$.redirectval=0;
     $$.redirectsender=$2;
+    $$.redirectindex=$3;
   }
 | PortRedirectSymbol ValueSpec SenderSpec IndexSpec
   {
     $$.redirectval=$2;
     $$.redirectsender=$3;
+    $$.redirectindex=$4;
   }
 | PortRedirectSymbol error
   {
     $$.redirectval=0;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 ;
 
@@ -6295,19 +6403,15 @@ SenderSpec: // 391
 ;
 
 IndexSpec:
-  IndexKeyword ValueStoreSpec
-  {
-    Location loc(infile, @1);
-    loc.error("Modifier '@index' is not currently supported.");
-    delete $2;
-  }
+  IndexKeyword ValueStoreSpec { $$ = $2; }
 ;
 
 TriggerStatement: // 393
   PortOrAny DotTriggerOpKeyword PortTriggerOp
   {
-    $$ = new Statement(Statement::S_TRIGGER, $1, $3.templ_inst,
-                       $3.fromclause, $3.redirectval, $3.redirectsender);
+    $$ = new Statement(Statement::S_TRIGGER, $1.reference, $1.any_from,
+                       $3.templ_inst, $3.fromclause, $3.redirectval,
+                       $3.redirectsender, $3.redirectindex);
     $$->set_location(infile, @$);
   }
 ;
@@ -6319,14 +6423,16 @@ PortTriggerOp: // 394
     $$.fromclause = $2;
     $$.redirectval = $3.redirectval;
     $$.redirectsender = $3.redirectsender;
+    $$.redirectindex = $3.redirectindex;
   }
 ;
 
 GetCallStatement: // 396
   PortOrAny DotGetCallOpKeyword PortGetCallOp
   {
-    $$ = new Statement(Statement::S_GETCALL, $1, $3.templ_inst,
-                       $3.fromclause, $3.redirectparam, $3.redirectsender);
+    $$ = new Statement(Statement::S_GETCALL, $1.reference, $1.any_from,
+                       $3.templ_inst, $3.fromclause, $3.redirectparam,
+                       $3.redirectsender, $3.redirectindex);
     $$->set_location(infile, @$);
   }
 ;
@@ -6338,6 +6444,7 @@ PortGetCallOp: // 397
     $$.fromclause = $2;
     $$.redirectparam = $3.redirectparam;
     $$.redirectsender = $3.redirectsender;
+    $$.redirectindex = $3.redirectindex;
   }
 ;
 
@@ -6346,46 +6453,55 @@ optPortRedirectWithParam: // [399]
   {
     $$.redirectparam=0;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ParamSpec
   {
     $$.redirectparam=$2;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol SenderSpec
   {
     $$.redirectparam=0;
     $$.redirectsender=$2;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol IndexSpec
   {
     $$.redirectparam=0;
     $$.redirectsender=0;
+    $$.redirectindex=$2;
   }
 | PortRedirectSymbol ParamSpec SenderSpec
   {
     $$.redirectparam=$2;
     $$.redirectsender=$3;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ParamSpec IndexSpec
   {
     $$.redirectparam=$2;
     $$.redirectsender=0;
+    $$.redirectindex=$3;
   }
 | PortRedirectSymbol SenderSpec IndexSpec
   {
     $$.redirectparam=0;
     $$.redirectsender=$2;
+    $$.redirectindex=$3;
   }
 | PortRedirectSymbol ParamSpec SenderSpec IndexSpec
   {
     $$.redirectparam=$2;
     $$.redirectsender=$3;
+    $$.redirectindex=$4;
   }
 | PortRedirectSymbol error
   {
     $$.redirectparam=0;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 ;
 
@@ -6492,9 +6608,10 @@ VariableEntry: // 408
 GetReplyStatement: // 409
   PortOrAny DotGetReplyOpKeyword PortGetReplyOp
   {
-    $$ = new Statement(Statement::S_GETREPLY, $1, $3.templ_inst,
-                       $3.valuematch, $3.fromclause, $3.redirectval,
-                       $3.redirectparam, $3.redirectsender);
+    $$ = new Statement(Statement::S_GETREPLY, $1.reference, $1.any_from,
+                       $3.templ_inst, $3.valuematch, $3.fromclause,
+                       $3.redirectval, $3.redirectparam, $3.redirectsender,
+                       $3.redirectindex);
     $$->set_location(infile, @$);
   }
 ;
@@ -6508,6 +6625,7 @@ PortGetReplyOp: // 410
     $$.redirectval = $3.redirectval;
     $$.redirectparam = $3.redirectparam;
     $$.redirectsender = $3.redirectsender;
+    $$.redirectindex = $3.redirectindex;
   }
 ;
 
@@ -6517,102 +6635,119 @@ optPortRedirectWithValueAndParam: // [411]
     $$.redirectval=0;
     $$.redirectparam=0;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ValueSpec
   {
     $$.redirectval=$2;
     $$.redirectparam=0;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ParamSpec
   {
     $$.redirectval=0;
     $$.redirectparam=$2;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol SenderSpec
   {
     $$.redirectval=0;
     $$.redirectparam=0;
     $$.redirectsender=$2;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol IndexSpec
   {
     $$.redirectval=0;
     $$.redirectparam=0;
     $$.redirectsender=0;
+    $$.redirectindex=$2;
   }
 | PortRedirectSymbol ValueSpec ParamSpec
   {
     $$.redirectval=$2;
     $$.redirectparam=$3;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ValueSpec SenderSpec
   {
     $$.redirectval=$2;
     $$.redirectparam=0;
     $$.redirectsender=$3;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ValueSpec IndexSpec
   {
     $$.redirectval=$2;
     $$.redirectparam=0;
     $$.redirectsender=0;
+    $$.redirectindex=$3;
   }
 | PortRedirectSymbol ParamSpec SenderSpec
   {
     $$.redirectval=0;
     $$.redirectparam=$2;
     $$.redirectsender=$3;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ParamSpec IndexSpec
   {
     $$.redirectval=0;
     $$.redirectparam=$2;
     $$.redirectsender=0;
+    $$.redirectindex=$3;
   }
 | PortRedirectSymbol SenderSpec IndexSpec
   {
     $$.redirectval=0;
     $$.redirectparam=0;
     $$.redirectsender=$2;
+    $$.redirectindex=$3;
   }
 | PortRedirectSymbol ValueSpec ParamSpec SenderSpec
   {
     $$.redirectval=$2;
     $$.redirectparam=$3;
     $$.redirectsender=$4;
+    $$.redirectindex=0;
   }
 | PortRedirectSymbol ValueSpec ParamSpec IndexSpec
   {
     $$.redirectval=$2;
     $$.redirectparam=$3;
     $$.redirectsender=0;
+    $$.redirectindex=$4;
   }
 | PortRedirectSymbol ValueSpec SenderSpec IndexSpec
   {
     $$.redirectval=$2;
     $$.redirectparam=0;
     $$.redirectsender=$3;
+    $$.redirectindex=$4;
   }
 | PortRedirectSymbol ParamSpec SenderSpec IndexSpec
   {
     $$.redirectval=0;
     $$.redirectparam=$2;
     $$.redirectsender=$3;
+    $$.redirectindex=$4;
   }
 | PortRedirectSymbol ValueSpec ParamSpec SenderSpec IndexSpec
   {
     $$.redirectval=$2;
     $$.redirectparam=$3;
     $$.redirectsender=$4;
+    $$.redirectindex=$5;
   }
 | PortRedirectSymbol error
   {
     $$.redirectval=0;
     $$.redirectparam=0;
     $$.redirectsender=0;
+    $$.redirectindex=0;
   }
 ;
 
@@ -6652,26 +6787,29 @@ CheckStatement: // 415
   {
     switch ($3.statementtype) {
     case Statement::S_CHECK:
-      $$ = new Statement(Statement::S_CHECK, $1, $3.templ_inst,
-                         $3.redirectsender);
+      $$ = new Statement(Statement::S_CHECK, $1.reference, $1.any_from,
+                         $3.templ_inst, $3.redirectsender, $3.redirectindex);
       break;
     case Statement::S_CHECK_RECEIVE:
-      $$ = new Statement(Statement::S_CHECK_RECEIVE, $1, $3.templ_inst,
-                         $3.fromclause, $3.redirectval, $3.redirectsender);
+      $$ = new Statement(Statement::S_CHECK_RECEIVE, $1.reference, $1.any_from,
+                         $3.templ_inst, $3.fromclause, $3.redirectval,
+                         $3.redirectsender, $3.redirectindex);
       break;
     case Statement::S_CHECK_GETCALL:
-      $$ = new Statement(Statement::S_CHECK_GETCALL, $1, $3.templ_inst,
-                         $3.fromclause, $3.redirectparam, $3.redirectsender);
+      $$ = new Statement(Statement::S_CHECK_GETCALL, $1.reference, $1.any_from,
+                         $3.templ_inst, $3.fromclause, $3.redirectparam,
+                         $3.redirectsender, $3.redirectindex);
       break;
     case Statement::S_CHECK_GETREPLY:
-      $$ = new Statement(Statement::S_CHECK_GETREPLY, $1, $3.templ_inst,
-                         $3.valuematch, $3.fromclause, $3.redirectval,
-                         $3.redirectparam, $3.redirectsender);
+      $$ = new Statement(Statement::S_CHECK_GETREPLY, $1.reference, $1.any_from,
+                         $3.templ_inst, $3.valuematch, $3.fromclause,
+                         $3.redirectval, $3.redirectparam, $3.redirectsender,
+                         $3.redirectindex);
       break;
     case Statement::S_CHECK_CATCH:
-      $$ = new Statement(Statement::S_CHECK_CATCH, $1, $3.signature,
-                         $3.templ_inst, $3.timeout, $3.fromclause,
-                         $3.redirectval, $3.redirectsender);
+      $$ = new Statement(Statement::S_CHECK_CATCH, $1.reference, $1.any_from,
+                         $3.signature, $3.templ_inst, $3.timeout, $3.fromclause,
+                         $3.redirectval, $3.redirectsender, $3.redirectindex);
       break;
     default:
       FATAL_ERROR("Internal error.");
@@ -6692,6 +6830,7 @@ optCheckParameter: // [418]
     $$.redirectval = 0;
     $$.redirectparam = 0;
     $$.redirectsender = 0;
+    $$.redirectindex = 0;
   }
 | '(' CheckParameter optError ')' { $$ = $2; }
 | '(' error ')'
@@ -6705,6 +6844,7 @@ optCheckParameter: // [418]
     $$.redirectval = 0;
     $$.redirectparam = 0;
     $$.redirectsender = 0;
+    $$.redirectindex = 0;
   }
 ;
 
@@ -6726,6 +6866,7 @@ FromClausePresent: // 419
     $$.redirectval = 0;
     $$.redirectparam = 0;
     $$.redirectsender = 0;
+    $$.redirectindex = 0;
   }
 | FromClause PortRedirectSymbol IndexSpec
   {
@@ -6738,6 +6879,7 @@ FromClausePresent: // 419
     $$.redirectval = 0;
     $$.redirectparam = 0;
     $$.redirectsender = 0;
+    $$.redirectindex = $3;
   }
 | FromClause PortRedirectSymbol SenderSpec
   {
@@ -6750,6 +6892,7 @@ FromClausePresent: // 419
     $$.redirectval = 0;
     $$.redirectparam = 0;
     $$.redirectsender = $3;
+    $$.redirectindex = 0;
   }
 | FromClause PortRedirectSymbol SenderSpec IndexSpec
   {
@@ -6762,6 +6905,7 @@ FromClausePresent: // 419
     $$.redirectval = 0;
     $$.redirectparam = 0;
     $$.redirectsender = $3;
+    $$.redirectindex = $4;
   }
 ;
 
@@ -6777,6 +6921,7 @@ RedirectPresent: // 420
     $$.redirectval = 0;
     $$.redirectparam = 0;
     $$.redirectsender = $2;
+    $$.redirectindex = 0;
   }
 | PortRedirectSymbol IndexSpec
   {
@@ -6789,6 +6934,7 @@ RedirectPresent: // 420
     $$.redirectval = 0;
     $$.redirectparam = 0;
     $$.redirectsender = 0;
+    $$.redirectindex = $2;
   }
 | PortRedirectSymbol SenderSpec IndexSpec
   {
@@ -6801,6 +6947,7 @@ RedirectPresent: // 420
     $$.redirectval = 0;
     $$.redirectparam = 0;
     $$.redirectsender = $2;
+    $$.redirectindex = $3;
   }
 ;
 
@@ -6816,6 +6963,7 @@ CheckPortOpsPresent: // 421
     $$.redirectval = $2.redirectval;
     $$.redirectparam = 0;
     $$.redirectsender = $2.redirectsender;
+    $$.redirectindex = $2.redirectindex;
   }
 | GetCallOpKeyword PortGetCallOp
   {
@@ -6828,6 +6976,7 @@ CheckPortOpsPresent: // 421
     $$.redirectval = 0;
     $$.redirectparam = $2.redirectparam;
     $$.redirectsender = $2.redirectsender;
+    $$.redirectindex = $2.redirectindex;
 }
 | GetReplyOpKeyword PortGetReplyOp
   {
@@ -6840,6 +6989,7 @@ CheckPortOpsPresent: // 421
     $$.redirectval = $2.redirectval;
     $$.redirectparam = $2.redirectparam;
     $$.redirectsender = $2.redirectsender;
+    $$.redirectindex = $2.redirectindex;
 }
 | CatchOpKeyword PortCatchOp
   {
@@ -6852,15 +7002,16 @@ CheckPortOpsPresent: // 421
     $$.redirectval = $2.redirectval;
     $$.redirectparam = 0;
     $$.redirectsender = $2.redirectsender;
+    $$.redirectindex = $2.redirectindex;
   }
 ;
 
 CatchStatement: // 422
   PortOrAny DotCatchOpKeyword PortCatchOp
   {
-    $$ = new Statement(Statement::S_CATCH, $1, $3.signature, $3.templ_inst,
-                       $3.timeout, $3.fromclause, $3.redirectval,
-                       $3.redirectsender);
+    $$ = new Statement(Statement::S_CATCH, $1.reference, $1.any_from,
+                       $3.signature, $3.templ_inst, $3.timeout, $3.fromclause,
+                       $3.redirectval, $3.redirectsender, $3.redirectindex);
     $$->set_location(infile, @$);
   }
 ;
@@ -6874,6 +7025,7 @@ PortCatchOp: // 423
     $$.fromclause = $2;
     $$.redirectval = $3.redirectval;
     $$.redirectsender = $3.redirectsender;
+    $$.redirectindex = $3.redirectindex;
   }
 ;
 
@@ -7011,7 +7163,7 @@ ReadTimerOp: // 444
 RunningTimerOp: // 446
   TimerRef DotRunningKeyword
   {
-    $$ = new Value(Value::OPTYPE_UNDEF_RUNNING, $1);
+    $$ = new Value(Value::OPTYPE_UNDEF_RUNNING, $1, NULL, false);
     $$->set_location(infile, @$);
   }
 | AnyKeyword TimerKeyword DotRunningKeyword
@@ -7019,19 +7171,35 @@ RunningTimerOp: // 446
     $$ = new Value(Value::OPTYPE_TMR_RUNNING_ANY);
     $$->set_location(infile, @$);
   }
+| AnyKeyword FromKeyword TimerRef DotRunningKeyword
+  {
+    $$ = new Value(Value::OPTYPE_UNDEF_RUNNING, $3, NULL, true);
+    $$->set_location(infile, @$);
+  }
+| AnyKeyword FromKeyword TimerRef DotRunningKeyword PortRedirectSymbol IndexSpec
+  {
+    $$ = new Value(Value::OPTYPE_UNDEF_RUNNING, $3, $6, true);
+    $$->set_location(infile, @$);
+  }
 ;
 
 TimeoutStatement: // 447
   TimerRefOrAny DotTimeoutKeyword
   {
-    $$ = new Statement(Statement::S_TIMEOUT, $1);
+    $$ = new Statement(Statement::S_TIMEOUT, $1.reference, $1.any_from, NULL);
+    $$->set_location(infile, @$);
+  }
+| TimerRefOrAny DotTimeoutKeyword PortRedirectSymbol IndexSpec
+  {
+    $$ = new Statement(Statement::S_TIMEOUT, $1.reference, $1.any_from, $4);
     $$->set_location(infile, @$);
   }
 ;
 
 TimerRefOrAny: // 448
-  TimerRef { $$ = $1; }
-| AnyKeyword TimerKeyword { $$ = 0; }
+  TimerRef { $$.reference = $1; $$.any_from = false; }
+| AnyKeyword TimerKeyword { $$.reference = 0; $$.any_from = false; }
+| AnyKeyword FromKeyword TimerRef { $$.reference = $3; $$.any_from = true; }
 ;
 
 /* A.1.6.3 Type */
@@ -8778,7 +8946,11 @@ OpCall: // 611
 | ProfilerRunningOp { $$ = $1; }
 | PortOrAny DotCheckStateKeyword '(' SingleExpression ')'
   {
-    $$ = new Value(Value::OPTYPE_CHECKSTATE_ANY, $1, $4);
+    if ($1.any_from) {
+      Location loc(infile, @1);
+      loc.error("The 'any from' clause cannot be used in a checkstate operation");
+    }
+    $$ = new Value(Value::OPTYPE_CHECKSTATE_ANY, $1.reference, $4);
     $$->set_location(infile, @$);
   }
 // PortOrAll would cause a conflict 

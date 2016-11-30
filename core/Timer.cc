@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Delic, Adam
  *   Kovacs, Ferenc
  *   Raduly, Csaba
@@ -18,6 +19,7 @@
 #include "Error.hh"
 #include "Logger.hh"
 #include "Snapshot.hh"
+#include "Basetype.hh"
 
 TIMER *TIMER::list_head = NULL, *TIMER::list_tail = NULL,
     *TIMER::backup_head = NULL, *TIMER::backup_tail = NULL;
@@ -185,13 +187,13 @@ double TIMER::read() const
   return ret_val;
 }
 
-boolean TIMER::running() const
+boolean TIMER::running(Index_Redirect*) const
   {
   // the time is not frozen (i.e. time_now() is used)
   return is_started && TTCN_Snapshot::time_now() < t_expires;
   }
 
-alt_status TIMER::timeout()
+alt_status TIMER::timeout(Index_Redirect*)
 {
   // the time is frozen (i.e. get_alt_begin() is used)
   if (is_started) {

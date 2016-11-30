@@ -3042,6 +3042,17 @@ bool SubType::zero_length_allowed() const
   return length_restriction->is_element(size_limit_t(0));
 }
 
+bool SubType::length_allowed(size_t len) const
+{
+  if (checked != STC_YES) {
+    FATAL_ERROR("SubType::length_allowed()");
+  }
+  if (length_restriction == NULL) {
+    return true;
+  }
+  return length_restriction->is_element(size_limit_t(len));
+}
+
 string SubType::to_string() const
 {
   if (root) {

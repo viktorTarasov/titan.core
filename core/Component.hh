@@ -76,11 +76,11 @@ public:
   inline boolean is_present() const { return is_bound(); }
 #endif
 
-  alt_status done() const;
-  alt_status killed() const;
+  alt_status done(Index_Redirect*) const;
+  alt_status killed(Index_Redirect*) const;
 
-  boolean running() const;
-  boolean alive() const;
+  boolean running(Index_Redirect*) const;
+  boolean alive(Index_Redirect*) const;
 
   void stop() const;
   void kill() const;

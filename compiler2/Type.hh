@@ -409,6 +409,11 @@ namespace Common {
       * It will not have its own segment and reference generated in the JSON schema,
       * its schema segment will be generated as an embedded type's would. */
     bool pard_type_instance;
+    
+    /** Indicates that the component array version (used with the help of the
+      * 'any from' clause) of the 'done' function needs to be generated for
+      * this type. */
+    bool needs_any_from_done;
 
     /** Copy constructor, for the use of Type::clone() only. */
     Type(const Type& p);
@@ -1188,8 +1193,10 @@ namespace Common {
 
     bool is_untagged() const;
     
-    inline boolean is_pard_type_instance() { return pard_type_instance; }
+    inline bool is_pard_type_instance() { return pard_type_instance; }
     inline void set_pard_type_instance() { pard_type_instance = true; }
+    
+    inline void set_needs_any_from_done() { needs_any_from_done = true; }
     
     /** Calculates the type's display name from the genname (replaces double
       * underscore characters with single ones) */

@@ -237,20 +237,20 @@ namespace Common {
       OPTYPE_DECODE_BASE64, //v1
 
       /** cannot distinguish during parsing; can be COMP or TMR */
-      OPTYPE_UNDEF_RUNNING, // r1                    78
+      OPTYPE_UNDEF_RUNNING, // r1 [r2] b4                   78
       OPTYPE_COMP_NULL, // - (from V_TTCN3_NULL)
       OPTYPE_COMP_MTC, // -
       OPTYPE_COMP_SYSTEM, // -
       OPTYPE_COMP_SELF, // -
       OPTYPE_COMP_CREATE, // r1 [v2] [v3] b4
-      OPTYPE_COMP_RUNNING, // v1
+      OPTYPE_COMP_RUNNING, // v1 [r2] b4
       OPTYPE_COMP_RUNNING_ANY, // -
       OPTYPE_COMP_RUNNING_ALL, // -
       OPTYPE_COMP_ALIVE, // v1
       OPTYPE_COMP_ALIVE_ANY, // -
       OPTYPE_COMP_ALIVE_ALL, // -
       OPTYPE_TMR_READ, // r1     90
-      OPTYPE_TMR_RUNNING, // r1
+      OPTYPE_TMR_RUNNING, // r1 [r2] b4
       OPTYPE_TMR_RUNNING_ANY, // -
       OPTYPE_GETVERDICT, // -
       OPTYPE_ACTIVATE, // r1
@@ -404,11 +404,15 @@ namespace Common {
     Value(operationtype_t p_optype);
     /** Constructor used by V_EXPR "v1" or [v1] */
     Value(operationtype_t p_optype, Value *p_v1);
+    /** Constructor used bt V_EXPR "v1 [r2] b4": COMP_RUNNING, COMP_ALIVE */
+    Value(operationtype_t p_optype, Value* p_v1, Ttcn::Ref_base* p_r2, bool p_b4);
     /** Constructor used by V_EXPR "ti1": LENGTHOF, SIZEOF, VALUEOF, TTCN2STRING */
     Value(operationtype_t p_optype, TemplateInstance *p_ti1);
-    /** Constructor used by V_EXPR "r1": COMP_RUNNING, COMP_ALIVE,
-     *  TMR_READ, TMR_RUNNING, ACTIVATE */
+    /** Constructor used by V_EXPR "r1": TMR_READ, ACTIVATE */
     Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1);
+    /** Constructor used by V_EXPR "r1 [r2] b4": UNDEF_RUNNING */
+    Value(operationtype_t p_optype, Ttcn::Ref_base* p_r1, Ttcn::Ref_base* p_r2,
+      bool p_b4);
     /** ACTIVATE_REFD, OPTYPE_INVOKE, OPTYPE_COMP_ALIVE_REFD */
     Value(operationtype_t p_optype, Value *p_v1,
       Ttcn::ParsedActualParameters *p_ap_list);
@@ -575,17 +579,19 @@ namespace Common {
                                       const char *opnum1 = "left",
                                       const char *opnum2 = "right");
     void chk_expr_operand_undef_running(Type::expected_value_t exp_val,
-                                        Ttcn::Ref_base *ref,
+                                        Ttcn::Ref_base *ref, bool any_from,
+                                        Ttcn::Ref_base* index_ref,
                                         const char *opnum, const char *opname);
     /** Returns the referred component type if it is correct. */
     Type *chk_expr_operand_comptyperef_create();
     /** Checks whether the special component references mtc, system and self
      * have the correct component types (compatible with \a my_governor). */
     void chk_expr_comptype_compat();
-    void chk_expr_operand_compref(Value *val, const char *opnum,
-                                  const char *opname);
+    Type* chk_expr_operand_compref(Value *val, const char *opnum,
+                                  const char *opname, bool any_from = false);
     void chk_expr_operand_tmrref(Ttcn::Ref_base *ref,
-                                 const char *opnum, const char *opname);
+                                 const char *opnum, const char *opname,
+                                 bool any_from = false);
     void chk_expr_operand_activate(Ttcn::Ref_base *ref,
                                    const char *opnum, const char *opname);
     void chk_expr_operand_activate_refd(Value *val,

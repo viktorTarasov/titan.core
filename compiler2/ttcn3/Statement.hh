@@ -277,6 +277,7 @@ namespace Ttcn {
       LogArguments *logargs; ///< used by S_ACTION, S_LOG, S_STOP_TESTCASE
       struct {
         Reference *portref; /**< NULL means any/all */
+        bool anyfrom;
 	union {
 	  struct {
 	    TemplateInstance *sendpar;
@@ -301,6 +302,7 @@ namespace Ttcn {
 	      ValueRedirect *value;
 	      ParamRedirect *param;
 	      Reference *sender;
+	      Reference* index;
 	    } redirect;
 	    union {
 	      TemplateInstance *getreply_valuematch;
@@ -322,6 +324,8 @@ namespace Ttcn {
       struct {
         Reference *timerref; /**< 0 means any/all */
         Value *value;
+        bool any_from;
+        Reference* index_redirect;
       } timer_op; ///< used by S_START_TIMER, S_STOP_TIMER, S_TIMEOUT
 
       struct {
@@ -334,6 +338,9 @@ namespace Ttcn {
       struct {
         Value *compref; /**< if S_STOP_COMP, S_KILL then compref==0
                              means ALL */
+        bool any_from;
+        Reference* index_redirect;
+
         union {
           component_t any_or_all;
           /**< used if S_DONE, S_KILLED and compref==0 */
@@ -502,8 +509,11 @@ namespace Ttcn {
     Statement(statementtype_t p_st, AltGuards *p_ags);
     /** Constructor used by S_RETURN */
     Statement(statementtype_t p_st, Template *p_temp);
-    /** Constructor used by S_DEACTIVATE, S_STOP_COMP, S_KILL, S_KILLED */
+    /** Constructor used by S_DEACTIVATE, S_STOP_COMP, S_KILL */
     Statement(statementtype_t p_st, Value *p_val);
+    /** Constructor used by S_KILLED */
+    Statement(statementtype_t p_st, Value *p_val, bool p_any_from,
+              Reference* p_index_redirect);
     /** Constructor used by S_SETVERDICT */
     Statement(statementtype_t p_st, Value *p_val, LogArguments *p_logargs);
     /** Constructor used by S_SEND */
@@ -523,34 +533,40 @@ namespace Ttcn {
               Value *p_toclause);
     /** Constructor used by S_RECEIVE, S_CHECK_RECEIVE and
      *  S_TRIGGER. p_ref==0 means any port. */
-    Statement(statementtype_t p_st, Reference *p_ref,
+    Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
               TemplateInstance *p_templinst, TemplateInstance *p_fromclause,
-              ValueRedirect *p_redirectval, Reference *p_redirectsender);
+              ValueRedirect *p_redirectval, Reference *p_redirectsender,
+              Reference* p_redirectindex);
     /** Constructor used by S_GETCALL and S_CHECK_GETCALL. p_ref==0
      *  means any port. */
-    Statement(statementtype_t p_st, Reference *p_ref,
+    Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
               TemplateInstance *p_templinst, TemplateInstance *p_fromclause,
-              ParamRedirect *p_redirectparam, Reference *p_redirectsender);
+              ParamRedirect *p_redirectparam, Reference *p_redirectsender,
+              Reference* p_redirectindex);
     /** Constructor used by S_GETREPLY and S_CHECK_GETREPLY. p_ref==0
      *  means any port. */
-    Statement(statementtype_t p_st, Reference *p_ref,
+    Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
               TemplateInstance *p_templinst, TemplateInstance *p_valuematch,
               TemplateInstance *p_fromclause,
               ValueRedirect *p_redirectval, ParamRedirect *p_redirectparam,
-              Reference *p_redirectsender);
+              Reference *p_redirectsender, Reference* p_redirectindex);
     /** Constructor used by S_CATCH and S_CHECK_CATCH. p_ref==0 means
      *  any port. */
-    Statement(statementtype_t p_st, Reference *p_ref,
+    Statement(statementtype_t p_st, Reference *p_ref,  bool p_anyfrom,
               Reference *p_sig, TemplateInstance *p_templinst,
               bool p_timeout, TemplateInstance *p_fromclause,
-              ValueRedirect *p_redirectval, Reference *p_redirectsender);
+              ValueRedirect *p_redirectval, Reference *p_redirectsender,
+              Reference* p_redirectindex);
     /** Constructor used by S_CHECK. p_ref==0 means any port. */
-    Statement(statementtype_t p_st, Reference *p_ref,
-              TemplateInstance *p_fromclause, Reference *p_redirectsender);
+    Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
+              TemplateInstance *p_fromclause, Reference *p_redirectsender,
+              Reference* p_redirectindex);
     /** Constructor used by S_CLEAR, S_START_PORT and S_STOP_PORT.
-     *  p_ref==0 means all port. S_STOP_TIMER (p_ref==0: all timer),
-     *  S_TIMEOUT (p_ref==0: any timer). */
+     *  p_ref==0 means all port. S_STOP_TIMER (p_ref==0: all timer). */
     Statement(statementtype_t p_st, Reference *p_ref);
+    /** Constructor used by S_TIMEOUT (p_ref==0: any timer)*/
+    Statement(statementtype_t p_st, Reference *p_ref, bool p_any_from,
+              Reference* p_redirectindex);
     /** Constructor used by S_START_COMP */
     Statement(statementtype_t p_st, Value *p_compref, Ref_pard *p_funcinst);
     /** Constructor used by S_START_COMP_REFD */
@@ -558,7 +574,8 @@ namespace Ttcn {
               ParsedActualParameters *p_ap_list);
     /** Constructor used by S_DONE */
     Statement(statementtype_t p_st, Value *p_compref,
-              TemplateInstance *p_donematch, ValueRedirect *p_redirect);
+              TemplateInstance *p_donematch, ValueRedirect *p_redirect,
+              Reference* p_index_redirect, bool p_any_from);
     /** Constructor used by S_DONE, S_KILLED */
     Statement(statementtype_t p_st, component_t p_anyall);
     /** Constructor used by S_CONNECT, S_DISCONNECT, S_MAP, S_UNMAP */
@@ -621,6 +638,19 @@ namespace Ttcn {
     /** checks whether the statement (including all embedded statements) are
      * allowed in an interleaved construct */
     void chk_allowed_interleave();
+    
+    /** Checks the index redirect in a port, timer or component array operation.
+      *
+      * @param p_index_ref reference to variable or parameter for storing the index
+      * @param p_array_dims dimensions of the port, timer or component array
+      * @param p_any_from presence of the 'any from' clause before the array
+      * @param p_array_type string containing "port", "timer" or "component"
+      * (used in error messages)
+      *
+      * @note This function is also called by expressions containing timer or
+      * component operations in the Value class. */
+    static void chk_index_redirect(Reference* p_index_ref,
+      ArrayDimensions* p_array_dims, bool p_any_from, const char* p_array_type);
   private:
     void chk_start_undef();
     void chk_stop_undef();
@@ -680,11 +710,12 @@ namespace Ttcn {
     void chk_execute();
     void chk_execute_refd();
 
-    /** Checks whether \a p_ref points to a port or port parameter.
+    /** Checks whether \a p_ref points to a port, port parameter or port array.
      *  If \a p_ref refers to a port array the array indices within \a
-     *  p_ref are also checked.  Returns a pointer to the port type if
-     *  available or NULL otherwise. */
-    Type *chk_port_ref(Reference *p_ref);
+     *  p_ref are also checked. If \a p_any_from is true, then the reference
+     *  must point to a port array, otherwise it must point to a port.
+     *  Returns a pointer to the port type if available or NULL otherwise. */
+    Type *chk_port_ref(Reference *p_ref, bool p_any_from = false);
     /** Checks the `to' clause of a port operation. Field
      *  port_op.s.toclause shall be a component reference (or an
      *  address) depending on the extension attributes of \a
@@ -713,16 +744,20 @@ namespace Ttcn {
      *  describing the respective signature is returned or NULL in
      *  case of error. */
     static Type *chk_signature_ref(Reference *p_ref);
-    /** Checks whether \a p_ref points to a timer or timer parameter.
+    /** Checks whether \a p_ref points to a timer, timer parameter or timer array.
      *  If \a p_ref refers to a timer array the array indices within
-     *  \a p_ref are also checked. */
-    static void chk_timer_ref(Reference *p_ref);
-    /** Checks whether \a p_val is a component reference (i.e. its
-     *  type is a component type). Returns a pointer to the component
-     *  type if available or NULL otherwise. Flags \a allow_mtc and \a
-     *  allow_system indicate whether the mtc or system component
-     *  reference is acceptable in this context. */
-    Type *chk_comp_ref(Value *p_val, bool allow_mtc, bool allow_system);
+     *  \a p_ref are also checked. If \a p_any_from is true, then the reference
+     *  must point to a port array, otherwise it must point to a port.*/
+    static void chk_timer_ref(Reference *p_ref, bool p_any_from = false);
+    /** Checks whether \a p_val is a component or component array reference
+     *  (i.e. its type is a component or component array type).
+     *  Returns a pointer to the component or component array type if available
+     *  or NULL otherwise. Flags \a allow_mtc and \a allow_system indicate whether
+     *  the mtc or system component reference is acceptable in this context.
+     *  Flag p_any_from indicates whether the 'any from' clause was used on \a p_val
+     *  (in which case it must be a component array) or not (in which case it
+     *  must be a component). */
+    Type *chk_comp_ref(Value *p_val, bool allow_mtc, bool allow_system, bool p_any_from = false);
     /** Checks an endpoint for a port connection or mapping. Parameter
      *  \a p_compref is a component reference, \a p_portref refers to
      *  a port within the corresponding component type.  A pointer to
@@ -739,6 +774,14 @@ namespace Ttcn {
     char* generate_code(char *str);
     void generate_code_expr(expression_struct *expr);
     void ilt_generate_code(ILT *ilt);
+    
+    /** Generates code for an index redirect. (A new class is generated for each
+      * redirect, inheriting the Index_Redirect class.)
+      *
+      * @note This function is also called by expressions containing timer or
+      * component operations in the Value class. */
+    static void generate_code_index_redirect(expression_struct* expr,
+      Reference* p_ref, Scope* p_scope);
 
     /** Needed by implicit omit. Pushes attrib path down to definitions
      */
@@ -1129,11 +1172,8 @@ namespace Ttcn {
       * structure. A new class is generated for every value redirect, which
       * handles the redirecting.
       * @param matched_ti the template instance used for matching the redirected
-      * value (if NULL, then the template instance is an 'any value' template)
-      * @param base_class_prefix the namespace and/or class prefix of the
-      * base value redirect class of the appropriate type */
-    void generate_code(expression_struct* expr, TemplateInstance* matched_ti,
-      string base_class_prefix);
+      * value (if NULL, then the template instance is an 'any value' template) */
+    void generate_code(expression_struct* expr, TemplateInstance* matched_ti);
     /** returns true if at least one of the value redirects has the 
       * '@decoded' modifier*/
     bool has_decoded_modifier() const;

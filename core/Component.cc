@@ -93,28 +93,28 @@ void COMPONENT::log() const
   else TTCN_Logger::log_event_unbound();
 }
 
-alt_status COMPONENT::done() const
+alt_status COMPONENT::done(Index_Redirect*) const
 {
   if (component_value == UNBOUND_COMPREF) TTCN_error("Performing done "
     "operation on an unbound component reference.");
   return TTCN_Runtime::component_done(component_value);
 }
 
-alt_status COMPONENT::killed() const
+alt_status COMPONENT::killed(Index_Redirect*) const
 {
   if (component_value == UNBOUND_COMPREF) TTCN_error("Performing killed "
     "operation on an unbound component reference.");
   return TTCN_Runtime::component_killed(component_value);
 }
 
-boolean COMPONENT::running() const
+boolean COMPONENT::running(Index_Redirect*) const
 {
   if (component_value == UNBOUND_COMPREF) TTCN_error("Performing running "
     "operation on an unbound component reference.");
   return TTCN_Runtime::component_running(component_value);
 }
 
-boolean COMPONENT::alive() const
+boolean COMPONENT::alive(Index_Redirect*) const
 {
   if (component_value == UNBOUND_COMPREF) TTCN_error("Performing alive "
     "operation on an unbound component reference.");

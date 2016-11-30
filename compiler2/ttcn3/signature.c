@@ -329,25 +329,11 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
 
     /* class definition */
     def = mputprintf(def, "class %s_reply_redirect {\n", name);
-    
-    if (use_runtime_2 && sdef->return_type != NULL) {
-      /* value redirect base class (interface) for the return value */
-      def = mputprintf(def, 
-        "public:\n"
-        "class %s_Redirect_Interface {\n"
-        "public:\n"
-        "virtual void set_values(const %s&) = 0;\n"
-        "virtual ~%s_Redirect_Interface() { }\n"
-        "};\n"
-        "private:\n", sdef->return_type_w_no_prefix, sdef->return_type,
-        sdef->return_type_w_no_prefix);
-    }
 
     /* parameter pointers */
     if (sdef->return_type != NULL) {
-      def = mputprintf(def, "%s%s *ret_val_redir;\n",
-        use_runtime_2 ? sdef->return_type_w_no_prefix : sdef->return_type,
-        use_runtime_2 ? "_Redirect_Interface" : "");
+      def = mputprintf(def, "%s *ret_val_redir;\n",
+        use_runtime_2 ? "Value_Redirect_Interface" : sdef->return_type);
     }
     for (i = 0; i < sdef->parameters.nElements; i++) {
       if (sdef->parameters.elements[i].direction != PAR_IN) {
@@ -364,9 +350,8 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
       /* constructor */
       def = mputprintf(def, "%s_reply_redirect(", name);
       if (sdef->return_type != NULL) {
-        def = mputprintf(def, "%s%s *return_redirect",
-          use_runtime_2 ? sdef->return_type_w_no_prefix : sdef->return_type,
-          use_runtime_2 ? "_Redirect_Interface" : "");
+        def = mputprintf(def, "%s *return_redirect",
+          use_runtime_2 ? "Value_Redirect_Interface" : sdef->return_type);
         first_param = FALSE;
       }
       for (i = 0; i < sdef->parameters.nElements; i++) {
@@ -424,7 +409,7 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
       if (sdef->return_type!=NULL) {
         src = mputstr(src, "if (ret_val_redir != NULL) ");
         if (use_runtime_2) {
-          src = mputstr(src, "ret_val_redir->set_values(reply_par.return_value());\n");
+          src = mputstr(src, "ret_val_redir->set_values(&reply_par.return_value());\n");
         }
         else {
           src = mputstr(src, "*ret_val_redir = reply_par.return_value();\n");
@@ -692,20 +677,6 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
     def = mputprintf(def,
       "class %s_exception_template {\n"
       "public:\n", name);
-    
-    if (use_runtime_2) {
-      /* value redirect base classes (interfaces) */
-      for (i = 0; i < sdef->exceptions.nElements; i++) {
-        def = mputprintf(def,
-          "class %s_Redirect_Interface {\n"
-          "public:\n"
-          "virtual void set_values(const %s&) = 0;\n"
-          "virtual ~%s_Redirect_Interface() { }\n"
-          "};\n", sdef->exceptions.elements[i].name_w_no_prefix,
-          sdef->exceptions.elements[i].name,
-          sdef->exceptions.elements[i].name_w_no_prefix);
-      }
-    }
 
     /* data members */
     /* exception-selection enum */
@@ -723,10 +694,9 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
     /* union of all possible value redirect objects */
     def = mputstr(def, "union {\n");
     for (i = 0; i < sdef->exceptions.nElements; i++) {
-      def = mputprintf(def, "%s%s *%s_redir;\n",
-        use_runtime_2 ? sdef->exceptions.elements[i].name_w_no_prefix :
+      def = mputprintf(def, "%s *%s_redir;\n",
+        use_runtime_2 ? "Value_Redirect_Interface" :
         sdef->exceptions.elements[i].name,
-        use_runtime_2 ? "_Redirect_Interface" : "",
         sdef->exceptions.elements[i].altname);
     }
     def = mputstr(def, "};\n"
@@ -734,21 +704,19 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
     /* constructors (for all possible template + redirect object pairs) */
     for (i = 0; i < sdef->exceptions.nElements; i++) {
       def = mputprintf(def, "%s_exception_template(const %s_template& "
-        "init_template, %s%s *value_redirect = NULL);\n", name,
+        "init_template, %s *value_redirect = NULL);\n", name,
         sdef->exceptions.elements[i].name,
-        use_runtime_2 ? sdef->exceptions.elements[i].name_w_no_prefix :
-        sdef->exceptions.elements[i].name,
-        use_runtime_2 ? "_Redirect_Interface" : "");
+        use_runtime_2 ? "Value_Redirect_Interface" :
+        sdef->exceptions.elements[i].name);
       src = mputprintf(src, "%s_exception_template::%s_exception_template"
-        "(const %s_template& init_template, %s%s *value_redirect)\n"
+        "(const %s_template& init_template, %s *value_redirect)\n"
         "{\n"
         "exception_selection = %s_%s;\n"
         "field_%s = &init_template;\n"
         "%s_redir = value_redirect;\n"
         "}\n\n", name, name, sdef->exceptions.elements[i].name,
-        use_runtime_2 ? sdef->exceptions.elements[i].name_w_no_prefix :
-        sdef->exceptions.elements[i].name,
-        use_runtime_2 ? "_Redirect_Interface" : "", selection_prefix,
+        use_runtime_2 ? "Value_Redirect_Interface" :
+        sdef->exceptions.elements[i].name, selection_prefix,
         sdef->exceptions.elements[i].altname,
         sdef->exceptions.elements[i].altname,
         sdef->exceptions.elements[i].altname);
@@ -858,7 +826,7 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
         sdef->exceptions.elements[i].altname,
         sdef->exceptions.elements[i].altname);
       if (use_runtime_2) {
-        src = mputprintf(src, "%s_redir->set_values(source_value.%s_field());\n",
+        src = mputprintf(src, "%s_redir->set_values(&source_value.%s_field());\n",
           sdef->exceptions.elements[i].altname,
           sdef->exceptions.elements[i].altname);
       }

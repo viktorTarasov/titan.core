@@ -417,10 +417,10 @@ static void generate_generic_receive(char **def_ptr, char **src_ptr,
   }
 
   def = mputprintf(def, "alt_status %s(const %s_template& "
-    "sender_template, %s *sender_ptr);\n", function_name, sender_type,
-    sender_type);
+    "sender_template, %s *sender_ptr, Index_Redirect*);\n", function_name,
+    sender_type, sender_type);
   src = mputprintf(src, "alt_status %s::%s(const %s_template& "
-    "sender_template, %s *sender_ptr)\n"
+    "sender_template, %s *sender_ptr, Index_Redirect*)\n"
     "{\n"
     "msg_queue_item *my_head = (msg_queue_item*)msg_queue_head;\n"
     "if (msg_queue_head == NULL) {\n"
@@ -565,14 +565,14 @@ static void generate_receive(char **def_ptr, char **src_ptr,
   }
 
   def = mputprintf(def, "alt_status %s(const %s_template& value_template, "
-    "%s%s *value_redirect, const %s_template& sender_template, %s "
-    "*sender_ptr);\n", function_name, message_type->name,
-    use_runtime_2 ? message_type->name_w_no_prefix : message_type->name,
-    use_runtime_2 ? "_Redirect_Interface" : "", sender_type, sender_type);
+    "%s *value_redirect, const %s_template& sender_template, %s "
+    "*sender_ptr, Index_Redirect*);\n", function_name, message_type->name,
+    use_runtime_2 ? "Value_Redirect_Interface" : message_type->name,
+    sender_type, sender_type);
 
   src = mputprintf(src, "alt_status %s::%s(const %s_template& "
-    "value_template, %s%s *value_redirect, const %s_template& "
-    "sender_template, %s *sender_ptr)\n"
+    "value_template, %s *value_redirect, const %s_template& "
+    "sender_template, %s *sender_ptr, Index_Redirect*)\n"
     "{\n"
     "if (value_template.get_selection() == ANY_OR_OMIT) "
     "TTCN_error(\"%s operation using '*' as matching template\");\n"
@@ -586,9 +586,8 @@ static void generate_receive(char **def_ptr, char **src_ptr,
     "return ALT_NO;\n"
     "}\n"
     "} else ", class_name, function_name, message_type->name,
-    use_runtime_2 ? message_type->name_w_no_prefix : message_type->name,
-    use_runtime_2 ? "_Redirect_Interface" : "", sender_type, sender_type,
-    operation_name);
+    use_runtime_2 ? "Value_Redirect_Interface" : message_type->name,
+    sender_type, sender_type, operation_name);
   if (is_address) {
     src = mputprintf(src, "if (my_head->sender_component != "
       "SYSTEM_COMPREF) {\n"
@@ -666,7 +665,7 @@ static void generate_receive(char **def_ptr, char **src_ptr,
     "if (value_redirect != NULL) {\n", failed_status);
   if (use_runtime_2) {
     src = mputprintf(src,
-      "value_redirect->set_values(*my_head->message_%lu);\n"
+      "value_redirect->set_values(my_head->message_%lu);\n"
       "delete value_redirect;\n", (unsigned long) message_index);
   }
   else {
@@ -783,10 +782,10 @@ static void generate_generic_getop(getop_t getop,
   }
 
   def = mputprintf(def, "alt_status %s(const %s_template& "
-    "sender_template, %s *sender_ptr);\n", function_name, sender_type,
+    "sender_template, %s *sender_ptr, Index_Redirect*);\n", function_name, sender_type,
     sender_type);
   src = mputprintf(src, "alt_status %s::%s(const %s_template& "
-    "sender_template, %s *sender_ptr)\n"
+    "sender_template, %s *sender_ptr, Index_Redirect*)\n"
     "{\n"
     "if (proc_queue_head == NULL) {\n"
     "if (is_started) return ALT_MAYBE;\n"
@@ -981,13 +980,13 @@ static void generate_getcall(char **def_ptr, char **src_ptr,
 
   def = mputprintf(def, "alt_status %s(const %s_template& "
     "getcall_template, const %s_template& sender_template, "
-    "const %s_call_redirect& param_ref, %s *sender_ptr);\n",
+    "const %s_call_redirect& param_ref, %s *sender_ptr, Index_Redirect*);\n",
     function_name, signature->name, sender_type, signature->name,
     sender_type);
 
   src = mputprintf(src, "alt_status %s::%s(const %s_template& "
     "getcall_template, const %s_template& sender_template, "
-    "const %s_call_redirect& param_ref, %s *sender_ptr)\n"
+    "const %s_call_redirect& param_ref, %s *sender_ptr, Index_Redirect*)\n"
     "{\n"
     "if (proc_queue_head == NULL) {\n"
     "if (is_started) return ALT_MAYBE;\n"
@@ -1104,13 +1103,13 @@ static void generate_getreply(char **def_ptr, char **src_ptr,
 
   def = mputprintf(def, "alt_status %s(const %s_template& "
     "getreply_template, const %s_template& sender_template, "
-    "const %s_reply_redirect& param_ref, %s *sender_ptr);\n",
+    "const %s_reply_redirect& param_ref, %s *sender_ptr, Index_Redirect*);\n",
     function_name, signature->name, sender_type, signature->name,
     sender_type);
 
   src = mputprintf(src, "alt_status %s::%s(const %s_template& "
     "getreply_template, const %s_template& sender_template, "
-    "const %s_reply_redirect& param_ref, %s *sender_ptr)\n"
+    "const %s_reply_redirect& param_ref, %s *sender_ptr, Index_Redirect*)\n"
     "{\n", class_name, function_name, signature->name, sender_type,
     signature->name, sender_type);
   if (signature->has_return_value) {
@@ -1233,12 +1232,12 @@ static void generate_catch(char **def_ptr, char **src_ptr,
 
   def = mputprintf(def, "alt_status %s(const %s_exception_template& "
     "catch_template, const %s_template& sender_template, "
-    "%s *sender_ptr);\n",
+    "%s *sender_ptr, Index_Redirect*);\n",
     function_name, signature->name, sender_type, sender_type);
 
   src = mputprintf(src, "alt_status %s::%s(const %s_exception_template& "
     "catch_template, const %s_template& sender_template, "
-    "%s *sender_ptr)\n"
+    "%s *sender_ptr, Index_Redirect*)\n"
     "{\n"
     "if (catch_template.is_any_or_omit()) TTCN_error(\"%s operation using '*' "
     "as matching template\");\n"
@@ -1585,20 +1584,6 @@ void defPortClass(const port_def* pdef, output_struct* output)
 
 
   def = mputstr(def, "public:\n");
-  
-  /* value redirect base classes (interfaces) */
-  if (use_runtime_2 && has_msg_queue) {
-    for (i = 0; i < pdef->msg_in.nElements; ++i) {
-      def = mputprintf(def, 
-        "class %s_Redirect_Interface {\n"
-        "public:\n"
-        "virtual void set_values(const %s&) = 0;\n"
-        "virtual ~%s_Redirect_Interface() { }\n"
-        "};\n", pdef->msg_in.elements[i].name_w_no_prefix,
-        pdef->msg_in.elements[i].name,
-        pdef->msg_in.elements[i].name_w_no_prefix);
-    }
-  }
 
   /* constructor */
   def = mputprintf(def, "%s(const char *par_port_name", class_name);

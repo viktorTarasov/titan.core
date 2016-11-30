@@ -6,18 +6,7 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
-#   Balasko, Jeno
 #   Baranyi, Botond
-#   Ormandi, Matyas
 #
 ##############################################################################
-SADIRS := ver xer encode param template any_from
-ifeq ($(RT2), yes)
-SADIRS += deprecated
-endif
-#$(wildcard TTCN3_[a0-9]* ASN_[a0-9]*) ver xer
-
-all run check clean distclean:
-	for d in $(SADIRS); do $(MAKE) -C $$d $@ || exit 1; done
-
-
+include ../common.mk

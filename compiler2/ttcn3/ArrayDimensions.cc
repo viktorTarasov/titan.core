@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Beres, Szabolcs
  *   Kovacs, Ferenc
  *   Raduly, Csaba
@@ -323,11 +324,11 @@ namespace Ttcn {
   }
 
   void ArrayDimensions::chk_indices(Common::Reference *ref, const char *def_name,
-    bool allow_slicing, Type::expected_value_t exp_val)
+    bool allow_slicing, Type::expected_value_t exp_val, bool any_from)
   {
     FieldOrArrayRefs *subrefs = ref->get_subrefs();
     if (!subrefs) {
-      if (!allow_slicing)
+      if (!allow_slicing && !any_from)
 	ref->error("Reference to a %s array without array index", def_name);
       return;
     }
@@ -344,15 +345,22 @@ namespace Ttcn {
       dims[i]->chk_index(subref->get_val(), exp_val);
     }
     if (nof_refs < nof_dims) {
-      if (!allow_slicing) ref->error("Too few indices in a reference to a %s "
-	"array: the array has %lu dimensions, but the reference has only %lu "
-	"array %s", def_name, (unsigned long)nof_dims, (unsigned long)nof_refs,
-	nof_refs > 1 ? "indices" : "index");
+      if (!allow_slicing && !any_from) {
+        ref->error("Too few indices in a reference to a %s array without the "
+          "'any from' clause: the array has %lu dimensions, but the reference "
+          "has only %lu array %s", def_name, (unsigned long)nof_dims,
+          (unsigned long)nof_refs, nof_refs > 1 ? "indices" : "index");
+      }
     } else if (nof_refs > nof_dims) {
       ref->error("Too many indices in a reference to a %s array: the reference "
         "has %lu array indices, but the array has only %lu dimension%s",
         def_name, (unsigned long) nof_refs, (unsigned long) nof_dims,
         nof_dims > 1 ? "s" : "");
+    }
+    else if (any_from) { // nof_refs == nof_dims
+      ref->error("Too many indices in a reference to a %s array with the "
+        "'any from' clause : the reference has as many array indices as the "
+        "array has dimensions (%lu)", def_name, (unsigned long) nof_refs);
     }
   }
 
