@@ -2670,8 +2670,10 @@ namespace Ttcn {
       chk_start_timer();
       break;
     case S_STOP_TIMER:
+      chk_stop_timer();
+      break;
     case S_TIMEOUT:
-      chk_stop_timer_timeout();
+      chk_timer_timeout();
       break;
     case S_SETVERDICT:
       chk_setverdict();
@@ -2901,7 +2903,7 @@ namespace Ttcn {
       timer_op.timerref = dynamic_cast<Reference*>(t_ref);
       if (!timer_op.timerref) goto error;
       timer_op.value = 0;
-      chk_stop_timer_timeout();
+      chk_stop_timer();
       break;
     case Definition::A_CONST:
     case Definition::A_EXT_CONST:
@@ -4762,10 +4764,16 @@ error:
       }
     }
   }
-
-  void Statement::chk_stop_timer_timeout()
+  
+  void Statement::chk_stop_timer()
   {
-    Error_Context cntxt(this, "In %s statement", get_stmt_name());
+    Error_Context cntxt(this, "In stop timer statement");
+    chk_timer_ref(timer_op.timerref);
+  }
+
+  void Statement::chk_timer_timeout()
+  {
+    Error_Context cntxt(this, "In timeout statement");
     chk_timer_ref(timer_op.timerref, timer_op.any_from);
     if (timer_op.index_redirect != NULL && timer_op.timerref != NULL) {
       Common::Assignment* t_ass = timer_op.timerref->get_refd_assignment();

@@ -705,7 +705,8 @@ namespace Ttcn {
     /* checks map and unmap */
     void chk_map();
     void chk_start_timer();
-    void chk_stop_timer_timeout();
+    void chk_stop_timer();
+    void chk_timer_timeout();
     void chk_setverdict();
     void chk_execute();
     void chk_execute_refd();
