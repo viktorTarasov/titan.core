@@ -678,10 +678,11 @@ namespace Ttcn {
       delete timer_op.timerref;
       delete timer_op.value;
       break;
-    case S_STOP_TIMER:
     case S_TIMEOUT:
-      delete timer_op.timerref;
       delete timer_op.index_redirect;
+      // no break
+    case S_STOP_TIMER:
+      delete timer_op.timerref;
       break;
     case S_SETVERDICT:
       delete setverdict.verdictval;
@@ -1844,12 +1845,13 @@ namespace Ttcn {
       timer_op.timerref->set_my_scope(p_scope);
       if (timer_op.value) timer_op.value->set_my_scope(p_scope);
       break;
-    case S_STOP_TIMER:
     case S_TIMEOUT:
-      if (timer_op.timerref) timer_op.timerref->set_my_scope(p_scope);
       if (timer_op.index_redirect != NULL) {
         timer_op.index_redirect->set_my_scope(p_scope);
       }
+      // no break
+    case S_STOP_TIMER:
+      if (timer_op.timerref) timer_op.timerref->set_my_scope(p_scope);
       break;
     case S_SETVERDICT:
       setverdict.verdictval->set_my_scope(p_scope);
@@ -2116,13 +2118,14 @@ namespace Ttcn {
       timer_op.timerref->set_fullname(p_fullname+".timerref");
       if(timer_op.value) timer_op.value->set_fullname(p_fullname+".timerval");
       break;
-    case S_STOP_TIMER:
     case S_TIMEOUT:
-      if (timer_op.timerref)
-        timer_op.timerref->set_fullname(p_fullname+".timerref");
       if (timer_op.index_redirect != NULL) {
         timer_op.index_redirect->set_fullname(p_fullname + ".redirindex");
       }
+      // no break
+    case S_STOP_TIMER:
+      if (timer_op.timerref)
+        timer_op.timerref->set_fullname(p_fullname+".timerref");
       break;
     case S_SETVERDICT:
       setverdict.verdictval->set_fullname(p_fullname+".verdictval");
@@ -5711,13 +5714,14 @@ error:
       timer_op.timerref->set_code_section(p_code_section);
       if (timer_op.value) timer_op.value->set_code_section(p_code_section);
       break;
-    case S_STOP_TIMER:
     case S_TIMEOUT:
-      if (timer_op.timerref)
-        timer_op.timerref->set_code_section(p_code_section);
       if (timer_op.index_redirect != NULL) {
         timer_op.index_redirect->set_code_section(p_code_section);
       }
+      // no break
+    case S_STOP_TIMER:
+      if (timer_op.timerref)
+        timer_op.timerref->set_code_section(p_code_section);
       break;
     case S_SETVERDICT:
       setverdict.verdictval->set_code_section(p_code_section);

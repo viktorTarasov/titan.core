@@ -20,4 +20,3 @@ BISON := /usr/bin/bison
 JDKDIR := /proj/TTCN/Tools/jdk1.6.0_34
 XMLDIR := /usr
 OPENSSL_DIR := /usr
-DEBUG := yes
