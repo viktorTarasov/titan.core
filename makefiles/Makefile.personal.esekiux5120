@@ -21,3 +21,5 @@ JDKDIR  := /proj/TTCN/Tools/jdk1.6.0_23
 XMLDIR  := /app/libxml/2.9.1
 
 OPENSSL_DIR := /proj/TTCN/Tools/openssl-0.9.8r
+
+DEBUG := yes
