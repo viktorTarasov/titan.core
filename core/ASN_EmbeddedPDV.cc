@@ -775,7 +775,7 @@ boolean EMBEDDED_PDV_identification::BER_decode_TLV(const TTCN_Typedescriptor_t&
 // FIXME maybe: XER_encode and decode is virtually identical to CHARACTER_STRING
 
 int EMBEDDED_PDV_identification::XER_encode(const XERdescriptor_t& p_td,
-  TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+  TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
   int indenting = !is_canonical(flavor);
   boolean exer  = is_exer(flavor);
@@ -788,22 +788,22 @@ int EMBEDDED_PDV_identification::XER_encode(const XERdescriptor_t& p_td,
   ++indent;
   switch (union_selection) {
   case ALT_syntaxes:
-    field_syntaxes->XER_encode(EMBEDDED_PDV_identification_sxs_xer_, p_buf, flavor, indent, 0);;
+    field_syntaxes->XER_encode(EMBEDDED_PDV_identification_sxs_xer_, p_buf, flavor, flavor2, indent, 0);;
     break;
   case ALT_syntax:
-    field_syntax->XER_encode(EMBEDDED_PDV_identification_sx_xer_, p_buf, flavor, indent, 0);;
+    field_syntax->XER_encode(EMBEDDED_PDV_identification_sx_xer_, p_buf, flavor, flavor2, indent, 0);;
     break;
   case ALT_presentation__context__id:
-    field_presentation__context__id->XER_encode(EMBEDDED_PDV_identification_pci_xer_, p_buf, flavor, indent, 0);;
+    field_presentation__context__id->XER_encode(EMBEDDED_PDV_identification_pci_xer_, p_buf, flavor, flavor2, indent, 0);;
     break;
   case ALT_context__negotiation:
-    field_context__negotiation->XER_encode(EMBEDDED_PDV_identification_cn_xer_, p_buf, flavor, indent, 0);;
+    field_context__negotiation->XER_encode(EMBEDDED_PDV_identification_cn_xer_, p_buf, flavor, flavor2, indent, 0);;
     break;
   case ALT_transfer__syntax:
-    field_transfer__syntax->XER_encode(EMBEDDED_PDV_identification_ts_xer_, p_buf, flavor, indent, 0);;
+    field_transfer__syntax->XER_encode(EMBEDDED_PDV_identification_ts_xer_, p_buf, flavor, flavor2, indent, 0);;
     break;
   case ALT_fixed:
-    field_fixed->XER_encode(EMBEDDED_PDV_identification_fix_xer_, p_buf, flavor, indent, 0);;
+    field_fixed->XER_encode(EMBEDDED_PDV_identification_fix_xer_, p_buf, flavor, flavor2, indent, 0);;
     break;
   default:
     TTCN_EncDec_ErrorContext::error_internal("Unknown selection.");
@@ -1781,7 +1781,7 @@ boolean EMBEDDED_PDV_identification_syntaxes::BER_decode_TLV(const TTCN_Typedesc
 }
 
 int EMBEDDED_PDV_identification_syntaxes::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
   int indenting = !is_canonical(flavor);
   boolean exer  = is_exer(flavor);
@@ -1792,8 +1792,8 @@ int EMBEDDED_PDV_identification_syntaxes::XER_encode(const XERdescriptor_t& p_td
   p_buf.put_s((size_t)p_td.namelens[exer] - 1 + indenting, (const unsigned char*)p_td.names[exer]);
 
   ++indent;
-  field_abstract.XER_encode(EMBEDDED_PDV_identification_sxs_abs_xer_, p_buf, flavor, indent, 0);
-  field_transfer.XER_encode(EMBEDDED_PDV_identification_sxs_xfr_xer_, p_buf, flavor, indent, 0);
+  field_abstract.XER_encode(EMBEDDED_PDV_identification_sxs_abs_xer_, p_buf, flavor, flavor2, indent, 0);
+  field_transfer.XER_encode(EMBEDDED_PDV_identification_sxs_xfr_xer_, p_buf, flavor, flavor2, indent, 0);
 
   if (indenting) do_indent(p_buf, --indent);
   p_buf.put_c('<');
@@ -2522,7 +2522,7 @@ boolean EMBEDDED_PDV_identification_context__negotiation::BER_decode_TLV(const T
 }
 
 int EMBEDDED_PDV_identification_context__negotiation::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
   int indenting = !is_canonical(flavor);
   boolean exer  = is_exer(flavor);
@@ -2533,8 +2533,8 @@ int EMBEDDED_PDV_identification_context__negotiation::XER_encode(const XERdescri
   p_buf.put_s((size_t)p_td.namelens[exer] - 1 + indenting, (const unsigned char*)p_td.names[exer]);
 
   ++indent;
-  field_presentation__context__id.XER_encode(EMBEDDED_PDV_identification_cn_pci_xer_, p_buf, flavor, indent, 0);
-  field_transfer__syntax         .XER_encode(EMBEDDED_PDV_identification_cn_tsx_xer_, p_buf, flavor, indent, 0);
+  field_presentation__context__id.XER_encode(EMBEDDED_PDV_identification_cn_pci_xer_, p_buf, flavor, flavor2, indent, 0);
+  field_transfer__syntax         .XER_encode(EMBEDDED_PDV_identification_cn_tsx_xer_, p_buf, flavor, flavor2, indent, 0);
 
   if (indenting) do_indent(p_buf, --indent);
   p_buf.put_c('<');
@@ -3263,7 +3263,7 @@ void EMBEDDED_PDV::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer,p_buf, XER_coding, 0, 0);
+    XER_encode(*p_td.xer,p_buf, XER_coding, 0, 0, 0);
     break;}
   case TTCN_EncDec::CT_JSON: {
     TTCN_EncDec_ErrorContext ec("While JSON-encoding type '%s': ", p_td.name);
@@ -3376,7 +3376,7 @@ boolean EMBEDDED_PDV::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const AS
 }
 
 int EMBEDDED_PDV::XER_encode(const XERdescriptor_t& p_td,
-  TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const {
+  TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const {
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error
       (TTCN_EncDec::ET_UNBOUND, "Encoding an unbound value.");
@@ -3390,13 +3390,13 @@ int EMBEDDED_PDV::XER_encode(const XERdescriptor_t& p_td,
   p_buf.put_s((size_t)p_td.namelens[exer] - 1 + indenting, (const unsigned char*)p_td.names[exer]);
   flavor &= XER_MASK;
   ++indent;
-  field_identification         .XER_encode(EMBEDDED_PDV_identification_xer_       , p_buf, flavor, indent, 0);
+  field_identification         .XER_encode(EMBEDDED_PDV_identification_xer_       , p_buf, flavor, flavor2, indent, 0);
   if (field_data__value__descriptor.is_value()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,
       "data-value-descriptor not allowed for EMBEDDED PDV");
   }
-  field_data__value__descriptor.XER_encode(EMBEDDED_PDV_data_value_descriptor_xer_, p_buf, flavor, indent, 0);
-  field_data__value            .XER_encode(EMBEDDED_PDV_data_value_xer_           , p_buf, flavor, indent, 0);
+  field_data__value__descriptor.XER_encode(EMBEDDED_PDV_data_value_descriptor_xer_, p_buf, flavor, flavor2, indent, 0);
+  field_data__value            .XER_encode(EMBEDDED_PDV_data_value_xer_           , p_buf, flavor, flavor2, indent, 0);
 
   if (indenting) do_indent(p_buf, --indent);
   p_buf.put_c('<');

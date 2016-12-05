@@ -1324,33 +1324,33 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 
   if (xer_needed) { /* XERSTUFF encoder functions for union */
     def = mputstr(def,
-      "char **collect_ns(const XERdescriptor_t& p_td, size_t& num, boolean& def_ns) const;\n");
-
+      "char **collect_ns(const XERdescriptor_t& p_td, size_t& num, boolean& def_ns, unsigned int flavor = 0) const;\n");
     src=mputprintf(src,
       "boolean %s::can_start(const char *name, const char *uri,"
-      " const XERdescriptor_t& xd, unsigned int flavor) {\n"
+      " const XERdescriptor_t& xd, unsigned int flavor, unsigned int flavor2) {\n"
       "  boolean exer = is_exer(flavor);\n"
-      "  if (!exer || (!(xd.xer_bits & UNTAGGED) && !(flavor & (USE_NIL|(exer ? XER_LIST : XER_RECOF))))) "
+      "  if (!exer || (!(xd.xer_bits & UNTAGGED) && !(flavor & (USE_NIL|(exer ? XER_LIST : XER_RECOF)))%s)) "
       /* If the union has no own tag, there is nothing to check. */
       "return check_name(name, xd, exer)" /* if false, return immediately */
       " && (!exer || (flavor & USE_TYPE_ATTR) || check_namespace(uri, xd));\n"
       /* else check the ns, unless Basic XER (which has no namespaces, ever)
        * or USE_TYPE (where we only have a name from the type id attribute) */
       , name
+      , sdef->xerUseUnion ? " && !(flavor2 & FROM_UNION_USETYPE)" : ""
       );
     src = mputstr(src, "  flavor &= ~XER_RECOF;\n");
 
     /* An untagged union can start with the start tag of any alternative */
     for (i = 0; i < sdef->nElements; i++) {
       src=mputprintf(src,
-        "  if (%s::can_start(name, uri, %s_xer_, flavor)) return TRUE;\n"
+        "  if (%s::can_start(name, uri, %s_xer_, flavor, flavor2)) return TRUE;\n"
         , sdef->elements[i].type, sdef->elements[i].typegen
       );
     }
     src = mputstr(src, "  return FALSE;\n}\n\n");
 
     src = mputprintf(src,
-      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, boolean& def_ns) const {\n"
+      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, boolean& def_ns, unsigned int%s) const {\n"
       "  size_t num_collected;\n"
       "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
       /* Two-level new memory allocated */
@@ -1361,11 +1361,12 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "    boolean def_ns_1 = FALSE;\n"
       "    switch (union_selection) {\n"
       , name
+      , sdef->nElements > 0 ? " flavor" : ""
       );
     for (i = 0; i < sdef->nElements; i++) {
       src = mputprintf(src,
         "    case %s_%s:\n"
-        "      new_ns = field_%s->collect_ns(%s_xer_, num_new, def_ns_1);\n"
+        "      new_ns = field_%s->collect_ns(%s_xer_, num_new, def_ns_1, flavor);\n"
         "      def_ns = def_ns || def_ns_1;\n" /* alas, no ||= */
         "      merge_ns(collected_ns, num_collected, new_ns, num_new);\n"
         /* merge_ns() deallocated new_ns and duplicated strings,
@@ -1387,9 +1388,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "    }\n" /* switch */
       "    if ((p_td.xer_bits & USE_TYPE_ATTR) && !(p_td.xer_bits & XER_ATTRIBUTE) && need_type) {\n"
       /*     control ns for type attribute */
-      "      collected_ns = (char**)Realloc(collected_ns, sizeof(char*) * ++num_collected);\n"
+      "      new_ns = (char**)Malloc(sizeof(char*));\n"
+      "      num_new = 1;\n"
       "      const namespace_t *c_ns = p_td.my_module->get_controlns();\n"
-      "      collected_ns[num_collected-1] = mprintf(\" xmlns:%s='%s'\", c_ns->px, c_ns->ns);\n"
+      "      new_ns[0] = mprintf(\" xmlns:%s='%s'\", c_ns->px, c_ns->ns);\n"
+      "      merge_ns(collected_ns, num_collected, new_ns, num_new);\n"
       "    }\n"
       "  }\n"
       "  catch (...) {\n"
@@ -1406,7 +1409,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 
     src = mputprintf(src, /* XERSTUFF XER_encode for union */
       "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-      "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const\n"
+      "unsigned int p_flavor, unsigned int p_flavor2, int p_indent, embed_values_enc_struct_t*) const\n"
       "{\n"
       "%s"
       "  if (%s==union_selection) {\n"
@@ -1418,7 +1421,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "  int encoded_length=(int)p_buf.get_len();\n"
       , name
       , (use_runtime_2 ? "  if (err_descr) return XER_encode_negtest"
-        "(err_descr, p_td, p_buf, p_flavor, p_indent, 0);\n" : "")
+        "(err_descr, p_td, p_buf, p_flavor, p_flavor2, p_indent, 0);\n" : "")
       , unbound_value
     );
 
@@ -1426,29 +1429,30 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       src = mputstr(src,
         "  const boolean e_xer = is_exer(p_flavor);\n"
         "  boolean need_schema = FALSE;\n"
-        "  char *schema_prefix = mprintf(\"xsd\");\n"
-        "  int counter = 0;\n"
-        "  // Find a unique prefix for the xsd schema\n"
-        "  while (1) {\n"
-        "    boolean changed = FALSE;\n"
-        "    for (size_t i = 0; i < p_td.my_module->get_num_ns(); i++) {\n"
-        "      if (p_td.my_module->get_ns(i)->px != NULL &&\n"
-        "          strcmp(p_td.my_module->get_ns(i)->px, schema_prefix) == 0) {\n"
-        "        Free(schema_prefix);\n"
-        "        schema_prefix = mprintf(\"xsd%i\", counter);\n"
-        "        counter++;\n"
-        "        changed = TRUE;\n"
-        "        break; // new maybe unique prefix found\n"
-        "      }\n"
-        "    }\n"
-        "    if (!changed) {\n"
-        "      break; //break when a unique prefix found\n"
-        "    }\n"
-        "  }\n"
+        "  char *schema_prefix = NULL;\n"
         "  char *type_atr = NULL;\n"
         "  if (e_xer && (p_td.xer_bits & USE_TYPE_ATTR)) {\n"
         "    char *type_name = 0;\n"
         "    const namespace_t *control_ns;\n"
+        "    schema_prefix = mprintf(\"xsd\");\n"
+        "    int counter = 0;\n"
+        "    // Find a unique prefix for the xsd schema\n"
+        "    while (1) {\n"
+        "      boolean changed = FALSE;\n"
+        "      for (size_t i = 0; i < p_td.my_module->get_num_ns(); i++) {\n"
+        "        if (p_td.my_module->get_ns(i)->px != NULL &&\n"
+        "            strcmp(p_td.my_module->get_ns(i)->px, schema_prefix) == 0) {\n"
+        "          Free(schema_prefix);\n"
+        "          schema_prefix = mprintf(\"xsd%i\", counter);\n"
+        "          counter++;\n"
+        "          changed = TRUE;\n"
+        "          break; // new maybe unique prefix found\n"
+        "        }\n"
+        "      }\n"
+        "      if (!changed) {\n"
+        "        break; //break when a unique prefix found\n"
+        "      }\n"
+        "    }\n"
         "    switch (union_selection) {\n");
       /* In case of USE-TYPE the first field won't need the type attribute */
       int start_at = sdef->xerUseUnion ? 0 : 1;
@@ -1456,7 +1460,8 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         src = mputprintf(src,
           "    case %s_%s:\n"
           , selection_prefix, sdef->elements[i].name);
-        if (!sdef->xerUseUnion) { // UseType
+        // UseType and not UseUnion on field
+        if (!sdef->xerUseUnion && !sdef->elements[i].xerUseUnion) {
           src = mputprintf(src,
             "      if (%s_xer_.my_module != 0 && %s_xer_.ns_index != -1 &&\n"
             "          %s_xer_.namelens[1] > 2) {\n"
@@ -1512,11 +1517,13 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     } /* if UseTypeAttr */
     src = mputprintf(src,
       "  unsigned int flavor_1 = p_flavor;\n"
+      "  unsigned int flavor_2 = p_flavor2;\n"
       "  if (is_exer(p_flavor)) flavor_1 &= ~XER_RECOF;\n"
+      "  if (!(p_flavor & XER_LIST)) flavor_2 |= FROM_UNION_USETYPE;\n"
       "  boolean omit_tag = begin_xml(p_td, p_buf, flavor_1, p_indent, FALSE, "
-      "(collector_fn)&%s::collect_ns%s);\n"
+      "(collector_fn)&%s::collect_ns%s, flavor_2);\n"
       , sdef->name
-      , sdef->xerUseTypeAttr ? ", type_atr" : "");
+      , sdef->xerUseTypeAttr ? ", type_atr" : ", 0");
     src = mputprintf(src,
       "  unsigned int flavor_0 = (p_flavor & XER_MASK)%s;\n"
       "  switch (union_selection) {\n"
@@ -1525,7 +1532,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       src = mputprintf(src, "  case %s_%s:\n"
 	"    ec_1.set_msg(\"%s': \");\n"
 	"    field_%s->XER_encode(%s_xer_, p_buf, flavor_0, "
-	"p_indent + (!p_indent || !omit_tag), 0);\n"
+	"flavor_2, p_indent + (!p_indent || !omit_tag), 0);\n"
 	"    break;\n",
 	selection_prefix, sdef->elements[i].name,
 	sdef->elements[i].dispname,
@@ -1548,11 +1555,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       def = mputstr(def,
         "int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
         "const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-        "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const;\n");
+        "unsigned int p_flavor, unsigned int p_flavor2, int p_indent, embed_values_enc_struct_t*) const;\n");
       src = mputprintf(src, /* XERSTUFF XER_encode for union */
         "int %s::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
         "const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-        "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const\n"
+        "unsigned int p_flavor, unsigned int p_flavor2, int p_indent, embed_values_enc_struct_t*) const\n"
         "{\n"
         "  if (%s==union_selection) {\n"
         "    TTCN_error(\"Attempt to XER-encode an unbound union value.\");\n"
@@ -1568,29 +1575,30 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         src = mputstr(src,
           "  const boolean e_xer = is_exer(p_flavor);\n"
           "  boolean need_schema = FALSE;\n"
-          "  char *schema_prefix = mprintf(\"xsd\");\n"
-          "  int counter = 0;\n"
-          "  // Find a unique prefix for the xsd schema\n"
-          "  while (1) {\n"
-          "    boolean changed = FALSE;\n"
-          "    for (size_t i = 0; i < p_td.my_module->get_num_ns(); i++) {\n"
-          "      if (p_td.my_module->get_ns(i)->px != NULL &&\n"
-          "          strcmp(p_td.my_module->get_ns(i)->px, schema_prefix) == 0) {\n"
-          "        Free(schema_prefix);\n"
-          "        schema_prefix = mprintf(\"xsd%i\", counter);\n"
-          "        counter++;\n"
-          "        changed = TRUE;\n"
-          "        break; // new maybe unique prefix found\n"
-          "      }\n"
-          "    }\n"
-          "    if (!changed) {\n"
-          "      break; //break when a unique prefix found\n"
-          "    }\n"
-          "  }\n"
+          "  char *schema_prefix = NULL;\n"
           "  char *type_atr = NULL;\n"
           "  if (e_xer && (p_td.xer_bits & USE_TYPE_ATTR)) {\n"
           "    char *type_name = 0;\n"
           "    const namespace_t *control_ns;\n"
+          "    schema_prefix = mprintf(\"xsd\");\n"
+          "    int counter = 0;\n"
+          "    // Find a unique prefix for the xsd schema\n"
+          "    while (1) {\n"
+          "      boolean changed = FALSE;\n"
+          "      for (size_t i = 0; i < p_td.my_module->get_num_ns(); i++) {\n"
+          "        if (p_td.my_module->get_ns(i)->px != NULL &&\n"
+          "            strcmp(p_td.my_module->get_ns(i)->px, schema_prefix) == 0) {\n"
+          "          Free(schema_prefix);\n"
+          "          schema_prefix = mprintf(\"xsd%i\", counter);\n"
+          "          counter++;\n"
+          "          changed = TRUE;\n"
+          "          break; // new maybe unique prefix found\n"
+          "        }\n"
+          "      }\n"
+          "      if (!changed) {\n"
+          "        break; //break when a unique prefix found\n"
+          "      }\n"
+          "    }\n"
           "    switch (union_selection) {\n");
         int start_at = sdef->xerUseUnion ? 0 : 1;
         for (i = start_at; i < sdef->nElements; i++) {
@@ -1676,22 +1684,24 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "(\"internal error: erroneous value typedescriptor missing\");\n"
           "          else err_vals->value->errval->XER_encode("
           "*err_vals->value->type_descr->xer, p_buf, flavor_0, "
-          "p_indent + (!p_indent || !omit_tag), 0);\n"
+          "p_flavor2, p_indent + (!p_indent || !omit_tag), 0);\n"
           "        }\n"
           "      }\n"
           "    } else {\n"
           "      ec_1.set_msg(\"%s': \");\n"
           "      if (emb_descr) field_%s->XER_encode_negtest(emb_descr, "
-          "%s_xer_, p_buf, flavor_0, p_indent + (!p_indent || !omit_tag), 0);\n"
+          "%s_xer_, p_buf, flavor_0, p_flavor2%s, p_indent + (!p_indent || !omit_tag), 0);\n"
           "      else field_%s->XER_encode(%s_xer_, p_buf, flavor_0, "
-          "p_indent + (!p_indent || !omit_tag), 0);\n"
+          "p_flavor2, p_indent + (!p_indent || !omit_tag), 0);\n"
           "    }\n"
           "    break;\n",
           selection_prefix, sdef->elements[i].name, /* case label */
           (unsigned long)i, (unsigned long)i,
           sdef->elements[i].dispname, /* set_msg (erroneous) */
           sdef->elements[i].dispname, /* set_msg */
-          sdef->elements[i].name, sdef->elements[i].typegen,
+          sdef->elements[i].name,
+          sdef->elements[i].typegen,
+          sdef->xerUseTypeAttr && !sdef->xerUseUnion ? "| FROM_UNION_USETYPE" : "",
           sdef->elements[i].name, sdef->elements[i].typegen /* field_%s, %s_descr */
           );
       }
@@ -1734,21 +1744,24 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "  if (xerbits & USE_TYPE_ATTR) p_flavor &= ~XER_RECOF;\n"
       "  boolean own_tag = !(e_xer && ((xerbits & (ANY_ELEMENT | UNTAGGED)) "
       "|| (p_flavor & (USE_NIL|(e_xer ? XER_LIST : XER_RECOF)))));\n"
+      "  int other_attributes = 0;\n"
+      "  (void)other_attributes;\n"
       "  if ((e_xer || !is_record_of(p_flavor)) && own_tag)\n"
       /* Loop until the start tag */
       "  %sfor (rd_ok = p_reader.Ok(); rd_ok == 1; rd_ok = p_reader.Read()) {\n"
       "    type = p_reader.NodeType();\n"
-      "    if (type == XML_READER_TYPE_ELEMENT) {\n"
-      "      verify_name(p_reader, p_td, e_xer);\n"
+      "    if (type == XML_READER_TYPE_ELEMENT%s) {\n"
+      "      %sverify_name(p_reader, p_td, e_xer);\n"
       "      xml_depth = p_reader.Depth();\n"
       , name
       , sdef->xerUseTypeAttr ? "  char * typeatr = 0;\n" : ""
       , sdef->xerUseUnion ? "  boolean attribute = (p_td.xer_bits & XER_ATTRIBUTE) ? TRUE : FALSE;\n" : ""
       , sdef->xerUseUnion ? "if (!attribute) " : ""
+      , sdef->xerUseUnion ? " || (p_flavor & USE_TYPE_ATTR)" : ""
+      , sdef->xerUseUnion ? "if (!(p_flavor & USE_TYPE_ATTR)) " : ""
     );
     if (sdef->xerUseTypeAttr) {
       src = mputprintf(src,
-        "      int other_attributes = 0;\n"
         "      if (e_xer) {\n"
         "        for (rd_ok = p_reader.MoveToFirstAttribute(); rd_ok == 1;"
         " rd_ok = p_reader.MoveToNextAttribute()) {\n"
@@ -1760,8 +1773,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "          }\n"
         "          else ++other_attributes;\n"
         "        }\n" /* for */
-        "        rd_ok = p_reader.MoveToElement() | 1;\n"
-        , sdef->control_ns_prefix);
+        "%s"
+        , sdef->control_ns_prefix
+        , sdef->xerUseUnion ? "        rd_ok = p_reader.MoveToElement() | 1;\n" : "");
       if (!sdef->xerUseUnion) {
         /* USE-TYPE: No type attribute means the first alternative */
         src = mputprintf(src,
@@ -1776,8 +1790,8 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     }
 
     src = mputprintf(src,
-      "      if (!(e_xer && (p_td.xer_bits & USE_TYPE_ATTR)%s)\n"
-      "        && !p_reader.IsEmptyElement()) rd_ok = p_reader.Read();\n"
+      "      if (%s(p_td.xer_bits & USE_TYPE_ATTR)%s)\n"
+      "        && !p_reader.IsEmptyElement()) { rd_ok = p_reader.Read(); }\n"
       "      break;\n"
       "    }\n"
       "  }\n"
@@ -1789,17 +1803,19 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "    %sif (type == XML_READER_TYPE_ELEMENT) break;\n"
       "    else if (type == XML_READER_TYPE_END_ELEMENT) break;\n"
       "  }\n"
-      "  if (rd_ok) {\n"
+      "  if (%s) {\n"
       "    TTCN_EncDec_ErrorContext ec_1(\"Alternative '\");\n"
       "    TTCN_EncDec_ErrorContext ec_2;\n"
       "    const char *elem_name;\n"
       "    const char *ns_uri = 0;\n"
+      , sdef->xerUseTypeAttr && !sdef->xerUseUnion ? "!e_xer && !(" : "!(e_xer && "
       , sdef->xerUseTypeAttr ? " && other_attributes > 0" : ""
       , sdef->xerUseTypeAttr ? "if (!e_xer) " : ""
       , sdef->xerUseUnion ? "if (!attribute) " : ""
       , sdef->xerUseTypeAttr ?
         "if (e_xer) { if (type == XML_READER_TYPE_TEXT) break; }\n"
         "    else " : ""
+      , sdef->xerUseTypeAttr && !sdef->xerUseUnion ? "TRUE" : "rd_ok"
     );
 
     if (sdef->xerUseTypeAttr) {
@@ -1836,7 +1852,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
            *
            */
           "    if ((e_xer && (typeatr == NULL || !(p_td.xer_bits & USE_TYPE_ATTR))) "
-          "|| can_start(elem_name, ns_uri, %s_xer_, flavor_1) || strcmp(elem_name, \"%s\") == 0) {\n"
+          "|| can_start(elem_name, ns_uri, %s_xer_, flavor_1, p_flavor2)%s%s%s) {\n"
           "      ec_2.set_msg(\"%s': \");\n"
           "      if (%s==union_selection) {\n"
           "        matched = %d;\n"
@@ -1845,7 +1861,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "      if (field_%s->is_bound()) break; else clean_up();\n"
           "    }\n",
           sdef->elements[i].typegen,
-          XSD_type_to_xml_type(sdef->elements[i].xsd_type),
+          sdef->elements[i].xsd_type != XSD_NONE ? " || strcmp(elem_name, \"" : "",
+          sdef->elements[i].xsd_type != XSD_NONE ? XSD_type_to_xml_type(sdef->elements[i].xsd_type) : "",
+          sdef->elements[i].xsd_type != XSD_NONE ? "\") == 0" : "",
           sdef->elements[i].dispname,
           unbound_value, (int)i,
           sdef->elements[i].name,    sdef->elements[i].typegen,
@@ -1877,6 +1895,14 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     }
     else /* not USE-UNION */
     {
+      src = mputstr(src,
+        "    unsigned int flavor2 = p_flavor2;\n");
+      if (sdef->xerUseTypeAttr) {
+        src = mputstr(src,
+          "    if (e_xer && (p_td.xer_bits & USE_TYPE_ATTR)) {\n"
+          "      flavor2 |= FROM_UNION_USETYPE;\n"
+          "    }\n");
+      }
       if (sdef->exerMaybeEmptyIndex >= 0) {
         /* There is a field which can be empty XML. Add code to detect this
          * and jump to the appropriate field which can decode "nothing". */
@@ -1890,46 +1916,69 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       /* The field which can be empty should be checked last, otherwise we create an infinity loop with memory bomb.
        * So move that field to the last elseif branch*/
       for (i = 0; i < sdef->nElements; i++) {
-        if(sdef->exerMaybeEmptyIndex != i){
+        if(sdef->exerMaybeEmptyIndex != i) {
           src = mputprintf(src,
-            "    %sif (%s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT) || strcmp(elem_name, \"%s\") == 0) {\n"
+            "    %sif (%s::can_start(elem_name, ns_uri, %s_xer_, flavor_1, flavor2) || (%s_xer_.xer_bits & ANY_ELEMENT)%s%s%s%s) {\n"
             "      ec_2.set_msg(\"%s': \");\n"
             "      if (e_xer && (%s_xer_.xer_bits & BLOCKED)) {\n"
             "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
             "          \"Attempting to decode blocked or abstract field.\");\n"
-            "      }\n"
-            "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, p_flavor2, 0);\n"
+            "      }\n",
+            i && !(i==1 && sdef->exerMaybeEmptyIndex==0) ? "else " : "",  /*  print "if(" if generate code for the first field or if the first field is the MaybeEmpty field and we generate the code for the second one*/
+            sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typegen,
+            sdef->elements[i].xsd_type != XSD_NONE ? " || strcmp(elem_name, \"" : "",
+            sdef->elements[i].xsd_type != XSD_NONE ? XSD_type_to_xml_type(sdef->elements[i].xsd_type) : "",
+            sdef->elements[i].xsd_type != XSD_NONE ? "\") == 0" : "",
+            sdef->elements[i].xsd_type == XSD_NONE && sdef->elements[i].xerUseUnion ? " || (flavor2 & FROM_UNION_USETYPE)" : "",
+            sdef->elements[i].dispname,
+            sdef->elements[i].typegen);
+          if (sdef->xerUseTypeAttr) {
+            src = mputprintf(src,
+              "      if (e_xer && !(%s_xer_.xer_bits & USE_TYPE_ATTR)) {\n"
+              "        rd_ok = p_reader.MoveToElement() | 1;\n"
+              "      }\n",
+              sdef->elements[i].typegen);
+          }
+          if (!sdef->elements[i].xerUseUnion && sdef->xerUseTypeAttr) {
+            src = mputprintf(src,
+              "      if (e_xer && !((p_td.xer_bits & USE_TYPE_ATTR) && other_attributes > 0)\n"
+              "        && !p_reader.IsEmptyElement()) { rd_ok = p_reader.Read(); }\n");
+          }
+          src = mputprintf(src,
+            "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, flavor2, 0);\n"
             "      if (!%s%s().is_bound()) {\n"
             "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, \"Failed to decode field.\");\n"
             "      }\n"
             "    }\n",
-            i && !(i==1 && sdef->exerMaybeEmptyIndex==0) ? "else " : "",  /*  print "if(" if generate code for the first field or if the first field is the MaybeEmpty field and we generate the code for the second one*/
-            sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typegen,
-            XSD_type_to_xml_type(sdef->elements[i].xsd_type),
-            sdef->elements[i].dispname,
+            at_field, sdef->elements[i].name,
             sdef->elements[i].typegen,
-            at_field, sdef->elements[i].name,    sdef->elements[i].typegen,
             at_field, sdef->elements[i].name);
           }
       }
       if(sdef->exerMaybeEmptyIndex>=0 ){
         i=sdef->exerMaybeEmptyIndex;
         src = mputprintf(src,
-          "    %sif ((e_xer && (type==XML_READER_TYPE_END_ELEMENT || !own_tag)) || %s::can_start(elem_name, ns_uri, %s_xer_, flavor_1) || (%s_xer_.xer_bits & ANY_ELEMENT) || strcmp(elem_name, \"%s\") == 0) {\n"
+          "    %sif ((e_xer && (type==XML_READER_TYPE_END_ELEMENT || !own_tag)) || %s::can_start(elem_name, ns_uri, %s_xer_, flavor_1, flavor2) || (%s_xer_.xer_bits & ANY_ELEMENT)%s%s%s) {\n"
           "empty_xml:  ec_2.set_msg(\"%s': \");\n"
           "      if (e_xer && (%s_xer_.xer_bits & BLOCKED)) {\n"
           "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
           "          \"Attempting to decode blocked or abstract field.\");\n"
           "      }\n"
-          "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, p_flavor2, 0);\n"
+          "      if (e_xer && !(%s_xer_.xer_bits & USE_TYPE_ATTR)) {\n"
+          "        rd_ok = p_reader.MoveToElement() | 1;\n"
+          "      }\n"
+          "      %s%s().XER_decode(%s_xer_, p_reader, flavor_1, flavor2, 0);\n"
           "      if (!%s%s().is_bound()) {\n"
           "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, \"Failed to decode field.\");\n"
           "      }\n"
           "    }\n",
           sdef->nElements>0 ? "else " : "",
           sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typegen,
-          XSD_type_to_xml_type(sdef->elements[i].xsd_type),
+          sdef->elements[i].xsd_type != XSD_NONE ? " || strcmp(elem_name, \"" : "",
+          sdef->elements[i].xsd_type != XSD_NONE ? XSD_type_to_xml_type(sdef->elements[i].xsd_type) : "",
+          sdef->elements[i].xsd_type != XSD_NONE ? "\") == 0" : "",
           sdef->elements[i].dispname,
+          sdef->elements[i].typegen,
           sdef->elements[i].typegen,
           at_field, sdef->elements[i].name,    sdef->elements[i].typegen,
           at_field, sdef->elements[i].name);
@@ -1949,7 +1998,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 
     src = mputprintf(src,
       "  }\n" /* end if(rd_ok) */
-      "  if (%s(e_xer || !is_record_of(p_flavor)) && own_tag)\n"
+      "  if (%s(e_xer || !is_record_of(p_flavor)) && own_tag && !(p_flavor2 & FROM_UNION_USETYPE))\n"
       "  for (; rd_ok == 1; rd_ok = p_reader.Read()) {\n"
       "    type = p_reader.NodeType();\n"
       "    if (type == XML_READER_TYPE_END_ELEMENT) {\n"

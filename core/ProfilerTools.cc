@@ -489,8 +489,8 @@ namespace Profiler_Tools {
 
   // Compare function for sorting stats data based on total execution time (descending)
   int stats_data_cmp_time(const void* p_left, const void* p_right) {
-    const stats_data_t* p_left_data = (stats_data_t*)p_left;
-    const stats_data_t* p_right_data = (stats_data_t*)p_right;
+    const stats_data_t* p_left_data = (const stats_data_t*)p_left;
+    const stats_data_t* p_right_data = (const stats_data_t*)p_right;
     if (p_left_data->total_time.tv_sec > p_right_data->total_time.tv_sec) return -1;
     if (p_left_data->total_time.tv_sec < p_right_data->total_time.tv_sec) return 1;
     if (p_left_data->total_time.tv_usec > p_right_data->total_time.tv_usec) return -1;
@@ -500,13 +500,13 @@ namespace Profiler_Tools {
 
   // Compare function for sorting stats data based on execution count (descending)
   int stats_data_cmp_count(const void* p_left, const void* p_right) {
-    return ((stats_data_t*)p_right)->exec_count - ((stats_data_t*)p_left)->exec_count;
+    return ((const stats_data_t*)p_right)->exec_count - ((const stats_data_t*)p_left)->exec_count;
   }
 
   // Compare function for sorting stats data based on total time per execution count (descending)
   int stats_data_cmp_avg(const void* p_left, const void* p_right) {
-    const stats_data_t* p_left_data = (stats_data_t*)p_left;
-    const stats_data_t* p_right_data = (stats_data_t*)p_right;
+    const stats_data_t* p_left_data = (const stats_data_t*)p_left;
+    const stats_data_t* p_right_data = (const stats_data_t*)p_right;
     double left_time = p_left_data->total_time.tv_sec + p_left_data->total_time.tv_usec / 1000000.0;
     double right_time = p_right_data->total_time.tv_sec + p_right_data->total_time.tv_usec / 1000000.0;
     double diff = (right_time / p_right_data->exec_count) - (left_time / p_left_data->exec_count);

@@ -2932,9 +2932,9 @@ static void print_makefile(struct makefile_struct *makefile)
                 print_generated_file_name(fp, module, FALSE, "_setof.so");
                 print_generated_file_name(fp, module, FALSE, "_union.so");
               } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-                for (int i = 1; i < n_slices; i++) {
+                for (int slice = 1; slice < n_slices; slice++) {
                 char buffer[16]; // 6 digits + 4 chars + _part
-                sprintf(buffer, "_part_%i.so", i);
+                sprintf(buffer, "_part_%i.so", slice);
                   print_generated_file_name(fp, module, FALSE, buffer);
                 }
               }
@@ -2955,9 +2955,9 @@ static void print_makefile(struct makefile_struct *makefile)
                   print_generated_file_name(fp, module, FALSE, "_setof.so");
                   print_generated_file_name(fp, module, FALSE, "_union.so");
                 } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-                  for (int i = 1; i < n_slices; i++) {
+                  for (int slice = 1; slice < n_slices; slice++) {
                 char buffer[16]; // 6 digits + 4 chars + _part
-                sprintf(buffer, "_part_%i.so", i);
+                sprintf(buffer, "_part_%i.so", slice);
                     print_generated_file_name(fp, module, FALSE, buffer);
                   }
                 }
@@ -2978,9 +2978,9 @@ static void print_makefile(struct makefile_struct *makefile)
                 print_generated_file_name(fp, module, FALSE, "_setof.so");
                 print_generated_file_name(fp, module, FALSE, "_union.so");
               } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-                for (int i = 1; i < n_slices; i++) {
+                for (int slice = 1; slice < n_slices; slice++) {
                 char buffer[16]; // 6 digits + 4 chars + _part
-                sprintf(buffer, "_part_%i.so", i);
+                sprintf(buffer, "_part_%i.so", slice);
                   print_generated_file_name(fp, module, FALSE, buffer);
                 }
               }
@@ -3000,9 +3000,9 @@ static void print_makefile(struct makefile_struct *makefile)
                 print_generated_file_name(fp, module, FALSE, "_setof.so");
                 print_generated_file_name(fp, module, FALSE, "_union.so");
               } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-                for (int i = 1; i < n_slices; i++) {
+                for (int slice = 1; slice < n_slices; slice++) {
                 char buffer[16]; // 6 digits + 4 chars + _part
-                sprintf(buffer, "_part_%i.so", i);
+                sprintf(buffer, "_part_%i.so", slice);
                   print_generated_file_name(fp, module, FALSE, buffer);
                 }
               }
@@ -3042,9 +3042,9 @@ static void print_makefile(struct makefile_struct *makefile)
               print_generated_file_name(fp, module, FALSE, "_setof.o");
               print_generated_file_name(fp, module, FALSE, "_union.o");
             } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-              for (int i = 1; i < n_slices; i++) {
+              for (int slice = 1; slice < n_slices; slice++) {
                 char buffer[16]; // 6 digits + 4 chars + _part
-                sprintf(buffer, "_part_%i.o", i);
+                sprintf(buffer, "_part_%i.o", slice);
                 print_generated_file_name(fp, module, FALSE, buffer);
               }
             }
@@ -3065,9 +3065,9 @@ static void print_makefile(struct makefile_struct *makefile)
                 print_generated_file_name(fp, module, FALSE, "_setof.o");
                 print_generated_file_name(fp, module, FALSE, "_union.o");
               } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-                for (int i = 1; i < n_slices; i++) {
+                for (int slice = 1; slice < n_slices; slice++) {
                   char buffer[16]; // 6 digits + 4 chars + _part
-                sprintf(buffer, "_part_%i.o", i);
+                sprintf(buffer, "_part_%i.o", slice);
                   print_generated_file_name(fp, module, FALSE, buffer);
                 }
               }
@@ -3088,9 +3088,9 @@ static void print_makefile(struct makefile_struct *makefile)
               print_generated_file_name(fp, module, FALSE, "_setof.o");
               print_generated_file_name(fp, module, FALSE, "_union.o");
             } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-              for (int i = 1; i < n_slices; i++) {
+              for (int slice = 1; slice < n_slices; slice++) {
                 char buffer[16]; // 6 digits + 4 chars + _part
-                sprintf(buffer, "_part_%i.o", i);
+                sprintf(buffer, "_part_%i.o", slice);
                 print_generated_file_name(fp, module, FALSE, buffer);
               }
             }
@@ -3111,9 +3111,9 @@ static void print_makefile(struct makefile_struct *makefile)
                 print_generated_file_name(fp, module, FALSE, "_setof.o");
                 print_generated_file_name(fp, module, FALSE, "_union.o");
               } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
-                for (int i = 1; i < n_slices; i++) {
+                for (int slice = 1; slice < n_slices; slice++) {
                   char buffer[16]; // 6 digits + 4 chars + _part
-                  sprintf(buffer, "_part_%i.o", i);
+                  sprintf(buffer, "_part_%i.o", slice);
                   print_generated_file_name(fp, module, FALSE, buffer);
                 }
               }

@@ -197,9 +197,9 @@ int Base_Type::JSON_encode_negtest_raw(JSON_Tokenizer&) const
 }
 
 int Base_Type::XER_encode_negtest(const Erroneous_descriptor_t* /*p_err_descr*/,
-  const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+  const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
-  return XER_encode(p_td, p_buf, flavor, indent, 0); // ignore erroneous
+  return XER_encode(p_td, p_buf, flavor, flavor2, indent, 0); // ignore erroneous
 }
 
 int Base_Type::RAW_encode_negtest(const Erroneous_descriptor_t *,
@@ -1685,7 +1685,7 @@ void Record_Of_Type::encode(const TTCN_Typedescriptor_t& p_td,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0);
+    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0, 0);
     p_buf.put_c('\n');
     break;}
   case TTCN_EncDec::CT_JSON: {
@@ -1775,7 +1775,7 @@ void Record_Of_Type::decode(const TTCN_Typedescriptor_t& p_td,
   va_end(pvar);
 }
 
-char **Record_Of_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const
+char **Record_Of_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int /*flavor*/) const
 {
   size_t num_collected = 0;
   // First, our own namespace. Sets num_collected to 0 or 1.
@@ -1809,10 +1809,10 @@ static const universal_char sp = { 0,0,0,' ' };
 static const universal_char tb = { 0,0,0,9 };
 
 int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-  unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val) const
+  unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val) const
 {
   if (err_descr) {
-    return XER_encode_negtest(err_descr, p_td, p_buf, flavor, indent, emb_val);
+    return XER_encode_negtest(err_descr, p_td, p_buf, flavor, flavor2, indent, emb_val);
   }
 
   if (val_ptr == 0) TTCN_error(
@@ -1828,7 +1828,7 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 
   flavor = flavor
     | ( (exer && (p_td.xer_bits & XER_LIST))
-      || is_exerlist(flavor) ? SIMPLE_TYPE : 0);
+      || is_exerlist(flavor) ? SIMPLE_TYPE : XER_NONE /* = 0 */);
   flavor &= ~XER_RECOF; // record-of doesn't care
   int nof_elements = get_nof_elements();
   Base_Type::begin_xml(p_td, p_buf, flavor, indent, !nof_elements,
@@ -1902,7 +1902,7 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
           check_namespace_restrictions(p_td, (const char*)cs);
         }
         before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf,
-          flavor | ANY_ATTRIBUTES, indent, 0);
+          flavor | ANY_ATTRIBUTES, flavor2, indent, 0);
 
         p_buf.put_c('\'');
         p_buf.put_c(' ');
@@ -1924,7 +1924,7 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 
       UNIVERSAL_CHARSTRING after(len - j, (const universal_char*)(*elem) + j);
       after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf,
-        flavor | ANY_ATTRIBUTES, indent, 0);
+        flavor | ANY_ATTRIBUTES, flavor2, indent, 0);
       
       // Put this attribute in a dummy element and walk through it to check its validity
       TTCN_Buffer check_buf;
@@ -1947,13 +1947,13 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       if (i > 0 && !own_tag && 0 != emb_val &&
           emb_val->embval_index < emb_val->embval_array->size_of()) {
         emb_val->embval_array->get_at(emb_val->embval_index)->XER_encode(
-          UNIVERSAL_CHARSTRING_xer_, p_buf, flavor | EMBED_VALUES, indent+1, 0);
+          UNIVERSAL_CHARSTRING_xer_, p_buf, flavor | EMBED_VALUES, flavor2, indent+1, 0);
         ++emb_val->embval_index;
       }
       ec_1.set_msg("%d: ", i);
       if (exer && (p_td.xer_bits & XER_LIST) && i>0) p_buf.put_c(' ');
       get_at(i)->XER_encode(*p_td.oftype_descr, p_buf,
-        sub_flavor, indent+own_tag, emb_val);
+        sub_flavor, flavor2, indent+own_tag, emb_val);
     }
 
     if (indenting && nof_elements && !is_exerlist(flavor)) {
@@ -1983,7 +1983,7 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
  */
 int Record_Of_Type::encode_element(int i, const XERdescriptor_t& p_td,
   const Erroneous_values_t* ev, const Erroneous_descriptor_t* ed,
-  TTCN_Buffer& p_buf, unsigned int sub_flavor, int indent, embed_values_enc_struct_t* emb_val) const
+  TTCN_Buffer& p_buf, unsigned int sub_flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val) const
 {
   int enc_len = p_buf.get_len();
   TTCN_EncDec_ErrorContext ec;
@@ -2000,7 +2000,7 @@ int Record_Of_Type::encode_element(int i, const XERdescriptor_t& p_td,
       if (ev->before->type_descr==NULL) TTCN_error(
         "internal error: erroneous before type descriptor missing");
       ev->before->errval->XER_encode(*ev->before->type_descr->xer,
-        p_buf, sub_flavor, indent, 0);
+        p_buf, sub_flavor, flavor2, indent, 0);
     }
   }
 
@@ -2020,16 +2020,16 @@ int Record_Of_Type::encode_element(int i, const XERdescriptor_t& p_td,
         if (ev->value->type_descr==NULL) TTCN_error(
           "internal error: erroneous value type descriptor missing");
         ev->value->errval->XER_encode(*ev->value->type_descr->xer,
-          p_buf, sub_flavor, indent, 0);
+          p_buf, sub_flavor, flavor2, indent, 0);
       }
     } // else -> omit
   } else {
     ec.set_msg("Component #%d: ", i);
     if (ed) {
-      get_at(i)->XER_encode_negtest(ed, p_td, p_buf, sub_flavor, indent, emb_val);
+      get_at(i)->XER_encode_negtest(ed, p_td, p_buf, sub_flavor, flavor2, indent, emb_val);
     } else {
       // the "real" encoder
-      get_at(i)->XER_encode(p_td, p_buf, sub_flavor, indent, emb_val);
+      get_at(i)->XER_encode(p_td, p_buf, sub_flavor, flavor2, indent, emb_val);
     }
   }
 
@@ -2044,7 +2044,7 @@ int Record_Of_Type::encode_element(int i, const XERdescriptor_t& p_td,
       if (ev->after->type_descr==NULL) TTCN_error(
         "internal error: erroneous after type descriptor missing");
       ev->after->errval->XER_encode(*ev->after->type_descr->xer,
-        p_buf, sub_flavor, indent, 0);
+        p_buf, sub_flavor, flavor2, indent, 0);
     }
   }
 
@@ -2053,7 +2053,7 @@ int Record_Of_Type::encode_element(int i, const XERdescriptor_t& p_td,
 
 // XERSTUFF Record_Of_Type::XER_encode_negtest
 int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
-  const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned flavor, int indent,
+  const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned flavor, unsigned int flavor2, int indent,
   embed_values_enc_struct_t* emb_val) const
 {
   if (val_ptr == 0) TTCN_error(
@@ -2069,7 +2069,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
 
   flavor = flavor
     | ( (exer && (p_td.xer_bits & XER_LIST))
-      || is_exerlist(flavor) ? SIMPLE_TYPE : 0);
+      || is_exerlist(flavor) ? SIMPLE_TYPE : XER_NONE /* = 0 */);
   flavor &= ~XER_RECOF; // record-of doesn't care
   int nof_elements = get_nof_elements();
   Base_Type::begin_xml(p_td, p_buf, flavor, indent, !nof_elements,
@@ -2116,7 +2116,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
           if (ev->before->type_descr==NULL) TTCN_error(
             "internal error: erroneous before type descriptor missing");
           else ev->before->errval->XER_encode(*ev->before->type_descr->xer,
-            p_buf, flavor, indent, 0);
+            p_buf, flavor, flavor2, indent, 0);
         }
       }
 
@@ -2127,7 +2127,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
             if (ev->value->type_descr==NULL) TTCN_error(
               "internal error: erroneous value type descriptor missing");
             else ev->value->errval->XER_encode(*ev->value->type_descr->xer,
-              p_buf, flavor, indent, 0);
+              p_buf, flavor, flavor2, indent, 0);
           }
         }
       }
@@ -2168,7 +2168,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
 
             UNIVERSAL_CHARSTRING before(sp_at, (const universal_char*)(*elem));
             before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf,
-              flavor | ANY_ATTRIBUTES, indent, 0);
+              flavor | ANY_ATTRIBUTES, flavor2, indent, 0);
 
             p_buf.put_c('\'');
             p_buf.put_c(' ');
@@ -2185,7 +2185,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
 
           UNIVERSAL_CHARSTRING after(len - j, (const universal_char*)(*elem) + j);
           after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf,
-            flavor | ANY_ATTRIBUTES, indent, 0);
+            flavor | ANY_ATTRIBUTES, flavor2, indent, 0);
         }
       }
 
@@ -2198,7 +2198,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
             if (ev->after->type_descr==NULL) TTCN_error(
               "internal error: erroneous after type descriptor missing");
             else ev->after->errval->XER_encode(*ev->after->type_descr->xer,
-              p_buf, flavor, indent, 0);
+              p_buf, flavor, flavor2, indent, 0);
           }
         }
       }
@@ -2227,7 +2227,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
           ed0_i = emb_val->embval_err->next_field_emb_descr (emb_val->embval_index, emb_val->embval_err_descr_idx);
         }
         emb_val->embval_array->encode_element(emb_val->embval_index, UNIVERSAL_CHARSTRING_xer_,
-          ev0_i, ed0_i, p_buf, flavor | EMBED_VALUES, indent + own_tag, 0);
+          ev0_i, ed0_i, p_buf, flavor | EMBED_VALUES, flavor2, indent + own_tag, 0);
         ++emb_val->embval_index;
       }
 
@@ -2236,7 +2236,7 @@ int Record_Of_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr
       const Erroneous_descriptor_t* emb_descr =
         p_err_descr->next_field_emb_descr (i, edescr_idx);
 
-      encode_element(i, *p_td.oftype_descr, err_vals, emb_descr, p_buf, sub_flavor, indent+own_tag, emb_val);
+      encode_element(i, *p_td.oftype_descr, err_vals, emb_descr, p_buf, sub_flavor, flavor2, indent+own_tag, emb_val);
 
       // omit_after value -1 becomes "very big"
       if ((unsigned int)i >= (unsigned int)p_err_descr->omit_after) break;
@@ -2390,7 +2390,7 @@ int Record_Of_Type::XER_decode(const XERdescriptor_t& p_td,
              * belong to the embedded type, the record-of has already ended. */
             if (!own_tag && !can_start_v(
               (const char*)reader.LocalName(), (const char*)reader.NamespaceUri(),
-              p_td, flavor | UNTAGGED))
+              p_td, flavor | UNTAGGED, flavor2))
             {
               for (; success == 1 && reader.Depth() > depth; success = reader.Read()) ;
               // We should now be back at the same depth as we started.
@@ -2863,7 +2863,7 @@ void Record_Type::encode(const TTCN_Typedescriptor_t& p_td,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0);
+    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0, 0);
     p_buf.put_c('\n');
     break;}
   case TTCN_EncDec::CT_JSON: {
@@ -4057,7 +4057,7 @@ const XERdescriptor_t* Record_Type::xer_descr(int /*field_index*/) const
   return NULL;
 }
 
-char ** Record_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const
+char ** Record_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int /*flavor*/) const
 {
   const int field_cnt = get_count();
   // The USE-ORDER member is first, unless preempted by EMBED-VALUES
@@ -4118,10 +4118,10 @@ int Record_Type::get_index_byname(const char *name, const char *uri) const {
 }
 
 int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-  unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val_parent) const
+  unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val_parent) const
 {
   if (err_descr) {
-    return XER_encode_negtest(err_descr, p_td, p_buf, flavor, indent, 0);
+    return XER_encode_negtest(err_descr, p_td, p_buf, flavor, flavor2, indent, 0);
   }
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error
@@ -4236,7 +4236,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     const Base_Type * const q_uri = get_at(0);
     if (q_uri->is_present()) {
       p_buf.put_s(11, (cbyte*)" xmlns:b0='");
-      q_uri->XER_encode(*xer_descr(0), p_buf, flavor | XER_LIST, indent+1, 0);
+      q_uri->XER_encode(*xer_descr(0), p_buf, flavor | XER_LIST, flavor2, indent+1, 0);
       p_buf.put_c('\'');
     }
 
@@ -4248,18 +4248,18 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       sub_len += 3;
     }
     const Base_Type* const q_name = get_at(1);
-    sub_len += q_name->XER_encode(*xer_descr(1), p_buf, flavor | XER_LIST, indent+1, 0);
+    sub_len += q_name->XER_encode(*xer_descr(1), p_buf, flavor | XER_LIST, flavor2, indent+1, 0);
     if (p_td.xer_bits & XER_ATTRIBUTE) p_buf.put_c('\'');
   }
   else { // not USE-QNAME
     if (!exer && (p_td.xer_bits & EMBED_VALUES) && embed_values != NULL) {
       // The EMBED-VALUES member as an ordinary record of string
-      sub_len += embed_values->XER_encode(*xer_descr(0), p_buf, flavor, indent+1, 0);
+      sub_len += embed_values->XER_encode(*xer_descr(0), p_buf, flavor, flavor2, indent+1, 0);
     }
 
     if (!exer && (p_td.xer_bits & USE_ORDER)) {
       // The USE-ORDER member as an ordinary record of enumerated
-      sub_len += use_order->XER_encode(*xer_descr(uo_index), p_buf, flavor, indent+1, 0);
+      sub_len += use_order->XER_encode(*xer_descr(uo_index), p_buf, flavor, flavor2, indent+1, 0);
     }
 
     if (exer && (indent==0 || (flavor & DEF_NS_SQUASHED))) // write namespaces for toplevel only
@@ -4286,7 +4286,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     for (i = start_at; i < first_nonattr; ++i) {
       boolean is_xer_attr_field = xer_descr(i)->xer_bits & XER_ATTRIBUTE;
       ec_1.set_msg("%s': ", fld_name(i)); // attr
-      int tmp_len = get_at(i)->XER_encode(*xer_descr(i), p_buf, flavor, indent+1, 0);
+      int tmp_len = get_at(i)->XER_encode(*xer_descr(i), p_buf, flavor, flavor2, indent+1, 0);
       if (is_xer_attr_field && !exer) sub_len += tmp_len; /* do not add if attribute and EXER */
     }
 
@@ -4322,7 +4322,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       /* write the first string */
       if (embed_values != NULL && embed_values->size_of() > 0) {
         sub_len += embed_values->get_at(0)->XER_encode(UNIVERSAL_CHARSTRING_xer_,
-          p_buf, flavor | EMBED_VALUES, indent+1, 0);
+          p_buf, flavor | EMBED_VALUES, flavor2, indent+1, 0);
       }
     }
 
@@ -4421,7 +4421,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
         if (p_td.xer_bits & UNTAGGED && i > 0 && exer && embed_values == NULL && 0 != emb_val_parent &&
           emb_val_parent->embval_index < emb_val_parent->embval_array->size_of()) {
           emb_val_parent->embval_array->get_at(emb_val_parent->embval_index)->XER_encode(UNIVERSAL_CHARSTRING_xer_
-            , p_buf, flavor | EMBED_VALUES, indent+1, 0);
+            , p_buf, flavor | EMBED_VALUES, flavor2, indent+1, 0);
           ++emb_val_parent->embval_index;
         }
         
@@ -4436,13 +4436,13 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
           // because the tag-stripping effect of USE-NIL has been achieved
           // by encoding the sub-fields directly).
           flavor | ((exer && !use_order && (i == field_cnt-1)) ? (p_td.xer_bits & USE_NIL) : 0),
-          indent+!omit_tag, emb_val);
+          flavor2, indent+!omit_tag, emb_val);
 
         // Now the next embed-values string (NOT affected by USE-ORDER!)
         if (exer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&
             embed_values != NULL && emb_val->embval_index < embed_values->size_of() && ordered->get_at(ai)->is_present()) {
           embed_values->get_at(emb_val->embval_index)->XER_encode(UNIVERSAL_CHARSTRING_xer_
-            , p_buf, flavor | EMBED_VALUES, indent+1, 0);
+            , p_buf, flavor | EMBED_VALUES, flavor2, indent+1, 0);
           ++emb_val->embval_index;
         }
       } //for
@@ -4509,7 +4509,7 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
  */
 int Record_Type::encode_field(int i,
   const Erroneous_values_t* err_vals, const Erroneous_descriptor_t* emb_descr,
-  TTCN_Buffer& p_buf, unsigned int sub_flavor, int indent, embed_values_enc_struct_t* emb_val) const
+  TTCN_Buffer& p_buf, unsigned int sub_flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val) const
 {
   int enc_len = 0;
   TTCN_EncDec_ErrorContext ec;
@@ -4523,7 +4523,7 @@ int Record_Type::encode_field(int i,
       if (err_vals->before->type_descr==NULL) TTCN_error(
         "internal error: erroneous before typedescriptor missing");
       enc_len += err_vals->before->errval->XER_encode(
-        *err_vals->before->type_descr->xer, p_buf, sub_flavor, indent, 0);
+        *err_vals->before->type_descr->xer, p_buf, sub_flavor, flavor2, indent, 0);
     }
   }
 
@@ -4536,18 +4536,18 @@ int Record_Type::encode_field(int i,
         if (err_vals->value->type_descr==NULL) TTCN_error(
           "internal error: erroneous value typedescriptor missing");
         enc_len += err_vals->value->errval->XER_encode(
-          *err_vals->value->type_descr->xer, p_buf, sub_flavor, indent, 0);
+          *err_vals->value->type_descr->xer, p_buf, sub_flavor, flavor2, indent, 0);
       }
     } // else -> omit
   } else {
     ec.set_msg("Component %s: ", fld_name(i));
     if (emb_descr) {
       enc_len += get_at(i)->XER_encode_negtest(emb_descr, *xer_descr(i), p_buf,
-        sub_flavor, indent, emb_val);
+        sub_flavor, flavor2, indent, emb_val);
     } else {
       // the "real" encoder
       enc_len += get_at(i)->XER_encode(*xer_descr(i), p_buf,
-        sub_flavor, indent, emb_val);
+        sub_flavor, flavor2, indent, emb_val);
     }
   }
 
@@ -4561,7 +4561,7 @@ int Record_Type::encode_field(int i,
       if (err_vals->after->type_descr==NULL) TTCN_error(
         "internal error: erroneous after typedescriptor missing");
       enc_len += err_vals->after->errval->XER_encode(
-        *err_vals->after->type_descr->xer, p_buf, sub_flavor, indent, 0);
+        *err_vals->after->type_descr->xer, p_buf, sub_flavor, flavor2, indent, 0);
     }
   }
 
@@ -4570,7 +4570,7 @@ int Record_Type::encode_field(int i,
 
 // XERSTUFF Record_Type::XER_encode_negtest
 int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
-  const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor, int indent,
+  const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent,
   embed_values_enc_struct_t*) const
 {
   if (!is_bound()) {
@@ -4695,7 +4695,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
         if (ev->before->type_descr==NULL) TTCN_error(
           "internal error: erroneous before typedescriptor missing");
         sub_len += ev->before->errval->XER_encode(
-          *ev->before->type_descr->xer, p_buf, flavor, indent, 0);
+          *ev->before->type_descr->xer, p_buf, flavor, flavor2, indent, 0);
       }
     }
 
@@ -4708,7 +4708,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
           if (ev->value->type_descr==NULL) TTCN_error(
             "internal error: erroneous value typedescriptor missing");
           sub_len += ev->value->errval->XER_encode(
-            *ev->value->type_descr->xer, p_buf, flavor, indent, 0);
+            *ev->value->type_descr->xer, p_buf, flavor, flavor2, indent, 0);
         }
       } // else -> omit
     } else {
@@ -4722,7 +4722,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
         // the "real" encoder
         if (q_uri->is_present()) {
           p_buf.put_s(11, (cbyte*)" xmlns:b0='");
-          sub_len += q_uri->XER_encode(*xer_descr(0), p_buf, flavor | XER_LIST, indent+1, 0);
+          sub_len += q_uri->XER_encode(*xer_descr(0), p_buf, flavor | XER_LIST, flavor2, indent+1, 0);
           p_buf.put_c('\'');
         }
       }
@@ -4738,7 +4738,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
         if (ev->after->type_descr==NULL) TTCN_error(
           "internal error: erroneous after typedescriptor missing");
         sub_len += ev->after->errval->XER_encode(
-          *ev->after->type_descr->xer, p_buf, flavor, indent, 0);
+          *ev->after->type_descr->xer, p_buf, flavor, flavor2, indent, 0);
       }
     }
 
@@ -4759,7 +4759,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
         if (ev->before->type_descr==NULL) TTCN_error(
           "internal error: erroneous before typedescriptor missing");
         sub_len += ev->before->errval->XER_encode(
-          *ev->before->type_descr->xer, p_buf, flavor, indent, 0);
+          *ev->before->type_descr->xer, p_buf, flavor, flavor2, indent, 0);
       }
     }
 
@@ -4772,7 +4772,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
           if (ev->value->type_descr==NULL) TTCN_error(
             "internal error: erroneous value typedescriptor missing");
           sub_len += ev->value->errval->XER_encode(
-            *ev->value->type_descr->xer, p_buf, flavor, indent, 0);
+            *ev->value->type_descr->xer, p_buf, flavor, flavor2, indent, 0);
         }
       } // else -> omit
     } else {
@@ -4787,7 +4787,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
           sub_len += 3;
         }
 
-        sub_len += get_at(1)->XER_encode(*xer_descr(1), p_buf, flavor | XER_LIST, indent+1, 0);
+        sub_len += get_at(1)->XER_encode(*xer_descr(1), p_buf, flavor | XER_LIST, flavor2, indent+1, 0);
       }
     }
 
@@ -4801,7 +4801,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
         if (ev->after->type_descr==NULL) TTCN_error(
           "internal error: erroneous after typedescriptor missing");
         sub_len += ev->after->errval->XER_encode(
-          *ev->after->type_descr->xer, p_buf, flavor, indent, 0);
+          *ev->after->type_descr->xer, p_buf, flavor, flavor2, indent, 0);
       }
     }
 
@@ -4810,12 +4810,12 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
   else { // not USE-QNAME
     if (!exer && (p_td.xer_bits & EMBED_VALUES)) {
       // The EMBED-VALUES member as an ordinary record of string
-      sub_len += embed_values->XER_encode(*xer_descr(0), p_buf, flavor, indent+1, 0);
+      sub_len += embed_values->XER_encode(*xer_descr(0), p_buf, flavor, flavor2, indent+1, 0);
     }
 
     if (!exer && (p_td.xer_bits & USE_ORDER)) {
       // The USE-ORDER member as an ordinary record of enumerated
-      sub_len += use_order->XER_encode(*xer_descr(uo_index), p_buf, flavor, indent+1, 0);
+      sub_len += use_order->XER_encode(*xer_descr(uo_index), p_buf, flavor, flavor2, indent+1, 0);
     }
 
     if (exer && (indent==0 || (flavor & DEF_NS_SQUASHED))) // write namespaces for toplevel only
@@ -4856,7 +4856,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
       boolean is_xer_attr_field = xer_descr(i)->xer_bits & XER_ATTRIBUTE;
       ec_1.set_msg("%s': ", fld_name(i)); // attr
 
-      tmp_len = encode_field(i, ev, ed, p_buf, flavor, indent + !omit_tag, 0);
+      tmp_len = encode_field(i, ev, ed, p_buf, flavor, flavor2, indent + !omit_tag, 0);
 
       if (is_xer_attr_field && !exer) sub_len += tmp_len; // do not add if attribute and EXER
 
@@ -4933,7 +4933,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
           ed0_0 = ed0->next_field_emb_descr (0, embed_values_descr_idx);
         }
         sub_len += embed_values->encode_element(0, UNIVERSAL_CHARSTRING_xer_,
-          ev0_0, ed0_0, p_buf, flavor | EMBED_VALUES, indent+!omit_tag, 0);
+          ev0_0, ed0_0, p_buf, flavor | EMBED_VALUES, flavor2, indent+!omit_tag, 0);
       }
     }
 
@@ -5075,7 +5075,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
           // because the tag-stripping effect of USE-NIL has been achieved
           // by encoding the sub-fields directly).
           flavor | ((exer && !use_order && (i == field_cnt-1)) ? (p_td.xer_bits & USE_NIL) : 0),
-          indent + !omit_tag, emb_val);
+          flavor2, indent + !omit_tag, emb_val);
 
         // Now the next embed-values string (NOT affected by USE-ORDER!)
         if (exer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&
@@ -5087,7 +5087,7 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
             ed0_i = ed0->next_field_emb_descr (emb_val->embval_index, emb_val->embval_err_descr_idx);
           }
           embed_values->encode_element(emb_val->embval_index, UNIVERSAL_CHARSTRING_xer_,
-            ev0_i, ed0_i, p_buf, flavor | EMBED_VALUES, indent + !omit_tag, 0);
+            ev0_i, ed0_i, p_buf, flavor | EMBED_VALUES, flavor2, indent + !omit_tag, 0);
           ++emb_val->embval_index;
         }
       } //for
@@ -5787,7 +5787,7 @@ int Record_Type::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
 }
 
 int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
-                                     const TTCN_Typedescriptor_t& p_td,
+                                     const TTCN_Typedescriptor_t& /*p_td*/,
                                      JSON_Tokenizer& p_tok) const 
 {
   if (!is_bound()) {
@@ -5886,7 +5886,7 @@ int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
   return enc_len;
 }
 
-int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
+int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokenizer& p_tok, boolean p_silent)
 {
   json_token_t token = JSON_TOKEN_NONE;
   size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);
@@ -6162,7 +6162,7 @@ void Empty_Record_Type::encode(const TTCN_Typedescriptor_t& p_td,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0);
+    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0, 0);
     p_buf.put_c('\n');
     break;}
   case TTCN_EncDec::CT_JSON: {
@@ -6344,7 +6344,7 @@ int Empty_Record_Type::TEXT_decode(const TTCN_Typedescriptor_t& p_td,
 }
 
 int Empty_Record_Type::XER_encode(const XERdescriptor_t& p_td,
-  TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+  TTCN_Buffer& p_buf, unsigned int flavor, unsigned int /*flavor2*/, int indent, embed_values_enc_struct_t*) const
 {
   int encoded_length=(int)p_buf.get_len();
   int indenting = !is_canonical(flavor);

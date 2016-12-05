@@ -106,7 +106,8 @@ enum XER_flavor {
 };
 
 enum XER_flavor2 {
-    USE_NIL_PARENT_TAG = 1U << 0 // Content field has attribute that was read by parent
+    USE_NIL_PARENT_TAG = 1U << 0, // Content field has attribute that was read by parent
+    FROM_UNION_USETYPE = 1U << 1 // When the parent of a useUnion field is a union with useType
 };
 
 /** WHITESPACE actions.

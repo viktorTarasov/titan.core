@@ -280,7 +280,7 @@ JNIEXPORT void JNICALL Java_org_eclipse_titan_executor_jni_JNIMiddleWare_execute
  * 
  * NOTE: Function comment is here, because function declaration is in org_eclipse_titan_executor_jni_JNIMiddleWare.h, which is generated.
  */
-JNIEXPORT jint JNICALL Java_org_eclipse_titan_executor_jni_JNIMiddleWare_get_1execute_1cfg_1len(JNIEnv *env, jobject)
+JNIEXPORT jint JNICALL Java_org_eclipse_titan_executor_jni_JNIMiddleWare_get_1execute_1cfg_1len(JNIEnv *, jobject)
 {
   return (jint)Jnimw::mycfg.execute_list_len;
 }
@@ -295,7 +295,7 @@ JNIEXPORT jint JNICALL Java_org_eclipse_titan_executor_jni_JNIMiddleWare_get_1ex
  * 
  * NOTE: Function comment is here, because function declaration is in org_eclipse_titan_executor_jni_JNIMiddleWare.h, which is generated.
  */
-JNIEXPORT void JNICALL Java_org_eclipse_titan_executor_jni_JNIMiddleWare_execute_1cfg(JNIEnv *env, jobject, jint index)
+JNIEXPORT void JNICALL Java_org_eclipse_titan_executor_jni_JNIMiddleWare_execute_1cfg(JNIEnv *, jobject, jint index)
 {
   if (!Jnimw::userInterface)
     return;

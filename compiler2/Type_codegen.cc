@@ -1204,6 +1204,7 @@ void Type::generate_code_Choice(output_struct *target)
       
       if (cftype->xerattrib != NULL) {
         sdef.elements[i].xsd_type = cftype->xerattrib->xsd_type;
+        sdef.elements[i].xerUseUnion = cftype->xerattrib->useUnion_;
       }
     }
     if (sdef.jsonAsValue) {

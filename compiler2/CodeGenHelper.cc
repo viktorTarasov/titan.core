@@ -488,7 +488,7 @@ void CodeGenHelper::write_output() {
       // If we need to split
       if (num_of_chars >= chunk_size) {
         size_t base_pos = 0;
-        for (unsigned int i = 0; i < slice_num; i++) {
+        for (i = 0; i < slice_num; i++) {
           if (i == 0) { // The first slice has the module's name
             fname = output->module_dispname;
           } else {

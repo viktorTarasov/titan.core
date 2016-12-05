@@ -9605,9 +9605,9 @@ namespace Ttcn {
         LazyParamData::clean();
         if (val->get_valuetype() == Value::V_REFD) {
           // check if the reference is a parameter, mark it as used if it is
-          Reference* ref = dynamic_cast<Reference*>(val->get_reference());
-          if (ref != NULL) {
-            ref->ref_usage_found();
+          Reference* r = dynamic_cast<Reference*>(val->get_reference());
+          if (r != NULL) {
+            r->ref_usage_found();
           }
         }
       } else {
@@ -9636,10 +9636,10 @@ namespace Ttcn {
         if (temp->get_DerivedRef() != NULL ||
             temp->get_Template()->get_templatetype() == Template::TEMPLATE_REFD) {
           // check if the reference is a parameter, mark it as used if it is
-          Reference* ref = dynamic_cast<Reference*>(temp->get_DerivedRef() != NULL ?
+          Reference* r = dynamic_cast<Reference*>(temp->get_DerivedRef() != NULL ?
             temp->get_DerivedRef() : temp->get_Template()->get_reference());
-          if (ref != NULL) {
-            ref->ref_usage_found();
+          if (r != NULL) {
+            r->ref_usage_found();
           }
         }
       } else {

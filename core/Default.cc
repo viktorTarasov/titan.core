@@ -25,6 +25,7 @@
 #include "Logger.hh"
 #include "Error.hh"
 #include "TitanLoggerApi.hh"
+#include "Optional.hh"
 
 #include "../common/dbgnew.hh"
 

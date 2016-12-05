@@ -1843,10 +1843,10 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
 
   /* Write some helper functions */
   def = mputstr(def,
-    "char **collect_ns(const XERdescriptor_t& p_td, size_t& num_ns, bool& def_ns) const;\n");
+    "char **collect_ns(const XERdescriptor_t& p_td, size_t& num_ns, bool& def_ns, unsigned int flavor = 0) const;\n");
 
   src = mputprintf(src,
-    "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num_ns, bool& def_ns) const {\n"
+    "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num_ns, bool& def_ns, unsigned int) const {\n"
     "  size_t num_collected;\n"
     "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
     /* The above might throw but then nothing was allocated. */
@@ -1894,14 +1894,14 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   );
 
   src = mputprintf(src,
-    "boolean %s::can_start(const char *name, const char *uri, const XERdescriptor_t& xd, unsigned int flavor) {\n"
+    "boolean %s::can_start(const char *name, const char *uri, const XERdescriptor_t& xd, unsigned int flavor, unsigned int flavor2) {\n"
     "  boolean e_xer = is_exer(flavor &= ~XER_RECOF);\n"
     "  if (!e_xer || !((xd.xer_bits & UNTAGGED) || (flavor & (USE_NIL|XER_RECOF)))) return check_name(name, xd, e_xer) && (!e_xer || check_namespace(uri, xd));\n"
     , name
   );
   for (i = start_at; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "  else if (%s::can_start(name, uri, %s_xer_, flavor)) return TRUE;\n"
+      "  else if (%s::can_start(name, uri, %s_xer_, flavor, flavor2)) return TRUE;\n"
       /* Here we know for sure it's exer */
       , sdef->elements[i].type
       , sdef->elements[i].typegen
@@ -1915,7 +1915,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   /* * * * * * * * * * XER_encode * * * * * * * * * * * * * * */
   src = mputprintf(src,
     "int %s::XER_encode(const XERdescriptor_t& p_td, "
-    "TTCN_Buffer& p_buf, unsigned int p_flavor, int p_indent, embed_values_enc_struct_t* emb_val_parent) const\n"
+    "TTCN_Buffer& p_buf, unsigned int p_flavor, unsigned int p_flavor2, int p_indent, embed_values_enc_struct_t* emb_val_parent) const\n"
     "{\n"
     "  if (!is_bound()) TTCN_EncDec_ErrorContext::error"
     "(TTCN_EncDec::ET_UNBOUND, \"Encoding an unbound value.\");\n"
@@ -2007,7 +2007,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  if (e_xer && (p_td.xer_bits & USE_QNAME)) {\n"
       "    if (field_%s.is_value()) {\n"
       "      p_buf.put_s(11, (cbyte*)\" xmlns:b0='\");\n"
-      "      field_%s.XER_encode(%s_xer_, p_buf, p_flavor | XER_LIST, p_indent+1, 0);\n"
+      "      field_%s.XER_encode(%s_xer_, p_buf, p_flavor | XER_LIST, p_flavor2, p_indent+1, 0);\n"
       "      p_buf.put_c('\\'');\n"
       "    }\n"
       "    if (p_td.xer_bits & XER_ATTRIBUTE) begin_attribute(p_td, p_buf);\n"
@@ -2016,7 +2016,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "      p_buf.put_s(3, (cbyte*)\"b0:\");\n"
       "      sub_len += 3;\n"
       "    }\n"
-      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor | XER_LIST, p_indent+1, 0);\n"
+      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor | XER_LIST, p_flavor2, p_indent+1, 0);\n"
       "    if (p_td.xer_bits & XER_ATTRIBUTE) p_buf.put_c('\\'');\n"
       "  } else" /* no newline */
       , sdef->elements[0].name
@@ -2032,7 +2032,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     src = mputprintf(src,
       "  if (!e_xer && (p_td.xer_bits & EMBED_VALUES)) {\n"
       "    ec_1.set_msg(\"%s': \");\n"
-      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1, 0);\n"
+      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_flavor2, p_indent+1, 0);\n"
       "  }\n"
       , sdef->elements[0].dispname
       , sdef->elements[0].name, sdef->elements[0].typegen
@@ -2042,7 +2042,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
   if (sdef->xerUseOrderPossible) {
     src = mputprintf(src,
       "  if (!e_xer && (p_td.xer_bits & USE_ORDER)) {\n"
-      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1, 0);\n"
+      "    sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_flavor2, p_indent+1, 0);\n"
       "  }\n"
       , sdef->elements[uo].name, sdef->elements[uo].typegen
     );
@@ -2078,7 +2078,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     if (i==0 && sdef->xerEmbedValuesPossible && (sdef->elements[i].xerAnyKind & ANY_ATTRIB_BIT)) continue ;
     src = mputprintf(src, 
       "  ec_1.set_msg(\"%s': \");\n"
-      "  tmp_len = field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1, 0);\n"
+      "  tmp_len = field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_flavor2, p_indent+1, 0);\n"
       "  %ssub_len += tmp_len;\n" /* do not add if attribute and EXER */
       , sdef->elements[i].dispname
       , sdef->elements[i].name, sdef->elements[i].typegen
@@ -2114,7 +2114,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  if (e_xer && (p_td.xer_bits & EMBED_VALUES)) {\n"
     /* write the first string (must come AFTER the attributes) */
       "    if (%s%s%s field_%s%s.size_of() > 0) {\n"
-      "      sub_len += field_%s%s[0].XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+      "      sub_len += field_%s%s[0].XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_flavor2, p_indent+1, 0);\n"
       "    }\n"
       "  }\n"
       , sdef->elements[0].dispname
@@ -2127,7 +2127,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     if (want_namespaces) { /* here's another chance */
       src = mputprintf(src,
         "  else if ( !(p_td.xer_bits & EMBED_VALUES)) {\n"
-        "    %sfield_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+1, 0);\n"
+        "    %sfield_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_flavor2, p_indent+1, 0);\n"
         "  }\n"
         , ((sdef->elements[0].xerAnyKind & ANY_ATTRIB_BIT) ? "" : "sub_len += " )
         , sdef->elements[0].name, sdef->elements[0].typegen
@@ -2183,7 +2183,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputprintf(src,
         "  if (!nil_attribute) {\n"
         "%s"
-        "  if (!e_xer) sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+!omit_tag, 0);\n"
+        "  if (!e_xer) sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor, p_flavor2, p_indent+!omit_tag, 0);\n"
         "  else" /* no newline */
         , (sdef->xerUseNilPossible ? "  if (!(p_td.xer_bits & USE_ORDER)) p_flavor |= (p_td.xer_bits & USE_NIL);\n" : "")
         /* If USE-ORDER is on, the tag-removing effect of USE-NIL has been
@@ -2238,7 +2238,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       src = mputprintf(src,
         "    case %lu:\n"
         "      ec_1.set_msg(\"%s': \");\n"
-        "      sub_len += field_%s%s%s%s.XER_encode(%s_xer_, p_buf, p_flavor, p_indent+!omit_tag, %s);\n"
+        "      sub_len += field_%s%s%s%s.XER_encode(%s_xer_, p_buf, p_flavor, p_flavor2, p_indent+!omit_tag, %s);\n"
 
         , (unsigned long)offset++
         , sdef->elements[i].dispname
@@ -2263,7 +2263,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         "    if (e_xer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&\n"
         "        %s%s%s emb_val->embval_index < field_%s%s.size_of()) { // embed-val\n"
         "      field_%s%s[emb_val->embval_index].XER_encode(\n"
-        "        UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+        "        UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_flavor2, p_indent+1, 0);\n"
         "      ++emb_val->embval_index;\n"
         "    }\n"
         , sdef->elements[0].isOptional ? "field_" : ""
@@ -2295,13 +2295,13 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
           "  if (0 != emb_val_parent->embval_array_reg) {\n"
           "    if (emb_val_parent->embval_index < emb_val_parent->embval_array_reg->size_of()) {\n"
           "      (*emb_val_parent->embval_array_reg)[emb_val_parent->embval_index].XER_encode(UNIVERSAL_CHARSTRING_xer_"
-          "      , p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+          "      , p_buf, p_flavor | EMBED_VALUES, p_flavor2, p_indent+1, 0);\n"
           "      ++emb_val_parent->embval_index;\n"
           "    }\n"
           "  } else {\n"
            "   if (emb_val_parent->embval_index < emb_val_parent->embval_array_opt->size_of()) {\n"
           "      (*emb_val_parent->embval_array_opt)[emb_val_parent->embval_index].XER_encode(UNIVERSAL_CHARSTRING_xer_"
-          "      , p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+          "      , p_buf, p_flavor | EMBED_VALUES, p_flavor2, p_indent+1, 0);\n"
           "      ++emb_val_parent->embval_index;\n"
           "    }\n"
           "  }\n"
@@ -2312,7 +2312,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
         );
       }
       src = mputprintf(src,
-        "  sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor%s, p_indent+!omit_tag, %s);\n"
+        "  sub_len += field_%s.XER_encode(%s_xer_, p_buf, p_flavor%s, p_flavor2, p_indent+!omit_tag, %s);\n"
         , sdef->elements[i].name, sdef->elements[i].typegen
         , sdef->xerUseNilPossible ? "| (p_td.xer_bits & USE_NIL)" : ""
         , sdef->xerEmbedValuesPossible ? "emb_val" : "0"
@@ -2323,7 +2323,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
           "  if (e_xer && (p_td.xer_bits & EMBED_VALUES) && 0 != emb_val &&\n"
           "      %s%s%s %s%s%s emb_val->embval_index < field_%s%s.size_of()) {\n"
           "    field_%s%s[emb_val->embval_index].XER_encode(\n"
-          "      UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+          "      UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_flavor2, p_indent+1, 0);\n"
           "    ++emb_val->embval_index;\n"
           "  }\n"
           , sdef->elements[0].isOptional ? "field_" : ""
@@ -2602,7 +2602,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
 
     if (sdef->control_ns_prefix && !(num_attributes==1 && aa_index!=-1)) {
       src = mputprintf(src,
-        "    if (parent_tag && !strcmp(attr_name, \"type\") "
+        "    if (/*parent_tag &&*/ !strcmp(attr_name, \"type\") "
         "&& !strcmp((const char*)p_reader.Prefix(), \"%s\")) {} else\n"
         , sdef->control_ns_prefix);
       /* xsi:type; already processed by parent with USE-UNION or USE-TYPE */
@@ -6016,7 +6016,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
     if (xer_needed) { /* XERSTUFF codegen for empty record/SEQUENCE */
       src=mputprintf(src,
         "boolean %s::can_start(const char *p_name, const char *p_uri, "
-        "const XERdescriptor_t& p_td, unsigned int p_flavor) {\n"
+        "const XERdescriptor_t& p_td, unsigned int p_flavor, unsigned int /*p_flavor2*/) {\n"
         "  boolean e_xer = is_exer(p_flavor);\n"
         "  if (e_xer && (p_td.xer_bits & UNTAGGED)) return FALSE;\n"
         "  else return check_name(p_name, p_td, e_xer) && (!e_xer || check_namespace(p_uri, p_td));\n"
@@ -6026,7 +6026,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
         );
       src = mputprintf(src,
         "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-        "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const{\n"
+        "unsigned int p_flavor, unsigned int, int p_indent, embed_values_enc_struct_t*) const{\n"
         "  int encoded_length=(int)p_buf.get_len();\n"
         "  int is_indented = !is_canonical(p_flavor);\n"
         "  boolean e_xer = is_exer(p_flavor);\n"
@@ -6952,9 +6952,9 @@ check_generate_end:
         "static const XERdescriptor_t* xer_descriptors[];\n"
         "const XERdescriptor_t* xer_descr(int p_index) const;\n"
         "virtual boolean can_start_v(const char *name, const char *prefix, "
-        "XERdescriptor_t const& xd, unsigned int flavor);\n"
+        "XERdescriptor_t const& xd, unsigned int flavor, unsigned int flavor2);\n"
         "static  boolean can_start  (const char *name, const char *prefix, "
-        "XERdescriptor_t const& xd, unsigned int flavor);\n");
+        "XERdescriptor_t const& xd, unsigned int flavor, unsigned int flavor2);\n");
       src = mputprintf(src, "const XERdescriptor_t* %s::xer_descriptors[] = ", name);
       for (i = 0; i < sdef->nElements; i++) {
         src = mputprintf(src, "%c &%s_xer_",
@@ -6968,16 +6968,16 @@ check_generate_end:
          * We must make a virtual call in Record_Type::XER_decode because
          * we don't know the actual type (derived from Record_Type) */
         "boolean %s::can_start_v(const char *p_name, const char *p_uri, "
-        "XERdescriptor_t const& p_td, unsigned int p_flavor)\n"
-        "{ return can_start(p_name, p_uri, p_td, p_flavor); }\n"
+        "XERdescriptor_t const& p_td, unsigned int p_flavor, unsigned int p_flavor2)\n"
+        "{ return can_start(p_name, p_uri, p_td, p_flavor, p_flavor2); }\n"
         "boolean %s::can_start(const char *p_name, const char *p_uri, "
-        "XERdescriptor_t const& p_td, unsigned int p_flavor) {\n"
+        "XERdescriptor_t const& p_td, unsigned int p_flavor, unsigned int p_flavor2) {\n"
         "  boolean e_xer = is_exer(p_flavor);\n"
         "  if (!e_xer || (!(p_td.xer_bits & UNTAGGED) && !(p_flavor & USE_NIL))) return check_name(p_name, p_td, e_xer) && (!e_xer || check_namespace(p_uri, p_td));\n"
         , name , name, name);
       for (i = 0; i < sdef->nElements; i++) {
         src = mputprintf(src,
-          "  else if (%s::can_start(p_name, p_uri, %s_xer_, p_flavor)) return TRUE;\n"
+          "  else if (%s::can_start(p_name, p_uri, %s_xer_, p_flavor, p_flavor2)) return TRUE;\n"
           , sdef->elements[i].type, sdef->elements[i].typegen);
       }
       src = mputstr(src,
@@ -7001,7 +7001,7 @@ check_generate_end:
     }
     else { /* XER not needed */
       def = mputstr(def,
-        "boolean can_start_v(const char *, const char *, XERdescriptor_t const&, unsigned int)\n"
+        "boolean can_start_v(const char *, const char *, XERdescriptor_t const&, unsigned int, unsigned int)\n"
         "{ return FALSE; }\n"
         );
     } /* if (xer_needed) */

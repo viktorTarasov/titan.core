@@ -1142,9 +1142,10 @@ module XSDBaseTypeTest {
         setverdict(fail, match(my_type_result, my_type));
       }
 
-      // Currently works incorrectly: Bug 507270
-      /*my_type := { t := { cs := "cs" } }
-      expected := "<UseTypeWithUseUnion xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd1='http://www.w3.org/2001/XMLSchema' xsi:type='xsd1:Name'>name</UseTypeWithUseUnion>\n\n";
+      // Bug 507270
+      my_type := { t := { cs := "cs" } }
+      expected := "<UseTypeWithUseUnion xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd0='http://www.w3.org/2001/XMLSchema' xsi:type='xsd0:string'>cs</UseTypeWithUseUnion>\n\n";
+      
       result := enc_UseTypeWithUseUnion(my_type);
       if (oct2unichar(result) != expected) {
         setverdict(fail, match(oct2unichar(result), expected));
@@ -1152,7 +1153,19 @@ module XSDBaseTypeTest {
       my_type_result := dec_UseTypeWithUseUnion(result);
       if (my_type_result != my_type) {
         setverdict(fail, match(my_type_result, my_type));
-      }*/
+      }
+
+      my_type := { t := { os := 'ABCD'O } }
+      expected := "<UseTypeWithUseUnion xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd0='http://www.w3.org/2001/XMLSchema' xsi:type='xsd0:hexBinary'>ABCD</UseTypeWithUseUnion>\n\n";
+      
+      result := enc_UseTypeWithUseUnion(my_type);
+      if (oct2unichar(result) != expected) {
+        setverdict(fail, match(oct2unichar(result), expected));
+      }
+      my_type_result := dec_UseTypeWithUseUnion(result);
+      if (my_type_result != my_type) {
+        setverdict(fail, match(my_type_result, my_type));
+      }
 
       setverdict(pass);
     }

@@ -8959,6 +8959,7 @@ error:
       default:
         FATAL_ERROR("Value::is_unfoldable()");
       } // switch
+      FATAL_ERROR("Value::is_unfoldable()");
       break; // should never get here
     case V_MACRO:
       switch (u.macro) {
@@ -11894,7 +11895,7 @@ error:
         Ttcn::ActualParList *parlist = u.expr.r1->get_parlist();
         Common::Assignment *ass = u.expr.r1->get_refd_assignment();
         if (parlist) str = parlist->rearrange_init_code(str, usage_mod);
-
+        (void)ass; // eliminate assigned but not used warning
         parlist = u.expr.r2->get_parlist();
         ass = u.expr.r2->get_refd_assignment();
         if (parlist) str = parlist->rearrange_init_code(str, usage_mod);

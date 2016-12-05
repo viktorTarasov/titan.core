@@ -110,7 +110,7 @@ boolean get_profiler_code_line(const char *p_file_name,
   return FALSE;
 }
 
-void free_profiler_data()
+void free_profiler_data(void)
 {
   for (size_t i = 0; i < the_data->nof_lines; ++i) {
     Free(the_data->lines[i].file_name);

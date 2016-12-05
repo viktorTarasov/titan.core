@@ -136,7 +136,7 @@ void ASN_NULL::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0);
+    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0, 0);
     break;}
   case TTCN_EncDec::CT_JSON: {
     TTCN_EncDec_ErrorContext ec("While JSON-encoding type '%s': ", p_td.name);
@@ -234,7 +234,7 @@ boolean ASN_NULL::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
 }
 
 int ASN_NULL::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int /*flavor2*/, int indent, embed_values_enc_struct_t*) const
 {
   boolean exer  = is_exer(flavor);
   TTCN_EncDec_ErrorContext ec("While XER encoding NULL type: ");
