@@ -10575,17 +10575,19 @@ error:
       }
       label_r1:
       // no break
-    case OPTYPE_UNDEF_RUNNING: // r1 [r2] b4
-      if (u.expr.r2 != NULL) {
-        Common::Assignment *ass = u.expr.r2->get_refd_assignment();
-        self_ref |= (ass == lhs);
-      }
-      // no break
     case OPTYPE_TMR_READ: {     // r1
       Common::Assignment *ass = u.expr.r1->get_refd_assignment();
       self_ref |= (ass == lhs);
       break; }
-
+    case OPTYPE_UNDEF_RUNNING: { // r1 [r2] b4
+      if (u.expr.r2 != NULL) {
+        Common::Assignment *ass2 = u.expr.r2->get_refd_assignment();
+        self_ref |= (ass2 == lhs);
+      }
+      Common::Assignment *ass = u.expr.r1->get_refd_assignment();
+      self_ref |= (ass == lhs);
+      break; }
+    
     case OPTYPE_ISCHOSEN_T: // t1 i2
     case OPTYPE_ISBOUND: // ti1
     case OPTYPE_ISVALUE: // ti1

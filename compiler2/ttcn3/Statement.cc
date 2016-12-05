@@ -653,6 +653,8 @@ namespace Ttcn {
       break;
     case S_STOP_COMP:
     case S_KILL:
+      delete comp_op.compref;
+      break;
     case S_KILLED:
       delete comp_op.compref;
       delete comp_op.index_redirect;
@@ -1349,6 +1351,9 @@ namespace Ttcn {
   {
     switch (statementtype) {
     case S_DONE:
+      comp_op.donereturn.donematch = NULL;
+      comp_op.donereturn.redirect = NULL;
+      // no break
     case S_KILLED:
       comp_op.compref = 0;
       comp_op.any_or_all = p_anyall;
@@ -1814,6 +1819,8 @@ namespace Ttcn {
       break;
     case S_STOP_COMP:
     case S_KILL:
+      if (comp_op.compref) comp_op.compref->set_my_scope(p_scope);
+      break;
     case S_KILLED:
       if (comp_op.compref) comp_op.compref->set_my_scope(p_scope);
       if (comp_op.index_redirect != NULL) {
@@ -2087,6 +2094,8 @@ namespace Ttcn {
       break;
     case S_STOP_COMP:
     case S_KILL:
+      if (comp_op.compref) comp_op.compref->set_fullname(p_fullname+".compref");
+      break;
     case S_KILLED:
       if (comp_op.compref) comp_op.compref->set_fullname(p_fullname+".compref");
       if (comp_op.index_redirect != NULL) {
@@ -5683,6 +5692,8 @@ error:
       break;
     case S_STOP_COMP:
     case S_KILL:
+      if (comp_op.compref) comp_op.compref->set_code_section(p_code_section);
+      break;
     case S_KILLED:
       if (comp_op.compref) comp_op.compref->set_code_section(p_code_section);
       if (comp_op.index_redirect != NULL) {
