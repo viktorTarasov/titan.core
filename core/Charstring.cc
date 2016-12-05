@@ -1626,7 +1626,7 @@ boolean CHARSTRING::from_JSON_string(const char* p_value, size_t p_value_len, bo
     }
   }
   
-  // The charstring will be shorter than the JSON string, at least by the 2 quotes
+  // The resulting string (its length is less than or equal to end - start)
   char* str = (char*)Malloc(end - start);
   size_t len = 0;
   boolean error = FALSE;
