@@ -1513,7 +1513,7 @@ boolean EXTERNAL_identification_template::match(const EXTERNAL_identification& o
 EXTERNAL_identification EXTERNAL_identification_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of union type EXTERNAL.identification.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of union type EXTERNAL.identification.");
   EXTERNAL_identification ret_val;
   switch (single_value.union_selection) {
   case EXTERNAL_identification::ALT_syntaxes:
@@ -2418,7 +2418,7 @@ boolean EXTERNAL_identification_syntaxes_template::match(const EXTERNAL_identifi
 EXTERNAL_identification_syntaxes EXTERNAL_identification_syntaxes_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of type EXTERNAL.identification.syntaxes.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of type EXTERNAL.identification.syntaxes.");
   EXTERNAL_identification_syntaxes ret_val;
   ret_val.abstract() = single_value->field_abstract.valueof();
   ret_val.transfer() = single_value->field_transfer.valueof();
@@ -3064,7 +3064,7 @@ boolean EXTERNAL_identification_context__negotiation_template::match(const EXTER
 EXTERNAL_identification_context__negotiation EXTERNAL_identification_context__negotiation_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of type EXTERNAL.identification.context-negotiation.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of type EXTERNAL.identification.context-negotiation.");
   EXTERNAL_identification_context__negotiation ret_val;
   ret_val.presentation__context__id() = single_value->field_presentation__context__id.valueof();
   ret_val.transfer__syntax() = single_value->field_transfer__syntax.valueof();
@@ -3836,7 +3836,7 @@ boolean EXTERNAL_template::match(const EXTERNAL& other_value,
 EXTERNAL EXTERNAL_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of type EXTERNAL.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of type EXTERNAL.");
   EXTERNAL ret_val;
   ret_val.identification() = single_value->field_identification.valueof();
   if (single_value->field_data__value__descriptor.is_omit()) ret_val.data__value__descriptor() = OMIT_VALUE;

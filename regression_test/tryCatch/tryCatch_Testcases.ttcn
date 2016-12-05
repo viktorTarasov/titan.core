@@ -162,7 +162,7 @@ function f_behavior_sending(in template charstring pl_msg) runs on MyComp {
     } else {
       log("Catched error msg:", e);
       if( isvalue(pl_msg) ) { setverdict(fail, "exception for sending real value");}
-      f_setverdict_str(e, pattern "*Performing valueof or send operation on a non-specific charstring template.");
+      f_setverdict_str(e, pattern "*Performing a valueof or send operation on a non-specific charstring template.");
       @try {
         PCO.send("Default msg");
       }
@@ -177,7 +177,7 @@ function f_behavior_sending(in template charstring pl_msg) runs on MyComp {
   }
   @catch(e) {
     log("Catched DTE:",e);
-    f_setverdict_str(e, pattern "*Performing valueof or send operation on a non-specific charstring template.");
+    f_setverdict_str(e, pattern "*Performing a valueof or send operation on a non-specific charstring template.");
 
     if(isvalue(pl_msg) ) { 
       setverdict(fail, "exception for valueof(real value template)");
@@ -269,7 +269,7 @@ function f_valueof(in template charstring pl_msg) runs on MyComp {
   }
   @catch(e) {
     log("Catched DTE:", e);
-    f_setverdict_str(e, pattern "*Performing valueof or send operation on a non-specific charstring template.");
+    f_setverdict_str(e, pattern "*Performing a valueof or send operation on a non-specific charstring template.");
 
     if(isvalue(pl_msg) ) { 
       setverdict(fail, "exception for valueof of real value template");

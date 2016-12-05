@@ -2333,7 +2333,7 @@ boolean CHARSTRING_template::match(const CHARSTRING& other_value,
 const CHARSTRING& CHARSTRING_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific "
+    TTCN_error("Performing a valueof or send operation on a non-specific "
                "charstring template.");
   return single_value;
 }

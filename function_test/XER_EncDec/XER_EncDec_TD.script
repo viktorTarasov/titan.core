@@ -1455,7 +1455,7 @@ control {
 
 <RESULT>
 
-Dynamic test case error: Performing valueof or send operation on a non-specific template of type @Temp.MyType
+Dynamic test case error: Performing a valueof or send operation on a non-specific template of type @Temp.MyType
 
 <END_TC>  
   

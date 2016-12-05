@@ -1122,7 +1122,7 @@ boolean CHARACTER_STRING_identification_template::match(const CHARACTER_STRING_i
 CHARACTER_STRING_identification CHARACTER_STRING_identification_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of union type CHARACTER STRING.identification.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of union type CHARACTER STRING.identification.");
   CHARACTER_STRING_identification ret_val;
   switch (single_value.union_selection) {
   case CHARACTER_STRING_identification::ALT_syntaxes:
@@ -2112,7 +2112,7 @@ boolean CHARACTER_STRING_identification_syntaxes_template::match(const CHARACTER
 CHARACTER_STRING_identification_syntaxes CHARACTER_STRING_identification_syntaxes_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of type CHARACTER STRING.identification.syntaxes.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of type CHARACTER STRING.identification.syntaxes.");
   CHARACTER_STRING_identification_syntaxes ret_val;
   ret_val.abstract() = single_value->field_abstract.valueof();
   ret_val.transfer() = single_value->field_transfer.valueof();
@@ -2845,7 +2845,7 @@ boolean CHARACTER_STRING_identification_context__negotiation_template::match(con
 CHARACTER_STRING_identification_context__negotiation CHARACTER_STRING_identification_context__negotiation_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of type CHARACTER STRING.identification.context-negotiation.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of type CHARACTER STRING.identification.context-negotiation.");
   CHARACTER_STRING_identification_context__negotiation ret_val;
   ret_val.presentation__context__id() = single_value->field_presentation__context__id.valueof();
   ret_val.transfer__syntax() = single_value->field_transfer__syntax.valueof();
@@ -3730,7 +3730,7 @@ boolean CHARACTER_STRING_template::match(const CHARACTER_STRING& other_value,
 CHARACTER_STRING CHARACTER_STRING_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of type CHARACTER STRING.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of type CHARACTER STRING.");
   CHARACTER_STRING ret_val;
   ret_val.identification() = single_value->field_identification.valueof();
   if (single_value->field_data__value__descriptor.is_omit()) ret_val.data__value__descriptor() = OMIT_VALUE;

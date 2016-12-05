@@ -1118,7 +1118,7 @@ boolean EMBEDDED_PDV_identification_template::match(const EMBEDDED_PDV_identific
 EMBEDDED_PDV_identification EMBEDDED_PDV_identification_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of union type EMBEDDED PDV.identification.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of union type EMBEDDED PDV.identification.");
   EMBEDDED_PDV_identification ret_val;
   switch (single_value.union_selection) {
   case EMBEDDED_PDV_identification::ALT_syntaxes:
@@ -2116,7 +2116,7 @@ boolean EMBEDDED_PDV_identification_syntaxes_template::match(const EMBEDDED_PDV_
 EMBEDDED_PDV_identification_syntaxes EMBEDDED_PDV_identification_syntaxes_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of type EMBEDDED PDV.identification.syntaxes.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of type EMBEDDED PDV.identification.syntaxes.");
   EMBEDDED_PDV_identification_syntaxes ret_val;
   ret_val.abstract() = single_value->field_abstract.valueof();
   ret_val.transfer() = single_value->field_transfer.valueof();
@@ -2857,7 +2857,7 @@ boolean EMBEDDED_PDV_identification_context__negotiation_template::match(const E
 EMBEDDED_PDV_identification_context__negotiation EMBEDDED_PDV_identification_context__negotiation_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of type EMBEDDED PDV.identification.context-negotiation.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of type EMBEDDED PDV.identification.context-negotiation.");
   EMBEDDED_PDV_identification_context__negotiation ret_val;
   ret_val.presentation__context__id() = single_value->field_presentation__context__id.valueof();
   ret_val.transfer__syntax() = single_value->field_transfer__syntax.valueof();
@@ -3747,7 +3747,7 @@ boolean EMBEDDED_PDV_template::match(const EMBEDDED_PDV& other_value,
 EMBEDDED_PDV EMBEDDED_PDV_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific template of type EMBEDDED PDV.");
+    TTCN_error("Performing a valueof or send operation on a non-specific template of type EMBEDDED PDV.");
   EMBEDDED_PDV ret_val;
   ret_val.identification() = single_value->field_identification.valueof();
   if (single_value->field_data__value__descriptor.is_omit()) ret_val.data__value__descriptor() = OMIT_VALUE;

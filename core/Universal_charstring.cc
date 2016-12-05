@@ -4155,7 +4155,7 @@ boolean UNIVERSAL_CHARSTRING_template::match
 const UNIVERSAL_CHARSTRING& UNIVERSAL_CHARSTRING_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific "
+    TTCN_error("Performing a valueof or send operation on a non-specific "
       "universal charstring template.");
   return single_value;
 }
