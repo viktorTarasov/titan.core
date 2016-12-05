@@ -283,11 +283,11 @@ public:
 #endif
 
   int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor,
-    int indent, embed_values_enc_struct_t* emb_val) const;
+    unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val) const;
 #ifdef TITAN_RUNTIME_2
   int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
     const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor,
-    int indent, embed_values_enc_struct_t* emb_val) const;
+    unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val) const;
 #endif
   /** Used during XML decoding, in case this object is an AnyElement field in a record.
     * Determines whether XER_decode() should be called or this field should be omitted.
@@ -302,7 +302,7 @@ public:
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t* emb_val);
 
-  char ** collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const;
+  char ** collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor = 0) const;
 
   operator T_type&();
   operator const T_type&() const;
@@ -981,7 +981,8 @@ int OPTIONAL<T_type>::RAW_decode(const TTCN_Typedescriptor_t& p_td,
 
 template<typename T_type>
 int
-OPTIONAL<T_type>::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val) const
+OPTIONAL<T_type>::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor,
+  unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val) const
 {
 #ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
@@ -989,7 +990,7 @@ OPTIONAL<T_type>::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsi
   switch (optional_selection) {
 #endif
   case OPTIONAL_PRESENT:
-    return optional_value->XER_encode(p_td, buf, flavor, indent, emb_val);
+    return optional_value->XER_encode(p_td, buf, flavor, flavor2, indent, emb_val);
   case OPTIONAL_OMIT:
     return 0; // nothing to do !
   default:
@@ -1003,12 +1004,12 @@ OPTIONAL<T_type>::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsi
 template<typename T_type>
 int
 OPTIONAL<T_type>::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
-  const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor, int indent,
-  embed_values_enc_struct_t* emb_val) const
+  const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsigned int flavor, unsigned int flavor2,
+  int indent, embed_values_enc_struct_t* emb_val) const
 {
   switch (get_selection()) {
   case OPTIONAL_PRESENT:
-    return optional_value->XER_encode_negtest(p_err_descr, p_td, buf, flavor, indent, emb_val);
+    return optional_value->XER_encode_negtest(p_err_descr, p_td, buf, flavor, flavor2, indent, emb_val);
   case OPTIONAL_OMIT:
     return 0; // nothing to do !
   default:
@@ -1098,7 +1099,7 @@ OPTIONAL<T_type>::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
             || ( (p_td.xer_bits & UNTAGGED) && !reader.IsEmptyElement())
           // If the optional field (a string) has anyElement, accept the element
           // regardless of its name. Else the name (and namespace) must match.
-          || T_type::can_start(name, ns_uri, p_td, flavor)) { // it is us
+          || T_type::can_start(name, ns_uri, p_td, flavor, flavor2)) { // it is us
           found_it:
           set_to_present();
           //success = reader.Read(); // move to next thing TODO should it loop till an element ?
@@ -1128,7 +1129,7 @@ finished:
 }
 
 template<typename T_type>
-char ** OPTIONAL<T_type>::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const {
+char ** OPTIONAL<T_type>::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int /*flavor*/) const {
 #ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
 #else

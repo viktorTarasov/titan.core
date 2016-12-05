@@ -90,7 +90,7 @@ void Base_Type::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     if(!p_td.xer) TTCN_EncDec_ErrorContext::error_internal(
       "No XER descriptor available for type '%s'.", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0);
+    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0, 0);
     p_buf.put_c('\n');
     break;}
   case TTCN_EncDec::CT_JSON: {
@@ -232,7 +232,7 @@ static const cbyte empty_tag_end[4] = "/>\n";
 
 int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   unsigned int& flavor, int indent, boolean empty,
-  collector_fn collector, const char *type_atr) const
+  collector_fn collector, const char *type_atr, unsigned int flavor2) const
 {
   const int indenting = !is_canonical(flavor);
   const int exer = is_exer(flavor);
@@ -276,7 +276,7 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     char **collected_ns = NULL;
     boolean def_ns = FALSE;
     if (namespaces_needed) {
-      collected_ns = (this->*collector)(p_td, num_collected, def_ns);
+      collected_ns = (this->*collector)(p_td, num_collected, def_ns, flavor2);
     }
 
     p_buf.put_s((size_t)p_td.namelens[exer] - 2, (cbyte*)p_td.names[exer]);
@@ -322,6 +322,10 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       (p_buf.get_data()[buf_used] == '\n')) {
       p_buf.increase_length((size_t)-1); // back up over the newline
       omit_tag = -1; // to help fix HO85831
+    } else if (exer && (p_td.xer_bits & USE_TYPE_ATTR) && type_atr && (flavor2 & FROM_UNION_USETYPE)) {
+      p_buf.increase_length((size_t)-1); // back up over the endtag
+      p_buf.put_s(mstrlen(const_cast<char*>(type_atr)), (cbyte*)type_atr);
+      p_buf.put_c('>');
     }
   }
 
@@ -982,7 +986,7 @@ int Base_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
 }
 
 int Base_Type::XER_encode(const XERdescriptor_t& p_td,
-                          TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const
+                          TTCN_Buffer&, unsigned int, unsigned int, int, embed_values_enc_struct_t*) const
 {
   TTCN_error("XER encoding requested for type '%-.*s' which has no"
              " XER encoding method.", p_td.namelens[0]-2, p_td.names[0]);
@@ -1011,14 +1015,14 @@ int Base_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer&, b
 }
 
 boolean Base_Type::can_start(const char *name, const char *uri,
-  XERdescriptor_t const& xd, unsigned int flavor)
+  XERdescriptor_t const& xd, unsigned int flavor, unsigned int /*flavor2*/)
 {
   boolean e_xer = is_exer(flavor);
   // Check the name. If EXER, check the namespace too.
   return check_name(name, xd, e_xer) && (!e_xer || check_namespace(uri, xd));
 }
 
-char ** Base_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const
+char ** Base_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int /* flavor */) const
 {
   def_ns = FALSE;
   char *tmp = NULL;

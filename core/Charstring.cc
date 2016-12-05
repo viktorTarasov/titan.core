@@ -806,7 +806,7 @@ void CHARSTRING::encode(const TTCN_Typedescriptor_t& p_td,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0);
+    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0, 0);
     p_buf.put_c('\n');
     break;}
   case TTCN_EncDec::CT_JSON: {
@@ -1229,7 +1229,7 @@ extern const char cb64[]=
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 int CHARSTRING::XER_encode(const XERdescriptor_t& p_td,
-                 TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+                 TTCN_Buffer& p_buf, unsigned int flavor, unsigned int /*flavor2*/, int indent, embed_values_enc_struct_t*) const
 {
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,

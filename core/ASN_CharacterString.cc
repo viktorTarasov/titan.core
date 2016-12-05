@@ -788,7 +788,7 @@ boolean CHARACTER_STRING_identification::BER_decode_TLV(const TTCN_Typedescripto
 // FIXME maybe: XER_encode and decode is virtually identical to EMBEDDED_PDV
 
 int CHARACTER_STRING_identification::XER_encode(const XERdescriptor_t& p_td,
-               TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+               TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
   int encoded_length=(int)p_buf.get_len();
 
@@ -797,22 +797,22 @@ int CHARACTER_STRING_identification::XER_encode(const XERdescriptor_t& p_td,
   flavor &= XER_MASK;
   switch (union_selection) {
   case ALT_syntaxes:
-    field_syntaxes->XER_encode(EMBEDDED_PDV_identification_sxs_xer_, p_buf, flavor, indent, 0);
+    field_syntaxes->XER_encode(EMBEDDED_PDV_identification_sxs_xer_, p_buf, flavor, flavor2, indent, 0);
     break;
   case ALT_syntax:
-    field_syntax->XER_encode(EMBEDDED_PDV_identification_sx_xer_, p_buf, flavor, indent, 0);
+    field_syntax->XER_encode(EMBEDDED_PDV_identification_sx_xer_, p_buf, flavor, flavor2, indent, 0);
     break;
   case ALT_presentation__context__id:
-    field_presentation__context__id->XER_encode(EMBEDDED_PDV_identification_pci_xer_, p_buf, flavor, indent, 0);
+    field_presentation__context__id->XER_encode(EMBEDDED_PDV_identification_pci_xer_, p_buf, flavor, flavor2, indent, 0);
     break;
   case ALT_context__negotiation:
-    field_context__negotiation->XER_encode(EMBEDDED_PDV_identification_cn_xer_, p_buf, flavor, indent, 0);
+    field_context__negotiation->XER_encode(EMBEDDED_PDV_identification_cn_xer_, p_buf, flavor, flavor2,indent, 0);
     break;
   case ALT_transfer__syntax:
-    field_transfer__syntax->XER_encode(EMBEDDED_PDV_identification_ts_xer_, p_buf, flavor, indent, 0);
+    field_transfer__syntax->XER_encode(EMBEDDED_PDV_identification_ts_xer_, p_buf, flavor, flavor2, indent, 0);
     break;
   case ALT_fixed:
-    field_fixed->XER_encode(EMBEDDED_PDV_identification_fix_xer_, p_buf, flavor, indent, 0);
+    field_fixed->XER_encode(EMBEDDED_PDV_identification_fix_xer_, p_buf, flavor, flavor2, indent, 0);
     break;
   default:
     TTCN_EncDec_ErrorContext::error_internal("Unknown selection.");
@@ -1787,14 +1787,14 @@ boolean CHARACTER_STRING_identification_syntaxes::BER_decode_TLV(const TTCN_Type
 }
 
 int CHARACTER_STRING_identification_syntaxes::XER_encode(const XERdescriptor_t& p_td,
-               TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+               TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
   int encoded_length=(int)p_buf.get_len();
 
   begin_xml(p_td, p_buf, flavor, indent++, FALSE);
 
-  field_abstract.XER_encode(CHARACTER_STRING_identification_sxs_abs_xer_, p_buf, flavor, indent, 0);
-  field_transfer.XER_encode(CHARACTER_STRING_identification_sxs_xfr_xer_, p_buf, flavor, indent, 0);
+  field_abstract.XER_encode(CHARACTER_STRING_identification_sxs_abs_xer_, p_buf, flavor, flavor2, indent, 0);
+  field_transfer.XER_encode(CHARACTER_STRING_identification_sxs_xfr_xer_, p_buf, flavor, flavor2, indent, 0);
 
   end_xml(p_td, p_buf, flavor, --indent, FALSE);
 
@@ -2518,14 +2518,14 @@ boolean CHARACTER_STRING_identification_context__negotiation::BER_decode_TLV(con
 }
 
 int CHARACTER_STRING_identification_context__negotiation::XER_encode(const XERdescriptor_t& p_td,
-               TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+               TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
   int encoded_length=(int)p_buf.get_len();
 
   begin_xml(p_td, p_buf, flavor, indent++, FALSE);
 
-  field_presentation__context__id.XER_encode(CHARACTER_STRING_identification_pci_xer_, p_buf, flavor, indent, 0);
-  field_transfer__syntax         .XER_encode(CHARACTER_STRING_identification_ts_xer_ , p_buf, flavor, indent, 0);
+  field_presentation__context__id.XER_encode(CHARACTER_STRING_identification_pci_xer_, p_buf, flavor, flavor2, indent, 0);
+  field_transfer__syntax         .XER_encode(CHARACTER_STRING_identification_ts_xer_ , p_buf, flavor, flavor2, indent, 0);
 
   end_xml(p_td, p_buf, flavor, --indent, FALSE);
 
@@ -3251,7 +3251,7 @@ void CHARACTER_STRING::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer,p_buf, XER_coding, 0, 0);
+    XER_encode(*p_td.xer,p_buf, XER_coding, 0, 0, 0);
     p_buf.put_c('\n');
     break;}
   case TTCN_EncDec::CT_JSON: {
@@ -3365,7 +3365,7 @@ boolean CHARACTER_STRING::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, cons
 }
 
 int CHARACTER_STRING::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-  unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+  unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error
@@ -3376,10 +3376,10 @@ int CHARACTER_STRING::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf
   flavor &= ~XER_RECOF; // ASN.1 character string doesn't care
   begin_xml(p_td, p_buf, flavor, indent++, FALSE);
 
-  field_identification.XER_encode(CHARACTER_STRING_identification_xer_, p_buf, flavor, indent, 0);
+  field_identification.XER_encode(CHARACTER_STRING_identification_xer_, p_buf, flavor, flavor2, indent, 0);
   // data-value-descriptor is OPTIONAL and can never be present.
   // Its encoding is empty.
-  field_string__value .XER_encode(CHARACTER_STRING_data_value_xer_    , p_buf, flavor, indent, 0);
+  field_string__value .XER_encode(CHARACTER_STRING_data_value_xer_    , p_buf, flavor, flavor2, indent, 0);
 
   end_xml(p_td, p_buf, flavor, --indent, FALSE);
 

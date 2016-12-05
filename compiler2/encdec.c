@@ -64,19 +64,19 @@ void def_encdec(const char *p_classname,
 #ifndef NDEBUG
       "// written by %s in " __FILE__ " at %d\n"
 #endif
-      "int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, "
-      "embed_values_enc_struct_t*) const;\n"
+      "int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int,"
+      "unsigned int, int, embed_values_enc_struct_t*) const;\n"
       "int XER_decode(const XERdescriptor_t&, XmlReaderWrap&, unsigned int, "
       "unsigned int, embed_values_dec_struct_t*);\n"
       "static boolean can_start(const char *name, const char *uri, "
-      "XERdescriptor_t const& xd, unsigned int);\n"
+      "XERdescriptor_t const& xd, unsigned int, unsigned int);\n"
       "%s"
 #ifndef NDEBUG
       , __FUNCTION__, __LINE__
 #endif
       , use_runtime_2 ?
         "boolean can_start_v(const char *name, const char *uri, "
-        "XERdescriptor_t const& xd, unsigned int);\n" : ""
+        "XERdescriptor_t const& xd, unsigned int, unsigned int);\n" : ""
     );
   if(json) {
     def = mputprintf(def,
@@ -130,7 +130,7 @@ void def_encdec(const char *p_classname,
       /* Do not use %s_xer_ here. It supplies the XER descriptor of oldtype
        * even if encoding newtype for:
        * <ttcn>type newtype oldtype;</ttcn> */
-     "    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0);\n"
+     "    XER_encode(*(p_td.xer),p_buf, XER_coding, 0, 0, 0);\n"
      "    p_buf.put_c('\\n');\n" /* make sure it has a newline */
      "    break;}\n"
      "  case TTCN_EncDec::CT_JSON: {\n"

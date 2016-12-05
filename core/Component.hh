@@ -22,9 +22,11 @@
 #include "Types.h"
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
 
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 // value class for all component types
 

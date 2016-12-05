@@ -264,6 +264,10 @@ public:
 
   int lengthof() const;
   
+  /* returns the CHARSTRING representation of this. Quadruples are converted
+   into the form: \q{group,plane,row,cell} */
+  CHARSTRING get_stringRepr_for_pattern() const;
+  
   void dump() const;
 
 private:
@@ -272,9 +276,6 @@ private:
   
   UNIVERSAL_CHARSTRING extract_matched_section(int start, int end) const;
 
-  /* returns the CHARSTRING representation of this. Quadruples are converted
-     into the form: \q{group,plane,row,cell} */
-  CHARSTRING get_stringRepr_for_pattern() const;
 
   void convert_cstr_to_uni();
 //checks if an valid BOM is at the head of the string. Returns the length of BOM
@@ -361,7 +362,7 @@ public:
                  TTCN_Buffer&) const;
   int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,  Limit_Token_List&,
                   boolean no_err=FALSE, boolean first_call=TRUE);
-  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const;
+  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, unsigned int, int, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, unsigned int, embed_values_dec_struct_t*);
   /** Decodes UTF-8 into the internal representation (UCS4-BE)
    *

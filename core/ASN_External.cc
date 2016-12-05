@@ -105,7 +105,7 @@ namespace { /* anonymous namespace */
     inline union_selection_type get_selection() const { return union_selection; }
 #ifdef TITAN_RUNTIME_2
     void set_param(Module_Param& /*param*/) { TTCN_error("Internal error: EXTERNALtransfer_encoding::set_param() called."); }
-    Module_Param* get_param(Module_Param_Name& param_name) const { TTCN_error("Internal error: EXTERNALtransfer_encoding::get_param() called."); }
+    Module_Param* get_param(Module_Param_Name& /*param_name*/) const { TTCN_error("Internal error: EXTERNALtransfer_encoding::get_param() called."); }
     void encode_text(Text_Buf& /*text_buf*/) const { TTCN_error("Internal error: EXTERNALtransfer_encoding::encode_text() called."); }
     void decode_text(Text_Buf& /*text_buf*/) { TTCN_error("Internal error: EXTERNALtransfer_encoding::decode_text() called."); }
     boolean is_bound() const { return union_selection!=UNBOUND_VALUE; }
@@ -117,7 +117,7 @@ namespace { /* anonymous namespace */
     ASN_BER_TLV_t* BER_encode_TLV(const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const;
     boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
     int XER_encode(const XERdescriptor_t& p_td,
-                   TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+                   TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
     int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                    unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   private:
@@ -161,7 +161,7 @@ namespace { /* anonymous namespace */
     {return field_encoding;}
 #ifdef TITAN_RUNTIME_2
     void set_param(Module_Param& /*param*/) { TTCN_error("Internal error: EXTERNALtransfer::set_param() called."); }
-    Module_Param* get_param(Module_Param_Name& param_name) const { TTCN_error("Internal error: EXTERNALtransfer::get_param() called."); }
+    Module_Param* get_param(Module_Param_Name& /*param_name*/) const { TTCN_error("Internal error: EXTERNALtransfer::get_param() called."); }
     void encode_text(Text_Buf& /*text_buf*/) const { TTCN_error("Internal error: EXTERNALtransfer::encode_text() called."); }
     void decode_text(Text_Buf& /*text_buf*/) { TTCN_error("Internal error: EXTERNALtransfer::decode_text() called."); }
     boolean is_bound() const { TTCN_error("Internal error: EXTERNALtransfer::is_bound() called."); }
@@ -175,7 +175,7 @@ namespace { /* anonymous namespace */
     ASN_BER_TLV_t* BER_encode_TLV(const TTCN_Typedescriptor_t& p_td, unsigned p_coding) const;
     boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
     int XER_encode(const XERdescriptor_t& p_td,
-                   TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+                   TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
     int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                    unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   };
@@ -414,7 +414,7 @@ namespace { /* anonymous namespace */
   }
 
   int EXTERNALtransfer_encoding::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
   {
     int indenting = !is_canonical(flavor);
     boolean exer  = is_exer(flavor);
@@ -427,13 +427,13 @@ namespace { /* anonymous namespace */
     ++indent;
     switch (union_selection) {
     case ALT_single__ASN1__type:
-      field_single__ASN1__type->XER_encode(EXTERNAL_encoding_singleASN_xer_, p_buf, flavor, indent, 0);
+      field_single__ASN1__type->XER_encode(EXTERNAL_encoding_singleASN_xer_, p_buf, flavor, flavor2, indent, 0);
       break;
     case ALT_octet__aligned:
-      field_octet__aligned    ->XER_encode(EXTERNAL_encoding_octet_aligned_xer_, p_buf, flavor, indent, 0);
+      field_octet__aligned    ->XER_encode(EXTERNAL_encoding_octet_aligned_xer_, p_buf, flavor, flavor2, indent, 0);
       break;
     case ALT_arbitrary:
-      field_arbitrary         ->XER_encode(EXTERNAL_encoding_arbitrary_xer_, p_buf, flavor, indent, 0);
+      field_arbitrary         ->XER_encode(EXTERNAL_encoding_arbitrary_xer_, p_buf, flavor, flavor2, indent, 0);
       break;
     case UNBOUND_VALUE:
       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
@@ -571,7 +571,7 @@ namespace { /* anonymous namespace */
   }
 
   int EXTERNALtransfer::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
   {
     int indenting = !is_canonical(flavor);
     boolean exer  = is_exer(flavor);
@@ -582,10 +582,10 @@ namespace { /* anonymous namespace */
     p_buf.put_s((size_t)p_td.namelens[exer] - 1 + indenting, (const unsigned char*)p_td.names[exer]);
 
     ++indent;
-    field_direct__reference      .XER_encode(EXTERNAL_direct_reference_xer_     , p_buf, flavor, indent, 0);
-    field_indirect__reference    .XER_encode(EXTERNAL_indirect_reference_xer_   , p_buf, flavor, indent, 0);
-    field_data__value__descriptor.XER_encode(EXTERNAL_data_value_descriptor_xer_, p_buf, flavor, indent, 0);
-    field_encoding               .XER_encode(EXTERNAL_encoding_xer_ , p_buf, flavor, indent, 0);
+    field_direct__reference      .XER_encode(EXTERNAL_direct_reference_xer_     , p_buf, flavor, flavor2, indent, 0);
+    field_indirect__reference    .XER_encode(EXTERNAL_indirect_reference_xer_   , p_buf, flavor, flavor2, indent, 0);
+    field_data__value__descriptor.XER_encode(EXTERNAL_data_value_descriptor_xer_, p_buf, flavor, flavor2, indent, 0);
+    field_encoding               .XER_encode(EXTERNAL_encoding_xer_ , p_buf, flavor, flavor2, indent, 0);
 
     if (indenting) do_indent(p_buf, --indent);
     p_buf.put_c('<');
@@ -716,7 +716,7 @@ boolean EXTERNAL::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BE
 }
 
 int EXTERNAL::XER_encode(const XERdescriptor_t& p_td,
-  TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+  TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error
@@ -724,7 +724,7 @@ int EXTERNAL::XER_encode(const XERdescriptor_t& p_td,
   }
   EXTERNALtransfer xfer;
   xfer.load(*this);
-  return xfer.XER_encode(p_td, p_buf, flavor, indent, 0);
+  return xfer.XER_encode(p_td, p_buf, flavor, flavor2, indent, 0);
 }
 
 int EXTERNAL::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
@@ -3470,7 +3470,7 @@ void EXTERNAL::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTC
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0);
+    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0, 0);
     break;}
   case TTCN_EncDec::CT_JSON: {
     TTCN_EncDec_ErrorContext ec("While JSON-encoding type '%s': ", p_td.name);

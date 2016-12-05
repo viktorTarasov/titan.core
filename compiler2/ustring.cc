@@ -172,8 +172,8 @@ ustring::ustring(const string& s)
     delete ret;
   }
   if (isUTF8) {
-    ustring s = Common::decode_utf8(octet_str, CharCoding::UTF_8);
-    val_ptr = s.val_ptr;
+    ustring str = Common::decode_utf8(octet_str, CharCoding::UTF_8);
+    val_ptr = str.val_ptr;
     val_ptr->ref_count++;
   } else {
     init_struct(s.size());

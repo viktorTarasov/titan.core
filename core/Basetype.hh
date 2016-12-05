@@ -167,7 +167,7 @@ public:
    *         FALSE otherwise.
    */
   static boolean can_start(const char *name, const char *uri,
-    XERdescriptor_t const& xd, unsigned int flavor);
+    XERdescriptor_t const& xd, unsigned int flavor, unsigned int flavor2);
 
 #ifdef TITAN_RUNTIME_2
   /** Initialize this object (or one of its fields/elements) with a 
@@ -481,12 +481,12 @@ public:
    * @return number of bytes written into the buffer
    */
   VIRTUAL_IF_RUNTIME_2 int XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val) const;
+    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val) const;
 
 #ifdef TITAN_RUNTIME_2
   virtual int XER_encode_negtest(const Erroneous_descriptor_t* /*p_err_descr*/,
     const XERdescriptor_t& /*p_td*/, TTCN_Buffer& /*p_buf*/,
-    unsigned int /*flavor*/, int /*indent*/, embed_values_enc_struct_t* /*emb_val*/) const;
+    unsigned int /*flavor*/, unsigned int /*flavor2*/, int /*indent*/, embed_values_enc_struct_t* /*emb_val*/) const;
 #endif
 
   /** Decode the current object from the supplied buffer.
@@ -536,7 +536,7 @@ public:
    * (the space at start allows direct concatenation of the strings)
    */
   VIRTUAL_IF_RUNTIME_2 char ** collect_ns(const XERdescriptor_t& p_td,
-    size_t& num, bool& def_ns) const;
+    size_t& num, bool& def_ns, unsigned int flavor = 0) const;
 
   /** Copy strings from @p new_namespaces to @p collected_ns,
    *  discarding duplicates.
@@ -555,7 +555,7 @@ public:
     char **new_namespaces, size_t num_new);
 
   typedef char** (Base_Type::*collector_fn)
-    (const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const;
+    (const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor) const;
 
   /** Start writing the XML representation
    *
@@ -576,7 +576,7 @@ public:
    */
   VIRTUAL_IF_RUNTIME_2 int begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
     unsigned int& flavor, int indent, boolean empty,
-    collector_fn collector = &Base_Type::collect_ns, const char *type_atr = NULL) const;
+    collector_fn collector = &Base_Type::collect_ns, const char *type_atr = NULL, unsigned int flavor2 = 0) const;
   /** Finish the XML representation.
    *
    * @param[in]  p_td XER descriptor
@@ -815,13 +815,13 @@ public:
   virtual int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, Limit_Token_List&, boolean no_err=FALSE, boolean first_call=TRUE);
 
   virtual int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+    unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   virtual int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
-    const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned flavor, int indent, embed_values_enc_struct_t*) const;
+    const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned flavor, unsigned flavor2, int indent, embed_values_enc_struct_t*) const;
   /// Helper for XER_encode_negtest
   int encode_element(int i, const XERdescriptor_t& p_td, const Erroneous_values_t* err_vals,
     const Erroneous_descriptor_t* emb_descr,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t* emb_val) const;
+    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val) const;
   virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader, unsigned int, unsigned int, embed_values_dec_struct_t*);
   virtual boolean isXerAttribute() const;
   virtual boolean isXmlValueList() const;
@@ -848,9 +848,9 @@ public:
   /** Constant unbound element - return this instead of NULL in constant functions */
   virtual const Base_Type* get_unbound_elem() const = 0;
 
-  virtual char ** collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const;
+  virtual char ** collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor) const;
   virtual boolean can_start_v(const char *name, const char *prefix,
-    XERdescriptor_t const& xd, unsigned int flavor) = 0;
+    XERdescriptor_t const& xd, unsigned int flavor, unsigned int flavor2) = 0;
 
   void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }
   Erroneous_descriptor_t* get_err_descr() const { return err_descr; }
@@ -958,10 +958,10 @@ public:
   virtual int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, Limit_Token_List&, boolean no_err=FALSE, boolean first_call=TRUE);
 
   virtual int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+    unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   virtual int XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
     const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+    unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     unsigned int, unsigned int, embed_values_dec_struct_t*);
   /// @{
@@ -969,9 +969,9 @@ public:
   virtual int get_xer_num_attr() const { return 0; /* default */ }
   virtual const XERdescriptor_t* xer_descr(int field_index) const;
   /// @}
-  virtual char ** collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const;
+  virtual char ** collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor = 0) const;
   virtual boolean can_start_v(const char *name, const char *prefix,
-    XERdescriptor_t const& xd, unsigned int flavor) = 0;
+    XERdescriptor_t const& xd, unsigned int flavor, unsigned int flavor2) = 0;
   
   /** Encodes accordingly to the JSON encoding rules.
     * Returns the length of the encoded data. */
@@ -991,7 +991,7 @@ public:
 private:
   /// Helper for XER_encode_negtest
   int encode_field(int i, const Erroneous_values_t* err_vals, const Erroneous_descriptor_t* emb_descr,
-  TTCN_Buffer& p_buf, unsigned int sub_flavor, int indent, embed_values_enc_struct_t* emb_val) const;
+  TTCN_Buffer& p_buf, unsigned int sub_flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t* emb_val) const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1038,7 +1038,7 @@ public:
   virtual int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, Limit_Token_List&, boolean no_err=FALSE, boolean first_call=TRUE);
 
   virtual int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+    unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   virtual int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     unsigned int, unsigned int, embed_values_dec_struct_t*);
   

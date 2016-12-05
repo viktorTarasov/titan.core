@@ -259,7 +259,7 @@ void TTCN_Debugger_UI::read_loop()
       // EOF was received -> exit all
       puts("exit all");
       char** args = new char*[1];
-      args[0] = (char*)"all";
+      args[0] = const_cast<char*>("all");
       ttcn3_debugger.execute_command(D_EXIT, 1, args);
       delete [] args;
     }

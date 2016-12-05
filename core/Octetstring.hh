@@ -28,7 +28,6 @@
 
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
 #include "Error.hh"
 
 class INTEGER;
@@ -37,6 +36,9 @@ class HEXSTRING;
 class CHARSTRING;
 class OCTETSTRING_ELEMENT;
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 // octetstring value class
 
@@ -173,7 +175,7 @@ public:
   int TEXT_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&,  Limit_Token_List&,
                  boolean no_err=FALSE, boolean first_call=TRUE);
   int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-                 unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+                 unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                  unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   

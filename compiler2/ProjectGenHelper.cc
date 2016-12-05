@@ -244,14 +244,14 @@ std::string ProjectDescriptor::setRelativePathTo(const std::string& absPathTo)
   }
 
   size_t slashCount = 0;
-  for (size_t i = lastSlash; i < projectAbsWorkingDir.size(); ++i) {
+  for (i = lastSlash; i < projectAbsWorkingDir.size(); ++i) {
     if (projectAbsWorkingDir.at(i) == SEPARATOR)
       ++slashCount;
   }
 
   std::string relPath;
   const std::string upDir("../");
-  for (size_t i = 0; i < slashCount; ++i)
+  for (i = 0; i < slashCount; ++i)
     relPath.append(upDir);
 
   std::string pathTo = absPathTo.substr(lastSlash+1); // we left the heading slash

@@ -27,6 +27,7 @@
 #include "RAW.hh"
 #include "Error.hh"
 #include "Logger.hh"
+#include "string.h"
 
 const TTCN_EncDec::error_behavior_t
 TTCN_EncDec::default_error_behavior[TTCN_EncDec::ET_ALL] = {

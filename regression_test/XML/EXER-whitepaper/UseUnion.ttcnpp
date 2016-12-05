@@ -358,6 +358,7 @@ type union UUVal {
   variant (hs) "XSD:token";
   variant (f) "XSD:float";
   variant (size) "XSD:string";
+  variant (vt) "XSD:NCName"
   variant (cs) "XSD:normalizedString";
   variant (ucs) "XSD:Name";
 }
@@ -404,7 +405,7 @@ const universal charstring str_uu_rec :=
 "\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:string'>Small</UU>\n" &
 "\t<UU>1101</UU>\n" &
 "\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:boolean'>true</UU>\n" &
-"\t<UU>inconc</UU>\n" &
+"\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:NCName'>inconc</UU>\n" &
 "\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:float'>1.600000</UU>\n" &
 "\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:token'>164FA</UU>\n" &
 "\t<UU xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:hexBinary'>1BC6</UU>\n" &
@@ -452,7 +453,7 @@ DECLARE_EXER_ENCODERS(UUNoAttr, uu_no_attr);
 const UUNoAttr c_uu_na1 := { { hs := '117BA'H }, { size := Huge } };
 
 const universal charstring str_uu_na1 :=
-"<UUNoAttr xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' uuatr='117BA'>Huge</UUNoAttr>\n\n";
+"<UUNoAttr xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' uuatr='117BA' xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:string'>Huge</UUNoAttr>\n\n";
 
 const UUNoAttr c_uu_na2 := { { roi := { 1, 2, 3, 4 } }, { roi := { 5, 6, 7, 8 } } };
 

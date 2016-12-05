@@ -179,7 +179,7 @@ public:
   /** @brief Encode according to XML Encoding Rules.
    **/
   int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor,
-                 int indent, embed_values_enc_struct_t*) const;
+                 unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   /** @brief Decode according to XML Encoding Rules.
    **/
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,

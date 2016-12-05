@@ -971,7 +971,7 @@ static void fill_continuing_octets(int n_continuing, unsigned char *continuing_p
   }
 }
 
-ustring decode_utf8(const string & ostr, CharCoding::CharCodingType expected_coding)
+ustring decode_utf8(const string & ostr, CharCoding::CharCodingType /*expected_coding*/)
 {
   size_t length = ostr.size();
   if (0 == length) return ustring();

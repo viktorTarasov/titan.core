@@ -26,7 +26,6 @@
 
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
 #include "Error.hh"
 
 class INTEGER;
@@ -36,6 +35,9 @@ class CHARSTRING;
 class HEXSTRING_ELEMENT;
 
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 class HEXSTRING : public Base_Type {
 
@@ -143,7 +145,7 @@ public:
   int RAW_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, int, raw_order_t,
                  boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
   int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+    unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   

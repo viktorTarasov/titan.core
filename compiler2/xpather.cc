@@ -364,11 +364,11 @@ extern "C" const char* getLibFromProject(const char* projName)
   return NULL;
 }
 
-extern "C" void erase_libs() {
+extern "C" void erase_libs(void) {
   projGenHelper.cleanUp();
 }
 
-extern "C" void print_libs() {
+extern "C" void print_libs(void) {
   projGenHelper.print();
 }
 
@@ -1592,38 +1592,40 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   }
 
   if (!get_config_mode) {
-    struct string2_list* last_elem = required_configs;
-    //                        To ensure that the first elem is checked too if last_elem->next is null
-    while (last_elem && last_elem->str1 != NULL && last_elem->str2 != NULL) {
-      if (!strcmp(last_elem->str1, *p_project_name) && strcmp(last_elem->str2, actcfg)) {
-        { // check if the other configuration exists
-          expstring_t xpathActCfg= mprintf(
-            "/TITAN_Project_File_Information/Configurations/"
-              "Configuration[@name='%s']/text()", last_elem->str2);
-          XPathObject theConfigEx(run_xpath(xpathCtx, xpathActCfg));
-          Free(xpathActCfg);
+    {
+      struct string2_list* last_elem = required_configs;
+      //                        To ensure that the first elem is checked too if last_elem->next is null
+      while (last_elem && last_elem->str1 != NULL && last_elem->str2 != NULL) {
+        if (!strcmp(last_elem->str1, *p_project_name) && strcmp(last_elem->str2, actcfg)) {
+          { // check if the other configuration exists
+            expstring_t xpathActCfg= mprintf(
+              "/TITAN_Project_File_Information/Configurations/"
+                "Configuration[@name='%s']/text()", last_elem->str2);
+            XPathObject theConfigEx(run_xpath(xpathCtx, xpathActCfg));
+            Free(xpathActCfg);
 
-          xmlNodeSetPtr nodes = theConfigEx->nodesetval;
-          if (nodes == NULL) {
-            ERROR("The active build configuration named '%s' of project '%s' does not exist",
-              last_elem->str2, *p_project_name);
-            for (size_t i = 0; i < folders.size(); ++i) {
-              Free(const_cast<char*>(folders.get_nth_elem(i)));
+            xmlNodeSetPtr nodes = theConfigEx->nodesetval;
+            if (nodes == NULL) {
+              ERROR("The active build configuration named '%s' of project '%s' does not exist",
+                last_elem->str2, *p_project_name);
+              for (size_t i = 0; i < folders.size(); ++i) {
+                Free(const_cast<char*>(folders.get_nth_elem(i)));
+              }
+              folders.clear();
+              return TPD_FAILED;
             }
-            folders.clear();
-            return TPD_FAILED;
           }
+          ERROR("Required configuration is inconsistent or circular : Project '%s' cannot have 2 "
+                "different configuration '%s' and '%s'",
+                last_elem->str1, actcfg, last_elem->str2);
+          for (size_t i = 0; i < folders.size(); ++i) {
+            Free(const_cast<char*>(folders.get_nth_elem(i)));
+          }
+          folders.clear();
+          return TPD_FAILED;
         }
-        ERROR("Required configuration is inconsistent or circular : Project '%s' cannot have 2 "
-              "different configuration '%s' and '%s'",
-              last_elem->str1, actcfg, last_elem->str2);
-        for (size_t i = 0; i < folders.size(); ++i) {
-          Free(const_cast<char*>(folders.get_nth_elem(i)));
-        }
-        folders.clear();
-        return TPD_FAILED;
+        last_elem = last_elem->next;
       }
-      last_elem = last_elem->next;
     }
 
   // Collect path variables
@@ -2027,8 +2029,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
             " The available targets are: 'executable', 'library'", content);
       }
     }
-    ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
-    if (projDesc) projDesc->setLibrary(*p_Lflag);
+    ProjectDescriptor* projDescr = projGenHelper.getTargetOfProject(*p_project_name);
+    if (projDescr) projDescr->setLibrary(*p_Lflag);
   }
 
   // Executable name (don't care unless top-level invocation)
@@ -2526,8 +2528,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
         replacechar(&content);
         last_elem->str = content;
 
-        ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
-        if (projDesc) projDesc->addToLinkerLibs(last_elem->str);
+        ProjectDescriptor* projDescr = projGenHelper.getTargetOfProject(*p_project_name);
+        if (projDescr) projDescr->addToLinkerLibs(last_elem->str);
       }
     }
   }
@@ -2559,8 +2561,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
         replacechar(&content);
         last_elem->str = content;
 
-        ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
-        if (projDesc) projDesc->addToLibSearchPaths(last_elem->str);
+        ProjectDescriptor* projDescr = projGenHelper.getTargetOfProject(*p_project_name);
+        if (projDescr) projDescr->addToLibSearchPaths(last_elem->str);
       }
     }
   }
@@ -3136,7 +3138,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   folders.clear();
   
   if(free_name) {
-    Free((char*)p_tpd_name);
+    Free(const_cast<char*>(p_tpd_name));
   }
 
   excluded_files.clear();

@@ -3171,8 +3171,8 @@ error:
           continue;
         }
         for(size_t i2=i; i2<select_union.sus->get_nof_sus(); i2++) {
-          size_t size = select_union.sus->get_su_byIndex(i2)->get_ids().size();
-          for(size_t j2=j; j2<size; j2++) {
+          size_t size2 = select_union.sus->get_su_byIndex(i2)->get_ids().size();
+          for(size_t j2=j; j2<size2; j2++) {
             if (i == i2 && j == j2) continue;
             const Identifier *id2 = select_union.sus->get_su_byIndex(i2)->get_id_byIndex(j2);
             if (id->get_ttcnname() == id2->get_ttcnname()) {
@@ -9027,7 +9027,7 @@ error:
   }
 
   void ParamRedirect::generate_code(expression_struct_t *expr,
-                                    TemplateInstance* matched_ti, bool is_out)
+                                    TemplateInstance* matched_ti, bool /*is_out*/)
   {
     // AssignmentList is converted to VariableList during checking
     if (parredirtype != P_VAR) FATAL_ERROR("ParamRedirect::generate_code()");
@@ -11586,7 +11586,7 @@ error:
     ids.add(id);
   }
 
-  void SelectUnion::chk(Type *p_gov)
+  void SelectUnion::chk(Type */*p_gov*/)
   {
     Error_Context cntxt(this, "In select union statement");
     block->chk();

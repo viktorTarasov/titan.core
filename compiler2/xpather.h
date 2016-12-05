@@ -84,7 +84,7 @@ const char* findLibraryName(const char* libraryName, const char* projName);
 #ifdef __cplusplus
 extern "C"
 #endif
-void erase_libs();
+void erase_libs(void);
 
 #ifdef __cplusplus
 extern "C"
@@ -124,7 +124,7 @@ boolean hasSubProject(const char* projName);
 #ifdef __cplusplus
 extern "C"
 #endif
-void print_libs();
+void print_libs(void);
 
 #ifdef __cplusplus
 extern "C"

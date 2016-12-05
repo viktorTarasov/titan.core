@@ -69,7 +69,7 @@ boolean get_profiler_code_line(const char *p_file_name,
   char **p_function_name, int *p_line_no);
 
 /** Frees the database (must be called once, at the end of compilation) */
-void free_profiler_data();
+void free_profiler_data(void);
 
 #ifdef	__cplusplus
 }
