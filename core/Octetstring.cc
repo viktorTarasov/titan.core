@@ -34,6 +34,7 @@
 #include "BER.hh"
 #include "TEXT.hh"
 #include "Addfunc.hh"
+#include "Optional.hh"
 
 #include "../common/dbgnew.hh"
 #include <string.h>
@@ -630,7 +631,7 @@ void OCTETSTRING::encode(const TTCN_Typedescriptor_t& p_td,
   case TTCN_EncDec::CT_XER: {
     TTCN_EncDec_ErrorContext ec("While XER-encoding type '%s': ", p_td.name);
     unsigned XER_coding=va_arg(pvar, unsigned);
-    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0);
+    XER_encode(*p_td.xer, p_buf, XER_coding, 0, 0, 0);
     break;}
   case TTCN_EncDec::CT_JSON: {
     TTCN_EncDec_ErrorContext ec("While TEXT-encoding type '%s': ", p_td.name);
@@ -915,7 +916,7 @@ extern unsigned int xlate(cbyte* in, int phase, unsigned char* dest);
 extern const char cb64[];
 
 int OCTETSTRING::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int /*flavor2*/, int indent, embed_values_enc_struct_t*) const
 {
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error
@@ -1306,7 +1307,7 @@ int OCTETSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();
   if (use_default) {
     // No JSON data in the buffer -> use default value
-    value = (char*)p_td.json->default_value;
+    value = const_cast<char*>(p_td.json->default_value);
     value_len = strlen(value);
   } else {
     dec_len = p_tok.get_next_token(&token, &value, &value_len);

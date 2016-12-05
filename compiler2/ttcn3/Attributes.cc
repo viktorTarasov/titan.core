@@ -462,7 +462,7 @@ namespace Ttcn {
     return str;
   }
 
-  char* ErroneousDescriptor::generate_code_struct_str(char *str, char *& def, string genname, int field_index)
+  char* ErroneousDescriptor::generate_code_struct_str(char *str, char *& /*def*/, string genname, int field_index)
   {
     string genname_values_vec = genname + "_valsvec";
     string genname_embedded_vec = genname + "_embvec";

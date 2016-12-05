@@ -557,7 +557,7 @@ namespace Asn {
     json.put_next_token(JSON_TOKEN_OBJECT_END);
   }
   
-  void Module::generate_debugger_init(output_struct *output)
+  void Module::generate_debugger_init(output_struct */*output*/)
   {
     // no debugging in ASN.1 modules
   }

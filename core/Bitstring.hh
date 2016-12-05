@@ -27,9 +27,9 @@
 #include "Types.h"
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
 #include "RAW.hh"
 #include "BER.hh"
+#include "Error.hh"
 
 class INTEGER;
 class HEXSTRING;
@@ -38,6 +38,9 @@ class CHARSTRING;
 class BITSTRING_ELEMENT;
 
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 /** bitstring value class.
  * Refcounted copy-on-write implementation */
@@ -190,7 +193,7 @@ public:
   int RAW_decode(const TTCN_Typedescriptor_t& , TTCN_Buffer&, int, raw_order_t,
      boolean no_err=FALSE, int sel_field=-1, boolean first_call=TRUE);
 
-  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, int, embed_values_enc_struct_t*) const;
+  int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, unsigned int, int, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, unsigned int, embed_values_dec_struct_t*);
   
   /** Encodes accordingly to the JSON encoding rules.

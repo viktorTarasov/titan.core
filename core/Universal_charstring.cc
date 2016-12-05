@@ -1138,7 +1138,7 @@ void UNIVERSAL_CHARSTRING::encode(const TTCN_Typedescriptor_t& p_td,
     default: // nothing to do
       break;
     }
-    XER_encode(*p_td.xer,p_buf, XER_coding, 0, 0);
+    XER_encode(*p_td.xer,p_buf, XER_coding, 0, 0, 0);
     p_buf.put_c('\n');
     break; }
   case TTCN_EncDec::CT_JSON: {
@@ -1778,7 +1778,7 @@ boolean UNIVERSAL_CHARSTRING::BER_decode_TLV
 extern void xml_escape(const unsigned int c, TTCN_Buffer& p_buf);
 
 int UNIVERSAL_CHARSTRING::XER_encode(const XERdescriptor_t& p_td,
-    TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const
+    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int /*flavor2*/, int indent, embed_values_enc_struct_t*) const
 {
   if(!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,

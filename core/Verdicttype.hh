@@ -23,9 +23,11 @@
 
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
 
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 /// verdicttype value class
 
@@ -96,7 +98,7 @@ public:
               TTCN_EncDec::coding_t p_coding, ...);
 
   int XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+    unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   

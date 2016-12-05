@@ -22,10 +22,12 @@
 #include "Types.h"
 #include "Basetype.hh"
 #include "Template.hh"
-#include "Optional.hh"
 
 class Text_Buf;
 class Module_Param;
+
+template<typename T>
+class OPTIONAL;
 
 class Default_Base {
   friend class TTCN_Default;

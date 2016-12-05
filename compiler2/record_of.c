@@ -1046,13 +1046,13 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
   if (xer_needed) { /* XERSTUFF encoder codegen for record-of, RT1 */
     def = mputstr(def,
-      "char **collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const;\n");
+      "char **collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor = 0) const;\n");
 
     /* Write the body of the XER encoder/decoder functions. The declaration
      * is written by def_encdec() in encdec.c */
     src = mputprintf(src,
       "boolean %s::can_start(const char *name, const char *uri, "
-      "XERdescriptor_t const& xd, unsigned int flavor) {\n"
+      "XERdescriptor_t const& xd, unsigned int flavor, unsigned int flavor2) {\n"
       "  boolean e_xer = is_exer(flavor);\n"
       "  if ((!e_xer || !(xd.xer_bits & UNTAGGED)) && !(flavor & XER_RECOF)) return "
       "check_name(name, xd, e_xer) && (!e_xer || check_namespace(uri, xd));\n"
@@ -1067,7 +1067,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       src = mputstr(src, "{\n");
       for (f = 0; f < sdef->nFollowers; ++f) {
         src = mputprintf(src,
-          "    if (%s::can_start(name, uri, %s_xer_, flavor)) return FALSE;\n"
+          "    if (%s::can_start(name, uri, %s_xer_, flavor, flavor2)) return FALSE;\n"
           , sdef->followers[f].type
           , sdef->followers[f].typegen
           );
@@ -1079,13 +1079,13 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     else src = mputstr(src, "return TRUE;\n");
 
     src = mputprintf(src,
-      "  return %s::can_start(name, uri, *xd.oftype_descr, flavor | XER_RECOF);\n"
+      "  return %s::can_start(name, uri, *xd.oftype_descr, flavor | XER_RECOF, flavor2);\n"
       "}\n\n"
       , sdef->type
       );
 
     src = mputprintf(src,
-      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const {\n"
+      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int) const {\n"
       "  size_t num_collected;\n"
       "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
       /* The above may throw but then nothing was allocated. */
@@ -1113,7 +1113,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
     src=mputprintf(src,
       "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-      "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t* emb_val) const\n{\n"
+      "unsigned int p_flavor, unsigned int p_flavor2, int p_indent, embed_values_enc_struct_t* emb_val) const\n{\n"
       "  if (val_ptr == 0) TTCN_error(\"Attempt to XER-encode an unbound record of\");\n" /* TODO type name */
       "  int encoded_length=(int)p_buf.get_len();\n"
       "  boolean e_xer = is_exer(p_flavor);\n"
@@ -1209,7 +1209,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         "          p_buf.put_s(ns_len, (const unsigned char*)ns);\n"
 
         "          UNIVERSAL_CHARSTRING before(sp_at, (const universal_char*)(*val_ptr->value_elements[i]));\n"
-        "          before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent, 0);\n"
+        "          before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_flavor2, p_indent, 0);\n"
         // Ensure the namespace abides to its restrictions
         "          if (p_td.xer_bits & (ANY_FROM | ANY_EXCEPT)) {\n"
         "            TTCN_Buffer ns_buf;\n"
@@ -1237,7 +1237,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         "        }\n"
 
         "        UNIVERSAL_CHARSTRING after(len - j, (const universal_char*)(*val_ptr->value_elements[i]) + j);\n"
-        "        after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent, 0);\n"
+        "        after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_flavor2, p_indent, 0);\n"
         // Put this attribute in a dummy element and walk through it to check its validity
         "        TTCN_Buffer check_buf;\n"
         "        check_buf.put_s(2, (const unsigned char*)\"<a\");\n"
@@ -1300,17 +1300,17 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "          emb_val->embval_array_reg->size_of() : emb_val->embval_array_opt->size_of())) {\n"
       "        if (0 != emb_val->embval_array_reg) {\n"
       "          (*emb_val->embval_array_reg)[emb_val->embval_index].XER_encode(\n"
-      "            UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+      "            UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_flavor2, p_indent+1, 0);\n"
       "        }\n"
       "        else {\n"
       "          (*emb_val->embval_array_opt)[emb_val->embval_index].XER_encode(\n"
-      "            UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+      "            UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_flavor2, p_indent+1, 0);\n"
       "        }\n"
       "        ++emb_val->embval_index;\n"
       "      }\n"
       "      ec_1.set_msg(\"%d: \", i);\n"
       "      if (e_xer && (p_td.xer_bits & XER_LIST) && i>0) p_buf.put_c(' ');\n"
-      "      (*this)[i].XER_encode(*p_td.oftype_descr, p_buf, p_flavor, p_indent+own_tag, emb_val);\n"
+      "      (*this)[i].XER_encode(*p_td.oftype_descr, p_buf, p_flavor, p_flavor2, p_indent+own_tag, emb_val);\n"
       "    }\n"
       "    if (indenting && !is_exerlist(p_flavor)) {\n"
     );
@@ -1486,7 +1486,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       /* An untagged record-of ends if it encounters an element with a name
        * that doesn't match its component */
       "            if (!own_tag && !can_start((const char*)p_reader.LocalName(), "
-      "(const char*)p_reader.NamespaceUri(), p_td, p_flavor)) {\n"
+      "(const char*)p_reader.NamespaceUri(), p_td, p_flavor, p_flavor2)) {\n"
       "              for (; rd_ok == 1 && p_reader.Depth() > xml_depth; rd_ok = p_reader.Read()) ;\n"
       "              break;\n"
       "            }\n"
@@ -2514,13 +2514,13 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
 
   if (xer_needed) { /* XERSTUFF encoder codegen for record-of, RT1 */
     def = mputstr(def,
-      "char **collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const;\n");
+      "char **collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor = 0) const;\n");
 
     /* Write the body of the XER encoder/decoder functions. The declaration
      * is written by def_encdec() in encdec.c */
     src = mputprintf(src,
       "boolean %s::can_start(const char *name, const char *uri, "
-      "XERdescriptor_t const& xd, unsigned int flavor) {\n"
+      "XERdescriptor_t const& xd, unsigned int flavor, unsigned int flavor2) {\n"
       "  boolean e_xer = is_exer(flavor);\n"
       "  if ((!e_xer || !(xd.xer_bits & UNTAGGED)) && !(flavor & XER_RECOF)) return "
       "check_name(name, xd, e_xer) && (!e_xer || check_namespace(uri, xd));\n"
@@ -2535,7 +2535,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       src = mputstr(src, "{\n");
       for (f = 0; f < sdef->nFollowers; ++f) {
         src = mputprintf(src,
-          "    if (%s::can_start(name, uri, %s_xer_, flavor)) return FALSE;\n"
+          "    if (%s::can_start(name, uri, %s_xer_, flavor, flavor2)) return FALSE;\n"
           , sdef->followers[f].type
           , sdef->followers[f].typegen
           );
@@ -2547,13 +2547,13 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
     else src = mputstr(src, "return TRUE;\n");
 
     src = mputprintf(src,
-      "  return %s::can_start(name, uri, *xd.oftype_descr, flavor | XER_RECOF);\n"
+      "  return %s::can_start(name, uri, *xd.oftype_descr, flavor | XER_RECOF, flavor2);\n"
       "}\n\n"
       , sdef->type
       );
 
     src = mputprintf(src,
-      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns) const {\n"
+      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int) const {\n"
       "  size_t num_collected;\n"
       "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
       /* The above may throw but then nothing was allocated. */
@@ -2581,7 +2581,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
 
     src=mputprintf(src,
       "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, "
-      "unsigned int p_flavor, int p_indent, embed_values_enc_struct_t* emb_val) const\n{\n"
+      "unsigned int p_flavor, unsigned int p_flavor2, int p_indent, embed_values_enc_struct_t* emb_val) const\n{\n"
       "  if (n_elements==-1) TTCN_error(\"Attempt to XER-encode an unbound record of\");\n" /* TODO type name */
       "  int encoded_length=(int)p_buf.get_len();\n"
       "  boolean e_xer = is_exer(p_flavor);\n"
@@ -2672,7 +2672,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
         "          p_buf.put_s(ns_len, (const unsigned char*)ns);\n"
 
         "          UNIVERSAL_CHARSTRING before(sp_at, (const universal_char*)(value_elements[i]));\n"
-        "          before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent, 0);\n"
+        "          before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_flavor2, p_indent, 0);\n"
         // Ensure the namespace abides to its restrictions
         "          if (p_td.xer_bits & (ANY_FROM | ANY_EXCEPT)) {\n"
         "            TTCN_Buffer ns_buf;\n"
@@ -2700,12 +2700,12 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
         "        }\n"
 
         "        UNIVERSAL_CHARSTRING after(len - j, (const universal_char*)(value_elements[i]) + j);\n"
-        "        after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_indent, 0);\n"
+        "        after.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_flavor2, p_indent, 0);\n"
         // Put this attribute in a dummy element and walk through it to check its validity
         "        TTCN_Buffer check_buf;\n"
-        "        check_buf.put_s(2, (unsigned char*)\"<a\");\n"
+        "        check_buf.put_s(2, (const unsigned char*)\"<a\");\n"
         "        check_buf.put_s(p_buf.get_len() - buf_start, p_buf.get_data() + buf_start);\n"
-        "        check_buf.put_s(2, (unsigned char*)\"/>\");"
+        "        check_buf.put_s(2, (const unsigned char*)\"/>\");"
         "        XmlReaderWrap checker(check_buf);\n"
         "        while (1 == checker.Read()) ;\n"
         "      }\n"
@@ -2763,17 +2763,17 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "          emb_val->embval_array_reg->size_of() : emb_val->embval_array_opt->size_of())) {\n"
       "        if (0 != emb_val->embval_array_reg) {\n"
       "          (*emb_val->embval_array_reg)[emb_val->embval_index].XER_encode(\n"
-      "            UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+      "            UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_flavor2, p_indent+1, 0);\n"
       "        }\n"
       "        else {\n"
       "          (*emb_val->embval_array_opt)[emb_val->embval_index].XER_encode(\n"
-      "            UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_indent+1, 0);\n"
+      "            UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | EMBED_VALUES, p_flavor2, p_indent+1, 0);\n"
       "        }\n"
       "        ++emb_val->embval_index;\n"
       "      }\n"
       "      ec_1.set_msg(\"%d: \", i);\n"
       "      if (e_xer && (p_td.xer_bits & XER_LIST) && i>0) p_buf.put_c(' ');\n"
-      "      value_elements[i].XER_encode(*p_td.oftype_descr, p_buf, p_flavor, p_indent+own_tag, emb_val);\n"
+      "      value_elements[i].XER_encode(*p_td.oftype_descr, p_buf, p_flavor, p_flavor2, p_indent+own_tag, emb_val);\n"
       "    }\n"
       "    if (indenting && !is_exerlist(p_flavor)) {\n"
     );
@@ -2943,7 +2943,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       /* An untagged record-of ends if it encounters an element with a name
        * that doesn't match its component */
       "            if (!own_tag && !can_start((const char*)p_reader.LocalName(), "
-      "(const char*)p_reader.NamespaceUri(), p_td, p_flavor)) {\n"
+      "(const char*)p_reader.NamespaceUri(), p_td, p_flavor, p_flavor2)) {\n"
       "              for (; rd_ok == 1 && p_reader.Depth() > xml_depth; rd_ok = p_reader.Read()) ;\n"
       "              break;\n"
       "            }\n"
@@ -3271,20 +3271,20 @@ void defRecordOfClass2(const struct_of_def *sdef, output_struct *output)
   if (xer_needed) {
     def = mputprintf(def, "boolean isXerAttribute() const { return %s; }\n"
       "virtual boolean can_start_v(const char * name, const char *uri, "
-      "XERdescriptor_t const& xd, unsigned int);\n"
+      "XERdescriptor_t const& xd, unsigned int, unsigned int flavor2);\n"
       "static  boolean can_start  (const char * name, const char *uri, "
-      "XERdescriptor_t const& xd, unsigned int);\n",
+      "XERdescriptor_t const& xd, unsigned int, unsigned int flavor2);\n",
       sdef->xerAttribute ? "TRUE" : "FALSE");
     src = mputprintf(src,
       /* The virtual can_start_v hands off to the static can_start.
        * We must make a virtual call in Record_Of_Type::XER_decode because
        * we don't know the actual type (derived from Record_Of_Type) */
       "boolean %s::can_start_v(const char *name, const char *uri, "
-      "XERdescriptor_t const& xd, unsigned int flavor) {\n"
-      "  return can_start(name, uri, xd, flavor);\n"
+      "XERdescriptor_t const& xd, unsigned int flavor, unsigned int flavor2) {\n"
+      "  return can_start(name, uri, xd, flavor, flavor2);\n"
       "}\n\n"
       "boolean %s::can_start(const char *name, const char *uri, "
-      "XERdescriptor_t const& xd, unsigned int flavor) {\n"
+      "XERdescriptor_t const& xd, unsigned int flavor, unsigned int flavor2) {\n"
       "  boolean e_xer = is_exer(flavor);\n"
       /* if EXER and UNTAGGED, it can begin with the tag of the element,
        * otherwise it must be the tag of the type itself,
@@ -3304,7 +3304,7 @@ void defRecordOfClass2(const struct_of_def *sdef, output_struct *output)
       src = mputstr(src, "{\n");
       for (f = 0; f < sdef->nFollowers; ++f) {
         src = mputprintf(src,
-          "    if (%s::can_start(name, uri, %s_xer_, flavor)) return FALSE;\n"
+          "    if (%s::can_start(name, uri, %s_xer_, flavor, flavor2)) return FALSE;\n"
           , sdef->followers[f].type
           , sdef->followers[f].typegen
           );
@@ -3317,7 +3317,7 @@ void defRecordOfClass2(const struct_of_def *sdef, output_struct *output)
       src = mputstr(src, "return TRUE;\n");
     }
     src = mputprintf(src,
-      "  return %s::can_start(name, uri, *xd.oftype_descr, flavor | XER_RECOF);\n"
+      "  return %s::can_start(name, uri, *xd.oftype_descr, flavor | XER_RECOF, flavor2);\n"
       "}\n\n", sdef->type);
     def = mputprintf(def, "boolean isXmlValueList() const { return %s; }\n\n",
       sdef->xmlValueList ? "TRUE" : "FALSE");
@@ -3326,7 +3326,7 @@ void defRecordOfClass2(const struct_of_def *sdef, output_struct *output)
     /* The call in XER_decode is still there, can_start_v must exist. */
     def = mputstr(def,
       "virtual boolean can_start_v(const char *, const char *, "
-      "XERdescriptor_t const&, unsigned int) { return FALSE; }\n");
+      "XERdescriptor_t const&, unsigned int, unsigned int) { return FALSE; }\n");
   }
 
   /* end of class */

@@ -21,10 +21,11 @@
 #ifndef OBJID_HH
 #define OBJID_HH
 
-#include "Optional.hh"
-// the following are pulled in by Optional.hh:
-//#include "Basetype.hh"
-//#include "Template.hh"
+#include "Basetype.hh"
+#include "Template.hh"
+
+template<typename T>
+class OPTIONAL;
 
 class Text_Buf;
 class Module_Param;
@@ -103,7 +104,7 @@ public:
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
                          const ASN_BER_TLV_t& p_tlv, unsigned L_form);
   int XER_encode(const XERdescriptor_t& p_td,
-                 TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+                 TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                  unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   

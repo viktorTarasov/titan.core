@@ -90,6 +90,7 @@ typedef struct {
   /** true if the field is a record-of or set-of with optimized memory allocation */
   boolean optimizedMemAlloc;
   XSD_types xsd_type;
+  boolean xerUseUnion;
 } struct_field;
 
 /** Structure (record, set, union, anytype) descriptor for code generation */

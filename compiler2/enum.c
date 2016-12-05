@@ -655,7 +655,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
      */
     src = mputprintf(src,
       "boolean %s::can_start(const char *name, const char *uri, "
-      "const XERdescriptor_t& xd, unsigned int flavor) {\n"
+      "const XERdescriptor_t& xd, unsigned int flavor, unsigned int) {\n"
       "  boolean exer = is_exer(flavor);\n"
       "  return check_name(name, xd, exer) && (!exer || check_namespace(uri, xd));\n"
       "}\n\n"
@@ -664,7 +664,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
 
     src = mputprintf(src,
       "int %s::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,"
-      " unsigned int p_flavor, int p_indent, embed_values_enc_struct_t*) const\n"
+      " unsigned int p_flavor, unsigned int, int p_indent, embed_values_enc_struct_t*) const\n"
       "{\n"
       "  int encoded_length=(int)p_buf.get_len();\n"
       "  const boolean e_xer = is_exer(p_flavor);\n"
@@ -814,7 +814,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "  boolean use_default = p_td.json->default_value && 0 == p_tok.get_buffer_length();\n"
       "  if (use_default) {\n"
       // No JSON data in the buffer -> use default value
-      "    value = (char*)p_td.json->default_value;\n"
+      "    value = const_cast<char*>(p_td.json->default_value);\n"
       "    value_len = strlen(value);\n"
       "  } else {\n"
       "    dec_len = p_tok.get_next_token(&token, &value, &value_len);\n"

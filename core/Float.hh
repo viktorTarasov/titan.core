@@ -150,7 +150,7 @@ public:
                  int sel_field=-1, boolean first_call=TRUE);
 
   int XER_encode(const XERdescriptor_t& p_td,
-                 TTCN_Buffer& p_buf, unsigned int flavor, int indent, embed_values_enc_struct_t*) const;
+                 TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                  unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
   
