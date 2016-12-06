@@ -1085,16 +1085,16 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       );
 
     src = mputprintf(src,
-      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int) const {\n"
+      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor) const {\n"
       "  size_t num_collected;\n"
-      "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
+      "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns, flavor);\n"
       /* The above may throw but then nothing was allocated. */
       "  if (val_ptr) try {\n"
       "    char **new_ns;\n"
       "    size_t num_new;\n"
       "    for (int i = 0; i < val_ptr->n_elements; ++i) {\n"
       "      boolean def_ns_1 = FALSE;\n"
-      "      new_ns = (*this)[i].collect_ns(*p_td.oftype_descr, num_new, def_ns_1);\n"
+      "      new_ns = (*this)[i].collect_ns(*p_td.oftype_descr, num_new, def_ns_1, flavor);\n"
       "      merge_ns(collected_ns, num_collected, new_ns, num_new);\n"
       "      def_ns = def_ns || def_ns_1;\n" /* alas, no ||= */
       "    }\n"
@@ -1150,7 +1150,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "        size_t num_collected = 0;\n"
       "        char **collected_ns = NULL;\n"
       "        boolean def_ns = FALSE;\n"
-      "        collected_ns = collect_ns(p_td, num_collected, def_ns);\n"
+      "        collected_ns = collect_ns(p_td, num_collected, def_ns, p_flavor2);\n"
       "        for (size_t cur_coll = 0; cur_coll < num_collected; ++cur_coll) {\n"
       "          p_buf.put_s(strlen(collected_ns[cur_coll]), (cbyte*)collected_ns[cur_coll]);\n"
       "          Free(collected_ns[cur_coll]);\n"
@@ -1273,7 +1273,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "        size_t num_collected = 0;\n"
       "        char **collected_ns = NULL;\n"
       "        boolean def_ns = FALSE;\n"
-      "        collected_ns = collect_ns(p_td, num_collected, def_ns);\n"
+      "        collected_ns = collect_ns(p_td, num_collected, def_ns, p_flavor2);\n"
       "        for (size_t cur_coll = 0; cur_coll < num_collected; ++cur_coll) {\n"
       "          p_buf.put_s(strlen(collected_ns[cur_coll]), (cbyte*)collected_ns[cur_coll]);\n"
       "          Free(collected_ns[cur_coll]);\n"
@@ -2553,16 +2553,16 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       );
 
     src = mputprintf(src,
-      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int) const {\n"
+      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor) const {\n"
       "  size_t num_collected;\n"
-      "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
+      "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns, flavor);\n"
       /* The above may throw but then nothing was allocated. */
       "  if (n_elements!=-1) try {\n"
       "    char **new_ns;\n"
       "    size_t num_new;\n"
       "    for (int i = 0; i < n_elements; ++i) {\n"
       "      boolean def_ns_1 = FALSE;\n"
-      "      new_ns = value_elements[i].collect_ns(*p_td.oftype_descr, num_new, def_ns_1);\n"
+      "      new_ns = value_elements[i].collect_ns(*p_td.oftype_descr, num_new, def_ns_1, flavor);\n"
       "      merge_ns(collected_ns, num_collected, new_ns, num_new);\n"
       "      def_ns = def_ns || def_ns_1;\n" /* alas, no ||= */
       "    }\n"
@@ -2618,7 +2618,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "        size_t num_collected = 0;\n"
       "        char **collected_ns = NULL;\n"
       "        boolean def_ns = FALSE;\n"
-      "        collected_ns = collect_ns(p_td, num_collected, def_ns);\n"
+      "        collected_ns = collect_ns(p_td, num_collected, def_ns, p_flavor2);\n"
       "        for (size_t cur_coll = 0; cur_coll < num_collected; ++cur_coll) {\n"
       "          p_buf.put_s(strlen(collected_ns[cur_coll]), (cbyte*)collected_ns[cur_coll]);\n"
       "          Free(collected_ns[cur_coll]);\n"
@@ -2736,7 +2736,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "        size_t num_collected = 0;\n"
       "        char **collected_ns = NULL;\n"
       "        boolean def_ns = FALSE;\n"
-      "        collected_ns = collect_ns(p_td, num_collected, def_ns);\n"
+      "        collected_ns = collect_ns(p_td, num_collected, def_ns, p_flavor2);\n"
       "        for (size_t cur_coll = 0; cur_coll < num_collected; ++cur_coll) {\n"
       "          p_buf.put_s(strlen(collected_ns[cur_coll]), (cbyte*)collected_ns[cur_coll]);\n"
       "          Free(collected_ns[cur_coll]);\n"

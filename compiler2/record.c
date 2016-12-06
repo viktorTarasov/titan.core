@@ -1846,9 +1846,9 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     "char **collect_ns(const XERdescriptor_t& p_td, size_t& num_ns, bool& def_ns, unsigned int flavor = 0) const;\n");
 
   src = mputprintf(src,
-    "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num_ns, bool& def_ns, unsigned int) const {\n"
+    "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num_ns, bool& def_ns, unsigned int flavor) const {\n"
     "  size_t num_collected;\n"
-    "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
+    "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns, flavor);\n"
     /* The above might throw but then nothing was allocated. */
     , name);
 
@@ -1860,7 +1860,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
     "  boolean def_ns_1 = FALSE;\n");
   for (i = start_at; i < sdef->nElements; ++i) {
     src = mputprintf(src,
-      "  new_ns = field_%s.collect_ns(%s_xer_, num_new, def_ns);\n"
+      "  new_ns = field_%s.collect_ns(%s_xer_, num_new, def_ns, flavor);\n"
       "  merge_ns(collected_ns, num_collected, new_ns, num_new);\n"
       "  def_ns = def_ns || def_ns_1;\n" /* alas, no ||= */
       , sdef->elements[i].name, sdef->elements[i].typegen
@@ -1939,12 +1939,12 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       "  boolean def_ns = FALSE;\n"
       "  if (e_xer) {\n"
       "    if (p_indent == 0) {\n" /* top-level */
-      "      collected_ns = collect_ns(p_td, num_collected, def_ns);\n" /* our own ns */
+      "      collected_ns = collect_ns(p_td, num_collected, def_ns, p_flavor2);\n" /* our own ns */
       "    }\n"
       "    else if ((p_flavor & DEF_NS_SQUASHED) && p_td.my_module && p_td.ns_index != -1){\n"
       "      const namespace_t * ns = p_td.my_module->get_ns((size_t)p_td.ns_index);\n"
       "      if (*ns->px == '\\0') {\n"
-      "        collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
+      "        collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns, p_flavor2);\n"
       "      }\n"
       "    }\n"
       "  }\n"

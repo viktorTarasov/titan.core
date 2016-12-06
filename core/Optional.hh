@@ -1129,14 +1129,14 @@ finished:
 }
 
 template<typename T_type>
-char ** OPTIONAL<T_type>::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int /*flavor*/) const {
+char ** OPTIONAL<T_type>::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor) const {
 #ifdef TITAN_RUNTIME_2
   switch (get_selection()) {
 #else
   switch (optional_selection) {
 #endif
   case OPTIONAL_PRESENT:
-    return optional_value->collect_ns(p_td, num, def_ns);
+    return optional_value->collect_ns(p_td, num, def_ns, flavor);
   case OPTIONAL_OMIT:
     def_ns = FALSE;
     num = 0;

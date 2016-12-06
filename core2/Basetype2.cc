@@ -1775,12 +1775,12 @@ void Record_Of_Type::decode(const TTCN_Typedescriptor_t& p_td,
   va_end(pvar);
 }
 
-char **Record_Of_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int /*flavor*/) const
+char **Record_Of_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor) const
 {
   size_t num_collected = 0;
   // First, our own namespace. Sets num_collected to 0 or 1.
   // If it throws, nothing was allocated.
-  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);
+  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns, flavor);
 
   // Then the embedded type
   try {
@@ -1788,7 +1788,7 @@ char **Record_Of_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool
     if (val_ptr) for (int i = 0; i < get_nof_elements(); ++i) {
       size_t num_new = 0;
       char **new_namespaces = get_at(i)->collect_ns(
-        *p_td.oftype_descr, num_new, def_ns_1);
+        *p_td.oftype_descr, num_new, def_ns_1, flavor);
       merge_ns(collected_ns, num_collected, new_namespaces, num_new);
       def_ns = def_ns || def_ns_1; // alas, no ||=
     }
@@ -4057,7 +4057,7 @@ const XERdescriptor_t* Record_Type::xer_descr(int /*field_index*/) const
   return NULL;
 }
 
-char ** Record_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int /*flavor*/) const
+char ** Record_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor) const
 {
   const int field_cnt = get_count();
   // The USE-ORDER member is first, unless preempted by EMBED-VALUES
@@ -4068,7 +4068,7 @@ char ** Record_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& 
   size_t num_collected = 0;
   // First, our own namespace. Sets num_collected to 0 or 1.
   // If it throws, nothing was allocated.
-  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);
+  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns, flavor);
 
   try{
     // If the nil attribute will be written, add the control namespace
@@ -4088,7 +4088,7 @@ char ** Record_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& 
     for (int a = start_at; a < field_cnt; ++a) {
       size_t num_new = 0;
       boolean def_ns_1 = FALSE;
-      char **new_namespaces = get_at(a)->collect_ns(*xer_descr(a), num_new, def_ns_1);
+      char **new_namespaces = get_at(a)->collect_ns(*xer_descr(a), num_new, def_ns_1, flavor);
       merge_ns(collected_ns, num_collected, new_namespaces, num_new);
       def_ns = def_ns || def_ns_1;
       // merge_ns freed new_namespaces
@@ -4165,14 +4165,14 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   boolean def_ns = FALSE;
   if (exer) {
     if (indent == 0) { // top-level type
-      collected_ns = collect_ns(p_td, num_collected, def_ns);
+      collected_ns = collect_ns(p_td, num_collected, def_ns, flavor2);
     }
     else if ((flavor & DEF_NS_SQUASHED) && p_td.my_module && p_td.ns_index != -1) {
       const namespace_t * ns = p_td.my_module->get_ns((size_t)p_td.ns_index);
       // The default namespace has been squashed.
       // If we are in the default namespace, restore it.
       if (*ns->px == '\0') {
-        collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);
+        collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns, flavor2);
       }
     }
   }
@@ -4609,14 +4609,14 @@ int Record_Type::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
   boolean def_ns = FALSE;
   if (exer) {
     if (indent == 0) { // top-level type
-      collected_ns = collect_ns(p_td, num_collected, def_ns);
+      collected_ns = collect_ns(p_td, num_collected, def_ns, flavor2);
     }
     else if ((flavor & DEF_NS_SQUASHED) && p_td.my_module && p_td.ns_index != -1) {
       const namespace_t * ns = p_td.my_module->get_ns((size_t)p_td.ns_index);
       // The default namespace has been squashed.
       // If we are in the default namespace, restore it.
       if (*ns->px == '\0') {
-        collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);
+        collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns, flavor2);
       }
     }
   }
@@ -5319,15 +5319,12 @@ int Record_Type::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
           break;
         } // type has USE-NIL
         
-        if (parent_tag) {
           const char *prefix = (const char*)reader.Prefix();
-          // prefix may be NULL, control_ns->px is never NULL or empty
-          if (prefix && !strcmp(prefix, control_ns->px)
-            && !strcmp((const char*)reader.LocalName(), "type")) {
+          // prefix may be NULL
+          if (prefix && !strcmp((const char*)reader.LocalName(), "type")) {
             continue; // xsi:type has been processed by the parent
           }
-        }
-
+        
         if (aa_index >= 0) {
           ec_1.set_msg("%s': ", fld_name(aa_index));
           TTCN_EncDec_ErrorContext ec_2("Attribute %d: ", num_aa);
