@@ -178,8 +178,9 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
 
   /* set_parameters function (used for param redirect in getcall) */
   if (num_in > 0) {
-    def = mputprintf(def, "virtual void set_parameters(const %s_call& call_par) "
-      "const;\n", name);
+    /* empty virtual destructor (for the virtual set_parameters function) */
+    def = mputprintf(def, "virtual ~%s_call_redirect() { }\n"
+      "virtual void set_parameters(const %s_call& call_par) const;\n", name, name);
     src = mputprintf(src, "void %s_call_redirect::set_parameters(const "
       "%s_call& call_par) const\n"
       "{\n", name, name);
@@ -382,15 +383,18 @@ void defSignatureClasses(const signature_def *sdef, output_struct *output)
       def = mputstr(def, " { }\n");
     }
     /* otherwise constructor is not needed */
-    
-    if (use_runtime_2 && sdef->return_type != NULL) {
-      /* destructor (only the return redirect object needs to be deleted) */
-      def = mputprintf(def, "~%s_reply_redirect() { "
-        "if (ret_val_redir != NULL) delete ret_val_redir; }\n", name);
-    }
 
     /* set_parameters function (used for param redirect in getreply) */
     if (num_out > 0 || sdef->return_type != NULL) {
+      if (use_runtime_2 && sdef->return_type != NULL) {
+        /* destructor (only the return redirect object needs to be deleted) */
+        def = mputprintf(def, "virtual ~%s_reply_redirect() { "
+          "if (ret_val_redir != NULL) delete ret_val_redir; }\n", name);
+      }
+      else {
+        /* empty virtual destructor (for the virtual set_parameters function) */
+        def = mputprintf(def, "virtual ~%s_reply_redirect() { }\n", name);
+      }
       /* if there are "out" or "inout" parameters or a "return" ... */
       def = mputprintf(def, "virtual void set_parameters(const %s_reply& reply_par) "
         "const;\n", name);
