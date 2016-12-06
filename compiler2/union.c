@@ -1350,9 +1350,9 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     src = mputstr(src, "  return FALSE;\n}\n\n");
 
     src = mputprintf(src,
-      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, boolean& def_ns, unsigned int%s) const {\n"
+      "char ** %s::collect_ns(const XERdescriptor_t& p_td, size_t& num, boolean& def_ns, unsigned int flavor) const {\n"
       "  size_t num_collected;\n"
-      "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns);\n"
+      "  char **collected_ns = Base_Type::collect_ns(p_td, num_collected, def_ns, flavor);\n"
       /* Two-level new memory allocated */
       "  char **new_ns;\n"
       "  size_t num_new;\n"
@@ -1361,7 +1361,6 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "    boolean def_ns_1 = FALSE;\n"
       "    switch (union_selection) {\n"
       , name
-      , sdef->nElements > 0 ? " flavor" : ""
       );
     for (i = 0; i < sdef->nElements; i++) {
       src = mputprintf(src,
