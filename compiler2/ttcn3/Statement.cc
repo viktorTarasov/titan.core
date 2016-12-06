@@ -5028,7 +5028,7 @@ error:
               // make sure all possible indices are allowed by the element 
               // type's subtype
               for (size_t i = 0; i < nof_dims; ++i) {
-                Error_Context cntxt(p_index_ref, "In dimension #%lu",
+                Error_Context context(p_index_ref, "In dimension #%lu",
                   (unsigned long)(i + 1));
                 ArrayDimension* dim = p_array_dims->get_dim_byIndex(i);
                 for (size_t j = 0; j < dim->get_size(); ++j) {

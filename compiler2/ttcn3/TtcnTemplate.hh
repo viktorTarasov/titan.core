@@ -480,6 +480,8 @@ namespace Ttcn {
 
     char *generate_code_init_all_from(char *str, const char *name);
     char *generate_code_init_all_from_list(char *str, const char *name);
+    
+    string generate_code_str_pattern(bool cast_needed, string& preamble);
 
     /** Helper function for \a generate_code_expr() and get_single_expr().
      * It handles the invoke operation. */

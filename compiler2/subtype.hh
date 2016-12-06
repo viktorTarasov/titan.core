@@ -257,6 +257,8 @@ public:
   SubtypeConstraint* get_extension() { return extension; }
 
   string to_string() const;
+  
+  vector<SubTypeParse> * get_subtype_parsed() const;
 
   /** Set restrictions.
    *

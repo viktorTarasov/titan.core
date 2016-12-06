@@ -36,12 +36,14 @@ namespace Ttcn {
       PSE_REF,
       PSE_REFDSET
     } kind;
-    union {
-      string *str;
-      Ttcn::Reference *ref;
-    };
+    string *str;
+    Ttcn::Reference *ref;
+    Type * t; // The type of the reference in the case of PSE_REFDSET
+    boolean with_N; // If the reference was given as \N{ref} in the pattern
+    boolean is_charstring; // \N{charstring}
+    boolean is_universal_charstring; // \N{universal charstring}
     ps_elem_t(kind_t p_kind, const string& p_str);
-    ps_elem_t(kind_t p_kind, Ttcn::Reference *p_ref);
+    ps_elem_t(kind_t p_kind, Ttcn::Reference *p_ref, boolean N);
     ps_elem_t(const ps_elem_t& p);
     ~ps_elem_t();
     ps_elem_t* clone() const;
@@ -52,13 +54,15 @@ namespace Ttcn {
   };
 
   PatternString::ps_elem_t::ps_elem_t(kind_t p_kind, const string& p_str)
-    : kind(p_kind)
+    : kind(p_kind), ref(NULL), t(NULL), with_N(FALSE), is_charstring(FALSE),
+    is_universal_charstring(FALSE)
   {
     str = new string(p_str);
   }
 
-  PatternString::ps_elem_t::ps_elem_t(kind_t p_kind, Ttcn::Reference *p_ref)
-    : kind(p_kind)
+  PatternString::ps_elem_t::ps_elem_t(kind_t p_kind, Ttcn::Reference *p_ref, boolean N)
+    : kind(p_kind), str(NULL), with_N(N), is_charstring(FALSE),
+    is_universal_charstring(FALSE)
   {
     if (!p_ref) FATAL_ERROR("PatternString::ps_elem_t::ps_elem_t()");
     ref = p_ref;
@@ -69,10 +73,11 @@ namespace Ttcn {
     switch(kind) {
     case PSE_STR:
       delete str;
-      break;
+      // fall through
     case PSE_REF:
     case PSE_REFDSET:
       delete ref;
+      // do not delete t
       break;
     } // switch kind
   }
@@ -111,6 +116,13 @@ namespace Ttcn {
     if (kind != PSE_REF) FATAL_ERROR("PatternString::ps_elem_t::chk_ref()");
     Value* v = 0;
     Value* v_last = 0;
+    if (ref->get_id()->get_name() == "CHARSTRING") {
+      is_charstring = TRUE;
+      return;
+    } else if (ref->get_id()->get_name() == "UNIVERSAL_CHARSTRING") {
+      is_universal_charstring = TRUE;
+      return;
+    }
     Common::Assignment* ass = ref->get_refd_assignment();
     if (!ass)
       return;
@@ -137,8 +149,15 @@ namespace Ttcn {
     }
     Type* refcheckertype = Type::get_pooltype(tt);
     switch (ass->get_asstype()) {
+    case Common::Assignment::A_TYPE:
+      kind = PSE_REFDSET;
+      t = ass->get_Type();
+      break;
     case Common::Assignment::A_MODULEPAR_TEMP:
-    case Common::Assignment::A_VAR_TEMPLATE:
+    case Common::Assignment::A_VAR_TEMPLATE: 
+    case Common::Assignment::A_PAR_TEMPL_IN:
+    case Common::Assignment::A_PAR_TEMPL_OUT:
+    case Common::Assignment::A_PAR_TEMPL_INOUT:
       // error reporting moved up
       break;
     case Common::Assignment::A_TEMPLATE: {
@@ -150,16 +169,20 @@ namespace Ttcn {
       case Template::SPECIFIC_VALUE:
         v_last = templ->get_specific_value();
         break;
-      case Template::CSTR_PATTERN: {
-        Ttcn::PatternString* ps = templ->get_cstr_pattern();
-        if (!ps->has_refs())
-          v_last = ps->get_value();
-        break; }
-      case Template::USTR_PATTERN: {
-        Ttcn::PatternString* ps = templ->get_ustr_pattern();
-        if (!ps->has_refs())
-          v_last = ps->get_value();
-        break; }
+      case Template::CSTR_PATTERN: 
+        if (!with_N) {
+          Ttcn::PatternString* ps = templ->get_cstr_pattern();
+          if (!ps->has_refs())
+            v_last = ps->get_value();
+          break;
+        }
+      case Template::USTR_PATTERN: 
+        if (!with_N) {
+          Ttcn::PatternString* ps = templ->get_ustr_pattern();
+          if (!ps->has_refs())
+            v_last = ps->get_value();
+          break;
+        }
       default:
         TTCN_pattern_error("Unable to resolve referenced '%s' to character "
           "string type. '%s' template cannot be used.",
@@ -183,12 +206,18 @@ namespace Ttcn {
       v_last->get_valuetype() == Value::V_USTR)) {
       // the reference points to a constant
       // substitute the reference with the known value
-      delete ref;
-      kind = PSE_STR;
-      if (v_last->get_valuetype() == Value::V_CSTR)
+      if (v_last->get_valuetype() == Value::V_CSTR) {
+        if (with_N && v_last->get_val_str().size() != 1) {
+          ref->error("The length of the charstring must be of length one, when it is being referenced in a pattern with \\N{ref}");
+        }
         str = new string(v_last->get_val_str());
-      else
+      } else {
+        if (with_N && v_last->get_val_ustr().size() != 1) {
+          ref->error("The length of the universal charstring must be of length one, when it is being referenced in a pattern with \\N{ref}");
+        }
         str = new string(v_last->get_val_ustr().get_stringRepr_for_pattern());
+      }
+      kind = PSE_STR;
     }
     delete v;
   }
@@ -283,20 +312,15 @@ namespace Ttcn {
   
   void PatternString::addStringUSI(char **usi_str, const size_t size)
   {
-    ustring s = ustring((const char**)usi_str, size);
+    ustring s = ustring(const_cast<const char**>(usi_str), size);
     ps_elem_t *last_elem = get_last_elem();
     if (last_elem) *last_elem->str += s.get_stringRepr_for_pattern().c_str();
     else elems.add(new ps_elem_t(ps_elem_t::PSE_STR, s.get_stringRepr_for_pattern()));
   }
 
-  void PatternString::addRef(Ttcn::Reference *p_ref)
+  void PatternString::addRef(Ttcn::Reference *p_ref, boolean N)
   {
-    elems.add(new ps_elem_t(ps_elem_t::PSE_REF, p_ref));
-  }
-
-  void PatternString::addRefdCharSet(Ttcn::Reference *p_ref)
-  {
-    elems.add(new ps_elem_t(ps_elem_t::PSE_REFDSET, p_ref));
+    elems.add(new ps_elem_t(ps_elem_t::PSE_REF, p_ref, N));
   }
 
   string PatternString::get_full_str() const
@@ -371,7 +395,7 @@ namespace Ttcn {
     for (size_t i = 0; i < elems.size(); i++) {
       ps_elem_t *pse = elems[i];
       if (pse->kind != ps_elem_t::PSE_STR)
-	FATAL_ERROR("PatternString::chk_pattern()");
+	      FATAL_ERROR("PatternString::chk_pattern()");
       str += *pse->str;
     }
     char* posix_str = 0;
@@ -441,7 +465,7 @@ namespace Ttcn {
     }
   }
 
-  string PatternString::create_charstring_literals(Common::Module *p_mod)
+  string PatternString::create_charstring_literals(Common::Module *p_mod, string& preamble)
   {
     /* The cast is there for the benefit of OPTIONAL<CHARSTRING>, because
      * it doesn't have operator+(). Only the first member needs the cast
@@ -455,42 +479,170 @@ namespace Ttcn {
     size_t nof_elems = elems.size();
     if (nof_elems > 0) {
       // the pattern is not empty
-      for (size_t i = 0; i < nof_elems; i++) {
-	if (i > 0) s += " + ";
-	ps_elem_t *pse = elems[i];
-	switch (pse->kind) {
-	case ps_elem_t::PSE_STR:
+    for (size_t i = 0; i < nof_elems; i++) {
+      if (i > 0) s += " + ";
+      ps_elem_t *pse = elems[i];
+      
+      // \N{charstring} and \N{universal charstring}
+      if (pse->is_charstring) {
+        s += p_mod->add_charstring_literal(string("?"));
+        continue;
+      } else if (pse->is_universal_charstring) {
+        s += p_mod->add_charstring_literal(string("?"));
+        continue;
+      }
+
+      switch (pse->kind) {
+        // Known in compile time: string literal, const etc.
+        case ps_elem_t::PSE_STR:
           s += p_mod->add_charstring_literal(*pse->str);
           break;
-	case ps_elem_t::PSE_REFDSET:
-          /* actually, not supported */
-          FATAL_ERROR("PatternString::create_charstring_literals()");
-          break;
-	case ps_elem_t::PSE_REF: {
-	  expression_struct expr;
-	  Code::init_expr(&expr);
-	  pse->ref->generate_code(&expr);
-	  if (expr.preamble || expr.postamble)
-	    FATAL_ERROR("PatternString::create_charstring_literals()");
-          s += expr.expr;
-          Common::Assignment* assign = pse->ref->get_refd_assignment();
+        // Known in compile time: string type with(out) range or list
+        case ps_elem_t::PSE_REFDSET: {
+          if (!pse->t)
+            FATAL_ERROR("PatternString::create_charstring_literals()");
+          if (!pse->t->get_sub_type()) {
+            // just a string type without any restrictions (or alias)
+            s += "\"?\"";
+            continue;
+          }
+          vector<Common::SubTypeParse> * vec = pse->t->get_sub_type()->get_subtype_parsed();
 
-          if ((assign->get_asstype() == Common::Assignment::A_TEMPLATE
-            || assign->get_asstype() == Common::Assignment::A_MODULEPAR_TEMP
-            || assign->get_asstype() == Common::Assignment::A_VAR_TEMPLATE))
-          {
-            if ((assign->get_Type()->get_typetype() == Type::T_CSTR
-              || assign->get_Type()->get_typetype() == Type::T_USTR)) {
-              s += ".get_single_value()";
+          while (vec == NULL) { // go through aliases to find where the restrictions are
+            if (pse->t->get_Reference()) {
+              pse->t = pse->t->get_Reference()->get_refd_assignment(FALSE)->get_Type();
+            } else {
+              break;
             }
-            else {
-              s += ".valueof()";
+            if (pse->t->get_sub_type()) {
+              vec = pse->t->get_sub_type()->get_subtype_parsed();
+            } else {
+              break;
             }
           }
+          if (vec == NULL) {
+            // I don't think it can happen, but to be sure...
+            s += "\"?\"";
+            continue;
+          }
+          s+= "\"";
+          if (vec->size() > 1) s+= "(";
+          for (size_t j = 0; j < vec->size(); j++) {
+            Common::SubTypeParse* stp = (*vec)[j];
+            if (j > 0) {
+              s+="|\"+"; // todo what if default    
+            }else {
+              s+= "\"+";
+            }
+            switch (stp->get_selection()) {
+              case SubTypeParse::STP_RANGE: // type charstring ("a" .. "z")
+                s+="\"[\" + ";
+                switch (stp->Min()->get_valuetype()) {
+                  case Value::V_CSTR:
+                    s+= p_mod->add_charstring_literal(stp->Min()->get_val_str());
+                    s+= "+ \"-\" +";
+                    s+= p_mod->add_charstring_literal(stp->Max()->get_val_str());
+                    break;
+                  case Value::V_USTR:
+                    s+= p_mod->add_charstring_literal(stp->Min()->get_val_ustr().get_stringRepr_for_pattern());
+                    s+= "+ \"-\" +";
+                    s+= p_mod->add_charstring_literal(stp->Max()->get_val_ustr().get_stringRepr_for_pattern());
+                    break;
+                  default:
+                    FATAL_ERROR("PatternString::create_charstring_literals()");
+                }
+                s+=" + \"]\"";
+                break;
+              case SubTypeParse::STP_SINGLE: // type charstring ("a", "b")
+                switch (stp->Single()->get_valuetype()) {
+                  case Value::V_CSTR:
+                    s+= p_mod->add_charstring_literal(stp->Single()->get_val_str());
+                    break;
+                  case Value::V_USTR:
+                    s+= p_mod->add_charstring_literal(stp->Single()->get_val_ustr().get_stringRepr_for_pattern());
+                    break;
+                  default:
+                    FATAL_ERROR("PatternString::create_charstring_literals()");
+                    break;
+                }
+                break;
+              default:
+                FATAL_ERROR("PatternString::create_charstring_literals()");
+            }
+            s+= "+\"";
+          }
+          if (vec->size() > 1) s+= ")";
+          s+= "\"";
+          break; }
+        // Not known in compile time
+        case ps_elem_t::PSE_REF: {
+          expression_struct expr;
+          Code::init_expr(&expr);
+          pse->ref->generate_code(&expr);
+          if (expr.preamble || expr.postamble)
+            FATAL_ERROR("PatternString::create_charstring_literals()");
+          s += expr.expr;
+          Common::Assignment* assign = pse->ref->get_refd_assignment();
+          char* str = NULL;
+          
+          // TODO: these checks will generated each time a reference is referenced in a pattern
+          // and it could be generated once
+          if (pse->with_N) {
+            if ((assign->get_asstype() == Common::Assignment::A_TEMPLATE
+                  || assign->get_asstype() == Common::Assignment::A_MODULEPAR_TEMP
+                  || assign->get_asstype() == Common::Assignment::A_VAR_TEMPLATE
+                  || assign->get_asstype() == Common::Assignment::A_PAR_TEMPL_IN
+                  || assign->get_asstype() == Common::Assignment::A_PAR_TEMPL_OUT
+                  || assign->get_asstype() == Common::Assignment::A_PAR_TEMPL_INOUT))
+            {
+            string value_literal = p_mod->add_charstring_literal(string("value"));
+            str = mputprintf(str,
+              "if (%s.get_istemplate_kind(%s) == FALSE) {\n"
+              "TTCN_error(\"Only specific value template allowed in pattern reference with \\\\N{ref}\");\n"
+              "}\n"
+              , expr.expr
+              , value_literal.c_str());
+            }
+            
+            str = mputprintf(str,
+              "if (%s.lengthof() != 1)\n"
+              "{\n"
+              "TTCN_error(\"The length of the %scharstring must be of length one, when it is being referenced in a pattern with \\\\N{ref}\");\n"
+              "}\n"
+              , expr.expr
+              , assign->get_Type()->get_typetype() == Type::T_USTR ? "universal " : "");
+            preamble += str;
+            Free(str);
+          }
+          if ((assign->get_asstype() == Common::Assignment::A_TEMPLATE
+            || assign->get_asstype() == Common::Assignment::A_MODULEPAR_TEMP
+            || assign->get_asstype() == Common::Assignment::A_VAR_TEMPLATE
+            || assign->get_asstype() == Common::Assignment::A_PAR_TEMPL_IN
+            || assign->get_asstype() == Common::Assignment::A_PAR_TEMPL_OUT
+            || assign->get_asstype() == Common::Assignment::A_PAR_TEMPL_INOUT))
+          {
+            if ((assign->get_Type()->get_typetype() == Type::T_CSTR
+              || assign->get_Type()->get_typetype() == Type::T_USTR) && !pse->with_N) {
+              s += ".get_single_value()";
+            }
+            else if (assign->get_Type()->get_typetype() == Type::T_USTR && pse->with_N) {
+              s += ".valueof().get_stringRepr_for_pattern()";
+            } else {
+              s += ".valueof()";
+            }
+          } else if ((assign->get_asstype() == Common::Assignment::A_MODULEPAR
+            || assign->get_asstype() == Common::Assignment::A_VAR
+            || assign->get_asstype() == Common::Assignment::A_PAR_VAL
+            || assign->get_asstype() == Common::Assignment::A_PAR_VAL_IN
+            || assign->get_asstype() == Common::Assignment::A_PAR_VAL_OUT
+            || assign->get_asstype() == Common::Assignment::A_PAR_VAL_INOUT)
+            && assign->get_Type()->get_typetype() == Type::T_USTR) {
+            s += ".get_stringRepr_for_pattern()";
+          }
 
-	  Code::free_expr(&expr);
-	  break; }
-	} // switch kind
+          Code::free_expr(&expr);
+          break; }
+        } // switch kind
       } // for
     } else {
       // empty pattern: create an empty string literal for it

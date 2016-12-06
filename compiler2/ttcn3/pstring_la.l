@@ -182,7 +182,7 @@ if (in_set) {
     Location loc(current_file, old_line, old_column, current_line, current_column);
     if (ref) {
       ref->set_location(loc);
-      ps->addRef(ref);
+      ps->addRef(ref, FALSE);
     } else {
       loc.error("Invalid reference expression");
     }
@@ -213,26 +213,42 @@ if (in_set) {
   while (isalnum(yytext[id_begin + id_len]) || yytext[id_begin + id_len] == '_')
     id_len++;
   string id_str(id_len, yytext + id_begin);
-  /*
+  
   Ttcn::Reference *ref = new Ttcn::Reference(new Identifier(
     Identifier::ID_TTCN, id_str));
-  ref->set_location(loc);
-  ps->addRefdCharSet(ref);
-  */
+  ps->addRef(ref, TRUE);
+  
   int first_line = current_line, first_column = current_column;
   UPDATE_LOCATION(0, yyleng);
   Location loc(current_file, first_line, first_column, current_line,
     current_column);
+  ref->set_location(loc);
   if (Identifier::is_reserved_word(id_str, Identifier::ID_TTCN)) {
     loc.error("Invalid character set reference: `%s' is a reserved word in "
       "TTCN-3", id_str.c_str());
   } else if (in_set) {
     loc.warning("Character set reference `\\N{%s}' is not supported, "
       "dropped out from the set", id_str.c_str());
-  } else {
+  }
+}
+
+
+"\\N"{WS}"{"{WS}"universal"{WS}"charstring"{WS}"}" {
+  /** The third {WS} is optional but if it's empty then the previous rule catches it**/
+  string id_str("universal charstring");
+  
+  Ttcn::Reference *ref = new Ttcn::Reference(new Identifier(
+    Identifier::ID_TTCN, id_str));
+  ps->addRef(ref, TRUE);
+  
+  int first_line = current_line, first_column = current_column;
+  UPDATE_LOCATION(0, yyleng);
+  Location loc(current_file, first_line, first_column, current_line,
+    current_column);
+  ref->set_location(loc);
+  if (in_set) {
     loc.warning("Character set reference `\\N{%s}' is not supported, "
-      "substituted with `?'", id_str.c_str());
-    ps->addChar('?');
+      "dropped out from the set", id_str.c_str());
   }
 }
 

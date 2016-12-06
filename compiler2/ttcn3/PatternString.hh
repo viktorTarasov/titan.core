@@ -69,8 +69,7 @@ namespace Ttcn {
     void addString(const char *p_str);
     void addString(const string& p_str);
     void addStringUSI(char **usi_str, const size_t size);
-    void addRef(Ttcn::Reference *p_ref);
-    void addRefdCharSet(Ttcn::Reference *p_ref);
+    void addRef(Ttcn::Reference *p_ref, boolean N);
     string get_full_str() const;
 
     void set_pattern_type(pstr_type_t p_type);
@@ -88,7 +87,7 @@ namespace Ttcn {
      * generation. */
     void join_strings();
     /** Temporary hack... */
-    string create_charstring_literals(Common::Module *p_mod);
+    string create_charstring_literals(Common::Module *p_mod, string& preamble);
     virtual void dump(unsigned level) const;
 
     /** Called by Value::get_value_refd_last() */
