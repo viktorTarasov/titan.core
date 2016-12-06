@@ -183,7 +183,7 @@ type record RecDef {
   variant(f) "JSON:default(1.0e6)";
   variant(size) "JSON:default(Tiny)";
   variant(os) "JSON : default(1DE7)";
-  variant(ucs) "JSON:default(Ã¼res)";
+  variant(ucs) "JSON:default(üres)";
   variant(bs) "JSON:default (101)";
   variant(hs) "JSON:default(DEAD)";
   variant(vt) "JSON:default(fail)";

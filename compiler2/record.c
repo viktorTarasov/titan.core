@@ -5304,7 +5304,7 @@ void defRecordTemplate1(const struct_def *sdef, output_struct *output)
     src = mputprintf(src, "%s %s_template::valueof() const\n"
 	"{\n"
 	"if (template_selection != SPECIFIC_VALUE || is_ifpresent)\n"
-	"TTCN_error(\"Performing valueof or send operation on a non-specific "
+	"TTCN_error(\"Performing a valueof or send operation on a non-specific "
 	"template of type %s.\");\n"
 	"%s ret_val;\n", name, name, dispname, name);
     for (i = 0; i < sdef->nElements; i++) {

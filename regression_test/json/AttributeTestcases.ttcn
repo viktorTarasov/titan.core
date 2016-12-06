@@ -175,9 +175,9 @@ testcase tc_attribute_union() runs on MTC {
 // The decoder will attempt to decode each field and the first to successfully decode the value
 // will be the selected one (thus the order of the fields is important)
 testcase tc_attribute_as_value() runs on MTC {
-  var Stuff stuff := { { ival := 18 }, { osval := '1D66FE'O }, { csval := "almafa" }, { bval := true }, { fval := 1.8e-20}, { ucsval := "almÃ¡cska" }, { bsval := '1101101'B }, { prodval := { name := "Shoe", price := 79.99, code := 'A4C'H } }, { roival := { 1, 3, 3, 7 } }, { prod2val := { "Car", 14000.0, omit } }, { sizeval := Large }, { unival := { hsval := 'EE0'H } }, { unival := { rocsval := { "one", "two", "ten" } } } };
+  var Stuff stuff := { { ival := 18 }, { osval := '1D66FE'O }, { csval := "almafa" }, { bval := true }, { fval := 1.8e-20}, { ucsval := "almácska" }, { bsval := '1101101'B }, { prodval := { name := "Shoe", price := 79.99, code := 'A4C'H } }, { roival := { 1, 3, 3, 7 } }, { prod2val := { "Car", 14000.0, omit } }, { sizeval := Large }, { unival := { hsval := 'EE0'H } }, { unival := { rocsval := { "one", "two", "ten" } } } };
 
-  var octetstring os := unichar2oct("[18,\"1D66FE\",\"almafa\",true,1.800000e-20,\"almÃ¡cska\",\"1101101\",{\"name\":\"Shoe\",\"price\":79.990000,\"code\":\"A4C\"},[1,3,3,7],{\"name\":\"Car\",\"price\":14000.000000},\"Large\",\"EE0\",[\"one\",\"two\",\"ten\"]]", "UTF-8");
+  var octetstring os := unichar2oct("[18,\"1D66FE\",\"almafa\",true,1.800000e-20,\"almácska\",\"1101101\",{\"name\":\"Shoe\",\"price\":79.990000,\"code\":\"A4C\"},[1,3,3,7],{\"name\":\"Car\",\"price\":14000.000000},\"Large\",\"EE0\",[\"one\",\"two\",\"ten\"]]", "UTF-8");
   f_check_encoding(encoded:= f_enc_stuff(stuff) , expected := os);
   f_bool2verdict( match(f_dec_stuff(f_enc_stuff(stuff)), stuff) );
   setverdict(pass);
@@ -186,7 +186,7 @@ testcase tc_attribute_as_value() runs on MTC {
 // Testing default values for record fields (decoding only)
 testcase tc_attribute_default() runs on MTC {
   var octetstring os := char2oct("{}");
-  var RecDef d := { i := -19, f := 1000000.000000, b := false, bs := '101'B, hs := 'DEAD'H, os := '1DE7'O, cs := "empty", ucs := "Ã¼res", size := Tiny, vt := fail };
+  var RecDef d := { i := -19, f := 1000000.000000, b := false, bs := '101'B, hs := 'DEAD'H, os := '1DE7'O, cs := "empty", ucs := "üres", size := Tiny, vt := fail };
   f_bool2verdict( match(f_dec_def(os), d) );
 
   os := char2oct("{ \"b\" : null }");
@@ -365,7 +365,7 @@ control {
   execute(tc_attribute_prettyprint2());
   execute(tc_attribute_union());
   execute(tc_attribute_as_value());
-  //execute(tc_attribute_default());
+  execute(tc_attribute_default());
   execute(tc_attribute_as_value_asn());
   execute(tc_attribute_optional_as_value());
   execute(tc_attribute_metainfo_for_unbound());

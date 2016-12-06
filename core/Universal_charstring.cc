@@ -2421,9 +2421,9 @@ boolean UNIVERSAL_CHARSTRING::from_JSON_string(boolean check_quotes)
     }
   }
   
-  // The resulting string will be shorter than the JSON string, at least by the 2 quotes
-  universal_char* ustr = (universal_char*)Malloc((json_len - 2) * sizeof(universal_char));
-  memset(ustr, 0, sizeof(universal_char) * (json_len - 2));
+  // The resulting string (its length is less than or equal to end - start)
+  universal_char* ustr = (universal_char*)Malloc((end - start) * sizeof(universal_char));
+  memset(ustr, 0, sizeof(universal_char) * (end - start));
   int ustr_len = 0;
   boolean error = FALSE;
   
@@ -4155,7 +4155,7 @@ boolean UNIVERSAL_CHARSTRING_template::match
 const UNIVERSAL_CHARSTRING& UNIVERSAL_CHARSTRING_template::valueof() const
 {
   if (template_selection != SPECIFIC_VALUE || is_ifpresent)
-    TTCN_error("Performing valueof or send operation on a non-specific "
+    TTCN_error("Performing a valueof or send operation on a non-specific "
       "universal charstring template.");
   return single_value;
 }
