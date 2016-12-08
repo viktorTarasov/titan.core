@@ -609,9 +609,11 @@ char* TTCN_pattern_to_regexp_uni(const char* p_pattern, bool p_nocase, int** gro
   pattern_yy_delete_buffer(flex_buffer);
 
   // needed by regexp to find user specified groups
-  if (user_groups && groups) {
-    *groups = (int*)Malloc(sizeof(int) * (user_groups + 1));
-    (*groups)[0] = user_groups;
+  if (user_groups /*&& groups*/) {
+    if (groups) {
+      *groups = (int*)Malloc(sizeof(int) * (user_groups + 1));
+      (*groups)[0] = user_groups;
+    }
 
     int par = -1, index = 1;
     for (size_t i = 0; i < strlen(ret_val); i++) {
@@ -621,7 +623,7 @@ char* TTCN_pattern_to_regexp_uni(const char* p_pattern, bool p_nocase, int** gro
       if (ret_val[i] == '<') {
         ret_val[i] = '(';
         par++;
-        (*groups)[index++] = par;
+        if (groups) (*groups)[index++] = par;
       }
     }
   } else if (groups)

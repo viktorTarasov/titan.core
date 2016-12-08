@@ -3109,10 +3109,14 @@ end:
     case BSTR_PATTERN:
     case HSTR_PATTERN:
     case OSTR_PATTERN:
-    case CSTR_PATTERN:
-    case USTR_PATTERN:
       str = mputprintf(str, "%s = %s;\n", name, get_single_expr(false).c_str());
-      break;
+      break;  
+    case CSTR_PATTERN:
+    case USTR_PATTERN: {
+      string preamble;
+      string expr = generate_code_str_pattern(false, preamble);
+      str = mputprintf(str, "%s%s = %s;\n", preamble.c_str(), name, expr.c_str());
+      break; }
     case SPECIFIC_VALUE:
       if (get_code_section() == CS_POST_INIT)
         str = u.specific_value->rearrange_init_code(str, my_scope->get_scope_mod_gen());
@@ -4846,10 +4850,11 @@ compile_time:
     case BSTR_PATTERN:
     case HSTR_PATTERN:
     case OSTR_PATTERN:
-    case CSTR_PATTERN:
-    case USTR_PATTERN:
     case TEMPLATE_NOTUSED:
       return true;
+    case CSTR_PATTERN: // Some preamble needed when \N{ref} used
+    case USTR_PATTERN:
+      return false;
     case SPECIFIC_VALUE:
       return u.specific_value->has_single_expr();
     case TEMPLATE_REFD: {
@@ -4893,6 +4898,25 @@ compile_time:
     }
   }
 
+  
+  string Template::generate_code_str_pattern(bool cast_needed, string& preamble) {
+    if (cast_needed && (length_restriction || is_ifpresent))
+      FATAL_ERROR("Template::generate_code_str_pattern()");
+    string ret_val;
+    switch(templatetype) {
+      case CSTR_PATTERN:
+      case USTR_PATTERN:
+        ret_val = u.pstring
+        ->create_charstring_literals(get_my_scope()->get_scope_mod_gen(), preamble);
+        break;
+      default:
+        FATAL_ERROR("Template::generate_code_str_pattern()");
+    }
+    if (cast_needed) ret_val = my_governor->get_genname_template(my_scope) +
+      "(" + ret_val + ")";
+    return ret_val;
+  }
+  
   string Template::get_single_expr(bool cast_needed)
   {
     if (cast_needed && (length_restriction || is_ifpresent))
@@ -4955,10 +4979,6 @@ compile_time:
     case OSTR_PATTERN:
       return get_my_scope()->get_scope_mod_gen()
         ->add_octetstring_pattern(*u.pattern);
-    case CSTR_PATTERN:
-    case USTR_PATTERN:
-      return u.pstring
-        ->create_charstring_literals(get_my_scope()->get_scope_mod_gen());
     default:
       FATAL_ERROR("Template::get_single_expr()");
     }

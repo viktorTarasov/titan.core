@@ -2770,6 +2770,10 @@ void SubType::print_full_warning() const
     "it does not constrain the root type.", my_owner->get_typename().c_str());
 }
 
+vector<SubTypeParse> * SubType::get_subtype_parsed() const {
+  return parsed;
+}
+
 void SubType::chk()
 {
   if ((checked!=STC_NO) || (subtype==ST_ERROR)) FATAL_ERROR("SubType::chk()");
