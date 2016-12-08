@@ -18,6 +18,7 @@
  *   Raduly, Csaba
  *   Szabados, Kristof
  *   Szabo, Janos Zoltan – initial implementation
+ *   Szabo, Bence Janos
  *   Zalanyi, Balazs Andor
  *   Pandi, Krisztian
  *

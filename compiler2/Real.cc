@@ -32,6 +32,11 @@ namespace Common {
   {
     return ((r!=r) || (r==REAL_INFINITY) || (r==-REAL_INFINITY));
   }
+  
+  bool isNaN(const Real& r) 
+  {
+    return r!=r;
+  }
 
   string Real2string(const Real& r)
   {

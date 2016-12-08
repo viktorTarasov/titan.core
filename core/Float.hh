@@ -106,6 +106,7 @@ public:
   
   /** special TTCN-3 float values are not_a_number and +/- infinity */
   static boolean is_special(double flt_val);
+  static boolean is_nan(double flt_val);
   static void check_numeric(double flt_val, const char *err_msg_begin);
 
   void log() const;

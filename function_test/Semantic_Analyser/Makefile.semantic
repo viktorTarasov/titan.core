@@ -9,9 +9,10 @@
 #   Balasko, Jeno
 #   Baranyi, Botond
 #   Ormandi, Matyas
+#   Szabo, Bence Janos
 #
 ##############################################################################
-SADIRS := ver xer encode param template any_from pattern_ref
+SADIRS := ver xer encode param template any_from pattern_ref float
 ifeq ($(RT2), yes)
 SADIRS += deprecated
 endif
