@@ -245,7 +245,8 @@ void write_output(output_struct *output, const char *module_name,
 	    "#if TTCN3_VERSION != %d\n"
 	    "#error Version mismatch detected.\\\n"
 	    " Please check the version of the %s compiler and the "
-	    "base library.\n"
+	    "base library.\\\n"
+	    " Run make clean and rebuild the project if the version of the compiler changed recently.\n"
 	    "#endif\n",
 	    TTCN3_VERSION, is_ttcn ? "TTCN-3" : "ASN.1");
 	/* Check the platform matches */

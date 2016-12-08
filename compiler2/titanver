@@ -113,7 +113,8 @@ if ( scalar keys %versions > 1 ) {
         warn "Compiled with $compiler $ver: ", join(', ', @$ref), "\n";
     }
     die "Error! All object files should be compiled with the same compiler version.\n"
-    . "The following $compiler versions were detected: ", join(', ', keys %versions);
+    . "The following $compiler versions were detected: ", join(', ', keys %versions),
+    "\nRun make clean and make to recompile the project if the version of the compiler changed recently.";
 }
 
 __END__
