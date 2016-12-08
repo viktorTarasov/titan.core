@@ -1,12 +1,7 @@
 /******************************************************************************
- * Copyright (c) 2000-2016 Ericsson Telecom AB
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (C) 2016 ETSI  All Rights Reserved.
  *
- * Contributors:
- *   Adrien Kirjak – initial implementation
+ * Adrien Kirjak
  *
  ** @version  0.0.1
  ** @purpose  1:21.1.1, Map operation accepts ports with compatible message type list containing several types
@@ -23,7 +18,7 @@
 //   5) outlist-PORT2 defines the messages or procedures of the out-direction of PORT2.
 // c) The map operation (assuming PORT2 is the test system interface port) is allowed if 
 // and only if:
-// outlist-PORT1 â outlist-PORT2 and inlist-PORT2 â inlist-PORT1.
+// outlist-PORT1 Ã¢ÂÂ outlist-PORT2 and inlist-PORT2 Ã¢ÂÂ inlist-PORT1.
 //
 // In this test, outlist-PORT1 == outlist-PORT2 and inlist-PORT2 == inlist-PORT1
 

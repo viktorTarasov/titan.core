@@ -1,12 +1,7 @@
 /******************************************************************************
- * Copyright (c) 2000-2016 Ericsson Telecom AB
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (C) 2016 ETSI  All Rights Reserved.
  *
- * Contributors:
- *   Adrien Kirjak – initial implementation
+ * Adrien Kirjak
  *
  ** @version  0.0.1
  ** @purpose  1:B.1.5.2, Ensure that the IUT correctly handles template matching of character pattern reference expressions
@@ -40,13 +35,13 @@ module Sem_B010502_reference_expression_010 {
   			field1 := pattern "{\m_Ref}", // this should accept pattern "abc?def?" only	
   			field2 := pattern "{m_Ref}\q{0,0,1,113}",   
 			// this should accept pattern "abc?def?" only, with any character in ? 	
-  			field3 := pattern "{\m_Ref}\q{0,0,1,113}" // this should accept pattern "abc?def?Å±" only	
+  			field3 := pattern "{\m_Ref}\q{0,0,1,113}" // this should accept pattern "abc?def?ÃÂ±" only	
      	};
 
  		v_testMessage:=  {  
   			field1 := "abc?def?",
-  			field2 := "abcDdefGÅ±",
-  			field3 := "abc?def?Å±"  
+  			field2 := "abcDdefGÃÂ±",
+  			field3 := "abc?def?ÃÂ±"  
  		}; 
  
 		connect(self:messagePort, self:messagePort);
