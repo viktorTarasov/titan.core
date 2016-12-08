@@ -1,5 +1,8 @@
-/*****************************************************************
- * @author STF 433
+/******************************************************************************
+ * Copyright (C) 2016 ETSI  All Rights Reserved.
+ *
+ * Adrien Kirjak
+ *
  * @version 0.0.1
  * @purpose 1:20.4, Validate that interleave statements are properly handled.
  * @verdict pass accept, noexecution
