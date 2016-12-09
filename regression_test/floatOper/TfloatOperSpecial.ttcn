@@ -37,7 +37,11 @@ testcase tc_addition() runs on EmptyCT {
     setverdict(fail);
   }
 
-  // Checked at compile time
+  f := f2 + f;
+  if (f != -infinity) {
+    setverdict(fail);
+  }
+
   f := infinity + 1.0;
   if (f != infinity) {
     setverdict(fail);
@@ -48,109 +52,38 @@ testcase tc_addition() runs on EmptyCT {
     setverdict(fail);
   }
 
-
-  var charstring dte_message := "Dynamic test case error: Invalid operands of float addition: Left operand is inf, right operand is inf";
-  @try {
-    f := infinity;
-    f2 := infinity;
-    f := f + f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := not_a_number + f2;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float addition: Left operand is inf, right operand is -inf";
-  @try {
-    f := infinity;
-    f2 := -infinity;
-    f := f + f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := f2 + not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float addition: Left operand is -inf, right operand is inf";
-  @try {
-    f := -infinity;
-    f2 := infinity;
-    f := f + f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := infinity + not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float addition: Left operand is -inf, right operand is -inf";
-  @try {
-    f := -infinity;
-    f2 := -infinity;
-    f := f + f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity + not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float addition: Left operand is nan, right operand is inf";
-  @try {
-    f := not_a_number;
-    f2 := infinity;
-    f := f + f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity + infinity;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float addition: Left operand is inf, right operand is nan";
-  @try {
-    f := infinity;
-    f2 := not_a_number;
-    f := f + f2;
-    setverdict(fail, "Expected dynamic test case error");
+  f := infinity + infinity;
+  if (f != infinity) {
+    setverdict(fail);
   }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
-  }
-
-  dte_message := "Dynamic test case error: Invalid operands of float addition: Left operand is nan, right operand is nan";
-  @try {
-    f := not_a_number;
-    f2 := not_a_number;
-    f := f + f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
-  }
-
-  dte_message := "Dynamic test case error: Invalid operands of float addition: Left operand is nan, right operand is 1";
-  @try {
-    f := not_a_number;
-    f2 := 1.0;
-    f := f + f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity + -infinity;
+  if (f != -infinity) {
+    setverdict(fail);
   }
 
   setverdict(pass);
@@ -169,6 +102,10 @@ testcase tc_subtraction() runs on EmptyCT {
     setverdict(fail);
   }
 
+  f := f2 - f;
+  if (f != -infinity) {
+    setverdict(fail);
+  }
 
   f := -infinity;
   f := f - 1.0;
@@ -180,7 +117,6 @@ testcase tc_subtraction() runs on EmptyCT {
     setverdict(fail);
   }
 
-  // Checked at compile time
   f := infinity - 1.0;
   if (f != infinity) {
     setverdict(fail);
@@ -192,108 +128,39 @@ testcase tc_subtraction() runs on EmptyCT {
   }
 
 
-  var charstring dte_message := "Dynamic test case error: Invalid operands of float subtraction: Left operand is inf, right operand is inf";
-  @try {
-    f := infinity;
-    f2 := infinity;
-    f := f - f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := not_a_number - f2;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float subtraction: Left operand is inf, right operand is -inf";
-  @try {
-    f := infinity;
-    f2 := -infinity;
-    f := f - f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := f2 - not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float subtraction: Left operand is -inf, right operand is inf";
-  @try {
-    f := -infinity;
-    f2 := infinity;
-    f := f - f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := infinity - not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float subtraction: Left operand is -inf, right operand is -inf";
-  @try {
-    f := -infinity;
-    f2 := -infinity;
-    f := f - f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity - not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float subtraction: Left operand is nan, right operand is inf";
-  @try {
-    f := not_a_number;
-    f2 := infinity;
-    f := f - f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity - infinity;
+  if (f != -infinity) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float subtraction: Left operand is inf, right operand is nan";
-  @try {
-    f := infinity;
-    f2 := not_a_number;
-    f := f - f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := infinity - infinity;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float subtraction: Left operand is nan, right operand is nan";
-  @try {
-    f := not_a_number;
-    f2 := not_a_number;
-    f := f - f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
-  }
-
-  dte_message := "Dynamic test case error: Invalid operands of float subtraction: Left operand is nan, right operand is 1";
-  @try {
-    f := not_a_number;
-    f2 := 1.0;
-    f := f - f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity - -infinity;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
   setverdict(pass);
@@ -317,6 +184,12 @@ testcase tc_multiplication() runs on EmptyCT {
     setverdict(fail);
   }
 
+  f := infinity;
+  f := f2 * f;
+  if (f != infinity) {
+    setverdict(fail);
+  }
+
   f := -infinity;
   f := f * 2.0;
   if (f != -infinity) {
@@ -331,7 +204,6 @@ testcase tc_multiplication() runs on EmptyCT {
     setverdict(fail);
   }
 
-  // Checked at compile time
   f := infinity * 1.0;
   if (f != infinity) {
     setverdict(fail);
@@ -342,109 +214,39 @@ testcase tc_multiplication() runs on EmptyCT {
     setverdict(fail);
   }
 
-
-  var charstring dte_message := "Dynamic test case error: Invalid operands of float multiplication: Left operand is inf, right operand is inf";
-  @try {
-    f := infinity;
-    f2 := infinity;
-    f := f * f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := not_a_number * f2;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float multiplication: Left operand is inf, right operand is -inf";
-  @try {
-    f := infinity;
-    f2 := -infinity;
-    f := f * f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := f2 * not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float multiplication: Left operand is -inf, right operand is inf";
-  @try {
-    f := -infinity;
-    f2 := infinity;
-    f := f * f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := infinity * not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float multiplication: Left operand is -inf, right operand is -inf";
-  @try {
-    f := -infinity;
-    f2 := -infinity;
-    f := f * f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity * not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float multiplication: Left operand is nan, right operand is inf";
-  @try {
-    f := not_a_number;
-    f2 := infinity;
-    f := f * f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity * infinity;
+  if (f != -infinity) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float multiplication: Left operand is inf, right operand is nan";
-  @try {
-    f := infinity;
-    f2 := not_a_number;
-    f := f * f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := infinity * infinity;
+  if (f != infinity) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float multiplication: Left operand is nan, right operand is nan";
-  @try {
-    f := not_a_number;
-    f2 := not_a_number;
-    f := f * f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
-  }
-
-  dte_message := "Dynamic test case error: Invalid operands of float multiplication: Left operand is nan, right operand is 2";
-  @try {
-    f := not_a_number;
-    f2 := 2.0;
-    f := f * f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity * -infinity;
+  if (f != infinity) {
+    setverdict(fail);
   }
 
   setverdict(pass);
@@ -465,6 +267,12 @@ testcase tc_division() runs on EmptyCT {
   }
   f := f / f3;
   if (f != -infinity) {
+    setverdict(fail);
+  }
+
+  f := infinity;
+  f := f2 / f;
+  if (f != 0.000000) {
     setverdict(fail);
   }
 
@@ -505,8 +313,6 @@ testcase tc_division() runs on EmptyCT {
     setverdict(fail);
   }
 
-
-  // Checked at compile time
   f := infinity / 2.0;
   if (f != infinity) {
     setverdict(fail);
@@ -518,108 +324,39 @@ testcase tc_division() runs on EmptyCT {
   }
 
 
-  var charstring dte_message := "Dynamic test case error: Invalid operands of float division: Left operand is inf, right operand is inf";
-  @try {
-    f := infinity;
-    f2 := infinity;
-    f := f / f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := not_a_number / f2;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float division: Left operand is inf, right operand is -inf";
-  @try {
-    f := infinity;
-    f2 := -infinity;
-    f := f / f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := f2 / not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float division: Left operand is -inf, right operand is inf";
-  @try {
-    f := -infinity;
-    f2 := infinity;
-    f := f / f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := infinity / not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float division: Left operand is -inf, right operand is -inf";
-  @try {
-    f := -infinity;
-    f2 := -infinity;
-    f := f / f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity / not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float division: Left operand is nan, right operand is inf";
-  @try {
-    f := not_a_number;
-    f2 := infinity;
-    f := f / f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity / infinity;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float division: Left operand is inf, right operand is nan";
-  @try {
-    f := infinity;
-    f2 := not_a_number;
-    f := f / f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := infinity / infinity;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
-  dte_message := "Dynamic test case error: Invalid operands of float division: Left operand is nan, right operand is nan";
-  @try {
-    f := not_a_number;
-    f2 := not_a_number;
-    f := f / f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
-  }
-
-  dte_message := "Dynamic test case error: Invalid operands of float division: Left operand is nan, right operand is 2";
-  @try {
-    f := not_a_number;
-    f2 := 2.0;
-    f := f / f2;
-    setverdict(fail, "Expected dynamic test case error");
-  }
-  @catch (msg) {
-    if (not match(msg, dte_message)) {
-      setverdict(fail, "Expected error: ", dte_message, ", got: ", msg);
-    }
+  f := -infinity / -infinity;
+  if (f != not_a_number) {
+    setverdict(fail);
   }
 
   setverdict(pass);
@@ -643,6 +380,9 @@ const float c_f5 := inf * two;
 const float c_f6 := inf / two;
 const float c_f7 := neginf * negtwo;
 const float c_f8 := neginf / negtwo;
+const float c_f21 := inf + inf;
+const float c_f22 := inf * inf;
+const float c_f23 := -inf * -inf;
 
 // All of theese are -infinity
 const float c_f9 := neginf + two;
@@ -653,6 +393,10 @@ const float c_f13 := neginf * two;
 const float c_f14 := neginf / two;
 const float c_f15 := inf * negtwo;
 const float c_f16 := inf / negtwo;
+const float c_f24 := -inf - inf;
+const float c_f25 := -inf * inf;
+const float c_f26 := inf * -inf;
+const float c_f27 := -inf + -inf;
 
 
 // All of theese are 0.000000
@@ -662,9 +406,20 @@ const float c_f17 := two / inf;
 const float c_f18 := two / neginf;
 
 // All of theese are not_a_number
-
 const float c_f19 := inf * 0.0;
 const float c_f20 := neginf * 0.0;
+const float c_f28 := not_a_number + 1.0;
+const float c_f29 := not_a_number - 1.0;
+const float c_f30 := 1.0 + not_a_number;
+const float c_f31 := 1.0 - not_a_number;
+const float c_f32 := not_a_number * 1.0;
+const float c_f33 := not_a_number / 1.0;
+const float c_f34 := 1.0 * not_a_number;
+const float c_f35 := 1.0 / not_a_number;
+const float c_f36 := inf / inf;
+const float c_f37 := -inf / inf;
+const float c_f38 := -inf / -inf;
+const float c_f39 := inf / -inf;
 
 testcase tc_compile_time() runs on EmptyCT {
 
@@ -691,6 +446,15 @@ testcase tc_compile_time() runs on EmptyCT {
     setverdict(fail);
   }
   if (c_f8 != infinity) {
+    setverdict(fail);
+  }
+  if (c_f21 != infinity) {
+    setverdict(fail);
+  }
+  if (c_f22 != infinity) {
+    setverdict(fail);
+  }
+  if (c_f23 != infinity) {
     setverdict(fail);
   }
 
@@ -720,6 +484,18 @@ testcase tc_compile_time() runs on EmptyCT {
   if (c_f16 != -infinity) {
     setverdict(fail);
   }
+  if (c_f24 != -infinity) {
+    setverdict(fail);
+  }
+  if (c_f25 != -infinity) {
+    setverdict(fail);
+  }
+  if (c_f26 != -infinity) {
+    setverdict(fail);
+  }
+  if (c_f27 != -infinity) {
+    setverdict(fail);
+  }
 
 
   // 0.000000
@@ -738,6 +514,42 @@ testcase tc_compile_time() runs on EmptyCT {
     setverdict(fail);
   }
   if (c_f20 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f28 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f29 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f30 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f31 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f32 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f33 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f34 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f35 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f36 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f37 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f38 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f39 != not_a_number) {
     setverdict(fail);
   }
 

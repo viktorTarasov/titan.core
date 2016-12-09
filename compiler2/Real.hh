@@ -55,7 +55,6 @@ namespace Common {
   /** +/- infinity and not_a_number are non-numeric float values in ttcn-3,
       these special values cannot be used in some places */
   bool isSpecialFloatValue(const Real& r);
-  bool isNaN(const Real& r);
 
   /**
    * Converts the Common::Real value to string.

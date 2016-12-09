@@ -6396,47 +6396,6 @@ error:
       set_valuetype(V_ERROR);
     }
   }
-  
-  void Value::chk_expr_operand_valid_float(Value* v1, Value* v2, const char *opnum1, const char *opnum2, const char *opname)
-  {
-    ttcn3float r1, r2;
-    boolean r1_is_set = FALSE, r2_is_set = FALSE;
-    if(valuetype!=V_ERROR) {
-      if(u.expr.state!=EXPR_CHECKING_ERR) {
-        if(!v1->is_unfoldable()) {
-          if(v1->get_expr_returntype()==Type::T_REAL) {
-            r1 = v1->get_val_Real();
-            r1_is_set = TRUE;
-          }
-        }
-        if(!v2->is_unfoldable()) {
-          if(v2->get_expr_returntype()==Type::T_REAL) {
-            r2 = v2->get_val_Real();
-            r2_is_set = TRUE;
-          }
-        }
-        if (r1_is_set && r2_is_set) {
-          if ((isSpecialFloatValue(r1) && isSpecialFloatValue(r2)) || isNaN(r1) || isNaN(r2)) {
-            error("Invalid operands of float %s: %s operand is %s, %s operand is %s",
-                    opname, opnum1, Real2string(r1).c_str(), opnum2, Real2string(r2).c_str());
-            set_valuetype(V_ERROR);
-          }
-        } else if (r1_is_set) {
-          if (isNaN(r1)) {
-            v1->error("%s operand of operation `%s' cannot be %s, it must be a numeric value",
-               opnum1, opname, Real2string(r1).c_str());
-            set_valuetype(V_ERROR);
-          }
-        } else if (r2_is_set) {
-          if (isNaN(r2)) {
-            v2->error("%s operand of operation `%s' cannot be %s, it must be a numeric value",
-               opnum2, opname, Real2string(r2).c_str());
-            set_valuetype(V_ERROR);
-          }
-        }
-      }
-    }
-  }
 
   void Value::chk_expr_operands(ReferenceChain *refch,
                                 Type::expected_value_t exp_val)
@@ -6943,7 +6902,7 @@ error:
       chk_expr_operandtype_int_float(tt2, second, opname, v2);
       chk_expr_eval_value(v1, t_chk, refch, exp_val);
       chk_expr_eval_value(v2, t_chk, refch, exp_val);
-      chk_expr_operand_valid_float(v1, v2, first, second, opname);
+      // No float checks needed, everything is allowed on -+infinity and not_a_number
       if(u.expr.v_optype==OPTYPE_DIVIDE)
         chk_expr_val_int_float_not0(v2, second, opname);
       chk_expr_operandtypes_same(tt1, tt2, opname);

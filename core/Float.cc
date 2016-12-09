@@ -130,11 +130,6 @@ boolean FLOAT::is_special(double flt_val)
   return ( (flt_val!=flt_val) || (flt_val==INFINITY) || (flt_val==-INFINITY) );
 }
 
-boolean FLOAT::is_nan(double flt_val)
-{
-  return flt_val!=flt_val;
-}
-
 void FLOAT::check_numeric(double flt_val, const char *err_msg_begin)
 {
   if (is_special(flt_val)) {
@@ -146,10 +141,6 @@ void FLOAT::check_numeric(double flt_val, const char *err_msg_begin)
 double FLOAT::operator+(double other_value) const
 {
   must_bound("Unbound left operand of float addition.");
-  // Both of them are +-infinity                           or one of them is nan
-  if ((is_special(float_value) && is_special(other_value)) || is_nan(float_value) || is_nan(other_value)) {
-    TTCN_error("Invalid operands of float addition: Left operand is %g, right operand is %g", (double)float_value, other_value);
-  }
   return float_value + other_value;
 }
 
@@ -157,20 +148,12 @@ double FLOAT::operator+(const FLOAT& other_value) const
 {
   must_bound("Unbound left operand of float addition.");
   other_value.must_bound("Unbound right operand of float addition.");
-  // Both of them are +-infinity                           or one of them is nan
-  if ((is_special(float_value) && is_special(other_value.float_value)) || is_nan(float_value) || is_nan(other_value.float_value)) {
-    TTCN_error("Invalid operands of float addition: Left operand is %g, right operand is %g", (double)float_value, (double)other_value.float_value);
-  }
   return float_value + other_value.float_value;
 }
 
 double FLOAT::operator-(double other_value) const
 {
   must_bound("Unbound left operand of float subtraction.");
-  // Both of them are +-infinity                           or one of them is nan
-  if ((is_special(float_value) && is_special(other_value)) || is_nan(float_value) || is_nan(other_value)) {
-    TTCN_error("Invalid operands of float subtraction: Left operand is %g, right operand is %g", (double)float_value, other_value);
-  }
   return float_value - other_value;
 }
 
@@ -178,20 +161,12 @@ double FLOAT::operator-(const FLOAT& other_value) const
 {
   must_bound("Unbound left operand of float subtraction.");
   other_value.must_bound("Unbound right operand of float subtraction.");
-  // Both of them are +-infinity                                        or one of them is nan
-  if ((is_special(float_value) && is_special(other_value.float_value)) || is_nan(float_value) || is_nan(other_value.float_value)) {
-    TTCN_error("Invalid operands of float subtraction: Left operand is %g, right operand is %g", (double)float_value, (double)other_value.float_value);
-  }
   return float_value - other_value.float_value;
 }
 
 double FLOAT::operator*(double other_value) const
 {
   must_bound("Unbound left operand of float multiplication.");
-    // Both of them are +-infinity                                        or one of them is nan
-  if ((is_special(float_value) && is_special(other_value)) || is_nan(float_value) || is_nan(other_value)) {
-    TTCN_error("Invalid operands of float multiplication: Left operand is %g, right operand is %g", (double)float_value, other_value);
-  }
   return float_value * other_value;
 }
 
@@ -199,20 +174,12 @@ double FLOAT::operator*(const FLOAT& other_value) const
 {
   must_bound("Unbound left operand of float multiplication.");
   other_value.must_bound("Unbound right operand of float multiplication.");
-  // Both of them are +-infinity                                        or one of them is nan
-  if ((is_special(float_value) && is_special(other_value.float_value)) || is_nan(float_value) || is_nan(other_value.float_value)) {
-    TTCN_error("Invalid operands of float multiplication: Left operand is %g, right operand is %g", (double)float_value, (double)other_value.float_value);
-  }
   return float_value * other_value.float_value;
 }
 
 double FLOAT::operator/(double other_value) const
 {
   must_bound("Unbound left operand of float division.");
-  // Both of them are +-infinity                                        or one of them is nan
-  if ((is_special(float_value) && is_special(other_value)) || is_nan(float_value) || is_nan(other_value)) {
-    TTCN_error("Invalid operands of float division: Left operand is %g, right operand is %g", (double)float_value, other_value);
-  }
   if (other_value == 0.0) TTCN_error("Float division by zero.");
   return float_value / other_value;
 }
@@ -221,10 +188,6 @@ double FLOAT::operator/(const FLOAT& other_value) const
 {
   must_bound("Unbound left operand of float division.");
   other_value.must_bound("Unbound right operand of float division.");
-  // Both of them are +-infinity                                        or one of them is nan
-  if ((is_special(float_value) && is_special(other_value.float_value)) || is_nan(float_value) || is_nan(other_value.float_value)) {
-    TTCN_error("Invalid operands of float division: Left operand is %g, right operand is %g", (double)float_value, (double)other_value.float_value);
-  }
   if (other_value.float_value == 0.0) TTCN_error("Float division by zero.");
   return float_value / other_value.float_value;
 }
@@ -1195,40 +1158,24 @@ int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
 double operator+(double double_value, const FLOAT& other_value)
 {
   other_value.must_bound("Unbound right operand of float addition.");
-  // Both of them are +-infinity                           or one of them is nan
-  if ((FLOAT::is_special(double_value) && FLOAT::is_special(other_value.float_value)) || FLOAT::is_nan(double_value) || FLOAT::is_nan(other_value.float_value)) {
-    TTCN_error("Invalid operands of float addition: Left operand is %g, right operand is %g", double_value, (double)other_value.float_value);
-  }
   return double_value + other_value.float_value;
 }
 
 double operator-(double double_value, const FLOAT& other_value)
 {
   other_value.must_bound("Unbound right operand of float subtraction.");
-  // Both of them are +-infinity                           or one of them is nan
-  if ((FLOAT::is_special(double_value) && FLOAT::is_special(other_value.float_value)) || FLOAT::is_nan(double_value) || FLOAT::is_nan(other_value.float_value)) {
-    TTCN_error("Invalid operands of float subtraction: Left operand is %g, right operand is %g", double_value, (double)other_value.float_value);
-  }
   return double_value - other_value.float_value;
 }
 
 double operator*(double double_value, const FLOAT& other_value)
 {
   other_value.must_bound("Unbound right operand of float multiplication.");
-    // Both of them are +-infinity                           or one of them is nan
-  if ((FLOAT::is_special(double_value) && FLOAT::is_special(other_value.float_value)) || FLOAT::is_nan(double_value) || FLOAT::is_nan(other_value.float_value)) {
-    TTCN_error("Invalid operands of float multiplication: Left operand is %g, right operand is %g", double_value, (double)other_value.float_value);
-  }
   return double_value * other_value.float_value;
 }
 
 double operator/(double double_value, const FLOAT& other_value)
 {
   other_value.must_bound("Unbound right operand of float division.");
-    // Both of them are +-infinity                           or one of them is nan
-  if ((FLOAT::is_special(double_value) && FLOAT::is_special(other_value.float_value)) || FLOAT::is_nan(double_value) || FLOAT::is_nan(other_value.float_value)) {
-    TTCN_error("Invalid operands of float division: Left operand is %g, right operand is %g", double_value, (double)other_value.float_value);
-  }
   if (other_value.float_value == 0.0) TTCN_error("Float division by zero.");
   return double_value / other_value.float_value;
 }

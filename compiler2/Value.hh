@@ -668,7 +668,6 @@ namespace Common {
     void chk_expr_operands(ReferenceChain *refch,
                            Type::expected_value_t exp_val);
     void chk_expr_operand_valid_float(Value* v, const char *opnum, const char *opname);
-    void chk_expr_operand_valid_float(Value* v1, Value* v2, const char *opnum1, const char *opnum2, const char *opname);
     /** Evaluate...
      * Called by Value::get_value_refd_last() for V_EXPR */
     void evaluate_value(ReferenceChain *refch, Type::expected_value_t exp_val);

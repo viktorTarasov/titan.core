@@ -6536,9 +6536,6 @@ control {
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 1>
-(?im)error: Second operand of operation `/' cannot be NaN, it must be a numeric value
-<END_RESULT>
-<RESULT IF_PASS COUNT 1>
 (?im)error: The operand of operation `rnd \(seed\)' cannot be INF, it must be a numeric value
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
@@ -6550,7 +6547,7 @@ control {
 <RESULT IF_PASS COUNT 1>
 (?im)error: A non-negative float value was expected as timer duration instead of `NaN'
 <END_RESULT>
-<RESULT IF_PASS COUNT 5>
+<RESULT IF_PASS COUNT 4>
 (?is)\berror:
 <END_RESULT>
 <END_TC>
