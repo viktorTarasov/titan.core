@@ -85,6 +85,10 @@ testcase tc_addition() runs on EmptyCT {
   if (f != -infinity) {
     setverdict(fail);
   }
+  f := not_a_number + not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
+  }
 
   setverdict(pass);
 }
@@ -159,6 +163,10 @@ testcase tc_subtraction() runs on EmptyCT {
   }
 
   f := -infinity - -infinity;
+  if (f != not_a_number) {
+    setverdict(fail);
+  }
+  f := not_a_number - not_a_number;
   if (f != not_a_number) {
     setverdict(fail);
   }
@@ -246,6 +254,10 @@ testcase tc_multiplication() runs on EmptyCT {
 
   f := -infinity * -infinity;
   if (f != infinity) {
+    setverdict(fail);
+  }
+  f := not_a_number * not_a_number;
+  if (f != not_a_number) {
     setverdict(fail);
   }
 
@@ -358,6 +370,10 @@ testcase tc_division() runs on EmptyCT {
   if (f != not_a_number) {
     setverdict(fail);
   }
+  f := not_a_number / not_a_number;
+  if (f != not_a_number) {
+    setverdict(fail);
+  }
 
   setverdict(pass);
 }
@@ -420,6 +436,10 @@ const float c_f36 := inf / inf;
 const float c_f37 := -inf / inf;
 const float c_f38 := -inf / -inf;
 const float c_f39 := inf / -inf;
+const float c_f40 := not_a_number + not_a_number;
+const float c_f41 := not_a_number - not_a_number;
+const float c_f42 := not_a_number * not_a_number;
+const float c_f43 := not_a_number / not_a_number;
 
 testcase tc_compile_time() runs on EmptyCT {
 
@@ -550,6 +570,18 @@ testcase tc_compile_time() runs on EmptyCT {
     setverdict(fail);
   }
   if (c_f39 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f40 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f41 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f42 != not_a_number) {
+    setverdict(fail);
+  }
+  if (c_f43 != not_a_number) {
     setverdict(fail);
   }
 

@@ -9,32 +9,37 @@
  *   Bence Janos Szabo
  *
  ******************************************************************************/
-module special_SE {
+module special_OK {
 
-const float err1 := infinity + infinity;
-const float err2 := infinity + -infinity;
-const float err3 := -infinity + -infinity;
-
-
-const float err4 := infinity - infinity;
-const float err5 := infinity - -infinity;
-const float err6 := -infinity - -infinity;
-
-const float err7 := infinity * infinity;
-const float err8 := infinity * -infinity;
-const float err9 := -infinity * -infinity;
+const float result1 := infinity + infinity;
+const float result2 := infinity + -infinity;
+const float result3 := -infinity + -infinity;
 
 
-const float err10 := infinity / infinity;
-const float err11 := infinity / -infinity;
-const float err12 := -infinity / -infinity;
+const float result4 := infinity - infinity;
+const float result5 := infinity - -infinity;
+const float result6 := -infinity - -infinity;
 
-const float err13 := not_a_number + 2.0;
-const float err14 := not_a_number - 2.0;
-const float err15 := not_a_number * 2.0;
-const float err16 := not_a_number / 2.0;
-const float err17 := not_a_number + infinity;
-const float err18 := not_a_number + -infinity;
+const float result7 := infinity * infinity;
+const float result8 := infinity * -infinity;
+const float result9 := -infinity * -infinity;
+
+
+const float result10 := infinity / infinity;
+const float result11 := infinity / -infinity;
+const float result12 := -infinity / -infinity;
+
+const float result13 := not_a_number + 2.0;
+const float result14 := not_a_number - 2.0;
+const float result15 := not_a_number * 2.0;
+const float result16 := not_a_number / 2.0;
+const float result17 := not_a_number + infinity;
+const float result18 := not_a_number + -infinity;
+
+const float result19 := infinity + not_a_number;
+const float result20 := infinity - not_a_number;
+const float result21 := infinity * not_a_number;
+const float result22 := infinity / not_a_number;
 
 function fun() {
   var float f := 2.0;
@@ -49,6 +54,8 @@ function fun() {
 
   f2 := not_a_number / f;
   f2 := f / not_a_number;
+
+  f2 := not_a_number / not_a_number;
 }
 
 
