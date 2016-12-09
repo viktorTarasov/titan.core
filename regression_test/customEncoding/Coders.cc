@@ -98,4 +98,54 @@ INTEGER f__dec__recof(BITSTRING& b, RecOf& x)
   return 0;
 }
 
+BITSTRING f__enc__seqof(const Types::SeqOf& x)
+{
+  TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_DEFAULT);
+  TTCN_Buffer buf;
+  x.encode(Types::SeqOf_descr_, buf, TTCN_EncDec::CT_JSON, false);
+  OCTETSTRING tmp;
+  buf.get_string(tmp);
+  return oct2bit(tmp);
+}
+
+INTEGER f__dec__seqof(BITSTRING& x, Types::SeqOf& y)
+{
+  TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);
+  TTCN_Buffer buf(bit2oct(x));
+  y.decode(Types::SeqOf_descr_, buf, TTCN_EncDec::CT_JSON);
+  switch (TTCN_EncDec::get_last_error_type()) {
+  case TTCN_EncDec::ET_NONE: {
+    buf.cut();
+    OCTETSTRING tmp;
+    buf.get_string(tmp);
+    x = oct2bit(tmp);
+    return 0; }
+  case TTCN_EncDec::ET_INCOMPL_MSG:
+  case TTCN_EncDec::ET_LEN_ERR:
+    return 2;
+  default:
+    return 1;
+  }
+}
+
+INTEGER f__dec__choice(BITSTRING& x, Types::Choice& y)
+{
+  TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);
+  TTCN_Buffer buf(bit2oct(x));
+  y.decode(Types::Choice_descr_, buf, TTCN_EncDec::CT_JSON);
+  switch (TTCN_EncDec::get_last_error_type()) {
+  case TTCN_EncDec::ET_NONE: {
+    buf.cut();
+    OCTETSTRING tmp;
+    buf.get_string(tmp);
+    x = oct2bit(tmp);
+    return 0; }
+  case TTCN_EncDec::ET_INCOMPL_MSG:
+  case TTCN_EncDec::ET_LEN_ERR:
+    return 2;
+  default:
+    return 1;
+  }
+}
+
 } // namespace Custom1

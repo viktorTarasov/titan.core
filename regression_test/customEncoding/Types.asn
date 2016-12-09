@@ -23,4 +23,11 @@ Seq ::= SEQUENCE {
   str VisibleString
 }
 
+SeqOf ::= SEQUENCE OF INTEGER
+
+Choice ::= CHOICE {
+  num INTEGER,
+  str VisibleString
+}
+
 END

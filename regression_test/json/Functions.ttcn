@@ -67,7 +67,7 @@ external function f_enc_A(in A u) return octetstring
 external function f_enc_ER(in EmptyRec u) return octetstring
   with { extension "prototype(convert)"; extension "encode(JSON)"; }
   
-external function f_enc_roi(in RoI u) return octetstring
+external function f_enc_roi(in RoI u) return bitstring
   with { extension "prototype(convert)"; extension "encode(JSON)"; }
   
 external function f_enc_rof(in RoF u) return octetstring
@@ -215,7 +215,7 @@ external function f_dec_A(in octetstring x) return A
 external function f_dec_ER(in octetstring x) return EmptyRec
   with { extension "prototype(convert)"; extension "decode(JSON)"; }
   
-external function f_dec_roi(in octetstring x) return RoI
+external function f_dec_roi(in bitstring x) return RoI
   with { extension "prototype(convert)"; extension "decode(JSON)"; }
   
 external function f_dec_rof(in octetstring x) return RoF
@@ -294,6 +294,15 @@ external function f_dec_null(in octetstring x) return HasNull
 //============== Internal Functions ====================
   
 function f_check_encoding(in octetstring encoded, in octetstring expected) {
+   log("encoded: ",encoded," expected: ",expected)
+   if(encoded == expected) {
+     setverdict(pass);
+   } else {
+      setverdict(fail, "expected:", expected,"received: ", encoded);
+   }
+ } with { extension "transparent"}
+ 
+ function f_check_encoding_bit(in bitstring encoded, in bitstring expected) {
    log("encoded: ",encoded," expected: ",expected)
    if(encoded == expected) {
      setverdict(pass);

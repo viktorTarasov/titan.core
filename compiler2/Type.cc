@@ -176,6 +176,9 @@ namespace Common {
 
   Type *Type::get_stream_type(MessageEncodingType_t encoding_type, int stream_variant)
   {
+    if (stream_variant == 0) {
+      return get_pooltype(T_BSTR);
+    }
     switch (encoding_type) {
     case CT_BER:
     case CT_PER:
@@ -184,13 +187,11 @@ namespace Common {
     case CT_JSON:
       return get_pooltype(T_OSTR);
     case CT_TEXT:
-      if(stream_variant==0){
+      if(stream_variant==1){
         return get_pooltype(T_CSTR);
       } else {
         return get_pooltype(T_OSTR);
       }
-    case CT_CUSTOM:
-      return get_pooltype(T_BSTR);
     default:
       FATAL_ERROR("Type::get_stream_type()");
       return 0;
@@ -606,6 +607,8 @@ namespace Common {
     chk_finished = false;
     pard_type_instance = false;
     needs_any_from_done = false;
+    encoding_by_function = false;
+    decoding_by_function = false;
     asn_encoding = CT_UNDEF;
     asn_decoding = CT_UNDEF;
   }
@@ -4395,27 +4398,45 @@ namespace Common {
   
   void Type::set_coding_function(bool encode, const string& function_name)
   {
-    string& coding_str = encode ? encoding_str : decoding_str;
-    if (!coding_str.empty()) {
-      error("Multiple custom %s functions declared for type '%s' (function `%s' "
-        "is already set)", encode ? "encoding" : "decoding",
-        get_typename().c_str(), coding_str.c_str());
+    string& coding_function = encode ? encoding_function : decoding_function;
+    MessageEncodingType_t& asn_coding = encode ? asn_encoding : asn_decoding;
+    bool& coding_by_function = encode ?
+      encoding_by_function : decoding_by_function;
+    if (!coding_function.empty()) {
+      // leave coding_by_function as true, this will indicate that there are
+      // multiple coding functions set
+      coding_function.clear();
+    }
+    else if (asn_coding != CT_UNDEF) {
+      // a different encoding type is already set for the ASN.1 type
+      asn_coding = CT_MULTIPLE;
+      coding_function.clear();
       return;
     }
-    coding_str = function_name;
-    coding_by_function = true;
+    else {
+      if (is_asn1()) {
+        asn_coding = CT_PER;
+      }
+      coding_function = function_name;
+      coding_by_function = true;
+    }
   }
   
   void Type::set_asn_coding(bool encode, Type::MessageEncodingType_t new_coding)
   {
     MessageEncodingType_t& coding = encode ? asn_encoding : asn_decoding;
-    if (coding == CT_UNDEF) {
+    bool& coding_by_function = encode ?
+      encoding_by_function : decoding_by_function; // true = PER coder is set
+    string& coding_function = encode ? encoding_function : decoding_function; // PER coder
+    if (coding == CT_UNDEF && !coding_by_function) {
       // this is the first encoding/decoding function for this type, store it
+      // (also, no PER coders have been set for the type yet)
       coding = new_coding;
     }
-    else if (coding != new_coding) {
+    else if (coding != new_coding || coding_by_function) {
       // there are several encoding/decoding functions declared for this type
       // with different codings (encvalue/decvalue cannot be used in this case)
+      coding_function.clear();
       coding = CT_MULTIPLE;
     }
   }
@@ -4424,7 +4445,8 @@ namespace Common {
     string& coding_str = encode ? encoding_str : decoding_str;
     if (!coding_str.empty())
       return;
-    coding_by_function = false;
+    bool& coding_by_function = encode ?
+      encoding_by_function : decoding_by_function;
     Type::MessageEncodingType_t coding = CT_UNDEF;
 
     if (!is_asn1()) {
@@ -4517,18 +4539,18 @@ namespace Common {
     else { // ASN.1 type
       coding = encode ? asn_encoding : asn_decoding;
       if ((coding == CT_UNDEF && delayed) || coding == CT_MULTIPLE) {
-        // either this is the delayed call and no external function has been
+        // either this is the delayed call and no external functions have been
         // found, or there was already more than one function
         error("Cannot determine the %s rules for ASN.1 type `%s'. "
-          "%s %s external function%s found%s", encode ? "encoding" : "decoding",
+          "%s %s external functions found%s", encode ? "encoding" : "decoding",
           get_typename().c_str(), coding == CT_UNDEF ? "No" : "Multiple",
-          encode ? "encoding" : "decoding", coding == CT_UNDEF ? "" : "s",
+          encode ? "encoding" : "decoding",
           coding == CT_UNDEF ? "" : " with different rules");
         return;
       }
-      if (coding == CT_UNDEF && !delayed) {
-        // the coding type is set by the external function's checker in this case;
-        // it's possible, that the function exists, but has not been reached yet;
+      if (!delayed) {
+        // there have been no errors so far in determining the coding type,
+        // but there might still be unchecked external functions out there;
         // delay this function until everything else has been checked
         Modules::delay_type_encode_check(this, encode);
         return;
@@ -4546,9 +4568,6 @@ namespace Common {
         break;
       case CT_TEXT:
         coding_str = "TEXT";
-        break;
-      case CT_PER:
-        coding_str = "PER";
         break;
       case CT_XER:
         coding_str = "XER, XER_EXTENDED"; // TODO: fine tuning this parameter
@@ -4568,20 +4587,31 @@ namespace Common {
         if (!berattrib)
           delete ber;
         break; }
-      case CT_CUSTOM:
-        if (!delayed) {
-          // coding_str is set by the coding function's checker in this case;
-          // it's possible, that the function exists, but has not been reached yet;
+      case CT_PER:
+      case CT_CUSTOM: {
+        // the coding function is set by its semantic checker in this case
+        string& coding_function = encode ? encoding_function : decoding_function;
+        if (coding_function.empty() && coding_by_function) {
+          error("Multiple %s %s functions set for type `%s'",
+            get_encoding_name(coding), encode ? "encoding" : "decoding",
+            get_typename().c_str());
+        }
+        else if (!delayed) {
+          // there have been no errors so far in determining the coding function,
+          // but there might still be unchecked external functions out there;
           // delay this function until everything else has been checked
           Modules::delay_type_encode_check(this, encode);
         }        
-        else if (coding_str.empty()) {
-          // this is the delayed call, and the custom coding function has still
-          // not been found
-          error("No custom %s function found for type `%s'",
+        else if (coding_function.empty()) {
+          // this is the delayed call, and the coding function has still not been set
+          error("No %s %s function found for type `%s'", get_encoding_name(coding),
             encode ? "encoding" : "decoding", get_typename().c_str());
         }
-        return;
+        else {
+          // this is the delayed call, and exactly one coding function has been set
+          coding_str = coding_function;
+        }
+        return; }
       default:
         error("Unknown coding selected for type '%s'", get_typename().c_str());
         break;
@@ -4589,8 +4619,8 @@ namespace Common {
     coding_by_function = false;
   }
 
-  bool Type::is_coding_by_function() const {
-    return coding_by_function;
+  bool Type::is_coding_by_function(bool encode) const {
+    return encode ? encoding_by_function : decoding_by_function;
   }
 
   const string& Type::get_coding(bool encode) const {

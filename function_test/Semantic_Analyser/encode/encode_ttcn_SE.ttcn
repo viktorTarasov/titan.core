@@ -1,0 +1,95 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+module encode_ttcn_SE { //^In TTCN-3 module//
+
+
+/* types with no coder functions */
+type integer AnInt with { encode "nonexistent" }; //^error\: No custom decoding function found for type//
+
+type record ARecord { //^error\: No custom decoding function found for type//
+  integer i,
+  octetstring os
+}
+
+function f1() {
+  var ARecord x;
+  var AnInt y;
+  var bitstring bs := '110'B;
+
+  if (decvalue(bs, y) != 0) {}
+  if (decvalue(bs, x) != 0) {} 
+}
+
+
+/* invalid custom coding functions */
+type record of integer AList with { encode "codec1" };
+
+external function f_enc_list1(in AList x, out bitstring y) //^In external function definition// //Only `prototype\(convert\)' is allowed for custom encoding functions//
+  with { extension "prototype(fast) encode(codec1)" }
+  
+external function f_enc_list2(in AList x) return octetstring //^In external function definition// //The output type of custom encoding should be `bitstring' instead of `octetstring'//
+  with { extension "prototype(convert) encode(codec1)" }
+  
+external function f_dec_list1(in bitstring x) return AList //^In external function definition// //Only `prototype\(sliding\)' is allowed for custom decoding functions//
+  with { extension "prototype(convert) decode(codec1)" }
+  
+external function f_dec_list2(in bitstring x, out AList y) //^In external function definition// //Only `prototype\(sliding\)' is allowed for custom decoding functions//
+  with { extension "prototype(fast) decode(codec1)" }
+
+external function f_dec_list3(in bitstring x, out AList y) return integer //^In external function definition// //Only `prototype\(sliding\)' is allowed for custom decoding functions//
+  with { extension "prototype(backtrack) decode(codec1)" }
+  
+external function f_dec_list4(inout charstring x, out AList y) return integer //^In external function definition// //The input type of custom decoding should be `bitstring' instead of `charstring'//
+  with { extension "prototype(sliding) decode(codec1)" }
+ 
+
+/* type with multiple custom coding functions */ 
+type union AUnion { //Multiple custom encoding functions set for type// //Multiple custom decoding functions set for type//
+  octetstring field
+}
+with {
+  encode "codec2"
+}
+
+external function f_enc_uni1(in AUnion x) return bitstring
+  with { extension "prototype(convert) encode(codec2)" }
+  
+external function f_enc_uni2(in AUnion x) return bitstring
+  with { extension "prototype(convert) encode(codec2)" }
+  
+external function f_dec_uni1(inout bitstring x, out AUnion y) return integer
+  with { extension "prototype(sliding) decode(codec2)" }
+
+function f2() { //^In function definition//
+  var AUnion x := { field := '1234'O };
+  var bitstring y := encvalue(x); //^In variable definition// //^In the parameter of encvalue//
+  var integer res := decvalue(y, x);
+}
+
+external function f_dec_uni2(inout bitstring x, out AUnion y) return integer
+  with { extension "prototype(sliding) decode(codec2)" }
+  
+  
+/* type with multiple custom encoding functions, but no encvalue */
+type integer AnArray[4] with { encode "codec3" }
+
+external function f_enc_arr1(in AnArray x) return bitstring
+  with { extension "prototype(convert) encode(codec3)" }
+  
+external function f_enc_arr2(in AnArray x) return bitstring
+  with { extension "prototype(convert) encode(codec3)" }
+
+
+} with {
+  encode "whatever"
+}

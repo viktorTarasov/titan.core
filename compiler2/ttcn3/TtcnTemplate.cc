@@ -4582,7 +4582,7 @@ compile_time:
       target_type->get_genname_value(my_scope).c_str(), class_tmp_id.c_str(),
       target_type->get_genname_template(my_scope).c_str(), class_tmp_id.c_str(),
       target_type->get_genname_value(my_scope).c_str());
-    bool dec_by_func = target_type->is_coding_by_function();
+    bool dec_by_func = target_type->is_coding_by_function(false);
     if (dec_by_func) {
       str = mputprintf(str,
         // convert the TTCN_Buffer into a bitstring
