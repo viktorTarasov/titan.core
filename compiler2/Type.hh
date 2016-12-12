@@ -307,7 +307,10 @@ namespace Common {
 
     string encoding_str;  // needed by codegen for encvalue() and decvalue()
     string decoding_str;
-    bool coding_by_function;  // false - coding attribute is set, true - coding via coding function
+    bool encoding_by_function;  // false - coding attribute is set, true - coding via coding function
+    bool decoding_by_function;  // same for decoding
+    string encoding_function; // name of custom or PER encoder
+    string decoding_function; // name of custom or PER decoder
     MessageEncodingType_t asn_encoding; // set by the semantic analysis of encoding
     MessageEncodingType_t asn_decoding; // and decoding external functions for ASN.1 types
     /** What kind of AST element owns the type.
@@ -659,7 +662,7 @@ namespace Common {
     void set_coding_function(bool encode, const string& function_name);
     void set_asn_coding(bool encode, MessageEncodingType_t new_coding);
     void chk_coding(bool encode, bool delayed = false);
-    bool is_coding_by_function() const;
+    bool is_coding_by_function(bool encode) const;
     const string& get_coding(bool encode) const;
   private:
     static MessageEncodingType_t get_enc_type(const Ttcn::SingleWithAttrib& enc);

@@ -428,7 +428,7 @@ namespace Ttcn {
         source_type->get_typename().c_str(),
         Type::get_encoding_name(u.encdec.coding_type));
     }
-    Type *stream_type = Type::get_stream_type(u.encdec.coding_type);
+    Type *stream_type = Type::get_stream_type(u.encdec.coding_type, 1);
     if (!stream_type->is_identical(target_type)) {
       target_type->error("Target type of %s encoding should be `%s' instead "
         "of `%s'", Type::get_encoding_name(u.encdec.coding_type),
@@ -441,7 +441,7 @@ namespace Ttcn {
   void TypeMappingTarget::chk_decode(Type *source_type)
   {
     Error_Context cntxt(this, "In `decode' mapping");
-    Type *stream_type = Type::get_stream_type(u.encdec.coding_type);
+    Type *stream_type = Type::get_stream_type(u.encdec.coding_type, 1);
     if (!stream_type->is_identical(source_type)) {
       source_type->error("Source type of %s encoding should be `%s' instead "
         "of `%s'", Type::get_encoding_name(u.encdec.coding_type),

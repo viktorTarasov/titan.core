@@ -6561,9 +6561,11 @@ namespace Ttcn {
             // "untagged" on the (toplevel) input type will have no effect.
             warning("UNTAGGED encoding attribute is ignored on top-level type");
           }
-          if (Common::Type::CT_CUSTOM == encoding_type) {
+          if (Common::Type::CT_CUSTOM == encoding_type ||
+              Common::Type::CT_PER == encoding_type) {
             if (PROTOTYPE_CONVERT != prototype) {
-              error("Only `prototype(convert)' is allowed for custom encoding functions");
+              error("Only `prototype(convert)' is allowed for %s encoding functions",
+                Type::get_encoding_name(encoding_type));
             }
             else {
               // let the input type know that this is its encoding function
@@ -6580,22 +6582,43 @@ namespace Ttcn {
         }
       }
       if (output_type) {
-        if(encoding_type == Common::Type::CT_TEXT) { // TEXT encoding supports both octetstring and charstring stream types
+        if(encoding_type == Common::Type::CT_TEXT) {
+          // TEXT encoding supports bitstring, octetstring and charstring stream types
           Type *stream_type = Type::get_stream_type(encoding_type,0);
           Type *stream_type2 = Type::get_stream_type(encoding_type,1);
-          if ( (!stream_type->is_identical(output_type)) && (!stream_type2->is_identical(output_type)) ) {
-            output_type->error("The output type of %s encoding should be `%s' or `%s' "
-              "instead of `%s'", Type::get_encoding_name(encoding_type),
+          Type *stream_type3 = Type::get_stream_type(encoding_type,2);
+          if ( (!stream_type->is_identical(output_type)) &&
+               (!stream_type2->is_identical(output_type)) &&
+               (!stream_type3->is_identical(output_type))) {
+            output_type->error("The output type of %s encoding should be `%s', "
+              "`%s' or `%s' instead of `%s'", Type::get_encoding_name(encoding_type),
               stream_type->get_typename().c_str(),
               stream_type2->get_typename().c_str(),
+              stream_type3->get_typename().c_str(),
               output_type->get_typename().c_str());
           }
-        } else {
+        }
+        else if (encoding_type == Common::Type::CT_CUSTOM ||
+                 encoding_type == Common::Type::CT_PER) {
+          // custom and PER encodings only support the bitstring stream type
           Type *stream_type = Type::get_stream_type(encoding_type);
           if (!stream_type->is_identical(output_type)) {
             output_type->error("The output type of %s encoding should be `%s' "
               "instead of `%s'", Type::get_encoding_name(encoding_type),
               stream_type->get_typename().c_str(),
+              output_type->get_typename().c_str());
+          }
+        }
+        else {
+          // all other encodings support bitstring and octetstring stream types
+          Type *stream_type = Type::get_stream_type(encoding_type, 0);
+          Type *stream_type2 = Type::get_stream_type(encoding_type, 1);
+          if (!stream_type->is_identical(output_type) &&
+              !stream_type2->is_identical(output_type)) {
+            output_type->error("The output type of %s encoding should be `%s' "
+              "or '%s' instead of `%s'", Type::get_encoding_name(encoding_type),
+              stream_type->get_typename().c_str(),
+              stream_type2->get_typename().c_str(),
               output_type->get_typename().c_str());
           }
         }
@@ -6608,17 +6631,25 @@ namespace Ttcn {
         error("Attribute `decode' cannot be used without `prototype'");
       }
       if (input_type) {
-        if(encoding_type == Common::Type::CT_TEXT) { // TEXT encoding supports both octetstring and charstring stream types
+        if(encoding_type == Common::Type::CT_TEXT) {
+          // TEXT encoding supports bitstring, octetstring and charstring stream types
           Type *stream_type = Type::get_stream_type(encoding_type,0);
           Type *stream_type2 = Type::get_stream_type(encoding_type,1);
-          if ( (!stream_type->is_identical(input_type)) && (!stream_type2->is_identical(input_type)) ) {
-            input_type->error("The input type of %s decoding should be `%s' or `%s' "
-              "instead of `%s'", Type::get_encoding_name(encoding_type),
+          Type *stream_type3 = Type::get_stream_type(encoding_type,2);
+          if ( (!stream_type->is_identical(input_type)) &&
+               (!stream_type2->is_identical(input_type)) &&
+               (!stream_type3->is_identical(input_type))) {
+            input_type->error("The input type of %s decoding should be `%s', "
+            "`%s' or `%s' instead of `%s'", Type::get_encoding_name(encoding_type),
               stream_type->get_typename().c_str(),
               stream_type2->get_typename().c_str(),
+              stream_type3->get_typename().c_str(),
               input_type->get_typename().c_str());
           }
-        } else {
+        }
+        else if (encoding_type == Common::Type::CT_CUSTOM ||
+                 encoding_type == Common::Type::CT_PER) {
+          // custom and PER encodings only support the bitstring stream type
           Type *stream_type = Type::get_stream_type(encoding_type);
           if (!stream_type->is_identical(input_type)) {
             input_type->error("The input type of %s decoding should be `%s' "
@@ -6627,7 +6658,19 @@ namespace Ttcn {
               input_type->get_typename().c_str());
           }
         }
-        
+        else {
+          // all other encodings support bitstring and octetstring stream types
+          Type *stream_type = Type::get_stream_type(encoding_type, 0);
+          Type *stream_type2 = Type::get_stream_type(encoding_type, 1);
+          if (!stream_type->is_identical(input_type) &&
+              !stream_type2->is_identical(input_type)) {
+            input_type->error("The input type of %s decoding should be `%s' "
+              "or `%s' instead of `%s'", Type::get_encoding_name(encoding_type),
+              stream_type->get_typename().c_str(),
+              stream_type2->get_typename().c_str(),
+              input_type->get_typename().c_str());
+          }
+        }
       }
       if (output_type && !output_type->has_encoding(encoding_type, encoding_options)) {
         if (Common::Type::CT_CUSTOM == encoding_type) {
@@ -6641,9 +6684,11 @@ namespace Ttcn {
         }
       }
       else {
-        if (Common::Type::CT_CUSTOM == encoding_type) {
+        if (Common::Type::CT_CUSTOM == encoding_type ||
+            Common::Type::CT_PER == encoding_type) {
           if (PROTOTYPE_SLIDING != prototype) {
-            error("Only `prototype(sliding)' is allowed for custom decoding functions");
+            error("Only `prototype(sliding)' is allowed for %s decoding functions",
+              Type::get_encoding_name(encoding_type));
           }
           else if (output_type) {
             // let the output type know that this is its decoding function
@@ -6863,13 +6908,25 @@ namespace Ttcn {
       result_name = 0;
     }
     // taking the result from the buffer and producing debug printout
-    str = mputprintf(str, "ttcn_buffer.get_string(%s);\n"
+    if (output_type->get_type_refd_last()->get_typetype_ttcn3() ==
+        Common::Type::T_BSTR) {
+      // cannot extract a bitstring from the buffer, use temporary octetstring
+      // and convert it to bitstring
+      str = mputprintf(str,
+        "OCTETSTRING tmp_os;\n"
+        "ttcn_buffer.get_string(tmp_os);\n"
+        "%s = oct2bit(tmp_os);\n", result_name);
+    }
+    else {
+      str = mputprintf(str, "ttcn_buffer.get_string(%s);\n", result_name);
+    }
+    str = mputprintf(str,
       "if (TTCN_Logger::log_this_event(TTCN_Logger::DEBUG_ENCDEC)) {\n"
       "TTCN_Logger::begin_event(TTCN_Logger::DEBUG_ENCDEC);\n"
       "TTCN_Logger::log_event_str(\"%s(): Stream after encoding: \");\n"
       "%s.log();\n"
       "TTCN_Logger::end_event();\n"
-      "}\n", result_name, function_name, result_name);
+      "}\n", function_name, result_name);
     // returning the result stream if necessary
     if (prototype == PROTOTYPE_CONVERT) {
       if (debugger_active) {
@@ -6909,9 +6966,17 @@ namespace Ttcn {
       "TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);\n");
     } else str = mputstr(str, "TTCN_EncDec::set_error_behavior("
       "TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_DEFAULT);\n");
+    str = mputstr(str, "TTCN_EncDec::clear_error();\n");
     // creating a buffer from the input stream
-    str = mputprintf(str, "TTCN_EncDec::clear_error();\n"
-      "TTCN_Buffer ttcn_buffer(%s);\n", first_par_name);
+    if (input_type->get_type_refd_last()->get_typetype_ttcn3() ==
+        Common::Type::T_BSTR) {
+      // cannot create a buffer from a bitstring, convert it to octetstring
+      str = mputprintf(str, "TTCN_Buffer ttcn_buffer(bit2oct(%s));\n",
+        first_par_name);
+    }
+    else {
+      str = mputprintf(str, "TTCN_Buffer ttcn_buffer(%s);\n", first_par_name);
+    }
     const char *result_name;
     if (prototype == PROTOTYPE_CONVERT) {
       // creating a local variable for the result
@@ -6949,14 +7014,25 @@ namespace Ttcn {
         "if (ttcn_buffer.get_pos() < ttcn_buffer.get_len()-1 && "
           "TTCN_Logger::log_this_event(TTCN_WARNING)) {\n"
         "ttcn_buffer.cut();\n"
-        "%s remaining_stream;\n"
-        "ttcn_buffer.get_string(remaining_stream);\n"
+        "%s remaining_stream;\n",
+        input_type->get_genname_value(my_scope).c_str());
+      if (input_type->get_type_refd_last()->get_typetype_ttcn3() ==
+          Common::Type::T_BSTR) {
+        str = mputstr(str,
+          "OCTETSTRING tmp_os;\n"
+          "ttcn_buffer.get_string(tmp_os);\n"
+          "remaining_stream = oct2bit(tmp_os);\n");
+      }
+      else {
+        str = mputstr(str, "ttcn_buffer.get_string(remaining_stream);\n");
+      }
+      str = mputprintf(str,
         "TTCN_Logger::begin_event(TTCN_WARNING);\n"
         "TTCN_Logger::log_event_str(\"%s(): Warning: Data remained at the end "
           "of the stream after successful decoding: \");\n"
         "remaining_stream.log();\n"
         "TTCN_Logger::end_event();\n"
-        "}\n", input_type->get_genname_value(my_scope).c_str(), function_name);
+        "}\n", function_name);
       // closing the block and returning the appropriate result or status code
       if (prototype == PROTOTYPE_BACKTRACK) {
         if (debugger_active) {
@@ -6984,11 +7060,21 @@ namespace Ttcn {
       }
     } else {
       // result handling and debug printout for sliding decoders
-      str = mputprintf(str, "switch (TTCN_EncDec::get_last_error_type()) {\n"
+      str = mputstr(str, "switch (TTCN_EncDec::get_last_error_type()) {\n"
         "case TTCN_EncDec::ET_NONE:\n"
         // TTCN_Buffer::get_string will call OCTETSTRING::clean_up()
-        "ttcn_buffer.cut();\n"
-        "ttcn_buffer.get_string(%s);\n"
+        "ttcn_buffer.cut();\n");
+      if (input_type->get_type_refd_last()->get_typetype_ttcn3() ==
+          Common::Type::T_BSTR) {
+        str = mputprintf(str,
+          "OCTETSTRING tmp_os;\n"
+          "ttcn_buffer.get_string(tmp_os);\n"
+          "%s = oct2bit(tmp_os);\n", first_par_name);
+      }
+      else {
+        str = mputprintf(str, "ttcn_buffer.get_string(%s);\n", first_par_name);
+      }
+      str = mputprintf(str,
         "if (TTCN_Logger::log_this_event(TTCN_Logger::DEBUG_ENCDEC)) {\n"
         "TTCN_Logger::begin_event(TTCN_Logger::DEBUG_ENCDEC);\n"
         "TTCN_Logger::log_event_str(\"%s(): Stream after decoding: \");\n"
@@ -7001,7 +7087,7 @@ namespace Ttcn {
         "%sreturn 2;\n"
         "default:\n"
         "%sreturn 1;\n"
-        "}\n", first_par_name, function_name, first_par_name,
+        "}\n", function_name, first_par_name,
         debugger_active ? "ttcn3_debugger.set_return_value(\"0\");\n" : "",
         debugger_active ? "ttcn3_debugger.set_return_value(\"2\");\n" : "",
         debugger_active ? "ttcn3_debugger.set_return_value(\"1\");\n" : "");

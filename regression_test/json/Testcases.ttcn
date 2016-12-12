@@ -367,35 +367,35 @@ testcase tc_record_empty() runs on MTC{
 
 //====== Record of===============
 
-//ROI
+//ROI (with bitstring as stream type)
 testcase tc_recordofinteger_empty() runs on MTC{
   var RoI r:={}
-  var octetstring os := char2oct("[]");
-  f_check_encoding(encoded:= f_enc_roi(r), expected := os)
+  var bitstring bs := oct2bit(char2oct("[]"));
+  f_check_encoding_bit(encoded:= f_enc_roi(r), expected := bs)
   f_bool2verdict(match(f_dec_roi(f_enc_roi(r)), r));
 }
 
 testcase tc_recordofinteger_short() runs on MTC{
   var RoI r:= { 1, 4, 5, 7, 6, 6, 4, 0 , -1 };
-  var octetstring os := char2oct("[1,4,5,7,6,6,4,0,-1]");
-  f_check_encoding(encoded:= f_enc_roi(r), expected := os)
+  var bitstring bs := oct2bit(char2oct("[1,4,5,7,6,6,4,0,-1]"));
+  f_check_encoding_bit(encoded:= f_enc_roi(r), expected := bs)
   f_bool2verdict(match(f_dec_roi(f_enc_roi(r)), r));
 }
 
 testcase tc_recordofinteger_long() runs on MTC{
   var RoI r:= {0};
-  var octetstring os := char2oct("[0");
+  var bitstring bs := oct2bit(char2oct("[0"));
   //init:
   
   for(var integer i:=1; i<50; i:=i+1) {
     r[i]:=i;
-    os := os & commao & char2oct(int2str(i));
+    bs := bs & oct2bit(commao) & oct2bit(char2oct(int2str(i)));
   }
-  os := os & char2oct("]")
+  bs := bs & oct2bit(char2oct("]"));
   log(r);
-  log(os)
+  log(bs)
   //test:
-  f_check_encoding(encoded:= f_enc_roi(r), expected := os)
+  f_check_encoding_bit(encoded:= f_enc_roi(r), expected := bs)
   f_bool2verdict(match(f_dec_roi(f_enc_roi(r)), r));
 }
 

@@ -35,6 +35,11 @@ namespace Custom1 {
 BITSTRING f__enc__recof(const RecOf& x);
 INTEGER f__dec__recof(BITSTRING& b, RecOf& x);
 
+// "PER" coder functions, using the built-in JSON codec
+extern BITSTRING f__enc__seqof(const Types::SeqOf& x);
+extern INTEGER f__dec__seqof(BITSTRING& x, Types::SeqOf& y);
+extern INTEGER f__dec__choice(BITSTRING& x, Types::Choice& y);
+
 }
 
 #endif

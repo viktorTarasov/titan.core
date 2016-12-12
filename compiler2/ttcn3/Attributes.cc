@@ -567,8 +567,8 @@ namespace Ttcn {
         if (act_attr->get_is_raw()) {
           switch (ti_type->get_typetype_ttcn3()) {
           case Type::T_BSTR:
-            if (!type->has_encoding(Type::CT_PER) && !type->has_encoding(Type::CT_RAW)) {
-              act_attr->error("A `raw' %s value was used for erroneous type `%s' which has no RAW or PER encodings.",
+            if (!type->has_encoding(Type::CT_RAW)) {
+              act_attr->error("A `raw' %s value was used for erroneous type `%s' which has no RAW encoding.",
                               ti_type->get_typename().c_str(), type->get_typename().c_str());
             }
             break;
@@ -591,7 +591,6 @@ namespace Ttcn {
         } else {
           // the two types must have at least one common encoding
           if (!((type->has_encoding(Type::CT_BER)&&ti_type->has_encoding(Type::CT_BER)) ||
-                (type->has_encoding(Type::CT_PER)&&ti_type->has_encoding(Type::CT_PER)) ||
                 (type->has_encoding(Type::CT_RAW)&&ti_type->has_encoding(Type::CT_RAW)) ||
                 (type->has_encoding(Type::CT_TEXT)&&ti_type->has_encoding(Type::CT_TEXT)) ||
                 (type->has_encoding(Type::CT_XER)&&ti_type->has_encoding(Type::CT_XER)) ||

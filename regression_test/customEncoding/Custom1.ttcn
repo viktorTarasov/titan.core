@@ -14,9 +14,11 @@
 // This module tests custom encoding for TTCN-3 types and encoding for ASN.1 types
 // (Encvalue and decvalue encode and decode values of TTCN-3 types using manually written
 // external functions, as long as they have the same encoding name as the value's type.
-// A similar technique is used when using encvalue or decvalue on a value of
-// and ASN.1 type: an encoding/decoding external function, of a built-in encoding type,
-// must be declared for the ASN.1 type).
+// When using encvalue or decvalue on a value of an ASN.1 type an encoding/decoding
+// external function, of a built-in encoding type, must be declared for the ASN.1 type.
+// PER encoding for ASN.1 types works similarly to custom encoding for TTCN-3 types:
+// encoding and decoding is done by manually written coders, that are declared with
+// the 'PER' encoding attribute, instead of a custom encoding attribute).
 module Custom1 {
 
 import from Custom2 all;
@@ -326,6 +328,128 @@ testcase tc_asn_decmatch() runs on CT
   }
 }
 
+// PER coder functions, these need to be implemented manually, just like custom
+// coder functions
+external function f_enc_seqof(in SeqOf x) return bitstring
+  with { extension "prototype(convert) encode(PER)" };
+  
+external function f_dec_seqof(inout bitstring x, out SeqOf y) return integer
+  with { extension "prototype(sliding) decode(PER)" };
+  
+// Test 11.
+// PER coder with encvalue and decvalue.
+testcase tc_per() runs on CT
+{
+  var SeqOf x := { 1, 2, 3 };
+  // the manually written "PER" coder for this module uses the built-in JSON coder
+  var bitstring enc_exp := oct2bit(char2oct("[1,2,3]"));
+  var SeqOf dec_exp := x;
+  
+  var bitstring enc := encvalue(x);
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  var SeqOf dec;
+  var integer res := decvalue(enc_exp, dec);
+  if (res != 0) {
+    setverdict(fail, "Failed to decode ", enc_exp);
+  }
+  if (dec != dec_exp) {
+    setverdict(fail, "Expected: ", dec_exp, ", got: ", dec);
+  }
+  setverdict(pass);
+}
+
+// Test 12.
+// The redirected parameter is decoded using the PER coder.
+// Same input value as in test 11.
+testcase tc_per_param_redirect() runs on CT
+{
+  connect(self:pt_proc, self:pt_proc);
+  var SeqOf val := { 1, 2, 3 };
+  var charstring str_fmt := "UTF-8";
+  var universal charstring val_enc := encvalue_unichar(val, str_fmt);
+  var SeqOf res;
+  pt_proc.reply(Sig: { p := val_enc });
+  timer tmr := 1.0;
+  tmr.start;
+  alt {
+    [] pt_proc.getreply(Sig: { p := val_enc }) -> param (res := @decoded(str_fmt) p) {
+      if (res != val) {
+        setverdict(fail, "Invalid decoded parameter. Expected: ", val, ", got: ", res);
+      }
+      else {
+        setverdict(pass);
+      }
+    }
+    [] pt_proc.getreply(Sig: { p := ?}) {
+      setverdict(fail, "Invalid reply received.");
+    }
+    [] tmr.timeout {
+      setverdict(fail, "Timed out.");
+    }
+  }
+}
+
+// Test 13.
+// Decoded content matching with the PER coder.
+// Same input value as in test 11.
+testcase tc_per_decmatch() runs on CT
+{
+  connect(self:pt_msg, self:pt_msg);
+  var SeqOf val := { 1, 2, 3 };
+  var Msg msg := { data := omit, list := { encvalue(val) } };
+  var SeqOf res;
+  pt_msg.send(msg);
+  timer tmr := 1.0;
+  tmr.start;
+  alt {
+    [] pt_msg.receive(Msg: { data := omit, list := { decmatch val } }) {
+      setverdict(pass);
+    }
+    [] pt_msg.receive(?) {
+      setverdict(fail, "Invalid message received or decoded content matching failed.");
+    }
+    [] tmr.timeout {
+      setverdict(fail, "Timed out.");
+    }
+  }
+}
+
+// encoder function for ASN.1 type Choice, using the built-in JSON codec
+external function f_enc_choice(in Choice x) return bitstring
+  with { extension "prototype(convert) encode(JSON)" };
+
+// PER decoder function for ASN.1 type Choice, which needs to be implemented manually
+external function f_dec_choice(inout bitstring x, out Choice y) return integer
+  with { extension "prototype(sliding) decode(PER)" };
+
+// Test 14.
+// Encoding an ASN.1 type with JSON (built-in) and decoding the same type with PER (manual).
+testcase tc_asn_mixed() runs on CT
+{
+  var Choice x := { num := 2 };
+  var bitstring enc_exp := oct2bit(char2oct("{\"num\":2}"));
+  // the manually written "PER" decoder for this module uses the built-in JSON coder,
+  // so the encoding result can safely be used as input for the decoder, and the
+  // decoding result will be the initial value
+  var Choice dec_exp := x;
+  
+  var bitstring enc := encvalue(x);
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  var Choice dec;
+  var integer res := decvalue(enc_exp, dec);
+  if (res != 0) {
+    setverdict(fail, "Failed to decode ", enc_exp);
+  }
+  if (dec != dec_exp) {
+    setverdict(fail, "Expected: ", dec_exp, ", got: ", dec);
+  }
+  setverdict(pass);
+}
+
 control {
   execute(tc_custom1());
   execute(tc_custom2());
@@ -337,6 +461,10 @@ control {
   execute(tc_asn());
   execute(tc_asn_param_redirect());
   execute(tc_asn_decmatch());
+  execute(tc_per());
+  execute(tc_per_param_redirect());
+  execute(tc_per_decmatch());
+  execute(tc_asn_mixed());
 }
 
 }

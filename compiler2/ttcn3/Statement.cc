@@ -9297,7 +9297,7 @@ error:
             set_params_str = mputstr(set_params_str, "}\nelse {\n");
           }
           Type::typetype_t tt = par->get_type()->get_type_refd_last()->get_typetype_ttcn3();
-          if (ve->get_dec_type()->is_coding_by_function()) {
+          if (ve->get_dec_type()->is_coding_by_function(false)) {
             set_params_str = mputstr(set_params_str, "BITSTRING buff(");
             switch (tt) {
             case Type::T_BSTR:
@@ -10041,7 +10041,7 @@ error:
               set_values_str = mputstr(set_values_str, "}\nelse {\n");
             }
             Type::typetype_t tt = redir_type->get_type_refd_last()->get_typetype_ttcn3();
-            if (member_type->is_coding_by_function()) {
+            if (member_type->is_coding_by_function(false)) {
               set_values_str = mputprintf(set_values_str, "BITSTRING buff_%d(",
                 (int)i);
               switch (tt) {

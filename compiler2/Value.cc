@@ -12970,7 +12970,7 @@ error:
       break;
     }
 
-    if (!gov_last->is_coding_by_function()) {
+    if (!gov_last->is_coding_by_function(true)) {
       const string& tmp_id = get_temporary_id();
       const string& tmp_buf_id = get_temporary_id();
       const string& tmp_ref_id = get_temporary_id();
@@ -13031,7 +13031,7 @@ error:
     if (expr2.preamble)
       expr->preamble = mputprintf(expr->preamble, "%s", expr2.preamble);
 
-    if (!_type->is_coding_by_function()) {
+    if (!_type->is_coding_by_function(false)) {
       const string& tmp_id = get_temporary_id();
       const string& buffer_id = get_temporary_id();
       const string& retval_id = get_temporary_id();
@@ -13127,7 +13127,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       v2_code = generate_code_char_coding_check(expr, u.expr.v2, "encvalue_unichar");
     }
 
-    if (!gov_last->is_coding_by_function()) {
+    if (!gov_last->is_coding_by_function(true)) {
       const string& tmp_id = get_temporary_id();
       const string& tmp_buf_id = get_temporary_id();
       const string& tmp_ref_id = get_temporary_id();
@@ -13205,7 +13205,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       v3_code = generate_code_char_coding_check(expr, u.expr.v3, "decvalue_unichar");
     }
 
-    if (!_type->is_coding_by_function()) {
+    if (!_type->is_coding_by_function(false)) {
       const string& tmp_id = get_temporary_id();
       const string& buffer_id = get_temporary_id();
       const string& retval_id = get_temporary_id();
