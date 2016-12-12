@@ -233,7 +233,7 @@ MPNumber
 %left '*' '/'
 %left UnarySign
 
-%expect 1
+%expect 2
 
 /*
 Source of conflicts (1 S/R):
@@ -245,6 +245,9 @@ all modules in the next module parameter (reduce).
 
 The built-in Bison behavior always chooses the shift over the reduce
 (the * is interpreted as multiplication).
+1 conflict:
+infinity can be a float value in LengthMatch's upper bound (SimpleParameterValue)
+or an infinityKeyword.
 */
 
 %%
@@ -331,6 +334,7 @@ ParameterReference:
 SimpleParameterValue:
 	MPNumber { BN_free($1); }
 | MPFloat
+| InfinityKeyword
 | BooleanValue
 | ObjIdValue
 | VerdictValue
@@ -364,18 +368,35 @@ PatternChunk:
 
 IntegerRange:
   '(' '-' InfinityKeyword DotDot MPNumber ')' { BN_free($5); }
+| '(' '-' InfinityKeyword DotDot '!' MPNumber ')' { BN_free($6); }
 | '(' MPNumber DotDot MPNumber ')' { BN_free($2); BN_free($4); }
+| '(' '!' MPNumber DotDot MPNumber ')' { BN_free($3); BN_free($5); }
+| '(' MPNumber DotDot '!' MPNumber ')' { BN_free($2); BN_free($5); }
+| '(' '!' MPNumber DotDot '!' MPNumber ')' { BN_free($3); BN_free($6); }
 | '(' MPNumber DotDot InfinityKeyword ')' { BN_free($2); }
+| '(' '!' MPNumber DotDot InfinityKeyword ')' { BN_free($3); }
 ;
 
 FloatRange:
   '(' '-' InfinityKeyword DotDot MPFloat ')'
+| '(' '!' '-' InfinityKeyword DotDot MPFloat ')'
+| '(' '-' InfinityKeyword DotDot '!' MPFloat ')'
+| '(' '!' '-' InfinityKeyword DotDot '!' MPFloat ')'
 | '(' MPFloat DotDot MPFloat ')'
+| '(' '!' MPFloat DotDot MPFloat ')'
+| '(' MPFloat DotDot '!' MPFloat ')'
+| '(' '!' MPFloat DotDot '!' MPFloat ')'
 | '(' MPFloat DotDot InfinityKeyword ')'
+| '(' '!' MPFloat DotDot InfinityKeyword ')'
+| '(' MPFloat DotDot '!' InfinityKeyword ')'
+| '(' '!' MPFloat DotDot '!' InfinityKeyword ')'
 ;
-
+  
 StringRange:
   '(' UniversalCharstringFragment DotDot UniversalCharstringFragment ')'
+| '(' '!' UniversalCharstringFragment DotDot UniversalCharstringFragment ')'
+| '(' UniversalCharstringFragment DotDot '!' UniversalCharstringFragment ')'
+| '(' '!' UniversalCharstringFragment DotDot '!' UniversalCharstringFragment ')'
 
 IntegerValue:
 	Number { $$ = $1; }

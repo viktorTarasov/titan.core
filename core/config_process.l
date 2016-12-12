@@ -96,7 +96,7 @@ LINECOMMENT ("//"|"#")[^\r\n]*{NEWLINE}
 
 NUMBER 0|([1-9][0-9]*)
 
-FLOAT [+-]?({NUMBER}\.[0-9]+)|((({NUMBER}(\.[0-9]+)?)|(\.[0-9]+))[Ee][+-]?{NUMBER})|infinity|not_a_number
+FLOAT [+-]?({NUMBER}\.[0-9]+)|((({NUMBER}(\.[0-9]+)?)|(\.[0-9]+))[Ee][+-]?{NUMBER})|not_a_number
 
 BIN 0|1
 BITSTRING '{BIN}*'B
