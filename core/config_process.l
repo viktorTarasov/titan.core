@@ -53,6 +53,11 @@
 
 #include "../common/dbgnew.hh"
 
+#ifndef INFINITY
+#include <float.h>
+static const double INFINITY = (DBL_MAX*DBL_MAX);
+#endif
+
 #include "Profiler.hh"
 
 extern string_map_t *config_defines;

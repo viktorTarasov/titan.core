@@ -51,6 +51,11 @@
 
 //#include "../../common/dbgnew.hh"
 
+#ifndef INFINITY
+#include <float.h>
+static const double INFINITY = (DBL_MAX*DBL_MAX);
+#endif
+
 extern string_map_t *config_defines;
 
 #define yylval config_read_lval
