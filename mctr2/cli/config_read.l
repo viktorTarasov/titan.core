@@ -35,6 +35,7 @@
 
 #include <deque>
 #include <string>
+#include <math.h>
 
 #include <openssl/crypto.h>
 #include <openssl/bn.h>
@@ -89,7 +90,7 @@ LINECOMMENT ("//"|"#")[^\r\n]*{NEWLINE}
 
 NUMBER 0|([1-9][0-9]*)
 
-FLOAT [+-]?({NUMBER}\.[0-9]+)|((({NUMBER}(\.[0-9]+)?)|(\.[0-9]+))[Ee][+-]?{NUMBER})
+FLOAT [+-]?({NUMBER}\.[0-9]+)|((({NUMBER}(\.[0-9]+)?)|(\.[0-9]+))[Ee][+-]?{NUMBER})|infinity|not_a_number
 
 BIN 0|1
 BITSTRING '{BIN}*'B
@@ -360,7 +361,15 @@ UID [uU][+]?[0-9A-Fa-f]{1,8}
 }
 
 {FLOAT}	{
-	yylval.float_val = atof(yytext);
+  if (!strcmp(yytext, "not_a_number")) {
+#ifdef NAN
+    yylval.float_val = NAN;
+#else
+    yylval.float_val = INFINITY + (-INFINITY);
+#endif
+  } else {
+    yylval.float_val = atof(yytext);
+  }
   if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     RETURN(MPFloat);
   }

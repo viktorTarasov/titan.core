@@ -16,7 +16,7 @@ include $(TOPDIR)/Makefile.regression
 unexport ABS_SRC
 unexport SRCDIR
 
-DIRS := assignment concat
+DIRS := assignment concat special_values
 ifdef RT2
 DIRS += references nested
 endif

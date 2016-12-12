@@ -34,6 +34,7 @@
 
 #include <deque>
 #include <string>
+#include <math.h>
 
 #include "../common/cfg_process_utils.hh"
 #include "../common/Path2.hh"
@@ -90,7 +91,7 @@ LINECOMMENT ("//"|"#")[^\r\n]*{NEWLINE}
 
 NUMBER 0|([1-9][0-9]*)
 
-FLOAT [+-]?({NUMBER}\.[0-9]+)|((({NUMBER}(\.[0-9]+)?)|(\.[0-9]+))[Ee][+-]?{NUMBER})
+FLOAT [+-]?({NUMBER}\.[0-9]+)|((({NUMBER}(\.[0-9]+)?)|(\.[0-9]+))[Ee][+-]?{NUMBER})|infinity|not_a_number
 
 BIN 0|1
 BITSTRING '{BIN}*'B
@@ -330,7 +331,15 @@ TTCNSTRINGPARSING_COMPONENT "$#&&&(#TTCNSTRINGPARSING_COMPONENT$#&&^#% "
 	}
 
 {FLOAT}		{
-	yylval.float_val = atof(yytext);
+  if (!strcmp(yytext, "not_a_number")) {
+#ifdef NAN
+    yylval.float_val = NAN;
+#else
+    yylval.float_val = INFINITY + (-INFINITY);
+#endif
+  } else {
+    yylval.float_val = atof(yytext);
+  }
   if (YY_START == SC_MODULE_PARAMETERS || YY_START == SC_CHAR_KEYWORD) {
     // return a different token for module parameters so it doesn't conflict with references
     return MPFloat;
