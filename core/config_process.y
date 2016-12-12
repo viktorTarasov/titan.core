@@ -63,6 +63,12 @@
 
 #include "config_process.lex.hh"
 
+#ifndef INFINITY
+#include <float.h>
+static const double INFINITY = (DBL_MAX*DBL_MAX);
+#endif
+
+
 extern void reset_config_process_lex(const char* fname);
 extern void config_process_close();
 extern int config_process_get_current_line();
@@ -387,13 +393,16 @@ ParameterNameSegment
 %left '*' '/'
 %left UnarySign
 
-%expect 1
+%expect 2
 
 /*
 1 conflict:
 When seeing a '*' token after a module parameter expression the parser cannot
 decide whether the token is a multiplication operator (shift) or it refers to 
 all modules in the next module parameter (reduce).
+1 conflict:
+infinity can be a float value in LengthMatch's upper bound (SimpleParameterValue)
+or an infinityKeyword.
 */
 %%
 
@@ -595,6 +604,10 @@ SimpleParameterValue:
 | MPFloat
   {
     $$ = new Module_Param_Float($1);
+  }
+| InfinityKeyword
+  {
+    $$ = new Module_Param_Float(INFINITY);
   }
 | BooleanValue
   {
