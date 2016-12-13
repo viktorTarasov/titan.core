@@ -254,7 +254,7 @@ external function f_dec_seq(in octetstring x) return Seq
 testcase tc_asn() runs on CT
 {
   var Seq x := { num := 10, str := "abc" };
-  var bitstring enc_exp := oct2bit(char2oct("{\n\t\"num\" : 10,\n\t\"str\" : \"abc\"\n}"));
+  var bitstring enc_exp := oct2bit(char2oct("{\"num\":10,\"str\":\"abc\"}"));
   var Seq dec_exp := x;
   
   var bitstring enc := encvalue(x);

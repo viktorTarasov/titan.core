@@ -4573,7 +4573,7 @@ namespace Common {
         coding_str = "XER, XER_EXTENDED"; // TODO: fine tuning this parameter
         break;
       case CT_JSON:
-        coding_str = "JSON";
+        coding_str = "JSON, FALSE"; // with compact printing
         break;
       case CT_BER: {
         coding_str = "BER, ";
