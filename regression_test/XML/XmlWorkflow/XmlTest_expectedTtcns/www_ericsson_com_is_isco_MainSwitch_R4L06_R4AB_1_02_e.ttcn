@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_ericsson_com_is_isco_MainSwitch_R4L06_R4AB_1_02_e.ttcn
+//  File:          www_ericsson_com_is_isco_MainSwitch_R4L06_R4AB_1_02.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_ericsson_com_is_isco_MainSwitch_R4L06_R4AB_1_02_e {
+module www_ericsson_com_is_isco_MainSwitch_R4L06_R4AB_1_02 {
 
 
 import from XSD all;

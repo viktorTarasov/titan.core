@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          http_www_example_org_name_conv3_e.ttcn
+//  File:          http_www_example_org_name_conv3.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- name_conv_remove_seq_of_low_line.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "http://////////www.example.org/name_conv3////e" */
+//			/* targetnamespace = "http://////////www.example.org/name_conv3///" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

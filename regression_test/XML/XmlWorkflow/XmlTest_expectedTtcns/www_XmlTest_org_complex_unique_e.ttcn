@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_complex_unique_e.ttcn
+//  File:          www_XmlTest_org_complex_unique.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- XmlTest_complex_unique_e.xsd
+//	- XmlTest_complex_unique.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.XmlTest.org/complex_unique/e" */
+//			/* targetnamespace = "www.XmlTest.org/complex_unique" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

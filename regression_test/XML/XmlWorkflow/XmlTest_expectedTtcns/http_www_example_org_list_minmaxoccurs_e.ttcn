@@ -1,7 +1,7 @@
-/*******************************************************************************
+/******************************************************************************
 * Copyright (c) 2000-2016 Ericsson Telecom AB
 *
-* XSD to TTCN-3 Translator version: CRL 113 200/6 R0A                       
+* XSD to TTCN-3 Translator
 *
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
@@ -11,9 +11,9 @@
 * Contributors:
 *   Szabo, Bence Janos
 *
-*******************************************************************************/
+******************************************************************************/
 //
-//  File:          http_www_example_org_list_minmaxoccurs_e.ttcn
+//  File:          http_www_example_org_list_minmaxoccurs.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -23,9 +23,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- listMinMaxOccurs_e.xsd
+//	- listMinMaxOccurs.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "http://www.example.org/list/minmaxoccurs/e" */
+//			/* targetnamespace = "http://www.example.org/list/minmaxoccurs" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -37,7 +37,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module http_www_example_org_list_minmaxoccurs_e {
+module http_www_example_org_list_minmaxoccurs {
 
 
 import from XSD all;
@@ -298,6 +298,6 @@ with {
 }
 with {
   encode "XML";
-  variant "namespace as 'http://www.example.org/list/minmaxoccurs/e' prefix 'this'";
+  variant "namespace as 'http://www.example.org/list/minmaxoccurs' prefix 'this'";
   variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          http_www_example_org_seq_embeds_seq_e.ttcn
+//  File:          http_www_example_org_seq_embeds_seq.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- sequence_embeds_sequence_e.xsd
+//	- sequence_embeds_sequence.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "http://www.example.org/seq-embeds-seq/e" */
+//			/* targetnamespace = "http://www.example.org/seq-embeds-seq" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

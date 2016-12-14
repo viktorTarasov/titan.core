@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_attrib_enum_e.ttcn
+//  File:          www_example_org_attrib_enum.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- attrib_enum_e.xsd
+//	- attrib_enum.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/attrib/enum/e" */
+//			/* targetnamespace = "www.example.org/attrib/enum" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          tail_f_com_ns_confd_1_0_e.ttcn
+//  File:          tail_f_com_ns_confd_1_0.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module tail_f_com_ns_confd_1_0_e {
+module tail_f_com_ns_confd_1_0 {
 
 
 import from XSD all;

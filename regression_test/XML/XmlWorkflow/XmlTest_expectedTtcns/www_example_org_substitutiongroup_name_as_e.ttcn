@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_substitutiongroup_name_as_e.ttcn
+//  File:          www_example_org_substitutiongroup_name_as.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- substitutiongroup_name_as_e.xsd
+//	- substitutiongroup_name_as.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/substitutiongroup/name/as/e" */
+//			/* targetnamespace = "www.example.org/substitutiongroup/name/as" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

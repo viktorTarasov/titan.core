@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_simpletype_ref_e.ttcn
+//  File:          www_example_org_simpletype_ref.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_simpletype_ref_e {
+module www_example_org_simpletype_ref {
 
 
 import from XSD all;

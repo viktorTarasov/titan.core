@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          ETSI_CR5852_union_e.ttcn
+//  File:          ETSI_CR5852_union.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module ETSI_CR5852_union_e {
+module ETSI_CR5852_union {
 
 
 import from XSD all;

@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_comment_placement_e.ttcn
+//  File:          www_example_org_comment_placement.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- comment_placement.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/comment/placement/e" */
+//			/* targetnamespace = "www.example.org/comment/placement" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

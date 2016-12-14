@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_attribgroup_ingroup_e.ttcn
+//  File:          www_example_org_attribgroup_ingroup.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- attribgroup_ingroup_e.xsd
+//	- attribgroup_ingroup.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/attribgroup/ingroup/e" */
+//			/* targetnamespace = "www.example.org/attribgroup/ingroup" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

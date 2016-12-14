@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          MyTypes_e.ttcn
+//  File:          MyTypes.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- module_typename_conversion_1.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "MyTypes_e" */
+//			/* targetnamespace = "MyTypes" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

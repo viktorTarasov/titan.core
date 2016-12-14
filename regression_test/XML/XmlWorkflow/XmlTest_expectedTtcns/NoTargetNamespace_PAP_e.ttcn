@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_PAP_e.ttcn
+//  File:          NoTargetNamespace_PAP.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_PAP_e {
+module NoTargetNamespace_PAP {
 
 
 import from XSD all;

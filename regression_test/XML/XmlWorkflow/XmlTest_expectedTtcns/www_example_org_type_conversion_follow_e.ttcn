@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_conversion_follow_e.ttcn
+//  File:          www_example_org_type_conversion_follow.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_type_conversion_follow_e {
+module www_example_org_type_conversion_follow {
 
 
 import from XSD all;

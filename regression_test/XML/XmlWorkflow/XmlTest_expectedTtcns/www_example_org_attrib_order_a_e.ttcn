@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_attrib_order_a_e.ttcn
+//  File:          www_example_org_attrib_order_a.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -47,7 +47,7 @@ import from XSD all;
 import from www_example_org_attrib_order_b all;
 
 
-import from NoTargetNamespace2_e all;
+import from NoTargetNamespace2 all;
 
 
 type XSD.String Local1 ("fixed")

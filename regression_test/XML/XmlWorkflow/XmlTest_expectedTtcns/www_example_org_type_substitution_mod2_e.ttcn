@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_substitution_mod2_e.ttcn
+//  File:          www_example_org_type_substitution_mod2.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- type_substitution_mod2_e.xsd
+//	- type_substitution_mod2.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.example.org/type/substitution/mod2/e" */
+//			/* targetnamespace = "www.example.org/type/substitution/mod2" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

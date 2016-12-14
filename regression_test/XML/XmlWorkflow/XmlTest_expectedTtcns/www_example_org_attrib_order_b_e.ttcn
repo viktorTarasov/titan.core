@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- attrib_order_b_e.xsd
+//	- attrib_order_b.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.example.org/attrib/order/b/e" */
+//			/* targetnamespace = "www.example.org/attrib/order/b" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

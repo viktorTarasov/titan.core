@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- namespaceas.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/namespaceas_e" */
+//			/* targetnamespace = "www.example.org/namespaceas" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_namespaceas_e {
+module www_example_org_namespaceas {
 
 
 import from XSD all;

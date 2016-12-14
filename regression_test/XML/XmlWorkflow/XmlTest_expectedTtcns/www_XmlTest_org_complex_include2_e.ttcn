@@ -17,7 +17,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_complex_include_e.ttcn
+//  File:          www_XmlTest_org_complex_include.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -41,7 +41,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_complex_include2_e {
+module www_XmlTest_org_complex_include2 {
 
 
 import from XSD all;
@@ -96,7 +96,7 @@ with {
 }
 with {
   encode "XML";
-  variant "namespace as 'www.XmlTest.org/complex_include2' prefix 'r2'";
+  variant "namespace as 'www.XmlTest.org/complex_include' prefix 'r'";
   variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
   variant "elementFormQualified";
 }

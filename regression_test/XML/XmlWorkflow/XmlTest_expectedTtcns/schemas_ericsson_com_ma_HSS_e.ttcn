@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          schemas_ericsson_com_ma_HSS_e.ttcn
+//  File:          schemas_ericsson_com_ma_HSS.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -43,7 +43,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module schemas_ericsson_com_ma_HSS_e {
+module schemas_ericsson_com_ma_HSS {
 
 
 import from XSD all;

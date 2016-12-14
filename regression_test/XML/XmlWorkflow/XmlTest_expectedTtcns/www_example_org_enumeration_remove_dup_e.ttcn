@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_enumeration_remove_dup_e.ttcn
+//  File:          www_example_org_enumeration_remove_dup.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_enumeration_remove_dup_e {
+module www_example_org_enumeration_remove_dup {
 
 
 import from XSD all;

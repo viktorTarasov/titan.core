@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_anyattrib_single_e.ttcn
+//  File:          www_example_org_anyattrib_single.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_anyattrib_single_e {
+module www_example_org_anyattrib_single {
 
 
 import from XSD all;

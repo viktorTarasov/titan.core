@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_complex_simpleContent_e.ttcn
+//  File:          www_XmlTest_org_complex_simpleContent.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_complex_simpleContent_e {
+module www_XmlTest_org_complex_simpleContent {
 
 
 import from XSD all;
@@ -83,6 +83,6 @@ with {
 }
 with {
   encode "XML";
-  variant "namespace as 'www.XmlTest.org/complex_simpleContent_e' prefix 'ns35'";
+  variant "namespace as 'www.XmlTest.org/complex_simpleContent' prefix 'ns35'";
   variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

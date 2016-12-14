@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          http_www_example_org_name_conv2_e.ttcn
+//  File:          http_www_example_org_name_conv2.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- name_conv_non_alphanumeric.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "http://www.example.org/name_conv2;;;;;;/e" */
+//			/* targetnamespace = "http://www.example.org/name_conv2;;;;;;" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

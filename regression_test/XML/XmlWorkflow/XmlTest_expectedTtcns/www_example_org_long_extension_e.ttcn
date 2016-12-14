@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_long_extension_e.ttcn
+//  File:          www_example_org_long_extension.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- long_extension.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/long/extension_e" */
+//			/* targetnamespace = "www.example.org/long/extension" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

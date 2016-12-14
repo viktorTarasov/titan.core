@@ -99,7 +99,8 @@ type component mtc_CT {}
 
 // -p switch needed because it would overwrite the predefined XSD.ttcn and
 // UsefulTtcn3types.ttcn file with each xsd2ttcn execution
-const charstring xsd2ttcn_command := "xsd2ttcn -p ";
+// -t switch needed to not generate timing information
+const charstring xsd2ttcn_command := "xsd2ttcn -p -t ";
 
 const integer c_shell_successWithoutWarningAndError:=0;
 const integer c_shell_success := 0;
@@ -108,20 +109,58 @@ const integer c_shell_error:=256;
 const integer c_shell_error_noSuchFileOrDirectory:=512;
 
 //Expected and accepted diffs:
-// Line "Copyright Ericsson AB 2013"        - 4 diffs
-// Line "XSD to TTCN-3 Translator version:" - 4 diffs
-// Line "File"                              - 4 diffs
-// Line "Updated: "                         - 4 diffs
-// Line "module www_"                       - 4 diffs
-// Line "ETSI ES 201 873-9 V4.1.2"          - 2 diffs ???? << Fix it !
-// Line "variant \"namespace as"            - 4 diffs
-// Script counts the strings "\n" thus N different lines mean N-1 numOfDiff
-//Possible values:12+ 8+ 19,21,23,25 but 21 and 25 should be eliminated!
+// Line  "Copyright (c) 2000-2016"          - 1 diff
+// Lines "Contributors: ... "               - 1 diff
+// Line "Updated: "                         - 1 diff
+// Optional diff: Module name               - 1 diff
 
-const integer c_numOfDiff_header := 21+12;
-const integer c_numOfDiff_headerAndModuleName := 27+12;
-const integer c_numOfDiff_headerModNameAndNamespace := 31+12;
-const integer c_numOfDiff_headerModNameAndImport := 31+12;
+// In most cases this 3 diff will be present, but in some rare cases there
+// will be 4.
+
+const integer c_numOfDiff := 3;
+const integer c_numOfDiff_ModName := 4;
+
+// When creating new testcases: Change the copyright header of the expected
+// ttcn just like in the other expected ttcns and write your name into a 
+// contributors section just like in the other expected ttcns. In normal
+// case theese changes are required.
+
+
+//=========================================================================
+// f_countDiffs
+//=========================================================================
+// Each difference starts with a newline and a number. This function
+// counts these.
+external function f_countDiffs(charstring diffoutput) return integer;
+
+//=========================================================================
+// f_compareFiles
+//=========================================================================
+// File comparison works with the following logic:
+//   Command to execute: diff -w file1 file2
+//   The result is passed to the f_countDiffs which counts the differences
+function f_compareFiles(in charstring pl_file1, in charstring pl_file2, in integer pl_diffLimit) runs on xmlTest_CT {
+  var integer vl_expectedResult:=0
+  if(pl_diffLimit>0) { vl_expectedResult:=256; }
+  var boolean vl_success:=false;
+  f_shell_command("diff -w " & pl_file1  & " " & pl_file2,"",vl_expectedResult,vl_success);
+
+  if(v_ASP_PResult.code==0)
+  {
+    setverdict(pass);
+  }
+  else if(v_ASP_PResult.code==256) {
+    var integer vl_counter:=0;
+    vl_counter := f_countDiffs(v_ASP_PResult.stdout);
+    log("Counted differences: ",vl_counter, " Expected differences: ", pl_diffLimit)
+    if(vl_counter!=pl_diffLimit) {
+      setverdict(fail);
+    }
+  } else { //e.g 512: No such file or directory
+    log("Wrong result code: ",v_ASP_PResult.code, " Expected result code: ", vl_expectedResult)
+    setverdict(fail);
+  }
+}//f_
 
 //=========================================================================
 // Templates
@@ -140,48 +179,6 @@ const integer c_numOfDiff_headerModNameAndImport := 31+12;
 //=========================================================================
 // Functions
 //=========================================================================
-
-//=========================================================================
-// f_countDelimiters
-//=========================================================================
-function f_countDelimiters(in charstring pl_string, in charstring pl_delimiter, inout integer pl_counter) {
-  pl_counter:=0;
-  var integer pos:=0;
-  var integer vl_size:=lengthof(pl_string);
-  var integer vl_delimsize:=lengthof(pl_delimiter);
-  while(pos<vl_size) {
-    if( substr(pl_string,pos,vl_delimsize)==pl_delimiter) { pl_counter:=pl_counter+1}
-    pos:=pos+1;
-  }
-}//f_
-
-//=========================================================================
-// f_compareFiles
-//=========================================================================
-//pl_diffLimit: upper limit of acceptable diff lines. 4 means one acceptable difference
-function f_compareFiles(in charstring pl_file1, in charstring pl_file2, in integer pl_diffLimit) runs on xmlTest_CT {
-  var integer vl_expectedResult:=0
-  if(pl_diffLimit>0) { vl_expectedResult:=256; }
-  var boolean vl_success:=false;
-  f_shell_command("diff -w " & pl_file1  & " " & pl_file2,"",vl_expectedResult,vl_success);
-
-  if(v_ASP_PResult.code==0)
-  {
-    setverdict(pass);
-  }
-  else if(v_ASP_PResult.code==256) {
-    var integer vl_counter:=0;
-    f_countDelimiters(v_ASP_PResult.stdout,"\n",vl_counter);
-    log("Counted lines: ",vl_counter, " diffLimit: ", pl_diffLimit)
-    if(vl_counter>pl_diffLimit) {
-      setverdict(fail);
-    }
-  } else { //e.g 512: No such file or directory
-    log("Wrong result code: ",v_ASP_PResult.code, " Expected result code: ", vl_expectedResult)
-    setverdict(fail);
-  }
-}//f_
-
 
 //********* SHELL Functions ***********************
 

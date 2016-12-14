@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_substitutiongroup_complex_without_element_e.ttcn
+//  File:          www_example_org_substitutiongroup_complex_without_element.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- substitutiongroup_complex_without_element_e.xsd
+//	- substitutiongroup_complex_without_element.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/substitutiongroup/complex/without/element/e" */
+//			/* targetnamespace = "www.example.org/substitutiongroup/complex/without/element" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

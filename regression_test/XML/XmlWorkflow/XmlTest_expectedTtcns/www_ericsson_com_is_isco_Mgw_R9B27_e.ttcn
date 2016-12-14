@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_ericsson_com_is_isco_Mgw_R9B27_e.ttcn
+//  File:          www_ericsson_com_is_isco_Mgw_R9B27.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_ericsson_com_is_isco_Mgw_R9B27_e {
+module www_ericsson_com_is_isco_Mgw_R9B27 {
 
 
 import from XSD all;

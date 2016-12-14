@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_complex2_e.ttcn
+//  File:          www_XmlTest_org_complex2.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -28,7 +28,7 @@
 //	Generated from file(s):
 //	- XmlTest_complex2.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.XmlTest.org/complex2/e" */
+//			/* targetnamespace = "www.XmlTest.org/complex2" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_complex2_e {
+module www_XmlTest_org_complex2 {
 
 
 import from XSD all;

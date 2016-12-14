@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_xml_in_annotation_e.ttcn
+//  File:          www_example_org_xml_in_annotation.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- xml_in_annotation.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/xml/in/annotation/e" */
+//			/* targetnamespace = "www.example.org/xml/in/annotation" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_xml_in_annotation_e {
+module www_example_org_xml_in_annotation {
 
 
 import from XSD all;

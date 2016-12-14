@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_decimal_withMinMaxInclusive_e.ttcn
+//  File:          www_XmlTest_org_decimal_withMinMaxInclusive.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_decimal_withMinMaxInclusive_e {
+module www_XmlTest_org_decimal_withMinMaxInclusive {
 
 
 import from XSD all;

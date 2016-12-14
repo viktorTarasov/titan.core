@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          module_typename_conversion_e.ttcn
+//  File:          module_typename_conversion.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- module_typename_conversion.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "module_typename_conversion_e" */
+//			/* targetnamespace = "module_typename_conversion" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

@@ -15,7 +15,7 @@
 *
 ******************************************************************************/
 //
-//  File:          attribute_in_extension_e.ttcn
+//  File:          attribute_in_extension.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -27,7 +27,7 @@
 //	Generated from file(s):
 //	- attribute_in_extension.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "attribute_in_extension_e" */
+//			/* targetnamespace = "attribute_in_extension" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

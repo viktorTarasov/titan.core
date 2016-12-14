@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_anyattr_in_complex_e.ttcn
+//  File:          www_example_org_anyattr_in_complex.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- anyattr_in_compex_e.xsd
+//	- anyattr_in_complex.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/anyattr/in/complex/e" */
+//			/* targetnamespace = "www.example.org/anyattr/in/complex" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

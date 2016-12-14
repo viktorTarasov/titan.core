@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02_HK84933_e.ttcn
+//  File:          www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02_HK84933.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02_HK84933_e {
+module www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02_HK84933 {
 
 
 import from XSD all;

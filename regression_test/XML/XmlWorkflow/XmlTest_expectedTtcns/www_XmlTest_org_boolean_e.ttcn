@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_boolean_e.ttcn
+//  File:          www_XmlTest_org_boolean.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_boolean_e {
+module www_XmlTest_org_boolean {
 
 
 import from XSD all;

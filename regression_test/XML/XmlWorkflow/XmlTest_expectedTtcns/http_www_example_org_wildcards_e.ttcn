@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          http_www_example_org_wildcards_e.ttcn
+//  File:          http_www_example_org_wildcards.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- anyattribute_optional.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "http://www.example.org/wildcards/e" */
+//			/* targetnamespace = "http://www.example.org/wildcards" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

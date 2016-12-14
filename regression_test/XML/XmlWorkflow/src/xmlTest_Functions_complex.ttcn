@@ -15,15 +15,15 @@
 module xmlTest_Functions_complex
 {
 
-import from www_XmlTest_org_complex_simpleContent_e all;
-import from www_XmlTest_org_complex_mixed_e all;
-import from www_XmlTest_org_complex_choice_e all;
-import from www_XmlTest_org_complex_all_e all;
-import from www_XmlTest_org_complex_extension_e all;
-import from www_XmlTest_org_complex_restriction_e all;
-import from www_XmlTest_org_complex_include_e all;
-import from www_XmlTest_org_complex_import_e all;
-import from www_XmlTest_org_complex_any_e all;
+import from www_XmlTest_org_complex_simpleContent all;
+import from www_XmlTest_org_complex_mixed all;
+import from www_XmlTest_org_complex_choice all;
+import from www_XmlTest_org_complex_all all;
+import from www_XmlTest_org_complex_extension all;
+import from www_XmlTest_org_complex_restriction all;
+import from www_XmlTest_org_complex_include all;
+import from www_XmlTest_org_complex_import all;
+import from www_XmlTest_org_complex_any all;
 //==============================================================================
 //  External functions
 //==============================================================================

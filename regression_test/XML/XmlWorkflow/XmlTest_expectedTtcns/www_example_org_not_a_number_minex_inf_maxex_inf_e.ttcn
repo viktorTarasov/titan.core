@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_not_a_number_minex_inf_maxex_inf_e.ttcn
+//  File:          www_example_org_not_a_number_minex_inf_maxex_inf.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- not_a_number_minex_inf_maxex_-inf.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/not_a_number/minex_inf/maxex_-inf/e" */
+//			/* targetnamespace = "www.example.org/not_a_number/minex_inf/maxex_-inf" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

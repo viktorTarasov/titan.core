@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_substitution_chain_e.ttcn
+//  File:          www_example_org_type_substitution_chain.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- type_substitution_chain_e.xsd
+//	- type_substitution_chain.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/type/substitution/chain/e" */
+//			/* targetnamespace = "www.example.org/type/substitution/chain" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

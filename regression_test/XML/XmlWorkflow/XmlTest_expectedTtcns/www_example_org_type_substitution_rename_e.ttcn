@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_substitution_rename_e.ttcn
+//  File:          www_example_org_type_substitution_rename.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- type_substitution_rename_e.xsd
+//	- type_substitution_rename.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.example.org/type/substitution/rename/e" */
+//			/* targetnamespace = "www.example.org/type/substitution/rename" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

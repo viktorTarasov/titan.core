@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          http_www_example_org_nillable_in_nillable_extension_e.ttcn
+//  File:          http_www_example_org_nillable_in_nillable_extension.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- nillable_in_nillable_extension.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "http://www.example.org/nillable/in/nillable/extension/e" */
+//			/* targetnamespace = "http://www.example.org/nillable/in/nillable/extension" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

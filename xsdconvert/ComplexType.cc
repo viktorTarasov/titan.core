@@ -2012,6 +2012,12 @@ void ComplexType::resolveComplexTypeExtension() {
 void ComplexType::resolveComplexTypeRestriction() {
   if (mode == restrictionMode && cmode == CT_complextype_mode && !outside_reference.empty()) {
     ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(this, want_CT);
+    if (ct == NULL) {
+      printError(module->getSchemaname(), name.convertedValue,
+        "Reference for a non-defined type: " + getReference().repr());
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+      return;
+    }
     if(ct->getXsdtype() != n_NOTSET){
       if (ct->resolved == No) {
         ct->referenceResolving();
@@ -2026,7 +2032,7 @@ void ComplexType::resolveComplexTypeRestriction() {
         List<ComplexType*>::iterator field2 = ct->complexfields.begin();
         for (; field2; field2 = field2->Next) {
           if (field->Data->getName().convertedValue == field2->Data->getName().convertedValue &&
-            field->Data->getType().convertedValue == field2->Data->getType().convertedValue &&
+            field->Data->getType().convertedValue.getValueWithoutPrefix(':') == field2->Data->getType().convertedValue.getValueWithoutPrefix(':') &&
             field->Data->complexfields.size() <= field2->Data->complexfields.size() &&
             hasMatchingFields(field->Data->complexfields, field2->Data->complexfields)) {
             // TODO: better algorithm to find matching fields

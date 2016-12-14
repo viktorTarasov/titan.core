@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_self_recursion_e.ttcn
+//  File:          www_example_org_self_recursion.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_self_recursion_e {
+module www_example_org_self_recursion {
 
 
 import from XSD all;

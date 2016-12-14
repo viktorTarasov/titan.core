@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_RLP_e.ttcn
+//  File:          NoTargetNamespace_RLP.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_RLP_e {
+module NoTargetNamespace_RLP {
 
 
 import from XSD all;

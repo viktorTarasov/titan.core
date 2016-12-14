@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_string_withOverDefinition_e {
+module www_XmlTest_org_string_withOverDefinition {
 
 
 import from XSD all;

@@ -9,7 +9,7 @@
 * http://www.eclipse.org/legal/epl-v10.html
 *******************************************************************************/
 //
-//  File:          www_example_org_including_module_e.ttcn
+//  File:          www_example_org_including_module.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -19,9 +19,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- including_module_e.xsd
+//	- including_module.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/including/module/e" */
+//			/* targetnamespace = "www.example.org/including/module" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

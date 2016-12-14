@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          schemas_ericsson_com_upg_dm_hss_sh_4_1_e.ttcn
+//  File:          schemas_ericsson_com_upg_dm_hss_sh_4_1.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module schemas_ericsson_com_upg_dm_hss_sh_4_1_e {
+module schemas_ericsson_com_upg_dm_hss_sh_4_1 {
 
 
 import from XSD all;

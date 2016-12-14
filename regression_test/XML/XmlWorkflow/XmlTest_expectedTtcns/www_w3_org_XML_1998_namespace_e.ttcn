@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_w3_org_XML_1998_namespace_e.ttcn
+//  File:          www_w3_org_XML_1998_namespace.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_w3_org_XML_1998_namespace_e {
+module www_w3_org_XML_1998_namespace {
 
 
 import from XSD all;

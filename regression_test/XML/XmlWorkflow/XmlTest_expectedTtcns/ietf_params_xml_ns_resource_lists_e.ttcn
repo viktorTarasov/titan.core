@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          ietf_params_xml_ns_resource_lists_e.ttcn
+//  File:          ietf_params_xml_ns_resource_lists.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module ietf_params_xml_ns_resource_lists_e {
+module ietf_params_xml_ns_resource_lists {
 
 
 import from XSD all;

@@ -15,7 +15,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_annotation_t_e.ttcn
+//  File:          www_XmlTest_org_annotation_t.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -27,7 +27,7 @@
 //	Generated from file(s):
 //	- XmlTest_annotation.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.XmlTest.org/annotation/e" */
+//			/* targetnamespace = "www.XmlTest.org/annotation" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------
@@ -38,7 +38,8 @@
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-module www_XmlTest_org_annotation_t_e {
+
+module www_XmlTest_org_annotation_t {
 
 
 import from XSD all;

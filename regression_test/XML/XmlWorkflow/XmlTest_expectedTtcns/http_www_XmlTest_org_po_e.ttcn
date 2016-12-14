@@ -15,7 +15,7 @@
 *
 ******************************************************************************/
 //
-//  File:          http_www_XmlTest_org_po_e.ttcn
+//  File:          http_www_XmlTest_org_po.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -27,7 +27,7 @@
 //	Generated from file(s):
 //	- po.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "http://www.XmlTest.org/po/e" */
+//			/* targetnamespace = "http://www.XmlTest.org/po" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

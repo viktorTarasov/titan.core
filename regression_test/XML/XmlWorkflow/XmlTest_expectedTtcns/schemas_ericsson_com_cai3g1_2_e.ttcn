@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          schemas_ericsson_com_cai3g1_2_e.ttcn
+//  File:          schemas_ericsson_com_cai3g1_2.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module schemas_ericsson_com_cai3g1_2_e {
+module schemas_ericsson_com_cai3g1_2 {
 
 
 import from XSD all;

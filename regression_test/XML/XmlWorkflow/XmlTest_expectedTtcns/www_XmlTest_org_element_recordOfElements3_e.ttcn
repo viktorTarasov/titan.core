@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_element_recordOfElements3_e.ttcn
+//  File:          www_XmlTest_org_element_recordOfElements3.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- XmlTest_element_recordOfElements3_e.xsd
+//	- XmlTest_element_recordOfElements3.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "www.XmlTest.org/element_recordOfElements3" */
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_element_recordOfElements3_e {
+module www_XmlTest_org_element_recordOfElements3 {
 
 
 import from XSD all;

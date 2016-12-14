@@ -15,7 +15,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_e.ttcn
+//  File:          www_example_org.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -39,7 +39,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_e {
+module www_example_org {
 
 
 import from XSD all;

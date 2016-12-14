@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_integer_withMaxExcl_e.ttcn
+//  File:          www_XmlTest_org_integer_withMaxExcl.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_integer_withMaxExcl_e {
+module www_XmlTest_org_integer_withMaxExcl {
 
 
 import from XSD all;

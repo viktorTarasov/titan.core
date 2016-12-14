@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_substitution_simpletype_e.ttcn
+//  File:          www_example_org_type_substitution_simpletype.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- type_substitution_simpletype_e.xsd
+//	- type_substitution_simpletype.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/type/substitution/simpletype/e" */
+//			/* targetnamespace = "www.example.org/type/substitution/simpletype" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

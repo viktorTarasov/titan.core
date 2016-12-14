@@ -35,12 +35,12 @@ import from PIPEasp_PortType all;
 import from PIPEasp_Templates all;
 import from xmlTest_Shell all;
 
-import from www_XmlTest_org_element_anyType_e all;
-import from www_XmlTest_org_complex_all_e all;
-import from www_XmlTest_org_complex_extension_e all;
-import from www_XmlTest_org_complex_restriction_e all;
-import from www_XmlTest_org_complex_import_e all;
-import from www_XmlTest_org_complex_any_e all;
+import from www_XmlTest_org_element_anyType all;
+import from www_XmlTest_org_complex_all all;
+import from www_XmlTest_org_complex_extension all;
+import from www_XmlTest_org_complex_restriction all;
+import from www_XmlTest_org_complex_import all;
+import from www_XmlTest_org_complex_any all;
 
 import from xmlTest_Functions_string all;
 import from xmlTest_Functions_complex1 all;
@@ -82,8 +82,6 @@ import from xmlTest_Functions_list all;
 //Component Types
 //=========================================================================
 
-type component xmlTest_CT extends Shell_CT {}
-
 type component mtc_CT {}
 //=========================================================================
 // Constants
@@ -108,48 +106,6 @@ type component mtc_CT {}
 //=========================================================================
 
 //=========================================================================
-// f_countDelimiters
-//=========================================================================
-function f_countDelimiters(in charstring pl_string, in charstring pl_delimiter, inout integer pl_counter) {
-  pl_counter:=0;
-  var integer pos:=0;
-  var integer vl_size:=lengthof(pl_string);
-  var integer vl_delimsize:=lengthof(pl_delimiter);
-  while(pos<vl_size) {
-    if( substr(pl_string,pos,vl_delimsize)==pl_delimiter) { pl_counter:=pl_counter+1}
-    pos:=pos+1;
-  }
-}//f_
-
-//=========================================================================
-// f_compareFiles
-//=========================================================================
-//pl_diffLimit: upper limit of acceptable diff lines. 4 means one acceptable difference
-function f_compareFiles(in charstring pl_file1, in charstring pl_file2, in integer pl_diffLimit) runs on xmlTest_CT {
-  var integer vl_expectedResult:=0
-  if(pl_diffLimit>0) { vl_expectedResult:=256; }
-  var boolean vl_success:=false;
-  f_shell_command("diff -w " & pl_file1  & " " & pl_file2,"",vl_expectedResult,vl_success);
-
-  if(v_ASP_PResult.code==0)
-  {
-    setverdict(pass);
-  }
-  else if(v_ASP_PResult.code==256) {
-    var integer vl_counter:=0;
-    f_countDelimiters(v_ASP_PResult.stdout,"\n",vl_counter);
-    log("Counted lines: ",vl_counter, " diffLimit: ", pl_diffLimit)
-    if(vl_counter>pl_diffLimit) {
-      setverdict(fail);
-    }
-  } else { //e.g 512: No such file or directory
-    log("Wrong result code: ",v_ASP_PResult.code, " Expected result code: ", vl_expectedResult)
-    setverdict(fail);
-  }
-}//f_
-
-
-//=========================================================================
 // Testcases
 //=========================================================================
 testcase tc_versionTest() runs on xmlTest_CT
@@ -169,7 +125,7 @@ testcase tc_firstTrial() runs on xmlTest_CT
 
   if(getverdict==pass) {
     f_compareFiles(
-      "www_example_org_elements_e.ttcn","www_example_org_elements.ttcn", c_numOfDiff_headerAndModuleName);
+      "www_example_org_elements_e.ttcn","www_example_org_elements.ttcn", c_numOfDiff);
   }
 }
 
@@ -181,7 +137,7 @@ testcase tc_secondTrial() runs on xmlTest_CT
 
   if(getverdict==pass) {
     f_compareFiles(
-      "http_www_XmlTest_org_po_e.ttcn","http_www_XmlTest_org_po.ttcn", c_numOfDiff_headerAndModuleName);
+      "http_www_XmlTest_org_po_e.ttcn","http_www_XmlTest_org_po.ttcn", c_numOfDiff);
   }
 }
 testcase tc_empty() runs on xmlTest_CT
@@ -190,7 +146,7 @@ testcase tc_empty() runs on xmlTest_CT
 
   if(getverdict==pass) {
     f_compareFiles(
-      "www_XmlTest_org_empty_e.ttcn","www_XmlTest_org_empty.ttcn", c_numOfDiff_headerAndModuleName);
+      "www_XmlTest_org_empty_e.ttcn","www_XmlTest_org_empty.ttcn", c_numOfDiff);
   }
 }
 
@@ -199,7 +155,7 @@ testcase tc_annotation() runs on xmlTest_CT
   f_shellCommandWithVerdict(xsd2ttcn_command & " XmlTest_annotation.xsd","",c_shell_successWithWarning);
   if(getverdict==pass) {
       f_compareFiles(
-      "www_XmlTest_org_annotation_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
+      "www_XmlTest_org_annotation_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff);
     }
 }
 
@@ -220,7 +176,7 @@ testcase tc_xml_in_annotation() runs on xmlTest_CT
   f_shellCommandWithVerdict(xsd2ttcn_command & " xml_in_annotation.xsd","",c_shell_successWithoutWarningAndError);
   if(getverdict==pass) {
       f_compareFiles(
-      "www_example_org_xml_in_annotation_e.ttcn","www_example_org_xml_in_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
+      "www_example_org_xml_in_annotation_e.ttcn","www_example_org_xml_in_annotation.ttcn", c_numOfDiff);
     }
 }
 
@@ -253,7 +209,7 @@ testcase tc_options_c() runs on xmlTest_CT
 {
   f_shellCommandWithVerdict(xsd2ttcn_command & " -c XmlTest_annotation.xsd","",c_shell_successWithWarning );
   if(getverdict==pass) {
-    f_compareFiles("www_XmlTest_org_annotation_c_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    f_compareFiles("www_XmlTest_org_annotation_c_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_ModName);
   }
 }
 
@@ -262,7 +218,7 @@ testcase tc_options_e() runs on xmlTest_CT
 {
   f_shellCommandWithVerdict(xsd2ttcn_command & " -e XmlTest_annotation.xsd","",c_shell_successWithWarning );
   if(getverdict==pass) {
-    f_compareFiles("www_XmlTest_org_annotation_e_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    f_compareFiles("www_XmlTest_org_annotation_e_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_ModName);
   }
 }
 
@@ -271,7 +227,7 @@ testcase tc_options_f() runs on xmlTest_CT
 {
   f_shellCommandWithVerdict(xsd2ttcn_command & " -f XmlTest_files1.txt","",c_shell_successWithWarning );
   if(getverdict==pass) {
-    f_compareFiles("www_XmlTest_org_annotation_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerModNameAndNamespace);
+    f_compareFiles("www_XmlTest_org_annotation2_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_ModName);
   }
 }
 
@@ -280,13 +236,13 @@ testcase tc_options_g() runs on xmlTest_CT
   f_shellCommandWithVerdict(xsd2ttcn_command & " -g dont_generate_element_substitution.xsd","",c_shell_successWithoutWarningAndError );
   if(getverdict==pass) {
     f_compareFiles("www_example_org_dont_generate_element_substitution_e.ttcn",
-                   "www_example_org_dont_generate_element_substitution.ttcn", c_numOfDiff_headerModNameAndNamespace);
+                   "www_example_org_dont_generate_element_substitution.ttcn", c_numOfDiff);
   }
 
   f_shellCommandWithVerdict(xsd2ttcn_command & " generate_element_substitution.xsd","",c_shell_successWithoutWarningAndError );
   if(getverdict==pass) {
     f_compareFiles("www_example_org_generate_element_substitution_e.ttcn",
-                   "www_example_org_generate_element_substitution.ttcn", c_numOfDiff_headerModNameAndNamespace);
+                   "www_example_org_generate_element_substitution.ttcn", c_numOfDiff);
   }
 }
 
@@ -336,7 +292,7 @@ testcase tc_options_t() runs on xmlTest_CT
 {
   f_shellCommandWithVerdict(xsd2ttcn_command & " -t  XmlTest_annotation.xsd","",c_shell_successWithWarning );
   if(getverdict==pass) {
-    f_compareFiles("www_XmlTest_org_annotation_t_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_headerAndModuleName);
+    f_compareFiles("www_XmlTest_org_annotation_t_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_ModName);
   }
 }
 
@@ -399,7 +355,7 @@ group Testcases_basedOnTtcnStandard9 {
     f_shellCommandWithVerdict(xsd2ttcn_command & " all.xsd","",c_shell_successWithoutWarningAndError);
     if(getverdict==pass) {
       f_compareFiles(
-	"www_example_org_all_e.ttcn","www_example_org_all.ttcn", c_numOfDiff_headerAndModuleName);
+	"www_example_org_all_e.ttcn","www_example_org_all.ttcn", c_numOfDiff);
     }
   }
 
@@ -415,7 +371,7 @@ group Testcases_basedOnTtcnStandard9 {
 
     if(getverdict==pass) {
       f_compareFiles(
-	"http_www_example_org_ttcn_wildcards_e.ttcn","http_www_example_org_ttcn_wildcards.ttcn", c_numOfDiff_headerAndModuleName);
+	"http_www_example_org_ttcn_wildcards_e.ttcn","http_www_example_org_ttcn_wildcards.ttcn", c_numOfDiff);
     }
   }
 
@@ -427,7 +383,7 @@ group Testcases_basedOnTtcnStandard9 {
   f_shellCommandWithVerdict(xsd2ttcn_command & " HQ73011.xsd","",c_shell_successWithoutWarningAndError);
     if(getverdict==pass) {
       f_compareFiles(
-        "urn_ietf_params_xml_ns_conference_info_e.ttcn","urn_ietf_params_xml_ns_conference_info.ttcn", c_numOfDiff_headerAndModuleName);
+        "urn_ietf_params_xml_ns_conference_info_e.ttcn","urn_ietf_params_xml_ns_conference_info.ttcn", c_numOfDiff);
     }
   }
 
@@ -436,7 +392,7 @@ group Testcases_basedOnTtcnStandard9 {
   f_shellCommandWithVerdict(xsd2ttcn_command & " anyattribute_optional.xsd","",c_shell_successWithoutWarningAndError);
     if(getverdict==pass) {
       f_compareFiles(
-        "http_www_example_org_wildcards_e.ttcn","http_www_example_org_wildcards.ttcn", c_numOfDiff_headerAndModuleName);
+        "http_www_example_org_wildcards_e.ttcn","http_www_example_org_wildcards.ttcn", c_numOfDiff);
     }
   }
 
@@ -445,7 +401,7 @@ group Testcases_basedOnTtcnStandard9 {
   f_shellCommandWithVerdict(xsd2ttcn_command & " anyattrib_single.xsd","",c_shell_successWithoutWarningAndError);
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_anyattrib_single_e.ttcn","www_example_org_anyattrib_single.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_anyattrib_single_e.ttcn","www_example_org_anyattrib_single.ttcn", c_numOfDiff);
     }
   }
 
@@ -454,7 +410,7 @@ group Testcases_basedOnTtcnStandard9 {
   f_shellCommandWithVerdict(xsd2ttcn_command & " anyattr_in_complex.xsd","",c_shell_successWithoutWarningAndError);
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_anyattr_in_complex_e.ttcn","www_example_org_anyattr_in_complex.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_anyattr_in_complex_e.ttcn","www_example_org_anyattr_in_complex.ttcn", c_numOfDiff);
     }
   }
 
@@ -466,7 +422,7 @@ group Testcases_basedOnTtcnStandard9 {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_attributegroup_e.ttcn","www_example_org_attributegroup.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_attributegroup_e.ttcn","www_example_org_attributegroup.ttcn", c_numOfDiff);
     }
   }
 
@@ -481,7 +437,7 @@ group Testcases_basedOnTtcnStandard9 {
     f_shellCommandWithVerdict(xsd2ttcn_command & " id_attrib.xsd","",c_shell_successWithWarning);
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_id_attrib_e.ttcn", "www_example_org_id_attrib.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_id_attrib_e.ttcn", "www_example_org_id_attrib.ttcn", c_numOfDiff);
     }
   }
 
@@ -490,12 +446,12 @@ group Testcases_basedOnTtcnStandard9 {
     f_shellCommandWithVerdict(xsd2ttcn_command & " attrib_order_a.xsd attrib_order_b.xsd attrib_order_c.xsd","",c_shell_successWithoutWarningAndError);
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_attrib_order_a_e.ttcn", "www_example_org_attrib_order_a.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_attrib_order_a_e.ttcn", "www_example_org_attrib_order_a.ttcn", c_numOfDiff+1); // +1: imported module
     }
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_attrib_order_b_e.ttcn", "www_example_org_attrib_order_b.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_attrib_order_b_e.ttcn", "www_example_org_attrib_order_b.ttcn", c_numOfDiff);
     }
   }
 
@@ -505,7 +461,7 @@ group Testcases_basedOnTtcnStandard9 {
     if(getverdict==pass) {
       f_compareFiles(
         "http_www_example_org_name_conv2_e.ttcn",
-        "http_www_example_org_name_conv2.ttcn", c_numOfDiff_headerAndModuleName);
+        "http_www_example_org_name_conv2.ttcn", c_numOfDiff);
     }
   }
 
@@ -514,12 +470,12 @@ group Testcases_basedOnTtcnStandard9 {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "imported_module_e.ttcn","imported_module.ttcn", c_numOfDiff_headerAndModuleName);
+        "imported_module_e.ttcn","imported_module.ttcn", c_numOfDiff);
     }
 
     if(getverdict==pass) {
       f_compareFiles(
-        "imported_module_1_e.ttcn","imported_module_1.ttcn", c_numOfDiff_headerAndModuleName);
+        "imported_module_1_e.ttcn","imported_module_1.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -528,12 +484,12 @@ group Testcases_basedOnTtcnStandard9 {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "module_typename_conversion_e.ttcn","module_typename_conversion.ttcn", c_numOfDiff_headerAndModuleName);
+        "module_typename_conversion_e.ttcn","module_typename_conversion.ttcn", c_numOfDiff);
     }
 
     if(getverdict==pass) {
       f_compareFiles(
-        "MyTypes_e.ttcn","MyTypes.ttcn", c_numOfDiff_headerAndModuleName);
+        "MyTypes_e.ttcn","MyTypes.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -544,7 +500,7 @@ group Testcases_basedOnTtcnStandard9 {
     if(getverdict==pass) {
       f_compareFiles(
         "http_www_example_org_name_conv3_e.ttcn",
-        "http_www_example_org_name_conv3.ttcn", c_numOfDiff_headerAndModuleName);
+        "http_www_example_org_name_conv3.ttcn", c_numOfDiff);
     }
   }
 
@@ -554,7 +510,7 @@ group Testcases_basedOnTtcnStandard9 {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_name_conv_http_e.ttcn",
-        "www_example_org_name_conv_http.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_name_conv_http.ttcn", c_numOfDiff);
     }
   }
 
@@ -564,7 +520,7 @@ group Testcases_basedOnTtcnStandard9 {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_comment_placement_e.ttcn",
-        "www_example_org_comment_placement.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_comment_placement.ttcn", c_numOfDiff);
     }
   }
 
@@ -587,7 +543,7 @@ group StringTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_string.ttcn",
-        "www_XmlTest_org_string_e.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_string_e.ttcn", c_numOfDiff);
     }
 ////////////////////////////////////////////
 //
@@ -606,7 +562,7 @@ group StringTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_string_withWhitespace.ttcn",
-        "www_XmlTest_org_string_withWhitespace_e.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_string_withWhitespace_e.ttcn", c_numOfDiff);
     }
     f_encDecTest_StringWhiteSpaceP();
     f_encDecTest_StringWhiteSpaceR();
@@ -620,7 +576,7 @@ group StringTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_string_withEnum.ttcn",
-        "www_XmlTest_org_string_withEnum_e.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_string_withEnum_e.ttcn", c_numOfDiff);
     }
     f_encDecTest_StringEnum();
   }
@@ -640,7 +596,7 @@ group StringTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_string_withPosLength.ttcn",
-        "www_XmlTest_org_string_withPosLength_e.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_string_withPosLength_e.ttcn", c_numOfDiff);
     }
   }
 
@@ -667,7 +623,7 @@ group StringTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_fixed_value.ttcn",
-        "www_example_org_fixed_value_e.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_fixed_value_e.ttcn", c_numOfDiff);
     }
   }
 
@@ -685,7 +641,7 @@ group StringTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_string_withMinLength.ttcn",
-        "www_XmlTest_org_string_withMinLength_e.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_string_withMinLength_e.ttcn", c_numOfDiff);
     }
   }
 
@@ -708,7 +664,7 @@ group StringTest {
     f_shellCommandWithVerdict(xsd2ttcn_command & " XmlTest_string_withPosMax.xsd","",c_shell_successWithoutWarningAndError);
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_string_withPosMax_e.ttcn","www_XmlTest_org_string_withPosMax.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_string_withPosMax_e.ttcn","www_XmlTest_org_string_withPosMax.ttcn", c_numOfDiff);
     }
   }
 
@@ -745,7 +701,7 @@ group StringTest {
   //  f_shellCommandWithVerdict(xsd2ttcn_command & " regex_square_brackets.xsd","",c_shell_successWithoutWarningAndError);
   //  if(getverdict==pass) {
   //    f_compareFiles(
-  //      "www_example_org_regex_square_brackets_e.ttcn","www_example_org_regex_square_brackets.ttcn", c_numOfDiff_headerAndModuleName);
+  //      "www_example_org_regex_square_brackets_e.ttcn","www_example_org_regex_square_brackets.ttcn", c_numOfDiff);
   //  }
   //}
 }//StringTest
@@ -760,7 +716,7 @@ group BooleanTest {
     f_shellCommandWithVerdict(xsd2ttcn_command & "  XmlTest_boolean.xsd","",c_shell_successWithoutWarningAndError)
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_boolean_e.ttcn","www_XmlTest_org_boolean.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_boolean_e.ttcn","www_XmlTest_org_boolean.ttcn", c_numOfDiff);
     }
   }
 
@@ -769,7 +725,7 @@ group BooleanTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_boolean_variant_commented_e.ttcn",
-        "www_example_org_boolean_variant_commented.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_boolean_variant_commented.ttcn", c_numOfDiff);
     }
   }
 }//BooleanTest
@@ -786,7 +742,7 @@ group DecimalTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_decimal_e.ttcn",
-        "www_XmlTest_org_decimal.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_decimal.ttcn", c_numOfDiff);
     }
   }
 
@@ -796,7 +752,7 @@ group DecimalTest {
   //     if(getverdict==pass) {
   //       f_compareFiles(
   //         "www_XmlTest_org_decimal_withLength_e.ttcn",
-  //         "www_XmlTest_org_decimal_withLength.ttcn", c_numOfDiff_headerAndModuleName);
+  //         "www_XmlTest_org_decimal_withLength.ttcn", c_numOfDiff);
   //     }
   //   }
 
@@ -808,7 +764,7 @@ group DecimalTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_decimal_withMinMaxInclusive_e.ttcn",
-        "www_XmlTest_org_decimal_withMinMaxInclusive.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_decimal_withMinMaxInclusive.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -819,7 +775,7 @@ group DecimalTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_decimal_withMinMaxExclusive_e.ttcn",
-        "www_XmlTest_org_decimal_withMinMaxExclusive.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_decimal_withMinMaxExclusive.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -830,7 +786,7 @@ group DecimalTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_decimal_withEnum_e.ttcn",
-        "www_XmlTest_org_decimal_withEnum.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_decimal_withEnum.ttcn", c_numOfDiff);
     }
   }
 
@@ -840,7 +796,7 @@ group DecimalTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_decimal_fractiondigits_e.ttcn",
-        "www_example_org_decimal_fractiondigits.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_decimal_fractiondigits.ttcn", c_numOfDiff);
     }
   }
 }//DecimalTest
@@ -857,7 +813,7 @@ group IntegerTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_integer_e.ttcn",
-        "www_XmlTest_org_integer.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_integer.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -878,7 +834,7 @@ group IntegerTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_integer_withEnum_e.ttcn","www_XmlTest_org_integer_withEnum.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_integer_withEnum_e.ttcn","www_XmlTest_org_integer_withEnum.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -889,7 +845,7 @@ group IntegerTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_integer_withMinIncl_e.ttcn",
-        "www_XmlTest_org_integer_withMinIncl.ttcn",c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_integer_withMinIncl.ttcn",c_numOfDiff);
     }
   }//tc_
 
@@ -899,7 +855,7 @@ group IntegerTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_integer_withMaxIncl_e.ttcn","www_XmlTest_org_integer_withMaxIncl.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_integer_withMaxIncl_e.ttcn","www_XmlTest_org_integer_withMaxIncl.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -910,7 +866,7 @@ group IntegerTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_integer_withMinExcl_e.ttcn",
-        "www_XmlTest_org_integer_withMinExcl.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_integer_withMinExcl.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -920,7 +876,7 @@ group IntegerTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_integer_withMaxExcl_e.ttcn","www_XmlTest_org_integer_withMaxExcl.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_integer_withMaxExcl_e.ttcn","www_XmlTest_org_integer_withMaxExcl.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -934,7 +890,7 @@ group IntegerTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_not_a_number_minex_inf_maxex_inf_e.ttcn",
-        "www_example_org_not_a_number_minex_inf_maxex_inf.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_not_a_number_minex_inf_maxex_inf.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -945,7 +901,7 @@ group IntegerTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_simple_enum_e.ttcn","www_XmlTest_org_simple_enum.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_simple_enum_e.ttcn","www_XmlTest_org_simple_enum.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -956,7 +912,7 @@ group IntegerTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_simpletype_restrict_comp_e.ttcn","www_example_org_simpletype_restrict_comp.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_simpletype_restrict_comp_e.ttcn","www_example_org_simpletype_restrict_comp.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -967,7 +923,7 @@ group IntegerTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_simpletype_ref_e.ttcn","www_example_org_simpletype_ref.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_simpletype_ref_e.ttcn","www_example_org_simpletype_ref.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -978,7 +934,7 @@ group IntegerTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_simpletype_base_e.ttcn","www_example_org_simpletype_base.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_simpletype_base_e.ttcn","www_example_org_simpletype_base.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -990,7 +946,7 @@ group IntegerTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_enum_field_names_e.ttcn","www_example_org_enum_field_names.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_enum_field_names_e.ttcn","www_example_org_enum_field_names.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -1001,7 +957,7 @@ group IntegerTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_attribute_enumeration_variant_e.ttcn","www_example_org_attribute_enumeration_variant.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_attribute_enumeration_variant_e.ttcn","www_example_org_attribute_enumeration_variant.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1018,7 +974,7 @@ group TimeTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_time_e.ttcn","www_XmlTest_org_time.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_time_e.ttcn","www_XmlTest_org_time.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1028,7 +984,7 @@ group TimeTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_time_withEnum_e.ttcn","www_XmlTest_org_time_withEnum.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_time_withEnum_e.ttcn","www_XmlTest_org_time_withEnum.ttcn", c_numOfDiff);
     }
   }//tc_
 }//TimeTest
@@ -1041,7 +997,7 @@ group ListTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_list_e.ttcn","www_XmlTest_org_list.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_list_e.ttcn","www_XmlTest_org_list.ttcn", c_numOfDiff);
     }
 
     // restrictions:length, minLength, maxLength, pattern, and  enumeration.
@@ -1057,7 +1013,7 @@ group ListTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_list_integer_e.ttcn","www_XmlTest_org_list_integer.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_list_integer_e.ttcn","www_XmlTest_org_list_integer.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -1068,7 +1024,7 @@ group ListTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_list_simpletype_e.ttcn","www_example_org_list_simpletype.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_list_simpletype_e.ttcn","www_example_org_list_simpletype.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -1079,7 +1035,7 @@ group ListTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_list_complextype_e.ttcn","www_example_org_list_complextype.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_list_complextype_e.ttcn","www_example_org_list_complextype.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -1090,7 +1046,7 @@ group ListTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "http_www_example_org_list_minmaxoccurs_e.ttcn","http_www_example_org_list_minmaxoccurs.ttcn", c_numOfDiff_headerAndModuleName);
+        "http_www_example_org_list_minmaxoccurs_e.ttcn","http_www_example_org_list_minmaxoccurs.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -1104,7 +1060,7 @@ group UnionTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_union_e.ttcn","www_XmlTest_org_union.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_union_e.ttcn","www_XmlTest_org_union.ttcn", c_numOfDiff);
     }
   }//tc_
   
@@ -1114,7 +1070,7 @@ group UnionTest {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "ETSI_CR5852_union_e.ttcn","ETSI_CR5852_union.ttcn", c_numOfDiff_headerAndModuleName);
+        "ETSI_CR5852_union_e.ttcn","ETSI_CR5852_union.ttcn", c_numOfDiff);
     }
   }
 
@@ -1125,7 +1081,7 @@ group UnionTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_enumeration_restriction_e.ttcn",
-        "www_example_org_enumeration_restriction.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_enumeration_restriction.ttcn", c_numOfDiff);
     }
   }
 
@@ -1136,7 +1092,7 @@ group UnionTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_seq_enumeration_restriction_e.ttcn",
-        "www_example_org_seq_enumeration_restriction.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_seq_enumeration_restriction.ttcn", c_numOfDiff);
     }
   }
 
@@ -1147,7 +1103,7 @@ group UnionTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_enumeration_restriction3_e.ttcn",
-        "www_example_org_enumeration_restriction3.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_enumeration_restriction3.ttcn", c_numOfDiff);
     }
   }
 
@@ -1159,7 +1115,7 @@ group UnionTest {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_enumeration_remove_dup_e.ttcn",
-        "www_example_org_enumeration_remove_dup.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_enumeration_remove_dup.ttcn", c_numOfDiff);
     }
   }
 
@@ -1175,7 +1131,7 @@ group ComplexType {
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_XmlTest_org_complex1_e.ttcn","www_XmlTest_org_complex1.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_complex1_e.ttcn","www_XmlTest_org_complex1.ttcn", c_numOfDiff);
        f_encDecTest_InternationalPrice();
      }
   }//tc_
@@ -1187,7 +1143,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex2_e.ttcn","www_XmlTest_org_complex2.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_complex2_e.ttcn","www_XmlTest_org_complex2.ttcn", c_numOfDiff);
     }
     f_encDecTest_InternationalPrice2(); //TR: HL24977 -solved -Primer, 2.5.3 Empty Content
     f_encDecTest_InternationalPrice3();
@@ -1200,7 +1156,7 @@ group ComplexType {
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_XmlTest_org_complex_simpleContent_e.ttcn","www_XmlTest_org_complex_simpleContent.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_complex_simpleContent_e.ttcn","www_XmlTest_org_complex_simpleContent.ttcn", c_numOfDiff);
       f_encDecTest_ComplexTypeWithSimpleContent1();
       f_encDecTest_ComplexTypeWithSimpleContent2();
       f_encDecTest_ComplexTypeWithSimpleContent2_neg();
@@ -1213,9 +1169,9 @@ group ComplexType {
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_example_org_namespaceas_e.ttcn","www_example_org_namespaceas.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_namespaceas_e.ttcn","www_example_org_namespaceas.ttcn", c_numOfDiff);
        f_compareFiles(
-        "www_example_org_imported2_e.ttcn","www_example_org_imported2.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_imported2_e.ttcn","www_example_org_imported2.ttcn", c_numOfDiff);
      }
   }//tc_
 
@@ -1225,7 +1181,7 @@ group ComplexType {
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_XmlTest_org_complex_mixed_e.ttcn","www_XmlTest_org_complex_mixed.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_mixed_e.ttcn","www_XmlTest_org_complex_mixed.ttcn", c_numOfDiff);
      }
   }//tc_
 
@@ -1235,7 +1191,7 @@ group ComplexType {
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_example_org_seq_group_reference_e.ttcn","www_example_org_seq_group_reference.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_seq_group_reference_e.ttcn","www_example_org_seq_group_reference.ttcn", c_numOfDiff);
      }
   }//tc_
 
@@ -1250,7 +1206,7 @@ group ComplexType {
 
      if(getverdict==pass) {
        f_compareFiles(
-        "http_www_example_org_seq_embeds_seq_e.ttcn","http_www_example_org_seq_embeds_seq.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "http_www_example_org_seq_embeds_seq_e.ttcn","http_www_example_org_seq_embeds_seq.ttcn", c_numOfDiff);
        f_encDecTest_InternationalPrice();
      }
   }//tc_
@@ -1261,7 +1217,7 @@ group ComplexType {
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_XmlTest_org_complex_choice_e.ttcn","www_XmlTest_org_complex_choice.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_choice_e.ttcn","www_XmlTest_org_complex_choice.ttcn", c_numOfDiff);
      }
   }//tc_
 
@@ -1285,7 +1241,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex_all_e.ttcn","www_XmlTest_org_complex_all.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_all_e.ttcn","www_XmlTest_org_complex_all.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1465,7 +1421,7 @@ group ComplexType {
     f_shellCommandWithVerdict(xsd2ttcn_command & " XmlTest_complex_minOccursMaxOccurs.xsd","",c_shell_successWithoutWarningAndError);
     if(getverdict==pass) {
        f_compareFiles(
-        "www_XmlTest_org_complex_minOccursMaxOccurs_e.ttcn","www_XmlTest_org_complex_minOccursMaxOccurs.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_minOccursMaxOccurs_e.ttcn","www_XmlTest_org_complex_minOccursMaxOccurs.ttcn", c_numOfDiff);
      }
   }
 
@@ -1475,7 +1431,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex_extension_e.ttcn","www_XmlTest_org_complex_extension.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_extension_e.ttcn","www_XmlTest_org_complex_extension.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1484,7 +1440,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "name_conversion_extension_attrib_e.ttcn","name_conversion_extension_attrib.ttcn", c_numOfDiff_headerAndModuleName);
+        "name_conversion_extension_attrib_e.ttcn","name_conversion_extension_attrib.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1493,7 +1449,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_long_extension_e.ttcn","www_example_org_long_extension.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_long_extension_e.ttcn","www_example_org_long_extension.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1502,7 +1458,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_self_recursion_e.ttcn","www_example_org_self_recursion.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_self_recursion_e.ttcn","www_example_org_self_recursion.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1511,7 +1467,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_type_conversion_follow_e.ttcn","www_example_org_type_conversion_follow.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_type_conversion_follow_e.ttcn","www_example_org_type_conversion_follow.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1520,7 +1476,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "attribute_in_extension_e.ttcn","attribute_in_extension.ttcn", c_numOfDiff_headerAndModuleName);
+        "attribute_in_extension_e.ttcn","attribute_in_extension.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1529,7 +1485,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_attr_ext_rest_e.ttcn","www_example_org_attr_ext_rest.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_attr_ext_rest_e.ttcn","www_example_org_attr_ext_rest.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1538,7 +1494,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_attrib_enum_e.ttcn","www_example_org_attrib_enum.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_attrib_enum_e.ttcn","www_example_org_attrib_enum.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1563,7 +1519,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex_restriction_e.ttcn","www_XmlTest_org_complex_restriction.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_restriction_e.ttcn","www_XmlTest_org_complex_restriction.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1573,7 +1529,7 @@ group ComplexType {
     if(getverdict==pass) {
       f_compareFiles(
         "http_www_example_org_complex_restriction_with_use_e.ttcn",
-         "http_www_example_org_complex_restriction_with_use.ttcn", c_numOfDiff_headerAndModuleName);
+         "http_www_example_org_complex_restriction_with_use.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1583,7 +1539,7 @@ group ComplexType {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_complex_nillable_e.ttcn",
-         "www_example_org_complex_nillable.ttcn", c_numOfDiff_headerAndModuleName);
+         "www_example_org_complex_nillable.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1594,7 +1550,7 @@ group ComplexType {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_nillable_fixed_e.ttcn",
-         "www_example_org_nillable_fixed.ttcn", c_numOfDiff_headerAndModuleName);
+         "www_example_org_nillable_fixed.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1604,7 +1560,7 @@ group ComplexType {
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_no_ns_connector_e.ttcn",
-         "www_example_org_no_ns_connector.ttcn", c_numOfDiff_headerModNameAndNamespace);
+         "www_example_org_no_ns_connector.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1614,7 +1570,7 @@ group ComplexType {
     if(getverdict==pass) {
       f_compareFiles(
         "http_www_example_org_2001_XMLSchema_e.ttcn",
-         "http_www_example_org_2001_XMLSchema.ttcn", c_numOfDiff_headerModNameAndNamespace);
+         "http_www_example_org_2001_XMLSchema.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1644,7 +1600,7 @@ group ComplexType {
     if(getverdict==pass) {
       f_compareFiles(
         "www_XmlTest_org_complex_unique_e.ttcn",
-         "www_XmlTest_org_complex_unique.ttcn", c_numOfDiff_headerModNameAndNamespace);
+         "www_XmlTest_org_complex_unique.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1654,7 +1610,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex_include1_e.ttcn","www_XmlTest_org_complex_include.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_include1_e.ttcn","www_XmlTest_org_complex_include.ttcn", c_numOfDiff_ModName);
     }
   }//tc_
 
@@ -1667,7 +1623,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_including_module_e.ttcn","www_example_org_including_module.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_including_module_e.ttcn","www_example_org_including_module.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1688,10 +1644,10 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex_import_e.ttcn","www_XmlTest_org_complex_import.ttcn", c_numOfDiff_headerModNameAndImport);
+        "www_XmlTest_org_complex_import_e.ttcn","www_XmlTest_org_complex_import.ttcn", c_numOfDiff);
 
       f_compareFiles(
-       "www_XmlTest_org_complex_include2_e.ttcn","www_XmlTest_org_complex_include.ttcn", c_numOfDiff_headerModNameAndImport);
+       "www_XmlTest_org_complex_include2_e.ttcn","www_XmlTest_org_complex_include.ttcn", c_numOfDiff_ModName);
     }
   }//tc_
 
@@ -1705,10 +1661,10 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex_import_e.ttcn","www_XmlTest_org_complex_import.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_complex_import_e.ttcn","www_XmlTest_org_complex_import.ttcn", c_numOfDiff);
 
       f_compareFiles(
-       "www_XmlTest_org_complex_include2_e.ttcn","www_XmlTest_org_complex_include.ttcn", c_numOfDiff_headerModNameAndNamespace);
+       "www_XmlTest_org_complex_include2_e.ttcn","www_XmlTest_org_complex_include.ttcn", c_numOfDiff_ModName);
     }
   }//tc_
 
@@ -1730,7 +1686,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex_import_e.ttcn","www_XmlTest_org_complex_import.ttcn", c_numOfDiff_headerModNameAndNamespace+4);
+        "www_XmlTest_org_complex_import_e.ttcn","www_XmlTest_org_complex_import.ttcn", c_numOfDiff+1); // +1 because of tc_complex_import_pos2_converter
     }
   }//tc_
 
@@ -1786,11 +1742,11 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex_import_A_e.ttcn","www_XmlTest_org_complex_import_A.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_import_A_e.ttcn","www_XmlTest_org_complex_import_A.ttcn", c_numOfDiff);
       f_compareFiles(
-        "www_XmlTest_org_complex_import_B_e.ttcn","www_XmlTest_org_complex_import_B.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_import_B_e.ttcn","www_XmlTest_org_complex_import_B.ttcn", c_numOfDiff);
       f_compareFiles(
-        "www_XmlTest_org_complex_import_AB_e.ttcn","www_XmlTest_org_complex_import_AB.ttcn", 10+c_numOfDiff_headerModNameAndImport);
+        "www_XmlTest_org_complex_import_AB_e.ttcn","www_XmlTest_org_complex_import_AB.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1810,7 +1766,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_complex_any_e.ttcn","www_XmlTest_org_complex_any.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_complex_any_e.ttcn","www_XmlTest_org_complex_any.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1819,7 +1775,7 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_import_prefix_e.ttcn","www_example_org_import_prefix.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_import_prefix_e.ttcn","www_example_org_import_prefix.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1828,15 +1784,15 @@ group ComplexType {
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_pref1_e.ttcn","www_example_org_pref1.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_pref1_e.ttcn","www_example_org_pref1.ttcn", c_numOfDiff);
     }
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_pref2_e.ttcn","www_example_org_pref2.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_pref2_e.ttcn","www_example_org_pref2.ttcn", c_numOfDiff);
     }
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_pref3_e.ttcn","www_example_org_pref3.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_pref3_e.ttcn","www_example_org_pref3.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -1906,7 +1862,7 @@ group Elements{
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_XmlTest_org_element_anyType_e.ttcn","www_XmlTest_org_element_anyType.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_XmlTest_org_element_anyType_e.ttcn","www_XmlTest_org_element_anyType.ttcn", c_numOfDiff);
      }
   }//tc_
 
@@ -1916,7 +1872,7 @@ group Elements{
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_example_org_qualified_element_attrib_e.ttcn","www_example_org_qualified_element_attrib.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_qualified_element_attrib_e.ttcn","www_example_org_qualified_element_attrib.ttcn", c_numOfDiff);
      }
   }//tc_
 
@@ -1926,7 +1882,7 @@ group Elements{
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_example_org_unqualified_element_attrib_e.ttcn","www_example_org_unqualified_element_attrib.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_unqualified_element_attrib_e.ttcn","www_example_org_unqualified_element_attrib.ttcn", c_numOfDiff);
      }
   }//tc_
 
@@ -2050,7 +2006,7 @@ group Elements{
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_XmlTest_org_element_recordOfElements_e.ttcn","www_XmlTest_org_element_recordOfElements.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_element_recordOfElements_e.ttcn","www_XmlTest_org_element_recordOfElements.ttcn", c_numOfDiff);
      }
   }//tc_
 
@@ -2074,7 +2030,7 @@ group Elements{
 
      if(getverdict==pass) {
        f_compareFiles(
-        "www_XmlTest_org_element_recordOfElements_e.ttcn","www_XmlTest_org_element_recordOfElements.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_element_recordOfElements_e.ttcn","www_XmlTest_org_element_recordOfElements.ttcn", c_numOfDiff);
       f_encDecTest_PersonInfo1_defaultElement();
      }
   }//tc_
@@ -2086,7 +2042,7 @@ group Elements{
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_element_recordOfElements4_e.ttcn","www_XmlTest_org_element_recordOfElements4.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_element_recordOfElements4_e.ttcn","www_XmlTest_org_element_recordOfElements4.ttcn", c_numOfDiff);
       f_encDecTest_PersonInfo4();
     }
   }//tc_
@@ -2098,7 +2054,7 @@ group Elements{
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_element_recordOfElements3_e.ttcn","www_XmlTest_org_element_recordOfElements3.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_element_recordOfElements3_e.ttcn","www_XmlTest_org_element_recordOfElements3.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2115,7 +2071,7 @@ group Elements{
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_XmlTest_org_element_recordOfElements5_e.ttcn","www_XmlTest_org_element_recordOfElements5.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_XmlTest_org_element_recordOfElements5_e.ttcn","www_XmlTest_org_element_recordOfElements5.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2131,7 +2087,7 @@ group Elements{
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_substitutiongroup_e.ttcn","www_example_org_substitutiongroup.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_e.ttcn","www_example_org_substitutiongroup.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2142,7 +2098,7 @@ group Elements{
 
     if(getverdict==pass) {
       f_compareFiles(
-        "www_example_org_substitutiongroup_name_as_e.ttcn","www_example_org_substitutiongroup_name_as.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_name_as_e.ttcn","www_example_org_substitutiongroup_name_as.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2154,7 +2110,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_substitutiongroup_abstract_block_1_e.ttcn",
-        "www_example_org_substitutiongroup_abstract_block_1.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_abstract_block_1.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2166,7 +2122,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_substitutiongroup_abstract_block_2_e.ttcn",
-        "www_example_org_substitutiongroup_abstract_block_2.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_abstract_block_2.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2178,7 +2134,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_substitutiongroup_complex_without_element_e.ttcn",
-        "www_example_org_substitutiongroup_complex_without_element.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_complex_without_element.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2190,7 +2146,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_substitutiongroup_complex_without_element_e.ttcn",
-        "www_example_org_substitutiongroup_complex_without_element.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_complex_without_element.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2202,7 +2158,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_substitutiongroup_complextype_block_e.ttcn",
-        "www_example_org_substitutiongroup_complextype_block.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_complextype_block.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2228,13 +2184,13 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_substitutiongroup_ref_e.ttcn",
-        "www_example_org_substitutiongroup_ref.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_ref.ttcn", c_numOfDiff);
     }
 
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_substitutiongroup_main_e.ttcn",
-        "www_example_org_substitutiongroup_main.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_main.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2246,7 +2202,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_substitutiongroup_rename_e.ttcn",
-        "www_example_org_substitutiongroup_rename.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_substitutiongroup_rename.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2263,7 +2219,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_e.ttcn",
-        "www_example_org_type_substitution.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2281,7 +2237,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_chain_e.ttcn",
-        "www_example_org_type_substitution_chain.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_chain.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2293,7 +2249,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_abstract_block_e.ttcn",
-        "www_example_org_type_substitution_abstract_block.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_abstract_block.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2305,13 +2261,13 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_mod1_e.ttcn",
-        "www_example_org_type_substitution_mod1.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_mod1.ttcn", c_numOfDiff);
     }
 
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_mod2_e.ttcn",
-        "www_example_org_type_substitution_mod2.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_mod2.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2323,7 +2279,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_simpletype_e.ttcn",
-        "www_example_org_type_substitution_simpletype.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_simpletype.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2335,7 +2291,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_subs_with_elem_subs_e.ttcn",
-        "www_example_org_type_subs_with_elem_subs.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_subs_with_elem_subs.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2347,13 +2303,13 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_elem_in_ct_mod1_e.ttcn",
-        "www_example_org_type_substitution_elem_in_ct_mod1.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_elem_in_ct_mod1.ttcn", c_numOfDiff);
     }
 
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_elem_in_ct_mod2_e.ttcn",
-        "www_example_org_type_substitution_elem_in_ct_mod2.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_elem_in_ct_mod2.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2365,7 +2321,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_only_element_substitution_e.ttcn",
-        "www_example_org_only_element_substitution.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_only_element_substitution.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2377,7 +2333,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_builtintype_e.ttcn",
-        "www_example_org_type_substitution_builtintype.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_builtintype.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2389,7 +2345,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_rename_e.ttcn",
-        "www_example_org_type_substitution_rename.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_rename.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2401,7 +2357,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_complex_cascade_e.ttcn",
-        "www_example_org_type_substitution_complex_cascade.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_complex_cascade.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2413,7 +2369,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_substitution_simple_cascade_e.ttcn",
-        "www_example_org_type_substitution_simple_cascade.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_type_substitution_simple_cascade.ttcn", c_numOfDiff);
     }
 
   }//tc_
@@ -2455,7 +2411,7 @@ group Elements{
 
     if(getverdict==pass) {
       f_compareFiles(
-        "XmlTest_imsike_e.ttcn","XmlTest_imsike.ttcn", c_numOfDiff_headerAndModuleName);
+        "XmlTest_imsike_e.ttcn","XmlTest_imsike.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -2464,7 +2420,7 @@ group Elements{
 
     if(getverdict==pass) {
       f_compareFiles(
-        "nillable_annotations_e.ttcn","nillable_annotations.ttcn", c_numOfDiff_headerAndModuleName);
+        "nillable_annotations_e.ttcn","nillable_annotations.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -2474,7 +2430,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "http_www_example_org_nillable_in_nillable_extension_e.ttcn",
-        "http_www_example_org_nillable_in_nillable_extension.ttcn", c_numOfDiff_headerAndModuleName);
+        "http_www_example_org_nillable_in_nillable_extension.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -2484,7 +2440,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_type_attributegroup_nillable_e.ttcn",
-        "www_example_org_type_attributegroup_nillable.ttcn", c_numOfDiff_headerAndModuleName);
+        "www_example_org_type_attributegroup_nillable.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -2494,7 +2450,7 @@ group Elements{
     if(getverdict==pass) {
       f_compareFiles(
         "www_example_org_attribgroup_ingroup_e.ttcn",
-        "www_example_org_attribgroup_ingroup.ttcn", c_numOfDiff_headerModNameAndNamespace);
+        "www_example_org_attribgroup_ingroup.ttcn", c_numOfDiff);
     }
   }//tc_
 
@@ -2533,7 +2489,10 @@ group Elements{
 //=========================================================================
 // Control
 //=========================================================================
-
+// When creating new testcases: Change the copyright header of the expected
+// ttcn just like in the other expected ttcns and write your name into a 
+// contributors section just like in the other expected ttcns. In normal
+// case theese changes are required.
 control {
   execute(tc_versionTest());//Passed
   execute(tc_xsd2ttcn_versionTest());//Passed

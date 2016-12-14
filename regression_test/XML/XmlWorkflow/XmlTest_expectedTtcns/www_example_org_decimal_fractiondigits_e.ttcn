@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_decimal_fractiondigits_e.ttcn
+//  File:          www_example_org_decimal_fractiondigits.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- decimal_fractiondigits.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/decimal/fractiondigits/e" */
+//			/* targetnamespace = "www.example.org/decimal/fractiondigits" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

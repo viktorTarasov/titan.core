@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          schemas_ericsson_com_upg_bulkprovisioning_1_0_e.ttcn
+//  File:          schemas_ericsson_com_upg_bulkprovisioning_1_0.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module schemas_ericsson_com_upg_bulkprovisioning_1_0_e {
+module schemas_ericsson_com_upg_bulkprovisioning_1_0 {
 
 
 import from XSD all;

@@ -9,7 +9,7 @@
 * http://www.eclipse.org/legal/epl-v10.html
 *******************************************************************************/
 //
-//  File:          http_www_example_org_2001_XMLSchema_e.ttcn
+//  File:          http_www_example_org_2001_XMLSchema.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -21,7 +21,7 @@
 //	Generated from file(s):
 //	- MyXMLSchema.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "http://www.example.org/2001/XMLSchema/e" */
+//			/* targetnamespace = "http://www.example.org/2001/XMLSchema" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

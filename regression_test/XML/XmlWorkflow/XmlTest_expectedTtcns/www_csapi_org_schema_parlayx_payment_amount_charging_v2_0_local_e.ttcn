@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_csapi_org_schema_parlayx_payment_amount_charging_v2_0_local_e.ttcn
+//  File:          www_csapi_org_schema_parlayx_payment_amount_charging_v2_0_local.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_csapi_org_schema_parlayx_payment_amount_charging_v2_0_local_e {
+module www_csapi_org_schema_parlayx_payment_amount_charging_v2_0_local {
 
 
 import from XSD all;

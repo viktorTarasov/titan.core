@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_complex_import_AB_e.ttcn
+//  File:          www_XmlTest_org_complex_import_AB.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,16 +40,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_complex_import_AB_e {
+module www_XmlTest_org_complex_import_AB {
 
 
 import from XSD all;
 
 
-import from www_XmlTest_org_complex_import_A_e all;
+import from www_XmlTest_org_complex_import_A all;
 
 
-import from www_XmlTest_org_complex_import_B_e all;
+import from www_XmlTest_org_complex_import_B all;
 
 
 /* This documentum tests based on
@@ -63,8 +63,8 @@ import from www_XmlTest_org_complex_import_B_e all;
 
 type record PurchaseReportImport
 {
-	www_XmlTest_org_complex_import_A_e.MyType myTypeA,
-	www_XmlTest_org_complex_import_B_e.MyType myTypeB
+	www_XmlTest_org_complex_import_A.MyType myTypeA,
+	www_XmlTest_org_complex_import_B.MyType myTypeB
 }
 with {
   variant "name as uncapitalized";

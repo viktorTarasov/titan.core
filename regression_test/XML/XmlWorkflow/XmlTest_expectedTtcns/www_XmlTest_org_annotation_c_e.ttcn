@@ -15,7 +15,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_annotation_c_e.ttcn
+//  File:          www_XmlTest_org_annotation.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -43,6 +43,8 @@ module www_XmlTest_org_annotation_c {
 
 
 import from XSD all;
+
+
 
 
 type XSD.PositiveInteger MyInteger1

@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_element_recordOfElements4_e.ttcn
+//  File:          www_XmlTest_org_element_recordOfElements4.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_element_recordOfElements4_e {
+module www_XmlTest_org_element_recordOfElements4 {
 
 
 import from XSD all;

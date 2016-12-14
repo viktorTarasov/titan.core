@@ -14,7 +14,7 @@
 module xmlTest_Functions_complex1
 {
 
-import from www_XmlTest_org_complex1_e all;
+import from www_XmlTest_org_complex1 all;
 
 external function f_enc_InternationalPrice(in InternationalPrice pdu, out octetstring stream)
 with { extension "prototype(fast) encode(XER:XER_EXTENDED)" }

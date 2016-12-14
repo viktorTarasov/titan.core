@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_substitution_abstract_block_e.ttcn
+//  File:          www_example_org_type_substitution_abstract_block.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- type_substitution_abstract_block_e.xsd
+//	- type_substitution_abstract_block.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/type/substitution/abstract/block/e" */
+//			/* targetnamespace = "www.example.org/type/substitution/abstract/block" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

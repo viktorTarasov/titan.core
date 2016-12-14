@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_nillable_fixed_e.ttcn
+//  File:          www_example_org_nillable_fixed.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_example_org_nillable_fixed_e {
+module www_example_org_nillable_fixed {
 
 
 import from XSD all;

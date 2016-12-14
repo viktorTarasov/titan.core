@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_string_withFaultyMinMax_e {
+module www_XmlTest_org_string_withFaultyMinMax {
 
 
 import from XSD all;

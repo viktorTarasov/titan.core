@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_csapi_org_schema_parlayx_common_v2_0_e.ttcn
+//  File:          www_csapi_org_schema_parlayx_common_v2_0.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_csapi_org_schema_parlayx_common_v2_0_e {
+module www_csapi_org_schema_parlayx_common_v2_0 {
 
 
 import from XSD all;

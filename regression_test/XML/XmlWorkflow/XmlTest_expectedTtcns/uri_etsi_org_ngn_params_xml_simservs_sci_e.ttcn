@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          uri_etsi_org_ngn_params_xml_simservs_sci_e.ttcn
+//  File:          uri_etsi_org_ngn_params_xml_simservs_sci.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module uri_etsi_org_ngn_params_xml_simservs_sci_e {
+module uri_etsi_org_ngn_params_xml_simservs_sci {
 
 
 import from XSD all;

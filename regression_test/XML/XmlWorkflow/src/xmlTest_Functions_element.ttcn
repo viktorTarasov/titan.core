@@ -14,16 +14,16 @@
  ******************************************************************************/
 module xmlTest_Functions_element
 {
-import from www_XmlTest_org_element_anyType_e all;
-import from www_XmlTest_org_element_recordOfElements_e all;
-import from www_XmlTest_org_element_recordOfElements3_e all;
-import from www_XmlTest_org_element_recordOfElements4_e all;
-import from www_XmlTest_org_element_recordOfElements5_e all;
-import from www_XmlTest_org_element_nameInheritance_e all;
+import from www_XmlTest_org_element_anyType all;
+import from www_XmlTest_org_element_recordOfElements all;
+import from www_XmlTest_org_element_recordOfElements3 all;
+import from www_XmlTest_org_element_recordOfElements4 all;
+import from www_XmlTest_org_element_recordOfElements5 all;
+import from www_XmlTest_org_element_nameInheritance all;
 import from www_ericsson_com_is_isco_Tgc_R6A48_R6H01  all;
 import from www_example_org_substitutiongroup all;
 import from www_example_org_type_substitution all;
-import from XmlTest_imsike_e all;
+import from XmlTest_imsike all;
 import from xmlTest_Shell all;
 //==============================================================================
 //  External functions

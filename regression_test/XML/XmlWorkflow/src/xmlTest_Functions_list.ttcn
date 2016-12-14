@@ -14,7 +14,7 @@
 module xmlTest_Functions_list
 {
 
-import from www_XmlTest_org_list_e all;
+import from www_XmlTest_org_list all;
 //==============================================================================
 //  External functions
 //==============================================================================

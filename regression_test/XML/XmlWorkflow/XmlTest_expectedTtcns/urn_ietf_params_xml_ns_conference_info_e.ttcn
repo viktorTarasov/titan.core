@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          urn_ietf_params_xml_ns_conference_info_e.ttcn
+//  File:          urn_ietf_params_xml_ns_conference_info.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module urn_ietf_params_xml_ns_conference_info_e {
+module urn_ietf_params_xml_ns_conference_info {
 
 
 import from XSD all;

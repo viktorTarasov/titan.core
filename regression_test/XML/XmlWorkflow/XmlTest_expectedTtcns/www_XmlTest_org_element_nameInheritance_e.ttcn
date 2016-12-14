@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_element_nameInheritance_e.ttcn
+//  File:          www_XmlTest_org_element_nameInheritance.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_element_nameInheritance_e {
+module www_XmlTest_org_element_nameInheritance {
 
 
 import from XSD all;

@@ -15,7 +15,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_e.ttcn
+//  File:          NoTargetNamespace.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -39,7 +39,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_e {
+module NoTargetNamespace {
 
 
 import from XSD all;

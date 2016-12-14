@@ -15,7 +15,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_ericsson_com_is_isco_IsTypes_R4L06_R4AF11_e.ttcn
+//  File:          www_ericsson_com_is_isco_IsTypes_R4L06_R4AF11.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -34,7 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_ericsson_com_is_isco_IsTypes_R4L06_R4AF11_e {
+module www_ericsson_com_is_isco_IsTypes_R4L06_R4AF11 {
 
 
 import from XSD all;

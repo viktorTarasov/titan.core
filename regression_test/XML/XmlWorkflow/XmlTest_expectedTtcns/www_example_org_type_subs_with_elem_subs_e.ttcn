@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_subs_with_elem_subs_e.ttcn
+//  File:          www_example_org_type_subs_with_elem_subs.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- type_subs_with_elem_subs_e.xsd
+//	- type_subs_with_elem_subs.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.example.org/type/subs/with/elem/subs/e" */
+//			/* targetnamespace = "www.example.org/type/subs/with/elem/subs" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

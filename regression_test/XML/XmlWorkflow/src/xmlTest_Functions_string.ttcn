@@ -14,9 +14,9 @@
 module xmlTest_Functions_string
 {
 
-import from www_XmlTest_org_string_e all;
-import from www_XmlTest_org_string_withEnum_e all;
-import from www_XmlTest_org_string_withWhitespace_e all;
+import from www_XmlTest_org_string all;
+import from www_XmlTest_org_string_withEnum all;
+import from www_XmlTest_org_string_withWhitespace all;
 import from xmlTest_Shell all;
 //==============================================================================
 //  External functions

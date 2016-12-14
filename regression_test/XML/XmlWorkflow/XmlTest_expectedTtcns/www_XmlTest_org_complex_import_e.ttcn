@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_complex_import_e.ttcn
+//  File:          www_XmlTest_org_complex_import.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,13 +40,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_complex_import_e {
+module www_XmlTest_org_complex_import {
 
 
 import from XSD all;
 
 
-import from www_XmlTest_org_complex_include_e all;
+import from www_XmlTest_org_complex_include all;
 
 
 /* This documentum tests based on

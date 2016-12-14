@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_substitution_simple_cascade_e.ttcn
+//  File:          www_example_org_type_substitution_simple_cascade.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- type_substitution_simple_cascade_e.xsd
+//	- type_substitution_simple_cascade.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/type/substitution/simple/cascade/e" */
+//			/* targetnamespace = "www.example.org/type/substitution/simple/cascade" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

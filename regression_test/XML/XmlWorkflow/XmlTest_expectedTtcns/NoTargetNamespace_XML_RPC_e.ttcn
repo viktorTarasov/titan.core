@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_XML_RPC_e.ttcn
+//  File:          NoTargetNamespace_XML_RPC.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_XML_RPC_e {
+module NoTargetNamespace_XML_RPC {
 
 
 import from XSD all;

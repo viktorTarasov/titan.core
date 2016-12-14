@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_only_element_substitution_e.ttcn
+//  File:          www_example_org_only_element_substitution.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- only_element_substitution_e.xsd
+//	- only_element_substitution.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.example.org/only/element/substitution/e" */
+//			/* targetnamespace = "www.example.org/only/element/substitution" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

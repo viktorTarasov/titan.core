@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          nillable_annotations_e.ttcn
+//  File:          nillable_annotations.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- nillable_annotations.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "nillable_annotations/e" */
+//			/* targetnamespace = "nillable_annotations" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

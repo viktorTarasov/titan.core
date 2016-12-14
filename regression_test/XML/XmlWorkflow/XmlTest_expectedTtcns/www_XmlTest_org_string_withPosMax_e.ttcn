@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_string_withPosMax_e.ttcn
+//  File:          www_XmlTest_org_string_withPosMax.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_string_withPosMax_e {
+module www_XmlTest_org_string_withPosMax {
 
 
 import from XSD all;

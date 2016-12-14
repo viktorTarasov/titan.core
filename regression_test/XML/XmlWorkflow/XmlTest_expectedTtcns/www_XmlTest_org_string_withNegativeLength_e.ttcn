@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_string_withNegativeLength_e {
+module www_XmlTest_org_string_withNegativeLength {
 
 
 import from XSD all;

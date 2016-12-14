@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_substitution_builtintype_e.ttcn
+//  File:          www_example_org_type_substitution_builtintype.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- type_substitution_builtintype_e.xsd
+//	- type_substitution_builtintype.xsd
 //			/* xml version = "1.0" */
-//			/* targetnamespace = "www.example.org/type/substitution/builtintype/e" */
+//			/* targetnamespace = "www.example.org/type/substitution/builtintype" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

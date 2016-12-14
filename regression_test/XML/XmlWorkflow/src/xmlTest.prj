@@ -311,6 +311,7 @@
                 <File path="../XmlTest_expectedTtcns/XmlTest_imsike_e.ttcn" />
                 <File path="../XmlTest_expectedTtcns/www_XmlTest_org_element_nameInheritance_e.ttcn" />
                 <File path="../XmlTest_expectedTtcns/www_XmlTest_org_annotation_e.ttcn" />
+                <File path="../XmlTest_expectedTtcns/www_XmlTest_org_annotation2_e.ttcn" />
                 <File path="../XmlTest_expectedTtcns/www_XmlTest_org_annotation_c_e.ttcn" />
                 <File path="../XmlTest_expectedTtcns/www_XmlTest_org_annotation_e_e.ttcn" />
                 <File path="../XmlTest_expectedTtcns/www_XmlTest_org_annotation_t_e.ttcn" />
@@ -420,6 +421,7 @@
                 <File path="xmlTest_Functions_element.ttcn" />
                 <File path="xmlTest_Functions_complex.ttcn" />
                 <File path="xmlTest_Functions_list.ttcn" />
+                <File path="external.cc" />
             </File_Group>
             <File_Group name="XmlTest_asn1s" />
             <File_Group name="Tgc_temporary" >

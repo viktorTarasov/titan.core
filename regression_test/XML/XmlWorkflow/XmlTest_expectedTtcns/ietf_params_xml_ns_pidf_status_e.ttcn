@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          ietf_params_xml_ns_pidf_status_e.ttcn
+//  File:          ietf_params_xml_ns_pidf_status.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module ietf_params_xml_ns_pidf_status_e {
+module ietf_params_xml_ns_pidf_status {
 
 
 import from XSD all;

@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_empty_e.ttcn
+//  File:          www_XmlTest_org_empty.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_empty_e {
+module www_XmlTest_org_empty {
 
 
 import from XSD all;

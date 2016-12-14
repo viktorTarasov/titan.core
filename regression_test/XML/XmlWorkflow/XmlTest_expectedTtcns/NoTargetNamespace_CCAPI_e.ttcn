@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_CCAPI_e.ttcn
+//  File:          NoTargetNamespace_CCAPI.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_CCAPI_e {
+module NoTargetNamespace_CCAPI {
 
 
 import from XSD all;

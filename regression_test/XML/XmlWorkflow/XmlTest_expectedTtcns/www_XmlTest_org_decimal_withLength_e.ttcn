@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_XmlTest_org_decimal_withLength_e.ttcn
+//  File:          www_XmlTest_org_decimal_withLength.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_decimal_withLength_e {
+module www_XmlTest_org_decimal_withLength {
 
 
 import from XSD all;

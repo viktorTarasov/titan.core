@@ -43,7 +43,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_XmlTest_org_complex_include1_e {
+module www_XmlTest_org_complex_include1 {
 
 
 import from XSD all;
@@ -80,6 +80,7 @@ with {
       5.4 Importing Types
       XML Schema Part 1: Structures Second Edition
       ...
+      ETSI ES 201 873-9 V4.1.2
       This is the included schema with proper namespace */
 
 

@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          http_www_example_org_complex_restriction_with_use_e.ttcn
+//  File:          http_www_example_org_complex_restriction_with_use.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- complex_restriction_with_use.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "http://www.example.org/complex-restriction-with-use/e" */
+//			/* targetnamespace = "http://www.example.org/complex-restriction-with-use" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_simpletype_base_e.ttcn
+//  File:          www_example_org_simpletype_base.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,7 +24,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- simpletype_base_e.xsd
+//	- simpletype_base.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "www.example.org/simpletype/base" */
 ////////////////////////////////////////////////////////////////////////////////

@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_type_substitution_elem_in_ct_mod1_e.ttcn
+//  File:          www_example_org_type_substitution_elem_in_ct_mod1.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,9 +24,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- type_substitution_elem_in_ct_mod1_e.xsd
+//	- type_substitution_elem_in_ct_mod1.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "www.example.org/type/substitution/elem/in/ct/mod1/e" */
+//			/* targetnamespace = "www.example.org/type/substitution/elem/in/ct/mod1" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

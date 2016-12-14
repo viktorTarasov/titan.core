@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          name_conversion_extension_attrib_e.ttcn
+//  File:          name_conversion_extension_attrib.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- name_conversion_extension_attrib.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "name_conversion_extension_attrib/e" */
+//			/* targetnamespace = "name_conversion_extension_attrib" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          imported_module_e.ttcn
+//  File:          imported_module.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -26,7 +26,7 @@
 //	Generated from file(s):
 //	- imported_module.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
-//			/* targetnamespace = "imported_module_e" */
+//			/* targetnamespace = "imported_module" */
 ////////////////////////////////////////////////////////////////////////////////
 //     Modification header(s):
 //-----------------------------------------------------------------------------

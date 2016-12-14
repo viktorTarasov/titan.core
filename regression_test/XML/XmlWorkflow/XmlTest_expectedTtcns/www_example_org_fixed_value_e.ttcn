@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_fixed_value_e.ttcn
+//  File:          www_example_org_fixed_value.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,7 +24,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- a.xsd
+//	- fixed_value.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "www.example.org/fixed/value" */
 ////////////////////////////////////////////////////////////////////////////////

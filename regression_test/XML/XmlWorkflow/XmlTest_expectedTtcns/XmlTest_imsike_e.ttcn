@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          XmlTest_imsike_e.ttcn
+//  File:          XmlTest_imsike.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module XmlTest_imsike_e {
+module XmlTest_imsike {
 
 
 import from XSD all;

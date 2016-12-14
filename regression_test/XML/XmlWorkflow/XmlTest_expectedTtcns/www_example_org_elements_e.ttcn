@@ -14,7 +14,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_example_org_elements_e.ttcn
+//  File:          www_example_org_elements.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -24,7 +24,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //	Generated from file(s):
-//	- elements_e.xsd
+//	- elements.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "www.example.org/elements" */
 ////////////////////////////////////////////////////////////////////////////////
