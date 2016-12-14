@@ -42,12 +42,12 @@ all: $(GENERATED_DIRS)
 dir_single_mode:
 	mkdir $@
 	cd $@ && for file in $(FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) $(RT2_FLAG) -s ./* && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) $(RT2_FLAG) -s -e ExclusiveRangeTemplate ./* && $(MAKE_PROG)
 	
 dir_parallel_mode:
 	mkdir $@
 	cd $@ && for file in $(FILES); do ln -s ../$$file || exit; done
-	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) $(RT2_FLAG) ./* && $(MAKE_PROG)
+	cd $@ && $(TTCN3_DIR)/bin/ttcn3_makefilegen $(COVERAGE_FLAG) $(SPLIT_FLAG) $(RT2_FLAG) -e ExclusiveRangeTemplate ./* && $(MAKE_PROG)
 
 run: $(GENERATED_DIRS)
 	cd $(DIR_SINGLE) && ./$(RUNNABLE) $(CFG) 
