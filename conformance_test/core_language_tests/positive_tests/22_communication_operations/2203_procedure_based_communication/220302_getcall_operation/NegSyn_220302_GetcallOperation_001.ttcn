@@ -28,7 +28,7 @@ module NegSyn_220302_GetcallOperation_001 {
 		var integer v_index;
         alt
 		{
-        	[] p.getcall -> @index v_index { setverdict(pass); }
+        	[] p.getcall -> @index value v_index { setverdict(pass); }
 			[else] { setverdict(fail, "The any from getcall operation didn't match for some reason"); } 
 		}		
 	}

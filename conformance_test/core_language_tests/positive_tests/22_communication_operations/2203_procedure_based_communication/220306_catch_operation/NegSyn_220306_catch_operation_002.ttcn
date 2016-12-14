@@ -26,7 +26,7 @@ module NegSyn_220306_catch_operation_002 {
 	
 	function f() runs on GeneralComp
 	{
-		p.getcall(S:?);
+		p.getcall(S:{});
 		p.raise(S, 10);
 	}
 	
@@ -39,7 +39,7 @@ module NegSyn_220306_catch_operation_002 {
 		v_ptc.done;
         alt
 		{
-        	[] any port.catch -> @index v_index { setverdict(pass); }
+        	[] any port.catch -> @index value v_index { setverdict(pass); }
 			[else] { setverdict(fail, "The any from catch operation didn't match for some reason"); } 
 		}		
     }

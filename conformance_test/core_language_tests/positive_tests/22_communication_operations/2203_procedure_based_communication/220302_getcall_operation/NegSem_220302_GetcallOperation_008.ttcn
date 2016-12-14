@@ -32,7 +32,7 @@ module NegSem_220302_GetcallOperation_008 {
 		var GeneralComp v_src;
         alt
 		{
-        	[] any from p.getcall(S:{p_par := (0..c_portCount)}) -> param (v_parValue := p_par) sender v_src @index v_index { 
+        	[] any from p.getcall(S:{p_par := (0..c_portCount)}) -> param (v_parValue := p_par) sender v_src @index value v_index { 
 				if(v_index == 1 and v_parValue == v_index + 1){
 		            setverdict(pass);
 		        } else {

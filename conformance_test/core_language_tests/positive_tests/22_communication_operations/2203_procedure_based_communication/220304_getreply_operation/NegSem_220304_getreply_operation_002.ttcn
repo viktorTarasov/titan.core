@@ -47,7 +47,7 @@ module NegSem_220304_getreply_operation_002 {
     
         alt
 		{
-        	[] any from p.getreply(S:?) -> @index v_index { 
+        	[] any from p.getreply(S:{}) -> @index value v_index { 
 				if(v_index[0] == 1){
 		            setverdict(pass);
 		        } else {

@@ -47,7 +47,7 @@ module Sem_220304_getreply_operation_004 {
 
         alt
 		{
-        	[] any from p.getreply(S:{p_par := (1..10)}) -> @index v_index { 
+        	[] any from p.getreply(S:{p_par := (1..10)}) -> @index value v_index { 
 				setverdict(fail, "The any from getreply operation produced incorrect match"); 
 			}
 			[else] { setverdict(pass); } 

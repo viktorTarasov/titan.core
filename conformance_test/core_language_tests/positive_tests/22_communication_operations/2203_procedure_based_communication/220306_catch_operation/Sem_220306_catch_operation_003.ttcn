@@ -47,7 +47,7 @@ module Sem_220306_catch_operation_003 {
 
         alt
 		{
-        	[] any from p.catch(S, integer:(1..10)) -> @index v_index { 
+        	[] any from p.catch(S, integer:(1..10)) -> @index value v_index { 
 				setverdict(fail, "The any from catch operation produced incorrect match"); 
 			}
 			[else] { setverdict(pass); } 

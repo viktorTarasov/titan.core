@@ -38,7 +38,7 @@ module Sem_220202_ReceiveOperation_020 {
         p[2].send(10);
 
         alt {
-            [] any from p.receive(integer:?) -> @index v_index { 
+            [] any from p.receive(integer:?) -> @index value v_index { 
                 if (v_index == 2) { setverdict(pass); }
                 else { setverdict(fail); }
             }
