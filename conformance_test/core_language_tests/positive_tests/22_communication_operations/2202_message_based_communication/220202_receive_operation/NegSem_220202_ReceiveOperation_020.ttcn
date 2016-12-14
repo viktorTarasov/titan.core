@@ -25,8 +25,9 @@ module NegSem_220202_ReceiveOperation_020 {
 	    
     testcase TC_NegSem_220202_ReceiveOperation_020() runs on GeneralComp {
         var integer v_indices[2];
+		connect(self:p[0][1][2],self:p[0][1][2]);
         p[0][1][2].send(100);
-        any from p.receive(integer:?) -> @index v_indices;
+        any from p.receive(integer:?) -> @index value v_indices;
         setverdict(pass);
     }
 

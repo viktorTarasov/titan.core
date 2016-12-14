@@ -2365,6 +2365,1024 @@ error: Type mismatch: The type of the operand should be a component type instead
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_210305_alive_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from alive is applied to single component >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210305_alive_operation_001 NegSem_210305_alive_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.5, Verify that error occurs when any from alive is applied to single component
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction b 
+// The ComponentArrayRef shall be a reference to a component array variable identifier.
+module NegSem_210305_alive_operation_001 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210305_alive_operation_001() runs on GeneralComp system GeneralComp {
+		var boolean v_isAlive;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());
+        v_isAlive := any from v_ptc.alive;
+        if(v_isAlive){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from alive operation didn't find alive components");
+        }
+    }
+
+    control {
+        execute(TC_NegSem_210305_alive_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The operand of operation `alive': Type mismatch: component array reference was expected instead of `@NegSem_210305_alive_operation_001.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210305_alive_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from alive is applied to 1D array and index target has wrong type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210305_alive_operation_003 NegSem_210305_alive_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.5, Verify that error occurs when any from alive is applied to 1D array and index target has wrong type
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction d
+// If the index redirection is used for single-dimensional component arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_210305_alive_operation_003 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+
+	function f_done() runs on GeneralComp {}
+	
+    testcase TC_NegSem_210305_alive_operation_003() runs on GeneralComp system GeneralComp {
+		var boolean v_isAlive;
+		const integer c_size := 4;
+        var GeneralComp v_ptc[c_size];
+		var float v_index;
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			v_ptc[i] := GeneralComp.create; // created components are inactive
+			if (i mod 2 == 0) { v_ptc[i].start(f_done()); } //quick done components on even indices
+			else { v_ptc[i].start(f());} // activate v_ptc
+		}
+        v_isAlive := any from v_ptc.alive -> @index value v_index;
+        if(v_index == 1.0){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from alive operation didn't find alive components");
+        }
+    }
+
+    control {
+        execute(TC_NegSem_210305_alive_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of component arrays can only be redirected to an integer, an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210305_alive_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from alive index redirection for multi-D arrays requires arrays of correct size >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210305_alive_operation_004 NegSem_210305_alive_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.5, Verify that any from alive index redirection for multi-D arrays requires arrays of correct size
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction e:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_210305_alive_operation_004 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+
+	function f_done() runs on GeneralComp {}
+	
+    testcase TC_NegSem_210305_alive_operation_004() runs on GeneralComp system GeneralComp {
+		var boolean v_isAlive;
+		const integer c_size := 3;
+        var GeneralComp v_ptc[c_size][c_size];
+		var integer v_index[1];
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			for (var integer j := 0; j < c_size; j := j + 1) {				
+				v_ptc[i][j] := GeneralComp.create; // created components are inactive
+				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].start(f_done()); } //quick done components on even i or odd j
+				else { v_ptc[i][j].start(f());} // activate v_ptc
+			}
+		}
+        v_isAlive := any from v_ptc.alive -> @index value v_index;
+        if(v_index[0] == 1 and v_index[1] == 0){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "Index incorrectly assigned");
+        }
+    }
+
+    control {
+        execute(TC_NegSem_210305_alive_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Size of integer array is invalid: the component array has 2 dimensions, but the integer array has 1 element
+<END_RESULT>
+<RESULT COUNT 1>
+error: Array index overflow: the index value must be at most `0' instead of `1'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210305_alive_operation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from alive index redirection for multi-D arrays requires arrays >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210305_alive_operation_005 NegSem_210305_alive_operation_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.5, Verify that any from alive index redirection for multi-D arrays requires arrays
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction e:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_210305_alive_operation_005 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+
+	function f_done() runs on GeneralComp {}
+	
+    testcase TC_NegSem_210305_alive_operation_005() runs on GeneralComp system GeneralComp {
+		var boolean v_isAlive;
+		const integer c_size := 3;
+        var GeneralComp v_ptc[c_size][c_size];
+		var integer v_index;
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			for (var integer j := 0; j < c_size; j := j + 1) {				
+				v_ptc[i][j] := GeneralComp.create; // created components are inactive
+				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].start(f_done()); } //quick done components on even i or odd j
+				else { v_ptc[i][j].start(f());} // activate v_ptc
+			}
+		}
+        v_isAlive := any from v_ptc.alive -> @index value v_index;
+        if(v_index == 1){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "Index incorrectly assigned");
+        }
+    }
+
+    control {
+        execute(TC_NegSem_210305_alive_operation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of multi-dimensional component arrays can only be redirected to an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210305_alive_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in component.alive operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210305_alive_operation_001 NegSyn_210305_alive_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.5, Verify that error occurs when using index redirection in component.alive operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210305_alive_operation_001 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210305_alive_operation_001() runs on GeneralComp system GeneralComp {
+		var boolean v_isAlive;
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+        v_isAlive := v_ptc.alive -> @index value v_index;
+        if(v_isAlive){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from alive operation didn't find alive components");
+        }
+    }
+
+    control {
+        execute(TC_NegSyn_210305_alive_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210305_alive_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in any component.alive operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210305_alive_operation_002 NegSyn_210305_alive_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.5, Verify that error occurs when using index redirection in any component.alive operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210305_alive_operation_002 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210305_alive_operation_002() runs on GeneralComp system GeneralComp {
+		var boolean v_isAlive;
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+        v_isAlive := any component.alive -> @index value v_index;
+        if(v_isAlive){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from alive operation didn't find alive components");
+        }
+    }
+
+    control {
+        execute(TC_NegSyn_210305_alive_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210305_alive_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in all component.alive operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210305_alive_operation_003 NegSyn_210305_alive_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.5, Verify that error occurs when using index redirection in all component.alive operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210305_alive_operation_003 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210305_alive_operation_003() runs on GeneralComp system GeneralComp {
+		var boolean v_isAlive;
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+        v_isAlive := all component.alive -> @index value v_index;
+        if(v_isAlive){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from alive operation didn't find alive components");
+        }
+    }
+
+    control {
+        execute(TC_NegSyn_210305_alive_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210305_alive_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in function instance.alive operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210305_alive_operation_004 NegSyn_210305_alive_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.5, Verify that error occurs when using index redirection in function instance.alive operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210305_alive_operation_004 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+	function initComp() return GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+		return v_ptc;
+	}
+	
+    testcase TC_NegSyn_210305_alive_operation_004() runs on GeneralComp system GeneralComp {
+		var boolean v_isAlive;
+		var integer v_index;
+        v_isAlive := initComp().alive -> @index value v_index;
+        if(v_isAlive){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from alive operation didn't find alive components");
+        }
+    }
+
+    control {
+        execute(TC_NegSyn_210305_alive_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210306_running_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from running is applied to single component >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210306_running_operation_001 NegSem_210306_running_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.6, Verify that error occurs when any from running is applied to single component
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction b 
+// The ComponentArrayRef shall be a reference to a component array variable identifier.
+module NegSem_210306_running_operation_001 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210306_running_operation_001() runs on GeneralComp system GeneralComp {
+		var boolean v_isRunning;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());
+        v_isRunning := any from v_ptc.running;
+
+        if(v_isRunning){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from running operation didn't find running components");
+        }
+    }
+
+    control {
+        execute(TC_NegSem_210306_running_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The operand of operation `component running': Type mismatch: component array reference was expected instead of `@NegSem_210306_running_operation_001.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210306_running_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from running is applied to 1D array and index target is array >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210306_running_operation_002 NegSem_210306_running_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.6, Verify that error occurs when any from running is applied to 1D array and index target is array
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction d
+// If the index redirection is used for single-dimensional component arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_210306_running_operation_002 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210306_running_operation_002() runs on GeneralComp system GeneralComp {
+		var boolean v_isRunning;
+		const integer c_size := 4;
+        var GeneralComp v_ptc[c_size];
+		var integer v_index[1];
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			v_ptc[i] := GeneralComp.create; // created components are inactive
+			if (i mod 2 == 0) { v_ptc[i].kill; } // kill components on even indices			
+			else { v_ptc[i].start(f());} // activate v_ptc
+		}
+
+        v_isRunning := any from v_ptc.running -> @index value v_index;
+
+        if(v_index[0] == 1){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from running operation didn't find running components");
+        }
+    }
+
+    control {
+        execute(TC_NegSem_210306_running_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of one-dimensional component arrays can only be redirected to an integer
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210306_running_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from running is applied to 1D array and index target has wrong type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210306_running_operation_003 NegSem_210306_running_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.6, Verify that error occurs when any from running is applied to 1D array and index target has wrong type
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction d
+// If the index redirection is used for single-dimensional component arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_210306_running_operation_003 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210306_running_operation_003() runs on GeneralComp system GeneralComp {
+		var boolean v_isRunning;
+		const integer c_size := 4;
+        var GeneralComp v_ptc[c_size];
+		var float v_index;
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			v_ptc[i] := GeneralComp.create; // created components are inactive
+			if (i mod 2 == 0) { v_ptc[i].kill; } // kill components on even indices			
+			else { v_ptc[i].start(f());} // activate v_ptc
+		}
+
+        v_isRunning := any from v_ptc.running -> @index value v_index;
+
+        if(v_index == 1.0){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from running operation didn't find running components");
+        }
+    }
+
+    control {
+        execute(TC_NegSem_210306_running_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of component arrays can only be redirected to an integer, an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210306_running_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from running index redirection for multi-D arrays requires arrays of correct size >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210306_running_operation_004 NegSem_210306_running_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.6, Verify that any from running index redirection for multi-D arrays requires arrays of correct size
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction e:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_210306_running_operation_004 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210306_running_operation_004() runs on GeneralComp system GeneralComp {
+		var boolean v_isRunning;
+		const integer c_size := 3;
+        var GeneralComp v_ptc[c_size][c_size];
+		var integer v_index[1];
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			for (var integer j := 0; j < c_size; j := j + 1) {				
+				v_ptc[i][j] := GeneralComp.create; // created components are inactive
+				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].kill; } // kill components on even i or odd j
+				else { v_ptc[i][j].start(f());} // activate v_ptc
+			}
+		}
+
+        v_isRunning := any from v_ptc.running -> @index value v_index;
+        if(v_index[0] == 1 and v_index[1] == 0){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "Index incorrectly assigned");
+        }
+    }
+
+    control {
+        execute(TC_NegSem_210306_running_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Size of integer array is invalid: the component array has 2 dimensions, but the integer array has 1 element
+<END_RESULT>
+<RESULT COUNT 1>
+error: Array index overflow: the index value must be at most `0' instead of `1'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210306_running_operation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from running index redirection for multi-D arrays requires arrays >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210306_running_operation_005 NegSem_210306_running_operation_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.6, Verify that any from running index redirection for multi-D arrays requires arrays
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction e:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_210306_running_operation_005 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210306_running_operation_005() runs on GeneralComp system GeneralComp {
+		var boolean v_isRunning;
+		const integer c_size := 3;
+        var GeneralComp v_ptc[c_size][c_size];
+		var integer v_index;
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			for (var integer j := 0; j < c_size; j := j + 1) {				
+				v_ptc[i][j] := GeneralComp.create; // created components are inactive
+				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].kill; } // kill components on even i or odd j
+				else { v_ptc[i][j].start(f());} // activate v_ptc
+			}
+		}
+
+        v_isRunning := any from v_ptc.running -> @index value v_index;
+
+        if(v_index == 1){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "Index incorrectly assigned");
+        }
+    }
+
+    control {
+        execute(TC_NegSem_210306_running_operation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of multi-dimensional component arrays can only be redirected to an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210306_running_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in component.running operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210306_running_operation_001 NegSyn_210306_running_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.6, Verify that error occurs when using index redirection in component.running operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210306_running_operation_001 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210306_running_operation_001() runs on GeneralComp system GeneralComp {
+		var boolean v_isRunning;
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+        v_isRunning := v_ptc.running -> @index value v_index;
+
+        if(v_isRunning){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from running operation didn't find running components");
+        }
+    }
+
+    control {
+        execute(TC_NegSyn_210306_running_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210306_running_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in any component.running operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210306_running_operation_002 NegSyn_210306_running_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.6, Verify that error occurs when using index redirection in any component.running operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210306_running_operation_002 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210306_running_operation_002() runs on GeneralComp system GeneralComp {
+		var boolean v_isRunning;
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+        v_isRunning := any component.running -> @index value v_index;
+
+        if(v_isRunning){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from running operation didn't find running components");
+        }
+    }
+
+    control {
+        execute(TC_NegSyn_210306_running_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210306_running_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in all component.running operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210306_running_operation_003 NegSyn_210306_running_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.6, Verify that error occurs when using index redirection in all component.running operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210306_running_operation_003 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210306_running_operation_003() runs on GeneralComp system GeneralComp {
+		var boolean v_isRunning;
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+        v_isRunning := all component.running -> @index value v_index;
+
+        if(v_isRunning){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from running operation didn't find running components");
+        }
+    }
+
+    control {
+        execute(TC_NegSyn_210306_running_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210306_running_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in function instance.running operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210306_running_operation_004 NegSyn_210306_running_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.6, Verify that error occurs when using index redirection in function instance.running operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210306_running_operation_004 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+	function initComp() return GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+		return v_ptc;
+	}
+	
+    testcase TC_NegSyn_210306_running_operation_004() runs on GeneralComp system GeneralComp {
+		var boolean v_isRunning;
+		var integer v_index;
+        v_isRunning := initComp().running -> @index value v_index;
+
+        if(v_isRunning){
+            setverdict(pass);
+        } else {
+            setverdict(fail, "The any from running operation didn't find running components");
+        }
+    }
+
+    control {
+        execute(TC_NegSyn_210306_running_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_210307_done_operation_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -2406,6 +3424,614 @@ module NegSem_210307_done_operation_001 {
 
 <RESULT COUNT 1>
 error: Reference to a value was expected instead of type `@NegSem_210307_done_operation_001.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210307_done_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from done is applied to single component >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210307_done_operation_002 NegSem_210307_done_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, Verify that error occurs when any from done is applied to single component
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c 
+// The ComponentArrayRef shall be a reference to a component array variable identifier.
+module NegSem_210307_done_operation_002 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210307_done_operation_002() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());
+		alt
+		{
+        	[] any from v_ptc.done { setverdict(pass); }
+			[else] { setverdict(fail, "The any from done operation didn't find done components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSem_210307_done_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch: The type of the operand should be a component array type instead of `@NegSem_210307_done_operation_002.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210307_done_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from done is applied to 1D array and index target is array >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210307_done_operation_003 NegSem_210307_done_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, Verify that error occurs when any from done is applied to 1D array and index target is array
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction e
+// If the index redirection is used for single-dimensional component arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_210307_done_operation_003 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210307_done_operation_003() runs on GeneralComp system GeneralComp {
+		const integer c_size := 4;
+        var GeneralComp v_ptc[c_size];
+		var integer v_index[1];
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			v_ptc[i] := GeneralComp.create; // created components are inactive
+			if (i mod 2 == 0) { v_ptc[i].kill; } // kill components on even indices			
+			else { v_ptc[i].start(f());} // activate v_ptc
+		}
+
+		alt
+		{
+        	[] any from v_ptc.done -> @index value v_index 
+			{ 
+				if(v_index[0] == 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Invalid index value");
+		        }
+				setverdict(pass); 
+			}
+			[else] { setverdict(fail, "The any from done operation didn't find done components"); } 
+		}       
+    }
+
+    control {
+        execute(TC_NegSem_210307_done_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of one-dimensional component arrays can only be redirected to an integer
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210307_done_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from done is applied to 1D array and index target has wrong type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210307_done_operation_004 NegSem_210307_done_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, Verify that error occurs when any from done is applied to 1D array and index target has wrong type
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction e
+// If the index redirection is used for single-dimensional component arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_210307_done_operation_004 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210307_done_operation_004() runs on GeneralComp system GeneralComp {
+		const integer c_size := 4;
+        var GeneralComp v_ptc[c_size];
+		var float v_index;
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			v_ptc[i] := GeneralComp.create; // created components are inactive
+			if (i mod 2 == 0) { v_ptc[i].kill; } // kill components on even indices			
+			else { v_ptc[i].start(f());} // activate v_ptc
+		}
+
+		alt
+		{
+        	[] any from v_ptc.done -> @index value v_index 
+			{ 
+				if(v_index == 1.0){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Invalid index value");
+		        }
+				setverdict(pass); 
+			}
+			[else] { setverdict(fail, "The any from done operation didn't find done components"); } 
+		} 
+    }
+
+    control {
+        execute(TC_NegSem_210307_done_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of component arrays can only be redirected to an integer, an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210307_done_operation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from done index redirection for multi-D arrays requires arrays of correct size >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210307_done_operation_005 NegSem_210307_done_operation_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, Verify that any from done index redirection for multi-D arrays requires arrays of correct size
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction f:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_210307_done_operation_005 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210307_done_operation_005() runs on GeneralComp system GeneralComp {
+		const integer c_size := 3;
+        var GeneralComp v_ptc[c_size][c_size];
+		var integer v_index[1];
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			for (var integer j := 0; j < c_size; j := j + 1) {				
+				v_ptc[i][j] := GeneralComp.create; // created components are inactive
+				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].kill; } // kill components on even i or odd j
+				else { v_ptc[i][j].start(f());} // activate v_ptc
+			}
+		}
+
+        alt
+		{
+        	[] any from v_ptc.done -> @index value v_index 
+			{ 
+				if(v_index[0] == 1 and v_index[1] == 0){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Invalid index value");
+		        }
+				setverdict(pass); 
+			}
+			[else] { setverdict(fail, "The any from done operation didn't find done components"); } 
+		} 
+    }
+
+    control {
+        execute(TC_NegSem_210307_done_operation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Size of integer array is invalid: the component array has 2 dimensions, but the integer array has 1 element
+<END_RESULT>
+<RESULT COUNT 1>
+error: Array index overflow: the index value must be at most `0' instead of `1'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210307_done_operation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from done index redirection for multi-D arrays requires arrays >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210307_done_operation_006 NegSem_210307_done_operation_006.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, Verify that any from done index redirection for multi-D arrays requires arrays
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction f:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_210307_done_operation_006 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210307_done_operation_006() runs on GeneralComp system GeneralComp {
+		const integer c_size := 3;
+        var GeneralComp v_ptc[c_size][c_size];
+		var integer v_index;
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			for (var integer j := 0; j < c_size; j := j + 1) {				
+				v_ptc[i][j] := GeneralComp.create; // created components are inactive
+				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].kill; } // kill components on even i or odd j
+				else { v_ptc[i][j].start(f());} // activate v_ptc
+			}
+		}
+
+		alt
+		{
+        	[] any from v_ptc.done -> @index value v_index 
+			{ 
+				if(v_index == 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Invalid index value");
+		        }
+				setverdict(pass); 
+			}
+			[else] { setverdict(fail, "The any from done operation didn't find done components"); } 
+		} 
+    }
+
+    control {
+        execute(TC_NegSem_210307_done_operation_006(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of multi-dimensional component arrays can only be redirected to an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210307_done_operation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - partially initialized array in any from ComponentArrayRef.done >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_210307_done_operation_010 NegSem_210307_done_operation_010.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, partially initialized array in any from ComponentArrayRef.done
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The ComponentArrayRef shall be a reference to a completely initialized component array.
+
+module NegSem_210307_done_operation_010 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		setverdict(pass);
+	}
+	
+    testcase TC_NegSem_210307_done_operation_010() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptcs[2];
+        var verdicttype v_verdict;
+        v_ptcs[0] := GeneralComp.create;
+        v_ptcs[0].start(f());
+		alt {
+			[] any from v_ptcs.done { 
+                setverdict(pass);
+            }
+		}
+    }
+
+    control {
+        execute(TC_NegSem_210307_done_operation_010(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing done operation on an unbound component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210307_done_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in component.done operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210307_done_operation_001 NegSyn_210307_done_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, Verify that error occurs when using index redirection in component.done operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction d
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210307_done_operation_001 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 1.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210307_done_operation_001() runs on GeneralComp system GeneralComp {
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());	
+		alt
+		{
+        	[] v_ptc.done -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from done operation didn't find done components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_210307_done_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Index redirect cannot be used without the 'any from' clause
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210307_done_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in any component.done operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210307_done_operation_002 NegSyn_210307_done_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, Verify that error occurs when using index redirection in any component.done operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction d
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210307_done_operation_002 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 1.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210307_done_operation_002() runs on GeneralComp system GeneralComp {
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+        alt
+		{
+        	[] any component.done -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from done operation didn't find done components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_210307_done_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->, expecting '{'
+<END_RESULT>
+<RESULT COUNT 1>
+error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210307_done_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in all component.done operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210307_done_operation_003 NegSyn_210307_done_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, Verify that error occurs when using index redirection in all component.done operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction d
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210307_done_operation_003 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 1.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210307_done_operation_003() runs on GeneralComp system GeneralComp {
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+		alt
+		{
+        	[] all component.done -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from done operation didn't find done components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_210307_done_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->, expecting '{'
+<END_RESULT>
+<RESULT COUNT 1>
+error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210307_done_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in function instance.done operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210307_done_operation_004 NegSyn_210307_done_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, Verify that error occurs when using index redirection in function instance.done operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction d
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210307_done_operation_004 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 1.0;
+		t.start;
+		t.timeout;
+	}
+	
+	function f_getComp(GeneralComp p_ptc) return GeneralComp {
+		return p_ptc;
+	}
+	
+    testcase TC_NegSyn_210307_done_operation_004() runs on GeneralComp system GeneralComp {
+		var integer v_index;
+		var GeneralComp v_ptc := GeneralComp.create;
+		alt
+		{
+        	[] any from f_getComp(v_ptc).done -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from done operation didn't find done components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_210307_done_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch: The type of the operand should be a component array type instead of `@NegSyn_210307_done_operation_004.GeneralComp'
 <END_RESULT>
 
 <END_TC>
@@ -2456,6 +4082,617 @@ module NegSem_210308_killed_operation_001 {
 
 <RESULT COUNT 1>
 error: at or before token `killed': syntax error, unexpected DotKilledKeyword, expecting DotKillKeyword
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210308_killed_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from killed is applied to single component >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210308_killed_operation_002 NegSem_210308_killed_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.8, Verify that error occurs when any from killed is applied to single component
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction b 
+// The ComponentArrayRef shall be a reference to a component array variable identifier.
+module NegSem_210308_killed_operation_002 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210308_killed_operation_002() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.kill;
+		alt
+		{
+        	[] any from v_ptc.killed { setverdict(pass); }
+			[else] { setverdict(fail, "The any from killed operation didn't find killed components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSem_210308_killed_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch: The type of the operand should be a component array type instead of `@NegSem_210308_killed_operation_002.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210308_killed_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from killed is applied to 1D array and index target is array >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210308_killed_operation_003 NegSem_210308_killed_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.8, Verify that error occurs when any from killed is applied to 1D array and index target is array
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction d
+// If the index redirection is used for single-dimensional component arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_210308_killed_operation_003 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210308_killed_operation_003() runs on GeneralComp system GeneralComp {
+		const integer c_size := 4;
+        var GeneralComp v_ptc[c_size];
+		var integer v_index[1];
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			v_ptc[i] := GeneralComp.create; // created components are inactive
+			if (i mod 2 == 0) { v_ptc[i].kill; } // kill components on even indices			
+			else { v_ptc[i].start(f());} // activate v_ptc
+		}
+
+		alt
+		{
+        	[] any from v_ptc.killed -> @index value v_index 
+			{ 
+				if(v_index[0] == 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Invalid index value");
+		        }
+				setverdict(pass); 
+			}
+			[else] { setverdict(fail, "The any from killed operation didn't find killed components"); } 
+		}       
+    }
+
+    control {
+        execute(TC_NegSem_210308_killed_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of one-dimensional component arrays can only be redirected to an integer
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210308_killed_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from killed is applied to 1D array and index target has wrong type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210308_killed_operation_004 NegSem_210308_killed_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.8, Verify that error occurs when any from killed is applied to 1D array and index target has wrong type
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction d
+// If the index redirection is used for single-dimensional component arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_210308_killed_operation_004 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210308_killed_operation_004() runs on GeneralComp system GeneralComp {
+		const integer c_size := 4;
+        var GeneralComp v_ptc[c_size];
+		var float v_index;
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			v_ptc[i] := GeneralComp.create; // created components are inactive
+			if (i mod 2 == 0) { v_ptc[i].kill; } // kill components on even indices			
+			else { v_ptc[i].start(f());} // activate v_ptc
+		}
+
+		alt
+		{
+        	[] any from v_ptc.killed -> @index value v_index 
+			{ 
+				if(v_index == 1.0){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Invalid index value");
+		        }
+				setverdict(pass); 
+			}
+			[else] { setverdict(fail, "The any from killed operation didn't find killed components"); } 
+		} 
+    }
+
+    control {
+        execute(TC_NegSem_210308_killed_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of component arrays can only be redirected to an integer, an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210308_killed_operation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from killed index redirection for multi-D arrays requires arrays of correct size >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210308_killed_operation_005 NegSem_210308_killed_operation_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.8, Verify that any from killed index redirection for multi-D arrays requires arrays of correct size
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction e:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_210308_killed_operation_005 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210308_killed_operation_005() runs on GeneralComp system GeneralComp {
+		const integer c_size := 3;
+        var GeneralComp v_ptc[c_size][c_size];
+		var integer v_index[1];
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			for (var integer j := 0; j < c_size; j := j + 1) {				
+				v_ptc[i][j] := GeneralComp.create; // created components are inactive
+				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].kill; } // kill components on even i or odd j
+				else { v_ptc[i][j].start(f());} // activate v_ptc
+			}
+		}
+
+        alt
+		{
+        	[] any from v_ptc.killed -> @index value v_index 
+			{ 
+				if(v_index[0] == 1 and v_index[1] == 0){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Invalid index value");
+		        }
+				setverdict(pass); 
+			}
+			[else] { setverdict(fail, "The any from killed operation didn't find killed components"); } 
+		} 
+    }
+
+    control {
+        execute(TC_NegSem_210308_killed_operation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Size of integer array is invalid: the component array has 2 dimensions, but the integer array has 1 element
+<END_RESULT>
+<RESULT COUNT 1>
+error: Array index overflow: the index value must be at most `0' instead of `1'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210308_killed_operation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from killed index redirection for multi-D arrays requires arrays >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210308_killed_operation_006 NegSem_210308_killed_operation_006.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.8, Verify that any from killed index redirection for multi-D arrays requires arrays
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction e:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_210308_killed_operation_006 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 100.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSem_210308_killed_operation_006() runs on GeneralComp system GeneralComp {
+		const integer c_size := 3;
+        var GeneralComp v_ptc[c_size][c_size];
+		var integer v_index;
+
+		for (var integer i := 0; i < c_size; i := i + 1) {
+			for (var integer j := 0; j < c_size; j := j + 1) {				
+				v_ptc[i][j] := GeneralComp.create; // created components are inactive
+				if (i mod 2 == 0 or j mod 2 == 1) { v_ptc[i][j].kill; } // kill components on even i or odd j
+				else { v_ptc[i][j].start(f());} // activate v_ptc
+			}
+		}
+
+		alt
+		{
+        	[] any from v_ptc.killed -> @index value v_index 
+			{ 
+				if(v_index == 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Invalid index value");
+		        }
+				setverdict(pass); 
+			}
+			[else] { setverdict(fail, "The any from killed operation didn't find killed components"); } 
+		} 
+    }
+
+    control {
+        execute(TC_NegSem_210308_killed_operation_006(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of multi-dimensional component arrays can only be redirected to an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_210308_killed_operation_010 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - partially initialized array in any from ComponentArrayRef.killed >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_210308_killed_operation_010 NegSem_210308_killed_operation_010.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.7, partially initialized array in any from ComponentArrayRef.killed
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The ComponentArrayRef shall be a reference to a completely initialized component array.
+
+module NegSem_210308_killed_operation_010 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		setverdict(pass);
+	}
+	
+    testcase TC_NegSem_210308_killed_operation_010() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptcs[2];
+        var verdicttype v_verdict;
+        v_ptcs[0] := GeneralComp.create;
+        v_ptcs[0].start(f());
+		alt {
+			[] any from v_ptcs.killed { 
+                setverdict(pass);
+            }
+		}
+    }
+
+    control {
+        execute(TC_NegSem_210308_killed_operation_010(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing killed operation on an unbound component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210308_killed_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in component.killed operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210308_killed_operation_001 NegSyn_210308_killed_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.8, Verify that error occurs when using index redirection in component.killed operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210308_killed_operation_001 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 1.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210308_killed_operation_001() runs on GeneralComp system GeneralComp {
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());	
+		alt
+		{
+        	[] v_ptc.killed -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from killed operation didn't find killed components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_210308_killed_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->, expecting '{'
+<END_RESULT>
+<RESULT COUNT 1>
+error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210308_killed_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in any component.killed operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210308_killed_operation_002 NegSyn_210308_killed_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.8, Verify that error occurs when using index redirection in any component.killed operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210308_killed_operation_002 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 1.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210308_killed_operation_002() runs on GeneralComp system GeneralComp {
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+        alt
+		{
+        	[] any component.killed -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from killed operation didn't find killed components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_210308_killed_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->, expecting '{'
+<END_RESULT>
+<RESULT COUNT 1>
+error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210308_killed_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in all component.killed operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210308_killed_operation_003 NegSyn_210308_killed_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.8, Verify that error occurs when using index redirection in all component.killed operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210308_killed_operation_003 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 1.0;
+		t.start;
+		t.timeout;
+	}
+	
+    testcase TC_NegSyn_210308_killed_operation_003() runs on GeneralComp system GeneralComp {
+		var integer v_index;
+        var GeneralComp v_ptc := GeneralComp.create;
+		v_ptc.start(f());		
+		alt
+		{
+        	[] all component.killed -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from killed operation didn't find killed components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_210308_killed_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: at or before token `->': syntax error, unexpected ->, expecting '{'
+<END_RESULT>
+<RESULT COUNT 1>
+error: at or before token `control': syntax error, unexpected ControlKeyword, expecting \$end
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_210308_killed_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in function instance.killed operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_210308_killed_operation_004 NegSyn_210308_killed_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.3.8, Verify that error occurs when using index redirection in function instance.killed operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction c
+// The index redirection shall only be used when the operation is used on an any from 
+// component array construct.
+module NegSyn_210308_killed_operation_004 {
+
+    type component GeneralComp {}
+
+	function f() runs on GeneralComp {
+		timer t := 1.0;
+		t.start;
+		t.timeout;
+	}
+	
+	function f_getComp(GeneralComp p_ptc) return GeneralComp {
+		return p_ptc;
+	}
+	
+    testcase TC_NegSyn_210308_killed_operation_004() runs on GeneralComp system GeneralComp {
+		var integer v_index;
+		var GeneralComp v_ptc := GeneralComp.create;
+		alt
+		{
+        	[] any from f_getComp(v_ptc).killed -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from killed operation didn't find killed components"); } 
+		}
+    }
+
+    control {
+        execute(TC_NegSyn_210308_killed_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Type mismatch: The type of the operand should be a component array type instead of `@NegSyn_210308_killed_operation_004.GeneralComp'
 <END_RESULT>
 
 <END_TC>

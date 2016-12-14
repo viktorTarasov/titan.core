@@ -1610,6 +1610,222 @@ Dynamic test case error: The second argument of connect operation contains the n
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_017 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - index redirection in standard port.receive >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_017 NegSem_220202_ReceiveOperation_017.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, index redirection in standard port.receive
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The index redirection shall only be used when the operation is used on an any from port
+// array construct.
+
+module NegSem_220202_ReceiveOperation_017 {
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_017() runs on GeneralComp {
+        var integer v_int;
+		connect(self:p, self:p);
+
+        p.send(10);
+        p.receive(integer:?) -> @index value v_int;
+
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_017(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Index redirect cannot be used without the 'any from' clause
+<END_RESULT>
+
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_019 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - insufficient value range of variable in index redirection >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_019 NegSem_220202_ReceiveOperation_019.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, insufficient value range of variable in index redirection 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the index redirection is used for single-dimensional port arrays, the type of the 
+// integer variable shall allow storing the highest index of the respective array.
+
+module NegSem_220202_ReceiveOperation_019 {
+    type integer RestrInt(0..2);
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p[10];
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_019() runs on GeneralComp {
+        var RestrInt v_int;
+
+		connect(self:p[5], self:p[5]);
+        p[5].send(100);
+        any from p.receive(integer:?) -> @index value v_int;
+
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_019(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: 3 is not a valid value for type `integer' which has subtype \(0..2\)
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_020 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - insufficient array dimension of variable in index redirection >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_020 NegSem_220202_ReceiveOperation_020.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, insufficient array dimension of variable in index redirection 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the index redirection is used for multi-dimensional port arrays, the size of the 
+// integer array or record of integer type shall exactly be the same as the dimension of
+// the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+
+module NegSem_220202_ReceiveOperation_020 {
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p[3][2][3];
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_020() runs on GeneralComp {
+        var integer v_indices[2];
+		connect(self:p[0][1][2],self:p[0][1][2]);
+        p[0][1][2].send(100);
+        any from p.receive(integer:?) -> @index value v_indices;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_020(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Size of integer array is invalid: the port array has 3 dimensions, but the integer array has 2 elements
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220202_ReceiveOperation_021 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - insufficient array dimension of variable in index redirection >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220202_ReceiveOperation_021 NegSem_220202_ReceiveOperation_021.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.2, insufficient element value range of variable in index redirection 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the index redirection is used for multi-dimensional port arrays, the size of the 
+// integer array or record of integer type shall exactly be the same as the dimension of
+// the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+
+module NegSem_220202_ReceiveOperation_021 {
+	type integer RestrInt(0..2);
+    type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p[4][2][3];
+	}
+	    
+    testcase TC_NegSem_220202_ReceiveOperation_021() runs on GeneralComp {
+        var RestrInt v_indices[3];
+
+		connect(self:p[3][1][2],self:p[3][1][2]);
+
+        p[3][1][2].send(100);
+        any from p.receive(integer:?) -> @index value v_indices;
+
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220202_ReceiveOperation_021(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: 3 is not a valid value for type `integer' which has subtype \(0..2\)
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_220202_ReceiveOperation_022 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -2544,6 +2760,217 @@ Dynamic test case error: The second argument of connect operation contains the n
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_019 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - insufficient value range of variable in index redirection >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_019 NegSem_220203_TriggerOperation_019.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, insufficient value range of variable in index redirection 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the index redirection is used for single-dimensional port arrays, the type of the 
+// integer variable shall allow storing the highest index of the respective array.
+
+module NegSem_220203_TriggerOperation_019 {
+    type integer RestrInt(0..2);
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p[10];
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_019() runs on GeneralComp {
+        var RestrInt v_int;
+
+		connect(self:p[5], self:p[5]);
+        p[5].send(100);
+        any from p.trigger(integer:?) -> @index value v_int;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_019(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: 3 is not a valid value for type `integer' which has subtype \(0..2\)
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_017 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - index redirection in standard port.trigger >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_017 NegSem_220203_TriggerOperation_017.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, index redirection in standard port.trigger
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// The index redirection shall only be used when the operation is used on an any from port
+// array construct.
+
+module NegSem_220203_TriggerOperation_017 {
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_017() runs on GeneralComp {
+        var integer v_int;
+
+		connect(self:p, self:p);
+        p.send(10);
+        p.trigger(integer:?) -> @index value v_int;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_017(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Index redirect cannot be used without the 'any from' clause
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_020 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - insufficient array dimension of variable in index redirection >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_020 NegSem_220203_TriggerOperation_020.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, insufficient array dimension of variable in index redirection 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the index redirection is used for multi-dimensional port arrays, the size of the 
+// integer array or record of integer type shall exactly be the same as the dimension of
+// the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+
+module NegSem_220203_TriggerOperation_020 {
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p[3][2][3];
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_020() runs on GeneralComp {
+        var integer v_indices[2];
+
+		connect(self:p[0][1][2], self:p[0][1][2]);
+        p[0][1][2].send(100);
+        any from p.trigger(integer:?) -> @index value v_indices;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_020(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Size of integer array is invalid: the port array has 3 dimensions, but the integer array has 2 elements
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_021 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - insufficient element value range of variable in index redirection >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_021 NegSem_220203_TriggerOperation_0201ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, insufficient element value range of variable in index redirection 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the index redirection is used for multi-dimensional port arrays, the size of the 
+// integer array or record of integer type shall exactly be the same as the dimension of
+// the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+
+module NegSem_220203_TriggerOperation_021 {
+	type integer RestrInt(0..2);
+    type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p[4][2][3];
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_021() runs on GeneralComp {
+        var RestrInt v_indices[3];
+
+		connect(self:p[3][1][2], self:p[3][1][2]);
+        p[3][1][2].send(100);
+        any from p.trigger(integer:?) -> @index value v_indices;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_021(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: 3 is not a valid value for type `integer' which has subtype \(0..2\)
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_220203_TriggerOperation_022 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -3204,6 +3631,367 @@ error: Parameter redirect cannot be used without signature template
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from getcall is applied to single port >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_004 NegSem_220302_GetcallOperation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, Verify that error occurs when any from getcall is applied to single port
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction g 
+// The PortArrayRef shall be a reference to a port array variable identifier.
+module NegSem_220302_GetcallOperation_004 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		var integer v_index;
+        alt
+		{
+        	[] any from p.getcall { setverdict(pass); }
+			[else] { setverdict(fail, "The any from getcall operation didn't match for some reason"); } 
+		}		
+	}
+	
+    testcase TC_NegSem_220302_GetcallOperation_004() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}, nowait);
+		v_ptc.start(f());
+		v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a port array was expected instead of a port
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from getcall is applied to 1D array and index target is array >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_005 NegSem_220302_GetcallOperation_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, Verify that error occurs when any from getcall is applied to 1D array and index target is array
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction i
+// If the index redirection is used for single-dimensional port arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_220302_GetcallOperation_005 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	}
+	
+	const integer c_portCount := 4;
+
+    type component GeneralComp {
+		port P p[c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		var integer v_index[1];
+        alt
+		{
+        	[] any from p.getcall(S:{}) -> @index value v_index { 
+				if(v_index[0] == 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Index or parameter value incorrectly assigned");
+		        }
+			}
+			[else] { setverdict(fail, "The any from getcall operation didn't match for some reason");  } 
+		}		
+	}
+	
+    testcase TC_NegSem_220302_GetcallOperation_005() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create;
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			connect(self:p[i], v_ptc:p[i]);
+			if (i mod 2 > 0) { p[i].call(S:{}, nowait); }
+		}
+		v_ptc.start(f());
+		v_ptc.done;	    
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of one-dimensional port arrays can only be redirected to an integer
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from getcall is applied to 1D array and index target has wrong type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_006 NegSem_220302_GetcallOperation_006.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, Verify that error occurs when any from getcall is applied to 1D array and index target has wrong type
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction i
+// If the index redirection is used for single-dimensional port arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_220302_GetcallOperation_006 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 4;
+
+    type component GeneralComp {
+		port P p[c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		var float v_index;
+        alt
+		{
+        	[] any from p.getcall(S:{}) -> @index value v_index { 
+				if(v_index == 1.0){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Index or parameter value incorrectly assigned");
+		        }
+			}
+			[else] { setverdict(fail, "The any from getcall operation didn't match for some reason");  } 
+		}		
+	}
+	
+    testcase TC_NegSem_220302_GetcallOperation_006() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create;
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			connect(self:p[i], v_ptc:p[i]);
+			if (i mod 2 > 0) { p[i].call(S:{}, nowait); }
+		}
+		v_ptc.start(f());
+		v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_006(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of port arrays can only be redirected to an integer, an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_007 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from getcall index redirection for multi-D arrays requires arrays of correct size >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_007 NegSem_220302_GetcallOperation_007.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, Verify that any from getcall index redirection for multi-D arrays requires arrays of correct size
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction j:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_220302_GetcallOperation_007 {
+
+	signature S(integer p_par);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 3;
+    type component GeneralComp {
+		port P p[c_portCount][c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		var integer v_index[1], v_parValue;
+		var GeneralComp v_src;
+        alt
+		{
+        	[] any from p.getcall(S:{p_par := (0..c_portCount)}) -> sender v_src @index value v_index { 
+				if(v_index[0] == 1 and v_index[1] == 2 and v_parValue == v_index[0] + 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Indices or parameter value incorrectly assigned");
+		        }				
+			}
+			[else] { setverdict(fail, "The any from getcall operation didn't match for some reason");  } 
+		}
+	}
+	
+	
+    testcase TC_NegSem_220302_GetcallOperation_007() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create;
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				connect(self:p[i][j], v_ptc:p[i][j]);
+				if (i == 1 and j == 2 or i == 2 and j == 1) { p[i][j].call(S:{ p_par := i + 1 }, nowait); }
+			}
+		}
+		v_ptc.start(f());
+		v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_007(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Size of integer array is invalid: the port array has 2 dimensions, but the integer array has 1 element
+<END_RESULT>
+<RESULT COUNT 1>
+error: Array index overflow: the index value must be at most `0' instead of `1'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220302_GetcallOperation_008 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from getcall index redirection for multi-D arrays requires arrays >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220302_GetcallOperation_008 NegSem_220302_GetcallOperation_008.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, Verify that any from getcall index redirection for multi-D arrays requires arrays
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction j:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_220302_GetcallOperation_008 {
+
+    signature S(integer p_par);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 3;
+    type component GeneralComp {
+		port P p[c_portCount][c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		var integer v_index, v_parValue;
+		var GeneralComp v_src;
+        alt
+		{
+        	[] any from p.getcall(S:{p_par := (0..c_portCount)}) -> param (v_parValue := p_par) sender v_src @index value v_index { 
+				if(v_index == 1 and v_parValue == v_index + 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Indices or parameter value incorrectly assigned");
+		        }				
+			}
+			[else] { setverdict(fail, "The any from getcall operation didn't match for some reason");  } 
+		}
+	}
+	
+    testcase TC_NegSem_220302_GetcallOperation_008() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create;
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				connect(self:p[i][j], v_ptc:p[i][j]);
+				if (i == 1 and j == 2 or i == 2 and j == 1) { p[i][j].call(S:{ p_par := i + 1 }, nowait); }
+			}
+		}
+		v_ptc.start(f());
+		v_ptc.done;	 
+    }
+
+    control {
+        execute(TC_NegSem_220302_GetcallOperation_008(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of multi-dimensional port arrays can only be redirected to an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_220302_GetcallOperation_009 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -3687,6 +4475,68 @@ error: The types in `from' clause and `sender' redirect are not the same: `@NegS
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSyn_220302_GetcallOperation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in port.getcall operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_220302_GetcallOperation_001 NegSyn_220302_GetcallOperation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.2, Verify that error occurs when using index redirection in port.getcall operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction h
+// The index redirection shall only be used when the operation is used on an any from 
+// port array construct.
+module NegSyn_220302_GetcallOperation_001 {
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		var integer v_index;
+        alt
+		{
+        	[] p.getcall -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from getcall operation didn't match for some reason"); } 
+		}		
+	}
+	
+    testcase TC_NegSyn_220302_GetcallOperation_001() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}, nowait);
+		v_ptc.start(f());
+		v_ptc.done;
+    }
+
+    control {
+        execute(TC_NegSyn_220302_GetcallOperation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Index redirect cannot be used without the 'any from' clause
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_220303_ReplyOperation_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -3807,6 +4657,401 @@ module NegSem_220303_ReplyOperation_002 {
 
 <RESULT COUNT 1>
 Dynamic test case error: The second argument of connect operation contains the null component reference.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from getreply is applied to single port >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_001 NegSem_220304_getreply_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, Verify that error occurs when any from getreply is applied to single port
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction e 
+// The PortArrayRef shall be a reference to a port array variable identifier.
+module NegSem_220304_getreply_operation_001 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p.getcall(S:{});
+		p.reply(S:{});
+	}
+	
+    testcase TC_NegSem_220304_getreply_operation_001() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}, nowait);
+		v_ptc.start(f());
+		v_ptc.done;
+        alt
+		{
+        	[] any from p.getreply { setverdict(pass); }
+			[else] { setverdict(fail, "The any from getreply operation didn't match for some reason"); } 
+		}
+	}
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a port array was expected instead of a port
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from getreply is applied to 1D array and index target is array >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_002 NegSem_220304_getreply_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, Verify that error occurs when any from getreply is applied to 1D array and index target is array
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction g
+// If the index redirection is used for single-dimensional port arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_220304_getreply_operation_002 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 4;
+    type component GeneralComp 
+	{
+		port P p[c_portCount];
+	} 
+	
+	function f() runs on GeneralComp
+	{
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			p[i].getcall;
+			if (i mod 2 == 1) { p[i].reply(S:{}) };
+		}
+	}
+	
+    testcase TC_NegSem_220304_getreply_operation_002() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create;
+		var integer v_index[1];
+
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			connect(self:p[i], v_ptc:p[i]);
+			p[i].call(S:{}, nowait);
+		}
+
+		v_ptc.start(f());
+		v_ptc.done;	
+    
+        alt
+		{
+        	[] any from p.getreply(S:{}) -> @index value v_index { 
+				if(v_index[0] == 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Index or parameter value incorrectly assigned");
+		        }
+			}
+			[else] { setverdict(fail, "The any from getreply operation didn't match for some reason");  } 
+		}		
+    }
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of one-dimensional port arrays can only be redirected to an integer
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from getreply is applied to 1D array and index target has wrong type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_003 NegSem_220304_getreply_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, Verify that error occurs when any from getreply is applied to 1D array and index target has wrong type
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction g
+// If the index redirection is used for single-dimensional port arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_220304_getreply_operation_003 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 4;
+    type component GeneralComp 
+	{
+		port P p[c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			p[i].getcall;
+			if (i mod 2 == 1) { p[i].reply(S:{}) };
+		}	
+	}
+	
+    testcase TC_NegSem_220304_getreply_operation_003() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create;
+		var float v_index;
+
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			connect(self:p[i], v_ptc:p[i]);
+			p[i].call(S:{}, nowait);
+		}
+
+		v_ptc.start(f());
+		v_ptc.done;
+
+        alt
+		{
+        	[] any from p.getreply(S:{}) -> @index value v_index { 
+				if(v_index == 1.0){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Index or parameter value incorrectly assigned");
+		        }
+			}
+			[else] { setverdict(fail, "The any from getreply operation didn't match for some reason");  } 
+		}
+	}
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of port arrays can only be redirected to an integer, an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from getreply index redirection for multi-D arrays requires arrays of correct size >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_004 NegSem_220304_getreply_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, Verify that any from getreply index redirection for multi-D arrays requires arrays of correct size
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction h:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_220304_getreply_operation_004 {
+
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 3;
+    type component GeneralComp 
+	{
+		port P p[c_portCount][c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				p[i][j].getcall(S:{});
+				if (i == 1 and j == 2 or i == 2 and j == 1) { p[i][j].reply(S:{}); }
+			}
+		}
+	}
+	
+	
+    testcase TC_NegSem_220304_getreply_operation_004() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create, v_src;
+		var integer v_index[1];
+
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				connect(self:p[i][j], v_ptc:p[i][j]);
+				p[i][j].call(S:{}, nowait);
+			}
+		}
+
+		v_ptc.start(f());
+		v_ptc.done;
+
+        alt
+		{
+        	[] any from p.getreply(S:{}) -> sender v_src @index value v_index { 
+				if(v_index[0] == 1 and v_index[1] == 2){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Indices or parameter value incorrectly assigned");
+		        }				
+			}
+			[else] { setverdict(fail, "The any from getreply operation didn't match for some reason");  } 
+		}    
+	}
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Size of integer array is invalid: the port array has 2 dimensions, but the integer array has 1 element
+<END_RESULT>
+<RESULT COUNT 1>
+error: Array index overflow: the index value must be at most `0' instead of `1'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220304_getreply_operation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from getreply index redirection for multi-D arrays requires arrays >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220304_getreply_operation_005 NegSem_220304_getreply_operation_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, Verify that any from getreply index redirection for multi-D arrays requires arrays
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction h:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_220304_getreply_operation_005 {
+
+    signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 3;
+    type component GeneralComp 
+	{
+		port P p[c_portCount][c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				p[i][j].getcall(S:{});
+				if (i == 1 and j == 2 or i == 2 and j == 1) { p[i][j].reply(S:{}); }
+			}
+		}
+	}
+	
+    testcase TC_NegSem_220304_getreply_operation_005() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create, v_src;
+		var integer v_index;
+
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				connect(self:p[i][j], v_ptc:p[i][j]);
+				p[i][j].call(S:{}, nowait);
+			}
+		}
+
+		v_ptc.start(f());
+		v_ptc.done;	
+ 
+        alt
+		{
+        	[] any from p.getreply(S:{}) -> @index value v_index { 
+				if(v_index == 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Indices or parameter value incorrectly assigned");
+		        }				
+			}
+			[else] { setverdict(fail, "The any from getreply operation didn't match for some reason");  } 
+		}
+	}
+
+    control {
+        execute(TC_NegSem_220304_getreply_operation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of multi-dimensional port arrays can only be redirected to an integer array or a record of integers
 <END_RESULT>
 
 <END_TC>
@@ -4725,6 +5970,70 @@ error: The encoding format parameter for the '@decoded' modifier is only availab
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSyn_220304_getreply_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in port.getreply operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_220304_getreply_operation_001 NegSyn_220304_getreply_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.4, Verify that error occurs when using index redirection in port.getreply operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction f
+// The index redirection shall only be used when the operation is used on an any from 
+// port array construct.
+module NegSyn_220304_getreply_operation_001 {
+	signature S();
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p.getcall(S:{});
+		p.reply(S:{});
+	}
+	
+    testcase TC_NegSyn_220304_getreply_operation_001() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		var integer v_index;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}, nowait);
+		v_ptc.start(f());
+		v_ptc.done;
+        alt
+		{
+        	[] p.getreply -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from getreply operation didn't match for some reason"); } 
+		}		
+	}
+
+    control {
+        execute(TC_NegSyn_220304_getreply_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT >
+error: Index redirect cannot be used without the 'any from' clause
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_220305_raise_operation_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -5299,6 +6608,400 @@ Dynamic test case error: Port p has neither connections nor mappings. Message ca
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from catch is applied to single port >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_001 NegSem_220306_catch_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, Verify that error occurs when any from catch is applied to single port
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction g 
+// The PortArrayRef shall be a reference to a port array variable identifier.
+module NegSem_220306_catch_operation_001 {
+
+	signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p.getcall(S:{});
+		p.raise(S, 10);
+	}
+	
+    testcase TC_NegSem_220306_catch_operation_001() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}, nowait);
+		v_ptc.start(f());
+		v_ptc.done;
+        alt
+		{
+        	[] any from p.catch { setverdict(pass); }
+			[else] { setverdict(fail, "The any from catch operation didn't match for some reason"); } 
+		}
+	}
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Reference to a port array was expected instead of a port
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from catch is applied to 1D array and index target is array >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_002 NegSem_220306_catch_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, Verify that error occurs when any from catch is applied to 1D array and index target is array
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction i
+// If the index redirection is used for single-dimensional port arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_220306_catch_operation_002 {
+
+	signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 4;
+    type component GeneralComp 
+	{
+		port P p[c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			p[i].getcall;
+			if (i mod 2 == 1) { p[i].raise(S, 10) };
+		}
+	}
+	
+    testcase TC_NegSem_220306_catch_operation_002() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create;
+
+		var integer v_index[1];
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			connect(self:p[i], v_ptc:p[i]);
+			p[i].call(S:{}, nowait);
+		}
+
+		v_ptc.start(f());
+		v_ptc.done;	 
+   
+        alt
+		{
+        	[] any from p.catch(S, integer:?) -> @index value v_index { 
+				if(v_index[0] == 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Index or parameter value incorrectly assigned");
+		        }
+			}
+			[else] { setverdict(fail, "The any from catch operation didn't match for some reason");  } 
+		}		
+    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_002(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of one-dimensional port arrays can only be redirected to an integer
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_003 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when any from catch is applied to 1D array and index target has wrong type >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_003 NegSem_220306_catch_operation_003.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, Verify that error occurs when any from catch is applied to 1D array and index target has wrong type
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction i
+// If the index redirection is used for single-dimensional port arrays, the type
+// of the integer variable shall allow storing the highest index of the respective array.
+module NegSem_220306_catch_operation_003 {
+
+	signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 4;
+    type component GeneralComp 
+	{
+		port P p[c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			p[i].getcall;
+			if (i mod 2 == 1) { p[i].raise(S, 10) };
+		}	
+	}
+	
+    testcase TC_NegSem_220306_catch_operation_003() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create;
+		var float v_index;
+
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			connect(self:p[i], v_ptc:p[i]);
+			p[i].call(S:{}, nowait);
+		}
+
+		v_ptc.start(f());
+		v_ptc.done;
+
+        alt
+		{
+        	[] any from p.catch(S, integer:?) -> @index value v_index { 
+				if(v_index == 1.0){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Index or parameter value incorrectly assigned");
+		        }
+			}
+			[else] { setverdict(fail, "The any from catch operation didn't match for some reason");  } 
+		}
+	}
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_003(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of port arrays can only be redirected to an integer, an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from catch index redirection for multi-D arrays requires arrays of correct size >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_004 NegSem_220306_catch_operation_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, Verify that any from catch index redirection for multi-D arrays requires arrays of correct size
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction j:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_220306_catch_operation_004 {
+
+	signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 3;
+    type component GeneralComp 
+	{
+		port P p[c_portCount][c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				p[i][j].getcall(S:{});
+				if (i == 1 and j == 2 or i == 2 and j == 1) { p[i][j].raise(S, 10); }
+			}
+		}
+	}
+	
+	
+    testcase TC_NegSem_220306_catch_operation_004() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create, v_src;
+		var integer v_index[1];
+
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				connect(self:p[i][j], v_ptc:p[i][j]);
+				p[i][j].call(S:{}, nowait);
+			}
+		}
+
+		v_ptc.start(f());
+		v_ptc.done;
+
+        alt
+		{
+        	[] any from p.catch(S, integer:?) -> sender v_src @index value v_index { 
+				if(v_index[0] == 1 and v_index[1] == 2){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Indices or parameter value incorrectly assigned");
+		        }				
+			}
+			[else] { setverdict(fail, "The any from catch operation didn't match for some reason");  } 
+		}    }
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_004(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Size of integer array is invalid: the port array has 2 dimensions, but the integer array has 1 element
+<END_RESULT>
+<RESULT COUNT 1>
+error: Array index overflow: the index value must be at most `0' instead of `1'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_220306_catch_operation_005 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that any from catch index redirection for multi-D arrays requires arrays >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220306_catch_operation_005 NegSem_220306_catch_operation_005.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, Verify that any from catch index redirection for multi-D arrays requires arrays
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction j:
+// If the index redirection is used for multi-dimensional component arrays, the size 
+// of the integer array or record of integer type shall exactly be the same as the dimension 
+// of the respective array, and its type shall allow storing the highest index (from all 
+// dimensions) of the array.
+module NegSem_220306_catch_operation_005 {
+
+    signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+	const integer c_portCount := 3;
+    type component GeneralComp 
+	{
+		port P p[c_portCount][c_portCount];
+	}
+	
+	function f() runs on GeneralComp
+	{
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				p[i][j].getcall(S:{});
+				if (i == 1 and j == 2 or i == 2 and j == 1) { p[i][j].raise(S, 10); }
+			}
+		}
+	}
+	
+    testcase TC_NegSem_220306_catch_operation_005() runs on GeneralComp system GeneralComp {
+		var GeneralComp v_ptc := GeneralComp.create, v_src;
+		var integer v_index;
+
+		for(var integer i := 0; i < c_portCount; i := i + 1) {
+			for(var integer j := 0; j < c_portCount; j := j + 1) {
+				connect(self:p[i][j], v_ptc:p[i][j]);
+				p[i][j].call(S:{}, nowait);
+			}
+		}
+
+		v_ptc.start(f());
+		v_ptc.done;	 
+
+        alt
+		{
+        	[] any from p.catch(S, integer:?) -> @index value v_index { 
+				if(v_index == 1){
+		            setverdict(pass);
+		        } else {
+		            setverdict(fail, "Indices or parameter value incorrectly assigned");
+		        }				
+			}
+			[else] { setverdict(fail, "The any from catch operation didn't match for some reason");  } 
+		}
+	}
+
+    control {
+        execute(TC_NegSem_220306_catch_operation_005(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Indices of multi-dimensional port arrays can only be redirected to an integer array or a record of integers
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_220306_catch_operation_006 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -5858,6 +7561,70 @@ module NegSem_220306_catch_operation_013 {
 
 <RESULT COUNT 1>
 error: The types in `from' clause and `sender' redirect are not the same: `@NegSem_220306_catch_operation_013.AltComp' was expected instead of `@NegSem_220306_catch_operation_013.GeneralComp'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSyn_220306_catch_operation_001 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that error occurs when using index redirection in port.catch operation >
+
+<COMPILE>
+
+<MODULE TTCN NegSyn_220306_catch_operation_001 NegSyn_220306_catch_operation_001.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.3.6, Verify that error occurs when using index redirection in port.catch operation
+ ** @verdict  pass reject
+ *****************************************************************/
+// The following requirements are tested:
+// Restriction h
+// The index redirection shall only be used when the operation is used on an any from 
+// port array construct.
+module NegSyn_220306_catch_operation_001 {
+	signature S() exception(integer);
+	
+	type port P procedure {
+		inout S;
+	} with {extension "internal"}
+	
+    type component GeneralComp 
+	{
+		port P p;
+	}
+	
+	function f() runs on GeneralComp
+	{
+		p.getcall(S:{});
+		p.raise(S, 20);
+	}
+	
+    testcase TC_NegSyn_220306_catch_operation_001() runs on GeneralComp system GeneralComp {
+        var GeneralComp v_ptc := GeneralComp.create;
+		var integer v_index;
+		connect(self:p, v_ptc:p);
+		p.call(S:{}, nowait);
+		v_ptc.start(f());
+		v_ptc.done;
+        alt
+		{
+        	[] p.catch -> @index value v_index { setverdict(pass); }
+			[else] { setverdict(fail, "The any from catch operation didn't match for some reason"); } 
+		}		
+	}
+
+    control {
+        execute(TC_NegSyn_220306_catch_operation_001(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Index redirect cannot be used without the 'any from' clause
 <END_RESULT>
 
 <END_TC>

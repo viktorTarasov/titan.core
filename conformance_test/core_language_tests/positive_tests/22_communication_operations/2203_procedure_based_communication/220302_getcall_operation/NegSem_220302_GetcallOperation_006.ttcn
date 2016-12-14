@@ -30,7 +30,7 @@ module NegSem_220302_GetcallOperation_006 {
 		var float v_index;
         alt
 		{
-        	[] any from p.getcall(S:?) -> @index v_index { 
+        	[] any from p.getcall(S:{}) -> @index value v_index { 
 				if(v_index == 1.0){
 		            setverdict(pass);
 		        } else {

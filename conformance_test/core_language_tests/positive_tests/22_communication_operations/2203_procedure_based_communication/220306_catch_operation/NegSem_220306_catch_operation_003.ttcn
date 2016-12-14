@@ -47,7 +47,7 @@ module NegSem_220306_catch_operation_003 {
 
         alt
 		{
-        	[] any from p.catch(S, integer:?) -> @index v_index { 
+        	[] any from p.catch(S, integer:?) -> @index value v_index { 
 				if(v_index == 1.0){
 		            setverdict(pass);
 		        } else {

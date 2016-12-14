@@ -53,7 +53,7 @@ module Sem_220304_getreply_operation_006 {
 	
         alt
 		{
-        	[] any from p.getreply(S:{p_par := (0..c_portCount)}) -> param (v_parValue := p_par) sender v_src @index v_index { 
+        	[] any from p.getreply(S:{p_par := (0..c_portCount)}) -> param (v_parValue := p_par) sender v_src @index value v_index { 
 				if(v_index[0] == 1 and v_index[1] == 2 and v_parValue == v_index[0] + 1){
 		            setverdict(pass);
 		        } else {
