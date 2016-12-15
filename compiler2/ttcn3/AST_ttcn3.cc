@@ -6569,8 +6569,7 @@ namespace Ttcn {
             }
             else {
               // let the input type know that this is its encoding function
-              input_type->get_type_refd()->set_coding_function(true,
-                get_genname_from_scope(input_type->get_type_refd()->get_my_scope()));
+              input_type->get_type_refd()->set_coding_function(true, this);
               // treat this as a manual external function during code generation
               function_type = EXTFUNC_MANUAL;
             }
@@ -6692,8 +6691,7 @@ namespace Ttcn {
           }
           else if (output_type) {
             // let the output type know that this is its decoding function
-            output_type->get_type_refd()->set_coding_function(false,
-              get_genname_from_scope(output_type->get_type_refd()->get_my_scope()));
+            output_type->get_type_refd()->set_coding_function(false, this);
             // treat this as a manual external function during code generation
             function_type = EXTFUNC_MANUAL;
           }

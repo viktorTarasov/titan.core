@@ -84,9 +84,9 @@ external function f_enc_seqof2(in SeqOf x) return bitstring
 external function f_dec_seqof1(inout bitstring x, out SeqOf y) return integer
   with { extension "prototype(sliding) decode(PER)" }
 
-function f3() {
+function f3() { //^In function definition//
   var SeqOf x := { 1, 2 };
-  var bitstring y := encvalue(x);
+  var bitstring y := encvalue(x); //^In variable definition// //^In the parameter of encvalue//
   var integer res := decvalue(y, x);
 }
 

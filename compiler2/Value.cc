@@ -12970,6 +12970,7 @@ error:
       break;
     }
 
+    Scope* scope = u.expr.ti1->get_Template()->get_my_scope();
     if (!gov_last->is_coding_by_function(true)) {
       const string& tmp_id = get_temporary_id();
       const string& tmp_buf_id = get_temporary_id();
@@ -12983,9 +12984,7 @@ error:
         expr->preamble = mputc  (expr->preamble, '\n');
       }
       expr->preamble = mputprintf(expr->preamble, "%s const& %s = %s",
-        gov_last->get_genname_typedescriptor(
-          u.expr.ti1->get_Template()->get_my_scope()
-        ).c_str(),
+        gov_last->get_genname_typedescriptor(scope).c_str(),
         tmp_ref_id.c_str(),
         expr2.expr);
       if (is_templ) // make a value out of the template, if needed
@@ -12993,9 +12992,7 @@ error:
       expr->preamble = mputprintf(expr->preamble,
         ";\n%s.encode(%s_descr_, %s, TTCN_EncDec::CT_%s",
         tmp_ref_id.c_str(),
-        gov_last->get_genname_typedescriptor(
-          u.expr.ti1->get_Template()->get_my_scope()
-        ).c_str(),
+        gov_last->get_genname_typedescriptor(scope).c_str(),
         tmp_buf_id.c_str(),
         gov_last->get_coding(true).c_str()
       );
@@ -13009,8 +13006,8 @@ error:
         expr->postamble = mputstr(expr->postamble, expr2.postamble);
     } else
       expr->expr = mputprintf(expr->expr, "%s(%s%s)",
-        gov_last->get_coding(true).c_str(), expr2.expr,
-        is_templ ? ".valueof()" : "");
+        gov_last->get_coding_function(true)->get_genname_from_scope(scope).c_str(),
+        expr2.expr, is_templ ? ".valueof()" : "");
     Code::free_expr(&expr2);
   }
   
@@ -13031,6 +13028,7 @@ error:
     if (expr2.preamble)
       expr->preamble = mputprintf(expr->preamble, "%s", expr2.preamble);
 
+    Scope* scope = u.expr.r2->get_my_scope();
     if (!_type->is_coding_by_function(false)) {
       const string& tmp_id = get_temporary_id();
       const string& buffer_id = get_temporary_id();
@@ -13052,9 +13050,7 @@ error:
         "%s%s.decode(%s_descr_, %s, TTCN_EncDec::CT_%s);\n",
         expr2.expr,
         optional ? "()" : "",
-          _type->get_genname_typedescriptor(
-            u.expr.r2->get_my_scope()
-          ).c_str(),
+          _type->get_genname_typedescriptor(scope).c_str(),
           buffer_id.c_str(),
           _type->get_coding(false).c_str()
       );
@@ -13090,7 +13086,7 @@ error:
       expr->expr = mputprintf(expr->expr, "%s", retval_id.c_str());
     } else
       expr->expr = mputprintf(expr->expr, "%s(%s, %s)",
-        _type->get_coding(false).c_str(), expr1.expr, expr2.expr);
+        _type->get_coding_function(false)->get_genname_from_scope(scope).c_str(), expr1.expr, expr2.expr);
     if (expr1.postamble)
       expr->postamble = mputprintf(expr->postamble, "%s", expr1.postamble);
     if (expr2.postamble)
@@ -13127,6 +13123,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       v2_code = generate_code_char_coding_check(expr, u.expr.v2, "encvalue_unichar");
     }
 
+    Scope* scope = u.expr.ti1->get_Template()->get_my_scope();
     if (!gov_last->is_coding_by_function(true)) {
       const string& tmp_id = get_temporary_id();
       const string& tmp_buf_id = get_temporary_id();
@@ -13140,9 +13137,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
         expr->preamble = mputc  (expr->preamble, '\n');
       }
       expr->preamble = mputprintf(expr->preamble, "%s const& %s = %s",
-        gov_last->get_genname_typedescriptor(
-          u.expr.ti1->get_Template()->get_my_scope()
-        ).c_str(),
+        gov_last->get_genname_typedescriptor(scope).c_str(),
         tmp_ref_id.c_str(),
         expr2.expr);
       if (is_templ) // make a value out of the template, if needed
@@ -13150,9 +13145,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       expr->preamble = mputprintf(expr->preamble,
         ";\n%s.encode(%s_descr_, %s, TTCN_EncDec::CT_%s",
         tmp_ref_id.c_str(),
-        gov_last->get_genname_typedescriptor(
-          u.expr.ti1->get_Template()->get_my_scope()
-        ).c_str(),
+        gov_last->get_genname_typedescriptor(scope).c_str(),
         tmp_buf_id.c_str(),
         gov_last->get_coding(true).c_str()
       );
@@ -13172,8 +13165,8 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
         expr->postamble = mputstr(expr->postamble, expr2.postamble);
     } else {
       expr->expr = mputprintf(expr->expr, "oct2unichar(bit2oct(%s(%s%s))",
-        gov_last->get_coding(true).c_str(), expr2.expr,
-        is_templ ? ".valueof()" : "");
+        gov_last->get_coding_function(true)->get_genname_from_scope(scope).c_str(),
+        expr2.expr, is_templ ? ".valueof()" : "");
       if(u.expr.v2) {
         expr->expr = mputprintf(expr->expr, ", %s", v2_code);
       } else {
@@ -13205,6 +13198,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       v3_code = generate_code_char_coding_check(expr, u.expr.v3, "decvalue_unichar");
     }
 
+    Scope* scope = u.expr.r2->get_my_scope();
     if (!_type->is_coding_by_function(false)) {
       const string& tmp_id = get_temporary_id();
       const string& buffer_id = get_temporary_id();
@@ -13227,9 +13221,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
         "%s%s.decode(%s_descr_, %s, TTCN_EncDec::CT_%s);\n",
         expr2.expr,
         optional ? "()" : "",
-          _type->get_genname_typedescriptor(
-            u.expr.r2->get_my_scope()
-          ).c_str(),
+          _type->get_genname_typedescriptor(scope).c_str(),
           buffer_id.c_str(),
           _type->get_coding(false).c_str()
       );
@@ -13275,7 +13267,9 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
         "%s = oct2unichar(bit2oct(%s), %s);\n",
         ustr_ref_id.c_str(), expr1.expr,
         bstr_id.c_str(), ustr_ref_id.c_str(), u.expr.v3 ? v3_code : "\"UTF-8\"",
-        ret_val_id.c_str(), _type->get_coding(false).c_str(), bstr_id.c_str(), expr2.expr,
+        ret_val_id.c_str(),
+        _type->get_coding_function(false)->get_genname_from_scope(scope).c_str(),
+        bstr_id.c_str(), expr2.expr,
         ustr_ref_id.c_str(), bstr_id.c_str(), u.expr.v3 ? v3_code : "\"UTF-8\"");
       expr->expr = mputprintf(expr->expr, "%s", ret_val_id.c_str());
     }

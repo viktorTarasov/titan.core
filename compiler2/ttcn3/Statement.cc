@@ -9350,8 +9350,8 @@ error:
               "TTCN_error(\"Parameter redirect (for parameter '%s') failed, "
               "because the buffer was not empty after decoding. "
               "Remaining bits: %%d.\", buff.lengthof());\n"
-              "}\n", ve->get_dec_type()->get_coding(false).c_str(),
-              par_name, par_name, par_name);
+              "}\n", ve->get_dec_type()->get_coding_function(false)->
+              get_genname_from_scope(scope).c_str(), par_name, par_name, par_name);
           }
           else { // built-in decoding
             switch (tt) {
@@ -10097,7 +10097,8 @@ error:
                 "TTCN_error(\"Value redirect #%d failed, because the buffer was "
                 "not empty after decoding. Remaining bits: %%d.\", "
                 "buff_%d.lengthof());\n"
-                "}\n", member_type->get_coding(false).c_str(),
+                "}\n", member_type->get_coding_function(false)->
+                get_genname_from_scope(scope).c_str(),
                 (int)i, (int)i, (int)(i + 1), (int)i, (int)(i + 1), (int)i);
             }
             else { // built-in decoding

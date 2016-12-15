@@ -20,7 +20,7 @@ IMPORTS;
 
 Int ::= INTEGER
 
-Seq ::= SEQUENCE { --//Cannot determine the encoding rules for ASN.1 type `@Types-A.Seq'. Multiple encoding external functions found with different rules// //Cannot determine the decoding rules for ASN.1 type `@Types-A.Seq'. Multiple decoding external functions found with different rules//
+Seq ::= SEQUENCE { --//Cannot determine the encoding rules for type `@Types-A.Seq'. Multiple encoding external functions found with different rules// //Cannot determine the decoding rules for type `@Types-A.Seq'. Multiple decoding external functions found with different rules//
   num INTEGER,
   str VisibleString
 }
@@ -30,11 +30,11 @@ Set ::= SET {
   str VisibleString
 }
 
-SeqOf ::= SEQUENCE OF INTEGER --//Multiple PER encoding functions set for type// //Multiple PER decoding functions set for type//
+SeqOf ::= SEQUENCE OF INTEGER --//Cannot determine the encoding rules for type `@Types-A.SeqOf'. Multiple encoding external functions found with different rules// //Cannot determine the decoding rules for type `@Types-A.SeqOf'. Multiple decoding external functions found with different rules//
 
 SetOf ::= SET OF INTEGER
 
-Choice ::= CHOICE { --//Cannot determine the encoding rules for ASN.1 type `@Types-A.Choice'. Multiple encoding external functions found with different rules// //Cannot determine the decoding rules for ASN.1 type `@Types-A.Choice'. No decoding external functions found//
+Choice ::= CHOICE { --//Cannot determine the encoding rules for type `@Types-A.Choice'. Multiple encoding external functions found with different rules// //Cannot determine the decoding rules for type `@Types-A.Choice'. No decoding external functions found//
   num INTEGER,
   str VisibleString
 }

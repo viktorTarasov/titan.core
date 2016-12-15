@@ -142,6 +142,29 @@ testcase tc_custom3() runs on CT
 }
 
 // Test 4.
+// The encoded type and the coding functions are in another module (in the same other module).
+testcase tc_custom4() runs on CT
+{
+  var BitString x := '10010110'B;
+  var bitstring enc_exp := x;
+  var BitString dec_exp := x;
+  
+  var bitstring enc := encvalue(x);
+  if (enc != enc_exp) {
+    setverdict(fail, "Expected: ", enc_exp, ", got: ", enc);
+  }
+  var BitString dec;
+  var integer res := decvalue(enc_exp, dec);
+  if (res != 0) {
+    setverdict(fail, "Failed to decode ", enc_exp);
+  }
+  if (dec != dec_exp) {
+    setverdict(fail, "Expected: ", dec_exp, ", got: ", dec);
+  }
+  setverdict(pass);
+}
+
+// Test 5.
 // Using encvalue on templates and template variables
 // Same type and encoding function as test 1
 testcase tc_custom_temp() runs on CT
@@ -162,7 +185,7 @@ testcase tc_custom_temp() runs on CT
   setverdict(pass);
 }
 
-// Test 5.
+// Test 6.
 // Same as test 2, but with encvalue_unichar and decvalue_unichar.
 // The input RecOf has also been adjusted, so it doesn't cause problems for the UTF-8 decoder.
 testcase tc_custom_unichar() runs on CT
@@ -186,7 +209,7 @@ testcase tc_custom_unichar() runs on CT
   setverdict(pass);
 }
 
-// Test 6.
+// Test 7.
 // Using custom encoding on a decoded parameter redirect.
 // Same input value as in test 5.
 testcase tc_custom_param_redirect() runs on CT
@@ -217,7 +240,7 @@ testcase tc_custom_param_redirect() runs on CT
   }
 }
 
-// Test 7.
+// Test 8.
 // Using custom encoding in a template with decoded content matching.
 // Same input as test 3.
 testcase tc_custom_decmatch() runs on CT
@@ -249,7 +272,7 @@ external function f_enc_seq(in Seq x) return octetstring
 external function f_dec_seq(in octetstring x) return Seq
   with { extension "prototype(convert) decode(JSON)" };
   
-// Test 8.
+// Test 9.
 // Using encvalue and decvalue on the ASN.1 type Seq (with JSON encoding).
 testcase tc_asn() runs on CT
 {
@@ -272,7 +295,7 @@ testcase tc_asn() runs on CT
   setverdict(pass);
 }
 
-// Test 9.
+// Test 10.
 // The redirected parameter is decoded into a value of ASN.1 type Seq.
 // Same input value as in test 8.
 testcase tc_asn_param_redirect() runs on CT
@@ -303,7 +326,7 @@ testcase tc_asn_param_redirect() runs on CT
   }
 }
 
-// Test 10.
+// Test 11.
 // Decoded content matching against a value of ASN.1 type Seq.
 // Same input value as in test 8.
 testcase tc_asn_decmatch() runs on CT
@@ -336,7 +359,7 @@ external function f_enc_seqof(in SeqOf x) return bitstring
 external function f_dec_seqof(inout bitstring x, out SeqOf y) return integer
   with { extension "prototype(sliding) decode(PER)" };
   
-// Test 11.
+// Test 12.
 // PER coder with encvalue and decvalue.
 testcase tc_per() runs on CT
 {
@@ -360,7 +383,7 @@ testcase tc_per() runs on CT
   setverdict(pass);
 }
 
-// Test 12.
+// Test 13.
 // The redirected parameter is decoded using the PER coder.
 // Same input value as in test 11.
 testcase tc_per_param_redirect() runs on CT
@@ -391,7 +414,7 @@ testcase tc_per_param_redirect() runs on CT
   }
 }
 
-// Test 13.
+// Test 14.
 // Decoded content matching with the PER coder.
 // Same input value as in test 11.
 testcase tc_per_decmatch() runs on CT
@@ -424,7 +447,7 @@ external function f_enc_choice(in Choice x) return bitstring
 external function f_dec_choice(inout bitstring x, out Choice y) return integer
   with { extension "prototype(sliding) decode(PER)" };
 
-// Test 14.
+// Test 15.
 // Encoding an ASN.1 type with JSON (built-in) and decoding the same type with PER (manual).
 testcase tc_asn_mixed() runs on CT
 {
@@ -454,6 +477,7 @@ control {
   execute(tc_custom1());
   execute(tc_custom2());
   execute(tc_custom3());
+  execute(tc_custom4());
   execute(tc_custom_temp());
   execute(tc_custom_unichar());
   execute(tc_custom_param_redirect());

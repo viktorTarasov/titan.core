@@ -114,6 +114,7 @@ namespace Common {
   class SignatureParamList;
   class SignatureExceptions;
   class CodeGenHelper;
+  class Assignment;
 
   /**
    * This is the base class for types.
@@ -195,14 +196,13 @@ namespace Common {
      */
     enum MessageEncodingType_t {
       CT_UNDEF, /**< undefined/unused */
-      CT_BER,   /**< ASN.1 BER */
-      CT_PER,   /**< ASN.1 PER (not supported yet) */
-      CT_RAW,   /**< TTCN-3 RAW */
-      CT_TEXT,  /**< TTCN-3 TEXT */
-      CT_XER,    /**< ASN.1 XER */
-      CT_JSON,   /**< TTCN-3 JSON */
-      CT_CUSTOM, /**< user defined encoding */
-      CT_MULTIPLE /**< multiple codings defined for an ASN.1 type */
+      CT_BER,   /**< ASN.1 BER (built-in) */
+      CT_PER,   /**< ASN.1 PER (through user defined coder functions) */
+      CT_RAW,   /**< TTCN-3 RAW (built-in) */
+      CT_TEXT,  /**< TTCN-3 TEXT (built-in) */
+      CT_XER,    /**< TTCN-3 XER (built-in) */
+      CT_JSON,   /**< TTCN-3 and ASN.1 JSON (built-in) */
+      CT_CUSTOM  /**< user defined encoding (through user defined coder functions) */
     };
 
     /** selector for value checking algorithms */
@@ -225,7 +225,7 @@ namespace Common {
     };
 
     /** Enumeration to represent the owner of the type.
-     *  Also align OT_UNKNOWN at line 200. */
+      */
     enum TypeOwner_t {
       OT_UNKNOWN,
       OT_TYPE_ASS, ///< ASN.1 type assignment (Ass_T)
@@ -260,6 +260,31 @@ namespace Common {
       OT_EXC_SPEC, ///< exception Specification (ExcSpec)
       OT_SIG_PAR, ///< signature parameter (SignatureParam)
       OT_POOL ///< It's a pool type, owned by the type pool
+    };
+    
+    /**
+     * Enumeration to represent the default method of encoding or decoding for a type.
+     */
+    enum coding_type_t {
+      CODING_UNSET, ///< No encoding/decoding method has been set for the type.
+      CODING_BUILT_IN, ///< The type uses a built-in codec for encoding/decoding.
+      CODING_BY_FUNCTION, ///< The type uses a user defined function for encoding/decoding.
+      CODING_MULTIPLE ///< Multiple encoding/decoding methods have been set for the type.
+    };
+    
+    /**
+     * Structure containing the default encoding or decoding settings for a type.
+     * These settings determine how values of the type are encoded or decoded by
+     * the following TTCN-3 language elements:
+     * 'encvalue' (encode), 'encvalue_unichar' (encode), 'decvalue' (decode),
+     * 'decvalue_unichar' (decode), 'decmatch' (decode) and '@decoded' (decode).
+     */
+    struct coding_t {
+      coding_type_t type; ///< Type of encoding/decoding
+      union {
+        MessageEncodingType_t built_in_coding; ///< Built-in codec (if type is CODING_BUILT_IN)
+        Assignment* function_def; ///< Pointer to external function definition (if type is CODING_BY_FUNCTION)
+      };
     };
 
     /** Returns the display string of \a encoding_type. */
@@ -305,14 +330,9 @@ namespace Common {
     vector<SubTypeParse> *parsed_restr; ///< parsed subtype restrictions are stored here until they are moved to the sub_type member
     SubType *sub_type; ///< effective/aggregate subtype of this type, NULL if neither inherited nor own subtype restrictions exist
 
-    string encoding_str;  // needed by codegen for encvalue() and decvalue()
-    string decoding_str;
-    bool encoding_by_function;  // false - coding attribute is set, true - coding via coding function
-    bool decoding_by_function;  // same for decoding
-    string encoding_function; // name of custom or PER encoder
-    string decoding_function; // name of custom or PER decoder
-    MessageEncodingType_t asn_encoding; // set by the semantic analysis of encoding
-    MessageEncodingType_t asn_decoding; // and decoding external functions for ASN.1 types
+    coding_t default_encoding; ///< default settings for encoding values of this type
+    coding_t default_decoding; ///< default settings for decoding values of this type
+    
     /** What kind of AST element owns the type.
      *  It may not be known at creation type, so it's initially OT_UNKNOWN.
      *  We want this information so we don't have to bother with XER
@@ -658,12 +678,35 @@ namespace Common {
     bool is_list_type(bool allow_array);
 
     /** Sets the encoding or decoding function for the type (in case of custom
-      * encoding). */
-    void set_coding_function(bool encode, const string& function_name);
+      * or PER encoding). */
+    void set_coding_function(bool encode, Assignment* function_def);
+    
+    /** Sets the codec to use when encoding or decoding the ASN.1 type */
     void set_asn_coding(bool encode, MessageEncodingType_t new_coding);
+    
+    /** Determines the method of encoding or decoding for values of this type
+      * based on its attributes and on encoder or decoder function definitions
+      * with this type as their input or output. An error is displayed if the
+      * coding method cannot be determined.
+      *
+      * @note Because this check depends on the checks of other AST elements
+      * (external functions), it is sometimes delayed to the end of the semantic
+      * analysis. */
     void chk_coding(bool encode, bool delayed = false);
+    
+    /** Indicates whether the type is encoded/decoded by a function or by a
+      * built-in codec. */
     bool is_coding_by_function(bool encode) const;
-    const string& get_coding(bool encode) const;
+    
+    /** Returns the string representation of the type's default codec.
+      * Used during code generation for types encoded/decoded by a built-in
+      * codec. */
+    string get_coding(bool encode) const;
+    
+    /** Returns the function definition of the type's encoder/decoder function.
+      * Used during code generation for types encoded/decoded by functions. */
+    Assignment* get_coding_function(bool encode) const;
+    
   private:
     static MessageEncodingType_t get_enc_type(const Ttcn::SingleWithAttrib& enc);
 

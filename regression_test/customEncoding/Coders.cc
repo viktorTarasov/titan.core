@@ -58,6 +58,18 @@ INTEGER f__dec__uni(BITSTRING& b, Custom1::Uni& x)
   }
 }
 
+BITSTRING f__enc__bs(const BITSTRING& x)
+{
+  return x;
+}
+
+INTEGER f__dec__bs(BITSTRING& b, BITSTRING& x)
+{
+  x = b;
+  b = BITSTRING(0, NULL);
+  return 0;
+}
+
 } // namespace Custom2
 
 namespace Custom1 {

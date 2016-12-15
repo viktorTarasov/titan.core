@@ -27,6 +27,9 @@ INTEGER f__dec__rec(BITSTRING& b, Custom3::Rec& x);
 BITSTRING f__enc__uni(const Custom1::Uni& x);
 INTEGER f__dec__uni(BITSTRING& b, Custom1::Uni& x);
 
+BITSTRING f__enc__bs(const BITSTRING& x);
+INTEGER f__dec__bs(BITSTRING& b, BITSTRING& x);
+
 }
 
 namespace Custom1 {

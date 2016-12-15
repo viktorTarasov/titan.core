@@ -305,6 +305,13 @@ namespace Common {
   
   void Modules::delay_type_encode_check(Type* p_type, bool p_encode)
   {
+    for (size_t i = 0; i < delayed_type_enc_v.size(); ++i) {
+      if (delayed_type_enc_v[i]->t == p_type &&
+          delayed_type_enc_v[i]->enc == p_encode) {
+        // it's already in the list of delayed checks
+        return;
+      }
+    }
     type_enc_t* elem = new type_enc_t;
     elem->t = p_type;
     elem->enc = p_encode;

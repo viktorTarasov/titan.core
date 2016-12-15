@@ -14,9 +14,9 @@ module encode_ttcn_SE { //^In TTCN-3 module//
 
 
 /* types with no coder functions */
-type integer AnInt with { encode "nonexistent" }; //^error\: No custom decoding function found for type//
+type integer AnInt with { encode "nonexistent" }; //Cannot determine the decoding rules for type `integer'. No decoding external functions found//
 
-type record ARecord { //^error\: No custom decoding function found for type//
+type record ARecord { //Cannot determine the decoding rules for type `@encode_ttcn_SE.ARecord'. No decoding external functions found//
   integer i,
   octetstring os
 }
@@ -54,7 +54,7 @@ external function f_dec_list4(inout charstring x, out AList y) return integer //
  
 
 /* type with multiple custom coding functions */ 
-type union AUnion { //Multiple custom encoding functions set for type// //Multiple custom decoding functions set for type//
+type union AUnion { //Cannot determine the encoding rules for type `@encode_ttcn_SE.AUnion'. Multiple encoding external functions found// //Cannot determine the decoding rules for type `@encode_ttcn_SE.AUnion'. Multiple decoding external functions found//
   octetstring field
 }
 with {
