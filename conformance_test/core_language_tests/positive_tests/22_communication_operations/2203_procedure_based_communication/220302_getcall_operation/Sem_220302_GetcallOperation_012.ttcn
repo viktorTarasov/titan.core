@@ -31,7 +31,7 @@ module Sem_220302_GetcallOperation_012 {
 		var @lazy integer v_index;
         alt
 		{
-        	[] any from p.getcall -> @index v_index { 
+        	[] any from p.getcall -> @index value v_index { 
 				if(v_index == 1){ // no getcall call during evaluation, v_index remains equal to 1
 		            setverdict(pass);
 		        } else {

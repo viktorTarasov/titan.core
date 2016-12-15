@@ -29,7 +29,7 @@ module NegSyn_220302_GetcallOperation_002 {
 		var integer v_index;
         alt
 		{
-        	[] any port.getcall -> @index v_index { setverdict(pass); }
+        	[] any port.getcall -> @index value v_index { setverdict(pass); }
 			[else] { setverdict(fail, "The any from getcall operation didn't match for some reason"); } 
 		}		
 	}

@@ -32,7 +32,7 @@ module Sem_220302_GetcallOperation_009 {
 
         alt
 		{
-        	[] any from p.getcall(S:{p_par := (1..10)}) -> sender v_src @index v_index { 
+        	[] any from p.getcall(S:{p_par := (1..10)}) -> sender v_src @index value v_index { 
 				setverdict(fail, "The any from getcall operation produced incorrect match"); 
 			}
 			[else] { setverdict(pass); } 

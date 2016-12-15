@@ -28,7 +28,7 @@ module NegSem_220203_TriggerOperation_020 {
 
 		connect(self:p[0][1][2], self:p[0][1][2]);
         p[0][1][2].send(100);
-        any from p.trigger(integer:?) -> @index v_indices;
+        any from p.trigger(integer:?) -> @index value v_indices;
         setverdict(pass);
     }
 

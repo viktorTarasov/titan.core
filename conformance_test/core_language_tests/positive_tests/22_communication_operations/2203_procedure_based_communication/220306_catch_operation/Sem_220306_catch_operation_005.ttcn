@@ -49,7 +49,7 @@ module Sem_220306_catch_operation_005 {
 	
         alt
 		{
-        	[] any from p.catch(S, integer:(0..c_portCount)) -> value v_res @index v_index { 
+        	[] any from p.catch(S, integer:(0..c_portCount)) -> value v_res @index value v_index { 
 				if(v_index == 1 and v_res == v_index + 1){
 		            setverdict(pass);
 		        } else {

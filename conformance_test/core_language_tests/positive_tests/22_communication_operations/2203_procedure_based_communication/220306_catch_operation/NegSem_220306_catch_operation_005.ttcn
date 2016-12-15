@@ -31,7 +31,7 @@ module NegSem_220306_catch_operation_005 {
 	{
 		for(var integer i := 0; i < c_portCount; i := i + 1) {
 			for(var integer j := 0; j < c_portCount; j := j + 1) {
-				p[i][j].getcall(S:?);
+				p[i][j].getcall(S:{});
 				if (i == 1 and j == 2 or i == 2 and j == 1) { p[i][j].raise(S, 10); }
 			}
 		}
@@ -53,7 +53,7 @@ module NegSem_220306_catch_operation_005 {
 
         alt
 		{
-        	[] any from p.catch(S, integer:?) -> @index v_index { 
+        	[] any from p.catch(S, integer:?) -> @index value v_index { 
 				if(v_index == 1){
 		            setverdict(pass);
 		        } else {

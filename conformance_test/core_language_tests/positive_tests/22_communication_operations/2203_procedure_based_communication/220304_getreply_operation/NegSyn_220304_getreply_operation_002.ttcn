@@ -26,7 +26,7 @@ module NegSyn_220304_getreply_operation_002 {
 	
 	function f() runs on GeneralComp
 	{
-		p.getcall(S:?);
+		p.getcall(S:{});
 		p.reply(S:{});
 	}
 	
@@ -39,7 +39,7 @@ module NegSyn_220304_getreply_operation_002 {
 		v_ptc.done;
         alt
 		{
-        	[] any port.getreply -> @index v_index { setverdict(pass); }
+        	[] any port.getreply -> @index value v_index { setverdict(pass); }
 			[else] { setverdict(fail, "The any from getreply operation didn't match for some reason"); } 
 		}		
     }

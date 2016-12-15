@@ -25,9 +25,9 @@ module NegSem_220202_ReceiveOperation_019 {
     testcase TC_NegSem_220202_ReceiveOperation_019() runs on GeneralComp {
         var RestrInt v_int;
 
-		connect(self:p, self:p);
+		connect(self:p[5], self:p[5]);
         p[5].send(100);
-        any from p.receive(integer:?) -> @index v_int;
+        any from p.receive(integer:?) -> @index value v_int;
 
         setverdict(pass);
     }

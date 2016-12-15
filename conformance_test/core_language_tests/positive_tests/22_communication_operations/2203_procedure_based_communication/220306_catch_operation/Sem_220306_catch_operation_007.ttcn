@@ -46,7 +46,7 @@ module Sem_220306_catch_operation_007 {
 	
         alt
 		{
-        	[] any from p.catch(S, integer:?) -> @index v_index { 
+        	[] any from p.catch(S, integer:?) -> @index value v_index { 
 				if(v_index == 1){  // no catch call during evaluation, v_index remains equal to 1
 		            setverdict(pass);
 		        } else {

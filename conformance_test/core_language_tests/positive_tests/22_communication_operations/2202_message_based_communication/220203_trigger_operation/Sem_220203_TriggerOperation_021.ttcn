@@ -43,7 +43,7 @@ module Sem_220203_TriggerOperation_021 {
         altP.send(1);
 
         alt {
-            [] any from p.trigger(integer:?) -> @index v_index { 
+            [] any from p.trigger(integer:?) -> @index value v_index { 
                 if (v_index == { 0, 2 }) { setverdict(pass); }
                 else { setverdict(fail, "v_index: ", v_index); }
             }

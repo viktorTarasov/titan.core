@@ -52,7 +52,7 @@ module Sem_220306_catch_operation_006 {
 	
         alt
 		{
-        	[] any from p.catch(S, integer:?) -> sender v_src @index v_index { 
+        	[] any from p.catch(S, integer:?) -> sender v_src @index value v_index { 
 				if(v_index[0] == 1 and v_index[1] == 2){
 		            setverdict(pass);
 		        } else {
