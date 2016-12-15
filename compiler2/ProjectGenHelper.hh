@@ -145,7 +145,8 @@ private:
     const ProjectDescriptor* getProject(const char* projName) const;
     bool DynamicLibraryChecker(const ProjectDescriptor* desc,
                          bool& found,
-                         char** executableName);
+                         char** executableName,
+                         std::vector<std::string>& history);
 private:
   static ProjectGenHelper& intance;
   static const std::string emptyString;

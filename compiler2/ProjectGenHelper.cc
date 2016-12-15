@@ -699,7 +699,9 @@ bool ProjectGenHelper::sanityCheck()
     for (std::map<std::string, ProjectDescriptor>::reverse_iterator rit = projs.rbegin(); rit != projs.rend(); ++rit) {
       if ((rit->second).isLibrary() && (rit->second).getLinkingStrategy()) { //dynamic library 
         ProjectDescriptor& proj = rit->second;
-        found = DynamicLibraryChecker(&proj, found, &execName);
+        std::vector<std::string> history;
+        history.push_back(proj.getProjectName());
+        found = DynamicLibraryChecker(&proj, found, &execName, history);
         if (found) {
            ERROR("Project \"%s\" is dynamic linked library. Sub project \"%s\" is executable.\n"
                  "in TPD file, %s's all sub-level defaultTarget shall be set library too.",
@@ -748,7 +750,8 @@ void ProjectGenHelper::cleanUp()
 
 bool ProjectGenHelper::DynamicLibraryChecker(const ProjectDescriptor* desc,
                                        bool& found,
-                                       char** executableName)
+                                       char** executableName,
+                                       std::vector<std::string>& history)
 {
   if (found || !desc) return true;
   for (size_t i = 0; i < desc->numOfReferencedProjects(); ++i) {
@@ -756,7 +759,19 @@ bool ProjectGenHelper::DynamicLibraryChecker(const ProjectDescriptor* desc,
     const ProjectDescriptor* subProj = getTargetOfProject(refProjName);
     if (0 == checkedProjs.count(subProj->getProjectName())) {
       if (subProj->isLibrary()) {
-        found = DynamicLibraryChecker(subProj, found, executableName);
+        // Check if we already checked this subproject.
+        bool inHistory = false;
+        for (size_t j = 0; j < history.size(); j++) {
+          if (history[j] == subProj->getProjectName()) {
+            inHistory = true;
+            ERROR("Project hierarchy has circular references which is not supported when the improved linking method is used.\n"
+                  "For further information see the TITAN referenceguide.");
+          }
+        }
+        if (!inHistory) {
+          found = DynamicLibraryChecker(subProj, found, executableName, history);
+          history.push_back(subProj->getProjectName());
+        }
       }
       else { // search for executable under dynamic linked library
         found = true;
