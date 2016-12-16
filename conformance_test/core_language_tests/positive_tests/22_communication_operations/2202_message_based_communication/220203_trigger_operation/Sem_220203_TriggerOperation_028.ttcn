@@ -30,7 +30,7 @@ module Sem_220203_TriggerOperation_028 {
         p[1].send(1);
         p[1].send(2);
         p[1].send(3);
-        any from p.trigger(integer:?) -> @index v_int;
+        any from p.trigger(integer:?) -> @index value v_int;
 
         if (v_int == 1) { // evaluation of @lazy (receive shall not be called again)
             alt {
