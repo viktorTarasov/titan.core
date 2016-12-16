@@ -122,5 +122,18 @@ external function f_enc_choice1(in Choice x) return bitstring
   
 external function f_enc_choice2(in Choice x) return bitstring
   with { extension "prototype(convert) encode(PER)" }
+  
+/* external function declarations for nonexistent types */
+external function f_enc_non1(in NonExistent x) return bitstring //^In external function definition// //^In formal parameter list// //^In parameter// //There is no local or imported definition with name//
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_non2(in NonExistent x) return bitstring //^In external function definition// //^In formal parameter list//  //^In parameter// //There is no local or imported definition with name//
+  with { extension "prototype(convert) encode(PER)" }
+  
+external function f_dec_non1(inout bitstring x, out NonExistent y) return integer //^In external function definition// //^In formal parameter list//  //^In parameter// //There is no local or imported definition with name//
+  with { extension "prototype(sliding) decode(BER)" }
+
+external function f_dec_non2(inout bitstring x, out NonExistent y) return integer //^In external function definition// //^In formal parameter list//  //^In parameter// //There is no local or imported definition with name//
+  with { extension "prototype(sliding) decode(PER)" }
 
 }
