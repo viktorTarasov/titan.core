@@ -231,6 +231,15 @@ testcase tc_options_f() runs on xmlTest_CT
   }
 }
 
+//         -J file:        the XSD files are taken from file instead of the command line
+testcase tc_options_J() runs on xmlTest_CT
+{
+  f_shellCommandWithVerdict(xsd2ttcn_command & " -J XmlTest_files1.txt","",c_shell_successWithWarning );
+  if(getverdict==pass) {
+    f_compareFiles("www_XmlTest_org_annotation2_e.ttcn","www_XmlTest_org_annotation.ttcn", c_numOfDiff_ModName);
+  }
+}
+
 testcase tc_options_g() runs on xmlTest_CT
 {
   f_shellCommandWithVerdict(xsd2ttcn_command & " -g dont_generate_element_substitution.xsd","",c_shell_successWithoutWarningAndError );
@@ -2511,6 +2520,7 @@ control {
   execute(tc_options_c());
   execute(tc_options_e());
   execute(tc_options_f());
+  execute(tc_options_J());
   execute(tc_options_g());
   execute(tc_options_p());
   execute(tc_options_s());

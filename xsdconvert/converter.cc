@@ -31,7 +31,7 @@
 bool c_flag_used = false;
 int  d_flag_used = 0;
 bool e_flag_used = false;
-bool f_flag_used = false;
+bool f_flag_used = false; // also J flag
 bool g_flag_used = true;
 bool h_flag_used = false;
 bool m_flag_used = false;
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
   char c;
   opterr = 0;
 
-  while ((c = getopt(argc, argv, "cdef:ghmnpqstvwxz")) != -1) {
+  while ((c = getopt(argc, argv, "cdef:ghJ:mnpqstvwxz")) != -1) {
     switch (c) {
       case 'c':
         c_flag_used = true;
@@ -84,6 +84,7 @@ int main(int argc, char **argv) {
         e_flag_used = true;
         break;
       case 'f':
+      case 'J':
         f_flag_used = true;
         from_file = optarg;
         break;
@@ -241,13 +242,13 @@ static void printProductinfo() {
 
 static void printUsage(const char * argv0) {
   fprintf(stderr, "\n"
-    "usage: %s [-ceghmpstVwx] [-f file] schema.xsd ...\n"
+    "usage: %s [-ceghmpstVwx] [-f file] [-J file] schema.xsd ...\n"
     "	or %s -v\n"
     "\n"
     "OPTIONS:\n"
     "	-c:		disable the generation of comments in TTCN-3 modules\n"
     "	-e:		disable the generation of encoding instructions in TTCN-3 modules\n"
-    "	-f file:	the names of XSD files are taken from file instead of the command line\n"
+    "	-f|J file:	the names of XSD files are taken from file instead of the command line\n"
     "	-g:		generate TTCN-3 code disallowing element substitution\n"
     "	-h:		generate TTCN-3 code allowing type substitution\n"
     "	-m:		generate only the UsefulTtcn3Types and XSD predefined modules"
