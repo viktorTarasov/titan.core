@@ -6567,7 +6567,7 @@ namespace Ttcn {
               error("Only `prototype(convert)' is allowed for %s encoding functions",
                 Type::get_encoding_name(encoding_type));
             }
-            else {
+            else if (input_type->is_ref()) {
               // let the input type know that this is its encoding function
               input_type->get_type_refd()->set_coding_function(true, this);
               // treat this as a manual external function during code generation
@@ -6689,7 +6689,7 @@ namespace Ttcn {
             error("Only `prototype(sliding)' is allowed for %s decoding functions",
               Type::get_encoding_name(encoding_type));
           }
-          else if (output_type) {
+          else if (output_type != NULL && output_type->is_ref()) {
             // let the output type know that this is its decoding function
             output_type->get_type_refd()->set_coding_function(false, this);
             // treat this as a manual external function during code generation
