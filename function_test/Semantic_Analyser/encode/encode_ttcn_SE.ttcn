@@ -89,6 +89,67 @@ external function f_enc_arr1(in AnArray x) return bitstring
 external function f_enc_arr2(in AnArray x) return bitstring
   with { extension "prototype(convert) encode(codec3)" }
 
+type record A {
+  integer a
+}
+
+type record B {
+  integer b
+}
+
+type record C {
+  A a,
+  B b
+} with {
+  encode "XML";
+}
+
+type union D {
+  A a,
+  B b
+} with {
+  encode "XML";
+}
+
+type set E {
+  A a,
+  B b
+} with {
+  encode "XML";
+}
+
+external function f_enc_C(in C x) return octetstring //^In external function definition \`f_enc_C\'\:// //^error\: Input type \`\@encode_ttcn_SE\.C\' does not support XER encoding\. The following fields do not support XER encoding\: a\, b//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+
+external function f_enc_D(in D x) return octetstring //^In external function definition \`f_enc_D\'\:// //^error\: Input type \`\@encode_ttcn_SE\.D\' does not support XER encoding\. The following fields do not support XER encoding\: a\, b//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+
+external function f_enc_E(in E x) return octetstring //^In external function definition \`f_enc_E\'\:// //^error\: Input type \`\@encode_ttcn_SE\.E\' does not support XER encoding\. The following fields do not support XER encoding\: a\, b//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+
+external function f_enc_A(in A x) return octetstring //^In external function definition \`f_enc_A\'\:// //^error\: Input type \`\@encode_ttcn_SE\.A\' does not support XER encoding\.//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+
+type record A2 {
+  integer a
+} with {
+  encode "XML";
+}
+
+type record B2 {
+  integer b
+} with {
+  encode "XML";
+}
+
+type record C2 {
+  A a,
+  B b
+}
+
+external function f_enc_C2(in C2 x) return octetstring //^In external function definition \`f_enc_C2\'\:// //^error\: Input type \`\@encode_ttcn_SE\.C2\' does not support XER encoding\.//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+
 
 } with {
   encode "whatever"
