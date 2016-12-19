@@ -8939,7 +8939,8 @@ error:
     if (!error_flag && t_var_type != NULL) {
       // make sure the variable's type has a decoding type set, and store it
       t_parass->set_dec_type(t_var_type->get_type_refd());
-      t_parass->get_dec_type()->chk_coding(false);
+      t_parass->get_dec_type()->chk_coding(false,
+        t_parass->get_ref()->get_my_scope()->get_scope_mod());
     }
   }
   else {
@@ -9745,7 +9746,8 @@ error:
               // store the variable type in case it's decoded (since this cannot
               // be extracted from the value type with the sub-references)
               v[i]->set_dec_type(var_type->get_type_refd());
-              v[i]->get_dec_type()->chk_coding(false);
+              v[i]->get_dec_type()->chk_coding(false,
+                v[i]->get_var_ref()->get_my_scope()->get_scope_mod());
             }
           }
           else {

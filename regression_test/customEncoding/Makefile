@@ -19,7 +19,7 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = Custom1.ttcn Custom2.ttcn Custom3.ttcn
+TTCN3_MODULES = Custom1.ttcn Custom2.ttcn Custom3.ttcn Custom5.ttcn
 ASN1_MODULES = Types.asn
 
 ifdef RT2

@@ -692,7 +692,7 @@ namespace Common {
       * @note Because this check depends on the checks of other AST elements
       * (external functions), it is sometimes delayed to the end of the semantic
       * analysis. */
-    void chk_coding(bool encode, bool delayed = false);
+    void chk_coding(bool encode, Module* usage_mod, bool delayed = false);
     
     /** Indicates whether the type is encoded/decoded by a function or by a
       * built-in codec. */

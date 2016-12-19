@@ -5782,7 +5782,8 @@ bool Type::chk_this_template_Str(Template *t, namedbool implicit_omit,
         target->get_Template(), (target->get_DerivedRef() != NULL) ?
         INCOMPLETE_ALLOWED : INCOMPLETE_NOT_ALLOWED,
         OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, implicit_omit, lhs);
-      target_type->get_type_refd_last()->chk_coding(false);
+      target_type->get_type_refd_last()->chk_coding(false,
+        t->get_my_scope()->get_scope_mod());
     }
     {
       Value* str_enc = t->get_string_encoding();

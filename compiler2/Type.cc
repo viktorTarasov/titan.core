@@ -4428,16 +4428,32 @@ namespace Common {
     }
   }
 
-  void Type::chk_coding(bool encode, bool delayed /* = false */) {
+  void Type::chk_coding(bool encode, Module* usage_mod, bool delayed /* = false */) {
     coding_t& coding = encode ? default_encoding : default_decoding;
     switch (coding.type) {
     case CODING_BY_FUNCTION:
+      {
+        Module* func_mod = coding.function_def->get_my_scope()->get_scope_mod();
+        if (usage_mod != func_mod) {
+          // add a phantom import for the coder function's module, to make sure
+          // it is visible from the module that requested the coding
+          Ttcn::Module* usage_mod_ttcn = dynamic_cast<Ttcn::Module*>(usage_mod);
+          if (usage_mod_ttcn == NULL) {
+            FATAL_ERROR("Type::chk_coding");
+          }
+          Ttcn::ImpMod* new_imp = new Ttcn::ImpMod(func_mod->get_modid().clone());
+          new_imp->set_mod(func_mod);
+          new_imp->set_imptype(Ttcn::ImpMod::I_DEPENDENCY);
+          usage_mod_ttcn->get_imports().add_impmod(new_imp);
+        }
+      }
+      // fall through
     case CODING_BUILT_IN:
       if (!delayed) {
         // a coding method has been set by an external function's checker,
         // but there might still be unchecked external functions out there;
         // delay this function until everything else has been checked
-        Modules::delay_type_encode_check(this, encode);
+        Modules::delay_type_encode_check(this, usage_mod, encode);
       }
       return;
     case CODING_UNSET:
@@ -4550,7 +4566,7 @@ namespace Common {
         // the type has a custom encoding attribute, but no external coder
         // function with that encoding has been found yet;
         // delay this function until everything else has been checked
-        Modules::delay_type_encode_check(this, encode);
+        Modules::delay_type_encode_check(this, usage_mod, encode);
         // set the coding type back to UNSET for delayed call
         coding.type = CODING_UNSET;
       }
@@ -4562,7 +4578,7 @@ namespace Common {
     else { // ASN.1 type
       // delay this function until everything else has been checked, in case
       // there is an encoder/decoder external function out there for this type
-      Modules::delay_type_encode_check(this, encode);
+      Modules::delay_type_encode_check(this, usage_mod, encode);
     }
   }
 

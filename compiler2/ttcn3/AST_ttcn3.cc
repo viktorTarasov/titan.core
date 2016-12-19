@@ -1288,6 +1288,10 @@ namespace Ttcn {
 
   void ImpMod::chk_imp(ReferenceChain& refch, vector<Common::Module>& moduleStack)
   {
+      if (imptype == I_DEPENDENCY) {
+        // these are added during semantic analysis, including their module pointer
+        return;
+      }
       Error_Context cntxt(this, "In import definition");
 
       if (!modules->has_mod_withId(*modid)) {
@@ -1399,6 +1403,8 @@ namespace Ttcn {
 
         break;
       }
+      case I_DEPENDENCY:
+        return false;
       default:
         FATAL_ERROR("ImpMod::get_imported_def");
       }
@@ -1489,6 +1495,8 @@ namespace Ttcn {
           return result;
         break;
       }
+      case I_DEPENDENCY:
+        return NULL;
       default:
         FATAL_ERROR("ImpMod::get_imported_def");
       }
@@ -1579,6 +1587,16 @@ namespace Ttcn {
   void Imports::add_impmod(ImpMod *p_impmod)
   {
     if (!p_impmod) FATAL_ERROR("Ttcn::Imports::add_impmod()");
+    if (p_impmod->get_imptype() == ImpMod::I_DEPENDENCY) {
+      // this is just an extra dependency, not an actual 'import' in TTCN-3 code,
+      // only insert it if it's needed
+      for (size_t i = 0; i < impmods_v.size(); ++i) {
+        if (p_impmod->get_mod() == impmods_v[i]->get_mod()) {
+          delete p_impmod;
+          return;
+        }
+      }
+    }
     impmods_v.add(p_impmod);
     p_impmod->set_my_mod(my_mod);
   }

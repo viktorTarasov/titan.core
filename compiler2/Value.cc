@@ -5658,7 +5658,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     }*/
 
     if(!disable_attribute_validation()) {
-      t_type->chk_coding(true);
+      t_type->chk_coding(true, my_scope->get_scope_mod());
     }
     
     switch (t_type->get_typetype()) {
@@ -5810,7 +5810,7 @@ error:
     }
 
     if(!disable_attribute_validation()) {
-      t_type->chk_coding(false);
+      t_type->chk_coding(false, my_scope->get_scope_mod());
     }
 
     return;

@@ -646,7 +646,7 @@ namespace Ttcn {
     void set_with_attr(MultiWithAttrib* p_attrib);
     WithAttribPath* get_attrib_path();
     void set_parent_path(WithAttribPath* p_path);
-    const Imports& get_imports() const { return *imp; }
+    Imports& get_imports() { return *imp; }
 
     bool is_visible(const Identifier& id, visibility_t visibility);
     
@@ -719,7 +719,14 @@ namespace Ttcn {
       I_ERROR,
       I_ALL,
       I_IMPORTSPEC,
-      I_IMPORTIMPORT
+      I_IMPORTIMPORT,
+      /** Phantom import for when the 'include' is needed in the generated C++
+        * code, but the TTCN-3 'import' statement is optional.
+        * Currently this can only happen when using coding values of a type that
+        * has custom or PER coder functions set (the module containing the coder
+        * function declarations does not have to be imported to the module that
+        * contains the coding operation). */
+      I_DEPENDENCY
     };
   private:
     /** Points to the target (imported) module. This is initially NULL;

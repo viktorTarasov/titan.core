@@ -22,4 +22,13 @@ with {
   encode "localCustom";
 }
 
+// Set type for test 5
+type set Set {
+  integer num,
+  charstring str
+}
+with {
+  encode "localCustom";
+}
+
 }

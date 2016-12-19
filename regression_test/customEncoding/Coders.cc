@@ -161,3 +161,50 @@ INTEGER f__dec__choice(BITSTRING& x, Types::Choice& y)
 }
 
 } // namespace Custom1
+
+namespace Custom5 {
+
+BITSTRING f__enc__set(const Custom3::Set& x)
+{
+  return int2bit(x.num(), 8);
+}
+
+INTEGER f__dec__set(BITSTRING& b, Custom3::Set& x)
+{
+  x.num() = bit2int(b);
+  x.str() = "c++";
+  b = BITSTRING(0, NULL);
+  return 0;
+}
+
+BITSTRING f__enc__setof(const Types::SetOf& x)
+{
+  TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_DEFAULT);
+  TTCN_Buffer buf;
+  x.encode(Types::SetOf_descr_, buf, TTCN_EncDec::CT_JSON, false);
+  OCTETSTRING tmp;
+  buf.get_string(tmp);
+  return oct2bit(tmp);
+}
+
+INTEGER f__dec__setof(BITSTRING& x, Types::SetOf& y)
+{
+  TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_WARNING);
+  TTCN_Buffer buf(bit2oct(x));
+  y.decode(Types::SetOf_descr_, buf, TTCN_EncDec::CT_JSON);
+  switch (TTCN_EncDec::get_last_error_type()) {
+  case TTCN_EncDec::ET_NONE: {
+    buf.cut();
+    OCTETSTRING tmp;
+    buf.get_string(tmp);
+    x = oct2bit(tmp);
+    return 0; }
+  case TTCN_EncDec::ET_INCOMPL_MSG:
+  case TTCN_EncDec::ET_LEN_ERR:
+    return 2;
+  default:
+    return 1;
+  }
+}
+
+} // namespace Custom5

@@ -23,7 +23,14 @@ Seq ::= SEQUENCE {
   str VisibleString
 }
 
+Set2 ::= SET {
+  num INTEGER,
+  str VisibleString
+}
+
 SeqOf ::= SEQUENCE OF INTEGER
+
+SetOf ::= SEQUENCE OF INTEGER
 
 Choice ::= CHOICE {
   num INTEGER,

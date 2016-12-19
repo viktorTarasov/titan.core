@@ -177,7 +177,8 @@ namespace Common {
     // run delayed Type::chk_coding() calls
     if (!delayed_type_enc_v.empty()) {
       for (size_t i = 0; i < delayed_type_enc_v.size(); ++i) {
-        delayed_type_enc_v[i]->t->chk_coding(delayed_type_enc_v[i]->enc, true);
+        delayed_type_enc_v[i]->t->chk_coding(delayed_type_enc_v[i]->enc,
+          delayed_type_enc_v[i]->mod, true);
         delete delayed_type_enc_v[i];
       }
       delayed_type_enc_v.clear();
@@ -303,10 +304,11 @@ namespace Common {
     }
   }
   
-  void Modules::delay_type_encode_check(Type* p_type, bool p_encode)
+  void Modules::delay_type_encode_check(Type* p_type, Module* p_module, bool p_encode)
   {
     for (size_t i = 0; i < delayed_type_enc_v.size(); ++i) {
       if (delayed_type_enc_v[i]->t == p_type &&
+          delayed_type_enc_v[i]->mod == p_module &&
           delayed_type_enc_v[i]->enc == p_encode) {
         // it's already in the list of delayed checks
         return;
@@ -314,6 +316,7 @@ namespace Common {
     }
     type_enc_t* elem = new type_enc_t;
     elem->t = p_type;
+    elem->mod = p_module;
     elem->enc = p_encode;
     delayed_type_enc_v.add(elem);
   }
