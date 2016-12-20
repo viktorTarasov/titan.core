@@ -149,4 +149,5 @@ These tests might run for half an hour (regr.tests)  to two hours (func.tests)
 
 8. Optionally, copy Titan into its final directory.
 From here on, you can continue with the Titan installation guide, see /Install/docs, to set/change environment variables etc.
+and then, optionally, the Eclipse installation guide.
 
