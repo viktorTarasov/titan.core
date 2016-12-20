@@ -940,6 +940,7 @@ void TTCN3_Debugger::test_execution_started()
     if (function_calls.cfg == CALLS_STORE_ALL) {
       Free(function_calls.buffer.ptr);
       function_calls.buffer.ptr = NULL;
+      function_calls.buffer.size = 0;
     }
     function_calls.buffer.start = 0;
     function_calls.buffer.end = -1;
