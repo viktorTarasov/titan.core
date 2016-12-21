@@ -43,7 +43,7 @@ module Pos_070502_derivation_by_list_005 {
     testcase TC_Pos_070502_derivation_by_list_005() runs on C system C {
         var Raw v_rcv;
 
-        var Raw  v_Raw:="<ns150:MyType xmlns:ns150='schema:Pos_070502_derivation_by_list_005'>true 2.000000 false</ns150:MyType>\n\n";
+        var Raw  v_Raw:="<ns150:MyType xmlns:ns150='schema:Pos_070502_derivation_by_list_005' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>true 2.000000 false</ns150:MyType>\n\n";
 
         connect(self:p, self:p1);
 

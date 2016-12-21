@@ -52,7 +52,7 @@ module Pos_070503_derivation_by_union_001 {
     testcase TC_Pos_070503_derivation_by_union_001() runs on C system C {
         var Raw v_rcv;
 
-        var Raw  v_Raw:="<ns151:MyType xmlns:ns151='schema:Pos_070503_derivation_by_union_001' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:type='ns151:integer'>5</ns151:MyType>\n\n";
+        var Raw  v_Raw:="<ns151:MyType xmlns:ns151='schema:Pos_070503_derivation_by_union_001' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' xsi:type='xsd:integer'>5</ns151:MyType>\n\n";
 
         connect(self:p, self:p1);
 
