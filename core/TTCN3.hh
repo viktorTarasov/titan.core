@@ -32,6 +32,12 @@
 #ifndef TTCN3_HH
 #define TTCN3_HH
 
+#ifdef MEMORY_DEBUG
+// this is needed so the global debug_new_counter object is destroyed after
+// the global objects in the generated C++ files are destroyed
+#include "dbgnew.hh"
+#endif
+
 #include "version.h"
 #include <cversion.h>
 

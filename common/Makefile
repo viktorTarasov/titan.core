@@ -84,6 +84,9 @@ ifdef MINGW
 else
 	mkdir -p $(INCDIR)
 	cp version.h memory.h platform.h ttcn3float.hh pattern.hh CharCoding.hh JSON_Tokenizer.hh $(INCDIR)
+ifeq ($(DEBUG), yes)
+	cp dbgnew.hh $(INCDIR)
+endif
 ifneq ($(TARGETS), )
   ifeq ($(DEBUG), no)
 	$(STRIP) $(TARGETS)

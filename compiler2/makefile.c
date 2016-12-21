@@ -2114,6 +2114,11 @@ static void print_makefile(struct makefile_struct *makefile)
     fputs("# Flags for the C++ preprocessor (and makedepend as well):\n"
           "CPPFLAGS = -D$(PLATFORM) -I$(TTCN3_DIR)/include", fp);
 
+#ifdef MEMORY_DEBUG
+    // enable debug mode for the generated code, too
+    fputs(" -g -DMEMORY_DEBUG", fp);
+#endif
+
     if (makefile->use_runtime_2) fputs(" -DTITAN_RUNTIME_2", fp);
 
     for (i = 0; i < makefile->nBaseDirs; i++) {
