@@ -66,15 +66,15 @@ size_t Module_Param_Id::get_nof_names() const {
 char* Module_Param_Name::get_str() const {
   char* result = NULL;
   for (size_t i = 0; i < names.size(); ++i) {
-    boolean is_index = names[i][0] >= '0' && names[i][0] <= '9';
-    if (i > 0 && !is_index) {
+    boolean index = names[i][0] >= '0' && names[i][0] <= '9';
+    if (i > 0 && !index) {
       result = mputc(result, '.');
     }
-    if (is_index) {
+    if (index) {
       result = mputc(result, '[');
     }
     result = mputstr(result, names[i]);
-    if (is_index) {
+    if (index) {
       result = mputc(result, ']');
     }
   }

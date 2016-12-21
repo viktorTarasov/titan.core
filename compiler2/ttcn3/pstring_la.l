@@ -51,7 +51,7 @@ using namespace Common;
 static void update_location(size_t start_index, size_t end_index,
   size_t& current_line, size_t& current_column)
 {
-  for (size_t i = start_index; i < yyleng && i < end_index; i++) {
+  for (size_t i = start_index; i < (size_t)yyleng && i < end_index; i++) {
     // count CR, count LF, but count CR + LF as one
     switch (yytext[i]) {
     case '\r':

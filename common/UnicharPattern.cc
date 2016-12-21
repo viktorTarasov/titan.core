@@ -96,6 +96,7 @@ UnicharPattern::UnicharPattern() : mappings_head(NULL)
   if (fp == NULL) {
     TTCN_pattern_warning("Cannot open file '%s' for reading. "
       "Case-insensitive universal charstring patterns are disabled.\n", mappings_file);
+    Free(mappings_file);
     return;
   }
   Free(mappings_file);

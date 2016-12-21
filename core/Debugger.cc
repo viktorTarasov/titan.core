@@ -93,6 +93,7 @@ void TTCN3_Debugger::set_breakpoint(const char* p_module, const char* p_location
       batch_file != NULL ? batch_file : "", batch_file != NULL ? "'" : "");
   }
   else {
+    Free(function);
     if (breakpoints[pos].batch_file != NULL) {
       if (batch_file != NULL) {
         if (!strcmp(batch_file, breakpoints[pos].batch_file)) {

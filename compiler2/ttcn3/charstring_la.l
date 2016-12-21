@@ -119,7 +119,7 @@ HEXDIGIT [0-9A-Fa-f]
   Location loc(current_file, current_line, current_column, current_line,
     current_column + yyleng);
   loc.warning("Unknown escape sequence `%s' was treated literally", yytext);
-  for (size_t i = 0; i < yyleng; i++) ADD_CHAR(yytext[i]);
+  for (size_t i = 0; i < (size_t)yyleng; i++) ADD_CHAR(yytext[i]);
   current_column += 2;
 }
 
@@ -133,7 +133,7 @@ HEXDIGIT [0-9A-Fa-f]
 {NEWLINE}   {
   Location loc(current_file, current_line, current_column, current_line + 1, 0);
   loc.warning("Unescaped newline character");
-  for (size_t i = 0; i < yyleng; i++) ADD_CHAR(yytext[i]);
+  for (size_t i = 0; i < (size_t)yyleng; i++) ADD_CHAR(yytext[i]);
   current_line++;
   current_column = 0;
 }

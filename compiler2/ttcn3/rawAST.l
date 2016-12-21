@@ -184,7 +184,8 @@ omit	RETURN(XOmitKeyword);
   current_column += 2;
   bool backslash_flag = false;
   yylval.str = memptystr();
-  for (size_t i = 2; i < yyleng - 2; ) {
+  size_t len = (size_t)yyleng - 2;
+  for (size_t i = 2; i < len; ) {
     if (!backslash_flag && (yytext[i] == '\\' || yytext[i] == '"') &&
 	yytext[i + 1] == '"' &&
 	(yytext[i + 2] == '\\' || yytext[i + 2] == '"') &&
@@ -496,7 +497,8 @@ definite   RETURN(XKWdefinite);
   current_column++;
   bool backslash_flag = false;
   yylval.str = memptystr();
-  for (size_t i = 1; i < yyleng - 1; ) {
+  size_t len = (size_t)yyleng - 1;
+  for (size_t i = 1; i < len; ) {
     if (!backslash_flag && (yytext[i] == '\'' || yytext[i] == '"') &&
         yytext[i + 1] == yytext[i]) {
       /* transform '' -> \' and "" -> \" */
