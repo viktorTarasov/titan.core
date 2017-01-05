@@ -310,8 +310,18 @@ struct XERdescriptor_t
   const          char *names[2];
   /** Length of closing tag string (strlen of names[i]) */
   const unsigned short namelens[2];
-  /** Various EXER flags */
-  const unsigned long xer_bits; // TODO which types what flags mean what ?
+  /** Various EXER flags
+   * This field is used as a flag carrier integer.
+   * Each bit (flag) in the integer has a name which comes from the XER_flavor enum.
+   * The XER_flavor enum holds 32 elements (bits) which fits into this
+   * unsigned int. If we need to use the flags form the XER_flavor2 enum then
+   * a new xer_bits field needs to be created.
+   * 
+   * Some possible uses: 
+   *  - in the xer descriptor of the types
+   *  - in conditions: if (p_td.xer_bits & UNTAGGED) ...
+   */
+  const unsigned int xer_bits; // TODO which types what flags mean what ?
   /** Whitespace handling */
   const XER_whitespace_action whitespace;
   /** value to compare for DEFAULT-FOR-EMPTY */
@@ -514,7 +524,7 @@ void check_namespace_restrictions(const XERdescriptor_t& p_td, const char* p_xml
   extern const XERdescriptor_t type_name##_xer_ = { \
     { xmlname ">\n", xmlname ">\n" }, \
     { 2+sizeof(xmlname)-1, 2+sizeof(xmlname)-1 }, \
-    0UL, WHITESPACE_PRESERVE, NULL, NULL, 0, 0, NULL, NULL, -1, XSD_NONE }
+    0U, WHITESPACE_PRESERVE, NULL, NULL, 0, 0, NULL, NULL, -1, XSD_NONE }
 // The compiler should fold the two identical strings into one
 
 # define XER_STRUCT_COPY(cpy,original) \
