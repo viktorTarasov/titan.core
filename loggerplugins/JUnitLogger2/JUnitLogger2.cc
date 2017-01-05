@@ -151,7 +151,7 @@ void JUnitLogger2::log(const TitanLoggerApi::TitanLogEvent& event,
 
         case TitanLoggerApi::TestcaseEvent_choice::ALT_testcaseFinished: {
           const TitanLoggerApi::TestcaseType& tct = tcev.testcaseFinished();
-          testcase.reason = tct.reason();
+          testcase.reason = escape_xml_element(tct.reason());
           testcase.module_name = tct.name().module__name();
           
           const TitanLoggerApi::TimestampType& ts = event.timestamp();

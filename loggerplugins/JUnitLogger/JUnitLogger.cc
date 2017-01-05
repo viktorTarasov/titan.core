@@ -177,7 +177,7 @@ void JUnitLogger::log(const TitanLoggerApi::TitanLogEvent& event,
         (now - then) / 1000000.0,
         verdict_name[tct.verdict()],
         (tct.reason().lengthof() > 0 ? ", reason: " : ""),
-        (const char*)tct.reason());
+        (const char*)escape_xml_element(tct.reason()));
 
       fprintf(file_stream_, "  <testcase classname='%s' name='%s' time='%f'>\n",
         (const char*)tct.name().module__name(),
