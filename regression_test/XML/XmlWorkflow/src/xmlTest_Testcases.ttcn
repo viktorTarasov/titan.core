@@ -2383,6 +2383,34 @@ group Elements{
 
   }//tc_
 
+  //========================================================
+  // Alias tests
+  //========================================================
+
+  testcase tc_simpletype_aliases() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & " simpletype_aliases.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_simpletype_aliases_e.ttcn",
+        "www_example_org_simpletype_aliases.ttcn", c_numOfDiff);
+    }
+
+  }//tc_
+
+  testcase tc_complextype_aliases() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & " complextype_aliases.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_complextype_aliases_e.ttcn",
+        "www_example_org_complextype_aliases.ttcn", c_numOfDiff);
+    }
+
+  }//tc_
+
 
 
   //========================================================
@@ -2735,6 +2763,10 @@ control {
   execute(tc_type_substitution_rename());
   execute(tc_type_substitution_complex_cascade());
   execute(tc_type_substitution_simple_cascade());
+
+  //===aliases===
+  execute(tc_simpletype_aliases());
+  execute(tc_complextype_aliases());
 
 
 

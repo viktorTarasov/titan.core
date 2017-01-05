@@ -64,6 +64,81 @@ type record NillableInRecord
 	XSD.Boolean allow_do_not,
 	record {
 		XSD.Integer phoneNumber optional,
+		SeqNillable content optional
+	} seqNillableExtended optional
+}
+with {
+  variant "element";
+  variant (allow_do_not) "name as 'allow-do-not'";
+  //variant (allow_do_not) "text 'true' as '1'";
+  //variant (allow_do_not) "text 'false' as '0'";
+  variant (seqNillableExtended) "name as capitalized";
+  variant (seqNillableExtended) "useNil";
+  variant (seqNillableExtended.phoneNumber) "name as capitalized";
+  variant (seqNillableExtended.phoneNumber) "attribute";
+};
+
+
+type record NillableInRecordAlias
+{
+	XSD.Boolean allow_do_not,
+	record {
+		SeqNillable content optional
+	} seqNillableExtended optional
+}
+with {
+  variant "element";
+  variant (allow_do_not) "name as 'allow-do-not'";
+  //variant (allow_do_not) "text 'true' as '1'";
+  //variant (allow_do_not) "text 'false' as '0'";
+  variant (seqNillableExtended) "name as capitalized";
+  variant (seqNillableExtended) "useNil";
+};
+
+
+type record NillableInRecordNotAlias
+{
+	XSD.Boolean allow_do_not,
+	record {
+		record {
+			XSD.Integer number optional
+		} content optional
+	} seqNillableExtended optional
+}
+with {
+  variant "element";
+  variant (allow_do_not) "name as 'allow-do-not'";
+  //variant (allow_do_not) "text 'true' as '1'";
+  //variant (allow_do_not) "text 'false' as '0'";
+  variant (seqNillableExtended) "name as capitalized";
+  variant (seqNillableExtended) "useNil";
+  variant (seqNillableExtended.content.number) "name as capitalized";
+};
+
+
+type record SeqNillable2
+{
+	XSD.Integer phoneNumber optional,
+	XSD.Integer number optional,
+	record length(0 .. 32) of record {
+		XSD.Integer content optional
+	} nillableNumber_list
+}
+with {
+  variant (phoneNumber) "name as capitalized";
+  variant (phoneNumber) "attribute";
+  variant (number) "name as capitalized";
+  variant (nillableNumber_list) "untagged";
+  variant (nillableNumber_list[-]) "name as 'NillableNumber'";
+  variant (nillableNumber_list[-]) "useNil";
+};
+
+
+type record NillableInRecordRestriction
+{
+	XSD.Boolean allow_do_not,
+	record {
+		XSD.Integer phoneNumber,
 		record {
 			XSD.Integer number optional,
 			record length(0 .. 32) of record {

@@ -34,7 +34,7 @@ public:
 
   LengthType(SimpleType * p_parent);
   // Default copy constructor and destructor are used
-
+  
   void applyReference(const LengthType & other);
   void applyFacets();
   void printToFile(FILE * file) const;
@@ -51,7 +51,7 @@ public:
 
   PatternType(SimpleType * p_parent);
   // Default copy constructor and destructor are used
-
+  
   void applyReference(const PatternType & other);
   void applyFacet();
   void printToFile(FILE * file) const;
@@ -73,7 +73,7 @@ public:
 
   EnumerationType(SimpleType * p_parent);
   // Default copy constructor and destructor are used
-
+  
   void applyReference(const EnumerationType & other);
   void applyFacets();
   void sortFacets();
@@ -243,6 +243,9 @@ protected:
   bool inList;
   // We are inside a list if inList is true and mode == listMode
   
+  // If this type is an alias then the alias field points to the original type
+  SimpleType * alias;
+  
   //Element substitution
   void addToSubstitutions();
 
@@ -398,6 +401,14 @@ public:
           nameDepList.push_back(t);
       }
   }
+  
+  SimpleType * getAlias() const {
+      return alias;
+  }
+  
+  // Returns true if the type really restricts or extends the type not
+  // just aliases it.
+  bool hasRestrictionOrExtension() const;
 
 };
 

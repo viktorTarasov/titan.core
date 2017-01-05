@@ -33,4 +33,83 @@ attributeFormDefault="unqualified">
 	</xs:complexType>
 </xs:element>
 
+<xs:element name="NillableInRecordAlias">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element name="allow-do-not" type="xs:boolean">
+			</xs:element>
+			<xs:element name="SeqNillableExtended" minOccurs="0" maxOccurs="1" nillable="true">
+				<xs:complexType>
+					<xs:complexContent>
+						<xs:restriction base="ns12:SeqNillable">
+							<xs:sequence>
+								<xs:element name="Number" type="xs:integer" minOccurs="0">
+								</xs:element>
+								<xs:element name="NillableNumber" type="xs:integer" minOccurs="0" maxOccurs="32" nillable="true">
+								</xs:element>
+							</xs:sequence>
+						</xs:restriction>
+					</xs:complexContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:element>
+
+<xs:element name="NillableInRecordNotAlias">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element name="allow-do-not" type="xs:boolean">
+			</xs:element>
+			<xs:element name="SeqNillableExtended" minOccurs="0" maxOccurs="1" nillable="true">
+				<xs:complexType>
+					<xs:complexContent>
+						<xs:restriction base="ns12:SeqNillable">
+							<xs:sequence>
+								<xs:element name="Number" type="xs:integer" minOccurs="0">
+								</xs:element>
+							</xs:sequence>
+						</xs:restriction>
+					</xs:complexContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:element>
+
+<xs:complexType name="SeqNillable2">
+	<xs:sequence>
+		<xs:element name="Number" type="xs:integer" minOccurs="0">
+		</xs:element>
+		<xs:element name="NillableNumber" type="xs:integer" minOccurs="0" maxOccurs="32" nillable="true">
+		</xs:element>
+	</xs:sequence>
+	<xs:attribute name="PhoneNumber" type="xs:integer"/>
+</xs:complexType>
+
+<xs:element name="NillableInRecordRestriction">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element name="allow-do-not" type="xs:boolean">
+			</xs:element>
+			<xs:element name="SeqNillableExtended" minOccurs="0" maxOccurs="1" nillable="true">
+				<xs:complexType>
+					<xs:complexContent>
+						<xs:restriction base="ns12:SeqNillable2">
+							<xs:sequence>
+								<xs:element name="Number" type="xs:integer" minOccurs="0">
+								</xs:element>
+								<xs:element name="NillableNumber" type="xs:integer" minOccurs="0" maxOccurs="32" nillable="true">
+								</xs:element>
+							</xs:sequence>
+							<xs:attribute name="PhoneNumber" type="xs:integer" use="required">
+							</xs:attribute>
+						</xs:restriction>
+					</xs:complexContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:element>
+
 </xs:schema>

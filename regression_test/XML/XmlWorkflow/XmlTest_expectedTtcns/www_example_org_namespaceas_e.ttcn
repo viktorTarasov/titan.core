@@ -66,26 +66,18 @@ with {
 
 type record OtherType
 {
-	XSD.Integer billingAccountNumber,
-	record {
-		Foobar base
-	} something,
-	record {
-		Bar base
-	} something2,
-	record {
-		XSD.String something optional
-	} something3,
+	Foobar billingAccountNumber,
+	Foobar something,
+	Bar something2,
+	Bar something3,
 	record {
 		XSD.String something
 	} something4
 }
 with {
   variant (billingAccountNumber) "namespace as 'www.example.org/imported2' prefix 'other'";
-  variant (something.base) "namespace as 'www.example.org/imported2' prefix 'other'";
-  variant (something.base) "untagged";
-  variant (something2.base) "namespace as 'www.example.org/imported2' prefix 'other'";
-  variant (something2.base) "untagged";
+  variant (something) "namespace as 'www.example.org/imported2' prefix 'other'";
+  variant (something2) "namespace as 'www.example.org/imported2' prefix 'other'";
 };
 
 

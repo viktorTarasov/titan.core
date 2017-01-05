@@ -168,7 +168,9 @@
 		<File path="../xsd/www_example_org_pref1.xsd" />
 		<File path="../xsd/www_example_org_pref2.xsd" />
 		<File path="../xsd/www_example_org_pref3.xsd" />
-        <File path="../xsd/listMinMaxOccurs.xsd" />
+		<File path="../xsd/listMinMaxOccurs.xsd" />
+		<File path="../xsd/simpletype_aliases.xsd" />
+		<File path="../xsd/complextype_aliases.xsd" />
             </File_Group>
             <File_Group name="XmlTest_xsds" >
                 <File path="../XmlTest_xsds/XmlTest_boolean.xsd" />
@@ -409,6 +411,8 @@
 	        <File path="../XmlTest_expectedTtcns/www_example_org_pref2_e.ttcn" />
 	        <File path="../XmlTest_expectedTtcns/www_example_org_pref3_e.ttcn" />
             <File path="../XmlTest_expectedTtcns/http_www_example_org_list_minmaxoccurs_e.ttcn" />
+            <File path="../XmlTest_expectedTtcns/www_example_org_simpletype_aliases_e.ttcn" />
+            <File path="../XmlTest_expectedTtcns/www_example_org_complextype_aliases_e.ttcn" />
             </File_Group>
             <File_Group name="XmlTest_src" >
                 <File path="xmlTest_Shell.ttcn" />

@@ -87,7 +87,8 @@ private:
   ComplexType * parentTypeSubsGroup;
 
 
-  void applyAttributeRestriction(ComplexType * found_CT);
+  // Returns true if the attributes really restricted and not just aliased
+  bool applyAttributeRestriction(ComplexType * found_CT);
   void applyAttributeExtension(ComplexType * found_CT, AttributeType * anyAttr = NULL);
   void nameConversion_names(const List<NamespaceType> & ns);
   void nameConversion_types(const List<NamespaceType> & ns);
@@ -114,6 +115,8 @@ private:
   void resolveComplexTypeRestriction();
   void resolveUnion(SimpleType *st);
   bool hasMatchingFields(const List<ComplexType*>& a, const List<ComplexType*>& b) const;
+  // True if a restriction really restricts the type not just aliases
+  bool hasComplexRestriction(ComplexType* ct) const;
 
   void printVariant(FILE * file);
 

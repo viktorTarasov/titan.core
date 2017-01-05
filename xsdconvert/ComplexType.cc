@@ -306,6 +306,7 @@ void ComplexType::loadWithValues() {
         f->type.upload(atts.base);
         f->setReference(atts.base);
         f->addVariant(V_untagged);
+        f->mode = restrictionMode;
         complexfields.push_back(f);
         basefield = f;
         actfield = f;
@@ -329,6 +330,7 @@ void ComplexType::loadWithValues() {
         f->type.upload(atts.base);
         f->setReference(atts.base);
         f->addVariant(V_untagged);
+        f->mode = extensionMode;
         complexfields.push_back(f);
         basefield = f;
         actfield = f;
@@ -823,7 +825,7 @@ void ComplexType::applyReference(const SimpleType & other, const bool on_attribu
   }
 
   builtInBase = other.getBuiltInBase();
-
+  
   length.applyReference(other.getLength());
   pattern.applyReference(other.getPattern());
   enumeration.applyReference(other.getEnumeration());
@@ -1149,11 +1151,12 @@ void ComplexType::printToFile(FILE * file, const unsigned level, const bool is_u
     }else {
       fprintf(file, "%s %s", type.convertedValue.c_str(), name.convertedValue.c_str());
     }
-    fprintf(file, "\n{\n");
-
-    if (attribfields.empty() && complexfields.empty()) {
-      fprintf(file, "\n");
-    }
+    if(type.convertedValue == "record" || type.convertedValue == "union"){
+      fprintf(file, "\n{\n");
+      if (attribfields.empty() && complexfields.empty()) {
+        fprintf(file, "\n");
+      }
+    } 
 
     for (List<ComplexType*>::iterator c = complexfields.begin(), nextField; c; c = nextField) {
       nextField = c->Next;
@@ -1304,7 +1307,9 @@ void ComplexType::printToFile(FILE * file, const unsigned level, const bool is_u
   }
 
   if (top) {
-    fprintf(file, "}");
+    if(type.convertedValue == "record" || type.convertedValue == "union"){
+      fprintf(file, "}");
+    }
     if(mode == listMode){
       fprintf(file, " %s", name.convertedValue.c_str());
     }
@@ -1620,8 +1625,11 @@ void ComplexType::applyAttributeExtension(ComplexType * found_CT, AttributeType 
 }
 
 //Attribute restriction logic when restricting complextypes
-void ComplexType::applyAttributeRestriction(ComplexType * found_CT) {
-  for (List<AttributeType*>::iterator attr = attribfields.begin(), nextAttr; attr; attr = nextAttr) {
+bool ComplexType::applyAttributeRestriction(ComplexType * found_CT) {
+  bool isModifiedAttr = false;
+  // when the element is nillable the attributes are in the parent
+  ComplexType * me = parent != NULL && nillable ? parent : this;
+  for (List<AttributeType*>::iterator attr = me->attribfields.begin(), nextAttr; attr; attr = nextAttr) {
     nextAttr = attr->Next;
     bool l = false;
     for (List<AttributeType*>::iterator attr2 = found_CT->attribfields.begin(); attr2; attr2 = attr2->Next) {
@@ -1634,31 +1642,35 @@ void ComplexType::applyAttributeRestriction(ComplexType * found_CT) {
     if (!l) {
       delete attr->Data;
       attr->Data = NULL;
-      attribfields.remove(attr);
+      me->attribfields.remove(attr);
     }
   }
   size_t size = found_CT->attribfields.size();
-  size_t size2 = attribfields.size();
+  size_t size2 = me->attribfields.size();
   size_t i = 0;
   List<AttributeType*>::iterator attr = found_CT->attribfields.begin();
   for (; i < size; attr = attr->Next, i = i + 1) {
     bool l = false;
     size_t j = 0;
-    List<AttributeType*>::iterator attr2 = attribfields.begin();
+    List<AttributeType*>::iterator attr2 = me->attribfields.begin();
     for (; j < size2; attr2 = attr2->Next, j = j + 1) {
       if (attr->Data->getName().convertedValue == attr2->Data->getName().convertedValue &&
         attr->Data->getType().convertedValue == attr2->Data->getType().convertedValue && !attr2->Data->getUsed()) {
         l = true;
+        if(attr->Data->getUseVal() != attr2->Data->getUseVal()){
+          isModifiedAttr = true;
+        }
         attr2->Data->setUsed(true);
         break;
       }
     }
     if (!l) {
       AttributeType * newAttrib = new AttributeType(*attr->Data);
-      attribfields.push_back(newAttrib);
-      setParent(this, newAttrib);
+      me->attribfields.push_back(newAttrib);
+      setParent(me, newAttrib);
     }
   }
+  return isModifiedAttr;
 }
 
 void ComplexType::addNameSpaceAsVariant(RootType * root, RootType * other) {
@@ -1837,28 +1849,73 @@ void ComplexType::resolveSimpleTypeExtension() {
         if (ct->resolved == No) {
           ct->referenceResolving();
         }
-        basefield->outside_reference.set_resolved(ct);
-        ct->basefield->addToNameDepList(basefield);
-        basefield->nameDep = ct->basefield;
-        basefield->mode = extensionMode;
-        basefield->applyReference(*ct->basefield, true);
-        addNameSpaceAsVariant(basefield, ct->basefield);
-        applyAttributeExtension(ct);
+        // If an alias
+        if (attribfields.empty()) {
+          for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+            field->Data->setInvisible();
+          }
+
+          for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+            field->Data->setInvisible();
+          }
+          
+          basefield->setInvisible();
+          type.upload(st->getName().originalValueWoPrefix);
+          ct->addToNameDepList(this);
+          nameDep = ct;
+          addNameSpaceAsVariant(this, st);
+          alias = ct;
+        } else {
+          
+          while (ct != NULL && ct->getAlias() != NULL) {
+            ct = (ComplexType*)ct->getAlias();
+          }
+          
+          basefield->outside_reference.set_resolved(ct);
+          ct->basefield->addToNameDepList(basefield);
+          basefield->nameDep = ct->basefield;
+          basefield->mode = extensionMode;
+          basefield->applyReference(*ct->basefield, true);
+          addNameSpaceAsVariant(basefield, ct->basefield);
+          applyAttributeExtension(ct);
+        }
       } else {
         if (!st->getReference().empty() && !st->getReference().is_resolved()) {
           st->referenceResolving();
         }
-        st->addToNameDepList(basefield);
-        basefield->nameDep = st;
-        addNameSpaceAsVariant(basefield, st);
-        const Mstring old_type = basefield->getType().originalValueWoPrefix;
-        basefield->applyReference(*st);
-        // If st has enumeration then the type is restored to the original value
-        // because enumerations cannot be extended here and this way we just
-        // create an alias.
-        if (st->getEnumeration().modified) {
-          basefield->setTypeValue(old_type);
-          basefield->getEnumeration().modified = false;
+        
+        bool hasRestrOrExt = basefield->hasRestrictionOrExtension();
+        // If an alias
+        if(!hasRestrOrExt && attribfields.empty()){
+          // Set the fields and attributes invisible
+          for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+            field->Data->setInvisible();
+          }
+
+          for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+            field->Data->setInvisible();
+          }
+          basefield->setInvisible();
+          type.upload(st->getName().originalValueWoPrefix);
+          st->addToNameDepList(this);
+          nameDep = st;
+          addNameSpaceAsVariant(this, st);
+          alias = st;
+        } else {
+          while(st != NULL && st->getAlias() != NULL) {
+            st = st->getAlias();
+          }
+          basefield->builtInBase = st->getBuiltInBase();
+          addNameSpaceAsVariant(basefield, st);
+          const Mstring old_type = basefield->getType().originalValueWoPrefix;
+          basefield->applyReference(*st);
+          // If st has enumeration then the type is restored to the original value
+          // because enumerations cannot be extended here and this way we just
+          // create an alias.
+          if (st->getEnumeration().modified) {
+            basefield->setTypeValue(old_type);
+            basefield->getEnumeration().modified = false;
+          }
         }
       }
     } else if(!isBuiltInType(basefield->getType().convertedValue)){
@@ -1879,6 +1936,28 @@ void ComplexType::resolveSimpleTypeRestriction() {
         "Reference for a non-defined type: " + basefield->getReference().repr());
       TTCN3ModuleInventory::getInstance().incrNumErrors();
       return;
+    }
+    bool hasRestrOrExt = basefield->hasRestrictionOrExtension();
+    // If an alias
+    if(!hasRestrOrExt && attribfields.empty()){
+      type.upload(st->getName().convertedValue);
+      st->addToNameDepList(this);
+      nameDep = st;
+      alias = st;
+      basefield->setInvisible();
+      for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+        field->Data->setInvisible();
+      }
+
+      for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+        field->Data->setInvisible();
+      }
+      addNameSpaceAsVariant(this, st);
+      return;
+    }
+    
+    while (st != NULL && st->getAlias() != NULL) {
+      st = st->getAlias();
     }
     basefield->outside_reference.set_resolved(st);
     if (st->getXsdtype() != n_NOTSET) {
@@ -1924,6 +2003,7 @@ void ComplexType::resolveSimpleTypeRestriction() {
       return;
     }
     
+    // Alias not possible here, because basefield->outside_reference is empty
     basefield->outside_reference.set_resolved(ct);
     if (ct != NULL) {
       if (ct->resolved == No) {
@@ -1962,6 +2042,25 @@ void ComplexType::resolveComplexTypeExtension() {
       outside_reference.set_resolved(ct);
       if (ct->resolved == No) {
         ct->referenceResolving();
+      }
+      // it is an alias
+      if (complexfields.empty() && attribfields.empty()) {
+        type.upload(ct->getName().convertedValue);
+        
+        for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+          field->Data->setInvisible();
+        }
+        
+        for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+          field->Data->setInvisible();
+        }
+        ct->addToNameDepList(this);
+        nameDep = ct;
+        alias = ct;
+        return;
+      }
+      while (ct != NULL && ct->getAlias() != NULL) {
+        ct = (ComplexType*)ct->getAlias();
       }
       List<AttributeType*>::iterator anyAttr = attribfields.begin();
       for (; anyAttr; anyAttr = anyAttr->Next) {
@@ -2018,12 +2117,32 @@ void ComplexType::resolveComplexTypeRestriction() {
       TTCN3ModuleInventory::getInstance().incrNumErrors();
       return;
     }
-    if(ct->getXsdtype() != n_NOTSET){
+    if(ct->getXsdtype() != n_NOTSET) {
       if (ct->resolved == No) {
         ct->referenceResolving();
       }
+      ComplexType * maybeAlias = ct;
+      while (maybeAlias != NULL && maybeAlias->getAlias() != NULL) {
+        maybeAlias = (ComplexType*)maybeAlias->getAlias();
+      }
+      bool isModifiedAttr = applyAttributeRestriction(maybeAlias);
+      if(!isModifiedAttr && !hasComplexRestriction(maybeAlias)){
+        type.upload(ct->getName().convertedValue);
+        
+        for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+          field->Data->setInvisible();
+        }
+        
+        for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+          field->Data->setInvisible();
+        }
+        ct->addToNameDepList(this);
+        nameDep = ct;
+        alias = ct;
+        return;
+      }
+      
       outside_reference.set_resolved(ct);
-      applyAttributeRestriction(ct);
 
       size_t size = complexfields.size();
       size_t i = 0;
@@ -2065,6 +2184,28 @@ bool ComplexType::hasMatchingFields(const List<ComplexType*>& mainList, const Li
       }
     }
     return true;
+}
+
+bool ComplexType::hasComplexRestriction(ComplexType* ct) const {
+  if(complexfields.size() != ct->complexfields.size() || hasRestrictionOrExtension()) {
+    return true;
+  }
+  
+  for(List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+    for(List<ComplexType*>::iterator field2 = ct->complexfields.begin(); field2; field2 = field2->Next) {
+      if(field->Data->getName().convertedValue.getValueWithoutPrefix(':') == field2->Data->getName().convertedValue.getValueWithoutPrefix(':') &&
+         field->Data->getType().convertedValue.getValueWithoutPrefix(':') == field2->Data->getType().convertedValue.getValueWithoutPrefix(':')) {
+        if(field->Data->getMinOccurs() == field2->Data->getMinOccurs() && field->Data->getMaxOccurs() == field2->Data->getMaxOccurs()){
+          if(field->Data->hasComplexRestriction(field2->Data)) {
+            return true;
+          }
+        } else {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 void ComplexType::resolveUnion(SimpleType *st) {

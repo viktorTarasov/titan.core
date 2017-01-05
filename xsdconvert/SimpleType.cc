@@ -50,6 +50,7 @@ SimpleType::SimpleType(XMLParser * a_parser, TTCN3Module * a_module, ConstructTy
 , addedToTypeSubstitution(false)
 , block(not_set)
 , inList(false)
+, alias(NULL)
 , parent(NULL) {
 }
 
@@ -75,6 +76,7 @@ SimpleType::SimpleType(const SimpleType& other)
 , addedToTypeSubstitution(other.addedToTypeSubstitution)
 , block(other.block)
 , inList(other.inList)
+, alias(other.alias)
 , parent(NULL) {
   length.parent = this;
   pattern.parent = this;
@@ -598,6 +600,9 @@ void SimpleType::referenceResolving() {
 }
 
 void SimpleType::referenceForST(SimpleType * found_ST) {
+  while(found_ST != NULL && found_ST->alias != NULL){
+    found_ST = found_ST->alias;
+  }
   outside_reference.set_resolved(found_ST);
   if (in_name_only)
     return;
@@ -611,15 +616,27 @@ void SimpleType::referenceForST(SimpleType * found_ST) {
 
   if (mode == listMode || mode == restrictionAfterListMode)
     return;
-
+  
+  bool hasRestrOrExt = hasRestrictionOrExtension();
+  
   length.applyReference(found_ST->length);
   pattern.applyReference(found_ST->pattern);
   enumeration.applyReference(found_ST->enumeration);
   whitespace.applyReference(found_ST->whitespace);
   value.applyReference(found_ST->value);
+  
+  if(!hasRestrOrExt){
+    length.modified = false;
+    pattern.modified = false;
+    enumeration.modified = false;
+    whitespace.modified = false;
+    value.modified = false;
+    alias = found_ST;
+  }
 
   mode = found_ST->mode;
-  if (found_ST->mode != listMode && found_ST->mode != restrictionAfterListMode) {
+  if (found_ST->mode != listMode && found_ST->mode != restrictionAfterListMode
+      && hasRestrOrExt) {
     type.upload(found_ST->getType().convertedValue);
   }
 }
@@ -809,6 +826,15 @@ void SimpleType::applyRefAttribute(const Mstring& ref_value) {
     setReference(ref_value);
     fromRef = true;
   }
+}
+
+bool SimpleType::hasRestrictionOrExtension() const {
+  return
+    enumeration.modified ||
+    length.modified ||
+    value.modified ||
+    pattern.modified ||
+    whitespace.modified;
 }
 
 void SimpleType::printToFile(FILE * file) {
