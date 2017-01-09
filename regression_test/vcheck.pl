@@ -46,6 +46,10 @@ while (<>)
   elsif (/Looks like/) {
     push @output, "$_ in $dirname";
   }
+  elsif (/(\S+:\d+:\s+)?Memory leak at \S+, size \d+, ord \d+:.*/)
+  {
+    push @output, $dirname.": ".$_;
+  }
 }
 
 my $errorCount = 0;

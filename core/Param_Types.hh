@@ -65,7 +65,8 @@ public:
   virtual size_t get_index() const;
   virtual char* get_name() const;
   virtual char* get_current_name() const;
-  virtual boolean next_name(int offset = 1);
+  virtual boolean next_name();
+  virtual void reset();
   virtual size_t get_nof_names() const;
   virtual char* get_str() const = 0; // returns an expstring that must be deallocated
 };
@@ -83,9 +84,9 @@ public:
   ~Module_Param_Name() { for (size_t i = 0; i < names.size(); ++i) Free(names[i]); }
   boolean is_explicit() const { return TRUE; }
   char* get_current_name() const { return names[pos]; }
-  boolean next_name(int offset = 1) {
-    if (static_cast<int>(pos) + offset < 0 || pos + offset >= names.size()) return FALSE;
-    pos += offset;
+  boolean next_name() {
+    if (pos + 1 >= names.size()) return FALSE;
+    ++pos;
     return TRUE;
   }
   void reset() { pos = 0; }

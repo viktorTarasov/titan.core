@@ -1753,7 +1753,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "      %sverify_name(p_reader, p_td, e_xer);\n"
       "      xml_depth = p_reader.Depth();\n"
       , name
-      , sdef->xerUseTypeAttr ? "  char * typeatr = 0;\n" : ""
+      , sdef->xerUseTypeAttr ? "  const char * typeatr = 0;\n" : ""
       , sdef->xerUseUnion ? "  boolean attribute = (p_td.xer_bits & XER_ATTRIBUTE) ? TRUE : FALSE;\n" : ""
       , sdef->xerUseUnion ? "if (!attribute) " : ""
       , sdef->xerUseUnion ? " || (p_flavor & USE_TYPE_ATTR)" : ""
@@ -1768,22 +1768,13 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "          const char *attr_name = (const char*)p_reader.Name();\n"
         "          if (!strcmp(attr_name, \"%s:type\"))\n"
         "          {\n"
-        "            typeatr = mcopystr((const char*)p_reader.Value());\n"
+        "            typeatr = (const char*)p_reader.Value();\n"
         "          }\n"
         "          else ++other_attributes;\n"
         "        }\n" /* for */
         "%s"
         , sdef->control_ns_prefix
         , sdef->xerUseUnion ? "        rd_ok = p_reader.MoveToElement() | 1;\n" : "");
-      if (!sdef->xerUseUnion) {
-        /* USE-TYPE: No type attribute means the first alternative */
-        src = mputprintf(src,
-          "        if (typeatr == NULL) {\n"
-          "          typeatr = mcopystrn(%s_xer_.names[1], %s_xer_.namelens[1] - 2);\n"
-          "        }\n"
-          , sdef->elements[0].typegen
-          , sdef->elements[0].typegen);
-      }
       src = mputstr(src,
         "      }\n" /* if exer */);
     }
@@ -1820,15 +1811,17 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     if (sdef->xerUseTypeAttr) {
       src = mputstr(src,
         "    if (e_xer) {\n" /* USE-TYPE => no XML element, use typeatr */
-        "      char *token_1 = strtok(typeatr, \":\");\n" /* extract the namespace (if any) */
+        "      char* typeatr_cpy = mcopystr(typeatr);\n" /* copy the string so it can be tokenized */
+        "      char *token_1 = strtok(typeatr_cpy, \":\");\n" /* extract the namespace (if any) */
         "      char *token_2 = strtok(NULL, \":\");\n"
         "      if (token_2) {\n" /* namespace found */
-        "        elem_name = token_2;\n"
+        "        elem_name = typeatr + (token_2 - typeatr_cpy);\n" /* save the token's address in the original string, not in the copy */
         "        ns_uri = get_ns_uri_from_prefix(token_1, p_td);\n"
         "      }\n"
         "      else {\n" /* no namespace */
-        "        elem_name = token_1;\n"
+        "        elem_name = typeatr;\n"
         "      }\n"
+        "      Free(typeatr_cpy);\n"
         "      flavor_1 |= USE_TYPE_ATTR;\n"
         "    }\n"
         "    else" /* no newline, gobbles up the next {} */);
@@ -1917,13 +1910,14 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       for (i = 0; i < sdef->nElements; i++) {
         if(sdef->exerMaybeEmptyIndex != i) {
           src = mputprintf(src,
-            "    %sif (%s::can_start(elem_name, ns_uri, %s_xer_, flavor_1, flavor2) || (%s_xer_.xer_bits & ANY_ELEMENT)%s%s%s%s) {\n"
+            "    %sif (%s%s::can_start(elem_name, ns_uri, %s_xer_, flavor_1, flavor2) || (%s_xer_.xer_bits & ANY_ELEMENT)%s%s%s%s) {\n"
             "      ec_2.set_msg(\"%s': \");\n"
             "      if (e_xer && (%s_xer_.xer_bits & BLOCKED)) {\n"
             "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
             "          \"Attempting to decode blocked or abstract field.\");\n"
             "      }\n",
             i && !(i==1 && sdef->exerMaybeEmptyIndex==0) ? "else " : "",  /*  print "if(" if generate code for the first field or if the first field is the MaybeEmpty field and we generate the code for the second one*/
+            i == 0 && sdef->xerUseTypeAttr ? "(e_xer && typeatr == NULL) || " : "", /* USE-TYPE: No type attribute means the first alternative */
             sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typegen,
             sdef->elements[i].xsd_type != XSD_NONE ? " || strcmp(elem_name, \"" : "",
             sdef->elements[i].xsd_type != XSD_NONE ? XSD_type_to_xml_type(sdef->elements[i].xsd_type) : "",
@@ -1957,7 +1951,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       if(sdef->exerMaybeEmptyIndex>=0 ){
         i=sdef->exerMaybeEmptyIndex;
         src = mputprintf(src,
-          "    %sif ((e_xer && (type==XML_READER_TYPE_END_ELEMENT || !own_tag)) || %s::can_start(elem_name, ns_uri, %s_xer_, flavor_1, flavor2) || (%s_xer_.xer_bits & ANY_ELEMENT)%s%s%s) {\n"
+          "    %sif (%s(e_xer && (type==XML_READER_TYPE_END_ELEMENT || !own_tag)) || %s::can_start(elem_name, ns_uri, %s_xer_, flavor_1, flavor2) || (%s_xer_.xer_bits & ANY_ELEMENT)%s%s%s) {\n"
           "empty_xml:  ec_2.set_msg(\"%s': \");\n"
           "      if (e_xer && (%s_xer_.xer_bits & BLOCKED)) {\n"
           "        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,\n"
@@ -1972,6 +1966,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "      }\n"
           "    }\n",
           sdef->nElements>0 ? "else " : "",
+          i == 0 && sdef->xerUseTypeAttr  ? "(e_xer && typeatr == NULL) || " : "", /* USE-TYPE: No type attribute means the first alternative */
           sdef->elements[i].type, sdef->elements[i].typegen, sdef->elements[i].typegen,
           sdef->elements[i].xsd_type != XSD_NONE ? " || strcmp(elem_name, \"" : "",
           sdef->elements[i].xsd_type != XSD_NONE ? XSD_type_to_xml_type(sdef->elements[i].xsd_type) : "",
@@ -2006,10 +2001,8 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "      break;\n"
       "    }\n"
       "  }\n"
-      "%s"
       "  return 1;\n"
-      "}\n\n", sdef->xerUseUnion ? "!attribute && " : "",
-      sdef->xerUseTypeAttr ? "  Free(typeatr);\n" : "");
+      "}\n\n", sdef->xerUseUnion ? "!attribute && " : "");
   }
   if (json_needed) {
     // JSON encode
@@ -2275,7 +2268,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "      int ret_val = %s%s().JSON_decode(%s_descr_, p_tok, p_silent);\n"
           "      if (0 > ret_val) {\n"
           "        if (JSON_ERROR_INVALID_TOKEN) {\n"
-          "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, \"%s\");\n"
+          "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, %lu, \"%s\");\n"
           "        }\n"
           "        return JSON_ERROR_FATAL;\n"
           "      } else {\n"
@@ -2284,13 +2277,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "    } else "
           , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname
           , at_field, sdef->elements[i].name, sdef->elements[i].typedescrname
-          , sdef->elements[i].dispname);
+          , (unsigned long) strlen(sdef->elements[i].dispname), sdef->elements[i].dispname);
       }
       src = mputstr(src,
         "{\n"
-        "      char* fld_name2 = mcopystrn(fld_name, name_len);\n"
-        "      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_INVALID_NAME_ERROR, fld_name2);\n"
-        "      Free(fld_name2);\n"
+        "      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_INVALID_NAME_ERROR, (int)name_len, fld_name);\n"
         "      return JSON_ERROR_FATAL;\n"
         "    }\n"
         "  }\n\n"

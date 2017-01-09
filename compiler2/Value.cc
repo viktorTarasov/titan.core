@@ -13118,7 +13118,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       break;
     }
     
-    const char * v2_code = NULL;
+    char * v2_code = NULL;
     if(u.expr.v2) {
       v2_code = generate_code_char_coding_check(expr, u.expr.v2, "encvalue_unichar");
     }
@@ -13175,6 +13175,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       expr->expr = mputprintf(expr->expr, ")");
     }
     Code::free_expr(&expr2);
+    Free(v2_code);
   }
 
   void Value::generate_code_expr_decvalue_unichar(expression_struct *expr)
@@ -13193,7 +13194,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       expr->preamble = mputprintf(expr->preamble, "%s", expr1.preamble);
     if (expr2.preamble)
       expr->preamble = mputprintf(expr->preamble, "%s", expr2.preamble);
-    const char* v3_code = NULL;
+    char* v3_code = NULL;
     if(u.expr.v3) {
       v3_code = generate_code_char_coding_check(expr, u.expr.v3, "decvalue_unichar");
     }
@@ -13279,6 +13280,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       expr->postamble = mputprintf(expr->postamble, "%s", expr2.postamble);
     Code::free_expr(&expr1);
     Code::free_expr(&expr2);
+    Free(v3_code);
   }
   
   void Value::generate_code_expr_checkstate(expression_struct *expr)

@@ -4529,12 +4529,12 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           , sdef->elements[i].name, sdef->elements[i].name, sdef->elements[i].name);
       }
       src = mputprintf(src,
-        "             JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, \"%s\");\n"
+        "             JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, %lu, \"%s\");\n"
         "           }\n"
         "           return JSON_ERROR_FATAL;\n"
         "         }\n"
         "         dec_len += (size_t)ret_val;\n"
-        , sdef->elements[i].dispname);
+        , (unsigned long) strlen(sdef->elements[i].dispname), sdef->elements[i].dispname);
       if (has_metainfo_enabled) {
         src = mputstr(src, "        }\n");
       }
@@ -4545,18 +4545,15 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     src = mputprintf(src,
       "{\n"
                // invalid field name
-      "        char* fld_name2 = mcopystrn(fld_name, name_len);\n"
-      "        JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, %sJSON_DEC_INVALID_NAME_ERROR, fld_name2);\n"
+      "        JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, %sJSON_DEC_INVALID_NAME_ERROR, (int)name_len, fld_name);\n"
                // if this is set to a warning, skip the value of the field
       "        dec_len += p_tok.get_next_token(&j_token, NULL, NULL);\n"
       "        if (JSON_TOKEN_NUMBER != j_token && JSON_TOKEN_STRING != j_token &&\n"
       "            JSON_TOKEN_LITERAL_TRUE != j_token && JSON_TOKEN_LITERAL_FALSE != j_token &&\n"
       "            JSON_TOKEN_LITERAL_NULL != j_token) {\n"
-      "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, fld_name2);\n"
-      "          Free(fld_name2);\n"
+      "          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, (int)name_len, fld_name);\n"
       "          return JSON_ERROR_FATAL;\n"
       "        }\n"
-      "        Free(fld_name2);\n"
       "      }\n"
       "    }\n"
       "  }\n\n"
@@ -4575,11 +4572,13 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           "  }\n"
           "  else if (JSON_METAINFO_NEEDED == metainfo_%s) {\n"
           // no meta info was found for this field, report the delayed error
-          "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, \"%s\");\n"
+          "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, %lu, \"%s\");\n"
           "  }\n"
           "  else "
           , sdef->elements[i].name, sdef->elements[i].name
-          , sdef->elements[i].name, sdef->elements[i].dispname);
+          , sdef->elements[i].name
+          , (unsigned long) strlen(sdef->elements[i].dispname)
+          , sdef->elements[i].dispname);
       }
       src = mputprintf(src,
         "  if (!%s_found) {\n"

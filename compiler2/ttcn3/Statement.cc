@@ -9801,18 +9801,19 @@ error:
       // a value redirect class is generated for this redirect in the expression's
       // preamble and instantiated in the expression
       Scope* scope = v[0]->get_var_ref()->get_my_scope();
-      string tmp_id = scope->get_scope_mod_gen()->get_temporary_id();
-      expr->expr = mputprintf(expr->expr, "new Value_Redirect_%s(", tmp_id.c_str());
+      string class_id = scope->get_scope_mod_gen()->get_temporary_id();
+      string instance_id = scope->get_scope_mod_gen()->get_temporary_id();
 
       // go through the value redirect and gather the necessary data for the class
       char* members_str = NULL;
       char* constr_params_str = NULL;
       char* constr_init_list_str = NULL;
       char* set_values_str = NULL;
+      char* inst_params_str = NULL;
       if (matched_ti != NULL && has_decoded_modifier()) {
         // store a pointer to the matched template, the decoding results from
         // decmatch templates might be reused to optimize decoded value redirects
-        expr->expr = mputprintf(expr->expr, "&(%s), ", matched_ti->get_last_gen_expr());
+        inst_params_str = mprintf("&(%s), ", matched_ti->get_last_gen_expr());
         members_str = mprintf("%s* ptr_matched_temp;\n",
           value_type->get_genname_template(scope).c_str());
         constr_params_str = mputprintf(constr_params_str, "%s* par_matched_temp, ",
@@ -9822,14 +9823,24 @@ error:
       boolean need_par = FALSE;
       for (size_t i = 0; i < v.size(); ++i) {
         if (i > 0) {
-          expr->expr = mputstr(expr->expr, ", ");
+          inst_params_str = mputstr(inst_params_str, ", ");
           constr_params_str = mputstr(constr_params_str, ", ");
           constr_init_list_str = mputstr(constr_init_list_str, ", ");
         }
         // pass the variable references to the new instance's constructor
-        expr->expr = mputstr(expr->expr, "&(");
-        v[i]->get_var_ref()->generate_code(expr);
-        expr->expr = mputc(expr->expr, ')');
+        expression_struct var_ref_expr;
+        Code::init_expr(&var_ref_expr);
+        inst_params_str = mputstr(inst_params_str, "&(");
+        v[i]->get_var_ref()->generate_code(&var_ref_expr);
+        inst_params_str = mputstr(inst_params_str, var_ref_expr.expr);
+        inst_params_str = mputc(inst_params_str, ')');
+        if (var_ref_expr.preamble != NULL) {
+          expr->preamble = mputstr(expr->preamble, var_ref_expr.preamble);
+        }
+        if (var_ref_expr.postamble != NULL) {
+          expr->postamble = mputstr(expr->postamble, var_ref_expr.postamble);
+        }
+        Code::free_expr(&var_ref_expr);
         Type* redir_type = v[i]->get_subrefs() == NULL ? value_type :
           value_type->get_field_type(v[i]->get_subrefs(), Type::EXPECTED_DYNAMIC_VALUE);
         redir_type = redir_type->get_type_refd_last();
@@ -10075,8 +10086,18 @@ error:
                 else {
                   // the encoding format is not known at compile-time, so an extra
                   // member and constructor parameter is needed to store it
-                  expr->expr = mputstr(expr->expr, ", ");
-                  v[i]->get_str_enc()->generate_code_expr(expr);
+                  inst_params_str = mputstr(inst_params_str, ", ");
+                  expression_struct str_enc_expr;
+                  Code::init_expr(&str_enc_expr);
+                  v[i]->get_str_enc()->generate_code_expr(&str_enc_expr);
+                  inst_params_str = mputstr(inst_params_str, str_enc_expr.expr);
+                  if (str_enc_expr.preamble != NULL) {
+                    expr->preamble = mputstr(expr->preamble, str_enc_expr.preamble);
+                  }
+                  if (str_enc_expr.postamble != NULL) {
+                    expr->postamble = mputstr(expr->postamble, str_enc_expr.postamble);
+                  }
+                  Code::free_expr(&str_enc_expr);
                   members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
                     (int)i);
                   constr_params_str = mputprintf(constr_params_str,
@@ -10148,8 +10169,18 @@ error:
                 else {
                   // the encoding format is not known at compile-time, so an extra
                   // member and constructor parameter is needed to store it
-                  expr->expr = mputstr(expr->expr, ", ");
-                  v[i]->get_str_enc()->generate_code_expr(expr);
+                  inst_params_str = mputstr(inst_params_str, ", ");
+                  expression_struct str_enc_expr;
+                  Code::init_expr(&str_enc_expr);
+                  v[i]->get_str_enc()->generate_code_expr(&str_enc_expr);
+                  inst_params_str = mputstr(inst_params_str, str_enc_expr.expr);
+                  if (str_enc_expr.preamble != NULL) {
+                    expr->preamble = mputstr(expr->preamble, str_enc_expr.preamble);
+                  }
+                  if (str_enc_expr.postamble != NULL) {
+                    expr->postamble = mputstr(expr->postamble, str_enc_expr.postamble);
+                  }
+                  Code::free_expr(&str_enc_expr);
                   members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
                     (int)i);
                   constr_params_str = mputprintf(constr_params_str,
@@ -10229,7 +10260,6 @@ error:
         }
         Code::free_expr(&subrefs_expr);
       }
-      expr->expr = mputc(expr->expr, ')');
       // generate the new class with the gathered data
       expr->preamble = mputprintf(expr->preamble,
         "class Value_Redirect_%s : public Value_Redirect_Interface {\n"
@@ -10244,7 +10274,7 @@ error:
         // variable; the redirects marked with the '@decoded' modifier are decoded
         // here before they are assigned
         "void set_values(const Base_Type*%s)\n"
-        "{\n", tmp_id.c_str(), members_str, tmp_id.c_str(), constr_params_str,
+        "{\n", class_id.c_str(), members_str, class_id.c_str(), constr_params_str,
         constr_init_list_str, need_par ? " p" : "");
       if (need_par) {
         // don't generate the parameter and its casting if it is never used
@@ -10254,13 +10284,17 @@ error:
           value_type->get_genname_value(scope).c_str());
       }
       expr->preamble = mputstr(expr->preamble, set_values_str);
-      expr->preamble = mputstr(expr->preamble,
+      expr->preamble = mputprintf(expr->preamble,
         "}\n"
-        "};\n");
+        "};\n"
+        "Value_Redirect_%s %s(%s);\n",
+        class_id.c_str(), instance_id.c_str(), inst_params_str);
       Free(members_str);
       Free(constr_params_str);
       Free(constr_init_list_str);
       Free(set_values_str);
+      Free(inst_params_str);
+      expr->expr = mputprintf(expr->expr, "&%s", instance_id.c_str());
     }
     else { // RT1
       // in this case only the address of the one variable needs to be generated

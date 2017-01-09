@@ -200,7 +200,7 @@ void Module_List::set_param(Module_Param& param)
     }
 #endif
     
-    param.get_id()->next_name(-1); // set the position back to the first segment
+    param.get_id()->reset(); // set the position back to the first segment
     for (TTCN_Module *list_iter = list_head; list_iter != NULL;
       list_iter = list_iter->list_next) {
       if (list_iter->set_param_func != NULL &&
@@ -250,7 +250,7 @@ Module_Param* Module_List::get_param(Module_Param_Name& param_name,
   // If not found, check if the first name segment was the module parameter name
   // (even if it matched a module name)
   if (param == NULL) {
-    param_name.next_name(-1); // set the position back to the first segment
+    param_name.reset(); // set the position back to the first segment
     for (TTCN_Module *list_iter = list_head; list_iter != NULL;
       list_iter = list_iter->list_next) {
       if (list_iter->get_param_func != NULL) {

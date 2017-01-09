@@ -131,12 +131,12 @@ private:
   static boolean verdict_enabled();
   static void wait_for_state_change();
   static void clear_qualified_name(qualified_name& q_name);
-  static void clean_up();
 
   static void initialize_component_type();
   static void terminate_component_type();
 
 public:
+  static void clean_up();
   static void set_component_type(const char *component_type_module,
     const char *component_type_name);
   static void set_component_name(const char *new_component_name);

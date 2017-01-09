@@ -31,7 +31,7 @@ namespace Common {
   class Code {
   public:
 
-    static void init_output(output_struct *output);
+    static void init_output(output_struct *output, boolean no_alloc = FALSE);
     static void merge_output(output_struct *dest, output_struct *src);
     static void free_output(output_struct *output);
 

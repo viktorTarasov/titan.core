@@ -562,6 +562,7 @@ static char *get_dir_name(const char *path_name, const char *working_dir)
     Free(dir_name);
     if (absolute_dir == NULL || working_dir == NULL) {
       /* an error occurred */
+      Free(absolute_dir);
       return NULL;
     } else if (!strcmp(absolute_dir, working_dir)) {
       /* the directory is identical to the working dir */
@@ -2116,7 +2117,7 @@ static void print_makefile(struct makefile_struct *makefile)
 
 #ifdef MEMORY_DEBUG
     // enable debug mode for the generated code, too
-    fputs(" -g -DMEMORY_DEBUG", fp);
+    fputs(" -DMEMORY_DEBUG", fp);
 #endif
 
     if (makefile->use_runtime_2) fputs(" -DTITAN_RUNTIME_2", fp);
@@ -2214,7 +2215,11 @@ static void print_makefile(struct makefile_struct *makefile)
     }
 
     fprintf(fp, "# Flags for the C++ compiler:\n"
-          "CXXFLAGS = %s%s %s %s\n\n"
+          "CXXFLAGS = %s%s %s %s"
+#ifdef MEMORY_DEBUG
+          " -g" // enable debug information for the generated code
+#endif
+          "\n\n"
           "# Flags for the linker:\n"
           "LDFLAGS = %s%s\n\n"
           "ifeq ($(PLATFORM), WIN32)\n"
@@ -5120,7 +5125,7 @@ int main(int argc, char *argv[])
     }
     if (tpd_processed == TPD_FAILED) {
       ERROR("Failed to process %s", tpd_file_name);
-      exit(EXIT_FAILURE);
+      goto end;
     }
     if (zflag) {
       WARNING("Compiler option '-z' and its argument will be overwritten by "
@@ -5156,6 +5161,7 @@ int main(int argc, char *argv[])
     }
   }
 
+end:
   free_string_list(sub_project_dirs);
   free_string_list(ttcn3_prep_includes);
   free_string_list(ttcn3_prep_defines);
@@ -5193,7 +5199,7 @@ int main(int argc, char *argv[])
       Free(optflags);
     if (ttcn3prep)
       Free(ttcn3prep);
-    /* Free(output_file); */
+  /* Free(output_file); */
     for (E = 0; E < argc; ++E) Free(argv[E]);
     Free(argv);
   }

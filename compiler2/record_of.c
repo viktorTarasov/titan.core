@@ -1210,6 +1210,15 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
 
         "          UNIVERSAL_CHARSTRING before(sp_at, (const universal_char*)(*val_ptr->value_elements[i]));\n"
         "          before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf, p_flavor | ANY_ATTRIBUTES, p_flavor2, p_indent, 0);\n"
+
+        "          p_buf.put_c('\\'');\n"
+        "          p_buf.put_c(' ');\n"
+
+        /* Keep just the "b%d" part from ns */
+        "          p_buf.put_s(ns_len - 9, (const unsigned char*)ns + 7);\n"
+        "          p_buf.put_c(':');\n"
+        "          Free(ns);\n"
+
         // Ensure the namespace abides to its restrictions
         "          if (p_td.xer_bits & (ANY_FROM | ANY_EXCEPT)) {\n"
         "            TTCN_Buffer ns_buf;\n"
@@ -1219,13 +1228,6 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
         "            check_namespace_restrictions(p_td, (const char*)cs);\n"
         "          }\n"
 
-        "          p_buf.put_c('\\'');\n"
-        "          p_buf.put_c(' ');\n"
-
-        /* Keep just the "b%d" part from ns */
-        "          p_buf.put_s(ns_len - 9, (const unsigned char*)ns + 7);\n"
-        "          p_buf.put_c(':');\n"
-        "          Free(ns);\n"
         "        }\n"
         "        else {\n"
         "          p_buf.put_c(' ');\n"

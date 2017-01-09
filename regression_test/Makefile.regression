@@ -208,6 +208,10 @@ else
 CPPFLAGS += -I${XMLDIR}/include/libxml2
 endif
 
+ifeq ($(DEBUG), yes)
+CPPFLAGS += -DMEMORY_DEBUG
+CXXFLAGS += -g
+endif
 
 
 # Quiet down a bit

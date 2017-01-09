@@ -29,7 +29,7 @@ namespace Common {
   // ===== Code
   // =================================
 
-  void Code::init_output(output_struct *output)
+  void Code::init_output(output_struct *output, boolean no_alloc)
   {
     output->header.includes = NULL;
     output->header.class_decls = NULL;
@@ -65,7 +65,7 @@ namespace Common {
     output->intervals.function_bodies_max_size = 1;
     output->intervals.static_conversion_function_bodies_max_size = 1;
     output->intervals.static_function_bodies_max_size = 1;
-    if (CodeGenHelper::GetInstance().get_split_mode() == CodeGenHelper::SPLIT_TO_SLICES) {
+    if (!no_alloc && CodeGenHelper::GetInstance().get_split_mode() == CodeGenHelper::SPLIT_TO_SLICES) {
       output->intervals.methods = (size_t*)Malloc(output->intervals.methods_max_size * sizeof(size_t));
       output->intervals.function_bodies = (size_t*)Malloc(output->intervals.function_bodies_max_size * sizeof(size_t));
       output->intervals.static_conversion_function_bodies = (size_t*)Malloc(output->intervals.static_conversion_function_bodies_max_size * sizeof(size_t));
@@ -173,7 +173,7 @@ namespace Common {
     Free(output->intervals.function_bodies);
     Free(output->intervals.static_conversion_function_bodies);
     Free(output->intervals.static_function_bodies);
-    init_output(output);
+    init_output(output, TRUE);
   }
 
   void Code::init_cdef(const_def *cdef)

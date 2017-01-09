@@ -299,12 +299,13 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 
 %type <str>
     XEncodeToken XmatchDef XAliasToken XJsonValueSegment XJsonValueCore XJsonValue
+    XJsonAlias
 
 %type <decodetoken>
     XDecodeToken
 
 %type <cstr>
-    XTextReservedWord XJsonAlias
+    XTextReservedWord
 
 %type <identifier>
     XPointerToDef XRecordFieldRef XIdentifierOrReserved
@@ -352,6 +353,7 @@ XOstring
 Xtoken
 Xstring
 XAliasToken
+XJsonAlias
 XJsonValueSegment
 XJsonValueCore
 XJsonValue
@@ -1583,28 +1585,28 @@ XOmitAsNull:
 ;
 
 XNameAs:
-  XKWname XSpaces XKWas XSpaces XJsonAlias { jsonstruct->alias = mcopystr($5); }
+  XKWname XSpaces XKWas XSpaces XJsonAlias { jsonstruct->alias = $5; }
 ;
 
 XJsonAlias: // include all keywords, so they can be used as aliases for fields, too
   XAliasToken { $$ = $1; }
-| XKWomit     { $$ = "omit"; }
-| XKWas       { $$ = "as"; }
-| XKWnull     { $$ = "null"; }
-| XKWname     { $$ = "name"; }
-| XKWvalue    { $$ = "value"; }
-| XKWdefault  { $$ = "default"; }
-| XKWextend   { $$ = "extend"; }
-| XKWmetainfo { $$ = "metainfo"; }
-| XKWfor      { $$ = "for"; }
-| XKWunbound  { $$ = "unbound"; }
+| XKWomit     { $$ = mcopystr("omit"); }
+| XKWas       { $$ = mcopystr("as"); }
+| XKWnull     { $$ = mcopystr("null"); }
+| XKWname     { $$ = mcopystr("name"); }
+| XKWvalue    { $$ = mcopystr("value"); }
+| XKWdefault  { $$ = mcopystr("default"); }
+| XKWextend   { $$ = mcopystr("extend"); }
+| XKWmetainfo { $$ = mcopystr("metainfo"); }
+| XKWfor      { $$ = mcopystr("for"); }
+| XKWunbound  { $$ = mcopystr("unbound"); }
 
 XAsValue:
   XKWas XSpaces XKWvalue { jsonstruct->as_value = true; }
 ;
 
 XDefault:
-  XKWdefault XOptSpaces XJsonValue { jsonstruct->default_value = mcopystr($3); }
+  XKWdefault XOptSpaces XJsonValue { jsonstruct->default_value = $3; }
 ;
 
 XExtend:
@@ -1613,13 +1615,13 @@ XExtend:
 ;
 
 XJsonValue:
-  XJsonValueStart XJsonValueCore XJsonValueEnd { $$ = mcopystr($2); }
+  XJsonValueStart XJsonValueCore XJsonValueEnd { $$ = $2; }
 | XJsonValueStart XJsonValueEnd                { $$ = mcopystr(""); }
 ;
 
 XJsonValueCore:
-  XJsonValueCore XJsonValueSegment { $$ = mcopystr($1); $$ = mputstr($$, $2); }
-| XJsonValueSegment                { $$ = mcopystr($1); }
+  XJsonValueCore XJsonValueSegment { $$ = mputstr($1, $2); Free($2); }
+| XJsonValueSegment                { $$ = $1; }
 ;
 
 XMetainfoForUnbound:

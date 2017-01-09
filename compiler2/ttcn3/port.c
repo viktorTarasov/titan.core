@@ -665,8 +665,8 @@ static void generate_receive(char **def_ptr, char **src_ptr,
     "if (value_redirect != NULL) {\n", failed_status);
   if (use_runtime_2) {
     src = mputprintf(src,
-      "value_redirect->set_values(my_head->message_%lu);\n"
-      "delete value_redirect;\n", (unsigned long) message_index);
+      "value_redirect->set_values(my_head->message_%lu);\n",
+      (unsigned long) message_index);
   }
   else {
     src = mputprintf(src,

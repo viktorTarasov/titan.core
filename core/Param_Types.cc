@@ -53,9 +53,13 @@ char* Module_Param_Id::get_current_name() const {
   return NULL;
 }
 
-boolean Module_Param_Id::next_name(int /*offset*/) {
+boolean Module_Param_Id::next_name() {
   TTCN_error("Internal error: Module_Param_Id::next_name()");
   return FALSE;
+}
+
+void Module_Param_Id::reset() {
+  TTCN_error("Internal error: Module_Param_Id::reset()");
 }
 
 size_t Module_Param_Id::get_nof_names() const {

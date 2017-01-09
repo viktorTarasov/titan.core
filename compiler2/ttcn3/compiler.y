@@ -9750,6 +9750,7 @@ SelectUnion:
       $$->add_id($3.elements[i].id);
     }
     $$->set_location(infile, @3);
+    Free($3.elements);
   }
 | CaseKeyword '(' error ')' StatementBlock optSemiColon
   {

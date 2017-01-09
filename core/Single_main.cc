@@ -334,6 +334,7 @@ fail:
 
   TTCN_Logger::terminate_logger();
   TTCN_Snapshot::terminate();
+  TTCN_Runtime::clean_up();
 
   return ret_val;
 }

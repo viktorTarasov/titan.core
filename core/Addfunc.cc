@@ -3125,6 +3125,7 @@ OCTETSTRING decode_base64(const CHARSTRING& b64)
         ++p_b64; // skip \n too
       }
       else {
+        Free(output);
         TTCN_error("Error: Invalid character in Base64 encoded data: 0x%02X", *p_b64);
       }
     }

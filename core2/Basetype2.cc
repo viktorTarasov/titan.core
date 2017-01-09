@@ -1893,14 +1893,7 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
         p_buf.put_s(ns_len, (cbyte*)ns);
 
         UNIVERSAL_CHARSTRING before(sp_at, (const universal_char*)(*elem));
-        if (p_td.xer_bits & (ANY_FROM | ANY_EXCEPT)) {
-          // Ensure the namespace abides to its restrictions
-          TTCN_Buffer ns_buf;
-          before.encode_utf8(ns_buf);
-          CHARSTRING cs;
-          ns_buf.get_string(cs);
-          check_namespace_restrictions(p_td, (const char*)cs);
-        }
+        
         before.XER_encode(UNIVERSAL_CHARSTRING_xer_, p_buf,
           flavor | ANY_ATTRIBUTES, flavor2, indent, 0);
 
@@ -1911,6 +1904,15 @@ int Record_Of_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
         p_buf.put_s(ns_len - 9, (cbyte*)ns + 7);
         p_buf.put_c(':');
         Free(ns);
+        
+        if (p_td.xer_bits & (ANY_FROM | ANY_EXCEPT)) {
+          // Ensure the namespace abides to its restrictions
+          TTCN_Buffer ns_buf;
+          before.encode_utf8(ns_buf);
+          CHARSTRING cs;
+          ns_buf.get_string(cs);
+          check_namespace_restrictions(p_td, (const char*)cs);
+        }
       }
       else {
         p_buf.put_c(' ');
@@ -5898,12 +5900,13 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokeniz
   const int field_count = get_count();
   
   // initialize meta info states
-  int* metainfo = new int[field_count];
-  boolean* field_found = new boolean[field_count];
+  Vector<int> metainfo(field_count);
+  Vector<boolean> field_found(field_count);
   for (int i = 0; i < field_count; ++i) {
-    field_found[i] = FALSE;
-    metainfo[i] = (NULL != fld_descr(i)->json && fld_descr(i)->json->metainfo_unbound) ?
-      JSON_METAINFO_NONE : JSON_METAINFO_NOT_APPLICABLE;
+    field_found.push_back(FALSE);
+    metainfo.push_back(
+      (NULL != fld_descr(i)->json && fld_descr(i)->json->metainfo_unbound) ?
+      JSON_METAINFO_NONE : JSON_METAINFO_NOT_APPLICABLE);
   }
   
   while (TRUE) {
@@ -5947,19 +5950,16 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokeniz
       }
       if (field_count == field_idx) {
         // invalid field name
-        char* name2 = mcopystrn(name, name_len);
         JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, is_metainfo ?
-          JSON_DEC_METAINFO_NAME_ERROR : JSON_DEC_INVALID_NAME_ERROR, name2);
+          JSON_DEC_METAINFO_NAME_ERROR : JSON_DEC_INVALID_NAME_ERROR, (int)name_len, name);
         // if this is set to a warning, skip the value of the field
         dec_len += p_tok.get_next_token(&token, NULL, NULL);
         if (JSON_TOKEN_NUMBER != token && JSON_TOKEN_STRING != token &&
             JSON_TOKEN_LITERAL_TRUE != token && JSON_TOKEN_LITERAL_FALSE != token &&
             JSON_TOKEN_LITERAL_NULL != token) {
-          TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, name2);
-          Free(name2);
+          TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, (int)name_len, name);
           return JSON_ERROR_FATAL;
         }
-        Free(name2);
         continue;
       }
       
@@ -6004,7 +6004,8 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokeniz
                 continue;
               }
             }
-            JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, fld_name(field_idx));
+            JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, 
+              (int)strlen(fld_name(field_idx)), fld_name(field_idx));
           }
           return JSON_ERROR_FATAL;
         }
@@ -6027,7 +6028,8 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokeniz
     }
     else if (JSON_METAINFO_NEEDED == metainfo[field_idx]) {
       // no meta info was found for this field, report the delayed error
-      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, fld_name(field_idx));
+      JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR,
+        (int)strlen(fld_name(field_idx)), fld_name(field_idx));
     }
     else if (!field_found[field_idx]) {
       if (NULL != fld_descr(field_idx)->json && NULL != fld_descr(field_idx)->json->default_value) {
@@ -6041,8 +6043,6 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokeniz
       }
     }
   }
-  
-  delete[] metainfo;
   
   return (int)dec_len;
 }

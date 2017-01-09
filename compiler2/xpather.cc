@@ -637,6 +637,7 @@ int is_xsd_module(const char *file_name, char **module_name) {
   char *command = NULL;
   command = mputprintf(command, "xsd2ttcn -q -n %s", file_name);
   fp = popen(command, "r");
+  Free(command);
   if (fp == NULL) {
     ERROR("Could not get the module names of the XSD modules");
     return 0;
@@ -1346,12 +1347,12 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
       search_paths, n_search_paths, makefileScript, all_configs);
   }
   if (TPD_FAILED == success){
-    exit(EXIT_FAILURE);
+    goto failure;
   }
 
   if (false == projGenHelper.sanityCheck()) {
     fprintf (stderr, "makefilegen exits\n");
-    exit(EXIT_FAILURE);
+    goto failure;
   }
 
   projGenHelper.generateRefProjectWorkingDirsTo(*p_project_name);
@@ -1365,6 +1366,41 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   seen_tpd_files.clear();
 
   return success;
+  
+failure:
+  /* free everything before exiting */
+  free_string_list(sub_project_dirs);
+  free_string_list(ttcn3_prep_includes);
+  free_string_list(ttcn3_prep_defines);
+  free_string_list(ttcn3_prep_undefines);
+  free_string_list(prep_includes);
+  free_string_list(prep_defines);
+  free_string_list(prep_undefines);
+  free_string_list(solspeclibs);
+  free_string_list(sol8speclibs);
+  free_string_list(linuxspeclibs);
+  free_string_list(freebsdspeclibs);
+  free_string_list(win32speclibs);
+  free_string_list(linkerlibs);
+  free_string_list(additionalObjects);
+  free_string_list(linkerlibsearchp);
+  free_string_list(*profiled_file_list);
+
+  Free(search_paths);
+
+  Free(generatorCommandOutput);
+  free_string2_list(target_placement_list);
+  free_string2_list(required_configs);
+  Free(makefileScript);
+
+  Free(p_ets_name);
+  Free(cxxcompiler);
+  Free(optlevel);
+  Free(optflags);
+  Free(ttcn3prep);
+  for (int E = 0; E < *p_argc; ++E) Free((*p_argv)[E]);
+  Free(*p_argv);
+  exit(EXIT_FAILURE);
 }
 
 // optind is the index of the next element of argv to be processed.
@@ -2004,8 +2040,10 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
       expstring_t rel_file_dir = get_dir_from_path(file_path);
       expstring_t file_name = get_file_from_path(file_path);
       expstring_t abs_dir_path = get_absolute_dir(rel_file_dir, abs_tpd_dir, TRUE);
-      expstring_t abs_file_name = compose_path_name(abs_dir_path, file_name);
-      *makefileScript = mcopystr(abs_file_name);
+      *makefileScript = compose_path_name(abs_dir_path, file_name);
+      Free(rel_file_dir);
+      Free(file_name);
+      Free(abs_dir_path);
     }
   }
 
@@ -3123,6 +3161,10 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
     *p_argc = new_argc;
     *p_optind = 0;
   } else {
+    for (int i = 0; i < new_argc; ++i) {
+      Free(new_argv[i]);
+    }
+    Free(new_argv);
     Free(*p_project_name);
   }
 

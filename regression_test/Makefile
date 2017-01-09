@@ -71,6 +71,7 @@ all dep clean distclean:
 	$(MAKE) -C compileonly $@
 	for dir in $(DIRS); do $(MAKE) -C $$dir $@ || exit; done
 	$(RM) report.txt
+	$(RM) build.txt
 
 run:
 	for dir in $(DIRS); do $(MAKE) -C $$dir $@ || exit; done
@@ -86,10 +87,21 @@ coverage:
 	$(LCOV_DIR)/bin/genhtml -o regtest_coverage -t "TITAN Regression Test Coverage" regtest_coverage.info
 
 compileonly $(DIRS) $(addsuffix /, $(DIRS)):
+ifeq ($(DEBUG), yes)
+	bash -c 'set -o pipefail; $(MAKE) -C $@ 2>&1 | tee current_build.txt'
+	@if [ -f build.txt ]; \
+	then cat build.txt current_build.txt > build_result.txt; rm current_build.txt; mv build_result.txt build.txt; \
+	else mv current_build.txt build.txt; fi
+else
 	$(MAKE) -C $@
+endif
 
 # Build in parallel
 parallel build-par: compileonly $(DIRS)
+	@echo "--------------------------------------"
+	@echo "List of memory leaks during the build:"
+	@echo "--------------------------------------"
+	@perl vcheck.pl build.txt
 
 # To generate a report:
 # First, build everything (incl. compileonly); possibly in parallel.
