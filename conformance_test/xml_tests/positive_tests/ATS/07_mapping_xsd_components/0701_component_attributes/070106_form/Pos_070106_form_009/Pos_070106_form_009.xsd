@@ -2,15 +2,15 @@
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     targetNamespace="schema:Pos_070106_form_009"
-    xmlns:ns132_1="schema:Pos_070106_form_009"
-    xmlns:ns132_2="schema:Pos_070106_form_009_2">
+    xmlns:ns230_1="schema:Pos_070106_form_009"
+    xmlns:ns230_2="schema:Pos_070106_form_009_2">
   <import namespace="schema:Pos_070106_form_009_2" schemaLocation="Pos_070106_form_009_2.xsd" />
   <element name="MyElement">
 	<complexType>
 		<sequence>
 			<element name="myField" type="integer" />
-			<element name="myField2" type="ns132_2:MyType"/>
-			<element ref="ns132_2:MyElement"/>
+			<element name="myField2" type="ns230_2:MyType"/>
+			<element ref="ns230_2:MyElement"/>
 		</sequence>
 	</complexType>
   </element>

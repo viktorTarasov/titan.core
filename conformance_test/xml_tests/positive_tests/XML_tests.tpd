@@ -824,6 +824,18 @@
 	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_007.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_007.ttcn"/>
 	<FileResource projectRelativePath="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_008/Pos_070106_form_008.ttcn" relativeURI="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_008/Pos_070106_form_008.ttcn"/>
 	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_008.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_008.ttcn"/>
+	<FileResource projectRelativePath="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_009/Pos_070106_form_009.ttcn" relativeURI="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_009/Pos_070106_form_009.ttcn"/>
+	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_009.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_009.ttcn"/>
+	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_009_2.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_009_2.ttcn"/>
+	<FileResource projectRelativePath="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_010/Pos_070106_form_010.ttcn" relativeURI="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_010/Pos_070106_form_010.ttcn"/>
+	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_010.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_010.ttcn"/>
+	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_010_2.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_010_2.ttcn"/>
+	<FileResource projectRelativePath="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_011/Pos_070106_form_011.ttcn" relativeURI="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_011/Pos_070106_form_011.ttcn"/>
+	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_011.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_011.ttcn"/>
+	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_011_2.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_011_2.ttcn"/>
+	<FileResource projectRelativePath="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_011/Pos_070106_form_012.ttcn" relativeURI="ATS/07_mapping_xsd_components/0701_component_attributes/070106_form/Pos_070106_form_012/Pos_070106_form_012.ttcn"/>
+	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_012.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_012.ttcn"/>
+	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070106_form_012_2.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070106_form_012_2.ttcn"/>
 	<FileResource projectRelativePath="ATS/07_mapping_xsd_components/0701_component_attributes/070107_type/Pos_070107_type_001/Pos_070107_type_001.ttcn" relativeURI="ATS/07_mapping_xsd_components/0701_component_attributes/070107_type/Pos_070107_type_001/Pos_070107_type_001.ttcn"/>
 	<FileResource projectRelativePath="ATS/xsd_converted/schema_Pos_070107_type_001.ttcn" relativeURI="ATS/xsd_converted/schema_Pos_070107_type_001.ttcn"/>
 	<FileResource projectRelativePath="ATS/07_mapping_xsd_components/0701_component_attributes/070107_type/Pos_070107_type_002/Pos_070107_type_002.ttcn" relativeURI="ATS/07_mapping_xsd_components/0701_component_attributes/070107_type/Pos_070107_type_002/Pos_070107_type_002.ttcn"/>
