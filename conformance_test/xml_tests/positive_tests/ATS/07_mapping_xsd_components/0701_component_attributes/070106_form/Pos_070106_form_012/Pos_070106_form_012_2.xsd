@@ -2,9 +2,9 @@
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
 	attributeFormDefault="qualified" 
 	targetNamespace="schema:Pos_070106_form_012_2"
-	xmlns:ns="schema:Pos_070106_form_012_2">
-	<element name="MyElement" type="ns:MyType" />
+	xmlns:ns233_2="schema:Pos_070106_form_012_2">
+	<element name="MyElement" type="ns233_2:MyType" />
     <complexType name="MyType">
-       <attribute name="myField" type="MyAttributeType" />
+       <attribute name="myField" type="integer" />
     </complexType>
 </schema>
