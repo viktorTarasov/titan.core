@@ -52,6 +52,9 @@ CPPFLAGS = -D$(PLATFORM) -I$(TTCN3_DIR)/include -I$(XMLDIR)/include/libxml2
 ifdef RT2
 CPPFLAGS += -DTITAN_RUNTIME_2
 endif
+ifeq ($(DEBUG), yes)
+CPPFLAGS += -DMEMORY_DEBUG
+endif
 
 # Flags for the C++ compiler:
 CXXFLAGS = -Wall
