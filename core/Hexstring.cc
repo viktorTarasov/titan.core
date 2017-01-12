@@ -37,6 +37,7 @@
 #include "../common/dbgnew.hh"
 
 #include <string.h>
+#include <ctype.h>
 
 // hexstring value class
 
@@ -1100,14 +1101,36 @@ int HEXSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_
         value_len -= 2;
         ++value;
       }
-      init_struct(value_len);
+      // White spaces are ignored, so the resulting hexstring might be shorter
+      // than the extracted JSON string
+      int nibbles = value_len;
       for (size_t i = 0; i < value_len; ++i) {
-        unsigned char nibble = char_to_hexdigit(value[i]);
-        if (nibble <= 0x0F) {
-          set_nibble(i, nibble);
-        } else {
-          error = TRUE;
-        }      
+        if (value[i] == ' ') {
+          --nibbles;
+        }
+        else if (!isxdigit(value[i])) {
+          if (value[i] == '\\' && i + 1 < value_len &&
+              (value[i + 1] == 'n' || value[i + 1] == 'r' || value[i + 1] == 't')) {
+            // Escaped white space character
+            ++i;
+            nibbles -= 2;
+          }
+          else {
+            error = TRUE;
+            break;
+          }
+        }
+      }
+      if (!error) {
+        init_struct(nibbles);
+        int nibble_index = 0;
+        for (size_t i = 0; i < value_len; ++i) {
+          if (!isxdigit(value[i])) {
+            continue;
+          }
+          set_nibble(nibble_index, char_to_hexdigit(value[i]));
+          ++nibble_index;
+        }
       }
     } else {
       error = TRUE;
@@ -1118,9 +1141,6 @@ int HEXSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_
   
   if (error) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FORMAT_ERROR, "string", "hexstring");
-    if (p_silent) {
-      clean_up();
-    }
     return JSON_ERROR_FATAL;    
   }
   return (int)dec_len;

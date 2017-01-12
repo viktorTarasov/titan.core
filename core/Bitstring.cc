@@ -1210,13 +1210,34 @@ int BITSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_
         value_len -= 2;
         ++value;
       }
-      init_struct(value_len);
+      // White spaces are ignored, so the resulting bitstring might be shorter
+      // than the extracted JSON string
+      int bits = value_len;
       for (size_t i = 0; i < value_len; ++i) {
-        if ('0' <= value[i] && '1' >= value[i]) {
-          set_bit(i, value[i] - '0');
-        } else {
-          error = TRUE;
-          break;
+        if (value[i] == ' ') {
+          --bits;
+        }
+        else if (value[i] != '0' && value[i] != '1') {
+          if (value[i] == '\\' && i + 1 < value_len &&
+              (value[i + 1] == 'n' || value[i + 1] == 'r' || value[i + 1] == 't')) {
+            // Escaped white space character
+            ++i;
+            bits -= 2;
+          }
+          else {
+            error = TRUE;
+            break;
+          }
+        }
+      }
+      if (!error) {
+        init_struct(bits);
+        int bit_index = 0;
+        for (size_t i = 0; i < value_len; ++i) {
+          if (value[i] == '0' || value[i] == '1') {
+            set_bit(bit_index, value[i] - '0');
+            ++bit_index;
+          }
         }
       }
     } else {
@@ -1228,9 +1249,6 @@ int BITSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_
   
   if (error) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FORMAT_ERROR, "string", "bitstring");
-    if (p_silent) {
-      clean_up();
-    }
     return JSON_ERROR_FATAL;    
   }
   return (int)dec_len;

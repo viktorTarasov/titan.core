@@ -38,6 +38,7 @@
 
 #include "../common/dbgnew.hh"
 #include <string.h>
+#include <ctype.h>
 
 // octetstring value class
 
@@ -1317,23 +1318,50 @@ int OCTETSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
     return JSON_ERROR_FATAL;
   }
   else if (JSON_TOKEN_STRING == token || use_default) {
-    if (0 == value_len % 2 && (use_default ||
-        (value_len > 2 && value[0] == '\"' && value[value_len - 1] == '\"'))) {
+    if (use_default || (value_len > 2 && value[0] == '\"' && value[value_len - 1] == '\"')) {
       if (!use_default) {
         // The default value doesn't have quotes around it
         value_len -= 2;
         ++value;
       }
-      size_t octets = value_len / 2;
-      init_struct(octets);
-      for (size_t i = 0; i < octets; ++i) {
-        unsigned char upper_nibble = char_to_hexdigit(value[2 * i]);
-        unsigned char lower_nibble = char_to_hexdigit(value[2 * i + 1]);
-        if (upper_nibble <= 0x0F && lower_nibble <= 0x0F) {
-          val_ptr->octets_ptr[i] = (upper_nibble << 4) | lower_nibble;
-        } else {
-          error = TRUE;
-        }      
+      // White spaces are ignored, so the resulting octetstring might be shorter
+      // than the extracted JSON string
+      int nibbles = value_len;
+      for (size_t i = 0; i < value_len; ++i) {
+        if (value[i] == ' ') {
+          --nibbles;
+        }
+        else if (!isxdigit(value[i]) || i + 1 == value_len ||
+                 !isxdigit(value[i + 1])) {
+          if (value[i] == '\\' && i + 1 < value_len &&
+              (value[i + 1] == 'n' || value[i + 1] == 'r' || value[i + 1] == 't')) {
+            // Escaped white space character
+            ++i;
+            nibbles -= 2;
+          }
+          else {
+            error = TRUE;
+            break;
+          }
+        }
+        else {
+          // It's a valid octet (jump through its second nibble)
+          ++i;
+        }
+      }
+      if (!error) {
+        init_struct(nibbles / 2);
+        int octet_index = 0;
+        for (size_t i = 0; i < value_len - 1; ++i) {
+          if (!isxdigit(value[i]) || !isxdigit(value[i + 1])) {
+            continue;
+          }
+          unsigned char upper_nibble = char_to_hexdigit(value[i]);
+          unsigned char lower_nibble = char_to_hexdigit(value[i + 1]);
+          val_ptr->octets_ptr[octet_index] = (upper_nibble << 4) | lower_nibble;
+          ++octet_index;
+          ++i;
+        }
       }
     } else {
       error = TRUE;
@@ -1344,9 +1372,6 @@ int OCTETSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   
   if (error) {
     JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FORMAT_ERROR, "string", "octetstring");
-    if (p_silent) {
-      clean_up();
-    }
     return JSON_ERROR_FATAL;    
   }
   return (int)dec_len;

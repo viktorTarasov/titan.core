@@ -249,6 +249,12 @@ type record MetainfoOuterRecord {
   MetainfoInnerRecord myRec
 }
 
+type record BinaryStrings {
+  bitstring bit,
+  hexstring hex,
+  octetstring oct
+}
+
 type record of integer MetainfoRecOf
 with { variant "JSON: metainfo for unbound"; }
 

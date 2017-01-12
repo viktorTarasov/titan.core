@@ -555,6 +555,48 @@ testcase tc_asn_optional_null() runs on MTC {
   f_bool2verdict(match(f_dec_null(os), c_not_null));
 }
 
+// The encodings of binary strings (bitstrings, hexstrings and octetstrings) may contain white spaces.
+// White spaces are ignored and the rest of the strings should be decoded correctly.
+testcase tc_binary_strings_with_white_spaces() runs on MTC {
+  var bitstring bs := oct2bit(char2oct("{ \"bit\" : \"10 01\\r00 11\", \"hex\" : \"00 ab c\\t\", \"oct\" : \"ab 12 66\\nc3 d4 f8\" }"));
+  var BinaryStrings x;
+  var integer res := decvalue(bs, x);
+  var BinaryStrings exp := { bit := '10010011'B, hex := '00ABC'H, oct := 'AB1266C3D4F8'O };
+  if (res != 0) {
+    setverdict(fail, "Invalid decoding result: ", res, " (expected 0)");
+  }
+  else if (x != exp) {
+    setverdict(fail, "Invalid decoded value. Got: ", x, ", expected: ", exp);
+  }
+  else if (bs != ''B) {
+    setverdict(fail, "Buffer not empty after decoding: ", bs);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
+// Binary strings (bitstrings, hexstrings and octetstrings) containing invalid characters.
+// Decoding should fail with error code 2. The output value should remain unbound and the buffer should remain unchanged after decoding.
+testcase tc_binary_strings_with_invalid_chars() runs on MTC {
+  var bitstring bs := oct2bit(char2oct("{ \"bit\" : \"10,01,00,11\", \"hex\" : \"00 abxc\", \"oct\" : \"ab 12 66\\fc3 d4 f8\" }"));
+  var bitstring bs_orig := bs;
+  var BinaryStrings x;
+  var integer res := decvalue(bs, x);
+  if (res != 2) {
+    setverdict(fail, "Invalid decoding result: ", res, " (expected 2)");
+  }
+  else if (isbound(x)) {
+    setverdict(fail, "Value changed during decoding: ", x);
+  }
+  else if (bs != bs_orig) {
+    setverdict(fail, "Buffer changed during decoding: ", bs);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
 //=========================================================================
 // Control
 //=========================================================================
@@ -613,6 +655,9 @@ control {
   execute(tc_asn_open_type_and_null());
   execute(tc_asn_objid_and_any());
   execute(tc_asn_optional_null());
+  
+  execute(tc_binary_strings_with_white_spaces());
+  execute(tc_binary_strings_with_invalid_chars());
 }
 
 

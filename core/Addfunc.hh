@@ -40,6 +40,8 @@ class OCTETSTRING_template;
 class CHARSTRING_template;
 class UNIVERSAL_CHARSTRING_template;
 
+// Helper functions
+
 extern char hexdigit_to_char(unsigned char hexdigit);
 
 // Additional predefined functions defined in Annex C of ES 101 873-1
