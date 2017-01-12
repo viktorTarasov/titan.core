@@ -54,7 +54,12 @@ OTHER_FILES := Makefile
 
 # lastword only in GNU make 3.81 and above :(
 COMMON_MK := $(word $(words $(MAKEFILE_LIST)), $(MAKEFILE_LIST))
-CW := $(COMMON_MK:common.mk=cw.pl) 
+CW := $(COMMON_MK:common.mk=cw.pl)
+
+include ../../Makefile.personal
+ifeq ($(DEBUG), yes)
+CPPFLAGS += -DMEMORY_DEBUG
+endif
 
 #
 # Rules for building the executable...
