@@ -112,6 +112,7 @@ UnicharPattern::UnicharPattern() : mappings_head(NULL)
     if (line_end != NULL) {
       *line_end = '\0';
     }
+    //TODO:Valgrind reports uninitialized value coming form here to remove_spaces
     // each column ends with a ';', use that as the separator for strtok
     char* from_str = remove_spaces(strtok(line, ";"));
     size_t from_str_len = from_str != NULL ? strlen(from_str) : 0;
@@ -123,6 +124,7 @@ UnicharPattern::UnicharPattern() : mappings_head(NULL)
     if (from_str_len < 4 || from_str_len > 5) {
       TTCN_pattern_warning("Invalid format of case folding file (code column). "
         "Case-insensitive universal charstring patterns are disabled.\n");
+      fclose(fp);
       clean_up();
       return;
     }
@@ -131,6 +133,7 @@ UnicharPattern::UnicharPattern() : mappings_head(NULL)
     if (status == NULL || strlen(status) != 1) {
       TTCN_pattern_warning("Invalid format of case folding file (status column). "
         "Case-insensitive universal charstring patterns are disabled.\n");
+      fclose(fp);
       clean_up();
       return;
     }
@@ -143,6 +146,7 @@ UnicharPattern::UnicharPattern() : mappings_head(NULL)
     if (to_str_len < 4 || to_str_len > 5) {
       TTCN_pattern_warning("Invalid format of case folding file (mapping column). "
         "Case-insensitive universal charstring patterns are disabled.\n");
+      fclose(fp);
       clean_up();
       return;
     }
@@ -171,10 +175,12 @@ UnicharPattern::UnicharPattern() : mappings_head(NULL)
       // one of the tokens contained a non-hex character
       TTCN_pattern_warning("Invalid format of case folding file (character code). "
         "Case-insensitive universal charstring patterns are disabled.\n");
+      fclose(fp);
       clean_up();
       return;
     }
   }
+  fclose(fp);
 }
 
 void UnicharPattern::clean_up()

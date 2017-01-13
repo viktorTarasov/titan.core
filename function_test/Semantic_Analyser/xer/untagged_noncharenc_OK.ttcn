@@ -9,9 +9,10 @@
  *   Balasko, Jeno
  *   Baranyi, Botond
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
-module untagged_noncharenc_SE {
+module untagged_noncharenc_OK {
 
   type record R2 {
     hexstring os

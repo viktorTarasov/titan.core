@@ -82,6 +82,11 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
     } decodetoken;
     NamespaceSpecification nsspec;
     NamespaceRestriction   nsrestr;
+    struct {
+      char* str;
+      Ttcn::Reference* reference;
+      bool ref;
+    } dfestruct;
 }
 
 %token <intval> XNumber
@@ -336,7 +341,9 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
     anyAttributes anyElement optNamespaceRestriction urilist
 
 
-%type <str>  defaultForEmpty name newnameOrKeyword  keyword optPrefix quotedURIorAbsent
+%type <str>  name newnameOrKeyword  keyword optPrefix quotedURIorAbsent
+
+%type <dfestruct> defaultForEmpty
 
 %type <nsspec> namespace namespacespecification controlNamespace text
 
@@ -403,6 +410,8 @@ namespace
 namespacespecification
 text
 controlNamespace
+
+
 
 %start XAttribSpec
 
@@ -1326,7 +1335,12 @@ XERattribute:
       {
         mymod->set_controlns($1.uri, $1.prefix);
       }
-    | defaultForEmpty { xerstruct->defaultForEmpty_ = $1; }
+    | defaultForEmpty
+      {
+        xerstruct->defaultForEmpty_ = $1.str;
+        xerstruct->defaultForEmptyIsRef_ = $1.ref;
+        xerstruct->defaultForEmptyRef_ = $1.reference;
+      }
     | XKWelement { xerstruct->element_ = true; }
     | XKWelementFormQualified { xerstruct->form_ |= XerAttributes::ELEMENT_DEFAULT_QUALIFIED; }
     | XKWembedValues { xerstruct->embedValues_ = true; }
@@ -1487,7 +1501,19 @@ text:
 
 defaultForEmpty:
     XKWdefaultForEmpty XKWas Xstring
-    { $$ = $3; }
+    { $$.str = $3; $$.ref = false; $$.reference = NULL; }
+    | XKWdefaultForEmpty XKWas XIdentifier
+    { $$.reference = new Ttcn::Reference($3);
+      $$.reference->set_location(infile, @$);
+      $$.ref = true;
+      $$.str = NULL;
+    }
+    | XKWdefaultForEmpty XKWas XIdentifier '.' XIdentifier
+    { $$.reference = new Ttcn::Reference($3, $5);
+      $$.reference->set_location(infile, @$);
+      $$.ref = true;
+      $$.str = NULL;
+    }
 ;
 
 fractionDigits:

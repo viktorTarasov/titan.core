@@ -774,7 +774,7 @@ namespace Common {
     void chk_xer_any_element();
     void chk_xer_attribute();
     void chk_xer_dfe();
-    Value *new_value_for_dfe(Type *last, const char *dfe_str);
+    Value *new_value_for_dfe(Type *last, const char *dfe_str, Common::Reference* ref = NULL, bool is_ref_dfe = false);
     void target_of_text(string& text);
     void chk_xer_embed_values(int num_attributes);
     void chk_xer_text();

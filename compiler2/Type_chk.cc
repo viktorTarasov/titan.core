@@ -695,7 +695,7 @@ void Type::chk_xer_any_element()
   } // switch
 
   if (xerattrib->attribute_ || xerattrib->base64_ || xerattrib->untagged_
-    || xerattrib->defaultForEmpty_ != NULL
+    || (xerattrib->defaultForEmpty_ != NULL || xerattrib->defaultForEmptyIsRef_)
     || xerattrib->whitespace_ != XerAttributes::PRESERVE) {
     error("A type with ANY-ELEMENT may not have any of the following encoding instructions: "
       "ATTRIBUTE, BASE64, DEFAULT-FOR-EMPTY, PI-OR-COMMENT, UNTAGGED or WHITESPACE");
@@ -818,17 +818,72 @@ static const string dfe_suffix("_dfe");
  * @param last pointer to a Type which is the end of the reference chain,
  * usually this->get_type_refd_last()
  * @param dfe_str string containing the value from defaultForEmpty
+ * @param ref Reference containing the reference in defaultForEmpty
+ * @param is_ref_dfe true if reference is used instead of text in defaultForempty
  * @return a newly allocated Common::Value
  */
-Value *Type::new_value_for_dfe(Type *last, const char *dfe_str)
+Value *Type::new_value_for_dfe(Type *last, const char *dfe_str, Common::Reference* ref, bool is_ref_dfe)
 {
-  string defaultstring(dfe_str);
+  string defaultstring;
+  if (is_ref_dfe) {
+    Value* v = new Value(Value::V_REFD, ref->clone());
+    v->set_my_scope(get_my_scope()->get_scope_mod());
+    if (!is_compatible_tt_tt(last->typetype, v->get_expr_governor_last()->typetype, last->is_asn1(), v->get_expr_governor_last()->is_asn1())) {
+      v->get_reference()->error("Incompatible types were given to defaultForEmpty variant: `%s' instead of `%s'.\n",
+        v->get_expr_governor_last()->get_typename().c_str(), last->get_typename().c_str());
+      delete v;
+      return 0;
+    }
+    if (!v->is_unfoldable()) {
+      switch(v->get_value_refd_last()->get_valuetype()) {
+        case Value::V_CSTR:
+          defaultstring = v->get_val_str().c_str();
+          break;
+        case Value::V_USTR:
+        case Value::V_ISO2022STR:
+          defaultstring = v->get_val_ustr().get_stringRepr_for_pattern();
+          break;
+        case Value::V_INT:
+          defaultstring = Int2string(v->get_val_Int()->get_val());
+          break;
+        case Value::V_REAL:
+          defaultstring = Real2string(v->get_val_Real());
+          break;
+        case Value::V_BOOL:
+          if (v->get_val_bool()) {
+            defaultstring = "true";
+          } else {
+            defaultstring = "false";
+          }
+          break;
+        case Value::V_ENUM: {
+          Value* v2 = v->get_value_refd_last();
+          defaultstring = v2->get_val_id()->get_ttcnname().c_str();
+          break; }
+        //case Value::V_CHOICE: //In the switch below the choice is handled but
+                                //it is not possible to write DFE for unions???
+        default:
+          break;
+      }
+      dfe_str = defaultstring.c_str();
+    } else if (v->get_reference()->get_refd_assignment()->get_asstype() ==  Assignment::A_MODULEPAR) {
+      return v;
+    } else {
+       v->get_reference()->error("Only strings, constants and module parameters are allowed for a defaultForEmpty value.\n");
+       delete v;
+       return 0;
+    }
+    delete v;
+  }
+  if (!is_ref_dfe) {
+    defaultstring = dfe_str;
+  }
   switch (last->typetype) {
   case T_CSTR:
   case T_USTR:
   case T_UTF8STRING:
-    return new Value(Common::Value::V_CSTR,
-      new string(defaultstring));
+      return new Value(Common::Value::V_CSTR,
+        new string(defaultstring));
 
   case T_INT:
   case T_INT_A:
@@ -994,8 +1049,7 @@ void Type::chk_xer_dfe()
   }
 
   if (is_charenc() == Yes) {
-    xerattrib->defaultValue_ = new_value_for_dfe(last, xerattrib->defaultForEmpty_);
-
+    xerattrib->defaultValue_ = new_value_for_dfe(last, xerattrib->defaultForEmpty_, xerattrib->defaultForEmptyRef_, xerattrib->defaultForEmptyIsRef_);
     if (xerattrib->defaultValue_ != 0) {
       xerattrib->defaultValue_->set_genname(this->genname, dfe_suffix);
       xerattrib->defaultValue_->set_my_scope(this->my_scope);
@@ -1019,7 +1073,7 @@ void Type::chk_xer_dfe()
       cft = cft->get_type_refd_last();
       //typetype_t cftt = cft->get_typetype();
 
-      xerattrib->defaultValue_ = new_value_for_dfe(cft, xerattrib->defaultForEmpty_);
+      xerattrib->defaultValue_ = new_value_for_dfe(cft, xerattrib->defaultForEmpty_, xerattrib->defaultForEmptyRef_, xerattrib->defaultForEmptyIsRef_);
       if (xerattrib->defaultValue_ != 0) {
         xerattrib->defaultValue_->set_genname(last->genname, string("_dfe"));
         xerattrib->defaultValue_->set_my_scope(cft->my_scope);
@@ -1501,6 +1555,7 @@ void Type::chk_xer_untagged()
   if ( has_aa(xerattrib)
     || has_ae(xerattrib)
     || xerattrib->attribute_   || 0 != xerattrib->defaultForEmpty_
+    || xerattrib->defaultForEmptyIsRef_
     || xerattrib->embedValues_ || xerattrib->useNil_
     || (xerattrib->useOrder_ && is_asn1()) || xerattrib->useType_) {
     error("A type with final encoding attribute UNTAGGED shall not have"
@@ -1674,6 +1729,7 @@ void Type::chk_xer_use_nil()
       if (has_ae(cft->xerattrib)
         ||has_aa(cft->xerattrib)
         ||cft->xerattrib->defaultForEmpty_ != 0
+        ||cft->xerattrib->defaultForEmptyIsRef_
         ||cft->xerattrib->untagged_
         ||cft->xerattrib->useNil_
         ||cft->xerattrib->useOrder_
@@ -2195,7 +2251,7 @@ void Type::chk_xer() { // XERSTUFF semantic check
     error("The fractionDigits encoding instruction shall be used with XSD.Decimal types.");
   } // if DECIMAL 
 
-  if (xerattrib->defaultForEmpty_ != 0) {
+  if (xerattrib->defaultForEmpty_ != 0 || xerattrib->defaultForEmptyIsRef_) {
     chk_xer_dfe();
   } // if defaultForEmpty
 

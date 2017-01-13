@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 module DefaultForEmpty {
@@ -79,9 +80,85 @@ testcase decode_dfe() runs on DFE
   CHECK_DECODE(exer_dec_dfe, str_dfe_e_dec, DFEProduct, dfeval);
 }
 
+
+//===========================================================================//
+
+
+const charstring cs := "cs";
+const universal charstring us := "us";
+const integer i := 1;
+const float f := 1.0;
+const boolean b := true;
+
+DECLARE_EXER_ENCODERS(DFEConst, dfe_const);
+
+type record DFEConst {
+  charstring cs,
+  universal charstring us,
+  integer i,
+  float f,
+  boolean b
+}
+with {
+  variant "element";
+  variant (cs) "defaultForEmpty as cs";
+  variant (us) "defaultForEmpty as us";
+  variant (i) "defaultForEmpty as i";
+  variant (f) "defaultForEmpty as f";
+  variant (b) "defaultForEmpty as b";
+}
+
+const universal charstring str_dfe_const_e := "<DFEConst>\n\t<cs/>\n\t<us/>\n\t<i/>\n\t<f/>\n\t<b/>\n</DFEConst>\n\n";
+
+const DFEConst dfeval_exp := { cs, us, i, f, b };
+
+testcase decode_dfe_const() runs on DFE
+{
+  CHECK_DECODE(exer_dec_dfe_const, str_dfe_const_e, DFEConst, dfeval_exp);
+}
+
+
+//===========================================================================//
+
+modulepar charstring mp_cs; // "mp_cs"
+modulepar universal charstring mp_us; // "mp_us"
+modulepar integer mp_i; // 3
+modulepar float mp_f; // 3.0
+modulepar boolean mp_b; // true
+
+DECLARE_EXER_ENCODERS(DFEMP, dfe_mp);
+
+type record DFEMP {
+  charstring cs,
+  universal charstring us,
+  integer i,
+  float f,
+  boolean b
+}
+with {
+  variant "element";
+  variant (cs) "defaultForEmpty as mp_cs";
+  variant (us) "defaultForEmpty as mp_us";
+  variant (i) "defaultForEmpty as mp_i";
+  variant (f) "defaultForEmpty as mp_f";
+  variant (b) "defaultForEmpty as mp_b";
+}
+
+const universal charstring str_dfe_mp_e := "<DFEMP>\n\t<cs/>\n\t<us/>\n\t<i/>\n\t<f/>\n\t<b/>\n</DFEMP>\n\n";
+
+const DFEMP dfeval_mp_exp := { "mp_cs", "mp_us", 3, 3.0, true };
+
+testcase decode_dfe_mp() runs on DFE
+{
+  CHECK_DECODE(exer_dec_dfe_mp, str_dfe_mp_e, DFEMP, dfeval_mp_exp);
+}
+
+
 control {
   execute(encode_dfe());
   execute(decode_dfe());
+  execute(decode_dfe_const());
+  execute(decode_dfe_mp());
 }
 
 }

@@ -552,8 +552,10 @@ void Type::generate_code_xerdescriptor(output_struct* target)
       const_def cdef;
       Code::init_cdef(&cdef);
       t->generate_code_object(&cdef, xerattrib->defaultValue_);
-      cdef.init = xerattrib->defaultValue_->generate_code_init
-        (cdef.init, xerattrib->defaultValue_->get_lhs_name().c_str());
+      // Generate the initialization of the dfe values in the post init function
+      // because the module params are not initialized in the pre init function
+      target->functions.post_init = xerattrib->defaultValue_->generate_code_init
+        (target->functions.post_init, xerattrib->defaultValue_->get_lhs_name().c_str());
       Code::merge_cdef(target, &cdef);
       Code::free_cdef(&cdef);
     }

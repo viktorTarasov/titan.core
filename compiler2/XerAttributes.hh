@@ -26,6 +26,7 @@
 #include <limits.h>
 #include "../common/memory.h"
 #include "datatypes.h"
+#include "../compiler2/Setting.hh"
 
 namespace Common {
 class Value;
@@ -155,6 +156,10 @@ public:
   bool decimal_;
   /// String parsed out from the encoding attribute
   char * defaultForEmpty_;
+  /// True if the defaultForEmpty variant's value is a reference.
+  bool defaultForEmptyIsRef_;
+  /// The reference to the defaultForEmpty's value.
+  Common::Reference* defaultForEmptyRef_;
   /// Value object constructed by Type::chk_xer() from defaultForEmpty_
   Common::Value *defaultValue_;
   /// Global element in XSD

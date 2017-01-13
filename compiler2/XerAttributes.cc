@@ -41,6 +41,8 @@ XerAttributes::XerAttributes()
 , block_(false)
 , decimal_(false)
 , defaultForEmpty_(0)
+, defaultForEmptyIsRef_(false)
+, defaultForEmptyRef_(0)
 , defaultValue_(0)
 , element_(false)
 , embedValues_(false)
@@ -83,6 +85,7 @@ XerAttributes::~XerAttributes()
 
   Free(defaultForEmpty_);
   delete defaultValue_;
+  delete defaultForEmptyRef_;
 
   FreeNameChange(name_);
   FreeNamespace(namespace_);
@@ -170,7 +173,10 @@ void XerAttributes::print(const char *type_name) const {
     fputs(block_ ? "BLOCK\n" : "", stderr);
     fputs(decimal_ ? "DECIMAL\n" : "", stderr);
 
-    if (defaultForEmpty_)  fprintf(stderr, "DEFAULT-FOR-EMPTY '%s'\n", defaultForEmpty_);
+    if (defaultForEmpty_)
+      fprintf(stderr, "DEFAULT-FOR-EMPTY '%s' %s\n",
+        defaultForEmptyIsRef_ ? defaultForEmptyRef_->get_dispname().c_str() : defaultForEmpty_,
+        defaultForEmptyIsRef_ ? "(reference) " : "");
 
     if (element_) fputs("ELEMENT\n", stderr);
     fputs(embedValues_ ? "EMBED-VALUES\n" : "", stderr);
@@ -283,6 +289,12 @@ other.print("other");
   if (other.defaultForEmpty_ != 0) {
     Free(defaultForEmpty_);
     defaultForEmpty_ = mcopystr(other.defaultForEmpty_);
+    defaultForEmptyIsRef_ = other.defaultForEmptyIsRef_;
+  }
+  
+  if (other.defaultForEmptyIsRef_ && other.defaultForEmptyRef_ != 0) {
+    Free(defaultForEmptyRef_);
+    defaultForEmptyRef_ = other.defaultForEmptyRef_->clone();
   }
 
   element_ |= other.element_;
@@ -396,6 +408,8 @@ bool XerAttributes::empty() const
   && !block_
   && !decimal_
   && defaultForEmpty_ == 0
+  && !defaultForEmptyIsRef_
+  && !defaultForEmptyRef_
   && !element_
   && !embedValues_
   && !(form_ & LOCALLY_SET)

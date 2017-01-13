@@ -11,7 +11,7 @@
  *   Szabo, Bence Janos
  *
  ******************************************************************************/
-module emb_first_opt_SE {
+module emb_first_opt_OK {
 
 type record e1 {
   record of universal charstring field_1 optional /* no default in TTCN-3, optional is now allowed */
