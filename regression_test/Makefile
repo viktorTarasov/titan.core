@@ -98,10 +98,12 @@ endif
 
 # Build in parallel
 parallel build-par: compileonly $(DIRS)
+ifeq ($(DEBUG), yes)
 	@echo "--------------------------------------"
 	@echo "List of memory leaks during the build:"
 	@echo "--------------------------------------"
 	@perl vcheck.pl build.txt
+endif
 
 # To generate a report:
 # First, build everything (incl. compileonly); possibly in parallel.
