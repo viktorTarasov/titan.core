@@ -67,7 +67,6 @@ Compressed update site and SHA512 checksum:
 * https://github.com/eclipse/titan.TestPorts.PIPEasp
 * https://github.com/eclipse/titan.TestPorts.SCTPasp
 * https://github.com/eclipse/titan.TestPorts.SIPmsg
-* http://git.eclipse.org/gitroot/titan/titan.TestPorts.SocketCANasp
 * https://github.com/eclipse/titan.TestPorts.SQLasp
 * https://github.com/eclipse/titan.TestPorts.SSHCLIENTasp
 * https://github.com/eclipse/titan.TestPorts.STDINOUTmsg
