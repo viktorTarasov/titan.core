@@ -1345,6 +1345,9 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
       p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
       run_command_list, seen_tpd_files, required_configs, profiled_file_list,
       search_paths, n_search_paths, makefileScript, all_configs);
+  } else {
+    free_config_struct(all_configs);
+    all_configs = NULL;
   }
   if (TPD_FAILED == success){
     goto failure;
@@ -1387,17 +1390,18 @@ failure:
   free_string_list(*profiled_file_list);
 
   Free(search_paths);
-
-  Free(generatorCommandOutput);
+  Free(*generatorCommandOutput);
+  free_string2_list(create_symlink_list);
   free_string2_list(target_placement_list);
   free_string2_list(required_configs);
-  Free(makefileScript);
+  Free(*makefileScript);
+  Free(*p_project_name);
 
-  Free(p_ets_name);
-  Free(cxxcompiler);
-  Free(optlevel);
-  Free(optflags);
-  Free(ttcn3prep);
+  Free(*p_ets_name);
+  Free(*cxxcompiler);
+  Free(*optlevel);
+  Free(*optflags);
+  Free(*ttcn3prep);
   for (int E = 0; E < *p_argc; ++E) Free((*p_argv)[E]);
   Free(*p_argv);
   exit(EXIT_FAILURE);
