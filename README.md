@@ -133,6 +133,7 @@ Compressed update site and SHA512 checksum:
 ## Libraries:
 
 * https://github.com/eclipse/titan.Libraries.TCCUsefulFunctions
+* git://git.eclipse.org/gitroot/titan/titan.Libraries.TLS.git 
 
 ## Miscellaneous projects: 
 
