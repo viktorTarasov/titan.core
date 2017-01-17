@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Baranyi, Botond
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 
@@ -76,6 +77,36 @@ function f_embeddedEmptyRecord() {
       action("not empty");
     }
   }
+}
+
+function f_with_goto() {
+  var boolean v_result;
+  var charstring pl_messageType := "s";
+  v_result := true;
+  if (not v_result) { goto END_EXECUTION };
+
+  select (pl_messageType) {
+    case ("SAR")  {
+       v_result := false;
+     }
+  }
+  label END_EXECUTION;
+  log(v_result);
+}
+
+function f_with_goto_int() {
+  var integer v_result;
+  var charstring pl_messageType := "s";
+  v_result := 3;
+  if (v_result == 2) { goto END_EXECUTION };
+
+  select (v_result) {
+    case (4)  {
+       v_result := 3;
+     }
+  }
+  label END_EXECUTION;
+  log(v_result);
 }
 
 }

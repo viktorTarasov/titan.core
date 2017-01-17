@@ -6334,7 +6334,9 @@ error:
     char *expr_name=select.expr->generate_code_tmp(0, expr_init);
     if (expr_init[0]) { // some init code was generated
       str = update_location_object(str);
-      str = mputstr(str, "{\n");
+    }
+    str = mputstr(str, "{\n");
+    if (expr_init[0]) {
       str = mputstr(str, expr_init);
     }
     
@@ -6357,7 +6359,7 @@ error:
       str=select.scs->generate_code(str, tmp_prefix.c_str(), tmp_id.c_str());
     }
     Free(expr_name);
-    if (expr_init[0]) str=mputstr(str, "}\n");
+    str=mputstr(str, "}\n");
     Free(expr_init);
     return str;
   }
