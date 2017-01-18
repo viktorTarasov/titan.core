@@ -1551,6 +1551,18 @@ void ValueType::printToFile(FILE * file) const {
         val = fixed_value;
       }
       fprintf(file, " (%s)", val.c_str());
+    } else if (isFloatType(type)) {
+      Mstring val;
+      if (fixed_value == "INF") {
+        val = "infinity";
+      } else if (fixed_value == "-INF") {
+        val = "-infinity";
+      } else if (fixed_value == "NaN") {
+        val = "not_a_number";
+      } else {
+        val = fixed_value;
+      }
+      fprintf(file, " (%s)", val.c_str());
     } else {
       fprintf(file, " (%s)", fixed_value.c_str());
     }

@@ -65,6 +65,27 @@ with {
 };
 
 
+type XSD.Float FloatType2 (infinity)
+with {
+  variant "defaultForEmpty as 'INF'";
+  variant "element";
+};
+
+
+type XSD.Float FloatType3 (-infinity)
+with {
+  variant "defaultForEmpty as '-INF'";
+  variant "element";
+};
+
+
+type XSD.Float FloatType4 (not_a_number)
+with {
+  variant "defaultForEmpty as 'NaN'";
+  variant "element";
+};
+
+
 type XSD.Double DoubleType (7.0)
 with {
   variant "defaultForEmpty as '7.0'";
