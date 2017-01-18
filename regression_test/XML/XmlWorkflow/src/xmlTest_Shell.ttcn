@@ -293,6 +293,11 @@ runs on Shell_CT
               pl_success:=false;
             }
           }//select
+          vl_pattern := "*(Memory leak at)*";
+          if (regexp(v_ASP_PResult.stderr,vl_pattern,0) != "") {
+            log("Memory leak detected during command execution.");
+            pl_success := false;
+          }
         } else {
           log("The result code(", v_ASP_PResult.code, ") is not the expected(", vl_expectedCode, ")");
           pl_success:=false;

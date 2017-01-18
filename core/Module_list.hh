@@ -23,6 +23,9 @@
 
 #include <stdio.h>
 #include "Types.h"
+#ifdef USAGE_STATS
+#include <pthread.h>
+#endif
 
 class Text_Buf;
 class TTCN_Module;
@@ -30,6 +33,9 @@ class Module_Param;
 class Module_Param_Name;
 class ModuleVersion;
 struct namespace_t;
+#ifdef USAGE_STATS
+struct thread_data;
+#endif
 
 typedef void (*genericfunc_t)(void);
 
@@ -64,7 +70,11 @@ public:
   static void execute_all_testcases(const char *module_name);
 
   static void print_version();
-  static void send_versions();
+  
+#ifdef USAGE_STATS
+  static void send_usage_stats(pthread_t& thread, thread_data*& data);
+  static void clean_up_usage_stats(pthread_t thread, thread_data* data);
+#endif
   static void list_testcases();
   static void push_version(Text_Buf& text_buf);
 

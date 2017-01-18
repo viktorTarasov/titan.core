@@ -715,7 +715,9 @@ namespace Ttcn {
       regex_str = TTCN_pattern_to_regexp(utf8str.c_str(), true);
     }
     
-    return convert_to_json_string(regex_str);
+    char* json_str = convert_to_json_string(regex_str);
+    Free(regex_str);
+    return json_str;
   }
 
 } // namespace Ttcn

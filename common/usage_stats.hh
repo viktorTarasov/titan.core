@@ -61,6 +61,10 @@ public:
   void send(const char*);
 };
 
+struct thread_data {
+  std::string msg;
+  Sender* sndr;
+};
 
 class UsageData {
 public:
@@ -69,7 +73,7 @@ public:
     static UsageData instance; // Guaranteed to be destroyed.
     return instance; // Instantiated on first use.
   }
-  static void sendDataThreaded(std::string msg, Sender* sender);
+  static pthread_t sendDataThreaded(std::string msg, thread_data* data);
 
 private:
 

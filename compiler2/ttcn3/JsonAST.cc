@@ -15,10 +15,10 @@
 #include <cstddef>
 #include <cstdio>
 
-void JsonSchemaExtension::init(const char* p_key, const char* p_value)
+void JsonSchemaExtension::init(char* p_key, char* p_value)
 {
-  key = mcopystr(p_key);
-  value = mcopystr(p_value);
+  key = p_key;
+  value = p_value;
 }
 
 JsonSchemaExtension::~JsonSchemaExtension()

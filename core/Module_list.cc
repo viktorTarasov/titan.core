@@ -349,8 +349,9 @@ void Module_List::print_version()
     "--------------------\n", stderr);
 }
 
-void Module_List::send_versions() {
 #ifdef USAGE_STATS
+void Module_List::send_usage_stats(pthread_t& thread, thread_data*& data)
+{
   std::set<ModuleVersion> versions;
   for (TTCN_Module *list_iter = list_head; list_iter != NULL;
       list_iter = list_iter->list_next)  {
@@ -371,11 +372,26 @@ void Module_List::send_versions() {
       }
   }
 
-  HttpSender* sender = new HttpSender;
-  UsageData::getInstance().sendDataThreaded(stream.str().c_str(), sender);
-#endif
+  data = new thread_data;
+  data->sndr = new HttpSender;
+  thread = UsageData::getInstance().sendDataThreaded(stream.str().c_str(), data);
 }
-            
+
+void Module_List::clean_up_usage_stats(pthread_t thread, thread_data* data)
+{
+  if (thread != 0) {
+    // cancel the usage stats thread if it hasn't finished yet
+    pthread_cancel(thread);
+    pthread_join(thread, NULL);
+  }
+  if (data != NULL) {
+    if (data->sndr != NULL) {
+      delete data->sndr;
+    }
+    delete data;
+  }
+}
+#endif // USAGE_STATS   
 
 void Module_List::list_testcases()
 {

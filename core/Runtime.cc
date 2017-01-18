@@ -447,12 +447,18 @@ int TTCN_Runtime::hc_main(const char *local_addr, const char *MC_addr,
   TTCN_Logger::log_HC_start(get_host_name());
   TTCN_Logger::write_logger_settings();
   TTCN_Snapshot::check_fd_setsize();
+#ifdef USAGE_STATS
+  pthread_t stats_thread = 0;
+  thread_data* stats_data = NULL;
+#endif
   try {
     if (local_addr != NULL)
       TTCN_Communication::set_local_address(local_addr);
     TTCN_Communication::set_mc_address(MC_addr, MC_port);
     TTCN_Communication::connect_mc();
-    Module_List::send_versions();
+#ifdef USAGE_STATS
+    Module_List::send_usage_stats(stats_thread, stats_data);
+#endif
     executor_state = HC_IDLE;
     TTCN_Communication::send_version();
     initialize_component_process_tables();
@@ -476,6 +482,10 @@ int TTCN_Runtime::hc_main(const char *local_addr, const char *MC_addr,
   if (is_hc())
     TTCN_Logger::log_executor_runtime(
       API::ExecutorRuntime_reason::host__controller__finished);
+
+#ifdef USAGE_STATS
+  Module_List::clean_up_usage_stats(stats_thread, stats_data);
+#endif
 
   return ret_val;
 }
