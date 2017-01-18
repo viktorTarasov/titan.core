@@ -98,21 +98,21 @@ public:
    * true if s is found
    * false otherwise
    */
-  bool isFound(const Mstring & s);
+  bool isFound(const Mstring & s) const;
 
   /**
    * Look for s c-string content
    * true if s is found
    * false otherwise
    */
-  bool isFound(const char * s);
+  bool isFound(const char * s) const;
 
   /**
    * Look for c character content
    * true if s is found
    * false otherwise
    */
-  bool isFound(char c);
+  bool isFound(char c) const;
 
   /**
    * Look for c-string content
@@ -120,7 +120,7 @@ public:
    * character where the matching found,
    * returns null otherwise
    */
-  char * foundAt(const char * c);
+  char * foundAt(const char * c) const;
 
   /**
    * The first character of the Mstring is set to uppercase

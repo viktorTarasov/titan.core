@@ -86,6 +86,48 @@ with {
 };
 
 
+type XSD.Float FloatType5 (3.0)
+with {
+  variant "defaultForEmpty as '3'";
+  variant "element";
+};
+
+
+type XSD.Float FloatType6 (-3.0)
+with {
+  variant "defaultForEmpty as '-3'";
+  variant "element";
+};
+
+
+type XSD.Float FloatType7 (-1E4)
+with {
+  variant "defaultForEmpty as '-1E4'";
+  variant "element";
+};
+
+
+type XSD.Float FloatType8 (12.78e-2)
+with {
+  variant "defaultForEmpty as '12.78e-2'";
+  variant "element";
+};
+
+
+type XSD.Float FloatType9 (0.0)
+with {
+  variant "defaultForEmpty as '0'";
+  variant "element";
+};
+
+
+type XSD.Float FloatType10 (-0.0)
+with {
+  variant "defaultForEmpty as '-0'";
+  variant "element";
+};
+
+
 type XSD.Double DoubleType (7.0)
 with {
   variant "defaultForEmpty as '7.0'";

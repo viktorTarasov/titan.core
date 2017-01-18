@@ -86,19 +86,19 @@ void Mstring::insertChar(size_t pos, char c) {
   text = mcopystr(temp.text);
 }
 
-bool Mstring::isFound(const Mstring & s) {
+bool Mstring::isFound(const Mstring & s) const {
   return strstr(text, s.text);
 }
 
-bool Mstring::isFound(const char * s) {
+bool Mstring::isFound(const char * s) const {
   return strstr(text, s);
 }
 
-bool Mstring::isFound(char c) {
+bool Mstring::isFound(char c) const {
   return strchr(text, c);
 }
 
-char * Mstring::foundAt(const char * s) {
+char * Mstring::foundAt(const char * s) const {
   return strstr(text, s);
 }
 

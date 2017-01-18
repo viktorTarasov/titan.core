@@ -1559,6 +1559,10 @@ void ValueType::printToFile(FILE * file) const {
         val = "-infinity";
       } else if (fixed_value == "NaN") {
         val = "not_a_number";
+      } else if (!fixed_value.isFound('.') && !fixed_value.isFound('e') &&
+               !fixed_value.isFound('E')) {
+        // Float types need the .0 if it is a single integer.
+        val = fixed_value + Mstring(".0");
       } else {
         val = fixed_value;
       }
