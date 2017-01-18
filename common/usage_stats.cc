@@ -194,31 +194,27 @@ UsageData::~UsageData() {
 
 }
 
-struct thread_data {
-  std::string msg;
-  Sender* sndr;
-};
 
-void UsageData::sendDataThreaded(std::string msg, Sender* sender) {
-  thread_data* data = new thread_data; // will be deleted by sendData
-  data->msg = "id="+ id + "&host=" + host + "&platform=" + platform + "&gccv=" + C_COMPILER_VERSION + "&titanv=" + PRODUCT_NUMBER + "&msg="+ msg + "\r";
-  data->sndr = sender;
+pthread_t UsageData::sendDataThreaded(std::string msg, thread_data* data) {
+  data->msg = "id="+ id + "&host=" + host + "&platform=" + platform +
+    "&gccv=" + C_COMPILER_VERSION + "&titanv=" + PRODUCT_NUMBER + "&msg="+ msg + "\r";
 
   pthread_t thread;
   pthread_create(&thread, NULL, sendData, data);
+  return thread;
 }
 
 void* UsageData::sendData(void* m) {
+  // make sure the thread is cancelable if the main thread finishes first
+  pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+  
   thread_data* my_data;
   my_data = (thread_data*)m;
 
   if(my_data->sndr) {
     my_data->sndr->send(my_data->msg.c_str());
-    delete my_data->sndr;
   }
-  
-  // delete the data after use
-  delete my_data;
   
   return NULL;
 }

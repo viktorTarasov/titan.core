@@ -1152,6 +1152,11 @@ int main(int argc, char *argv[])
   unsigned int error_count = Error_Context::get_error_count();
   if (error_count > 0) ret_val = EXIT_FAILURE;
 
+#ifdef USAGE_STATS
+  pthread_t stats_thread = 0;
+  thread_data* stats_data = NULL;
+#endif
+  
   if (parse_only || semantic_check_only) {
     // print detailed statistics
     Error_Context::print_error_statistics();
@@ -1184,8 +1189,9 @@ int main(int argc, char *argv[])
         }
       }
 
-      HttpSender *sender = new HttpSender;
-      UsageData::getInstance().sendDataThreaded(stream.str(), sender);
+      stats_data = new thread_data;
+      stats_data->sndr = new HttpSender;
+      stats_thread = UsageData::getInstance().sendDataThreaded(stream.str(), stats_data);
 #endif
       if (ttcn2json) {
         NOTIFY("Generating JSON schema...");
@@ -1233,5 +1239,19 @@ int main(int argc, char *argv[])
 
   // dbgnew.hh already does it: check_mem_leak(argv[0]);
 
+#ifdef USAGE_STATS
+  if (stats_thread != 0) {
+    // cancel the usage stats thread if it hasn't finished yet
+    pthread_cancel(stats_thread);
+    pthread_join(stats_thread, NULL);
+  }
+  if (stats_data != NULL) {
+    if (stats_data->sndr != NULL) {
+      delete stats_data->sndr;
+    }
+    delete stats_data;
+  }
+#endif
+  
   return ret_val;
 }

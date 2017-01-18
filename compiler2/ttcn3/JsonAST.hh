@@ -18,13 +18,13 @@
 
 class JsonSchemaExtension {
 private:
-  void init(const char* p_key, const char* p_value);
+  void init(char* p_key, char* p_value);
 public:
   char* key;
   char* value;
   
-  JsonSchemaExtension(const char* p_key, const char* p_value) { init(p_key, p_value); }
-  JsonSchemaExtension(const JsonSchemaExtension& x) { init(x.key, x.value); }
+  JsonSchemaExtension(char* p_key, char* p_value) { init(p_key, p_value); }
+  JsonSchemaExtension(const JsonSchemaExtension& x) { init(mcopystr(x.key), mcopystr(x.value)); }
   ~JsonSchemaExtension();
 };
 
