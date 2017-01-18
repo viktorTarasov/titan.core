@@ -1689,9 +1689,12 @@ void ComplexType::resolveAttribute(AttributeType* attr) {
         attr->setTypeOfField(st->getName().convertedValue);
         attr->setNameOfField(st->getName().originalValueWoPrefix);
         attr->setOrigModule(st->getModule());
+        st->addToNameDepList(attr);
       } else {
         attr->setTypeOfField(st->getName().convertedValue);
-        if (st->getType().convertedValue == "record" || st->getType().convertedValue == "union") {
+        if (st->getType().convertedValue == "record" || st->getType().convertedValue == "union"
+            || st->getXsdtype() == n_NOTSET) // It really is a simpleType
+          {
             st->addToNameDepList(attr);
           }
       }

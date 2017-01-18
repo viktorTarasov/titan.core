@@ -464,6 +464,15 @@ group Testcases_basedOnTtcnStandard9 {
     }
   }
 
+  testcase tc_attribute_rename() runs on xmlTest_CT
+  {
+    f_shellCommandWithVerdict(xsd2ttcn_command & " attribute_rename.xsd","",c_shell_successWithoutWarningAndError);
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_attribute_rename_e.ttcn", "www_example_org_attribute_rename.ttcn", c_numOfDiff);
+    }
+  }
+
   testcase tc_name_conv_non_alphanumeric() runs on xmlTest_CT
   {
     f_shellCommandWithVerdict(xsd2ttcn_command & " name_conv_non_alphanumeric.xsd","",c_shell_successWithoutWarningAndError);
@@ -2573,6 +2582,7 @@ control {
   execute(tc_XmlTest_attribute_use_noTNS());//Passed
   execute(tc_id_attribute());
   execute(tc_attribute_order());
+  execute(tc_attribute_rename());
   execute(tc_name_conv_non_alphanumeric());
   execute(tc_module_name_convert_with_diff_namespace());
   execute(tc_module_typename_conversion());
