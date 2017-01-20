@@ -22,6 +22,7 @@
 #include "TTCN3Module.hh"
 #include "SimpleType.hh"
 #include "ComplexType.hh"
+#include "Constant.hh"
 
 extern bool h_flag_used;
 extern bool q_flag_used;
@@ -101,6 +102,17 @@ void TTCN3ModuleInventory::finalModification() {
       type->Data->finalModification();
     }
   }
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+    for (List<RootType*>::iterator type = module->Data->getConstantDefs().begin(); type; type = type->Next) {
+      type->Data->finalModification();
+    }
+    Constant::finalFinalModification(module->Data->getConstantDefs());
+  }
+  for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+    for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next) {
+      type->Data->finalModification2();
+    }
+  }
 }
 
 void TTCN3ModuleInventory::nameConversion() {
@@ -115,6 +127,7 @@ void TTCN3ModuleInventory::nameConversion() {
   for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
     if (module->Data->isnotIntoNameConversion()) continue;
 
+    List<RootType*> definedConstants_inABC;
     List<RootType*> definedElements_inABC;
     List<RootType*> definedAttributes_inABC;
     List<RootType*> definedSimpleTypes_inABC;
@@ -124,6 +137,19 @@ void TTCN3ModuleInventory::nameConversion() {
 
     for (List<TTCN3Module*>::iterator module2 = module; module2; module2 = module2->Next) {
       if (module2->Data->getModulename() != module->Data->getModulename()) continue;
+      
+      for (List<RootType*>::iterator type = module2->Data->getConstantDefs().begin(); type; type = type->Next) {
+        definedConstants_inABC.push_back(type->Data);
+      }
+      // If two module has the same module name then they will be generated into
+      // one module, so the constants shall be moved.
+      if (module->Data != module2->Data) {
+        for (List<RootType*>::iterator type = module->Data->getConstantDefs().begin(), nextType; type; type = nextType) {
+          nextType = type->Next;
+          module2->Data->getConstantDefs().push_back(type->Data);
+          module->Data->getConstantDefs().remove(type);
+        }
+      }
 
       for (List<RootType*>::iterator type = module2->Data->getDefinedTypes().begin(); type; type = type->Next) {
         switch (type->Data->getConstruct()) {
@@ -152,6 +178,7 @@ void TTCN3ModuleInventory::nameConversion() {
       module2->Data->notIntoNameConversion();
     }
 
+    definedSimpleTypes_inABC.sort(compareTypes);
     definedElements_inABC.sort(compareTypes);
     definedAttributes_inABC.sort(compareTypes);
     definedSimpleTypes_inABC.sort(compareTypes);
@@ -164,6 +191,9 @@ void TTCN3ModuleInventory::nameConversion() {
       typenames.push_back(QualifiedName(module->Data->getTargetNamespace(), mod->Data->getModulename()));
     }
 
+    for (List<RootType*>::iterator type = definedConstants_inABC.begin(); type; type = type->Next) {
+      type->Data->nameConversion(nameMode, module->Data->getDeclaredNamespaces());
+    }
     for (List<RootType*>::iterator type = definedElements_inABC.begin(); type; type = type->Next) {
       type->Data->nameConversion(nameMode, module->Data->getDeclaredNamespaces());
     }
@@ -188,6 +218,9 @@ void TTCN3ModuleInventory::nameConversion() {
    * Conversion of the type of types
    * ******************************************************/
   for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
+    for (List<RootType*>::iterator type = module->Data->getConstantDefs().begin(); type; type = type->Next) {
+      type->Data->nameConversion(typeMode, module->Data->getDeclaredNamespaces());
+    }
     for (List<RootType*>::iterator type = module->Data->getDefinedTypes().begin(); type; type = type->Next) {
       type->Data->nameConversion(typeMode, module->Data->getDeclaredNamespaces());
     }

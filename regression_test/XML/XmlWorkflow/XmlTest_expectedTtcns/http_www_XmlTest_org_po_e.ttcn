@@ -45,6 +45,9 @@ module http_www_XmlTest_org_po {
 import from XSD all;
 
 
+const XSD.NMTOKEN c_defaultForEmpty_1 := "US";
+
+
 /* Purchase order schema for Example.com.
      Copyright 2000 Example.com. All rights reserved. */
 
@@ -78,7 +81,7 @@ with {
 
 type record USAddress
 {
-	XSD.NMTOKEN country ("US") optional,
+	XSD.NMTOKEN country (c_defaultForEmpty_1) optional,
 	XSD.String name,
 	XSD.String street,
 	XSD.String city,
@@ -86,7 +89,7 @@ type record USAddress
 	XSD.Decimal zip
 }
 with {
-  variant (country) "defaultForEmpty as 'US'";
+  variant (country) "defaultForEmpty as c_defaultForEmpty_1";
   variant (country) "attribute";
 };
 

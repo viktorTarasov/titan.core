@@ -58,6 +58,10 @@ class TTCN3Module {
    */
   List<RootType*>definedTypes;
   /**
+   * contains all constant definitions defined in the module
+   */
+  List<RootType*>constantDefs;
+  /**
    * Type of the currently processed main type
    */
   ConstructType actualXsdConstruct;
@@ -92,6 +96,8 @@ class TTCN3Module {
 
   bool moduleNotIntoFile;
   bool moduleNotIntoNameConversion;
+  
+  unsigned int const_counter;
 
   TTCN3Module & operator=(const TTCN3Module &); // not implemented
   TTCN3Module(const TTCN3Module &); // not implemented
@@ -171,8 +177,9 @@ public:
 
   void addAnnotation();
   void addMainType(const ConstructType typeOfMainType);
-  void addMainType(RootType * type){ definedTypes.push_back(type); }
-
+  void addMainType(RootType * type) { definedTypes.push_back(type); }
+  void addConstant(RootType * constant) { constantDefs.push_back(constant); }
+  
   bool hasDefinedMainType() const {
     return !definedTypes.empty();
   }
@@ -180,6 +187,10 @@ public:
 
   const List<RootType*> & getDefinedTypes() const {
     return definedTypes;
+  }
+  
+   List<RootType*> & getConstantDefs() {
+    return constantDefs;
   }
 
   RootType & getLastMainType() {
@@ -254,6 +265,14 @@ public:
   void TargetNamespace2ModuleName();
 
   friend bool compareModules(TTCN3Module * lhs, TTCN3Module * rhs);
+  
+  unsigned int getConstCounter() {
+    return const_counter;
+  }
+  
+  void increaseConstCounter() {
+    ++const_counter;
+  }
 
   void dump() const;
 };

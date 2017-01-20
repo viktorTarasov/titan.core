@@ -44,6 +44,9 @@ module www_example_org_nillable_fixed {
 import from XSD all;
 
 
+const XSD.Integer c_defaultForEmpty_1 := 1;
+
+
 type record RemarkNillable
 {
 	XSD.String content optional
@@ -72,7 +75,7 @@ with {
 type record SeqNillable
 {
 	XSD.Integer bar optional,
-	XSD.Integer foo (1) optional,
+	XSD.Integer foo (c_defaultForEmpty_1) optional,
 	record {
 		record {
 			XSD.String content optional
@@ -89,7 +92,7 @@ with {
   variant "useNil";
   variant "element";
   variant (bar) "attribute";
-  variant (foo) "defaultForEmpty as '1'";
+  variant (foo) "defaultForEmpty as c_defaultForEmpty_1";
   variant (foo) "attribute";
   variant (content.forename) "useNil";
   variant (content.surname) "useNil";

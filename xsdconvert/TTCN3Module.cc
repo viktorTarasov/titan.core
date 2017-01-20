@@ -22,6 +22,7 @@
 #include "ComplexType.hh"
 #include "ImportStatement.hh"
 #include "Annotation.hh"
+#include "Constant.hh"
 
 #include "../common/version_internal.h"
 
@@ -41,6 +42,7 @@ TTCN3Module::TTCN3Module(const char * a_filename, XMLParser * a_parser)
 , schemaname()
 , modulename()
 , definedTypes()
+, constantDefs()
 , actualXsdConstruct(c_unknown)
 , xsdVersion()
 , xsdEncoding()
@@ -57,7 +59,8 @@ TTCN3Module::TTCN3Module(const char * a_filename, XMLParser * a_parser)
 , variant()
 , xmlSchemaPrefixes()
 , moduleNotIntoFile(false)
-, moduleNotIntoNameConversion(false) {
+, moduleNotIntoNameConversion(false)
+, const_counter(1) {
 #if defined(WIN32) && !defined(MINGW)
   // Transform a Windows style path: "C:\cygwin\tmp\a.xsd"
   // into a POSIX style path: "/home/a/xsd", so getValueWithoutPrefix('/')
@@ -87,6 +90,10 @@ TTCN3Module::TTCN3Module(const char * a_filename, XMLParser * a_parser)
 
 TTCN3Module::~TTCN3Module() {
   for (List<RootType*>::iterator type = definedTypes.begin(); type; type = type->Next) {
+    delete type->Data;
+  }
+  
+  for (List<RootType*>::iterator type = constantDefs.begin(); type; type = type->Next) {
     delete type->Data;
   }
 }
@@ -286,6 +293,9 @@ void TTCN3Module::generate_TTCN3_included_types(FILE * file) {
 }
 
 void TTCN3Module::generate_TTCN3_types(FILE * file) {
+  for (List<RootType*>::iterator type = constantDefs.begin(); type; type = type->Next) {
+    type->Data->printToFile(file);
+  }
   for (List<RootType*>::iterator type = definedTypes.begin(); type; type = type->Next) {
     if (type->Data->getConstruct() != c_include && type->Data->getConstruct() != c_import) {
       type->Data->printToFile(file);
@@ -451,6 +461,10 @@ void TTCN3Module::TargetNamespace2ModuleName() {
 void TTCN3Module::dump() const {
   fprintf(stderr, "Module '%s' at %p (from %s)\n",
     modulename.c_str(), (const void*) this, schemaname.c_str());
+  
+  for (List<RootType*>::iterator type = constantDefs.begin(); type; type = type->Next) {
+    type->Data->dump(1);
+  }
 
   for (List<RootType*>::iterator type = definedTypes.begin(); type; type = type->Next) {
     type->Data->dump(1);

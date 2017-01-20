@@ -2411,6 +2411,48 @@ group Elements{
 
   }//tc_
 
+  testcase tc_defaultforempty() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & " defaultforempty.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_defaultforempty_e.ttcn",
+        "www_example_org_defaultforempty.ttcn", c_numOfDiff);
+    }
+
+  }//tc_
+
+  testcase tc_defaultforempty_diff_module() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & " defaultforempty_mod1.xsd defaultforempty_mod2.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_defaultforempty_mod1_e.ttcn",
+        "www_example_org_defaultforempty_mod1.ttcn", c_numOfDiff);
+    }
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_defaultforempty_mod2_e.ttcn",
+        "www_example_org_defaultforempty_mod2.ttcn", c_numOfDiff);
+    }
+
+  }//tc_
+
+  testcase tc_defaultforempty_same_ns() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & " defaultforempty_same_ns1.xsd defaultforempty_same_ns2.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_defaultforempty_same_ns_e.ttcn",
+        "www_example_org_defaultforempty_same_ns.ttcn", c_numOfDiff);
+    }
+
+  }//tc_
+
   //========================================================
   // Alias tests
   //========================================================
@@ -2794,6 +2836,10 @@ control {
   execute(tc_type_substitution_rename());
   execute(tc_type_substitution_complex_cascade());
   execute(tc_type_substitution_simple_cascade());
+
+  execute(tc_defaultforempty());
+  execute(tc_defaultforempty_diff_module());
+  execute(tc_defaultforempty_same_ns());
 
   //===aliases===
   execute(tc_simpletype_aliases());

@@ -46,6 +46,9 @@ module urn_ietf_params_xml_ns_conference_info {
 import from XSD all;
 
 
+const State_type c_defaultForEmpty_1 := full;
+
+
 /* CONFERENCE ELEMENT */
 
 
@@ -77,7 +80,7 @@ with {
   variant "name as 'conference-type'";
   variant (attr) "attribute";
   variant (entity) "attribute";
-  variant (state) "defaultForEmpty as 'full'";
+  variant (state) "defaultForEmpty as c_defaultForEmpty_1";
   variant (state) "attribute";
   variant (attr_1) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:conference-info'";
   variant (attr_1) "name as 'attr'";
@@ -231,7 +234,7 @@ type record Uris_type
 }
 with {
   variant "name as 'uris-type'";
-  variant (state) "defaultForEmpty as 'full'";
+  variant (state) "defaultForEmpty as c_defaultForEmpty_1";
   variant (state) "attribute";
   variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:conference-info'";
   variant (entry_list) "untagged";
@@ -282,7 +285,7 @@ type record Users_type
 }
 with {
   variant "name as 'users-type'";
-  variant (state) "defaultForEmpty as 'full'";
+  variant (state) "defaultForEmpty as c_defaultForEmpty_1";
   variant (state) "attribute";
   variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:conference-info'";
   variant (user_list) "untagged";
@@ -311,7 +314,7 @@ type record User_type
 with {
   variant "name as 'user-type'";
   variant (entity) "attribute";
-  variant (state) "defaultForEmpty as 'full'";
+  variant (state) "defaultForEmpty as c_defaultForEmpty_1";
   variant (state) "attribute";
   variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:conference-info'";
   variant (display_text) "name as 'display-text'";
@@ -372,7 +375,7 @@ type record Endpoint_type
 with {
   variant "name as 'endpoint-type'";
   variant (entity) "attribute";
-  variant (state) "defaultForEmpty as 'full'";
+  variant (state) "defaultForEmpty as c_defaultForEmpty_1";
   variant (state) "attribute";
   variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:conference-info'";
   variant (display_text) "name as 'display-text'";
@@ -557,7 +560,7 @@ type record Sidebars_by_val_type
 }
 with {
   variant "name as 'sidebars-by-val-type'";
-  variant (state) "defaultForEmpty as 'full'";
+  variant (state) "defaultForEmpty as c_defaultForEmpty_1";
   variant (state) "attribute";
   variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:conference-info'";
   variant (entry_list) "untagged";

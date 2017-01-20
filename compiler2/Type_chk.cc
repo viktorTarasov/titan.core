@@ -828,7 +828,12 @@ Value *Type::new_value_for_dfe(Type *last, const char *dfe_str, Common::Referenc
   if (is_ref_dfe) {
     Value* v = new Value(Value::V_REFD, ref->clone());
     v->set_my_scope(get_my_scope()->get_scope_mod());
-    if (!is_compatible_tt_tt(last->typetype, v->get_expr_governor_last()->typetype, last->is_asn1(), v->get_expr_governor_last()->is_asn1())) {
+    Type * t = v->get_expr_governor_last();
+    if (t == NULL) {
+      delete v;
+      return 0;
+    }
+    if (!is_compatible_tt_tt(last->typetype, v->get_expr_governor_last()->typetype, last->is_asn1(), t->is_asn1())) {
       v->get_reference()->error("Incompatible types were given to defaultForEmpty variant: `%s' instead of `%s'.\n",
         v->get_expr_governor_last()->get_typename().c_str(), last->get_typename().c_str());
       delete v;

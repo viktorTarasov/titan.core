@@ -79,12 +79,12 @@ private:
   TagName lastType;
   Mstring actualPath;
   RootType * actfield;
-  SimpleType * nameDep;
+  SimpleType * nameDep; // not owned
   RootType * nillable_field;
   ComplexType * basefield;
   ComplexType_Mode cmode;
   Resolv_State resolved;
-  ComplexType * parentTypeSubsGroup;
+  ComplexType * parentTypeSubsGroup; // not owned
 
 
   // Returns true if the attributes really restricted and not just aliased
@@ -100,7 +100,9 @@ private:
   void applyNamespaceAttribute(VariantMode varLabel, const Mstring& ns_list);
   void applyReference(const SimpleType & other, const bool on_attributes = false);
   void setParent(ComplexType * par, SimpleType * child);
+  void subFinalModification();
   void finalModification2();
+  void subFinalModification2();
   Mstring findRoot(const BlockValue value, SimpleType * elem, const Mstring& head_type, const bool first);
 
   //Reference resolving functions

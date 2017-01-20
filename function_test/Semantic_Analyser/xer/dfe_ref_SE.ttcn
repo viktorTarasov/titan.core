@@ -18,7 +18,8 @@ type record DFEConst { //^In type definition//
   universal charstring us, //^In record field \`us\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_us//
   integer i, //^In record field \`i\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_i//
   float f, //^In record field \`f\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_f//
-  boolean b //^In record field \`b\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_b//
+  boolean b, //^In record field \`b\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_b//
+  charstring csmissing //^In record field \`csmissing\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_csmissing//
 }
 with {
   variant "element";
@@ -27,6 +28,7 @@ with {
   variant (i) "defaultForEmpty as c_oct"; //^error: Incompatible types were given to defaultForEmpty variant\: \`octetstring\' instead of \`integer\'\.//
   variant (f) "defaultForEmpty as c_oct"; //^error: Incompatible types were given to defaultForEmpty variant\: \`octetstring\' instead of \`float\'\.//
   variant (b) "defaultForEmpty as c_oct"; //^error: Incompatible types were given to defaultForEmpty variant\: \`octetstring\' instead of \`boolean\'\.//
+  variant (csmissing) "defaultForEmpty as c_missing"; //^error\: There is no local or imported definition with name \`c_missing\'//
 }
 
 }

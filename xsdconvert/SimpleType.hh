@@ -20,6 +20,7 @@
 #include "RootType.hh"
 
 class SimpleType;
+class Constant;
 
 class LengthType {
   LengthType & operator=(const LengthType &); // not implemented
@@ -70,6 +71,7 @@ public:
   List<QualifiedName> items_time;
   List<Mstring> items_misc;
   List<Mstring> variants;
+  List<Mstring> converted_facets;
 
   EnumerationType(SimpleType * p_parent);
   // Default copy constructor and destructor are used
@@ -230,9 +232,9 @@ protected:
   bool isOptional;
   Mstring substitutionGroup;
   //Pointer to the generated element substitution group
-  ComplexType * subsGroup;
+  ComplexType * subsGroup; // not owned
   //Pointer to the generated type substitution group
-  ComplexType * typeSubsGroup;
+  ComplexType * typeSubsGroup; // not owned
   //To determine if already added to type substitution
   bool addedToTypeSubstitution;
   BlockValue block;
@@ -244,7 +246,9 @@ protected:
   // We are inside a list if inList is true and mode == listMode
   
   // If this type is an alias then the alias field points to the original type
-  SimpleType * alias;
+  SimpleType * alias; // not owned
+  
+  Constant * defaultForEmptyConstant; // not owned
   
   //Element substitution
   void addToSubstitutions();
@@ -280,6 +284,7 @@ public:
   void referenceResolving();
   void nameConversion(const NameConversionMode mode, const List<NamespaceType> & ns);
   void finalModification();
+  virtual void finalModification2();
   virtual bool hasUnresolvedReference();
   virtual void modifyList();
   void dump(const unsigned int depth) const;
@@ -389,7 +394,7 @@ public:
       inList = list;
   }
   
-  void addToNameDepList(SimpleType * t) {
+  void addToNameDepList(RootType * t) {
       //If the type has a substitution, we add the namedep to the substitution
       if(subsGroup != NULL && this != (SimpleType*)subsGroup){
           SimpleType * substitution = (SimpleType*)subsGroup;
@@ -404,6 +409,10 @@ public:
   
   SimpleType * getAlias() const {
       return alias;
+  }
+  
+  Constant * getConstantDefaultForEmpty() const {
+    return defaultForEmptyConstant;
   }
   
   // Returns true if the type really restricts or extends the type not
