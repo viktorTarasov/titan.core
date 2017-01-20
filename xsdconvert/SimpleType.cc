@@ -28,6 +28,18 @@
 extern bool g_flag_used;
 extern bool h_flag_used;
 
+#ifndef INFINITY
+#define INFINITY (DBL_MAX*DBL_MAX)
+#endif
+const double PLUS_INFINITY(INFINITY);
+const double MINUS_INFINITY(-INFINITY);
+
+#ifdef NAN
+const double NOT_A_NUMBER(NAN);
+#else
+const double NOT_A_NUMBER((double)PLUS_INFINITY+(double)MINUS_INFINITY);
+#endif
+
 SimpleType::SimpleType(XMLParser * a_parser, TTCN3Module * a_module, ConstructType a_construct)
 : RootType(a_parser, a_module, a_construct)
 , builtInBase()
@@ -1242,7 +1254,11 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
     for (List<Mstring>::iterator facet = facets.begin(); facet; facet = facet->Next) {
       double float_value = atof(facet->Data.c_str());
       const ValueType & value = parent->getValue();
-      if (value.lower <= float_value && float_value <= value.upper) {
+      // Value uses DBL_MAX as infinity or -DBL_MAX as -infinity
+      if ((value.lower <= float_value && float_value <= value.upper)
+        || (facet->Data == "-INF" && value.lower == -DBL_MAX)
+        || (facet->Data == "INF" && value.upper == DBL_MAX)
+        || facet->Data == "NaN") {
         bool found = false;
         for (List<double>::iterator itemFloat = items_float.begin(); itemFloat; itemFloat = itemFloat->Next) {
           if (float_value == itemFloat->Data) {
@@ -1307,13 +1323,21 @@ void EnumerationType::printToFile(FILE * file, unsigned int indent_level) const 
     for (List<double>::iterator itemFloat = items_float.begin(); itemFloat; itemFloat = itemFloat->Next) {
       if (itemFloat != items_float.begin()) fputs(", ", file);
 
-      double intpart = 0;
-      double fracpart = 0;
-      fracpart = modf(itemFloat->Data, &intpart);
-      if (fracpart == 0) {
-        fprintf(file, "%lld.0", (long long int) (itemFloat->Data));
+      if (itemFloat->Data == PLUS_INFINITY) {
+        fprintf(file, "infinity");
+      } else if (itemFloat->Data == MINUS_INFINITY) {
+        fprintf(file, "-infinity");
+      } else if (isnan(itemFloat->Data)) {
+        fprintf(file, "not_a_number");
       } else {
-        fprintf(file, "%g", itemFloat->Data);
+        double intpart = 0;
+        double fracpart = 0;
+        fracpart = modf(itemFloat->Data, &intpart);
+        if (fracpart == 0) {
+          fprintf(file, "%lld.0", (long long int) (itemFloat->Data));
+        } else {
+          fprintf(file, "%g", itemFloat->Data);
+        }
       }
     }
   } else if (isTimeType(base)) {

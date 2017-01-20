@@ -9,6 +9,7 @@
  Contributors:
   Balasko, Jeno
   Raduly, Csaba
+  Szabo, Bence Janos
 -->
 <schema  xmlns="http://www.w3.org/2001/XMLSchema"
 xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -68,5 +69,14 @@ targetNamespace="www.example.org/ranges/float">
 		<maxInclusive value="NaN"/>
 	</restriction>
 </simpleType>
+
+<simpleType name="enum">
+	<restriction base="float">
+		<enumeration value="INF"/>
+		<enumeration value="-INF"/>
+		<enumeration value="NaN"/>
+	</restriction>
+</simpleType>
+
 
 </schema>
