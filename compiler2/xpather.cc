@@ -1068,6 +1068,8 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
             // Go to the next required config
             req_config = req_config->next;
             continue;
+          } else {
+            found = TRUE;
           }
           
           // Get the project_name's act_config config_struct (tmp holds it)
@@ -1090,7 +1092,7 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
           }
           insert_to_tmp_config(tmp_configs, project_name, act_config, is_active);
           
-          // Analyse referenced project's of project_name project
+          // Analyze referenced projects of project_name project
           struct string_list* last_child = tmp->children;
           while (last_child && last_child->str != NULL) {
             result = analyse_child(all_configs, last_child->str, NULL, required_configs, tmp_configs);
@@ -1103,8 +1105,8 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
       }
       last = last->next;
     }
-    
-    if (found == FALSE) { // No one said anything about this project's configuration
+     // No one said anything about this project's configuration or we still don't know the configuration
+    if (found == FALSE || get_act_config(required_configs, project_name) == NULL) {
       //Get the active configuration of this project
       last = all_configs;
       while (last && last->project_name != NULL && last->project_conf != NULL) {
@@ -1218,13 +1220,14 @@ static tpd_result config_struct_get_required_configs(struct config_struct* const
         if (result == FALSE) return TPD_FAILED;
         insert_to_tmp_config(*tmp_configs, last->project_name, last->project_conf, TRUE);
         
-        // last variable holds the top level project's active configuration which needed to be analysed
+        // last variable holds the top level project's active configuration which needed to be analyzed
         // Insert every required config of the top level project active configuration
         struct string2_list* last_proj_config = last->requirements;
         while (last_proj_config && last_proj_config->str1 != NULL && last_proj_config->str2 != NULL) { // todo ezek a null cuccok mindenhova, every param should not be null
           struct string_list* children = last->children;
           // This if allows that a top level project can require an other project's configuration
           // without referencing it.
+          
           if (children->str != NULL || strcmp(last_proj_config->str1, last->project_name) == 0) {
             result = insert_to_required_config(all_configs, last_proj_config->str1, last_proj_config->str2, required_configs);
             if (result == FALSE) return TPD_FAILED;
@@ -1233,7 +1236,7 @@ static tpd_result config_struct_get_required_configs(struct config_struct* const
         }
         last->processed = TRUE;
         
-        //Analyse the referenced project of the top level project
+        //Analyze the referenced project of the top level project
         struct string_list* last_child = last->children;
         while (last_child && last_child->str != NULL) {
           result = analyse_child(all_configs, last_child->str, NULL, required_configs, *tmp_configs); // todo check if everywhere is handled
@@ -2925,6 +2928,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
                 next_child->next = NULL;
                 last_child->next = next_child;
                 last_child = next_child;
+                //break; needed???
               }
             }
             tmp = tmp->next;
