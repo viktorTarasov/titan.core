@@ -45,7 +45,7 @@ BuildTpd:
 CheckTpd: BuildTpd
 	if [ ! -f "./a_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./a_binDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 58 failed: Overall verdict: fail" && exit 1; fi
-	if [ ! -f "./b_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./b_bin1/Makefile` -ne 1 ]; \
+	if [ ! -f "./b_binDefault/Makefile" ] || [ `grep -c "EXECUTABLE = binDefault" ./b_binDefault/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 58 failed: Overall verdict: fail" && exit 1; fi
 	if [ ! -f "./c_bin1/Makefile" ] || [ `grep -c "EXECUTABLE = bin1" ./c_bin1/Makefile` -ne 1 ]; \
 	then echo "Makefilegen required config test 58 failed: Overall verdict: fail" && exit 1; fi
