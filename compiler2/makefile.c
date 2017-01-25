@@ -4995,6 +4995,8 @@ int main(int argc, char *argv[])
   
   if (error_flag) {
     usage();
+    Free(other_files);
+    Free(search_paths);
     return EXIT_FAILURE;
   }
 
@@ -5007,6 +5009,8 @@ int main(int argc, char *argv[])
 #ifdef LICENSE
     print_license_info();
 #endif
+    Free(other_files);
+    Free(search_paths);
     return EXIT_SUCCESS;
   }
 
@@ -5017,16 +5021,21 @@ int main(int argc, char *argv[])
   free_openssl();
   if (!valid_license) {
     free_license(&lstr);
+    Free(other_files);
+    Free(search_paths);
     exit(EXIT_FAILURE);
   }
   if (!check_feature(&lstr, FEATURE_TPGEN)) {
     ERROR("The license key does not allow the generation of "
           "Makefile skeletons.");
+    Free(other_files);
+    Free(search_paths);
     return EXIT_FAILURE;
   }
   free_license(&lstr);
 #endif
 
+  boolean free_argv = FALSE;
   if (tflag) {
     char* abs_work_dir = NULL;
     FILE* prj_graph_fp = NULL;
@@ -5104,7 +5113,7 @@ int main(int argc, char *argv[])
     boolean temp_wflag = FALSE;
 
     tpd_processed = process_tpd(tpd_file_name, tpd_build_config, file_list_path,
-      &argc, &argv, &optind, &ets_name, &project_name,
+      &argc, &argv, &free_argv, &optind, &ets_name, &project_name,
       &gflag, &sflag, &cflag, &aflag, &pflag,
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
       create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csflag,
@@ -5118,14 +5127,17 @@ int main(int argc, char *argv[])
       wflag = temp_wflag;
     }
 
-    Free(abs_work_dir);
     if (prj_graph_fp) {
       fprintf(prj_graph_fp, "</project_hierarchy_graph>\n");
       fclose(prj_graph_fp);
     }
     if (tpd_processed == TPD_FAILED) {
       ERROR("Failed to process %s", tpd_file_name);
-      goto end;
+      // process_tpd has already cleaned everything up
+      return EXIT_FAILURE;
+    }
+    else {
+      Free(abs_work_dir);
     }
     if (zflag) {
       WARNING("Compiler option '-z' and its argument will be overwritten by "
@@ -5160,8 +5172,12 @@ int main(int argc, char *argv[])
       executeMakefileScript(makefileScript, output_file);
     }
   }
+  else {
+    free_string2_list(run_command_list);
+    free_string2_list(create_symlink_list);
+    Free(project_name);
+  }
 
-end:
   free_string_list(sub_project_dirs);
   free_string_list(ttcn3_prep_includes);
   free_string_list(ttcn3_prep_defines);
@@ -5185,10 +5201,9 @@ end:
   free_string2_list(target_placement_list);
   free_string2_list(required_configs);
   Free(makefileScript);
-
+  
   Free(other_files);
   if (tpd_processed == TPD_SUCCESS) {
-    int E;
     if (!(eflag && ets_name))
       Free(ets_name);
     if (cxxcompiler)
@@ -5200,6 +5215,9 @@ end:
     if (ttcn3prep)
       Free(ttcn3prep);
   /* Free(output_file); */
+  }
+  if (free_argv) {
+    int E;
     for (E = 0; E < argc; ++E) Free(argv[E]);
     Free(argv);
   }
