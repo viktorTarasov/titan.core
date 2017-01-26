@@ -369,9 +369,29 @@ namespace Ttcn {
         }
       } else {
         // Generate code for array reference.
-        expr->expr = mputc(expr->expr, '[');
-        ref->get_val()->generate_code_expr(expr);
-        expr->expr = mputc(expr->expr, ']');
+        Value* v = ref->get_val();
+        Type * pt = v->get_expr_governor_last();
+        // If the value is indexed with an array or record of then generate
+        // the indexes of the array or record of into the code, one by one.
+        if (pt->get_typetype() == Type::T_ARRAY || pt->get_typetype() == Type::T_SEQOF) {
+          int len = 0, start = 0;
+          if (pt->get_typetype() == Type::T_ARRAY) {
+            len = (int)pt->get_dimension()->get_size();
+            start = pt->get_dimension()->get_offset();
+          } else if (pt->get_typetype() == Type::T_SEQOF) {
+            len = pt->get_sub_type()->get_length_restriction();
+          }
+          // Generate the indexes as [x][y]...
+          for (int j = start; j < start + len; j++) {
+            expr->expr = mputc(expr->expr, '[');
+            v->generate_code_expr(expr);
+            expr->expr = mputprintf(expr->expr, "[%i]]", j);
+          }
+        } else {
+          expr->expr = mputc(expr->expr, '[');
+          v->generate_code_expr(expr);
+          expr->expr = mputc(expr->expr, ']');
+        }
         if (type) {
           // Follow the embedded type.
           switch (type->get_typetype()) {
