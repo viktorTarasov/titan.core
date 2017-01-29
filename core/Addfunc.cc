@@ -214,15 +214,15 @@ static CharCoding::CharCodingType is_ascii ( const OCTETSTRING& ostr )
 
 static CharCoding::CharCodingType is_utf8 ( const OCTETSTRING& ostr )
 {
-  const char MSB = 1 << 7; // MSB is 1 in case of non ASCII character  
-  const char MSBmin1 = 1 << 6; // 0100 0000   
+  const unsigned char MSB = 1 << 7; // MSB is 1 in case of non ASCII character  
+  const unsigned char MSBmin1 = 1 << 6; // 0100 0000   
   int i = 0;
   const unsigned char* strptr = (const unsigned char*)ostr;
   //  std::cout << "UTF-8 strptr" << strptr << std::endl;  
   while (ostr.lengthof() > i) {
     if ( strptr[i] & MSB) { // non ASCII char
   // std::cout << "UTF-8 strptr[" << i << "]: " << std::hex << (int)strptr[i] << std::endl;
-    char maskUTF8 = 1 << 6; // 111x xxxx shows how many additional bytes are there
+    unsigned char maskUTF8 = 1 << 6; // 111x xxxx shows how many additional bytes are there
       if (!(strptr[i] & maskUTF8)) return CharCoding::UNKNOWN; // accepted 11xxx xxxx but received 10xx xxxx
       unsigned int noofUTF8 = 0; // 11xx xxxxx -> 2 bytes, 111x xxxxx -> 3 bytes , 1111 xxxxx -> 4 bytes in UTF-8
       while (strptr[i] & maskUTF8) {
