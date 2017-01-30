@@ -17,6 +17,7 @@
  *   Kremer, Peter
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *
  ******************************************************************************/
@@ -1644,7 +1645,12 @@ void defPortClass(const port_def* pdef, output_struct* output)
         src = mputstr(src, "TTCN_error(\"Message cannot be sent to system "
           "on internal port %s.\", port_name);\n");
       } else {
-        src = mputprintf(src, "outgoing_send(send_par%s);\n",
+        src = mputprintf(src,
+          "{\n"
+          // To generate DTE-s if not mapped or connected.
+          "(void)get_default_destination();\n"
+          "outgoing_send(send_par%s);\n"
+          "}\n",
           pdef->testport_type == ADDRESS ? ", NULL" : "");
       }
       src = mputprintf(src, "else {\n"
@@ -1680,6 +1686,8 @@ void defPortClass(const port_def* pdef, output_struct* output)
         " send_par.log(),"
         " TTCN_Logger::end_event_log2str()));\n"
         "}\n", class_name, msg->name, pdef->address_name, msg->dispname);
+      // To generate DTE-s if not mapped or connected.
+      src = mputstr(src, "(void)get_default_destination();\n");
       if (pdef->port_type != USER || (msg->nTargets == 1 &&
         msg->targets[0].mapping_type == M_SIMPLE)) {
         src = mputstr(src, "outgoing_send(send_par, "

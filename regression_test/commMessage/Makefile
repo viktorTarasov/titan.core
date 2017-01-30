@@ -27,7 +27,7 @@ include $(TOPDIR)/Makefile.regression
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)-parallel$(DYNAMIC_SUFFIX)
 TTCN3_LIB_SINGLE = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = TcommMessage.ttcn HS41022.ttcn
+TTCN3_MODULES = TcommMessage.ttcn HS41022.ttcn AddressPortNegTest.ttcn
 
 ifdef RT2
 TTCN3_MODULES += TmultipleRedirects.ttcn
@@ -46,7 +46,11 @@ GENERATED_SOURCES2 := $(foreach file, $(GENERATED_SOURCES:.cc=), $(addprefix $(f
 GENERATED_SOURCES += $(GENERATED_SOURCES2)
 endif
 
-OBJECTS = $(GENERATED_SOURCES:.cc=.o)
+PORT_SOURCES = PortType1.cc PortType2.cc
+PORT_HEADERS = PortType1.hh PortType2.hh
+
+
+OBJECTS = $(GENERATED_SOURCES:.cc=.o) $(PORT_SOURCES:.cc=.o) 
 
 TARGET = TcommMessage$(EXESUFFIX)
 TARGET_SINGLE = TcommMessage_single$(EXESUFFIX)
@@ -62,12 +66,12 @@ $(TARGET_SINGLE): $(OBJECTS)
 .cc.o:
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
 
-$(GENERATED_SOURCES) $(GENERATED_HEADERS): $(TTCN3_MODULES) $(ASN1_MODULES)
-	$(TTCN3_COMPILER) $^
+$(GENERATED_SOURCES) $(GENERATED_HEADERS) $(PORT_SOURCES) $(PORT_HEADERS): $(TTCN3_MODULES) $(ASN1_MODULES)
+	$(TTCN3_COMPILER) -t $^
 
 clean distclean:
 	-rm -f $(TARGET) $(TARGET_SINGLE) $(OBJECTS) $(GENERATED_HEADERS) \
-	$(GENERATED_SOURCES) *.log Makefile.bak
+	$(GENERATED_SOURCES) $(PORT_HEADERS) $(PORT_SOURCES) *.log Makefile.bak
 
 dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
