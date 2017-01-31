@@ -4652,6 +4652,20 @@ error:
       ptb1->report_connection_errors(ptb2);
       if (ptb1 != ptb2) ptb2->report_connection_errors(ptb1);
     }
+    
+    {
+      Error_Context cntxt2(config_op.compref1, "In first endpoint");
+      if (ptb1->get_testport_type() == PortTypeBody::TP_ADDRESS) {
+        error("An address supporting port cannot be used in the connect operation");
+      }
+    }
+    
+    {
+      Error_Context cntxt2(config_op.compref1, "In second endpoint");
+      if (ptb2->get_testport_type() == PortTypeBody::TP_ADDRESS) {
+        error("An address supporting port cannot be used in the connect operation");
+      }
+    }
   }
 
   void Statement::chk_map()
