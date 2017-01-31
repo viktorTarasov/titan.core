@@ -1297,7 +1297,11 @@ port_connection *PORT::add_connection(component remote_component,
       else if (ret_val > 0) break;
     } else if (conn_ptr->remote_component > remote_component) break;
   }
-
+  
+  if (n_system_mappings > 0) {
+    TTCN_error("Connect operation cannot be performed on a mapped port (%s).", port_name);
+  }
+  
   port_connection *new_conn = new port_connection;
   new_conn->owner_port = this;
 
@@ -2414,6 +2418,9 @@ void PORT::map_port(const char *component_port, const char *system_port)
   PORT *port_ptr = lookup_by_name(component_port);
   if (port_ptr == NULL) TTCN_error("Map operation refers to "
     "non-existent port %s.", component_port);
+  if (port_ptr->connection_list_head != NULL) {
+    TTCN_error("Map operation is not allowed on a connected port (%s).", component_port);
+  }
   port_ptr->map(system_port);
   if (!TTCN_Runtime::is_single())
     TTCN_Communication::send_mapped(component_port, system_port);
