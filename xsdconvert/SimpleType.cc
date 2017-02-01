@@ -21,12 +21,25 @@
 #include "TTCN3ModuleInventory.hh"
 #include "TTCN3Module.hh"
 #include "ComplexType.hh"
+#include "Constant.hh"
 
 #include <cmath> // for using "pow" function
 #include <cfloat>
 
 extern bool g_flag_used;
 extern bool h_flag_used;
+
+#ifndef INFINITY
+#define INFINITY (DBL_MAX*DBL_MAX)
+#endif
+const double PLUS_INFINITY(INFINITY);
+const double MINUS_INFINITY(-INFINITY);
+
+#ifdef NAN
+const double NOT_A_NUMBER(NAN);
+#else
+const double NOT_A_NUMBER((double)PLUS_INFINITY+(double)MINUS_INFINITY);
+#endif
 
 SimpleType::SimpleType(XMLParser * a_parser, TTCN3Module * a_module, ConstructType a_construct)
 : RootType(a_parser, a_module, a_construct)
@@ -51,6 +64,7 @@ SimpleType::SimpleType(XMLParser * a_parser, TTCN3Module * a_module, ConstructTy
 , block(not_set)
 , inList(false)
 , alias(NULL)
+, defaultForEmptyConstant(NULL)
 , parent(NULL) {
 }
 
@@ -77,6 +91,7 @@ SimpleType::SimpleType(const SimpleType& other)
 , block(other.block)
 , inList(other.inList)
 , alias(other.alias)
+, defaultForEmptyConstant(other.defaultForEmptyConstant)
 , parent(NULL) {
   length.parent = this;
   pattern.parent = this;
@@ -248,10 +263,14 @@ void SimpleType::loadWithValues() {
 void SimpleType::applyDefaultAttribute(const Mstring& default_value) {
   if (!default_value.empty()) {
     value.default_value = default_value;
-  const Mstring nameT = type.originalValueWoPrefix.getValueWithoutPrefix(':');
+    const Mstring typeT = type.originalValueWoPrefix.getValueWithoutPrefix(':');
     //Not supported for hexBinary and base64Binary
-    if (nameT != "hexBinary" && nameT != "base64Binary") {
-      addVariant(V_defaultForEmpty, default_value);
+    if (typeT != "hexBinary" && typeT != "base64Binary") {
+      Constant * c = new Constant(this, type.convertedValue, default_value);
+      module->addConstant(c);
+      defaultForEmptyConstant = c;
+      // Delay adding the defaultForEmpty variant after the nameconversion
+      // happened on the constants
     }
   }
 }
@@ -260,10 +279,14 @@ void SimpleType::applyFixedAttribute(const Mstring& fixed_value) {
   if (!fixed_value.empty()) {
     value.fixed_value = fixed_value;
     value.modified = true;
-    const Mstring nameT = type.originalValueWoPrefix.getValueWithoutPrefix(':');
+    const Mstring typeT = type.originalValueWoPrefix.getValueWithoutPrefix(':');
     //Not supported for hexBinary and base64Binary
-    if (nameT != "hexBinary" && nameT != "base64Binary") {
-      addVariant(V_defaultForEmpty, fixed_value);
+    if (typeT != "hexBinary" && typeT != "base64Binary") {
+      Constant * c = new Constant(this, type.convertedValue, fixed_value);
+      module->addConstant(c);
+      defaultForEmptyConstant = c;
+      // Delay adding the defaultForEmpty variant after the nameconversion
+      // happened on the constants
     }
   }
 }
@@ -316,7 +339,7 @@ void SimpleType::addToSubstitutions(){
   //Simpletype
   if(st->subsGroup == NULL){
     ComplexType * head_element = new ComplexType(*st, ComplexType::fromTagSubstitution);
-    for(List<SimpleType*>::iterator simpletype = st->nameDepList.begin(); simpletype; simpletype = simpletype->Next){
+    for(List<RootType*>::iterator simpletype = st->nameDepList.begin(); simpletype; simpletype = simpletype->Next){
       head_element->getNameDepList().push_back(simpletype->Data);
     }
     st->nameDepList.clear();
@@ -371,12 +394,14 @@ void SimpleType::addToTypeSubstitutions() {
   if(st->getTypeSubstitution() == NULL){
     ComplexType * head_element = new ComplexType(*st, ComplexType::fromTypeSubstitution);
     head_element->getNameDepList().clear();
-    for(List<SimpleType*>::iterator simpletype = st->nameDepList.begin(), nextST; simpletype; simpletype = nextST){
-      nextST = simpletype->Next;
+    for(List<RootType*>::iterator roottype = st->nameDepList.begin(), nextST; roottype; roottype = nextST){
+      nextST = roottype->Next;
       //Don't add if it is in a type substitution 
-      if(simpletype->Data->getTypeSubstitution() == NULL){
-        head_element->getNameDepList().push_back(simpletype->Data);
-        st->getNameDepList().remove(simpletype);
+      SimpleType* simpletype = dynamic_cast<SimpleType*>(roottype->Data);
+      if (simpletype == NULL) continue;
+      if(simpletype->getTypeSubstitution() == NULL){
+        head_element->getNameDepList().push_back(roottype->Data);
+        st->getNameDepList().remove(roottype);
       }
     }
     
@@ -734,8 +759,14 @@ void SimpleType::nameConversion_names() {
   XSDName2TTCN3Name(name.convertedValue, TTCN3ModuleInventory::getInstance().getTypenames(), type_name, res, var);
   name.convertedValue = res;
   addVariant(V_onlyValue, var);
-  for (List<SimpleType*>::iterator st = nameDepList.begin(); st; st = st->Next) {
+  for (List<RootType*>::iterator st = nameDepList.begin(); st; st = st->Next) {
     st->Data->setTypeValue(res);
+  }
+  if (outside_reference.get_ref() != NULL && defaultForEmptyConstant!= NULL) {
+    // We don't know if the name conversion already happened on the get_ref()
+    // so we push defaultForEmptyConstant to it's namedeplist.
+    defaultForEmptyConstant->setTypeValue(outside_reference.get_ref()->getType().convertedValue);
+    outside_reference.get_ref()->getNameDepList().push_back(defaultForEmptyConstant);
   }
 }
 
@@ -807,6 +838,17 @@ void SimpleType::finalModification() {
   }
 
   isOptional = isOptional || (getMinOccurs() == 0 && getMaxOccurs() == 0);
+  
+
+}
+
+void SimpleType::finalModification2() {
+  // Delayed adding the defaultForEmpty variant after the nameconversion
+  // happened on the constants
+  if (defaultForEmptyConstant != NULL) {
+    TTCN3Module * mod = parent != NULL ? parent->getModule() : getModule();
+    addVariant(V_defaultForEmpty, defaultForEmptyConstant->getAlterego()->getConstantName(mod));
+  }
 }
 
 bool SimpleType::hasUnresolvedReference() {
@@ -1181,7 +1223,8 @@ EnumerationType::EnumerationType(SimpleType * a_simpleType)
 , items_float()
 , items_time()
 , items_misc()
-, variants() {
+, variants()
+, converted_facets() {
 }
 
 void EnumerationType::applyReference(const EnumerationType & other) {
@@ -1211,6 +1254,7 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
         Mstring res, var;
         XSDName2TTCN3Name(facet->Data, items_string, enum_id_name, res, var);
         text_variants.push_back(var);
+        converted_facets.push_back(res);
       }
     }
     text_variants.sort();
@@ -1230,7 +1274,17 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
             break;
           }
         }
-        if (!found) items_int.push_back(int_value);
+        if (!found) {
+          items_int.push_back(int_value);
+          expstring_t tmp = NULL;
+          if (int_value < 0) {
+            tmp = mputprintf(tmp, "int_%d", abs(int_value));
+          } else {
+            tmp = mputprintf(tmp, "int%d", int_value);
+          }
+          converted_facets.push_back(Mstring(tmp));
+          Free(tmp);
+        }
 
         if (variants.empty() || variants.back() != "\"useNumber\"") {
           variants.push_back(Mstring("\"useNumber\""));
@@ -1242,7 +1296,11 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
     for (List<Mstring>::iterator facet = facets.begin(); facet; facet = facet->Next) {
       double float_value = atof(facet->Data.c_str());
       const ValueType & value = parent->getValue();
-      if (value.lower <= float_value && float_value <= value.upper) {
+      // Value uses DBL_MAX as infinity or -DBL_MAX as -infinity
+      if ((value.lower <= float_value && float_value <= value.upper)
+        || (facet->Data == "-INF" && value.lower == -DBL_MAX)
+        || (facet->Data == "INF" && value.upper == DBL_MAX)
+        || facet->Data == "NaN") {
         bool found = false;
         for (List<double>::iterator itemFloat = items_float.begin(); itemFloat; itemFloat = itemFloat->Next) {
           if (float_value == itemFloat->Data) {
@@ -1252,6 +1310,8 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
         }
         if (!found) {
           items_float.push_back(float_value);
+          Mstring res = xmlFloat2TTCN3FloatStr(facet->Data);
+          converted_facets.push_back(res);
         }
       }
     }
@@ -1261,6 +1321,7 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
       Mstring res, var;
       XSDName2TTCN3Name(facet->Data, items_time, enum_id_name, res, var);
       text_variants.push_back(var);
+      converted_facets.push_back(res);
     }
     text_variants.sort();
     for (List<Mstring>::iterator var = text_variants.end(); var; var = var->Prev) {
@@ -1307,13 +1368,21 @@ void EnumerationType::printToFile(FILE * file, unsigned int indent_level) const 
     for (List<double>::iterator itemFloat = items_float.begin(); itemFloat; itemFloat = itemFloat->Next) {
       if (itemFloat != items_float.begin()) fputs(", ", file);
 
-      double intpart = 0;
-      double fracpart = 0;
-      fracpart = modf(itemFloat->Data, &intpart);
-      if (fracpart == 0) {
-        fprintf(file, "%lld.0", (long long int) (itemFloat->Data));
+      if (itemFloat->Data == PLUS_INFINITY) {
+        fprintf(file, "infinity");
+      } else if (itemFloat->Data == MINUS_INFINITY) {
+        fprintf(file, "-infinity");
+      } else if (isnan(itemFloat->Data)) {
+        fprintf(file, "not_a_number");
       } else {
-        fprintf(file, "%g", itemFloat->Data);
+        double intpart = 0;
+        double fracpart = 0;
+        fracpart = modf(itemFloat->Data, &intpart);
+        if (fracpart == 0) {
+          fprintf(file, "%lld.0", (long long int) (itemFloat->Data));
+        } else {
+          fprintf(file, "%g", itemFloat->Data);
+        }
       }
     }
   } else if (isTimeType(base)) {
@@ -1526,45 +1595,44 @@ void ValueType::printToFile(FILE * file) const {
     return;
   }
   if (!fixed_value.empty()) {
-    //Base64binary and hexbyte does not supported
-    Mstring type;
-    if(isBuiltInType(parent->getType().originalValueWoPrefix)){
-      type = parent->getType().originalValueWoPrefix; 
-    }else {
-      type = getPrefixByNameSpace(parent, parent->getReference().get_uri()) + Mstring(":") + parent->getReference().get_val();
-    }
-    if(!isBuiltInType(type)){
-      type = findBuiltInType(parent, type);
-    }
-    if (isStringType(type) || isTimeType(type) || isQNameType(type) || isAnyType(type)) {
-      const Mstring& name = type.getValueWithoutPrefix(':');
-      if (name != "hexBinary" && name != "base64Binary") {
-        fprintf(file, " (\"%s\")", fixed_value.c_str());
-      }
-    } else if (isBooleanType(type)) {
-      Mstring val;
-      if (fixed_value == "1") {
-        val = "true";
-      } else if (fixed_value == "0") {
-        val = "false";
-      } else {
-        val = fixed_value;
-      }
-      fprintf(file, " (%s)", val.c_str());
-    } else if (isFloatType(type)) {
-      Mstring val;
-      if (fixed_value == "INF") {
-        val = "infinity";
-      } else if (fixed_value == "-INF") {
-        val = "-infinity";
-      } else if (fixed_value == "NaN") {
-        val = "not_a_number";
-      } else {
-        val = fixed_value;
-      }
+    if (parent->getConstantDefaultForEmpty() != NULL) {
+      // Insert the constant's name in the TTCN type restriction.
+      TTCN3Module * mod = parent->parent != NULL ? parent->parent->getModule() :
+                          parent->getModule();
+      Mstring val = parent->getConstantDefaultForEmpty()->getAlterego()->getConstantName(mod);
       fprintf(file, " (%s)", val.c_str());
     } else {
-      fprintf(file, " (%s)", fixed_value.c_str());
+      //Base64binary and hexbyte does not supported
+      Mstring type;
+      if(isBuiltInType(parent->getType().originalValueWoPrefix)){
+        type = parent->getType().originalValueWoPrefix; 
+      }else {
+        type = getPrefixByNameSpace(parent, parent->getReference().get_uri()) + Mstring(":") + parent->getReference().get_val();
+      }
+      if(!isBuiltInType(type)){
+        type = findBuiltInType(parent, type);
+      }
+      if (isStringType(type) || isTimeType(type) || isQNameType(type) || isAnyType(type)) {
+        const Mstring& name = type.getValueWithoutPrefix(':');
+        if (name != "hexBinary" && name != "base64Binary") {
+          fprintf(file, " (\"%s\")", fixed_value.c_str());
+        }
+      } else if (isBooleanType(type)) {
+        Mstring val;
+        if (fixed_value == "1") {
+          val = "true";
+        } else if (fixed_value == "0") {
+          val = "false";
+        } else {
+          val = fixed_value;
+        }
+        fprintf(file, " (%s)", val.c_str());
+      } else if (isFloatType(type)) {
+        Mstring val = xmlFloat2TTCN3FloatStr(fixed_value);
+        fprintf(file, " (%s)", val.c_str());
+      } else {
+        fprintf(file, " (%s)", fixed_value.c_str());
+      }
     }
     return;
   }

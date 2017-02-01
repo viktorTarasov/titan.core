@@ -67,7 +67,7 @@ private:
 
 public:
 
-  static const size_t max_vector_length = -1;
+  static const size_t max_vector_length = (size_t) -1;
 
   /** Creates an empty vector. */
   vector() : num_e(0), e_ptr(NULL) { }

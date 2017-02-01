@@ -144,7 +144,7 @@ protected:
 
   /// List of types that depend on this one.
   /// Used to propagate the effect of name conversion to the dependents
-  List<SimpleType*> nameDepList; // no responsibility for elements
+  List<RootType*> nameDepList; // no responsibility for elements
   
 private:
   unsigned long long int minOccurs;
@@ -172,6 +172,9 @@ public:
   }
 
   virtual void finalModification() {
+  }
+  
+  virtual void finalModification2() {
   }
 
   virtual bool hasUnresolvedReference() {
@@ -263,7 +266,7 @@ public:
     return comment;
   }
 
-  List<SimpleType*> & getNameDepList() {
+  List<RootType*> & getNameDepList() {
       return nameDepList;
   }
 

@@ -292,7 +292,8 @@ other.print("other");
     defaultForEmptyIsRef_ = other.defaultForEmptyIsRef_;
   }
   
-  if (other.defaultForEmptyIsRef_ && other.defaultForEmptyRef_ != 0) {
+  defaultForEmptyIsRef_ |= other.defaultForEmptyIsRef_;
+  if (other.defaultForEmptyRef_ != 0) {
     Free(defaultForEmptyRef_);
     defaultForEmptyRef_ = other.defaultForEmptyRef_->clone();
   }

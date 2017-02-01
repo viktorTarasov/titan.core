@@ -22,7 +22,7 @@ SOURCES :=	converter.cc \
 			RootType.cc SimpleType.cc AttributeType.cc ComplexType.cc \
 			Annotation.cc ImportStatement.cc \
 			PredefinedModules.cc GeneralFunctions.cc \
-			Mstring.cc
+			Mstring.cc Constant.cc
 
 # No generated sources
 STATIC_SOURCES := $(SOURCES)

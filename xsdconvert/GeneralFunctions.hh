@@ -50,6 +50,9 @@ void printError(const Mstring& filename, int lineNumber, const Mstring& text);
 void printError(const Mstring& filename, const Mstring& typeName, const Mstring& text);
 void indent(FILE * file, const unsigned int x);
 
+// Converts an XML float value as string to a correct ttcn float value as string
+Mstring xmlFloat2TTCN3FloatStr(const Mstring& xmlFloat);
+
 long double stringToLongDouble(const char * input);
 
 class RootType;

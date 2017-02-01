@@ -103,7 +103,9 @@ void RootType::addVariant(const VariantMode var, const Mstring& var_value, const
       variantstring = "\"controlNamespace" + var_value + "\"";
       break;
     case V_defaultForEmpty:
-      variantstring = "\"defaultForEmpty as \'" + var_value + "\'\""; // chapter 7.1.5
+      // The apostrophes are not needed because the var_value will be a constant
+      // reference.
+      variantstring = "\"defaultForEmpty as " + var_value + "\""; // chapter 7.1.5
       break;
     case V_element:
       variantstring = "\"element\"";

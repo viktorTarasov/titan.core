@@ -105,7 +105,7 @@ void AttributeType::nameConversion_names(QualifiedNames& used_ns) {
     used_ns.push_back(used_names.back());
   }
 
-  for (List<SimpleType*>::iterator st = nameDepList.begin(); st; st = st->Next) {
+  for (List<RootType*>::iterator st = nameDepList.begin(); st; st = st->Next) {
     st->Data->setTypeValue(res);
   }
 }

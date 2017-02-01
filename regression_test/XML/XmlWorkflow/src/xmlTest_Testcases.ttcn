@@ -898,9 +898,28 @@ group IntegerTest {
     }
   }//tc_
 
+  testcase tc_ranges_integer() runs on xmlTest_CT {
+    f_shellCommandWithVerdict(xsd2ttcn_command & "  ranges_integer.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_ranges_integer_e.ttcn",
+        "www_example_org_ranges_integer.ttcn", c_numOfDiff);
+    }
+  }//tc_
+
 
 }//IntegerTest
 
+  testcase tc_ranges_float() runs on xmlTest_CT {
+    f_shellCommandWithVerdict(xsd2ttcn_command & "  ranges_float.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_ranges_float_e.ttcn",
+        "www_example_org_ranges_float.ttcn", c_numOfDiff);
+    }
+  }//tc_
 
   testcase tc_float_not_a_number() runs on xmlTest_CT {
     f_shellCommandWithVerdict(xsd2ttcn_command & "  not_a_number_minex_inf_maxex_-inf.xsd","",c_shell_successWithoutWarningAndError)
@@ -2392,6 +2411,48 @@ group Elements{
 
   }//tc_
 
+  testcase tc_defaultforempty() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & " defaultforempty.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_defaultforempty_e.ttcn",
+        "www_example_org_defaultforempty.ttcn", c_numOfDiff);
+    }
+
+  }//tc_
+
+  testcase tc_defaultforempty_diff_module() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & " defaultforempty_mod1.xsd defaultforempty_mod2.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_defaultforempty_mod1_e.ttcn",
+        "www_example_org_defaultforempty_mod1.ttcn", c_numOfDiff);
+    }
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_defaultforempty_mod2_e.ttcn",
+        "www_example_org_defaultforempty_mod2.ttcn", c_numOfDiff);
+    }
+
+  }//tc_
+
+  testcase tc_defaultforempty_same_ns() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & " defaultforempty_same_ns1.xsd defaultforempty_same_ns2.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_defaultforempty_same_ns_e.ttcn",
+        "www_example_org_defaultforempty_same_ns.ttcn", c_numOfDiff);
+    }
+
+  }//tc_
+
   //========================================================
   // Alias tests
   //========================================================
@@ -2631,6 +2692,7 @@ control {
   execute(tc_integer_withMaxIncl());//Passed
   execute(tc_integer_withMinExcl());//Passed
   execute(tc_integer_withMaxExcl());//Passed
+  execute(tc_ranges_integer());//Passed
   //===Time===
   execute(tc_time());//passed
   execute(tc_time_withEnum());//Passed TR HL22058
@@ -2642,6 +2704,7 @@ control {
   execute(tc_list_complextype());
   execute(tc_list_minmaxoccurs());
   //===Float===
+  execute(tc_ranges_float());
   execute(tc_float_not_a_number());
 
   //===simpleType enum====
@@ -2773,6 +2836,10 @@ control {
   execute(tc_type_substitution_rename());
   execute(tc_type_substitution_complex_cascade());
   execute(tc_type_substitution_simple_cascade());
+
+  execute(tc_defaultforempty());
+  execute(tc_defaultforempty_diff_module());
+  execute(tc_defaultforempty_same_ns());
 
   //===aliases===
   execute(tc_simpletype_aliases());

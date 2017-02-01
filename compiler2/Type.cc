@@ -1703,7 +1703,58 @@ namespace Common {
         }
         // check the index value
         Value *index_value = ref->get_val();
-        if (t->typetype == T_ARRAY) {
+        index_value->set_lowerid_to_ref();
+        
+        // pt is the type with the indexing is made, while t is the type on the
+        // indexing is applied.
+        Type* pt = index_value->get_expr_governor_last();
+        if (pt != NULL &&
+          // The indexer type is an array or record of
+           (pt->get_typetype() == T_ARRAY || pt->get_typetype() == T_SEQOF) &&
+          // The indexed type is a record of or set of or array
+           (t->get_typetype() == T_SEQOF || t->get_typetype() == T_SETOF || t->get_typetype() == T_ARRAY)) {
+          
+          // The indexer type must be of type integer
+          if (pt->get_ofType()->get_type_refd_last()->get_typetype() != T_INT) {
+            ref->error("Only fixed length array or record of integer types are allowed for short-hand notation for nested indexes.");
+            return 0;
+          }
+          int len = 0;
+          // Get the length of the array or record of
+          if (pt->get_typetype() == T_ARRAY) {
+            len = (int)pt->get_dimension()->get_size();
+          } else if (pt->get_typetype() == T_SEQOF) {
+            SubType* sub = pt->get_sub_type();
+            if (sub == NULL) {
+              ref->error("The type `%s' must have single size length restriction when used as a short-hand notation for nested indexes.",
+                pt->get_typename().c_str());
+              return 0;
+            }
+            len = pt->get_sub_type()->get_length_restriction();
+            if (len == -1) {
+              ref->error("The type `%s' must have single size length restriction when used as a short-hand notation for nested indexes.",
+                pt->get_typename().c_str());
+              return 0;
+            }
+          }
+          embedded_type = embedded_type->get_type_refd_last();
+          int j = 0;
+          // Get the len - 1'th inner type
+          while (j < len - 1) {
+            switch (embedded_type->get_typetype()) {
+              case T_SEQOF:
+              case T_SETOF:
+              case T_ARRAY:
+                embedded_type = embedded_type->get_ofType()->get_type_refd_last();
+                break;
+              default:
+                ref->error("The type `%s' contains too many indexes (%i) in the short-hand notation for nested indexes.",
+                  pt->get_typename().c_str(), len);
+                return 0;
+            }
+            j++;
+          }
+        } else if (t->typetype == T_ARRAY) {
           // checking of array index is performed by the array dimension
           t->u.array.dimension->chk_index(index_value, expected_index);
         } else {

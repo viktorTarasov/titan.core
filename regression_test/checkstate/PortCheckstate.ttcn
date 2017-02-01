@@ -70,6 +70,7 @@ module PortCheckstate
             setverdict(fail);
         }
 
+        unmap(mtc:MyPCO2, system:MyPCO4);
         var MyMTCType myComp1 := MyMTCType.create;
         connect(myComp1:MyPCO2, mtc:MyPCO2);
 
@@ -154,6 +155,7 @@ module PortCheckstate
             setverdict(fail);
         }
 
+        unmap(mtc:MyPCO2, system:MyPCO4);
         var MyMTCType myComp1 := MyMTCType.create;
         connect(myComp1:MyPCO2, mtc:MyPCO2);
 
@@ -253,6 +255,7 @@ module PortCheckstate
             setverdict(fail);
         }
 
+        unmap(mtc:MyPCO1, system:MyPCO3);
         var MyMTCType myComp1 := MyMTCType.create;
         connect(myComp1:MyPCO1, mtc:MyPCO1);
 
@@ -263,6 +266,7 @@ module PortCheckstate
             setverdict(fail);
         }
 
+        unmap(mtc:MyPCO2, system:MyPCO4);
         var MyMTCType myComp2 := MyMTCType.create;
         connect(myComp2:MyPCO2, mtc:MyPCO2);
 

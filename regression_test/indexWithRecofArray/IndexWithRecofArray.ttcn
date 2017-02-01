@@ -1,0 +1,1688 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+
+module IndexWithRecofArray {
+
+	type component GeneralComp {	    	    
+	}
+ 
+
+	type record of record of integer RoRoI;
+	type record of record of RoRoI RoIRoIRoIRoI;
+	type set of set of integer SoISoI;
+	type set of set of SoISoI SoISoISoISoI
+	type record length(1) of  integer  RoI1;
+	type record length(2) of  integer  RoI2;
+
+
+//###########################################################################//
+// Record of indexed with array or record of
+	
+	testcase tc_recordof_indexed_with_array() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var integer v_index[1] := { 1 }
+
+////////////////////////////////////////////////////
+
+		if (v_rec[v_index] == {2, 3}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index] := {5, 6};
+		if (v_rec[v_index] == {5, 6}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index] := {2, 3};
+
+////////////////////////////////////////////////////
+
+
+		if (v_rec[v_index][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index][0] := 99;
+		if (v_rec[v_index][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index][0] := 2;
+
+////////////////////////////////////////////////////
+
+		if (v_rec[0][v_index] == 1) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[0][v_index] := 99;
+		if (v_rec[0][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[0][v_index] := 1;
+
+
+////////////////////////////////////////////////////
+
+
+		if (v_rec[v_index][v_index] == 3) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index][v_index] := 99;
+		if (v_rec[v_index][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index][v_index] := 3;
+
+////////////////////////////////////////////////////		
+
+        var integer v_index2[2] := {1, 0};
+        if (v_rec[v_index2] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index2] := 99;
+		if (v_rec[v_index2] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index2] := 2;
+	}
+
+	testcase tc_recordof_indexed_with_recordof() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var RoI1 v_index := { 1 }
+		////////////////////////////////////////////////////
+
+		if (v_rec[v_index] == {2, 3}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index] := {5, 6};
+		if (v_rec[v_index] == {5, 6}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index] := {2, 3};
+
+////////////////////////////////////////////////////
+
+
+		if (v_rec[v_index][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index][0] := 99;
+		if (v_rec[v_index][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index][0] := 2;
+
+////////////////////////////////////////////////////
+
+		if (v_rec[0][v_index] == 1) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[0][v_index] := 99;
+		if (v_rec[0][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[0][v_index] := 1;
+
+
+////////////////////////////////////////////////////
+
+
+		if (v_rec[v_index][v_index] == 3) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index][v_index] := 99;
+		if (v_rec[v_index][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index][v_index] := 3;
+
+////////////////////////////////////////////////////		
+
+        var integer v_index2[2] := {1, 0};
+        if (v_rec[v_index2] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index2] := 99;
+		if (v_rec[v_index2] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index2] := 2;
+	}
+
+	testcase tc_recordof_indexed_with_recordof_and_array() runs on GeneralComp {
+		var RoIRoIRoIRoI v_rec := {
+			{
+				{
+					{0, 1},
+					{2, 3}
+				},
+				{
+					{4, 5},
+					{6, 7}
+				}
+			},
+			{
+				{
+					{8, 9},
+					{10, 11}
+				},
+				{
+					{12, 13},
+					{14, 15}
+				}
+			}
+		}
+		var integer v_index[1] := {0};
+		var integer v_index2[2] := {0, 1};
+		var RoI1 v_roi1 := {0};
+		var RoI2 v_roi2 := {0, 1};
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_rec[v_index][v_index2][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index][v_index2][v_index] := 99;
+		if (v_rec[v_index][v_index2][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index][v_index2][v_index] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_rec[v_index][v_index2][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index][v_index2][0] := 99;
+		if (v_rec[v_index][v_index2][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index][v_index2][0] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_rec[v_index][0][1][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_index][0][1][v_index] := 99;
+		if (v_rec[v_index][0][1][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_index][0][1][v_index] := 2;
+
+////////////////////////////////////////////////////
+
+		// [0][0][1][0]
+		if (v_rec[v_roi1][v_index2][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_roi1][v_index2][v_index] := 99;
+		if (v_rec[v_roi1][v_index2][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_roi1][v_index2][v_index] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_rec[v_roi1][v_roi2][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_roi1][v_roi2][v_index] := 99;
+		if (v_rec[v_roi1][v_roi2][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_roi1][v_roi2][v_index] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_rec[v_roi1][v_roi2][v_roi1] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_roi1][v_roi2][v_roi1] := 99;
+		if (v_rec[v_roi1][v_roi2][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_roi1][v_roi2][v_roi1] := 2;
+
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_rec[v_roi1][v_roi2][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_roi1][v_roi2][0] := 99;
+		if (v_rec[v_roi1][v_roi2][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_roi1][v_roi2][0] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_rec[0][v_roi2][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[0][v_roi2][0] := 99;
+		if (v_rec[0][v_roi2][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[0][v_roi2][0] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_rec[v_roi1][0][1][v_roi1] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_roi1][0][1][v_roi1] := 99;
+		if (v_rec[v_roi1][0][1][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_roi1][0][1][v_roi1] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][1][1][0]
+		if (v_rec[v_roi1][1][1][v_roi1] == 6) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_roi1][1][1][v_roi1] := 99;
+		if (v_rec[v_roi1][1][1][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_roi1][1][1][v_roi1] := 6;
+
+////////////////////////////////////////////////////	
+
+		// [0][1][1][0]
+		if (v_rec[v_roi1][v_roi2[1]][1][v_roi1] == 6) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_roi1][v_roi2[1]][1][v_roi1] := 99;
+		if (v_rec[v_roi1][v_roi2[1]][1][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_roi1][v_roi2[1]][1][v_roi1] := 6;
+
+////////////////////////////////////////////////////	
+
+		// [0][1][1][0]
+		if (v_rec[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] == 6) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] := 99;
+		if (v_rec[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] := 6;
+
+////////////////////////////////////////////////////	
+
+		// [1][0][1][1]
+		if (v_rec[v_roi2[1]][v_index2][v_index2[1]] == 11) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_rec[v_roi2[1]][v_index2][v_index2[1]] := 99;
+		if (v_rec[v_roi2[1]][v_index2][v_index2[1]] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_rec[v_roi2[1]][v_index2][v_index2[1]] := 11;
+	}
+
+
+//###########################################################################//
+// Set of indexed with array or record of
+
+
+	testcase tc_setof_indexed_with_array() runs on GeneralComp {
+
+		var SoISoI v_set := {{0, 1}, {2, 3}};
+        var integer v_index[1] := { 1 }
+////////////////////////////////////////////////////
+
+		if (v_set[v_index] == {2, 3}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index] := {5, 6};
+		if (v_set[v_index] == {5, 6}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index] := {2, 3};
+
+////////////////////////////////////////////////////
+
+
+		if (v_set[v_index][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index][0] := 99;
+		if (v_set[v_index][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index][0] := 2;
+
+////////////////////////////////////////////////////
+
+		if (v_set[0][v_index] == 1) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[0][v_index] := 99;
+		if (v_set[0][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[0][v_index] := 1;
+
+
+////////////////////////////////////////////////////
+
+
+		if (v_set[v_index][v_index] == 3) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index][v_index] := 99;
+		if (v_set[v_index][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index][v_index] := 3;
+
+////////////////////////////////////////////////////		
+
+        var integer v_index2[2] := {1, 0};
+        if (v_set[v_index2] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index2] := 99;
+		if (v_set[v_index2] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index2] := 2;
+	}
+
+	testcase tc_setof_indexed_with_recordof() runs on GeneralComp {
+
+		var SoISoI v_set := {{0, 1}, {2, 3}};
+        var RoI1 v_index := { 1 }
+////////////////////////////////////////////////////
+
+		if (v_set[v_index] == {2, 3}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index] := {5, 6};
+		if (v_set[v_index] == {5, 6}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index] := {2, 3};
+
+////////////////////////////////////////////////////
+
+
+		if (v_set[v_index][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index][0] := 99;
+		if (v_set[v_index][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index][0] := 2;
+
+////////////////////////////////////////////////////
+
+		if (v_set[0][v_index] == 1) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[0][v_index] := 99;
+		if (v_set[0][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[0][v_index] := 1;
+
+
+////////////////////////////////////////////////////
+
+
+		if (v_set[v_index][v_index] == 3) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index][v_index] := 99;
+		if (v_set[v_index][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index][v_index] := 3;
+
+////////////////////////////////////////////////////		
+
+        var integer v_index2[2] := {1, 0};
+        if (v_set[v_index2] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index2] := 99;
+		if (v_set[v_index2] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index2] := 2;
+	}
+
+	testcase tc_setof_indexed_with_recordof_and_array() runs on GeneralComp {
+		var SoISoISoISoI v_set := {
+			{
+				{
+					{0, 1},
+					{2, 3}
+				},
+				{
+					{4, 5},
+					{6, 7}
+				}
+			},
+			{
+				{
+					{8, 9},
+					{10, 11}
+				},
+				{
+					{12, 13},
+					{14, 15}
+				}
+			}
+		}
+		var integer v_index[1] := {0};
+		var integer v_index2[2] := {0, 1};
+		var RoI1 v_roi1 := {0};
+		var RoI2 v_roi2 := {0, 1};
+
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_set[v_index][v_index2][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index][v_index2][v_index] := 99;
+		if (v_set[v_index][v_index2][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index][v_index2][v_index] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_set[v_index][v_index2][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index][v_index2][0] := 99;
+		if (v_set[v_index][v_index2][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index][v_index2][0] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_set[v_index][0][1][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_index][0][1][v_index] := 99;
+		if (v_set[v_index][0][1][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_index][0][1][v_index] := 2;
+
+////////////////////////////////////////////////////
+
+		// [0][0][1][0]
+		if (v_set[v_roi1][v_index2][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_roi1][v_index2][v_index] := 99;
+		if (v_set[v_roi1][v_index2][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_roi1][v_index2][v_index] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_set[v_roi1][v_roi2][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_roi1][v_roi2][v_index] := 99;
+		if (v_set[v_roi1][v_roi2][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_roi1][v_roi2][v_index] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_set[v_roi1][v_roi2][v_roi1] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_roi1][v_roi2][v_roi1] := 99;
+		if (v_set[v_roi1][v_roi2][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_roi1][v_roi2][v_roi1] := 2;
+
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_set[v_roi1][v_roi2][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_roi1][v_roi2][0] := 99;
+		if (v_set[v_roi1][v_roi2][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_roi1][v_roi2][0] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_set[0][v_roi2][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[0][v_roi2][0] := 99;
+		if (v_set[0][v_roi2][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[0][v_roi2][0] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_set[v_roi1][0][1][v_roi1] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_roi1][0][1][v_roi1] := 99;
+		if (v_set[v_roi1][0][1][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_roi1][0][1][v_roi1] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][1][1][0]
+		if (v_set[v_roi1][1][1][v_roi1] == 6) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_roi1][1][1][v_roi1] := 99;
+		if (v_set[v_roi1][1][1][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_roi1][1][1][v_roi1] := 6;
+
+////////////////////////////////////////////////////	
+
+		// [0][1][1][0]
+		if (v_set[v_roi1][v_roi2[1]][1][v_roi1] == 6) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_roi1][v_roi2[1]][1][v_roi1] := 99;
+		if (v_set[v_roi1][v_roi2[1]][1][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_roi1][v_roi2[1]][1][v_roi1] := 6;
+
+////////////////////////////////////////////////////	
+
+		// [0][1][1][0]
+		if (v_set[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] == 6) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] := 99;
+		if (v_set[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] := 6;
+
+////////////////////////////////////////////////////	
+
+		// [1][0][1][1]
+		if (v_set[v_roi2[1]][v_index2][v_index2[1]] == 11) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_set[v_roi2[1]][v_index2][v_index2[1]] := 99;
+		if (v_set[v_roi2[1]][v_index2][v_index2[1]] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_set[v_roi2[1]][v_index2][v_index2[1]] := 11;
+	}
+
+
+//###########################################################################//
+// Array indexed with array or record of
+
+
+	testcase tc_array_indexed_with_array() runs on GeneralComp {
+		var integer v_arr[2][2] := {{0, 1}, {2, 3}};
+		var integer v_index[1] := { 1 }
+////////////////////////////////////////////////////
+
+		if (v_arr[v_index] == {2, 3}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index] := {5, 6};
+		if (v_arr[v_index] == {5, 6}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index] := {2, 3};
+
+////////////////////////////////////////////////////
+
+
+		if (v_arr[v_index][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][0] := 99;
+		if (v_arr[v_index][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][0] := 2;
+
+////////////////////////////////////////////////////
+
+		if (v_arr[0][v_index] == 1) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[0][v_index] := 99;
+		if (v_arr[0][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[0][v_index] := 1;
+
+
+////////////////////////////////////////////////////
+
+
+		if (v_arr[v_index][v_index] == 3) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][v_index] := 99;
+		if (v_arr[v_index][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][v_index] := 3;
+
+////////////////////////////////////////////////////		
+
+        var integer v_index2[2] := {1, 0};
+        if (v_arr[v_index2] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index2] := 99;
+		if (v_arr[v_index2] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index2] := 2;
+	}
+
+		testcase tc_array_indexed_with_recordof() runs on GeneralComp {
+		var integer v_arr[2][2] := {{0, 1}, {2, 3}};
+		var RoI1 v_index := { 1 }
+////////////////////////////////////////////////////
+
+		if (v_arr[v_index] == {2, 3}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index] := {5, 6};
+		if (v_arr[v_index] == {5, 6}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index] := {2, 3};
+
+////////////////////////////////////////////////////
+
+
+		if (v_arr[v_index][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][0] := 99;
+		if (v_arr[v_index][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][0] := 2;
+
+////////////////////////////////////////////////////
+
+		if (v_arr[0][v_index] == 1) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[0][v_index] := 99;
+		if (v_arr[0][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[0][v_index] := 1;
+
+
+////////////////////////////////////////////////////
+
+
+		if (v_arr[v_index][v_index] == 3) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][v_index] := 99;
+		if (v_arr[v_index][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][v_index] := 3;
+
+////////////////////////////////////////////////////		
+
+        var integer v_index2[2] := {1, 0};
+        if (v_arr[v_index2] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index2] := 99;
+		if (v_arr[v_index2] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index2] := 2;
+	}
+
+
+		testcase tc_array_indexed_with_recordof_and_array() runs on GeneralComp {
+		var integer v_arr[2][2][2][2] := {
+			{
+				{
+					{0, 1},
+					{2, 3}
+				},
+				{
+					{4, 5},
+					{6, 7}
+				}
+			},
+			{
+				{
+					{8, 9},
+					{10, 11}
+				},
+				{
+					{12, 13},
+					{14, 15}
+				}
+			}
+		}
+		var integer v_index[1] := {0};
+		var integer v_index2[2] := {0, 1};
+		var RoI1 v_roi1 := {0};
+		var RoI2 v_roi2 := {0, 1};
+
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_arr[v_index][v_index2][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][v_index2][v_index] := 99;
+		if (v_arr[v_index][v_index2][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][v_index2][v_index] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_arr[v_index][v_index2][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][v_index2][0] := 99;
+		if (v_arr[v_index][v_index2][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][v_index2][0] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_arr[v_index][0][1][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][0][1][v_index] := 99;
+		if (v_arr[v_index][0][1][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][0][1][v_index] := 2;
+
+////////////////////////////////////////////////////
+
+		// [0][0][1][0]
+		if (v_arr[v_roi1][v_index2][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_roi1][v_index2][v_index] := 99;
+		if (v_arr[v_roi1][v_index2][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_roi1][v_index2][v_index] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_arr[v_roi1][v_roi2][v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_roi1][v_roi2][v_index] := 99;
+		if (v_arr[v_roi1][v_roi2][v_index] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_roi1][v_roi2][v_index] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_arr[v_roi1][v_roi2][v_roi1] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_roi1][v_roi2][v_roi1] := 99;
+		if (v_arr[v_roi1][v_roi2][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_roi1][v_roi2][v_roi1] := 2;
+
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_arr[v_roi1][v_roi2][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_roi1][v_roi2][0] := 99;
+		if (v_arr[v_roi1][v_roi2][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_roi1][v_roi2][0] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_arr[0][v_roi2][0] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[0][v_roi2][0] := 99;
+		if (v_arr[0][v_roi2][0] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[0][v_roi2][0] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][0][1][0]
+		if (v_arr[v_roi1][0][1][v_roi1] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_roi1][0][1][v_roi1] := 99;
+		if (v_arr[v_roi1][0][1][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_roi1][0][1][v_roi1] := 2;
+
+////////////////////////////////////////////////////	
+
+		// [0][1][1][0]
+		if (v_arr[v_roi1][1][1][v_roi1] == 6) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_roi1][1][1][v_roi1] := 99;
+		if (v_arr[v_roi1][1][1][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_roi1][1][1][v_roi1] := 6;
+
+////////////////////////////////////////////////////	
+
+		// [0][1][1][0]
+		if (v_arr[v_roi1][v_roi2[1]][1][v_roi1] == 6) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_roi1][v_roi2[1]][1][v_roi1] := 99;
+		if (v_arr[v_roi1][v_roi2[1]][1][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_roi1][v_roi2[1]][1][v_roi1] := 6;
+
+////////////////////////////////////////////////////	
+
+		// [0][1][1][0]
+		if (v_arr[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] == 6) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] := 99;
+		if (v_arr[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_roi1][v_roi2[1]][v_index2[1]][v_roi1] := 6;
+
+////////////////////////////////////////////////////	
+
+		// [1][0][1][1]
+		if (v_arr[v_roi2[1]][v_index2][v_index2[1]] == 11) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_roi2[1]][v_index2][v_index2[1]] := 99;
+		if (v_arr[v_roi2[1]][v_index2][v_index2[1]] == 99) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_roi2[1]][v_index2][v_index2[1]] := 11;
+
+	}
+
+
+//###########################################################################//
+// Array of charstring indexed with record of
+
+	testcase tc_arrayfstr_indexed_with_recordof() runs on GeneralComp {
+		var charstring v_arr[2][2] := {{"a", "b"}, {"c", "d"}};
+		var RoI1 v_index := { 1 }
+
+////////////////////////////////////////////////////
+
+		if (v_arr[v_index] == {"c", "d"}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index] := {"x", "y"};
+		if (v_arr[v_index] == {"x", "y"}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index] := {"c", "d"};
+
+////////////////////////////////////////////////////		
+
+		if (v_arr[v_index][0] == "c") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][0] := "x";
+		if (v_arr[v_index][0] == "x") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][0] := "c";
+
+////////////////////////////////////////////////////
+
+		if (v_arr[0][v_index] == "b") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[0][v_index] := "x";
+		if (v_arr[0][v_index] == "x") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[0][v_index] := "b";
+
+////////////////////////////////////////////////////
+
+		if (v_arr[v_index][v_index] == "d") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][v_index] := "x";
+		if (v_arr[v_index][v_index] == "x") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][v_index] := "d";
+
+////////////////////////////////////////////////////
+
+        var RoI2 v_index2 := {1, 0};
+        if (v_arr[v_index2] == "c") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index2] := "x";
+		if (v_arr[v_index2] == "x") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index2] := "c";
+
+	}
+
+
+//###########################################################################//
+// Array of charstring indexed with special indexing array
+
+	type integer MyInt;
+
+	testcase tc_array_indexed_with_spec_array() runs on GeneralComp {
+		var charstring v_arr[2..4][2..4] := {{"a", "b", "c"}, {"d", "e", "f"}, {"g", "h", "i"}};
+		var MyInt v_index[1..1] := {3};
+
+////////////////////////////////////////////////////
+
+		if (v_arr[v_index] == {"d", "e", "f"}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index] := {"x", "y", "z"};
+		if (v_arr[v_index] == {"x", "y", "z"}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index] := {"d", "e", "f"};
+
+////////////////////////////////////////////////////
+
+		if (v_arr[v_index][2] == "d") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][2] := "x";
+		if (v_arr[v_index][2] == "x") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][2] := "d";
+
+////////////////////////////////////////////////////
+
+		if (v_arr[2][v_index] == "b") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[2][v_index] := "x";
+		if (v_arr[2][v_index] == "x") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[2][v_index] := "b";
+
+////////////////////////////////////////////////////
+
+		if (v_arr[v_index][v_index] == "e") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index][v_index] := "x";
+		if (v_arr[v_index][v_index] == "x") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index][v_index] := "e";
+
+////////////////////////////////////////////////////
+
+        var MyInt v_index2[3..4] := {3, 2};
+        if (v_arr[v_index2] == "d") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+
+		// Assignment test
+		v_arr[v_index2] := "x";
+		if (v_arr[v_index2] == "x") {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+		// Restore to original value
+		v_arr[v_index2] := "d";
+	}
+
+	control {
+		execute(tc_recordof_indexed_with_array());
+		execute(tc_recordof_indexed_with_recordof());
+		execute(tc_recordof_indexed_with_recordof_and_array());
+
+		execute(tc_setof_indexed_with_array());
+		execute(tc_setof_indexed_with_recordof());
+		execute(tc_setof_indexed_with_recordof_and_array());
+		
+		execute(tc_array_indexed_with_array());
+		execute(tc_array_indexed_with_recordof());
+		execute(tc_array_indexed_with_recordof_and_array());
+
+		execute(tc_arrayfstr_indexed_with_recordof());
+		execute(tc_array_indexed_with_spec_array());
+	}
+
+}

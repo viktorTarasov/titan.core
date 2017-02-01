@@ -794,12 +794,12 @@ static CharCoding::CharCodingType is_ascii (size_t length, const unsigned char* 
 
 static CharCoding::CharCodingType is_utf8(size_t length, const unsigned char* strptr)
 {
-  const char MSB = 1 << 7; // MSB is 1 in case of non ASCII character  
-  const char MSBmin1 = 1 << 6; // 0100 0000   
+  const unsigned char MSB = 1 << 7; // MSB is 1 in case of non ASCII character  
+  const unsigned char MSBmin1 = 1 << 6; // 0100 0000   
   size_t i = 0;
   while (length > i) {
     if ( strptr[i] & MSB) { // non ASCII char
-    char maskUTF8 = 1 << 6; // 111x xxxx shows how many additional bytes are there
+    unsigned char maskUTF8 = 1 << 6; // 111x xxxx shows how many additional bytes are there
       if (!(strptr[i] & maskUTF8)) return CharCoding::UNKNOWN; // accepted 11xxx xxxx but received 10xx xxxx
       unsigned int noofUTF8 = 0; // 11xx xxxxx -> 2 bytes, 111x xxxxx -> 3 bytes , 1111 xxxxx -> 4 bytes in UTF-8
       while (strptr[i] & maskUTF8) {

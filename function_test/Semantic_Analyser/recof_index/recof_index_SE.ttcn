@@ -1,0 +1,50 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+module recof_index_SE { //^In TTCN-3 module//
+
+  type record of record of integer RoRoI;
+  type record length(1..2) of integer RoI1;
+  type record length(3) of integer RoI2;
+  type record of integer RoI;
+
+  type record length(1) of float RoF1;
+
+  function f() { //^In function definition `f'//
+    var RoRoI v_rec := {{0, 1}, {2, 3}};
+    var RoI1 v_index := { 1 }
+	if (v_rec[v_index] == {2, 3}) { //^In if statement:// //error: The type \`@recof_index_SE\.RoI1\' must have single size length restriction when used as a short-hand notation for nested indexes\.//
+	}
+
+    var RoI2 v_index2 := { 1, 2, 3 }
+	if (v_rec[v_index2] == {2, 3}) { //^In if statement:// //error: The type \`@recof_index_SE.RoI2\' contains too many indexes \(3\) in the short-hand notation for nested indexes\.//
+	}
+
+	var integer v_arr[3] := { 1, 2, 3 }
+	if (v_rec[v_arr] == {2, 3}) { //^In if statement:// //error: The type \`integer\[3\]\' contains too many indexes \(3\) in the short-hand notation for nested indexes\.//
+	}
+
+	var RoF1 v_index3 := { 1.0 }
+	if (v_rec[v_index3] == {2, 3}) { //^In if statement:// //error\: Only fixed length array or record of integer types are allowed for short\-hand notation for nested indexes\.//
+	}
+
+	var integer v_arr2[0] := { } //In variable definition \`v_arr2\'\:// //error\: A positive integer value was expected as array size instead of \`0\'//
+	if (v_rec[v_arr2] == {2, 3}) {
+	}
+
+	var RoI v_index4 := { 1, 1 }
+	if (v_rec[v_index4] == {2, 3}) { //^In if statement:// //error\: The type \`\@recof_index_SE\.RoI\' must have single size length restriction when used as a short\-hand notation for nested indexes\.//
+	}
+
+  }
+
+
+}

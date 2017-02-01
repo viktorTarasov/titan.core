@@ -10001,6 +10001,57 @@ module ModuleA {
 :exmp.
 
 .*---------------------------------------------------------------------*
+:h3.Address port - connect operation
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Address port - connect operation>
+
+<COMPILE>
+<VERDICT_LEAF PASS>
+<MODULE TTCN ModuleA ModuleA.ttcn>
+module ModuleA {
+    type record MyAddressType { // user-defined type
+    integer field1,
+    boolean field2
+    } 
+
+    type MyAddressType address;
+
+    type integer MyMessType;
+
+    type port PortType message {
+    //  address MyAddress;
+    inout MyMessType;
+    } with {extension "address"};
+            
+    type component TestCaseComp {
+    port PortType p;
+    var address v_addr:= {5, true}
+    }
+
+    testcase tc_connect() runs on TestCaseComp system TestCaseComp {
+
+        var TestCaseComp v_ptcA := TestCaseComp.create alive;
+        connect(self:p, v_ptcA:p);
+        connect(v_ptcA:p, self:p);
+    }
+}
+<END_MODULE>
+<RESULT IF_PASS COUNT 4>
+(?im)address.+?port.+?cannot.+?used.+?connect
+<END_RESULT>
+<RESULT IF_PASS COUNT 4>
+(?is)\berror:
+<END_RESULT>
+<RESULT IF_PASS POSITIVE>
+(?im)\bnotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
+<END_RESULT>
+<END_TC>
+
+:exmp.
+
+.*---------------------------------------------------------------------*
 :h3.Bitstring concatenation - type restriction on result but not on parameters
 .*---------------------------------------------------------------------*
 Note: this is a positive test.

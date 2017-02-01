@@ -622,6 +622,24 @@ void indent(FILE* file, const unsigned int x) {
   }
 }
 
+Mstring xmlFloat2TTCN3FloatStr(const Mstring& xmlFloat) {
+  Mstring result;
+  if (xmlFloat == "INF") {
+    result = "infinity";
+  } else if (xmlFloat == "-INF") {
+    result = "-infinity";
+  } else if (xmlFloat == "NaN") {
+    result = "not_a_number";
+  } else if (!xmlFloat.isFound('.') && !xmlFloat.isFound('e') && !xmlFloat.isFound('E')) {
+    // Float types need the .0 if it is a single integer or 
+    // translate special float values to TTCN3.
+    result = xmlFloat + Mstring(".0");
+  } else {
+    result = xmlFloat;
+  }
+  return result;
+}
+
 long double stringToLongDouble(const char *input) {
   long double result = 0.0;
   // `strtold()' is not available on older platforms.

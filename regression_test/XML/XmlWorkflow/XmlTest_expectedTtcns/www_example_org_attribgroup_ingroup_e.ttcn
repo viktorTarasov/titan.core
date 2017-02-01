@@ -44,16 +44,19 @@ module www_example_org_attribgroup_ingroup {
 import from XSD all;
 
 
+const XSD.String c_defaultForEmpty_1 := "simple";
+
+
 type record AttrGroupinGroup
 {
 	RemoteSchema remoteSchema optional,
-	XSD.String type_ ("simple") optional
+	XSD.String type_ (c_defaultForEmpty_1) optional
 }
 with {
   variant (remoteSchema) "attribute";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_1";
   variant (type_) "form as qualified";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as 'simple'";
   variant (type_) "attribute";
 };
 

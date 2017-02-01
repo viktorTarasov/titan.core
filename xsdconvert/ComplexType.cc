@@ -433,8 +433,6 @@ void ComplexType::loadWithValues() {
       attribute->addVariant(V_attribute);
       attribute->applyMinMaxOccursAttribute(0, 1);
       attribute->setXsdtype(n_attribute);
-      attribute->applyDefaultAttribute(atts.default_);
-      attribute->applyFixedAttribute(atts.fixed);
       attribute->setUseVal(atts.use);
       attribute->setAttributeFormAs(atts.form);
       lastType = n_attribute;
@@ -445,6 +443,8 @@ void ComplexType::loadWithValues() {
       } else {
         attribute->applyRefAttribute(atts.ref);
       }
+      attribute->applyDefaultAttribute(atts.default_);
+      attribute->applyFixedAttribute(atts.fixed);
       actfield = attribute;
       
       //In case of nillable parent it is difficult...
@@ -862,7 +862,7 @@ void ComplexType::nameConversion_names(const List<NamespaceType> &) {
   if (!found) {
     addVariant(V_onlyValue, var);
   }
-  for (List<SimpleType*>::iterator dep = nameDepList.begin(); dep; dep = dep->Next) {
+  for (List<RootType*>::iterator dep = nameDepList.begin(); dep; dep = dep->Next) {
     dep->Data->setTypeValue(res);
   }
 }
@@ -1009,7 +1009,7 @@ void ComplexType::setFieldPaths(Mstring path) {
   }
 }
 
-void ComplexType::finalModification2() {  
+void ComplexType::subFinalModification() {  
   //Call SimpleType finalModification
   SimpleType::finalModification();
   
@@ -1027,7 +1027,7 @@ void ComplexType::finalModification2() {
       complexfields.remove(field);
     } else {
       //Recursive call
-      field->Data->finalModification2();
+      field->Data->subFinalModification();
       //collect <xsd:all> elements
       if (field->Data->fromAll) {
         enumNames.push_back(field->Data->getName().convertedValue);
@@ -1126,12 +1126,27 @@ void ComplexType::finalModification2() {
 }
 
 void ComplexType::finalModification() {
-  finalModification2();
+  subFinalModification();
   setFieldPaths(empty_string);
+}
+
+void ComplexType::finalModification2() {
+  subFinalModification2();
   List<Mstring> container;
   collectVariants(container);
   variant.clear();
   variant = container;
+}
+
+void ComplexType::subFinalModification2() {
+  SimpleType::finalModification2();
+  for (List<ComplexType*>::iterator field = complexfields.begin(); field; field = field->Next) {
+    //Recursive call
+    field->Data->subFinalModification2();
+  }
+  for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
+    field->Data->SimpleType::finalModification2();
+  }
 }
 
 void ComplexType::printToFile(FILE * file) {
@@ -1690,12 +1705,18 @@ void ComplexType::resolveAttribute(AttributeType* attr) {
         attr->setNameOfField(st->getName().originalValueWoPrefix);
         attr->setOrigModule(st->getModule());
         st->addToNameDepList(attr);
+        if (attr->getConstantDefaultForEmpty() != NULL) {
+          st->addToNameDepList((RootType*)attr->getConstantDefaultForEmpty());
+        }
       } else {
         attr->setTypeOfField(st->getName().convertedValue);
         if (st->getType().convertedValue == "record" || st->getType().convertedValue == "union"
             || st->getXsdtype() == n_NOTSET) // It really is a simpleType
           {
             st->addToNameDepList(attr);
+            if (attr->getConstantDefaultForEmpty() != NULL) {
+              st->addToNameDepList((RootType*)attr->getConstantDefaultForEmpty());
+            }
           }
       }
       attr->getReference().set_resolved(st);
@@ -1833,12 +1854,21 @@ void ComplexType::resolveElement(SimpleType *st) {
     if(st->getSubstitution() != NULL){
       st->getSubstitution()->addToNameDepList(this);
       nameDep = st->getSubstitution();
+      if (defaultForEmptyConstant != NULL) {
+        st->getSubstitution()->addToNameDepList((RootType*)defaultForEmptyConstant);
+      }
     }if(st->getTypeSubstitution() != NULL){
       st->getTypeSubstitution()->addToNameDepList(this);
       nameDep = st->getTypeSubstitution();
+      if (defaultForEmptyConstant != NULL) {
+        st->getTypeSubstitution()->addToNameDepList((RootType*)defaultForEmptyConstant);
+      }
     }else {
       st->addToNameDepList(this);
       nameDep = st;
+      if (defaultForEmptyConstant != NULL) {
+        st->addToNameDepList((RootType*)defaultForEmptyConstant);
+      }
     }
   }
 }

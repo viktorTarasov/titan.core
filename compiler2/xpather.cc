@@ -1068,6 +1068,8 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
             // Go to the next required config
             req_config = req_config->next;
             continue;
+          } else {
+            found = TRUE;
           }
           
           // Get the project_name's act_config config_struct (tmp holds it)
@@ -1090,7 +1092,7 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
           }
           insert_to_tmp_config(tmp_configs, project_name, act_config, is_active);
           
-          // Analyse referenced project's of project_name project
+          // Analyze referenced projects of project_name project
           struct string_list* last_child = tmp->children;
           while (last_child && last_child->str != NULL) {
             result = analyse_child(all_configs, last_child->str, NULL, required_configs, tmp_configs);
@@ -1103,8 +1105,8 @@ static boolean analyse_child(struct config_struct* const all_configs, const char
       }
       last = last->next;
     }
-    
-    if (found == FALSE) { // No one said anything about this project's configuration
+     // No one said anything about this project's configuration or we still don't know the configuration
+    if (found == FALSE || get_act_config(required_configs, project_name) == NULL) {
       //Get the active configuration of this project
       last = all_configs;
       while (last && last->project_name != NULL && last->project_conf != NULL) {
@@ -1218,13 +1220,14 @@ static tpd_result config_struct_get_required_configs(struct config_struct* const
         if (result == FALSE) return TPD_FAILED;
         insert_to_tmp_config(*tmp_configs, last->project_name, last->project_conf, TRUE);
         
-        // last variable holds the top level project's active configuration which needed to be analysed
+        // last variable holds the top level project's active configuration which needed to be analyzed
         // Insert every required config of the top level project active configuration
         struct string2_list* last_proj_config = last->requirements;
         while (last_proj_config && last_proj_config->str1 != NULL && last_proj_config->str2 != NULL) { // todo ezek a null cuccok mindenhova, every param should not be null
           struct string_list* children = last->children;
           // This if allows that a top level project can require an other project's configuration
           // without referencing it.
+          
           if (children->str != NULL || strcmp(last_proj_config->str1, last->project_name) == 0) {
             result = insert_to_required_config(all_configs, last_proj_config->str1, last_proj_config->str2, required_configs);
             if (result == FALSE) return TPD_FAILED;
@@ -1233,7 +1236,7 @@ static tpd_result config_struct_get_required_configs(struct config_struct* const
         }
         last->processed = TRUE;
         
-        //Analyse the referenced project of the top level project
+        //Analyze the referenced project of the top level project
         struct string_list* last_child = last->children;
         while (last_child && last_child->str != NULL) {
           result = analyse_child(all_configs, last_child->str, NULL, required_configs, *tmp_configs); // todo check if everywhere is handled
@@ -1250,7 +1253,7 @@ static tpd_result config_struct_get_required_configs(struct config_struct* const
 }
 
 static tpd_result process_tpd_internal(const char *p_tpd_name, char* tpdName, const char *actcfg,
-  const char *file_list_path, int *p_argc, char ***p_argv,
+  const char *file_list_path, int *p_argc, char ***p_argv, boolean* p_free_argv,
   int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
   boolean *p_Rflag, boolean *p_lflag, boolean *p_mflag, boolean *p_Pflag,
@@ -1270,7 +1273,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char* tpdName, co
   const char **search_paths, size_t n_search_paths, char** makefileScript, struct config_struct * const all_configs);
 
 extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
-  const char *file_list_path, int *p_argc, char ***p_argv,
+  const char *file_list_path, int *p_argc, char ***p_argv, boolean* p_free_argv,
   int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
   boolean *p_Rflag, boolean *p_lflag, boolean *p_mflag, boolean *p_Pflag,
@@ -1301,7 +1304,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   // The first round only collects the configurations about the tpd-s into the
   // all_configs variable. It does not do anything else.
   tpd_result success = process_tpd_internal(p_tpd_name, tpdName,
-      actcfg, file_list_path, p_argc, p_argv, p_optind, p_ets_name, p_project_name,
+      actcfg, file_list_path, p_argc, p_argv, p_free_argv, p_optind, p_ets_name, p_project_name,
       p_gflag, p_sflag, p_cflag, p_aflag, preprocess,
       p_Rflag, p_lflag, p_mflag, p_Pflag,
       p_Lflag, recursive, force_overwrite, gen_only_top_level,
@@ -1329,7 +1332,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
     // optimal case. In the not optimal case errors are produced.
     // This round does get the information from the tpd to generate the makefile.
     success = process_tpd_internal(p_tpd_name, tpdName,
-      actcfg, file_list_path, p_argc, p_argv, p_optind, p_ets_name, p_project_name,
+      actcfg, file_list_path, p_argc, p_argv, p_free_argv, p_optind, p_ets_name, p_project_name,
       p_gflag, p_sflag, p_cflag, p_aflag, preprocess,
       p_Rflag, p_lflag, p_mflag, p_Pflag,
       p_Lflag, recursive, force_overwrite, gen_only_top_level,
@@ -1368,7 +1371,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   }
   seen_tpd_files.clear();
 
-  return success;
+  return TPD_SUCCESS;
   
 failure:
   /* free everything before exiting */
@@ -1391,20 +1394,33 @@ failure:
 
   Free(search_paths);
   Free(*generatorCommandOutput);
+  free_string2_list(run_command_list);
   free_string2_list(create_symlink_list);
   free_string2_list(target_placement_list);
   free_string2_list(required_configs);
   Free(*makefileScript);
   Free(*p_project_name);
+  Free(*abs_work_dir_p);
 
   Free(*p_ets_name);
   Free(*cxxcompiler);
   Free(*optlevel);
   Free(*optflags);
   Free(*ttcn3prep);
-  for (int E = 0; E < *p_argc; ++E) Free((*p_argv)[E]);
-  Free(*p_argv);
-  exit(EXIT_FAILURE);
+  if (*p_free_argv) {
+    for (int E = 0; E < *p_argc; ++E) Free((*p_argv)[E]);
+    Free(*p_argv);
+  }
+  
+  for (size_t i = 0, num = seen_tpd_files.size(); i < num; ++i) {
+    const cstring& key = seen_tpd_files.get_nth_key(i);
+    int *elem = seen_tpd_files.get_nth_elem(i);
+    key.destroy();
+    delete elem;
+  }
+  seen_tpd_files.clear();
+  
+  return TPD_FAILED;
 }
 
 // optind is the index of the next element of argv to be processed.
@@ -1418,7 +1434,7 @@ failure:
 // If process_tpd() preserves the content of such a string (e.g. ets_name),
 // it must nevertheless make a copy on the heap via mcopystr().
 static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, const char *actcfg,
-  const char *file_list_path, int *p_argc, char ***p_argv,
+  const char *file_list_path, int *p_argc, char ***p_argv, boolean* p_free_argv,
   int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
   boolean *p_Rflag, boolean *p_lflag, boolean *p_mflag, boolean *p_Pflag,
@@ -1579,6 +1595,9 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
     XPathObject projectNameObj(run_xpath(xpathCtx, projectNameXpath));
     Free(projectNameXpath);
     if (projectNameObj->nodesetval && projectNameObj->nodesetval->nodeNr > 0) {
+      if (*p_project_name != NULL) {
+        Free(*p_project_name);
+      }
       *p_project_name = mcopystr((const char*)projectNameObj->nodesetval->nodeTab[0]->content);
       projGenHelper.addTarget(*p_project_name);
       projGenHelper.setToplevelProjectName(*p_project_name);
@@ -2882,6 +2901,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
         int my_argc = 0;
         char *my_args[] = { NULL };
         char **my_argv = my_args + 0;
+        boolean my_free_argv = FALSE;
         int my_optind = 0;
         boolean my_gflag = *p_gflag, my_aflag = *p_aflag, my_cflag = *p_cflag, // pass down
           my_Rflag = *p_Rflag, my_Pflag = *p_Pflag, my_Zflag = *p_Zflag, my_Hflag = *p_Hflag,
@@ -2925,6 +2945,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
                 next_child->next = NULL;
                 last_child->next = next_child;
                 last_child = next_child;
+                //break; needed???
               }
             }
             tmp = tmp->next;
@@ -2932,7 +2953,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
         }
       
         tpd_result success = process_tpd_internal((const char*)abs_projectLocationURI, tpdName_loc,
-          my_actcfg, file_list_path, &my_argc, &my_argv, &my_optind, &my_ets, &my_proj_name,
+          my_actcfg, file_list_path, &my_argc, &my_argv, &my_free_argv, &my_optind, &my_ets, &my_proj_name,
           &my_gflag, &my_sflag, &my_cflag, &my_aflag, preprocess, &my_Rflag, &my_lflag,
           &my_mflag, &my_Pflag, &my_Lflag, recursive, force_overwrite, gen_only_top_level, NULL, &sub_proj_abs_work_dir,
           sub_project_dirs, program_name, prj_graph_fp, create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, ttcn3_prep_undefines, 
@@ -3013,21 +3034,31 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
               const cstring tmp(my_argv[z]);
               if (!files.has_key(tmp)){
                 files.add(tmp, my_argv[z]);
-              } else {
+              } else if (my_free_argv) {
                 Free(my_argv[z]);
               }
             }
           }
 
-          Free(my_argv); // free the array; we keep the pointers
+          if (my_free_argv) {
+            Free(my_argv); // free the array; we keep the pointers
+          }
           Free(my_ets);
-          Free(my_proj_name);
         }
-        else if (success == TPD_FAILED) {
-          ERROR("Failed to process %s", (const char*)abs_projectLocationURI);
-          result = TPD_FAILED;
+        else {
+          if (my_free_argv) {
+            for (int z = 0; z < my_argc; ++z) {
+              Free(my_argv[z]);
+            }
+            Free(my_argv);
+          }
+          if (success == TPD_FAILED) {
+            ERROR("Failed to process %s", (const char*)abs_projectLocationURI);
+            result = TPD_FAILED;
+          }
+          // else TPD_SKIPPED, keep quiet
         }
-        // else TPD_SKIPPED, keep quiet
+        Free(my_proj_name);
         Free(tpdName_loc);
         name = projectLocationURI = tpdName_loc = NULL; // forget all
       }
@@ -3161,6 +3192,15 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   }
   // replace argv only if not config mode
   if (!get_config_mode) {
+    if (*p_free_argv) {
+      for (int i = 0; i < *p_argc; ++i) {
+        Free((*p_argv)[i]);
+      }
+      Free(*p_argv);
+    }
+    else {
+      *p_free_argv = TRUE;
+    }
     *p_argv = new_argv;
     *p_argc = new_argc;
     *p_optind = 0;
@@ -3169,7 +3209,6 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
       Free(new_argv[i]);
     }
     Free(new_argv);
-    Free(*p_project_name);
   }
 
   // finally...

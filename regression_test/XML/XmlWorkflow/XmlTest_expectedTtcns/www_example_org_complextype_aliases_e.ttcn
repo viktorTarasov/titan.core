@@ -43,6 +43,9 @@ module www_example_org_complextype_aliases {
 import from XSD all;
 
 
+const XSD.Integer c_defaultForEmpty_1 := 2;
+
+
 /* Theese types needed to force the nameconversion */
 
 
@@ -245,7 +248,7 @@ type record ComplexTypeRestrictionNotAlias5
 {
 	XSD.String attr optional,
 	record length(0 .. 2) of record {
-		XSD.Integer elem (2) optional,
+		XSD.Integer elem (c_defaultForEmpty_1) optional,
 		record length(1 .. 2) of XSD.Integer elem1_list
 	} sequence_list
 }
@@ -253,7 +256,7 @@ with {
   variant (attr) "attribute";
   variant (sequence_list) "untagged";
   variant (sequence_list[-]) "untagged";
-  variant (sequence_list[-].elem) "defaultForEmpty as '2'";
+  variant (sequence_list[-].elem) "defaultForEmpty as c_defaultForEmpty_1";
   variant (sequence_list[-].elem1_list) "untagged";
   variant (sequence_list[-].elem1_list[-]) "name as 'elem1'";
 };
@@ -266,14 +269,14 @@ type record ComplexTypeRestrictionNotAlias6
 {
 	XSD.String attr optional,
 	record length(0 .. 2) of record {
-		XSD.Integer elem (2)
+		XSD.Integer elem (c_defaultForEmpty_1)
 	} sequence_list
 }
 with {
   variant (attr) "attribute";
   variant (sequence_list) "untagged";
   variant (sequence_list[-]) "untagged";
-  variant (sequence_list[-].elem) "defaultForEmpty as '2'";
+  variant (sequence_list[-].elem) "defaultForEmpty as c_defaultForEmpty_1";
 };
 
 

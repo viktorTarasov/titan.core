@@ -12,7 +12,7 @@
 #   Szabo, Bence Janos
 #
 ##############################################################################
-SADIRS := ver xer encode param template any_from pattern_ref float
+SADIRS := ver xer encode param template any_from pattern_ref float recof_index
 ifeq ($(RT2), yes)
 SADIRS += deprecated
 endif

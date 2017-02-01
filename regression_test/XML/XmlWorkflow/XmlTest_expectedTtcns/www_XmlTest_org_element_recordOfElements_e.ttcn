@@ -46,6 +46,12 @@ module www_XmlTest_org_element_recordOfElements {
 import from XSD all;
 
 
+const XSD.String c_defaultForEmpty_1 := "Msc";
+
+
+const XSD.String c_defaultForEmpty_2 := "American";
+
+
 /* This documentum tests based on
       XML Schema Part 1: Structures Second Edition */
 
@@ -58,7 +64,7 @@ type record PersonInfo1
 	XSD.String degree optional
 }
 with {
-  variant (degree) "defaultForEmpty as 'Msc'";
+  variant (degree) "defaultForEmpty as c_defaultForEmpty_1";
 };
 
 
@@ -71,7 +77,7 @@ type record PersonInfo2
 	XSD.Integer age optional
 }
 with {
-  variant (nationality) "defaultForEmpty as 'American'";
+  variant (nationality) "defaultForEmpty as c_defaultForEmpty_2";
   variant (nationality) "attribute";
   variant (title) "attribute";
 };

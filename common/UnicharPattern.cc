@@ -107,12 +107,16 @@ UnicharPattern::UnicharPattern() : mappings_head(NULL)
   // read one line at a time
   char line[1024];
   while (fgets(line, sizeof(line), fp) != NULL) {
+    // skip empty lines
+    if (strcmp(line,"\n") == 0 || strcmp(line,"\r\n") == 0) {
+      continue;
+    }
     // ignore everything after the '#' (this is the 'comment' indicator)
     char* line_end = strchr(line, '#');
     if (line_end != NULL) {
       *line_end = '\0';
     }
-    //TODO:Valgrind reports uninitialized value coming form here to remove_spaces
+    
     // each column ends with a ';', use that as the separator for strtok
     char* from_str = remove_spaces(strtok(line, ";"));
     size_t from_str_len = from_str != NULL ? strlen(from_str) : 0;

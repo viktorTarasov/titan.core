@@ -50,10 +50,13 @@ import from www_example_org_attrib_order_b all;
 import from NoTargetNamespace2 all;
 
 
-type XSD.String Local1 ("fixed")
+const XSD.String c_defaultForEmpty_1 := "fixed";
+
+
+type XSD.String Local1 (c_defaultForEmpty_1)
 with {
+  variant "defaultForEmpty as c_defaultForEmpty_1";
   variant "name as uncapitalized";
-  variant "defaultForEmpty as 'fixed'";
   variant "attribute";
 };
 

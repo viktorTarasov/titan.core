@@ -243,6 +243,7 @@ namespace Ttcn {
   // =================================
   
   IndexedTemplate::IndexedTemplate(const IndexedTemplate& p)
+  : Node(p), Location(p)
   {
     index = p.index->clone();
     temp = p.temp->clone();
@@ -357,6 +358,7 @@ namespace Ttcn {
   }
   
   NamedTemplate::NamedTemplate(const NamedTemplate& p)
+  : Node(p), Location(p)
   {
     name = p.name->clone();
     temp = p.temp->clone();

@@ -172,6 +172,11 @@
 		<File path="../xsd/simpletype_aliases.xsd" />
 		<File path="../xsd/complextype_aliases.xsd" />
 		<File path="../xsd/attribute_rename.xsd" />
+        <File path="../xsd/defaultforempty.xsd" />
+        <File path="../xsd/defaultforempty_mod1.xsd" />
+        <File path="../xsd/defaultforempty_mod2.xsd" />
+        <File path="../xsd/defaultforempty_same_ns1.xsd" />
+        <File path="../xsd/defaultforempty_same_ns2.xsd" />
             </File_Group>
             <File_Group name="XmlTest_xsds" >
                 <File path="../XmlTest_xsds/XmlTest_boolean.xsd" />
@@ -415,6 +420,12 @@
             <File path="../XmlTest_expectedTtcns/www_example_org_simpletype_aliases_e.ttcn" />
             <File path="../XmlTest_expectedTtcns/www_example_org_complextype_aliases_e.ttcn" />
             <File path="../XmlTest_expectedTtcns/www_example_org_attribute_rename_e.ttcn" />
+            <File path="../XmlTest_expectedTtcns/www_example_org_ranges_integer_e.ttcn" />
+            <File path="../XmlTest_expectedTtcns/www_example_org_ranges_float_e.ttcn" />
+            <File path="../XmlTest_expectedTtcns/www_example_org_defaultforempty_e.ttcn" />
+            <File path="../XmlTest_expectedTtcns/www_example_org_defaultforempty_mod1_e.ttcn" />
+            <File path="../XmlTest_expectedTtcns/www_example_org_defaultforempty_mod2_e.ttcn" />
+            <File path="../XmlTest_expectedTtcns/www_example_org_defaultforempty_same_ns_e.ttcn" />
             </File_Group>
             <File_Group name="XmlTest_src" >
                 <File path="xmlTest_Shell.ttcn" />
