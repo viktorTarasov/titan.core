@@ -4656,14 +4656,14 @@ error:
     {
       Error_Context cntxt2(config_op.compref1, "In first endpoint");
       if (ptb1->get_testport_type() == PortTypeBody::TP_ADDRESS) {
-        error("An address supporting port cannot be used in the connect operation");
+        error("An address supporting port cannot be used in a connect operation");
       }
     }
     
     {
       Error_Context cntxt2(config_op.compref1, "In second endpoint");
       if (ptb2->get_testport_type() == PortTypeBody::TP_ADDRESS) {
-        error("An address supporting port cannot be used in the connect operation");
+        error("An address supporting port cannot be used in a connect operation");
       }
     }
   }
