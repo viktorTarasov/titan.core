@@ -96,6 +96,9 @@ testcase tc_ispresent_legacy() runs on CT
   if (ispresent(t_int_comp_list)) {
     setverdict(fail, t_int_comp_list, " should not be present");
   }
+  if (ispresent(t_int_comp_list_p)) {
+    setverdict(fail, t_int_comp_list_p, " should not be present");
+  }
   if (ispresent(t_char_comp_list)) {
     setverdict(fail, t_char_comp_list, " should not be present");
   }

@@ -1542,6 +1542,779 @@ testcase tc_record_partiallyInit13() runs on recordOper_mycomp {
     if(ispresent(vl_r.roi[0])){setverdict(fail)}else {setverdict(pass)};
     if(ispresent(vl_r.roi[90])){setverdict(fail)}else {setverdict(pass)};
   }
+
+
+  
+
+
+ //##########################################################################//
+
+   type record ExampleType {
+    integer a,
+    boolean b 
+  }  
+
+  template ExampleType exampleTemplate1 := {
+    a := 4,
+    b := false
+  }
+
+  testcase tc_rec_template() runs on recordOper_mycomp {
+
+    if (isbound(exampleTemplate1)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate1)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate1.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate1.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+//###########################################################################//
+
+  template ExampleType exampleTemplate2(template boolean MyBoolTemplate := false, template integer MyintTemplate := 1) := {
+    a := MyintTemplate, 
+    b := MyBoolTemplate
+  }
+
+  testcase tc_rec_template_param() runs on recordOper_mycomp {
+
+    if (isbound(exampleTemplate2)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate2)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate2.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate2.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate2(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate2(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate2(true).a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate2(true).a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate2(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate2(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate2(true, 3).a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate2(true, 3).a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+//###########################################################################//
+
+  template ExampleType exampleTemplate3(template boolean MyBoolTemplate := false, template integer MyintTemplate := 1) modifies exampleTemplate2 := {
+    a := MyintTemplate,
+    b := MyBoolTemplate
+  }
+
+    testcase tc_rec_template_param_modifies() runs on recordOper_mycomp {
+
+    if (isbound(exampleTemplate3)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate3)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate3.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate3.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate3(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate3(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate3(true).a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate3(true).a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate3(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate3(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleTemplate3(true, 3).a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleTemplate3(true, 3).a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+//###########################################################################//
+
+  type record ExampleType2 {
+    integer a,
+    ExampleType t
+  }
+
+
+  template ExampleType2 exampleEmbTemplate1 := {
+    a := 4,
+    t := {3, true}
+  }
+
+  testcase tc_emb_rec_template() runs on recordOper_mycomp {
+
+    if (isbound(exampleEmbTemplate1)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate1)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate1.t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate1.t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate1.t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate1.t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+//###########################################################################//
+
+  template ExampleType2 exampleEmbTemplate2(template boolean MyBoolTemplate := false, template integer MyintTemplate := 1) := {
+    a := MyintTemplate, 
+    t := {MyintTemplate, MyBoolTemplate}
+  }
+
+  testcase tc_emb_rec_template_param() runs on recordOper_mycomp {
+
+    if (isbound(exampleEmbTemplate2)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate2)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate2.t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate2.t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate2.t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate2.t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate2(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate2(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate2(true).t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate2(true).t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate2(true).t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate2(true).t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate2(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate2(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate2(true, 3).t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate2(true, 3).t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate2(true, 3).t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate2(true, 3).t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+//###########################################################################//
+
+  template ExampleType2 exampleEmbTemplate3(template boolean MyBoolTemplate := false, template integer MyintTemplate := 1) modifies exampleEmbTemplate2 := {
+    a := MyintTemplate,
+    t := {MyintTemplate, MyBoolTemplate}
+  }
+
+  testcase tc_emb_rec_template_param_modifies() runs on recordOper_mycomp {
+
+    if (isbound(exampleEmbTemplate3)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate3)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate3.t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate3.t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate3.t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate3.t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate3(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate3(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate3(true).t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate3(true).t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate3(true).t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate3(true).t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate3(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate3(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate3(true, 3).t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate3(true, 3).t)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleEmbTemplate3(true, 3).t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleEmbTemplate3(true, 3).t.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+//###########################################################################//
+
+template anytype exampleAnyTypeTemplate1 := {
+  ExampleType := {2, false}
+}
+
+testcase tc_anytype_rec_template() runs on recordOper_mycomp {
+
+    if (isbound(exampleAnyTypeTemplate1)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate1)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate1.ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate1.ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate1.ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate1.ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+  template anytype exampleAnyTypeTemplate2(template boolean MyBoolTemplate := false, template integer MyintTemplate := 1) := {
+    ExampleType := {MyintTemplate, MyBoolTemplate}
+  }
+
+  testcase tc_anytype_rec_template_param() runs on recordOper_mycomp {
+
+    if (isbound(exampleAnyTypeTemplate2)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate2)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate2.ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate2.ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate2.ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate2.ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate2(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate2(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate2(true).ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate2(true).ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate2(true).ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate2(true).ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate2(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate2(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate2(true, 3).ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate2(true, 3).ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate2(true, 3).ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate2(true, 3).ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+  template anytype exampleAnyTypeTemplate3(template boolean MyBoolTemplate := false, template integer MyintTemplate := 1) modifies exampleAnyTypeTemplate2 := {
+    ExampleType := {MyintTemplate, MyBoolTemplate}
+  }
+
+  testcase tc_anytype_rec_template_param_modifies() runs on recordOper_mycomp {
+
+    if (isbound(exampleAnyTypeTemplate3)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate3)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate3.ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate3.ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate3.ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate3.ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate3(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate3(true))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate3(true).ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate3(true).ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate3(true).ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate3(true).ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate3(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate3(true, 3))) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate3(true, 3).ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate3(true, 3).ExampleType)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (isbound(exampleAnyTypeTemplate3(true, 3).ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+
+    if (ispresent(exampleAnyTypeTemplate3(true, 3).ExampleType.a)) {
+      setverdict(pass);
+    } else {
+      setverdict(fail);
+    }
+  }
+
+
+//###########################################################################//
     
 control {
  const recordOper_trecord cl_temp1:={ x1:=omit, x2:=3.4 }; // can constants be declared in the control part
@@ -1613,5 +2386,20 @@ control {
  execute(tc_record_omit2());
  execute(tc_record_omit_HQ51693());
  execute(tc_recordOf_omit());
+
+ execute(tc_rec_template());
+ execute(tc_rec_template_param());
+ execute(tc_rec_template_param_modifies());
+
+ execute(tc_emb_rec_template());
+ execute(tc_emb_rec_template_param());
+ execute(tc_emb_rec_template_param_modifies());
+
+ execute(tc_anytype_rec_template());
+ execute(tc_anytype_rec_template_param());
+ execute(tc_anytype_rec_template_param_modifies());
 }
+}
+with {
+  extension "anytype ExampleType"
 }

@@ -19,6 +19,8 @@ import from Types all;
 template integer t_int_value_list := ( 1, 3, 5, 7 );
 template integer t_int_comp_list := complement ( 2, 4, 6, 8 );
 
+template integer t_int_comp_list_p(template integer ti := 2) := complement ( ti, 4, 6, 8 );
+
 template charstring t_char_value_list := ( "a", "aa", "aaa" );
 template charstring t_char_comp_list := complement ( "b", "bb", "bbb" );
 
