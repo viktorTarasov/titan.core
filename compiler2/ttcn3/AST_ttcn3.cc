@@ -7490,7 +7490,6 @@ namespace Ttcn {
     // assemble the function body first (this also determines which parameters
     // are never used)
     char* body = create_location_object(memptystr(), "ALTSTEP", dispname_str);
-    body = fp_list->generate_shadow_objects(body);
     if (debugger_active) {
       body = generate_code_debugger_function_init(body, this);
     }
@@ -7505,13 +7504,19 @@ namespace Ttcn {
       mputprintf(target->header.function_prototypes,
         "extern alt_status %s_instance(%s);\n", genname_str, formal_par_list);
 
+    // generate shadow objects for parameters if needed
+    // (this needs be done after the body is generated, so it to knows which 
+    // parameters are never used)
+    char* shadow_objects = fp_list->generate_shadow_objects(memptystr());
+    
     // function for altstep instance: body
     target->source.function_bodies = mputprintf(target->source.function_bodies,
       "alt_status %s_instance(%s)\n"
       "{\n"
-      "%s"
-      "}\n\n", genname_str, formal_par_list, body);
+      "%s%s"
+      "}\n\n", genname_str, formal_par_list, shadow_objects, body);
     Free(formal_par_list);
+    Free(shadow_objects);
     Free(body);
 
     char *actual_par_list =
@@ -8068,6 +8073,23 @@ namespace Ttcn {
       delete default_value;
       if (!semantic_check_only)
         defval.ap->set_code_section(GovernedSimple::CS_POST_INIT);
+    }
+    
+    if (use_runtime_2 && my_parlist->get_my_def() != NULL &&
+        my_parlist->get_my_def()->get_asstype() == Definition::A_ALTSTEP) {
+      // altstep 'in' parameters are always shadowed in RT2, because if a default
+      // altstep deactivates itself, then its parameters are deleted;
+      // update the genname so that all references in the generated code
+      // will point to the shadow object
+      switch (asstype) {
+      case A_PAR_VAL:
+      case A_PAR_VAL_IN:
+      case A_PAR_TEMPL_IN:
+        set_genname(id->get_name() + "_shadow");
+        break;
+      default:
+        break;
+      }
     }
   }
 
@@ -8834,7 +8856,9 @@ namespace Ttcn {
 
   char *FormalPar::generate_shadow_object(char *str) const
   {
-    if (used_as_lvalue && !lazy_eval) {
+    if ((used_as_lvalue || (use_runtime_2 && usage_found &&
+        my_parlist->get_my_def()->get_asstype() == Definition::A_ALTSTEP))
+        && !lazy_eval) {
       const string& t_genname = get_genname();
       const char *genname_str = t_genname.c_str();
       const char *name_str = id->get_name().c_str();
@@ -8848,7 +8872,7 @@ namespace Ttcn {
           type->get_genname_template(my_scope).c_str(), genname_str, name_str);
         break;
       default:
-        FATAL_ERROR("FormalPar::generate_shadow_object()");
+        break;
       }
     }
     return str;
@@ -10113,13 +10137,30 @@ namespace Ttcn {
     // add an extra copy constructor call to the referenced value and template
     // parameters if the referred definition is also passed by reference to
     // another parameter
+    bool all_in_params_shadowed = use_runtime_2 && p_fpl != NULL &&
+      p_fpl->get_my_def()->get_asstype() == Common::Assignment::A_ALTSTEP;
     for (size_t i = 0; i < nof_pars; i++) {
       if (i > 0) expr->expr = mputstr(expr->expr, ", ");
       ActualPar *par = params[i];
       bool copy_needed = false;
       // the copy constructor call is not needed if the parameter is copied
       // into a shadow object in the body of the called function
-      if (!p_fpl || !p_fpl->get_fp_byIndex(i)->get_used_as_lvalue()) {
+      bool shadowed = false;
+      if (p_fpl != NULL) {
+        switch (p_fpl->get_fp_byIndex(i)->get_asstype()) {
+        case Common::Assignment::A_PAR_VAL:
+        case Common::Assignment::A_PAR_VAL_IN:
+        case Common::Assignment::A_PAR_TEMPL_IN:
+          // all 'in' parameters are shadowed in altsteps in RT2, otherwise an
+          // 'in' parameter is shadowed if it is used as lvalue
+          shadowed = all_in_params_shadowed ? true :
+            p_fpl->get_fp_byIndex(i)->get_used_as_lvalue();
+          break;
+        default:
+          break;
+        }
+      }
+      if (!shadowed) {
         switch (par->get_selection()) {
         case ActualPar::AP_VALUE: {
           Value *v = par->get_Value();
