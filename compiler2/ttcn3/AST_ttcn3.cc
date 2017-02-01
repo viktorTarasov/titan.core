@@ -784,19 +784,33 @@ namespace Ttcn {
     Common::Assignment *ass = get_refd_assignment();
     const string& ass_id = ass->get_genname_from_scope(my_scope);
     const char *ass_id_str = ass_id.c_str();
-
+    
+    expression_struct_t t;
+    Code::init_expr(&t);
+    // Generate the default parameters if needed
+    if (parlist) {
+      parlist->generate_code_alias(&t, ass->get_FormalParList(),
+        ass->get_RunsOnType(), false);
+    }
+    string ass_id2 = ass_id;
+    if (t.expr != NULL) {
+      ass_id2 = ass_id2 + "(" + t.expr + ")";
+      ass_id_str = ass_id2.c_str();
+    }
+    Code::free_expr(&t);
+    
     if (subrefs.get_nof_refs() > 0) {
       const string& tmp_generalid = my_scope->get_scope_mod_gen()
           ->get_temporary_id();
       const char *tmp_generalid_str = tmp_generalid.c_str();
-
+      
       expression_struct isbound_expr;
       Code::init_expr(&isbound_expr);
       isbound_expr.preamble = mputprintf(isbound_expr.preamble,
           "boolean %s = %s.is_bound();\n", tmp_generalid_str,
           ass_id_str);
       ass->get_Type()->generate_code_ispresentbound(&isbound_expr, &subrefs, my_scope->get_scope_mod_gen(),
-          tmp_generalid, ass_id, is_template, isbound);
+          tmp_generalid, ass_id2, is_template, isbound);
 
       expr->preamble = mputstr(expr->preamble, isbound_expr.preamble);
       expr->preamble = mputstr(expr->preamble, isbound_expr.expr);

@@ -346,6 +346,35 @@ testcase templateIntReverseOrderImported2() runs on templateInt_mycomp {
   }
 }
 
+template integer IntTemplateParam(template integer i := 3) := i;
+
+testcase templateIntParam() runs on templateInt_mycomp {
+  if (ispresent(IntTemplateParam)) {
+    setverdict(pass);
+  } else {
+    setverdict(fail);
+  }
+
+  if (ispresent(IntTemplateParam(2))) {
+    setverdict(pass);
+  } else {
+    setverdict(fail);
+  }
+
+  if (isbound(IntTemplateParam)) {
+    setverdict(pass);
+  } else {
+    setverdict(fail);
+  }
+
+  if (isbound(IntTemplateParam(2))) {
+    setverdict(pass);
+  } else {
+    setverdict(fail);
+  }
+}
+
+
 control {
  execute(templateIntSpec());
  execute(templateIntList());
@@ -363,5 +392,6 @@ control {
  execute(templateIntReverseOrder());
  execute(templateIntReverseOrderImported());
  execute(templateIntReverseOrderImported2());
+ execute(templateIntParam());
 }
 }

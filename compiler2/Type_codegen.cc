@@ -2591,19 +2591,32 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
         closing_brackets = closing_brackets2;
       
         const string& tmp_id = module->get_temporary_id();
+        const string& tmp_id2 = module->get_temporary_id();
         const char *tmp_id_str = tmp_id.c_str();
+        const char *tmp_id2_str = tmp_id2.c_str();
+        
+        // Own const ref to the temp value
+        expr->expr = mputprintf(expr->expr,
+          "const %s%s& %s = %s;\n",
+          t->get_genname_value(module).c_str(),
+          is_template ? "_template" : "",
+          tmp_id_str, tmp_generalid_str);
+        // Get the const ref of the field from the previous const ref
+        // If we would get the const ref of the field immediately then the
+        // value in the const ref would be free-d instantly.
         expr->expr = mputprintf(expr->expr,
           "const %s%s& %s = %s.%s%s();\n",
           next_t->get_genname_value(module).c_str(),
-          is_template?"_template":"", tmp_id_str, tmp_generalid_str,
+          is_template ? "_template" : "",
+          tmp_id2_str, tmp_id_str,
           t->typetype == T_ANYTYPE ? "AT_" : "", id.get_name().c_str());
 
         expr->expr = mputprintf(expr->expr,
           "%s = %s.%s(%s);\n", global_id.c_str(),
-          tmp_id_str, isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
+          tmp_id2_str, isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
           (!(isbound||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
         Free(tmp_generalid_str);
-        tmp_generalid_str = mcopystr(tmp_id_str);
+        tmp_generalid_str = mcopystr(tmp_id2_str);
       }
 
       t = next_t;
