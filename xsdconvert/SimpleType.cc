@@ -23,7 +23,8 @@
 #include "ComplexType.hh"
 #include "Constant.hh"
 
-#include <cmath> // for using "pow" function
+// TODO: once we can use C++11 as the base platform replace with cmath
+#include <math.h> // for using "pow" function
 #include <cfloat>
 
 extern bool g_flag_used;
