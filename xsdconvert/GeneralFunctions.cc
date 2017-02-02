@@ -24,8 +24,6 @@
 #include <cctype> // for using "toupper" function
 #include <cstring>
 #include <cstdio>
-// TODO: once we can use C++11 as the base platform replace with cmath
-#include <math.h>
 #include <regex.h>
 
 #include "../common/version_internal.h"
