@@ -9,6 +9,11 @@
 *   Baranyi, Botond
 *   Pilisi, Gergely
 ******************************************************************************
+
+Please be aware that due to the incompatibility of EPL and GPL licenses, one may not link EPL and GPL code together 
+and distribute the result. ( see https://mmilinkov.wordpress.com/2010/04/06/epl-gpl-commentary/). However 
+from pure tehnical standpoint Titan can be compiled on GPL-licensed Cygwin as detailed below. 
+
 Cygwin setup
     - If Cygwin is installed already, refresh your Cygwin installation
       Titan is always build for the newest Cygwin version available. 
