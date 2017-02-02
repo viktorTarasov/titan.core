@@ -621,9 +621,9 @@ testcase tc_Check_2() runs on ProcComponent {
 }
 
 // Address port cannot be connected.
-testcase tc_PortAddress_internal_usage() runs on ProcComponentMultiPort {
-  /* procedure based internal communication with address-supporting port */
-  /*var ProcComponent2 PC2;
+/*testcase tc_PortAddress_internal_usage() runs on ProcComponentMultiPort {
+  //procedure based internal communication with address-supporting port
+  var ProcComponent2 PC2;
   var integer i:=0;
   PC2:=ProcComponent2.create;
   PC2.start(GetCall_behav3());
@@ -650,9 +650,9 @@ testcase tc_PortAddress_internal_usage() runs on ProcComponentMultiPort {
     []Port4.catch(timeout) {
       setverdict(fail);
     }
-  }*/
+  }
   setverdict(pass);
-}
+}*/
 
 testcase tc_PortAddress_external_usage1() runs on addressComponent
 system addressComponent {
@@ -794,7 +794,7 @@ control {
   execute(tc_Call_MultiPTC_anyport());
   execute(tc_Check_1());
   execute(tc_Check_2());
-  execute(tc_PortAddress_internal_usage()); // auto pass: address port cannot be connected.
+  //execute(tc_PortAddress_internal_usage());
   execute(tc_PortAddress_external_usage1());
   execute(tc_PortAddress_external_usage2());
   execute(tc_GetReplyParameters());
