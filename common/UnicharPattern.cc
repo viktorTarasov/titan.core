@@ -82,23 +82,35 @@ UnicharPattern::UnicharPattern() : mappings_head(NULL)
 {
   // if anything goes wrong while parsing the case mappings file, just delete the
   // partial results, display a warning, and treat all patterns as case-sensitive
+  FILE* fp = NULL;
   const char* ttcn3_dir = getenv("TTCN3_DIR");
-  if (ttcn3_dir == NULL) {
-    TTCN_pattern_warning("Environment variable TTCN3_DIR not present. "
-      "Case-insensitive universal charstring patterns are disabled.\n");
-    return;
+  char* mappings_file = NULL;
+  if (ttcn3_dir != NULL) {
+    size_t ttcn3_dir_len = strlen(ttcn3_dir);
+    bool ends_with_slash = ttcn3_dir_len > 0 && ttcn3_dir[ttcn3_dir_len - 1] == '/';
+    mappings_file = mprintf("%s%setc/CaseFolding.txt", ttcn3_dir,
+      ends_with_slash ? "" : "/");
+    fp = fopen(mappings_file, "r");
+    if (fp == NULL) {
+      // during the TITAN build the case mappings file has not been moved to the
+      // installation directory yet; try its original location
+      fp = fopen("../etc/CaseFolding.txt", "r");
+    }
   }
-  size_t ttcn3_dir_len = strlen(ttcn3_dir);
-  bool ends_with_slash = ttcn3_dir_len > 0 && ttcn3_dir[ttcn3_dir_len - 1] == '/';
-  char* mappings_file = mprintf("%s%setc/CaseFolding.txt", ttcn3_dir,
-    ends_with_slash ? "" : "/");
-  FILE* fp = fopen(mappings_file, "r");
   if (fp == NULL) {
-    TTCN_pattern_warning("Cannot open file '%s' for reading. "
-      "Case-insensitive universal charstring patterns are disabled.\n", mappings_file);
+    if (ttcn3_dir == NULL) {
+      TTCN_pattern_warning("Environment variable TTCN3_DIR not present. "
+        "Case-insensitive universal charstring patterns are disabled.\n");
+    }
+    else {
+      TTCN_pattern_warning("Cannot open file '%s' for reading. "
+        "Case-insensitive universal charstring patterns are disabled.\n",
+        mappings_file);
+    }
     Free(mappings_file);
     return;
   }
+  
   Free(mappings_file);
   
   // this always points to the last element of the list
