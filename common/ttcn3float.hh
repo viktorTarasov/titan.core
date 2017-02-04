@@ -14,9 +14,7 @@
 #ifndef TTCN3FLOAT_HH_
 #define TTCN3FLOAT_HH_
 
-// TODO: once we can use C++11 as the base platform replace with cmath
-// this way the signedbit will become a defined function instead of a macro
-#include <math.h>
+#include <cmath>
 
 /* TTCN-3 float values that have absolute value smaller than this
    are displayed in exponential notation. */
@@ -25,31 +23,31 @@
    are displayed in exponential notation. */
 #define MAX_DECIMAL_FLOAT		1.0E+10
 
-#ifndef signbit
+//#ifndef signbit
 // Probably Solaris.
 // Thankfully, IEEE Std 1003.1, 2004 Edition says that signbit is a macro,
 // hence it's safe to use ifdef.
 
-#ifdef __sparc
-// Big endian
+//#ifdef __sparc
+//// Big endian
 
-inline int signbitfunc(double d)
-{
-  return *((unsigned char*)&d) & 0x80;
-}
+//inline int signbitfunc(double d)
+//{
+//  return *((unsigned char*)&d) & 0x80;
+//}
 
-#else
+//#else
 // Probably Intel, assume little endian
-inline int signbitfunc(double d)
-{
-  return ((unsigned char*)&d)[sizeof(double)-1] & 0x80;
-}
+//inline int signbitfunc(double d)
+//{
+//  return ((unsigned char*)&d)[sizeof(double)-1] & 0x80;
+//}
 
-#endif
+//#endif
 
-#define signbit(d) signbitfunc(d)
+//#define signbit(d) signbitfunc(d)
 
-#endif // def signbit
+//#endif // def signbit
 
 /** A class which behaves almost, but not quite, entirely unlike
  *  a floating-point value.
@@ -91,14 +89,14 @@ struct ttcn3float {
   }
 
   bool operator<(double d) const {
-    if (isnan(value)) {
+    if (std::isnan(value)) {
       return false; // TTCN-3 special: NaN is bigger than anything except NaN
     }
-    else if (isnan(d)) {
+    else if (std::isnan(d)) {
       return true; // TTCN-3 special: NaN is bigger than anything except NaN
     }
     else if (value==0.0 && d==0.0) { // does not distinguish -0.0
-      return signbit(value) && !signbit(d); // value negative, d positive
+      return std::signbit(value) && !std::signbit(d); // value negative, d positive
     }
     else { // finally, the sensible behavior
       return value < d;
@@ -106,14 +104,14 @@ struct ttcn3float {
   }
 
   bool operator>(double d) const {
-    if (isnan(value)) {
+    if (std::isnan(value)) {
       return true; // TTCN-3 special: NaN is bigger than anything except NaN
     }
-    else if (isnan(d)) {
+    else if (std::isnan(d)) {
       return false; // TTCN-3 special: NaN is bigger than anything except NaN
     }
     else if (value==0.0 && d==0.0) { // does not distinguish -0.0
-      return !signbit(value) && signbit(d); // value positive, d negative
+      return !std::signbit(value) && std::signbit(d); // value positive, d negative
     }
     else { // finally, the sensible behavior
       return value > d;
@@ -121,14 +119,14 @@ struct ttcn3float {
   }
 
   bool operator==(double d) const {
-    if (isnan(value)) {
-      return !!isnan(d); // TTCN-3 special: NaN is bigger than anything except NaN
+    if (std::isnan(value)) {
+      return !!std::isnan(d); // TTCN-3 special: NaN is bigger than anything except NaN
     }
-    else if (isnan(d)) {
+    else if (std::isnan(d)) {
       return false;
     }
     else if (value==0.0 && d==0.0) { // does not distinguish -0.0
-      return signbit(value) == signbit(d);
+      return std::signbit(value) == std::signbit(d);
     }
     else { // finally, the sensible behavior
       return value == d;
