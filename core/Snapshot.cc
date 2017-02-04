@@ -22,7 +22,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
-#include <math.h>
+#include <cmath>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -1086,7 +1086,7 @@ void TTCN_Snapshot::take_new(boolean block_execution)
           // the first timeout is in the future: blocking is needed
           // filling up tv with appropriate values
           if (block_time < (double)MAX_BLOCK_TIME) {
-            pollTimeout = static_cast<int>(floor(block_time*1000));
+            pollTimeout = static_cast<int>(std::floor(block_time*1000));
             handleTimer = TRUE;
           } else {
             // issue a warning: the user probably does not want such

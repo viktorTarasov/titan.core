@@ -23,8 +23,7 @@
 #include "ComplexType.hh"
 #include "Constant.hh"
 
-// TODO: once we can use C++11 as the base platform replace with cmath
-#include <math.h> // for using "pow" function
+#include <cmath>
 #include <cfloat>
 
 extern bool g_flag_used;
@@ -1373,12 +1372,12 @@ void EnumerationType::printToFile(FILE * file, unsigned int indent_level) const 
         fprintf(file, "infinity");
       } else if (itemFloat->Data == MINUS_INFINITY) {
         fprintf(file, "-infinity");
-      } else if (isnan(itemFloat->Data)) {
+      } else if (std::isnan(itemFloat->Data)) {
         fprintf(file, "not_a_number");
       } else {
         double intpart = 0;
         double fracpart = 0;
-        fracpart = modf(itemFloat->Data, &intpart);
+        fracpart = std::modf(itemFloat->Data, &intpart);
         if (fracpart == 0) {
           fprintf(file, "%lld.0", (long long int) (itemFloat->Data));
         } else {
@@ -1548,7 +1547,7 @@ void ValueType::applyFacets() // only for integer and float types
   // totalDigits facet is only for integer types and decimal
   if (facet_totalDigits > 0) // if this facet is used
   {
-    double r = pow(10.0, facet_totalDigits);
+    double r = std::pow(10.0, facet_totalDigits);
 
     if (base == "integer") {
       lower = (int) -(r - 1);
@@ -1692,7 +1691,7 @@ void ValueType::printToFile(FILE * file) const {
     } else {
       double intpart = 0;
       double fracpart = 0;
-      fracpart = modf(lower, &intpart);
+      fracpart = std::modf(lower, &intpart);
       if (fracpart == 0) {
         fprintf(file, "%.1Lf", lower);
       } else {
@@ -1710,7 +1709,7 @@ void ValueType::printToFile(FILE * file) const {
     } else {
       double intpart = 0;
       double fracpart = 0;
-      fracpart = modf(upper, &intpart);
+      fracpart = std::modf(upper, &intpart);
       if (fracpart == 0) {
         fprintf(file, "%.1Lf", upper);
       } else {
