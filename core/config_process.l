@@ -34,7 +34,6 @@
 
 #include <deque>
 #include <string>
-#include <math.h>
 
 #include "../common/cfg_process_utils.hh"
 #include "../common/Path2.hh"
