@@ -4373,12 +4373,7 @@ namespace Ttcn {
       if (info_base.needs_conversion())
         body->set_needs_conversion();
     }
-    // Check for restriction.
-    if (Template::is_less_restrictive(base_template->get_template_restriction(),
-          template_restriction)) {
-      error("The template restriction is not the same or more "
-          "restrictive as of base template `%s'", ass->get_fullname().c_str());
-    }
+
     // Checking formal parameter lists.
     FormalParList *base_fpl = base_template->get_FormalParList();
     size_t nof_base_fps = base_fpl ? base_fpl->get_nof_fps() : 0;
