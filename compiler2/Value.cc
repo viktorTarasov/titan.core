@@ -9110,7 +9110,7 @@ error:
         index = v_index->get_val_Int()->get_val();
         index_available = true;
       } else if (!silent) {
-        array_index->error("An integer value was expected as index");
+        array_index->error("An integer value or a fixed length array or record of integer value was expected as index");
       }
     }
     if (valuetype == V_OMIT) {
