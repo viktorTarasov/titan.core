@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include <math.h>
 
 // We cannot check without using a "./configure" script or such if we have
 // llabs() or not.  Define our own function instead.

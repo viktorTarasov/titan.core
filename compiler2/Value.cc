@@ -56,7 +56,6 @@
 #include "../common/JSON_Tokenizer.hh"
 #include "ttcn3/Ttcn2Json.hh"
 
-#include <math.h>
 #include <regex.h>
 #include <limits.h>
 
