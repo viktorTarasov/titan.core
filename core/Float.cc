@@ -23,7 +23,7 @@
  *
  ******************************************************************************/
 #include <string.h>
-#include <math.h>
+#include <cmath>
 #include <float.h>
 
 #include "../common/memory.h"
@@ -459,7 +459,7 @@ FLOAT::BER_encode_TLV(const TTCN_Typedescriptor_t& p_td,
       new_tlv=ASN_BER_TLV_t::construct(1, NULL);
       new_tlv->V.str.Vstr[0]=0x41;
     }
-    else if(isnan((double)float_value)) {
+    else if(std::isnan((double)float_value)) {
       TTCN_EncDec_ErrorContext::error_internal("Value is NaN.");
     }
     else {
@@ -673,7 +673,7 @@ int FLOAT::RAW_encode(const TTCN_Typedescriptor_t& p_td, RAW_enc_tree& myleaf) c
       "Encoding an unbound value.");
     tmp = 0.0;
   }
-  if (isnan(tmp)) {
+  if (std::isnan(tmp)) {
     TTCN_EncDec_ErrorContext::error_internal("Value is NaN.");
   }
   if (myleaf.must_free) Free(myleaf.body.leaf.data_ptr);
@@ -786,7 +786,7 @@ int FLOAT::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
 #else
     for (int i = 0, k = 7; i < 8; i++, k--) dv[i] = data[k];
 #endif
-    if (isnan(tmp)) {
+    if (std::isnan(tmp)) {
       if (no_err) return -1;
       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
         "Not a Number received for type %s.", p_td.name);
@@ -848,7 +848,7 @@ int FLOAT::XER_encode(const XERdescriptor_t& p_td,
   if (exer && (p_td.xer_bits & XER_DECIMAL)) {
     char buf[312];
     int n = 0;
-    if (isnan((double)float_value)) {
+    if (std::isnan((double)float_value)) {
       n = snprintf(buf, sizeof(buf), "%s", XER_NAN_STR);
     } else if ((double)float_value == (double)INFINITY) {
       n = snprintf(buf, sizeof(buf), "%s", XER_POS_INF_STR);
@@ -869,7 +869,7 @@ int FLOAT::XER_encode(const XERdescriptor_t& p_td,
   }
   else {
     CHARSTRING value;
-    if (isnan((double)float_value)) {
+    if (std::isnan((double)float_value)) {
       value = XER_NAN_STR;
     } else if ((double)float_value == (double)INFINITY) {
       value = XER_POS_INF_STR;
@@ -1074,7 +1074,7 @@ int FLOAT::JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok) cons
   if (-(double)INFINITY == value) {
     return p_tok.put_next_token(JSON_TOKEN_STRING, NEG_INF_STR);
   }
-  if (isnan(value)) {
+  if (std::isnan(value)) {
     return p_tok.put_next_token(JSON_TOKEN_STRING, NAN_STR);
   }
   
