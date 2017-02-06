@@ -18,7 +18,6 @@
 #define _Common_Real_HH
 
 #include "string.hh"
-#include <math.h>
 
 // older versions of gcc do not have numeric_limits<double> or it is wrong
 // and they do not have constants defined by C99 standard
