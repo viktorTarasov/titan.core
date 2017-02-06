@@ -18,23 +18,23 @@
 
 static void *dummy = NULL;
 
-void *operator new(size_t size) throw (std::bad_alloc)
+void *operator new(size_t size) _GLIBCXX_THROW (std::bad_alloc)
 {
     return Malloc(size);
 }
 
-void *operator new[](size_t size) throw (std::bad_alloc)
+void *operator new[](size_t size) _GLIBCXX_THROW (std::bad_alloc)
 {
     if (size == 0) return &dummy;
     else return Malloc(size);
 }
 
-void operator delete(void *ptr) throw()
+void operator delete(void *ptr) _GLIBCXX_USE_NOEXCEPT
 {
     Free(ptr);
 }
 
-void operator delete[](void *ptr) throw()
+void operator delete[](void *ptr) _GLIBCXX_USE_NOEXCEPT
 {
     if (ptr != (void*)&dummy) Free(ptr);
 }
