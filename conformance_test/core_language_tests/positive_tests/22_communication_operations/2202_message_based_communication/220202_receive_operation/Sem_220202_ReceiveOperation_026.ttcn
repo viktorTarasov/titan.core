@@ -32,7 +32,7 @@ module Sem_220202_ReceiveOperation_026 {
         p[1].send(2);
         p[1].send(3);
 
-        any from p.receive(integer:?) -> @index v_int;
+        any from p.receive(integer:?) -> @index value v_int;
 
         if (v_int == 1) { // evaluation of @lazy (receive shall not be called again)
             alt {
