@@ -111,10 +111,8 @@ COMMON_OBJECTS := $(addprefix ../common/, memory.o path.o userinfo.o)
 
 TCOV2LCOV_COMMON_OBJECTS := ../common/memory.o
 
-ifeq ($(LICENSING), yes)
-    COMMON_OBJECTS += ../common/license.o
-    TCOV2LCOV_COMMON_OBJECTS += ../common/license.o
-endif
+COMMON_OBJECTS += ../common/license.o
+TCOV2LCOV_COMMON_OBJECTS += ../common/license.o
 
 ifdef REGEX_DIR
   COMMON_OBJECTS += $(REGEX_DIR)/lib/regex.o

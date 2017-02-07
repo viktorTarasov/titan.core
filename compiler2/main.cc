@@ -69,9 +69,9 @@
 
 #include "ttcn3/profiler.h"
 
-#ifdef LICENSE
+
 #include "../common/license.h"
-#endif
+
 
 using namespace Common;
 
@@ -919,12 +919,13 @@ int main(int argc, char *argv[])
     fputs("TTCN-3 and ASN.1 Compiler for the TTCN-3 Test Executor\n"
 	  "Product number: " PRODUCT_NUMBER "\n"
 	  "Build date: " __DATE__ " " __TIME__ "\n"
-	  "Compiled with: " C_COMPILER_VERSION "\n\n"
-	  COPYRIGHT_STRING "\n\n", stderr);
+	  "Compiled with: " C_COMPILER_VERSION "\n", stderr);
+	  fputs("Using ", stderr);
+	  fputs(openssl_version_str(), stderr);
+	  fputs("\n\n", stderr);
+	  fputs(COPYRIGHT_STRING "\n\n", stderr);
 #ifdef LICENSE
     print_license_info();
-    fputs("\nUsing ", stderr);
-    fputs(openssl_version_str(), stderr);
     fputs("\n\n", stderr);
 #endif
     return EXIT_SUCCESS;
