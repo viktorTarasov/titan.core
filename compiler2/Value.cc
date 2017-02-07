@@ -9103,12 +9103,26 @@ error:
                                      ReferenceChain *refch, bool silent)
   {
     Value *v_index = array_index->get_value_refd_last(refch);
+    if (!my_governor) FATAL_ERROR("Value::get_refd_field_value()");
+    Type *t = my_governor->get_type_refd_last();
     Int index = 0;
     bool index_available = false;
     if (!v_index->is_unfoldable()) {
       if (v_index->valuetype == V_INT) {
         index = v_index->get_val_Int()->get_val();
         index_available = true;
+      } else if (v_index->valuetype == V_ARRAY || v_index->valuetype == V_SEQOF) {
+        Value *v = this;
+        size_t comps = v_index->get_nof_comps();
+        for (size_t i = 0; i < comps; i++) {
+          Value *comp = v_index->get_comp_byIndex(i);
+          v = v->get_refd_array_value(comp, usedInIsbound, refch, silent);
+          if (v == NULL) {
+            // error reported already
+            return 0;
+          }
+        }
+        return v;
       } else if (!silent) {
         array_index->error("An integer value or a fixed length array or record of integer value was expected as index");
       }
@@ -9120,8 +9134,7 @@ error:
       }
       return 0;
     }
-    if (!my_governor) FATAL_ERROR("Value::get_refd_field_value()");
-    Type *t = my_governor->get_type_refd_last();
+
     switch (t->get_typetype()) {
     case Type::T_ERROR:
       // remain silent

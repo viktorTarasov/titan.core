@@ -11,10 +11,13 @@
  ******************************************************************************/
 module recof_index_SE { //^In TTCN-3 module//
 
+  type set of set of integer SoSoI;
   type record of record of integer RoRoI;
+  type record length(1) of integer RoIOne;
   type record length(1..2) of integer RoI1;
   type record length(3) of integer RoI2;
   type record of integer RoI;
+  type set of integer SoI;
 
   type record length(1) of float RoF1;
 
@@ -46,5 +49,42 @@ module recof_index_SE { //^In TTCN-3 module//
 
   }
 
+
+  const RoRoI c_roiroi1 := {{1,2}, {3,4}}
+  
+  const RoIOne c_roi := {3}; //error\: Index overflow in a value of \`record of\' type \`\@recof_index_SE\.RoRoI\'\: the index is 3\, but the value has only 2 elements//
+  const RoI c_roi_err := c_roiroi1[c_roi]; //^In constant definition \`c_roi_err\'\:// 
+  
+  const RoIOne c_roi2 := {4}; //error\: Index overflow in a value of \`record of\' type \`\@recof_index_SE\.RoRoI\.SEQUENCE_OF\'\: the index is 4\, but the value has only 2 elements//
+  const integer c_int_err := c_roiroi1[1][c_roi2]; //^In constant definition \`c_int_err\'\:// 
+  
+  const RoI2 c_roi3 := {1,1,1}; //error\: Invalid array element reference\: type \`integer\' cannot be indexed//
+  const integer c_int_err2 := c_roiroi1[c_roi3]; //In constant definition \`c_int_err2\'\://
+
+
+  const SoSoI c_soisoi1 := {{1,2}, {3,4}}
+  
+  const RoIOne c_roi4 := {3}; //error\: Index overflow in a value of \`set of\' type \`\@recof_index_SE\.SoSoI\'\: the index is 3\, but the value has only 2 elements//
+  const SoI c_soi_err := c_soisoi1[c_roi4]; //^In constant definition \`c_soi_err\'\:// 
+  
+  const RoIOne c_roi5 := {4}; //error\: Index overflow in a value of \`set of\' type \`\@recof_index_SE\.SoSoI\.SET_OF\'\: the index is 4\, but the value has only 2 elements//
+  const integer c_int_err3 := c_soisoi1[1][c_roi5]; //^In constant definition \`c_int_err3\'\:// 
+  
+  const RoI2 c_roi6 := {1,1,1}; //error\: Invalid array element reference\: type \`integer\' cannot be indexed//
+  const integer c_int_err4 := c_soisoi1[c_roi6]; //In constant definition \`c_int_err4\'\://
+
+
+  const integer c_arrarr1[2][2] := {{1,2}, {3,4}}
+  
+  const RoIOne c_roi7 := {3}; //error\: Array index overflow\: the index value must be at most \`1\' instead of \`3\'//
+  const integer c_arr_err[2] := c_arrarr1[c_roi7]; //^In constant definition \`c_arr_err\'\:// 
+  
+  const RoIOne c_roi8 := {4}; //error\: Array index overflow\: the index value must be at most \`1\' instead of \`4\'//
+  const integer c_int_err5 := c_arrarr1[1][c_roi8]; //^In constant definition \`c_int_err5\'\:// 
+  
+  const RoI2 c_roi9 := {1,1,1}; //error\: Invalid array element reference\: type \`integer\' cannot be indexed//
+  const integer c_int_err6 := c_arrarr1[c_roi9]; //In constant definition \`c_int_err6\'\://
+
+  
 
 }
