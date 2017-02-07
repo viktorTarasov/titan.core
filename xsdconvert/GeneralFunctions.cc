@@ -24,7 +24,6 @@
 #include <cctype> // for using "toupper" function
 #include <cstring>
 #include <cstdio>
-#include <cmath>
 #include <regex.h>
 
 #include "../common/version_internal.h"

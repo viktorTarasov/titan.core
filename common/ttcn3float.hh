@@ -14,8 +14,6 @@
 #ifndef TTCN3FLOAT_HH_
 #define TTCN3FLOAT_HH_
 
-// TODO: once we can use C++11 as the base platform replace with cmath
-// this way the signedbit will become a defined function instead of a macro
 #include <math.h>
 
 /* TTCN-3 float values that have absolute value smaller than this
@@ -26,9 +24,9 @@
 #define MAX_DECIMAL_FLOAT		1.0E+10
 
 #ifndef signbit
-// Probably Solaris.
-// Thankfully, IEEE Std 1003.1, 2004 Edition says that signbit is a macro,
-// hence it's safe to use ifdef.
+ Probably Solaris.
+ Thankfully, IEEE Std 1003.1, 2004 Edition says that signbit is a macro,
+ hence it's safe to use ifdef.
 
 #ifdef __sparc
 // Big endian
@@ -39,7 +37,7 @@ inline int signbitfunc(double d)
 }
 
 #else
-// Probably Intel, assume little endian
+ Probably Intel, assume little endian
 inline int signbitfunc(double d)
 {
   return ((unsigned char*)&d)[sizeof(double)-1] & 0x80;

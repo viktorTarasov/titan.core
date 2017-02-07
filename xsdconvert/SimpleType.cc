@@ -23,7 +23,7 @@
 #include "ComplexType.hh"
 #include "Constant.hh"
 
-#include <cmath> // for using "pow" function
+#include <math.h>
 #include <cfloat>
 
 extern bool g_flag_used;

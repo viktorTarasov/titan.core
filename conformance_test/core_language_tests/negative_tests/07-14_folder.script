@@ -1799,6 +1799,129 @@ error: at or before token `control': syntax error, unexpected ControlKeyword, ex
 .*---------------------------------------------------------------------*
 
 *---------------------------------------------------------------------*
+:h3. NegSem_0901_Communication_ports_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that it is not possible to connect a mapped port  >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_0901_Communication_ports_002 NegSem_0901_Communication_ports_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:9, Ensure that it is not possible to connect a mapped port
+ ** @verdict  pass reject
+ ***************************************************/
+
+/*NOTE: see Figure 7(f): connection of two TSI ports is not allowed
+ * */
+
+module NegSem_0901_Communication_ports_002{ 
+
+
+    type port loopbackPort message { 
+	  inout integer
+	} with {extension "internal"}
+
+	type component GeneralComp {	    	    
+		  port loopbackPort p1;
+		 
+	}	
+
+	type component System {	    	    
+		  port loopbackPort p1;
+		 
+	}	
+
+	testcase TC_NegSem_0901_Communication_ports_002() runs on GeneralComp system System {
+		
+		var GeneralComp v_ptc := GeneralComp.create;
+		map(self:p1, system:p1);		
+		connect(self:p1, v_ptc:p1); // error: mtc.p1 is already mapped to SystemComp.p1
+		setverdict(pass);
+	 
+	}
+
+	control{
+		execute(TC_NegSem_0901_Communication_ports_002());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Connect operation cannot be performed on a mapped port \(p1\)
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_0901_Communication_ports_004 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Verify that it is not possible to map a connected port  >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_0901_Communication_ports_004 NegSem_0901_Communication_ports_004.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:9.1, Verify that it is not possible to map a connected port
+ ** @verdict  pass reject
+ ***************************************************/
+
+/*NOTE: see Figure 7(b): GeneralComp port p1 is mapped to a TSI port P1.
+ * Therefore mapping GeneralComp port p2 with TSI port P1 gives an error.
+ * */
+
+
+
+module NegSem_0901_Communication_ports_004 {
+  
+    type port MyPort message {
+        inout integer
+    } with {extension "internal"}
+
+    type component GeneralComp
+    {
+        port MyPort p1;
+        port MyPort p2;
+    }
+    
+    type component SystemComp
+    {
+        port MyPort p1;
+    }
+	
+    testcase TC_NegSem_0901_Communication_ports_004() runs on GeneralComp system SystemComp {
+		
+	//create a test component        
+        var GeneralComp v_ptc := GeneralComp.create;
+		connect(self:p1, v_ptc:p1);
+		map(self:p1, system:p1); // error: mtc.p1 is already connected to v_ptc.p1
+		setverdict(pass);
+    }
+	
+    control{
+        execute(TC_NegSem_0901_Communication_ports_004());
+    }
+}
+
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Map operation is not allowed on a connected port \(p1\).
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_0901_Communication_ports_007 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -1906,7 +2029,7 @@ error: Both endpoints of the mapping are system ports
 
 <COMPILE>
 
-<MODULE TTCN NegSyn_0901_Communication_ports_001 NegSem_0901_Communication_ports_001.ttcn >
+<MODULE TTCN NegSyn_0901_Communication_ports_001 NegSyn_0901_Communication_ports_001.ttcn >
 /***************************************************
  ** @version  0.0.1
  ** @purpose  1:9.1, Verify that a two TSI port cannot be connected

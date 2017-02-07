@@ -36,7 +36,7 @@ module NegSem_0901_Communication_ports_004 {
 	//create a test component        
         var GeneralComp v_ptc := GeneralComp.create;
 		connect(self:p1, v_ptc:p1);
-		map(self:p1, system:p1); // error: v_ptc.p1 is already mapped to SystemComp.p1
+		map(self:p1, system:p1); // error: mtc.p1 is already connected to v_ptc.p1
 		setverdict(pass);
     }
 	

@@ -35,7 +35,6 @@
 
 #include <deque>
 #include <string>
-#include <math.h>
 
 #include <openssl/crypto.h>
 #include <openssl/bn.h>

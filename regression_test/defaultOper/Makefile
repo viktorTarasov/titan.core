@@ -23,6 +23,10 @@ TTCN3_LIB = ttcn3$(RT2_SUFFIX)-parallel$(DYNAMIC_SUFFIX)
 
 TTCN3_MODULES = TdefaultOper.ttcn
 
+ifdef RT2
+TTCN3_MODULES += TdefaultOperRT2.ttcn
+endif
+
 GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc)
 GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)
 ifdef CODE_SPLIT
@@ -54,7 +58,7 @@ dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
 
 run: $(TARGET)
-	ttcn3_start $(TARGET) config.cfg
+	ttcn3_start $(TARGET) config$(RT2_SUFFIX).cfg
 
 .NOTPARALLEL:
 

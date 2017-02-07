@@ -3860,6 +3860,446 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_060203_records_and_sets_of_single_types_016 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - array as a record-of value index on right hand side (less items than record-of dimension) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060203_records_and_sets_of_single_types_016 NegSem_060203_records_and_sets_of_single_types_016.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.3, array as a record-of value index on right hand side (less items than record-of dimension)
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// For nested record of or set of types, an array or record of integer restricted 
+// to a single size can be used as a short-hand notation for a nested index
+// notation.
+
+module NegSem_060203_records_and_sets_of_single_types_016 {
+
+	type component GeneralComp {	    	    
+	}
+ 
+	type record of record of integer RoRoI;
+	
+	testcase TC_NegSem_060203_records_and_sets_of_single_types_016() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var integer v_index[3] := { 1, 0, 0 }
+		if (v_rec[v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control {
+		execute(TC_NegSem_060203_records_and_sets_of_single_types_016());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type `integer\[3\]' contains too many indexes \(3\) in the short-hand notation for nested indexes.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_060203_records_and_sets_of_single_types_017 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - array as a record-of value index on left hand side (less items than record-of dimension) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060203_records_and_sets_of_single_types_017 NegSem_060203_records_and_sets_of_single_types_017.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.3, array as a record-of value index on left hand side (less items than record-of dimension)
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// For nested record of or set of types, an array or record of integer restricted 
+// to a single size can be used as a short-hand notation for a nested index
+// notation.
+
+module NegSem_060203_records_and_sets_of_single_types_017 {
+
+	type component GeneralComp {	    	    
+	}
+ 
+	type record of record of integer RoRoI;
+	
+	testcase TC_NegSem_060203_records_and_sets_of_single_types_017() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var integer v_index[3] := { 1, 0, 0 }
+        v_rec[v_index] := 10;
+		if (v_rec == {{0, 1}, {10, 3}}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control {
+		execute(TC_NegSem_060203_records_and_sets_of_single_types_017());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type `integer\[3\]' contains too many indexes \(3\) in the short-hand notation for nested indexes.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_060203_records_and_sets_of_single_types_018 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - fixed-size record-of as a record-of value index on right hand side (less items than record-of dimension) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060203_records_and_sets_of_single_types_018 NegSem_060203_records_and_sets_of_single_types_018.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.3, fixed-size record-of as a record-of value index on right hand side (less items than record-of dimension)
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// For nested record of or set of types, an array or record of integer restricted 
+// to a single size can be used as a short-hand notation for a nested index
+// notation.
+
+module NegSem_060203_records_and_sets_of_single_types_018 {
+
+	type component GeneralComp {	    	    
+	}
+ 
+    type record length(3) of integer Indexer;
+	type record of record of integer RoRoI;
+	
+	testcase TC_NegSem_060203_records_and_sets_of_single_types_018() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var Indexer v_index := { 1, 0, 0 }
+		if (v_rec[v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control {
+		execute(TC_NegSem_060203_records_and_sets_of_single_types_018());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type `@NegSem_060203_records_and_sets_of_single_types_018.Indexer' contains too many indexes \(3\) in the short-hand notation for nested indexes.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_060203_records_and_sets_of_single_types_019 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - fixed-size record-of as a record-of value index on left hand side (less items than record-of dimension) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060203_records_and_sets_of_single_types_019 NegSem_060203_records_and_sets_of_single_types_019.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.3, fixed-size record-of as a record-of value index on left hand side (less items than record-of dimension)
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// For nested record of or set of types, an array or record of integer restricted 
+// to a single size can be used as a short-hand notation for a nested index
+// notation.
+
+module NegSem_060203_records_and_sets_of_single_types_019 {
+
+	type component GeneralComp {	    	    
+	}
+ 
+    type record length(3) of integer Indexer;
+	type record of record of integer RoRoI;
+	
+	testcase TC_NegSem_060203_records_and_sets_of_single_types_019() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var Indexer v_index := { 1, 0, 0 }
+        v_rec[v_index] := 10;
+		if (v_rec == {{0, 1}, {10, 3}}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control {
+		execute(TC_NegSem_060203_records_and_sets_of_single_types_019());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type `@NegSem_060203_records_and_sets_of_single_types_019.Indexer' contains too many indexes \(3\) in the short-hand notation for nested indexes.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_060203_records_and_sets_of_single_types_020 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - fixed-size set-of as a record-of value index on right hand side >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060203_records_and_sets_of_single_types_020 NegSem_060203_records_and_sets_of_single_types_020.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.3, fixed-size set-of as a record-of value index on right hand side
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// For nested record of or set of types, an array or record of integer restricted 
+// to a single size can be used as a short-hand notation for a nested index
+// notation.
+
+module NegSem_060203_records_and_sets_of_single_types_020 {
+
+	type component GeneralComp {	    	    
+	}
+ 
+    type set length(2) of integer Indexer;
+	type record of record of integer RoRoI;
+	
+	testcase TC_NegSem_060203_records_and_sets_of_single_types_020() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var Indexer v_index := { 1, 0 }
+		if (v_rec[v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control {
+		execute(TC_NegSem_060203_records_and_sets_of_single_types_020());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A value or expression of type integer was expected
+<END_RESULT>
+<RESULT COUNT 1>
+error: The operands of operation `==' should be of compatible types
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_060203_records_and_sets_of_single_types_021 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - fixed-size set-of as a record-of value index on left hand side >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060203_records_and_sets_of_single_types_021 NegSem_060203_records_and_sets_of_single_types_021.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.3, fixed-size set-of as a record-of value index on left hand side
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// For nested record of or set of types, an array or record of integer restricted 
+// to a single size can be used as a short-hand notation for a nested index
+// notation.
+
+module NegSem_060203_records_and_sets_of_single_types_021 {
+
+	type component GeneralComp {	    	    
+	}
+ 
+    type set length(2) of integer Indexer;
+	type record of record of integer RoRoI;
+	
+	testcase TC_NegSem_060203_records_and_sets_of_single_types_021() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var Indexer v_index := { 1, 0 }
+        v_rec[v_index] := 10;
+		if (v_rec == {{0, 1}, {10, 3}}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control {
+		execute(TC_NegSem_060203_records_and_sets_of_single_types_021());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: A value or expression of type integer was expected
+<END_RESULT>
+<RESULT COUNT 1>
+error: record of value was expected
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_060203_records_and_sets_of_single_types_022 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - variable-size record-of as a record-of value index on right hand side >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060203_records_and_sets_of_single_types_022 NegSem_060203_records_and_sets_of_single_types_022.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.3, variable-size record-of as a record-of value index on right hand side
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// For nested record of or set of types, an array or record of integer restricted 
+// to a single size can be used as a short-hand notation for a nested index
+// notation.
+
+module NegSem_060203_records_and_sets_of_single_types_022 {
+
+	type component GeneralComp {	    	    
+	}
+ 
+    type record of integer Indexer;
+	type record of record of integer RoRoI;
+	
+	testcase TC_NegSem_060203_records_and_sets_of_single_types_022() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var Indexer v_index := { 1, 0 }
+		if (v_rec[v_index] == 2) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control {
+		execute(TC_NegSem_060203_records_and_sets_of_single_types_022());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type `@NegSem_060203_records_and_sets_of_single_types_022.Indexer' must have single size length restriction when used as a short-hand notation for nested indexes.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_060203_records_and_sets_of_single_types_023 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - variable-size record-of as a record-of value index on left hand side (less items than record-of dimension) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060203_records_and_sets_of_single_types_023 NegSem_060203_records_and_sets_of_single_types_023.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.3, variable-size record-of as a record-of value index on left hand side (less items than record-of dimension)
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// For nested record of or set of types, an array or record of integer restricted 
+// to a single size can be used as a short-hand notation for a nested index
+// notation.
+
+module NegSem_060203_records_and_sets_of_single_types_023 {
+
+	type component GeneralComp {	    	    
+	}
+ 
+    type record of integer Indexer;
+	type record of record of integer RoRoI;
+	
+	testcase TC_NegSem_060203_records_and_sets_of_single_types_023() runs on GeneralComp {
+
+		var RoRoI v_rec := {{0, 1}, {2, 3}};
+        var Indexer v_index := { 1, 0 }
+        v_rec[v_index] := 10;
+		if (v_rec == {{0, 1}, {10, 3}}) {
+			setverdict(pass);
+		} else {
+			setverdict(fail);
+		}
+	}
+	
+	control {
+		execute(TC_NegSem_060203_records_and_sets_of_single_types_023());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type `@NegSem_060203_records_and_sets_of_single_types_023.Indexer' must have single size length restriction when used as a short-hand notation for nested indexes.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSyn_060203_records_and_sets_of_single_types_001 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
@@ -5866,6 +6306,105 @@ error: A value or expression of type integer was expected
 
 <END_TC>
 :exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_060207_arrays_020 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - integer array with too many items as multidimensional array index >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060207_arrays_020 NegSem_060207_arrays_020.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.7, integer array with too many items as multidimensional array index
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// An array or record of integer restricted to a single size can be used in the 
+// index notation as a short-hand for the repeated index notation.
+
+module NegSem_060207_arrays_020 {
+
+	type component GeneralComp {
+	}
+	
+	testcase TC_NegSem_060207_arrays_020() runs on GeneralComp {        
+        var integer v_rhindexes[3] := { 0, 1, 0 }, v_lhindexes[3] := { 1, 2, 0 }
+        var integer v_arr[2][3] := { { 1, 2, 3 }, { 4, 5, 6 } };
+        // testing both RH and LH side:
+        v_arr[v_lhindexes] := v_arr[v_rhindexes];        
+        if (v_arr == { { 1, 2, 3 }, { 4, 5, 2} }) { setverdict(pass); }
+        else { setverdict(fail); }
+	}
+	
+	control {
+		execute(TC_NegSem_060207_arrays_020());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type `integer\[3\]' contains too many indexes \(3\) in the short-hand notation for nested indexes.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_060207_arrays_021 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - variable-size record of integer as multidimensional array index >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_060207_arrays_021 NegSem_060207_arrays_021.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:6.2.7, variable-size record of integer as multidimensional array index
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// An array or record of integer restricted to a single size can be used in the 
+// index notation as a short-hand for the repeated index notation.
+
+module NegSem_060207_arrays_021 {
+
+	type component GeneralComp {
+	}
+    
+    type record length(1..2) of integer RI;
+	
+	testcase TC_NegSem_060207_arrays_021() runs on GeneralComp {        
+        var RI v_rhindexes := { 0, 1 }, v_lhindexes := { 1, 2 }
+        var integer v_arr[2][3] := { { 1, 2, 3 }, { 4, 5, 6 } };
+        // testing both RH and LH side:
+        v_arr[v_lhindexes] := v_arr[v_rhindexes];        
+        if (v_arr == { { 1, 2, 3 }, { 4, 5, 2} }) { setverdict(pass); }
+        else { setverdict(fail); }
+	}
+	
+	control {
+		execute(TC_NegSem_060207_arrays_021());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The type `@NegSem_060207_arrays_021.RI' must have single size length restriction when used as a short-hand notation for nested indexes.
+<END_RESULT>
+
+<END_TC>
+:exmp
+
 
 *---------------------------------------------------------------------*
 :h3. NegSem_060207_arrays_022 negative test
