@@ -24,9 +24,9 @@
 #define MAX_DECIMAL_FLOAT		1.0E+10
 
 #ifndef signbit
- Probably Solaris.
- Thankfully, IEEE Std 1003.1, 2004 Edition says that signbit is a macro,
- hence it's safe to use ifdef.
+// Probably Solaris.
+// Thankfully, IEEE Std 1003.1, 2004 Edition says that signbit is a macro,
+// hence it's safe to use ifdef.
 
 #ifdef __sparc
 // Big endian
@@ -37,7 +37,7 @@ inline int signbitfunc(double d)
 }
 
 #else
- Probably Intel, assume little endian
+// Probably Intel, assume little endian
 inline int signbitfunc(double d)
 {
   return ((unsigned char*)&d)[sizeof(double)-1] & 0x80;
