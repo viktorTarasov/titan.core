@@ -55,7 +55,7 @@ OBJECTS_NOMAIN := $(filter-out Cli_main.o, $(OBJECTS))
 
 COMMON_OBJECTS := $(addprefix ../../common/, memory.o config_preproc.o \
 config_preproc_la.o config_preproc_p.tab.o path.o NetworkHandler.o \
-Path2.o) ../../core/RInt.o ../../core/Textbuf.o
+Path2.o openssl_version.o) ../../core/RInt.o ../../core/Textbuf.o
 
 ifeq ($(LICENSING), yes)
     COMMON_OBJECTS += ../../common/license.o

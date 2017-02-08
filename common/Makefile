@@ -36,7 +36,7 @@ GENERATED_SOURCES := pattern_la.cc pattern_p.cc pattern_uni.cc config_preproc_la
 # Sources in the CVS
 
 STATIC_SOURCES := memory.c new.cc userinfo.c path.c config_preproc.cc Quadruple.cc \
-		  Path2.cc ModuleVersion.cc JSON_Tokenizer.cc UnicharPattern.cc
+		  Path2.cc ModuleVersion.cc JSON_Tokenizer.cc UnicharPattern.cc openssl_version.c
 
 ifndef MINGW
 STATIC_SOURCES += NetworkHandler.cc
