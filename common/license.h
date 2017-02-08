@@ -150,8 +150,6 @@ void print_license_info(void);
 void init_openssl(void);
 void free_openssl(void);
 
-const char * openssl_version_str(void);
-
 #if defined(WIN32) || defined(INTERIX)
 long gethostid(void);
 #endif

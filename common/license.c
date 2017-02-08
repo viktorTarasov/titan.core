@@ -489,10 +489,6 @@ void free_openssl()
     ERR_free_strings();
 }
 
-const char * openssl_version_str(void) {
-  return SSLeay_version(SSLEAY_VERSION);
-}
-
 #if defined(WIN32) || defined(INTERIX)
 
 #ifdef INTERIX

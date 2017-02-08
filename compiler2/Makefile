@@ -111,8 +111,10 @@ COMMON_OBJECTS := $(addprefix ../common/, memory.o path.o userinfo.o)
 
 TCOV2LCOV_COMMON_OBJECTS := ../common/memory.o
 
-COMMON_OBJECTS += ../common/license.o
-TCOV2LCOV_COMMON_OBJECTS += ../common/license.o
+ifeq ($(LICENSING), yes)
+	COMMON_OBJECTS += ../common/license.o
+	TCOV2LCOV_COMMON_OBJECTS += ../common/license.o
+endif
 
 ifdef REGEX_DIR
   COMMON_OBJECTS += $(REGEX_DIR)/lib/regex.o
@@ -120,7 +122,7 @@ endif
 
 COMPILER_COMMON_OBJECTS := $(COMMON_OBJECTS) \
 $(addprefix ../common/, new.o pattern_la.o pattern_p.o pattern_uni.o Quadruple.o \
-ModuleVersion.o JSON_Tokenizer.o UnicharPattern.o)
+ModuleVersion.o JSON_Tokenizer.o UnicharPattern.o openssl_version.o)
 
 ifeq ($(USAGE_STATS), yes)
 COMPILER_COMMON_OBJECTS += ../common/usage_stats.o
