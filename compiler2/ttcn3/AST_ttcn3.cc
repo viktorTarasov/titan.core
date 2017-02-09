@@ -3847,8 +3847,8 @@ namespace Ttcn {
       if (t->get_fat_runs_on_self()) {
         error("Type of module parameter cannot be of function reference type"
             " `%s' which has runs on self clause", t->get_fullname().c_str());
+        break;
       }
-      break;
     default:
 #if defined(MINGW)
       checked = true;

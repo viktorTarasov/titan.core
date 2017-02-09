@@ -29,6 +29,16 @@ function add(in integer a, in integer b) return integer { return a+b; }
 function sub(in integer a, in integer b) return integer { return a-b; }
 function mul(in integer a, in integer b) return integer { return a*b; }
 
+public function my_int2str(in integer a) return charstring {
+  var charstring f := int2str(a);
+  return f;
+}
+
+type function my_int2str_type(in integer a) return charstring;
+
+modulepar my_int2str_type modulepar_my_intstr := refers(my_int2str);
+
+
 type union operator_type
 {
   un_oper  unary,
@@ -443,6 +453,15 @@ function f_refers() {
   var f_FT vf := valueof(f_FT:refers(f_refers));  
 }
 
+// for Bug 511976 
+testcase tc_modulepar_refer() runs on FuncRef_comp {
+  if (modulepar_my_intstr.apply(4) == "4") {
+    setverdict(pass);
+  } else {
+    setverdict(fail);
+  }
+}
+
 
 control
 {
@@ -465,6 +484,7 @@ control
   execute(tc_runsonself());
   execute(tc_functionrefIsbound());
   execute(tc_send_tc());
+  execute(tc_modulepar_refer());
 }
 }
 
