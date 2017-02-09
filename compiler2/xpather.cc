@@ -635,7 +635,11 @@ int is_xsd_module(const char *file_name, char **module_name) {
   FILE *fp;
   char line[1024];
   char *command = NULL;
-  command = mputprintf(command, "xsd2ttcn -q -n %s", file_name);
+  char *ttcn3_dir = getenv("TTCN3_DIR");
+  command = mputprintf(command, "%s%sxsd2ttcn -q -n %s",
+    ttcn3_dir != NULL ? ttcn3_dir : "",
+    ttcn3_dir != NULL ? "/bin/" : "",
+    file_name);
   fp = popen(command, "r");
   Free(command);
   if (fp == NULL) {
