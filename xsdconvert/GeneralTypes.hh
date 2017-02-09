@@ -148,7 +148,7 @@ public:
   }
 
   QualifiedName(const Mstring& ns, const Mstring nm)
-  : nsuri(ns), name(nm), dup(false) {
+  : nsuri(ns), name(nm), orig_name(nm), dup(false) {
   }
 
   QualifiedName(const Mstring& ns, const Mstring nm, const Mstring orig)

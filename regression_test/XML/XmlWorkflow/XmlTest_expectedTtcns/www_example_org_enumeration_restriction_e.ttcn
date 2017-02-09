@@ -154,6 +154,26 @@ type Only_int Ints (
 );
 
 
+type union UnionWithEnumField
+{
+	enumerated {
+		x,
+		none_,
+		type_
+	} alt_,
+	XSD.PositiveInteger alt_1 (1 .. !1000000)
+}
+with {
+  variant "useUnion";
+  variant "element";
+  variant (alt_) "name as ''";
+  variant (alt_) "text 'none_' as 'none'";
+  variant (alt_) "text 'type_' as 'type'";
+  variant (alt_) "text 'x' as ''";
+  variant (alt_1) "name as ''";
+};
+
+
 }
 with {
   encode "XML";

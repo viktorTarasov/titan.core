@@ -125,4 +125,23 @@
 	</xs:restriction>
 </xs:simpleType>
 
+<xs:element name="UnionWithEnumField">
+	<xs:simpleType>
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:normalizedString">
+					<xs:enumeration value=""/>
+					<xs:enumeration value="none"/>
+					<xs:enumeration value="type"/>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:positiveInteger">
+					<xs:maxExclusive value="1000000"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+</xs:element>
+
 </xs:schema>
