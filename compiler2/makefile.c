@@ -2905,7 +2905,7 @@ static void print_makefile(struct makefile_struct *makefile)
 
       fputs("\nBASE2_GENERATED_HEADERS =", fp);
       if (makefile->gnu_make) {
-        fputs(" $(BASE2_GENERATED_SOURCES:.cc=.hh)", fp);
+          fputs(" $(BASE2_GENERATED_SOURCES:.cc=.hh)", fp);
       }
       else
         ERROR("the usage of 'Z' flag requires GNU make");
@@ -3296,15 +3296,15 @@ static void print_makefile(struct makefile_struct *makefile)
                 if (makefile->code_splitting_mode != NULL) {
                   int n_slices;
                   if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
-                    print_generated_file_name(fp, module, TRUE, "_seq.o");
-                    print_generated_file_name(fp, module, TRUE, "_set.o");
-                    print_generated_file_name(fp, module, TRUE, "_seqof.o");
-                    print_generated_file_name(fp, module, TRUE, "_setof.o");
-                    print_generated_file_name(fp, module, TRUE, "_union.o");
+                    print_generated_file_name(fp, module, TRUE, "_seq.so");
+                    print_generated_file_name(fp, module, TRUE, "_set.so");
+                    print_generated_file_name(fp, module, TRUE, "_seqof.so");
+                    print_generated_file_name(fp, module, TRUE, "_setof.so");
+                    print_generated_file_name(fp, module, TRUE, "_union.so");
                   } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
                     for (int slice = 1; slice < n_slices; slice++) {
                       char buffer[16]; // 6 digits + 4 chars + _part
-                      sprintf(buffer, "_part_%i.o", slice);
+                      sprintf(buffer, "_part_%i.so", slice);
                       print_generated_file_name(fp, module, TRUE, buffer);
                     }
                   }
