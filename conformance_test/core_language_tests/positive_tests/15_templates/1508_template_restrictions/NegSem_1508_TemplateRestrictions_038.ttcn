@@ -4,7 +4,7 @@
  * Adrien Kirjak
  *
  ** @version  0.0.1
- ** @purpose  1:15.8, Ensure that template(omit) can't be parameter to template(value) if it is omit
+ ** @purpose  1:15.8, Ensure that template(present) can't be parameter to template(value) if it contains anyvalueornone(*)
  ** @verdict  pass reject
  *****************************************************************/
 
@@ -15,12 +15,11 @@ module NegSem_1508_TemplateRestrictions_038 {
 		boolean b 
     }	
 	
-	type component GeneralComp {
-	}
+	type component GeneralComp {}
 
-	template (value) ExampleType m_baseTemplate(template (omit) integer MyintTemplate := omit) :={
+	template (value) ExampleType m_baseTemplate(template (present) integer MyintTemplate := *) :={
 		a := MyintTemplate,	
-		// template (omit) MyintTemplate is omit, which is not allowed with value restriction 
+// template (present) MyintTemplate contains anyvalueornone(*), which is not allowed with value restriction 
 		b := true
 	}
 	
@@ -30,7 +29,7 @@ module NegSem_1508_TemplateRestrictions_038 {
       		setverdict(pass);
 		} else {
             setverdict(fail);
-        }
+       }
  	}
 
     control{

@@ -3189,6 +3189,797 @@ error: Restriction on template does not allow usage of omit value
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_036 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that template(present) can't be parameter to a template(omit) if contains anyvalueornone(*) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_036 NegSem_1508_TemplateRestrictions_036.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that template(present) can't be parameter to a template(omit) if contains anyvalueornone(*)
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_1508_TemplateRestrictions_036 {
+
+    type record ExampleType {	// Exampletype record integer and a boolean
+       	integer a,
+		boolean b 
+    }	
+	
+	type component GeneralComp {}
+
+	template (omit) ExampleType m_baseTemplate(template (present) integer MyintTemplate := *) :={
+		a := MyintTemplate,	
+	// template (present) MyintTemplate contains anyvalueornone(*), which is not allowed in omit restriction 
+		b := true
+	}
+	
+	testcase TC_NegSem_1508_TemplateRestrictions_036() runs on GeneralComp {
+      
+		if (valueof(m_baseTemplate.b) == true) {
+      		setverdict(pass);
+		} else {
+            setverdict(fail);
+       }
+ 	}
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_036());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Restriction on template formal parameter does not allow usage of any or omit
+<END_RESULT>
+<RESULT COUNT 1>
+error: Formal parameter with template restriction `present' not allowed here
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_037 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that template(present) can't be parameter to template(omit) if contains anyvalue(?) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_037 NegSem_1508_TemplateRestrictions_037.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that template(present) can't be parameter to template(omit) if contains anyvalue(?)
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_1508_TemplateRestrictions_037 {
+
+    type record ExampleType {	// Exampletype record integer and a boolean
+       	integer a,
+		boolean b 
+    }	
+	
+	type component GeneralComp {
+	}
+
+	template (omit) ExampleType m_baseTemplate(template (present) integer MyintTemplate := ?) :={
+		a := MyintTemplate,	
+		// template (present) MyintTemplate contains anyvalue(?), which is not allowed in omit restriction 
+		b := true
+	}
+	
+	testcase TC_NegSem_1508_TemplateRestrictions_037() runs on GeneralComp {
+
+		if (ispresent(m_baseTemplate.a) == true) {
+      		setverdict(pass);
+		} else {
+            setverdict(fail);
+       }
+ 	}
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_037());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Formal parameter with template restriction `present' not allowed here
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_038 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that template(present) can't be parameter to template(value) if it contains anyvalueornone(*) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_038 NegSem_1508_TemplateRestrictions_038.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that template(present) can't be parameter to template(value) if it contains anyvalueornone(*)
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_1508_TemplateRestrictions_038 {
+
+    type record ExampleType {	// Exampletype record integer and a boolean
+       	integer a,
+		boolean b 
+    }	
+	
+	type component GeneralComp {}
+
+	template (value) ExampleType m_baseTemplate(template (present) integer MyintTemplate := *) :={
+		a := MyintTemplate,	
+// template (present) MyintTemplate contains anyvalueornone(*), which is not allowed with value restriction 
+		b := true
+	}
+	
+	testcase TC_NegSem_1508_TemplateRestrictions_038() runs on GeneralComp {
+
+		if (ispresent(m_baseTemplate.a) == true) {
+      		setverdict(pass);
+		} else {
+            setverdict(fail);
+       }
+ 	}
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_038());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Restriction on template formal parameter does not allow usage of any or omit
+<END_RESULT>
+<RESULT COUNT 1>
+error: Formal parameter with template restriction `present' not allowed here
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_039 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that unrestricted template can't be parameter to template(value) if it contains anyvalueornone(*) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_039 NegSem_1508_TemplateRestrictions_039.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that unrestricted template can't be parameter to template(value) if it contains anyvalueornone(*)
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_1508_TemplateRestrictions_039 {
+
+    type record ExampleType {	// Exampletype record integer and a boolean
+       	integer a,
+		boolean b 
+    }	
+	
+	type component GeneralComp {}
+
+	template (value) ExampleType m_baseTemplate(template integer MyintTemplate := *) :={
+		a := MyintTemplate,	
+	// template MyintTemplate contains anyvalueornone(*), which is not allowed with value restriction 
+		b := true
+	}
+	
+	testcase TC_NegSem_1508_TemplateRestrictions_039() runs on GeneralComp {
+      
+		if (ispresent(m_baseTemplate.a) == true) {
+      		setverdict(pass);
+		} else {
+            setverdict(fail);
+       	}
+ 	}
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_039());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Formal parameter without template restriction not allowed here
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_040 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that template(present) can't be parameter to a template(omit) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_040 NegSem_1508_TemplateRestrictions_040.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that template(present) can't be parameter to a template(omit)
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_1508_TemplateRestrictions_040 {
+
+    type record ExampleType {	// Exampletype record integer and a boolean
+       	integer a,
+		boolean b 
+    }	
+	
+	type component GeneralComp {}
+
+	template (omit) ExampleType m_baseTemplate(template (present) integer MyintTemplate := 1) :={
+		a := MyintTemplate,	// template (present)is not allowed parameter in omit restriction 
+		b := true
+	}
+	
+	testcase TC_NegSem_1508_TemplateRestrictions_040() runs on GeneralComp {
+
+		if (valueof(m_baseTemplate.b) == true) {
+      		setverdict(pass);
+		} else {
+            setverdict(fail);
+       	}
+ 	}
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_040());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Formal parameter with template restriction `present' not allowed here
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_041 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that unrestricted template cannot be parameter to template(value) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_041 NegSem_1508_TemplateRestrictions_041.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that unrestricted template cannot be parameter to template(value)
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+module NegSem_1508_TemplateRestrictions_041 {
+
+    type record ExampleType {	// Exampletype record integer and a boolean
+       	integer a,
+		boolean b 
+    }	
+	
+	type component GeneralComp {
+	}
+
+	template (value) ExampleType m_baseTemplate(template integer MyintTemplate := 1) :={
+		a := MyintTemplate,	 // template is not allowed parameter in value restriction 
+		b := true
+	}
+	
+	testcase TC_NegSem_1508_TemplateRestrictions_041() runs on GeneralComp {
+      
+		
+		if (ispresent(m_baseTemplate.a) == true) {
+      		setverdict(pass);
+		} else {
+            setverdict(fail);
+       	}
+ 	}
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_041());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Formal parameter without template restriction not allowed here
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_042 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that template(present) cannot be parameter to template(value) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_042 NegSem_1508_TemplateRestrictions_042.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that template(present) cannot be parameter to template(value)
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_1508_TemplateRestrictions_042 {
+
+    type record ExampleType {	// Exampletype record integer and a boolean
+       	integer a,
+	boolean b 
+       }	
+	
+	type component GeneralComp {
+	}
+
+	template (value) ExampleType m_baseTemplate(template (present) integer MyintTemplate := 2) :={
+		a := MyintTemplate,	 // template (present)is not allowed parameter in value restriction 
+		b := true
+	}
+	
+	testcase TC_NegSem_1508_TemplateRestrictions_042() runs on GeneralComp {
+      
+		
+		if (ispresent(m_baseTemplate.a) == true) {
+      		setverdict(pass);
+		} else {
+            setverdict(fail);
+       }
+ }
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_042());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Formal parameter with template restriction `present' not allowed here
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_043 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that template(present) can be parameter to template(omit) >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_043 NegSem_1508_TemplateRestrictions_043.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that template(present) can be parameter to template(omit)
+ ** @verdict  pass reject
+ *****************************************************************/
+
+module NegSem_1508_TemplateRestrictions_043 {
+
+    type record ExampleType {	// Exampletype record integer and a boolean
+       	integer a,
+		boolean b 
+    }	
+	
+	type component GeneralComp {
+	}
+
+	template (omit) ExampleType m_baseTemplate(template integer MyintTemplate := 1) :={
+		a := MyintTemplate,	// template is not allowed parameter in omit restriction 
+		b := true
+	}
+	
+	testcase TC_NegSem_1508_TemplateRestrictions_043() runs on GeneralComp {
+      
+		
+		if (ispresent(m_baseTemplate.a) == true) {
+      		setverdict(pass);
+		} else {
+            setverdict(fail);
+       	}
+ 	}
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_043());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Formal parameter without template restriction not allowed here
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_045 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that the restrictiveness of parameters template(value)->template(present) is handled correctly. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_045 NegSem_1508_TemplateRestrictions_045.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that the restrictiveness of parameters template(value)->template(present) is handled correctly.
+ ** @verdict  pass reject, noexecution
+ *****************************************************************/
+
+// ATTENTION: This is not allowed in Titan
+
+module NegSem_1508_TemplateRestrictions_044 {
+
+	type component GeneralComp { }
+
+    type record ExampleType {
+        integer a,
+        boolean b optional
+    }
+
+    template(present) ExampleType m_baseTemplate(template(value) integer p_myInt) := {
+        a := p_myInt,
+        b := true
+    }
+	
+    template(present) ExampleType m_modifiedTemplate(template(present) integer p_myInt) modifies m_baseTemplate := { // value -> present restriction change is not allowed
+        a := 21
+    }
+
+	testcase TC_NegSem_1508_TemplateRestrictions_044() runs on GeneralComp {
+        if (match(valueof(m_modifiedTemplate(1).a), 21) and
+            match(valueof(m_modifiedTemplate(1).b), true)
+        ) {
+            setverdict(pass);
+        } else {
+            setverdict(fail);
+        }
+    }
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_044());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The restriction of parameter is not the same or more restrictive as in base template `@NegSem_1508_TemplateRestrictions_044.m_baseTemplate'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_045 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC -  Ensure that the restrictiveness of parameters template(value)->template(omit) is handled correctly. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_045 NegSem_1508_TemplateRestrictions_045.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that the restrictiveness of parameters template(value)->template(omit) is handled correctly.
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+// ATTENTION: This is not allowed in Titan
+
+module NegSem_1508_TemplateRestrictions_045 {
+
+	type component GeneralComp { }
+
+    type record ExampleType {
+        integer a,
+        boolean b optional
+    }
+
+    template(present) ExampleType m_baseTemplate(template(value) integer p_myInt) := {
+        a := p_myInt,
+        b := true
+    }
+
+    template(present) ExampleType m_modifiedTemplate(template(omit) integer p_myInt) modifies m_baseTemplate := { // value -> omit restriction change is not allowed
+        a := 21
+    }
+	
+	testcase TC_NegSem_1508_TemplateRestrictions_045() runs on GeneralComp {
+        if (match(valueof(m_modifiedTemplate(1).a), 21) and
+            match(valueof(m_modifiedTemplate(1).b), true)
+        ) {
+            setverdict(pass);
+        } else {
+            setverdict(fail);
+        }
+    }
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_045());
+    }
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The restriction of parameter is not the same or more restrictive as in base template `@NegSem_1508_TemplateRestrictions_045.m_baseTemplate'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_046 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the restrictiveness of parameters template(value)->template is handled correctly. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_046 NegSem_1508_TemplateRestrictions_046.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that the restrictiveness of parameters template(value)->template is handled correctly.
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+// ATTENTION: This is not allowed in Titan
+
+module NegSem_1508_TemplateRestrictions_046 {
+
+	type component GeneralComp { }
+
+    type record ExampleType {
+        integer a,
+        boolean b optional
+    }
+
+    template(present) ExampleType m_baseTemplate(template(value) integer p_myInt) := {
+        a := p_myInt,
+        b := true
+    }
+
+    template(present) ExampleType m_modifiedTemplate(template integer p_myInt) modifies m_baseTemplate := {
+		// value -> unrestricted change is not allowed
+        a := 21
+    }
+
+	testcase TC_NegSem_1508_TemplateRestrictions_046() runs on GeneralComp {
+        if (match(valueof(m_modifiedTemplate(1).a), 21) and
+            match(valueof(m_modifiedTemplate(1).b), true)
+        ) {
+            setverdict(pass);
+        } else {
+            setverdict(fail);
+        }
+    }
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_046());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The restriction of parameter is not the same or more restrictive as in base template `@NegSem_1508_TemplateRestrictions_046.m_baseTemplate'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_047 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_047 NegSem_1508_TemplateRestrictions_047.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly.
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+// ATTENTION: This is not allowed in Titan
+
+module NegSem_1508_TemplateRestrictions_047 {
+
+	type component GeneralComp { }
+
+    type record ExampleType {
+        integer a,
+        boolean b optional
+    }
+
+    template(present) ExampleType m_baseTemplate(template(omit) integer p_myInt) := {
+        a := p_myInt,
+        b := true
+    }
+
+    template(present) ExampleType m_modifiedTemplate(template(present) integer p_myInt) modifies m_baseTemplate := { // omit -> present restriction change is not allowed
+        a := 21
+    }
+
+	testcase TC_NegSem_1508_TemplateRestrictions_047() runs on GeneralComp {
+        if (match(valueof(m_modifiedTemplate(1).a), 21) and
+            match(valueof(m_modifiedTemplate(1).b), true)
+        ) {
+            setverdict(pass);
+        } else {
+            setverdict(fail);
+        }
+    }
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_047());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The restriction of parameter is not the same or more restrictive as in base template `@NegSem_1508_TemplateRestrictions_047.m_baseTemplate'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_048 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_048 NegSem_1508_TemplateRestrictions_048.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly.
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+// ATTENTION: This is not allowed in Titan
+
+module NegSem_1508_TemplateRestrictions_048 {
+
+	type component GeneralComp { }
+
+    type record ExampleType {
+        integer a,
+        boolean b optional
+    }
+
+    template(present) ExampleType m_baseTemplate(template(omit) integer p_myInt) := {
+        a := p_myInt,
+        b := true
+    }
+
+    template(present) ExampleType m_modifiedTemplate(template integer p_myInt) modifies m_baseTemplate := {
+		// omit -> unrestricted change is not allowed
+        a := 21
+    }
+
+	testcase TC_NegSem_1508_TemplateRestrictions_048() runs on GeneralComp {
+        if (match(valueof(m_modifiedTemplate(1).a), 21) and
+            match(valueof(m_modifiedTemplate(1).b), true)
+        ) {
+            setverdict(pass);
+        } else {
+            setverdict(fail);
+        }
+    }
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_048());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The restriction of parameter is not the same or more restrictive as in base template `@NegSem_1508_TemplateRestrictions_048.m_baseTemplate'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1508_TemplateRestrictions_049 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly. >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_1508_TemplateRestrictions_049 NegSem_1508_TemplateRestrictions_049.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.8, Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly.
+ ** @verdict  pass accept, ttcn3verdict:pass
+ *****************************************************************/
+
+// ATTENTION: This is not allowed in Titan
+
+module NegSem_1508_TemplateRestrictions_049 {
+
+	type component GeneralComp { }
+
+    type record ExampleType {
+        integer a,
+        boolean b optional
+    }
+
+    template(present) ExampleType m_baseTemplate(template(present) integer p_myInt) := {
+        a := p_myInt,
+        b := true
+    }
+
+    template(present) ExampleType m_modifiedTemplate(template integer p_myInt) modifies m_baseTemplate := {
+		// present -> unrestricted change is not allowed
+        a := 21
+    }
+
+	testcase TC_NegSem_1508_TemplateRestrictions_049() runs on GeneralComp {
+        if (match(valueof(m_modifiedTemplate(1).a), 21) and
+            match(valueof(m_modifiedTemplate(1).b), true)
+        ) {
+            setverdict(pass);
+        } else {
+            setverdict(fail);
+        }
+    }
+
+    control{
+        execute(TC_NegSem_1508_TemplateRestrictions_049());
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: The restriction of parameter is not the same or more restrictive as in base template `@NegSem_1508_TemplateRestrictions_049.m_baseTemplate'
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_1508_TemplateRestrictions_050 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.

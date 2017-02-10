@@ -18,9 +18,9 @@ module NegSem_1508_TemplateRestrictions_037 {
 	type component GeneralComp {
 	}
 
-	template (omit) ExampleType m_baseTemplate(template integer MyintTemplate := ?) :={
+	template (omit) ExampleType m_baseTemplate(template (present) integer MyintTemplate := ?) :={
 		a := MyintTemplate,	
-		// template MyintTemplate contains anyvalue(?), which is not allowed in omit restriction 
+		// template (present) MyintTemplate contains anyvalue(?), which is not allowed in omit restriction 
 		b := true
 	}
 	
