@@ -4,7 +4,7 @@
  * Adrien Kirjak
  *
  ** @version  0.0.1
- ** @purpose  1:15.8, Ensure that the an unrestriced template can't be parameter to template(present) if it contains omit
+ ** @purpose  1:15.8, Ensure that template(present) cannot be parameter to template(value)
  ** @verdict  pass reject
  *****************************************************************/
 
@@ -12,26 +12,26 @@ module NegSem_1508_TemplateRestrictions_042 {
 
     type record ExampleType {	// Exampletype record integer and a boolean
        	integer a,
-		boolean b 
-    }	
+	boolean b 
+       }	
 	
 	type component GeneralComp {
 	}
 
-	template (present) ExampleType m_baseTemplate(template integer MyintTemplate := omit) :={
-		a := MyintTemplate,	
-	// template MyintTemplate contains omit, which is not allowed with present restriction 
+	template (value) ExampleType m_baseTemplate(template (present) integer MyintTemplate := 2) :={
+		a := MyintTemplate,	 // template (present)is not allowed parameter in value restriction 
 		b := true
 	}
 	
 	testcase TC_NegSem_1508_TemplateRestrictions_042() runs on GeneralComp {
-
+      
+		
 		if (ispresent(m_baseTemplate.a) == true) {
       		setverdict(pass);
 		} else {
             setverdict(fail);
        }
- 	}
+ }
 
     control{
         execute(TC_NegSem_1508_TemplateRestrictions_042());
