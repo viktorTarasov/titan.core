@@ -635,7 +635,11 @@ int is_xsd_module(const char *file_name, char **module_name) {
   FILE *fp;
   char line[1024];
   char *command = NULL;
-  command = mputprintf(command, "xsd2ttcn -q -n %s", file_name);
+  char *ttcn3_dir = getenv("TTCN3_DIR");
+  command = mputprintf(command, "%s%sxsd2ttcn -q -n %s",
+    ttcn3_dir != NULL ? ttcn3_dir : "",
+    ttcn3_dir != NULL ? "/bin/" : "",
+    file_name);
   fp = popen(command, "r");
   Free(command);
   if (fp == NULL) {
@@ -1261,7 +1265,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char* tpdName, co
   const char *output_file, char** abs_work_dir_p, struct string_list* sub_project_dirs,
   const char* program_name, FILE* prj_graph_fp, struct string2_list* create_symlink_list, struct string_list* ttcn3_prep_includes,
   struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
-  struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
+  struct string_list* prep_defines, struct string_list* prep_undefines, char **p_csmode, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
   boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean *p_Eflag, boolean* p_nflag,
@@ -1281,7 +1285,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
   const char *output_file, char** abs_work_dir_p, struct string_list* sub_project_dirs,
   const char* program_name, FILE* prj_graph_fp, struct string2_list* create_symlink_list, struct string_list* ttcn3_prep_includes,
   struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes, 
-  struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
+  struct string_list* prep_defines, struct string_list* prep_undefines, char **p_csmode, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag, 
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
   boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean* p_Eflag, boolean* p_nflag,
@@ -1311,7 +1315,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
       output_file, abs_work_dir_p, sub_project_dirs,
       program_name, prj_graph_fp, create_symlink_list, ttcn3_prep_includes,
       ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines,
-      prep_undefines, p_csflag, p_quflag, p_dsflag, cxxcompiler,
+      prep_undefines, p_csmode, p_quflag, p_dsflag, cxxcompiler,
       optlevel, optflags, p_dbflag, p_drflag, p_dtflag, p_dxflag, p_djflag,
       p_fxflag, p_doflag, p_gfflag, p_lnflag, p_isflag,
       p_asflag, p_swflag, p_Yflag, p_Mflag, p_Eflag, p_nflag, p_diflag, solspeclibs, sol8speclibs,
@@ -1339,7 +1343,7 @@ extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
       output_file, abs_work_dir_p, sub_project_dirs,
       program_name, prj_graph_fp, create_symlink_list, ttcn3_prep_includes,
       ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines,
-      prep_undefines, p_csflag, p_quflag, p_dsflag, cxxcompiler,
+      prep_undefines, p_csmode, p_quflag, p_dsflag, cxxcompiler,
       optlevel, optflags, p_dbflag, p_drflag, p_dtflag, p_dxflag, p_djflag,
       p_fxflag, p_doflag, p_gfflag, p_lnflag, p_isflag,
       p_asflag, p_swflag, p_Yflag, p_Mflag, p_Eflag, p_nflag, p_diflag, solspeclibs, sol8speclibs,
@@ -1442,7 +1446,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   const char *output_file, char** abs_work_dir_p, struct string_list* sub_project_dirs,
   const char* program_name, FILE* prj_graph_fp, struct string2_list* create_symlink_list, struct string_list* ttcn3_prep_includes,
   struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
-  struct string_list* prep_defines, struct string_list* prep_undefines, boolean *p_csflag, boolean *p_quflag, boolean* p_dsflag,
+  struct string_list* prep_defines, struct string_list* prep_undefines, char **p_csmode, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
   boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean* p_Eflag, boolean* p_nflag,
@@ -1991,6 +1995,32 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
       }
     } // next FileResource
   }
+  
+  // Gather the code splitting mode from the active configuration
+  {
+    expstring_t xpathActCfgCodeSplitting = mprintf(
+      "/TITAN_Project_File_Information/Configurations/Configuration[@name='%s']"
+      "//ProjectProperties/MakefileSettings/codeSplitting/text()",
+      actcfg);
+    XPathObject codeSplittingObj(run_xpath(xpathCtx, xpathActCfgCodeSplitting));
+    Free(xpathActCfgCodeSplitting);
+    if (codeSplittingObj->nodesetval && codeSplittingObj->nodesetval->nodeNr > 0) {
+      const char* content = (const char*)codeSplittingObj->nodesetval->nodeTab[0]->content;
+      if (local_argc != 0) { // top level project
+        // Get the code splitting without thinking
+        *p_csmode = mcopystr(content);
+      } else if (*p_csmode == NULL && strcmp(content, "none") != 0) { // todo config in error message?
+        ERROR("The top level project does not have code splitting set, but the `%s' project has `%s' code splitting set.",
+          *p_project_name, content);
+      } else if (*p_csmode != NULL && strcmp(content, *p_csmode)) {
+        ERROR("Code splitting must be the same. Top level project has `%s', `%s' project has `%s' code splitting set.",
+          *p_csmode, *p_project_name, content);
+      }
+    } else if (*p_csmode != NULL && strcmp(*p_csmode, "none") != 0) {
+      ERROR("The top level project have `%s' code splitting set, but the `%s' project has none.",
+        *p_csmode, *p_project_name);
+    }
+  }
 
   // Check options
   xsdbool2boolean(xpathCtx, actcfg, "useAbsolutePath", p_aflag);
@@ -1999,7 +2029,6 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   xsdbool2boolean(xpathCtx, actcfg, "dynamicLinking", p_lflag);
   xsdbool2boolean(xpathCtx, actcfg, "functiontestRuntime", p_Rflag);
   xsdbool2boolean(xpathCtx, actcfg, "singleMode", p_sflag);
-  xsdbool2boolean(xpathCtx, actcfg, "codeSplitting", p_csflag);
   xsdbool2boolean(xpathCtx, actcfg, "quietly", p_quflag);
   xsdbool2boolean(xpathCtx, actcfg, "disableSubtypeChecking", p_dsflag);
   xsdbool2boolean(xpathCtx, actcfg, "disableBER", p_dbflag);
@@ -2905,7 +2934,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
         int my_optind = 0;
         boolean my_gflag = *p_gflag, my_aflag = *p_aflag, my_cflag = *p_cflag, // pass down
           my_Rflag = *p_Rflag, my_Pflag = *p_Pflag, my_Zflag = *p_Zflag, my_Hflag = *p_Hflag,
-          my_sflag =  0, my_Lflag =  0, my_lflag =  0, my_mflag =  0, my_csflag = 0,
+          my_sflag =  0, my_Lflag =  0, my_lflag =  0, my_mflag =  0,
           my_quflag = 0, my_dsflag = 0, my_dbflag = 0, my_drflag = 0,
           my_dtflag = 0, my_dxflag = 0, my_djflag = 0, my_fxflag = 0, my_doflag = 0, 
           my_gfflag = 0, my_lnflag = 0, my_isflag = 0, my_asflag = 0, 
@@ -2914,6 +2943,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
 
         char *my_ets = NULL;
         char *my_proj_name = NULL;
+        char *my_csmode = *p_csmode;
         autostring abs_projectLocationURI;
         if (not_abs_path) {
           abs_projectLocationURI = compose_path_name(abs_tpd_dir, projectLocationURI);
@@ -2957,7 +2987,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
           &my_gflag, &my_sflag, &my_cflag, &my_aflag, preprocess, &my_Rflag, &my_lflag,
           &my_mflag, &my_Pflag, &my_Lflag, recursive, force_overwrite, gen_only_top_level, NULL, &sub_proj_abs_work_dir,
           sub_project_dirs, program_name, prj_graph_fp, create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, ttcn3_prep_undefines, 
-          prep_includes, prep_defines, prep_undefines, &my_csflag,
+          prep_includes, prep_defines, prep_undefines, &my_csmode,
           &my_quflag, &my_dsflag, cxxcompiler, optlevel, optflags, &my_dbflag, &my_drflag,
           &my_dtflag, &my_dxflag, &my_djflag, &my_fxflag, &my_doflag,
           &my_gfflag, &my_lnflag, &my_isflag, &my_asflag, &my_swflag, &my_Yflag, &my_Mflag, &my_Eflag, &my_nflag, &my_diflag,

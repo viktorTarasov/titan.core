@@ -41,7 +41,24 @@
                     <xs:element name="dynamicLinking" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="functiontestRuntime" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="singleMode" minOccurs="0" maxOccurs="1" type="xs:boolean" />
-                    <xs:element name="codeSplitting" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
+                    <xs:element name="codeSplitting" minOccurs="0" maxOccurs="1">
+                      <xs:simpleType>
+                        <xs:union>
+                          <xs:simpleType>
+                            <xs:restriction base="xs:normalizedString">
+                              <xs:enumeration value=""/>
+                              <xs:enumeration value="none"/>
+                              <xs:enumeration value="type"/>
+                            </xs:restriction>
+                          </xs:simpleType>
+                          <xs:simpleType>
+                            <xs:restriction base="xs:positiveInteger">
+                              <xs:maxExclusive value="1000000"/>
+                            </xs:restriction>
+                          </xs:simpleType>
+                        </xs:union>
+                      </xs:simpleType>
+                    </xs:element>
                     <xs:element name="defaultTarget" minOccurs="0" maxOccurs="1">
                       <xs:simpleType>
                         <xs:restriction base="xs:normalizedString">

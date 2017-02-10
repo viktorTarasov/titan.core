@@ -245,7 +245,7 @@ struct makefile_struct {
   struct string_list* prep_includes; /* not owned */
   struct string_list* prep_defines; /* not owned */
   struct string_list* prep_undefines; /* not owned */
-  boolean codesplittpd;
+  const char *codesplittpd;
   boolean quietly;
   boolean disablesubtypecheck;
   const char *cxxcompiler;
@@ -2207,13 +2207,6 @@ static void print_makefile(struct makefile_struct *makefile)
       fputs("\n\n", fp);
     }
 
-    /* code splitting: command line argument wins */
-    if (makefile->code_splitting_mode == NULL) {
-      if (makefile->codesplittpd) {
-        makefile->code_splitting_mode = mcopystr("-U type");
-      }
-    }
-
     fprintf(fp, "# Flags for the C++ compiler:\n"
           "CXXFLAGS = %s%s %s %s"
 #ifdef MEMORY_DEBUG
@@ -2649,8 +2642,51 @@ static void print_makefile(struct makefile_struct *makefile)
 
     fputs("\nGENERATED_HEADERS =", fp);
     if (makefile->gnu_make) {
-      fputs(" $(GENERATED_SOURCES:.cc=.hh)", fp);
-    } 
+      int n_slices;
+      // If GNU make and split to slices code splitting set, then if we would
+      // use the .cc=.hh then the _part_i.hh header files would be printed into
+      // the makefile that would cause weird behavior.
+      if (makefile->code_splitting_mode != NULL && (n_slices = atoi(makefile->code_splitting_mode + 2))) {
+        if (makefile->TTCN3ModulesRegular) {
+          fputs(" $(TTCN3_MODULES:.ttcn=.hh)", fp);
+          if (makefile->preprocess) {
+            fputs(" $(TTCN3_PP_MODULES:.ttcnpp=.hh)", fp);
+          }
+        } else {
+          for (i = 0; i < makefile->nTTCN3Modules; i++) {
+            const struct module_struct *module = makefile->TTCN3Modules + i;
+            if (module->dir_name == NULL || !makefile->central_storage)
+              print_generated_file_name(fp, module, FALSE, ".hh");
+          }
+          if (makefile->preprocess) {
+            for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+              const struct module_struct *module = makefile->TTCN3PPModules + i;
+              if (module->dir_name == NULL || !makefile->central_storage)
+                print_generated_file_name(fp, module, FALSE, ".hh");
+            }
+          }
+          if (makefile->nXSDModules) {
+            for (i = 0; i < makefile->nXSDModules; i++) {
+              const struct module_struct *module = makefile->XSDModules + i;
+              if (module->dir_name == NULL || !makefile->central_storage)
+                print_generated_file_name(fp, module, FALSE, ".hh");
+            }
+          }
+        }
+        if (makefile->ASN1ModulesRegular) {
+          fputs(" $(ASN1_MODULES:.asn=.hh)", fp);
+        } else {
+          for (i = 0; i < makefile->nASN1Modules; i++) {
+            const struct module_struct *module = makefile->ASN1Modules + i;
+            if (module->dir_name == NULL || !makefile->central_storage)
+              print_generated_file_name(fp, module, FALSE, ".hh");
+          }
+        }
+      } else {
+        // Generate normally
+        fputs(" $(GENERATED_SOURCES:.cc=.hh)", fp);
+      }
+    }
     else {
       for (i = 0; i < makefile->nTTCN3Modules; i++) {
         const struct module_struct *module = makefile->TTCN3Modules + i;
@@ -2762,7 +2798,50 @@ static void print_makefile(struct makefile_struct *makefile)
       }
       fputs("\nBASE_GENERATED_HEADERS =", fp);
       if (makefile->gnu_make) {
-        fputs(" $(BASE_GENERATED_SOURCES:.cc=.hh)", fp);
+        int n_slices;
+        // If GNU make and split to slices code splitting set, then if we would
+        // use the .cc=.hh then the _part_i.hh header files would be printed into
+        // the makefile that would cause weird behavior.
+        if (makefile->code_splitting_mode != NULL && (n_slices = atoi(makefile->code_splitting_mode + 2))) {
+          if (makefile->TTCN3ModulesRegular) {
+            fputs(" $(BASE_TTCN3_MODULES:.ttcn=.hh)", fp);
+            if (makefile->preprocess) {
+              fputs(" $(BASE_TTCN3_PP_MODULES:.ttcnpp=.hh)", fp);
+            }
+          } else {
+            for (i = 0; i < makefile->nTTCN3Modules; i++) {
+              const struct module_struct *module = makefile->TTCN3Modules + i;
+              if (module->dir_name != NULL)
+                print_generated_file_name(fp, module, TRUE, ".hh");
+            }
+            if (makefile->preprocess) {
+              for (i = 0; i < makefile->nTTCN3PPModules; i++) {
+                const struct module_struct *module = makefile->TTCN3PPModules + i;
+                if (module->dir_name != NULL)
+                  print_generated_file_name(fp, module, TRUE, ".hh");
+              }
+            }
+            if (makefile->nXSDModules) {
+              for (i = 0; i < makefile->nXSDModules; i++) {
+                const struct module_struct *module = makefile->XSDModules + i;
+                if (module->dir_name != NULL)
+                  print_generated_file_name(fp, module, TRUE, ".hh");
+              }
+            }
+          }
+          if (makefile->ASN1ModulesRegular) {
+            fputs(" $(BASE_ASN1_MODULES:.asn=.hh)", fp);
+          } else {
+            for (i = 0; i < makefile->nASN1Modules; i++) {
+              const struct module_struct *module = makefile->ASN1Modules + i;
+              if (module->dir_name != NULL)
+                print_generated_file_name(fp, module, TRUE, ".hh");
+            }
+          }
+        } else {
+          // Generate normally
+          fputs(" $(BASE_GENERATED_SOURCES:.cc=.hh)", fp);
+        }
       } else {
         for (i = 0; i < makefile->nTTCN3Modules; i++) {
           const struct module_struct *module = makefile->TTCN3Modules + i;
@@ -2826,7 +2905,7 @@ static void print_makefile(struct makefile_struct *makefile)
 
       fputs("\nBASE2_GENERATED_HEADERS =", fp);
       if (makefile->gnu_make) {
-        fputs(" $(BASE2_GENERATED_SOURCES:.cc=.hh)", fp);
+          fputs(" $(BASE2_GENERATED_SOURCES:.cc=.hh)", fp);
       }
       else
         ERROR("the usage of 'Z' flag requires GNU make");
@@ -3165,26 +3244,94 @@ static void print_makefile(struct makefile_struct *makefile)
           else {
             for (i = 0; i < makefile->nTTCN3Modules; i++) {
               const struct module_struct *module = makefile->TTCN3Modules + i;
-              if (module->dir_name != NULL)
+              if (module->dir_name != NULL) {
                 print_generated_file_name(fp, module, TRUE, ".so");
+                if (makefile->code_splitting_mode != NULL) {
+                  int n_slices;
+                  if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                    print_generated_file_name(fp, module, TRUE, "_seq.so");
+                    print_generated_file_name(fp, module, TRUE, "_set.so");
+                    print_generated_file_name(fp, module, TRUE, "_seqof.so");
+                    print_generated_file_name(fp, module, TRUE, "_setof.so");
+                    print_generated_file_name(fp, module, TRUE, "_union.so");
+                  } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                    for (int slice = 1; slice < n_slices; slice++) {
+                      char buffer[16]; // 6 digits + 4 chars + _part
+                      sprintf(buffer, "_part_%i.so", slice);
+                      print_generated_file_name(fp, module, TRUE, buffer);
+                    }
+                  }
+                }
+              }
             }
             if (makefile->preprocess) {
               for (i = 0; i < makefile->nTTCN3PPModules; i++) {
                 const struct module_struct *module =
                   makefile->TTCN3PPModules + i;
-                if (module->dir_name != NULL)
+                if (module->dir_name != NULL) {
                   print_generated_file_name(fp, module, TRUE, ".so");
+                  if (makefile->code_splitting_mode != NULL) {
+                    int n_slices;
+                    if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                      print_generated_file_name(fp, module, TRUE, "_seq.so");
+                      print_generated_file_name(fp, module, TRUE, "_set.so");
+                      print_generated_file_name(fp, module, TRUE, "_seqof.so");
+                      print_generated_file_name(fp, module, TRUE, "_setof.so");
+                      print_generated_file_name(fp, module, TRUE, "_union.so");
+                    } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                      for (int slice = 1; slice < n_slices; slice++) {
+                        char buffer[16]; // 6 digits + 4 chars + _part
+                        sprintf(buffer, "_part_%i.so", slice);
+                        print_generated_file_name(fp, module, TRUE, buffer);
+                      }
+                    }
+                  }
+                }
               }
             }
             for (i = 0; i < makefile->nASN1Modules; i++) {
               const struct module_struct *module = makefile->ASN1Modules + i;
-              if (module->dir_name != NULL)
+              if (module->dir_name != NULL) {
                 print_generated_file_name(fp, module, TRUE, ".so");
+                if (makefile->code_splitting_mode != NULL) {
+                  int n_slices;
+                  if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                    print_generated_file_name(fp, module, TRUE, "_seq.so");
+                    print_generated_file_name(fp, module, TRUE, "_set.so");
+                    print_generated_file_name(fp, module, TRUE, "_seqof.so");
+                    print_generated_file_name(fp, module, TRUE, "_setof.so");
+                    print_generated_file_name(fp, module, TRUE, "_union.so");
+                  } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                    for (int slice = 1; slice < n_slices; slice++) {
+                      char buffer[16]; // 6 digits + 4 chars + _part
+                      sprintf(buffer, "_part_%i.so", slice);
+                      print_generated_file_name(fp, module, TRUE, buffer);
+                    }
+                  }
+                }
+              }
             }
             for (i = 0; i < makefile->nXSDModules; i++) {
               const struct module_struct *module = makefile->XSDModules + i;
-              if (module->dir_name != NULL)
+              if (module->dir_name != NULL) {
                 print_generated_file_name(fp, module, TRUE, ".so");
+                if (makefile->code_splitting_mode != NULL) {
+                  int n_slices;
+                  if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                    print_generated_file_name(fp, module, TRUE, "_seq.so");
+                    print_generated_file_name(fp, module, TRUE, "_set.so");
+                    print_generated_file_name(fp, module, TRUE, "_seqof.so");
+                    print_generated_file_name(fp, module, TRUE, "_setof.so");
+                    print_generated_file_name(fp, module, TRUE, "_union.so");
+                  } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                    for (int slice = 1; slice < n_slices; slice++) {
+                      char buffer[16]; // 6 digits + 4 chars + _part
+                      sprintf(buffer, "_part_%i.so", slice);
+                      print_generated_file_name(fp, module, TRUE, buffer);
+                    }
+                  }
+                }
+              }
             }
           }
           if (makefile->gnu_make && makefile->BaseUserSourcesRegular) {
@@ -3230,6 +3377,22 @@ static void print_makefile(struct makefile_struct *makefile)
             const struct module_struct *module = makefile->TTCN3Modules + i;
             if (module->dir_name != NULL) {
               print_generated_file_name(fp, module, TRUE, ".o");
+              if (makefile->code_splitting_mode != NULL) {
+                int n_slices;
+                if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                  print_generated_file_name(fp, module, TRUE, "_seq.o");
+                  print_generated_file_name(fp, module, TRUE, "_set.o");
+                  print_generated_file_name(fp, module, TRUE, "_seqof.o");
+                  print_generated_file_name(fp, module, TRUE, "_setof.o");
+                  print_generated_file_name(fp, module, TRUE, "_union.o");
+                } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                  for (int slice = 1; slice < n_slices; slice++) {
+                    char buffer[16]; // 6 digits + 4 chars + _part
+                    sprintf(buffer, "_part_%i.o", slice);
+                    print_generated_file_name(fp, module, TRUE, buffer);
+                  }
+                }
+              }
             }
           }
           if (makefile->preprocess) {
@@ -3237,6 +3400,22 @@ static void print_makefile(struct makefile_struct *makefile)
               const struct module_struct *module = makefile->TTCN3PPModules + i;
               if (module->dir_name != NULL) {
                 print_generated_file_name(fp, module, TRUE, ".o");
+                if (makefile->code_splitting_mode != NULL) {
+                  int n_slices;
+                  if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                    print_generated_file_name(fp, module, TRUE, "_seq.o");
+                    print_generated_file_name(fp, module, TRUE, "_set.o");
+                    print_generated_file_name(fp, module, TRUE, "_seqof.o");
+                    print_generated_file_name(fp, module, TRUE, "_setof.o");
+                    print_generated_file_name(fp, module, TRUE, "_union.o");
+                  } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                    for (int slice = 1; slice < n_slices; slice++) {
+                      char buffer[16]; // 6 digits + 4 chars + _part
+                      sprintf(buffer, "_part_%i.o", slice);
+                      print_generated_file_name(fp, module, TRUE, buffer);
+                    }
+                  }
+                }
               }
             }
           }
@@ -3244,12 +3423,44 @@ static void print_makefile(struct makefile_struct *makefile)
             const struct module_struct *module = makefile->ASN1Modules + i;
             if (module->dir_name != NULL) {
               print_generated_file_name(fp, module, TRUE, ".o");
+              if (makefile->code_splitting_mode != NULL) {
+                int n_slices;
+                if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                  print_generated_file_name(fp, module, TRUE, "_seq.o");
+                  print_generated_file_name(fp, module, TRUE, "_set.o");
+                  print_generated_file_name(fp, module, TRUE, "_seqof.o");
+                  print_generated_file_name(fp, module, TRUE, "_setof.o");
+                  print_generated_file_name(fp, module, TRUE, "_union.o");
+                } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                  for (int slice = 1; slice < n_slices; slice++) {
+                    char buffer[16]; // 6 digits + 4 chars + _part
+                    sprintf(buffer, "_part_%i.o", slice);
+                    print_generated_file_name(fp, module, TRUE, buffer);
+                  }
+                }
+              }
             }
           }
           for (i = 0; i < makefile->nXSDModules; i++) {
             const struct module_struct *module = makefile->XSDModules + i;
             if (module->dir_name != NULL) {
               print_generated_file_name(fp, module, TRUE, ".o");
+              if (makefile->code_splitting_mode != NULL) {
+                int n_slices;
+                if (strcmp(makefile->code_splitting_mode, "-U type") == 0) {
+                  print_generated_file_name(fp, module, TRUE, "_seq.o");
+                  print_generated_file_name(fp, module, TRUE, "_set.o");
+                  print_generated_file_name(fp, module, TRUE, "_seqof.o");
+                  print_generated_file_name(fp, module, TRUE, "_setof.o");
+                  print_generated_file_name(fp, module, TRUE, "_union.o");
+                } else if((n_slices = atoi(makefile->code_splitting_mode + 2))) {
+                  for (int slice = 1; slice < n_slices; slice++) {
+                    char buffer[16]; // 6 digits + 4 chars + _part
+                    sprintf(buffer, "_part_%i.o", slice);
+                    print_generated_file_name(fp, module, TRUE, buffer);
+                  }
+                }
+              }
             }
           }
         }
@@ -4424,7 +4635,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   const char *code_splitting_mode, const char *tcov_file_name, struct string_list* profiled_file_list, const char* file_list_file_name,
   boolean Lflag, boolean Zflag, boolean Hflag, struct string_list* sub_project_dirs, struct string_list* ttcn3_prep_includes,
   struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
-  struct string_list* prep_defines, struct string_list* prep_undefines, boolean codesplittpd, boolean quietly, boolean disablesubtypecheck,
+  struct string_list* prep_defines, struct string_list* prep_undefines, char *codesplittpd, boolean quietly, boolean disablesubtypecheck,
   const char* cxxcompiler, const char* optlevel, const char* optflags, boolean disableber, boolean disableraw, boolean disabletext,
   boolean disablexer, boolean disablejson, boolean forcexerinasn, boolean defaultasomit, boolean gccmsgformat,
   boolean linenumbersonlymsg, boolean includesourceinfo, boolean addsourcelineinfo, boolean suppresswarnings,
@@ -4460,7 +4671,6 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   makefile.prep_includes =  prep_includes;
   makefile.prep_defines =  prep_defines;
   makefile.prep_undefines =  prep_undefines;
-  makefile.codesplittpd = codesplittpd;
   makefile.quietly = quietly;
   makefile.disablesubtypecheck = disablesubtypecheck;
   makefile.cxxcompiler = cxxcompiler;
@@ -4545,6 +4755,21 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
 
   if (code_splitting_mode != NULL) {
     makefile.code_splitting_mode = mputprintf(makefile.code_splitting_mode, "-U %s", code_splitting_mode);
+  }
+  if (codesplittpd != NULL) { // TPD code splitting overrides console code splitting
+    makefile.code_splitting_mode = mputprintf(makefile.code_splitting_mode, "-U %s", codesplittpd);
+  }
+  
+  if (makefile.code_splitting_mode != NULL && makefile.linkingStrategy == TRUE) {
+    WARNING("Code splitting from TPD file is not supported when the improved linking method is used (Z flag).");
+    Free(makefile.code_splitting_mode);
+    makefile.code_splitting_mode = NULL;
+  }
+  
+  if (makefile.code_splitting_mode != NULL && makefile.hierarchical == TRUE) {
+    WARNING("Code splitting from TPD file is not supported when hierarchical makefile generation is used (H flag).");
+    Free(makefile.code_splitting_mode);
+    makefile.code_splitting_mode = NULL;
   }
 
   if (tcov_file_name != NULL) {
@@ -4679,7 +4904,7 @@ int main(int argc, char *argv[])
     Pflag = FALSE, Rflag = FALSE, sflag = FALSE, tflag = FALSE,
     wflag = FALSE, vflag = FALSE, mflag = FALSE, Uflag = FALSE,
     Lflag = FALSE, rflag = FALSE, Fflag = FALSE, Xflag = FALSE,
-    Tflag = FALSE, Yflag = FALSE, csflag = FALSE, quflag = FALSE,
+    Tflag = FALSE, Yflag = FALSE, quflag = FALSE,
     dsflag = FALSE, dbflag = FALSE, drflag = FALSE, dtflag = FALSE,
     dxflag = FALSE, fxflag = FALSE, doflag = FALSE,
     gfflag = FALSE, lnflag = FALSE, isflag = FALSE, asflag = FALSE,
@@ -4690,6 +4915,7 @@ int main(int argc, char *argv[])
   char *output_file = NULL;
   char *ets_name = NULL;
   char *project_name = NULL;
+  char *csmode = NULL;
   size_t n_other_files = 0;
   const char **other_files = NULL;
   const char *code_splitting_mode = NULL;
@@ -5116,7 +5342,7 @@ int main(int argc, char *argv[])
       &argc, &argv, &free_argv, &optind, &ets_name, &project_name,
       &gflag, &sflag, &cflag, &aflag, &pflag,
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
-      create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csflag,
+      create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csmode,
       &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
       &asflag, &temp_wflag, &Yflag, &Mflag, &Eflag, &nflag, &diflag, solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
       linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &Zflag, &Hflag,
@@ -5164,7 +5390,7 @@ int main(int argc, char *argv[])
       output_file, ets_name, project_name, gflag, sflag, cflag, aflag, pflag, dflag, fflag||Fflag,
       Rflag, lflag, mflag, Cflag, code_splitting_mode, tcov_file_name, profiled_file_list,
       file_list_file_name, Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
-      ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, csflag, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
+      ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, csmode, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
       drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, wflag, Yflag, Mflag, Eflag, nflag, diflag, solspeclibraries,
       sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, ttcn3prep, linkerlibraries, additionalObjects,
       linkerlibsearchpath, generatorCommandOutput, target_placement_list);
@@ -5196,6 +5422,7 @@ int main(int argc, char *argv[])
   free_string_list(profiled_file_list);
 
   Free(search_paths);
+  Free(csmode);
 
   Free(generatorCommandOutput);
   free_string2_list(target_placement_list);
