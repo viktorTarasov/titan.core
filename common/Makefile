@@ -119,6 +119,7 @@ config_preproc_p.tab.cc config_preproc_p.tab.hh: config_preproc_p.y
 ifdef OPENSSL_DIR
 ifneq ($(OPENSSL_DIR), default)
 license.o license.d: CPPFLAGS := $(CPPFLAGS) -I$(OPENSSL_DIR)/include
+openssl_version.o openssl_version.d: CPPFLAGS := $(CPPFLAGS) -I$(OPENSSL_DIR)/include
 endif
 endif
 

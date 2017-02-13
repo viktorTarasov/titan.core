@@ -13,6 +13,18 @@
 #include "openssl_version.h"
 #include <openssl/crypto.h>
 
+
+// Backward compatibility with older openssl versions
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
 const char * openssl_version_str(void) {
-  return SSLeay_version(SSLEAY_VERSION);
+	return SSLeay_version(SSLEAY_VERSION);
 }
+
+#else
+
+const char * openssl_version_str(void) {
+	return OpenSSL_version(OPENSSL_VERSION);
+}
+
+#endif
