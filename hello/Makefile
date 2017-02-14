@@ -12,6 +12,7 @@
 #   Kovacs, Ferenc
 #   Lovassy, Arpad
 #   Raduly, Csaba
+#   Szabo, Bence Janos
 #   Szabo, Janos Zoltan – initial implementation
 #
 ##############################################################################
@@ -39,5 +40,6 @@ else
 	sed -e 's/# TTCN3_DIR =/TTCN3_DIR =/' <Makefile.tmp >Makefile && \
 	$(RM) Makefile.tmp && \
 	$(MAKE) CXX='$(CXX)' CXXFLAGS='$(CXXFLAGS)' LDFLAGS='$(LDFLAGS)' && \
-	(sleep 5 && echo 'Hello, TTCN-3!') | ttcn3_start MyExample MyExample.cfg
+	(sleep 5 && echo 'Hello, TTCN-3!') | ttcn3_start MyExample MyExample.cfg && \
+	logformat *.log -o MyExample_merged.log
 endif
