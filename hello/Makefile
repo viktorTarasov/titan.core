@@ -41,5 +41,5 @@ else
 	$(RM) Makefile.tmp && \
 	$(MAKE) CXX='$(CXX)' CXXFLAGS='$(CXXFLAGS)' LDFLAGS='$(LDFLAGS)' && \
 	(sleep 5 && echo 'Hello, TTCN-3!') | ttcn3_start MyExample MyExample.cfg && \
-	logformat *.log -o MyExample_merged.log
+	logformat -o MyExample_merged.log *.log
 endif
