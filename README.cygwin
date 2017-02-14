@@ -77,7 +77,7 @@ Cygwin setup
   
    (H) Select the Create icon on Desktop checkbox
    
-   (I) (Optional)
+   (I) Change <your home directory> (optional):
        Your "unix" home directory, by default is:
        <your cygwin installation directory>/home/<yourUserId>
        If you are (also) working in command line mode, it is a good 
@@ -103,33 +103,45 @@ Cygwin setup
         into the Windows environment variable "Path". For example if the cygwin root is "C:\cygwin64" then 
         Path should contain  "C:\cygwin64\bin;C:\cygwin64\usr\bin".
 
-  (J) Using the binary Titan package: download the Titan package for from
-    GitHub. Unpack the Titan package into a folder of your choice.
+  (J) Using the binary Titan package: download the Titan package from
+    https://projects.eclipse.org/projects/tools.titan/downloads.
+		Unpack the Titan package into a folder of your choice (for example ${HOME}/titan.core)
       Note: It is not a requirement, but is a kind of best practice to 
             place Titan into a subfolder within your "unix" home directory.
       Edit the <your cygwin installation directory>/home/<yourUserId>/.bashrc
       file. Add these lines to it:
+				export TTCN3_DIR=${HOME}/titan.core
         export PATH=${TTCN3_DIR}/bin:${PATH}
         export LD_LIBRARY_PATH=${TTCN3_DIR}/lib:${LD_LIBRARY_PATH}
 
-  (K) Compile Titan with Cygwin:
-   Get the latest source code from GitHub.
-   Download and install JDK from Oracle's download site:
+  or(K) Using TITAN from source code
+		Get the latest source code from GitHub:
+			- First time:
+				cd ~/git
+				git clone https://github.com/eclipse/titan.core.git
+				//Folder titan.core will be created
+			- Updating the already existing local repository:
+				cd ~/git/titan.core
+				git pull https://github.com/eclipse/titan.core.git
+		Download and install JDK from Oracle's download site:
      http://www.oracle.com/technetwork/java/javase/downloads/index.html
-   Edit the <your cygwin installation directory>/home/<yourUserId>/.bashrc
-   as above.
-   Create titan/Makefile.personal with the following content:    
-            TTCN3_DIR := /home/<user id>/git/titan/Install
+		Compile Titan with Cygwin:
+		Edit the <your home directory>/.bashrc, as above in (J), add these lines to it: 
+			export TTCN3_DIR=${HOME}/git/titan.core/Install
+			export PATH=${TTCN3_DIR}/bin:${PATH}
+      export LD_LIBRARY_PATH=${TTCN3_DIR}/lib:${LD_LIBRARY_PATH}
+		Create titan.core/Makefile.personal with the following content:    
+            TTCN3_DIR := <your home directory>/git/titan.core/Install
             JDKDIR := /home/<user id>/jdk
             JNI := no
             GUI := no
             GEN_PDF := no
             DEBUG := no
-   Compile Titan:
+		Compile Titan:
           cd titan
           make -j  
           make install 
-   The compiled files will be placed into the titan/Install directory. 
+		The compiled files will be placed into the titan.core/Install directory. 
   
   (L) If you want to use graphical tools (like nedit for example), then you need to install the Cygwin/X
       component too. The install procedure can be found at the homepage:
