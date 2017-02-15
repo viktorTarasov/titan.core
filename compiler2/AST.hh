@@ -487,6 +487,12 @@ namespace Common {
      *  named assignments are visible. */
     virtual Assignment* get_ass_byIndex(size_t p_i) = 0;
   };
+  
+  enum param_eval_t {
+    NORMAL_EVAL,
+    LAZY_EVAL,
+    FUZZY_EVAL
+  };
 
   /**
    * Abstract class to represent different kinds of assignments.
@@ -572,7 +578,7 @@ namespace Common {
     virtual Type *get_Type();
     virtual Value *get_Value();
     virtual Ttcn::Template *get_Template();
-    virtual bool get_lazy_eval() const;
+    virtual param_eval_t get_eval_type() const;
     /** @} */
     /** Returns the formal parameter list of a TTCN-3 definition */
     virtual Ttcn::FormalParList *get_FormalParList();

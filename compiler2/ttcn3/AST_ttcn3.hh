@@ -1634,8 +1634,8 @@ namespace Ttcn {
     bool used_as_lvalue;
     /** restriction on template value */
     template_restriction_t template_restriction;
-    /** normal or lazy evaluation parametrization should be used */
-    bool lazy_eval;
+    /** normal, lazy or fuzzy evaluation parametrization should be used */
+    param_eval_t eval;
     /** Flag that indicates whether the C++ code for the parameter's default
       * value has been generated or not. */
     bool defval_generated;
@@ -1649,11 +1649,11 @@ namespace Ttcn {
     FormalPar& operator=(const FormalPar& p);
   public:
     FormalPar(asstype_t p_asstype, Type *p_type, Identifier* p_name,
-      TemplateInstance *p_defval, bool p_lazy_eval=false);
+      TemplateInstance *p_defval, param_eval_t p_eval = NORMAL_EVAL);
     FormalPar(asstype_t p_asstype,
       template_restriction_t p_template_restriction,
       Type *p_type, Identifier* p_name, TemplateInstance *p_defval,
-      bool p_lazy_eval=false);
+      param_eval_t p_eval = NORMAL_EVAL);
     FormalPar(asstype_t p_asstype, Identifier* p_name,
       TemplateInstance *p_defval);
     ~FormalPar();
@@ -1716,7 +1716,7 @@ namespace Ttcn {
      * The \a refch parameter is needed when the code for start_ptc_function is
      * generated, because reference is generated in case of inout parameters. */
     char *generate_code_object(char *str, const char *p_prefix,
-      char refch = '&');
+      char refch = '&', bool gen_init = false);
     /** Generates a C++ statement that instantiates a shadow object for the
      * parameter when necessary. It is used when the value of an 'in' value or
      * template parameter is overwritten within the function body. */
@@ -1727,7 +1727,7 @@ namespace Ttcn {
     virtual void dump_internal(unsigned level) const;
     template_restriction_t get_template_restriction()
       { return template_restriction; }
-    virtual bool get_lazy_eval() const { return lazy_eval; }
+    virtual param_eval_t get_eval_type() const { return eval; }
     // code generation: get the C++ string that refers to the formal parameter
     // adds a casting to data type if wrapped into a lazy param
     string get_reference_name(Scope* scope) const;
@@ -1779,7 +1779,7 @@ namespace Ttcn {
     /** Checks the parameter list, which belongs to definition of type
      * \a deftype. */
     void chk(Definition::asstype_t deftype);
-    void chk_noLazyParams();
+    void chk_noLazyFuzzyParams();
     /** Checks the parameter list for startability: reports error if the owner
      * function cannot be started on a PTC. Used by functions and function
      * types. Parameter \a p_what shall contain "Function" or "Function type",
@@ -1834,7 +1834,7 @@ namespace Ttcn {
      * The \a refch parameter is needed when the code for start_ptc_function is
      * generated, because reference is generated in case of inout parameters. */
     char *generate_code_object(char *str, const char *p_prefix,
-      char refch = '&');
+      char refch = '&', bool gen_init = false);
     /** Generates the C++ shadow objects for all parameters. */
     char *generate_shadow_objects(char *str) const;
     char *generate_code_set_unbound(char *str) const;

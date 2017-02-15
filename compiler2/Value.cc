@@ -14428,17 +14428,17 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
   }
 
 ///////////////////////////////////////////////////////////////////////////////
-// class LazyParamData
+// class LazyFuzzyParamData
 
-    int LazyParamData::depth = 0;
-    bool LazyParamData::used_as_lvalue = false;
-    vector<string>* LazyParamData::type_vec = NULL;
-    vector<string>* LazyParamData::refd_vec = NULL;
+    int LazyFuzzyParamData::depth = 0;
+    bool LazyFuzzyParamData::used_as_lvalue = false;
+    vector<string>* LazyFuzzyParamData::type_vec = NULL;
+    vector<string>* LazyFuzzyParamData::refd_vec = NULL;
 
-    void LazyParamData::init(bool p_used_as_lvalue) {
-      if (depth<0) FATAL_ERROR("LazyParamData::init()");
+    void LazyFuzzyParamData::init(bool p_used_as_lvalue) {
+      if (depth<0) FATAL_ERROR("LazyFuzzyParamData::init()");
       if (depth==0) {
-        if (type_vec || refd_vec) FATAL_ERROR("LazyParamData::init()");
+        if (type_vec || refd_vec) FATAL_ERROR("LazyFuzzyParamData::init()");
         used_as_lvalue = p_used_as_lvalue;
         type_vec = new vector<string>;
         refd_vec = new vector<string>;
@@ -14446,9 +14446,9 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       depth++;
     }
 
-    void LazyParamData::clean() {
-      if (depth<=0) FATAL_ERROR("LazyParamData::clean()");
-      if (!type_vec || !refd_vec) FATAL_ERROR("LazyParamData::clean()");
+    void LazyFuzzyParamData::clean() {
+      if (depth<=0) FATAL_ERROR("LazyFuzzyParamData::clean()");
+      if (!type_vec || !refd_vec) FATAL_ERROR("LazyFuzzyParamData::clean()");
       if (depth==1) {
         // type_vec
         for (size_t i=0; i<type_vec->size(); i++) delete (*type_vec)[i];
@@ -14464,17 +14464,18 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       depth--;
     }
 
-    bool LazyParamData::in_lazy() {
-      if (depth<0) FATAL_ERROR("LazyParamData::in_lazy()");
+    bool LazyFuzzyParamData::in_lazy_or_fuzzy() {
+      if (depth<0) FATAL_ERROR("LazyFuzzyParamData::in_lazy_or_fuzzy()");
       return depth>0;
     }
 
     // returns a temporary id instead of the C++ reference to a definition
-    // stores in vectors the C++ type of the definiton, the C++ reference to the definition and if it refers to a lazy formal parameter
-    string LazyParamData::add_ref_genname(Assignment* ass, Scope* scope) {
-      if (!ass || !scope) FATAL_ERROR("LazyParamData::add_ref_genname()");
-      if (!type_vec || !refd_vec) FATAL_ERROR("LazyParamData::add_ref_genname()");
-      if (type_vec->size()!=refd_vec->size()) FATAL_ERROR("LazyParamData::add_ref_genname()");
+    // stores in vectors the C++ type of the definiton, the C++ reference to the
+    // definition and whether it refers to a lazy/fuzzy formal parameter
+    string LazyFuzzyParamData::add_ref_genname(Assignment* ass, Scope* scope) {
+      if (!ass || !scope) FATAL_ERROR("LazyFuzzyParamData::add_ref_genname()");
+      if (!type_vec || !refd_vec) FATAL_ERROR("LazyFuzzyParamData::add_ref_genname()");
+      if (type_vec->size()!=refd_vec->size()) FATAL_ERROR("LazyFuzzyParamData::add_ref_genname()");
       // store the type of the assignment
       string* type_str = new string;
       switch (ass->get_asstype()) {
@@ -14489,22 +14490,22 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       default:
         *type_str = ass->get_Type()->get_genname_value(scope);
       }
-      // add the Lazy_Param<> part if the referenced assignment is a FormalPar with lazy_eval == true
-      bool refd_ass_is_lazy_fpar = false;
+      // add the Lazy_Fuzzy_Expr<> part if the referenced assignment is a FormalPar lazy or fuzzy
+      bool refd_ass_is_lazy_or_fuzzy_fpar = false;
       switch (ass->get_asstype()) {
       case Assignment::A_PAR_VAL:
       case Assignment::A_PAR_VAL_IN:
       case Assignment::A_PAR_TEMPL_IN:
-        refd_ass_is_lazy_fpar = ass->get_lazy_eval();
-        if (refd_ass_is_lazy_fpar) {
-          *type_str = string("Lazy_Param<") + *type_str + string(">");
+        refd_ass_is_lazy_or_fuzzy_fpar = ass->get_eval_type() != NORMAL_EVAL;
+        if (ass->get_eval_type() != NORMAL_EVAL) {
+          *type_str = string("Lazy_Fuzzy_Expr<") + *type_str + string(">");
         }
         break;
       default:
         break;
       }
       // add the "const" part if the referenced assignment is a constant thing
-      if (!refd_ass_is_lazy_fpar) {
+      if (!refd_ass_is_lazy_or_fuzzy_fpar) {
         switch (ass->get_asstype()) {
         case Assignment::A_CONST:
         case Assignment::A_OC:
@@ -14529,7 +14530,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       type_vec->add(type_str);
       // store the C++ reference string
       refd_vec->add(new string(ass->get_genname_from_scope(scope,""))); // the "" parameter makes sure that no casting to type is generated into the string
-      if (refd_ass_is_lazy_fpar) {
+      if (refd_ass_is_lazy_or_fuzzy_fpar) {
         Type* refd_ass_type = ass->get_Type();
         string refd_ass_type_genname = (ass->get_asstype()==Assignment::A_PAR_TEMPL_IN) ? refd_ass_type->get_genname_template(scope) : refd_ass_type->get_genname_value(scope);
         return string("((") + refd_ass_type_genname + string("&)") + get_member_name(refd_vec->size()-1) + string(")");
@@ -14538,15 +14539,15 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       }
     }
 
-    string LazyParamData::get_member_name(size_t idx) {
+    string LazyFuzzyParamData::get_member_name(size_t idx) {
       return string("lpm_") + Int2string(idx);
     }
 
-    string LazyParamData::get_constr_param_name(size_t idx) {
+    string LazyFuzzyParamData::get_constr_param_name(size_t idx) {
       return string("lpp_") + Int2string(idx);
     }
 
-    void LazyParamData::generate_code_for_value(expression_struct* expr, Value* val, Scope* my_scope) {
+    void LazyFuzzyParamData::generate_code_for_value(expression_struct* expr, Value* val, Scope* my_scope) {
       // copied from ActualPar::generate_code(), TODO: remove duplication by refactoring
       if (use_runtime_2 && TypeConv::needs_conv_refd(val)) {
         const string& tmp_id = val->get_temporary_id();
@@ -14562,7 +14563,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       }
     }
 
-    void LazyParamData::generate_code_for_template(expression_struct* expr, TemplateInstance* temp, template_restriction_t gen_restriction_check, Scope* my_scope) {
+    void LazyFuzzyParamData::generate_code_for_template(expression_struct* expr, TemplateInstance* temp, template_restriction_t gen_restriction_check, Scope* my_scope) {
       // copied from ActualPar::generate_code(), TODO: remove duplication by refactoring
       if (use_runtime_2 && TypeConv::needs_conv_refd(temp->get_Template())) {
         const string& tmp_id = temp->get_Template()->get_temporary_id();
@@ -14580,43 +14581,49 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       } else temp->generate_code(expr, gen_restriction_check);
     }
 
-    void LazyParamData::generate_code(expression_struct *expr, Value* value, Scope* scope) {
-      if (depth<=0) FATAL_ERROR("LazyParamData::generate_code()");
+    void LazyFuzzyParamData::generate_code(expression_struct *expr, Value* value, Scope* scope, boolean lazy) {
+      if (depth<=0) FATAL_ERROR("LazyFuzzyParamData::generate_code()");
       if (depth>1) {
         // if a function with lazy parameter(s) was called inside a lazy parameter then don't generate code for
-        // lazy parameter inside a lazy parameter, call the funcion as a normal call
-        // wrap the calculated parameter value inside a special constructor which calculates the value of it's cache immediately
+        // lazy parameter inside a lazy parameter, call the function as a normal call
+        // wrap the calculated parameter value inside a special constructor which calculates the value of its cache immediately
         expression_struct value_expr;
         Code::init_expr(&value_expr);
         generate_code_for_value(&value_expr, value, scope);
-        // the id of the instance of Lazy_Param which will be used as the actual parameter
-        const string& lazy_param_id = value->get_temporary_id();
+        // the id of the instance of Lazy_Fuzzy_Expr, which will be used as the actual parameter
+        const string& param_id = value->get_temporary_id();
         if (value_expr.preamble) {
           expr->preamble = mputstr(expr->preamble, value_expr.preamble);
         }
-        expr->preamble = mputprintf(expr->preamble, "Lazy_Param<%s> %s(Lazy_Param<%s>::EXPR_EVALED, %s);\n",
-          value->get_my_governor()->get_genname_value(scope).c_str(), lazy_param_id.c_str(),
-          value->get_my_governor()->get_genname_value(scope).c_str(), value_expr.expr);
+        expr->preamble = mputprintf(expr->preamble, "Lazy_Fuzzy_Expr<%s> %s(%s, Lazy_Fuzzy_Expr<%s>::EXPR_EVALED, %s);\n",
+          value->get_my_governor()->get_genname_value(scope).c_str(), param_id.c_str(),
+          lazy ? "FALSE" : "TRUE", value->get_my_governor()->get_genname_value(scope).c_str(), value_expr.expr);
         Code::free_expr(&value_expr);
-        expr->expr = mputstr(expr->expr, lazy_param_id.c_str());
+        expr->expr = mputstr(expr->expr, param_id.c_str());
         return;
       }
       // only if the formal parameter is *not* used as lvalue
       if (!used_as_lvalue && value->get_valuetype()==Value::V_REFD && value->get_reference()->get_subrefs()==NULL) {
         Assignment* refd_ass = value->get_reference()->get_refd_assignment();
         if (refd_ass) {
-          bool refd_ass_is_lazy_fpar = false;
+          bool refd_ass_is_lazy_or_fuzzy_fpar = false;
           switch (refd_ass->get_asstype()) {
           case Assignment::A_PAR_VAL:
           case Assignment::A_PAR_VAL_IN:
           case Assignment::A_PAR_TEMPL_IN:
-            refd_ass_is_lazy_fpar = refd_ass->get_lazy_eval();
+            refd_ass_is_lazy_or_fuzzy_fpar = refd_ass->get_eval_type() != NORMAL_EVAL;
             break;
           default:
             break;
           }
-          if (refd_ass_is_lazy_fpar) {
-            expr->expr = mputprintf(expr->expr, "%s", refd_ass->get_genname_from_scope(scope,"").c_str());
+          if (refd_ass_is_lazy_or_fuzzy_fpar) {
+            string refd_str = refd_ass->get_genname_from_scope(scope, "");
+            if ((refd_ass->get_eval_type() == LAZY_EVAL && !lazy) ||
+                (refd_ass->get_eval_type() == FUZZY_EVAL && lazy)) {
+              expr->preamble = mputprintf(expr->preamble, "%s.change();\n", refd_str.c_str());
+              expr->postamble = mputprintf(expr->postamble, "%s.revert();\n", refd_str.c_str());
+            }
+            expr->expr = mputprintf(expr->expr, "%s", refd_str.c_str());
             return;
           }
         }
@@ -14625,49 +14632,55 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       expression_struct value_expr;
       Code::init_expr(&value_expr);
       generate_code_for_value(&value_expr, value, scope);
-      // the id of the instance of Lazy_Param which will be used as the actual parameter
-      string lazy_param_id = value->get_temporary_id();
+      // the id of the instance of Lazy_Fuzzy_Expr, which will be used as the actual parameter
+      string param_id = value->get_temporary_id();
       string type_name = value->get_my_governor()->get_genname_value(scope);
-      generate_code_lazyparam_class(expr, value_expr, lazy_param_id, type_name);
+      generate_code_param_class(expr, value_expr, param_id, type_name, lazy);
     }
 
-    void LazyParamData::generate_code(expression_struct *expr, TemplateInstance* temp, template_restriction_t gen_restriction_check, Scope* scope) {
-      if (depth<=0) FATAL_ERROR("LazyParamData::generate_code()");
+    void LazyFuzzyParamData::generate_code(expression_struct *expr, TemplateInstance* temp, template_restriction_t gen_restriction_check, Scope* scope, boolean lazy) {
+      if (depth<=0) FATAL_ERROR("LazyFuzzyParamData::generate_code()");
       if (depth>1) {
         // if a function with lazy parameter(s) was called inside a lazy parameter then don't generate code for
-        // lazy parameter inside a lazy parameter, call the funcion as a normal call
-        // wrap the calculated parameter value inside a special constructor which calculates the value of it's cache immediately
+        // lazy parameter inside a lazy parameter, call the function as a normal call
+        // wrap the calculated parameter value inside a special constructor which calculates the value of its cache immediately
         expression_struct tmpl_expr;
         Code::init_expr(&tmpl_expr);
         generate_code_for_template(&tmpl_expr, temp, gen_restriction_check, scope);
-        // the id of the instance of Lazy_Param which will be used as the actual parameter
-        const string& lazy_param_id = temp->get_Template()->get_temporary_id();
+        // the id of the instance of Lazy_Fuzzy_Expr which will be used as the actual parameter
+        const string& param_id = temp->get_Template()->get_temporary_id();
         if (tmpl_expr.preamble) {
           expr->preamble = mputstr(expr->preamble, tmpl_expr.preamble);
         }
-        expr->preamble = mputprintf(expr->preamble, "Lazy_Param<%s> %s(Lazy_Param<%s>::EXPR_EVALED, %s);\n",
-          temp->get_Template()->get_my_governor()->get_genname_template(scope).c_str(), lazy_param_id.c_str(),
-          temp->get_Template()->get_my_governor()->get_genname_template(scope).c_str(), tmpl_expr.expr);
+        expr->preamble = mputprintf(expr->preamble, "Lazy_Fuzzy_Expr<%s> %s(%s, Lazy_Fuzzy_Expr<%s>::EXPR_EVALED, %s);\n",
+          temp->get_Template()->get_my_governor()->get_genname_template(scope).c_str(), param_id.c_str(),
+          lazy ? "FALSE" : "TRUE", temp->get_Template()->get_my_governor()->get_genname_template(scope).c_str(), tmpl_expr.expr);
         Code::free_expr(&tmpl_expr);
-        expr->expr = mputstr(expr->expr, lazy_param_id.c_str());
+        expr->expr = mputstr(expr->expr, param_id.c_str());
         return;
       }
       // only if the formal parameter is *not* used as lvalue
       if (!used_as_lvalue && temp->get_Template()->get_templatetype()==Template::TEMPLATE_REFD && temp->get_Template()->get_reference()->get_subrefs()==NULL) {
         Assignment* refd_ass = temp->get_Template()->get_reference()->get_refd_assignment();
         if (refd_ass) {
-          bool refd_ass_is_lazy_fpar = false;
+          bool refd_ass_is_lazy_or_fuzzy_fpar = false;
           switch (refd_ass->get_asstype()) {
           case Assignment::A_PAR_VAL:
           case Assignment::A_PAR_VAL_IN:
           case Assignment::A_PAR_TEMPL_IN:
-            refd_ass_is_lazy_fpar = refd_ass->get_lazy_eval();
+            refd_ass_is_lazy_or_fuzzy_fpar = refd_ass->get_eval_type() != NORMAL_EVAL;
             break;
           default:
             break;
           }
-          if (refd_ass_is_lazy_fpar) {
-            expr->expr = mputprintf(expr->expr, "%s", refd_ass->get_genname_from_scope(scope,"").c_str());
+          if (refd_ass_is_lazy_or_fuzzy_fpar) {
+            string refd_str = refd_ass->get_genname_from_scope(scope, "");
+            if ((refd_ass->get_eval_type() == LAZY_EVAL && !lazy) ||
+                (refd_ass->get_eval_type() == FUZZY_EVAL && lazy)) {
+              expr->preamble = mputprintf(expr->preamble, "%s.change();\n", refd_str.c_str());
+              expr->postamble = mputprintf(expr->postamble, "%s.revert();\n", refd_str.c_str());
+            }
+            expr->expr = mputprintf(expr->expr, "%s", refd_str.c_str());
             return;
           }
         }
@@ -14676,33 +14689,32 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       expression_struct tmpl_expr;
       Code::init_expr(&tmpl_expr);
       generate_code_for_template(&tmpl_expr, temp, gen_restriction_check, scope);
-      // the id of the instance of Lazy_Param which will be used as the actual parameter
-      string lazy_param_id = temp->get_Template()->get_temporary_id();
+      // the id of the instance of Lazy_Fuzzy_Expr which will be used as the actual parameter
+      string param_id = temp->get_Template()->get_temporary_id();
       string type_name = temp->get_Template()->get_my_governor()->get_genname_template(scope);
-      generate_code_lazyparam_class(expr, tmpl_expr, lazy_param_id, type_name);
+      generate_code_param_class(expr, tmpl_expr, param_id, type_name, lazy);
     }
 
-    void LazyParamData::generate_code_lazyparam_class(expression_struct *expr, expression_struct& param_expr, const string& lazy_param_id, const string& type_name) {
-      expr->preamble = mputprintf(expr->preamble, "class Lazy_Param_%s : public Lazy_Param<%s> {\n", lazy_param_id.c_str(), type_name.c_str());
-      if (type_vec->size()>0) {
-        // private members of the local class will be const references to the objects referenced by the expression
-        for (size_t i=0; i<type_vec->size(); i++) {
-          expr->preamble = mputprintf(expr->preamble, "%s& %s;\n", (*type_vec)[i]->c_str(), get_member_name(i).c_str());
-        }
-        expr->preamble = mputstr(expr->preamble, "public:\n");
-        expr->preamble = mputprintf(expr->preamble, "Lazy_Param_%s(", lazy_param_id.c_str());
-        for (size_t i=0; i<type_vec->size(); i++) {
+    void LazyFuzzyParamData::generate_code_param_class(expression_struct *expr, expression_struct& param_expr, const string& param_id, const string& type_name, boolean lazy) {
+      expr->preamble = mputprintf(expr->preamble,
+        "class Lazy_Fuzzy_Expr_%s : public Lazy_Fuzzy_Expr<%s> {\n",
+          param_id.c_str(), type_name.c_str());
+      // private members of the local class will be const references to the objects referenced by the expression
+      for (size_t i=0; i<type_vec->size(); i++) {
+        expr->preamble = mputprintf(expr->preamble, "%s& %s;\n", (*type_vec)[i]->c_str(), get_member_name(i).c_str());
+      }
+      expr->preamble = mputstr(expr->preamble, "public:\n");
+      expr->preamble = mputprintf(expr->preamble, "Lazy_Fuzzy_Expr_%s(", param_id.c_str());
+      for (size_t i=0; i<type_vec->size(); i++) {
           if (i>0) expr->preamble = mputstr(expr->preamble, ", ");
           expr->preamble = mputprintf(expr->preamble, "%s& %s", (*type_vec)[i]->c_str(), get_constr_param_name(i).c_str());
-        }
-        expr->preamble = mputstr(expr->preamble, "): ");
-        for (size_t i=0; i<type_vec->size(); i++) {
-          if (i>0) expr->preamble = mputstr(expr->preamble, ", ");
-          expr->preamble = mputprintf(expr->preamble, "%s(%s)", get_member_name(i).c_str(), get_constr_param_name(i).c_str());
-        }
-        expr->preamble = mputstr(expr->preamble, " {}\n");
-        expr->preamble = mputstr(expr->preamble, "private:\n");
       }
+      expr->preamble = mputprintf(expr->preamble, "): Lazy_Fuzzy_Expr(%s)", lazy ? "FALSE" : "TRUE");
+      for (size_t i=0; i<type_vec->size(); i++) {
+        expr->preamble = mputprintf(expr->preamble, ", %s(%s)", get_member_name(i).c_str(), get_constr_param_name(i).c_str());
+      }
+      expr->preamble = mputstr(expr->preamble, " {}\n");
+      expr->preamble = mputstr(expr->preamble, "private:\n");
       expr->preamble = mputstr(expr->preamble, "virtual void eval_expr() {\n");
       // use the temporary expr structure to fill the body of the eval_expr() function
       if (param_expr.preamble) {
@@ -14716,7 +14728,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       expr->preamble = mputstr(expr->preamble, "}\n"
         "};\n" // end of local class definition
       );
-      expr->preamble = mputprintf(expr->preamble, "Lazy_Param_%s %s", lazy_param_id.c_str(), lazy_param_id.c_str());
+      expr->preamble = mputprintf(expr->preamble, "Lazy_Fuzzy_Expr_%s %s", param_id.c_str(), param_id.c_str());
       if (type_vec->size()>0) {
         expr->preamble = mputc(expr->preamble, '(');
         // paramteres of the constructor are references to the objects used in the expression
@@ -14727,15 +14739,15 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
         expr->preamble = mputc(expr->preamble, ')');
       }
       expr->preamble = mputstr(expr->preamble, ";\n");
-      // the instance of the local class Lazy_Param_tmp_xxx is used as the actual parameter
-      expr->expr = mputprintf(expr->expr, "%s", lazy_param_id.c_str());
+      // the instance of the local class Lazy_Fuzzy_Expr_tmp_xxx is used as the actual parameter
+      expr->expr = mputprintf(expr->expr, "%s", param_id.c_str());
     }
 
-    void LazyParamData::generate_code_ap_default_ref(expression_struct *expr, Ttcn::Ref_base* ref, Scope* scope) {
+    void LazyFuzzyParamData::generate_code_ap_default_ref(expression_struct *expr, Ttcn::Ref_base* ref, Scope* scope, boolean lazy) {
       expression_struct ref_expr;
       Code::init_expr(&ref_expr);
       ref->generate_code(&ref_expr);
-      const string& lazy_param_id = scope->get_scope_mod_gen()->get_temporary_id();
+      const string& param_id = scope->get_scope_mod_gen()->get_temporary_id();
       if (ref_expr.preamble) {
          expr->preamble = mputstr(expr->preamble, ref_expr.preamble);
       }
@@ -14754,29 +14766,31 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       default:
         type_str = ass->get_Type()->get_genname_value(scope);
       }
-      expr->preamble = mputprintf(expr->preamble, "Lazy_Param<%s> %s(Lazy_Param<%s>::EXPR_EVALED, %s);\n",
-        type_str.c_str(), lazy_param_id.c_str(), type_str.c_str(), ref_expr.expr);
+      expr->preamble = mputprintf(expr->preamble, "Lazy_Fuzzy_Expr<%s> %s(%s, Lazy_Fuzzy_Expr<%s>::EXPR_EVALED, %s);\n",
+        type_str.c_str(), param_id.c_str(), lazy ? "FALSE" : "TRUE", type_str.c_str(), ref_expr.expr);
       if (ref_expr.postamble) {
         expr->postamble = mputstr(expr->postamble, ref_expr.postamble);
       }
       Code::free_expr(&ref_expr);
-      expr->expr = mputstr(expr->expr, lazy_param_id.c_str());
+      expr->expr = mputstr(expr->expr, param_id.c_str());
     }
 
-    void LazyParamData::generate_code_ap_default_value(expression_struct *expr, Value* value, Scope* scope) {
-      const string& lazy_param_id = value->get_temporary_id();
-      expr->preamble = mputprintf(expr->preamble, "Lazy_Param<%s> %s(Lazy_Param<%s>::EXPR_EVALED, %s);\n",
-        value->get_my_governor()->get_genname_value(scope).c_str(), lazy_param_id.c_str(),
-        value->get_my_governor()->get_genname_value(scope).c_str(), value->get_genname_own(scope).c_str());
-      expr->expr = mputstr(expr->expr, lazy_param_id.c_str());
+    void LazyFuzzyParamData::generate_code_ap_default_value(expression_struct *expr, Value* value, Scope* scope, boolean lazy) {
+      const string& param_id = value->get_temporary_id();
+      expr->preamble = mputprintf(expr->preamble, "Lazy_Fuzzy_Expr<%s> %s(%s, Lazy_Fuzzy_Expr<%s>::EXPR_EVALED, %s);\n",
+        value->get_my_governor()->get_genname_value(scope).c_str(), param_id.c_str(),
+        lazy ? "FALSE" : "TRUE", value->get_my_governor()->get_genname_value(scope).c_str(),
+        value->get_genname_own(scope).c_str());
+      expr->expr = mputstr(expr->expr, param_id.c_str());
     }
 
-    void LazyParamData::generate_code_ap_default_ti(expression_struct *expr, TemplateInstance* ti, Scope* scope) {
-      const string& lazy_param_id = ti->get_Template()->get_temporary_id();
-      expr->preamble = mputprintf(expr->preamble, "Lazy_Param<%s> %s(Lazy_Param<%s>::EXPR_EVALED, %s);\n",
-        ti->get_Template()->get_my_governor()->get_genname_template(scope).c_str(), lazy_param_id.c_str(),
-        ti->get_Template()->get_my_governor()->get_genname_template(scope).c_str(), ti->get_Template()->get_genname_own(scope).c_str());
-      expr->expr = mputstr(expr->expr, lazy_param_id.c_str());
+    void LazyFuzzyParamData::generate_code_ap_default_ti(expression_struct *expr, TemplateInstance* ti, Scope* scope, boolean lazy) {
+      const string& param_id = ti->get_Template()->get_temporary_id();
+      expr->preamble = mputprintf(expr->preamble, "Lazy_Fuzzy_Expr<%s> %s(%s, Lazy_Fuzzy_Expr<%s>::EXPR_EVALED, %s);\n",
+        ti->get_Template()->get_my_governor()->get_genname_template(scope).c_str(), param_id.c_str(),
+        lazy ? "FALSE" : "TRUE", ti->get_Template()->get_my_governor()->get_genname_template(scope).c_str(), 
+        ti->get_Template()->get_genname_own(scope).c_str());
+      expr->expr = mputstr(expr->expr, param_id.c_str());
     }
 
 } // namespace Common

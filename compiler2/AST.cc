@@ -1907,10 +1907,10 @@ namespace Common {
     return 0;
   }
 
-  bool Assignment::get_lazy_eval() const
+  param_eval_t Assignment::get_eval_type() const
   {
-    FATAL_ERROR("Common::Assignment::get_lazy_eval()");
-    return false;
+    FATAL_ERROR("Common::Assignment::get_eval_type()");
+    return NORMAL_EVAL;
   }
 
   Ttcn::FormalParList *Assignment::get_FormalParList()
@@ -1958,12 +1958,12 @@ namespace Common {
     }
     if (p_prefix) ret_val += p_prefix;
     ret_val += get_genname();
-    // add the cast to real type if its a lazy formal paramter
+    // add the cast to real type if it's a lazy or fuzzy formal parameter
     switch (asstype) {
     case A_PAR_VAL:
     case A_PAR_VAL_IN:
     case A_PAR_TEMPL_IN:
-      if (get_lazy_eval() && p_prefix==NULL) {
+      if (get_eval_type() != NORMAL_EVAL && p_prefix==NULL) {
         Type* type = get_Type();
         string type_genname = (asstype==A_PAR_TEMPL_IN) ? type->get_genname_template(p_scope) : type->get_genname_value(p_scope);
         ret_val = string("((") + type_genname + string("&)") + ret_val + string(")");

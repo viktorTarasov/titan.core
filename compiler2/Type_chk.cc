@@ -2947,7 +2947,7 @@ void Type::chk_Fat()
   switch (typetype) {
   case T_FUNCTION:
     u.fatref.fp_list->chk(Ttcn::Definition::A_FUNCTION);
-    u.fatref.fp_list->chk_noLazyParams();
+    u.fatref.fp_list->chk_noLazyFuzzyParams();
     if (u.fatref.is_startable && !u.fatref.fp_list->get_startability())
       u.fatref.is_startable = false;
     if (u.fatref.return_type) {
@@ -2962,11 +2962,11 @@ void Type::chk_Fat()
     break;
   case T_ALTSTEP:
     u.fatref.fp_list->chk(Ttcn::Definition::A_ALTSTEP);
-    u.fatref.fp_list->chk_noLazyParams();
+    u.fatref.fp_list->chk_noLazyFuzzyParams();
     break;
   case T_TESTCASE:
     u.fatref.fp_list->chk(Ttcn::Definition::A_TESTCASE);
-    u.fatref.fp_list->chk_noLazyParams();
+    u.fatref.fp_list->chk_noLazyFuzzyParams();
     if (u.fatref.system.ref) {
       Error_Context cntxt2(u.fatref.runs_on.ref, "In `system' clause");
       u.fatref.system.type = u.fatref.system.ref->chk_comptype_ref();

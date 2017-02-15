@@ -692,8 +692,8 @@ namespace Ttcn {
       expr->expr = mputc(expr->expr, ')');
     } else {
       expr->expr = mputstr(expr->expr,
-        LazyParamData::in_lazy() ?
-        LazyParamData::add_ref_genname(ass, my_scope).c_str() :
+        LazyFuzzyParamData::in_lazy_or_fuzzy() ?
+        LazyFuzzyParamData::add_ref_genname(ass, my_scope).c_str() :
         ass->get_genname_from_scope(my_scope).c_str());
     }
     if (subrefs.get_nof_refs() > 0) subrefs.generate_code(expr, ass);
@@ -755,8 +755,8 @@ namespace Ttcn {
       expr->expr = mputc(expr->expr, ')');
     } else {
       expr->expr = mputstr(expr->expr,
-        LazyParamData::in_lazy() ?
-        LazyParamData::add_ref_genname(ass, my_scope).c_str() :
+        LazyFuzzyParamData::in_lazy_or_fuzzy() ?
+        LazyFuzzyParamData::add_ref_genname(ass, my_scope).c_str() :
         ass->get_genname_from_scope(my_scope).c_str());
     }
     expr->expr = mputstr(expr->expr, ")");
@@ -996,7 +996,7 @@ namespace Ttcn {
     if (!Ref_base::has_single_expr()) return false;
     for (size_t i = 0; i < parlist.get_nof_pars(); i++)
       if (!parlist.get_par(i)->has_single_expr()) return false;
-    // if any formal parameter has lazy evaluation 
+    // if any formal parameter has lazy or fuzzy evaluation 
     Common::Assignment *ass = get_refd_assignment();
     if (ass) {
       const FormalParList *fplist = ass->get_FormalParList();
@@ -1004,7 +1004,7 @@ namespace Ttcn {
         size_t num_formal = fplist->get_nof_fps();
         for (size_t i=0; i<num_formal; ++i) {
           const FormalPar *fp = fplist->get_fp_byIndex(i);
-          if (fp->get_lazy_eval()) return false;
+          if (fp->get_eval_type() != NORMAL_EVAL) return false;
         }
       }
     }
@@ -6409,7 +6409,7 @@ namespace Ttcn {
       body = mprintf("if (!strcmp(function_name, \"%s\")) {\n",
         dispname_str);
       if (nof_fps > 0) {
-        body = fp_list->generate_code_object(body, "", ' ');
+        body = fp_list->generate_code_object(body, "", ' ', true);
         for (size_t i = 0; i < nof_fps; i++) {
           body = mputprintf(body, "%s.decode_text(function_arguments);\n",
             fp_list->get_fp_byIndex(i)->get_reference_name(my_scope).c_str());
@@ -7914,10 +7914,10 @@ namespace Ttcn {
   // =================================
 
   FormalPar::FormalPar(asstype_t p_asstype, Type *p_type, Identifier* p_name,
-    TemplateInstance *p_defval, bool p_lazy_eval)
+    TemplateInstance *p_defval, param_eval_t p_eval)
     : Definition(p_asstype, p_name), type(p_type), my_parlist(0),
     used_as_lvalue(false), template_restriction(TR_NONE),
-    lazy_eval(p_lazy_eval), defval_generated(false), usage_found(false)
+    eval(p_eval), defval_generated(false), usage_found(false)
   {
     switch (p_asstype) {
     case A_PAR_VAL:
@@ -7940,10 +7940,10 @@ namespace Ttcn {
 
   FormalPar::FormalPar(asstype_t p_asstype,
     template_restriction_t p_template_restriction, Type *p_type,
-    Identifier* p_name, TemplateInstance *p_defval, bool p_lazy_eval)
+    Identifier* p_name, TemplateInstance *p_defval, param_eval_t p_eval)
     : Definition(p_asstype, p_name), type(p_type), my_parlist(0),
     used_as_lvalue(false), template_restriction(p_template_restriction),
-    lazy_eval(p_lazy_eval), defval_generated(false), usage_found(false)
+    eval(p_eval), defval_generated(false), usage_found(false)
   {
     switch (p_asstype) {
     case A_PAR_TEMPL_IN:
@@ -7962,7 +7962,7 @@ namespace Ttcn {
   FormalPar::FormalPar(asstype_t p_asstype, Identifier* p_name,
     TemplateInstance *p_defval)
     : Definition(p_asstype, p_name), type(0), my_parlist(0),
-    used_as_lvalue(false), template_restriction(TR_NONE), lazy_eval(false),
+    used_as_lvalue(false), template_restriction(TR_NONE), eval(NORMAL_EVAL),
     defval_generated(false), usage_found(false)
   {
     if (p_asstype != A_PAR_TIMER)
@@ -8667,9 +8667,9 @@ namespace Ttcn {
       else {
         // update the genname so that all references in the generated code
         // will point to the shadow object
-  if (!lazy_eval) {
+        if (eval == NORMAL_EVAL) {
           set_genname(id->get_name() + "_shadow");
-  }
+        }
         used_as_lvalue = true;
       }
     }
@@ -8756,8 +8756,8 @@ namespace Ttcn {
     const char *name_str = display_name ? id->get_name().c_str() : "";
     switch (asstype) {
     case A_PAR_VAL_IN:
-      if (lazy_eval) {
-        str = mputprintf(str, "Lazy_Param<%s>& %s", type->get_genname_value(my_scope).c_str(), name_str);
+      if (eval != NORMAL_EVAL) {
+        str = mputprintf(str, "Lazy_Fuzzy_Expr<%s>& %s", type->get_genname_value(my_scope).c_str(), name_str);
       } else {
         str = mputprintf(str, "const %s& %s", type->get_genname_value(my_scope).c_str(), name_str);
       }
@@ -8769,8 +8769,8 @@ namespace Ttcn {
         name_str);
       break;
     case A_PAR_TEMPL_IN:
-      if (lazy_eval) {
-        str = mputprintf(str, "Lazy_Param<%s>& %s", type->get_genname_template(my_scope).c_str(), name_str);
+      if (eval != NORMAL_EVAL) {
+        str = mputprintf(str, "Lazy_Fuzzy_Expr<%s>& %s", type->get_genname_template(my_scope).c_str(), name_str);
       } else {
         str = mputprintf(str, "const %s& %s", type->get_genname_template(my_scope).c_str(), name_str);
       }
@@ -8792,7 +8792,7 @@ namespace Ttcn {
   string FormalPar::get_reference_name(Scope* scope) const
   {
     string ret_val;
-    if (lazy_eval) {
+    if (eval != NORMAL_EVAL) {
       ret_val += "((";
       switch (asstype) {
       case A_PAR_TEMPL_IN:
@@ -8805,19 +8805,24 @@ namespace Ttcn {
       ret_val += "&)";
     }
     ret_val += get_id().get_name();
-    if (lazy_eval) {
+    if (eval != NORMAL_EVAL) {
       ret_val += ")";
     }
     return ret_val;
   }
 
-  char *FormalPar::generate_code_object(char *str, const char *p_prefix, char refch)
+  char *FormalPar::generate_code_object(char *str, const char *p_prefix, char refch, bool gen_init)
   {
     const char *name_str = id->get_name().c_str();
     switch (asstype) {
     case A_PAR_VAL_IN:
-      if (lazy_eval) {
-        str = mputprintf(str, "Lazy_Param<%s> %s%s;\n", type->get_genname_value(my_scope).c_str(), p_prefix, name_str);
+      if (eval != NORMAL_EVAL) {
+        str = mputprintf(str, "Lazy_Fuzzy_Expr<%s> %s%s",
+          type->get_genname_value(my_scope).c_str(), p_prefix, name_str);
+        if (gen_init) {
+          str = mputprintf(str, "(%s)", eval == LAZY_EVAL ? "FALSE" : "TRUE");
+        }
+        str = mputstr(str, ";\n");
       } else {
         str = mputprintf(str, "%s %s%s;\n", type->get_genname_value(my_scope).c_str(), p_prefix, name_str);
       }
@@ -8829,8 +8834,13 @@ namespace Ttcn {
         type->get_genname_value(my_scope).c_str(), refch, p_prefix, name_str);
       break;
     case A_PAR_TEMPL_IN:
-      if (lazy_eval) {
-        str = mputprintf(str, "Lazy_Param<%s> %s%s;\n", type->get_genname_template(my_scope).c_str(), p_prefix, name_str);
+      if (eval != NORMAL_EVAL) {
+        str = mputprintf(str, "Lazy_Fuzzy_Expr<%s> %s%s",
+          type->get_genname_template(my_scope).c_str(), p_prefix, name_str);
+        if (gen_init) {
+          str = mputprintf(str, "(%s)", eval == LAZY_EVAL ? "FALSE" : "TRUE");
+        }
+        str = mputstr(str, ";\n");
       } else {
         str = mputprintf(str, "%s %s%s;\n", type->get_genname_template(my_scope).c_str(), p_prefix, name_str);
       }
@@ -8853,7 +8863,7 @@ namespace Ttcn {
   {
     if ((used_as_lvalue || (use_runtime_2 && usage_found &&
         my_parlist->get_my_def()->get_asstype() == Definition::A_ALTSTEP))
-        && !lazy_eval) {
+        && eval == NORMAL_EVAL) {
       const string& t_genname = get_genname();
       const char *genname_str = t_genname.c_str();
       const char *name_str = id->get_name().c_str();
@@ -9108,14 +9118,15 @@ namespace Ttcn {
     }
   }
 
-  // check that @lazy paramterization not used in cases currently unsupported
-  void FormalParList::chk_noLazyParams() {
+  // check that @lazy and @fuzzy paramterization are not used in cases currently unsupported
+  void FormalParList::chk_noLazyFuzzyParams() {
     Error_Context cntxt(this, "In formal parameter list");
     for (size_t i = 0; i < pars_v.size(); i++) {
       FormalPar *par = pars_v[i];
-      if (par->get_lazy_eval()) {
-        par->error("Formal parameter `%s' cannot be @lazy, not supported in this case.",
-          par->get_id().get_dispname().c_str());
+      if (par->get_eval_type() != NORMAL_EVAL) {
+        par->error("Formal parameter `%s' cannot be @%s, not supported in this case.",
+          par->get_id().get_dispname().c_str(),
+          par->get_eval_type() == LAZY_EVAL ? "lazy" : "fuzzy");
       }
     }
   }
@@ -9208,8 +9219,8 @@ namespace Ttcn {
             get_template_restriction()));
       }
       // check for @lazy equivalence
-      if (type_par->get_lazy_eval()!=function_par->get_lazy_eval()) {
-        function_par->error("Parameter @lazy-ness mismatch");
+      if (type_par->get_eval_type()!=function_par->get_eval_type()) {
+        function_par->error("Parameter evaluation type (normal, @lazy or @fuzzy) mismatch");
       }
       // check for name equivalence
       const Identifier& type_par_id = type_par->get_id();
@@ -9520,10 +9531,10 @@ namespace Ttcn {
     return str;
   }
 
-  char *FormalParList::generate_code_object(char *str, const char *p_prefix, char refch)
+  char *FormalParList::generate_code_object(char *str, const char *p_prefix, char refch, bool gen_init)
   {
     for (size_t i = 0; i < pars_v.size(); i++)
-      str = pars_v[i]->generate_code_object(str, p_prefix, refch);
+      str = pars_v[i]->generate_code_object(str, p_prefix, refch, gen_init);
     return str;
   }
 
@@ -9775,14 +9786,14 @@ namespace Ttcn {
   void ActualPar::generate_code(expression_struct *expr, bool copy_needed,
                                 FormalPar* formal_par) const
   {
-    bool lazy_param = formal_par != NULL ? formal_par->get_lazy_eval() : false;
+    param_eval_t param_eval = formal_par != NULL ? formal_par->get_eval_type() : NORMAL_EVAL;
     bool used_as_lvalue = formal_par != NULL ? formal_par->get_used_as_lvalue() : false;
     switch (selection) {
     case AP_VALUE:
-      if (lazy_param) { // copy_needed doesn't matter in this case
-        LazyParamData::init(used_as_lvalue);
-        LazyParamData::generate_code(expr, val, my_scope);
-        LazyParamData::clean();
+      if (param_eval != NORMAL_EVAL) { // copy_needed doesn't matter in this case
+        LazyFuzzyParamData::init(used_as_lvalue);
+        LazyFuzzyParamData::generate_code(expr, val, my_scope, param_eval == LAZY_EVAL);
+        LazyFuzzyParamData::clean();
         if (val->get_valuetype() == Value::V_REFD) {
           // check if the reference is a parameter, mark it as used if it is
           Reference* r = dynamic_cast<Reference*>(val->get_reference());
@@ -9791,8 +9802,7 @@ namespace Ttcn {
           }
         }
       } else {
-        if (copy_needed) expr->expr = mputprintf(expr->expr, "%s(",
-          val->get_my_governor()->get_genname_value(my_scope).c_str());
+        char* expr_expr = NULL;
         if (use_runtime_2 && TypeConv::needs_conv_refd(val)) {
           // Generate everything to preamble to be able to tackle the wrapper
           // constructor call.  TODO: Reduce the number of temporaries created.
@@ -9803,16 +9813,44 @@ namespace Ttcn {
             tmp_id_str);
           expr->preamble = TypeConv::gen_conv_code_refd(expr->preamble,
             tmp_id_str, val);
-          expr->expr = mputstr(expr->expr, tmp_id_str);
-        } else val->generate_code_expr(expr);
+          expr_expr = mputstr(expr_expr, tmp_id_str);
+        } else {
+          expression_struct val_expr;
+          Code::init_expr(&val_expr);
+          val->generate_code_expr(&val_expr);
+          if (val_expr.preamble != NULL) {
+            expr->preamble = mputstr(expr->preamble, val_expr.preamble);
+          }
+          if (val_expr.postamble == NULL) {
+            expr_expr = mputstr(expr_expr, val_expr.expr);
+          }
+          else {
+            // make sure the postambles of the parameters are executed before the
+            // function call itself (needed if the value contains function calls
+            // with lazy or fuzzy parameters)
+            const string& tmp_id = val->get_temporary_id();
+            expr->preamble = mputprintf(expr->preamble, "%s %s(%s);\n",
+              val->get_my_governor()->get_genname_value(my_scope).c_str(),
+              tmp_id.c_str(), val_expr.expr);
+            expr->preamble = mputstr(expr->preamble, val_expr.postamble);
+            expr_expr = mputstr(expr_expr, tmp_id.c_str());
+            copy_needed = false; // already copied
+          }
+          Code::free_expr(&val_expr);
+        }
+        if (copy_needed) expr->expr = mputprintf(expr->expr, "%s(",
+          val->get_my_governor()->get_genname_value(my_scope).c_str());
+        expr->expr = mputstr(expr->expr, expr_expr);
+        Free(expr_expr);
         if (copy_needed) expr->expr = mputc(expr->expr, ')');
       }
       break;
     case AP_TEMPLATE:
-      if (lazy_param) { // copy_needed doesn't matter in this case
-        LazyParamData::init(used_as_lvalue);
-        LazyParamData::generate_code(expr, temp, gen_restriction_check, my_scope);
-        LazyParamData::clean();
+      if (param_eval != NORMAL_EVAL) { // copy_needed doesn't matter in this case
+        LazyFuzzyParamData::init(used_as_lvalue);
+        LazyFuzzyParamData::generate_code(expr, temp, gen_restriction_check, my_scope,
+           param_eval == LAZY_EVAL);
+        LazyFuzzyParamData::clean();
         if (temp->get_DerivedRef() != NULL ||
             temp->get_Template()->get_templatetype() == Template::TEMPLATE_REFD) {
           // check if the reference is a parameter, mark it as used if it is
@@ -9823,9 +9861,7 @@ namespace Ttcn {
           }
         }
       } else {
-        if (copy_needed)
-          expr->expr = mputprintf(expr->expr, "%s(", temp->get_Template()
-            ->get_my_governor()->get_genname_template(my_scope).c_str());
+        char* expr_expr = NULL;
         if (use_runtime_2 && TypeConv::needs_conv_refd(temp->get_Template())) {
           const string& tmp_id = temp->get_Template()->get_temporary_id();
           const char *tmp_id_str = tmp_id.c_str();
@@ -9838,13 +9874,41 @@ namespace Ttcn {
           if (gen_restriction_check != TR_NONE)
             expr->preamble = Template::generate_restriction_check_code(
               expr->preamble, tmp_id_str, gen_restriction_check);
-          expr->expr = mputstr(expr->expr, tmp_id_str);
-        } else temp->generate_code(expr, gen_restriction_check);
+          expr_expr = mputstr(expr_expr, tmp_id_str);
+        } else {
+          expression_struct temp_expr;
+          Code::init_expr(&temp_expr);
+          temp->generate_code(&temp_expr, gen_restriction_check);
+          if (temp_expr.preamble != NULL) {
+            expr->preamble = mputstr(expr->preamble, temp_expr.preamble);
+          }
+          if (temp_expr.postamble == NULL) {
+            expr_expr = mputstr(expr_expr, temp_expr.expr);
+          }
+          else {
+            // make sure the postambles of the parameters are executed before the
+            // function call itself (needed if the template contains function calls
+            // with lazy or fuzzy parameters)
+            const string& tmp_id = val->get_temporary_id();
+            expr->preamble = mputprintf(expr->preamble, "%s %s(%s);\n",
+              temp->get_Template()->get_my_governor()->get_genname_template(my_scope).c_str(),
+              tmp_id.c_str(), temp_expr.expr);
+            expr->preamble = mputstr(expr->preamble, temp_expr.postamble);
+            expr_expr = mputstr(expr_expr, tmp_id.c_str());
+            copy_needed = false; // already copied
+          }
+          Code::free_expr(&temp_expr);
+        }
+        if (copy_needed)
+          expr->expr = mputprintf(expr->expr, "%s(", temp->get_Template()
+            ->get_my_governor()->get_genname_template(my_scope).c_str());
+        expr->expr = mputstr(expr->expr, expr_expr);
+        Free(expr_expr);
         if (copy_needed) expr->expr = mputc(expr->expr, ')');
       }
       break;
     case AP_REF: {
-      if (lazy_param) FATAL_ERROR("ActualPar::generate_code()"); // syntax error should have already happened
+      if (param_eval != NORMAL_EVAL) FATAL_ERROR("ActualPar::generate_code()"); // syntax error should have already happened
       if (copy_needed) FATAL_ERROR("ActualPar::generate_code()");
       bool is_restricted_template = gen_restriction_check != TR_NONE ||
         gen_post_restriction_check != TR_NONE;
@@ -9925,22 +9989,25 @@ namespace Ttcn {
       if (copy_needed) FATAL_ERROR("ActualPar::generate_code()");
       switch (act->selection) {
       case AP_REF:
-        if (lazy_param) {
-          LazyParamData::generate_code_ap_default_ref(expr, act->ref, my_scope);
+        if (param_eval != NORMAL_EVAL) {
+          LazyFuzzyParamData::generate_code_ap_default_ref(expr, act->ref, my_scope,
+            param_eval == LAZY_EVAL);
         } else {
           act->ref->generate_code(expr);
         }
         break;
       case AP_VALUE:
-        if (lazy_param) {
-          LazyParamData::generate_code_ap_default_value(expr, act->val, my_scope);
+        if (param_eval != NORMAL_EVAL) {
+          LazyFuzzyParamData::generate_code_ap_default_value(expr, act->val, my_scope,
+            param_eval == LAZY_EVAL);
         } else {
           expr->expr = mputstr(expr->expr, act->val->get_genname_own(my_scope).c_str());
         }
         break;
       case AP_TEMPLATE:
-        if (lazy_param) {
-          LazyParamData::generate_code_ap_default_ti(expr, act->temp, my_scope);
+        if (param_eval != NORMAL_EVAL) {
+          LazyFuzzyParamData::generate_code_ap_default_ti(expr, act->temp, my_scope,
+            param_eval == LAZY_EVAL);
         } else {
           expr->expr = mputstr(expr->expr, act->temp->get_Template()->get_genname_own(my_scope).c_str());
         }
@@ -10241,8 +10308,8 @@ namespace Ttcn {
               Code::init_expr(&array_expr);
               // the array object's name contains the reference, followed by
               // the subrefs before the current array ref
-              array_expr.expr = mcopystr(LazyParamData::in_lazy() ?
-                LazyParamData::add_ref_genname(ass, ref->get_my_scope()).c_str() :
+              array_expr.expr = mcopystr(LazyFuzzyParamData::in_lazy_or_fuzzy() ?
+                LazyFuzzyParamData::add_ref_genname(ass, ref->get_my_scope()).c_str() :
                 ass->get_genname_from_scope(ref->get_my_scope()).c_str());
               if (ref_i > 0) {
                 subrefs->generate_code(&array_expr, ass, ref_i);

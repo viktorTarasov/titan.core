@@ -510,8 +510,13 @@ public:
   {
     const void* ptr = p_var.set_function != NULL ? p_var.value : p_var.cvalue;
     TTCN_Logger::begin_event_log2str();
-    ((Lazy_Param<EXPR_TYPE>*)ptr)->log();
+    ((Lazy_Fuzzy_Expr<EXPR_TYPE>*)ptr)->log();
     return TTCN_Logger::end_event_log2str();
+  }
+  
+  static CHARSTRING print_fuzzy_param(const variable_t&)
+  {
+    return CHARSTRING("<fuzzy value>");
   }
   
   //////////////////////////////////////////////////////

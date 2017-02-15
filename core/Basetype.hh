@@ -29,6 +29,7 @@
 #include "RInt.hh"
 #include "JSON_Tokenizer.hh"
 #include "Logger.hh"
+#include "Error.hh"
 #ifdef TITAN_RUNTIME_2
 #include "Struct_of.hh"
 #include "XER.hh"
@@ -1062,27 +1063,85 @@ extern boolean operator!=(null_type null_value, const Empty_Record_Type& other_v
 #undef VIRTUAL_IF_RUNTIME_2
 #endif
 
+/** Base class for values and templates with fuzzy or lazy evaluation
+  *
+  * When inheriting, override the virtual function eval_expr() to evaluate
+  * the desired expression. Add new members and a new constructor if the
+  * expression contains references to variables.
+  * The class is also used by itself (without inheriting) to store the static
+  * values/templates of fuzzy or lazy parameters (the ones that are known at
+  * compile-time). */
 template <class EXPR_TYPE>
-class Lazy_Param {
+class Lazy_Fuzzy_Expr {
 protected:
+  /** Evaluation type. True for fuzzy evaluation, false for lazy evaluation. */
+  boolean fuzzy;
+  /** Indicates whether a lazy expression has been evaluated. This flag is
+    * updated in case of fuzzy evaluation, too, in case the evaluation type is
+    * later changed to lazy. */
   boolean expr_evaluated;
-  EXPR_TYPE expr_cache;  
+  /** The previous value of expr_evaluated is stored here when it is reset.
+    * (This is only needed if an evaluated lazy expression is changed to fuzzy,
+    * then to lazy, and isn't evaluated until it is reverted back to the initial
+    * lazy evaluation. Changing from fuzzy to lazy resets the evaluation flag,
+    * and the information, that the initial lazy expression was evaluated, would
+    * otherwise be lost.) */
+  boolean old_expr_evaluated;
+  /** Stores the value of the evaluated expression (in which case it is unbound
+    * until the first evaluation) or a static value/template, if it is known at
+    * compile-time. */
+  EXPR_TYPE expr_cache;
+  /** Evaluates the expression. Empty by default. Should be overridden by the
+    * inheriting class. */
   virtual void eval_expr() {}
 public:
-  Lazy_Param(): expr_evaluated(FALSE) {}
+  /** Constructor called by the inheriting class. */
+  Lazy_Fuzzy_Expr(boolean p_fuzzy): fuzzy(p_fuzzy), expr_evaluated(FALSE), old_expr_evaluated(FALSE) {}
+  /** Dummy type used by the static value/template constructor, since the
+    * inheriting class' constructor may have parameters of any type. */
   enum evaluated_state_t { EXPR_EVALED };
-  Lazy_Param(evaluated_state_t /*p_es*/, EXPR_TYPE p_cache): expr_evaluated(TRUE), expr_cache(p_cache) {}
+  /** Constructor for static values and templates. */
+  Lazy_Fuzzy_Expr(boolean p_fuzzy, evaluated_state_t /*p_es*/, EXPR_TYPE p_cache)
+  : fuzzy(p_fuzzy), expr_evaluated(TRUE), old_expr_evaluated(TRUE), expr_cache(p_cache) {}
+  /** Copy constructor (can't set it to private, since it is currently used by
+    * the generated default altstep classes). */
+  Lazy_Fuzzy_Expr(const Lazy_Fuzzy_Expr&) {
+    TTCN_error("Internal error: Copying a fuzzy or lazy parameter.");
+  }
+  /** Casting operator. This function is called whenever the fuzzy or lazy
+    * expression is referenced. */
   operator EXPR_TYPE&() {
-    if (!expr_evaluated) { eval_expr(); expr_evaluated=TRUE; }
+    if (fuzzy || !expr_evaluated) {
+      eval_expr();
+      expr_evaluated = TRUE;
+    }
     return expr_cache;
   }
-  virtual ~Lazy_Param() {}
+  /** Virtual destructor. */
+  virtual ~Lazy_Fuzzy_Expr() {}
+  /** Logging function. Used by the TTCN-3 Debugger for printing the values of
+    * lazy parameters. */
   void log() const {
     if (!expr_evaluated) {
       TTCN_Logger::log_event_str("<not evaluated>");
     }
     else {
       expr_cache.log();
+    }
+  }
+  /** Changes the evaluation type (from lazy to fuzzy or from fuzzy to lazy). */
+  void change() {
+    fuzzy = !fuzzy;
+    if (!fuzzy) {
+      old_expr_evaluated = expr_evaluated;
+      expr_evaluated = FALSE;
+    }
+  }
+  /** Reverts the evaluation type back to its previous state. */
+  void revert() {
+    fuzzy = !fuzzy;
+    if (fuzzy) {
+      expr_evaluated = expr_evaluated || old_expr_evaluated;
     }
   }
 };

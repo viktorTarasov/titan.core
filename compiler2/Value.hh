@@ -1027,13 +1027,13 @@ namespace Common {
 
   /** @} end of AST_Value group */
 
-  class LazyParamData {
-    static int depth; // recursive code generation: calling a func. with lazy param inside a lazy param
+  class LazyFuzzyParamData {
+    static int depth; // recursive code generation: calling a func. with lazy/fuzzy param inside a lazy/fuzzy param
     static bool used_as_lvalue;
     static vector<string>* type_vec;
     static vector<string>* refd_vec;
   public:
-    static bool in_lazy();
+    static bool in_lazy_or_fuzzy();
     static void init(bool p_used_as_lvalue);
     static void clean();
     static string add_ref_genname(Assignment* ass, Scope* scope);
@@ -1041,12 +1041,12 @@ namespace Common {
     static string get_constr_param_name(size_t idx);
     static void generate_code_for_value(expression_struct* expr, Value* val, Scope* my_scope);
     static void generate_code_for_template(expression_struct* expr, TemplateInstance* temp, template_restriction_t gen_restriction_check, Scope* my_scope);
-    static void generate_code(expression_struct *expr, Value* value, Scope* scope);
-    static void generate_code(expression_struct *expr, TemplateInstance* temp, template_restriction_t gen_restriction_check, Scope* scope);
-    static void generate_code_lazyparam_class(expression_struct *expr, expression_struct& param_expr, const string& lazy_param_id, const string& type_name);
-    static void generate_code_ap_default_ref(expression_struct *expr, Ttcn::Ref_base* ref, Scope* scope);
-    static void generate_code_ap_default_value(expression_struct *expr, Value* value, Scope* scope);
-    static void generate_code_ap_default_ti(expression_struct *expr, TemplateInstance* ti, Scope* scope);
+    static void generate_code(expression_struct *expr, Value* value, Scope* scope, boolean lazy);
+    static void generate_code(expression_struct *expr, TemplateInstance* temp, template_restriction_t gen_restriction_check, Scope* scope, boolean lazy);
+    static void generate_code_param_class(expression_struct *expr, expression_struct& param_expr, const string& param_id, const string& type_name, boolean lazy);
+    static void generate_code_ap_default_ref(expression_struct *expr, Ttcn::Ref_base* ref, Scope* scope, boolean lazy);
+    static void generate_code_ap_default_value(expression_struct *expr, Value* value, Scope* scope, boolean lazy);
+    static void generate_code_ap_default_ti(expression_struct *expr, TemplateInstance* ti, Scope* scope, boolean lazy);
   };
   
 } // namespace Common

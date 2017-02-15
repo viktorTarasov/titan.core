@@ -215,6 +215,7 @@ static const string anyname("anytype");
   template_restriction_t template_restriction;
   ValueRedirect* value_redirect;
   SingleValueRedirect* single_value_redirect;
+  param_eval_t eval;
 
   struct {
     bool is_raw;
@@ -897,7 +898,7 @@ static const string anyname("anytype");
  *********************************************************************/
 
 %type <bool_val> optAliveKeyword optOptionalKeyword optOverrideKeyword
-  optErrValueRaw optAllKeyword optLazyOrFuzzyModifier
+  optErrValueRaw optAllKeyword
 %type <str> FreeText optLanguageSpec PatternChunk PatternChunkList
 %type <uchar_val> Group Plane Row Cell
 %type <id> FieldIdentifier FieldReference GlobalModuleId
@@ -1027,6 +1028,7 @@ static const string anyname("anytype");
 %type <variableentries> VariableList
 %type <variableentry> VariableEntry
 %type <subtypeparses> seqValueOrRange AllowedValues optSubTypeSpec
+%type <eval> optLazyOrFuzzyModifier
 
 %type <arraydimension_list> optArrayDef
 %type <fieldorarrayref_list> optExtendedFieldReference
@@ -7690,14 +7692,9 @@ Reference: // 490 ValueReference
 /* A.1.6.5 Parameterization */
 
 optLazyOrFuzzyModifier:
-  /* empty */ { $$ = false; }
-| LazyKeyword { $$ = true; }
-| FuzzyKeyword
-  {
-    $$ = false;
-    Location loc(infile, @1);
-    loc.error("Modifier '@fuzzy' is not currently supported.");
-  }
+  /* empty */ { $$ = NORMAL_EVAL; }
+| LazyKeyword { $$ = LAZY_EVAL; }
+| FuzzyKeyword { $$ = FUZZY_EVAL; }
 ;
 
 FormalValuePar: // 516

@@ -188,16 +188,14 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
     current_mod = var_ass->get_my_scope()->get_scope_mod();
   }
   
-  bool is_lazy_param = false;
+  param_eval_t eval = NORMAL_EVAL;
   bool is_constant = false;
   switch (var_ass->get_asstype()) {
   case Common::Assignment::A_PAR_VAL:
   case Common::Assignment::A_PAR_VAL_IN:
   case Common::Assignment::A_PAR_TEMPL_IN: {
-    if (var_ass->get_lazy_eval()) {
-      // lazy parameters have their own printing function
-      is_lazy_param = true;
-    }
+    // lazy and fuzzy parameters have their own printing functions
+    eval = var_ass->get_eval_type();
     Ttcn::FormalPar* fpar = dynamic_cast<Ttcn::FormalPar*>(var_ass);
     is_constant = fpar == NULL || !fpar->get_used_as_lvalue();
     break; }
@@ -214,8 +212,19 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
   // recreate the TTCN-3 version of the type name and determine the type's 
   // printing and overwriting functions
   string type_name, print_function, set_function;
-  print_function = is_lazy_param ? "TTCN3_Debugger::print_lazy_param<" :
-    "TTCN3_Debugger::print_base_var";
+  switch (eval) {
+  case NORMAL_EVAL:
+    print_function = "TTCN3_Debugger::print_base_var";
+    break;
+  case LAZY_EVAL:
+    print_function = "TTCN3_Debugger::print_lazy_param<";
+    break;
+  case FUZZY_EVAL:
+    print_function = "TTCN3_Debugger::print_fuzzy_param";
+    break;
+  default:
+    FATAL_ERROR("generate_code_debugger_add_var");
+  }
   set_function = "TTCN3_Debugger::set_base_var";
   if (var_ass->get_asstype() == Common::Assignment::A_TIMER ||
       var_ass->get_asstype() == Common::Assignment::A_PAR_TIMER) {
@@ -238,14 +247,14 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
            var_type->get_typetype() != Type::T_UNRESTRICTEDSTRING) {
       var_type = var_type->get_type_refd();
     }
-    if (is_lazy_param) {
+    if (eval == LAZY_EVAL) {
       print_function += var_type->get_genname_value(current_mod);
     }
     if (var_type->get_typetype() == Type::T_PORT && var_ass->get_Dimensions() != NULL) {
       // port array
       type_name = var_type->get_dispname() +
         array_dimensions_to_string(var_ass->get_Dimensions());
-      if (!is_lazy_param) {
+      if (eval == NORMAL_EVAL) {
         print_function = string("TTCN3_Debugger::print_port_array<") +
           function_params_for_array_dims(var_ass->get_Dimensions(),
                                     var_type->get_genname_value(current_mod),
@@ -264,7 +273,7 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
       calculate_type_name_and_debug_functions_from_type(t, t, current_mod,
         type_name, dummy1, dummy2);
       type_name += dims_str;
-      if (!is_lazy_param) {
+      if (eval == NORMAL_EVAL) {
         switch (var_ass->get_asstype()) {
         case Common::Assignment::A_MODULEPAR_TEMP:
         case Common::Assignment::A_TEMPLATE:
@@ -295,7 +304,7 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
     else {
       string dummy;
       calculate_type_name_and_debug_functions_from_type(var_ass->get_Type(),
-        var_type, current_mod, type_name, is_lazy_param ? dummy : print_function,
+        var_type, current_mod, type_name, eval != NORMAL_EVAL ? dummy : print_function,
         set_function);
     }
   }
@@ -309,7 +318,7 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
   case Common::Assignment::A_PAR_TEMPL_INOUT:
     // add a suffix, if it's a template
     type_name += " template";
-    if (is_lazy_param) {
+    if (eval == LAZY_EVAL) {
       print_function += "_template";
     }
     break;
@@ -317,7 +326,7 @@ char* generate_code_debugger_add_var(char* str, Common::Assignment* var_ass,
     break;
   }
   
-  if (is_lazy_param) {
+  if (eval == LAZY_EVAL) {
     print_function += ">";
   }
   
