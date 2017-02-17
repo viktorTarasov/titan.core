@@ -272,7 +272,7 @@
 #endif
 
 /* Copyright message */
-#define COPYRIGHT_STRING COMMENT_PREFIX "Copyright (c) 2000-2016 Ericsson Telecom AB"
+#define COPYRIGHT_STRING COMMENT_PREFIX "Copyright (c) 2000-2017 Ericsson Telecom AB"
 
 /* For prefixing the above messages. Default value: empty string. */
 #define COMMENT_PREFIX
