@@ -14709,7 +14709,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
           if (i>0) expr->preamble = mputstr(expr->preamble, ", ");
           expr->preamble = mputprintf(expr->preamble, "%s& %s", (*type_vec)[i]->c_str(), get_constr_param_name(i).c_str());
       }
-      expr->preamble = mputprintf(expr->preamble, "): Lazy_Fuzzy_Expr(%s)", lazy ? "FALSE" : "TRUE");
+      expr->preamble = mputprintf(expr->preamble, "): Lazy_Fuzzy_Expr<%s>(%s)", type_name.c_str(), lazy ? "FALSE" : "TRUE");
       for (size_t i=0; i<type_vec->size(); i++) {
         expr->preamble = mputprintf(expr->preamble, ", %s(%s)", get_member_name(i).c_str(), get_constr_param_name(i).c_str());
       }
