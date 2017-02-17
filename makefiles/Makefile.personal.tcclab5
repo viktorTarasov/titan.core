@@ -26,6 +26,6 @@ LDFLAGS += -Wl,-export-dynamic
 
 OPENSSL_DIR := default
 
-JDKDIR := /usr/lib64/jvm/java-1.6.0
+JDKDIR := /home/titanrt/jenkins/jdk/jdk64
 
 XMLDIR := default
