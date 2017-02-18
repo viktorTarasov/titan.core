@@ -2068,7 +2068,7 @@ namespace Ttcn {
       return;
     }
 
-    int ABCLength = strlen(ABCClass);
+    size_t ABCLength = strlen(ABCClass);
     if (ABCLength < 3 || ABCLength > 5) {
       // incorrect ABC number
       type_ = NONE;
