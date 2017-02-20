@@ -1786,7 +1786,7 @@ bool StringSubtypeTreeElement<STRINGTYPE,CHARLIMITTYPE>::is_element(const STRING
   default:
     FATAL_ERROR("StringSubtypeTreeElement::is_element()");
   }
-  return TUNKNOWN;
+  return true; // don't know if it matches
 }
 
 // if the constraints are ortogonal (e.g. size and alphabet) or just different then return TUNKNOWN
