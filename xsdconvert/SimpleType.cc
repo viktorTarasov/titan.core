@@ -373,10 +373,11 @@ void SimpleType::addToTypeSubstitutions() {
   //It would be nice if here outside_reference.resolved to everything
   bool newST = false;
   SimpleType * st = (SimpleType*)outside_reference.get_ref();
-  if(st == NULL && !isBuiltInType(type.convertedValue)){
+  bool isConvertedBuiltIn = isBuiltInType(type.convertedValue);
+  if(st == NULL && !isConvertedBuiltIn){
     //Not even a reference, and not a built in type
     return;
-  }else if(st == NULL && isBuiltInType(type.convertedValue)){
+  }else if(st == NULL && isConvertedBuiltIn){
     st = new SimpleType(parser, module, construct);
     st->type.upload(type.convertedValue);
     st->name.upload(type.convertedValue);
