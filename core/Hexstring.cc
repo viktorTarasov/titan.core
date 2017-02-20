@@ -896,7 +896,7 @@ int HEXSTRING::XER_encode(const XERdescriptor_t& p_td,
 
 }
 
-unsigned int xlate_hs(cbyte*in, int phase, unsigned char*dest) {
+unsigned int xlate_hs(xmlChar in[4], int phase, unsigned char*dest) {
   static unsigned char nbytes[4] = { 3,1,1,2 };
   unsigned char out[4];
 
