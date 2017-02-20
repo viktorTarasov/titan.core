@@ -416,7 +416,6 @@ int VERDICTTYPE::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
       }
     }
   } else {
-    error = FALSE;
     verdict_value = UNBOUND_VERDICT;
     return JSON_ERROR_INVALID_TOKEN;
   }
