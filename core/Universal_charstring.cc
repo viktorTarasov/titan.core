@@ -1605,7 +1605,6 @@ void UNIVERSAL_CHARSTRING::encode_utf16(TTCN_Buffer& buf,
         temp = p;
         temp <<= 16;
         univc |= temp;
-        temp = 0;
         temp = r;
         temp <<= 8;
         univc |= temp;
