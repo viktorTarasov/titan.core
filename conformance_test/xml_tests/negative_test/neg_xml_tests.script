@@ -1,5 +1,5 @@
 .******************************************************************************
-.* Copyright (c) 2000-2016 Ericsson Telecom AB
+.* Copyright (c) 2000-2017 Ericsson Telecom AB
 .* All rights reserved. This program and the accompanying materials
 .* are made available under the terms of the Eclipse Public License v1.0
 .* which accompanies this distribution, and is available at
@@ -125,7 +125,7 @@ module Neg_050103_imports_001 {
 
 <MODULE TTCN schema_Neg_050103_imports_001 schema_Neg_050103_imports_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -261,7 +261,7 @@ module Neg_060101_length_001 {
 
 <MODULE TTCN schema_Neg_060101_length_001 schema_Neg_060101_length_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -401,7 +401,7 @@ module Neg_060105_enumeration_001 {
 
 <MODULE TTCN schema_Neg_060105_enumeration_001 schema_Neg_060105_enumeration_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -541,7 +541,7 @@ module Neg_060105_enumeration_002 {
 
 <MODULE TTCN schema_Neg_060105_enumeration_002 schema_Neg_060105_enumeration_002.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -683,7 +683,7 @@ module Neg_060105_enumeration_003 {
 
 <MODULE TTCN schema_Neg_060105_enumeration_003 schema_Neg_060105_enumeration_003.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -822,7 +822,7 @@ module Neg_060105_enumeration_004 {
 
 <MODULE TTCN schema_Neg_060105_enumeration_004 schema_Neg_060105_enumeration_004.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5B01                     
 *
@@ -980,7 +980,7 @@ module Neg_060109_minexclusive_001 {
 
 <MODULE TTCN schema_Neg_060109_minexclusive_001 schema_Neg_060109_minexclusive_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -1119,7 +1119,7 @@ module Neg_060109_minexclusive_002 {
 
 <MODULE TTCN schema_Neg_060109_minexclusive_002 schema_Neg_060109_minexclusive_002.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -1256,7 +1256,7 @@ module Neg_060110_maxexclusive_001 {
 
 <MODULE TTCN schema_Neg_060110_maxexclusive_001 schema_Neg_060110_maxexclusive_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -1389,7 +1389,7 @@ module Neg_060111_total_digits_001 {
 
 <MODULE TTCN schema_Neg_060111_total_digits_001 schema_Neg_060111_total_digits_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -1527,7 +1527,7 @@ module Neg_060111_total_digits_002 {
 
 <MODULE TTCN schema_Neg_060111_total_digits_002 schema_Neg_060111_total_digits_002.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -1666,7 +1666,7 @@ module Neg_060111_total_digits_003 {
 
 <MODULE TTCN schema_Neg_060111_total_digits_003 schema_Neg_060111_total_digits_003.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -1804,7 +1804,7 @@ module Neg_060111_total_digits_004 {
 
 <MODULE TTCN schema_Neg_060111_total_digits_004 schema_Neg_060111_total_digits_004.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -1943,7 +1943,7 @@ module Neg_060212_any_uri_001 {
 
 <MODULE TTCN schema_Neg_060212_any_uri_001 schema_Neg_060212_any_uri_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -2081,7 +2081,7 @@ module Neg_060212_any_uri_002 {
 
 <MODULE TTCN schema_Neg_060212_any_uri_002 schema_Neg_060212_any_uri_002.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -2220,7 +2220,7 @@ module Neg_060502_date_and_time_001 {
 
 <MODULE TTCN schema_Neg_060502_date_and_time_001 schema_Neg_060502_date_and_time_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -2359,7 +2359,7 @@ module Neg_060502_date_and_time_002 {
 
 <MODULE TTCN schema_Neg_060502_date_and_time_002 schema_Neg_060502_date_and_time_002.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -2497,7 +2497,7 @@ module Neg_060502_date_and_time_003 {
 
 <MODULE TTCN schema_Neg_060502_date_and_time_003 schema_Neg_060502_date_and_time_003.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -2636,7 +2636,7 @@ module Neg_060502_date_and_time_004 {
 
 <MODULE TTCN schema_Neg_060502_date_and_time_004 schema_Neg_060502_date_and_time_004.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -2774,7 +2774,7 @@ module Neg_060504_date_001 {
 
 <MODULE TTCN schema_Neg_060504_date_001 schema_Neg_060504_date_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -2911,7 +2911,7 @@ module Neg_060504_date_002 {
 
 <MODULE TTCN schema_Neg_060504_date_002 schema_Neg_060504_date_002.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -3049,7 +3049,7 @@ module Neg_060504_date_003 {
 
 <MODULE TTCN schema_Neg_060504_date_003 schema_Neg_060504_date_003.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -3187,7 +3187,7 @@ module Neg_060504_date_004 {
 
 <MODULE TTCN schema_Neg_060504_date_004 schema_Neg_060504_date_004.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -3326,7 +3326,7 @@ module Neg_060505_gregorian_year_and_month_001 {
 
 <MODULE TTCN schema_Neg_060505_gregorian_year_and_month_001 schema_Neg_060505_gregorian_year_and_month_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -3464,7 +3464,7 @@ module Neg_060505_gregorian_year_and_month_002 {
 
 <MODULE TTCN schema_Neg_060505_gregorian_year_and_month_002 schema_Neg_060505_gregorian_year_and_month_002.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -3602,7 +3602,7 @@ module Neg_060505_gregorian_year_and_month_003 {
 
 <MODULE TTCN schema_Neg_060505_gregorian_year_and_month_003 schema_Neg_060505_gregorian_year_and_month_003.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -3740,7 +3740,7 @@ module Neg_060505_gregorian_year_and_month_004 {
 
 <MODULE TTCN schema_Neg_060505_gregorian_year_and_month_004 schema_Neg_060505_gregorian_year_and_month_004.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -3878,7 +3878,7 @@ module Neg_060506_gregorian_year_001 {
 
 <MODULE TTCN schema_Neg_060506_gregorian_year_001 schema_Neg_060506_gregorian_year_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -4016,7 +4016,7 @@ module Neg_070104_minoccurs_and_maxoccurs_001 {
 
 <MODULE TTCN schema_Neg_070104_minoccurs_and_maxoccurs_001 schema_Neg_070104_minoccurs_and_maxoccurs_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -4161,7 +4161,7 @@ module Neg_070104_minoccurs_and_maxoccurs_002 {
 
 <MODULE TTCN schema_Neg_070104_minoccurs_and_maxoccurs_002 schema_Neg_070104_minoccurs_and_maxoccurs_002.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -4306,7 +4306,7 @@ module Neg_070104_minoccurs_and_maxoccurs_003 {
 
 <MODULE TTCN schema_Neg_070104_minoccurs_and_maxoccurs_003 schema_Neg_070104_minoccurs_and_maxoccurs_003.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -4459,7 +4459,7 @@ module Neg_070105_default_and_fixed_001 {
 
 <MODULE TTCN schema_Neg_070105_default_and_fixed_001 schema_Neg_070105_default_and_fixed_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -4601,7 +4601,7 @@ module Neg_070112_use_001 {
 
 <MODULE TTCN schema_Neg_070112_use_001 schema_Neg_070112_use_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -4744,7 +4744,7 @@ module Neg_070502_derivation_by_list_001 {
 
 <MODULE TTCN schema_Neg_070502_derivation_by_list_001 schema_Neg_070502_derivation_by_list_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/6 R1A                       
 *
@@ -4886,7 +4886,7 @@ module Neg_070502_derivation_by_list_002 {
 
 <MODULE TTCN schema_Neg_070502_derivation_by_list_001 schema_Neg_070502_derivation_by_list_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/6 R1A                       
 *
@@ -5027,7 +5027,7 @@ module Neg_07060102_restricting_simple_content_001 {
 
 <MODULE TTCN schema_Neg_07060102_restricting_simple_content_001 schema_Neg_07060102_restricting_simple_content_001.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -5218,7 +5218,7 @@ module Neg_080101_head_elements_of_substitution_groups_002 {
 
 <MODULE TTCN schema_Neg_080101_head_elements_of_substitution_groups_002 schema_Neg_080101_head_elements_of_substitution_groups_002.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *
@@ -5461,7 +5461,7 @@ module Neg_080101_head_elements_of_substitution_groups_003 {
 
 <MODULE TTCN schema_Neg_080101_head_elements_of_substitution_groups_003 schema_Neg_080101_head_elements_of_substitution_groups_003.ttcn >
 /*******************************************************************************
-* Copyright (c) 2000-2016 Ericsson Telecom AB
+* Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator version: CRL 113 200/5 R5A                       
 *

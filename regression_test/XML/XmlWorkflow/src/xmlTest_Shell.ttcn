@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -109,7 +109,7 @@ const integer c_shell_error:=256;
 const integer c_shell_error_noSuchFileOrDirectory:=512;
 
 //Expected and accepted diffs:
-// Line  "Copyright (c) 2000-2016"          - 1 diff
+// Line  "Copyright (c) 2000-2017"          - 1 diff
 // Lines "Contributors: ... "               - 1 diff
 // Line "Updated: "                         - 1 diff
 // Optional diff: Module name               - 1 diff
