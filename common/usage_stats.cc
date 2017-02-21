@@ -207,7 +207,6 @@ pthread_t UsageData::sendDataThreaded(std::string msg, thread_data* data) {
 void* UsageData::sendData(void* m) {
   // make sure the thread is cancelable if the main thread finishes first
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
   
   thread_data* my_data;
   my_data = (thread_data*)m;
