@@ -8309,7 +8309,7 @@ control {
 (?is)\berror: Formal parameter `str' cannot be \@lazy, not supported in this case.
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
-(?is)\berror: Parameter \@lazy-ness mismatch
+(?is)\berror: Parameter evaluation type \(normal, \@lazy or \@fuzzy\) mismatch
 <END_RESULT>
 <RESULT IF_PASS COUNT 2>
 (?is)\berror:
