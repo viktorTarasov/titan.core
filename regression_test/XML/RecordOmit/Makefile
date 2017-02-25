@@ -160,13 +160,10 @@ compile: $(TTCN3_MODULES) $(PREPROCESSED_TTCN3_MODULES) $(ASN1_MODULES) $(firstw
 	$(TTCN3_COMPILER) $(COMPILER_FLAGS) $(filter-out $(TTCN3_COMPILER), $^)
 	touch $@
 
-clean:
+clean distclean:
 	-$(RM) $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
 	$(GENERATED_SOURCES) $(PREPROCESSED_TTCN3_MODULES) compile \
-	tags *.log *.stackdump
-
-distclean: clean
-	-$(RM) $(DEPFILES)
+	$(DEPFILES) tags *.log *.stackdump
 
 #
 # Add your rules here if necessary...
