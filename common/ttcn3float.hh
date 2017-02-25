@@ -105,7 +105,7 @@ struct ttcn3float {
 
   bool operator>(double d) const {
     if (isnan(value)) {
-      return true; // TTCN-3 special: NaN is bigger than anything except NaN
+      return !isnan(d); // TTCN-3 special: NaN is bigger than anything except NaN
     }
     else if (isnan(d)) {
       return false; // TTCN-3 special: NaN is bigger than anything except NaN
