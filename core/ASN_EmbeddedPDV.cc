@@ -584,6 +584,7 @@ Module_Param* EMBEDDED_PDV_identification_template::get_param(Module_Param_Name&
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported value of type EMBEDDED PDV.identification.");
     break;
   }
   if (is_ifpresent) {
@@ -1937,6 +1938,7 @@ Module_Param* EMBEDDED_PDV_identification_syntaxes_template::get_param(Module_Pa
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type EMBEDDED PDV.identification.syntaxes.");
     break;
   }
   if (is_ifpresent) {
@@ -2678,6 +2680,7 @@ Module_Param* EMBEDDED_PDV_identification_context__negotiation_template::get_par
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type EMBEDDED PDV.identification.context-negotiation.");
     break;
   }
   if (is_ifpresent) {
@@ -3563,6 +3566,7 @@ Module_Param* EMBEDDED_PDV_template::get_param(Module_Param_Name& param_name) co
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type EMBEDDED PDV.");
     break;
   }
   if (is_ifpresent) {

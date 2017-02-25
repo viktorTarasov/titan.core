@@ -982,6 +982,7 @@ Module_Param* OBJID_template::get_param(Module_Param_Name& param_name) const
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported objid template.");
     break;
   }
   if (is_ifpresent) {

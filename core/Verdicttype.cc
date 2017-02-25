@@ -759,6 +759,7 @@ Module_Param* VERDICTTYPE_template::get_param(Module_Param_Name& param_name) con
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported verdict template.");
     break;
   }
   if (is_ifpresent) {

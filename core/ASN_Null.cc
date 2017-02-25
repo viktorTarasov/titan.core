@@ -624,6 +624,7 @@ Module_Param* ASN_NULL_template::get_param(Module_Param_Name& param_name) const
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported ASN.1 NULL template.");
     break;
   }
   if (is_ifpresent) {

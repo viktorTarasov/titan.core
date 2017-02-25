@@ -2549,6 +2549,7 @@ Module_Param* INTEGER_template::get_param(Module_Param_Name& param_name) const
     mp = new Module_Param_IntRange(lower_bound, upper_bound, value_range.min_is_exclusive, value_range.max_is_exclusive);
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported integer template.");
     break;
   }
   if (is_ifpresent) {

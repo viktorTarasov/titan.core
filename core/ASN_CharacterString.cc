@@ -597,6 +597,7 @@ Module_Param* CHARACTER_STRING_identification_template::get_param(Module_Param_N
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported value of type CHARACTER STRING.identification.");
     break;
   }
   if (is_ifpresent) {
@@ -1933,6 +1934,7 @@ Module_Param* CHARACTER_STRING_identification_syntaxes_template::get_param(Modul
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type CHARACTER STRING.identification.syntaxes.");
     break;
   }
   if (is_ifpresent) {
@@ -2666,6 +2668,7 @@ Module_Param* CHARACTER_STRING_identification_context__negotiation_template::get
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type CHARACTER STRING.identification.context-negotiation.");
     break;
   }
   if (is_ifpresent) {
@@ -3546,6 +3549,7 @@ Module_Param* CHARACTER_STRING_template::get_param(Module_Param_Name& param_name
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type CHARACTER STRING.");
     break;
   }
   if (is_ifpresent) {

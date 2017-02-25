@@ -1114,6 +1114,7 @@ Module_Param* BOOLEAN_template::get_param(Module_Param_Name& param_name) const
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported boolean template.");
     break;
   }
   if (is_ifpresent) {

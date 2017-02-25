@@ -2838,9 +2838,10 @@ Module_Param* CHARSTRING_template::get_param(Module_Param_Name& param_name) cons
     mp = new Module_Param_Pattern(mcopystr(single_value), pattern_value.nocase);
     break;
   case DECODE_MATCH:
-    mp->error("Referencing a decoded content matching template is not supported.");
+    TTCN_error("Referencing a decoded content matching template is not supported.");
     break;
   default:
+    TTCN_error("Referencing an uninitialized/unsupported charstring template.");
     break;
   }
   if (is_ifpresent) {

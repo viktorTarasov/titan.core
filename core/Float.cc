@@ -1647,6 +1647,7 @@ Module_Param* FLOAT_template::get_param(Module_Param_Name& param_name) const
       value_range.max_value, value_range.max_is_present, value_range.min_is_exclusive, value_range.max_is_exclusive);
     break;
   default:
+    TTCN_error("Referencing an uninitialized/unsupported float template.");
     break;
   }
   if (is_ifpresent) {

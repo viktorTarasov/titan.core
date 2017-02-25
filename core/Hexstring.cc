@@ -1917,9 +1917,10 @@ Module_Param* HEXSTRING_template::get_param(Module_Param_Name& param_name) const
     mp = new Module_Param_Hexstring_Template(pattern_value->n_elements, val_cpy);
     break; }
   case DECODE_MATCH:
-    mp->error("Referencing a decoded content matching template is not supported.");
+    TTCN_error("Referencing a decoded content matching template is not supported.");
     break;
   default:
+    TTCN_error("Referencing an uninitialized/unsupported hexstring template.");
     break;
   }
   if (is_ifpresent) {

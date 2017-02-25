@@ -1214,6 +1214,7 @@ Module_Param* EXTERNAL_identification_template::get_param(Module_Param_Name& par
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported value of type EXTERNAL.identification.");
     break;
   }
   if (is_ifpresent) {
@@ -2239,6 +2240,7 @@ Module_Param* EXTERNAL_identification_syntaxes_template::get_param(Module_Param_
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type EXTERNAL.identification.syntaxtes .");
     break;
   }
   if (is_ifpresent) {
@@ -2885,6 +2887,7 @@ Module_Param* EXTERNAL_identification_context__negotiation_template::get_param(M
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type EXTERNAL.identification.context-negotiation.");
     break;
   }
   if (is_ifpresent) {
@@ -3652,6 +3655,7 @@ Module_Param* EXTERNAL_template::get_param(Module_Param_Name& param_name) const
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type EXTERNAL.");
     break;
   }
   if (is_ifpresent) {

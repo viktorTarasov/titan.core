@@ -4580,9 +4580,10 @@ Module_Param* UNIVERSAL_CHARSTRING_template::get_param(Module_Param_Name& param_
     mp = new Module_Param_Pattern(mcopystr(*pattern_string), pattern_value.nocase);
     break;
   case DECODE_MATCH:
-    mp->error("Referencing a decoded content matching template is not supported.");
+    TTCN_error("Referencing a decoded content matching template is not supported.");
     break;
   default:
+    TTCN_error("Referencing an uninitialized/unsupported universal charstring template.");
     break;
   }
   if (is_ifpresent) {

@@ -1404,6 +1404,7 @@ Module_Param* Record_Of_Template::get_param(Module_Param_Name& param_name) const
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type %s.", get_descriptor()->name);
     break;
   }
   if (is_ifpresent) {
@@ -2290,6 +2291,7 @@ Module_Param* Set_Of_Template::get_param(Module_Param_Name& param_name) const
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type %s.", get_descriptor()->name);
     break;
   }
   if (is_ifpresent) {
@@ -2976,6 +2978,7 @@ Module_Param* Record_Template::get_param(Module_Param_Name& param_name) const
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type %s.", get_descriptor()->name);
     break;
   }
   if (is_ifpresent) {
@@ -3365,6 +3368,7 @@ Module_Param* Empty_Record_Template::get_param(Module_Param_Name& param_name) co
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported template of type %s.", get_descriptor()->name);
     break;
   }
   if (is_ifpresent) {

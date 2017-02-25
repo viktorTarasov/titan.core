@@ -746,6 +746,7 @@ Module_Param* COMPONENT_template::get_param(Module_Param_Name& param_name) const
     }
     break; }
   default:
+    TTCN_error("Referencing an uninitialized/unsupported component reference template.");
     break;
   }
   if (is_ifpresent) {
