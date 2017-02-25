@@ -45,13 +45,13 @@ nonMandatoryPar logFiles logger_control namedActualParameters \
 assignmentNotation omitdef anytype RAW implicitMsgEncoding pattern_quadruples \
 macros visibility hexstrOper ucharstrOper objidOper CRTR00015758 slider \
 XML ipv6 implicitOmit testcase_defparam transparent HQ16404 cfgFile \
-all_from lazyEval tryCatch text2ttcn json junitlogger ttcn2json profiler templateOmit \
+all_from lazyEval tryCatch text2ttcn json ttcn2json profiler templateOmit \
 customEncoding makefilegen uidChars checkstate hostid templateIstemplatekind \
 selectUnion templateExclusiveRange any_from templatePatternRef indexWithRecofArray \
 connectMapOperTest fuzzy
 
 ifdef DYN
-DIRS += loggerplugin
+DIRS += loggerplugin junitlogger 
 endif
 
 ifdef RT2
