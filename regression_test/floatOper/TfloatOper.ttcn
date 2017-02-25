@@ -429,7 +429,8 @@ testcase floatComparison() runs on floatOper_comptype {
 
   var float NaN := not_a_number;
   if (NaN != not_a_number) { setverdict(fail, __LINE__, ": not_a_number==not_a_number:NotOK") }
-
+  if (NaN < NaN) { setverdict(fail, __LINE__, ": not_a_number<not_a_number:NotOK") }
+  if (NaN > NaN) { setverdict(fail, __LINE__, ": not_a_number<not_a_number:NotOK") }
 }
 
 testcase constFloatComparison() runs on floatOper_comptype {
@@ -476,7 +477,8 @@ testcase constFloatComparison() runs on floatOper_comptype {
 
   const float NaN := not_a_number;
   if (NaN != not_a_number) { setverdict(fail, __LINE__, ": not_a_number==not_a_number:NotOK") }
-
+  if (NaN < NaN) { setverdict(fail, __LINE__, ": not_a_number<not_a_number:NotOK") }
+  if (NaN > NaN) { setverdict(fail, __LINE__, ": not_a_number<not_a_number:NotOK") }
 }
 
 control {
