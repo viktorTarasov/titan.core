@@ -41,23 +41,6 @@
         </ConfigurationRequirements>
       </ProjectProperties>
     </Configuration>
-    <Configuration name="Empty">
-      <ProjectProperties>
-        <MakefileSettings>
-          <codeSplitting></codeSplitting>
-          <targetExecutable>binDefault/binDefault</targetExecutable>
-        </MakefileSettings>
-        <LocalBuildSettings>
-          <workingDirectory>binDefault</workingDirectory>
-        </LocalBuildSettings>
-        <ConfigurationRequirements>
-          <configurationRequirement>
-            <projectName>c</projectName>
-            <requiredConfiguration>Empty</requiredConfiguration>
-          </configurationRequirement>
-        </ConfigurationRequirements>
-      </ProjectProperties>
-    </Configuration>
     <Configuration name="Type">
       <ProjectProperties>
         <MakefileSettings>
@@ -88,6 +71,60 @@
           <configurationRequirement>
             <projectName>c</projectName>
             <requiredConfiguration>Number</requiredConfiguration>
+          </configurationRequirement>
+        </ConfigurationRequirements>
+      </ProjectProperties>
+    </Configuration>
+    <Configuration name="None-Dyn">
+      <ProjectProperties>
+        <MakefileSettings>
+          <dynamicLinking>true</dynamicLinking>
+          <codeSplitting>none</codeSplitting>
+          <targetExecutable>binDefault/binDefault</targetExecutable>
+        </MakefileSettings>
+        <LocalBuildSettings>
+          <workingDirectory>binDefault</workingDirectory>
+        </LocalBuildSettings>
+        <ConfigurationRequirements>
+          <configurationRequirement>
+            <projectName>c</projectName>
+            <requiredConfiguration>None-Dyn</requiredConfiguration>
+          </configurationRequirement>
+        </ConfigurationRequirements>
+      </ProjectProperties>
+    </Configuration>
+    <Configuration name="Type-Dyn">
+      <ProjectProperties>
+        <MakefileSettings>
+          <dynamicLinking>true</dynamicLinking>
+          <codeSplitting>type</codeSplitting>
+          <targetExecutable>binDefault/binDefault</targetExecutable>
+        </MakefileSettings>
+        <LocalBuildSettings>
+          <workingDirectory>binDefault</workingDirectory>
+        </LocalBuildSettings>
+        <ConfigurationRequirements>
+          <configurationRequirement>
+            <projectName>c</projectName>
+            <requiredConfiguration>Type-Dyn</requiredConfiguration>
+          </configurationRequirement>
+        </ConfigurationRequirements>
+      </ProjectProperties>
+    </Configuration>
+    <Configuration name="Number-Dyn">
+      <ProjectProperties>
+        <MakefileSettings>
+          <dynamicLinking>true</dynamicLinking>
+          <codeSplitting>5</codeSplitting>
+          <targetExecutable>binDefault/binDefault</targetExecutable>
+        </MakefileSettings>
+        <LocalBuildSettings>
+          <workingDirectory>binDefault</workingDirectory>
+        </LocalBuildSettings>
+        <ConfigurationRequirements>
+          <configurationRequirement>
+            <projectName>c</projectName>
+            <requiredConfiguration>Number-Dyn</requiredConfiguration>
           </configurationRequirement>
         </ConfigurationRequirements>
       </ProjectProperties>
