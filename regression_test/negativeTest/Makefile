@@ -42,7 +42,7 @@ TTCN3_MODULES = negtest.ttcn NegTestTestcases.ttcn \
 NegTest_TEXT_Types.ttcn NegTest_TEXT_Testcases.ttcn \
 NegTest_RAW_Types.ttcn NegTest_RAW_Testcases.ttcn \
 www_XmlTest_org_negativeTest_XML_Types.ttcn NegTest_XML_Testcases.ttcn XSD.ttcn UsefulTtcn3Types.ttcn \
-NegTest_JSON.ttcn
+NegTest_JSON.ttcn NegTest_Update.ttcn
 
 ASN1_MODULES = Types.asn NegTestTypes.asn
 

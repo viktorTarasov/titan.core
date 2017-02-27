@@ -48,8 +48,9 @@ namespace Ttcn {
   // ===== ILT_root
   // =================================
 
-  ILT_root::ILT_root(Statement *p_il)
-    : il(p_il), tmpnum(0), c_l(0), c_b(0)
+  ILT_root::ILT_root(Statement *p_il, char*& p_def_glob_vars, char*& p_src_glob_vars)
+    : il(p_il), tmpnum(0), c_l(0), c_b(0), out_def_glob_vars(p_def_glob_vars)
+    , out_src_glob_vars(p_src_glob_vars)
   {
     if(!p_il || p_il->get_statementtype()!=Statement::S_INTERLEAVE)
       FATAL_ERROR("ILT_root::ILT_root()");
@@ -99,6 +100,16 @@ namespace Ttcn {
   char*& ILT_root::get_out_branches()
   {
     return out_branches;
+  }
+  
+  char*& ILT_root::get_out_def_glob_vars()
+  {
+    return out_def_glob_vars;
+  }
+  
+  char*& ILT_root::get_out_src_glob_vars()
+  {
+    return out_src_glob_vars;
   }
 
   const string& ILT_root::get_my_tmpid()
@@ -293,6 +304,16 @@ namespace Ttcn {
   {
     return root->get_out_branches();
   }
+  
+  char*& ILT_branch::get_out_def_glob_vars()
+  {
+    return root->get_out_def_glob_vars();
+  }
+  
+  char*& ILT_branch::get_out_src_glob_vars()
+  {
+    return root->get_out_src_glob_vars();
+  }
 
   const string& ILT_branch::get_my_tmpid()
   {
@@ -411,7 +432,8 @@ namespace Ttcn {
       }
       else {
         out_stmt=mputstr(out_stmt, "{\n"); // (2)
-        out_stmt=block->generate_code(out_stmt);
+        out_stmt=block->generate_code(out_stmt, get_out_def_glob_vars(),
+          get_out_src_glob_vars());
       }
       if(branchtype==BT_IL) {
         out_stmt=mputprintf(out_stmt, "%s_state[%lu]=1;\n",

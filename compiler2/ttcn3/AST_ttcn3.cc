@@ -2171,7 +2171,8 @@ namespace Ttcn {
         "debug_scope.initial_snapshot();\n", module_dispname);
     }
     target->functions.control =
-      block->generate_code(target->functions.control);
+      block->generate_code(target->functions.control, target->header.global_vars,
+      target->source.global_vars);
     target->functions.control = mputstr(target->functions.control,
       "TTCN_Runtime::end_controlpart();\n");
   }
@@ -3112,18 +3113,21 @@ namespace Ttcn {
     return false;
   }
 
-  void Definition::chk_erroneous_attr()
+  ErroneousAttributes* Definition::chk_erroneous_attr(WithAttribPath* p_attrib_path, Type* p_type,
+                                                      Scope* p_scope, string p_fullname,
+                                                      bool in_update_stmt)
   {
-    if (!w_attrib_path) return;
-    const Ttcn::MultiWithAttrib* attribs = w_attrib_path->get_local_attrib();
-    if (!attribs) return;
+    if (!p_attrib_path) return NULL;
+    const Ttcn::MultiWithAttrib* attribs = p_attrib_path->get_local_attrib();
+    if (!attribs) return NULL;
+    ErroneousAttributes* erroneous_attrs = NULL;
     for (size_t i = 0; i < attribs->get_nof_elements(); i++) {
       const Ttcn::SingleWithAttrib* act_attr = attribs->get_element(i);
       if (act_attr->get_attribKeyword()==Ttcn::SingleWithAttrib::AT_ERRONEOUS) {
         if (!use_runtime_2) {
-          error("`erroneous' attributes can be used only with the Function Test Runtime");
-          note("If you need negative testing use the -R flag when generating the makefile");
-          return;
+          attribs->error("`erroneous' attributes can be used only with the Function Test Runtime");
+          attribs->note("If you need negative testing use the -R flag when generating the makefile");
+          return NULL;
         }
         size_t nof_qualifiers = act_attr->get_attribQualifiers() ? act_attr->get_attribQualifiers()->get_nof_qualifiers() : 0;
         dynamic_array<Type*> refd_type_array(nof_qualifiers); // only the qualifiers pointing to existing fields will be added to erroneous_attrs objects
@@ -3133,12 +3137,12 @@ namespace Ttcn {
           // check if qualifiers point to existing fields
           for (size_t qi=0; qi<nof_qualifiers; qi++) {
             Qualifier* act_qual = const_cast<Qualifier*>(act_attr->get_attribQualifiers()->get_qualifier(qi));
-            act_qual->set_my_scope(get_my_scope());
-            Type* field_type = get_Type()->get_field_type(act_qual, Type::EXPECTED_CONSTANT);
+            act_qual->set_my_scope(p_scope);
+            Type* field_type = p_type->get_field_type(act_qual, Type::EXPECTED_CONSTANT);
             if (field_type) {
               dynamic_array<size_t> subrefs_array;
               dynamic_array<Type*> type_array;
-              bool valid_indexes = get_Type()->get_subrefs_as_array(act_qual, subrefs_array, type_array);
+              bool valid_indexes = p_type->get_subrefs_as_array(act_qual, subrefs_array, type_array);
               if (!valid_indexes) field_type = NULL;
               if (act_qual->refers_to_string_element()) {
                 act_qual->error("Reference to a string element cannot be used in this context");
@@ -3152,12 +3156,12 @@ namespace Ttcn {
         ErroneousAttributeSpec* err_attr_spec = ttcn3_parse_erroneous_attr_spec_string(
           act_attr->get_attribSpec().get_spec().c_str(), act_attr->get_attribSpec());
         if (err_attr_spec) {
-          if (!erroneous_attrs) erroneous_attrs = new ErroneousAttributes(get_Type());
+          if (!erroneous_attrs) erroneous_attrs = new ErroneousAttributes(p_type);
           // attr.spec will be owned by erroneous_attrs object
           erroneous_attrs->add_spec(err_attr_spec);
-          err_attr_spec->set_fullname(get_fullname());
-          err_attr_spec->set_my_scope(get_my_scope());
-          err_attr_spec->chk();
+          err_attr_spec->set_fullname(p_fullname);
+          err_attr_spec->set_my_scope(p_scope);
+          err_attr_spec->chk(in_update_stmt);
           // create qualifier - err.attr.spec. pairs
           for (size_t qi=0; qi<nof_qualifiers; qi++) {
             if (refd_type_array[qi] && (err_attr_spec->get_indicator()!=ErroneousAttributeSpec::I_INVALID)) {
@@ -3168,6 +3172,7 @@ namespace Ttcn {
       }
     }
     if (erroneous_attrs) erroneous_attrs->chk();
+    return erroneous_attrs;
   }
 
   char* Definition::generate_code_str(char *str)
@@ -3546,8 +3551,9 @@ namespace Ttcn {
       type->chk_this_value(value, 0, Type::EXPECTED_CONSTANT, INCOMPLETE_ALLOWED,
         OMIT_NOT_ALLOWED, SUB_CHK, has_implicit_omit_attr());
       value_under_check = false;
-      chk_erroneous_attr();
-      if (erroneous_attrs) value->set_err_descr(erroneous_attrs->get_err_descr());
+      erroneous_attrs = chk_erroneous_attr(w_attrib_path, type, get_my_scope(),
+        get_fullname(), false);
+      if (erroneous_attrs) value->add_err_descr(NULL, erroneous_attrs->get_err_descr());
     {
       ReferenceChain refch(type, "While checking embedded recursions");
       value->chk_recursions(refch);
@@ -3878,7 +3884,7 @@ namespace Ttcn {
     Code::init_cdef(&cdef);
     const string& t_genname = get_genname();
     const char *name = t_genname.c_str();
-    type->generate_code_object(&cdef, my_scope, t_genname, "modulepar_", false);
+    type->generate_code_object(&cdef, my_scope, t_genname, "modulepar_", false, false);
     if (def_value) {
       cdef.init = update_location_object(cdef.init);
       cdef.init = def_value->generate_code_init(cdef.init, def_value->get_lhs_name().c_str());
@@ -4053,7 +4059,7 @@ namespace Ttcn {
     Code::init_cdef(&cdef);
     const string& t_genname = get_genname();
     const char *name = t_genname.c_str();
-    type->generate_code_object(&cdef, my_scope, t_genname, "modulepar_", true);
+    type->generate_code_object(&cdef, my_scope, t_genname, "modulepar_", true, false);
     if (def_template) {
       cdef.init = update_location_object(cdef.init);
       cdef.init = def_template->generate_code_init(cdef.init, def_template->get_lhs_name().c_str());
@@ -4233,8 +4239,9 @@ namespace Ttcn {
       ANY_OR_OMIT_ALLOWED, SUB_CHK,
       has_implicit_omit_attr() ? IMPLICIT_OMIT : NOT_IMPLICIT_OMIT, 0);
 
-    chk_erroneous_attr();
-    if (erroneous_attrs) body->set_err_descr(erroneous_attrs->get_err_descr());
+    erroneous_attrs = chk_erroneous_attr(w_attrib_path, type, get_my_scope(),
+      get_fullname(), false);
+    if (erroneous_attrs) body->add_err_descr(NULL, erroneous_attrs->get_err_descr());
 
     {
       ReferenceChain refch(type, "While checking embedded recursions");
@@ -4465,6 +4472,10 @@ namespace Ttcn {
   void Def_Template::generate_code(output_struct *target, bool)
   {
     type->generate_code(target);
+    if (body->get_err_descr() != NULL && body->get_err_descr()->has_descr(NULL)) {
+        target->functions.post_init = body->get_err_descr()->generate_code_init_str(
+          NULL, target->functions.post_init, body->get_lhs_name());
+    }
     if (fp_list) {
       // Parameterized template. Generate code for a function which returns
       // a $(genname)_template and has the appropriate parameters.
@@ -4504,10 +4515,6 @@ namespace Ttcn {
         function_body = mputprintf(function_body, "%s ret_val;\n",
           type_genname_str);
       }
-      if (erroneous_attrs && erroneous_attrs->get_err_descr()) {
-        function_body = erroneous_attrs->get_err_descr()->
-          generate_code_str(function_body, target->header.global_vars, string("ret_val"), true);
-      }
       function_body = body->generate_code_init(function_body, "ret_val");
       if (template_restriction!=TR_NONE && gen_restriction_check)
         function_body = Template::generate_restriction_check_code(function_body,
@@ -4516,6 +4523,28 @@ namespace Ttcn {
         function_body = mputstr(function_body,
           "ttcn3_debugger.set_return_value((TTCN_Logger::begin_event_log2str(), "
           "ret_val.log(), TTCN_Logger::end_event_log2str()));\n");
+      }
+      if (ErroneousDescriptors::can_have_err_attribs(type)) {
+        // these are always generated, not just if the template has erroneous
+        // descriptors, so adding '@update' statements in other modules does not
+        // require this module's code to be regenerated
+        target->source.global_vars = mputprintf(target->source.global_vars,
+          "Erroneous_descriptor_t* %s_err_descr_ptr = NULL;\n",
+          body->get_lhs_name().c_str());
+        target->header.global_vars = mputprintf(target->header.global_vars,
+          "extern Erroneous_descriptor_t* %s_err_descr_ptr;\n",
+          body->get_lhs_name().c_str());
+        function_body = mputprintf(function_body,
+          "ret_val.set_err_descr(%s_err_descr_ptr);\n",
+          body->get_lhs_name().c_str());
+      }
+      if (body->get_err_descr() != NULL && body->get_err_descr()->has_descr(NULL)) {
+        target->source.global_vars = body->get_err_descr()->generate_code_str(NULL,
+          target->source.global_vars, target->header.global_vars, body->get_lhs_name());
+        target->functions.post_init = mputprintf(target->functions.post_init,
+          "%s_err_descr_ptr = &%s_%lu_err_descr;\n",
+          body->get_lhs_name().c_str(), body->get_lhs_name().c_str(),
+          (unsigned long) body->get_err_descr()->get_descr_index(NULL));
       }
       function_body = mputstr(function_body, "return ret_val;\n");
       // if the template modifies a parameterized template, then the inherited
@@ -4585,6 +4614,11 @@ namespace Ttcn {
       if (template_restriction != TR_NONE && gen_restriction_check)
         cdef.init = Template::generate_restriction_check_code(cdef.init,
           body->get_lhs_name().c_str(), template_restriction);
+      if (body->get_err_descr() != NULL && body->get_err_descr()->has_descr(NULL)) {
+        cdef.init = mputprintf(cdef.init, "%s.set_err_descr(&%s_%lu_err_descr);\n",
+          body->get_lhs_name().c_str(), body->get_lhs_name().c_str(),
+          (unsigned long) body->get_err_descr()->get_descr_index(NULL));
+      }
       target->header.global_vars = mputstr(target->header.global_vars,
         cdef.decl);
       target->source.global_vars = mputstr(target->source.global_vars,
@@ -4849,7 +4883,7 @@ namespace Ttcn {
     type->generate_code(target);
     const_def cdef;
     Code::init_cdef(&cdef);
-    type->generate_code_object(&cdef, my_scope, get_genname(), 0, false);
+    type->generate_code_object(&cdef, my_scope, get_genname(), 0, false, false);
     Code::merge_cdef(target, &cdef);
     Code::free_cdef(&cdef);
     if (initial_value) {
@@ -5062,7 +5096,7 @@ namespace Ttcn {
     type->generate_code(target);
     const_def cdef;
     Code::init_cdef(&cdef);
-    type->generate_code_object(&cdef, my_scope, get_genname(), 0, true);
+    type->generate_code_object(&cdef, my_scope, get_genname(), 0, true, false);
     Code::merge_cdef(target, &cdef);
     Code::free_cdef(&cdef);
     if (initial_value) {
@@ -6344,7 +6378,8 @@ namespace Ttcn {
     if (debugger_active) {
       body = generate_code_debugger_function_init(body, this);
     }
-    body = block->generate_code(body);
+    body = block->generate_code(body, target->header.global_vars,
+      target->source.global_vars);
     // smart formal parameter list (names of unused parameters are omitted)
     char *formal_par_list = fp_list->generate_code(memptystr());
     fp_list->generate_code_defval(target);
@@ -7488,8 +7523,10 @@ namespace Ttcn {
     if (debugger_active) {
       body = generate_code_debugger_function_init(body, this);
     }
-    body = sb->generate_code(body);
-    body = ags->generate_code_altstep(body);
+    body = sb->generate_code(body, target->header.global_vars,
+      target->source.global_vars);
+    body = ags->generate_code_altstep(body, target->header.global_vars,
+      target->source.global_vars);
     // generate a smart formal parameter list (omits unused parameter names)
     char *formal_par_list = fp_list->generate_code(memptystr());
     fp_list->generate_code_defval(target);
@@ -7772,7 +7809,8 @@ namespace Ttcn {
       body = system_type->get_CompBody()->generate_code_comptype_name(body);
     else body = runs_on_body->generate_code_comptype_name(body);
     body = mputstr(body, ", has_timer, timer_value);\n");
-    body = block->generate_code(body);
+    body = block->generate_code(body, target->header.global_vars,
+      target->source.global_vars);
     body = mputprintf(body,
       "} catch (const TC_Error& tc_error) {\n"
       "} catch (const TC_End& tc_end) {\n"

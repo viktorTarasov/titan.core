@@ -36,6 +36,7 @@
 #include "Int.hh"
 #include "main.hh"
 #include "ttcn3/profiler.h"
+#include "ttcn3/Attributes.hh"
 
 namespace Common {
 
@@ -481,6 +482,22 @@ namespace Common {
   // =================================
   // ===== GovernedSimple
   // =================================
+  
+  GovernedSimple::~GovernedSimple()
+  {
+    delete err_descrs;
+  }
+  
+  void GovernedSimple::add_err_descr(Ttcn::Statement* p_update_statement,
+                                     Ttcn::ErroneousDescriptor* p_err_descr)
+  {
+    if (p_err_descr != NULL) {
+      if (err_descrs == NULL) {
+        err_descrs = new Ttcn::ErroneousDescriptors;
+      }
+      err_descrs->add(p_update_statement, p_err_descr);
+    }
+  }
 
   string GovernedSimple::get_lhs_name() const
   {

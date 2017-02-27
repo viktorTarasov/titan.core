@@ -23,6 +23,7 @@
 #include "../Type.hh"
 #include "../main.hh"
 #include "TtcnTemplate.hh"
+#include "Statement.hh"
 
 namespace Ttcn {
 
@@ -226,7 +227,7 @@ namespace Ttcn {
     return (tmpl_inst->get_Template()->get_templatetype()==Template::OMIT_VALUE);
   }
 
-  void ErroneousAttributeSpec::chk()
+  void ErroneousAttributeSpec::chk(bool in_update_stmt)
   {
     if (get_is_omit()) { // special case, no type needed
       if ((indicator==I_BEFORE)||(indicator==I_AFTER)) {
@@ -290,7 +291,10 @@ namespace Ttcn {
       value = templ->get_Value();
       value->set_my_governor(type);
       type->chk_this_value_ref(value);
-      type->chk_this_value(value, 0, Type::EXPECTED_CONSTANT,
+      // dynamic values are allowed for attribute specs in '@update' statements,
+      // but not for the initial attribute specs of constants and templates
+      type->chk_this_value(value, 0, in_update_stmt ?
+        Type::EXPECTED_DYNAMIC_VALUE : Type::EXPECTED_CONSTANT,
         INCOMPLETE_NOT_ALLOWED, OMIT_NOT_ALLOWED, SUB_CHK);
       //{ FIXME: make this work
       //  ReferenceChain refch(type, "While checking embedded recursions");
@@ -315,21 +319,21 @@ namespace Ttcn {
     return "";
   }
 
-  char* ErroneousAttributeSpec::generate_code_str(char *str, char *& def, string genname, const bool embedded)
+  char* ErroneousAttributeSpec::generate_code_str(char *str, char *& def, string genname)
   {
     if (get_is_omit()) return str;
     if (!type) FATAL_ERROR("ErroneousAttributeSpec::generate_code_str()");
     if (!value) FATAL_ERROR("ErroneousAttributeSpec::generate_code_str()");
     if (first_genname.empty()) { // this is the first use
-      str = mputprintf(str, "%s%s %s;\n", split_to_slices && !embedded ? "" : "static ",
+      str = mputprintf(str, "%s%s %s;\n", split_to_slices ? "" : "static ",
         type->get_genname_value(value->get_my_scope()).c_str(), genname.c_str());
       first_genname = genname;
-      if (split_to_slices && !embedded) {
+      if (split_to_slices) {
         def = mputprintf(def, "extern %s %s;\n",
           type->get_genname_value(value->get_my_scope()).c_str(), genname.c_str());
       }
     } else {
-      str = mputprintf(str, "%s%s& %s = %s;\n", split_to_slices && !embedded ? "" : "static ",
+      str = mputprintf(str, "%s& %s = %s;\n",
         type->get_genname_value(value->get_my_scope()).c_str(),
         genname.c_str(), first_genname.c_str());
     }
@@ -364,22 +368,23 @@ namespace Ttcn {
 
   // ==== ErroneousValues ====
 
-  char* ErroneousValues::generate_code_embedded_str(char *str, char *& def, string genname, const bool embedded)
+  char* ErroneousValues::generate_code_embedded_str(char *str, char *& def, string genname)
   {
-    if (before) str = generate_code_embedded_str(str, def, genname+"_before", before, embedded);
-    if (value) str = generate_code_embedded_str(str, def, genname+"_value", value, embedded);
-    if (after) str = generate_code_embedded_str(str, def, genname+"_after", after, embedded);
+    if (before) str = generate_code_embedded_str(str, def, genname+"_before", before);
+    if (value) str = generate_code_embedded_str(str, def, genname+"_value", value);
+    if (after) str = generate_code_embedded_str(str, def, genname+"_after", after);
     return str;
   }
 
-  char* ErroneousValues::generate_code_embedded_str(char *str, char *& def, string genname, ErroneousAttributeSpec* attr_spec, const bool embedded)
+  char* ErroneousValues::generate_code_embedded_str(char *str, char *& def, string genname, ErroneousAttributeSpec* attr_spec)
   {
-    str = attr_spec->generate_code_str(str, def, genname+"_errval", embedded);
-    str = mputprintf(str, "%sErroneous_value_t %s = { %s, %s, %s };\n", split_to_slices && !embedded ? "" : "static ", genname.c_str(),
+    str = attr_spec->generate_code_str(str, def, genname+"_errval");
+    str = mputprintf(str, "%sErroneous_value_t %s = { %s, %s, %s };\n",
+      split_to_slices ? "" : "static ", genname.c_str(),
       attr_spec->get_is_raw() ? "true" : "false",
       attr_spec->get_is_omit() ? "NULL" : ("&"+genname+"_errval").c_str(),
       attr_spec->get_typedescriptor_str().c_str());
-    if (split_to_slices && !embedded) {
+    if (split_to_slices) {
       def = mputprintf(def, "extern Erroneous_value_t %s;\n", genname.c_str());
     }
     return str;
@@ -412,39 +417,41 @@ namespace Ttcn {
 
   // ==== ErroneousDescriptor ====
 
-  char* ErroneousDescriptor::generate_code_embedded_str(char *str, char *& def, string genname, const bool embedded)
+  char* ErroneousDescriptor::generate_code_embedded_str(char *str, char *& def, string genname)
   {
     // values
     for (size_t i=0; i<values_m.size(); i++) {
-      str = values_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_v"+Int2string((int)values_m.get_nth_key(i)), embedded);
+      str = values_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_v"+Int2string((int)values_m.get_nth_key(i)));
     }
     // embedded descriptors
     for (size_t i=0; i<descr_m.size(); i++) {
-      str = descr_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_d"+Int2string((int)descr_m.get_nth_key(i)), embedded);
+      str = descr_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_d"+Int2string((int)descr_m.get_nth_key(i)));
     }
     // values vector
     if (values_m.size()>0) {
-      str = mputprintf(str, "%sErroneous_values_t %s_valsvec[%d] = { ", split_to_slices && !embedded ? "" : "static ", genname.c_str(), (int)values_m.size());
+      str = mputprintf(str, "%sErroneous_values_t %s_valsvec[%d] = { ",
+        split_to_slices ? "" : "static ", genname.c_str(), (int)values_m.size());
       for (size_t i=0; i<values_m.size(); i++) {
         if (i>0) str = mputstr(str, ", ");
         int key_i = (int)values_m.get_nth_key(i);
         str = values_m.get_nth_elem(i)->generate_code_struct_str(str, genname+"_v"+Int2string(key_i), key_i);
       }
       str = mputstr(str, " };\n");
-      if (split_to_slices && !embedded) {
+      if (split_to_slices) {
         def = mputprintf(def, "extern Erroneous_values_t %s_valsvec[%d];\n", genname.c_str(), (int)values_m.size());
       }
     }
     // embedded descriptor vector
     if (descr_m.size()>0) {
-      str = mputprintf(str, "%sErroneous_descriptor_t %s_embvec[%d] = { ", split_to_slices && !embedded ? "" : "static ", genname.c_str(), (int)descr_m.size());
+      str = mputprintf(str, "%sErroneous_descriptor_t %s_embvec[%d] = { ",
+        split_to_slices ? "" : "static ", genname.c_str(), (int)descr_m.size());
       for (size_t i=0; i<descr_m.size(); i++) {
         if (i>0) str = mputstr(str, ", ");
         int key_i = (int)descr_m.get_nth_key(i);
         str = descr_m.get_nth_elem(i)->generate_code_struct_str(str, def, genname+"_d"+Int2string(key_i), key_i);
       }
       str = mputstr(str, " };\n");
-      if (split_to_slices && !embedded) {
+      if (split_to_slices) {
         def = mputprintf(def, "extern Erroneous_descriptor_t %s_embvec[%d];\n", genname.c_str(), (int)descr_m.size());
       }
     }
@@ -486,17 +493,82 @@ namespace Ttcn {
     }
   }
 
-  char* ErroneousDescriptor::generate_code_str(char *str, char *& def, string genname, const bool embedded)
+  char* ErroneousDescriptor::generate_code_str(char *str, char *& def, string genname)
   {
     genname += "_err_descr";
-    str = generate_code_embedded_str(str, def, genname, embedded);
-    str = mputprintf(str, "%sErroneous_descriptor_t %s = ", split_to_slices && !embedded ? "" : "static ", genname.c_str());
+    str = generate_code_embedded_str(str, def, genname);
+    str = mputprintf(str, "%sErroneous_descriptor_t %s = ",
+      split_to_slices ? "" : "static ", genname.c_str());
     str = generate_code_struct_str(str, def, genname, -1);
     str = mputstr(str, ";\n");
-    if (split_to_slices && !embedded) {
+    if (split_to_slices) {
       def = mputprintf(def, "extern Erroneous_descriptor_t %s;\n", genname.c_str());
     }
     return str;
+  }
+  
+  ErroneousDescriptors::~ErroneousDescriptors()
+  {
+    descr_map.clear();
+  }
+  
+  void ErroneousDescriptors::add(Statement* p_update_statement, ErroneousDescriptor* p_descr)
+  {
+    descr_map.add(p_update_statement, p_descr);
+  }
+  
+  bool ErroneousDescriptors::has_descr(Statement* p_update_statement)
+  {
+    return descr_map.has_key(p_update_statement);
+  }
+  
+  size_t ErroneousDescriptors::get_descr_index(Statement* p_update_statement)
+  {
+    return descr_map.find_key(p_update_statement);
+  }
+  
+  char* ErroneousDescriptors::generate_code_init_str(Statement* p_update_statement, char *str, string genname)
+  {
+    size_t i = descr_map.find_key(p_update_statement);
+    return descr_map.get_nth_elem(i)->generate_code_init_str(str,
+      genname + string("_") + Int2string((int)i) + string("_err_descr"));
+  }
+  
+  char* ErroneousDescriptors::generate_code_str(Statement* p_update_statement, char *str, char *& def, string genname)
+  {
+    size_t i = descr_map.find_key(p_update_statement);
+    return descr_map.get_nth_elem(i)->generate_code_str(str, def,
+      genname + string("_") + Int2string((int)i));
+  }
+  
+  void ErroneousDescriptors::chk_recursions(ReferenceChain& refch)
+  {
+    for (size_t i = 0; i < descr_map.size(); ++i) {
+      descr_map.get_nth_elem(i)->chk_recursions(refch);
+    }
+  }
+  
+  boolean ErroneousDescriptors::can_have_err_attribs(Type* t)
+  {
+    if (t == NULL) {
+      FATAL_ERROR("ErroneousDescriptors::can_have_err_attribs");
+    }
+    t = t->get_type_refd_last();
+    switch (t->get_typetype_ttcn3()) {
+    case Type::T_SEQ_T:
+    case Type::T_SET_T:
+      if (t->get_nof_comps() == 0) {
+        // empty records/sets can't have erroneous attributes
+        return FALSE;
+      }
+      // else fall through
+    case Type::T_SEQOF:
+    case Type::T_SETOF:
+    case Type::T_CHOICE_T:
+      return use_runtime_2;
+    default:
+      return FALSE;
+    }
   }
 
   // ==== ErroneousAttributes ====
@@ -1011,6 +1083,23 @@ namespace Ttcn {
         swa->error("field qualifiers are only allowed"
           " for record, set and union types");
         m_w_attrib->delete_element(i);
+      }
+    }
+
+    attributes_checked = true;
+  }
+  
+  void WithAttribPath::chk_only_erroneous()
+  {
+    if (attributes_checked || m_w_attrib == NULL) {
+      return;
+    }
+
+    for (size_t i = 0; i < m_w_attrib->get_nof_elements(); ++i) {
+      const SingleWithAttrib* attrib = m_w_attrib->get_element(i);
+      if (attrib->get_attribKeyword() != SingleWithAttrib::AT_ERRONEOUS) {
+        attrib->error("Only `erroneous' attributes are allowed in an `@update' "
+          "statement");
       }
     }
 
