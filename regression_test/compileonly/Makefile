@@ -23,12 +23,16 @@ include $(TOPDIR)/Makefile.regression
 CODIRS := dynamicTemplate styleGuide topLevelPdu \
 	circularImport circularImport2 typeInstantiation \
 	compareImported compoundif \
-	centralstorage mfgen-tpd mfgen-xsd \
+	centralstorage mfgen-tpd \
 	openType optionalAssignCompare portConstructor \
 	isbound namedActualParameters assignmentNotation \
 	attribQualif HT48786 selectCase openTypeNames \
 	defaultParamUsageBeforeDecl deterministic readFromFile \
 	asn1_hyphen nameClash
+
+ifdef DYN
+CODIRS +=  mfgen-xsd
+endif
 
 all dep clean distclean:
 	for dir in $(CODIRS); do $(MAKE) -C $$dir $@ || exit; done
