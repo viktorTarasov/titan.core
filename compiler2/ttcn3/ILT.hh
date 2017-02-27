@@ -52,6 +52,8 @@ namespace Ttcn {
     virtual char*& get_out_def() = 0;
     virtual char*& get_out_code() = 0;
     virtual char*& get_out_branches() = 0;
+    virtual char*& get_out_def_glob_vars() = 0;
+    virtual char*& get_out_src_glob_vars() = 0;
     virtual const string& get_my_tmpid() = 0;
     virtual size_t get_new_tmpnum() = 0;
     virtual size_t get_new_state_var(bool toplevel) = 0;
@@ -78,6 +80,8 @@ namespace Ttcn {
     char *out_statevars; // 0: unused; 1: ready; 2: toplevel (IL) etc
     char *out_code;
     char *out_branches;
+    char*& out_def_glob_vars;
+    char*& out_src_glob_vars;
   private:
     /** Copy constructor not implemented */
     ILT_root(const ILT_root& p);
@@ -85,7 +89,7 @@ namespace Ttcn {
     ILT_root& operator=(const ILT_root& p);
   public:
     /** Constructor; the parameter should be an InterleavedStatement */
-    ILT_root(Statement *p_il);
+    ILT_root(Statement *p_il, char*& p_def_glob_vars, char*& p_src_glob_vars);
     virtual ~ILT_root();
     virtual ILT_root *clone() const;
     virtual ILT_root* get_my_root();
@@ -93,6 +97,8 @@ namespace Ttcn {
     virtual char*& get_out_def();
     virtual char*& get_out_code();
     virtual char*& get_out_branches();
+    virtual char*& get_out_def_glob_vars();
+    virtual char*& get_out_src_glob_vars();
     virtual const string& get_my_tmpid();
     virtual size_t get_new_tmpnum();
     virtual size_t get_new_state_var(bool toplevel);
@@ -151,6 +157,8 @@ namespace Ttcn {
     virtual char*& get_out_def();
     virtual char*& get_out_code();
     virtual char*& get_out_branches();
+    virtual char*& get_out_def_glob_vars();
+    virtual char*& get_out_src_glob_vars();
     virtual const string& get_my_tmpid();
     virtual size_t get_new_tmpnum();
     virtual size_t get_new_state_var(bool toplevel);

@@ -33,6 +33,7 @@ namespace Ttcn {
   class Group;
   class Def_Template;
   class TemplateInstance;
+  class Statement;
 
   /** Attribute qualifier (DefOrFieldRef). */
   class Qualifier: public FieldOrArrayRefs, public Location
@@ -113,13 +114,13 @@ namespace Ttcn {
     void set_my_scope(Scope *p_scope);
     void dump(unsigned level) const;
     /** basic check, the qualifier of the field is not known here */
-    void chk();
+    void chk(bool in_update_stmt);
     indicator_t get_indicator() const { return indicator; }
     Type* get_type() const { return type; }
     bool get_is_raw() const { return is_raw; }
     bool get_is_omit() const;
     static const char* get_indicator_str(indicator_t i);
-    char* generate_code_str(char *str, char *& def, string genname, const bool embedded);
+    char* generate_code_str(char *str, char *& def, string genname);
     char* generate_code_init_str(char *str, string genname);
     string get_typedescriptor_str();
     void chk_recursions(ReferenceChain& refch);
@@ -132,9 +133,9 @@ namespace Ttcn {
     ErroneousAttributeSpec *before, *value, *after; // NULL if not specified
     string field_name; // qualifier string
     ErroneousValues(const string& p_field_name): before(0), value(0), after(0), field_name(p_field_name) {}
-    char* generate_code_embedded_str(char *str, char *& def, string genname, const bool embedded);
+    char* generate_code_embedded_str(char *str, char *& def, string genname);
     char* generate_code_init_str(char *str, string genname);
-    char* generate_code_embedded_str(char *str, char *& def, string genname, ErroneousAttributeSpec* attr_spec, const bool embedded);
+    char* generate_code_embedded_str(char *str, char *& def, string genname, ErroneousAttributeSpec* attr_spec);
     char* generate_code_struct_str(char *str, string genname, int field_index);
     void chk_recursions(ReferenceChain& refch);
   };
@@ -152,11 +153,36 @@ namespace Ttcn {
   public:
     ErroneousDescriptor(): omit_before(-1), omit_after(-1) {}
     ~ErroneousDescriptor();
-    char* generate_code_embedded_str(char *str, char *& def, string genname, const bool embedded);
+    char* generate_code_embedded_str(char *str, char *& def, string genname);
     char* generate_code_init_str(char *str, string genname);
     char* generate_code_struct_str(char *str, char *& def, string genname, int field_index);
-    char* generate_code_str(char *str, char *& def, string genname, const bool embedded);
+    char* generate_code_str(char *str, char *& def, string genname);
     void chk_recursions(ReferenceChain& refch);
+  };
+  
+  /**
+   * helper to construct several trees of erroneous attributes
+   * (contains the set of erroneous attributes set at initialization and the
+   * sets of erroneous attributes set by '@update' statements)
+   */
+  class ErroneousDescriptors {
+    /** Map of erroneous descriptors 
+      * Key: pointer to the '@update' statement or NULL (for the erroneous
+      * attributes specified at initialization)
+      * Values not owned */
+    map<Statement*, ErroneousDescriptor> descr_map;
+    ErroneousDescriptors(const ErroneousDescriptor& p); // disabled
+    ErroneousDescriptors& operator=(const ErroneousDescriptors& p); // disabled
+  public:
+    ErroneousDescriptors() {}
+    ~ErroneousDescriptors();
+    void add(Statement* p_update_statement, ErroneousDescriptor* p_descr);
+    bool has_descr(Statement* p_update_statement);
+    size_t get_descr_index(Statement* p_update_statement);
+    char* generate_code_init_str(Statement* p_update_statement, char *str, string genname);
+    char* generate_code_str(Statement* p_update_statement, char *str, char *& def, string genname);
+    void chk_recursions(ReferenceChain& refch);
+    static boolean can_have_err_attribs(Type* t);
   };
 
   /**
@@ -319,6 +345,7 @@ namespace Ttcn {
     void set_had_global_variants(bool has) { had_global_variants = has; }
     bool get_had_global_variants() { return had_global_variants; }
     void chk_no_qualif();
+    void chk_only_erroneous();
     void chk_global_attrib(bool erroneous_allowed=false);
     void set_parent(WithAttribPath* p_parent) { parent = p_parent; }
     WithAttribPath* get_parent() { return parent; }

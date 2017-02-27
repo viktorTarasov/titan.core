@@ -531,7 +531,7 @@ xor4b		RETURN(Xor4bKeyword);
 "@try"    RETURN(TitanSpecificTryKeyword);
 "@catch"  RETURN(TitanSpecificCatchKeyword);
 "@profiler" RETURN(TitanSpecificProfilerKeyword);
-
+"@update" RETURN(TitanSpecificUpdateKeyword);
 
 	/* Predefined function identifiers */
 

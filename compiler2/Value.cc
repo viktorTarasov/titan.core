@@ -10019,8 +10019,8 @@ error:
       default:
 	break;
       }
-      if (v->err_descr) { // FIXME: make this work
-        v->err_descr->chk_recursions(refch);
+      if (v->err_descrs) { // FIXME: make this work
+        v->err_descrs->chk_recursions(refch);
       }
     }
     recurs_checked = true;
@@ -11677,8 +11677,8 @@ error:
   char *Value::generate_code_init(char *str, const char *name)
   {
     if (get_code_generated()) return str;
-    if (err_descr) {
-      str = err_descr->generate_code_init_str(str, string(name) + "_err_descr");
+    if (err_descrs != NULL && err_descrs->has_descr(NULL)) {
+      str = err_descrs->generate_code_init_str(NULL, str, string(name));
     }
     switch (valuetype) {
     case V_NULL:
@@ -11753,8 +11753,9 @@ error:
     default:
       FATAL_ERROR("Value::generate_code_init()");
     }
-    if (err_descr) {
-      str = mputprintf(str, "%s.set_err_descr(&%s_err_descr);\n", name, name);
+    if (err_descrs != NULL && err_descrs->has_descr(NULL)) {
+      str = mputprintf(str, "%s.set_err_descr(&%s_%lu_err_descr);\n", name,
+        name, (unsigned long) err_descrs->get_descr_index(NULL));
     }
     set_code_generated();
     return str;

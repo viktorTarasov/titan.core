@@ -420,14 +420,14 @@ namespace Ttcn {
       stmts[i]->set_code_section(p_code_section);
   }
 
-  char* StatementBlock::generate_code(char *str)
+  char* StatementBlock::generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     if (exception_handling==EH_TRY) {
       str = mputstr(str, "TTCN_TryBlock try_block;\n");
     }
     if (stmts.size()>0) {
       Statement* first_stmt = stmts[0];
-      str = first_stmt->generate_code(str);
+      str = first_stmt->generate_code(str, def_glob_vars, src_glob_vars);
       if (exception_handling==EH_CATCH) {
         if (first_stmt->get_statementtype()!=Statement::S_DEF) FATAL_ERROR("StatementBlock::generate_code()");
         Definition* error_msg_def = first_stmt->get_def();
@@ -436,7 +436,7 @@ namespace Ttcn {
       }
     }
     for(size_t i=1; i<stmts.size(); i++) {
-      str = stmts[i]->generate_code(str);
+      str = stmts[i]->generate_code(str, def_glob_vars, src_glob_vars);
     }
     return str;
   }
@@ -452,7 +452,8 @@ namespace Ttcn {
       bool has_def=has_def_stmt_i();
       if(has_def) str=mputstr(str, "{\n");
       for(size_t i=0; i<nof_stmts; i++)
-        str=stmts[i]->generate_code(str);
+        str=stmts[i]->generate_code(str, ilt->get_out_def_glob_vars(),
+          ilt->get_out_src_glob_vars());
       if(has_def) str=mputstr(str, "}\n");
       return;
     }
@@ -463,7 +464,8 @@ namespace Ttcn {
     bool has_def=has_def_stmt_i(last_recv_stmt_i+1);
     if(has_def) str=mputstr(str, "{\n");
     for(size_t i=last_recv_stmt_i+1; i<nof_stmts; i++)
-      str=stmts[i]->generate_code(str);
+      str=stmts[i]->generate_code(str, ilt->get_out_def_glob_vars(),
+        ilt->get_out_src_glob_vars());
     if(has_def) str=mputstr(str, "}\n");
   }
 
@@ -710,6 +712,11 @@ namespace Ttcn {
     case S_INT2ENUM:
       delete convert_op.val;
       delete convert_op.ref;
+      break;
+    case S_UPDATE:
+      delete update_op.ref;
+      delete update_op.w_attrib_path;
+      delete update_op.err_attrib;
       break;
     default:
       FATAL_ERROR("Statement::clean_up()");
@@ -1434,6 +1441,29 @@ namespace Ttcn {
       FATAL_ERROR("Statement::Statement()");
     }
   }
+  
+  Statement::Statement(statementtype_t p_st, Reference* p_ref, MultiWithAttrib* p_attrib)
+  : statementtype(p_st), my_sb(0)
+  {
+    switch (statementtype) {
+    case S_UPDATE:
+      if (p_ref == NULL) {
+        FATAL_ERROR("Statement::Statement()");
+      }
+      update_op.ref = p_ref;
+      if (p_attrib != NULL) {
+        update_op.w_attrib_path = new WithAttribPath;
+        update_op.w_attrib_path->set_with_attr(p_attrib);
+      }
+      else {
+        update_op.w_attrib_path = NULL;
+      }
+      update_op.err_attrib = NULL;
+      break;
+    default:
+      FATAL_ERROR("Statement::Statement()");
+    }
+  }
 
   Statement::~Statement()
   {
@@ -1563,6 +1593,7 @@ namespace Ttcn {
     case S_INT2ENUM: return "int2enum";
     case S_START_PROFILER: return "@profiler.start";
     case S_STOP_PROFILER: return "@profiler.stop";
+    case S_UPDATE: return "@update";
     default:
       FATAL_ERROR("Statement::get_stmt_name()");
       return "";
@@ -1886,6 +1917,12 @@ namespace Ttcn {
       convert_op.val->set_my_scope(p_scope);
       convert_op.ref->set_my_scope(p_scope);
       break;
+    case S_UPDATE:
+      update_op.ref->set_my_scope(p_scope);
+      if (update_op.w_attrib_path != NULL) {
+        update_op.w_attrib_path->set_my_scope(p_scope);
+      }
+      break;
     default:
       FATAL_ERROR("Statement::set_my_scope()");
     } // switch statementtype
@@ -2163,6 +2200,12 @@ namespace Ttcn {
     case S_INT2ENUM:
       convert_op.val->set_fullname(p_fullname+".ti");
       convert_op.ref->set_fullname(p_fullname+".ref");
+      break;
+    case S_UPDATE:
+      update_op.ref->set_fullname(p_fullname + ".ref");
+      if (update_op.w_attrib_path != NULL) {
+        update_op.w_attrib_path->set_fullname(p_fullname + ".<attribpath>");
+      }
       break;
     default:
       FATAL_ERROR("Statement::set_fullname()");
@@ -2453,6 +2496,7 @@ namespace Ttcn {
     case S_START_PROFILER:
     case S_STOP_PROFILER:
     case S_INT2ENUM:
+    case S_UPDATE:
       return false;
     case S_ALT:
     case S_INTERLEAVE:
@@ -2706,6 +2750,9 @@ namespace Ttcn {
     case S_START_PROFILER:
     case S_STOP_PROFILER:
       // do nothing
+      break;
+    case S_UPDATE:
+      chk_update();
       break;
     default:
       FATAL_ERROR("Statement::chk()");
@@ -5531,6 +5578,49 @@ error:
       return 0;
     }
   }
+  
+  void Statement::chk_update()
+  {
+    Error_Context cntxt(this, "In @update statement");
+    if (!use_runtime_2) {
+      error("The @update statement is only available in the Function Test "
+        "runtime");
+      return;
+    }
+    Common::Assignment* refd_ass = update_op.ref->get_refd_assignment(false);
+    Type* ref_type = NULL;
+    if (refd_ass != NULL) {
+      switch (refd_ass->get_asstype()) {
+      case Definition::A_CONST:
+      case Definition::A_TEMPLATE:
+        break; // OK
+      default:
+        update_op.ref->error("Reference to constant or template definition was "
+          "expected instead of %s", refd_ass->get_assname());
+        return;
+      }
+      ref_type = refd_ass->get_Type();
+      if (ref_type != NULL &&
+          !ErroneousDescriptors::can_have_err_attribs(ref_type)) {
+        update_op.ref->error("Type `%s' cannot have erroneous attributes",
+          ref_type->get_typename().c_str());
+      }
+      if (update_op.w_attrib_path != NULL) {
+        update_op.w_attrib_path->chk_only_erroneous();
+        update_op.err_attrib = Definition::chk_erroneous_attr(update_op.w_attrib_path,
+          ref_type, my_sb, get_fullname(), true);
+        if (update_op.err_attrib != NULL) {
+          GovernedSimple* refd_obj = static_cast<GovernedSimple*>(
+            refd_ass->get_Setting());
+          refd_obj->add_err_descr(this, update_op.err_attrib->get_err_descr());
+        }
+      }
+    }
+    if (update_op.ref->get_subrefs() != NULL) {
+      update_op.ref->error("Field names and array indexes are not allowed in "
+        "this context");
+    }
+  }
 
   void Statement::set_code_section(
     GovernedSimple::code_section_t p_code_section)
@@ -5786,12 +5876,15 @@ error:
       convert_op.val->set_code_section(p_code_section);
       convert_op.ref->set_code_section(p_code_section);
       break;
+    case S_UPDATE:
+      update_op.ref->set_code_section(p_code_section);
+      break;
     default:
       FATAL_ERROR("Statement::set_code_section()");
     } // switch statementtype
   }
 
-  char *Statement::generate_code(char *str)
+  char *Statement::generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     switch (statementtype) {
     case S_BLOCK:
@@ -5824,7 +5917,7 @@ error:
       str=generate_code_invoke(str);
       break;
     case S_BLOCK:
-      str=generate_code_block(str);
+      str=generate_code_block(str, def_glob_vars, src_glob_vars);
       break;
     case S_LOG:
       str=generate_code_log(str);
@@ -5836,22 +5929,22 @@ error:
       str = generate_code_goto(str);
       break;
     case S_IF:
-      str=generate_code_if(str);
+      str=generate_code_if(str, def_glob_vars, src_glob_vars);
       break;
     case S_SELECT:
-      str=generate_code_select(str);
+      str=generate_code_select(str, def_glob_vars, src_glob_vars);
       break;
     case S_SELECTUNION:
-      str=generate_code_select_union(str);
+      str=generate_code_select_union(str, def_glob_vars, src_glob_vars);
       break;
     case S_FOR:
-      str=generate_code_for(str);
+      str=generate_code_for(str, def_glob_vars, src_glob_vars);
       break;
     case S_WHILE:
-      str=generate_code_while(str);
+      str=generate_code_while(str, def_glob_vars, src_glob_vars);
       break;
     case S_DOWHILE:
-      str=generate_code_dowhile(str);
+      str=generate_code_dowhile(str, def_glob_vars, src_glob_vars);
       break;
     case S_BREAK:
       str=generate_code_break(str);
@@ -5866,13 +5959,13 @@ error:
       str=generate_code_testcase_stop(str);
       break;
     case S_ALT:
-      str=ags->generate_code_alt(str, *this);
+      str=ags->generate_code_alt(str, def_glob_vars, src_glob_vars, *this);
       break;
     case S_REPEAT:
       str=generate_code_repeat(str);
       break;
     case S_INTERLEAVE:
-      str=generate_code_interleave(str);
+      str=generate_code_interleave(str, def_glob_vars, src_glob_vars);
       break;
     case S_RETURN:
       str=generate_code_return(str);
@@ -5890,7 +5983,7 @@ error:
       str = generate_code_send(str);
       break;
     case S_CALL:
-      str = generate_code_call(str);
+      str = generate_code_call(str, def_glob_vars, src_glob_vars);
       break;
     case S_REPLY:
       str = generate_code_reply(str);
@@ -5978,6 +6071,9 @@ error:
       break;
     case S_STOP_PROFILER:
       str = mputstr(str, "ttcn3_prof.stop();\n");
+      break;
+    case S_UPDATE:
+      str = generate_code_update(str, def_glob_vars, src_glob_vars);
       break;
     default:
       FATAL_ERROR("Statement::generate_code()");
@@ -6120,7 +6216,7 @@ error:
     }
     if (!has_receiving_stmt()) {
       char*& str=ilt->get_out_branches();
-      str=generate_code(str);
+      str=generate_code(str, ilt->get_out_def_glob_vars(), ilt->get_out_src_glob_vars());
       return;
     }
     switch (statementtype) {
@@ -6235,7 +6331,7 @@ error:
     return str;
   }
 
-  char *Statement::generate_code_block(char *str)
+  char *Statement::generate_code_block(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     switch (block->get_exception_handling()) {
     case StatementBlock::EH_NONE:
@@ -6254,7 +6350,7 @@ error:
       if (debugger_active) {
         str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
       }
-      str = block->generate_code(str);
+      str = block->generate_code(str, def_glob_vars, src_glob_vars);
       str = mputstr(str, "}\n");
     } else str = mputstr(str, "/* empty block */;\n");
     return str;
@@ -6331,11 +6427,12 @@ error:
     return str;
   }
 
-  char* Statement::generate_code_if(char *str)
+  char* Statement::generate_code_if(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     size_t blockcount=0;
     bool unreach=false, eachfalse=true;
-    str=if_stmt.ics->generate_code(str, blockcount, unreach, eachfalse);
+    str=if_stmt.ics->generate_code(str, def_glob_vars, src_glob_vars,
+      blockcount, unreach, eachfalse);
     if(if_stmt.elseblock && !unreach) {
       if(!eachfalse) str=mputstr(str, "else ");
       eachfalse=false;
@@ -6344,14 +6441,14 @@ error:
         str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
       }
       blockcount++;
-      str=if_stmt.elseblock->generate_code(str);
+      str=if_stmt.elseblock->generate_code(str, def_glob_vars, src_glob_vars);
     }
     while(blockcount-->0) str=mputstr(str, "}\n");
     if(eachfalse) str=mputstr(str, "/* never occurs */;\n");
     return str;
   }
 
-  char* Statement::generate_code_select(char *str)
+  char* Statement::generate_code_select(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     const string& tmp_prefix = my_sb->get_scope_mod_gen()->get_temporary_id();
     char *expr_init=memptystr();
@@ -6377,10 +6474,10 @@ error:
       gen_switch_code = select.scs->can_generate_switch();
     }
     if (gen_switch_code) {
-      str=select.scs->generate_code_switch(str, tmp_id.c_str());
+      str=select.scs->generate_code_switch(str, def_glob_vars, src_glob_vars, tmp_id.c_str());
     }
     else {
-      str=select.scs->generate_code(str, tmp_prefix.c_str(), tmp_id.c_str());
+      str=select.scs->generate_code(str, def_glob_vars, src_glob_vars, tmp_prefix.c_str(), tmp_id.c_str());
     }
     Free(expr_name);
     str=mputstr(str, "}\n");
@@ -6388,7 +6485,7 @@ error:
     return str;
   }
   
-  char* Statement::generate_code_select_union(char *str)
+  char* Statement::generate_code_select_union(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     expression_struct expr;
     Code::init_expr(&expr);
@@ -6400,7 +6497,7 @@ error:
     const char* type_name = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope()).c_str();
     char* loc = NULL;
     loc = select_union.expr->update_location_object(loc);
-    str = select_union.sus->generate_code(str, type_name, loc);
+    str = select_union.sus->generate_code(str, def_glob_vars, src_glob_vars, type_name, loc);
     str = mputstr(str, "}\n");
     if (expr.postamble) {
       str = mputstr(str, expr.postamble);
@@ -6410,7 +6507,7 @@ error:
     return str;
   }
   
-  char *Statement::generate_code_for(char *str)
+  char *Statement::generate_code_for(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     /** \todo initial does not have its own location */
     // statements in initial may have side effects
@@ -6451,7 +6548,7 @@ error:
       if (debugger_active) {
         str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
       }
-      str = loop.block->generate_code(str);
+      str = loop.block->generate_code(str, def_glob_vars, src_glob_vars);
       if (loop.label_next)
         str = mputprintf(str, "}\n"
           "%s:\n", loop.label_next->c_str());
@@ -6463,7 +6560,7 @@ error:
     return str;
   }
 
-  char *Statement::generate_code_while(char *str)
+  char *Statement::generate_code_while(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     // check whether the expression is constant
     bool condition_always_true = false, condition_always_false = false;
@@ -6490,13 +6587,13 @@ error:
       if (debugger_active) {
         str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
       }
-      str = loop.block->generate_code(str);
+      str = loop.block->generate_code(str, def_glob_vars, src_glob_vars);
       str = mputstr(str, "}\n");
     }
     return str;
   }
 
-  char *Statement::generate_code_dowhile(char *str)
+  char *Statement::generate_code_dowhile(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     // check whether the expression is constant
     bool expr_is_const = !loop.expr->is_unfoldable();
@@ -6510,7 +6607,7 @@ error:
       if (debugger_active) {
         str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
       }
-      str = loop.block->generate_code(str);
+      str = loop.block->generate_code(str, def_glob_vars, src_glob_vars);
     } else {
       str = mputstr(str, "for ( ; ; ) {\n");
       if (loop.has_cnt_in_ags || (!expr_is_const && loop.has_cnt))
@@ -6522,7 +6619,7 @@ error:
       if (debugger_active) {
         str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
       }
-      str = loop.block->generate_code(str);
+      str = loop.block->generate_code(str, def_glob_vars, src_glob_vars);
       // do not generate the exit condition for infinite loops
       if (!is_infinite_loop) {
         if (loop.label_next)
@@ -6592,9 +6689,9 @@ error:
     return str;
   }
 
-  char* Statement::generate_code_interleave(char *str)
+  char* Statement::generate_code_interleave(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
-    ILT_root ilt(this);
+    ILT_root ilt(this, def_glob_vars, src_glob_vars);
     str=ilt.generate_code(str);
     return str;
   }
@@ -6776,7 +6873,8 @@ error:
     const char* type_name = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope()).c_str();
     char* loc = NULL;
     loc = select_union.expr->update_location_object(loc);
-    str = select_union.sus->generate_code(str, type_name, loc);
+    str = select_union.sus->generate_code(str, ilt->get_out_def_glob_vars(),
+      ilt->get_out_src_glob_vars(), type_name, loc);
     str = mputstr(str, "}\n");
     if (expr.postamble) {
       str = mputstr(str, expr.postamble);
@@ -6817,8 +6915,9 @@ error:
       // the label name is used for prefixing local variables
       if(!my_sb) FATAL_ERROR("Statement::generate_code_call()");
       const string& tmplabel = my_sb->get_scope_mod_gen()->get_temporary_id();
-      str = port_op.s.call.body->generate_code_call_body(str, *this, tmplabel,
-                                                       true);
+      str = port_op.s.call.body->generate_code_call_body(str,
+        ilt->get_out_def_glob_vars(), ilt->get_out_src_glob_vars(), *this,
+        tmplabel, true);
       const char *label_str = tmplabel.c_str();
       str=mputprintf(str, "goto %s_end;\n"
                      "}\n", // (1)
@@ -7078,7 +7177,7 @@ error:
     return Code::merge_free_expr(str, &expr);
   }
 
-  char *Statement::generate_code_call(char *str)
+  char *Statement::generate_code_call(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     expression_struct expr;
     Code::init_expr(&expr);
@@ -7104,7 +7203,7 @@ error:
       }
       // the label name is used for prefixing local variables
       if(!my_sb) FATAL_ERROR("Statement::generate_code_call()");
-      str = port_op.s.call.body->generate_code_call_body(str, *this,
+      str = port_op.s.call.body->generate_code_call_body(str, def_glob_vars, src_glob_vars, *this,
 	my_sb->get_scope_mod_gen()->get_temporary_id(), false);
       str=mputstr(str, "}\n");
     }
@@ -7384,6 +7483,60 @@ error:
       expr.expr = mputc(expr.expr, ')');
     } else expr.expr = mputstr(expr.expr, "FALSE, 0.0)");
     return Code::merge_free_expr(str,&expr);
+  }
+  
+  char *Statement::generate_code_update(char *str, char*& def_glob_vars, char*& src_glob_vars)
+  {
+    Common::Assignment* refd_ass = update_op.ref->get_refd_assignment(false);
+    GovernedSimple* refd_obj = static_cast<GovernedSimple*>(
+      refd_ass->get_Setting());
+    
+    // namespace prefix, in case the value/template was declared in another module
+    string prefix;
+    if (my_sb->get_scope_mod_gen() != refd_obj->get_my_scope()->get_scope_mod_gen()) {
+      prefix = refd_obj->get_my_scope()->get_scope_mod_gen()->get_modid().get_name() +
+        string("::");
+    }
+    if (refd_obj->get_err_descr()->has_descr(this)) {
+      // the statement has erroneous attributes
+      // generate them to the global scope, so they remain active even after the
+      // '@update' statement's scope ends
+      src_glob_vars = refd_obj->get_err_descr()->generate_code_str(this,
+        src_glob_vars, def_glob_vars, refd_obj->get_lhs_name());
+      
+      // generate the descriptor's initialization code to the local scope, since
+      // it may depend on local variables
+      str = refd_obj->get_err_descr()->generate_code_init_str(this, str,
+        refd_obj->get_lhs_name());
+      if (refd_ass->get_FormalParList() != NULL) {
+        // a global descriptor pointer is used for parameterized templates, since
+        // there is no global constant or template to store the descriptor's
+        // address in
+        str = mputprintf(str, "%s%s_err_descr_ptr = &%s_%lu_err_descr;\n",
+          prefix.c_str(), refd_obj->get_lhs_name().c_str(),
+          refd_obj->get_lhs_name().c_str(),
+          (unsigned long) refd_obj->get_err_descr()->get_descr_index(this));
+      }
+      else {
+        // store the descriptor's address in the constant/template
+        str = mputprintf(str, "%s%s.set_err_descr(&%s_%lu_err_descr);\n",
+          prefix.c_str(), refd_obj->get_lhs_name().c_str(),
+          refd_obj->get_lhs_name().c_str(),
+          (unsigned long) refd_obj->get_err_descr()->get_descr_index(this));
+      }
+    }
+    else {
+      // remove the previously stored descriptor's address (if any)
+      if (refd_ass->get_FormalParList() != NULL) {
+        str = mputprintf(str, "%s%s_err_descr_ptr = NULL;\n", prefix.c_str(),
+          refd_obj->get_lhs_name().c_str());
+      }
+      else {
+        str = mputprintf(str, "%s%s.set_err_descr(NULL);\n", prefix.c_str(),
+          refd_obj->get_lhs_name().c_str());
+      }
+    }
+    return str;
   }
 
   void Statement::generate_code_expr_receive(expression_struct *expr,
@@ -7963,6 +8116,7 @@ error:
         case S_START_PROFILER:
         case S_STOP_PROFILER:
         case S_INT2ENUM:
+        case S_UPDATE:
           break;
         default:
           FATAL_ERROR("Statement::set_parent_path()");
@@ -10988,8 +11142,8 @@ error:
     block->set_code_section(p_code_section);
   }
 
-  char* IfClause::generate_code(char *str, size_t& blockcount,
-                                bool& unreach, bool& eachfalse)
+  char* IfClause::generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                size_t& blockcount, bool& unreach, bool& eachfalse)
   {
     if(unreach) return str;
     if(!expr->is_unfoldable()) {
@@ -11011,7 +11165,7 @@ error:
     if (debugger_active) {
       str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
     }
-    str=block->generate_code(str);
+    str=block->generate_code(str, def_glob_vars, src_glob_vars);
     str=mputstr(str, "}\n");
     return str;
   }
@@ -11182,12 +11336,12 @@ error:
       ics[i]->set_code_section(p_code_section);
   }
 
-  char* IfClauses::generate_code(char *str, size_t& blockcount,
-                                 bool& unreach, bool& eachfalse)
+  char* IfClauses::generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                 size_t& blockcount, bool& unreach, bool& eachfalse)
   {
     for(size_t i=0; i<ics.size(); i++) {
       if(unreach) return str;
-      str=ics[i]->generate_code(str, blockcount, unreach, eachfalse);
+      str=ics[i]->generate_code(str, def_glob_vars, src_glob_vars, blockcount, unreach, eachfalse);
     }
     return str;
   }
@@ -11333,8 +11487,9 @@ error:
     return str;
   }
   
-  char* SelectCase::generate_code_case(char *str, bool &else_branch,
-    vector<const Int>& used_numbers) {
+  char* SelectCase::generate_code_case(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                       bool &else_branch,
+                                       vector<const Int>& used_numbers) {
     bool already_present_all = true; // to decide if we need to generate the block
     if (tis != NULL) {
       for (size_t i = 0; i < tis->get_nof_tis(); i++) {
@@ -11360,14 +11515,15 @@ error:
     }
     if (!already_present_all) {
       str = mputstr(str, "{\n");
-      str = block->generate_code(str);
+      str = block->generate_code(str, def_glob_vars, src_glob_vars);
       str = mputstr(str, "break;\n}\n");
     }
     return str;
   }
 
   /** \todo review */
-  char* SelectCase::generate_code_stmt(char *str, const char *tmp_prefix,
+  char* SelectCase::generate_code_stmt(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                       const char *tmp_prefix,
                                        size_t idx, bool& unreach)
   {
     if(unreach) return str;
@@ -11376,7 +11532,7 @@ error:
     if (debugger_active) {
       str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
     }
-    str=block->generate_code(str);
+    str=block->generate_code(str, def_glob_vars, src_glob_vars);
     str=mputprintf(str, "goto %s_end;\n}\n", tmp_prefix);
     return str;
   }
@@ -11391,7 +11547,8 @@ error:
     bool has_recv=block->has_receiving_stmt();
     if(!has_recv) {
       str=mputstr(str, "{\n");
-      str=block->generate_code(str);
+      str=block->generate_code(str, ilt->get_out_def_glob_vars(),
+        ilt->get_out_src_glob_vars());
     }
     else block->ilt_generate_code(ilt);
     str=mputprintf(str, "goto %s_end;\n", tmp_prefix);
@@ -11534,8 +11691,8 @@ error:
       scs[i]->set_code_section(p_code_section);
   }
 
-  char* SelectCases::generate_code(char *str, const char *tmp_prefix,
-                                   const char *expr_name)
+  char* SelectCases::generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                   const char *tmp_prefix, const char *expr_name)
   {
     bool unreach=false;
     for(size_t i=0; i<scs.size(); i++) {
@@ -11545,20 +11702,21 @@ error:
     if(!unreach) str=mputprintf(str, "goto %s_end;\n", tmp_prefix);
     unreach=false;
     for(size_t i=0; i<scs.size(); i++) {
-      str=scs[i]->generate_code_stmt(str, tmp_prefix, i, unreach);
+      str=scs[i]->generate_code_stmt(str, def_glob_vars, src_glob_vars, tmp_prefix, i, unreach);
       if(unreach) break;
     }
     str=mputprintf(str, "%s_end: /* empty */;\n", tmp_prefix);
     return str;
   }
   
-  char* SelectCases::generate_code_switch(char *str, const char *expr_name)
+  char* SelectCases::generate_code_switch(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                          const char *expr_name)
   {
     bool else_branch=false;
     vector<const Int> used_numbers; // store the case values to remove duplicates
     str=mputprintf(str, "switch(%s.get_long_long_val()) {\n", expr_name);
     for(size_t i=0; i<scs.size(); i++) {
-      str=scs[i]->generate_code_case(str, else_branch, used_numbers);
+      str=scs[i]->generate_code_case(str, def_glob_vars, src_glob_vars, else_branch, used_numbers);
       if(else_branch) break;
     }
     str=mputprintf(str, "};");
@@ -11604,7 +11762,8 @@ error:
     vector<const Int> used_numbers; // store the case values to remove duplicates
     str=mputprintf(str, "switch(%s.get_long_long_val()) {\n", expr_name);
     for(size_t i=0; i<scs.size(); i++) {
-      str=scs[i]->generate_code_case(str, else_branch, used_numbers);
+      str=scs[i]->generate_code_case(str, ilt->get_out_def_glob_vars(),
+        ilt->get_out_src_glob_vars(), else_branch, used_numbers);
       if(else_branch) break;
     }
     str=mputprintf(str, "};");
@@ -11671,7 +11830,8 @@ error:
     block->set_code_section(p_code_section);
   }
 
-  char* SelectUnion::generate_code_case(char *str, const char *type_name, bool &else_branch)
+  char* SelectUnion::generate_code_case(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                        const char *type_name, bool &else_branch)
   {
     if (ids.size() != 0) {
       for (size_t i = 0; i < ids.size(); i++) {
@@ -11684,7 +11844,7 @@ error:
     }
     
     str = mputstr(str, "{\n");
-    str = block->generate_code(str);
+    str = block->generate_code(str, def_glob_vars, src_glob_vars);
     str = mputstr(str, "break;\n}\n");
     return str;
   }
@@ -11820,7 +11980,8 @@ error:
     }
   }
 
-  char* SelectUnions::generate_code(char *str, const char *type_name, const char *loc)
+  char* SelectUnions::generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                    const char *type_name, const char *loc)
   {
     str = mputprintf(str, "case(%s::UNBOUND_VALUE):\n", type_name);
     str = mputprintf(str, "%s", loc);
@@ -11828,7 +11989,7 @@ error:
     str = mputstr(str, "break;\n");
     bool else_branch = false;
     for (size_t i = 0; i < sus.size(); i++) {
-      str = sus[i]->generate_code_case(str, type_name, else_branch);
+      str = sus[i]->generate_code_case(str, def_glob_vars, src_glob_vars, type_name, else_branch);
     }
     if (!else_branch) {
       str = mputstr(str, "default:\nbreak;\n");
@@ -12369,7 +12530,8 @@ error:
       ags[i]->set_code_section(p_code_section);
   }
 
-  char *AltGuards::generate_code_alt(char *str, const Location& loc)
+  char *AltGuards::generate_code_alt(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                     const Location& loc)
   {
     bool label_needed = has_repeat, has_else_branch = false;
     for (size_t i = 0; i < ags.size(); i++) {
@@ -12429,7 +12591,7 @@ error:
 	  if (debugger_active) {
 	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
 	  }
-	  str = block->generate_code(str);
+	  str = block->generate_code(str, def_glob_vars, src_glob_vars);
 	  str = mputstr(str, "}\n");
 	}
 	// jump out of the infinite for() loop
@@ -12511,7 +12673,7 @@ error:
 	  if (debugger_active) {
 	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
 	  }
-	  str = block->generate_code(str);
+	  str = block->generate_code(str, def_glob_vars, src_glob_vars);
 	  if (block->has_return() != StatementBlock::RS_YES)
 	    str = mputstr(str, "break;\n");
 	  str = mputstr(str, "}\n");
@@ -12552,7 +12714,7 @@ error:
     return str;
   }
 
-  char *AltGuards::generate_code_altstep(char *str)
+  char *AltGuards::generate_code_altstep(char *str, char*& def_glob_vars, char*& src_glob_vars)
   {
     if (!my_scope) FATAL_ERROR("AltGuards::generate_code_altstep()");
     Common::Module *my_mod = my_scope->get_scope_mod_gen();
@@ -12572,7 +12734,7 @@ error:
 	  if (debugger_active) {
 	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
 	  }
-	  str = block->generate_code(str);
+	  str = block->generate_code(str, def_glob_vars, src_glob_vars);
 	  str = mputstr(str, "}\n");
 	}
 	if (block->has_return() != StatementBlock::RS_YES)
@@ -12647,7 +12809,7 @@ error:
 	  if (debugger_active) {
 	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
 	  }
-	  str = block->generate_code(str);
+	  str = block->generate_code(str, def_glob_vars, src_glob_vars);
 	  str = mputstr(str, "}\n");
 	}
 	if (!block || block->has_return() != StatementBlock::RS_YES)
@@ -12673,8 +12835,9 @@ error:
     return str;
   }
 
-  char* AltGuards::generate_code_call_body(char *str, const Location& loc,
-    const string& temp_id, bool in_interleave)
+  char* AltGuards::generate_code_call_body(char *str, char*& def_glob_vars, char*& src_glob_vars,
+                                           const Location& loc,
+                                           const string& temp_id, bool in_interleave)
   {
     if (label) FATAL_ERROR("AltGuards::generate_code_call_body()");
     label = new string(temp_id);
@@ -12737,7 +12900,7 @@ error:
           }
           else {
             str = mputstr(str, "{\n"); // (3)
-            str = block->generate_code(str);
+            str = block->generate_code(str, def_glob_vars, src_glob_vars);
             str = mputprintf(str, "goto %s_end;\n"
                              "}\n", // (3)
                              label_str);
@@ -12748,7 +12911,7 @@ error:
       else {
         if (block && block->get_nof_stmts() > 0) {
           str = mputstr(str, "{\n"); // (3)
-          str = block->generate_code(str);
+          str = block->generate_code(str, def_glob_vars, src_glob_vars);
 	  if (block->has_return() != StatementBlock::RS_YES)
 	    str = mputstr(str, "break;\n");
           str = mputstr(str, "}\n"); // (3)

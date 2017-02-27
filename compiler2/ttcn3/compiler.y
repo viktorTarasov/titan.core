@@ -777,6 +777,7 @@ static const string anyname("anytype");
 %token TitanSpecificTryKeyword
 %token TitanSpecificCatchKeyword
 %token TitanSpecificProfilerKeyword
+%token TitanSpecificUpdateKeyword
 
 /* Keywords combined with a leading dot */
 
@@ -981,7 +982,7 @@ static const string anyname("anytype");
   StartTimerStatement StopExecutionStatement StopStatement StopTCStatement
   StopTimerStatement TimeoutStatement TimerStatements TriggerStatement
   UnmapStatement VerdictStatements WhileStatement SelectCaseConstruct
-  SelectUnionConstruct
+  SelectUnionConstruct UpdateStatement
   StopTestcaseStatement String2TtcnStatement ProfilerStatement int2enumStatement
 %type <statementblock> StatementBlock optElseClause FunctionStatementOrDefList
   ControlStatementOrDefList ModuleControlBody
@@ -1381,6 +1382,7 @@ UnionFieldDef
 UnionFieldDefList
 UnmapStatement
 UnnamedPart
+UpdateStatement
 UpperBound
 Value
 ValueList
@@ -4077,6 +4079,7 @@ FunctionStatement: // 180
 | StopTestcaseStatement { $$ = $1; }
 | ProfilerStatement { $$ = $1; }
 | int2enumStatement { $$ = $1; }
+| UpdateStatement { $$ = $1; }
 ;
 
 FunctionInstance: /* refpard */ // 181
@@ -5247,6 +5250,7 @@ ControlStatement: /* Statement *stmt */ // 295
 | StopExecutionStatement { $$ = $1; }
 | ProfilerStatement { $$ = $1; }
 | int2enumStatement { $$ = $1; }
+| UpdateStatement { $$ = $1; }
 ;
 
 /* A.1.6.2.1 Variable instantiation */
@@ -8127,6 +8131,22 @@ int2enumStatement:
       out_ref->set_location(infile, @8);
     }
     $$ = new Statement(Statement::S_INT2ENUM, $4, out_ref);
+    $$->set_location(infile, @$);
+  }
+;
+
+UpdateStatement:
+  TitanSpecificUpdateKeyword '(' Reference ')' optWithStatement
+  {
+    Ttcn::Reference* ref;
+    if ($3.is_ref) {
+      ref = $3.ref;
+    }
+    else {
+      ref = new Ttcn::Reference($3.id);
+      ref->set_location(infile, @3);
+    }
+    $$ = new Statement(Statement::S_UPDATE, ref, $5);
     $$->set_location(infile, @$);
   }
 ;

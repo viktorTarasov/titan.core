@@ -57,7 +57,9 @@ namespace Ttcn {
   class RunsOnScope;
   class StatementBlock;
   struct ErroneousDescriptor;
+  class ErroneousDescriptors;
   class transparency_holder;
+  class Statement;
 } // namespace Ttcn
 
 namespace Common {
@@ -466,18 +468,19 @@ public:
      */
     bool code_generated;
   protected: // Derived classes need access to the copy c-tor
-    Ttcn::ErroneousDescriptor* err_descr; // not owned, used by negative testing
+    Ttcn::ErroneousDescriptors* err_descrs; // owned, used by negative testing
     GovernedSimple(const GovernedSimple& p) : Governed(p),
       genname_prefix(p.genname_prefix), code_section(p.code_section),
-      code_generated(false), err_descr(NULL), needs_conversion(false) { }
+      code_generated(false), err_descrs(NULL), needs_conversion(false) { }
     bool needs_conversion; /**< Type conversion needed. */
   private:
     /** Assignment disabled */
     GovernedSimple& operator=(const GovernedSimple& p);
   public:
     GovernedSimple(settingtype_t p_st) : Governed(p_st), genname_prefix(0),
-      code_section(CS_UNKNOWN), code_generated(false), err_descr(NULL),
+      code_section(CS_UNKNOWN), code_generated(false), err_descrs(NULL),
       needs_conversion(false) { }
+    ~GovernedSimple();
 
     /** Sets attribute \a genname_prefix to \a p_genname_prefix. For efficiency
      * reasons the string itself is not copied, thus it must point to a
@@ -498,11 +501,11 @@ public:
     /** Sets the flag \a code_generated to true. */
     void set_code_generated() { code_generated = true; }
 
-    /** Sets the err_descr if the template or value has negative testing */
-    void set_err_descr(Ttcn::ErroneousDescriptor* p_err_descr)
-      { err_descr = p_err_descr; }
-    Ttcn::ErroneousDescriptor* get_err_descr() const
-      { return err_descr; }
+    /** Adds an error descriptor to the template or value (for negative testing) */
+    void add_err_descr(Ttcn::Statement* p_update_statement,
+      Ttcn::ErroneousDescriptor* p_err_descr);
+    Ttcn::ErroneousDescriptors* get_err_descr() const
+      { return err_descrs; }
 
     /** has_single_expr() to return false. */
     inline void set_needs_conversion() { needs_conversion = true; }

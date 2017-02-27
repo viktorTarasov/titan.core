@@ -58,6 +58,8 @@ namespace Ttcn {
   /* not defined here: */
   class ILT;
   class ILT_branch;
+  class WithAttribPath;
+  class ErroneousAttributes;
 
   /**
    * Represents a %StatementBlock.
@@ -156,7 +158,12 @@ namespace Ttcn {
     /** Sets the code section selector of all embedded values and
      *  templates to \a p_code_section. */
     void set_code_section(GovernedSimple::code_section_t p_code_section);
-    char* generate_code(char *str);
+    /** Generates code for this statement block.
+      * '@update' statements may need to generate code into the global variables
+      * sections of the module's header and source file, so pointer references to
+      * these strings are passed to every statement block that may contain an
+      * '@update' statement. */
+    char* generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars);
     void ilt_generate_code(ILT *ilt);
 
     virtual void set_parent_path(WithAttribPath* p_path);
@@ -258,7 +265,9 @@ namespace Ttcn {
       S_STOP_PROFILER,
       /* Conversion statements */
       S_STRING2TTCN, // convert_op
-      S_INT2ENUM // convert_op
+      S_INT2ENUM, // convert_op
+      /* update statement */
+      S_UPDATE // update_op
     };
 
     enum component_t {
@@ -466,6 +475,12 @@ namespace Ttcn {
         Value* val;
         Reference* ref;
       } convert_op;
+      
+      struct {
+        Reference* ref;
+        WithAttribPath* w_attrib_path;
+        ErroneousAttributes* err_attrib;
+      } update_op; /**< S_UPDATE */
     };
 
     Statement(const Statement& p); ///< copy disabled
@@ -589,6 +604,8 @@ namespace Ttcn {
                TemplateInstances *p_ap_list, Value *p_val);
     /** Constructor used by S_STRING2TTCN, S_INT2ENUM */
     Statement(statementtype_t p_st, Value* p_val, Reference* p_ref);
+    /** Constructor used by S_UPDATE */
+    Statement(statementtype_t p_st, Reference* p_ref, MultiWithAttrib* p_attrib);
     virtual ~Statement();
     virtual Statement* clone() const;
     virtual void dump(unsigned int level) const;
@@ -768,11 +785,12 @@ namespace Ttcn {
                             bool allow_system);
     void chk_string2ttcn();
     void chk_int2enum();
+    void chk_update();
   public:
     /** Sets the code section selector of all embedded values and
      *  templates to \a p_code_section. */
     void set_code_section(GovernedSimple::code_section_t p_code_section);
-    char* generate_code(char *str);
+    char* generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars);
     void generate_code_expr(expression_struct *expr);
     void ilt_generate_code(ILT *ilt);
     
@@ -792,22 +810,22 @@ namespace Ttcn {
     /** used for function and altstep instances */
     char *generate_code_funcinst(char *str);
     char *generate_code_invoke(char *str);
-    char *generate_code_block(char *str);
+    char *generate_code_block(char *str, char*& def_glob_vars, char*& src_glob_vars);
     char *generate_code_log(char *str);
     char* generate_code_string2ttcn(char *str);
     char *generate_code_testcase_stop(char *str);
     char *generate_code_label(char *str);
     char *generate_code_goto(char *str);
-    char *generate_code_if(char *str);
-    char *generate_code_select(char *str);
-    char *generate_code_select_union(char *str);
-    char *generate_code_for(char *str);
-    char *generate_code_while(char *str);
-    char *generate_code_dowhile(char *str);
+    char *generate_code_if(char *str, char*& def_glob_vars, char*& src_glob_vars);
+    char *generate_code_select(char *str, char*& def_glob_vars, char*& src_glob_vars);
+    char *generate_code_select_union(char *str, char*& def_glob_vars, char*& src_glob_vars);
+    char *generate_code_for(char *str, char*& def_glob_vars, char*& src_glob_vars);
+    char *generate_code_while(char *str, char*& def_glob_vars, char*& src_glob_vars);
+    char *generate_code_dowhile(char *str, char*& def_glob_vars, char*& src_glob_vars);
     char *generate_code_break(char *str);
     char *generate_code_continue(char *str);
     char *generate_code_repeat(char *str);
-    char *generate_code_interleave(char *str);
+    char *generate_code_interleave(char *str, char*& def_glob_vars, char*& src_glob_vars);
     void ilt_generate_code_interleave(ILT *ilt);
     void ilt_generate_code_alt(ILT *ilt);
     void ilt_generate_code_receiving(ILT *ilt);
@@ -824,7 +842,7 @@ namespace Ttcn {
     char *generate_code_activate_refd(char *str);
     char *generate_code_deactivate(char *str);
     char *generate_code_send(char *str);
-    char *generate_code_call(char *str);
+    char *generate_code_call(char *str, char*& def_glob_vars, char*& src_glob_vars);
     char *generate_code_reply(char *str);
     char *generate_code_raise(char *str);
     char *generate_code_portop(char *str, const char *opname);
@@ -838,6 +856,7 @@ namespace Ttcn {
     char *generate_code_action(char *str);
     char *generate_code_testcaseinst(char *str);
     char *generate_code_execute_refd(char *str);
+    char* generate_code_update(char *str, char*& def_glob_vars, char*& src_glob_vars);
     /** used for receive, check-receive, trigger */
     void generate_code_expr_receive(expression_struct *expr,
       const char *opname);
@@ -1292,8 +1311,8 @@ namespace Ttcn {
     /** Sets the code section selector of all embedded values and
      *  templates to \a p_code_section. */
     void set_code_section(GovernedSimple::code_section_t p_code_section);
-    char* generate_code(char *str, size_t& blockcount,
-                        bool& unreach, bool& eachfalse);
+    char* generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars,
+      size_t& blockcount, bool& unreach, bool& eachfalse);
     void ilt_generate_code(ILT *ilt, const char *end_label, bool& unreach);
 
     /** Needed by implicit omit. Pushes attrib path down to definitions
@@ -1337,8 +1356,8 @@ namespace Ttcn {
     /** Sets the code section selector of all embedded values and
      *  templates to \a p_code_section. */
     void set_code_section(GovernedSimple::code_section_t p_code_section);
-    char* generate_code(char *str, size_t& blockcount,
-                        bool& unreach, bool& eachfalse);
+    char* generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars,
+      size_t& blockcount, bool& unreach, bool& eachfalse);
     void ilt_generate_code(ILT *ilt, const char *end_label, bool& unreach);
 
     /** Needed by implicit omit. Pushes attrib path down to definitions
@@ -1374,10 +1393,10 @@ namespace Ttcn {
     void set_code_section(GovernedSimple::code_section_t p_code_section);
     char* generate_code_if(char *str, const char *tmp_prefix,
                            const char *expr_name, size_t idx, bool& unreach);
-    char* generate_code_case(char *str, bool& else_branch,
-                             vector<const Int>& used_numbers);
-    char* generate_code_stmt(char *str, const char *tmp_prefix,
-                             size_t idx, bool& unreach);
+    char* generate_code_case(char *str, char*& def_glob_vars, char*& src_glob_vars,
+      bool& else_branch, vector<const Int>& used_numbers);
+    char* generate_code_stmt(char *str, char*& def_glob_vars, char*& src_glob_vars,
+      const char *tmp_prefix, size_t idx, bool& unreach);
     void ilt_generate_code_stmt(ILT *ilt, const char *tmp_prefix,
                                 size_t idx, bool& unreach);
 
@@ -1420,14 +1439,14 @@ namespace Ttcn {
     /** Sets the code section selector of all embedded values and
      *  templates to \a p_code_section. */
     void set_code_section(GovernedSimple::code_section_t p_code_section);
-    char *generate_code(char *str, const char *tmp_prefix,
-                        const char *expr_name);   
+    char *generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars,
+      const char *tmp_prefix, const char *expr_name);   
     void ilt_generate_code(ILT *ilt, const char *tmp_prefix,
                            const char *expr_init, const char *head_expr,
                            const char *expr_name);
     /** generates code with switch c++ statement only for integer 
      *  compatible types*/
-    char *generate_code_switch(char *str, const char *expr_name);
+    char *generate_code_switch(char *str, char*& def_glob_vars, char*& src_glob_vars, const char *expr_name);
     void ilt_generate_code_switch(ILT *ilt, const char *expr_init, const char *head_expr, const char *expr_name);
     
 
@@ -1461,7 +1480,8 @@ namespace Ttcn {
     /* checking functions */
     void chk(Type *p_gov);
     void set_code_section(GovernedSimple::code_section_t p_code_section);
-    char* generate_code_case(char *str, const char *type_name, bool &else_branch);
+    char* generate_code_case(char *str, char*& def_glob_vars, char*& src_glob_vars,
+      const char *type_name, bool &else_branch);
 
     /** Needed by implicit omit. Pushes attrib path down to definitions
      */
@@ -1499,7 +1519,8 @@ namespace Ttcn {
      * construct */
     void chk_allowed_interleave();
     void set_code_section(GovernedSimple::code_section_t p_code_section);
-    char *generate_code(char *str, const char *type_name, const char* loc);
+    char *generate_code(char *str, char*& def_glob_vars, char*& src_glob_vars,
+      const char *type_name, const char* loc);
 
     /** Needed by implicit omit. Pushes attrib path down to definitions
      */
@@ -1625,10 +1646,11 @@ namespace Ttcn {
     /** Generates the equivalent C++ code for the branches of an alt construct,
      * appends it to \a str and returns the resulting string. Parameter \a loc
      * shall contain the location of the alt construct. */
-    char *generate_code_alt(char *str, const Location& loc);
+    char *generate_code_alt(char *str, char*& def_glob_vars, char*& src_glob_vars,
+      const Location& loc);
     /** Generates the equivalent C++ code for the branches of an altstep,
      * appends it to \a str and returns the resulting string. */
-    char *generate_code_altstep(char *str);
+    char *generate_code_altstep(char *str, char*& def_glob_vars, char*& src_glob_vars);
     /** Generates the equivalent C++ code for the response and
      *  exception handling part of a call statement, appends it to \a
      *  str and returns the resulting string. Parameter \a loc
@@ -1638,8 +1660,8 @@ namespace Ttcn {
      *  those alt branches that contain receiving statement(s) are not
      *  generated but a "goto label_str_branch_n" where 'n' is the
      *  branch number. */
-    char* generate_code_call_body(char *str, const Location& loc,
-                                  const string& temp_id, bool in_interleave);
+    char* generate_code_call_body(char *str, char*& def_glob_vars, char*& src_glob_vars,
+      const Location& loc, const string& temp_id, bool in_interleave);
     void ilt_generate_code_call_body(ILT *ilt, const char *label_str);
   };
 

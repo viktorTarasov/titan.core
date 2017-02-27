@@ -3099,9 +3099,6 @@ end:
   {
     if (get_code_generated()) return str;
     set_code_generated();
-    if (err_descr) {
-      str = err_descr->generate_code_init_str(str, string(name)+"_err_descr");
-    }
     switch (templatetype) {
     case OMIT_VALUE:
     case ANY_VALUE:
@@ -3179,9 +3176,6 @@ end:
       str = length_restriction->generate_code_init(str, name);
     }
     if (is_ifpresent) str = mputprintf(str, "%s.set_ifpresent();\n", name);
-    if (err_descr) {
-      str = mputprintf(str, "%s.set_err_descr(&%s_err_descr);\n", name, name);
-    }
     return str;
   }
 

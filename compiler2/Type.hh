@@ -1157,7 +1157,8 @@ namespace Common {
      * exported with name \a name. This function shall be used when there is no
      * Value or Template object in the AST (e.g. in case of variables). */
     void generate_code_object(const_def *cdef, Scope* p_scope,
-      const string& name, const char *prefix, bool is_template);
+      const string& name, const char *prefix, bool is_template,
+      bool has_err_descr);
     /** Generates the declaration and definition of a C++ value or template
      * object governed by \a this into \a cdef based on the attributes of
      * \a p_setting. */

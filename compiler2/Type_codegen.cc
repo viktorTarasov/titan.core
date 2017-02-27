@@ -2820,7 +2820,7 @@ bool Type::has_done_attribute()
 }
 
 void Type::generate_code_object(const_def *cdef, Scope *p_scope,
-  const string& name, const char *prefix, bool is_template)
+  const string& name, const char *prefix, bool is_template, bool has_err_descr)
 {
   string type_name;
   if (is_template) type_name = get_genname_template(p_scope);
@@ -2830,12 +2830,12 @@ void Type::generate_code_object(const_def *cdef, Scope *p_scope,
   if (prefix) {
     cdef->decl = mputprintf(cdef->decl, "extern const %s& %s;\n",
       type_name_str, name_str);
-    if (split_to_slices) {
+    if (split_to_slices || has_err_descr) {
       cdef->decl = mputprintf(cdef->decl, "extern %s %s%s;\n", type_name_str, prefix, name_str);
     }
     cdef->def = mputprintf(cdef->def, "%s%s %s%s;\n"
-      "const %s& %s = %s%s;\n", split_to_slices ? "" : "static ", type_name_str, prefix, name_str,
-        type_name_str, name_str, prefix, name_str);
+      "const %s& %s = %s%s;\n", split_to_slices || has_err_descr ? "" : "static ",
+      type_name_str, prefix, name_str, type_name_str, name_str, prefix, name_str);
   } else {
     cdef->decl = mputprintf(cdef->decl, "extern %s %s;\n",
       type_name_str, name_str);
@@ -2856,13 +2856,18 @@ void Type::generate_code_object(const_def *cdef, GovernedSimple *p_setting)
   default:
     FATAL_ERROR("Type::generate_code_object()");
   }
-  if (p_setting->get_err_descr()) {
-    cdef->def = p_setting->get_err_descr()->generate_code_str(cdef->def, cdef->decl,
-      p_setting->get_genname_prefix() + p_setting->get_genname_own(), FALSE);
+  if (p_setting->get_err_descr() != NULL &&
+      p_setting->get_err_descr()->has_descr(NULL)) {
+    cdef->def = p_setting->get_err_descr()->generate_code_str(NULL, cdef->def,
+      cdef->decl, p_setting->get_genname_prefix() + p_setting->get_genname_own());
   }
+  // allways pass 'true' to the 'has_err_descr' parameter while in Runtime2, not
+  // just if the value/template has erroneous descriptors, so adding an '@update'
+  // statement in a different module does not require this module's code to be
+  // regenerated
   generate_code_object(cdef, p_setting->get_my_scope(),
     p_setting->get_genname_own(), p_setting->get_genname_prefix(),
-    is_template);
+    is_template, use_runtime_2);
 }
 
 void Type::generate_json_schema(JSON_Tokenizer& json, bool embedded, bool as_value)

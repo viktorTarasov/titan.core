@@ -888,8 +888,9 @@ namespace Ttcn {
      */
     virtual bool chk_identical(Definition *p_def);
     /** Parse and check the erroneous attribute data,
-      * sets erroneous_attrs member */
-    void chk_erroneous_attr();
+      * returns erroneous attributes or NULL */
+    static ErroneousAttributes* chk_erroneous_attr(WithAttribPath* p_attrib_path,
+      Type* p_type, Scope* p_scope, string p_fullname, bool in_update_stmt);
     /** This code generation is used when this definition is embedded
      * in a statement block. */
     virtual char* generate_code_str(char *str);

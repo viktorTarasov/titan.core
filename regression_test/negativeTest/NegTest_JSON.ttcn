@@ -102,6 +102,15 @@ const Uni2 u7 := { i := -6 } with { erroneous(i) "value := omit" };
 const Uni2 u8 := { i := -6 } with { erroneous(i) "value(raw) := \"abc\" & char(0,0,1,117)" };
 const Uni2 u9 := { list := { 0, 3, 6 } } with { erroneous(list[2]) "value := \"6\"" };
 
+template Rec r_temp := { num := 10, str := "hello" } with { erroneous(str) "value := r1" }; // the erroneous attributes of r1 will also affect the result
+
+template Set s_temp_pard(IntList p1, Rec p2) := { list := p1, rec := p2, b := true } with { erroneous(list) "after := omit all" }; // the erroneous attributes of p1 will also affect the result
+
+/* Erroneous constants and templates imported by other modules */
+const IntList c_imp := { 1, 12, 23, 34 } with { erroneous([3]) "value := 234" };
+template Rec t_imp := { num := 10, str := "hello" };
+template Uni2 t_imp_pard(IntList p) := { list := p } with { erroneous(list[0]) "after := omit all" };
+
 /******** Test cases for record-ofs ********/
 testcase tc_record_of_omit_before() runs on CT {
   var octetstring res := f_enc_il(il1);
@@ -279,6 +288,19 @@ testcase tc_union_as_value_alternative_is_erroneous() runs on CT {
   else { setverdict(fail, res); }
 }
 
+/********* Test cases for templates *********/
+testcase tc_record_template_other_value() runs on CT {
+  var octetstring res := f_enc_r(valueof(r_temp));
+  if (char2oct("{\"num\":10,\"str\":{\"BOOLEAN\":true,\"num\":10,\"str\":\"hello\"}}") == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+testcase tc_set_template_pard_omit_after() runs on CT {
+  var octetstring res := f_enc_s(valueof(s_temp_pard(il1, r1)));
+  if (char2oct("{\"list\":[2,3]}") == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
 /*************** Control part ***************/
 control {
   execute(tc_record_of_omit_before());
@@ -310,6 +332,8 @@ control {
   execute(tc_union_as_value_omit_value());
   execute(tc_union_as_value_raw_value());
   execute(tc_union_as_value_alternative_is_erroneous());
+  execute(tc_record_template_other_value());
+  execute(tc_set_template_pard_omit_after());
 }
 
 }
