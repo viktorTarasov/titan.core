@@ -3038,6 +3038,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
               } else {
                 ERROR("Internal error: cannot add command to list");
               }
+            } else {
+              Free(command);
             }
             // add working dir to the end of list
             if (sub_project_dirs) {
