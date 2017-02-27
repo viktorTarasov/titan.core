@@ -219,8 +219,7 @@ namespace Common {
     Free(expr->postamble);
   }
 
-  char* Code::merge_free_expr(char* str, expression_struct *expr,
-                              bool is_block)
+  char* Code::merge_free_expr(char* str, expression_struct *expr)
   {
     if (expr->preamble || expr->postamble) {
       // open a statement block if the expression has a preamble or postamble
@@ -230,9 +229,8 @@ namespace Common {
     }
     // append the expression itself
     str = mputstr(str, expr->expr);
-    // terminate it with a bracket or semi-colon
-    if (is_block) str = mputstr(str, "}\n");
-    else str = mputstr(str, ";\n");
+    // terminate it with a semi-colon
+    str = mputstr(str, ";\n");
     if (expr->preamble || expr->postamble) {
       // append the postamble if present
       if (expr->postamble) str = mputstr(str, expr->postamble);

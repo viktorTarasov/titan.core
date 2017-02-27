@@ -8736,7 +8736,7 @@ namespace Ttcn {
         expr.expr = mputprintf(expr.expr, "%s = ",
                                temp->get_lhs_name().c_str());
         dref->generate_code(&expr);
-        str = Code::merge_free_expr(str, &expr, false);
+        str = Code::merge_free_expr(str, &expr);
       }
       if (use_runtime_2 && TypeConv::needs_conv_refd(temp)) {
         str = TypeConv::gen_conv_code_refd(str, temp->get_lhs_name().c_str(), temp);
@@ -10096,7 +10096,7 @@ namespace Ttcn {
           Code::init_expr(&expr);
           expr.expr = mputprintf(expr.expr, "%s = ", t->get_lhs_name().c_str());
           dref->generate_code(&expr);
-          str = Code::merge_free_expr(str, &expr, false);
+          str = Code::merge_free_expr(str, &expr);
         }
         str = t->generate_code_init(str, t->get_lhs_name().c_str());
       }

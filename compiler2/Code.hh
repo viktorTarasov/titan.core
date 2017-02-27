@@ -42,8 +42,7 @@ namespace Common {
     static void init_expr(expression_struct *expr);
     static void clean_expr(expression_struct *expr);
     static void free_expr(expression_struct *expr);
-    static char* merge_free_expr(char* str, expression_struct *expr,
-                                 bool is_block=false);
+    static char* merge_free_expr(char* str, expression_struct *expr);
 
     /** Appends the C/C++ equivalent of character \a c to \a str. If flag
      * \a in_string is true (i.e. the \a c is a part of a string literal) then
