@@ -22,7 +22,7 @@ MAKEPROG := ${MAKE}
 all: Normal Recursive RecursiveDynamic
 
 Normal:
-	cd a && \
+	rm -rf binDefault ../b/binDefault ../c/binDefault && cd a && \
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -f $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
 	-t a.tpd -b None && cd binDefault && make && cd .. && rm -rf binDefault && \
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -f $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
@@ -31,7 +31,7 @@ Normal:
 	-t a.tpd -b Number && cd binDefault && make && cd .. && rm -rf binDefault
 
 Recursive:
-	cd a && \
+	rm -rf binDefault ../b/binDefault ../c/binDefault && cd a && \
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -F $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
 	-t a.tpd -rgpcb None && cd binDefault && make && cd .. && \
 	rm -rf binDefault ../b/binDefault ../c/binDefault && \
@@ -43,15 +43,15 @@ Recursive:
 	rm -rf binDefault ../b/binDefault ../c/binDefault
 
 RecursiveDynamic:
-	cd a && \
+	rm -rf binDefault ../b/binDefault ../c/binDefault && cd a && \
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -F $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
-	-t a.tpd -rcplb None && cd binDefault && make && cd .. && \
+	-t a.tpd -rcpb None-Dyn && cd binDefault && make && cd .. && \
 	rm -rf binDefault ../b/binDefault ../c/binDefault && \
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -F $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
-	-t a.tpd -rcplb Type && cd binDefault && make && cd .. && \
+	-t a.tpd -rcpb Type-Dyn && cd binDefault && make && cd .. && \
 	rm -rf binDefault ../b/binDefault ../c/binDefault && \
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -F $(MFGEN_FLAGS) $(COVERAGE_FLAG) \
-	-t a.tpd -rcplb Number && cd binDefault && make && cd .. && \
+	-t a.tpd -rcpb Number-Dyn && cd binDefault && make && cd .. && \
 	rm -rf binDefault ../b/binDefault ../c/binDefault
 
 

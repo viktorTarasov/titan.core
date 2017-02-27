@@ -32,17 +32,6 @@
         </LocalBuildSettings>
       </ProjectProperties>
     </Configuration>
-    <Configuration name="Empty">
-      <ProjectProperties>
-        <MakefileSettings>
-          <codeSplitting></codeSplitting>
-          <targetExecutable>binDefault/binDefault</targetExecutable>
-        </MakefileSettings>
-        <LocalBuildSettings>
-          <workingDirectory>binDefault</workingDirectory>
-        </LocalBuildSettings>
-      </ProjectProperties>
-    </Configuration>
     <Configuration name="Type">
       <ProjectProperties>
         <MakefileSettings>
@@ -57,6 +46,42 @@
     <Configuration name="Number">
       <ProjectProperties>
         <MakefileSettings>
+          <codeSplitting>5</codeSplitting>
+          <targetExecutable>binDefault/binDefault</targetExecutable>
+        </MakefileSettings>
+        <LocalBuildSettings>
+          <workingDirectory>binDefault</workingDirectory>
+        </LocalBuildSettings>
+      </ProjectProperties>
+    </Configuration>
+    <Configuration name="None-Dyn">
+      <ProjectProperties>
+        <MakefileSettings>
+          <dynamicLinking>true</dynamicLinking>
+          <codeSplitting>none</codeSplitting>
+          <targetExecutable>binDefault/binDefault</targetExecutable>
+        </MakefileSettings>
+        <LocalBuildSettings>
+          <workingDirectory>binDefault</workingDirectory>
+        </LocalBuildSettings>
+      </ProjectProperties>
+    </Configuration>
+    <Configuration name="Type-Dyn">
+      <ProjectProperties>
+        <MakefileSettings>
+          <dynamicLinking>true</dynamicLinking>
+          <codeSplitting>type</codeSplitting>
+          <targetExecutable>binDefault/binDefault</targetExecutable>
+        </MakefileSettings>
+        <LocalBuildSettings>
+          <workingDirectory>binDefault</workingDirectory>
+        </LocalBuildSettings>
+      </ProjectProperties>
+    </Configuration>
+    <Configuration name="Number-Dyn">
+      <ProjectProperties>
+        <MakefileSettings>
+          <dynamicLinking>true</dynamicLinking>
           <codeSplitting>5</codeSplitting>
           <targetExecutable>binDefault/binDefault</targetExecutable>
         </MakefileSettings>
