@@ -15,8 +15,14 @@ module Sem_050402_actual_parameters_201 {
         port MyPortType P;
     }
     
-    type record MyMessage { integer id, float number }
-    type port MyPortType message { inout MyMessage }
+    type record MyMessage { 
+		integer id, 
+		float number 
+	}
+
+    type port MyPortType message { 
+		inout MyMessage 
+	} with {extension "internal"}
 
     function sendLazy(@lazy MyMessage pdu) runs on GeneralComp {
         for (v_id := 1; v_id<9; v_id:=v_id+1){
