@@ -1318,7 +1318,7 @@ int OCTETSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
     return JSON_ERROR_FATAL;
   }
   else if (JSON_TOKEN_STRING == token || use_default) {
-    if (use_default || (value_len > 2 && value[0] == '\"' && value[value_len - 1] == '\"')) {
+    if (use_default || (value_len >= 2 && value[0] == '\"' && value[value_len - 1] == '\"')) {
       if (!use_default) {
         // The default value doesn't have quotes around it
         value_len -= 2;
@@ -1351,16 +1351,18 @@ int OCTETSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
       }
       if (!error) {
         init_struct(nibbles / 2);
-        int octet_index = 0;
-        for (size_t i = 0; i < value_len - 1; ++i) {
-          if (!isxdigit(value[i]) || !isxdigit(value[i + 1])) {
-            continue;
+        if (value_len != 0) {
+          int octet_index = 0;
+          for (size_t i = 0; i < value_len - 1; ++i) {
+            if (!isxdigit(value[i]) || !isxdigit(value[i + 1])) {
+              continue;
+            }
+            unsigned char upper_nibble = char_to_hexdigit(value[i]);
+            unsigned char lower_nibble = char_to_hexdigit(value[i + 1]);
+            val_ptr->octets_ptr[octet_index] = (upper_nibble << 4) | lower_nibble;
+            ++octet_index;
+            ++i;
           }
-          unsigned char upper_nibble = char_to_hexdigit(value[i]);
-          unsigned char lower_nibble = char_to_hexdigit(value[i + 1]);
-          val_ptr->octets_ptr[octet_index] = (upper_nibble << 4) | lower_nibble;
-          ++octet_index;
-          ++i;
         }
       }
     } else {

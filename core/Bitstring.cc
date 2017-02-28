@@ -1204,7 +1204,7 @@ int BITSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_
     return JSON_ERROR_FATAL;
   }
   else if (JSON_TOKEN_STRING == token || use_default) {
-    if (use_default || (value_len > 2 && value[0] == '\"' && value[value_len - 1] == '\"')) {
+    if (use_default || (value_len >= 2 && value[0] == '\"' && value[value_len - 1] == '\"')) {
       if (!use_default) {
         // The default value doesn't have quotes around it
         value_len -= 2;
