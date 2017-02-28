@@ -15,7 +15,7 @@ module Sem_1505_ModifiedTemplates_008 {
 
 	type port MyMessagePortType message {
 		inout MyMessageType
-	}
+	} with {extension "internal"}
 
 	type component GeneralComp {
 		port MyMessagePortType pt_myPort;
