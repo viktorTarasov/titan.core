@@ -2622,7 +2622,7 @@ void UNIVERSAL_CHARSTRING::decode_utf8(int n_octets,
   init_struct(n_uchars);
   n_uchars = 0;
 
-  int start = checkBOM ? check_BOM(CharCoding::UTF_8, sizeof(octets_ptr), octets_ptr) : 0;
+  int start = checkBOM ? check_BOM(CharCoding::UTF_8, n_octets, octets_ptr) : 0;
   for (int i = start; i < n_octets; ) {
     // perform the decoding character by character
     if (octets_ptr[i] <= 0x7F) {
@@ -2767,7 +2767,7 @@ void UNIVERSAL_CHARSTRING::decode_utf16(int n_octets,
     "Wrong UTF-16 string. The number of bytes (%d) in octetstring shall be non negative and divisible by 2",
     n_octets);
   }
-  int start = check_BOM(expected_coding, sizeof(octets_ptr), octets_ptr);
+  int start = check_BOM(expected_coding, n_octets, octets_ptr);
   int n_uchars = n_octets/2;
   init_struct(n_uchars);
   n_uchars = 0;
@@ -2855,7 +2855,7 @@ void UNIVERSAL_CHARSTRING::decode_utf32(int n_octets, const unsigned char *octet
     "Wrong UTF-32 string. The number of bytes (%d) in octetstring shall be non negative and divisible by 4",
     n_octets);
   }
-  int start = check_BOM(expected_coding, sizeof(octets_ptr), octets_ptr);
+  int start = check_BOM(expected_coding, n_octets, octets_ptr);
   int n_uchars = n_octets/4;
   init_struct(n_uchars);
   n_uchars = 0;
@@ -2916,72 +2916,46 @@ int UNIVERSAL_CHARSTRING::check_BOM(CharCoding::CharCodingType expected_coding,
                                     unsigned int length,
                                     const unsigned char* ostr)
 {
-  switch (expected_coding) {
-    case CharCoding::UTF32:
-    case CharCoding::UTF32BE:
-    case CharCoding::UTF32LE:
-      if (4 > length) {
-        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,
-        "The string is shorter than the expected BOM");
-      }
-      break;
-    case CharCoding::UTF16:
-    case CharCoding::UTF16BE:
-    case CharCoding::UTF16LE:
-      if (2 > length) {
-        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,
-        "The string is shorter than the expected BOM");
-      }
-      break;
-    case CharCoding::UTF_8:
-      if (3 > length) {
-        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG,
-        "The string is shorter than the expected BOM");
-      }
-      break;
-    default: break;
-  }
   std::string coding_str;
   //BOM indicates that the byte order is determined by a byte order mark, 
   //if present at the beginning the length of BOM is returned.
   switch (expected_coding) {
     case CharCoding::UTF32BE:
     case CharCoding::UTF32:
-      if (0x00 == ostr[0] && 0x00 == ostr[1] && 0xFE == ostr[2] && 0xFF == ostr[3]) {
+      if (4 <= length && 0x00 == ostr[0] && 0x00 == ostr[1] &&
+          0xFE == ostr[2] && 0xFF == ostr[3]) {
         return 4;
       }
       coding_str = "UTF-32BE";
     break;
     case CharCoding::UTF32LE:
-      if (0xFF == ostr[0] && 0xFE == ostr[1] && 0x00 == ostr[2] && 0x00 == ostr[3]) {
+      if (4 <= length && 0xFF == ostr[0] && 0xFE == ostr[1] &&
+          0x00 == ostr[2] && 0x00 == ostr[3]) {
         return 4;
       }
       coding_str = "UTF-32LE";
       break;
     case CharCoding::UTF16BE:
     case CharCoding::UTF16:
-      if (0xFE == ostr[0] && 0xFF == ostr[1]) {
+      if (2 <= length && 0xFE == ostr[0] && 0xFF == ostr[1]) {
         return 2;
       }
       coding_str = "UTF-16BE";
       break;
     case CharCoding::UTF16LE:
-      if (0xFF == ostr[0] && 0xFE == ostr[1]) {
+      if (2 <= length && 0xFF == ostr[0] && 0xFE == ostr[1]) {
         return 2;
       }
       coding_str = "UTF-16LE";
       break;
     case CharCoding::UTF_8:
-      if (0xEF == ostr[0] && 0xBB == ostr[1] && 0xBF == ostr[2]) {
+      if (3 <= length && 0xEF == ostr[0] && 0xBB == ostr[1] && 0xBF == ostr[2]) {
         return 3;
       }
       coding_str = "UTF-8";
       break;
     default:
-       // No BOM found
-       TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_DEC_UCSTR,
-       "Wrong %s string. No BOM detected, however the given coding type (%s) expects it to define the endianness",
-       coding_str.c_str(), coding_str.c_str());
+      TTCN_error("Internal error: invalid expected coding (%d)", expected_coding);
       break;
   }
   TTCN_EncDec_ErrorContext::warning("No %s Byte Order Mark(BOM) detected. It may result decoding errors",
