@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2016 ETSI  All Rights Reserved.
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
  * Adrien Kirjak
  *
@@ -32,7 +32,7 @@ module Sem_B0105_toplevel_002 {
  		template MessageType mw_matchingTemplate:= {  	
 		  	field1 := pattern "\q{0,0,1,113}", //"quadruple" notation for character "ű"
 		  	field2 := pattern "\q{0,0,1,113}*\q{0,0,1,116}", 
-			//"quadruple" notation for character "ű" and "Ŵ´"
+			//"quadruple" notation for character "ű" and "Ŵ"
 		  	field3 := pattern "\q{U0171}" // USI like notation for character "ű"
  		}
        

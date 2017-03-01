@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2016 ETSI  All Rights Reserved.
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
  * Adrien Kirjak
  *
@@ -18,7 +18,7 @@
 //   5) outlist-PORT2 defines the messages or procedures of the out-direction of PORT2.
 // c) The map operation (assuming PORT2 is the test system interface port) is allowed if 
 // and only if:
-// outlist-PORT1 Ã¢ÂÂ outlist-PORT2 and inlist-PORT2 Ã¢ÂÂ inlist-PORT1.
+// outlist-PORT1 ÃÂ¢ÃÂÃÂ outlist-PORT2 and inlist-PORT2 ÃÂ¢ÃÂÃÂ inlist-PORT1.
 //
 // In this test, one pair in outlist-PORT1 and inlist-PORT2 is incompatible (using 
 // strong typing rules)
