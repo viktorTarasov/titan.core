@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2016 ETSI  All Rights Reserved.
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
  * Adrien Kirjak
  *
@@ -10,7 +10,7 @@
 
  //Restriction b)
  
-/*If a record or set field or its corresponding matching mechanism is Ã¢ÂÂ implicitly or explicitly by using the not used symbol "-" -
+/*If a record or set field or its corresponding matching mechanism is ÃÂ¢ÃÂÃÂ implicitly or explicitly by using the not used symbol "-" -
 left unspecified in the modified template, then the matching mechanism in the corresponding field of the
 parent template shall be used.*/
 

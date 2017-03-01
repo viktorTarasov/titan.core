@@ -1,12 +1,7 @@
 /******************************************************************************
- * Copyright (c) 2000-2017 Ericsson Telecom AB
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
- * Contributors:
- *   Adrien Kirjak – initial implementation
+ * Adrien Kirjak
  *
  ** @version  0.0.1
  ** @purpose  9:6.3.13, Verify that unsigned byte type (8bit) shall be translated to TTCN-3 as a plain unsigned byte as defined in clause D.2.1.0 of ES 201 873 1 [1]

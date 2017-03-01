@@ -1,12 +1,7 @@
 /******************************************************************************
- * Copyright (c) 2000-2017 Ericsson Telecom AB
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
- * Contributors:
- *   Adrien Kirjak – initial implementation
+ * Adrien Kirjak
  *
  ** @version  0.0.1
  ** @purpose  9:7.1.6, Verify that unqualified element form is correctly converted (unqualified elementFormDefault)
@@ -15,7 +10,7 @@
 // The following requirements are tested:
 // The XSD form attribute controls if an attribute or element tag shall be 
 // encoded in XML by using a qualified or unqualified name. The values of the 
-// form attributes shall be preserved in the "form asâ¦" encoding instructions.
+// form attributes shall be preserved in the "form asÃ¢ÂÂ¦" encoding instructions.
 
 module Pos_070106_form_005 {
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2016 ETSI  All Rights Reserved.
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
  * Adrien Kirjak
  *
@@ -35,13 +35,13 @@ module Sem_B010502_reference_expression_010 {
   			field1 := pattern "{\m_Ref}", // this should accept pattern "abc?def?" only	
   			field2 := pattern "{m_Ref}\q{0,0,1,113}",   
 			// this should accept pattern "abc?def?" only, with any character in ? 	
-  			field3 := pattern "{\m_Ref}\q{0,0,1,113}" // this should accept pattern "abc?def?ÃÂ±" only	
+  			field3 := pattern "{\m_Ref}\q{0,0,1,113}" // this should accept pattern "abc?def?ÃÂÃÂ±" only	
      	};
 
  		v_testMessage:=  {  
   			field1 := "abc?def?",
-  			field2 := "abcDdefGÃÂ±",
-  			field3 := "abc?def?ÃÂ±"  
+  			field2 := "abcDdefGÃÂÃÂ±",
+  			field3 := "abc?def?ÃÂÃÂ±"  
  		}; 
  
 		connect(self:messagePort, self:messagePort);

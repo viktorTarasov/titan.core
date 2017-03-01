@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2016 ETSI  All Rights Reserved.
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
  * Adrien Kirjak
  *
@@ -21,7 +21,7 @@ module Sem_160102_predefined_functions_081 {
    		
       
    		var octetstring v_test := '414243C3A9C3BC'O;    
-		//UTF-8 encoded octetstring. The decoded value is: ABCÃÂ©ÃÂ¼
+		//UTF-8 encoded octetstring. The decoded value is: ABCÃÂÃÂ©ÃÂÃÂ¼
 
    		var charstring v_get := get_stringencoding(v_test);    // expected result: "UTF8"
        
