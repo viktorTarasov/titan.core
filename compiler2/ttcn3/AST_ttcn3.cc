@@ -3548,7 +3548,7 @@ namespace Ttcn {
       break;
     default:
       value_under_check = true;
-      type->chk_this_value(value, 0, Type::EXPECTED_CONSTANT, INCOMPLETE_ALLOWED,
+      type->chk_this_value(value, 0, Type::EXPECTED_CONSTANT, WARNING_FOR_INCOMPLETE,
         OMIT_NOT_ALLOWED, SUB_CHK, has_implicit_omit_attr());
       value_under_check = false;
       erroneous_attrs = chk_erroneous_attr(w_attrib_path, type, get_my_scope(),
@@ -4235,8 +4235,9 @@ namespace Ttcn {
     }
     chk_modified();
     chk_recursive_derivation();
-    type->chk_this_template_generic(body, INCOMPLETE_ALLOWED, OMIT_ALLOWED,
-      ANY_OR_OMIT_ALLOWED, SUB_CHK,
+    type->chk_this_template_generic(body,
+      derived_ref != NULL ? INCOMPLETE_ALLOWED : WARNING_FOR_INCOMPLETE,
+      OMIT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK,
       has_implicit_omit_attr() ? IMPLICIT_OMIT : NOT_IMPLICIT_OMIT, 0);
 
     erroneous_attrs = chk_erroneous_attr(w_attrib_path, type, get_my_scope(),
@@ -5025,8 +5026,6 @@ namespace Ttcn {
       }
 
       type->chk_this_template_ref(initial_value);
-      // temporary hack: to allow incomplete body as initial value
-      // checking as a modified template, but without a base template
       type->chk_this_template_generic(initial_value, INCOMPLETE_ALLOWED,
         OMIT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, IMPLICIT_OMIT, 0);
       gen_restriction_check =
