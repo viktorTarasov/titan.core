@@ -53,7 +53,12 @@ TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 #
 
 # TTCN-3 modules of this project:
-TTCN3_MODULES := logcontrol.ttcn TitanLoggerControl.ttcn
+TTCN3_MODULES := logcontrol.ttcn
+
+# This is needed by the compiler for semantic analysis, but it should
+# not be built and linked to the executable (since it's already part
+# of the runtime library)
+TITAN_RUNTIME_MODULES := TitanLoggerControl.ttcn
 
 # ASN.1 modules of this project:
 ASN1_MODULES =
@@ -116,7 +121,7 @@ $(TARGET): $(OBJECTS)
 $(GENERATED_SOURCES) $(GENERATED_HEADERS): compile
 	@if [ ! -f $@ ]; then $(RM) compile; $(MAKE) compile; fi
 
-compile: $(TTCN3_MODULES) $(ASN1_MODULES)
+compile: $(TTCN3_MODULES) $(ASN1_MODULES) $(TITAN_RUNTIME_MODULES)
 	$(TTCN3_COMPILER) $(COMPILER_FLAGS) $^ - $?
 	touch $@
 
