@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2016 ETSI  All Rights Reserved.
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
  * Adrien Kirjak
  *
@@ -16,7 +16,7 @@
 // the rest is returned (in the parameter encoded_value), and the decoded value is returned 
 // in the parameter decoded_value. The function shall return an integer value to indicate success 
 // or failure of the decoding below:
-// Ã¢ÂÂ¢ The return value 0 indicates that decoding was successful.
+// ÃÂ¢ÃÂÃÂ¢ The return value 0 indicates that decoding was successful.
 
 module Sem_160102_predefined_functions_018 {
     type integer I with { variant "32 bit"};

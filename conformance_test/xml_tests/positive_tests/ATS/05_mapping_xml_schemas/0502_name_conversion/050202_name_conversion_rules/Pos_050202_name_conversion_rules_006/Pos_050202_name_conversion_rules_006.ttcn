@@ -1,12 +1,7 @@
 /******************************************************************************
- * Copyright (c) 2000-2017 Ericsson Telecom AB
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
- * Contributors:
- *   Adrien Kirjak – initial implementation
+ * Adrien Kirjak
  *
  ** @version  0.0.1
  ** @purpose  9:5.2.2, Verify that prefixing type names with "X" works correctly
@@ -48,7 +43,7 @@ module Pos_050202_name_conversion_rules_006 {
     testcase TC_Pos_050202_name_conversion_rules_006() runs on C system C {
         var Raw v_rcv;
     
-		var Raw  v_Raw:="<ns017:ö01MyType xmlns:ns017='schema:Pos_050202_name_conversion_rules_006'>6</ns017:ö01MyType>\n";
+		var Raw  v_Raw:="<ns017:Ã¶01MyType xmlns:ns017='schema:Pos_050202_name_conversion_rules_006'>6</ns017:ö01MyType>\n";
 
         connect(self:p, self:p1);	
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2016 ETSI  All Rights Reserved.
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
  * Adrien Kirjak
  *
@@ -53,7 +53,7 @@ module NegSem_B010208_omit_value_003 {
     	alt {
      		[] messagePort.receive(mw_matchingTemplate) {
      	   		v_boolean := match({},mw_MyRecofTemplate);
-				// causes an error as a record of template shall not be Ã¢ÂÂomitÃ¢ÂÂ at the time of matching
+				// causes an error as a record of template shall not be ÃÂ¢ÃÂÃÂomitÃÂ¢ÃÂÃÂ at the time of matching
         		setverdict(pass);
      		}
      		[] messagePort.receive {

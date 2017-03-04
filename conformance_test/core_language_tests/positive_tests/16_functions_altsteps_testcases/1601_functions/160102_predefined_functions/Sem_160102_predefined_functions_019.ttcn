@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2016 ETSI  All Rights Reserved.
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
  * Adrien Kirjak
  *
@@ -15,7 +15,7 @@
 // If the decoding was unsuccessful, the actual parameters for encoded_value and decoded_value are 
 // not changed. The function shall return an integer value to indicate success or failure of the 
 // decoding below:
-// Ã¢ÂÂ¢ The return value 1 indicates an unspecified cause of decoding failure.
+// ÃÂ¢ÃÂÃÂ¢ The return value 1 indicates an unspecified cause of decoding failure.
 
 module Sem_160102_predefined_functions_019 {
     type enumerated E { one(1), two(2), three(3) } with { variant "32 bit"};

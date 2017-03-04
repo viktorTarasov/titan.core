@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2016 ETSI  All Rights Reserved.
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
  *
  * Adrien Kirjak
  *
@@ -17,7 +17,7 @@
 //   4) inlist-PORT2 defines the messages or procedures of the in-direction of PORT2; and
 //   5) outlist-PORT2 defines the messages or procedures of the out-direction of PORT2.
 // b) The connect operation is allowed if and only if:
-// outlist-PORT1 Ã¢ÂÂ inlist-PORT2 and outlist-PORT2 Ã¢ÂÂ inlist-PORT1.
+// outlist-PORT1 ÃÂ¢ÃÂÃÂ inlist-PORT2 and outlist-PORT2 ÃÂ¢ÃÂÃÂ inlist-PORT1.
 //
 // In this test, inlists and outlists are completely incompatible
 
