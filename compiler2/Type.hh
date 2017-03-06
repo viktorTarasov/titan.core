@@ -41,9 +41,10 @@
 
 class XerAttributes;
 enum namedbool { INCOMPLETE_NOT_ALLOWED = 0, INCOMPLETE_ALLOWED = 1,
-  NO_SUB_CHK = 0, SUB_CHK = 2, OMIT_NOT_ALLOWED = 0, OMIT_ALLOWED = 3,
-  ANY_OR_OMIT_NOT_ALLOWED = 0, ANY_OR_OMIT_ALLOWED = 4,
-  NOT_IMPLICIT_OMIT = 0, IMPLICIT_OMIT = 5, NOT_STR_ELEM = 0, IS_STR_ELEM = 6
+  WARNING_FOR_INCOMPLETE = 2, NO_SUB_CHK = 0, SUB_CHK = 3,
+  OMIT_NOT_ALLOWED = 0, OMIT_ALLOWED = 4,
+  ANY_OR_OMIT_NOT_ALLOWED = 0, ANY_OR_OMIT_ALLOWED = 5,
+  NOT_IMPLICIT_OMIT = 0, IMPLICIT_OMIT = 6, NOT_STR_ELEM = 0, IS_STR_ELEM = 7
 };
 
 namespace Asn {
@@ -875,7 +876,7 @@ namespace Common {
   private:
     bool chk_this_refd_template(Template *t, Common::Assignment *lhs);
     void chk_this_template_length_restriction(Template *t);
-    bool chk_this_template(Template *t, namedbool is_modified, namedbool sub_chk,
+    bool chk_this_template(Template *t, namedbool incomplete_allowed, namedbool sub_chk,
       namedbool implicit_omit, Common::Assignment *);
     bool chk_this_template_Str(Template *t, namedbool implicit_omit,
       Common::Assignment *lhs);
@@ -893,20 +894,20 @@ namespace Common {
     void chk_this_template_builtin(Template *t);
     void chk_this_template_Int_Real(Template *t);
     void chk_this_template_Enum(Template *t);
-    bool chk_this_template_Choice(Template *t, namedbool is_modified,
+    bool chk_this_template_Choice(Template *t, namedbool incomplete_allowed,
       namedbool implicit_omit, Common::Assignment *lhs);
-    bool chk_this_template_Seq(Template *t, namedbool is_modified,
+    bool chk_this_template_Seq(Template *t, namedbool incomplete_allowed,
       namedbool implicit_omit, Common::Assignment *lhs);
-    bool chk_this_template_Set(Template *t, namedbool is_modified,
+    bool chk_this_template_Set(Template *t, namedbool incomplete_allowed,
       namedbool implicit_omit, Common::Assignment *lhs);
-    bool chk_this_template_SeqOf(Template *t, namedbool is_modified,
+    bool chk_this_template_SeqOf(Template *t, namedbool incomplete_allowed,
       namedbool implicit_omit, Common::Assignment *lhs);
-    bool chk_this_template_SetOf(Template *t, namedbool is_modified,
+    bool chk_this_template_SetOf(Template *t, namedbool incomplete_allowed,
       namedbool implicit_omit, Common::Assignment *lhs);
-    bool chk_this_template_array(Template *t, namedbool is_modified,
+    bool chk_this_template_array(Template *t, namedbool incomplete_allowed,
       namedbool implicit_omit, Common::Assignment *lhs);
     void chk_this_template_Fat(Template *t);
-    void chk_this_template_Signature(Template *t, namedbool is_modified);
+    void chk_this_template_Signature(Template *t, namedbool incomplete_allowed);
   public:
     /** Check whether there is an enum item with the given name.
      *

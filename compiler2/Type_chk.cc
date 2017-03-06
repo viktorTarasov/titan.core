@@ -4322,7 +4322,7 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
       is_empty = false;
     }
   }
-  if (!incomplete_allowed || implicit_omit) {
+  if (incomplete_allowed != INCOMPLETE_ALLOWED || implicit_omit) {
     for (size_t i = 0; i < n_type_comps; i++) {
       const Identifier& id = get_comp_byIndex(i)->get_name();
       if (!comp_map.has_key(id.get_name())) {
@@ -4334,6 +4334,10 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
         else if (!incomplete_allowed)
           value->error("Field `%s' is missing from record value",
                      id.get_dispname().c_str());
+        else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+          value->warning("Field `%s' is missing from record value",
+            id.get_dispname().c_str());
+        }
       }
     }
   }
@@ -4389,7 +4393,7 @@ bool Type::chk_this_value_Set_T(Value *value, Common::Assignment *lhs, expected_
       is_empty = false;
     }
   }
-  if (!incomplete_allowed || implicit_omit) {
+  if (incomplete_allowed != INCOMPLETE_ALLOWED || implicit_omit) {
     for (size_t i = 0; i < n_type_comps; i++) {
       const Identifier& id = get_comp_byIndex(i)->get_name();
       if(!comp_map.has_key(id.get_name())) {
@@ -4399,8 +4403,12 @@ bool Type::chk_this_value_Set_T(Value *value, Common::Assignment *lhs, expected_
           is_empty = false;
         }
         else if (!incomplete_allowed)
-        value->error("Field `%s' is missing from set value %s",
-                     id.get_dispname().c_str(), implicit_omit ? "yes" : "no");
+          value->error("Field `%s' is missing from set value",
+            id.get_dispname().c_str());
+        else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+          value->warning("Field `%s' is missing from set value",
+            id.get_dispname().c_str());
+        }
       }
     }
   }
@@ -4586,6 +4594,9 @@ bool Type::chk_this_value_SeOf(Value *value, Common::Assignment *lhs, expected_v
           if (!incomplete_allowed)
             v_comp->error("Not used symbol `-' is not allowed in this "
                           "context");
+          else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+            v_comp->warning("Not used symbol `-' in %s value", valuetypename);
+          }
         } else {
           u.seof.ofType->chk_this_value_ref(v_comp);
           self_ref |= u.seof.ofType->chk_this_value(v_comp, lhs, expected_value,
@@ -4724,6 +4735,9 @@ bool Type::chk_this_value_Array(Value *value, Common::Assignment *lhs, expected_
           if (!incomplete_allowed)
             v_comp->error("Not used symbol `-' is not allowed in this "
                           "context");
+          else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+            v_comp->warning("Not used symbol `-' in array value");
+          }
         } else {
           u.array.element_type->chk_this_value_ref(v_comp);
           self_ref |= u.array.element_type->chk_this_value(v_comp, lhs,
@@ -4881,8 +4895,8 @@ bool Type::chk_this_value_Signature(Value *value, Common::Assignment *lhs,
       for (size_t i = 0; i < u.signature.parameters->get_nof_in_params(); i++) {
         const Identifier& id = get_comp_byIndex(i)->get_name();   //u.signature.parameters->get_param_byIndex(n)
         if (!comp_map.has_key(id.get_name()) && SignatureParam::PARAM_OUT != u.signature.parameters->get_in_param_byIndex(i)->get_direction()) {
-          value->error("Field `%s' is missing from signature value",
-                       id.get_dispname().c_str());
+            value->error("Field `%s' is missing from signature value",
+              id.get_dispname().c_str());
         }
       }
     }
@@ -5670,7 +5684,7 @@ bool Type::chk_this_refd_template(Template *t, Common::Assignment *lhs)
   return (lhs == ass);
 }
 
-bool Type::chk_this_template(Template *t, namedbool is_modified, namedbool,
+bool Type::chk_this_template(Template *t, namedbool incomplete_allowed, namedbool,
   namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
@@ -5725,31 +5739,31 @@ bool Type::chk_this_template(Template *t, namedbool is_modified, namedbool,
   case T_CHOICE_T:
   case T_OPENTYPE:
   case T_ANYTYPE:
-    self_ref = t_last->chk_this_template_Choice(t, is_modified, implicit_omit, lhs);
+    self_ref = t_last->chk_this_template_Choice(t, incomplete_allowed, implicit_omit, lhs);
     break;
   case T_SEQ_A:
   case T_SEQ_T:
-    self_ref = t_last->chk_this_template_Seq(t, is_modified, implicit_omit, lhs);
+    self_ref = t_last->chk_this_template_Seq(t, incomplete_allowed, implicit_omit, lhs);
     break;
   case T_SET_A:
   case T_SET_T:
-    self_ref = t_last->chk_this_template_Set(t, is_modified, implicit_omit, lhs);
+    self_ref = t_last->chk_this_template_Set(t, incomplete_allowed, implicit_omit, lhs);
     break;
   case T_SEQOF:
-    self_ref = t_last->chk_this_template_SeqOf(t, is_modified, implicit_omit, lhs);
+    self_ref = t_last->chk_this_template_SeqOf(t, incomplete_allowed, implicit_omit, lhs);
     break;
   case T_SETOF:
-    self_ref = t_last->chk_this_template_SetOf(t, is_modified, implicit_omit, lhs);
+    self_ref = t_last->chk_this_template_SetOf(t, incomplete_allowed, implicit_omit, lhs);
     break;
   case T_ARRAY:
-    self_ref = t_last->chk_this_template_array(t, is_modified, implicit_omit, lhs);
+    self_ref = t_last->chk_this_template_array(t, incomplete_allowed, implicit_omit, lhs);
     break;
   case T_PORT:
     t->error("Template cannot be defined for port type `%s'",
       get_fullname().c_str());
     break;
   case T_SIGNATURE:
-    t_last->chk_this_template_Signature(t, is_modified);
+    t_last->chk_this_template_Signature(t, incomplete_allowed);
     break;
   case T_FUNCTION:
   case T_ALTSTEP:
@@ -6011,7 +6025,7 @@ void Type::chk_this_template_Enum(Template *t)
     "allowed for enumerated type `%s'", get_typename().c_str());
 }
 
-bool Type::chk_this_template_Choice(Template *t, namedbool is_modified,
+bool Type::chk_this_template_Choice(Template *t, namedbool incomplete_allowed,
   namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
@@ -6046,10 +6060,10 @@ bool Type::chk_this_template_Choice(Template *t, namedbool is_modified,
 
       nt_templ->set_my_governor(field_type);
       field_type->chk_this_template_ref(nt_templ);
-      bool incompl_ok = t->get_completeness_condition_choice(is_modified, nt_name) ==
+      bool incompl_ok = t->get_completeness_condition_choice(incomplete_allowed, nt_name) ==
         Ttcn::Template::C_MAY_INCOMPLETE;
       self_ref |= field_type->chk_this_template_generic(nt_templ,
-        (incompl_ok ? INCOMPLETE_ALLOWED : INCOMPLETE_NOT_ALLOWED),
+        (incompl_ok ? incomplete_allowed : INCOMPLETE_NOT_ALLOWED),
         OMIT_NOT_ALLOWED, ANY_OR_OMIT_NOT_ALLOWED, SUB_CHK, implicit_omit, lhs);
     }
     break;}
@@ -6064,7 +6078,7 @@ bool Type::chk_this_template_Choice(Template *t, namedbool is_modified,
   return self_ref;
 }
 
-bool Type::chk_this_template_Seq(Template *t, namedbool is_modified,
+bool Type::chk_this_template_Seq(Template *t, namedbool incomplete_allowed,
   namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
@@ -6104,7 +6118,7 @@ bool Type::chk_this_template_Seq(Template *t, namedbool is_modified,
 
       CompField *cf = get_comp_byName(temp_id);
       if (in_synch) {
-        if (is_modified) {
+        if (incomplete_allowed) {
           // missing fields are allowed, but take care of ordering
           bool found = false;
           for (size_t j = next_index; j < n_type_comps; j++) {
@@ -6143,12 +6157,12 @@ bool Type::chk_this_template_Seq(Template *t, namedbool is_modified,
       comp_t->set_my_governor(type);
       type->chk_this_template_ref(comp_t);
       bool is_optional = cf->get_is_optional(); // || cf->has_default()
-      self_ref |= type->chk_this_template_generic(comp_t, is_modified,
+      self_ref |= type->chk_this_template_generic(comp_t, incomplete_allowed,
         (is_optional ? OMIT_ALLOWED : OMIT_NOT_ALLOWED),
         (is_optional ? ANY_OR_OMIT_ALLOWED : ANY_OR_OMIT_NOT_ALLOWED),
         SUB_CHK, implicit_omit, lhs);
     }
-    if (!is_modified || implicit_omit) {
+    if (incomplete_allowed != INCOMPLETE_ALLOWED || implicit_omit) {
       // check missing fields
       for (size_t i = 0; i < n_type_comps; i++) {
         const Identifier& id = get_comp_byIndex(i)->get_name();
@@ -6158,8 +6172,12 @@ bool Type::chk_this_template_Seq(Template *t, namedbool is_modified,
             if (!t->get_base_template())
               t->add_named_temp(new Ttcn::NamedTemplate(new Identifier(id),
                 new Template(Template::OMIT_VALUE)));
-          } else if (!is_modified) {
+          } else if (!incomplete_allowed) {
             t->error("Field `%s' is missing from template for record type `%s'",
+              id.get_dispname().c_str(), get_typename().c_str());
+          }
+          else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+            t->warning("Field `%s' is missing from template for record type `%s'",
               id.get_dispname().c_str(), get_typename().c_str());
           }
         }
@@ -6178,7 +6196,7 @@ bool Type::chk_this_template_Seq(Template *t, namedbool is_modified,
 }
 
 bool Type::chk_this_template_Set(Template *t,
-  namedbool is_modified, namedbool implicit_omit, Common::Assignment *lhs)
+  namedbool incomplete_allowed, namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
   size_t n_type_comps = get_nof_comps();
@@ -6223,13 +6241,12 @@ bool Type::chk_this_template_Set(Template *t,
       comp_t->set_my_governor(type);
       type->chk_this_template_ref(comp_t);
       bool is_optional = cf->get_is_optional();
-      self_ref |= type->chk_this_template_generic(comp_t,
-        (is_modified ? INCOMPLETE_ALLOWED : INCOMPLETE_NOT_ALLOWED),
+      self_ref |= type->chk_this_template_generic(comp_t, incomplete_allowed,
         (is_optional ? OMIT_ALLOWED : OMIT_NOT_ALLOWED),
         (is_optional ? ANY_OR_OMIT_ALLOWED : ANY_OR_OMIT_NOT_ALLOWED),
         SUB_CHK, implicit_omit, lhs);
     }
-    if (!is_modified || implicit_omit) {
+    if (incomplete_allowed != INCOMPLETE_ALLOWED || implicit_omit) {
       // check missing fields
       for (size_t i = 0; i < n_type_comps; i++) {
         const Identifier& id = get_comp_byIndex(i)->get_name();
@@ -6239,8 +6256,12 @@ bool Type::chk_this_template_Set(Template *t,
         	if (!t->get_base_template())
               t->add_named_temp(new Ttcn::NamedTemplate(new Identifier(id),
                 new Template(Template::OMIT_VALUE)));
-          } else if (!is_modified) {
+          } else if (!incomplete_allowed) {
             t->error("Field `%s' is missing from template for set type `%s'",
+              id.get_dispname().c_str(), get_typename().c_str());
+          }
+          else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+            t->warning("Field `%s' is missing from template for set type `%s'",
               id.get_dispname().c_str(), get_typename().c_str());
           }
         }
@@ -6258,7 +6279,7 @@ bool Type::chk_this_template_Set(Template *t,
   return self_ref;
 }
 
-bool Type::chk_this_template_SeqOf(Template *t, namedbool is_modified,
+bool Type::chk_this_template_SeqOf(Template *t, namedbool incomplete_allowed,
   namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
@@ -6283,7 +6304,7 @@ bool Type::chk_this_template_SeqOf(Template *t, namedbool is_modified,
     break; }
   case Ttcn::Template::TEMPLATE_LIST: {
     Ttcn::Template::completeness_t c =
-      t->get_completeness_condition_seof(is_modified);
+      t->get_completeness_condition_seof(incomplete_allowed);
     Template *t_base;
     size_t nof_base_comps;
     if (c == Ttcn::Template::C_PARTIAL) {
@@ -6317,12 +6338,15 @@ bool Type::chk_this_template_SeqOf(Template *t, namedbool is_modified,
           t_comp->error("Not used symbol `-' cannot be used here because "
             "there is no corresponding element in the base template");
         }
+        else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+          t_comp->warning("Not used symbol `-' in record of template");
+        }
         break;
       default:
         bool embedded_modified = (c == Ttcn::Template::C_MAY_INCOMPLETE) ||
           (c == Ttcn::Template::C_PARTIAL && i < nof_base_comps);
         self_ref |= u.seof.ofType->chk_this_template_generic(t_comp,
-          (embedded_modified ? INCOMPLETE_ALLOWED : INCOMPLETE_NOT_ALLOWED),
+          (embedded_modified ? incomplete_allowed : INCOMPLETE_NOT_ALLOWED),
           OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, implicit_omit, lhs);
         break;
       }
@@ -6383,7 +6407,7 @@ bool Type::chk_this_template_SeqOf(Template *t, namedbool is_modified,
   return self_ref;
 }
 
-bool Type::chk_this_template_SetOf(Template *t, namedbool is_modified,
+bool Type::chk_this_template_SetOf(Template *t, namedbool incomplete_allowed,
   namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
@@ -6419,7 +6443,7 @@ bool Type::chk_this_template_SetOf(Template *t, namedbool is_modified,
     break;}
   case Ttcn::Template::TEMPLATE_LIST: {
     Ttcn::Template::completeness_t c =
-      t->get_completeness_condition_seof(is_modified);
+      t->get_completeness_condition_seof(incomplete_allowed);
     Template *t_base;
     size_t nof_base_comps;
     if (c == Ttcn::Template::C_PARTIAL) {
@@ -6450,12 +6474,15 @@ bool Type::chk_this_template_SetOf(Template *t, namedbool is_modified,
           t_comp->error("Not used symbol `-' cannot be used here because "
             "there is no corresponding element in the base template");
         }
+        else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+          t_comp->warning("Not used symbol `-' in set of template");
+        }
         break;
       default:
         bool embedded_modified = (c == Ttcn::Template::C_MAY_INCOMPLETE) ||
           (c == Ttcn::Template::C_PARTIAL && i < nof_base_comps);
         self_ref |= u.seof.ofType->chk_this_template_generic(t_comp,
-          (embedded_modified ? INCOMPLETE_ALLOWED : INCOMPLETE_NOT_ALLOWED),
+          (embedded_modified ? incomplete_allowed : INCOMPLETE_NOT_ALLOWED),
           OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, implicit_omit, lhs);
         break;
       }
@@ -6514,7 +6541,7 @@ bool Type::chk_this_template_SetOf(Template *t, namedbool is_modified,
   return self_ref;
 }
 
-bool Type::chk_this_template_array(Template *t, namedbool is_modified,
+bool Type::chk_this_template_array(Template *t, namedbool incomplete_allowed,
                                    namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
@@ -6580,13 +6607,16 @@ bool Type::chk_this_template_array(Template *t, namedbool is_modified,
             implicit_omit, lhs);
           break;
         case Ttcn::Template::TEMPLATE_NOTUSED:
-          if (!is_modified)
+          if (!incomplete_allowed)
             t_comp->error("Not used symbol `-' is not allowed in this "
                           "context");
+          else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+            t_comp->warning("Not used symbol `-' in array template");
+          }
           break;
         default:
             self_ref |= u.array.element_type->chk_this_template_generic(t_comp,
-            is_modified, OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, implicit_omit, lhs);
+            incomplete_allowed, OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, implicit_omit, lhs);
           break;
       }
     }
@@ -6627,7 +6657,7 @@ bool Type::chk_this_template_array(Template *t, namedbool is_modified,
       it_comp->set_my_governor(u.array.element_type);
       u.array.element_type->chk_this_template_ref(it_comp);
       self_ref |= u.array.element_type->chk_this_template_generic(it_comp,
-        is_modified, OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, implicit_omit, lhs);
+        incomplete_allowed, OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, implicit_omit, lhs);
     }
     for (size_t i = 0; i < index_map.size(); i++)
       delete index_map.get_nth_elem(i);
@@ -6649,7 +6679,7 @@ void Type::chk_this_template_Fat(Template *t)
     "allowed for type `%s'", get_typename().c_str());
 }
 
-void Type::chk_this_template_Signature(Template *t, namedbool is_modified)
+void Type::chk_this_template_Signature(Template *t, namedbool incomplete_allowed)
 {
   bool self_ref = false;
   size_t n_type_params = get_nof_comps();
@@ -6701,10 +6731,11 @@ void Type::chk_this_template_Signature(Template *t, namedbool is_modified)
         temp_dispname_str);
       comp_t->set_my_governor(type);
       type->chk_this_template_ref(comp_t);
-      self_ref |= type->chk_this_template_generic(comp_t, is_modified, OMIT_NOT_ALLOWED, ANY_OR_OMIT_NOT_ALLOWED,
+      self_ref |= type->chk_this_template_generic(comp_t, incomplete_allowed,
+        OMIT_NOT_ALLOWED, ANY_OR_OMIT_NOT_ALLOWED,
         SUB_CHK, NOT_IMPLICIT_OMIT, NULL);
     }
-    if(!is_modified) {
+    if(incomplete_allowed != INCOMPLETE_ALLOWED) {
       SignatureParam *first_undef_in = NULL,
                       *first_undef_out = NULL;
       for (size_t i = 0; i < n_type_params; i++) {
@@ -6721,16 +6752,31 @@ void Type::chk_this_template_Signature(Template *t, namedbool is_modified)
             if(!first_undef_out) first_undef_out = par;
             break;
           default: //inout
-            t->error("Signature template is incomplete, because the inout "
-              "parameter `%s' is missing", id.get_dispname().c_str());
+            if (!incomplete_allowed) {
+              t->error("Signature template is incomplete, because the inout "
+                "parameter `%s' is missing", id.get_dispname().c_str());
+            }
+            else {
+              t->warning("Signature template is incomplete, because the inout "
+                "parameter `%s' is missing", id.get_dispname().c_str());
+            }
           }
         }
       }
-      if(first_undef_in!=NULL && first_undef_out!=NULL)
-        t->error("Signature template is incomplete, because the in parameter "
-          "`%s' and the out parameter `%s' is missing",
-          first_undef_in->get_id().get_dispname().c_str(),
-          first_undef_out->get_id().get_dispname().c_str());
+      if(first_undef_in!=NULL && first_undef_out!=NULL) {
+        if (!incomplete_allowed) {
+          t->error("Signature template is incomplete, because the in parameter "
+            "`%s' and the out parameter `%s' are missing",
+            first_undef_in->get_id().get_dispname().c_str(),
+            first_undef_out->get_id().get_dispname().c_str());
+        }
+        else {
+          t->warning("Signature template is incomplete, because the in parameter "
+            "`%s' and the out parameter `%s' are missing",
+            first_undef_in->get_id().get_dispname().c_str(),
+            first_undef_out->get_id().get_dispname().c_str());
+        }
+      }
     }
     comp_map.clear();
     break;}
