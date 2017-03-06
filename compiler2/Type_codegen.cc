@@ -2303,8 +2303,7 @@ void Type::generate_code_done(output_struct *target)
      use_runtime_2 ? "Value_Redirect_Interface" : genname_str, dispname_str, genname_str);
   if (use_runtime_2) {
     target->source.function_bodies = mputstr(target->source.function_bodies,
-      "value_redirect->set_values(&return_value);\n"
-      "delete value_redirect;\n");
+      "value_redirect->set_values(&return_value);\n");
   }
   else {
     target->source.function_bodies = mputstr(target->source.function_bodies,

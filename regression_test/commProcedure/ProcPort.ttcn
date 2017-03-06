@@ -60,6 +60,8 @@ signature s_StopPTC();
 signature MyProc6(inout integer I);
 signature MyProc7(inout universal charstring x) return MyRecord2 exception(MyRecord2, MyRecord3);
 
+type integer MyInt with { extension "done" }; 
+
 template s_StopPTC StopPTC := { }
 
 template MyProc5 MyProc5Template_any := {
@@ -313,6 +315,10 @@ function GetCallParameters_behav() runs on ProcComponent3 {
     }
     [] t.timeout { pt.reply(MyProc6:{t_getCall_timeout}); }
   }
+}
+
+function Done_behav(in MyInt p) runs on ProcComponent return MyInt {
+  return p;
 }
 
 testcase tc1_Call() runs on ProcComponent {
@@ -784,6 +790,18 @@ testcase tc_MatchingWithAnyOrOmit() runs on ProcComponent5 {
   }
 }
 
+testcase tc_doneWithValueRedirect() runs on ProcComponent {
+  var MyInt val := 2;
+  var MyInt res;
+  var ProcComponent comp := ProcComponent.create;
+  comp.start(Done_behav(val));
+  comp.done(MyInt: ?) -> value res;
+  if (res != val) {
+    setverdict(fail, "Invalid return value. Got: ", res, ", expected: ", val);
+  }
+  setverdict(pass);
+}
+
 control {
   execute(tc1_Call());
   execute(tc2_Call());
@@ -799,5 +817,6 @@ control {
   execute(tc_PortAddress_external_usage2());
   execute(tc_GetReplyParameters());
   execute(tc_MatchingWithAnyOrOmit());
+  execute(tc_doneWithValueRedirect());
 }
 }
