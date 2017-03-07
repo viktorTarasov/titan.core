@@ -85,6 +85,9 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
         src = mputprintf(src, "%s mapped_par;\n"
           "%s(send_par, mapped_par);\n",
           target->target_name, target->mapping.function.name);
+        if (!pdef->legacy) {
+          has_condition = TRUE;
+        }
         break;
       case PT_SLIDING:
         /* Yes, it is possible to use a "prototype(sliding)" decoder
@@ -146,6 +149,9 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
       default:
         FATAL_ERROR("generate_send_mapping(): invalid mapping type");
     }
+    if (!pdef->legacy) {
+      src = mputstr(src, "if (mapped_par.is_bound()) {\n"); // temporary solution instead of setstate
+    }
     src = mputprintf(src, "if (TTCN_Logger::log_this_event("
       "TTCN_Logger::PORTEVENT_DUALSEND)) {\n"
       "TTCN_Logger::log_dualport_map(0, \"%s\",\n"
@@ -169,9 +175,14 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
       if (pdef->testport_type != INTERNAL) src = mputstr(src, "}\n");
     }
     if (has_condition) {
-      src = mputstr(src, "return;\n"
-        "}\n");
+      src = mputstr(src, "return;\n");
+      if (pdef->legacy) {
+        src = mputstr(src, "}\n");
+      }
       report_error = TRUE;
+    }
+    if (!pdef->legacy) {
+      src = mputstr(src, "}\n");
     }
     if (mapped_type->nTargets > 1) src = mputstr(src, "}\n");
   }
@@ -196,11 +207,13 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
 }
 
 static char *generate_incoming_mapping(char *src, const port_def *pdef,
-  const port_msg_mapped_type *mapped_type)
+  const port_msg_mapped_type *mapped_type, boolean has_simple)
 {
-  size_t i;
+  // If has simple is true, then always the first one is the simple mapping,
+  // and the first mapping is taken care elsewhere
+  size_t i = has_simple ? 1 : 0;
   boolean has_buffer = FALSE, has_discard = FALSE, report_error = FALSE;
-  for (i = 0; i < mapped_type->nTargets; i++) {
+  for (; i < mapped_type->nTargets; i++) {
     const port_msg_type_mapping_target *target =
       mapped_type->targets + i;
     boolean has_condition = FALSE;
@@ -237,6 +250,9 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
           "throw;\n"
           "}\n", target->target_name, target->target_name,
           target->mapping.function.name);
+          if (!pdef->legacy) {
+            has_condition = TRUE;
+          }
         break;
       case PT_SLIDING:
         src = mputprintf(src,
@@ -319,6 +335,7 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
         FATAL_ERROR("generate_incoming_mapping(): invalid mapping type");
     }
     src = mputprintf(src, "msg_tail_count++;\n"
+      "%s"
       "if (TTCN_Logger::log_this_event(TTCN_Logger::PORTEVENT_DUALRECV)) "
       "{\n"
       "TTCN_Logger::log_dualport_map(1, \"%s\",\n"
@@ -330,7 +347,9 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
       "new_item->item_selection = MESSAGE_%lu;\n"
       "new_item->message_%lu = mapped_par;\n"
       "new_item->sender_component = sender_component;\n",
-      target->target_dispname, (unsigned long) target->target_index,
+      !pdef->legacy ? "if (mapped_par->is_bound()) {\n" : "", //temporary solution instead of setstate
+      target->target_dispname,
+      (unsigned long) target->target_index,
       (unsigned long) target->target_index);
     if (pdef->testport_type == ADDRESS) {
       src = mputprintf(src, "if (sender_address != NULL) "
@@ -368,7 +387,7 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
         "TTCN_Logger::log_dualport_discard(1, \"%s\", port_name, FALSE);\n"
         , mapped_type->dispname);
     }
-  } else if (report_error) {
+  } else if (report_error && !has_simple) { // only report error if no simple mapping is present
     src = mputprintf(src, "TTCN_error(\"Incoming message of type %s could "
       "not be handled by the type mapping rules on port %%s.\", "
       "port_name);\n", mapped_type->dispname);
@@ -1370,6 +1389,13 @@ void defPortClass(const port_def* pdef, output_struct* output)
     base_class_name = mcopystr("PORT");
   } else {
     switch (pdef->port_type) {
+    case USER:
+      if (pdef->legacy) {
+        class_name = mcopystr(pdef->name);
+        base_class_name = mprintf("%s_PROVIDER", pdef->provider_name);
+        break;
+      }
+      // else fall through
     case REGULAR:
       class_name = mprintf("%s_BASE", pdef->name);
       base_class_name = mcopystr("PORT");
@@ -1377,10 +1403,6 @@ void defPortClass(const port_def* pdef, output_struct* output)
     case PROVIDER:
       class_name = mcopystr(pdef->name);
       base_class_name = mprintf("%s_PROVIDER", pdef->name);
-      break;
-    case USER:
-      class_name = mcopystr(pdef->name);
-      base_class_name = mprintf("%s_PROVIDER", pdef->provider_name);
       break;
     default:
       FATAL_ERROR("defPortClass(): invalid port type");
@@ -1582,8 +1604,8 @@ void defPortClass(const port_def* pdef, output_struct* output)
       "sliding_buffer = OCTETSTRING(0, 0);\n");
     src = mputstr(src, "}\n\n");
   }
-
-
+  
+  
   def = mputstr(def, "public:\n");
 
   /* constructor */
@@ -1963,19 +1985,58 @@ void defPortClass(const port_def* pdef, output_struct* output)
       "}\n\n", class_name, sig->name);
   }
 
-  if (pdef->testport_type != INTERNAL && pdef->port_type == REGULAR) {
+  if (pdef->testport_type != INTERNAL &&
+     (pdef->port_type == REGULAR || (pdef->port_type == USER && !pdef->legacy))) {
     /* virtual functions for transmission (implemented by the test port) */
     def = mputstr(def, "protected:\n");
     /* outgoing_send functions */
+    size_t n_used = 0;
+    const char** used = NULL;
+    // Only print one outgoing_send for each type
     for (i = 0; i < pdef->msg_out.nElements; i++) {
-      def = mputprintf(def, "virtual void outgoing_send("
-        "const %s& send_par", pdef->msg_out.elements[i].name);
-      if (pdef->testport_type == ADDRESS) {
-        def = mputprintf(def, ", const %s *destination_address",
-          pdef->address_name);
+      used = (const char**)Realloc(used, (n_used + pdef->msg_out.elements[i].nTargets + 1) * sizeof(const char*));
+      boolean found = FALSE;
+      for (size_t k = 0; k < n_used; k++) {
+        if (strcmp(used[k], pdef->msg_out.elements[i].name) == 0) {
+          found = TRUE;
+          break;
+        }
       }
-      def = mputstr(def, ") = 0;\n");
+      if (!found) {
+        def = mputprintf(def, "virtual void outgoing_send("
+          "const %s& send_par", pdef->msg_out.elements[i].name);
+        if (pdef->testport_type == ADDRESS) {
+          def = mputprintf(def, ", const %s *destination_address",
+            pdef->address_name);
+        }
+        def = mputstr(def, ") = 0;\n");
+        used[n_used] = pdef->msg_out.elements[i].name;
+        n_used++;
+      }
+      if (pdef->port_type == USER && !pdef->legacy) {
+        for (size_t j = 0; j < pdef->msg_out.elements[i].nTargets; j++) {
+          found = FALSE;
+          for (size_t k = 0; k < n_used; k++) {
+            if (strcmp(used[k], pdef->msg_out.elements[i].targets[j].target_name) == 0) {
+              found = TRUE;
+              break;
+            }
+          }
+          if (!found) {
+            def = mputprintf(def, "virtual void outgoing_send("
+              "const %s& send_par", pdef->msg_out.elements[i].targets[j].target_name);
+            if (pdef->testport_type == ADDRESS) {
+              def = mputprintf(def, ", const %s *destination_address",
+                pdef->address_name);
+            }
+            def = mputstr(def, ") = 0;\n");
+            used[n_used] = pdef->msg_out.elements[i].targets[j].target_name;
+            n_used++;
+          }
+        }
+      }
     }
+    Free(used); // do not delete pointers
     /* outgoing_call functions */
     for (i = 0; i < pdef->proc_out.nElements; i++) {
       def = mputprintf(def, "virtual void outgoing_call("
@@ -2160,7 +2221,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
     for (i = 0; i < pdef->provider_msg_in.nElements; i++) {
       const port_msg_mapped_type *mapped_type =
         pdef->provider_msg_in.elements + i;
-      boolean is_simple = mapped_type->nTargets == 1 &&
+      boolean is_simple = (!pdef->legacy || mapped_type->nTargets == 1) &&
         mapped_type->targets[0].mapping_type == M_SIMPLE;
       def = mputprintf(def, "void incoming_message(const %s& "
         "incoming_par, component sender_component%s",
@@ -2211,6 +2272,10 @@ void defPortClass(const port_def* pdef, output_struct* output)
       " TTCN_Logger::log_event_str(\" %s : \"),"
       " incoming_par.log(), TTCN_Logger::end_event_log2str()));\n"
       "}\n", mapped_type->dispname);
+      // Print the simple mapping after the not simple mappings
+      if (!is_simple || !pdef->legacy) {
+        src = generate_incoming_mapping(src, pdef, mapped_type, is_simple);
+      }
       if (is_simple) {
         src = mputprintf(src,
 #ifndef NDEBUG
@@ -2230,7 +2295,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
             pdef->address_name);
         }
         src = mputstr(src, "append_to_msg_queue(new_item);\n");
-      } else src = generate_incoming_mapping(src, pdef, mapped_type);
+      }
       src = mputstr(src, "}\n\n");
     }
   } else { /* not user */
@@ -2744,7 +2809,8 @@ void defPortClass(const port_def* pdef, output_struct* output)
 
   output->header.class_decls = mputprintf(output->header.class_decls,
     "class %s;\n", class_name);
-  if (pdef->testport_type != INTERNAL && pdef->port_type == REGULAR)
+  if (pdef->testport_type != INTERNAL &&
+     (pdef->port_type == REGULAR || (pdef->port_type == USER && !pdef->legacy)))
     output->header.class_decls = mputprintf(output->header.class_decls,
       "class %s;\n", pdef->name);
 
@@ -2753,6 +2819,11 @@ void defPortClass(const port_def* pdef, output_struct* output)
 
   if (pdef->testport_type != INTERNAL) {
     switch (pdef->port_type) {
+    case USER:
+      if (pdef->legacy) {
+        break;
+      }
+      // else fall through
     case REGULAR:
       output->header.testport_includes = mputprintf(
         output->header.testport_includes, "#include \"%s.hh\"\n",
@@ -2857,15 +2928,54 @@ void generateTestPortSkeleton(const port_def *pdef)
       class_name, base_class_name, class_name,
       pdef->port_type == REGULAR ? " = NULL" : "", class_name);
 
+    // Only print each outgoing_send for each type
+    size_t n_used = 0;
+    const char** used = NULL;
     for (i = 0; i < pdef->msg_out.nElements; i++) {
-      fprintf(fp, "\tvoid outgoing_send(const %s& send_par",
-        pdef->msg_out.elements[i].name);
-      if (pdef->testport_type == ADDRESS) {
-        fprintf(fp, ",\n"
-          "\t\tconst %s *destination_address", pdef->address_name);
+      boolean found = FALSE;
+      used = (const char**)Realloc(used, (n_used + pdef->provider_msg_in.nElements + pdef->msg_out.elements[i].nTargets + 1) * sizeof(const char*));
+      for (size_t k = 0; k < n_used; k++) {
+        if (strcmp(used[k], pdef->msg_out.elements[i].name) == 0) {
+          found = TRUE;
+          break;
+        }
       }
-      fputs(");\n", fp);
+      if (!found) {
+        fprintf(fp, "\tvoid outgoing_send(const %s& send_par",
+          pdef->msg_out.elements[i].name);
+        if (pdef->testport_type == ADDRESS) {
+          fprintf(fp, ",\n"
+            "\t\tconst %s *destination_address", pdef->address_name);
+        }
+        fputs(");\n", fp);
+        used[n_used] = pdef->msg_out.elements[i].name;
+        n_used++;
+      }
+      if (pdef->port_type == USER && !pdef->legacy) {
+        for (size_t j = 0; j < pdef->msg_out.elements[i].nTargets; j++) {
+          found = FALSE;
+          for (size_t k = 0; k < n_used; k++) {
+            if (strcmp(used[k], pdef->msg_out.elements[i].targets[j].target_name) == 0) {
+              found = TRUE;
+              break;
+            }
+          }
+          if (!found) {
+            fprintf(fp, "\tvoid outgoing_send("
+              "const %s& send_par", pdef->msg_out.elements[i].targets[j].target_name);
+            if (pdef->testport_type == ADDRESS) {
+              fprintf(fp, ",\n"
+                "\t\tconst %s *destination_address", pdef->address_name);
+            }
+            fputs(");\n", fp);
+            
+            used[n_used] = pdef->msg_out.elements[i].targets[j].target_name;
+            n_used++;
+          }
+        }
+      }
     }
+    Free(used); // do not delete pointers
     for (i = 0; i < pdef->proc_out.nElements; i++) {
       fprintf(fp, "\tvoid outgoing_call(const %s_call& call_par",
         pdef->proc_out.elements[i].name);
@@ -3014,18 +3124,58 @@ void generateTestPortSkeleton(const port_def *pdef)
       class_name, class_name, class_name, class_name, class_name,
       class_name, class_name, class_name, class_name, class_name,
       class_name);
-
+    // Only print one outgoing_send for each type
+    // TODO: It is done three times, so maybe we can refactor it in the Ttfcnstuff.cc
+    size_t n_used = 0;
+    const char** used = NULL;
     for (i = 0; i < pdef->msg_out.nElements; i++) {
-      fprintf(fp, "void %s::outgoing_send(const %s& /*send_par*/",
-        class_name, pdef->msg_out.elements[i].name);
-      if (pdef->testport_type == ADDRESS) {
-        fprintf(fp, ",\n"
-          "\tconst %s * /*destination_address*/", pdef->address_name);
+      used = (const char**)Realloc(used, (n_used + pdef->msg_out.elements[i].nTargets + 1) * sizeof(const char*));
+      boolean found = FALSE;
+      for (size_t k = 0; k < n_used; k++) {
+        if (strcmp(used[k], pdef->msg_out.elements[i].name) == 0) {
+          found = TRUE;
+          break;
+        }
       }
-      fputs(")\n"
-        "{\n\n"
-        "}\n\n", fp);
+      if (!found) {
+        fprintf(fp, "void %s::outgoing_send(const %s& /*send_par*/",
+          class_name, pdef->msg_out.elements[i].name);
+        if (pdef->testport_type == ADDRESS) {
+          fprintf(fp, ",\n"
+            "\tconst %s * /*destination_address*/", pdef->address_name);
+        }
+        fputs(")\n"
+          "{\n\n"
+          "}\n\n", fp);
+        used[n_used] = pdef->msg_out.elements[i].name;
+        n_used++;
+      }
+      if (pdef->port_type == USER && !pdef->legacy) {
+        for (size_t j = 0; j < pdef->msg_out.elements[i].nTargets; j++) {
+          found = FALSE;
+          for (size_t k = 0; k < n_used; k++) {
+            if (strcmp(used[k], pdef->msg_out.elements[i].targets[j].target_name) == 0) {
+              found = TRUE;
+              break;
+            }
+          }
+          if (!found) {
+            fprintf(fp, "void %s::outgoing_send(const %s& /*send_par*/",
+            class_name, pdef->msg_out.elements[i].targets[j].target_name);
+            if (pdef->testport_type == ADDRESS) {
+              fprintf(fp, ",\n"
+                "\tconst %s * /*destination_address*/", pdef->address_name);
+            }
+            fputs(")\n"
+              "{\n\n"
+              "}\n\n", fp);
+            used[n_used] = pdef->msg_out.elements[i].targets[j].target_name;
+            n_used++;
+          }
+        }
+      }
     }
+    Free(used); // do not delete pointers
     for (i = 0; i < pdef->proc_out.nElements; i++) {
       fprintf(fp, "void %s::outgoing_call(const %s_call& /*call_par*/",
         class_name, pdef->proc_out.elements[i].name);

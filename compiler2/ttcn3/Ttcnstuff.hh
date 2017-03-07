@@ -11,6 +11,7 @@
  *   Delic, Adam
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Zalanyi, Balazs Andor
  *
  ******************************************************************************/
@@ -174,14 +175,22 @@ private:
   /** Check function mapping.
    * The function must have "prototype()", the function's input parameter
    * must match the source_type and its return type must match the target_type
-   * of this mapping. */
-  void chk_function(Common::Type *source_type);
+   * of this mapping.
+   * Param legacy: true if the old user attribute was used or false when the 
+   *               syntax in the standard was used.
+     Param incoming: true if the mapping is in the in list of port, false if the
+   *                 mapping is in the out list of the port.*/
+  void chk_function(Common::Type *source_type, bool legacy, bool incoming);
   /** Check "encode()" mapping. */
   void chk_encode(Common::Type *source_type);
   /** Check "decode()" mapping. */
   void chk_decode(Common::Type *source_type);
 public:
-  void chk(Common::Type *source_type);
+  /* Param legacy: true if the old user attribute was used or false when the 
+   *               syntax in the standard was used.
+     Param incoming: true if the mapping is in the in list of port, false if the
+   *                 mapping is in the out list of the port.*/
+  void chk(Common::Type *source_type, bool legacy, bool incoming);
   /** Fills the appropriate data structure \a target for code generation. */
   bool fill_type_mapping_target(port_msg_type_mapping_target *target,
     Common::Type *source_type, Common::Scope *p_scope, stringpool& pool);
@@ -236,7 +245,11 @@ public:
   size_t get_nof_targets() const { return targets->get_nof_targets(); }
   TypeMappingTarget *get_target_byIndex(size_t n) const
     { return targets->get_target_byIndex(n); }
-  void chk();
+  /* Param legacy: true if the old user attribute was used or false when the 
+   *               syntax in the standard was used.
+     Param incoming: true if the mapping is in the in list of port, false if the
+   *                 mapping is in the out list of the port.*/
+  void chk(bool legacy, bool incoming);
   virtual void dump(unsigned level) const;
 };
 
@@ -261,7 +274,11 @@ public:
   TypeMapping *get_mapping_byIndex(size_t n) const { return mappings_v[n]; }
   bool has_mapping_for_type(Common::Type *p_type) const;
   TypeMapping *get_mapping_byType(Common::Type *p_type) const;
-  void chk();
+  /* Param legacy: true if the old user attribute was used or false when the 
+   *               syntax in the standard was used.
+     Param incoming: true if the mapping is in the in list of port, false if the
+   *                 mapping is in the out list of the port.*/
+  void chk(bool legacy, bool incoming);
   virtual void dump(unsigned level) const;
 };
 
@@ -373,6 +390,7 @@ private:
   Types *in_list, *out_list, *inout_list;
   bool in_all, out_all, inout_all; // whether "(in|out|inout) all" was used
   bool checked;
+  bool legacy; // Old extension syntax or new standard syntax
   /* Types and signatures that can be sent and received.
    * These are initially empty; filled by PortTypeBody::chk_list based on
    * in_list, out_list, inout_list.
@@ -381,8 +399,8 @@ private:
   TypeSet *in_msgs, *out_msgs, *in_sigs, *out_sigs;
   TestPortAPI_t testport_type; // regular|internal|address
   PortType_t port_type; // regular|provider|user
-  Ttcn::Reference *provider_ref; ///< reference to provider port, for PT_USER
-  Common::Type *provider_type; ///< the type that provider_ref refers to
+  vector<Ttcn::Reference>provider_refs; ///< references to provider ports, for PT_USER
+  vector<Common::Type> provider_types; ///< the types that provider_refs refers to
   TypeMappings *in_mappings, *out_mappings; ///< mappings for PT_USER
   /** Copy constructor not implemented */
   PortTypeBody(const PortTypeBody& p);
@@ -415,14 +433,16 @@ public:
     { testport_type = p_testport_type; }
   PortType_t get_type() const { return port_type; }
   void add_provider_attribute();
-  void add_user_attribute(Ttcn::Reference *p_provider_ref,
-    TypeMappings *p_in_mappings, TypeMappings *p_out_mappings);
+  void add_user_attribute(Ttcn::Reference **p_provider_refs, size_t n_provider_refs,
+    TypeMappings *p_in_mappings, TypeMappings *p_out_mappings, bool p_legacy = true);
   Common::Type *get_provider_type() const;
 private:
   void chk_list(const Types *list, bool is_in, bool is_out);
   void chk_user_attribute();
 public:
   void chk();
+  void chk_map_translation();
+  void chk_connect_translation();
   void chk_attributes(Ttcn::WithAttribPath *w_attrib_path);
   /** Returns whether the outgoing messages and signatures of \a this are
    * on the incoming lists of \a p_other. */

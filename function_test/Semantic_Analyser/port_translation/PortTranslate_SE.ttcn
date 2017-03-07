@@ -1,0 +1,180 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+module PortTranslate_SE { //^In TTCN-3 module//
+
+	type integer MyInt;
+
+	type port PT1 message map to //In translation capability\:// //^In type definition \`PT1\'\://
+	  P1, //^error\: The referenced port type \`\@PortTranslate_SE\.P1\' must have the \`provider\' attribute//
+	  MyInt, //error\: Type reference \`MyInt\' does not refer to a port type//
+	  P1 { //^error\: The referenced port type \`\@PortTranslate_SE\.P1\' must have the \`provider\' attribute//
+		in integer
+	}
+
+	type port PT2 message map to //In translation capability\:// //^In type definition \`PT2\'\://
+	  P1, //error\: The referenced port type \`\@PortTranslate_SE\.P1\' must have the \`provider\' attribute//
+	  P2 {
+		in integer
+	}
+
+	type port P1 message {
+		in integer
+	}
+
+	type port P2 message {
+		in integer
+	} with {
+		extension "provider"
+	}
+
+	type port P3 message {
+		in integer, charstring
+		out integer
+	} with {
+		extension "provider"
+	}
+
+	type port P4 message {
+		out charstring
+	} with {
+		extension "provider"
+	}
+
+	type port P5 message {
+		in integer
+	} with {
+		extension "provider"
+	}
+
+	type port P6 message {
+		inout charstring
+	} with {
+		extension "provider"
+	}
+
+	type port P7 message {
+		in charstring
+	} with {
+		extension "provider"
+	}
+
+	type port P8 message {
+		in charstring
+		out integer
+	} with {
+		extension "provider"
+	}
+
+
+
+	type port PT3 message map to P3 { //^In translation capability\:// //^In type definition \`PT3\'\:// //error\: Incoming message type \`charstring\' is not present in the in\(out\) message list or in the from mapping types\, coming from port\: \`P3\'\.//
+		in integer
+	}
+
+	type port PT4 message map to P3 { //^In translation capability\:// //^In type definition \`PT4\'\:// //error\: Incoming message type \`charstring\' is not present in the in\(out\) message list or in the from mapping types\, coming from port\: \`P3\'\.// //error\: Incoming message type \`integer\' is not present in the in\(out\) message list or in the from mapping types\, coming from port\: \`P3\'\.//						  
+		out integer
+	}
+
+	type port PT5 message map to P4 { //^In translation capability\:// //^In type definition \`PT5\'\:// //error\: Inout message type \`integer\' is not present on the in and out messages or the inout messages of port \`P4\'\.//
+		inout integer
+	}
+
+	type port PT6 message map to P5 { //^In translation capability\:// //^In type definition \`PT6\'\:// //error\: Inout message type \`integer\' is not present on the in and out messages or the inout messages of port \`P5\'\.//
+		inout integer
+	}
+
+	type port PT7 message map to P6 { //^In translation capability\:// //^In type definition \`PT7\'\:// //^error\: Incoming message type \`charstring\' is not present in the in\(out\) message list or in the from mapping types\, coming from port\: \`P6\'\.// //^error\: Inout message type \`integer\' is not present on the in and out messages or the inout messages of port \`P6\'\.//
+		inout integer
+	}
+
+	type port PT8 message map to P7 { //^In translation capability\:// //^In type definition \`PT8\'\://  //error\: Out message type \`integer\' is not present in the out message list of the port \`P7\'\.//
+		out integer
+		in charstring
+	}
+
+
+	type port PT9 message map to P8 { //^In translation capability\:// //^In type definition \`PT9\'\:// //^In type mapping\:// //^In \`function\' mapping\:// //error\: The referenced function \`\@PortTranslate_SE\.bad_int_to_char\' does not have \`prototype\' fast attribute//
+		in charstring from integer with bad_int_to_char() : integer with int_to_char()
+		out integer
+	}
+
+	type port PT10 message map to P8 { //^In translation capability\:// //^In type definition \`PT10\'\:// //^In type mapping\:// //^In \`function\' mapping\:// //error\: The referenced function \`\@PortTranslate_SE\.bad_int_to_char\' does not have \`prototype\' fast attribute//
+		in charstring
+		out integer to charstring with bad_int_to_char() : charstring with int_to_char()
+	}
+
+	function bad_int_to_char(in integer a, out charstring b) {
+
+	}
+
+	function int_to_char(in integer a, out charstring b) {
+
+	} with {
+		extension "prototype(fast)"
+	}
+
+	type port PT11 message map to P8 { //^In translation capability\:// //^In type definition \`PT11\'\:// //^In type mapping\:// //^In \`function\' mapping\://
+		in charstring
+		out integer to charstring with bad_int_to_char2() : charstring with bad_int_to_char3() //^In \`function\' mapping\:// //error\: The input type of function \`\@PortTranslate_SE\.bad_int_to_char2\' must be the same as the source type of the mapping\: \`integer\' was expected instead of \`octetstring\'// //^error\: The output type of function \`\@PortTranslate_SE\.bad_int_to_char3\' must be the same as the target type of the mapping\: \`charstring\' was expected instead of \`octetstring\'//
+	}
+
+	function bad_int_to_char2(in octetstring a, out charstring b) {
+
+	} with {
+		extension "prototype(fast)"
+	}
+
+	function bad_int_to_char3(in integer a, out octetstring b) {
+
+	} with {
+		extension "prototype(fast)"
+	}
+
+	type port PT12 message map to P8 { //^In translation capability\:// //^In type definition \`PT12\'\:// //^In type mapping\:// //^In \`function\' mapping\://
+		in charstring from integer with bad_int_to_char4() : integer with bad_int_to_char5() //^In \`function\' mapping\:// //^error\: The input type of function \`\@PortTranslate_SE\.bad_int_to_char4\' must be the same as the source type of the mapping\: \`integer\' was expected instead of \`octetstring\'// //^error\: The output type of function \`\@PortTranslate_SE\.bad_int_to_char5\' must be the same as the target type of the mapping\: \`charstring\' was expected instead of \`octetstring\'//
+		out integer  
+	}
+
+	function bad_int_to_char4(in octetstring a, out charstring b) {
+
+	} with {
+		extension "prototype(fast)"
+	}
+
+	function bad_int_to_char5(in integer a, out octetstring b) {
+		
+	} with {
+		extension "prototype(fast)"
+	}
+
+
+	type port PT13 message map to P8 { //^In translation capability\:// //^In type definition \`PT13\'\:// //^In type mapping\:// //^In \`function\' mapping\:// //^error\: Reference to a function was expected instead of external function \`\@PortTranslate_SE\.bad_char_to_int6\'//
+		in charstring from integer with bad_char_to_int6() 
+		out integer
+	}
+
+	external function bad_char_to_int6(in integer a, out octetstring b)
+	with {
+		extension "prototype(fast)"
+	}
+
+	type port PT14 message map to P8 { //^In translation capability\:// //^In type definition \`PT14\'\:// //^In type mapping\:// //^In \`function\' mapping\:// //^error\: Reference to a function was expected instead of external function \`\@PortTranslate_SE\.bad_int_to_char6\'//
+		in charstring
+		out integer to charstring with bad_int_to_char6()
+	}
+
+	external function bad_int_to_char6(in charstring a, out integer b)
+	with {
+		extension "prototype(fast)"
+	}
+
+}
