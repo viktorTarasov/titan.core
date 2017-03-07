@@ -46,7 +46,13 @@ CXXDEPFLAGS = -MM
 #COMPILER_FLAGS +=
 
 # Execution mode: (either ttcn3 or ttcn3-parallel)
-TTCN3_LIB := ttcn3-rt2
+TTCN3_LIB := ttcn3-rt2$(DYNAMIC_SUFFIX)
+
+ifdef DYN
+LIB_SUFFIX := .so
+else
+LIB_SUFFIX := .a
+endif
 
 #
 # You may change these variables. Add your files if necessary...
@@ -98,7 +104,7 @@ all: $(TARGET) ;
 
 objects: $(OBJECTS) ;
 
-$(TARGET): $(OBJECTS) $(TTCN3_DIR)/lib/lib$(TTCN3_LIB).a
+$(TARGET): $(OBJECTS) $(TTCN3_DIR)/lib/lib$(TTCN3_LIB)$(LIB_SUFFIX)
 	$(CXX) $(LDFLAGS) -o $@ $^ \
 	-L$(TTCN3_DIR)/lib -l$(TTCN3_LIB) \
 	-L$(OPENSSL_DIR)/lib -lcrypto \
@@ -117,7 +123,7 @@ $(TARGET): $(OBJECTS) $(TTCN3_DIR)/lib/lib$(TTCN3_LIB).a
 $(GENERATED_SOURCES) $(GENERATED_HEADERS): compile
 	@if [ ! -f $@ ]; then $(RM) compile; $(MAKE) compile; fi
 
-compile:: $(firstword $(TTCN3_COMPILER)) $(TTCN3_DIR)/lib/lib$(TTCN3_LIB).a
+compile:: $(firstword $(TTCN3_COMPILER)) $(TTCN3_DIR)/lib/lib$(TTCN3_LIB)$(LIB_SUFFIX)
 	@if [ -f $@ ]; then $(RM) compile; $(MAKE) compile; fi
 
 compile:: $(TTCN3_MODULES) $(ASN1_MODULES)
