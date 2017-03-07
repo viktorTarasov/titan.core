@@ -6,20 +6,28 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
-#   Balasko, Jeno
-#   Baranyi, Botond
-#   Ormandi, Matyas
 #   Szabo, Bence Janos
 #
 ##############################################################################
-SADIRS := ver xer encode param template any_from pattern_ref float recof_index \
-port_translation
-ifeq ($(RT2), yes)
-SADIRS += deprecated erroneous_attributes
+TOPDIR := ../..
+include $(TOPDIR)/Makefile.regression
+
+ifdef LCOV
+COVERAGE_FLAG := -C
 endif
-#$(wildcard TTCN3_[a0-9]* ASN_[a0-9]*) ver xer
 
-all run check clean distclean:
-	for d in $(SADIRS); do $(MAKE) -C $$d $@ || exit 1; done
 
+MAKEPROG := ${MAKE}
+
+all: 
+	rm -rf bin && mkdir -p bin && cd bin && compiler -t ../*.ttcn && makefilegen -f ../*.ttcn *.cc *.hh && make
+
+
+clean:
+	-rm -rf bin
+
+distclean: clean
+	-rm -f *.out
+
+.PHONY: all clean distclean Normal Recursive RecursiveDynamic
 

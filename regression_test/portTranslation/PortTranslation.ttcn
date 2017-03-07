@@ -1,0 +1,246 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+module PortTranslation {
+
+/* Converter functions */
+
+	// Temporarily if the out param of the mapping functions are unbound it will
+	// try the next one in order
+
+	function MyRec_to_oct(in MyRec i, out octetstring j) {
+		if (i.types == Oct) {
+			j := i.val;
+		}
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function MyRec_to_int(in MyRec i, out integer j) {
+		if (i.types == Int) {
+			j := oct2int(i.val);
+		}
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function MyRec_to_MyRec(in MyRec i, out MyRec j) {
+		if (i.types == MyRec) {
+			j := i;
+		}
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function MyRec_to_char(in MyRec i, out charstring j) {
+		if (i.types == Char) {
+			j := oct2str(i.val);
+		}
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function char_to_hex(in charstring i, out hexstring j) {
+		if (i == "0001") {
+			j := str2hex(i);
+		}
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function char_to_hex2(in charstring i, out hexstring j) {
+		if (i == "0002") {
+			j := str2hex(i);
+		}
+	} with {
+		extension "prototype(fast)";
+	}
+
+///////////////////////////////////////////////////////////////////////////////
+
+	/* Types */
+
+	type enumerated Types {
+		Int, Char, Oct, Hex, Bit, MyRec, None
+	}
+
+	type record MyRec {
+		octetstring val,
+		Types types
+	}
+
+	type port P1 message {
+		in integer, bitstring
+		out MyRec, octetstring, bitstring
+	} with {
+		extension "provider"
+	}
+
+	type port P2 message {
+		in integer, bitstring
+		out octetstring, MyRec, bitstring
+	} with {
+		extension "provider"
+	}
+
+	type port PT2 message map to P1, P2 {
+		in charstring
+		in integer, octetstring, hexstring from charstring with char_to_hex() : charstring with char_to_hex2()
+		out MyRec to octetstring with MyRec_to_oct() : integer with MyRec_to_int() : MyRec with MyRec_to_MyRec() : charstring with MyRec_to_char()
+		out octetstring
+		inout bitstring
+	}
+
+
+	type component MyComp {
+		port PT2 p;
+	}
+
+	type component System {
+		port P1 p1
+		port P2 p2
+	}
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+	testcase tc_send() runs on MyComp system System {
+		map(self:p, system:p1);
+		var MyRec v_rec := { 'ABCDEF'O, Oct };
+
+		// Send octetstring with Oct, so the first mapping function will be successful
+		p.send(v_rec);
+		timer t := 1.0;
+		t.start;
+		alt {
+			[] p.receive(3) { setverdict(pass); }
+			[] p.receive(integer:?) { setverdict(fail); }
+			[] p.receive(octetstring:?) { setverdict(fail); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+
+		// Send octetstring with Int so the second mapping function will be successfull
+		v_rec := { '12'O, Int };
+		p.send(v_rec);
+		t.start;
+		alt {
+			[] p.receive(18) { setverdict(pass); }
+			[] p.receive(integer:?) { setverdict(fail); }
+			[] p.receive(octetstring:?) { setverdict(fail); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+
+		// Send octetstring with MyRec so the second mapping function will be successfull
+		v_rec := { '123456'O, MyRec };
+		p.send(v_rec);
+		t.start;
+		alt {
+			[] p.receive('123456'O) { setverdict(pass); }
+			[] p.receive(integer:?) { setverdict(fail); }
+			[] p.receive(octetstring:?) { setverdict(fail); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+
+		// Send octetstring with None so it will be generate an error because no mapping can handle the message
+		v_rec := { '123456'O, None };
+		@try{
+			p.send(v_rec);
+		} @catch (e) {
+			if (match(e, "Dynamic test case error: Outgoing message of type @PortTranslation.MyRec could not be handled by the type mapping rules on port p.")) {
+				setverdict(pass);
+			} else {
+				setverdict(fail);
+			}
+		}
+
+		// This should be sent too and the implementation of PT2 will send back the length of it.
+		var octetstring os := '12345678'O;
+		p.send(os);
+		t.start;
+		alt {
+			[] p.receive(4) { setverdict(pass); }
+			[] p.receive(integer:?) { setverdict(fail); }
+			[] p.receive(octetstring:?) { setverdict(fail); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+
+		var bitstring bs := '010101'B;
+		p.send(bs);
+		t.start;
+		alt {
+			[] p.receive(bs) { setverdict(pass); }
+			[] p.receive(integer:?) { setverdict(fail); }
+			[] p.receive(octetstring:?) { setverdict(fail); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+	}
+
+///////////////////////////////////////////////////////////////////////////////
+
+    testcase tc_receive() runs on MyComp system System {
+		map(self:p, system:p1);
+		var MyRec v_rec := { str2oct("0001"), Char };
+
+		// Send octetstring with Char, so the it will receive the str2hex("0001") hexstring because first it it will be mapped to
+		// charstring with the sending mapping, and it will send back to the port and the charstring will be mapped to hexstring using: char_to_hex
+		p.send(v_rec);
+		timer t := 1.0;
+		t.start;
+		alt {
+			[] p.receive(str2hex("0001")) { setverdict(pass); }
+			[] p.receive(integer:?) { setverdict(fail); }
+			[] p.receive(octetstring:?) { setverdict(fail); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+
+		v_rec := { str2oct("0002"), Char };
+
+		// Send octetstring with Char, so the it will receive the str2hex("0002") hexstring because first it it will be mapped to
+		// charstring with the sending mapping, and it will send back to the port and the charstring will be mapped to hexstring using: char_to_hex2
+		p.send(v_rec);
+		t.start;
+		alt {
+			[] p.receive(str2hex("0002")) { setverdict(pass); }
+			[] p.receive(integer:?) { setverdict(fail); }
+			[] p.receive(octetstring:?) { setverdict(fail); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+
+		v_rec := { str2oct("0003"), Char };
+
+		// Send octetstring with Char, so the it will receive the "0003" charstring because first it it will be mapped to
+		// charstring with the sending mapping, and it will send back to the port and the charstring will not be mapped
+		p.send(v_rec);
+		t.start;
+		alt {
+			[] p.receive(charstring:"0003") { setverdict(pass); }
+			[] p.receive(integer:?) { setverdict(fail); }
+			[] p.receive(octetstring:?) { setverdict(fail); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+
+	}
+
+
+	control {
+		execute(tc_send())
+		execute(tc_receive())
+	}
+
+}

@@ -12,6 +12,7 @@
  *   Delic, Adam
  *   Kremer, Peter
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *
  ******************************************************************************/
@@ -104,6 +105,7 @@ typedef struct port_def_tag {
   const char *provider_name;
   port_msg_mapped_type_list provider_msg_in;
   boolean has_sliding;
+  boolean legacy;
 } port_def;
 
 #ifdef __cplusplus

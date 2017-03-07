@@ -4544,7 +4544,8 @@ namespace Common {
             ea.get_encdecvalue_mappings(inmaps, maps);
             maps = encode ? maps : inmaps;
             maps->set_my_scope(this->get_my_scope());
-            maps->chk();
+            // The first param should be true, the other is not important if the first is true
+            maps->chk(true, false);
             // look for coding settings
             t = encode ? this : Type::get_pooltype(T_BSTR);
             mapping = maps->get_mapping_byType(t);

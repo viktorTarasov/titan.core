@@ -216,6 +216,7 @@ static const string anyname("anytype");
   ValueRedirect* value_redirect;
   SingleValueRedirect* single_value_redirect;
   param_eval_t eval;
+  TypeMappingTargets *typemappingtargets;
 
   struct {
     bool is_raw;
@@ -283,7 +284,13 @@ static const string anyname("anytype");
   struct {
     Ttcn::Types *in_list, *out_list, *inout_list;
     bool in_all, out_all, inout_all;
+    TypeMappings *in_mappings, *out_mappings;
   } portdefbody;
+  
+  struct {
+    Types * types;
+    TypeMappings *mappings;
+  } types_with_mapping;
 
   struct {
     Ttcn::Reference *ref;
@@ -569,6 +576,11 @@ static const string anyname("anytype");
     Ttcn::Reference* reference;
     bool any_from;
   } reference_or_any;
+  
+  struct {
+    size_t nElements;
+    Ttcn::Reference** elements;
+  } reference_list;
 }
 
 /* Tokens of TTCN-3 */
@@ -1013,7 +1025,8 @@ static const string anyname("anytype");
   NestedSetOfDef NestedTypeDef NestedUnionDef PortDefAttribs ReferencedType
   Type TypeOrNestedTypeDef NestedFunctionTypeDef NestedAltstepTypeDef
   NestedTestcaseTypeDef
-%type <types> TypeList AllOrTypeList
+%type <types_with_mapping> TypeList AllOrTypeList AllOrTypeListWithFrom
+AllOrTypeListWithTo TypeListWithFrom TypeListWithTo
 %type <value> AddressValue AliveOp AllPortsSpec AltGuardChar ArrayBounds
   ArrayExpression ArrayExpressionList BitStringValue BooleanExpression
   BooleanValue CharStringValue ComponentRef ComponentReferenceOrLiteral
@@ -1098,6 +1111,8 @@ static const string anyname("anytype");
 %type <value_redirect> ValueSpec
 %type <single_value_redirect> SingleValueSpec
 %type <single_value_redirect_list> SingleValueSpecList
+%type <typemappingtargets> WithList
+%type <reference_list> PortTypeList
 
 /*********************************************************************
  * Destructors
@@ -1123,11 +1138,21 @@ PatternChunkList
 }
 ActivateOp
 
+%destructor {
+  delete $$.types;
+  delete $$.mappings;
+}
+AllOrTypeList
+AllOrTypeListWithFrom
+AllOrTypeListWithTo
+TypeList
+TypeListWithFrom
+TypeListWithTo
+
 %destructor {delete $$;}
 AddressRef
 AddressValue
 AliveOp
-AllOrTypeList
 AllPortsSpec
 AltConstruct
 AltGuard
@@ -1375,7 +1400,6 @@ TriggerStatement
 Type
 TypeDef
 TypeDefBody
-TypeList
 TypeOrNestedTypeDef
 UnionDef
 UnionFieldDef
@@ -1401,6 +1425,7 @@ VerdictStatements
 VerdictValue
 WhileStatement
 WithAttribList
+WithList
 WithStatement
 optAltstepFormalParList
 optAttribQualifier
@@ -1473,6 +1498,7 @@ optExtendedFieldReference
 FriendModuleDef
 USI
 UIDlike
+PortTypeList
 
 
 %destructor {
@@ -1504,6 +1530,8 @@ StructOfDefBody
   delete $$.in_list;
   delete $$.out_list;
   delete $$.inout_list;
+  delete $$.in_mappings;
+  delete $$.out_mappings;
 }
 PortDefList
 PortDefLists
@@ -1837,7 +1865,7 @@ optDecodedModifier
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 57
+%expect 59
 
 %start GrammarRoot
 
@@ -1897,6 +1925,7 @@ with "->" (reduce).
 TODO: Find out what the index redirect conflicts with. It's probably something
 that would cause a semantic error anyway, but it would be good to know.
 
+9.) 2 conflicts in the rule TypeListWithTo.
 
 Note that the parser implemented by bison always chooses to shift instead of
 reduce in case of conflicts.
@@ -2729,6 +2758,22 @@ PortType: // 55
   }
 ;
 
+PortTypeList:
+  PortType
+  {
+    $$.nElements = 1;
+    $$.elements = (Ttcn::Reference**)Malloc(sizeof(*$$.elements));
+    $$.elements[0] = $1;
+  }
+| PortTypeList ',' optError PortType
+  {
+    $$.nElements = $1.nElements + 1;
+    $$.elements = (Ttcn::Reference**)
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements[$$.nElements - 1] = $4;
+  }
+;
+
 PortDef: // 56
   PortKeyword PortDefBody { $$ = $2; }
 ;
@@ -2748,6 +2793,20 @@ PortDefAttribs: // 60
       $2.in_all, $2.out_all, $2.inout_all);
     body->set_location(infile, @$);
     $$ = new Type(Type::T_PORT, body);
+    $$->set_location(infile, @$);
+    delete $2.in_mappings;
+    delete $2.out_mappings;
+  }
+| 
+  PortOperationMode MapKeyword ToKeyword PortTypeList PortDefLists
+  {
+    PortTypeBody *body = new PortTypeBody($1,
+      $5.in_list, $5.out_list, $5.inout_list,
+      $5.in_all, $5.out_all, $5.inout_all);
+    body->set_location(infile, @$);
+    $$ = new Type(Type::T_PORT, body);
+    body->add_user_attribute($4.elements, $4.nElements, $5.in_mappings, $5.out_mappings, false);
+    delete $4.elements;
     $$->set_location(infile, @$);
   }
 ;
@@ -2769,6 +2828,8 @@ PortDefLists:
     $$.in_all = false;
     $$.out_all = false;
     $$.inout_all = false;
+    $$.in_mappings = 0;
+    $$.out_mappings = 0;
   }
 ;
 
@@ -2779,71 +2840,101 @@ seqPortDefList:
     $$ = $1;
     if ($2.in_list) {
       if ($$.in_list) {
-	$$.in_list->steal_types($2.in_list);
-	delete $2.in_list;
+        $$.in_list->steal_types($2.in_list);
+        delete $2.in_list;
       } else $$.in_list = $2.in_list;
+    }
+    if ($2.in_mappings) {
+      if ($$.in_mappings) {
+        $$.in_mappings->steal_mappings($2.in_mappings);
+        delete $2.in_mappings;
+      } else {
+        $$.in_mappings = $2.in_mappings;
+      }
     }
     if ($2.out_list) {
       if ($$.out_list) {
-	$$.out_list->steal_types($2.out_list);
-	delete $2.out_list;
+        $$.out_list->steal_types($2.out_list);
+        delete $2.out_list;
       } else $$.out_list = $2.out_list;
+    }
+    if ($2.out_mappings) {
+      if ($$.out_mappings) {
+        $$.out_mappings->steal_mappings($2.out_mappings);
+        delete $2.out_mappings;
+      } else { 
+        $$.out_mappings = $2.out_mappings;
+      }
     }
     if ($2.inout_list) {
       if ($$.inout_list) {
-	$$.inout_list->steal_types($2.inout_list);
-	delete $2.inout_list;
+        $$.inout_list->steal_types($2.inout_list);
+        delete $2.inout_list;
       } else $$.inout_list = $2.inout_list;
     }
     if ($2.in_all) {
       if ($$.in_all) {
-	Location loc(infile, @2);
-	loc.warning("Duplicate directive `in all' in port type definition");
+        Location loc(infile, @2);
+        loc.warning("Duplicate directive `in all' in port type definition");
       } else $$.in_all = true;
     }
     if ($2.out_all) {
       if ($$.out_all) {
-	Location loc(infile, @2);
-	loc.warning("Duplicate directive `out all' in port type definition");
+        Location loc(infile, @2);
+        loc.warning("Duplicate directive `out all' in port type definition");
       } else $$.out_all = true;
     }
     if ($2.inout_all) {
       if ($$.inout_all) {
-	Location loc(infile, @2);
-	loc.warning("Duplicate directive `inout all' in port type definition");
+        Location loc(infile, @2);
+        loc.warning("Duplicate directive `inout all' in port type definition");
       } else $$.inout_all = true;
     }
   }
 ;
 
 PortDefList:
-  InParKeyword AllOrTypeList
+  InParKeyword AllOrTypeListWithFrom
   {
-    if ($2) {
-      $$.in_list = $2;
+    if ($2.types) {
+      $$.in_list = $2.types;
       $$.in_list->set_location(infile, @$);
       $$.in_all = false;
+      if ($2.mappings) {
+        $$.in_mappings = $2.mappings;
+      } else {
+        $$.in_mappings = 0;
+      }
     } else {
       $$.in_list = 0;
       $$.in_all = true;
+      $$.in_mappings = 0;
     }
     $$.out_list = 0;
     $$.out_all = false;
     $$.inout_list = 0;
+    $$.out_mappings = 0;
     $$.inout_all = false;
   }
-| OutParKeyword AllOrTypeList
+| OutParKeyword AllOrTypeListWithTo
   {
-    $$.in_list = 0;
-    $$.in_all = false;
-    if ($2) {
-      $$.out_list = $2;
+    if ($2.types) {
+      $$.out_list = $2.types;
       $$.out_list->set_location(infile, @$);
       $$.out_all = false;
+      if ($2.mappings) {
+        $$.out_mappings = $2.mappings;
+      } else {
+        $$.out_mappings = 0;
+      }
     } else {
       $$.out_list = 0;
       $$.out_all = true;
+      $$.out_mappings = 0;
     }
+    $$.in_list = 0;
+    $$.in_all = false;
+    $$.in_mappings = 0;
     $$.inout_list = 0;
     $$.inout_all = false;
   }
@@ -2853,14 +2944,17 @@ PortDefList:
     $$.in_all = false;
     $$.out_list = 0;
     $$.out_all = false;
-    if ($2) {
-      $$.inout_list = $2;
+    if ($2.types) {
+      $$.inout_list = $2.types;
       $$.inout_list->set_location(infile, @$);
       $$.inout_all = false;
     } else {
       $$.inout_list = 0;
       $$.inout_all = true;
     }
+    delete $2.mappings;
+    $$.in_mappings = 0;
+    $$.out_mappings = 0;
   }
 | InParKeyword error
   {
@@ -2870,6 +2964,8 @@ PortDefList:
     $$.in_all = false;
     $$.out_all = false;
     $$.inout_all = false;
+    $$.in_mappings = 0;
+    $$.out_mappings = 0;
   }
 | OutParKeyword error
   {
@@ -2879,6 +2975,8 @@ PortDefList:
     $$.in_all = false;
     $$.out_all = false;
     $$.inout_all = false;
+    $$.in_mappings = 0;
+    $$.out_mappings = 0;
   }
 | InOutParKeyword error
   {
@@ -2888,26 +2986,112 @@ PortDefList:
     $$.in_all = false;
     $$.out_all = false;
     $$.inout_all = false;
+    $$.in_mappings = 0;
+    $$.out_mappings = 0;
+  }
+;
+
+WithList:
+  Type WithKeyword FunctionRef '(' optError ')'
+  {
+    $$ = new TypeMappingTargets();
+    Ttcn::Reference *func_ref = new Ttcn::Reference($3.modid, $3.id);
+    TypeMappingTarget * tm = new TypeMappingTarget($1, TypeMappingTarget::TM_FUNCTION, func_ref);
+    $$->add_target(tm);
+  }
+| WithList ':' optError Type WithKeyword FunctionRef '(' optError ')'
+  {
+    Ttcn::Reference *func_ref = new Ttcn::Reference($6.modid, $6.id);
+    TypeMappingTarget * tm = new TypeMappingTarget($4, TypeMappingTarget::TM_FUNCTION, func_ref);
+    $$ = $1;
+    $$->add_target(tm);
   }
 ;
 
 AllOrTypeList: // 65
-  AllKeyword { $$ = 0; }
+  AllKeyword { $$.types = 0; $$.mappings = 0; }
 | TypeList { $$ = $1; }
 ;
 
 TypeList: // 67
   optError Type
   {
-    $$ = new Types;
-    $$->add_type($2);
+    $$.types = new Types;
+    $$.types->add_type($2);
+    $$.mappings = new TypeMappings();
   }
 | TypeList optError ',' optError Type
   {
     $$ = $1;
-    $$->add_type($5);
+    $$.types->add_type($5);
   }
 | TypeList optError ',' error { $$ = $1; }
+;
+
+AllOrTypeListWithFrom:
+  AllKeyword { $$.types = 0; $$.mappings = 0; }
+| TypeListWithFrom { $$ = $1; }
+;
+
+TypeListWithFrom:
+  optError Type
+  {
+    $$.types = new Types;
+    $$.types->add_type($2);
+    $$.mappings = new TypeMappings();
+  }
+| optError Type optError FromKeyword WithList
+  {
+    $$.types = new Types;
+    $$.types->add_type($2);
+    $$.mappings = new TypeMappings();
+    $$.mappings->add_mapping(new TypeMapping($2->clone(), $5));
+  }
+| TypeListWithFrom optError ',' optError Type
+  {
+    $$ = $1;
+    $$.types->add_type($5);
+  }
+| TypeListWithFrom optError ',' optError Type FromKeyword WithList
+  {
+    $$ = $1;
+    $$.types->add_type($5);
+    $$.mappings->add_mapping(new TypeMapping($5->clone(), $7));
+  }
+| TypeListWithFrom optError ',' error { $$ = $1; }
+;
+
+AllOrTypeListWithTo:
+  AllKeyword { $$.types = 0; $$.mappings = 0; }
+| TypeListWithTo { $$ = $1; }
+;
+
+TypeListWithTo:
+  optError Type
+  {
+    $$.types = new Types;
+    $$.types->add_type($2);
+    $$.mappings = new TypeMappings();
+  }
+| optError Type optError ToKeyword WithList
+  {
+    $$.types = new Types;
+    $$.types->add_type($2);
+    $$.mappings = new TypeMappings();
+    $$.mappings->add_mapping(new TypeMapping($2->clone(), $5));
+  }
+| TypeListWithTo optError ',' optError Type
+  {
+    $$ = $1;
+    $$.types->add_type($5);
+  }
+| TypeListWithTo optError ',' optError Type ToKeyword WithList
+  {
+    $$ = $1;
+    $$.types->add_type($5);
+    $$.mappings->add_mapping(new TypeMapping($5->clone(), $7));
+  }
+| TypeListWithTo optError ',' error { $$ = $1; }
 ;
 
 ComponentDef: // 78

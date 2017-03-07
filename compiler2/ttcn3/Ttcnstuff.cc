@@ -12,6 +12,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Zalanyi, Balazs Andor
  *
  ******************************************************************************/
@@ -374,7 +375,7 @@ namespace Ttcn {
     }
   }
 
-  void TypeMappingTarget::chk_function(Type *source_type)
+  void TypeMappingTarget::chk_function(Type *source_type, bool legacy, bool incoming)
   {
     Error_Context cntxt(this, "In `function' mapping");
     Assignment *t_ass = u.func.function_ref->get_refd_assignment(false);
@@ -384,26 +385,38 @@ namespace Ttcn {
     case Assignment::A_FUNCTION:
     case Assignment::A_FUNCTION_RVAL:
     case Assignment::A_FUNCTION_RTEMP:
+      break;
     case Assignment::A_EXT_FUNCTION:
     case Assignment::A_EXT_FUNCTION_RVAL:
     case Assignment::A_EXT_FUNCTION_RTEMP:
-      break;
+      // External functions are not allowed when the standard like behaviour is used
+      if (legacy) {
+        break;
+      }
     default:
-      u.func.function_ref->error("Reference to a function or external "
-        "function was expected instead of %s",
+      u.func.function_ref->error("Reference to a function%s"
+        " was expected instead of %s",
+        legacy ? " or external function" : "",
         t_ass->get_description().c_str());
       return;
     }
     u.func.function_ptr = dynamic_cast<Ttcn::Def_Function_Base*>(t_ass);
     if (!u.func.function_ptr) FATAL_ERROR("TypeMappingTarget::chk_function()");
-    if (u.func.function_ptr->get_prototype() ==
+    if (legacy && u.func.function_ptr->get_prototype() ==
         Ttcn::Def_Function_Base::PROTOTYPE_NONE) {
       u.func.function_ref->error("The referenced %s does not have `prototype' "
         "attribute", u.func.function_ptr->get_description().c_str());
       return;
     }
+   
+    if (!legacy && u.func.function_ptr->get_prototype() !=
+        Ttcn::Def_Function_Base::PROTOTYPE_FAST) {
+      u.func.function_ref->error("The referenced %s does not have `prototype' "
+        "fast attribute", u.func.function_ptr->get_description().c_str());
+      return;
+    }
     Type *input_type = u.func.function_ptr->get_input_type();
-    if (input_type && !source_type->is_identical(input_type)) {
+    if (legacy && input_type && !source_type->is_identical(input_type)) {
       source_type->error("The input type of %s must be the same as the source "
         "type of the mapping: `%s' was expected instead of `%s'",
         u.func.function_ptr->get_description().c_str(),
@@ -411,12 +424,60 @@ namespace Ttcn {
         input_type->get_typename().c_str());
     }
     Type *output_type = u.func.function_ptr->get_output_type();
-    if (output_type && !target_type->is_identical(output_type)) {
+    if (legacy && output_type && !target_type->is_identical(output_type)) {
       target_type->error("The output type of %s must be the same as the "
         "target type of the mapping: `%s' was expected instead of `%s'",
         u.func.function_ptr->get_description().c_str(),
         target_type->get_typename().c_str(),
         output_type->get_typename().c_str());
+    }
+    
+    //  The standard like behaviour has different function param checking
+    if (!legacy) {
+      // In the error message the source type is the target_type
+      // and the target type is the source_type for a reason.
+      // Reason: In the new standard like behaviour the conversion functions 
+      // has the correct param order for in and out parameters
+      // (which is more logical than the old behaviour)
+      // For example:
+      // in octetstring from integer with int_to_oct()
+      //         |              |             |
+      //    target_type     source_type   conv. func.
+      if (incoming) {
+        if (input_type && !target_type->is_identical(input_type)) {
+          target_type->error("The input type of %s must be the same as the "
+            "source type of the mapping: `%s' was expected instead of `%s'",
+            u.func.function_ptr->get_description().c_str(),
+            target_type->get_typename().c_str(),
+            input_type->get_typename().c_str());
+        }
+        if (output_type && !source_type->is_identical(output_type)) {
+          target_type->error("The output type of %s must be the same as the "
+            "target type of the mapping: `%s' was expected instead of `%s'",
+            u.func.function_ptr->get_description().c_str(),
+            source_type->get_typename().c_str(),
+            output_type->get_typename().c_str());
+        }
+      } else {
+        // For example:
+        // out octetstring to integer with oct_to_int()
+        //         |              |             |
+        //    source_type     target_type   conv. func.
+        if (input_type && !source_type->is_identical(input_type)) {
+          target_type->error("The input type of %s must be the same as the "
+            "source type of the mapping: `%s' was expected instead of `%s'",
+            u.func.function_ptr->get_description().c_str(),
+            source_type->get_typename().c_str(),
+            input_type->get_typename().c_str());
+        }
+        if (output_type && !target_type->is_identical(output_type)) {
+          target_type->error("The output type of %s must be the same as the "
+            "target type of the mapping: `%s' was expected instead of `%s'",
+            u.func.function_ptr->get_description().c_str(),
+            target_type->get_typename().c_str(),
+            output_type->get_typename().c_str());
+        }
+      }
     }
   }
 
@@ -456,7 +517,7 @@ namespace Ttcn {
     if (u.encdec.eb_list) u.encdec.eb_list->chk();
   }
 
-  void TypeMappingTarget::chk(Type *source_type)
+  void TypeMappingTarget::chk(Type *source_type, bool legacy, bool incoming)
   {
     if (checked) return;
     checked = true;
@@ -471,7 +532,7 @@ namespace Ttcn {
     case TM_DISCARD:
       break;
     case TM_FUNCTION:
-      chk_function(source_type);
+      chk_function(source_type, legacy, incoming);
       break;
     case TM_ENCODE:
       chk_encode(source_type);
@@ -663,7 +724,7 @@ namespace Ttcn {
     targets->set_my_scope(p_scope);
   }
 
-  void TypeMapping::chk()
+  void TypeMapping::chk(bool legacy, bool incoming)
   {
     Error_Context cntxt(this, "In type mapping");
     {
@@ -674,7 +735,7 @@ namespace Ttcn {
     bool has_sliding = false, has_non_sliding = false;
     for (size_t i = 0; i < nof_targets; i++) {
       TypeMappingTarget *target = targets->get_target_byIndex(i);
-      target->chk(source_type);
+      target->chk(source_type, legacy, incoming);
       if (nof_targets > 1) {
         switch (target->get_mapping_type()) {
         case TypeMappingTarget::TM_DISCARD:
@@ -689,13 +750,18 @@ namespace Ttcn {
           if (t_function) {
             switch (t_function->get_prototype()) {
             case Ttcn::Def_Function_Base::PROTOTYPE_NONE:
-              break;
+              break;           
             case Ttcn::Def_Function_Base::PROTOTYPE_BACKTRACK:
               has_non_sliding = true;
               break;
             case Ttcn::Def_Function_Base::PROTOTYPE_SLIDING:
               has_sliding = true;
               break;
+            case Ttcn::Def_Function_Base::PROTOTYPE_FAST:
+              // New standard like behaviour has no such limit
+              if (!legacy) {
+                break;
+              }
             default:
               target->error("The referenced %s must have the attribute "
                 "`prototype(backtrack)' or `prototype(sliding)' when more "
@@ -794,14 +860,14 @@ namespace Ttcn {
     return mappings_m[p_type->get_typename()];
   }
 
-  void TypeMappings::chk()
+  void TypeMappings::chk(bool legacy, bool incoming)
   {
     if (checked) return;
     checked = true;
     size_t nof_mappings = mappings_v.size();
     for (size_t i = 0; i < nof_mappings; i++) {
       TypeMapping *mapping = mappings_v[i];
-      mapping->chk();
+      mapping->chk(legacy, incoming);
       Type *source_type = mapping->get_source_type();
       if (source_type->get_type_refd_last()->get_typetype() != Type::T_ERROR) {
         const string& source_type_name = source_type->get_typename();
@@ -959,10 +1025,10 @@ namespace Ttcn {
     : Node(), Location(), my_type(0), operation_mode(p_operation_mode),
     in_list(p_in_list), out_list(p_out_list), inout_list(p_inout_list),
     in_all(p_in_all), out_all(p_out_all), inout_all(p_inout_all),
-    checked(false),
+    checked(false), legacy(true),
     in_msgs(0), out_msgs(0), in_sigs(0), out_sigs(0),
     testport_type(TP_REGULAR), port_type(PT_REGULAR),
-    provider_ref(0), provider_type(0), in_mappings(0), out_mappings(0)
+    provider_refs(), provider_types(), in_mappings(0), out_mappings(0)
   {
   }
 
@@ -975,7 +1041,11 @@ namespace Ttcn {
     delete out_msgs;
     delete in_sigs;
     delete out_sigs;
-    delete provider_ref;
+    for (size_t i = 0; i < provider_refs.size(); i++) {
+      delete provider_refs[i];
+    }
+    provider_refs.clear();
+    provider_types.clear();
     delete in_mappings;
     delete out_mappings;
   }
@@ -995,8 +1065,9 @@ namespace Ttcn {
     if (out_msgs) out_msgs->set_fullname(p_fullname + ".<outgoing_messages>");
     if (in_sigs) in_sigs->set_fullname(p_fullname + ".<incoming_signatures>");
     if (out_sigs) out_sigs->set_fullname(p_fullname + ".<outgoing_signatures>");
-    if (provider_ref)
-      provider_ref->set_fullname(p_fullname + ".<provider_ref>");
+    for (size_t i = 0; i < provider_refs.size(); i++) {
+      provider_refs[i]->set_fullname(p_fullname + ".<provider_ref>");
+    }
     if (in_mappings) in_mappings->set_fullname(p_fullname + ".<in_mappings>");
     if (out_mappings)
       out_mappings->set_fullname(p_fullname + ".<out_mappings>");
@@ -1007,7 +1078,9 @@ namespace Ttcn {
     if (in_list) in_list->set_my_scope(p_scope);
     if (out_list) out_list->set_my_scope(p_scope);
     if (inout_list) inout_list->set_my_scope(p_scope);
-    if (provider_ref) provider_ref->set_my_scope(p_scope);
+    for (size_t i = 0; i < provider_refs.size(); i++) {
+      provider_refs[i]->set_my_scope(p_scope);
+    }
     if (in_mappings) in_mappings->set_my_scope(p_scope);
     if (out_mappings) out_mappings->set_my_scope(p_scope);
   }
@@ -1097,7 +1170,8 @@ namespace Ttcn {
       Type *t;
       // in case of 'user' port types the address visible and supported by the
       // 'provider' port type is relevant
-      if (port_type == PT_USER && provider_type) t = provider_type;
+      // TODO: currently not supported the address in the new standard like behaviour
+      if (port_type == PT_USER && provider_types.size() > 0) t = provider_types[0];
       else t = my_type;
       return t->get_my_scope()->get_scope_mod()->get_address_type();
     } else {
@@ -1109,28 +1183,36 @@ namespace Ttcn {
   void PortTypeBody::add_provider_attribute()
   {
     port_type = PT_PROVIDER;
-    delete provider_ref;
-    provider_ref = 0;
-    provider_type = 0;
+    for (size_t i = 0; i < provider_refs.size(); i++) {
+    delete provider_refs[i];
+    }
+    provider_refs.clear();
+    provider_types.clear();
     delete in_mappings;
     in_mappings = 0;
     delete out_mappings;
     out_mappings = 0;
   }
 
-  void PortTypeBody::add_user_attribute(Ttcn::Reference *p_provider_ref,
-    TypeMappings *p_in_mappings, TypeMappings *p_out_mappings)
+  void PortTypeBody::add_user_attribute(Ttcn::Reference **p_provider_refs,
+    size_t n_provider_refs, TypeMappings *p_in_mappings, TypeMappings *p_out_mappings,
+    bool p_legacy)
   {
-    if (!p_provider_ref || !my_type)
+    if (!p_provider_refs || n_provider_refs == 0 || !my_type)
       FATAL_ERROR("PortTypeBody::add_user_attribute()");
     Scope *t_scope = my_type->get_my_scope();
     const string& t_fullname = get_fullname();
     port_type = PT_USER;
-    delete provider_ref;
-    provider_ref = p_provider_ref;
-    provider_ref->set_fullname(t_fullname + ".<provider_ref>");
-    provider_ref->set_my_scope(t_scope);
-    provider_type = 0;
+    for (size_t i = 0; i < provider_refs.size(); i++) {
+      delete provider_refs[i];
+    }
+    provider_refs.clear();
+    for (size_t i = 0; i < n_provider_refs; i++) {
+      provider_refs.add(p_provider_refs[i]);
+      provider_refs[i]->set_fullname(t_fullname + ".<provider_ref>");
+      provider_refs[i]->set_my_scope(t_scope);
+    }
+    provider_types.clear(); // Do not delete provider_types
     delete in_mappings;
     in_mappings = p_in_mappings;
     if (in_mappings) {
@@ -1143,13 +1225,14 @@ namespace Ttcn {
       out_mappings->set_fullname(t_fullname + ".<out_mappings>");
       out_mappings->set_my_scope(t_scope);
     }
+    legacy = p_legacy;
   }
 
   Type *PortTypeBody::get_provider_type() const
   {
     if (!checked || port_type != PT_USER)
       FATAL_ERROR("PortTypeBody::get_provider_type()");
-    return provider_type;
+    return provider_types[0]; // TODO, called in check coonn endpoint
   }
 
   void PortTypeBody::chk_list(const Types *list, bool is_in, bool is_out)
@@ -1249,60 +1332,190 @@ namespace Ttcn {
     }
   }
 
+  void PortTypeBody::chk_map_translation() {
+    
+    if (port_type != PT_USER || legacy) {
+      FATAL_ERROR("PortTypeBody::chk_map_translation()");
+    }
+    
+    vector<Type> provider_ins;
+    
+    TypeSet mapping_ins;
+    
+    if (in_mappings) {
+      for (size_t i = 0; i < in_mappings->get_nof_mappings(); i++) {
+        TypeMapping * mapping = in_mappings->get_mapping_byIndex(i);
+        for (size_t j = 0; j < mapping->get_nof_targets(); j++) {
+          if (!mapping_ins.has_type(mapping->get_target_byIndex(j)->get_target_type())) {
+            mapping_ins.add_type(mapping->get_target_byIndex(j)->get_target_type());
+          }
+        }
+      }
+    }
+    
+    for (size_t i = 0; i < provider_types.size(); i++) {
+      PortTypeBody *provider_body = provider_types[i]->get_PortBody();
+      if (provider_body->in_msgs) {
+        for (size_t j = 0; j < provider_body->in_msgs->get_nof_types(); j++) {
+          provider_ins.add(provider_body->in_msgs->get_type_byIndex(j));
+        }
+      }
+
+      for (size_t j = 0; j < provider_ins.size(); j++) {
+        bool found = false;
+        if (inout_list) {
+          for (size_t k = 0; k < inout_list->get_nof_types(); k++) {
+            if (provider_ins[j]->get_typename() == inout_list->get_type_byIndex(k)->get_typename()) {
+              found = true;
+              break;
+            }
+          }
+        }
+        if (((in_msgs && in_msgs->has_type(provider_ins[j])) // Provider in message is present in the port in message
+            || mapping_ins.has_type(provider_ins[j]) // Provider in message is present in one of the in mappings
+            || found // Provider in message is present in the inout list of the port 
+            ) == false) {
+          error("Incoming message type `%s' is not present in the in(out) message list or in the from mapping types, coming from port: `%s'.",
+            provider_ins[j]->get_typename().c_str(),
+            provider_types[i]->get_dispname().c_str()); // in mapping snull
+        }
+      }
+      
+      if (inout_list) {
+        for (size_t j = 0; j < inout_list->get_nof_types(); j++) {
+          if (provider_body->inout_list) {
+            bool found = false;
+            // If the inout message of the port is present on the provider inout message list
+            for (size_t k = 0; k < provider_body->inout_list->get_nof_types(); k++) {
+              if (inout_list->get_type_byIndex(j)->get_typename() ==
+                  provider_body->inout_list->get_type_byIndex(k)->get_typename()) {
+                found = true;
+                break;
+              }
+            }
+            if (found) {
+              continue;
+            }
+          }
+          bool found_in = false;
+          if (provider_body->in_list) {
+            // If the inout message of the port is present on the provider in message list
+            for (size_t k = 0; k < provider_body->in_list->get_nof_types(); k++) {
+              if (inout_list->get_type_byIndex(j)->get_typename() ==
+                  provider_body->in_list->get_type_byIndex(k)->get_typename()) {
+                found_in = true;
+                break;
+              }
+            }
+          }
+          bool found_out = false;
+          if (provider_body->out_list) {
+            // If the inout message of the port is present on the provider out message list
+            for (size_t k = 0; k < provider_body->out_list->get_nof_types(); k++) {
+              if (inout_list->get_type_byIndex(j)->get_typename() ==
+                  provider_body->out_list->get_type_byIndex(k)->get_typename()) {
+                found_out = true;
+                break;
+              }
+            }
+          }
+          
+          // Error if the inout message of the port is not present on the in and out message list
+          if (!found_in || !found_out) {
+            error("Inout message type `%s' is not present on the in and out messages or the inout messages of port `%s'.",
+              inout_list->get_type_byIndex(j)->get_typename().c_str(),
+              provider_types[i]->get_dispname().c_str());
+          }
+        }
+      }
+      
+      if (out_list) {
+        for (size_t j = 0; j < out_list->get_nof_types(); j++) {
+          bool found = false;
+          if (provider_body->out_list) {
+            for (size_t k = 0; k < provider_body->out_list->get_nof_types(); k++) {
+              if (out_list->get_type_byIndex(j)->get_typename() ==
+                  provider_body->out_list->get_type_byIndex(k)->get_typename()) {
+                found = true;
+                break;
+              }
+            }
+          }
+          if (!found) {
+            error("Out message type `%s' is not present in the out message list of the port `%s'.",
+              out_list->get_type_byIndex(j)->get_typename().c_str(),
+              provider_types[i]->get_dispname().c_str());
+          }
+        }
+      }
+      provider_ins.clear();
+    } // provider_types.size()
+  }
+  
+  void PortTypeBody::chk_connect_translation() {
+    FATAL_ERROR("PortTypeBody::chk_connect_translation(): Not implemented");
+  }
+  
   void PortTypeBody::chk_user_attribute()
   {
-    Error_Context cntxt(this, "In extension attribute `user'");
+    Error_Context cntxt(this,
+      legacy ? "In extension attribute `user'" : "In translation capability");
     // check the reference that points to the provider type
-    provider_type = 0;
+    provider_types.clear();
     PortTypeBody *provider_body = 0;
-    Assignment *t_ass = provider_ref->get_refd_assignment(); // provider port
-    if (t_ass) {
-      if (t_ass->get_asstype() == Assignment::A_TYPE) {
-        Type *t = t_ass->get_Type()->get_type_refd_last();
-        if (t->get_typetype() == Type::T_PORT) {
-          provider_type = t;
-          provider_body = t->get_PortBody();
+    size_t n_prov_t = 0;
+    for (size_t p = 0; p < provider_refs.size(); p++) {
+      provider_body = 0;
+      Assignment *t_ass = provider_refs[p]->get_refd_assignment(); // provider port
+      if (t_ass) {
+        if (t_ass->get_asstype() == Assignment::A_TYPE) {
+          Type *t = t_ass->get_Type()->get_type_refd_last();
+          if (t->get_typetype() == Type::T_PORT) {
+            provider_types.add(t);
+            n_prov_t++;
+            provider_body = t->get_PortBody();
+          } else {
+            provider_refs[p]->error("Type reference `%s' does not refer to a port "
+              "type", provider_refs[p]->get_dispname().c_str());
+          }
         } else {
-          provider_ref->error("Type reference `%s' does not refer to a port "
-            "type", provider_ref->get_dispname().c_str());
+          provider_refs[p]->error("Reference `%s' does not refer to a type",
+            provider_refs[p]->get_dispname().c_str());
         }
-      } else {
-        provider_ref->error("Reference `%s' does not refer to a type",
-          provider_ref->get_dispname().c_str());
       }
-    }
 
-    // checking the consistency of attributes in this and provider_body
-    if (provider_body && testport_type != TP_INTERNAL) {
-      if (provider_body->port_type != PT_PROVIDER) {
-        provider_ref->error("The referenced port type `%s' must have the "
-          "`provider' attribute", provider_type->get_typename().c_str());
-      }
-      switch (provider_body->testport_type) {
-      case TP_REGULAR:
-        if (testport_type == TP_ADDRESS) {
-          provider_ref->error("Attribute `address' cannot be used because the "
-            "provider port type `%s' does not have attribute `address'",
-            provider_type->get_typename().c_str());
+      // checking the consistency of attributes in this and provider_body
+      if (provider_body && testport_type != TP_INTERNAL) {
+        if (provider_body->port_type != PT_PROVIDER) {
+          provider_refs[p]->error("The referenced port type `%s' must have the "
+            "`provider' attribute", provider_types[n_prov_t-1]->get_typename().c_str());
         }
-        break;
-      case TP_INTERNAL:
-        provider_ref->error("Missing attribute `internal'. Provider port "
-          "type `%s' has attribute `internal', which must be also present here",
-          provider_type->get_typename().c_str());
-      case TP_ADDRESS:
-        break;
-      default:
-        FATAL_ERROR("PortTypeBody::chk_attributes()");
+        switch (provider_body->testport_type) {
+        case TP_REGULAR:
+          if (testport_type == TP_ADDRESS) {
+            provider_refs[p]->error("Attribute `address' cannot be used because the "
+              "provider port type `%s' does not have attribute `address'",
+              provider_types[n_prov_t-1]->get_typename().c_str());
+          }
+          break;
+        case TP_INTERNAL:
+          provider_refs[p]->error("Missing attribute `internal'. Provider port "
+            "type `%s' has attribute `internal', which must be also present here",
+            provider_types[n_prov_t-1]->get_typename().c_str());
+        case TP_ADDRESS:
+          break;
+        default:
+          FATAL_ERROR("PortTypeBody::chk_attributes()");
+        }
+        // inherit the test port API type from the provider
+        testport_type = provider_body->testport_type;
       }
-      // inherit the test port API type from the provider
-      testport_type = provider_body->testport_type;
-    }
-
+    } // for
+    
     // checking the incoming mappings
-    if (in_mappings) {
+    if (legacy && in_mappings) {
       Error_Context cntxt2(in_mappings, "In `in' mappings");
-      in_mappings->chk();
+      in_mappings->chk(legacy, true);
       // checking source types
       if (provider_body) {
         if (provider_body->in_msgs) {
@@ -1316,7 +1529,7 @@ namespace Ttcn {
               source_type->error("Source type `%s' of the `in' mapping is not "
                 "present on the list of incoming messages in provider port "
                 "type `%s'", source_type->get_typename().c_str(),
-                provider_type->get_typename().c_str());
+                provider_types[0]->get_typename().c_str());
             }
           }
           // check if all types of the `in' list of the provider are handled by
@@ -1328,13 +1541,13 @@ namespace Ttcn {
               in_mappings->error("Incoming message type `%s' of provider "
                 "port type `%s' is not handled by the incoming mappings",
                 msg_type->get_typename().c_str(),
-                provider_type->get_typename().c_str());
+                provider_types[0]->get_typename().c_str());
             }
           }
         } else {
           in_mappings->error("Invalid incoming mappings. Provider port type "
             "`%s' does not have incoming message types",
-            provider_type->get_typename().c_str());
+            provider_types[0]->get_typename().c_str());
         }
       }
       // checking target types
@@ -1353,15 +1566,15 @@ namespace Ttcn {
           }
         }
       }
-    } else if (provider_body && provider_body->in_msgs) {
+    } else if (legacy && provider_body && provider_body->in_msgs) {
       error("Missing `in' mappings to handle the incoming message types of "
-        "provider port type `%s'", provider_type->get_typename().c_str());
+        "provider port type `%s'", provider_types[0]->get_typename().c_str());
     }
 
     // checking the outgoing mappings
-    if (out_mappings) {
+    if (legacy && out_mappings) {
       Error_Context cntxt2(out_mappings, "In `out' mappings");
-      out_mappings->chk();
+      out_mappings->chk(legacy, false);
       // checking source types
       if (out_msgs) {
         // check if all source types are present on the `out' list
@@ -1406,18 +1619,18 @@ namespace Ttcn {
               target_type->error("Target type `%s' of the `out' mapping is "
                 "not present on the list of outgoing messages in provider "
                 "port type `%s'", target_type->get_typename().c_str(),
-                provider_type->get_typename().c_str());
+                provider_types[0]->get_typename().c_str());
             }
           }
         }
       }
-    } else if (out_msgs) {
+    } else if (legacy && out_msgs) {
       error("Missing `out' mappings to handle the outgoing message types of "
         "user port type `%s'", my_type->get_typename().c_str());
     }
 
     // checking the compatibility of signature lists
-    if (provider_body) {
+    if (legacy && provider_body) {
       if (in_sigs) {
         size_t nof_sigs = in_sigs->get_nof_types();
         for (size_t i = 0; i < nof_sigs; i++) {
@@ -1431,7 +1644,7 @@ namespace Ttcn {
                 "not present on the list of incoming signatures in provider "
                 "port type `%s'", t_sig->get_typename().c_str(),
                 my_type->get_typename().c_str(),
-                provider_type->get_typename().c_str());
+                provider_types[0]->get_typename().c_str());
           }
         }
       }
@@ -1444,7 +1657,7 @@ namespace Ttcn {
             error("Incoming signature `%s' of provider port type `%s' is not "
               "present on the list of incoming signatures in user port type "
               "`%s'", t_sig->get_typename().c_str(),
-              provider_type->get_typename().c_str(),
+              provider_types[0]->get_typename().c_str(),
               my_type->get_typename().c_str());
           }
         }
@@ -1460,7 +1673,7 @@ namespace Ttcn {
               "not present on the list of outgoing signatures in provider port "
               "type `%s'", t_sig->get_typename().c_str(),
               my_type->get_typename().c_str(),
-              provider_type->get_typename().c_str());
+              provider_types[0]->get_typename().c_str());
           }
         }
       }
@@ -1476,11 +1689,20 @@ namespace Ttcn {
               error("Outgoing signature `%s' of provider port type `%s' is not "
                 "present on the list of outgoing signatures in user port type "
                 "`%s'", t_sig->get_typename().c_str(),
-                provider_type->get_typename().c_str(),
+                provider_types[0]->get_typename().c_str(),
                 my_type->get_typename().c_str());
           }
         }
       }
+    }
+    if (!legacy) {
+      if (out_mappings) {
+        out_mappings->chk(legacy, false);
+      }
+      if (in_mappings) {
+        in_mappings->chk(legacy, true);
+      }
+      chk_map_translation();
     }
   }
 
@@ -1584,7 +1806,7 @@ namespace Ttcn {
         add_provider_attribute();
         break;
 
-      case ExtensionAttribute::PORT_TYPE_USER:
+      case ExtensionAttribute::PORT_TYPE_USER: {
         switch (port_type) {
         case PortTypeBody::PT_REGULAR:
           break;
@@ -1602,8 +1824,11 @@ namespace Ttcn {
         TypeMappings *in;
         TypeMappings *out;
         ea.get_user(ref, in, out);
-        add_user_attribute(ref, in, out);
-        break;
+        Reference **refs = (Reference**)Malloc(sizeof(Reference*));
+        refs[0] = ref;
+        add_user_attribute(refs, 1, in, out);
+        Free(refs);
+        break; }
 
       case ExtensionAttribute::ANYTYPELIST:
         break; // ignore it
@@ -1793,6 +2018,7 @@ namespace Ttcn {
     stringpool pool;
     port_def pdef;
     memset(&pdef, 0, sizeof(pdef));
+    pdef.legacy = legacy;
     const string& t_genname = my_type->get_genname_own();
     pdef.name = t_genname.c_str();
     pdef.dispname = my_type->get_fullname().c_str();
@@ -1832,16 +2058,26 @@ namespace Ttcn {
         port_msg_mapped_type *mapped_type = pdef.msg_out.elements + i;
         mapped_type->name = pool.add(type->get_genname_value(my_scope));
         mapped_type->dispname = pool.add(type->get_typename());
-        if (port_type == PT_USER) {
+        // When legacy behaviour is used and out_mappings is null then error later
+        if (port_type == PT_USER && (legacy || out_mappings)) {
           if (!out_mappings) FATAL_ERROR("PortTypeBody::generate_code()");
-          TypeMapping *mapping = out_mappings->get_mapping_byType(type);
-          mapped_type->nTargets = mapping->get_nof_targets();
-          mapped_type->targets = (port_msg_type_mapping_target*)
-            Malloc(mapped_type->nTargets * sizeof(*mapped_type->targets));
-          for (size_t j = 0; j < mapped_type->nTargets; j++) {
-            mapping->get_target_byIndex(j)->fill_type_mapping_target(
-              mapped_type->targets + j, type, my_scope, pool);
-            mapped_type->targets[j].target_index = static_cast<size_t>(-1);
+          if (legacy || out_mappings->has_mapping_for_type(type)) {
+            TypeMapping *mapping = out_mappings->get_mapping_byType(type);
+            mapped_type->nTargets = mapping->get_nof_targets();
+            mapped_type->targets = (port_msg_type_mapping_target*)
+              Malloc(mapped_type->nTargets * sizeof(*mapped_type->targets));
+            for (size_t j = 0; j < mapped_type->nTargets; j++) {
+              mapping->get_target_byIndex(j)->fill_type_mapping_target(
+                mapped_type->targets + j, type, my_scope, pool);
+              mapped_type->targets[j].target_index = static_cast<size_t>(-1);
+            }
+          } else if (!legacy) {
+            mapped_type->nTargets = 1;
+            mapped_type->targets = (port_msg_type_mapping_target*)
+                  Malloc(mapped_type->nTargets * sizeof(*mapped_type->targets));
+            mapped_type->targets[0].target_name = pool.add(type->get_genname_value(my_scope));
+            mapped_type->targets[0].target_dispname = pool.add(type->get_typename());
+            mapped_type->targets[0].mapping_type = M_SIMPLE;
           }
         } else {
           mapped_type->nTargets = 0;
@@ -1911,46 +2147,128 @@ namespace Ttcn {
 
     if (port_type == PT_USER) {
       pdef.port_type = USER;
-      if (!provider_type) FATAL_ERROR("PortTypeBody::generate_code()");
-      pdef.provider_name =
-        pool.add(provider_type->get_genname_value(my_scope));
-      PortTypeBody *provider_body = provider_type->get_PortBody();
-      if (provider_body->in_msgs) {
-        if (!in_mappings) // !this->in_msgs OK for an all-discard mapping
-          FATAL_ERROR("PortTypeBody::generate_code()");
-        pdef.provider_msg_in.nElements =
-          provider_body->in_msgs->get_nof_types();
-        pdef.provider_msg_in.elements = (port_msg_mapped_type*)
-          Malloc(pdef.provider_msg_in.nElements *
-            sizeof(*pdef.provider_msg_in.elements));
-        for (size_t i = 0; i < pdef.provider_msg_in.nElements; i++) {
-          Type *type = provider_body->in_msgs->get_type_byIndex(i);
-          port_msg_mapped_type *mapped_type = pdef.provider_msg_in.elements + i;
-          mapped_type->name = pool.add(type->get_genname_value(my_scope));
-          mapped_type->dispname = pool.add(type->get_typename());
-          TypeMapping *mapping = in_mappings->get_mapping_byType(type);
-          mapped_type->nTargets = mapping->get_nof_targets();
-          mapped_type->targets = (port_msg_type_mapping_target*)
-            Malloc(mapped_type->nTargets * sizeof(*mapped_type->targets));
-          for (size_t j = 0; j < mapped_type->nTargets; j++) {
-            TypeMappingTarget *t_target = mapping->get_target_byIndex(j);
-            pdef.has_sliding |= t_target->fill_type_mapping_target(
-              mapped_type->targets + j, type, my_scope, pool);
-            Type *target_type = t_target->get_target_type();
-            if (target_type) {
-              if (!in_msgs) FATAL_ERROR("PortTypeBody::generate_code()");
-              mapped_type->targets[j].target_index =
-                in_msgs->get_index_byType(target_type);
-            } else {
-              // the message will be discarded: fill in a dummy index
-              mapped_type->targets[j].target_index = static_cast<size_t>(-1);
+      if (provider_types.size() == 0) FATAL_ERROR("PortTypeBody::generate_code()");
+      if (legacy) {
+        pdef.provider_name =
+          pool.add(provider_types[0]->get_genname_value(my_scope));
+        PortTypeBody *provider_body = provider_types[0]->get_PortBody();
+        if (provider_body->in_msgs) {
+          if (!in_mappings) // !this->in_msgs OK for an all-discard mapping
+            FATAL_ERROR("PortTypeBody::generate_code()");
+          pdef.provider_msg_in.nElements =
+            provider_body->in_msgs->get_nof_types();
+          pdef.provider_msg_in.elements = (port_msg_mapped_type*)
+            Malloc(pdef.provider_msg_in.nElements *
+              sizeof(*pdef.provider_msg_in.elements));
+          for (size_t i = 0; i < pdef.provider_msg_in.nElements; i++) {
+            Type *type = provider_body->in_msgs->get_type_byIndex(i);
+            port_msg_mapped_type *mapped_type = pdef.provider_msg_in.elements + i;
+            mapped_type->name = pool.add(type->get_genname_value(my_scope));
+            mapped_type->dispname = pool.add(type->get_typename());
+            TypeMapping *mapping = in_mappings->get_mapping_byType(type);
+            mapped_type->nTargets = mapping->get_nof_targets();
+            mapped_type->targets = (port_msg_type_mapping_target*)
+              Malloc(mapped_type->nTargets * sizeof(*mapped_type->targets));
+            for (size_t j = 0; j < mapped_type->nTargets; j++) {
+              TypeMappingTarget *t_target = mapping->get_target_byIndex(j);
+              pdef.has_sliding |= t_target->fill_type_mapping_target(
+                mapped_type->targets + j, type, my_scope, pool);
+              Type *target_type = t_target->get_target_type();
+              if (target_type) {
+                if (!in_msgs) FATAL_ERROR("PortTypeBody::generate_code()");
+                if (in_msgs->has_type(target_type)) {
+                  mapped_type->targets[j].target_index =
+                    in_msgs->get_index_byType(target_type);
+                } else {
+                  mapped_type->targets[j].target_index = static_cast<size_t>(-1);
+                }
+              } else {
+                // the message will be discarded: fill in a dummy index
+                mapped_type->targets[j].target_index = static_cast<size_t>(-1);
+              }
             }
           }
+        } else {
+          pdef.provider_msg_in.nElements = 0;
+          pdef.provider_msg_in.elements = NULL;
         }
-      } else {
+      } else { // non-legacy standard like behaviour
+        pdef.provider_name = 0; // For non legacy generation it is not needed
         pdef.provider_msg_in.nElements = 0;
         pdef.provider_msg_in.elements = NULL;
-      }
+        if (in_msgs) {
+          // First we insert the in messages with simple conversion (no conversion)
+          // into a set called pdef.provider_msg_in.elements
+          for (size_t i = 0; i < in_msgs->get_nof_types(); i++) {
+            Type* type = in_msgs->get_type_byIndex(i);
+            pdef.provider_msg_in.nElements++;
+            pdef.provider_msg_in.elements = (port_msg_mapped_type*)Realloc(pdef.provider_msg_in.elements, pdef.provider_msg_in.nElements * sizeof(*pdef.provider_msg_in.elements));
+            port_msg_mapped_type* mapped_type = pdef.provider_msg_in.elements + (pdef.provider_msg_in.nElements - 1);
+            mapped_type->name = pool.add(type->get_genname_value(my_scope));
+            mapped_type->dispname = pool.add(type->get_typename());
+            mapped_type->nTargets = 1;
+            mapped_type->targets = (port_msg_type_mapping_target*)
+              Malloc(mapped_type->nTargets * sizeof(*mapped_type->targets));
+            mapped_type->targets[0].target_name = pool.add(type->get_genname_value(my_scope));
+            mapped_type->targets[0].target_dispname = pool.add(type->get_typename());
+            mapped_type->targets[0].mapping_type = M_SIMPLE;
+            mapped_type->targets[0].target_index =
+              in_msgs->get_index_byType(type);
+          } // for in_msgs->get_nof_types()
+        } // if in_msgs
+        
+        if (in_mappings) {
+          // Secondly we insert the mappings into the pdef.
+          // We collect the mapping sources for each distinct mapping targets.
+          // Kind of reverse what we did in the legacy behaviour.
+          for (size_t j = 0; j < in_mappings->get_nof_mappings(); j++) {
+            TypeMapping* mapping = in_mappings->get_mapping_byIndex(j);
+            for (size_t u = 0; u < mapping->get_nof_targets(); u++) {
+              TypeMappingTarget* mapping_target = mapping->get_target_byIndex(u);
+
+              port_msg_mapped_type *mapped_type = NULL;
+              // Do not insert the same mapped_type. The key is the dispname.
+              for (size_t k = 0; k < pdef.provider_msg_in.nElements; k++) {
+                if (pdef.provider_msg_in.elements[k].dispname == mapping_target->get_target_type()->get_typename()) {
+                  mapped_type = pdef.provider_msg_in.elements + k;
+                  break;
+                }
+              }
+              
+              // Mapping target not found. Create new port_msg_mapped_type
+              if (mapped_type == NULL) {
+                pdef.provider_msg_in.nElements++;
+                pdef.provider_msg_in.elements = (port_msg_mapped_type*)Realloc(pdef.provider_msg_in.elements, pdef.provider_msg_in.nElements * sizeof(*pdef.provider_msg_in.elements));
+                mapped_type = pdef.provider_msg_in.elements + (pdef.provider_msg_in.nElements - 1);
+                mapped_type->name = pool.add(mapping_target->get_target_type()->get_genname_value(my_scope));
+                mapped_type->dispname = pool.add(mapping_target->get_target_type()->get_typename());
+                mapped_type->nTargets = 0;
+                mapped_type->targets = NULL;
+              }
+              
+              // Insert the mapping source as the mapped target's target.
+              mapped_type->nTargets++;
+              mapped_type->targets = (port_msg_type_mapping_target*)
+                Realloc(mapped_type->targets, mapped_type->nTargets * sizeof(*mapped_type->targets));
+              size_t ind = mapped_type->nTargets - 1;
+
+              mapped_type->targets[ind].mapping_type = M_FUNCTION;
+              mapped_type->targets[ind].mapping.function.prototype = PT_FAST;
+              mapped_type->targets[ind].mapping.function.name = mapping_target->get_function()->get_genname_from_scope(my_scope).c_str();
+
+              mapped_type->targets[ind].target_name = pool.add(mapping->get_source_type()->get_genname_value(my_scope));
+              mapped_type->targets[ind].target_dispname = pool.add(mapping->get_source_type()->get_typename());
+              
+              if (in_msgs->has_type(mapping->get_source_type())) {
+                mapped_type->targets[ind].target_index =
+                  in_msgs->get_index_byType(mapping->get_source_type());
+              } else {
+                FATAL_ERROR("PortTypeBody::generate_code()");
+              }
+            } // for mapping->get_nof_targets()
+          } // for in_mappings->get_nof_mappings()
+        } // if in_mappings // todo inout?
+      } // if legacy
     } else {
       // "internal provider" is the same as "internal"
       if (port_type == PT_PROVIDER && testport_type != TP_INTERNAL)
@@ -1963,7 +2281,7 @@ namespace Ttcn {
 
     defPortClass(&pdef, target);
     if (generate_skeleton && testport_type != TP_INTERNAL &&
-        port_type != PT_USER) generateTestPortSkeleton(&pdef);
+        (port_type != PT_USER || !legacy)) generateTestPortSkeleton(&pdef);
 
     Free(pdef.msg_in.elements);
     for (size_t i = 0; i < pdef.msg_out.nElements; i++)
@@ -2046,8 +2364,10 @@ namespace Ttcn {
     default:
       DEBUG(level, "attribute: <unknown>");
     }
-    if (provider_ref)
-      DEBUG(level, "provider type: %s", provider_ref->get_dispname().c_str());
+    if (provider_refs.size() > 0)
+      for (size_t i = 0; i < provider_refs.size(); i++) {
+        DEBUG(level, "provider type %i: %s", (int)i, provider_refs[i]->get_dispname().c_str());
+      }
     if (in_mappings) {
       DEBUG(level, "in mappings:");
       in_mappings->dump(level + 1);
