@@ -8107,7 +8107,7 @@ namespace Ttcn {
         defval.ap->set_code_section(GovernedSimple::CS_POST_INIT);
     }
     
-    if (use_runtime_2 && my_parlist->get_my_def() != NULL &&
+    if (use_runtime_2 && eval == NORMAL_EVAL && my_parlist->get_my_def() != NULL &&
         my_parlist->get_my_def()->get_asstype() == Definition::A_ALTSTEP) {
       // altstep 'in' parameters are always shadowed in RT2, because if a default
       // altstep deactivates itself, then its parameters are deleted;
