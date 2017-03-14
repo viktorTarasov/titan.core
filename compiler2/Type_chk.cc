@@ -3197,7 +3197,7 @@ bool Type::chk_this_value(Value *value, Common::Assignment *lhs, expected_value_
   chk();
   Value *v_last = value->get_value_refd_last(0, expected_value);
   if (v_last->get_valuetype() == Value::V_OMIT) {
-    if (!omit_allowed) {
+    if (OMIT_NOT_ALLOWED == omit_allowed) {
       value->error("`omit' value is not allowed in this context");
       value->set_valuetype(Value::V_ERROR);
     }
@@ -3353,7 +3353,7 @@ bool Type::chk_this_value(Value *value, Common::Assignment *lhs, expected_value_
   } // switch
 
   // check value against subtype
-  if(sub_chk && (sub_type!=NULL)) sub_type->chk_this_value(value);
+  if(SUB_CHK == sub_chk && (sub_type!=NULL)) sub_type->chk_this_value(value);
 
   return self_ref;
 }
@@ -3503,7 +3503,7 @@ bool Type::chk_this_refd_value(Value *value, Common::Assignment *lhs, expected_v
   }
   TypeCompatInfo info(value->get_my_scope()->get_scope_mod(), this,
                       governor, true, false);
-  info.set_str1_elem(str_elem);
+  info.set_str1_elem(IS_STR_ELEM == str_elem);
   if (ref->get_subrefs()) info.set_str2_elem(ref->get_subrefs()->refers_to_string_element());
   TypeChain l_chain;
   TypeChain r_chain;
@@ -4271,7 +4271,7 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
     CompField *cf = get_comp_byName(value_id);
     // check the ordering of fields
     if (in_synch) {
-      if (incomplete_allowed) {
+      if (INCOMPLETE_ALLOWED == incomplete_allowed) {
         bool found = false;
         for (size_t i = next_index; i < n_type_comps; i++) {
           CompField *cf2 = get_comp_byIndex(i);
@@ -4292,7 +4292,7 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
         // the value must be complete unless implicit omit is set
         CompField *cf2 = get_comp_byIndex(seq_index);
         CompField *cf2_orig = cf2;
-        while (implicit_omit && seq_index < n_type_comps && cf2 != cf &&
+        while (IMPLICIT_OMIT == implicit_omit && seq_index < n_type_comps && cf2 != cf &&
           cf2->get_is_optional())
           cf2 = get_comp_byIndex(++seq_index);
         if (seq_index >= n_type_comps || cf2 != cf) {
@@ -4307,7 +4307,7 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
     Value *comp_value = nv->get_value();
     comp_value->set_my_governor(type);
     if (comp_value->get_valuetype() == Value::V_NOTUSED) {
-      if (implicit_omit) {
+      if (IMPLICIT_OMIT == implicit_omit) {
         comp_value->set_valuetype(Value::V_OMIT);
       } else {
         continue;
@@ -4322,16 +4322,16 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
       is_empty = false;
     }
   }
-  if (incomplete_allowed != INCOMPLETE_ALLOWED || implicit_omit) {
+  if (INCOMPLETE_ALLOWED != incomplete_allowed || IMPLICIT_OMIT == implicit_omit) {
     for (size_t i = 0; i < n_type_comps; i++) {
       const Identifier& id = get_comp_byIndex(i)->get_name();
       if (!comp_map.has_key(id.get_name())) {
-        if (get_comp_byIndex(i)->get_is_optional() && implicit_omit) {
+        if (get_comp_byIndex(i)->get_is_optional() && IMPLICIT_OMIT == implicit_omit) {
           value->add_se_comp(new NamedValue(new Identifier(id),
             new Value(Value::V_OMIT)));
           is_empty = false;
         }
-        else if (!incomplete_allowed)
+        else if (INCOMPLETE_ALLOWED != incomplete_allowed)
           value->error("Field `%s' is missing from record value",
                      id.get_dispname().c_str());
         else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
@@ -4378,7 +4378,7 @@ bool Type::chk_this_value_Set_T(Value *value, Common::Assignment *lhs, expected_
     Value *comp_value = nv->get_value();
     comp_value->set_my_governor(type);
     if (comp_value->get_valuetype() == Value::V_NOTUSED) {
-      if (implicit_omit) {
+      if (IMPLICIT_OMIT == implicit_omit) {
         comp_value->set_valuetype(Value::V_OMIT);
       } else {
         continue;
@@ -4393,16 +4393,16 @@ bool Type::chk_this_value_Set_T(Value *value, Common::Assignment *lhs, expected_
       is_empty = false;
     }
   }
-  if (incomplete_allowed != INCOMPLETE_ALLOWED || implicit_omit) {
+  if (INCOMPLETE_ALLOWED != incomplete_allowed || IMPLICIT_OMIT == implicit_omit) {
     for (size_t i = 0; i < n_type_comps; i++) {
       const Identifier& id = get_comp_byIndex(i)->get_name();
       if(!comp_map.has_key(id.get_name())) {
-        if (get_comp_byIndex(i)->get_is_optional() && implicit_omit) {
+        if (get_comp_byIndex(i)->get_is_optional() && IMPLICIT_OMIT == implicit_omit) {
           value->add_se_comp(new NamedValue(new Identifier(id),
             new Value(Value::V_OMIT)));
           is_empty = false;
         }
-        else if (!incomplete_allowed)
+        else if (INCOMPLETE_ALLOWED != incomplete_allowed)
           value->error("Field `%s' is missing from set value",
             id.get_dispname().c_str());
         else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
@@ -4475,7 +4475,7 @@ bool Type::chk_this_value_Seq_A(Value *value, Common::Assignment *lhs, expected_
       for ( ; t_i < n_type_comps; t_i++) {
         cf2 = u.secho.ctss->get_comp_byIndex(t_i);
         if (cf2 == cf || (!cf2->get_is_optional() && !cf2->has_default() &&
-          !implicit_omit))
+          IMPLICIT_OMIT != implicit_omit))
           break;
       }
       if (cf2 != cf) {
@@ -4506,7 +4506,7 @@ bool Type::chk_this_value_Seq_A(Value *value, Common::Assignment *lhs, expected_
       if (!cf->get_is_optional() && !cf->has_default())
       value->error("Mandatory component `%s' is missing from SEQUENCE value",
                    id.get_dispname().c_str());
-      else if (cf->get_is_optional() && implicit_omit)
+      else if (cf->get_is_optional() && IMPLICIT_OMIT == implicit_omit)
         value->add_se_comp(new NamedValue(new Identifier(id),
           new Value(Value::V_OMIT)));
     }
@@ -4554,7 +4554,7 @@ bool Type::chk_this_value_Set_A(Value *value, Common::Assignment *lhs, expected_
       if (!cf->get_is_optional() && !cf->has_default())
       value->error("Mandatory component `%s' is missing from SET value",
                    id.get_dispname().c_str());
-      else if (cf->get_is_optional() && implicit_omit)
+      else if (cf->get_is_optional() && IMPLICIT_OMIT == implicit_omit)
         value->add_se_comp(new NamedValue(new Identifier(id),
           new Value(Value::V_OMIT)));
   }
@@ -4591,7 +4591,7 @@ bool Type::chk_this_value_SeOf(Value *value, Common::Assignment *lhs, expected_v
                             (unsigned long)(i + 1));
         v_comp->set_my_governor(u.seof.ofType);
         if (v_comp->get_valuetype() == Value::V_NOTUSED) {
-          if (!incomplete_allowed)
+          if (INCOMPLETE_ALLOWED != incomplete_allowed)
             v_comp->error("Not used symbol `-' is not allowed in this "
                           "context");
           else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
@@ -4732,7 +4732,7 @@ bool Type::chk_this_value_Array(Value *value, Common::Assignment *lhs, expected_
         Value *v_comp = value->get_comp_byIndex(i);
         v_comp->set_my_governor(u.array.element_type);
         if (v_comp->get_valuetype() == Value::V_NOTUSED) {
-          if (!incomplete_allowed)
+          if (INCOMPLETE_ALLOWED != incomplete_allowed)
             v_comp->error("Not used symbol `-' is not allowed in this "
                           "context");
           else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
@@ -4853,7 +4853,7 @@ bool Type::chk_this_value_Signature(Value *value, Common::Assignment *lhs,
       CompField *cf = get_comp_byName(value_id);
       // check the ordering of fields
       if (in_synch) {
-        if (incomplete_allowed) {
+        if (INCOMPLETE_ALLOWED == incomplete_allowed) {
           bool found = false;
           for (size_t i = next_index; i < n_type_comps; i++) {
             CompField *cf2 = get_comp_byIndex(i);
@@ -4891,7 +4891,7 @@ bool Type::chk_this_value_Signature(Value *value, Common::Assignment *lhs,
         INCOMPLETE_NOT_ALLOWED,
         cf->get_is_optional() ? OMIT_ALLOWED : OMIT_NOT_ALLOWED, SUB_CHK);
     }
-    if (!incomplete_allowed) {
+    if (INCOMPLETE_ALLOWED != incomplete_allowed) {
       for (size_t i = 0; i < u.signature.parameters->get_nof_in_params(); i++) {
         const Identifier& id = get_comp_byIndex(i)->get_name();   //u.signature.parameters->get_param_byIndex(n)
         if (!comp_map.has_key(id.get_name()) && SignatureParam::PARAM_OUT != u.signature.parameters->get_in_param_byIndex(i)->get_direction()) {
@@ -5504,11 +5504,11 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
   namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
-  if (!allow_omit && t->get_template_refd_last()->get_templatetype() ==
+  if (OMIT_ALLOWED != allow_omit && t->get_template_refd_last()->get_templatetype() ==
       Ttcn::Template::OMIT_VALUE) {
       t->error("`omit' value is not allowed in this context");
   }
-  if (!allow_any_or_omit && t->get_template_refd_last()->get_templatetype() ==
+  if (ANY_OR_OMIT_ALLOWED != allow_any_or_omit && t->get_template_refd_last()->get_templatetype() ==
       Ttcn::Template::ANY_OR_OMIT) {
       t->error("Using `*' for mandatory field");
   }
@@ -5622,9 +5622,9 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
     break;
   }
   if (t->get_length_restriction()) chk_this_template_length_restriction(t);
-  if (!allow_omit && t->get_ifpresent())
+  if (OMIT_ALLOWED != allow_omit && t->get_ifpresent())
     t->error("`ifpresent' is not allowed here");
-  if(sub_chk && temptype != Ttcn::Template::PERMUTATION_MATCH) {
+  if(SUB_CHK == sub_chk && temptype != Ttcn::Template::PERMUTATION_MATCH) {
     /* Note: A "permuation" itself has no type - it is just a fragment. */
     if(sub_type!=NULL) sub_type->chk_this_template_generic(t);
   }
@@ -6118,7 +6118,7 @@ bool Type::chk_this_template_Seq(Template *t, namedbool incomplete_allowed,
 
       CompField *cf = get_comp_byName(temp_id);
       if (in_synch) {
-        if (incomplete_allowed) {
+        if (INCOMPLETE_ALLOWED == incomplete_allowed) {
           // missing fields are allowed, but take care of ordering
           bool found = false;
           for (size_t j = next_index; j < n_type_comps; j++) {
@@ -6141,7 +6141,7 @@ bool Type::chk_this_template_Seq(Template *t, namedbool incomplete_allowed,
           // the template must be complete
           CompField *cf2 = get_comp_byIndex(i);
           if (cf2 != cf) {
-            if (!cf2->get_is_optional() || !implicit_omit) {
+            if (!cf2->get_is_optional() || IMPLICIT_OMIT != implicit_omit) {
               namedtemp->error("Unexpected field `%s' in record template, "
                "expecting `%s'", temp_dispname_str,
                cf2->get_name().get_dispname().c_str());
@@ -6162,17 +6162,17 @@ bool Type::chk_this_template_Seq(Template *t, namedbool incomplete_allowed,
         (is_optional ? ANY_OR_OMIT_ALLOWED : ANY_OR_OMIT_NOT_ALLOWED),
         SUB_CHK, implicit_omit, lhs);
     }
-    if (incomplete_allowed != INCOMPLETE_ALLOWED || implicit_omit) {
+    if (incomplete_allowed != INCOMPLETE_ALLOWED || IMPLICIT_OMIT == implicit_omit) {
       // check missing fields
       for (size_t i = 0; i < n_type_comps; i++) {
         const Identifier& id = get_comp_byIndex(i)->get_name();
         if (!comp_map.has_key(id.get_name())) {
-          if (implicit_omit && get_comp_byIndex(i)->get_is_optional()) {
+          if (IMPLICIT_OMIT == implicit_omit && get_comp_byIndex(i)->get_is_optional()) {
             // do not overwrite base fields
             if (!t->get_base_template())
               t->add_named_temp(new Ttcn::NamedTemplate(new Identifier(id),
                 new Template(Template::OMIT_VALUE)));
-          } else if (!incomplete_allowed) {
+          } else if (INCOMPLETE_ALLOWED != incomplete_allowed) {
             t->error("Field `%s' is missing from template for record type `%s'",
               id.get_dispname().c_str(), get_typename().c_str());
           }
@@ -6246,17 +6246,17 @@ bool Type::chk_this_template_Set(Template *t,
         (is_optional ? ANY_OR_OMIT_ALLOWED : ANY_OR_OMIT_NOT_ALLOWED),
         SUB_CHK, implicit_omit, lhs);
     }
-    if (incomplete_allowed != INCOMPLETE_ALLOWED || implicit_omit) {
+    if (incomplete_allowed != INCOMPLETE_ALLOWED || IMPLICIT_OMIT == implicit_omit) {
       // check missing fields
       for (size_t i = 0; i < n_type_comps; i++) {
         const Identifier& id = get_comp_byIndex(i)->get_name();
         if (!comp_map.has_key(id.get_name())) {
-          if (get_comp_byIndex(i)->get_is_optional() && implicit_omit) {
+          if (get_comp_byIndex(i)->get_is_optional() && IMPLICIT_OMIT == implicit_omit) {
             // do not overwrite base fields
         	if (!t->get_base_template())
               t->add_named_temp(new Ttcn::NamedTemplate(new Identifier(id),
                 new Template(Template::OMIT_VALUE)));
-          } else if (!incomplete_allowed) {
+          } else if (INCOMPLETE_ALLOWED != incomplete_allowed) {
             t->error("Field `%s' is missing from template for set type `%s'",
               id.get_dispname().c_str(), get_typename().c_str());
           }
@@ -6304,7 +6304,7 @@ bool Type::chk_this_template_SeqOf(Template *t, namedbool incomplete_allowed,
     break; }
   case Ttcn::Template::TEMPLATE_LIST: {
     Ttcn::Template::completeness_t c =
-      t->get_completeness_condition_seof(incomplete_allowed);
+      t->get_completeness_condition_seof(INCOMPLETE_ALLOWED == incomplete_allowed);
     Template *t_base;
     size_t nof_base_comps;
     if (c == Ttcn::Template::C_PARTIAL) {
@@ -6443,7 +6443,7 @@ bool Type::chk_this_template_SetOf(Template *t, namedbool incomplete_allowed,
     break;}
   case Ttcn::Template::TEMPLATE_LIST: {
     Ttcn::Template::completeness_t c =
-      t->get_completeness_condition_seof(incomplete_allowed);
+      t->get_completeness_condition_seof(INCOMPLETE_ALLOWED == incomplete_allowed);
     Template *t_base;
     size_t nof_base_comps;
     if (c == Ttcn::Template::C_PARTIAL) {
@@ -6607,7 +6607,7 @@ bool Type::chk_this_template_array(Template *t, namedbool incomplete_allowed,
             implicit_omit, lhs);
           break;
         case Ttcn::Template::TEMPLATE_NOTUSED:
-          if (!incomplete_allowed)
+          if (INCOMPLETE_ALLOWED != incomplete_allowed)
             t_comp->error("Not used symbol `-' is not allowed in this "
                           "context");
           else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
@@ -6752,7 +6752,7 @@ void Type::chk_this_template_Signature(Template *t, namedbool incomplete_allowed
             if(!first_undef_out) first_undef_out = par;
             break;
           default: //inout
-            if (!incomplete_allowed) {
+            if (INCOMPLETE_ALLOWED != incomplete_allowed) {
               t->error("Signature template is incomplete, because the inout "
                 "parameter `%s' is missing", id.get_dispname().c_str());
             }
@@ -6764,7 +6764,7 @@ void Type::chk_this_template_Signature(Template *t, namedbool incomplete_allowed
         }
       }
       if(first_undef_in!=NULL && first_undef_out!=NULL) {
-        if (!incomplete_allowed) {
+        if (INCOMPLETE_ALLOWED != incomplete_allowed) {
           t->error("Signature template is incomplete, because the in parameter "
             "`%s' and the out parameter `%s' are missing",
             first_undef_in->get_id().get_dispname().c_str(),

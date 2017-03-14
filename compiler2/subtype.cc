@@ -1926,7 +1926,7 @@ void SubType::chk_this_template(Template *templ)
 {
   switch (templ->get_templatetype()) {
   case Template::TEMPLATE_LIST:
-    if ( (length_restriction!=NULL) && !length_restriction->is_empty() ) {
+    if ( (length_restriction!=NULL) && TTRUE != length_restriction->is_empty() ) {
       size_t nof_comp_woaon = templ->get_nof_comps_not_anyornone();
       if (!templ->temps_contains_anyornone_symbol() &&
         nof_comp_woaon < length_restriction->get_minimal().get_size()) {
@@ -2083,7 +2083,7 @@ void SubType::chk_this_template_pattern(const char *patt_type, Template *templ)
     templ->error("Template is incompatible with subtype");
     return;
   }
-  if ( (length_restriction!=NULL) && !length_restriction->is_empty() ) {
+  if ( (length_restriction!=NULL) && TTRUE != length_restriction->is_empty() ) {
     Int patt_min_len = static_cast<Int>(templ->get_min_length_of_pattern());
     if (patt_min_len < (Int)(length_restriction->get_minimal().get_size()) &&
       !templ->pattern_contains_anyornone_symbol()) {
@@ -3032,7 +3032,7 @@ Int SubType::get_length_restriction() const
   if (checked!=STC_YES) FATAL_ERROR("SubType::get_length_restriction()");
   if (parsed==NULL) return -1; // only own length restriction counts
   if (length_restriction==NULL) return -1;
-  if (length_restriction->is_empty()) return -1;
+  if (TTRUE == length_restriction->is_empty()) return -1;
   return ( (length_restriction->get_minimal()==length_restriction->get_maximal()) ?
            (Int)(length_restriction->get_minimal().get_size()) :
            -1 );

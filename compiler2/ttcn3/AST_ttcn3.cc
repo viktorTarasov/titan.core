@@ -3892,7 +3892,7 @@ namespace Ttcn {
     Code::merge_cdef(target, &cdef);
     Code::free_cdef(&cdef);
 
-    if (has_implicit_omit_attr()) {
+    if (IMPLICIT_OMIT == has_implicit_omit_attr()) {
       target->functions.post_init = mputprintf(target->functions.post_init,
         "modulepar_%s.set_implicit_omit();\n", name);
     }
@@ -4021,7 +4021,7 @@ namespace Ttcn {
       }
       break;
     default:
-      if (has_implicit_omit_attr()) {
+      if (IMPLICIT_OMIT == has_implicit_omit_attr()) {
         error("Implicit omit not supported for template module parameters");
       }
 #if defined(MINGW)
@@ -4040,7 +4040,7 @@ namespace Ttcn {
         type->chk_this_template_ref(def_template);
         checked = true;
         type->chk_this_template_generic(def_template, INCOMPLETE_ALLOWED,
-          OMIT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, has_implicit_omit_attr() ? IMPLICIT_OMIT : NOT_IMPLICIT_OMIT, 0);
+          OMIT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, IMPLICIT_OMIT == has_implicit_omit_attr() ? IMPLICIT_OMIT : NOT_IMPLICIT_OMIT, 0);
         if (!semantic_check_only) {
           def_template->set_genname_prefix("modulepar_");
           def_template->set_genname_recursive(get_genname());
@@ -4067,7 +4067,7 @@ namespace Ttcn {
     Code::merge_cdef(target, &cdef);
     Code::free_cdef(&cdef);
 
-    if (has_implicit_omit_attr()) {
+    if (IMPLICIT_OMIT == has_implicit_omit_attr()) {
       FATAL_ERROR("Def_Modulepar_Template::generate_code()");
     }
 
@@ -4238,7 +4238,7 @@ namespace Ttcn {
     type->chk_this_template_generic(body,
       derived_ref != NULL ? INCOMPLETE_ALLOWED : WARNING_FOR_INCOMPLETE,
       OMIT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK,
-      has_implicit_omit_attr() ? IMPLICIT_OMIT : NOT_IMPLICIT_OMIT, 0);
+      IMPLICIT_OMIT == has_implicit_omit_attr() ? IMPLICIT_OMIT : NOT_IMPLICIT_OMIT, 0);
 
     erroneous_attrs = chk_erroneous_attr(w_attrib_path, type, get_my_scope(),
       get_fullname(), false);
