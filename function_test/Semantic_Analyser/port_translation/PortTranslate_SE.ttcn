@@ -96,7 +96,7 @@ module PortTranslate_SE { //^In TTCN-3 module//
 		inout integer
 	}
 
-	type port PT8 message map to P7 { //^In translation capability\:// //^In type definition \`PT8\'\://  //^error\: Out message type \`integer\'\, or one of the target mappings of out message type \`integer\' is not present in the out or inout message list of the port \`P7\'\.//
+	type port PT8 message map to P7 { //^In translation capability\:// //^In type definition \`PT8\'\://  //^error\: Neither out message type \`integer\'\, nor one of its targetmappings are present in the out or inout message list of the port \`P7\'\.//
 		out integer
 		in charstring
 	}
@@ -184,7 +184,7 @@ module PortTranslate_SE { //^In TTCN-3 module//
 		extension "provider"
 	}
 
-	type port PT15 message map to P9 { //^In type definition \`PT15\'\:// //^In translation capability\:// //^error\: Out message type \`integer\'\, or one of the target mappings of out message type \`integer\' is not present in the out or inout message list of the port \`P9\'\.//
+	type port PT15 message map to P9 { //^In type definition \`PT15\'\:// //^In translation capability\:// //^error\: Neither out message type \`integer\'\, nor one of its targetmappings are present in the out or inout message list of the port \`P9\'\.//
 		out integer to charstring with int_to_char() : octetstring with int_to_oct()
 	}
 	

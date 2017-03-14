@@ -1441,7 +1441,6 @@ namespace Ttcn {
             error("Neither out message type `%s', nor one of its target"
               "mappings are present in the out or inout message list of the port `%s'.",
               out_list->get_type_byIndex(j)->get_typename().c_str(),
-              out_list->get_type_byIndex(j)->get_typename().c_str(),
               provider_types[i]->get_dispname().c_str());
           }
         }
