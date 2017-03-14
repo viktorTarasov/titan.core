@@ -64,7 +64,7 @@ GENERATED_SOURCES += $(GENERATED_SOURCES2)
 endif
 # C/C++ Source & header files of Test Ports, external functions and
 # other modules:
-USER_SOURCES = PT2.cc P1.cc P2.cc
+USER_SOURCES = PT2.cc P1.cc P2.cc P3.cc
 USER_HEADERS = $(USER_SOURCES:.cc=.hh)
 
 # Object files of this project that are needed for the executable test suite:

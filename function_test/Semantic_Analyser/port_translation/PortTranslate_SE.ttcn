@@ -13,10 +13,10 @@ module PortTranslate_SE { //^In TTCN-3 module//
 
 	type integer MyInt;
 
-	type port PT1 message map to //In translation capability\:// //^In type definition \`PT1\'\://
+	type port PT1 message map to //In translation capability\:// //^In type definition \`PT1\'\:// //^error\: Duplicate port mappings\, the type \`P1\' appears more than once\.//
 	  P1, //^error\: The referenced port type \`\@PortTranslate_SE\.P1\' must have the \`provider\' attribute//
 	  MyInt, //error\: Type reference \`MyInt\' does not refer to a port type//
-	  P1 { //^error\: The referenced port type \`\@PortTranslate_SE\.P1\' must have the \`provider\' attribute//
+	  P1 {
 		in integer
 	}
 
@@ -96,7 +96,7 @@ module PortTranslate_SE { //^In TTCN-3 module//
 		inout integer
 	}
 
-	type port PT8 message map to P7 { //^In translation capability\:// //^In type definition \`PT8\'\://  //error\: Out message type \`integer\' is not present in the out message list of the port \`P7\'\.//
+	type port PT8 message map to P7 { //^In translation capability\:// //^In type definition \`PT8\'\://  //^error\: Out message type \`integer\'\, or one of the target mappings of out message type \`integer\' is not present in the out or inout message list of the port \`P7\'\.//
 		out integer
 		in charstring
 	}
@@ -177,4 +177,21 @@ module PortTranslate_SE { //^In TTCN-3 module//
 		extension "prototype(fast)"
 	}
 
+
+	type port P9 message {
+		out hexstring
+	} with {
+		extension "provider"
+	}
+
+	type port PT15 message map to P9 { //^In type definition \`PT15\'\:// //^In translation capability\:// //^error\: Out message type \`integer\'\, or one of the target mappings of out message type \`integer\' is not present in the out or inout message list of the port \`P9\'\.//
+		out integer to charstring with int_to_char() : octetstring with int_to_oct()
+	}
+	
+	function int_to_oct(in integer a, out octetstring b) {
+
+	}
+	with {
+		extension "prototype(fast)"
+	}
 }

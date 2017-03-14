@@ -11,6 +11,7 @@
  ******************************************************************************/
 module PortTranslate {
 
+
 	type port P1 message {
 		in integer
 	} with {
@@ -43,6 +44,29 @@ module PortTranslate {
 	type port PT2_ message map to P1_, P2_ {
 		in integer from octetstring with oct_to_int() : hexstring with hex_to_int() : charstring with str_to_int()
 		in charstring from octetstring with oct_to_str() : hexstring with hex_to_str() : integer with int_to_str()
+	}
+
+///////////////////////////////////////////////////////////////////////////////
+
+	type component MyComp {
+		port PT1 pt1
+		port PT2 pt2
+		port PT2_ pt2_
+	}
+
+	type component MySystem {
+		port P1 p1
+		port P1_ p1_
+		port P2 p2
+		port P2_ p2_
+	}
+
+	// Check that mapping is possible
+	testcase tc_map() runs on MyComp system MySystem {
+		map(self:pt1, system:p1);
+		map(self:pt2, system:p1);
+		map(self:pt2_, system:p1_);
+		map(self:pt2_, system:p2_);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -227,6 +251,48 @@ module PortTranslate {
 	}
 
 
+///////////////////////////////////////////////////////////////////////////////
+
+	type port P19 message {
+		inout integer
+	} with {
+		extension "provider"
+	}
+	
+	type port PT15 message map to P19 {
+		out integer
+		in integer
+	}
+
+///////////////////////////////////////////////////////////////////////////////
+
+	type port P20 message {
+		out charstring
+		out bitstring
+	} with {
+		extension "provider"
+	}
+
+	type port P21 message {
+		out integer
+		out hexstring
+	} with {
+		extension "provider"
+	}
+
+	type port P22 message {
+		out octetstring
+		out hexstring
+	} with {
+		extension "provider"
+	}
+
+	type port PT16 message map to P20, P21, P22 {
+		out integer to charstring with int_to_str() : octetstring with int_to_oct()
+		out bitstring to hexstring with bit_to_hex()
+	}
+
+
 
 
 	/* Conversion functions */
@@ -358,5 +424,6 @@ module PortTranslate {
 	} with {
 		extension "prototype(fast)";
 	}
+
 
 }

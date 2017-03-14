@@ -89,6 +89,17 @@ typedef enum testport_type_t { NORMAL, INTERNAL, ADDRESS } testport_type_t;
 
 typedef enum port_type_t { REGULAR, PROVIDER, USER } port_type_t;
 
+typedef struct port_msg_provider {
+  const char *name; // provider type's name
+  size_t n_out_msg_type_names;
+  const char **out_msg_type_names; // provider's out message list
+} port_msg_prov;
+
+typedef struct port_msg_provider_list {
+  size_t nElements;
+  port_msg_prov *elements;
+} port_msg_prov_list;
+
 typedef struct port_def_tag {
   const char *name;
   const char *dispname;
@@ -102,7 +113,9 @@ typedef struct port_def_tag {
   port_proc_signature_list proc_out; /* from PortTypeBody::out_sigs */
   testport_type_t testport_type;
   port_type_t port_type;
-  const char *provider_name;
+  port_msg_prov_list provider_msg_outlist;
+  const char **mapper_name;
+  size_t n_mapper_name;
   port_msg_mapped_type_list provider_msg_in;
   boolean has_sliding;
   boolean legacy;
