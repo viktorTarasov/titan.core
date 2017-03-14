@@ -10,79 +10,79 @@
  *
  ******************************************************************************/
 
-#include "PT2.hh"
+#include "P3.hh"
 
 namespace PortTranslation {
 
-PT2::PT2(const char *par_port_name)
-	: PT2_BASE(par_port_name)
+P3::P3(const char *par_port_name)
+	: P3_BASE(par_port_name)
 {
 
 }
 
-PT2::~PT2()
+P3::~P3()
 {
 
 }
 
-void PT2::set_parameter(const char * /*parameter_name*/,
+void P3::set_parameter(const char * /*parameter_name*/,
 	const char * /*parameter_value*/)
 {
 
 }
 
-/*void PT2::Handle_Fd_Event(int fd, boolean is_readable,
+/*void P3::Handle_Fd_Event(int fd, boolean is_readable,
 	boolean is_writable, boolean is_error) {}*/
 
-void PT2::Handle_Fd_Event_Error(int /*fd*/)
+void P3::Handle_Fd_Event_Error(int /*fd*/)
 {
 
 }
 
-void PT2::Handle_Fd_Event_Writable(int /*fd*/)
+void P3::Handle_Fd_Event_Writable(int /*fd*/)
 {
 
 }
 
-void PT2::Handle_Fd_Event_Readable(int /*fd*/)
+void P3::Handle_Fd_Event_Readable(int /*fd*/)
 {
 
 }
 
-/*void PT2::Handle_Timeout(double time_since_last_call) {}*/
+/*void P3::Handle_Timeout(double time_since_last_call) {}*/
 
-void PT2::user_map(const char * /*system_port*/)
+void P3::user_map(const char * /*system_port*/)
 {
 
 }
 
-void PT2::user_unmap(const char * /*system_port*/)
+void P3::user_unmap(const char * /*system_port*/)
 {
 
 }
 
-void PT2::user_start()
+void P3::user_start()
 {
 
 }
 
-void PT2::user_stop()
+void P3::user_stop()
 {
 
 }
 
-void PT2::outgoing_send(const MyRec& send_par)
+void P3::outgoing_send(const MyRec& send_par)
 {
 	OCTETSTRING os = send_par.val();
-	incoming_message(oct2char(os));
+	incoming_message(os);
 }
 
-void PT2::outgoing_send(const OCTETSTRING& /*send_par*/)
+void P3::outgoing_send(const BITSTRING& /*send_par*/)
 {
 
 }
 
-void PT2::outgoing_send(const BITSTRING& /*send_par*/)
+void P3::outgoing_send(const OCTETSTRING& /*send_par*/)
 {
 
 }

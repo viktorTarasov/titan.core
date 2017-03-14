@@ -400,7 +400,9 @@ private:
   TestPortAPI_t testport_type; // regular|internal|address
   PortType_t port_type; // regular|provider|user
   vector<Ttcn::Reference>provider_refs; ///< references to provider ports, for PT_USER
-  vector<Common::Type> provider_types; ///< the types that provider_refs refers to
+  vector<Common::Type> provider_types; ///< the types that provider_refs refers to, for PT_USER
+  vector<Common::Type> mapper_types; ///< the types that map this port.
+                                     ///< only for PT_USER && !legacy
   TypeMappings *in_mappings, *out_mappings; ///< mappings for PT_USER
   /** Copy constructor not implemented */
   PortTypeBody(const PortTypeBody& p);
@@ -458,6 +460,11 @@ public:
    * test component port to system port \a p_other.
    * Applicable only if \a is_mappable() returned false. */
   void report_mapping_errors(PortTypeBody *p_other) const;
+  /** True if the PortTypeBody has translation capability towards p_other */
+  bool is_translate(PortTypeBody *p_other) const;
+  Type* get_my_type() const { return my_type; }
+  bool is_legacy() const { return legacy; }
+  void add_mapper_type(Type* t) { mapper_types.add(t); }
   void generate_code(output_struct *target);
   virtual void dump(unsigned level) const;
 };

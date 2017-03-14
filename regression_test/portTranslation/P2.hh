@@ -45,11 +45,16 @@ protected:
 	void user_start();
 	void user_stop();
 
+public:
 	void outgoing_send(const OCTETSTRING& send_par);
 	void outgoing_send(const MyRec& send_par);
 	void outgoing_send(const BITSTRING& send_par);
+	void outgoing_send(const INTEGER& send_par);
+	void outgoing_send(const CHARSTRING& send_par);
 	virtual void incoming_message(const INTEGER& incoming_par) = 0;
 	virtual void incoming_message(const BITSTRING& incoming_par) = 0;
+	virtual void incoming_message(const OCTETSTRING& incoming_par) = 0;
+	virtual void incoming_message(const CHARSTRING& incoming_par) = 0;
 };
 
 } /* end of namespace */

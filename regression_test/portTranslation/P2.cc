@@ -72,19 +72,31 @@ void P2_PROVIDER::user_stop()
 
 }
 
-void P2_PROVIDER::outgoing_send(const OCTETSTRING& /*send_par*/)
+void P2_PROVIDER::outgoing_send(const OCTETSTRING& send_par)
 {
-
+	INTEGER integer = send_par.lengthof();
+	incoming_message(integer);
 }
 
-void P2_PROVIDER::outgoing_send(const MyRec& /*send_par*/)
+void P2_PROVIDER::outgoing_send(const MyRec& send_par)
 {
-
+	OCTETSTRING os = send_par.val();
+	incoming_message(os);
 }
 
-void P2_PROVIDER::outgoing_send(const BITSTRING& /*send_par*/)
+void P2_PROVIDER::outgoing_send(const BITSTRING& send_par)
 {
+	incoming_message(send_par);
+}
 
+void P2_PROVIDER::outgoing_send(const CHARSTRING& send_par)
+{
+	incoming_message(send_par);
+}
+
+void P2_PROVIDER::outgoing_send(const INTEGER& send_par)
+{
+	incoming_message(send_par);
 }
 
 } /* end of namespace */

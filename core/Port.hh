@@ -95,7 +95,7 @@ protected:
   unsigned int msg_head_count, msg_tail_count, proc_head_count,
   proc_tail_count;
   boolean is_active, is_started, is_halted;
-
+  
 private:
   int n_system_mappings;
   char **system_mappings;
@@ -298,7 +298,9 @@ protected:
     Text_Buf& incoming_buf, component sender_component);
   virtual boolean process_exception(const char *signature_name,
     Text_Buf& incoming_buf, component sender_component);
-
+  
+  virtual void reset_port_variables();
+  
 private:
   port_connection *add_connection(component remote_component,
     const char *remote_port, transport_type_enum transport_type);

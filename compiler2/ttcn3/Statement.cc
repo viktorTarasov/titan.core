@@ -1388,6 +1388,7 @@ namespace Ttcn {
       config_op.portref1=p_portref1;
       config_op.compref2=p_compref2;
       config_op.portref2=p_portref2;
+      config_op.translate=false;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -4738,24 +4739,24 @@ error:
       pt1 = chk_conn_endpoint(config_op.compref1, config_op.portref1, true);
       if (pt1) {
         ptb1 = pt1->get_PortBody();
-	if (ptb1->is_internal()) {
-	  config_op.portref1->warning("Port type `%s' was marked as `internal'",
-            pt1->get_typename().c_str());
-	}
+        if (ptb1->is_internal()) {
+          config_op.portref1->warning("Port type `%s' was marked as `internal'",
+                  pt1->get_typename().c_str());
+        }
       } else ptb1 = 0;
       Value *cref1 = config_op.compref1->get_value_refd_last();
       if (cref1->get_valuetype() == Value::V_EXPR) {
-	switch (cref1->get_optype()) {
-	case Value::OPTYPE_COMP_MTC:
-	case Value::OPTYPE_COMP_SELF:
-	case Value::OPTYPE_COMP_CREATE:
-	  cref1_is_tc = true;
-	  break;
-	case Value::OPTYPE_COMP_SYSTEM:
-          cref1_is_system = true;
-	default:
+        switch (cref1->get_optype()) {
+        case Value::OPTYPE_COMP_MTC:
+        case Value::OPTYPE_COMP_SELF:
+        case Value::OPTYPE_COMP_CREATE:
+	        cref1_is_tc = true;
           break;
-	}
+        case Value::OPTYPE_COMP_SYSTEM:
+          cref1_is_system = true;
+        default:
+          break;
+        }
       }
     }
     {
@@ -4764,23 +4765,23 @@ error:
       if (pt2) {
         ptb2 = pt2->get_PortBody();
         if (ptb2->is_internal()) {
-	  config_op.portref2->warning("Port type `%s' was marked as `internal'",
+          config_op.portref2->warning("Port type `%s' was marked as `internal'",
             pt2->get_typename().c_str());
-	}
+        }
       } else ptb2 = 0;
       Value *cref2 = config_op.compref2->get_value_refd_last();
       if (cref2->get_valuetype() == Value::V_EXPR) {
-	switch (cref2->get_optype()) {
-	case Value::OPTYPE_COMP_MTC:
-	case Value::OPTYPE_COMP_SELF:
-	case Value::OPTYPE_COMP_CREATE:
-	  cref2_is_tc = true;
-	  break;
-	case Value::OPTYPE_COMP_SYSTEM:
-          cref2_is_system = true;
-	default:
+        switch (cref2->get_optype()) {
+        case Value::OPTYPE_COMP_MTC:
+        case Value::OPTYPE_COMP_SELF:
+        case Value::OPTYPE_COMP_CREATE:
+	        cref2_is_tc = true;
           break;
-	}
+        case Value::OPTYPE_COMP_SYSTEM:
+          cref2_is_system = true;
+        default:
+          break;
+        }
       }
     }
     if (cref1_is_tc && cref2_is_tc) {
@@ -4794,24 +4795,30 @@ error:
     // checking consistency
     if (!ptb1 || !ptb2) return;
     if (cref1_is_tc || cref2_is_system) {
-      if (!ptb1->is_mappable(ptb2)) {
-	error("The mapping between test component port type `%s' and system "
-	  "port type `%s' is not consistent", pt1->get_typename().c_str(),
-	  pt2->get_typename().c_str());
-	ptb1->report_mapping_errors(ptb2);
+      // The check for safe mapping was already checked in
+      // PortTypeBody::chk_map_translation()
+      config_op.translate = !ptb1->is_legacy() && ptb1->is_translate(ptb2);
+      if (!config_op.translate && !ptb1->is_mappable(ptb2)) {
+        error("The mapping between test component port type `%s' and system "
+          "port type `%s' is not consistent", pt1->get_typename().c_str(),
+          pt2->get_typename().c_str());
+        ptb1->report_mapping_errors(ptb2);
       }
     } else if (cref2_is_tc || cref1_is_system) {
-      if (!ptb2->is_mappable(ptb1)) {
-	error("The mapping between system port type `%s' and test component "
-	  "port type `%s' is not consistent", pt1->get_typename().c_str(),
-	  pt2->get_typename().c_str());
-	ptb2->report_mapping_errors(ptb1);
+      config_op.translate = !ptb2->is_legacy() && ptb2->is_translate(ptb1);
+      if (!config_op.translate && !ptb2->is_mappable(ptb1)) {
+        error("The mapping between system port type `%s' and test component "
+          "port type `%s' is not consistent", pt1->get_typename().c_str(),
+          pt2->get_typename().c_str());
+        ptb2->report_mapping_errors(ptb1);
       }
     } else {
       // we have no idea which one is the system port
-      if (!ptb1->is_mappable(ptb1) && !ptb2->is_mappable(ptb1)) {
-	error("The mapping between port types `%s' and `%s' is not consistent",
-          pt1->get_typename().c_str(), pt2->get_typename().c_str());
+      config_op.translate = (!ptb1->is_legacy() && ptb1->is_translate(ptb2)) ||
+                            (!ptb2->is_legacy() && ptb2->is_translate(ptb1));
+      if (!config_op.translate && !ptb1->is_mappable(ptb1) && !ptb2->is_mappable(ptb1)) {
+        error("The mapping between port types `%s' and `%s' is not consistent",
+                pt1->get_typename().c_str(), pt2->get_typename().c_str());
       }
     }
   }
@@ -5536,33 +5543,33 @@ error:
       const Identifier& t_portid = *p_portref->get_id();
       if (!comp_body->has_local_ass_withId(t_portid)) {
         p_portref->error("Component type `%s' does not have port with name "
-	  "`%s'", comp_type->get_typename().c_str(),
-	  t_portid.get_dispname().c_str());
-	return 0;
+          "`%s'", comp_type->get_typename().c_str(),
+          t_portid.get_dispname().c_str());
+        return 0;
       }
       Common::Assignment *t_ass = comp_body->get_local_ass_byId(t_portid);
       if (t_ass->get_asstype() != Common::Assignment::A_PORT) {
-	p_portref->error("Definition `%s' in component type `%s' is a %s and "
-	  "not a port", t_portid.get_dispname().c_str(),
-	  comp_type->get_typename().c_str(), t_ass->get_assname());
-	return 0;
+        p_portref->error("Definition `%s' in component type `%s' is a %s and "
+          "not a port", t_portid.get_dispname().c_str(),
+          comp_type->get_typename().c_str(), t_ass->get_assname());
+        return 0;
       }
       ArrayDimensions *t_dims = t_ass->get_Dimensions();
       if (t_dims) t_dims->chk_indices(p_portref, "port", false,
-	Type::EXPECTED_DYNAMIC_VALUE);
+        Type::EXPECTED_DYNAMIC_VALUE);
       else if (p_portref->get_subrefs()) {
-	p_portref->error("Port `%s' is not an array. The "
-	  "reference cannot have array indices",
-	  t_portid.get_dispname().c_str());
+        p_portref->error("Port `%s' is not an array. The "
+          "reference cannot have array indices",
+          t_portid.get_dispname().c_str());
       }
       Type *port_type = t_ass->get_Type();
       if (port_type) {
-	// check whether the external interface is provided by another port type
-	PortTypeBody *port_body = port_type->get_PortBody();
-	if (port_body->get_type() == PortTypeBody::PT_USER) {
-	  Type *provider_type = port_body->get_provider_type();
-	  if (provider_type) port_type = provider_type;
-	}
+        // check whether the external interface is provided by another port type
+        PortTypeBody *port_body = port_type->get_PortBody();
+        if (port_body->get_type() == PortTypeBody::PT_USER && port_body->is_legacy()) {
+          Type *provider_type = port_body->get_provider_type();
+          if (provider_type) port_type = provider_type;
+        }
       }
       return port_type;
     } else {
@@ -5570,10 +5577,10 @@ error:
       FieldOrArrayRefs *t_subrefs = p_portref->get_subrefs();
       if (t_subrefs) {
         // check the array indices: they should be integers
-	for (size_t i = 0; i < t_subrefs->get_nof_refs(); i++) {
-	  t_subrefs->get_ref(i)->get_val()
-	    ->chk_expr_int(Type::EXPECTED_DYNAMIC_VALUE);
-	}
+        for (size_t i = 0; i < t_subrefs->get_nof_refs(); i++) {
+          t_subrefs->get_ref(i)->get_val()
+            ->chk_expr_int(Type::EXPECTED_DYNAMIC_VALUE);
+        }
       }
       return 0;
     }
@@ -7374,7 +7381,29 @@ error:
       // a simple string shall be formed from the port name and array indices
       generate_code_portref(&expr, config_op.portref2);
     }
-    expr.expr = mputc(expr.expr, ')');
+    expr.expr = mputstr(expr.expr, ")");
+    if (config_op.translate) {
+      string funcname;
+      if (strcmp(opname, "map") == 0) {
+        funcname = "add_port";
+      } else if (strcmp(opname, "unmap") == 0) {
+        funcname = "remove_port";
+      } else {
+        //TODO connect, disconnect
+      }
+      if (!funcname.empty()) {
+        expr.expr = mputstr(expr.expr, ";\n");
+        config_op.portref1->generate_code_portref(&expr, my_sb);
+        expr.expr = mputprintf(expr.expr, ".%s(&(", funcname.c_str());
+        config_op.portref2->generate_code_portref(&expr, my_sb);
+        expr.expr = mputstr(expr.expr, "));\n");
+
+        config_op.portref2->generate_code_portref(&expr, my_sb);
+        expr.expr = mputprintf(expr.expr, ".%s(&(", funcname.c_str());
+        config_op.portref1->generate_code_portref(&expr, my_sb);
+        expr.expr = mputstr(expr.expr, "))");
+      }
+    }
     return Code::merge_free_expr(str, &expr);
   }
 

@@ -10,23 +10,17 @@
  *
  ******************************************************************************/
 
-#ifndef P1_HH
-#define P1_HH
+#ifndef P3_HH
+#define P3_HH
 
-#include <TTCN3.hh>
-
-// Note: Header file PortTranslation.hh must not be included into this file!
-// (because it includes this file)
-// Please add the declarations of message types manually.
+#include "PortTranslation.hh"
 
 namespace PortTranslation {
 
-class MyRec;
-
-class P1_PROVIDER : public PORT {
+class P3 : public P3_BASE {
 public:
-	P1_PROVIDER(const char *par_port_name);
-	~P1_PROVIDER();
+	P3(const char *par_port_name = NULL);
+	~P3();
 
 	void set_parameter(const char *parameter_name,
 		const char *parameter_value);
@@ -45,16 +39,9 @@ protected:
 	void user_start();
 	void user_stop();
 
-public:
 	void outgoing_send(const MyRec& send_par);
-	void outgoing_send(const OCTETSTRING& send_par);
 	void outgoing_send(const BITSTRING& send_par);
-	void outgoing_send(const CHARSTRING& send_par);
-	void outgoing_send(const INTEGER& send_par);
-	virtual void incoming_message(const INTEGER& incoming_par) = 0;
-	virtual void incoming_message(const BITSTRING& incoming_par) = 0;
-	virtual void incoming_message(const OCTETSTRING& incoming_par) = 0;
-	virtual void incoming_message(const CHARSTRING& incoming_par) = 0;
+	void outgoing_send(const OCTETSTRING& send_par);
 };
 
 } /* end of namespace */

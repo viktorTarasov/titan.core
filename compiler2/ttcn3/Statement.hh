@@ -342,6 +342,7 @@ namespace Ttcn {
         Reference *portref1;
         Value *compref2;
         Reference *portref2;
+        bool translate; // true if a map statement enables translation mode
       } config_op; ///< used by S_CONNECT, S_MAP, S_DISCONNECT, S_UNMAP
 
       struct {

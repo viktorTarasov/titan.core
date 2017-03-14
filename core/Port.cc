@@ -2197,12 +2197,22 @@ void PORT::unmap(const char *system_port)
     Free(unmapped_port);
     throw;
   }
+  
+  // Only valid for provider ports and standard like translation (user) ports.
+  // Currently the requirement is that the port needs to map only when mapped 
+  // to one port. If it would be mapped to more ports then this call would
+  // remove all translation capability.
+  reset_port_variables();
 
   TTCN_Logger::log_port_misc(
     TitanLoggerApi::Port__Misc_reason::port__was__unmapped__from__system,
     port_name, SYSTEM_COMPREF, system_port);
 
   Free(unmapped_port);
+}
+
+void PORT::reset_port_variables() {
+  
 }
 
 void PORT::process_connect_listen(const char *local_port,

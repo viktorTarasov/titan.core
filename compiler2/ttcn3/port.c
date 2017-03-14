@@ -69,6 +69,19 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
       src = mputstr(src, "TTCN_Buffer ttcn_buffer(send_par);\n");
       /* has_buffer will be set to TRUE later */
     }
+    if (!pdef->legacy && pdef->port_type == USER) {
+      // Mappings should only happen if the port it is mapped to has the same
+      // outgoing message type as the mapping target.
+      src = mputstr(src, "if (false");
+      for (size_t j = 0; j < pdef->provider_msg_outlist.nElements; j++) {
+        for (size_t k = 0; k < pdef->provider_msg_outlist.elements[j].n_out_msg_type_names; k++) {
+          if (strcmp(target->target_name, pdef->provider_msg_outlist.elements[j].out_msg_type_names[k]) == 0) {
+            src = mputprintf(src, " || p_%i != NULL", (int)j);
+          }
+        }
+      }
+      src = mputstr(src, ") {\n");
+    }
     if (mapped_type->nTargets > 1) src = mputstr(src, "{\n");
     switch (target->mapping_type) {
     case M_FUNCTION:
@@ -164,8 +177,10 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
     } else {
       if (pdef->testport_type != INTERNAL) {
         src = mputprintf(src, "if (destination_component == "
-          "SYSTEM_COMPREF) outgoing_send(mapped_par%s);\n"
-          "else {\n", pdef->testport_type == ADDRESS ? ", NULL" : "");
+          "SYSTEM_COMPREF) outgoing_%ssend(mapped_par%s);\n"
+          "else {\n",
+          pdef->port_type == USER && !pdef->legacy ? "mapped_" : "",
+          pdef->testport_type == ADDRESS ? ", NULL" : "");
       }
       src = mputprintf(src, "Text_Buf text_buf;\n"
         "prepare_message(text_buf, \"%s\");\n"
@@ -185,6 +200,10 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
       src = mputstr(src, "}\n");
     }
     if (mapped_type->nTargets > 1) src = mputstr(src, "}\n");
+    if (!pdef->legacy && pdef->port_type == USER) {
+      // end of the outgoing messages of port with mapping target check
+      src = mputstr(src, "}\n");
+    }
   }
   if (has_discard) {
     if (mapped_type->nTargets > 1) {
@@ -1392,7 +1411,8 @@ void defPortClass(const port_def* pdef, output_struct* output)
     case USER:
       if (pdef->legacy) {
         class_name = mcopystr(pdef->name);
-        base_class_name = mprintf("%s_PROVIDER", pdef->provider_name);
+        // legacy always has one provider_name
+        base_class_name = mprintf("%s_PROVIDER", pdef->provider_msg_outlist.elements[0].name);
         break;
       }
       // else fall through
@@ -1605,6 +1625,21 @@ void defPortClass(const port_def* pdef, output_struct* output)
     src = mputstr(src, "}\n\n");
   }
   
+  // Port variables which can be the mapped ports for translation
+  if (pdef->port_type == USER && !pdef->legacy) {
+    def = mputstr(def, "private:\n");
+    for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
+      def = mputprintf(def, "%s* p_%i;\n", pdef->provider_msg_outlist.elements[i].name, (int)i);
+    }
+  }
+  
+  // Port variables which can be the mapper ports for translation
+  if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
+    def = mputstr(def, "private:\n");
+    for (i = 0; i < pdef->n_mapper_name; i++) {
+      def = mputprintf(def, "%s* p_%i;\n", pdef->mapper_name[i], (int)i);
+    }
+  }
   
   def = mputstr(def, "public:\n");
 
@@ -1625,6 +1660,16 @@ void defPortClass(const port_def* pdef, output_struct* output)
     "msg_queue_tail = NULL;\n");
   if (has_proc_queue) src = mputstr(src, "proc_queue_head = NULL;\n"
     "proc_queue_tail = NULL;\n");
+  if (pdef->port_type == USER && !pdef->legacy) {
+    for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
+      src = mputprintf(src, "p_%i = NULL;\n", (int)i);
+    }
+  }
+  if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
+    for (i = 0; i < pdef->n_mapper_name; i++) {
+      src = mputprintf(src, "p_%i = NULL;\n", (int)i);
+    }
+  }
   src = mputstr(src, "}\n\n");
 
   /* destructor */
@@ -1660,7 +1705,11 @@ void defPortClass(const port_def* pdef, output_struct* output)
       "send_par.log(), TTCN_Logger::end_event_log2str()));\n"
       "}\n", class_name, msg->name, msg->dispname);
     if (pdef->port_type != USER || (msg->nTargets == 1 &&
-      msg->targets[0].mapping_type == M_SIMPLE)) {
+      msg->targets[0].mapping_type == M_SIMPLE) || (pdef->port_type == USER && !pdef->legacy)) {
+      // If not in translation mode then send message as normally would.
+      if (pdef->port_type == USER && !pdef->legacy && msg->nTargets > 1) {
+        src = mputstr(src, "if (!in_translation_mode()) {\n");
+      }
       /* the same message type goes through the external interface */
       src = mputstr(src, "if (destination_component == SYSTEM_COMPREF) ");
       if (pdef->testport_type == INTERNAL) {
@@ -1671,8 +1720,9 @@ void defPortClass(const port_def* pdef, output_struct* output)
           "{\n"
           // To generate DTE-s if not mapped or connected.
           "(void)get_default_destination();\n"
-          "outgoing_send(send_par%s);\n"
+          "outgoing_%ssend(send_par%s);\n"
           "}\n",
+          pdef->port_type == USER && !pdef->legacy ? "mapped_" : "",
           pdef->testport_type == ADDRESS ? ", NULL" : "");
       }
       src = mputprintf(src, "else {\n"
@@ -1681,6 +1731,13 @@ void defPortClass(const port_def* pdef, output_struct* output)
         "send_par.encode_text(text_buf);\n"
         "send_data(text_buf, destination_component);\n"
         "}\n", msg->dispname);
+      if (pdef->port_type == USER && !pdef->legacy && msg->nTargets > 1) {
+        // If in translation mode then generate the send mappings and send
+        // according to them.
+        src = mputstr(src, "} else {\n");
+        src = generate_send_mapping(src, pdef, msg, FALSE);
+        src = mputstr(src, "}\n");
+      }
     } else {
       /* the message type is mapped to another outgoing type of the
        * external interface */
@@ -1985,19 +2042,72 @@ void defPortClass(const port_def* pdef, output_struct* output)
       "}\n\n", class_name, sig->name);
   }
 
+    
+  if (pdef->port_type == USER && !pdef->legacy) {
+    def = mputstr(def, "public:\n");
+    // add_port and remove_port is called after the map and unmap statements.
+    for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
+      def = mputprintf(def, "void add_port(%s* p);\n", pdef->provider_msg_outlist.elements[i].name);
+      src = mputprintf(src, "void %s::add_port(%s*p) {\n p_%i = p;\n}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i);
+      
+      def = mputprintf(def, "void remove_port(%s*);\n", pdef->provider_msg_outlist.elements[i].name);
+      src = mputprintf(src, "void %s::remove_port(%s*) {\n p_%i = NULL;\n}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i);
+    }
+    
+    // in_translation_mode returns true if one of the port variables are not null
+    def = mputstr(def, "boolean in_translation_mode() const;\n");
+    src = mputprintf(src, "boolean %s::in_translation_mode() const {\nreturn ", class_name);
+    for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
+      src = mputprintf(src, "p_%i != NULL %s",
+        (int)i,
+        i != pdef->provider_msg_outlist.nElements - 1 ? "|| " : "");
+    }
+    src = mputstr(src, ";\n}\n\n");
+    
+    def = mputstr(def, "private:\n");
+    // Resets all port variables to NULL
+    def = mputstr(def, "void reset_port_variables();\n");
+    src = mputprintf(src, "void %s::reset_port_variables() {\n", class_name);
+    for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
+      src = mputprintf(src, "p_%i = NULL;\n", (int)i);
+    }
+    src = mputstr(src, "}\n\n");
+  }
+  
+  if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
+    def = mputstr(def, "public:\n");
+    // add_port and remove_port is called after the map and unmap statements.
+    for (i = 0; i < pdef->n_mapper_name; i++) {
+      def = mputprintf(def, "void add_port(%s* p);\n", pdef->mapper_name[i]);
+      src = mputprintf(src, "void %s::add_port(%s*p) {\n p_%i = p;\n}\n\n", class_name, pdef->mapper_name[i], (int)i);
+      
+      def = mputprintf(def, "void remove_port(%s*);\n", pdef->mapper_name[i]);
+      src = mputprintf(src, "void %s::remove_port(%s*) {\n p_%i = NULL;\n}\n\n", class_name, pdef->mapper_name[i], (int)i);
+    }
+    def = mputstr(def, "private:\n");
+    // Resets all port variables to NULL
+    def = mputstr(def, "void reset_port_variables();\n");
+    src = mputprintf(src, "void %s::reset_port_variables() {\n", class_name);
+    for (i = 0; i < pdef->n_mapper_name; i++) {
+      src = mputprintf(src, "p_%i = NULL;\n", (int)i);
+    }
+    src = mputstr(src, "}\n\n");
+  }
+  
   if (pdef->testport_type != INTERNAL &&
      (pdef->port_type == REGULAR || (pdef->port_type == USER && !pdef->legacy))) {
     /* virtual functions for transmission (implemented by the test port) */
-    def = mputstr(def, "protected:\n");
+    def = mputprintf(def, "%s:\n",
+      (pdef->port_type == USER && !pdef->legacy) ? "public" : "protected");
     /* outgoing_send functions */
     size_t n_used = 0;
     const char** used = NULL;
     // Only print one outgoing_send for each type
     for (i = 0; i < pdef->msg_out.nElements; i++) {
-      used = (const char**)Realloc(used, (n_used + pdef->msg_out.elements[i].nTargets + 1) * sizeof(const char*));
+      used = (const char**)Realloc(used, (n_used + 1) * sizeof(const char*));
       boolean found = FALSE;
-      for (size_t k = 0; k < n_used; k++) {
-        if (strcmp(used[k], pdef->msg_out.elements[i].name) == 0) {
+      for (size_t j = 0; j < n_used; j++) {
+        if (strcmp(used[j], pdef->msg_out.elements[i].name) == 0) {
           found = TRUE;
           break;
         }
@@ -2010,12 +2120,61 @@ void defPortClass(const port_def* pdef, output_struct* output)
             pdef->address_name);
         }
         def = mputstr(def, ") = 0;\n");
+        // When port translation is enabled
+        // we call the outgoing_mapped_send instead of outgoing_send,
+        // and this function will call one of the mapped port's outgoing_send
+        // functions, or its own outgoing_send function.
+        // This is for the types that are present in the out message list of the port
+        if (pdef->port_type == USER && !pdef->legacy) {
+          def = mputprintf(def, "void outgoing_mapped_send("
+          "const %s& send_par);\n", pdef->msg_out.elements[i].name);
+        
+          src = mputprintf(src, "void %s::outgoing_mapped_send("
+            "const %s& send_par", class_name, pdef->msg_out.elements[i].name);
+          if (pdef->testport_type == ADDRESS) {
+            def = mputprintf(def, ", const %s *destination_address",
+              pdef->address_name);
+          }
+          src = mputstr(src, ") {\n");
+          for (size_t j = 0; j < pdef->provider_msg_outlist.nElements; j++) {
+            found = FALSE;
+            for (size_t k = 0; k < pdef->provider_msg_outlist.elements[j].n_out_msg_type_names; k++) {
+              if (strcmp(pdef->msg_out.elements[i].name, pdef->provider_msg_outlist.elements[j].out_msg_type_names[k]) == 0) {
+                found = TRUE;
+                break;
+              }
+            }
+            if (found) {
+              src = mputprintf(src,
+                "if (p_%i != NULL) {\n"
+                "p_%i->outgoing_send(send_par);\n"
+                "return;\n}\n", (int)j, (int)j);
+            }
+          }
+          found = FALSE;
+          for (size_t j = 0; j < pdef->msg_out.nElements; j++) {
+            if (strcmp(pdef->msg_out.elements[j].name, pdef->msg_out.elements[i].name) == 0) {
+              found = TRUE;
+              break;
+            }
+          }
+          if (found) {
+            src = mputprintf(src, "outgoing_send(send_par);\n");
+          } else {
+            src = mputprintf(src, "TTCN_error(\"Cannot send this correctly %s\");\n", pdef->msg_out.elements[i].name); // todo
+          }
+          src = mputstr(src, "}\n\n");
+        }
         used[n_used] = pdef->msg_out.elements[i].name;
         n_used++;
       }
-      if (pdef->port_type == USER && !pdef->legacy) {
+    }
+    
+    if (pdef->port_type == USER && !pdef->legacy) {
+      for (i = 0; i < pdef->msg_out.nElements; i++) {
         for (size_t j = 0; j < pdef->msg_out.elements[i].nTargets; j++) {
-          found = FALSE;
+          boolean found = FALSE;
+          used = (const char**)Realloc(used, (n_used + 1) * sizeof(const char*));
           for (size_t k = 0; k < n_used; k++) {
             if (strcmp(used[k], pdef->msg_out.elements[i].targets[j].target_name) == 0) {
               found = TRUE;
@@ -2023,13 +2182,50 @@ void defPortClass(const port_def* pdef, output_struct* output)
             }
           }
           if (!found) {
-            def = mputprintf(def, "virtual void outgoing_send("
-              "const %s& send_par", pdef->msg_out.elements[i].targets[j].target_name);
+            // When standard like port translated port is present,
+            // We call the outgoing_mapped_send instead of outgoing_send,
+            // and this function will call one of the mapped port's outgoing_send
+            // functions, or its own outgoing_send function.
+            // This is for the mapping target types.
+            def = mputprintf(def, "void outgoing_mapped_send("
+            "const %s& send_par);\n", pdef->msg_out.elements[i].targets[j].target_name);
+
+            src = mputprintf(src, "void %s::outgoing_mapped_send("
+              "const %s& send_par", class_name, pdef->msg_out.elements[i].targets[j].target_name);
             if (pdef->testport_type == ADDRESS) {
               def = mputprintf(def, ", const %s *destination_address",
                 pdef->address_name);
             }
-            def = mputstr(def, ") = 0;\n");
+            src = mputstr(src, ") {\n");
+            for (size_t k = 0; k < pdef->provider_msg_outlist.nElements; k++) {
+              found = FALSE;
+              for (size_t l = 0; l < pdef->provider_msg_outlist.elements[k].n_out_msg_type_names; l++) {
+                if (strcmp(pdef->msg_out.elements[i].targets[j].target_name, pdef->provider_msg_outlist.elements[k].out_msg_type_names[l]) == 0) {
+                  found = TRUE;
+                  break;
+                }
+              }
+              if (found) {
+                src = mputprintf(src,
+                  "if (p_%i != NULL) {\n"
+                  "p_%i->outgoing_send(send_par);\n"
+                  "return;\n}\n", (int)k, (int)k);
+              }
+            }
+            found = FALSE;
+            for (size_t k = 0; k < pdef->msg_out.nElements; k++) {
+              if (strcmp(pdef->msg_out.elements[k].name, pdef->msg_out.elements[i].targets[j].target_name) == 0) {
+                found = TRUE;
+                break;
+              }
+            }
+            if (found) {
+              src = mputprintf(src, "outgoing_send(send_par);\n");
+            } else {
+              // This should never happen
+              src = mputprintf(src, "TTCN_error(\"Cannot send message correctly %s\");\n", pdef->msg_out.elements[i].targets[j].target_name);
+            }
+            src = mputstr(src, "}\n\n");
             used[n_used] = pdef->msg_out.elements[i].targets[j].target_name;
             n_used++;
           }
@@ -2037,6 +2233,9 @@ void defPortClass(const port_def* pdef, output_struct* output)
       }
     }
     Free(used); // do not delete pointers
+    if (pdef->port_type == USER && !pdef->legacy) {
+      def = mputstr(def, "protected:\n");
+    }
     /* outgoing_call functions */
     for (i = 0; i < pdef->proc_out.nElements; i++) {
       def = mputprintf(def, "virtual void outgoing_call("
@@ -2218,6 +2417,9 @@ void defPortClass(const port_def* pdef, output_struct* output)
   if (pdef->port_type == USER) {
     /* incoming_message() functions for the incoming types of the provider
      * port type */
+    if (!pdef->legacy) {
+      def = mputstr(def, "public:\n");
+    }
     for (i = 0; i < pdef->provider_msg_in.nElements; i++) {
       const port_msg_mapped_type *mapped_type =
         pdef->provider_msg_in.elements + i;
@@ -2274,7 +2476,14 @@ void defPortClass(const port_def* pdef, output_struct* output)
       "}\n", mapped_type->dispname);
       // Print the simple mapping after the not simple mappings
       if (!is_simple || !pdef->legacy) {
+        if (!pdef->legacy) {
+          // If in translation mode then receive according to incoming mappings
+          src = mputstr(src, "if (in_translation_mode()) {\n");
+        }
         src = generate_incoming_mapping(src, pdef, mapped_type, is_simple);
+        if (!pdef->legacy) {
+          src = mputstr(src, "}\n");
+        }
       }
       if (is_simple) {
         src = mputprintf(src,
@@ -2300,6 +2509,9 @@ void defPortClass(const port_def* pdef, output_struct* output)
     }
   } else { /* not user */
     /* incoming_message functions */
+    if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
+      def = mputstr(def, "public:\n");
+    }
     for (i = 0; i < pdef->msg_in.nElements; i++) {
       def = mputprintf(def, "void incoming_message(const %s& "
         "incoming_par, component sender_component",
@@ -2317,8 +2529,18 @@ void defPortClass(const port_def* pdef, output_struct* output)
         src = mputprintf(src, ", const %s *sender_address",
           pdef->address_name);
       }
-      src = mputstr(src, ")\n"
-        "{\n"
+      src = mputstr(src, ")\n{\n");
+      if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
+        // We forward the incoming_message to the mapped port
+        for (size_t j = 0; j < pdef->n_mapper_name; j++) {
+          src = mputprintf(src,
+            "if (p_%i != NULL) {\n"
+            "p_%i->incoming_message(incoming_par, sender_component);\n"
+            "return;\n}\n",
+            (int)j, (int)j);
+        }
+      }
+      src = mputstr(src,
         "if (!is_started) TTCN_error(\"Port %s is not started but a "
         "message has arrived on it.\", port_name);\n"
         "msg_tail_count++;\n"
@@ -2361,6 +2583,11 @@ void defPortClass(const port_def* pdef, output_struct* output)
       src = mputstr(src, "append_to_msg_queue(new_item);\n"
         "}\n\n");
     }
+  }
+  
+  if ((pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) ||
+      (pdef->port_type == USER && !pdef->legacy)) {
+    def = mputstr(def, "private:\n");
   }
 
   /* incoming_call functions */
@@ -2928,54 +3155,18 @@ void generateTestPortSkeleton(const port_def *pdef)
       class_name, base_class_name, class_name,
       pdef->port_type == REGULAR ? " = NULL" : "", class_name);
 
-    // Only print each outgoing_send for each type
-    size_t n_used = 0;
-    const char** used = NULL;
-    for (i = 0; i < pdef->msg_out.nElements; i++) {
-      boolean found = FALSE;
-      used = (const char**)Realloc(used, (n_used + pdef->provider_msg_in.nElements + pdef->msg_out.elements[i].nTargets + 1) * sizeof(const char*));
-      for (size_t k = 0; k < n_used; k++) {
-        if (strcmp(used[k], pdef->msg_out.elements[i].name) == 0) {
-          found = TRUE;
-          break;
-        }
-      }
-      if (!found) {
-        fprintf(fp, "\tvoid outgoing_send(const %s& send_par",
-          pdef->msg_out.elements[i].name);
-        if (pdef->testport_type == ADDRESS) {
-          fprintf(fp, ",\n"
-            "\t\tconst %s *destination_address", pdef->address_name);
-        }
-        fputs(");\n", fp);
-        used[n_used] = pdef->msg_out.elements[i].name;
-        n_used++;
-      }
-      if (pdef->port_type == USER && !pdef->legacy) {
-        for (size_t j = 0; j < pdef->msg_out.elements[i].nTargets; j++) {
-          found = FALSE;
-          for (size_t k = 0; k < n_used; k++) {
-            if (strcmp(used[k], pdef->msg_out.elements[i].targets[j].target_name) == 0) {
-              found = TRUE;
-              break;
-            }
-          }
-          if (!found) {
-            fprintf(fp, "\tvoid outgoing_send("
-              "const %s& send_par", pdef->msg_out.elements[i].targets[j].target_name);
-            if (pdef->testport_type == ADDRESS) {
-              fprintf(fp, ",\n"
-                "\t\tconst %s *destination_address", pdef->address_name);
-            }
-            fputs(");\n", fp);
-            
-            used[n_used] = pdef->msg_out.elements[i].targets[j].target_name;
-            n_used++;
-          }
-        }
-      }
+    if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
+      fprintf(fp, "public:\n");
     }
-    Free(used); // do not delete pointers
+    for (i = 0; i < pdef->msg_out.nElements; i++) {
+      fprintf(fp, "\tvoid outgoing_send(const %s& send_par",
+        pdef->msg_out.elements[i].name);
+      if (pdef->testport_type == ADDRESS) {
+        fprintf(fp, ",\n"
+          "\t\tconst %s *destination_address", pdef->address_name);
+      }
+      fputs(");\n", fp);
+    }
     for (i = 0; i < pdef->proc_out.nElements; i++) {
       fprintf(fp, "\tvoid outgoing_call(const %s_call& call_par",
         pdef->proc_out.elements[i].name);
@@ -3124,58 +3315,17 @@ void generateTestPortSkeleton(const port_def *pdef)
       class_name, class_name, class_name, class_name, class_name,
       class_name, class_name, class_name, class_name, class_name,
       class_name);
-    // Only print one outgoing_send for each type
-    // TODO: It is done three times, so maybe we can refactor it in the Ttfcnstuff.cc
-    size_t n_used = 0;
-    const char** used = NULL;
     for (i = 0; i < pdef->msg_out.nElements; i++) {
-      used = (const char**)Realloc(used, (n_used + pdef->msg_out.elements[i].nTargets + 1) * sizeof(const char*));
-      boolean found = FALSE;
-      for (size_t k = 0; k < n_used; k++) {
-        if (strcmp(used[k], pdef->msg_out.elements[i].name) == 0) {
-          found = TRUE;
-          break;
-        }
+      fprintf(fp, "void %s::outgoing_send(const %s& /*send_par*/",
+        class_name, pdef->msg_out.elements[i].name);
+      if (pdef->testport_type == ADDRESS) {
+        fprintf(fp, ",\n"
+          "\tconst %s * /*destination_address*/", pdef->address_name);
       }
-      if (!found) {
-        fprintf(fp, "void %s::outgoing_send(const %s& /*send_par*/",
-          class_name, pdef->msg_out.elements[i].name);
-        if (pdef->testport_type == ADDRESS) {
-          fprintf(fp, ",\n"
-            "\tconst %s * /*destination_address*/", pdef->address_name);
-        }
-        fputs(")\n"
-          "{\n\n"
-          "}\n\n", fp);
-        used[n_used] = pdef->msg_out.elements[i].name;
-        n_used++;
-      }
-      if (pdef->port_type == USER && !pdef->legacy) {
-        for (size_t j = 0; j < pdef->msg_out.elements[i].nTargets; j++) {
-          found = FALSE;
-          for (size_t k = 0; k < n_used; k++) {
-            if (strcmp(used[k], pdef->msg_out.elements[i].targets[j].target_name) == 0) {
-              found = TRUE;
-              break;
-            }
-          }
-          if (!found) {
-            fprintf(fp, "void %s::outgoing_send(const %s& /*send_par*/",
-            class_name, pdef->msg_out.elements[i].targets[j].target_name);
-            if (pdef->testport_type == ADDRESS) {
-              fprintf(fp, ",\n"
-                "\tconst %s * /*destination_address*/", pdef->address_name);
-            }
-            fputs(")\n"
-              "{\n\n"
-              "}\n\n", fp);
-            used[n_used] = pdef->msg_out.elements[i].targets[j].target_name;
-            n_used++;
-          }
-        }
-      }
+      fputs(")\n"
+        "{\n\n"
+        "}\n\n", fp);
     }
-    Free(used); // do not delete pointers
     for (i = 0; i < pdef->proc_out.nElements; i++) {
       fprintf(fp, "void %s::outgoing_call(const %s_call& /*call_par*/",
         class_name, pdef->proc_out.elements[i].name);
