@@ -4271,7 +4271,7 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
     CompField *cf = get_comp_byName(value_id);
     // check the ordering of fields
     if (in_synch) {
-      if (INCOMPLETE_ALLOWED == incomplete_allowed) {
+      if (INCOMPLETE_NOT_ALLOWED != incomplete_allowed) {
         bool found = false;
         for (size_t i = next_index; i < n_type_comps; i++) {
           CompField *cf2 = get_comp_byIndex(i);
@@ -4331,10 +4331,10 @@ bool Type::chk_this_value_Seq_T(Value *value, Common::Assignment *lhs, expected_
             new Value(Value::V_OMIT)));
           is_empty = false;
         }
-        else if (INCOMPLETE_ALLOWED != incomplete_allowed)
+        else if (INCOMPLETE_NOT_ALLOWED == incomplete_allowed)
           value->error("Field `%s' is missing from record value",
                      id.get_dispname().c_str());
-        else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+        else if (WARNING_FOR_INCOMPLETE == incomplete_allowed ) {
           value->warning("Field `%s' is missing from record value",
             id.get_dispname().c_str());
         }
@@ -4402,10 +4402,10 @@ bool Type::chk_this_value_Set_T(Value *value, Common::Assignment *lhs, expected_
             new Value(Value::V_OMIT)));
           is_empty = false;
         }
-        else if (INCOMPLETE_ALLOWED != incomplete_allowed)
+        else if (INCOMPLETE_NOT_ALLOWED == incomplete_allowed)
           value->error("Field `%s' is missing from set value",
             id.get_dispname().c_str());
-        else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
+        else if (WARNING_FOR_INCOMPLETE == incomplete_allowed ) {
           value->warning("Field `%s' is missing from set value",
             id.get_dispname().c_str());
         }
@@ -4591,7 +4591,7 @@ bool Type::chk_this_value_SeOf(Value *value, Common::Assignment *lhs, expected_v
                             (unsigned long)(i + 1));
         v_comp->set_my_governor(u.seof.ofType);
         if (v_comp->get_valuetype() == Value::V_NOTUSED) {
-          if (INCOMPLETE_ALLOWED != incomplete_allowed)
+          if (INCOMPLETE_NOT_ALLOWED == incomplete_allowed)
             v_comp->error("Not used symbol `-' is not allowed in this "
                           "context");
           else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
@@ -4732,7 +4732,7 @@ bool Type::chk_this_value_Array(Value *value, Common::Assignment *lhs, expected_
         Value *v_comp = value->get_comp_byIndex(i);
         v_comp->set_my_governor(u.array.element_type);
         if (v_comp->get_valuetype() == Value::V_NOTUSED) {
-          if (INCOMPLETE_ALLOWED != incomplete_allowed)
+          if (INCOMPLETE_NOT_ALLOWED == incomplete_allowed)
             v_comp->error("Not used symbol `-' is not allowed in this "
                           "context");
           else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
@@ -4853,7 +4853,7 @@ bool Type::chk_this_value_Signature(Value *value, Common::Assignment *lhs,
       CompField *cf = get_comp_byName(value_id);
       // check the ordering of fields
       if (in_synch) {
-        if (INCOMPLETE_ALLOWED == incomplete_allowed) {
+        if (INCOMPLETE_NOT_ALLOWED != incomplete_allowed) {
           bool found = false;
           for (size_t i = next_index; i < n_type_comps; i++) {
             CompField *cf2 = get_comp_byIndex(i);
@@ -4891,7 +4891,7 @@ bool Type::chk_this_value_Signature(Value *value, Common::Assignment *lhs,
         INCOMPLETE_NOT_ALLOWED,
         cf->get_is_optional() ? OMIT_ALLOWED : OMIT_NOT_ALLOWED, SUB_CHK);
     }
-    if (INCOMPLETE_ALLOWED != incomplete_allowed) {
+    if (INCOMPLETE_NOT_ALLOWED == incomplete_allowed) {
       for (size_t i = 0; i < u.signature.parameters->get_nof_in_params(); i++) {
         const Identifier& id = get_comp_byIndex(i)->get_name();   //u.signature.parameters->get_param_byIndex(n)
         if (!comp_map.has_key(id.get_name()) && SignatureParam::PARAM_OUT != u.signature.parameters->get_in_param_byIndex(i)->get_direction()) {
@@ -6118,7 +6118,7 @@ bool Type::chk_this_template_Seq(Template *t, namedbool incomplete_allowed,
 
       CompField *cf = get_comp_byName(temp_id);
       if (in_synch) {
-        if (INCOMPLETE_ALLOWED == incomplete_allowed) {
+        if (INCOMPLETE_NOT_ALLOWED != incomplete_allowed) {
           // missing fields are allowed, but take care of ordering
           bool found = false;
           for (size_t j = next_index; j < n_type_comps; j++) {
@@ -6162,7 +6162,7 @@ bool Type::chk_this_template_Seq(Template *t, namedbool incomplete_allowed,
         (is_optional ? ANY_OR_OMIT_ALLOWED : ANY_OR_OMIT_NOT_ALLOWED),
         SUB_CHK, implicit_omit, lhs);
     }
-    if (incomplete_allowed != INCOMPLETE_ALLOWED || IMPLICIT_OMIT == implicit_omit) {
+    if (INCOMPLETE_ALLOWED != incomplete_allowed  || IMPLICIT_OMIT == implicit_omit) {
       // check missing fields
       for (size_t i = 0; i < n_type_comps; i++) {
         const Identifier& id = get_comp_byIndex(i)->get_name();
@@ -6172,7 +6172,7 @@ bool Type::chk_this_template_Seq(Template *t, namedbool incomplete_allowed,
             if (!t->get_base_template())
               t->add_named_temp(new Ttcn::NamedTemplate(new Identifier(id),
                 new Template(Template::OMIT_VALUE)));
-          } else if (INCOMPLETE_ALLOWED != incomplete_allowed) {
+          } else if (INCOMPLETE_NOT_ALLOWED == incomplete_allowed) {
             t->error("Field `%s' is missing from template for record type `%s'",
               id.get_dispname().c_str(), get_typename().c_str());
           }
@@ -6246,7 +6246,7 @@ bool Type::chk_this_template_Set(Template *t,
         (is_optional ? ANY_OR_OMIT_ALLOWED : ANY_OR_OMIT_NOT_ALLOWED),
         SUB_CHK, implicit_omit, lhs);
     }
-    if (incomplete_allowed != INCOMPLETE_ALLOWED || IMPLICIT_OMIT == implicit_omit) {
+    if (INCOMPLETE_ALLOWED != incomplete_allowed || IMPLICIT_OMIT == implicit_omit) {
       // check missing fields
       for (size_t i = 0; i < n_type_comps; i++) {
         const Identifier& id = get_comp_byIndex(i)->get_name();
@@ -6256,7 +6256,7 @@ bool Type::chk_this_template_Set(Template *t,
         	if (!t->get_base_template())
               t->add_named_temp(new Ttcn::NamedTemplate(new Identifier(id),
                 new Template(Template::OMIT_VALUE)));
-          } else if (INCOMPLETE_ALLOWED != incomplete_allowed) {
+          } else if (INCOMPLETE_NOT_ALLOWED ==  incomplete_allowed) {
             t->error("Field `%s' is missing from template for set type `%s'",
               id.get_dispname().c_str(), get_typename().c_str());
           }
@@ -6304,7 +6304,7 @@ bool Type::chk_this_template_SeqOf(Template *t, namedbool incomplete_allowed,
     break; }
   case Ttcn::Template::TEMPLATE_LIST: {
     Ttcn::Template::completeness_t c =
-      t->get_completeness_condition_seof(INCOMPLETE_ALLOWED == incomplete_allowed);
+      t->get_completeness_condition_seof(INCOMPLETE_NOT_ALLOWED != incomplete_allowed);
     Template *t_base;
     size_t nof_base_comps;
     if (c == Ttcn::Template::C_PARTIAL) {
@@ -6443,7 +6443,7 @@ bool Type::chk_this_template_SetOf(Template *t, namedbool incomplete_allowed,
     break;}
   case Ttcn::Template::TEMPLATE_LIST: {
     Ttcn::Template::completeness_t c =
-      t->get_completeness_condition_seof(INCOMPLETE_ALLOWED == incomplete_allowed);
+      t->get_completeness_condition_seof(INCOMPLETE_NOT_ALLOWED != incomplete_allowed);
     Template *t_base;
     size_t nof_base_comps;
     if (c == Ttcn::Template::C_PARTIAL) {
@@ -6607,7 +6607,7 @@ bool Type::chk_this_template_array(Template *t, namedbool incomplete_allowed,
             implicit_omit, lhs);
           break;
         case Ttcn::Template::TEMPLATE_NOTUSED:
-          if (INCOMPLETE_ALLOWED != incomplete_allowed)
+          if (INCOMPLETE_NOT_ALLOWED == incomplete_allowed)
             t_comp->error("Not used symbol `-' is not allowed in this "
                           "context");
           else if (incomplete_allowed == WARNING_FOR_INCOMPLETE) {
@@ -6752,7 +6752,7 @@ void Type::chk_this_template_Signature(Template *t, namedbool incomplete_allowed
             if(!first_undef_out) first_undef_out = par;
             break;
           default: //inout
-            if (INCOMPLETE_ALLOWED != incomplete_allowed) {
+            if (INCOMPLETE_NOT_ALLOWED == incomplete_allowed) {
               t->error("Signature template is incomplete, because the inout "
                 "parameter `%s' is missing", id.get_dispname().c_str());
             }
@@ -6764,7 +6764,7 @@ void Type::chk_this_template_Signature(Template *t, namedbool incomplete_allowed
         }
       }
       if(first_undef_in!=NULL && first_undef_out!=NULL) {
-        if (INCOMPLETE_ALLOWED != incomplete_allowed) {
+        if (INCOMPLETE_NOT_ALLOWED == incomplete_allowed) {
           t->error("Signature template is incomplete, because the in parameter "
             "`%s' and the out parameter `%s' are missing",
             first_undef_in->get_id().get_dispname().c_str(),
