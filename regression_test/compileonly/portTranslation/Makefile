@@ -20,7 +20,7 @@ endif
 MAKEPROG := ${MAKE}
 
 all: 
-	rm -rf bin && mkdir -p bin && cd bin && compiler -t ../*.ttcn && makefilegen -f ../*.ttcn *.cc *.hh && make
+	rm -rf bin && mkdir -p bin && cd bin && $(TTCN3_COMPILER) -t ../*.ttcn && $(TTCN3_DIR)/bin/ttcn3_makefilegen -f ../*.ttcn *.cc *.hh && make
 
 
 clean:
