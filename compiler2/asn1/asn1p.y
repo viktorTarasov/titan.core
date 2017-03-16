@@ -94,6 +94,12 @@ void yywarning(const char *s)
   loc.warning("%s", s);
 }
 
+void yynote(const char *s)
+{
+  Location loc(asn1_infile, plineno);
+  loc.note("%s", s);
+}
+
 #endif /* YYBISON */
 %}
 
@@ -1269,7 +1275,7 @@ Class:
   {
     $$=Tag::TAG_UNIVERSAL;
     if(!asn1_yy_parse_internal)
-      yywarning("Using of UNIVERSAL tagclass is not recommended.");
+      yynote("Usage of UNIVERSAL tagclass is not recommended.");
   }
 | KW_APPLICATION {$$=Tag::TAG_APPLICATION;}
 | KW_PRIVATE {$$=Tag::TAG_PRIVATE;}
