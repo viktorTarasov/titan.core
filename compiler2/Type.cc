@@ -5752,7 +5752,12 @@ namespace Common {
               }
 
               if (subresult) memory.remember(t2, ANSWER_YES);
-              else    return memory.remember(t2, ANSWER_NO);
+              else {
+                // Remember the t type as NO also, because at least one of its
+                // field rejected xer encoding.
+                memory.remember(t, ANSWER_NO);
+                return memory.remember(t2, ANSWER_NO);
+              }
               // Note: return only if the answer (false) is known.
               // If the answer is true, keep checking.
             } // next i
