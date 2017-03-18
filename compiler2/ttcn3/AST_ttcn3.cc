@@ -1370,7 +1370,7 @@ namespace Ttcn {
             refch.mark_state();
             if (PRIVATE != im->get_visibility()) {
               if (refch.exists(m->get_fullname())) {
-                if(m->get_moduletype()!=Common::Module::MOD_ASN){  // Do not warning for circular import in ASN.1 module. It is legal
+                if(m->get_moduletype()!=Common::Module::MOD_ASN){  // Do not warn for circular import in ASN.1 module. It is legal
                   m->warning("Circular import chain is not recommended: %s",
                     refch.get_dispstr(m->get_fullname()).c_str());
                 }
