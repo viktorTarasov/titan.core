@@ -135,4 +135,4 @@ endif
 # Add your rules here if necessary...
 #
 run: $(TARGET) config.cfg
-	ttcn3_start $^
+	$(TTCN3_DIR)/bin/ttcn3_start $^
