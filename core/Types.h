@@ -42,7 +42,7 @@ typedef bool boolean;
 #define TRUE true
 
 enum verdicttype { NONE = 0, PASS = 1, INCONC = 2, FAIL = 3, ERROR = 4 };
-extern const char * const verdict_name[];
+extern const char * const verdict_name[5];
 
 enum alt_status { ALT_UNCHECKED, ALT_YES, ALT_MAYBE, ALT_NO, ALT_REPEAT,
     ALT_BREAK };

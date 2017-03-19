@@ -33,7 +33,7 @@
 #define UNBOUND_VERDICT ((verdicttype)(ERROR + 1))
 #define IS_VALID(verdict_value) (verdict_value >= NONE && verdict_value <= ERROR)
 
-const char * const verdict_name[] = { "none", "pass", "inconc", "fail", "error" };
+const char * const verdict_name[5] = { "none", "pass", "inconc", "fail", "error" };
 
 VERDICTTYPE::VERDICTTYPE()
 {
