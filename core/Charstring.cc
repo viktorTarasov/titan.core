@@ -1356,7 +1356,6 @@ unsigned int xlate(cbyte*in, int phase, unsigned char*dest) {
 int CHARSTRING::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                            unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*) {
   int exer = is_exer(flavor);
-  int success = reader.Ok(), depth = -1;
 
   if (exer && (p_td.xer_bits & XER_ATTRIBUTE)) {
     const char * name = verify_name(reader, p_td, exer);
@@ -1370,6 +1369,7 @@ int CHARSTRING::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   else {
     boolean omit_tag = exer
       && (p_td.xer_bits & UNTAGGED || flavor & (EMBED_VALUES|XER_LIST|USE_TYPE_ATTR|USE_NIL));
+    int success = reader.Ok(), depth = -1;
     for (; success == 1; success = reader.Read()) {
       int type = reader.NodeType();
       if (XML_READER_TYPE_ELEMENT == type) {

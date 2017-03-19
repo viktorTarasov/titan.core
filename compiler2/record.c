@@ -1592,8 +1592,8 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
                taglist_idx < cur_choice->nElements; ++taglist_idx) {
             rawAST_coding_field_list *fields = cur_choice->fields + taglist_idx;
             for (field_idx = 0; field_idx < fields->nElements; ++field_idx) {
-              rawAST_coding_fields *field = fields->fields + field_idx;
               if (field_idx == 0) {
+                rawAST_coding_fields *field = fields->fields + field_idx;
                 src = mputprintf(src,
                   "  if (idx_map[%d] < 0) {\n"
                   "    negtest_confl_crosstag = TRUE;\n"

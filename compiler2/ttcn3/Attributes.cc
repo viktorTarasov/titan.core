@@ -692,8 +692,6 @@ namespace Ttcn {
     map< size_t, dynamic_array<field_err_t> > embedded_fld_array_m; // used for recursive calls
     for (size_t i=0; i<fld_array.size(); i++) {
       field_err_t& act_field_err = fld_array[i];
-      ErroneousAttributeSpec::indicator_t act_indicator = act_field_err.err_attr->get_indicator();
-      bool is_omit = act_field_err.err_attr->get_is_omit();
       if (act_field_err.subrefs_array.size()<1) FATAL_ERROR("ErroneousAttributes::build_descr_tree()");
       size_t fld_idx = act_field_err.subrefs_array[0];
       if (omit_before_qual && (err_descr->omit_before!=-1) && (err_descr->omit_before>(int)fld_idx)) {
@@ -708,6 +706,8 @@ namespace Ttcn {
           act_field_err.qualifier->get_stringRepr().c_str(), omit_after_qual->get_stringRepr().c_str());
         continue;
       }
+      ErroneousAttributeSpec::indicator_t act_indicator = act_field_err.err_attr->get_indicator();
+      bool is_omit = act_field_err.err_attr->get_is_omit();
       if (act_field_err.subrefs_array.size()==1) { // erroneous value
         if (act_field_err.type_array.size()!=1) FATAL_ERROR("ErroneousAttributes::build_descr_tree()");
         if ((act_field_err.type_array[0]->get_typetype()==Type::T_SET_A) &&

@@ -336,14 +336,13 @@ int main(int argc, char *argv[])
   // Leave it relative.
   if (!input_dir) input_dir = ".";
   if (!output_file)	output_file = "output.info";
-  std::string xsd_file_str;
   if (!xsd_file) {
     const char *ttcn3_dir = getenv("TTCN3_DIR");
     if (!ttcn3_dir) {
       std::cerr << "$TTCN3_DIR environment variable is not set" << std::endl;
       param_error = true;
     } else {
-      xsd_file_str = std::string(ttcn3_dir) + P_SEP + std::string("include") + P_SEP + std::string("tcov.xsd");
+      std::string xsd_file_str = std::string(ttcn3_dir) + P_SEP + std::string("include") + P_SEP + std::string("tcov.xsd");
       xsd_file = xsd_file_str.c_str();
     }
   }

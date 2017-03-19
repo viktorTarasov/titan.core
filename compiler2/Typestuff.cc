@@ -541,9 +541,9 @@ namespace Common {
   void CTs_EE_CTs::chk_tags_seq_comp(TagCollection& coll, CompField *cf,
                                      bool is_mandatory)
   {
-    Type *type = cf->get_type();
     bool is_empty = coll.isEmpty();
     if (!is_mandatory || !is_empty) {
+      Type *type = cf->get_type();
       if (type->has_multiple_tags()) {
         Error_Context cntxt(type, "While checking tags of component `%s'",
                             cf->get_name().get_dispname().c_str());

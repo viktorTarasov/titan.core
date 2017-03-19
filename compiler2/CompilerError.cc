@@ -261,9 +261,9 @@ namespace Common {
     va_list args)
   {
     if (!suppress_context) print_context(stderr);
-    Location my_location;
     if (tail != 0 && loc && loc->get_filename() == 0) {
       // borrow location information from the innermost context
+      Location my_location;
       my_location.set_location( *(tail->location) );
       loc = &my_location;
     }

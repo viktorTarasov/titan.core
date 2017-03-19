@@ -562,8 +562,8 @@ void ComplexType::loadWithValues() {
     {
       xsdtype = parser->getActualTagName();
       cmode = CT_simpletype_mode;
-      Mstring fieldname;
       if (with_union && hasVariant(Mstring("useUnion"))) {
+        Mstring fieldname;
         if (max_alt == 0) {
           fieldname = Mstring("alt_");
         } else {

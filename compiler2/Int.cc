@@ -201,14 +201,13 @@ int_val_t int_val_t::operator+(const int_val_t& right) const
   // the beginning.
   bool a_neg = is_negative();
   bool b_neg = right.is_negative();
-  bool r_neg = a_neg && b_neg;
   if (!a_neg && b_neg) return operator-(-right);
   if (a_neg && !b_neg) return right.operator-(-(*this));
   if (native_flag) {
-    long long result_;
     if (right.is_native()) {
       unsigned long long result = val.native + right.get_val();
-      result_ = val.native + right.get_val();
+      long long result_ = val.native + right.get_val();
+      bool r_neg = a_neg && b_neg;
       if (static_cast<long long>(result) != result_ ||
           (!r_neg && result_ < 0) || (r_neg && result_ > 0)) {
         // We can safely assume that the sum of two non-negative long long

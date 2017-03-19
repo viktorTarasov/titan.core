@@ -273,10 +273,9 @@ void TTCN3_Profiler::enter_function(const char* filename, int lineno)
   execute_line(filename, lineno);
   
   if (!stopped) {
-    unsigned int element = get_element(filename);
-
     // store function data
     if (!disable_coverage) {
+      unsigned int element = get_element(filename);
       ++profiler_db[element].functions[get_function(element, lineno)].exec_count;
     }
   }

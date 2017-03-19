@@ -431,7 +431,7 @@ char *make_posix_str_code(const char *pat, bool cs)
   Free(mod_token);
   if (posix_str == NULL) FATAL_ERROR("make_posix_str_code()");
 
-  size_t len = mstrlen(posix_str), skip = 0;
+  size_t len = mstrlen(posix_str);
   if (maybe_fixed) { // maybe we can do fixed strings
     *ret_val = 'F'; // "fixed"
 
@@ -439,6 +439,7 @@ char *make_posix_str_code(const char *pat, bool cs)
     ret_val = mputstrn(ret_val, posix_str + 2, len - 6);
   }
   else { // no fixed-string optimization possible
+    size_t skip = 0;
     // TEXT decoder optimization
     if (len > 3) {
       if (!memcmp(posix_str + (len - 3), ".*$", 3)) {

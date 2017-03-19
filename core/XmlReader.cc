@@ -74,12 +74,12 @@ XmlReaderWrap::XmlReaderWrap(TTCN_Buffer& buf)
     xmlreader_lite::XML_READER_TYPE_XML_DECLARATION);
 
   LIBXML_TEST_VERSION;
-  const char * encoding = 0;
   if (0 == buf.get_len()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INCOMPL_MSG,
       "Cannot decode empty XML");
   }
   else {
+    const char * encoding = 0;
     my_reader = xmlReaderForMemory((const char*)buf.get_data(), buf.get_len(),
       "uri:geller", encoding, 0);
     if (0 == my_reader) {

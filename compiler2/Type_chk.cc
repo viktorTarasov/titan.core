@@ -256,8 +256,8 @@ void Type::parse_attributes()
   if ((hasVariantAttrs())
       && (enable_text() || enable_raw() || enable_xer())) {
 #ifndef NDEBUG
-    const char *fn = get_fullname().c_str();
     if (rawAST_debug) {
+      const char *fn = get_fullname().c_str();
       fprintf(stderr, "parse_attributes for %s\n", fn);
     }
 #endif
@@ -2069,11 +2069,10 @@ void Type::chk_xer() { // XERSTUFF semantic check
   if (ownertype==OT_TYPE_DEF
     ||ownertype==OT_COMP_FIELD
     ||ownertype==OT_RECORD_OF) {
-    XerAttributes *newx = 0;
     if (is_ref()) {
       // Merge XER attributes from the referenced type.
       // This implements X.693amd1 clause 15.1.2
-      newx = new XerAttributes;
+      XerAttributes * newx = new XerAttributes;
       Type *t1 = get_type_refd();
       // chk_refd() (called by chk() for T_REFD) does not check
       // the referenced type; do it now. This makes it fully recursive.

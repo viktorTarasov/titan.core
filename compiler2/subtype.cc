@@ -2692,7 +2692,7 @@ bool SubType::add_ttcn_length(Ttcn::LengthRestriction *lr, size_t restriction_in
 {
   string s;
   lr->append_stringRepr(s);
-  Value *lower=NULL,*upper=NULL;
+  Value *lower=NULL;
   lr->set_my_scope(my_owner->get_my_scope());
   lr->set_fullname(my_owner->get_fullname()+".<length_restriction_"+Int2string(restriction_index)+">");
   lr->chk(Type::EXPECTED_CONSTANT);
@@ -2700,7 +2700,7 @@ bool SubType::add_ttcn_length(Ttcn::LengthRestriction *lr, size_t restriction_in
   if (!lower->get_my_scope()) FATAL_ERROR("no scope");
   if (lower->get_valuetype() != Value::V_INT) return false;
   if (lr->get_is_range()) {
-    upper = lr->get_upper_value();
+    Value *upper = lr->get_upper_value();
     if (upper) {//HAS_UPPER
       if (upper->get_valuetype()!=Value::V_INT) return false;
       if (!upper->get_my_scope()) upper->set_my_scope(my_owner->get_my_scope());

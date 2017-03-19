@@ -4316,9 +4316,9 @@ namespace Ttcn {
     size_t min_fps = nof_base_fps;
     if (nof_local_fps < nof_base_fps) min_fps = nof_local_fps;
     for (size_t i = 0; i < min_fps; i++) {
-      FormalPar *base_fp = base_fpl->get_fp_byIndex(i);
       FormalPar *local_fp = fp_list->get_fp_byIndex(i);
       if (local_fp->has_notused_defval()) {
+        FormalPar *base_fp = base_fpl->get_fp_byIndex(i);
         if (base_fp->has_defval()) {
           local_fp->set_defval(base_fp->get_defval());
         } else {
@@ -8398,9 +8398,9 @@ namespace Ttcn {
       }
     }
 
-    Ttcn::Template * body = actual_par->get_Template();
     if (exp_val == Type::EXPECTED_STATIC_VALUE
       ||exp_val == Type::EXPECTED_CONSTANT) {
+      Ttcn::Template * body = actual_par->get_Template();
       chk_defpar_template(body, exp_val);
     }
     // Rip out the type, derived ref and template from actual_par
@@ -9949,7 +9949,6 @@ namespace Ttcn {
       if (copy_needed) FATAL_ERROR("ActualPar::generate_code()");
       bool is_restricted_template = gen_restriction_check != TR_NONE ||
         gen_post_restriction_check != TR_NONE;
-      Common::Assignment *ass = ref->get_refd_assignment();
       bool is_template_par = false;
       Type* actual_par_type = NULL;
       Type* formal_par_type = NULL;
@@ -9961,6 +9960,7 @@ namespace Ttcn {
             formal_par->get_asstype() == Common::Assignment::A_PAR_TEMPL_OUT) {
           is_template_par = true;
         }
+        Common::Assignment *ass = ref->get_refd_assignment();
         actual_par_type = ass->get_Type()->get_field_type(ref->get_subrefs(),
           is_template_par ? Type::EXPECTED_TEMPLATE : Type::EXPECTED_DYNAMIC_VALUE)->
           get_type_refd_last();

@@ -1622,8 +1622,8 @@ static void check_special_chars(const struct makefile_struct *makefile)
 static void add_base_dir(struct makefile_struct *makefile,
   const char *dir_name, boolean has_modules)
 {
-  struct base_dir_struct *base_dir;
   if (dir_name != NULL) {
+    struct base_dir_struct *base_dir;
     size_t i;
     for (i = 0; i < makefile->nBaseDirs; i++) {
       base_dir = makefile->BaseDirs + i;
@@ -1919,7 +1919,6 @@ static void print_makefile(struct makefile_struct *makefile)
     size_t i;
     char *user_info;
     const char* cxx;
-    const char* cpp;
     const char *rm_command = makefile->gnu_make ? "$(RM)" : "rm -f";
     FILE *fp;
     boolean run_compiler = (makefile->nASN1Modules > 0)
@@ -2103,6 +2102,7 @@ static void print_makefile(struct makefile_struct *makefile)
 
 
     if (makefile->preprocess || makefile->ttcn3preprocessor) {
+      const char* cpp;
       if (makefile->ttcn3preprocessor) {
         cpp = makefile->ttcn3preprocessor;
       } else {

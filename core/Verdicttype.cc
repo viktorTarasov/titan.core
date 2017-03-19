@@ -319,9 +319,7 @@ verdicttype VERDICTTYPE::str_to_verdict(const char *v, boolean silent)
 int VERDICTTYPE::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader,
   unsigned int p_flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
-  int rd_ok = 1, type;
   const boolean e_xer = is_exer(p_flavor);
-  const boolean name_tag = !((!e_xer && is_record_of(p_flavor)) || (e_xer && ((p_td.xer_bits & UNTAGGED) ||(is_record_of(p_flavor) && is_exerlist(p_flavor)))));
   if (e_xer && ((p_td.xer_bits & XER_ATTRIBUTE) || is_exerlist(p_flavor))) {
     if ((p_td.xer_bits & XER_ATTRIBUTE)) verify_name(p_reader, p_td, e_xer);
     const char * value = (const char *)p_reader.Value();
@@ -330,7 +328,10 @@ int VERDICTTYPE::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& p_reader
     }
   }
   else {
-    if (name_tag)      for (; rd_ok == 1; rd_ok = p_reader.Read()) {
+    int rd_ok = 1, type;
+    const boolean name_tag = !((!e_xer && is_record_of(p_flavor)) || (e_xer && ((p_td.xer_bits & UNTAGGED) ||(is_record_of(p_flavor) && is_exerlist(p_flavor)))));
+    if (name_tag)
+      for (; rd_ok == 1; rd_ok = p_reader.Read()) {
         type = p_reader.NodeType();
         if (XML_READER_TYPE_ELEMENT == type) {
           // If our parent is optional and there is an unexpected tag then return and

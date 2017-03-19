@@ -750,7 +750,6 @@ int FLOAT::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   boolean /*first_call*/)
 {
   int prepaddlength = buff.increase_pos_padd(p_td.raw->prepadding);
-  unsigned char *dv;
   limit -= prepaddlength;
   int decode_length = p_td.raw->fieldlength;
   if ( p_td.raw->fieldlength > limit
@@ -780,7 +779,7 @@ int FLOAT::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   cp.hexorder = ORDER_LSB;
   buff.get_b((size_t) decode_length, data, cp, top_bit_ord);
   if (decode_length == 64) {
-    dv = (unsigned char *) &tmp;
+    unsigned char *dv = (unsigned char *) &tmp;
 #if defined __sparc__ || defined __sparc
     memcpy(dv,data,8);
 #else

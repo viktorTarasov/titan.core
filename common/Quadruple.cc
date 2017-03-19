@@ -340,8 +340,8 @@ char* QuadInterval::generate_hex_interval(unsigned char source,
     return res;
   }
 
-  bool alt = false;
   if (hi > 0) {
+    bool alt = false;
     if (s_lo != 'A') {
       res = mputprintf(res, "%c[%c-P]", s_hi, s_lo);
       s_hi++;
@@ -593,9 +593,8 @@ void QuadSet::do_negate() {
 }
 
 void QuadSet::add_negate_interval(const Quad& q1, const Quad& q2) {
-  unsigned int w;
   if (q2 >= q1) {
-    w = q2.get_value() - q1.get_value();
+    unsigned int w = q2.get_value() - q1.get_value();
     if (w > 0)
       add(new QuadInterval(q1, q2));
     else {

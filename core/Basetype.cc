@@ -234,7 +234,6 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   unsigned int& flavor, int indent, boolean empty,
   collector_fn collector, const char *type_atr, unsigned int flavor2) const
 {
-  const int indenting = !is_canonical(flavor);
   const int exer = is_exer(flavor);
   int omit_tag = (indent != 0) // can never omit the tag at the toplevel
     && ( ((flavor & XER_RECOF) // can remove the tag even if not EXER
@@ -243,24 +242,18 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
         && ( (p_td.xer_bits & (UNTAGGED|ANY_ATTRIBUTES|ANY_ELEMENT))
           || (flavor & (EMBED_VALUES|XER_LIST|ANY_ATTRIBUTES|USE_NIL|USE_TYPE_ATTR)))));
 
-  // If a default namespace is in effect (uri but no prefix) and the type
-  // is unqualified, the default namespace must be canceled; otherwise
-  // an XML tag without a ns prefix looks like it belongs to the def.namespace
-  const boolean empty_ns_hack = exer && !omit_tag && (indent > 0)
-    && (p_td.xer_bits & FORM_UNQUALIFIED)
-    && (flavor & DEF_NS_PRESENT);
-
   if (exer && (p_td.xer_bits & XER_ATTRIBUTE)) {
     begin_attribute(p_td, p_buf);
   }
   else if (!omit_tag) { // full tag
+    const int indenting = !is_canonical(flavor);
     if (indenting) do_indent(p_buf, indent);
     p_buf.put_c('<');
     if (exer) write_ns_prefix(p_td, p_buf);
 
-    const namespace_t *ns_info = NULL;
     boolean namespaces_needed = FALSE;
     if (exer) {
+      const namespace_t *ns_info = NULL;
       if (p_td.my_module != NULL && p_td.ns_index != -1) {
         ns_info = p_td.my_module->get_ns((size_t)p_td.ns_index);
       }
@@ -288,6 +281,13 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       }
       Free(collected_ns);
     }
+
+    // If a default namespace is in effect (uri but no prefix) and the type
+    // is unqualified, the default namespace must be canceled; otherwise
+    // an XML tag without a ns prefix looks like it belongs to the def.namespace
+    const boolean empty_ns_hack = exer && !omit_tag && (indent > 0)
+      && (p_td.xer_bits & FORM_UNQUALIFIED)
+      && (flavor & DEF_NS_PRESENT);
 
     if (empty_ns_hack) {
       p_buf.put_s(9, (cbyte*)" xmlns=''");
@@ -338,7 +338,6 @@ void Base_Type::end_xml  (const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   unsigned int flavor, int indent, boolean empty) const
 {
   int exer = is_exer(flavor);
-  int indenting = !is_canonical(flavor);
   boolean omit_tag = (indent != 0) // can never omit the tag at the toplevel
     && ( ((flavor & XER_RECOF) // can remove the tag even if not EXER
       && !(exer && (flavor & BXER_EMPTY_ELEM))) // except 26.6, 26.7
@@ -351,6 +350,7 @@ void Base_Type::end_xml  (const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   }
   else if (!empty && !omit_tag) {
     // now close the tag
+    int indenting = !is_canonical(flavor);
     if (indenting && !(flavor & SIMPLE_TYPE)) do_indent(p_buf, indent);
     p_buf.put_s(2, (cbyte*)"</");
     if (exer) write_ns_prefix(p_td, p_buf);

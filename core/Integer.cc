@@ -276,11 +276,11 @@ INTEGER INTEGER::operator+(const INTEGER& other_value) const
     : BN_is_negative(val.openssl);
   boolean other_value_neg = other_value.native_flag
     ? (other_value.val.native < 0) : BN_is_negative(other_value.val.openssl);
-  boolean result_neg = this_neg && other_value_neg;
   if (!this_neg && other_value_neg) return operator-(-other_value);
   if (this_neg && !other_value_neg) return other_value.operator-(-(*this));
   if (likely(native_flag)) {
     if (likely(other_value.native_flag)) {
+      boolean result_neg = this_neg && other_value_neg;
       unsigned int result_u = val.native + other_value.val.native;
       int result = val.native + other_value.val.native;
       if ((static_cast<int>(result_u) != result) || (!result_neg &&
@@ -1625,7 +1625,6 @@ int INTEGER::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*)
 {
   const boolean exer = is_exer(flavor);
-  int depth = -1, success = reader.Ok(), type;
   const char * value = 0;
 
   boolean own_tag = !(exer && (p_td.xer_bits & UNTAGGED)) && !is_exerlist(flavor);
@@ -1644,6 +1643,7 @@ tagless:
     // Let the caller do reader.AdvanceAttribute();
   }
   else {
+    int depth = -1, success = reader.Ok(), type;
     for (; success == 1; success = reader.Read()) {
       type = reader.NodeType();
       if (XML_READER_TYPE_ELEMENT == type) {

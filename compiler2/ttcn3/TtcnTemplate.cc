@@ -2767,9 +2767,9 @@ end:
     switch (templatetype) {
     case NAMED_TEMPLATE_LIST:
       for (size_t i = 0;i < u.named_templates->get_nof_nts(); i++) {
-        Template* tmpl = u.named_templates->get_nt_byIndex(i)->get_template();
-        const string& name =
-          u.named_templates->get_nt_byIndex(i)->get_name().get_name();
+        NamedTemplate *nt = u.named_templates->get_nt_byIndex(i);
+        Template* tmpl = nt->get_template();
+        const string& name = nt->get_name().get_name();
         if (!checked_map.has_key(name)) {
           bool nrc = tmpl->chk_restriction(definition_name, TR_OMIT, usage_loc);
           needs_runtime_check = needs_runtime_check || nrc;
@@ -4068,21 +4068,14 @@ compile_time:
 
   char *Template::generate_code_init_se(char *str, const char *name)
   { // named template list
-    size_t nof_nts = u.named_templates->get_nof_nts();
     Type *type = my_governor->get_type_refd_last();
     if (type->get_nof_comps() > 0) {
+      size_t nof_nts = u.named_templates->get_nof_nts();
       for (size_t i = 0; i < nof_nts; i++) {
         NamedTemplate *nt = u.named_templates->get_nt_byIndex(i);
         const Identifier& fieldname = nt->get_name();
-        const char *fieldname_str = 0;
-        string at("AT_");
-        if (type->get_typetype()==Type::T_ANYTYPE) {
-          at += fieldname.get_name();
-          fieldname_str = at.c_str();
-        }
-        else {
-          fieldname_str = fieldname.get_name().c_str();
-        }
+        const char *fieldname_str = mprintf("%s%s",
+              type->get_typetype()==Type::T_ANYTYPE ? "AT_" : "", fieldname.get_name().c_str());
         Template *t = nt->get_template();
         if (t->needs_temp_ref()) {
           Type *field_type;

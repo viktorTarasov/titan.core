@@ -930,7 +930,6 @@ int HEXSTRING::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   int success = reader.Ok(), depth = -1, type;
   boolean own_tag = !is_exerlist(flavor) && !(exer && (p_td.xer_bits & UNTAGGED));
 
-  const char * value = 0;
   if (exer && (p_td.xer_bits & XER_ATTRIBUTE)) {
     const char * name = verify_name(reader, p_td, exer);
     (void)name;
@@ -970,7 +969,7 @@ int HEXSTRING::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
 
   type = reader.NodeType();
   if (success == 1 && (XML_READER_TYPE_TEXT == type || XML_READER_TYPE_ATTRIBUTE == type)) {
-    value = (const char *)reader.Value();
+    const char * value = (const char *)reader.Value();
     size_t len = value ? strlen(value) : 0;
 
     if (exer && (p_td.xer_bits & BASE_64)) {
