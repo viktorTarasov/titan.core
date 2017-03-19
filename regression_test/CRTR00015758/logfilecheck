@@ -7,7 +7,8 @@ my @expected_filenames;
 
 BEGIN { # @expected_filenames must be set at compile time
 my    $host = $ENV{HOSTNAME} || $ENV{HOSTNAME} || `hostname`;
-chomp $host;
+
+$host =~ s/\r|\n//g;
 $host =~ s/\.\S+//;
 
 my    $user = $ENV{USER} || $ENV{USERNAME};
