@@ -12,12 +12,12 @@
  ******************************************************************************/
 #include  "BerAST.hh"
 
-const char* BerAST::encode_string[] = {
+const char* BerAST::encode_string[2] = {
     "BER_ENCODE_CER",
     "BER_ENCODE_DER"
 };
 
-const char* BerAST::decode_string[] = {
+const char* BerAST::decode_string[5] = {
     "BER_ACCEPT_SHORT",
     "BER_ACCEPT_LONG",
     "BER_ACCEPT_INDEFINITE",

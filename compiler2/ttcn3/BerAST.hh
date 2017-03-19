@@ -16,8 +16,8 @@
 
 
 class BerAST {
-  static const char* encode_string[];
-  static const char* decode_string[];
+  static const char* encode_string[2];
+  static const char* decode_string[5];
 public:
 
   enum ber_encode_t {
