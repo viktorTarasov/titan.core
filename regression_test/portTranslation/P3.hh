@@ -42,6 +42,8 @@ protected:
 	void outgoing_send(const MyRec& send_par);
 	void outgoing_send(const BITSTRING& send_par);
 	void outgoing_send(const OCTETSTRING& send_par);
+	void outgoing_send(const HEXSTRING& send_par);
+	void outgoing_send(const INTEGER& send_par);
 };
 
 } /* end of namespace */

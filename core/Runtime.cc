@@ -59,6 +59,8 @@
 #include "Fd_And_Timeout_User.hh"
 #include <TitanLoggerApi.hh>
 #include "Profiler.hh"
+#include "Integer.hh"
+#include "Port.hh"
 
 namespace API = TitanLoggerApi;
 
@@ -115,6 +117,31 @@ struct TTCN_Runtime::component_process_struct {
   struct component_process_struct *prev_by_pid, *next_by_pid;
 } **TTCN_Runtime::components_by_compref = NULL,
   **TTCN_Runtime::components_by_pid = NULL;
+
+boolean TTCN_Runtime::translation_flag = FALSE;
+PORT* TTCN_Runtime::p = NULL;
+
+void TTCN_Runtime::set_port_state(const INTEGER& state, const CHARSTRING& info, boolean by_system) {
+  if (translation_flag) {
+    if (p != NULL) {
+      int lowed_end = by_system ? -1 : 0;
+      if (state < lowed_end || state > 3) {
+        TTCN_error("The value of the first parameter in the setstate operation must be 0, 1, 2 or 3.");
+      }
+      p->change_port_state((translation_port_state)((int)state));
+      TTCN_Logger::log_setstate(p->get_name(), (translation_port_state)((int)state), info);
+    } else {
+      TTCN_error("Internal error: TTCN_Runtime::set_port_state: The port is NULL.");
+    }
+  } else {
+    TTCN_error("setstate operation was called without being in a translation procedure.");
+  }
+}
+
+void TTCN_Runtime::set_translation_mode(boolean enabled, PORT* port) {
+  translation_flag = enabled;
+  p = port;
+}
 
 boolean TTCN_Runtime::is_idle()
 {

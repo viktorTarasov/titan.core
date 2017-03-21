@@ -489,6 +489,7 @@ self		RETURN(SelfKeyword);
 send		RETURN_DOT(SendOpKeyword);
 sender		RETURN(SenderKeyword);
 set		RETURN(SetKeyword);
+setstate	RETURN(SetstateKeyword);
 setverdict	RETURN(SetVerdictKeyword);
 signature	RETURN(SignatureKeyword);
 start		RETURN_DOT(StartKeyword);

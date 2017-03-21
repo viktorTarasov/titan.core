@@ -87,5 +87,15 @@ void P3::outgoing_send(const OCTETSTRING& /*send_par*/)
 
 }
 
+void P3::outgoing_send(const HEXSTRING& /*send_par*/)
+{
+
+}
+
+void P3::outgoing_send(const INTEGER& /*send_par*/)
+{
+
+}
+
 } /* end of namespace */
 

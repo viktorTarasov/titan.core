@@ -12,6 +12,7 @@
  *   Forstner, Matyas
  *   Kovacs, Ferenc
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -126,6 +127,15 @@ struct component_id_t {
 struct namespace_t {
   const char * const ns;
   const char * const px;
+};
+
+// States defined with the setstate operation.
+enum translation_port_state {
+  UNSET = -1,
+  TRANSLATED = 0,
+  NOT_TRANSLATED = 1,
+  FRAGMENTED = 2,
+  PARTIALLY_TRANSLATED = 3
 };
 
 #endif

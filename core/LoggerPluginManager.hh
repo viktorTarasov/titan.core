@@ -11,6 +11,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Zalanyi, Balazs Andor
  *   Pandi, Krisztian
  *
@@ -224,6 +225,8 @@ public:
     const CHARSTRING& value, int id);
   void log_dualport_discard(boolean incoming, const char *target_type,
     const char *port_name, boolean unhandled);
+  void log_setstate(const char *port_name, translation_port_state state,
+    const CHARSTRING& info);
 
   void log_port_misc(int reason, const char *port_name, int remote_component,
     const char *remote_port, const char *ip_address, int tcp_port, int new_size);

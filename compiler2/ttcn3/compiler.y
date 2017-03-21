@@ -748,6 +748,7 @@ static const string anyname("anytype");
 %token SenderKeyword
 %token SendOpKeyword
 %token SetKeyword
+%token SetstateKeyword
 %token SetVerdictKeyword
 %token SignatureKeyword
 %token StartKeyword
@@ -994,7 +995,7 @@ static const string anyname("anytype");
   StartTimerStatement StopExecutionStatement StopStatement StopTCStatement
   StopTimerStatement TimeoutStatement TimerStatements TriggerStatement
   UnmapStatement VerdictStatements WhileStatement SelectCaseConstruct
-  SelectUnionConstruct UpdateStatement
+  SelectUnionConstruct UpdateStatement SetstateStatement
   StopTestcaseStatement String2TtcnStatement ProfilerStatement int2enumStatement
 %type <statementblock> StatementBlock optElseClause FunctionStatementOrDefList
   ControlStatementOrDefList ModuleControlBody
@@ -1346,6 +1347,7 @@ SenderSpec
 SetDef
 SetLocalVerdict
 SetOfDef
+SetstateStatement
 Signature
 SignatureDef
 SignatureFormalPar
@@ -4264,6 +4266,7 @@ FunctionStatement: // 180
 | ProfilerStatement { $$ = $1; }
 | int2enumStatement { $$ = $1; }
 | UpdateStatement { $$ = $1; }
+| SetstateStatement { $$ = $1; }
 ;
 
 FunctionInstance: /* refpard */ // 181
@@ -8334,6 +8337,18 @@ UpdateStatement:
     $$->set_location(infile, @$);
   }
 ;
+
+SetstateStatement:
+  PortKeyword '.' SetstateKeyword '(' SingleExpression ')'
+  {
+    $$ = new Statement(Statement::S_SETSTATE, $5);
+    $$->set_location(infile, @$);
+  }
+| PortKeyword '.' SetstateKeyword '(' SingleExpression ',' TemplateInstance ')'
+  {
+    $$ = new Statement(Statement::S_SETSTATE, $5, $7);
+    $$->set_location(infile, @$);
+  }
 
 ProfilerRunningOp:
   TitanSpecificProfilerKeyword DotRunningKeyword

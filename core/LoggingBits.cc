@@ -9,6 +9,7 @@
  *   Balasko, Jeno
  *   Delic, Adam
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 #include "LoggingBits.hh"
@@ -120,7 +121,7 @@ const Logging_Bits Logging_Bits::log_all = {
     1,1, // FUNCTION
     1,1,1,1, // PARALLEL
     1,1,1, // TESTCASE
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1, // PORTEVENT
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // PORTEVENT
     1,1, // STATISTICS
     1,1,1,1,1,1, // TIMEROP
     1, // USER
@@ -133,7 +134,7 @@ const Logging_Bits Logging_Bits::log_all = {
 
 const Logging_Bits Logging_Bits::log_everything = {
   { 0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 }
 };
 
 // TTCN_ERROR | TTCN_WARNING | TTCN_ACTION | TTCN_TESTCASE | TTCN_STATISTICS
@@ -146,7 +147,7 @@ const Logging_Bits Logging_Bits::default_console_mask = {
     0,0, // FUNCTION
     0,0,0,0, // PARALLEL
     1,1,1, // TESTCASE
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0, // PORTEVENT
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // PORTEVENT
     1,1, // STATISTICS
     0,0,0,0,0,0, // TIMEROP
     0, // USER

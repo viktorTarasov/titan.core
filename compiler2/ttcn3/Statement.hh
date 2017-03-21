@@ -267,7 +267,8 @@ namespace Ttcn {
       S_STRING2TTCN, // convert_op
       S_INT2ENUM, // convert_op
       /* update statement */
-      S_UPDATE // update_op
+      S_UPDATE, // update_op
+      S_SETSTATE // setstate_op
     };
 
     enum component_t {
@@ -482,6 +483,11 @@ namespace Ttcn {
         WithAttribPath* w_attrib_path;
         ErroneousAttributes* err_attrib;
       } update_op; /**< S_UPDATE */
+      
+      struct {
+        Value* val;
+        TemplateInstance* ti;
+      } setstate_op; /**< S_SETSTATE */
     };
 
     Statement(const Statement& p); ///< copy disabled
@@ -525,7 +531,7 @@ namespace Ttcn {
     Statement(statementtype_t p_st, AltGuards *p_ags);
     /** Constructor used by S_RETURN */
     Statement(statementtype_t p_st, Template *p_temp);
-    /** Constructor used by S_DEACTIVATE, S_STOP_COMP, S_KILL */
+    /** Constructor used by S_DEACTIVATE, S_STOP_COMP, S_KILL, S_SETSTATE */
     Statement(statementtype_t p_st, Value *p_val);
     /** Constructor used by S_KILLED */
     Statement(statementtype_t p_st, Value *p_val, bool p_any_from,
@@ -607,6 +613,8 @@ namespace Ttcn {
     Statement(statementtype_t p_st, Value* p_val, Reference* p_ref);
     /** Constructor used by S_UPDATE */
     Statement(statementtype_t p_st, Reference* p_ref, MultiWithAttrib* p_attrib);
+    /** Constructor used by S_SETSTATE */
+    Statement(statementtype_t p_st, Value* p_val, TemplateInstance* p_ti);
     virtual ~Statement();
     virtual Statement* clone() const;
     virtual void dump(unsigned int level) const;
@@ -787,6 +795,7 @@ namespace Ttcn {
     void chk_string2ttcn();
     void chk_int2enum();
     void chk_update();
+    void chk_setstate();
   public:
     /** Sets the code section selector of all embedded values and
      *  templates to \a p_code_section. */
@@ -858,6 +867,7 @@ namespace Ttcn {
     char *generate_code_testcaseinst(char *str);
     char *generate_code_execute_refd(char *str);
     char* generate_code_update(char *str, char*& def_glob_vars, char*& src_glob_vars);
+    char* generate_code_setstate(char *str);
     /** used for receive, check-receive, trigger */
     void generate_code_expr_receive(expression_struct *expr,
       const char *opname);

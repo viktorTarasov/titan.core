@@ -2215,6 +2215,10 @@ void PORT::reset_port_variables() {
   
 }
 
+void PORT::change_port_state(translation_port_state /*state*/) {
+  
+}
+
 void PORT::process_connect_listen(const char *local_port,
   component remote_component, const char *remote_port,
   transport_type_enum transport_type)

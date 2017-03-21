@@ -29,6 +29,8 @@ class Text_Buf;
 class COMPONENT;
 class VERDICTTYPE;
 class CHARSTRING;
+class INTEGER;
+class PORT;
 
 extern "C" {
 typedef void (*signal_handler_type)(int);
@@ -93,6 +95,12 @@ private:
   struct component_process_struct;
   static component_process_struct **components_by_compref,
   **components_by_pid;
+  
+  // Translation flag is set to true before each port translation function called,
+  // and set to false after each port translation function.
+  static boolean translation_flag;
+  // The port which state will be changed by change_port_state
+  static PORT* p;
 
 public:
   inline static executor_state_enum get_state() { return executor_state; }
@@ -122,6 +130,9 @@ public:
   /** @} */
 
   static boolean is_in_ttcn_try_block() { return in_ttcn_try_block; }
+  
+  static void set_port_state(const INTEGER& state, const CHARSTRING& info, boolean by_system);
+  static void set_translation_mode(boolean enabled, PORT* port);
 
 private:
   inline static boolean in_controlpart()

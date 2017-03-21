@@ -14,6 +14,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *   Pandi, Krisztian
@@ -123,45 +124,46 @@ public:
     PORTEVENT_DUALRECV,
     PORTEVENT_DUALSEND,
     PORTEVENT_UNQUALIFIED, //35
+    PORTEVENT_SETSTATE,
 
     STATISTICS_VERDICT,
     STATISTICS_UNQUALIFIED,
 
     TIMEROP_READ,
-    TIMEROP_START,
-    TIMEROP_GUARD, //40
+    TIMEROP_START, //40
+    TIMEROP_GUARD,
     TIMEROP_STOP,
     TIMEROP_TIMEOUT,
     TIMEROP_UNQUALIFIED,
 
-    USER_UNQUALIFIED,
+    USER_UNQUALIFIED, //45
 
-    VERDICTOP_GETVERDICT, //45
+    VERDICTOP_GETVERDICT,
     VERDICTOP_SETVERDICT,
     VERDICTOP_FINAL,
     VERDICTOP_UNQUALIFIED,
 
-    WARNING_UNQUALIFIED,
+    WARNING_UNQUALIFIED, //50
 
     // MATCHING and DEBUG should be at the end (not included in LOG_ALL)
-    MATCHING_DONE, //50
+    MATCHING_DONE,
     MATCHING_TIMEOUT,
     MATCHING_PCSUCCESS,
     MATCHING_PCUNSUCC,
-    MATCHING_PMSUCCESS,
-    MATCHING_PMUNSUCC, //55
+    MATCHING_PMSUCCESS, //55
+    MATCHING_PMUNSUCC,
     MATCHING_MCSUCCESS,
     MATCHING_MCUNSUCC,
     MATCHING_MMSUCCESS,
-    MATCHING_MMUNSUCC,
-    MATCHING_PROBLEM, //60
+    MATCHING_MMUNSUCC, //60
+    MATCHING_PROBLEM,
     MATCHING_UNQUALIFIED,
 
     DEBUG_ENCDEC,
     DEBUG_TESTPORT,
     DEBUG_USER,
     DEBUG_FRAMEWORK,
-    DEBUG_UNQUALIFIED, //66
+    DEBUG_UNQUALIFIED, //67
 
     NUMBER_OF_LOGSEVERITIES, // must follow the last individual severity
     LOG_ALL_IMPORTANT
@@ -735,6 +737,8 @@ public:
     const CHARSTRING& value, int id);
   static void log_dualport_discard(boolean incoming, const char *target_type,
     const char *port_name, boolean unhaldled);
+  static void log_setstate(const char *port_name, translation_port_state state,
+    const CHARSTRING& info);
 
   static void log_port_misc(int reason, const char *port_name,
     int remote_component = NULL_COMPREF, const char *remote_port = NULL,

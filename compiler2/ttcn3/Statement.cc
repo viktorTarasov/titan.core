@@ -718,6 +718,10 @@ namespace Ttcn {
       delete update_op.w_attrib_path;
       delete update_op.err_attrib;
       break;
+    case S_SETSTATE:
+      delete setstate_op.val;
+      delete setstate_op.ti;
+      break;
     default:
       FATAL_ERROR("Statement::clean_up()");
     } // switch statementtype
@@ -1031,6 +1035,10 @@ namespace Ttcn {
       break;
     case S_DEACTIVATE:
       deactivate=p_val;
+      break;
+    case S_SETSTATE:
+      setstate_op.val = p_val;
+      setstate_op.ti = NULL;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -1465,6 +1473,22 @@ namespace Ttcn {
       FATAL_ERROR("Statement::Statement()");
     }
   }
+  
+    Statement::Statement(statementtype_t p_st, Value* p_val, TemplateInstance* p_ti)
+  : statementtype(p_st), my_sb(0)
+  {
+    switch (statementtype) {
+    case S_SETSTATE:
+      if (p_val == NULL || p_ti == NULL) {
+        FATAL_ERROR("Statement::Statement()");
+      }
+      setstate_op.val = p_val;
+      setstate_op.ti = p_ti;
+      break;
+    default:
+      FATAL_ERROR("Statement::Statement()");
+    }
+  }
 
   Statement::~Statement()
   {
@@ -1595,6 +1619,7 @@ namespace Ttcn {
     case S_START_PROFILER: return "@profiler.start";
     case S_STOP_PROFILER: return "@profiler.stop";
     case S_UPDATE: return "@update";
+    case S_SETSTATE: return "setstate";
     default:
       FATAL_ERROR("Statement::get_stmt_name()");
       return "";
@@ -1924,6 +1949,12 @@ namespace Ttcn {
         update_op.w_attrib_path->set_my_scope(p_scope);
       }
       break;
+    case S_SETSTATE:
+      setstate_op.val->set_my_scope(p_scope);
+      if (setstate_op.ti != NULL) {
+        setstate_op.ti->set_my_scope(p_scope);
+      }
+      break;
     default:
       FATAL_ERROR("Statement::set_my_scope()");
     } // switch statementtype
@@ -2206,6 +2237,12 @@ namespace Ttcn {
       update_op.ref->set_fullname(p_fullname + ".ref");
       if (update_op.w_attrib_path != NULL) {
         update_op.w_attrib_path->set_fullname(p_fullname + ".<attribpath>");
+      }
+      break;
+    case S_SETSTATE:
+      setstate_op.val->set_fullname(p_fullname + ".val");
+      if (setstate_op.ti != NULL) {
+        setstate_op.ti->set_fullname(p_fullname + ".ti");
       }
       break;
     default:
@@ -2498,6 +2535,7 @@ namespace Ttcn {
     case S_STOP_PROFILER:
     case S_INT2ENUM:
     case S_UPDATE:
+    case S_SETSTATE:
       return false;
     case S_ALT:
     case S_INTERLEAVE:
@@ -2754,6 +2792,9 @@ namespace Ttcn {
       break;
     case S_UPDATE:
       chk_update();
+      break;
+    case S_SETSTATE:
+      chk_setstate();
       break;
     default:
       FATAL_ERROR("Statement::chk()");
@@ -5628,6 +5669,42 @@ error:
         "this context");
     }
   }
+  
+  void Statement::chk_setstate() {
+    Error_Context cntxt(this, "In setstate statement");
+    {
+      Error_Context cntxt2(this, "In first parameter");
+      setstate_op.val->chk_expr_int(Type::EXPECTED_DYNAMIC_VALUE);
+      if (!setstate_op.val->is_unfoldable()) {
+        bool error = false;
+        if (setstate_op.val->get_val_Int()->is_native()) {
+          switch(setstate_op.val->get_val_Int()->get_val()) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+              break;
+            default:
+              error = true;
+          }
+        } else {
+          error = true;
+        }
+        if (error) {
+          setstate_op.val->error("The value of the first parameter must be 0, 1, 2 or 3.");
+        }
+      }
+    }
+    if (setstate_op.ti != NULL) {
+      Error_Context cntxt2(this, "In second parameter");
+      Type* t = setstate_op.ti->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE);
+      if (t != NULL) {
+        setstate_op.ti->chk(t);
+      } else {
+        setstate_op.ti->error("Cannot determine the type of the parameter.");
+      }
+    }
+  }
 
   void Statement::set_code_section(
     GovernedSimple::code_section_t p_code_section)
@@ -5886,6 +5963,12 @@ error:
     case S_UPDATE:
       update_op.ref->set_code_section(p_code_section);
       break;
+    case S_SETSTATE:
+      setstate_op.val->set_code_section(p_code_section);
+      if (setstate_op.ti != NULL) {
+        setstate_op.ti->set_code_section(p_code_section);
+      }
+      break;
     default:
       FATAL_ERROR("Statement::set_code_section()");
     } // switch statementtype
@@ -6081,6 +6164,9 @@ error:
       break;
     case S_UPDATE:
       str = generate_code_update(str, def_glob_vars, src_glob_vars);
+      break;
+    case S_SETSTATE:
+      str = generate_code_setstate(str);
       break;
     default:
       FATAL_ERROR("Statement::generate_code()");
@@ -7383,6 +7469,19 @@ error:
     }
     expr.expr = mputstr(expr.expr, ")");
     if (config_op.translate) {
+      bool warning = false;
+      if (!config_op.compref1->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
+        warning = true;
+        config_op.compref2->warning(
+          "Cannot determine the type of the component in the first parameter."
+          "The port translation will not work.");
+      }
+      if (!config_op.compref2->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
+        warning = true;
+        config_op.compref2->warning(
+          "Cannot determine the type of the component in the second parameter."
+          "The port translation will not work.");
+      }
       string funcname;
       if (strcmp(opname, "map") == 0) {
         funcname = "add_port";
@@ -7391,7 +7490,7 @@ error:
       } else {
         //TODO connect, disconnect
       }
-      if (!funcname.empty()) {
+      if (!funcname.empty() && warning == false) {
         expr.expr = mputstr(expr.expr, ";\n");
         config_op.portref1->generate_code_portref(&expr, my_sb);
         expr.expr = mputprintf(expr.expr, ".%s(&(", funcname.c_str());
@@ -7566,6 +7665,27 @@ error:
       }
     }
     return str;
+  }
+  
+  char* Statement::generate_code_setstate(char *str) {
+    expression_struct expr;
+    Code::init_expr(&expr);
+    expr.expr = mputstr(expr.expr, "TTCN_Runtime::set_port_state(");
+    if (!setstate_op.val->is_unfoldable()) {
+      expr.expr = mputprintf(expr.expr, "%i", (int)setstate_op.val->get_val_Int()->get_val());
+    } else {
+      setstate_op.val->generate_code_expr(&expr);
+    }
+    
+    expr.expr = mputstr(expr.expr, ", ");
+    if (setstate_op.ti != NULL) {
+      expr.expr = mputstr(expr.expr, "(TTCN_Logger::begin_event(TTCN_Logger::PORTEVENT_SETSTATE, TRUE), ");
+      setstate_op.ti->generate_code(&expr);
+      expr.expr = mputstr(expr.expr, ".log(), TTCN_Logger::end_event_log2str()), FALSE);\n");
+    } else {
+      expr.expr = mputstr(expr.expr, "\"\", FALSE);\n");
+    }
+    return Code::merge_free_expr(str, &expr);
   }
 
   void Statement::generate_code_expr_receive(expression_struct *expr,
@@ -8055,7 +8175,7 @@ error:
     Code::free_expr(&ref_expr);
     expr->expr = mputprintf(expr->expr, "&%s", tmp_id_var.c_str());
   }
-
+  
   void Statement::set_parent_path(WithAttribPath* p_path) {
     switch (statementtype) {
         case S_DEF:
@@ -8146,6 +8266,7 @@ error:
         case S_STOP_PROFILER:
         case S_INT2ENUM:
         case S_UPDATE:
+        case S_SETSTATE:
           break;
         default:
           FATAL_ERROR("Statement::set_parent_path()");

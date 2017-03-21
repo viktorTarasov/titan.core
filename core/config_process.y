@@ -1708,6 +1708,7 @@ LoggingBitOrCollection:
 	$$.add_sev(TTCN_Logger::PORTEVENT_DUALRECV);
 	$$.add_sev(TTCN_Logger::PORTEVENT_DUALSEND);
 	$$.add_sev(TTCN_Logger::PORTEVENT_UNQUALIFIED);
+  $$.add_sev(TTCN_Logger::PORTEVENT_SETSTATE);
 	break;
     case TTCN_Logger::TESTCASE_UNQUALIFIED:
 	$$.add_sev(TTCN_Logger::TESTCASE_START);

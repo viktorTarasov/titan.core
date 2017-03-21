@@ -271,6 +271,7 @@
 
     <element name="dualMapped"       type="TitanLoggerApi:Dualface_mapped" />
     <element name="dualDiscard"      type="TitanLoggerApi:Dualface_discard" />
+    <element name="setState"         type="TitanLoggerApi:Setstate" />
 
     <element name="portMisc"         type="TitanLoggerApi:Port_Misc" />
   </choice>
@@ -912,6 +913,14 @@
       the message; false means that the discard mapping was the only one
       </documentation></annotation>
     </element>
+  </sequence>
+</complexType>
+
+<complexType name="Setstate">
+  <sequence>
+    <element name="port_name"   type="string" />
+    <element name="state"       type="string" />
+    <element name="info"        type="string" />
   </sequence>
 </complexType>
 

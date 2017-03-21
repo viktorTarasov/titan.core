@@ -87,5 +87,10 @@ void PT2::outgoing_send(const BITSTRING& /*send_par*/)
 
 }
 
+void PT2::outgoing_send(const HEXSTRING& /*send_par*/)
+{
+
+}
+
 } /* end of namespace */
 

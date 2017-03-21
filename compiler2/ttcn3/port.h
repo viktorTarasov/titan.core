@@ -48,6 +48,7 @@ typedef struct port_msg_type_mapping_target_tag {
   msg_mapping_type_t mapping_type;
   union {
     struct {
+      const char *dispname;
       const char *name;
       function_prototype_t prototype;
     } function;

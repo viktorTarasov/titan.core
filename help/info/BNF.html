@@ -376,6 +376,22 @@ This ABNF browser was generated from file &lt;mockup_bnf.txt&gt; on Tue Jul 20 1
   </TR>
   <TR VALIGN=TOP>
     <TD>
+    <P><A NAME="setstatedef"></a><A HREF="#Xref.SetstateDef">SetstateDef</A>
+    <TD VALIGN=TOP>=</TD>
+    <TD><A HREF="#portkeyword">PortKeyword</A> . <A HREF="#setstatekeyword">SetstateKeyword</A> ( <A HREF="#singleexpression">SingleExpression</A> "," [ <A HREF="#freetext">FreeText</A> | <A HREF="#templateinstance">TemplateInstance</A></TD>
+  </TR>
+  <TR VALIGN=TOP>
+    <TD>
+    <P><A NAME="setstatekeyword"></a><A HREF="#Xref.SetstateKeyword">SetstateKeyword</A>
+    <TD VALIGN=TOP>=</TD>
+    <TD>"<FONT COLOR="black">setstate</FONT>"</TD>
+  </TR>
+  <TR VALIGN=TOP>
+    <TD></TD>
+    <TD></TD>
+  </TR>
+  <TR VALIGN=TOP>
+    <TD>
     <P><A NAME="recordofdef"></a><A HREF="#Xref.RecordOfDef">RecordOfDef</A>
     <TD VALIGN=TOP>=</TD>
     <TD><A HREF="#recordkeyword">RecordKeyword</A> [<A HREF="#stringlength">StringLength</A>] <A HREF="#ofkeyword">OfKeyword</A> <A HREF="#structofdefbody">StructOfDefBody</A></TD>
@@ -5796,7 +5812,7 @@ This ABNF browser was generated from file &lt;mockup_bnf.txt&gt; on Tue Jul 20 1
   </TR>
   <TR VALIGN=TOP>
     <TD><A NAME="Xref.FreeText"></a><A HREF="#freetext">FreeText</A></TD>
-    <TD><A HREF="#languagespec">LanguageSpec</A>, <A HREF="#attribspec">AttribSpec</A>, <A HREF="#sutstatements">SUTStatements</A>, <A HREF="#logstatement">LogStatement</A></TD>
+    <TD><A HREF="#languagespec">LanguageSpec</A>, <A HREF="#attribspec">AttribSpec</A>, <A HREF="#sutstatements">SUTStatements</A>, <A HREF="#logstatement">LogStatement</A>, <A HREF="#setstatedef">SetstateDef</A></TD>
   </TR>
   <TR VALIGN=TOP>
     <TD><A NAME="Xref.FromClause"></a><A HREF="#fromclause">FromClause</A></TD>
@@ -6496,7 +6512,7 @@ This ABNF browser was generated from file &lt;mockup_bnf.txt&gt; on Tue Jul 20 1
   </TR>
   <TR VALIGN=TOP>
     <TD><A NAME="Xref.PortKeyword"></a><A HREF="#portkeyword">PortKeyword</A></TD>
-    <TD><A HREF="#portdef">PortDef</A>, <A HREF="#portinstance">PortInstance</A>, <A HREF="#portorany">PortOrAny</A>, <A HREF="#portorall">PortOrAll</A></TD>
+    <TD><A HREF="#portdef">PortDef</A>, <A HREF="#portinstance">PortInstance</A>, <A HREF="#portorany">PortOrAny</A>, <A HREF="#portorall">PortOrAll</A>, <A HREF="#setstatedef">SetstateDef</A></TD>
   </TR>
   <TR VALIGN=TOP>
     <TD><A NAME="Xref.PortOrAll"></a><A HREF="#portorall">PortOrAll</A></TD>
@@ -6791,6 +6807,10 @@ This ABNF browser was generated from file &lt;mockup_bnf.txt&gt; on Tue Jul 20 1
     <TD><A HREF="#structuredtypedef">StructuredTypeDef</A></TD>
   </TR>
   <TR VALIGN=TOP>
+    <TD><A NAME="Xref.SetstateKeyword"></a><A HREF="#setstatekeyword">SetstateKeyword</A></TD>
+    <TD><A HREF="#setstatedef">SetstateDef</A></TD>
+  </TR>
+  <TR VALIGN=TOP>
     <TD><A NAME="Xref.SetVerdictKeyword"></a><A HREF="#setverdictkeyword">SetVerdictKeyword</A></TD>
     <TD><A HREF="#setlocalverdict">SetLocalVerdict</A></TD>
   </TR>
@@ -6856,7 +6876,7 @@ This ABNF browser was generated from file &lt;mockup_bnf.txt&gt; on Tue Jul 20 1
   <TR VALIGN=TOP>
     <TD><A NAME="Xref.SingleExpression"></a><A HREF="#singleexpression">SingleExpression</A></TD>
     <TD><A HREF="#fieldorbitnumber">FieldOrBitNumber</A>, <A HREF="#singlevalueorattrib">SingleValueOrAttrib</A>, <A HREF="#setlocalverdict">SetLocalVerdict</A>, <A HREF="#expression">Expression</A>,
-    <A HREF="#singleconstexpression">SingleConstExpression</A>, <A HREF="#booleanexpression">BooleanExpression</A>, <A HREF="#primary">Primary</A></TD>
+    <A HREF="#singleconstexpression">SingleConstExpression</A>, <A HREF="#booleanexpression">BooleanExpression</A>, <A HREF="#primary">Primary</A>, <A HREF="#setstatedef">SetstateDef</A></TD>
   </TR>
   <TR VALIGN=TOP>
     <TD><A NAME="Xref.SingleTimerInstance"></a><A HREF="#singletimerinstance">SingleTimerInstance</A></TD>
@@ -7049,7 +7069,7 @@ This ABNF browser was generated from file &lt;mockup_bnf.txt&gt; on Tue Jul 20 1
     <TD><A NAME="Xref.TemplateInstance"></a><A HREF="#templateinstance">TemplateInstance</A></TD>
     <TD><A HREF="#templateactualpar">TemplateActualPar</A>, <A HREF="#matchop">MatchOp</A>, <A HREF="#valueofop">ValueofOp</A>, <A HREF="#functionactualpar">FunctionActualPar</A>, <A
       HREF="#testcaseactualpar">TestcaseActualPar</A>, <A HREF="#sendparameter">SendParameter</A>, <A HREF="#callparameters">CallParameters</A>, <A HREF="#portreplyop">PortReplyOp</A>, <A
-      HREF="#portraiseop">PortRaiseOp</A>, <A HREF="#receiveparameter">ReceiveParameter</A>, <A HREF="#valuematchspec">ValueMatchSpec</A>, <A HREF="#catchopparameter">CatchOpParameter</A></TD>
+      HREF="#portraiseop">PortRaiseOp</A>, <A HREF="#receiveparameter">ReceiveParameter</A>, <A HREF="#valuematchspec">ValueMatchSpec</A>, <A HREF="#catchopparameter">CatchOpParameter</A>, <A HREF="#setstatedef">SetstateDef</A></TD>
   </TR>
   <TR VALIGN=TOP>
     <TD><A NAME="Xref.TemplateKeyword"></a><A HREF="#templatekeyword">TemplateKeyword</A></TD>

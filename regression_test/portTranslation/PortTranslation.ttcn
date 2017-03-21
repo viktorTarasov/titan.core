@@ -13,12 +13,12 @@ module PortTranslation {
 
 /* Converter functions */
 
-	// Temporarily if the out param of the mapping functions are unbound it will
-	// try the next one in order
-
 	function MyRec_to_oct(in MyRec i, out octetstring j) {
 		if (i.types == Oct) {
 			j := i.val;
+			port.setstate(0, "Some message"); // translated
+		} else {
+			port.setstate(1); // not translated
 		}
 	} with {
 		extension "prototype(fast)";
@@ -27,6 +27,9 @@ module PortTranslation {
 	function MyRec_to_int(in MyRec i, out integer j) {
 		if (i.types == Int) {
 			j := oct2int(i.val);
+			port.setstate(0); // translated
+		} else {
+			port.setstate(1); // not translated
 		}
 	} with {
 		extension "prototype(fast)";
@@ -35,6 +38,9 @@ module PortTranslation {
 	function MyRec_to_MyRec(in MyRec i, out MyRec j) {
 		if (i.types == MyRec) {
 			j := i;
+			port.setstate(0); // translated
+		} else {
+			port.setstate(1); // not translated
 		}
 	} with {
 		extension "prototype(fast)";
@@ -43,6 +49,9 @@ module PortTranslation {
 	function MyRec_to_char(in MyRec i, out charstring j) {
 		if (i.types == Char) {
 			j := oct2str(i.val);
+			port.setstate(0); // translated
+		} else {
+			port.setstate(1); // not translated
 		}
 	} with {
 		extension "prototype(fast)";
@@ -51,6 +60,9 @@ module PortTranslation {
 	function char_to_hex(in charstring i, out hexstring j) {
 		if (i == "0001") {
 			j := str2hex(i);
+			port.setstate(0); // translated
+		} else {
+			port.setstate(1); // not translated
 		}
 	} with {
 		extension "prototype(fast)";
@@ -59,6 +71,9 @@ module PortTranslation {
 	function char_to_hex2(in charstring i, out hexstring j) {
 		if (i == "0002") {
 			j := str2hex(i);
+			port.setstate(0); // translated
+		} else {
+			port.setstate(1); // not translated
 		}
 	} with {
 		extension "prototype(fast)";
@@ -67,6 +82,9 @@ module PortTranslation {
 	function char_to_char(in charstring i, out charstring j) {
 		if (i == oct2char('010203'O)) {
 			j := "";
+			port.setstate(0); // translated
+		} else {
+			port.setstate(1); // not translated
 		}
 	} with {
 		extension "prototype(fast)";
@@ -75,7 +93,36 @@ module PortTranslation {
 	function MyRec_to_hex(in MyRec i, out hexstring j) {
 		if (i.types == Hex) {
 			j := oct2hex(i.val);
+			port.setstate(0); // translated
+		} else {
+			port.setstate(1); // not translated
 		}
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function hex_to_bit(in hexstring i, out bitstring j) {
+		if (lengthof(i) > 4) {
+			j := hex2bit(substr(i, 0, 4));
+			i := substr(i, 4, lengthof(i)-4);
+			port.setstate(3); // partially translated, more messages to decode
+		} else {
+			j := hex2bit(substr(i, 0, lengthof(i)));
+			port.setstate(0); // translated
+		}
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function hex_to_char(in hexstring i, out charstring j) {
+		// dummy
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function int_to_bit_bad(in integer i, out bitstring j) {
+		// do nothing.
+		// Will generate error because the state of the port stays unset.
 	} with {
 		extension "prototype(fast)";
 	}
@@ -110,7 +157,7 @@ module PortTranslation {
 
 	type port P3 message {
 		out MyRec
-		out bitstring
+		out bitstring, hexstring, integer
 		inout octetstring
 	}
 
@@ -120,6 +167,7 @@ module PortTranslation {
 		out MyRec to octetstring with MyRec_to_oct() : integer with MyRec_to_int() : MyRec with MyRec_to_MyRec() : charstring with MyRec_to_char() : hexstring with MyRec_to_hex()
 		out octetstring
 		inout bitstring
+		out hexstring to bitstring with hex_to_bit() : charstring with hex_to_char()
 	}
 
 
@@ -409,6 +457,20 @@ module PortTranslation {
 		t.stop;
 	}
 
+	testcase tc_send_partially_translated() runs on MyComp system System {
+		map(self:p, system:p1);
+		var hexstring hs := '12345678ABCDEF'H;
+		p.send(hs);
+		// TODO: wait for port variables
+	}
+
+	testcase tc_send_fragmented() runs on MyComp system System {
+		map(self:p, system:p1);
+		var hexstring hs := '12345678ABCDEF'H;
+		p.send(hs);
+		// TODO: wait for port variables
+	}
+
 
 	control {
 		execute(tc_send())
@@ -418,6 +480,9 @@ module PortTranslation {
 		execute(tc_receive2());
 
 		execute(tc_send_and_receive_without_mapping());
+
+		//execute(tc_send_partially_translated());
+		//execute(tc_send_fragmented());
 	}
 
 }

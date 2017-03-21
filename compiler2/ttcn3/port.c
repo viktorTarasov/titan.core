@@ -81,6 +81,9 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
         }
       }
       src = mputstr(src, ") {\n");
+      src = mputstr(src, "TTCN_Runtime::set_translation_mode(TRUE, this);\n");
+      // Set to unset
+      src = mputstr(src, "TTCN_Runtime::set_port_state(-1, \"by test environment.\", TRUE);\n");
     }
     if (mapped_type->nTargets > 1) src = mputstr(src, "{\n");
     switch (target->mapping_type) {
@@ -162,8 +165,10 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
       default:
         FATAL_ERROR("generate_send_mapping(): invalid mapping type");
     }
-    if (!pdef->legacy) {
-      src = mputstr(src, "if (mapped_par.is_bound()) {\n"); // temporary solution instead of setstate
+    if (!pdef->legacy && pdef->port_type == USER) {
+      src = mputstr(src,
+        "TTCN_Runtime::set_translation_mode(FALSE, NULL);\n"
+        "if (port_state == TRANSLATED) {\n");
     }
     src = mputprintf(src, "if (TTCN_Logger::log_this_event("
       "TTCN_Logger::PORTEVENT_DUALSEND)) {\n"
@@ -196,8 +201,11 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
       }
       report_error = TRUE;
     }
-    if (!pdef->legacy) {
-      src = mputstr(src, "}\n");
+    if (!pdef->legacy && pdef->port_type == USER) {
+      src = mputprintf(src,
+        "} else if (port_state == UNSET) {\n"
+        "TTCN_error(\"The state of the port %%s remained unset after the mapping function %s finished.\", port_name);\n"
+        "}\n", target->mapping.function.dispname);
     }
     if (mapped_type->nTargets > 1) src = mputstr(src, "}\n");
     if (!pdef->legacy && pdef->port_type == USER) {
@@ -245,6 +253,10 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
     } else if (target->mapping_type == M_DECODE && !has_buffer) {
       src = mputstr(src, "TTCN_Buffer ttcn_buffer(incoming_par);\n");
       /* has_buffer will be set to TRUE later */
+    }
+    if (!pdef->legacy && pdef->port_type == USER) {
+      src = mputstr(src, "TTCN_Runtime::set_translation_mode(TRUE, this);\n");
+      src = mputstr(src, "port_state = UNSET;\n");
     }
     if (mapped_type->nTargets > 1) src = mputstr(src, "{\n");
     switch (target->mapping_type) {
@@ -353,8 +365,8 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
       default:
         FATAL_ERROR("generate_incoming_mapping(): invalid mapping type");
     }
-    src = mputprintf(src, "msg_tail_count++;\n"
-      "%s"
+    src = mputprintf(src, "%s"
+      "msg_tail_count++;\n"
       "if (TTCN_Logger::log_this_event(TTCN_Logger::PORTEVENT_DUALRECV)) "
       "{\n"
       "TTCN_Logger::log_dualport_map(1, \"%s\",\n"
@@ -366,7 +378,9 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
       "new_item->item_selection = MESSAGE_%lu;\n"
       "new_item->message_%lu = mapped_par;\n"
       "new_item->sender_component = sender_component;\n",
-      !pdef->legacy ? "if (mapped_par->is_bound()) {\n" : "", //temporary solution instead of setstate
+      !pdef->legacy && pdef->port_type == USER ?
+        "TTCN_Runtime::set_translation_mode(FALSE, NULL);\n"
+        "if (port_state == TRANSLATED) {\n" : "",
       target->target_dispname,
       (unsigned long) target->target_index,
       (unsigned long) target->target_index);
@@ -388,7 +402,15 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
       }
       else {
         src = mputstr(src, "return;\n"
-          "} else delete mapped_par;\n");
+          "}");
+        if (pdef->port_type == USER && !pdef->legacy) {
+          src = mputprintf(src,
+            " else if (port_state == UNSET) {\n"
+            "delete mapped_par;\n"
+            "TTCN_error(\"The state of the port %%s remained unset after the mapping function %s finished.\", port_name);\n"
+            "}\n", target->mapping.function.dispname);
+        }
+        src = mputstr(src, "else {\ndelete mapped_par;\n}\n");
       }
       report_error = TRUE;
     }
@@ -1625,16 +1647,17 @@ void defPortClass(const port_def* pdef, output_struct* output)
     src = mputstr(src, "}\n\n");
   }
   
-  // Port variables which can be the mapped ports for translation
   if (pdef->port_type == USER && !pdef->legacy) {
     def = mputstr(def, "private:\n");
+    // Port type variables which can be the mapped ports for translation
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
       def = mputprintf(def, "%s* p_%i;\n", pdef->provider_msg_outlist.elements[i].name, (int)i);
     }
+    def = mputstr(def, "translation_port_state port_state;\n");
   }
   
-  // Port variables which can be the mapper ports for translation
-  if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
+  // Port type variables in the provider types.
+  if (pdef->n_mapper_name > 0) {
     def = mputstr(def, "private:\n");
     for (i = 0; i < pdef->n_mapper_name; i++) {
       def = mputprintf(def, "%s* p_%i;\n", pdef->mapper_name[i], (int)i);
@@ -1664,11 +1687,11 @@ void defPortClass(const port_def* pdef, output_struct* output)
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
       src = mputprintf(src, "p_%i = NULL;\n", (int)i);
     }
+    src = mputprintf(src, "port_state = UNSET;\n");
   }
-  if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
-    for (i = 0; i < pdef->n_mapper_name; i++) {
-      src = mputprintf(src, "p_%i = NULL;\n", (int)i);
-    }
+  // Port type variables in the provider types.
+  for (i = 0; i < pdef->n_mapper_name; i++) {
+    src = mputprintf(src, "p_%i = NULL;\n", (int)i);
   }
   src = mputstr(src, "}\n\n");
 
@@ -1707,7 +1730,8 @@ void defPortClass(const port_def* pdef, output_struct* output)
     if (pdef->port_type != USER || (msg->nTargets == 1 &&
       msg->targets[0].mapping_type == M_SIMPLE) || (pdef->port_type == USER && !pdef->legacy)) {
       // If not in translation mode then send message as normally would.
-      if (pdef->port_type == USER && !pdef->legacy && msg->nTargets > 1) {
+      if (pdef->port_type == USER && !pdef->legacy &&
+         (msg->nTargets > 1 || (msg->nTargets > 0 && msg->targets[0].mapping_type != M_SIMPLE))) {
         src = mputstr(src, "if (!in_translation_mode()) {\n");
       }
       /* the same message type goes through the external interface */
@@ -1731,7 +1755,8 @@ void defPortClass(const port_def* pdef, output_struct* output)
         "send_par.encode_text(text_buf);\n"
         "send_data(text_buf, destination_component);\n"
         "}\n", msg->dispname);
-      if (pdef->port_type == USER && !pdef->legacy && msg->nTargets > 1) {
+      if (pdef->port_type == USER && !pdef->legacy &&
+         (msg->nTargets > 1 || (msg->nTargets > 0 && msg->targets[0].mapping_type != M_SIMPLE))) {
         // If in translation mode then generate the send mappings and send
         // according to them.
         src = mputstr(src, "} else {\n");
@@ -2054,7 +2079,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
       src = mputprintf(src, "void %s::remove_port(%s*) {\n p_%i = NULL;\n}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i);
     }
     
-    // in_translation_mode returns true if one of the port variables are not null
+    // in_translation_mode returns true if one of the port type variables are not null
     def = mputstr(def, "boolean in_translation_mode() const;\n");
     src = mputprintf(src, "boolean %s::in_translation_mode() const {\nreturn ", class_name);
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
@@ -2064,8 +2089,14 @@ void defPortClass(const port_def* pdef, output_struct* output)
     }
     src = mputstr(src, ";\n}\n\n");
     
+    def = mputstr(def, "void change_port_state(translation_port_state state);\n");
+    src = mputprintf(src,
+      "void %s::change_port_state(translation_port_state state) {\n"
+      "port_state = state;\n"
+      "}\n\n", class_name);
+    
     def = mputstr(def, "private:\n");
-    // Resets all port variables to NULL
+    // Resets all port type variables to NULL
     def = mputstr(def, "void reset_port_variables();\n");
     src = mputprintf(src, "void %s::reset_port_variables() {\n", class_name);
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
@@ -2073,8 +2104,8 @@ void defPortClass(const port_def* pdef, output_struct* output)
     }
     src = mputstr(src, "}\n\n");
   }
-  
-  if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
+  // Port type variables in the provider types.
+  if (pdef->n_mapper_name > 0) {
     def = mputstr(def, "public:\n");
     // add_port and remove_port is called after the map and unmap statements.
     for (i = 0; i < pdef->n_mapper_name; i++) {
@@ -2085,7 +2116,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
       src = mputprintf(src, "void %s::remove_port(%s*) {\n p_%i = NULL;\n}\n\n", class_name, pdef->mapper_name[i], (int)i);
     }
     def = mputstr(def, "private:\n");
-    // Resets all port variables to NULL
+    // Resets all port type variables to NULL
     def = mputstr(def, "void reset_port_variables();\n");
     src = mputprintf(src, "void %s::reset_port_variables() {\n", class_name);
     for (i = 0; i < pdef->n_mapper_name; i++) {
@@ -2161,7 +2192,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
           if (found) {
             src = mputprintf(src, "outgoing_send(send_par);\n");
           } else {
-            src = mputprintf(src, "TTCN_error(\"Cannot send this correctly %s\");\n", pdef->msg_out.elements[i].name); // todo
+            src = mputprintf(src, "TTCN_error(\"Cannot send message correctly with type %s\");\n", pdef->msg_out.elements[i].name);
           }
           src = mputstr(src, "}\n\n");
         }
@@ -3153,7 +3184,7 @@ void generateTestPortSkeleton(const port_def *pdef)
       "\tvoid user_start();\n"
       "\tvoid user_stop();\n\n",
       class_name, base_class_name, class_name,
-      pdef->port_type == REGULAR ? " = NULL" : "", class_name);
+      pdef->port_type == REGULAR || pdef->port_type == USER ? " = NULL" : "", class_name);
 
     if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
       fprintf(fp, "public:\n");

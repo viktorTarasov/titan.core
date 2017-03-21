@@ -133,6 +133,9 @@ public:
   boolean check_port_state(const CHARSTRING& type) const;
   static boolean any_check_port_state(const CHARSTRING& type);
   static boolean all_check_port_state(const CHARSTRING& type);
+  
+  // Used by the setstate operation through TTCN_Runtime
+  virtual void change_port_state(translation_port_state state);
 
   virtual alt_status receive(const COMPONENT_template& sender_template =
     any_compref, COMPONENT *sender_ptr = NULL,

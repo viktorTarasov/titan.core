@@ -15,6 +15,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *   Pandi, Krisztian
@@ -202,6 +203,7 @@ const char* TTCN_Logger::severity_subcategory_names[NUMBER_OF_LOGSEVERITIES] = {
   "DUALRECV",
   "DUALSEND",
   "UNQUALIFIED",
+  "SETSTATE",
   // STATISTICS:
   "VERDICT",
   "UNQUALIFIED",
@@ -392,6 +394,7 @@ char *TTCN_Logger::mputstr_severity(char *str, const TTCN_Logger::Severity& seve
   case TTCN_Logger::PORTEVENT_DUALRECV:
   case TTCN_Logger::PORTEVENT_DUALSEND:
   case TTCN_Logger::PORTEVENT_UNQUALIFIED:
+  case TTCN_Logger::PORTEVENT_SETSTATE:
     return mputstr(str, "PORTEVENT");
   case TTCN_Logger::STATISTICS_VERDICT:
   case TTCN_Logger::STATISTICS_UNQUALIFIED:
@@ -1415,6 +1418,12 @@ void TTCN_Logger::log_dualport_discard(boolean incoming, const char *target_type
 {
   get_logger_plugin_manager()->log_dualport_discard(incoming, target_type, port_name,
     unhandled);
+}
+
+void TTCN_Logger::log_setstate(const char* port_name, translation_port_state state,
+  const CHARSTRING& info)
+{
+  get_logger_plugin_manager()->log_setstate(port_name, state, info);
 }
 
 void TTCN_Logger::log_port_misc(int reason, const char *port_name,

@@ -894,6 +894,10 @@ PORTEVENT_UNQUALIFIED		{
 	yylval.logseverity_val = TTCN_Logger::PORTEVENT_UNQUALIFIED;
 	return LoggingBit;
 	}
+PORTEVENT_SETSTATE		{
+	yylval.logseverity_val = TTCN_Logger::PORTEVENT_SETSTATE;
+	return LoggingBit;
+	}
 (TTCN_)?PORTEVENT		{
 	yylval.logseverity_val = TTCN_Logger::PORTEVENT_UNQUALIFIED;
 	return LoggingBitCollection;

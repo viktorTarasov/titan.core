@@ -293,7 +293,14 @@ module PortTranslate {
 	}
 
 
+	type component Comp1 {
+		port PT16 pt16[4][5][5];
+		port P22  p22[3][5][6];
+	}
 
+	testcase tc_port_arr() runs on Comp1 {
+		map(self:pt16[1][2][3], system:p22[1][2][3]);
+	}
 
 	/* Conversion functions */
 
@@ -424,6 +431,7 @@ module PortTranslate {
 	} with {
 		extension "prototype(fast)";
 	}
+
 
 
 }

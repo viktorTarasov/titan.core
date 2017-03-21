@@ -47,14 +47,14 @@ TTCN3_LIB = ttcn3$(RT2_SUFFIX)-parallel$(DYNAMIC_SUFFIX)
 
 
 # TTCN-3 modules of this project:
-TTCN3_MODULES = PortTranslation.ttcn
+TTCN3_MODULES = PortTranslation.ttcn Setstate_neg.ttcn
 
 # ASN.1 modules of this project:
 ASN1_MODULES =
 
 # C++ source & header files generated from the TTCN-3 & ASN.1 modules of
 # this project:
-GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc) $(ASN1_MODULES:.asn=.cc)
+GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc) $(ASN1_MODULES:.asn=.cc) NP1.cc NPT2.cc
 GENERATED_HEADERS = $(GENERATED_SOURCES:.cc=.hh)
 ifdef SPLIT_TO_SLICES
 POSTFIXES := $(foreach file, $(SPLIT_TO_SLICES), $(addsuffix $(file), _part_))
@@ -114,7 +114,7 @@ compile:: $(TTCN3_DIR)/bin/compiler # $(TTCN3_COMPILER)
 	@if [ -f $@ ]; then $(RM) compile; $(MAKE) compile; fi
 
 compile:: $(TTCN3_MODULES) $(ASN1_MODULES)
-	$(TTCN3_COMPILER) $(COMPILER_FLAGS) $^ - $?
+	$(TTCN3_COMPILER) $(COMPILER_FLAGS) -t $^ - $?
 	touch $@
 
 clean distclean:

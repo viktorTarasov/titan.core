@@ -831,6 +831,7 @@ namespace Common {
     {"send__", "send", "send_"},
     {"sender__", "sender", "sender_"},
     {"set__", "set", "set_"},
+    {"setstate__", "setstate", "setstate_"},
     {"setverdict__", "setverdict", "setverdict_"},
     {"signature__", "signature", "signature_"},
     {"start__", "start", "start_"},

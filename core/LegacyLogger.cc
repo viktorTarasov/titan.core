@@ -12,6 +12,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szalai, Gabor
  *   Pandi, Krisztian
  *
@@ -1063,6 +1064,15 @@ extract_common:
         " The message was discarded."
       : "was discarded on port %s."),
       (const char*) dualop.port__name());
+    break; }
+  
+  case API::PortEvent_choice::ALT_setState: {
+    API::Setstate const& setstate = pec.setState();
+    ret_val = mputprintf(ret_val, "The state of the %s port was changed by a setstate operation to %s.",
+      (const char*)setstate.port__name(), (const char*)setstate.state());
+    if (setstate.info().lengthof() != 0) {
+      ret_val = mputprintf(ret_val, " Information: %s", (const char*)setstate.info());
+    }
     break; }
 
   case API::PortEvent_choice::ALT_portMisc: {

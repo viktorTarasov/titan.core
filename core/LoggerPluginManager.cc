@@ -12,6 +12,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Zalanyi, Balazs Andor
  *   Pandi, Krisztian
  *
@@ -1502,6 +1503,40 @@ void LoggerPluginManager::log_dualport_discard(boolean incoming, const char *tar
   dualop.target__type() = target_type;
   dualop.port__name() = port_name;
   dualop.unhandled() = unhandled;
+
+  log(event);
+}
+
+void LoggerPluginManager::log_setstate(const char *port_name, translation_port_state state,
+  const CHARSTRING& info)
+{
+  if (!TTCN_Logger::log_this_event(TTCN_Logger::PORTEVENT_SETSTATE) && (TTCN_Logger::get_emergency_logging()<=0))
+    return;
+  API::TitanLogEvent event;
+  fill_common_fields(event, TTCN_Logger::PORTEVENT_SETSTATE);
+
+  API::Setstate& setstate = event.logEvent().choice().portEvent().choice().setState();
+  setstate.port__name() = port_name;
+  setstate.info() = (const char*)info;
+  switch (state) {
+    case UNSET:
+      setstate.state() = "unset";
+      break;
+    case TRANSLATED:
+      setstate.state() = "translated";
+      break;
+    case NOT_TRANSLATED:
+      setstate.state() = "not translated";
+      break;
+     case FRAGMENTED:
+      setstate.state() = "fragmented";
+      break;
+    case PARTIALLY_TRANSLATED:
+      setstate.state() = "partially translated";
+      break;
+    default:
+      TTCN_Logger::fatal_error("LoggerPluginManager::log_setstate(): unexpected port state");
+  }
 
   log(event);
 }

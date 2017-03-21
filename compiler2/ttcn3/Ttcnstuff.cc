@@ -570,6 +570,8 @@ namespace Ttcn {
         FATAL_ERROR("TypeMappingTarget::fill_type_mapping_target()");
       target->mapping.function.name =
         pool.add(u.func.function_ptr->get_genname_from_scope(p_scope));
+      target->mapping.function.dispname =
+        pool.add(u.func.function_ptr->get_fullname());
       switch (u.func.function_ptr->get_prototype()) {
       case Ttcn::Def_Function_Base::PROTOTYPE_CONVERT:
         target->mapping.function.prototype = PT_CONVERT;
@@ -2297,10 +2299,15 @@ namespace Ttcn {
 
               mapped_type->targets[ind].mapping_type = M_FUNCTION;
               mapped_type->targets[ind].mapping.function.prototype = PT_FAST;
-              mapped_type->targets[ind].mapping.function.name = mapping_target->get_function()->get_genname_from_scope(my_scope).c_str();
+              mapped_type->targets[ind].mapping.function.name =
+                mapping_target->get_function()->get_genname_from_scope(my_scope).c_str();
+              mapped_type->targets[ind].mapping.function.dispname =
+                pool.add(mapping_target->get_function()->get_fullname());
 
-              mapped_type->targets[ind].target_name = pool.add(mapping->get_source_type()->get_genname_value(my_scope));
-              mapped_type->targets[ind].target_dispname = pool.add(mapping->get_source_type()->get_typename());
+              mapped_type->targets[ind].target_name =
+                pool.add(mapping->get_source_type()->get_genname_value(my_scope));
+              mapped_type->targets[ind].target_dispname =
+                pool.add(mapping->get_source_type()->get_typename());
               
               if (in_msgs->has_type(mapping->get_source_type())) {
                 mapped_type->targets[ind].target_index =
