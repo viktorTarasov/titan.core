@@ -4098,6 +4098,7 @@ compile_time:
           str = t->generate_code_init(str, embedded_name);
           Free(embedded_name);
         }
+        Free(fieldname_str);
       }
     } else {
       str = mputprintf(str, "%s = NULL_VALUE;\n", name);
