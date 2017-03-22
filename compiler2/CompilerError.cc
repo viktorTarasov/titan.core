@@ -265,9 +265,10 @@ namespace Common {
       // borrow location information from the innermost context
       Location my_location;
       my_location.set_location( *(tail->location) );
-      loc = &my_location;
+      my_location.print_location(stderr);
+    } else if (loc) {
+      loc->print_location(stderr);
     }
-    if (loc) loc->print_location(stderr);
     fputs("error: ", stderr);
     vfprintf(stderr, fmt, args);
     putc('\n', stderr);
