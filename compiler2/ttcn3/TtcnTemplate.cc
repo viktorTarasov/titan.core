@@ -4074,7 +4074,7 @@ compile_time:
       for (size_t i = 0; i < nof_nts; i++) {
         NamedTemplate *nt = u.named_templates->get_nt_byIndex(i);
         const Identifier& fieldname = nt->get_name();
-        const char *fieldname_str = mprintf("%s%s",
+        char *fieldname_str = mprintf("%s%s",
               type->get_typetype()==Type::T_ANYTYPE ? "AT_" : "", fieldname.get_name().c_str());
         Template *t = nt->get_template();
         if (t->needs_temp_ref()) {
