@@ -5713,7 +5713,6 @@ namespace Common {
           case T_FUNCTION:  // TTCN-3
           case T_ALTSTEP:   // TTCN-3
           case T_TESTCASE:  // TTCN-3
-          case T_ANYTYPE:   // TTCN-3 anytype
             return memory.remember(t, ANSWER_NO);
 
           case T_UNDEF:
@@ -5723,7 +5722,9 @@ namespace Common {
 
           case T_SEQ_T:
           case T_SET_T:
-          case T_CHOICE_T: {
+          case T_CHOICE_T:
+          case T_ANYTYPE:   // TTCN-3 anytype
+          {
             // No field may reject XER
             size_t ncomp = t->get_nof_comps();
             for (size_t i = 0; i < ncomp; ++i) {

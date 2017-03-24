@@ -105,6 +105,12 @@ void Type::chk()
     break;
   case T_ANYTYPE:
     // TODO maybe check for address type and add it automagically, then fall through
+    // anytype has untagged automatically
+    if(!xerattrib) {
+      xerattrib = new XerAttributes;
+    }
+    xerattrib->untagged_ = true;
+    // no break
   case T_SEQ_T:
   case T_SET_T:
   case T_CHOICE_T:
@@ -933,7 +939,7 @@ Value *Type::new_value_for_dfe(Type *last, const char *dfe_str, Common::Referenc
 
     return new Value(Common::Value::V_ENUM, val_id);
   }
-
+  // No T_ANYTYPE: anytype has untagged automatically.
   case T_CHOICE_A: case T_CHOICE_T: {
     // Try to guess which alternative the given DFE text belongs to.
     // Sort the fields based on typetype, so BOOL, INT, REAL, ENUM
@@ -1548,6 +1554,7 @@ void Type::chk_xer_untagged()
     // fall through
   case T_SEQ_A: case T_SEQ_T:
   case T_SET_A: case T_SET_T:
+  case T_ANYTYPE:
   case T_CHOICE_A: case T_CHOICE_T:
   case T_SEQOF: case T_SETOF:
     break; // acceptable
@@ -1598,7 +1605,8 @@ void Type::chk_xer_untagged()
         "the member of a sequence-of or set-of"); // X.693amd1, 32.2.4 b)
       break;
 
-    case T_CHOICE_T: {
+    case T_CHOICE_T:
+    case T_ANYTYPE: {
       size_t num_fields = parent_type->get_nof_comps();
       size_t num_empty = 0;
       for (size_t i = 0; i < num_fields; ++i) {
@@ -1756,6 +1764,7 @@ void Type::chk_xer_use_nil()
     case T_SEQ_A:
     case T_SET_T:
     case T_SET_A:
+    // No T_ANYTYPE: anytype has untagged automatically.
     case T_CHOICE_T:
     case T_CHOICE_A:
     case T_SEQOF:
@@ -1995,7 +2004,7 @@ void Type::chk_xer_use_type()
   if (!prefix) error("Type has USE-TYPE, but the module has no control namespace set");
 
   switch (last->typetype) {
-  // USE-TYPE applied to anytype ? Just say no.
+  // No T_ANYTYPE: anytype has untagged automatically.
   case T_CHOICE_A: case T_CHOICE_T: { // must be CHOICE; 37.2.1
     if (xerattrib->untagged_ || xerattrib->useUnion_) { // 37.2.5
       error("A type with USE-TYPE encoding instruction shall not also have"
@@ -2408,6 +2417,7 @@ void Type::chk_xer() { // XERSTUFF semantic check
           switch (cft->get_type_refd_last()->typetype) {
           case T_SEQ_A: case T_SEQ_T:
           case T_SET_A: case T_SET_T:
+          case T_ANYTYPE:
           case T_CHOICE_A: case T_CHOICE_T:
           case T_SEQOF:
           case T_SETOF:
@@ -2449,7 +2459,7 @@ void Type::chk_xer() { // XERSTUFF semantic check
     } // if the_one
 
     if (empties.size() > 1
-      && (typetype==T_CHOICE_A || typetype==T_CHOICE_T)) {
+      && (typetype==T_CHOICE_A || typetype==T_CHOICE_T || typetype==T_ANYTYPE)) {
       warning("More than one field can have empty XML. Decoding of empty"
         " XML is ambiguous, %s chosen arbitrarily.",
         empties.get_nth_elem(empties.size()-1)->get_name().get_name().c_str());
