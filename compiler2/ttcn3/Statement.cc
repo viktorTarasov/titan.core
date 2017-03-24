@@ -6587,7 +6587,8 @@ error:
       str = mputstr(str, expr.preamble);
     }
     str = mputprintf(str, "switch(%s.get_selection()) {\n", expr.expr);
-    const char* type_name = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope()).c_str();
+    string type_name_str = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope());
+    const char* type_name = type_name_str.c_str();
     char* loc = NULL;
     loc = select_union.expr->update_location_object(loc);
     str = select_union.sus->generate_code(str, def_glob_vars, src_glob_vars, type_name, loc);
@@ -6963,7 +6964,8 @@ error:
       str = mputstr(str, expr.preamble);
     }
     str = mputprintf(str, "switch(%s.get_selection()) {\n", expr.expr);
-    const char* type_name = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope()).c_str();
+    string type_name_str = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope());
+    const char* type_name = type_name_str.c_str();
     char* loc = NULL;
     loc = select_union.expr->update_location_object(loc);
     str = select_union.sus->generate_code(str, ilt->get_out_def_glob_vars(),
