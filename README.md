@@ -16,6 +16,10 @@ ASN.1 (Abstract Syntax Notation One).
 
 * https://www.eclipse.org/forums/index.php/f/297/
 
+# Bugzilla
+
+* https://bugs.eclipse.org/bugs/buglist.cgi?field0-0-0=product&field0-0-1=component&list_id=15328562&order=changeddate%2Cbug_status%20DESC%2Creporter%20DESC%2Ccomponent%2Cassigned_to%2Cpriority%2Cbug_severity&query_based_on=&query_format=advanced&type0-0-0=substring&type0-0-1=substring&value0-0-0=Titan&value0-0-1=Titan
+
 # Openhub page:
 
 * https://www.openhub.net/p/eclipse_titan/
@@ -36,7 +40,7 @@ https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_User_P.pdf
 
 
 
-##Binaries and SHA512 checksums for a number of Linux platforms can be downloaded from:
+##Binaries for a number of Linux platforms can be downloaded from:
 
 
 * https://projects.eclipse.org/projects/tools.titan/downloads
