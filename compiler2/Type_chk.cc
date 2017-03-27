@@ -105,12 +105,6 @@ void Type::chk()
     break;
   case T_ANYTYPE:
     // TODO maybe check for address type and add it automagically, then fall through
-    // anytype has untagged automatically
-    if(!xerattrib) {
-      xerattrib = new XerAttributes;
-    }
-    xerattrib->untagged_ = true;
-    // no break
   case T_SEQ_T:
   case T_SET_T:
   case T_CHOICE_T:
@@ -939,8 +933,7 @@ Value *Type::new_value_for_dfe(Type *last, const char *dfe_str, Common::Referenc
 
     return new Value(Common::Value::V_ENUM, val_id);
   }
-  // No T_ANYTYPE: anytype has untagged automatically.
-  case T_CHOICE_A: case T_CHOICE_T: {
+  case T_CHOICE_A: case T_CHOICE_T: case T_ANYTYPE: {
     // Try to guess which alternative the given DFE text belongs to.
     // Sort the fields based on typetype, so BOOL, INT, REAL, ENUM
     // are tried before the various string types
@@ -1764,7 +1757,7 @@ void Type::chk_xer_use_nil()
     case T_SEQ_A:
     case T_SET_T:
     case T_SET_A:
-    // No T_ANYTYPE: anytype has untagged automatically.
+    case T_ANYTYPE:
     case T_CHOICE_T:
     case T_CHOICE_A:
     case T_SEQOF:
@@ -2004,7 +1997,6 @@ void Type::chk_xer_use_type()
   if (!prefix) error("Type has USE-TYPE, but the module has no control namespace set");
 
   switch (last->typetype) {
-  // No T_ANYTYPE: anytype has untagged automatically.
   case T_CHOICE_A: case T_CHOICE_T: { // must be CHOICE; 37.2.1
     if (xerattrib->untagged_ || xerattrib->useUnion_) { // 37.2.5
       error("A type with USE-TYPE encoding instruction shall not also have"
@@ -2031,6 +2023,9 @@ void Type::chk_xer_use_type()
       }
     }
     break; }
+  case T_ANYTYPE:
+    error("USE-TYPE cannot be applied to anytype");
+    break;
   default:
     error("USE-TYPE can only applied to a CHOICE/union type");
     break;
@@ -2056,6 +2051,9 @@ void Type::chk_xer_use_union()
       else cf->error("Alternative of a CHOICE/union with USE-UNION must be character-encodable");
     }
     break; }
+  case T_ANYTYPE:
+    error("USE-UNION cannot be applied to anytype");
+    break;
   default:
     error("USE-UNION can only applied to a CHOICE/union type"); // 38.2.1
     break;
