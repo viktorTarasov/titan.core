@@ -25,10 +25,10 @@ ASN.1 (Abstract Syntax Notation One).
 * https://www.openhub.net/p/eclipse_titan/
 
 
-##Introductory video of a presentation about Titan held at EclipseCon 2014: 
+## Introductory video of a presentation about Titan held at EclipseCon 2014: 
 * https://www.youtube.com/watch?v=2knzZuwzn-Y.
 
-##Titan Datasheet on polarsys.org:
+## Titan Datasheet on polarsys.org:
 http://polarsys.org/sites/default/files/custom_uploads/TITAN%20Datasheet%20A4%202.1.pdf
 
 ## Ericsson TTCN-3 Course, Presentation material
@@ -40,7 +40,7 @@ https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_User_P.pdf
 
 
 
-##Binaries for a number of Linux platforms can be downloaded from:
+## Binaries for a number of Linux platforms can be downloaded from:
 
 
 * https://projects.eclipse.org/projects/tools.titan/downloads
@@ -48,7 +48,7 @@ https://www.eclipse.org/downloads/download.php?file=/titan/TITAN_User_P.pdf
 
 # Related products:
 
-##Eclipse IDE plug-ins (Designer, Executor, LogViewer, Titanium):
+## Eclipse IDE plug-ins (Designer, Executor, LogViewer, Titanium):
 
 Source code:
 
