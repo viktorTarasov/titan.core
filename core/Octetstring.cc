@@ -185,6 +185,14 @@ OCTETSTRING OCTETSTRING::operator+(const OCTETSTRING_ELEMENT& other_value) const
   return ret_val;
 }
 
+OCTETSTRING OCTETSTRING::operator+(const OPTIONAL<OCTETSTRING>& other_value) const
+{
+  if (other_value.is_present()) {
+    return *this + (const OCTETSTRING&)other_value;
+  }
+  TTCN_error("Unbound or omitted right operand of octetstring concatenation.");
+}
+
 OCTETSTRING& OCTETSTRING::operator+=(const OCTETSTRING& other_value)
 {
   must_bound("Appending an octetstring value to an unbound octetstring value.");
@@ -1454,6 +1462,15 @@ OCTETSTRING OCTETSTRING_ELEMENT::operator+
   return OCTETSTRING(2, result);
 }
 
+OCTETSTRING OCTETSTRING_ELEMENT::operator+(
+  const OPTIONAL<OCTETSTRING>& other_value) const
+{
+  if (other_value.is_present()) {
+    return *this + (const OCTETSTRING&)other_value;
+  }
+  TTCN_error("Unbound or omitted right operand of octetstring concatenation.");
+}
+
 OCTETSTRING OCTETSTRING_ELEMENT::operator~() const
 {
   must_bound("Unbound octetstring element operand of operator not4b.");
@@ -1817,6 +1834,251 @@ OCTETSTRING_template& OCTETSTRING_template::operator=
     copy_template(other_value);
   }
   return *this;
+}
+
+void OCTETSTRING_template::concat(Vector<unsigned short>& v) const
+{
+  switch (template_selection) {
+  case ANY_VALUE:
+  case ANY_OR_OMIT:
+    switch (length_restriction_type) {
+    case NO_LENGTH_RESTRICTION:
+      if (template_selection == ANY_VALUE) {
+        // ? => '*'
+        if (v.size() == 0 || v[v.size() - 1] != 257) {
+          // '**' == '*', so just ignore the second '*'
+          v.push_back(257);
+        }
+      }
+      else {
+        TTCN_error("Operand of octetstring template concatenation is an "
+          "AnyValueOrNone (*) matching mechanism with no length restriction");
+      }
+      break;
+    case RANGE_LENGTH_RESTRICTION:
+      if (!length_restriction.range_length.max_length ||
+          length_restriction.range_length.max_length != length_restriction.range_length.min_length) {
+        TTCN_error("Operand of octetstring template concatenation is an %s "
+          "matching mechanism with non-fixed length restriction",
+          template_selection == ANY_VALUE ? "AnyValue (?)" : "AnyValueOrNone (*)");
+      }
+      // else fall through (range length restriction is allowed if the minimum
+      // and maximum value are the same)
+    case SINGLE_LENGTH_RESTRICTION: {
+      // ? length(N) or * length(N) => '??...?' N times
+      int len = length_restriction_type == SINGLE_LENGTH_RESTRICTION ?
+        length_restriction.single_length : length_restriction.range_length.min_length;
+      for (int i = 0; i < len; ++i) {
+        v.push_back(256);
+      }
+      break; }
+    }
+    break;
+  case SPECIFIC_VALUE:
+    concat(v, single_value);
+    break;
+  case STRING_PATTERN:
+    for (unsigned int i = 0; i < pattern_value->n_elements; ++i) {
+      v.push_back(pattern_value->elements_ptr[i]);
+    }
+    break;
+  default:
+    TTCN_error("Operand of octetstring template concatenation is an "
+      "uninitialized or unsupported template.");
+  }
+}
+
+void OCTETSTRING_template::concat(Vector<unsigned short>& v, const OCTETSTRING& val)
+{
+  if (!val.is_bound()) {
+    TTCN_error("Operand of octetstring template concatenation is an "
+      "unbound value.");
+  }
+  for (int i = 0; i < val.val_ptr->n_octets; ++i) {
+    v.push_back(val.val_ptr->octets_ptr[i]);
+  }
+}
+
+void OCTETSTRING_template::concat(Vector<unsigned short>& v, template_sel sel)
+{
+  if (sel == ANY_VALUE) {
+    // ? => '*'
+    if (v.size() == 0 || v[v.size() - 1] != 257) {
+      // '**' == '*', so just ignore the second '*'
+      v.push_back(257);
+    }
+  }
+  else {
+    TTCN_error("Operand of octetstring template concatenation is an "
+      "uninitialized or unsupported template.");
+  }
+}
+
+
+OCTETSTRING_template OCTETSTRING_template::operator+(
+  const OCTETSTRING_template& other_value) const
+{
+  if (template_selection == SPECIFIC_VALUE &&
+      other_value.template_selection == SPECIFIC_VALUE) {
+    // result is a specific value template
+    return single_value + other_value.single_value;
+  }
+  if (template_selection == ANY_VALUE &&
+      other_value.template_selection == ANY_VALUE &&
+      length_restriction_type == NO_LENGTH_RESTRICTION &&
+      other_value.length_restriction_type == NO_LENGTH_RESTRICTION) {
+    // special case: ? & ? => ?
+    return OCTETSTRING_template(ANY_VALUE);
+  }
+  // otherwise the result is an octetstring pattern
+  Vector<unsigned short> v;
+  concat(v);
+  other_value.concat(v);
+  return OCTETSTRING_template(v.size(), v.data_ptr());
+}
+
+OCTETSTRING_template OCTETSTRING_template::operator+(
+  const OCTETSTRING& other_value) const
+{
+  if (template_selection == SPECIFIC_VALUE) {
+    // result is a specific value template
+    return single_value + other_value;
+  }
+  // otherwise the result is an octetstring pattern
+  Vector<unsigned short> v;
+  concat(v);
+  concat(v, other_value);
+  return OCTETSTRING_template(v.size(), v.data_ptr());
+}
+
+OCTETSTRING_template OCTETSTRING_template::operator+(
+  const OCTETSTRING_ELEMENT& other_value) const
+{
+  return *this + OCTETSTRING(other_value);
+}
+
+OCTETSTRING_template OCTETSTRING_template::operator+(
+  const OPTIONAL<OCTETSTRING>& other_value) const
+{
+  if (other_value.is_present()) {
+    return *this + (const OCTETSTRING&)other_value;
+  }
+  TTCN_error("Operand of octetstring template concatenation is an "
+    "unbound or omitted record/set field.");
+}
+
+OCTETSTRING_template OCTETSTRING_template::operator+(
+  template_sel other_template_sel) const
+{
+  if (template_selection == ANY_VALUE && other_template_sel == ANY_VALUE &&
+      length_restriction_type == NO_LENGTH_RESTRICTION) {
+    // special case: ? & ? => ?
+    return OCTETSTRING_template(ANY_VALUE);
+  }
+  // the result is always an octetstring pattern
+  Vector<unsigned short> v;
+  concat(v);
+  concat(v, other_template_sel);
+  return OCTETSTRING_template(v.size(), v.data_ptr());
+}
+
+OCTETSTRING_template operator+(const OCTETSTRING& left_value,
+  const OCTETSTRING_template& right_template)
+{
+  if (right_template.template_selection == SPECIFIC_VALUE) {
+    // result is a specific value template
+    return left_value + right_template.single_value;
+  }
+  // otherwise the result is an octetstring pattern
+  Vector<unsigned short> v;
+  OCTETSTRING_template::concat(v, left_value);
+  right_template.concat(v);
+  return OCTETSTRING_template(v.size(), v.data_ptr());
+}
+
+OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
+  const OCTETSTRING_template& right_template)
+{
+  return OCTETSTRING(left_value) + right_template;
+}
+
+OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& left_value,
+  const OCTETSTRING_template& right_template)
+{
+  if (left_value.is_present()) {
+    return (const OCTETSTRING&)left_value + right_template;
+  }
+  TTCN_error("Operand of octetstring template concatenation is an "
+    "unbound or omitted record/set field.");
+}
+
+OCTETSTRING_template operator+(template_sel left_template_sel,
+  const OCTETSTRING_template& right_template)
+{
+  if (left_template_sel == ANY_VALUE &&
+      right_template.template_selection == ANY_VALUE &&
+      right_template.length_restriction_type ==
+      Restricted_Length_Template::NO_LENGTH_RESTRICTION) {
+    // special case: ? & ? => ?
+    return OCTETSTRING_template(ANY_VALUE);
+  }
+  // the result is always an octetstring pattern
+  Vector<unsigned short> v;
+  OCTETSTRING_template::concat(v, left_template_sel);
+  right_template.concat(v);
+  return OCTETSTRING_template(v.size(), v.data_ptr());
+}
+
+OCTETSTRING_template operator+(const OCTETSTRING& left_value,
+  template_sel right_template_sel)
+{
+  // the result is always an octetstring pattern
+  Vector<unsigned short> v;
+  OCTETSTRING_template::concat(v, left_value);
+  OCTETSTRING_template::concat(v, right_template_sel);
+  return OCTETSTRING_template(v.size(), v.data_ptr());
+}
+
+OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
+  template_sel right_template_sel)
+{
+  return OCTETSTRING(left_value) + right_template_sel;
+}
+
+OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& left_value,
+  template_sel right_template_sel)
+{
+  if (left_value.is_present()) {
+    return (const OCTETSTRING&)left_value + right_template_sel;
+  }
+  TTCN_error("Operand of octetstring template concatenation is an "
+    "unbound or omitted record/set field.");
+}
+
+OCTETSTRING_template operator+(template_sel left_template_sel,
+  const OCTETSTRING& right_value)
+{
+  // the result is always an octetstring pattern
+  Vector<unsigned short> v;
+  OCTETSTRING_template::concat(v, left_template_sel);
+  OCTETSTRING_template::concat(v, right_value);
+  return OCTETSTRING_template(v.size(), v.data_ptr());
+}
+
+OCTETSTRING_template operator+(template_sel left_template_sel,
+  const OCTETSTRING_ELEMENT& right_value)
+{
+  return left_template_sel + OCTETSTRING(right_value);
+}
+
+OCTETSTRING_template operator+(template_sel left_template_sel,
+  const OPTIONAL<OCTETSTRING>& right_value)
+{
+  if (right_value.is_present()) {
+    return left_template_sel + (const OCTETSTRING&)right_value;
+  }
+  TTCN_error("Operand of octetstring template concatenation is an "
+    "unbound or omitted record/set field.");
 }
 
 OCTETSTRING_ELEMENT OCTETSTRING_template::operator[](int index_value)

@@ -62,6 +62,7 @@ public:
   boolean empty() const { return nof_elem == 0; }
   void reserve(size_t n);
   void shrink_to_fit();
+  T* data_ptr() const { return data; }
 
   // Element access
   T& operator[](size_t idx);

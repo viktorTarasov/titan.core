@@ -1953,6 +1953,7 @@ void SubType::chk_this_template(Template *templ)
   case Template::ALL_FROM:
   case Template::VALUE_LIST_ALL_FROM:
   case Template::DECODE_MATCH:
+  case Template::TEMPLATE_CONCAT:
     break;
   case Template::SUPERSET_MATCH:
   case Template::SUBSET_MATCH:

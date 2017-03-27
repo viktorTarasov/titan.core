@@ -39,6 +39,22 @@ namespace Common {
     if (!p_indexed) vs = new vector<Value>();
     else ivs = new vector<IndexedValue>();
   }
+  
+  Values::Values(const Values& p) : Node(p), indexed(p.indexed)
+  {
+    if (indexed) {
+      ivs = new vector<IndexedValue>();
+      for (size_t i = 0; i < p.ivs->size(); ++i) {
+        ivs->add((*p.ivs)[i]->clone());
+      }
+    }
+    else {
+      vs = new vector<Value>();
+      for (size_t i = 0; i < p.vs->size(); ++i) {
+        vs->add((*p.vs)[i]->clone());
+      }
+    }
+  }
 
   Values::~Values()
   {
@@ -55,7 +71,7 @@ namespace Common {
 
   Values *Values::clone() const
   {
-    FATAL_ERROR("Values::clone");
+    return new Values(*this);
   }
 
   void Values::set_fullname(const string& p_fullname)
@@ -165,6 +181,12 @@ namespace Common {
     if (!p_index || !p_value)
       FATAL_ERROR("NULL parameter: IndexedValue::IndexedValue()");
   }
+  
+  IndexedValue::IndexedValue(const IndexedValue& p) : Node(p), Location(p)
+  {
+    index = p.index->clone();
+    value = p.value->clone();
+  }
 
   IndexedValue::~IndexedValue()
   {
@@ -174,7 +196,7 @@ namespace Common {
 
   IndexedValue *IndexedValue::clone() const
   {
-    FATAL_ERROR("IndexedValue::clone");
+    return new IndexedValue(*this);
   }
 
   void IndexedValue::set_fullname(const string& p_fullname)

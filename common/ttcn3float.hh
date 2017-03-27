@@ -67,6 +67,10 @@ struct ttcn3float {
 
   /// Address-of, for scanf
   double* operator&() { return &value; }
+  
+  double operator+(const ttcn3float& x) const {
+    return value + x.value;
+  }
 
   const ttcn3float& operator+=(double d) {
     value += d;
