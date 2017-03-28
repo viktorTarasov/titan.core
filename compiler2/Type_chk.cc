@@ -105,6 +105,10 @@ void Type::chk()
     break;
   case T_ANYTYPE:
     // TODO maybe check for address type and add it automagically, then fall through
+    if(!xerattrib) {
+      xerattrib = new XerAttributes;
+    }
+    xerattrib->untagged_ = true;
   case T_SEQ_T:
   case T_SET_T:
   case T_CHOICE_T:
@@ -833,7 +837,12 @@ Value *Type::new_value_for_dfe(Type *last, const char *dfe_str, Common::Referenc
       delete v;
       return 0;
     }
-    if (!is_compatible_tt_tt(last->typetype, v->get_expr_governor_last()->typetype, last->is_asn1(), t->is_asn1())) {
+    bool same_mod = false;
+    if (last->get_my_scope()->get_scope_mod()->get_modid().get_name() ==
+        t->get_my_scope()->get_scope_mod()->get_modid().get_name()) {
+      same_mod = true;
+    }
+    if (!is_compatible_tt_tt(last->typetype, t->typetype, last->is_asn1(), t->is_asn1(), same_mod)) {
       v->get_reference()->error("Incompatible types were given to defaultForEmpty variant: `%s' instead of `%s'.\n",
         v->get_expr_governor_last()->get_typename().c_str(), last->get_typename().c_str());
       delete v;
@@ -3225,7 +3234,7 @@ bool Type::chk_this_value(Value *value, Common::Assignment *lhs, expected_value_
   case Value::V_MACRO:
     if (value->is_unfoldable(0, expected_value)) {
       typetype_t tt = value->get_expr_returntype(expected_value);
-      if (!is_compatible_tt(tt, value->is_asn1())) {
+      if (!is_compatible_tt(tt, value->is_asn1(), value->get_expr_governor_last())) {
         value->error("Incompatible value: `%s' value was expected",
                      get_typename().c_str());
         value->set_valuetype(Value::V_ERROR);

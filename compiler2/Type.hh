@@ -584,13 +584,14 @@ namespace Common {
      *  typetypes for a type (e.g. T_ENUM_A and T_ENUM_T) then all
      *  combinations of those are compatible.  */
     static bool is_compatible_tt_tt(typetype_t p_tt1, typetype_t p_tt2,
-                                    bool p_is_asn11, bool p_is_asn12);
+                                    bool p_is_asn11, bool p_is_asn12,
+                                    bool same_module);
     /** Returns whether the type is compatible with \a p_tt.  Used if the
      *  other value is unfoldable, but we can determine its expr_typetype.
      *  Note: The compatibility relation is asymmetric.  The function returns
      *  true if the set of possible values in \a p_type is a subset of
      *  possible values in \a this.  */
-    bool is_compatible_tt(typetype_t p_tt, bool p_is_asn1);
+    bool is_compatible_tt(typetype_t p_tt, bool p_is_asn1, Type* p_type = 0);
     /** Returns whether this type is compatible with \a p_type.  Note: The
      *  compatibility relation is asymmetric.  The function returns true if
      *  the set of possible values in \a p_type is a subset of possible values
