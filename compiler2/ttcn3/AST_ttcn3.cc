@@ -1211,7 +1211,7 @@ namespace Ttcn {
     return component_defs->has_ass_withId(p_id)
       || parent_scope->has_ass_withId(p_id);
   }
-
+  
   // =================================
   // ===== FriendMod
   // =================================
@@ -6231,7 +6231,7 @@ namespace Ttcn {
     if (!my_module) FATAL_ERROR("Def_Function::get_runs_on_scope()");
     return my_module->get_runs_on_scope(comptype);
   }
-
+  
   void Def_Function::chk()
   {
     if (checked) return;
@@ -6662,10 +6662,13 @@ namespace Ttcn {
           }
         }
         else {
-          if (Common::Type::CT_XER == encoding_type
-            && input_type->get_type_refd_last()->is_untagged()) {
-            // "untagged" on the (toplevel) input type will have no effect.
-            warning("UNTAGGED encoding attribute is ignored on top-level type");
+          if (Common::Type::CT_XER == encoding_type) {
+            Type* last = input_type->get_type_refd_last();
+            if (last->is_untagged() &&
+              last->get_typetype() == Type::T_CHOICE_A || last->get_typetype() == Type::T_CHOICE_T) {
+              // "untagged" on the (toplevel) input type will have no effect unless it is union
+              warning("UNTAGGED encoding attribute is ignored on top-level type");
+            }
           }
           if (Common::Type::CT_CUSTOM == encoding_type ||
               Common::Type::CT_PER == encoding_type) {

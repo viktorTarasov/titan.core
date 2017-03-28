@@ -9,6 +9,7 @@
  *   Balasko, Jeno
  *   Baranyi, Botond
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 module Untagged {
@@ -696,7 +697,94 @@ testcase decode_ut_recof() runs on UTA
   CHECK_DECODE(exer_dec_recof, s_recof, r_recof, c_recof);
 }
 
+// ------- untagged top level union
 
+type integer MyInt
+with {
+  variant "element";
+}
+
+type charstring MyChar
+with {
+  variant "element";
+}
+
+type union UntaggedUnion {
+  MyInt i,
+  MyChar c
+} with {
+  variant "untagged";
+}
+
+DECLARE_EXER_ENCODERS(UntaggedUnion, untunion);
+
+const UntaggedUnion c_untunion := { i := 44 };
+
+const universal charstring s_untunion := "<i>44</i>\n\n";
+
+testcase encode_ut_union() runs on UTA
+{
+  CHECK_METHOD(exer_enc_untunion, c_untunion, s_untunion);
+}
+
+testcase decode_ut_union() runs on UTA
+{
+  CHECK_DECODE(exer_dec_untunion, s_untunion, UntaggedUnion, c_untunion);
+}
+
+// ------- untagged top level record of union
+type record of UntaggedUnion UntaggedRecofUnion
+with {
+  variant "untagged";
+}
+
+
+DECLARE_EXER_ENCODERS(UntaggedRecofUnion, untunionrecof);
+
+const UntaggedRecofUnion c_untunionrecof := { { i := 44 }, {c := "asdf"} };
+
+const universal charstring s_untunionrecof :=
+"<UntaggedRecofUnion>\n"&
+"\t<i>44</i>\n"&
+"\t<c>asdf</c>\n"&
+"</UntaggedRecofUnion>\n\n";
+
+testcase encode_ut_union_recof() runs on UTA
+{
+  CHECK_METHOD(exer_enc_untunionrecof, c_untunionrecof, s_untunionrecof);
+}
+
+testcase decode_ut_union_recof() runs on UTA
+{
+  CHECK_DECODE(exer_dec_untunionrecof, s_untunionrecof, UntaggedRecofUnion, c_untunionrecof);
+}
+
+// ------- untagged top level union with nested untagged union
+
+type union UntaggedUnion2 {
+  UntaggedUnion unt,
+  MyInt i,
+  MyChar c
+} with {
+  variant "untagged";
+  variant (unt) "untagged";
+}
+
+DECLARE_EXER_ENCODERS(UntaggedUnion2, untunion2);
+
+const UntaggedUnion2 c_untunion2 := { unt := { i := 44 } };
+
+const universal charstring s_untunion2 := "<i>44</i>\n\n";
+
+testcase encode_ut_union2() runs on UTA
+{
+  CHECK_METHOD(exer_enc_untunion2, c_untunion2, s_untunion2);
+}
+
+testcase decode_ut_union2() runs on UTA
+{
+  CHECK_DECODE(exer_dec_untunion2, s_untunion2, UntaggedUnion2, c_untunion2);
+}
 
 /* * * * * * * * * * * Run it! * * * * * * * * * * */
 
@@ -736,6 +824,15 @@ control {
 
   execute(encode_ut_recof());
   execute(decode_ut_recof());
+
+  execute(encode_ut_union());
+  execute(decode_ut_union());
+
+  execute(encode_ut_union2());
+  execute(decode_ut_union2());
+
+  execute(encode_ut_union_recof());
+  execute(decode_ut_union_recof());
 }
 
 }

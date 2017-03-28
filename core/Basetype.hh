@@ -588,7 +588,7 @@ public:
    * @param[in]  empty true if an empty-element tag is needed
    */
   VIRTUAL_IF_RUNTIME_2 void end_xml  (const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-    unsigned int flavor, int indent, boolean empty) const;
+    unsigned int flavor, int indent, boolean empty, unsigned int flavor2 = 0) const;
   
   /** Encode JSON.
    * @return encoded length

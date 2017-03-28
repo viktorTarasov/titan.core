@@ -235,7 +235,9 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   collector_fn collector, const char *type_atr, unsigned int flavor2) const
 {
   const int exer = is_exer(flavor);
-  int omit_tag = (indent != 0) // can never omit the tag at the toplevel
+  int omit_tag =
+    // can never omit the tag at the toplevel, except when the type is union
+    (indent != 0 || (flavor2 & THIS_UNION))
     && ( ((flavor & XER_RECOF) // can remove the tag even if not EXER
       && !(exer && (flavor & BXER_EMPTY_ELEM))) // except 26.6, 26.7
       || (exer /*&& */
@@ -335,10 +337,12 @@ int Base_Type::begin_xml(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
 }
 
 void Base_Type::end_xml  (const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
-  unsigned int flavor, int indent, boolean empty) const
+  unsigned int flavor, int indent, boolean empty, unsigned int flavor2) const
 {
   int exer = is_exer(flavor);
-  boolean omit_tag = (indent != 0) // can never omit the tag at the toplevel
+  boolean omit_tag =
+    // can never omit the tag at the toplevel, except when the type is union
+    (indent != 0 || (flavor2 & THIS_UNION))
     && ( ((flavor & XER_RECOF) // can remove the tag even if not EXER
       && !(exer && (flavor & BXER_EMPTY_ELEM))) // except 26.6, 26.7
       || (exer /*&& */
