@@ -3227,7 +3227,7 @@ bool Type::chk_this_value(Value *value, Common::Assignment *lhs, expected_value_
     return chk_this_refd_value(value, lhs, expected_value, 0, is_str_elem);
   case Value::V_INVOKE:
     chk_this_invoked_value(value, lhs, expected_value);
-    return false; // assumes no self-ref in invoke
+    return false; // assumes no self-reference in invoke
   case Value::V_EXPR:
     if (lhs) self_ref = value->chk_expr_self_ref(lhs);
     // no break

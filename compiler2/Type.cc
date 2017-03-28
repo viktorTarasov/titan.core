@@ -3255,7 +3255,7 @@ namespace Common {
     case T_ANY:
       return p_tt2 == T_ANY || p_tt2 == T_OSTR;
     case T_ANYTYPE:
-      return p_tt2 == T_ANYTYPE && same_module;
+      return p_tt2 == T_ANYTYPE && same_module; // Need same module
       // these should never appear?
     case T_REFD:
     case T_REFDSPEC:
@@ -3284,8 +3284,8 @@ namespace Common {
     default: {
       bool same_mod = false;
       if (p_type && p_type->get_my_scope()) {
-        if (t1->get_my_scope()->get_scope_mod()->get_modid().get_name() ==
-            p_type->get_my_scope()->get_scope_mod()->get_modid().get_name()) {
+        if (t1->get_my_scope()->get_scope_mod() ==
+            p_type->get_my_scope()->get_scope_mod()) {
           same_mod = true;
         }
       }

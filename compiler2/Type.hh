@@ -582,7 +582,8 @@ namespace Common {
     /** Return whether the two typetypes are compatible.  Sometimes, this is
      *  just a question of \p p_tt1 == \p p_tt2.  When there are multiple
      *  typetypes for a type (e.g. T_ENUM_A and T_ENUM_T) then all
-     *  combinations of those are compatible.  */
+     *  combinations of those are compatible. In case of anytype the
+     *  module has to be the same  */
     static bool is_compatible_tt_tt(typetype_t p_tt1, typetype_t p_tt2,
                                     bool p_is_asn11, bool p_is_asn12,
                                     bool same_module);

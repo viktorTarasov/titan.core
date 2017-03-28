@@ -4234,6 +4234,7 @@ namespace Common {
       }
       // Deny type compatibility if no governors found.  The typetype_t must
       // be the same.  TODO: How can this happen?
+      // Default false the 5th param
       if (!Type::is_compatible_tt_tt(tt1, tt2, false, false, false)
           && !Type::is_compatible_tt_tt(tt2, tt1, false, false, false)) {
         error("The operands of operation `%s' should be of compatible types",
