@@ -105,6 +105,10 @@ void Type::chk()
     break;
   case T_ANYTYPE:
     // TODO maybe check for address type and add it automagically, then fall through
+    if(!xerattrib) {
+      xerattrib = new XerAttributes;
+    }
+    xerattrib->untagged_ = true;
   case T_SEQ_T:
   case T_SET_T:
   case T_CHOICE_T:

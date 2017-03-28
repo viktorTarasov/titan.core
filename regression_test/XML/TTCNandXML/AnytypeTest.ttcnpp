@@ -31,7 +31,7 @@ const universal charstring c_anytype_str_b :=
 "<anytype>\n\t<charstring>str</charstring>\n</anytype>\n\n";
 
 const universal charstring c_anytype_str :=
-"<anytype>\n\t<charstring>str</charstring>\n</anytype>\n\n";
+"<charstring>str</charstring>\n\n";
 
 testcase enc_anytype() runs on SAP
 {
@@ -58,7 +58,7 @@ const universal charstring c_anytypeal_str_b :=
 "<MyAnytype>\n\t<charstring>str</charstring>\n</MyAnytype>\n\n";
 
 const universal charstring c_anytypeal_str :=
-"<MyAnytype>\n\t<charstring>str</charstring>\n</MyAnytype>\n\n";
+"<charstring>str</charstring>\n\n";
 
 testcase enc_anytypealias() runs on SAP
 {
@@ -74,10 +74,7 @@ testcase dec_anytypealias() runs on SAP
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-type record of anytype RoAnytype
-with {
-  variant ([-]) "untagged"
-}
+type record of anytype RoAnytype;
 
 DECLARE_XER_ENCODERS(RoAnytype, roat);
 DECLARE_EXER_ENCODERS(RoAnytype, roat);
@@ -121,9 +118,6 @@ type record MyAnytypeRec {
   MyAnytype anytype_field_alias2,
   RoAnytype anytype_field_ro,
   charstring str
-} with {
-  variant (anytype_field) "untagged";
-  variant (anytype_field_alias) "untagged";
 }
 
 DECLARE_XER_ENCODERS(MyAnytypeRec, recat);
@@ -162,12 +156,8 @@ const universal charstring c_myanytyperec_str :=
 "<MyAnytypeRec>\n"&
 "\t<charstring>abc</charstring>\n"&
 "\t<charstring>def</charstring>\n"&
-"\t<anytype_field2>\n"&
-"\t\t<charstring>abcdef</charstring>\n"&
-"\t</anytype_field2>\n"&
-"\t<anytype_field_alias2>\n"&
-"\t\t<charstring>defghi</charstring>\n"&
-"\t</anytype_field_alias2>\n"&
+"\t<charstring>abcdef</charstring>\n"&
+"\t<charstring>defghi</charstring>\n"&
 "\t<anytype_field_ro>\n"&
 "\t\t<charstring>ttt</charstring>\n"&
 "\t\t<integer>4</integer>\n"&
@@ -193,7 +183,6 @@ testcase dec_myanytyperec() runs on SAP
 type record of anytype AnyTypeRo2
 with {
   variant "untagged";
-  variant ([-]) "untagged";
 }
 
 type record MyAnytypeRec2 {
@@ -241,8 +230,6 @@ with {
 
 type record DFERecAnyType {
   anytype at
-} with {
-  variant (at) "untagged";
 }
 
 DECLARE_XER_ENCODERS(DFERecAnyType, dferec);
@@ -257,40 +244,6 @@ const universal charstring c_dferec_str :=
 
 testcase tc_dec_anytype_DFE() runs on SAP {
   CHECK_DECODE(exer_dec_dferec, c_dferec_str, DFERecAnyType, c_dferec);
-}
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-type record UseNilRecAnyType {
-  anytype at optional
-} with {
-  variant "useNil";
-}
-
-DECLARE_XER_ENCODERS(UseNilRecAnyType, nilrec);
-DECLARE_EXER_ENCODERS(UseNilRecAnyType, nilrec);
-
-const UseNilRecAnyType c_nilrec := {at := {MyBool := true}};
-
-const universal charstring c_nilrec_str_b :=
-"<UseNilRecAnyType>\n"&
-"\t<at>\n"&
-"\t\t<MyBool><true/></MyBool>\n"&
-"\t</at>\n"&
-"</UseNilRecAnyType>\n\n";
-
-const universal charstring c_nilrec_str :=
-"<UseNilRecAnyType>\t<MyBool>true</MyBool>\n</UseNilRecAnyType>\n\n";
-
-testcase tc_enc_anytype_usenil() runs on SAP {
-  CHECK_METHOD(bxer_enc_nilrec, c_nilrec, c_nilrec_str_b);
-  CHECK_METHOD(exer_enc_nilrec, c_nilrec, c_nilrec_str);
-}
-
-testcase tc_dec_anytype_usenil() runs on SAP
-{
-  CHECK_DECODE(bxer_dec_nilrec, c_nilrec_str_b, UseNilRecAnyType, c_nilrec);
-  CHECK_DECODE(exer_dec_nilrec, c_nilrec_str, UseNilRecAnyType, c_nilrec);
 }
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -312,9 +265,6 @@ control {
   execute(tc_dec_anytype_ro_untagged());
 
   execute(tc_dec_anytype_DFE());
-
-  execute(tc_enc_anytype_usenil());
-  execute(tc_dec_anytype_usenil());
 }
 
 

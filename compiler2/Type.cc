@@ -3253,6 +3253,8 @@ namespace Common {
       return p_tt2==T_SET_A || p_tt2==T_SET_T;
     case T_ANY:
       return p_tt2 == T_ANY || p_tt2 == T_OSTR;
+    case T_ANYTYPE:
+      return p_tt2 == T_ANYTYPE;
       // these should never appear?
     case T_REFD:
     case T_REFDSPEC:
