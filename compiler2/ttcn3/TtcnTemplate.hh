@@ -69,7 +69,8 @@ namespace Ttcn {
       OSTR_PATTERN, /**< octetstring pattern */
       CSTR_PATTERN, /**< character string pattern */
       USTR_PATTERN, /**< universal charstring pattern */
-      DECODE_MATCH  /**< decoded content match */
+      DECODE_MATCH, /**< decoded content match */
+      TEMPLATE_CONCAT /**< concatenation of two templates */
     };
 
     /** Status codes for the verification of template body completeness. */
@@ -128,6 +129,11 @@ namespace Ttcn {
         Value* str_enc;
         TemplateInstance* target;
       } dec_match;
+      /** Used by TEMPLATE_CONCAT */
+      struct {
+        Template* op1;
+        Template* op2;
+      } concat;
     } u;
 
     /** This points to the type of the template */
@@ -173,11 +179,11 @@ namespace Ttcn {
     string create_stringRepr();
 
   public:
-    /** Constructor for TEMPLATE_ERROR, TEMPLATE_NOTUSED, OMIT_VALUE,
-     * ANY_VALUE, ANY_OR_OMIT and */
+    /** Constructor for TEMPLATE_ERROR and TEMPLATE_NOTUSED */
     Template(templatetype_t tt);
 
-    /** Constructor for SPECIFIC_VALUE */
+    /** Constructor for SPECIFIC_VALUE, ANY_VALUE, ANY_OR_OMIT, OMIT_VALUE and
+      * TEMPLATE_CONCAT (in which case it's recursive). */
     Template(Value *v);
 
     /** Constructor for TEMPLATE_REFD */
@@ -212,7 +218,7 @@ namespace Ttcn {
     
     /** Constructor for DECODE_MATCH */
     Template(Value* v, TemplateInstance* ti);
-
+    
     virtual ~Template();
 
     virtual Template* clone() const;
@@ -302,6 +308,7 @@ namespace Ttcn {
                                     bool silent = false);
     Value* get_string_encoding() const;
     TemplateInstance* get_decode_target() const;
+    Template* get_concat_operand(bool first) const;
   private:
     Template* get_template_refd(ReferenceChain *refch);
     Template* get_refd_field_template(const Identifier& field_id,
@@ -477,6 +484,7 @@ namespace Ttcn {
       bool is_superset);
     
     char* generate_code_init_dec_match(char* str, const char* name);
+    char* generate_code_init_concat(char* str, const char* name);
 
     char *generate_code_init_all_from(char *str, const char *name);
     char *generate_code_init_all_from_list(char *str, const char *name);

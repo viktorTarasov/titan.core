@@ -8364,6 +8364,10 @@ namespace Ttcn {
     case Template::DECODE_MATCH:
       chk_defpar_template(body->get_decode_target()->get_Template(), exp_val);
       break;
+    case Template::TEMPLATE_CONCAT:
+      chk_defpar_template(body->get_concat_operand(true), exp_val);
+      chk_defpar_template(body->get_concat_operand(false), exp_val);
+      break;
     } // switch templatetype
 
   }

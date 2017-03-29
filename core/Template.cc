@@ -505,6 +505,15 @@ boolean Restricted_Length_Template::is_any_or_omit() const
     length_restriction_type == NO_LENGTH_RESTRICTION;
 }
 
+template_sel operator+(template_sel left_template_sel, template_sel right_template_sel)
+{
+  if (left_template_sel == ANY_VALUE && right_template_sel == ANY_VALUE) {
+    return ANY_VALUE;
+  }
+  TTCN_error("Operand of template concatenation is an uninitialized or "
+    "unsupported template.");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct Record_Of_Template::Pair_of_elements{
@@ -886,6 +895,129 @@ const Base_Template* Record_Of_Template::get_at(
     TTCN_error("Using an unbound integer value for indexing a template of "
                "type %s.", get_descriptor()->name);
   return get_at((int)index_value);
+}
+
+int Record_Of_Template::get_length_for_concat(boolean& is_any_value) const
+{
+  switch (template_selection) {
+  case SPECIFIC_VALUE:
+    return single_value.n_elements;
+  case ANY_VALUE:
+  case ANY_OR_OMIT:
+    switch (length_restriction_type) {
+    case NO_LENGTH_RESTRICTION:
+      if (template_selection == ANY_VALUE) {
+        // ? => { * }
+        is_any_value = TRUE;
+        return 1;
+      }
+      TTCN_error("Operand of record of template concatenation is an "
+        "AnyValueOrNone (*) matching mechanism with no length restriction");
+    case RANGE_LENGTH_RESTRICTION:
+      if (!length_restriction.range_length.max_length ||
+          length_restriction.range_length.max_length != length_restriction.range_length.min_length) {
+        TTCN_error("Operand of record of template concatenation is an %s "
+          "matching mechanism with non-fixed length restriction",
+          template_selection == ANY_VALUE ? "AnyValue (?)" : "AnyValueOrNone (*)");
+      }
+      // else fall through (range length restriction is allowed if the minimum
+      // and maximum value are the same)
+    case SINGLE_LENGTH_RESTRICTION:
+      // ? length(N) or * length(N) => { ?, ?, ... ? } N times
+      return length_restriction_type == SINGLE_LENGTH_RESTRICTION ?
+        length_restriction.single_length : length_restriction.range_length.min_length;
+    }
+  default:
+    TTCN_error("Operand of record of template concatenation is an "
+      "uninitialized or unsupported template.");
+  }
+}
+
+int Record_Of_Template::get_length_for_concat(const Record_Of_Type& operand)
+{
+  if (!operand.is_bound()) {
+    TTCN_error("Operand of record of template concatenation is an "
+      "unbound value.");
+  }
+  return operand.val_ptr->n_elements;
+}
+
+int Record_Of_Template::get_length_for_concat(template_sel operand)
+{
+  if (operand == ANY_VALUE) {
+    // ? => { * }
+    return 1;
+  }
+  TTCN_error("Operand of record of template concatenation is an "
+    "uninitialized or unsupported template.");
+}
+
+void Record_Of_Template::concat(int& pos, const Record_Of_Template& operand)
+{
+  // all errors should have already been caught by the operand's
+  // get_length_for_concat() call;
+  // the result template (this) should already be set to SPECIFIC_VALUE and
+  // single_value.value_elements should already be allocated
+  switch (operand.template_selection) {
+  case SPECIFIC_VALUE:
+    for (int i = 0; i < operand.single_value.n_elements; ++i) {
+      single_value.value_elements[pos + i] =
+        operand.single_value.value_elements[i]->clone();
+    }
+    pos += operand.single_value.n_elements;
+    break;
+  case ANY_VALUE:
+  case ANY_OR_OMIT:
+    switch (operand.length_restriction_type) {
+    case NO_LENGTH_RESTRICTION:
+      // ? => { * }
+      single_value.value_elements[pos] = create_elem();
+      single_value.value_elements[pos]->set_value(ANY_OR_OMIT);
+      ++pos;
+      break;
+    case RANGE_LENGTH_RESTRICTION:
+    case SINGLE_LENGTH_RESTRICTION: {
+      // ? length(N) or * length(N) => { ?, ?, ... ? } N times
+      int N = operand.length_restriction_type == SINGLE_LENGTH_RESTRICTION ?
+        operand.length_restriction.single_length :
+        operand.length_restriction.range_length.min_length;
+      for (int i = 0; i < N; ++i) {
+        single_value.value_elements[pos + i] = create_elem();
+        single_value.value_elements[pos + i]->set_value(ANY_VALUE);
+      }
+      pos += N;
+      break; }
+    }
+  default:
+    break;
+  }
+}
+
+void Record_Of_Template::concat(int& pos, const Record_Of_Type& operand)
+{
+  // all errors should have already been caught by the
+  // get_length_for_concat() call;
+  // the result template (this) should already be set to SPECIFIC_VALUE and
+  // single_value.value_elements should already be allocated
+  for (int i = 0; i < operand.val_ptr->n_elements; ++i) {
+    single_value.value_elements[pos + i] = create_elem();
+    single_value.value_elements[pos + i]->copy_value(operand.get_at(i));
+  }
+  pos += operand.val_ptr->n_elements;
+}
+
+void Record_Of_Template::concat(int& pos)
+{
+  // this concatenates a template_sel to the result template;
+  // there is no need for a template_sel parameter, since the only template
+  // selection that can be concatenated is ANY_VALUE;
+  // the template selection has already been checked in the
+  // get_length_for_concat() call;
+  // the result template (this) should already be set to SPECIFIC_VALUE and
+  // single_value.value_elements should already be allocated
+  single_value.value_elements[pos] = create_elem();
+  single_value.value_elements[pos]->set_value(ANY_OR_OMIT);
+  ++pos;
 }
 
 void Record_Of_Template::set_size(int new_size)
@@ -1648,6 +1780,129 @@ const Base_Template* Set_Of_Template::get_at(const INTEGER& index_value) const
     TTCN_error("Using an unbound integer value for indexing a template of "
                "type %s.", get_descriptor()->name);
   return get_at((int)index_value);
+}
+
+int Set_Of_Template::get_length_for_concat(boolean& is_any_value) const
+{
+  switch (template_selection) {
+  case SPECIFIC_VALUE:
+    return single_value.n_elements;
+  case ANY_VALUE:
+  case ANY_OR_OMIT:
+    switch (length_restriction_type) {
+    case NO_LENGTH_RESTRICTION:
+      if (template_selection == ANY_VALUE) {
+        // ? => { * }
+        is_any_value = TRUE;
+        return 1;
+      }
+      TTCN_error("Operand of record of template concatenation is an "
+        "AnyValueOrNone (*) matching mechanism with no length restriction");
+    case RANGE_LENGTH_RESTRICTION:
+      if (!length_restriction.range_length.max_length ||
+          length_restriction.range_length.max_length != length_restriction.range_length.min_length) {
+        TTCN_error("Operand of record of template concatenation is an %s "
+          "matching mechanism with non-fixed length restriction",
+          template_selection == ANY_VALUE ? "AnyValue (?)" : "AnyValueOrNone (*)");
+      }
+      // else fall through (range length restriction is allowed if the minimum
+      // and maximum value are the same)
+    case SINGLE_LENGTH_RESTRICTION:
+      // ? length(N) or * length(N) => { ?, ?, ... ? } N times
+      return length_restriction_type == SINGLE_LENGTH_RESTRICTION ?
+        length_restriction.single_length : length_restriction.range_length.min_length;
+    }
+  default:
+    TTCN_error("Operand of record of template concatenation is an "
+      "uninitialized or unsupported template.");
+  }
+}
+
+int Set_Of_Template::get_length_for_concat(const Record_Of_Type& operand)
+{
+  if (!operand.is_bound()) {
+    TTCN_error("Operand of record of template concatenation is an "
+      "unbound value.");
+  }
+  return operand.val_ptr->n_elements;
+}
+
+int Set_Of_Template::get_length_for_concat(template_sel operand)
+{
+  if (operand == ANY_VALUE) {
+    // ? => { * }
+    return 1;
+  }
+  TTCN_error("Operand of record of template concatenation is an "
+    "uninitialized or unsupported template.");
+}
+
+void Set_Of_Template::concat(int& pos, const Set_Of_Template& operand)
+{
+  // all errors should have already been caught by the operand's
+  // get_length_for_concat() call;
+  // the result template (this) should already be set to SPECIFIC_VALUE and
+  // single_value.value_elements should already be allocated
+  switch (operand.template_selection) {
+  case SPECIFIC_VALUE:
+    for (int i = 0; i < operand.single_value.n_elements; ++i) {
+      single_value.value_elements[pos + i] =
+        operand.single_value.value_elements[i]->clone();
+    }
+    pos += operand.single_value.n_elements;
+    break;
+  case ANY_VALUE:
+  case ANY_OR_OMIT:
+    switch (operand.length_restriction_type) {
+    case NO_LENGTH_RESTRICTION:
+      // ? => { * }
+      single_value.value_elements[pos] = create_elem();
+      single_value.value_elements[pos]->set_value(ANY_OR_OMIT);
+      ++pos;
+      break;
+    case RANGE_LENGTH_RESTRICTION:
+    case SINGLE_LENGTH_RESTRICTION: {
+      // ? length(N) or * length(N) => { ?, ?, ... ? } N times
+      int N = operand.length_restriction_type == SINGLE_LENGTH_RESTRICTION ?
+        operand.length_restriction.single_length :
+        operand.length_restriction.range_length.min_length;
+      for (int i = 0; i < N; ++i) {
+        single_value.value_elements[pos + i] = create_elem();
+        single_value.value_elements[pos + i]->set_value(ANY_VALUE);
+      }
+      pos += N;
+      break; }
+    }
+  default:
+    break;
+  }
+}
+
+void Set_Of_Template::concat(int& pos, const Record_Of_Type& operand)
+{
+  // all errors should have already been caught by the
+  // get_length_for_concat() call;
+  // the result template (this) should already be set to SPECIFIC_VALUE and
+  // single_value.value_elements should already be allocated
+  for (int i = 0; i < operand.val_ptr->n_elements; ++i) {
+    single_value.value_elements[pos + i] = create_elem();
+    single_value.value_elements[pos + i]->copy_value(operand.get_at(i));
+  }
+  pos += operand.val_ptr->n_elements;
+}
+
+void Set_Of_Template::concat(int& pos)
+{
+  // this concatenates a template_sel to the result template;
+  // there is no need for a template_sel parameter, since the only template
+  // selection that can be concatenated is ANY_VALUE;
+  // the template selection has already been checked in the
+  // get_length_for_concat() call;
+  // the result template (this) should already be set to SPECIFIC_VALUE and
+  // single_value.value_elements should already be allocated
+  single_value.value_elements[pos] = create_elem();
+  single_value.value_elements[pos]->set_value(ANY_OR_OMIT);
+  ++pos;
 }
 
 void Set_Of_Template::set_size(int new_size)

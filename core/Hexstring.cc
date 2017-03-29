@@ -263,6 +263,14 @@ HEXSTRING HEXSTRING::operator+(const HEXSTRING_ELEMENT& other_value) const
   return ret_val;
 }
 
+HEXSTRING HEXSTRING::operator+(const OPTIONAL<HEXSTRING>& other_value) const
+{
+  if (other_value.is_present()) {
+    return *this + (const HEXSTRING&)other_value;
+  }
+  TTCN_error("Unbound or omitted right operand of hexstring concatenation.");
+}
+
 HEXSTRING HEXSTRING::operator~() const
 {
   must_bound("Unbound hexstring operand of operator not4b.");
@@ -1225,6 +1233,15 @@ HEXSTRING HEXSTRING_ELEMENT::operator+(const HEXSTRING_ELEMENT& other_value) con
   return HEXSTRING(2, &result);
 }
 
+HEXSTRING HEXSTRING_ELEMENT::operator+(
+  const OPTIONAL<HEXSTRING>& other_value) const
+{
+  if (other_value.is_present()) {
+    return *this + (const HEXSTRING&)other_value;
+  }
+  TTCN_error("Unbound or omitted right operand of hexstring concatenation.");
+}
+
 HEXSTRING HEXSTRING_ELEMENT::operator~() const
 {
   must_bound("Unbound hexstring element operand of operator not4b.");
@@ -1575,6 +1592,251 @@ HEXSTRING_template& HEXSTRING_template::operator=(
     copy_template(other_value);
   }
   return *this;
+}
+
+void HEXSTRING_template::concat(Vector<unsigned char>& v) const
+{
+  switch (template_selection) {
+  case ANY_VALUE:
+  case ANY_OR_OMIT:
+    switch (length_restriction_type) {
+    case NO_LENGTH_RESTRICTION:
+      if (template_selection == ANY_VALUE) {
+        // ? => '*'
+        if (v.size() == 0 || v[v.size() - 1] != 17) {
+          // '**' == '*', so just ignore the second '*'
+          v.push_back(17);
+        }
+      }
+      else {
+        TTCN_error("Operand of hexstring template concatenation is an "
+          "AnyValueOrNone (*) matching mechanism with no length restriction");
+      }
+      break;
+    case RANGE_LENGTH_RESTRICTION:
+      if (!length_restriction.range_length.max_length ||
+          length_restriction.range_length.max_length != length_restriction.range_length.min_length) {
+        TTCN_error("Operand of hexstring template concatenation is an %s "
+          "matching mechanism with non-fixed length restriction",
+          template_selection == ANY_VALUE ? "AnyValue (?)" : "AnyValueOrNone (*)");
+      }
+      // else fall through (range length restriction is allowed if the minimum
+      // and maximum value are the same)
+    case SINGLE_LENGTH_RESTRICTION: {
+      // ? length(N) or * length(N) => '??...?' N times
+      int len = length_restriction_type == SINGLE_LENGTH_RESTRICTION ?
+        length_restriction.single_length : length_restriction.range_length.min_length;
+      for (int i = 0; i < len; ++i) {
+        v.push_back(16);
+      }
+      break; }
+    }
+    break;
+  case SPECIFIC_VALUE:
+    concat(v, single_value);
+    break;
+  case STRING_PATTERN:
+    for (unsigned int i = 0; i < pattern_value->n_elements; ++i) {
+      v.push_back(pattern_value->elements_ptr[i]);
+    }
+    break;
+  default:
+    TTCN_error("Operand of hexstring template concatenation is an "
+      "uninitialized or unsupported template.");
+  }
+}
+
+void HEXSTRING_template::concat(Vector<unsigned char>& v, const HEXSTRING& val)
+{
+  if (!val.is_bound()) {
+    TTCN_error("Operand of hexstring template concatenation is an "
+      "unbound value.");
+  }
+  for (int i = 0; i < val.val_ptr->n_nibbles; ++i) {
+    v.push_back(val.get_nibble(i));
+  }
+}
+
+void HEXSTRING_template::concat(Vector<unsigned char>& v, template_sel sel)
+{
+  if (sel == ANY_VALUE) {
+    // ? => '*'
+    if (v.size() == 0 || v[v.size() - 1] != 17) {
+      // '**' == '*', so just ignore the second '*'
+      v.push_back(17);
+    }
+  }
+  else {
+    TTCN_error("Operand of hexstring template concatenation is an "
+      "uninitialized or unsupported template.");
+  }
+}
+
+
+HEXSTRING_template HEXSTRING_template::operator+(
+  const HEXSTRING_template& other_value) const
+{
+  if (template_selection == SPECIFIC_VALUE &&
+      other_value.template_selection == SPECIFIC_VALUE) {
+    // result is a specific value template
+    return single_value + other_value.single_value;
+  }
+  if (template_selection == ANY_VALUE &&
+      other_value.template_selection == ANY_VALUE &&
+      length_restriction_type == NO_LENGTH_RESTRICTION &&
+      other_value.length_restriction_type == NO_LENGTH_RESTRICTION) {
+    // special case: ? & ? => ?
+    return HEXSTRING_template(ANY_VALUE);
+  }
+  // otherwise the result is an hexstring pattern
+  Vector<unsigned char> v;
+  concat(v);
+  other_value.concat(v);
+  return HEXSTRING_template(v.size(), v.data_ptr());
+}
+
+HEXSTRING_template HEXSTRING_template::operator+(
+  const HEXSTRING& other_value) const
+{
+  if (template_selection == SPECIFIC_VALUE) {
+    // result is a specific value template
+    return single_value + other_value;
+  }
+  // otherwise the result is an hexstring pattern
+  Vector<unsigned char> v;
+  concat(v);
+  concat(v, other_value);
+  return HEXSTRING_template(v.size(), v.data_ptr());
+}
+
+HEXSTRING_template HEXSTRING_template::operator+(
+  const HEXSTRING_ELEMENT& other_value) const
+{
+  return *this + HEXSTRING(other_value);
+}
+
+HEXSTRING_template HEXSTRING_template::operator+(
+  const OPTIONAL<HEXSTRING>& other_value) const
+{
+  if (other_value.is_present()) {
+    return *this + (const HEXSTRING&)other_value;
+  }
+  TTCN_error("Operand of hexstring template concatenation is an "
+    "unbound or omitted record/set field.");
+}
+
+HEXSTRING_template HEXSTRING_template::operator+(
+  template_sel other_template_sel) const
+{
+  if (template_selection == ANY_VALUE && other_template_sel == ANY_VALUE &&
+      length_restriction_type == NO_LENGTH_RESTRICTION) {
+    // special case: ? & ? => ?
+    return HEXSTRING_template(ANY_VALUE);
+  }
+  // the result is always an hexstring pattern
+  Vector<unsigned char> v;
+  concat(v);
+  concat(v, other_template_sel);
+  return HEXSTRING_template(v.size(), v.data_ptr());
+}
+
+HEXSTRING_template operator+(const HEXSTRING& left_value,
+  const HEXSTRING_template& right_template)
+{
+  if (right_template.template_selection == SPECIFIC_VALUE) {
+    // result is a specific value template
+    return left_value + right_template.single_value;
+  }
+  // otherwise the result is an hexstring pattern
+  Vector<unsigned char> v;
+  HEXSTRING_template::concat(v, left_value);
+  right_template.concat(v);
+  return HEXSTRING_template(v.size(), v.data_ptr());
+}
+
+HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
+  const HEXSTRING_template& right_template)
+{
+  return HEXSTRING(left_value) + right_template;
+}
+
+HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
+  const HEXSTRING_template& right_template)
+{
+  if (left_value.is_present()) {
+    return (const HEXSTRING&)left_value + right_template;
+  }
+  TTCN_error("Operand of hexstring template concatenation is an "
+    "unbound or omitted record/set field.");
+}
+
+HEXSTRING_template operator+(template_sel left_template_sel,
+  const HEXSTRING_template& right_template)
+{
+  if (left_template_sel == ANY_VALUE &&
+      right_template.template_selection == ANY_VALUE &&
+      right_template.length_restriction_type ==
+      Restricted_Length_Template::NO_LENGTH_RESTRICTION) {
+    // special case: ? & ? => ?
+    return HEXSTRING_template(ANY_VALUE);
+  }
+  // the result is always an hexstring pattern
+  Vector<unsigned char> v;
+  HEXSTRING_template::concat(v, left_template_sel);
+  right_template.concat(v);
+  return HEXSTRING_template(v.size(), v.data_ptr());
+}
+
+HEXSTRING_template operator+(const HEXSTRING& left_value,
+  template_sel right_template_sel)
+{
+  // the result is always an hexstring pattern
+  Vector<unsigned char> v;
+  HEXSTRING_template::concat(v, left_value);
+  HEXSTRING_template::concat(v, right_template_sel);
+  return HEXSTRING_template(v.size(), v.data_ptr());
+}
+
+HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
+  template_sel right_template_sel)
+{
+  return HEXSTRING(left_value) + right_template_sel;
+}
+
+HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
+  template_sel right_template_sel)
+{
+  if (left_value.is_present()) {
+    return (const HEXSTRING&)left_value + right_template_sel;
+  }
+  TTCN_error("Operand of hexstring template concatenation is an "
+    "unbound or omitted record/set field.");
+}
+
+HEXSTRING_template operator+(template_sel left_template_sel,
+  const HEXSTRING& right_value)
+{
+  // the result is always an hexstring pattern
+  Vector<unsigned char> v;
+  HEXSTRING_template::concat(v, left_template_sel);
+  HEXSTRING_template::concat(v, right_value);
+  return HEXSTRING_template(v.size(), v.data_ptr());
+}
+
+HEXSTRING_template operator+(template_sel left_template_sel,
+  const HEXSTRING_ELEMENT& right_value)
+{
+  return left_template_sel + HEXSTRING(right_value);
+}
+
+HEXSTRING_template operator+(template_sel left_template_sel,
+  const OPTIONAL<HEXSTRING>& right_value)
+{
+  if (right_value.is_present()) {
+    return left_template_sel + (const HEXSTRING&)right_value;
+  }
+  TTCN_error("Operand of hexstring template concatenation is an "
+    "unbound or omitted record/set field.");
 }
 
 HEXSTRING_ELEMENT HEXSTRING_template::operator[](int index_value)

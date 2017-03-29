@@ -1867,12 +1867,12 @@ optDecodedModifier
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 59
+%expect 63
 
 %start GrammarRoot
 
 /*
-XXX Source of conflicts (57 S/R):
+XXX Source of conflicts (63 S/R):
 
 1.) 9 conflicts in one state
 The Expression after 'return' keyword is optional in ReturnStatement.
@@ -1928,6 +1928,15 @@ TODO: Find out what the index redirect conflicts with. It's probably something
 that would cause a semantic error anyway, but it would be good to know.
 
 9.) 2 conflicts in the rule TypeListWithTo.
+
+10.) 4 conflicts in 4 states
+In the Expression and SingleExpression rules when an AnyValue or AnyOrOmit is
+followed by a LengthMatch, the parser cannot decide whether the LengthMatch token
+belongs to the AnyValue/AnyOrOmit (shift) or the resulting template (reduce).
+This is only relevant for template concatenation:
+ex.: template octetstring t := 'AB'O & ? length (3);
+Because the parser shifts, the length restriction here is applied to the '?'
+instead of the concatenation result, which is the expected behavior.
 
 Note that the parser implemented by bison always chooses to shift instead of
 reduce in case of conflicts.
@@ -3589,10 +3598,9 @@ SingleValueOrAttrib: // 111
   MatchingSymbol { $$ = $1; }
 | SingleExpression
   {
-    if ($1->get_valuetype() == Value::V_OMIT) {
-      delete $1;
-      $$ = new Template(Template::OMIT_VALUE);
-    } else $$ = new Template($1); // SPECIFIC_VALUE; SingleExpr is a Template*
+    // SingleExpr is a Template*
+    // this constructor determines the template type based on the value
+    $$ = new Template($1);
     $$->set_location(infile, @$);
   }
 /* | TemplateRefWithParList -- covered by SingleExpression */
@@ -3649,7 +3657,7 @@ MatchingSymbol: // 116 is a Template*
     $$ = new Template(Template::COMPLEMENTED_LIST, $1);
     $$->set_location(infile, @$);
   }
-| AnyValue
+/*| AnyValue // these are in the SingleExpression and Expression rules now
   {
     $$ = new Template(Template::ANY_VALUE);
     $$->set_location(infile, @$);
@@ -3658,7 +3666,7 @@ MatchingSymbol: // 116 is a Template*
   {
     $$ = new Template(Template::ANY_OR_OMIT);
     $$->set_location(infile, @$);
-  }
+  }*/
 | ValueOrAttribList
   {
     $$ = new Template(Template::VALUE_LIST, $1);
@@ -8800,6 +8808,27 @@ Expression: // 579
 | OpCall { $$ = $1; }
 | Value { $$ = $1; }
 | CompoundExpression { $$ = $1; }
+/* These are needed for template concatenation */
+| AnyValue
+  {
+    $$ = new Value(Value::V_ANY_VALUE, (LengthRestriction*)NULL);
+    $$->set_location(infile, @$);
+  }
+| AnyValue LengthMatch
+  {
+    $$ = new Value(Value::V_ANY_VALUE, $2);
+    $$->set_location(infile, @$);
+  }
+| AnyOrOmit
+  {
+    $$ = new Value(Value::V_ANY_OR_OMIT, (LengthRestriction*)NULL);
+    $$->set_location(infile, @$);
+  }
+| AnyOrOmit LengthMatch
+  {
+    $$ = new Value(Value::V_ANY_OR_OMIT, $2);
+    $$->set_location(infile, @$);
+  }
 ;
 
 CompoundExpression: // 565
@@ -9083,6 +9112,27 @@ SingleExpression: // 595
   }
 | OpCall { $$ = $1; }
 | Value { $$ = $1; }
+/* These are needed for template concatenation */
+| AnyValue
+  {
+    $$ = new Value(Value::V_ANY_VALUE, (LengthRestriction*)NULL);
+    $$->set_location(infile, @$);
+  }
+| AnyValue LengthMatch
+  {
+    $$ = new Value(Value::V_ANY_VALUE, $2);
+    $$->set_location(infile, @$);
+  }
+| AnyOrOmit
+  {
+    $$ = new Value(Value::V_ANY_OR_OMIT, (LengthRestriction*)NULL);
+    $$->set_location(infile, @$);
+  }
+| AnyOrOmit LengthMatch
+  {
+    $$ = new Value(Value::V_ANY_OR_OMIT, $2);
+    $$->set_location(infile, @$);
+  }
 ;
 
 optExtendedFieldReference:

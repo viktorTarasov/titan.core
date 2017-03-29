@@ -520,6 +520,18 @@ namespace Ttcn {
     range.lower = p_lower;
     range.upper = p_upper;
   }
+  
+  LengthRestriction::LengthRestriction(const LengthRestriction& p)
+    : Node(), checked(p.checked), is_range(p.is_range)
+  {
+    if (is_range) {
+      range.lower = p.range.lower->clone();
+      range.upper = p.range.upper != NULL ? p.range.upper->clone() : NULL;
+    }
+    else {
+      single = p.single->clone();
+    }
+  }
 
   LengthRestriction::~LengthRestriction()
   {
@@ -531,7 +543,7 @@ namespace Ttcn {
 
   LengthRestriction *LengthRestriction::clone() const
   {
-    FATAL_ERROR("LengthRestriction::clone");
+    return new LengthRestriction(*this);
   }
 
   void LengthRestriction::set_fullname(const string& p_fullname)

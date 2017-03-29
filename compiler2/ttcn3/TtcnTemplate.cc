@@ -97,6 +97,10 @@ namespace Ttcn {
         p.u.dec_match.str_enc->clone() : NULL;
       u.dec_match.target = p.u.dec_match.target->clone();
       break;
+    case TEMPLATE_CONCAT:
+      u.concat.op1 = p.u.concat.op1->clone();
+      u.concat.op2 = p.u.concat.op2->clone();
+      break;
 //    default:
 //      FATAL_ERROR("Template::Template()");
     }
@@ -159,6 +163,10 @@ namespace Ttcn {
         delete u.dec_match.str_enc;
       }
       delete u.dec_match.target;
+      break;
+    case TEMPLATE_CONCAT:
+      delete u.concat.op1;
+      delete u.concat.op2;
       break;
 //    default:
 //      FATAL_ERROR("Template::clean_up()");
@@ -299,6 +307,11 @@ namespace Ttcn {
       ret_val += ": ";
       ret_val += u.dec_match.target->get_Template()->create_stringRepr();
       break;
+    case TEMPLATE_CONCAT:
+      ret_val += u.concat.op1->create_stringRepr();
+      ret_val += " & ";
+      ret_val += u.concat.op2->create_stringRepr();
+      break;
     default:
       ret_val += "<unknown template>";
       break;
@@ -318,8 +331,8 @@ namespace Ttcn {
     case TEMPLATE_ERROR:
     case TEMPLATE_NOTUSED:
     case OMIT_VALUE:
-    case ANY_VALUE:
-    case ANY_OR_OMIT:
+    //case ANY_VALUE:
+    //case ANY_OR_OMIT:
       break;
     default:
       FATAL_ERROR("Template::Template()");
@@ -328,12 +341,40 @@ namespace Ttcn {
 
   Template::Template(Value *v)
     : GovernedSimple(S_TEMPLATE),
-      templatetype(SPECIFIC_VALUE), my_governor(0), length_restriction(0),
+      templatetype(TEMPLATE_ERROR), my_governor(0), length_restriction(0),
       is_ifpresent(false), specific_value_checked(false),
       has_permutation(false), flattened(true), base_template(0)
   {
     if (!v) FATAL_ERROR("Template::Template()");
-    u.specific_value = v;
+    switch (v->get_valuetype()) {
+    case Value::V_ANY_VALUE:
+    case Value::V_ANY_OR_OMIT:
+      templatetype = v->get_valuetype() == Value::V_ANY_VALUE ?
+        ANY_VALUE : ANY_OR_OMIT;
+      set_length_restriction(v->take_length_restriction());
+      delete v;
+      break;
+    case Value::V_OMIT:
+      templatetype = OMIT_VALUE;
+      delete v;
+      break;
+    case Value::V_EXPR:
+      if (v->get_optype() == Value::OPTYPE_CONCAT) {
+        // convert the operands to templates with recursive calls to this constructor
+        templatetype = TEMPLATE_CONCAT;
+        u.concat.op1 = new Template(v->get_concat_operand(true)->clone());
+        u.concat.op1->set_location(*v->get_concat_operand(true));
+        u.concat.op2 = new Template(v->get_concat_operand(false)->clone());
+        u.concat.op2->set_location(*v->get_concat_operand(false));
+        delete v;
+        break;
+      }
+      // other expressions are specific value templates
+    default:
+      templatetype = SPECIFIC_VALUE;
+      u.specific_value = v;
+      break;
+    }
   }
 
   Template::Template(Ref_base *p_ref)
@@ -559,6 +600,10 @@ namespace Ttcn {
       }
       u.dec_match.target->set_fullname(p_fullname + ".<decoding_target>");
       break;
+    case TEMPLATE_CONCAT:
+      u.concat.op1->set_fullname(p_fullname + ".operand1");
+      u.concat.op2->set_fullname(p_fullname + ".operand2");
+      break;
 //    default:
 //      FATAL_ERROR("Template::set_fullname()");
     }
@@ -620,6 +665,10 @@ namespace Ttcn {
         u.dec_match.str_enc->set_my_scope(p_scope);
       }
       u.dec_match.target->set_my_scope(p_scope);
+      break;
+    case TEMPLATE_CONCAT:
+      u.concat.op1->set_my_scope(p_scope);
+      u.concat.op2->set_my_scope(p_scope);
       break;
 //    default:
 //      FATAL_ERROR("Template::set_my_scope()");
@@ -738,6 +787,10 @@ namespace Ttcn {
         u.dec_match.str_enc->set_code_section(p_code_section);
       }
       u.dec_match.target->set_code_section(p_code_section);
+      break;
+    case TEMPLATE_CONCAT:
+      u.concat.op1->set_code_section(p_code_section);
+      u.concat.op2->set_code_section(p_code_section);
       break;
     default:
       break;
@@ -909,6 +962,8 @@ namespace Ttcn {
       return "universal string pattern";
     case DECODE_MATCH:
       return "decoded content match";
+    case TEMPLATE_CONCAT:
+      return "template concatenation";
     default:
       return "unknown template";
     }
@@ -953,6 +1008,10 @@ namespace Ttcn {
     case VALUE_RANGE:
       u.value_range->set_lowerid_to_ref();
       break;
+    case TEMPLATE_CONCAT:
+      u.concat.op1->set_lowerid_to_ref();
+      u.concat.op2->set_lowerid_to_ref();
+      break;
     default:
       break;
     }
@@ -996,6 +1055,29 @@ namespace Ttcn {
       return Type::T_CSTR;
     case USTR_PATTERN:
       return Type::T_USTR;
+    case TEMPLATE_CONCAT: {
+      Type::typetype_t tt1 = u.concat.op1->get_expr_returntype(exp_val);
+      Type::typetype_t tt2 = u.concat.op2->get_expr_returntype(exp_val);
+      if (tt1 == Type::T_UNDEF) {
+        if (tt2 == Type::T_UNDEF) {
+          return Type::T_UNDEF;
+        }
+        return tt2;
+      }
+      else {
+        if (tt2 == Type::T_UNDEF) {
+          return tt1;
+        }
+        if ((tt1 == Type::T_CSTR && tt2 == Type::T_USTR) ||
+            (tt1 == Type::T_USTR && tt2 == Type::T_CSTR)) {
+          return Type::T_USTR;
+        }
+        if (tt1 != tt2) {
+          return Type::T_ERROR;
+        }
+        return tt1;
+      }
+    }
     default:
       return Type::T_UNDEF;
     }
@@ -1047,6 +1129,35 @@ namespace Ttcn {
         goto error;
       }
       break; }
+    case TEMPLATE_CONCAT: {
+      Type* t1 = u.concat.op1->get_expr_governor(exp_val);
+      Type* t2 = u.concat.op2->get_expr_governor(exp_val);
+      if (t1 == NULL) {
+        if (t2 == NULL) {
+          return NULL;
+        }
+        return t2;
+      }
+      else {
+        if (t2 == NULL) {
+          return t1;
+        }
+        Type::typetype_t tt1 = t1->get_type_refd_last()->get_typetype_ttcn3();
+        Type::typetype_t tt2 = t2->get_type_refd_last()->get_typetype_ttcn3();
+        if (tt1 == Type::T_CSTR && tt2 == Type::T_USTR) {
+          return t2;
+        }
+        if (tt1 == Type::T_USTR && tt2 == Type::T_CSTR) {
+          return t1;
+        }
+        if (tt1 != tt2) {
+          error("Operands of template concatenation are not compatible with "
+            "each other");
+          goto error;
+        }
+        return t1;
+      }
+    }
     default:
       return Type::get_pooltype(get_expr_returntype(exp_val));
     }
@@ -1069,6 +1180,7 @@ namespace Ttcn {
 
   void Template::set_length_restriction(LengthRestriction *p_lr)
   {
+    if (p_lr == NULL) return;
     if (length_restriction) FATAL_ERROR("Template::set_length_restriction()");
     length_restriction = p_lr;
   }
@@ -1372,7 +1484,7 @@ namespace Ttcn {
   Value* Template::get_string_encoding() const
   {
     if (templatetype != DECODE_MATCH) {
-      FATAL_ERROR("Template::get_decode_target()");
+      FATAL_ERROR("Template::get_string_encoding()");
     }
     return u.dec_match.str_enc;
   }
@@ -1383,6 +1495,14 @@ namespace Ttcn {
       FATAL_ERROR("Template::get_decode_target()");
     }
     return u.dec_match.target;
+  }
+  
+  Template* Template::get_concat_operand(bool first) const
+  {
+    if (templatetype != TEMPLATE_CONCAT) {
+      FATAL_ERROR("Template::get_concat_operand");
+    }
+    return first ? u.concat.op1 : u.concat.op2;
   }
 
   Template* Template::get_template_refd(ReferenceChain *refch)
@@ -1817,6 +1937,8 @@ namespace Ttcn {
         return false;
       }
     }
+    case TEMPLATE_CONCAT:
+      return u.concat.op1->is_Value() && u.concat.op2->is_Value();
     default:
       return false;
     }
@@ -1885,6 +2007,10 @@ namespace Ttcn {
       if (gov) gov = gov->get_parent_type();
       if (gov) ret_val->set_my_governor(gov);
       break; }
+    case TEMPLATE_CONCAT:
+      ret_val = new Value(Value::OPTYPE_CONCAT, u.concat.op1->get_Value(),
+        u.concat.op2->get_Value());
+      break;
     default:
       FATAL_ERROR("Template::get_Value()");
       ret_val = 0;
@@ -1974,6 +2100,14 @@ namespace Ttcn {
     case DECODE_MATCH:
       t->u.dec_match.target->chk_recursions(refch);
       break;
+    case TEMPLATE_CONCAT:
+      refch.mark_state();
+      t->u.concat.op1->chk_recursions(refch);
+      refch.prev_state();
+      refch.mark_state();
+      t->u.concat.op2->chk_recursions(refch);
+      refch.prev_state();
+      break;
     default:
       break;
     }
@@ -2028,6 +2162,10 @@ end:
           ->get_template()->chk_specific_value_generic();
       break;
     case OMIT_VALUE:
+      break;
+    case TEMPLATE_CONCAT:
+      t->u.concat.op1->chk_specific_value_generic();
+      t->u.concat.op2->chk_specific_value_generic();
       break;
     default:
       t->error("A specific value was expected instead of %s",
@@ -2659,6 +2797,7 @@ end:
     case ALL_FROM:
     case BSTR_PATTERN: case HSTR_PATTERN: case OSTR_PATTERN:
     case CSTR_PATTERN: case USTR_PATTERN: case DECODE_MATCH:
+    case TEMPLATE_CONCAT: // not implemented yet
       break; // NOP
     }
 
@@ -2945,6 +3084,12 @@ end:
         }
         needs_runtime_check = true; // only basic check, needs runtime check
         break;
+      case TEMPLATE_CONCAT:
+        u.concat.op1->chk_restriction(definition_name, template_restriction,
+          usage_loc);
+        u.concat.op2->chk_restriction(definition_name, template_restriction,
+          usage_loc);
+        break;
       case OMIT_VALUE:
         if (template_restriction==TR_OMIT) break;
         // Else restriction is TR_VALUE, but template type is OMIT:
@@ -3001,6 +3146,12 @@ end:
         usage_loc->error("Restriction on %s does not allow usage of %s",
           definition_name, get_templatetype_str());
         erroneous = true;
+        break;
+      case TEMPLATE_CONCAT:
+        u.concat.op1->chk_restriction(definition_name, template_restriction,
+          usage_loc);
+        u.concat.op2->chk_restriction(definition_name, template_restriction,
+          usage_loc);
         break;
       default:
         break; // all others are ok
@@ -3164,6 +3315,9 @@ end:
     case DECODE_MATCH:
       str = generate_code_init_dec_match(str, name);
       break;
+    case TEMPLATE_CONCAT:
+      str = generate_code_init_concat(str, name);
+      break;
     case TEMPLATE_NOTUSED:
       break;
     case TEMPLATE_ERROR:
@@ -3212,6 +3366,10 @@ end:
       break;
     case VALUE_RANGE:
       str = u.value_range->rearrange_init_code(str, usage_mod);
+      break;
+    case TEMPLATE_CONCAT:
+      str = u.concat.op1->rearrange_init_code(str, usage_mod);
+      str = u.concat.op2->rearrange_init_code(str, usage_mod);
       break;
     default:
       break;
@@ -3477,6 +3635,9 @@ end:
         if (!u.indexed_templates->get_it_byIndex(i)->get_template()->compile_time())
           return false;
       return true;
+    case TEMPLATE_CONCAT:
+      //return u.concat.op1->compile_time() && u.concat.op2->compile_time();
+      return false;
     }
 
     return true; // not reached
@@ -4684,6 +4845,34 @@ compile_time:
     str = mputstr(str, "}\n");
     return str;
   }
+  
+  char* Template::generate_code_init_concat(char* str, const char* name)
+  {
+    string left_expr;
+    string right_expr;
+    if (u.concat.op1->has_single_expr()) {
+      left_expr = u.concat.op1->get_single_expr(false);
+    }
+    else {
+      left_expr = my_scope->get_scope_mod_gen()->get_temporary_id();
+      str = mputprintf(str, "%s %s;\n",
+        my_governor->get_genname_template(my_scope).c_str(), left_expr.c_str());
+      str = u.concat.op1->generate_code_init(str, left_expr.c_str());
+    }
+    if (u.concat.op2->has_single_expr()) {
+      right_expr = u.concat.op2->get_single_expr(false);
+    }
+    else {
+      right_expr = my_scope->get_scope_mod_gen()->get_temporary_id();
+      str = mputprintf(str, "%s %s;\n",
+        my_governor->get_genname_template(my_scope).c_str(), right_expr.c_str());
+      str = u.concat.op2->generate_code_init(str, right_expr.c_str());
+    }
+      
+    str = mputprintf(str, "%s = %s + %s;\n", name, left_expr.c_str(),
+      right_expr.c_str());
+    return str;
+  }
 
   void Template::generate_code_expr_invoke(expression_struct *expr)
   {
@@ -4823,6 +5012,8 @@ compile_time:
     case PERMUTATION_MATCH:
       // FIXME
       return false;
+    case TEMPLATE_CONCAT:
+      return u.concat.op1->needs_temp_ref() || u.concat.op2->needs_temp_ref();
     }
     return false;
   }
@@ -4880,6 +5071,8 @@ compile_time:
     case ALL_FROM:
     case VALUE_LIST_ALL_FROM:
       return false;
+    case TEMPLATE_CONCAT:
+      return u.concat.op1->has_single_expr() && u.concat.op2->has_single_expr();
     default:
       FATAL_ERROR("Template::has_single_expr()");
       return false;
@@ -4967,6 +5160,10 @@ compile_time:
     case OSTR_PATTERN:
       return get_my_scope()->get_scope_mod_gen()
         ->add_octetstring_pattern(*u.pattern);
+    case TEMPLATE_CONCAT:
+      ret_val = u.concat.op1->get_single_expr(false) + " + " +
+        u.concat.op2->get_single_expr(false);
+      break;
     default:
       FATAL_ERROR("Template::get_single_expr()");
     }
@@ -5035,6 +5232,12 @@ compile_time:
       }
       DEBUG(level, "decoding target:");
       u.dec_match.target->dump(level + 1);
+      break;
+    case TEMPLATE_CONCAT:
+      DEBUG(level, "operand #1:");
+      u.concat.op1->dump(level + 1);
+      DEBUG(level, "operand #2:");
+      u.concat.op2->dump(level + 1);
       break;
     default:
       break;

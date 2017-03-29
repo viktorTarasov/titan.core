@@ -5663,7 +5663,7 @@ module module1
   const myu1 c_myu1 := char(0, 0, 1, 0)
   const myu2 c_myu2 := char(0, 0, 1, 0) & char(0, 0, 1, 0)
   template myu1 t_myu1 := char(0, 0, 1, 0)
-  template myu2 t_myu2 := char(0, 0, 1, 0) & char(0, 0, 1, 0)
+  template myu2 t_myu2 := char(0, 0, 1, 0) & char(0, 0, 1, 0) // type restrictions are currently not checked for concatenated templates
   template myu2 t_myu3 := t_myu1
   template myu1 t_myu4 := (char(0, 0, 1, 0))
   
@@ -5672,7 +5672,7 @@ module module1
     
   control {
     var template myu1 vt_myu1 := char(0, 0, 1, 0)
-    var template myu2 vt_myu2 := char(0, 0, 1, 0) & char(0, 0, 1, 0)
+    var template myu2 vt_myu2 := char(0, 0, 1, 0) & char(0, 0, 1, 0) // type restrictions are currently not checked for concatenated templates
     var template myu2 vt_myu3 := fu1()
     var myu1 v_myu1 := char(0, 0, 1, 0)
     var myu2 v_myu2 := char(0, 0, 1, 0) & char(0, 0, 1, 0)
@@ -5683,7 +5683,7 @@ module module1
 <RESULT COUNT 5>
 (?is)\berror: char\(0, 0, 1, 0\) is not a valid value for type `universal charstring' which has subtype \(char\(0, 0, 0, 0\),char\(0, 0, 0, 1\)\)
 <END_RESULT>
-<RESULT COUNT 4>
+<RESULT COUNT 2>
 (?is)\berror: char\(0, 0, 1, 0\) & char\(0, 0, 1, 0\) is not a valid value for type `universal charstring' which has subtype length\(1\)
 <END_RESULT>
 <RESULT COUNT 2>
@@ -5692,7 +5692,7 @@ module module1
 <RESULT COUNT 1>
 (?is)\berror: The subtype is an empty set
 <END_RESULT>
-<RESULT COUNT 12>
+<RESULT COUNT 10>
 (?is)\berror:
 <END_RESULT>
 <END_TC>

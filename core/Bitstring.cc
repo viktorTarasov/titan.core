@@ -256,6 +256,14 @@ BITSTRING BITSTRING::operator+(const BITSTRING_ELEMENT& other_value) const
   return ret_val;
 }
 
+BITSTRING BITSTRING::operator+(const OPTIONAL<BITSTRING>& other_value) const
+{
+  if (other_value.is_present()) {
+    return *this + (const BITSTRING&)other_value;
+  }
+  TTCN_error("Unbound or omitted right operand of bitstring concatenation.");
+}
+
 BITSTRING BITSTRING::operator~() const
 {
   must_bound("Unbound bitstring operand of operator not4b.");
@@ -1333,6 +1341,15 @@ BITSTRING BITSTRING_ELEMENT::operator+(const BITSTRING_ELEMENT& other_value)
   return BITSTRING(2, &result);
 }
 
+BITSTRING BITSTRING_ELEMENT::operator+(
+  const OPTIONAL<BITSTRING>& other_value) const
+{
+  if (other_value.is_present()) {
+    return *this + (const BITSTRING&)other_value;
+  }
+  TTCN_error("Unbound or omitted right operand of bitstring concatenation.");
+}
+
 BITSTRING BITSTRING_ELEMENT::operator~() const
 {
   must_bound("Unbound bitstring element operand of operator not4b.");
@@ -1686,6 +1703,251 @@ BITSTRING_template& BITSTRING_template::operator=
     copy_template(other_value);
   }
   return *this;
+}
+
+void BITSTRING_template::concat(Vector<unsigned char>& v) const
+{
+  switch (template_selection) {
+  case ANY_VALUE:
+  case ANY_OR_OMIT:
+    switch (length_restriction_type) {
+    case NO_LENGTH_RESTRICTION:
+      if (template_selection == ANY_VALUE) {
+        // ? => '*'
+        if (v.size() == 0 || v[v.size() - 1] != 3) {
+          // '**' == '*', so just ignore the second '*'
+          v.push_back(3);
+        }
+      }
+      else {
+        TTCN_error("Operand of bitstring template concatenation is an "
+          "AnyValueOrNone (*) matching mechanism with no length restriction");
+      }
+      break;
+    case RANGE_LENGTH_RESTRICTION:
+      if (!length_restriction.range_length.max_length ||
+          length_restriction.range_length.max_length != length_restriction.range_length.min_length) {
+        TTCN_error("Operand of bitstring template concatenation is an %s "
+          "matching mechanism with non-fixed length restriction",
+          template_selection == ANY_VALUE ? "AnyValue (?)" : "AnyValueOrNone (*)");
+      }
+      // else fall through (range length restriction is allowed if the minimum
+      // and maximum value are the same)
+    case SINGLE_LENGTH_RESTRICTION: {
+      // ? length(N) or * length(N) => '??...?' N times
+      int len = length_restriction_type == SINGLE_LENGTH_RESTRICTION ?
+        length_restriction.single_length : length_restriction.range_length.min_length;
+      for (int i = 0; i < len; ++i) {
+        v.push_back(2);
+      }
+      break; }
+    }
+    break;
+  case SPECIFIC_VALUE:
+    concat(v, single_value);
+    break;
+  case STRING_PATTERN:
+    for (unsigned int i = 0; i < pattern_value->n_elements; ++i) {
+      v.push_back(pattern_value->elements_ptr[i]);
+    }
+    break;
+  default:
+    TTCN_error("Operand of bitstring template concatenation is an "
+      "uninitialized or unsupported template.");
+  }
+}
+
+void BITSTRING_template::concat(Vector<unsigned char>& v, const BITSTRING& val)
+{
+  if (!val.is_bound()) {
+    TTCN_error("Operand of bitstring template concatenation is an "
+      "unbound value.");
+  }
+  for (int i = 0; i < val.val_ptr->n_bits; ++i) {
+    v.push_back(val.get_bit(i));
+  }
+}
+
+void BITSTRING_template::concat(Vector<unsigned char>& v, template_sel sel)
+{
+  if (sel == ANY_VALUE) {
+    // ? => '*'
+    if (v.size() == 0 || v[v.size() - 1] != 3) {
+      // '**' == '*', so just ignore the second '*'
+      v.push_back(3);
+    }
+  }
+  else {
+    TTCN_error("Operand of bitstring template concatenation is an "
+      "uninitialized or unsupported template.");
+  }
+}
+
+
+BITSTRING_template BITSTRING_template::operator+(
+  const BITSTRING_template& other_value) const
+{
+  if (template_selection == SPECIFIC_VALUE &&
+      other_value.template_selection == SPECIFIC_VALUE) {
+    // result is a specific value template
+    return single_value + other_value.single_value;
+  }
+  if (template_selection == ANY_VALUE &&
+      other_value.template_selection == ANY_VALUE &&
+      length_restriction_type == NO_LENGTH_RESTRICTION &&
+      other_value.length_restriction_type == NO_LENGTH_RESTRICTION) {
+    // special case: ? & ? => ?
+    return BITSTRING_template(ANY_VALUE);
+  }
+  // otherwise the result is an bitstring pattern
+  Vector<unsigned char> v;
+  concat(v);
+  other_value.concat(v);
+  return BITSTRING_template(v.size(), v.data_ptr());
+}
+
+BITSTRING_template BITSTRING_template::operator+(
+  const BITSTRING& other_value) const
+{
+  if (template_selection == SPECIFIC_VALUE) {
+    // result is a specific value template
+    return single_value + other_value;
+  }
+  // otherwise the result is an bitstring pattern
+  Vector<unsigned char> v;
+  concat(v);
+  concat(v, other_value);
+  return BITSTRING_template(v.size(), v.data_ptr());
+}
+
+BITSTRING_template BITSTRING_template::operator+(
+  const BITSTRING_ELEMENT& other_value) const
+{
+  return *this + BITSTRING(other_value);
+}
+
+BITSTRING_template BITSTRING_template::operator+(
+  const OPTIONAL<BITSTRING>& other_value) const
+{
+  if (other_value.is_present()) {
+    return *this + (const BITSTRING&)other_value;
+  }
+  TTCN_error("Operand of bitstring template concatenation is an "
+    "unbound or omitted record/set field.");
+}
+
+BITSTRING_template BITSTRING_template::operator+(
+  template_sel other_template_sel) const
+{
+  if (template_selection == ANY_VALUE && other_template_sel == ANY_VALUE &&
+      length_restriction_type == NO_LENGTH_RESTRICTION) {
+    // special case: ? & ? => ?
+    return BITSTRING_template(ANY_VALUE);
+  }
+  // the result is always an bitstring pattern
+  Vector<unsigned char> v;
+  concat(v);
+  concat(v, other_template_sel);
+  return BITSTRING_template(v.size(), v.data_ptr());
+}
+
+BITSTRING_template operator+(const BITSTRING& left_value,
+  const BITSTRING_template& right_template)
+{
+  if (right_template.template_selection == SPECIFIC_VALUE) {
+    // result is a specific value template
+    return left_value + right_template.single_value;
+  }
+  // otherwise the result is an bitstring pattern
+  Vector<unsigned char> v;
+  BITSTRING_template::concat(v, left_value);
+  right_template.concat(v);
+  return BITSTRING_template(v.size(), v.data_ptr());
+}
+
+BITSTRING_template operator+(const BITSTRING_ELEMENT& left_value,
+  const BITSTRING_template& right_template)
+{
+  return BITSTRING(left_value) + right_template;
+}
+
+BITSTRING_template operator+(const OPTIONAL<BITSTRING>& left_value,
+  const BITSTRING_template& right_template)
+{
+  if (left_value.is_present()) {
+    return (const BITSTRING&)left_value + right_template;
+  }
+  TTCN_error("Operand of bitstring template concatenation is an "
+    "unbound or omitted record/set field.");
+}
+
+BITSTRING_template operator+(template_sel left_template_sel,
+  const BITSTRING_template& right_template)
+{
+  if (left_template_sel == ANY_VALUE &&
+      right_template.template_selection == ANY_VALUE &&
+      right_template.length_restriction_type ==
+      Restricted_Length_Template::NO_LENGTH_RESTRICTION) {
+    // special case: ? & ? => ?
+    return BITSTRING_template(ANY_VALUE);
+  }
+  // the result is always an bitstring pattern
+  Vector<unsigned char> v;
+  BITSTRING_template::concat(v, left_template_sel);
+  right_template.concat(v);
+  return BITSTRING_template(v.size(), v.data_ptr());
+}
+
+BITSTRING_template operator+(const BITSTRING& left_value,
+  template_sel right_template_sel)
+{
+  // the result is always an bitstring pattern
+  Vector<unsigned char> v;
+  BITSTRING_template::concat(v, left_value);
+  BITSTRING_template::concat(v, right_template_sel);
+  return BITSTRING_template(v.size(), v.data_ptr());
+}
+
+BITSTRING_template operator+(const BITSTRING_ELEMENT& left_value,
+  template_sel right_template_sel)
+{
+  return BITSTRING(left_value) + right_template_sel;
+}
+
+BITSTRING_template operator+(const OPTIONAL<BITSTRING>& left_value,
+  template_sel right_template_sel)
+{
+  if (left_value.is_present()) {
+    return (const BITSTRING&)left_value + right_template_sel;
+  }
+  TTCN_error("Operand of bitstring template concatenation is an "
+    "unbound or omitted record/set field.");
+}
+
+BITSTRING_template operator+(template_sel left_template_sel,
+  const BITSTRING& right_value)
+{
+  // the result is always an bitstring pattern
+  Vector<unsigned char> v;
+  BITSTRING_template::concat(v, left_template_sel);
+  BITSTRING_template::concat(v, right_value);
+  return BITSTRING_template(v.size(), v.data_ptr());
+}
+
+BITSTRING_template operator+(template_sel left_template_sel,
+  const BITSTRING_ELEMENT& right_value)
+{
+  return left_template_sel + BITSTRING(right_value);
+}
+
+BITSTRING_template operator+(template_sel left_template_sel,
+  const OPTIONAL<BITSTRING>& right_value)
+{
+  if (right_value.is_present()) {
+    return left_template_sel + (const BITSTRING&)right_value;
+  }
+  TTCN_error("Operand of bitstring template concatenation is an "
+    "unbound or omitted record/set field.");
 }
 
 BITSTRING_ELEMENT BITSTRING_template::operator[](int index_value)

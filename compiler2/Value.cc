@@ -375,6 +375,10 @@ namespace Common {
     case V_REFER:
       u.refered = p.u.refered->clone();
       break;
+    case V_ANY_VALUE:
+    case V_ANY_OR_OMIT:
+      u.len_res = p.u.len_res != NULL ? p.u.len_res->clone() : NULL;
+      break;
     default:
       FATAL_ERROR("Value::Value()");
     } // switch
@@ -466,6 +470,10 @@ namespace Common {
       break;
     case V_UNDEF_BLOCK:
       delete u.block;
+      break;
+    case V_ANY_VALUE:
+    case V_ANY_OR_OMIT:
+      delete u.len_res;
       break;
     default:
       FATAL_ERROR("Value::clean_up()");
@@ -1419,6 +1427,20 @@ namespace Common {
       FATAL_ERROR("Value::Value()");
     } // switch
   }
+  
+  // V_ANY_VALUE, V_ANY_OR_OMIT
+  Value::Value(valuetype_t p_vt, Ttcn::LengthRestriction* p_len_res)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+  {
+    switch(p_vt) {
+    case V_ANY_VALUE:
+    case V_ANY_OR_OMIT:
+      u.len_res = p_len_res;
+      break;
+    default:
+      FATAL_ERROR("Value::Value()");
+    } // switch
+  }
 
   Value::~Value()
   {
@@ -1435,6 +1457,24 @@ namespace Common {
     if(valuetype!=V_EXPR)
       FATAL_ERROR("Value::get_optype()");
     return u.expr.v_optype;
+  }
+  
+  Value* Value::get_concat_operand(bool first_operand) const
+  {
+    if (valuetype != V_EXPR || u.expr.v_optype != OPTYPE_CONCAT) {
+      FATAL_ERROR("Value::get_concat_operand()");
+    }
+    return first_operand ? u.expr.v1 : u.expr.v2;
+  }
+  
+  Ttcn::LengthRestriction* Value::take_length_restriction()
+  {
+    if (valuetype != V_ANY_VALUE && valuetype != V_ANY_OR_OMIT) {
+      FATAL_ERROR("Value::take_length_restriction()");
+    }
+    Ttcn::LengthRestriction* ptr = u.len_res;
+    u.len_res = NULL;
+    return ptr;
   }
 
   void Value::set_my_governor(Type *p_gov)
@@ -10355,6 +10395,10 @@ error:
       break;
     case Ttcn::Template::TEMPLATE_ERROR:
       //FATAL_ERROR("Value::chk_expr_self_ref_templ()");
+      break;
+    case Ttcn::Template::TEMPLATE_CONCAT:
+      self_ref |= chk_expr_self_ref_templ(t->get_concat_operand(true), lhs);
+      self_ref |= chk_expr_self_ref_templ(t->get_concat_operand(false), lhs);
       break;
 //    default:
 //      FATAL_ERROR("todo ttype %d", t->get_templatetype());
