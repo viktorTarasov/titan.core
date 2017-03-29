@@ -42,4 +42,5 @@ else
 	$(MAKE) CXX='$(CXX)' CXXFLAGS='$(CXXFLAGS)' LDFLAGS='$(LDFLAGS)' && \
 	(sleep 5 && echo 'Hello, TTCN-3!') | ttcn3_start MyExample MyExample.cfg && \
 	logformat -o MyExample_merged.log *.log
+	cd $(DEMODIR) && make clean
 endif
