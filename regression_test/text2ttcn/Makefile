@@ -10,6 +10,7 @@
 #   Baranyi, Botond
 #   Szabados, Kristof
 #
+# TODO: this should be in the function_test folder together with the other encoders/decoders
 ##############################################################################
 TOPDIR := ../
 include   $(TOPDIR)/Makefile.regression
