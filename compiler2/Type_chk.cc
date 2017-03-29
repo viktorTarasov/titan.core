@@ -105,6 +105,10 @@ void Type::chk()
     break;
   case T_ANYTYPE:
     // TODO maybe check for address type and add it automagically, then fall through
+    if(!xerattrib) {
+      xerattrib = new XerAttributes;
+    }
+    xerattrib->untagged_ = true;
   case T_SEQ_T:
   case T_SET_T:
   case T_CHOICE_T:
@@ -833,7 +837,11 @@ Value *Type::new_value_for_dfe(Type *last, const char *dfe_str, Common::Referenc
       delete v;
       return 0;
     }
-    if (!is_compatible_tt_tt(last->typetype, v->get_expr_governor_last()->typetype, last->is_asn1(), t->is_asn1())) {
+    bool same_mod = false;
+    if (last->get_my_scope()->get_scope_mod() == t->get_my_scope()->get_scope_mod()) {
+      same_mod = true;
+    }
+    if (!is_compatible_tt_tt(last->typetype, t->typetype, last->is_asn1(), t->is_asn1(), same_mod)) {
       v->get_reference()->error("Incompatible types were given to defaultForEmpty variant: `%s' instead of `%s'.\n",
         v->get_expr_governor_last()->get_typename().c_str(), last->get_typename().c_str());
       delete v;
@@ -933,8 +941,7 @@ Value *Type::new_value_for_dfe(Type *last, const char *dfe_str, Common::Referenc
 
     return new Value(Common::Value::V_ENUM, val_id);
   }
-
-  case T_CHOICE_A: case T_CHOICE_T: {
+  case T_CHOICE_A: case T_CHOICE_T: case T_ANYTYPE: {
     // Try to guess which alternative the given DFE text belongs to.
     // Sort the fields based on typetype, so BOOL, INT, REAL, ENUM
     // are tried before the various string types
@@ -1548,6 +1555,7 @@ void Type::chk_xer_untagged()
     // fall through
   case T_SEQ_A: case T_SEQ_T:
   case T_SET_A: case T_SET_T:
+  case T_ANYTYPE:
   case T_CHOICE_A: case T_CHOICE_T:
   case T_SEQOF: case T_SETOF:
     break; // acceptable
@@ -1598,7 +1606,8 @@ void Type::chk_xer_untagged()
         "the member of a sequence-of or set-of"); // X.693amd1, 32.2.4 b)
       break;
 
-    case T_CHOICE_T: {
+    case T_CHOICE_T:
+    case T_ANYTYPE: {
       size_t num_fields = parent_type->get_nof_comps();
       size_t num_empty = 0;
       for (size_t i = 0; i < num_fields; ++i) {
@@ -1756,6 +1765,7 @@ void Type::chk_xer_use_nil()
     case T_SEQ_A:
     case T_SET_T:
     case T_SET_A:
+    case T_ANYTYPE:
     case T_CHOICE_T:
     case T_CHOICE_A:
     case T_SEQOF:
@@ -1995,7 +2005,6 @@ void Type::chk_xer_use_type()
   if (!prefix) error("Type has USE-TYPE, but the module has no control namespace set");
 
   switch (last->typetype) {
-  // USE-TYPE applied to anytype ? Just say no.
   case T_CHOICE_A: case T_CHOICE_T: { // must be CHOICE; 37.2.1
     if (xerattrib->untagged_ || xerattrib->useUnion_) { // 37.2.5
       error("A type with USE-TYPE encoding instruction shall not also have"
@@ -2022,6 +2031,9 @@ void Type::chk_xer_use_type()
       }
     }
     break; }
+  case T_ANYTYPE:
+    error("USE-TYPE cannot be applied to anytype");
+    break;
   default:
     error("USE-TYPE can only applied to a CHOICE/union type");
     break;
@@ -2047,6 +2059,9 @@ void Type::chk_xer_use_union()
       else cf->error("Alternative of a CHOICE/union with USE-UNION must be character-encodable");
     }
     break; }
+  case T_ANYTYPE:
+    error("USE-UNION cannot be applied to anytype");
+    break;
   default:
     error("USE-UNION can only applied to a CHOICE/union type"); // 38.2.1
     break;
@@ -2408,6 +2423,7 @@ void Type::chk_xer() { // XERSTUFF semantic check
           switch (cft->get_type_refd_last()->typetype) {
           case T_SEQ_A: case T_SEQ_T:
           case T_SET_A: case T_SET_T:
+          case T_ANYTYPE:
           case T_CHOICE_A: case T_CHOICE_T:
           case T_SEQOF:
           case T_SETOF:
@@ -2449,7 +2465,7 @@ void Type::chk_xer() { // XERSTUFF semantic check
     } // if the_one
 
     if (empties.size() > 1
-      && (typetype==T_CHOICE_A || typetype==T_CHOICE_T)) {
+      && (typetype==T_CHOICE_A || typetype==T_CHOICE_T || typetype==T_ANYTYPE)) {
       warning("More than one field can have empty XML. Decoding of empty"
         " XML is ambiguous, %s chosen arbitrarily.",
         empties.get_nth_elem(empties.size()-1)->get_name().get_name().c_str());
@@ -3210,14 +3226,14 @@ bool Type::chk_this_value(Value *value, Common::Assignment *lhs, expected_value_
     return chk_this_refd_value(value, lhs, expected_value, 0, is_str_elem);
   case Value::V_INVOKE:
     chk_this_invoked_value(value, lhs, expected_value);
-    return false; // assumes no self-ref in invoke
+    return false; // assumes no self-reference in invoke
   case Value::V_EXPR:
     if (lhs) self_ref = value->chk_expr_self_ref(lhs);
     // no break
   case Value::V_MACRO:
     if (value->is_unfoldable(0, expected_value)) {
       typetype_t tt = value->get_expr_returntype(expected_value);
-      if (!is_compatible_tt(tt, value->is_asn1())) {
+      if (!is_compatible_tt(tt, value->is_asn1(), value->get_expr_governor_last())) {
         value->error("Incompatible value: `%s' value was expected",
                      get_typename().c_str());
         value->set_valuetype(Value::V_ERROR);
@@ -5871,6 +5887,32 @@ bool Type::chk_this_template_Str(Template *t, namedbool implicit_omit,
       }
     }
     break;
+  case Ttcn::Template::TEMPLATE_CONCAT:
+    {
+      Error_Context cntxt(t, "In template concatenation");
+      t->set_lowerid_to_ref();
+      Template* t_left = t->get_concat_operand(true);
+      Template* t_right = t->get_concat_operand(false);
+      if (tt == T_CSTR || tt == T_USTR) {
+        if (t_left->get_templatetype() != Ttcn::Template::SPECIFIC_VALUE &&
+            t_left->get_templatetype() != Ttcn::Template::TEMPLATE_CONCAT &&
+            t_left->get_templatetype() != Ttcn::Template::TEMPLATE_REFD) {
+          t_left->error("Operands of %s template concatenation must be "
+            "specific value templates", get_typename_builtin(tt));
+        }
+        if (t_right->get_templatetype() != Ttcn::Template::SPECIFIC_VALUE &&
+            t_right->get_templatetype() != Ttcn::Template::TEMPLATE_CONCAT &&
+            t_right->get_templatetype() != Ttcn::Template::TEMPLATE_REFD) {
+          t_right->error("Operands of %s template concatenation must be "
+            "specific value templates", get_typename_builtin(tt));
+        }
+      }
+      self_ref = chk_this_template_generic(t_left, INCOMPLETE_NOT_ALLOWED,
+        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
+      self_ref = chk_this_template_generic(t_right, INCOMPLETE_NOT_ALLOWED,
+        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
+    }
+    break;
   default:
     report_error = true;
     break;
@@ -6398,6 +6440,18 @@ bool Type::chk_this_template_SeqOf(Template *t, namedbool incomplete_allowed,
       delete index_map.get_nth_elem(i);
     index_map.clear();
     break; }
+  case Ttcn::Template::TEMPLATE_CONCAT:
+    {
+      Error_Context cntxt(t, "In template concatenation");
+      Template* t_left = t->get_concat_operand(true);
+      Template* t_right = t->get_concat_operand(false);
+      t->set_lowerid_to_ref();
+      self_ref = chk_this_template_generic(t_left, incomplete_allowed,
+        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
+      self_ref = chk_this_template_generic(t_right, incomplete_allowed,
+        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
+    }
+    break;
   default:
     t->error("%s cannot be used for `record of' type `%s'",
       t->get_templatetype_str(), get_typename().c_str());
@@ -6532,6 +6586,18 @@ bool Type::chk_this_template_SetOf(Template *t, namedbool incomplete_allowed,
       delete index_map.get_nth_elem(i);
     index_map.clear();
     break; }
+  case Ttcn::Template::TEMPLATE_CONCAT:
+    {
+      Error_Context cntxt(t, "In template concatenation");
+      Template* t_left = t->get_concat_operand(true);
+      Template* t_right = t->get_concat_operand(false);
+      t->set_lowerid_to_ref();
+      self_ref = chk_this_template_generic(t_left, incomplete_allowed,
+        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
+      self_ref = chk_this_template_generic(t_right, incomplete_allowed,
+        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
+    }
+    break;
   default:
     t->error("%s cannot be used for `set of' type `%s'",
       t->get_templatetype_str(), get_typename().c_str());

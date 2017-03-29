@@ -50,6 +50,7 @@ namespace Ttcn {
   class ParsedActualParameters;
   class LogArguments;
   class JsonOmitCombination;
+  class LengthRestriction;
 }
 
 namespace Common {
@@ -125,7 +126,9 @@ namespace Common {
       V_ALTSTEP, /**< altstep */
       V_TESTCASE, /**< testcase */
       V_INVOKE, /**< invoke operation */
-      V_REFER /**< refer(function) */
+      V_REFER, /**< refer(function) */
+      V_ANY_VALUE, /**< any value (?) - used by template concatenation */
+      V_ANY_OR_OMIT /**< any or omit (*) - used by template concatenation */
     };
 
     enum verdict_t {
@@ -359,6 +362,7 @@ namespace Common {
       Block *block;
       verdict_t verdict;
       Common::Assignment *refd_fat; /** function, altstep, testcase */
+      Ttcn::LengthRestriction* len_res; /** any value, any or omit */
     } u;
     
     /** Used to avoid infinite recursions of is_unfoldable() */
@@ -454,11 +458,15 @@ namespace Common {
     Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2);
     /** Constructor used by decvalue_unichar*/
     Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2, Value *p_v3);
+    /** Constructor used by V_ANY_VALUE and V_ANY_OR_OMIT */
+    Value(valuetype_t p_vt, Ttcn::LengthRestriction* p_len_res);
     virtual ~Value();
     virtual Value* clone() const;
     valuetype_t get_valuetype() const {return valuetype;}
     /** it it is not V_EXPR then fatal error. */
     operationtype_t get_optype() const;
+    Value* get_concat_operand(bool first_operand) const;
+    Ttcn::LengthRestriction* take_length_restriction();
     /** Sets the governor type. */
     virtual void set_my_governor(Type *p_gov);
     /** Gets the governor type. */

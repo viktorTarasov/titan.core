@@ -36,6 +36,9 @@ class Text_Buf;
 class Module_Param;
 class Module_Param_Name;
 class Module_Param_Length_Restriction;
+class OCTETSTRING_template;
+class HEXSTRING_template;
+class BITSTRING_template;
 
 enum template_sel {
   UNINITIALIZED_TEMPLATE = -1,
@@ -158,6 +161,13 @@ class Restricted_Length_Template : public Base_Template
   , public RefdIndexInterface
 #endif
 {
+  friend OCTETSTRING_template operator+(template_sel left_template_sel,
+    const OCTETSTRING_template& right_template);
+  friend HEXSTRING_template operator+(template_sel left_template_sel,
+    const HEXSTRING_template& right_template);
+  friend BITSTRING_template operator+(template_sel left_template_sel,
+    const BITSTRING_template& right_template);
+  
 protected:
   enum length_restriction_type_t {
     NO_LENGTH_RESTRICTION = 0,
@@ -206,6 +216,9 @@ public:
   boolean is_omit() const;
   boolean is_any_or_omit() const;
 };
+
+template_sel operator+(template_sel left_template_sel,
+  template_sel right_template_sel);
 
 #ifndef TITAN_RUNTIME_2
 
@@ -293,6 +306,14 @@ protected:
   Base_Template* get_at(const INTEGER& index_value);
   const Base_Template* get_at(int index_value) const;
   const Base_Template* get_at(const INTEGER& index_value) const;
+  
+  int get_length_for_concat(boolean& is_any_value) const;
+  static int get_length_for_concat(const Record_Of_Type& operand);
+  static int get_length_for_concat(template_sel operand);
+  
+  void concat(int& pos, const Set_Of_Template& operand);
+  void concat(int& pos, const Record_Of_Type& operand);
+  void concat(int& pos);
 
   int size_of(boolean is_size) const;
   Set_Of_Template* get_list_item(int list_index);
@@ -405,6 +426,14 @@ protected:
   Base_Template* get_at(const INTEGER& index_value);
   const Base_Template* get_at(int index_value) const;
   const Base_Template* get_at(const INTEGER& index_value) const;
+  
+  int get_length_for_concat(boolean& is_any_value) const;
+  static int get_length_for_concat(const Record_Of_Type& operand);
+  static int get_length_for_concat(template_sel operand);
+  
+  void concat(int& pos, const Record_Of_Template& operand);
+  void concat(int& pos, const Record_Of_Type& operand);
+  void concat(int& pos);
 
   int size_of(boolean is_size) const;
   Record_Of_Template* get_list_item(int list_index);

@@ -238,7 +238,6 @@ namespace Ttcn {
       } range;
     };
 
-    /** Copy constructor disabled. */
     LengthRestriction(const LengthRestriction& p);
     /** Copy assignment disabled */
     LengthRestriction& operator=(const LengthRestriction& p);

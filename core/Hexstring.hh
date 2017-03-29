@@ -27,6 +27,7 @@
 #include "Basetype.hh"
 #include "Template.hh"
 #include "Error.hh"
+#include "Vector.hh"
 
 class INTEGER;
 class BITSTRING;
@@ -82,6 +83,7 @@ public:
 
   HEXSTRING operator+(const HEXSTRING& other_value) const;
   HEXSTRING operator+(const HEXSTRING_ELEMENT& other_value) const;
+  HEXSTRING operator+(const OPTIONAL<HEXSTRING>& other_value) const;
 
   HEXSTRING operator~() const;
   HEXSTRING operator&(const HEXSTRING& other_value) const;
@@ -180,6 +182,7 @@ public:
 
   HEXSTRING operator+(const HEXSTRING& other_value) const;
   HEXSTRING operator+(const HEXSTRING_ELEMENT& other_value) const;
+  HEXSTRING operator+(const OPTIONAL<HEXSTRING>& other_value) const;
 
   HEXSTRING operator~() const;
   HEXSTRING operator&(const HEXSTRING& other_value) const;
@@ -209,6 +212,27 @@ public:
 #endif
   struct hexstring_pattern_struct;
 private:
+  friend HEXSTRING_template operator+(const HEXSTRING& left_value,
+    const HEXSTRING_template& right_template);
+  friend HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
+    const HEXSTRING_template& right_template);
+  friend HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
+    const HEXSTRING_template& right_template);
+  friend HEXSTRING_template operator+(template_sel left_template_sel,
+    const HEXSTRING_template& right_template);
+  friend HEXSTRING_template operator+(const HEXSTRING& left_value,
+    template_sel right_template_sel);
+  friend HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
+    template_sel right_template_sel);
+  friend HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
+    template_sel right_template_sel);
+  friend HEXSTRING_template operator+(template_sel left_template_sel,
+    const HEXSTRING& right_value);
+  friend HEXSTRING_template operator+(template_sel left_template_sel,
+    const HEXSTRING_ELEMENT& right_value);
+  friend HEXSTRING_template operator+(template_sel left_template_sel,
+    const OPTIONAL<HEXSTRING>& right_value);
+  
   HEXSTRING single_value;
   union {
     struct {
@@ -223,6 +247,10 @@ private:
   static boolean match_pattern(const hexstring_pattern_struct *string_pattern,
     const HEXSTRING::hexstring_struct *string_value);
 
+  void concat(Vector<unsigned char>& v) const;
+  static void concat(Vector<unsigned char>& v, const HEXSTRING& val);
+  static void concat(Vector<unsigned char>& v, template_sel sel);
+  
 public:
   HEXSTRING_template();
   HEXSTRING_template(template_sel other_value);
@@ -240,6 +268,12 @@ public:
   HEXSTRING_template& operator=(const HEXSTRING_ELEMENT& other_value);
   HEXSTRING_template& operator=(const OPTIONAL<HEXSTRING>& other_value);
   HEXSTRING_template& operator=(const HEXSTRING_template& other_value);
+  
+  HEXSTRING_template operator+(const HEXSTRING_template& other_value) const;
+  HEXSTRING_template operator+(const HEXSTRING& other_value) const;
+  HEXSTRING_template operator+(const HEXSTRING_ELEMENT& other_value) const;
+  HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& other_value) const;
+  HEXSTRING_template operator+(template_sel other_template_sel) const;
 
   HEXSTRING_ELEMENT operator[](int index_value);
   HEXSTRING_ELEMENT operator[](const INTEGER& index_value);
@@ -282,5 +316,26 @@ public:
   void check_restriction(template_res t_res, const char* t_name=NULL, boolean legacy = FALSE) const;
 #endif
 };
+
+extern HEXSTRING_template operator+(const HEXSTRING& left_value,
+  const HEXSTRING_template& right_template);
+extern HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
+  const HEXSTRING_template& right_template);
+extern HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
+  const HEXSTRING_template& right_template);
+extern HEXSTRING_template operator+(template_sel left_template_sel,
+  const HEXSTRING_template& right_template);
+extern HEXSTRING_template operator+(const HEXSTRING& left_value,
+  template_sel right_template_sel);
+extern HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
+  template_sel right_template_sel);
+extern HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& left_value,
+  template_sel right_template_sel);
+extern HEXSTRING_template operator+(template_sel left_template_sel,
+  const HEXSTRING& right_value);
+extern HEXSTRING_template operator+(template_sel left_template_sel,
+  const HEXSTRING_ELEMENT& right_value);
+extern HEXSTRING_template operator+(template_sel left_template_sel,
+  const OPTIONAL<HEXSTRING>& right_value);
 
 #endif

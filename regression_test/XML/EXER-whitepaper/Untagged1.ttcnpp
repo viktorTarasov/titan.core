@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 module Untagged1 {
@@ -336,7 +337,7 @@ testcase tc_dec_ints() runs on Unt
   CHECK_DECODE(exer_dec_ints, estr_twoints, Ints, twoints);
 }
 
-// Untagged at toplevel (ignored) for union
+// not Untagged at toplevel for union
 // HM71472
 type union Choice
 {
@@ -345,7 +346,6 @@ type union Choice
 }
 with {
   variant "element"
-  variant "untagged"
   variant "namespace as 'foo:bar' prefix 'baz'";
 }
 
@@ -373,6 +373,83 @@ testcase tc_dec_choice() runs on Unt
 {
   CHECK_DECODE(bxer_dec_ch, bstr_itg, Choice, itg);
   CHECK_DECODE(exer_dec_ch, estr_itg, Choice, itg);
+}
+
+// Untagged at toplevel for union
+// HM71472
+type union Choice2
+{
+  integer answer,
+  charstring s
+}
+with {
+  variant "element"
+  variant "untagged"
+  // the namespace as variant will be not visible because it will be lost due to
+  // untagged
+  variant "namespace as 'foo:bar' prefix 'baz'";
+}
+
+DECLARE_XER_ENCODERS(Choice2, ch2);
+DECLARE_EXER_ENCODERS(Choice2, ch2);
+
+const Choice2 itg2 := { answer := 42 };
+const universal charstring bstr_itg2 :=
+"<Choice2>\n" &
+"\t<answer>42</answer>\n" &
+"</Choice2>\n\n";
+const universal charstring estr_itg2 :=
+"<answer>42</answer>\n\n";
+
+
+testcase tc_enc_choice2() runs on Unt
+{
+  CHECK_METHOD(bxer_enc_ch2, itg2, bstr_itg2);
+  CHECK_METHOD(exer_enc_ch2, itg2, estr_itg2);
+}
+
+testcase tc_dec_choice2() runs on Unt
+{
+  CHECK_DECODE(bxer_dec_ch2, bstr_itg2, Choice2, itg2);
+  CHECK_DECODE(exer_dec_ch2, estr_itg2, Choice2, itg2);
+}
+
+// Untagged at toplevel for union
+// HM71472
+type union Choice3
+{
+  integer answer,
+  charstring s
+}
+with {
+  variant "element"
+  variant "untagged"
+  variant (answer) "namespace as 'foo:bar' prefix 'baz'";
+  variant (answer) "element";
+}
+
+DECLARE_XER_ENCODERS(Choice3, ch3);
+DECLARE_EXER_ENCODERS(Choice3, ch3);
+
+const Choice3 itg3 := { answer := 42 };
+const universal charstring bstr_itg3 :=
+"<Choice3>\n" &
+"\t<answer>42</answer>\n" &
+"</Choice3>\n\n";
+const universal charstring estr_itg3 :=
+"<baz:answer xmlns:baz='foo:bar'>42</baz:answer>\n\n";
+
+
+testcase tc_enc_choice3() runs on Unt
+{
+  CHECK_METHOD(bxer_enc_ch3, itg3, bstr_itg3);
+  CHECK_METHOD(exer_enc_ch3, itg3, estr_itg3);
+}
+
+testcase tc_dec_choice3() runs on Unt
+{
+  CHECK_DECODE(bxer_dec_ch3, bstr_itg3, Choice3, itg3);
+  CHECK_DECODE(exer_dec_ch3, estr_itg3, Choice3, itg3);
 }
 
 // HM80553
@@ -475,6 +552,12 @@ control {
 
   execute(tc_enc_choice());
   execute(tc_dec_choice());
+
+  execute(tc_enc_choice2());
+  execute(tc_dec_choice2());
+  
+  execute(tc_enc_choice3());
+  execute(tc_dec_choice3());
 
   execute(tc_enc_widget());
   execute(tc_dec_widget());

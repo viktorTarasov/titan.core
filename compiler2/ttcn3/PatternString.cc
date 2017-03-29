@@ -169,6 +169,22 @@ namespace Ttcn {
       case Template::SPECIFIC_VALUE:
         v_last = templ->get_specific_value();
         break;
+      case Template::TEMPLATE_CONCAT:
+        if (templ->is_Value()) {
+          v = templ->get_Value();
+          v->set_my_governor(refcheckertype);
+          v->set_my_scope(ref->get_my_scope());
+          v->set_location(*ref);
+          refcheckertype->chk_this_value(v, 0, expected_value,
+            INCOMPLETE_NOT_ALLOWED, OMIT_NOT_ALLOWED, SUB_CHK);
+          v_last = v->get_value_refd_last();
+        }
+        else {
+          TTCN_pattern_error("Unable to resolve referenced '%s' to character "
+            "string type. Result of template concatenation is not a specific "
+            "value.", ref->get_dispname().c_str());
+        }
+        break;
       case Template::CSTR_PATTERN: 
         if (!with_N) {
           Ttcn::PatternString* ps = templ->get_cstr_pattern();

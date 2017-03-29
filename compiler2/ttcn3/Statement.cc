@@ -6587,7 +6587,8 @@ error:
       str = mputstr(str, expr.preamble);
     }
     str = mputprintf(str, "switch(%s.get_selection()) {\n", expr.expr);
-    const char* type_name = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope()).c_str();
+    string type_name_str = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope());
+    const char* type_name = type_name_str.c_str();
     char* loc = NULL;
     loc = select_union.expr->update_location_object(loc);
     str = select_union.sus->generate_code(str, def_glob_vars, src_glob_vars, type_name, loc);
@@ -6963,7 +6964,8 @@ error:
       str = mputstr(str, expr.preamble);
     }
     str = mputprintf(str, "switch(%s.get_selection()) {\n", expr.expr);
-    const char* type_name = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope()).c_str();
+    string type_name_str = select_union.expr->get_expr_governor_last()->get_genname_value(select_union.expr->get_my_scope());
+    const char* type_name = type_name_str.c_str();
     char* loc = NULL;
     loc = select_union.expr->update_location_object(loc);
     str = select_union.sus->generate_code(str, ilt->get_out_def_glob_vars(),
@@ -10654,6 +10656,31 @@ error:
     if (!p_ti) FATAL_ERROR("LogArgument::LogArgument()");
     ti = p_ti;
   }
+  
+  LogArgument::LogArgument(const LogArgument& p) : logargtype(p.logargtype)
+  {
+    switch (logargtype) {
+    case L_ERROR:
+      break;
+    case L_UNDEF:
+    case L_TI:
+      ti = p.ti->clone();
+      break;
+    case L_VAL:
+    case L_MATCH:
+    case L_MACRO:
+      val = p.val->clone();
+      break;
+    case L_REF:
+      ref = p.ref->clone();
+      break;
+    case L_STR:
+      cstr = new string(*cstr);
+      break;
+    default:
+      FATAL_ERROR("LogArgument::LogArgument()");
+    } // switch
+  }
 
   LogArgument::~LogArgument()
   {
@@ -10682,7 +10709,7 @@ error:
 
   LogArgument *LogArgument::clone() const
   {
-    FATAL_ERROR("LogArgument::clone");
+    return new LogArgument(*this);
   }
 
   void LogArgument::set_my_scope(Scope *p_scope)
@@ -11113,6 +11140,13 @@ error:
   // ===== LogArguments
   // =================================
 
+  LogArguments::LogArguments(const LogArguments& p)
+  {
+    for (size_t i = 0; i < logargs.size(); ++i) {
+      logargs[i] = p.logargs[i]->clone();
+    }
+  }
+  
   LogArguments::~LogArguments()
   {
     for(size_t i=0; i<logargs.size(); i++) delete logargs[i];
@@ -11121,7 +11155,7 @@ error:
 
   LogArguments *LogArguments::clone() const
   {
-    FATAL_ERROR("LogArguments::clone");
+    return new LogArguments(*this);
   }
 
   void LogArguments::add_logarg(LogArgument *p_logarg)

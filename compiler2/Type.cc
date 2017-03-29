@@ -3110,7 +3110,8 @@ namespace Common {
 
   /** \todo review, especially the string types... */
   bool Type::is_compatible_tt_tt(typetype_t p_tt1, typetype_t p_tt2,
-                                 bool p_is_asn11, bool p_is_asn12)
+                                 bool p_is_asn11, bool p_is_asn12,
+                                 bool same_module)
   {
     if (p_tt2 == T_ERROR) return true;
     switch (p_tt1) {
@@ -3253,6 +3254,8 @@ namespace Common {
       return p_tt2==T_SET_A || p_tt2==T_SET_T;
     case T_ANY:
       return p_tt2 == T_ANY || p_tt2 == T_OSTR;
+    case T_ANYTYPE:
+      return p_tt2 == T_ANYTYPE && same_module; // Need same module
       // these should never appear?
     case T_REFD:
     case T_REFDSPEC:
@@ -3265,7 +3268,7 @@ namespace Common {
     }
   }
 
-  bool Type::is_compatible_tt(typetype_t p_tt, bool p_is_asn1)
+  bool Type::is_compatible_tt(typetype_t p_tt, bool p_is_asn1, Type* p_type)
   {
     chk();
     Type *t1=get_type_refd_last();
@@ -3278,8 +3281,16 @@ namespace Common {
     case T_ADDRESS:
       FATAL_ERROR("Type::is_compatible_tt()");
       return false;
-    default:
-      return is_compatible_tt_tt(t1->typetype, p_tt, is_asn1(), p_is_asn1);
+    default: {
+      bool same_mod = false;
+      if (p_type && p_type->get_my_scope()) {
+        if (t1->get_my_scope()->get_scope_mod() ==
+            p_type->get_my_scope()->get_scope_mod()) {
+          same_mod = true;
+        }
+      }
+      return is_compatible_tt_tt(t1->typetype, p_tt, is_asn1(), p_is_asn1, same_mod);
+    }
     }
   }
 
@@ -5713,7 +5724,6 @@ namespace Common {
           case T_FUNCTION:  // TTCN-3
           case T_ALTSTEP:   // TTCN-3
           case T_TESTCASE:  // TTCN-3
-          case T_ANYTYPE:   // TTCN-3 anytype
             return memory.remember(t, ANSWER_NO);
 
           case T_UNDEF:
@@ -5723,7 +5733,9 @@ namespace Common {
 
           case T_SEQ_T:
           case T_SET_T:
-          case T_CHOICE_T: {
+          case T_CHOICE_T:
+          case T_ANYTYPE:   // TTCN-3 anytype
+          {
             // No field may reject XER
             size_t ncomp = t->get_nof_comps();
             for (size_t i = 0; i < ncomp; ++i) {

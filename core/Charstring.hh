@@ -40,6 +40,7 @@ class OCTETSTRING;
 class CHARSTRING_ELEMENT;
 class UNIVERSAL_CHARSTRING;
 class UNIVERSAL_CHARSTRING_ELEMENT;
+class UNIVERSAL_CHARSTRING_template;
 
 class Module_Param;
 
@@ -158,9 +159,12 @@ public:
   CHARSTRING operator+(const char* other_value) const;
   CHARSTRING operator+(const CHARSTRING& other_value) const;
   CHARSTRING operator+(const CHARSTRING_ELEMENT& other_value) const;
+  CHARSTRING operator+(const OPTIONAL<CHARSTRING>& other_value) const;
   UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING& other_value) const;
   UNIVERSAL_CHARSTRING operator+
     (const UNIVERSAL_CHARSTRING_ELEMENT& other_value) const;
+  UNIVERSAL_CHARSTRING operator+(
+    const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const;
 
   CHARSTRING& operator+=(char other_value);
   CHARSTRING& operator+=(const char *other_value);
@@ -308,9 +312,12 @@ public:
   CHARSTRING operator+(const char *other_value) const;
   CHARSTRING operator+(const CHARSTRING& other_value) const;
   CHARSTRING operator+(const CHARSTRING_ELEMENT& other_value) const;
+  CHARSTRING operator+(const OPTIONAL<CHARSTRING>& other_value) const;
   UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING& other_value) const;
   UNIVERSAL_CHARSTRING operator+
     (const UNIVERSAL_CHARSTRING_ELEMENT& other_value) const;
+  UNIVERSAL_CHARSTRING operator+(
+    const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const;
 
   inline boolean is_bound() const { return bound_flag; }
   inline boolean is_present() const { return bound_flag; }
@@ -344,6 +351,16 @@ extern CHARSTRING operator+(const char* string_value,
                             const CHARSTRING& other_value);
 extern CHARSTRING operator+(const char* string_value,
                             const CHARSTRING_ELEMENT& other_value);
+extern CHARSTRING operator+(const OPTIONAL<CHARSTRING>& left_value,
+  const CHARSTRING& right_value);
+extern CHARSTRING operator+(const OPTIONAL<CHARSTRING>& left_value,
+  const CHARSTRING_ELEMENT& right_value);
+extern UNIVERSAL_CHARSTRING operator+(const OPTIONAL<CHARSTRING>& left_value,
+  const UNIVERSAL_CHARSTRING& right_value);
+extern UNIVERSAL_CHARSTRING operator+(const OPTIONAL<CHARSTRING>& left_value,
+  const UNIVERSAL_CHARSTRING_ELEMENT& right_value);
+extern UNIVERSAL_CHARSTRING operator+(const OPTIONAL<CHARSTRING>& left_value,
+  const OPTIONAL<UNIVERSAL_CHARSTRING>& right_value);
 
 extern CHARSTRING operator<<=(const char *string_value,
                               const INTEGER& rotate_count);
@@ -357,6 +374,25 @@ struct unichar_decmatch_struct;
 class CHARSTRING_template : public Restricted_Length_Template {
 
   friend class UNIVERSAL_CHARSTRING_template;
+  
+  friend CHARSTRING_template operator+(const CHARSTRING& left_value,
+    const CHARSTRING_template& right_template);
+  friend CHARSTRING_template operator+(const CHARSTRING_ELEMENT& left_value,
+    const CHARSTRING_template& right_template);
+  friend CHARSTRING_template operator+(const OPTIONAL<CHARSTRING>& left_value,
+    const CHARSTRING_template& right_template);
+  friend UNIVERSAL_CHARSTRING_template operator+(
+    const UNIVERSAL_CHARSTRING& left_value,
+    const CHARSTRING_template& right_template);
+  friend UNIVERSAL_CHARSTRING_template operator+(
+    const UNIVERSAL_CHARSTRING_ELEMENT& left_value,
+    const CHARSTRING_template& right_template);
+  friend UNIVERSAL_CHARSTRING_template operator+(
+    const OPTIONAL<UNIVERSAL_CHARSTRING>& left_value,
+    const CHARSTRING_template& right_template);
+  friend UNIVERSAL_CHARSTRING_template operator+(
+    const CHARSTRING_template& left_template,
+    const UNIVERSAL_CHARSTRING_template& right_template);
 
 private:
   CHARSTRING single_value;
@@ -420,6 +456,17 @@ public:
   CHARSTRING_template& operator=(const CHARSTRING_ELEMENT& other_value);
   CHARSTRING_template& operator=(const OPTIONAL<CHARSTRING>& other_value);
   CHARSTRING_template& operator=(const CHARSTRING_template& other_value);
+  
+  CHARSTRING_template operator+(const CHARSTRING_template& other_value) const;
+  CHARSTRING_template operator+(const CHARSTRING& other_value) const;
+  CHARSTRING_template operator+(const CHARSTRING_ELEMENT& other_value) const;
+  CHARSTRING_template operator+(const OPTIONAL<CHARSTRING>& other_value) const;
+  UNIVERSAL_CHARSTRING_template operator+(
+    const UNIVERSAL_CHARSTRING& other_value) const;
+  UNIVERSAL_CHARSTRING_template operator+(
+    const UNIVERSAL_CHARSTRING_ELEMENT& other_value) const;
+  UNIVERSAL_CHARSTRING_template operator+(
+    const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const;
 
   CHARSTRING_ELEMENT operator[](int index_value);
   CHARSTRING_ELEMENT operator[](const INTEGER& index_value);
@@ -471,6 +518,22 @@ public:
    *  @pre template_selection is SPECIFIC_VALUE or STRING_PATTERN */
   const CHARSTRING& get_single_value() const;
 };
+
+extern CHARSTRING_template operator+(const CHARSTRING& left_value,
+  const CHARSTRING_template& right_template);
+extern CHARSTRING_template operator+(const CHARSTRING_ELEMENT& left_value,
+  const CHARSTRING_template& right_template);
+extern CHARSTRING_template operator+(const OPTIONAL<CHARSTRING>& left_value,
+  const CHARSTRING_template& right_template);
+extern UNIVERSAL_CHARSTRING_template operator+(
+  const UNIVERSAL_CHARSTRING& left_value,
+  const CHARSTRING_template& right_template);
+extern UNIVERSAL_CHARSTRING_template operator+(
+  const UNIVERSAL_CHARSTRING_ELEMENT& left_value,
+  const CHARSTRING_template& right_template);
+extern UNIVERSAL_CHARSTRING_template operator+(
+  const OPTIONAL<UNIVERSAL_CHARSTRING>& left_value,
+  const CHARSTRING_template& right_template);
 
 typedef CHARSTRING NumericString;
 typedef CHARSTRING PrintableString;

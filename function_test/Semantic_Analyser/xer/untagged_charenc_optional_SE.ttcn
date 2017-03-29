@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 module untagged_charenc_optional_SE {	//^In TTCN-3 module `untagged_charenc_optional_SE'://
@@ -32,7 +33,21 @@ type record parent2 {
   unt trouble optional // no message
 }
 
+type union uni {
+	integer i
+} with {
+	variant "untagged";
+}
+
+// No top level untagged warning for unions and anytype
+external function enc_uni(in uni u) return octetstring
+with { extension "prototype(convert) encode(XER:XER_EXTENDED)" }
+
+external function enc_anytype(in anytype u) return octetstring
+with { extension "prototype(convert) encode(XER:XER_EXTENDED)" }
+
 }
 with {
 encode "XML";
+extension "anytype integer";
 }
