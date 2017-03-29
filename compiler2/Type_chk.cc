@@ -838,8 +838,7 @@ Value *Type::new_value_for_dfe(Type *last, const char *dfe_str, Common::Referenc
       return 0;
     }
     bool same_mod = false;
-    if (last->get_my_scope()->get_scope_mod()->get_modid().get_name() ==
-        t->get_my_scope()->get_scope_mod()->get_modid().get_name()) {
+    if (last->get_my_scope()->get_scope_mod() == t->get_my_scope()->get_scope_mod()) {
       same_mod = true;
     }
     if (!is_compatible_tt_tt(last->typetype, t->typetype, last->is_asn1(), t->is_asn1(), same_mod)) {
