@@ -91,6 +91,9 @@ ifeq ($(LICENSING), yes)
 	cp licensegen/license.dat $(ETCDIR)/license
 endif
 	chmod -R +r,go-w $(TTCN3_DIR)
+	@echo "***********************************"
+	@echo "Installation successfully completed"
+	@echo "***********************************"
 
 # check is the standard GNU target for running tests
 # (avoids clash with shell builtin 'test')
