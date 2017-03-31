@@ -4580,7 +4580,7 @@ module NegSem_1511_ConcatenatingTemplatesOfStringAndListTypes_004 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `\*': syntax error, unexpected '\*'
+error: Operands of charstring template concatenation must be specific value templates
 <END_RESULT>
 
 <END_TC>
@@ -4639,52 +4639,6 @@ module NegSem_1511_ConcatenatingTemplatesOfStringAndListTypes_005 {
 
 <RESULT COUNT 1>
 error: at or before token `\*': syntax error, unexpected '\*', expecting Identifier or Cstring or CharKeyword
-<END_RESULT>
-
-<END_TC>
-:exmp
-
-*---------------------------------------------------------------------*
-:h3. NegSem_1511_ConcatenatingTemplatesOfStringAndListTypes_006 negative test
-.*---------------------------------------------------------------------*
-:xmp tab=0.
-
-<TC - Ensure that concatenation of octetstring types and ? patterns works as expected. >
-
-<COMPILE>
-
-<MODULE TTCN NegSem_1511_ConcatenatingTemplatesOfStringAndListTypes_006 NegSem_1511_ConcatenatingTemplatesOfStringAndListTypes_006.ttcn >
-/*****************************************************************
- ** @version  0.0.1
- ** @purpose  1:15.11, Ensure that concatenation of octetstring types and ? patterns works as expected.
- ** @verdict  pass reject
- *****************************************************************/
-
-module NegSem_1511_ConcatenatingTemplatesOfStringAndListTypes_006 {
-
-	type component GeneralComp { }
-
-	testcase TC_NegSem_1511_ConcatenatingTemplatesOfStringAndListTypes_006() runs on GeneralComp {	
-		var template octetstring v_myString1 := 'ABCD'O & ? length(2) length (6);  //missing parenthesis
-		if (match('ABCD12'O, v_myString1)) {
-		    setverdict(pass);
-		} else {
-		    setverdict(fail);
-		}
-	}
-
-	control{
-		execute(TC_NegSem_1511_ConcatenatingTemplatesOfStringAndListTypes_006());
-	}
-
-}
-<END_MODULE>
-
-<RESULT COUNT 1>
-error: at or before token `\?': syntax error, unexpected '\?' 
-<END_RESULT>
-<RESULT COUNT 1>
-error: at or before token `else': syntax error, unexpected ElseKeyword
 <END_RESULT>
 
 <END_TC>

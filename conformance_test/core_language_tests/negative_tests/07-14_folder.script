@@ -2286,7 +2286,7 @@ module NegSem_1101_ValueVars_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `\?': syntax error, unexpected '\?'
+error: integer value was expected
 <END_RESULT>
 
 <END_TC>
