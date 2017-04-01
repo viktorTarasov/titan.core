@@ -1866,7 +1866,7 @@ optDecodedModifier
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 66
+%expect 65
 
 %start GrammarRoot
 
@@ -3704,11 +3704,6 @@ MatchingSymbol: // 116 is a Template*
 | SupersetMatch
   {
     $$ = new Template(Template::SUPERSET_MATCH, $1);
-    $$->set_location(infile, @$);
-  }
-| '(' AllElementsFrom ')'
-  {
-    $$ = new Template(Template::VALUE_LIST_ALL_FROM, $2);
     $$->set_location(infile, @$);
   }
 ;

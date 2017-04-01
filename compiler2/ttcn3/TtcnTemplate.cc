@@ -63,7 +63,6 @@ namespace Ttcn {
       u.invoke.ap_list = p.u.invoke.ap_list ? p.u.invoke.ap_list->clone() : 0;
       break;
     case ALL_FROM:
-    case VALUE_LIST_ALL_FROM:
       u.all_from = p.u.all_from->clone();
       break;
     case TEMPLATE_LIST:
@@ -137,7 +136,6 @@ namespace Ttcn {
       delete u.templates;
       break;
     case ALL_FROM:
-    case VALUE_LIST_ALL_FROM:
       delete u.all_from;
       break;
     case NAMED_TEMPLATE_LIST:
@@ -431,18 +429,6 @@ namespace Ttcn {
     // calling set_lowerid_to_ref is too soon (my_scope is not set yet)
   }
 
-  Template::Template(templatetype_t tt, Template *t)
-  : GovernedSimple(S_TEMPLATE)
-  , templatetype(VALUE_LIST_ALL_FROM), my_governor(0), length_restriction(0)
-  , is_ifpresent(false), specific_value_checked(false)
-  , has_permutation(false), flattened(true), base_template(0)
-  {
-    if (tt != VALUE_LIST_ALL_FROM) FATAL_ERROR("Template::Template()");
-    u.all_from = t->u.all_from; // take it over
-    t->u.all_from = NULL;
-    delete t;
-  }
-
   Template::Template(NamedTemplates *nts)
     : GovernedSimple(S_TEMPLATE),
       templatetype(NAMED_TEMPLATE_LIST), my_governor(0), length_restriction(0),
@@ -574,7 +560,6 @@ namespace Ttcn {
       u.named_templates->set_fullname(p_fullname);
       break;
     case ALL_FROM:
-    case VALUE_LIST_ALL_FROM:
       u.all_from->set_fullname(p_fullname);
       break;
     case VALUE_LIST:
@@ -636,7 +621,6 @@ namespace Ttcn {
       if(u.invoke.ap_list) u.invoke.ap_list->set_my_scope(p_scope);
       break;
     case ALL_FROM:
-    case VALUE_LIST_ALL_FROM:
       u.all_from->set_my_scope(p_scope);
       break;
     case TEMPLATE_LIST:
@@ -930,7 +914,6 @@ namespace Ttcn {
     case TEMPLATE_INVOKE:
       return "template returning invoke";
     case ALL_FROM:
-    case VALUE_LIST_ALL_FROM:
       return "template with 'all from'";
     case TEMPLATE_LIST:
       return "value list notation";
@@ -1353,8 +1336,7 @@ namespace Ttcn {
 
   Template *Template::get_all_from() const
   {
-    if (templatetype != ALL_FROM
-      &&templatetype != VALUE_LIST_ALL_FROM)
+    if (templatetype != ALL_FROM)
       FATAL_ERROR("Template::get_all_from()");
     return u.all_from;
   }
@@ -2713,24 +2695,6 @@ end:
         Template *& t = u.templates->get_t_byIndex(i);
         // the element in the (,,,)
         switch (t->templatetype) {
-        case VALUE_LIST_ALL_FROM: {
-          // the all from from something like subset(1, (all from...), 99)
-          // value list: one out of many possible values^^^^^^^^^^^^^
-          Location tloc(*t); // save the location info
-          string tname(t->get_fullname());
-          Templates *ha = harbinger(t, from_permutation, true);
-          if (ha) {
-            // Don't touch t from now on, it might have been deleted!
-            Template *qq = new Template(VALUE_LIST, ha);
-            qq->set_location(tloc);
-            qq->set_fullname(tname + ".all_from");
-            new_templates->add_t(qq);
-          }
-          else {
-            new_templates->add_t(t); // transfer it unchanged
-            flattened = false;
-          }
-          break; }
 
         case ALL_FROM: { // subset(1, all from ..., 99)
           // some number of elements--^^^^^^^^^^^^
@@ -2778,16 +2742,6 @@ end:
 
       break; }
 
-    case VALUE_LIST_ALL_FROM: {
-      Templates *new_templates = harbinger(this, from_permutation, false);
-      if (new_templates) {
-        delete u.all_from;
-        // now we can change the type
-        templatetype = VALUE_LIST;
-        u.templates = new_templates;
-      }
-      break; }
-    
     case TEMPLATE_ERROR: case TEMPLATE_NOTUSED:
     case OMIT_VALUE:     case ANY_VALUE: case ANY_OR_OMIT:
     case SPECIFIC_VALUE:
@@ -3285,9 +3239,6 @@ end:
     case NAMED_TEMPLATE_LIST:
       str = generate_code_init_se(str, name);
       break;
-    case VALUE_LIST_ALL_FROM:
-      str = generate_code_init_all_from_list(str, name);
-      break;
     case ALL_FROM:
       str = generate_code_init_all_from(str, name);
       break;
@@ -3594,7 +3545,6 @@ end:
   {
     switch (templatetype) {
     case ALL_FROM:
-    case VALUE_LIST_ALL_FROM:
       return false;
     case TEMPLATE_ERROR: /**< erroneous template */
     case TEMPLATE_NOTUSED: /**< not used symbol (-) */
@@ -4181,52 +4131,6 @@ compile_time:
     return str;
   }
 
-  char *Template::generate_code_init_all_from_list(char *str, const char *name)
-  {
-    // FIXME: this is the third instance
-    expression_struct expr;
-    Code::init_expr(&expr);
-    switch (u.all_from->templatetype) {
-    case SPECIFIC_VALUE: {
-      Value *spec = u.all_from->u.specific_value;
-      switch (spec->get_valuetype()) {
-      case Common::Value::V_REFD: {
-        Common::Reference  *ref = spec->get_reference();
-        Ref_pard* ref_pard = dynamic_cast<Ref_pard*>(ref);
-        if (ref_pard)
-          ref_pard->generate_code_cached(&expr);
-        else
-          ref->generate_code(&expr);
-        break; }
-      default:
-        FATAL_ERROR("vtype %d", spec->get_valuetype());
-        break;
-      }
-      break; }
-
-    default:
-      FATAL_ERROR("ttype %d", u.all_from->templatetype);
-      break;
-    }
-
-    if (expr.preamble)
-     str = mputstr(str, expr.preamble);
-    
-    str = mputprintf(str,
-      "%s.set_type(VALUE_LIST, %s.n_elem());\n"
-      "for (int i_i = 0, i_lim = %s.n_elem(); i_i < i_lim; ++i_i) {\n",
-      name,
-      expr.expr,
-      expr.expr);
-    string embedded_name(name);
-    embedded_name += ".list_item(i_i)";
-    str = generate_code_init_all_from(str, embedded_name.c_str());
-    str = mputstrn(str, "}\n", 2);
-
-    Code::free_expr(&expr);
-    return str;
-  }
-
   char *Template::generate_code_init_se(char *str, const char *name)
   { // named template list
     Type *type = my_governor->get_type_refd_last();
@@ -4320,16 +4224,13 @@ compile_time:
           Code::free_expr(&expr);
         }
         else {
-          str_set_type = mputstr (str_set_type, ass->get_id().get_name().c_str());
-          if (subrefs) {
-            expression_struct expr;
-            Code::init_expr(&expr);
+          expression_struct expr;
+          Code::init_expr(&expr);
 
-            subrefs->generate_code(&expr, ass);
-            str_set_type = mputprintf(str_set_type, "%s", expr.expr);
+          ref->generate_code(&expr);
+          str_set_type = mputprintf(str_set_type, "%s", expr.expr);
 
-            Code::free_expr(&expr);
-          }
+          Code::free_expr(&expr);
         }
         
         switch(ass->get_asstype()) {
@@ -4370,8 +4271,6 @@ compile_time:
       for (size_t vi = 0; vi < nof_ts; ++vi) {
         Template *t = u.templates->get_t_byIndex(vi);
         switch (t->templatetype) {
-        case VALUE_LIST_ALL_FROM:
-          FATAL_ERROR("VALUE_LIST_ALL_FROM not handled");
         case ALL_FROM: {
           expression_struct expr;
           Code::init_expr(&expr);
@@ -4648,9 +4547,6 @@ compile_time:
           shifty += ".n_elem() /* 3442 */";
           Code::free_expr(&expr);
           break; }
-        case VALUE_LIST_ALL_FROM:
-          FATAL_ERROR("Not possible");
-          break; // not reached
 
         default:
           if (t->needs_temp_ref()) {
@@ -4998,7 +4894,6 @@ compile_time:
     case NAMED_TEMPLATE_LIST:
       return u.named_templates->get_nof_nts() > 1;
     case ALL_FROM:
-    case VALUE_LIST_ALL_FROM:
       return false;
     case VALUE_LIST:
     case COMPLEMENTED_LIST:
@@ -5069,7 +4964,6 @@ compile_time:
     case DECODE_MATCH:
       return false;
     case ALL_FROM:
-    case VALUE_LIST_ALL_FROM:
       return false;
     case TEMPLATE_CONCAT:
       return u.concat.op1->has_single_expr() && u.concat.op2->has_single_expr();
@@ -5222,7 +5116,6 @@ compile_time:
       u.pstring->dump(level+1);
       break;
     case ALL_FROM:
-    case VALUE_LIST_ALL_FROM:
       u.all_from->dump(level+1);
       break;
     case DECODE_MATCH:

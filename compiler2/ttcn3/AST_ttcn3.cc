@@ -8285,7 +8285,6 @@ namespace Ttcn {
       break; }
 
     case Template::ALL_FROM:
-    case Template::VALUE_LIST_ALL_FROM:
       FATAL_ERROR("should have been flattened");
       break;
     case Template::SUPERSET_MATCH:
