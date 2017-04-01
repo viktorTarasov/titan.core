@@ -130,7 +130,6 @@ static const string anyname("anytype");
   bool bool_val; /* boolean value */
   char *str; /* simple string value */
   unsigned char uchar_val;
-
   int_val_t *int_val; /* integer value */
   Real float_val; /* float value */
   Identifier *id;
@@ -1867,7 +1866,7 @@ optDecodedModifier
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 63
+%expect 66
 
 %start GrammarRoot
 
@@ -3877,6 +3876,11 @@ ValueOrAttribList: // 142 is a Templates*
   '(' TemplateListElem optError ',' seqValueOrAttrib optError ')'
   {
     $$ = $5;
+    $$->add_front_t($2);
+  }
+| '(' TemplateListElem optError ')'
+  {
+    $$ = new Templates;
     $$->add_front_t($2);
   }
 | '(' error TemplateListElem optError ',' seqValueOrAttrib optError ')'
