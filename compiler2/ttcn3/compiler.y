@@ -1871,7 +1871,7 @@ optDecodedModifier
 %start GrammarRoot
 
 /*
-XXX Source of conflicts (63 S/R):
+XXX Source of conflicts (65 S/R):
 
 1.) 9 conflicts in one state
 The Expression after 'return' keyword is optional in ReturnStatement.
@@ -1911,14 +1911,19 @@ non-standard language extension.
 
 6.) 1 Conflict due to pattern concatenation
 
-7.) 26 conflicts in one state
+7.) 27 conflicts in one state
 In the DecodedContentMatch rule a SingleExpression encased in round brackets is
 followed by an in-line template. For 26 tokens (after the ')' ) the parser cannot
 decide whether the token is the beginning of the in-line template (shift) or
 the brackets are only part of the SingleExpression itself and the conflicting
 token is the next segment in the expression (reduce).
 
-8.) 4 conflicts in 4 states
+8.) 1 conflict
+In the current version when the compiler finds '(' SingleExpression . ')'
+it can not decide if it should resolve to a SingleValueOrAttrib or to a SingleExpression.
+Shift is fine as single element list can be resolved via SingleValueOrAttrib too.
+
+9.) 4 conflicts in 4 states
 In the rules for 'running' and 'alive' operations with the 'any from' clause,
 the redirect operator ("->") after the 'running' or 'alive' keyword can be the
 start of the operation's index redirect (shift) or another expression that starts
@@ -1926,9 +1931,9 @@ with "->" (reduce).
 TODO: Find out what the index redirect conflicts with. It's probably something
 that would cause a semantic error anyway, but it would be good to know.
 
-9.) 2 conflicts in the rule TypeListWithTo.
+10.) 2 conflicts in the rule TypeListWithTo.
 
-10.) 4 conflicts in 4 states
+11.) 4 conflicts in 4 states
 In the Expression and SingleExpression rules when an AnyValue or AnyOrOmit is
 followed by a LengthMatch, the parser cannot decide whether the LengthMatch token
 belongs to the AnyValue/AnyOrOmit (shift) or the resulting template (reduce).
