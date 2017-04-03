@@ -64,7 +64,13 @@ dir_exist ${TTCN3_DIR}
 file_exist ${TTCN3_DIR}/lib/libmctrjninative.so
 [[ "${LD_LIBRARY_PATH}" == *"${TTCN3_DIR}/lib"* ]] && echo "\$TTCN3_DIR/lib is added to \$LD_LIBRARY_PATH=${LD_LIBRARY_PATH}, OK" \
 || { echo "\$TTCN3_DIR is NOT added to \$LD_LIBRARY_PATH=${LD_LIBRARY_PATH}, NOT OK, exiting"; exit 1; }
+
+# make sure, that the demo is compiled, which is cleaned in make install
+pushd ${TTCN3_DIR}/demo
+make
+popd
 file_exist ${TTCN3_DIR}/demo/MyExample
+
 # Check if HelloWorld demo binary is compiled in parallel mode: output of MyExample -v contains "(parallel mode)"
 [ `${TTCN3_DIR}/demo/MyExample -v 2>&1 | grep "(parallel mode)" | wc -l` != 0 ] && echo "${TTCN3_DIR}/demo/MyExample is compiled in parallel mode, OK" \
 || { echo "${TTCN3_DIR}/demo/MyExample is compiled in single mode, NOT in parallel mode, NOT OK, exiting"; exit 1; }
