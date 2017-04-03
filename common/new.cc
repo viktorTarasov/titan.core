@@ -36,7 +36,7 @@ void operator delete(void *ptr) throw()
 
 void operator delete[](void *ptr) throw()
 {
-    if (ptr != (void*)&dummy) Free(ptr);
+    if (ptr != static_cast<void*>(&dummy)) Free(ptr);
 }
 
 /**************************************************************************/

@@ -63,7 +63,6 @@ namespace Ttcn {
       SUBSET_MATCH, /**< subset match */
       PERMUTATION_MATCH, /**< permutation match */
       ALL_FROM, /**< "all from" as part of a larger list e.g. permutation, superset, subset, etc. */
-      VALUE_LIST_ALL_FROM, /**< "all from" in a value list, itself in a larger list */
       BSTR_PATTERN, /**< bitstring pattern */
       HSTR_PATTERN, /**< hexstring pattern */
       OSTR_PATTERN, /**< octetstring pattern */
@@ -195,11 +194,6 @@ namespace Ttcn {
 
     /** Constructor for ALL_FROM */
     Template(Template*);
-
-    /** Constructor for VALUE_LIST_ALL_FROM
-     *  Takes over the innards of \a t, then deletes it.
-     *  @pre tt == VALUE_LIST_ALL_FROM */
-    Template(templatetype_t tt, Template *t);
 
     /** Constructor for NAMED_TEMPLATE_LIST */
     Template(NamedTemplates *nts);

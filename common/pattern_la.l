@@ -213,12 +213,12 @@ NUMBER 0|([1-9][0-9]*)
 
  /* invalid escape sequences */
 "\\"(.|"\n") {
-  if (isprint((unsigned char)yytext[1]))
+  if (isprint(static_cast<unsigned char>(yytext[1])))
     TTCN_pattern_warning("Use of unrecognized escape sequence `\\%c' is "
       "deprecated.", yytext[1]);
   else TTCN_pattern_warning("Use of unrecognized escape sequence `\\' + "
-    "character code %u (0x%02X) is deprecated.", (unsigned char)yytext[1],
-    (unsigned char)yytext[1]);
+    "character code %u (0x%02X) is deprecated.", static_cast<unsigned char>(yytext[1]),
+    static_cast<unsigned char>(yytext[1]));
   yylval.c = yytext[1];
   return TOK_Char;
 }
@@ -239,30 +239,30 @@ NUMBER 0|([1-9][0-9]*)
  /* erroneous characters */
 
 <SC_Hash>.|\n {
-  if (isprint((unsigned char)yytext[0]))
+  if (isprint(static_cast<unsigned char>(yytext[0])))
     TTCN_pattern_error("A digit or `(' was expected after `#' instead of "
       "character `%c'.", yytext[0]);
   else TTCN_pattern_error("A digit or `(' was expected after `#' instead of "
-    "character with code %u (0x%02X).", (unsigned char)yytext[0],
-    (unsigned char)yytext[0]);
+    "character with code %u (0x%02X).", static_cast<unsigned char>(yytext[0]),
+    static_cast<unsigned char>(yytext[0]));
 }
 
 <SC_HashParen>. {
-  if (isprint((unsigned char)yytext[0]))
+  if (isprint(static_cast<unsigned char>(yytext[0])))
     TTCN_pattern_error("A number, `,' or `)' was expected after `#(' instead "
       "of character `%c'.", yytext[0]);
   else TTCN_pattern_error("A number, `,' or `)' was expected after `#(' "
-    "instead of character with code %u (0x%02X).", (unsigned char)yytext[0],
-    (unsigned char)yytext[0]);
+    "instead of character with code %u (0x%02X).", static_cast<unsigned char>(yytext[0]),
+    static_cast<unsigned char>(yytext[0]));
 }
 
 <SC_Quadruple,SC_Quadruple_Set>. {
-  if (isprint((unsigned char)yytext[0]))
+  if (isprint(static_cast<unsigned char>(yytext[0])))
     TTCN_pattern_error("A number, `,' or `}' was expected after `\\q{' "
       "instead of character `%c'.", yytext[0]);
   else TTCN_pattern_error("A number, `,' or `}' was expected after `\\q{' "
-    "instead of character with code %u (0x%02X).", (unsigned char)yytext[0],
-    (unsigned char)yytext[0]);
+    "instead of character with code %u (0x%02X).", static_cast<unsigned char>(yytext[0]),
+    static_cast<unsigned char>(yytext[0]));
 }
 
 %%

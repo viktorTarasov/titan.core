@@ -10331,7 +10331,6 @@ error:
       self_ref |= (ass == lhs);
       break; }
     case Ttcn::Template::ALL_FROM:
-    case Ttcn::Template::VALUE_LIST_ALL_FROM:
       self_ref |= chk_expr_self_ref_templ(t->get_all_from(), lhs);
       break;
     case Ttcn::Template::TEMPLATE_LIST:

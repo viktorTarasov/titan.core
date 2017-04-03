@@ -32,7 +32,7 @@ void string_chain_add(string_chain_t **ec, char *s)
       i = i->next;
     }
   }
-  new_ec = (string_chain_t*) Malloc(sizeof(*new_ec));
+  new_ec = static_cast<string_chain_t*>( Malloc(sizeof(*new_ec)));
   new_ec->str = s;
   new_ec->next = NULL;
   if (i != NULL) i->next = new_ec;
@@ -85,11 +85,10 @@ const char* string_map_add(string_map_t *map, char *key,
   } else {
     /* creating a new entry */
     map->n++;
-    map->data = (string_keyvalue_t**)
-      Realloc(map->data, (map->n) * sizeof(*map->data));
+    map->data = static_cast<string_keyvalue_t**>(Realloc(map->data, (map->n) * sizeof(*map->data)));
     memmove(map->data + pos + 1, map->data + pos,
             (map->n - pos - 1) * sizeof(*map->data));
-    map->data[pos] = (string_keyvalue_t*)Malloc(sizeof(**map->data));
+    map->data[pos] = static_cast<string_keyvalue_t*>(Malloc(sizeof(**map->data)));
     map->data[pos]->key = key;
     map->data[pos]->value = value;
     map->data[pos]->value_len = value_len;
@@ -118,7 +117,7 @@ const char* string_map_get_bykey(const string_map_t *map,
 
 string_map_t* string_map_new(void)
 {
-  string_map_t *map=(string_map_t*)Malloc(sizeof(string_map_t));
+  string_map_t *map = static_cast<string_map_t*>(Malloc(sizeof(string_map_t)));
   map->n=0;
   map->data=NULL;
   return map;

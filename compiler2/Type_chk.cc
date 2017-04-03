@@ -5541,7 +5541,6 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
       t->error("Generic wildcard `%s' cannot be used for signature `%s'",
                t->get_templatetype_str(), type->get_fullname().c_str());
     break;}
-  case Ttcn::Template::VALUE_LIST_ALL_FROM:
   case Ttcn::Template::ALL_FROM: {
     Ttcn::Template *af = t->get_all_from();
     switch (af->get_templatetype()) {
