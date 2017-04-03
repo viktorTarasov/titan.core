@@ -80,7 +80,9 @@ file_exist ${JUNIT_FULL}
 file_exist ${HAMCREST_FULL}
 
 # run test (and build its dependencies if needed)
+BASEDIR=${0%/*}
 ant \
+-f $BASEDIR/build.xml \
 -Djunit.full=${JUNIT_FULL} \
 -Dhamcrest.full=${HAMCREST_FULL} \
 TITAN_Executor_API_test
