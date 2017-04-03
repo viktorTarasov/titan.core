@@ -287,9 +287,9 @@ extern "C" {
 #ifdef __cplusplus
   /** Convert a patch level to the "Ericsson letter" */
   inline char eri(unsigned int p) { /* p stands for patch level */
-    char   i = (char)('A' + p); /* i stands for "if only it was that simple" */
+    char   i = static_cast<char>('A' + p); /* i stands for "if only it was that simple" */
     const int result = i + (i >= 'I') + 4 * (i >= 'N') + (i >= 'R');
-    return (char)result; /*check: does not overflow*/
+    return static_cast<char>(result); /*check: does not overflow*/
   }
 
 } /* extern "C" */

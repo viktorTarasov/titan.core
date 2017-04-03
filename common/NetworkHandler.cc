@@ -188,11 +188,11 @@ bool IPv4Address::set_addr(const char *p_addr, unsigned short p_port)
   clean_up();
   if (p_addr != NULL) {
     struct hostent *hptr = gethostbyname(p_addr);
-    if (hptr != NULL && (size_t)hptr->h_length == sizeof(struct in_addr)) {
+    if (hptr != NULL && static_cast<size_t>(hptr->h_length) == sizeof(struct in_addr)) {
       m_addr.sin_family = AF_INET;
       m_addr.sin_port = htons(p_port);
       memset(m_addr.sin_zero, 0, sizeof(m_addr.sin_zero));
-      memcpy(&m_addr.sin_addr, hptr->h_addr_list[0], hptr->h_length);
+      memcpy(&m_addr.sin_addr, hptr->h_addr_list[0], static_cast<size_t>(hptr->h_length));
       strncpy(m_addr_str, inet_ntoa(m_addr.sin_addr), sizeof(m_addr_str));
       strncpy(m_host_str, hptr->h_name, sizeof(m_host_str));
       return true;
@@ -212,7 +212,7 @@ int IPv4Address::accept(int p_sockfd)
       struct hostent *hptr =
         gethostbyaddr((const char *)&m_addr.sin_addr,
                       sizeof(m_addr.sin_addr), m_addr.sin_family);
-      if (hptr != NULL && (size_t)hptr->h_length == sizeof(struct in_addr)) {
+      if (hptr != NULL && static_cast<size_t>(hptr->h_length) == sizeof(struct in_addr)) {
         strncpy(m_host_str, hptr->h_name, sizeof(m_host_str));
       }
     }
@@ -231,7 +231,7 @@ int IPv4Address::getsockname(int p_sockfd)
       struct hostent *hptr =
         gethostbyaddr((const char *)&m_addr.sin_addr,
                       sizeof(m_addr.sin_addr), m_addr.sin_family);
-      if (hptr != NULL && (size_t)hptr->h_length == sizeof(struct in_addr)) {
+      if (hptr != NULL && static_cast<size_t>(hptr->h_length) == sizeof(struct in_addr)) {
         strncpy(m_host_str, hptr->h_name, sizeof(m_host_str));
       }
     }
@@ -241,7 +241,7 @@ int IPv4Address::getsockname(int p_sockfd)
 
 bool IPv4Address::operator==(const IPAddress& p_addr) const
 {
-  return memcmp(&m_addr.sin_addr, &(((const IPv4Address&)p_addr).m_addr.sin_addr), sizeof(m_addr.sin_addr)) == 0;
+  return memcmp(&m_addr.sin_addr, &((static_cast<const IPv4Address&>(p_addr)).m_addr.sin_addr), sizeof(m_addr.sin_addr)) == 0;
 }
 
 bool IPv4Address::operator!=(const IPAddress& p_addr) const
@@ -252,9 +252,9 @@ bool IPv4Address::operator!=(const IPAddress& p_addr) const
 IPAddress& IPv4Address::operator=(const IPAddress& p_addr)
 {
   clean_up();
-  memcpy(&m_addr, &((const IPv4Address&)p_addr).m_addr, sizeof(m_addr));
-  strncpy(m_host_str, ((const IPv4Address&)p_addr).m_host_str, sizeof(m_host_str));
-  strncpy(m_addr_str, ((const IPv4Address&)p_addr).m_addr_str, sizeof(m_addr_str));
+  memcpy(&m_addr, &(static_cast<const IPv4Address&>(p_addr)).m_addr, sizeof(m_addr));
+  strncpy(m_host_str, (static_cast<const IPv4Address&>(p_addr)).m_host_str, sizeof(m_host_str));
+  strncpy(m_addr_str, (static_cast<const IPv4Address&>(p_addr)).m_addr_str, sizeof(m_addr_str));
   return *this;
 }
 
@@ -325,7 +325,7 @@ bool IPv6Address::set_addr(const char *p_addr, unsigned short p_port)
   snprintf(p_port_str, sizeof(p_port_str), "%u", p_port);
   int s = getaddrinfo(p_addr, p_port_str, &hints, &res);
   if (s == 0) {
-    struct sockaddr_in6 *addr = (struct sockaddr_in6 *)(void*)res->ai_addr;
+    struct sockaddr_in6 *addr = static_cast<struct sockaddr_in6 *>(static_cast<void*>(res->ai_addr));
     // The (void*) shuts up the "cast increases required alignment" warning.
     // Hopefully, the res->ai_addr points to a properly aligned sockaddr_in6
     // and we won't have problems like these if we decide to support Sparc:
@@ -382,7 +382,7 @@ int IPv6Address::getsockname(int p_sockfd)
 
 bool IPv6Address::operator==(const IPAddress& p_addr) const
 {
-  return memcmp(&m_addr.sin6_addr, &(((const IPv6Address&)p_addr).m_addr.sin6_addr), sizeof(m_addr.sin6_addr)) == 0;
+  return memcmp(&m_addr.sin6_addr, &((static_cast<const IPv6Address&>(p_addr)).m_addr.sin6_addr), sizeof(m_addr.sin6_addr)) == 0;
 }
 
 bool IPv6Address::operator!=(const IPAddress& p_addr) const
@@ -393,9 +393,9 @@ bool IPv6Address::operator!=(const IPAddress& p_addr) const
 IPAddress& IPv6Address::operator=(const IPAddress& p_addr)
 {
   clean_up();
-  memcpy(&m_addr, &((const IPv6Address&)p_addr).m_addr, sizeof(m_addr));
-  strncpy(m_host_str, ((const IPv6Address&)p_addr).m_host_str, sizeof(m_host_str));
-  strncpy(m_addr_str, ((const IPv6Address&)p_addr).m_addr_str, sizeof(m_addr_str));
+  memcpy(&m_addr, &(static_cast<const IPv6Address&>(p_addr)).m_addr, sizeof(m_addr));
+  strncpy(m_host_str, (static_cast<const IPv6Address&>(p_addr)).m_host_str, sizeof(m_host_str));
+  strncpy(m_addr_str, (static_cast<const IPv6Address&>(p_addr)).m_addr_str, sizeof(m_addr_str));
   return *this;
 }
 

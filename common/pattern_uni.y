@@ -449,10 +449,10 @@ RE_Set:
       $$ = $4;
     else
       $$ = new QuadSet();
-    if ((unsigned int)']' > $3.value) {
+    if (static_cast<unsigned int>(']') > $3.value) {
       TTCN_pattern_error("Invalid range in the character set: the "
         "character code of the lower bound (%u) is higher than that of the "
-        "upper bound (%u).", ']', (unsigned int)$3.value);
+        "upper bound (%u).", ']', static_cast<unsigned int>($3.value));
     }
     $$->add(new QuadInterval(Quad(']'), Quad($3.value)));
     if ($5) {
@@ -504,7 +504,7 @@ RE_Set_Elem:
     if ($1.value > $3.value) {
       TTCN_pattern_error("Invalid range in the character set: the "
         "character code of the lower bound (%u) is higher than that of the "
-        "upper bound (%u).", (unsigned int)$1.value, (unsigned int)$3.value);
+        "upper bound (%u).", static_cast<unsigned int>($1.value), static_cast<unsigned int>($3.value));
     }
     $$ = new QuadSet();
     $$->add(new QuadInterval(Quad($1.value), Quad($3.value)));
@@ -574,10 +574,10 @@ RE_Quadruple:
     if ($3 == 0 && $5 == 0 && $7 == 0 && $9 == 0) TTCN_pattern_error("Zero "
       "character (i.e. quadruple `\\q{0,0,0,0}') is not supported in a "
       "pattern for type universal charstring.");
-    $$.comp.group = (unsigned char)$3;
-    $$.comp.plane = (unsigned char)$5;
-    $$.comp.row = (unsigned char)$7;
-    $$.comp.cell = (unsigned char)$9;
+    $$.comp.group = static_cast<unsigned char>($3);
+    $$.comp.plane = static_cast<unsigned char>($5);
+    $$.comp.row = static_cast<unsigned char>($7);
+    $$.comp.cell = static_cast<unsigned char>($9);
   }
 ;
 
@@ -611,7 +611,7 @@ char* TTCN_pattern_to_regexp_uni(const char* p_pattern, bool p_nocase, int** gro
   // needed by regexp to find user specified groups
   if (user_groups /*&& groups*/) {
     if (groups) {
-      *groups = (int*)Malloc(sizeof(int) * (user_groups + 1));
+      *groups = static_cast<int*>(Malloc(sizeof(int) * (user_groups + 1)));
       (*groups)[0] = user_groups;
     }
 
@@ -627,7 +627,7 @@ char* TTCN_pattern_to_regexp_uni(const char* p_pattern, bool p_nocase, int** gro
       }
     }
   } else if (groups)
-    *groups = (int*)0;
+    *groups = static_cast<int*>(0);
 
   return ret_val;
 }

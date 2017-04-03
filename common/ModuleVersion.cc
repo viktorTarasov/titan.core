@@ -29,7 +29,7 @@ std::string ModuleVersion::toString() const {
   }
   if (release != 0) {
     stream << separator << 'R' << release << separator
-      << (char)('A' + patch);
+      << static_cast<char>('A' + patch);
   }
   if (build != 0) {
     stream << separator << build;

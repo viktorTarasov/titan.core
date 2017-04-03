@@ -489,7 +489,7 @@ RE_Set:
     if (']' > $3) {
       TTCN_pattern_error("Invalid range `%s' in the character set: the "
 	"character code of the lower bound (%u) is higher than that of the "
-	"upper bound (%u).", range_str, ']', (unsigned char)$3);
+	"upper bound (%u).", range_str, ']', static_cast<unsigned char>($3));
     } else {
       if (set_has_range($$, ']', $3)) {
 	character_set *tmpset = set_init();
@@ -550,7 +550,7 @@ RE_Set_Elem:
       char *range_str = print_range($1, $3);
       TTCN_pattern_error("Invalid range `%s' in the character set: the "
 	"character code of the lower bound (%u) is higher than that of the "
-	"upper bound (%u).", range_str, (unsigned char)$1, (unsigned char)$3);
+	"upper bound (%u).", range_str, static_cast<unsigned char>($1), static_cast<unsigned char>($3));
       Free(range_str);
     }
     $$ = set_init();
@@ -715,8 +715,8 @@ char *print_character(char c)
   case '\r':
     return mcopystr("\\r");
   default:
-    if (isprint((unsigned char)c)) return mprintf("%c", c);
-    else return mprintf("\\q{0,0,0,%u}", (unsigned char)c);
+    if (isprint(static_cast<unsigned char>(c))) return mprintf("%c", c);
+    else return mprintf("\\q{0,0,0,%u}", static_cast<unsigned char>(c));
   }
 }
 
@@ -739,14 +739,14 @@ struct character_set {
 
 character_set *set_init()
 {
-  character_set *set = (character_set*)Malloc(sizeof(*set));
+  character_set *set = static_cast<character_set*>(Malloc(sizeof(*set)));
   memset(set->set_members, 0, sizeof(set->set_members));
   return set;
 }
 
 character_set *set_copy(const character_set *set)
 {
-  character_set *set2 = (character_set*)Malloc(sizeof(*set2));
+  character_set *set2 = static_cast<character_set*>(Malloc(sizeof(*set2)));
   memcpy(set2, set, sizeof(*set2));
   return set2;
 }
@@ -791,7 +791,7 @@ void set_remove_char(character_set *set, char c)
 
 int set_has_range(const character_set *set, char lower, char upper)
 {
-  for (size_t i = lower; i <= (unsigned char)upper; i++)
+  for (size_t i = lower; i <= static_cast<unsigned char>(upper); i++)
     if (set->set_members[i / CS_BITS_PER_ELEM] & 1UL << i % CS_BITS_PER_ELEM)
       return 1;
   return 0;
@@ -799,7 +799,7 @@ int set_has_range(const character_set *set, char lower, char upper)
 
 void set_add_range(character_set *set, char lower, char upper)
 {
-  for (size_t i = lower; i <= (unsigned char)upper; i++)
+  for (size_t i = lower; i <= static_cast<unsigned char>(upper); i++)
     set->set_members[i / CS_BITS_PER_ELEM] |= 1UL << i % CS_BITS_PER_ELEM;
 }
 
