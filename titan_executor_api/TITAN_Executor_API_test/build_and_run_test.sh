@@ -80,7 +80,8 @@ file_exist ${JUNIT_FULL}
 file_exist ${HAMCREST_FULL}
 
 # run test (and build its dependencies if needed)
-BASEDIR=${0%/*}
+BASEDIR=$(dirname $0)
+echo BASEDIR: $BASEDIR
 ant \
 -f $BASEDIR/build.xml \
 -Djunit.full=${JUNIT_FULL} \
