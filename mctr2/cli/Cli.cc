@@ -308,7 +308,7 @@ void Cli::notify(const struct timeval *timestamp, const char *source,
         fflush(stdout);
         break;
       case TSF_SEC:
-        printf("%ld.%06ld %s: %s\n", (long)timestamp->tv_sec, timestamp->tv_usec, source, message);
+        printf("%ld.%06ld %s: %s\n", static_cast<long>( timestamp->tv_sec ), timestamp->tv_usec, source, message);
         fflush(stdout);
       
         break;

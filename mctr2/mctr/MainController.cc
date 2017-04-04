@@ -343,8 +343,8 @@ void MainController::add_string_to_set(string_set *set, const char *str)
     if (result > 0) break;
     else if (result == 0) return;
   }
-  set->elements = (char**)Realloc(set->elements,
-    (set->n_elements + 1) * sizeof(*set->elements));
+  set->elements = static_cast<char**>( Realloc(set->elements,
+    (set->n_elements + 1) * sizeof(*set->elements)) );
   memmove(set->elements + i + 1, set->elements + i,
     (set->n_elements - i) * sizeof(*set->elements));
   set->elements[i] = mcopystr(str);
@@ -362,8 +362,8 @@ void MainController::remove_string_from_set(string_set *set,
       set->n_elements--;
       memmove(set->elements + i, set->elements + i + 1,
         (set->n_elements - i) * sizeof(*set->elements));
-      set->elements = (char**)Realloc(set->elements,
-        set->n_elements * sizeof(*set->elements));
+      set->elements = static_cast<char**>( Realloc(set->elements,
+        set->n_elements * sizeof(*set->elements)) );
     }
     return;
   }
@@ -2303,9 +2303,14 @@ int MainController::get_poll_timeout()
 {
   if (timer_head != NULL) {
     double offset = timer_head->expiration - time_now();
-    if (offset > 0.0) return (int)(1000.0 * offset);
-    else return 0;
-  } else return -1;
+    if (offset > 0.0) {
+      return static_cast<int>(1000.0 * offset);
+    } else {
+      return 0;
+    }
+  } else {
+    return -1;
+  }
 }
 
 void MainController::handle_expired_timers()
@@ -3625,7 +3630,7 @@ void MainController::send_error(int fd, const char *fmt, ...)
 void MainController::send_error_str(int fd, const char *reason)
 {
   Text_Buf text_buf;
-  text_buf.push_int((RInt)MSG_ERROR);
+  text_buf.push_int(static_cast<RInt>( MSG_ERROR ));
   text_buf.push_string(reason);
   send_message(fd, text_buf);
 }
@@ -6154,7 +6159,7 @@ unsigned short MainController::start_session(const char *local_address,
   }
 
   const int on = 1;
-  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&on,
+  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*) &on,
     sizeof(on))) {
     error("System call setsockopt (SO_REUSEADDR) failed on server socket: "
       "%s", strerror(errno));
@@ -6163,7 +6168,7 @@ unsigned short MainController::start_session(const char *local_address,
     return 0;
   }
 
-  if (setsockopt(server_fd, IPPROTO_TCP, TCP_NODELAY, (const char*)&on,
+  if (setsockopt(server_fd, IPPROTO_TCP, TCP_NODELAY, (const char*) &on,
     sizeof(on))) {
     error("System call setsockopt (TCP_NODELAY) failed on server socket: "
       "%s", strerror(errno));
