@@ -134,7 +134,7 @@ public:
   bool operator<(const char_limit_t& right) const { return chr<right.chr; }
   bool operator==(const char_limit_t& right) const { return chr==right.chr; }
   bool is_adjacent(const char_limit_t& other) const { return (chr+1==other.chr); }
-  char get_char() const { return (char)chr; }
+  char get_char() const { return static_cast<char>(chr); }
   char_limit_t next() const;
   char_limit_t previous() const;
   void check_single_value() const {}
@@ -410,19 +410,19 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
   // calculate the sweep points
   dynamic_array<sweep_point_t> sweep_points;
   sweep_point_t spi(0,0);
-  while ( (spi.a_idx<(int)values.size()) || (spi.b_idx<(int)other.values.size()) )
+  while ( (spi.a_idx < static_cast<int>(values.size())) || (spi.b_idx < static_cast<int>(other.values.size())) )
   {
-    if (spi.a_idx>=(int)values.size()) {
+    if (spi.a_idx >= static_cast<int>(values.size())) {
       sweep_points.add(sweep_point_t(-1,spi.b_idx));
       spi.b_idx++;
-    } else if (spi.b_idx>=(int)other.values.size()) {
+    } else if (spi.b_idx >= static_cast<int>(other.values.size())) {
       sweep_points.add(sweep_point_t(spi.a_idx, -1));
       spi.a_idx++;
     } else { // both are within the vector, get smaller or get both if equal
-      if (values[(size_t)spi.a_idx]<other.values[(size_t)spi.b_idx]) {
+      if (values[static_cast<size_t>(spi.a_idx)] < other.values[static_cast<size_t>(spi.b_idx)]) {
         sweep_points.add(sweep_point_t(spi.a_idx, -1));
         spi.a_idx++;
-      } else if (values[(size_t)spi.a_idx]==other.values[(size_t)spi.b_idx]) {
+      } else if (values[static_cast<size_t>(spi.a_idx)] == other.values[static_cast<size_t>(spi.b_idx)]) {
         sweep_points.add(spi);
         spi.a_idx++;
         spi.b_idx++;
@@ -443,7 +443,7 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
     bool a_point = false;
     if (sweep_points[i].a_idx!=-1) { // we are at a value in A
       a_point = true;
-      if (intervals[(size_t)sweep_points[i].a_idx]) { // this is a starting point of an interval in A
+      if (intervals[static_cast<size_t>(sweep_points[i].a_idx)]) { // this is a starting point of an interval in A
         a_interval = true;
         if (in_a) FATAL_ERROR("RangeListConstraint::set_operation(): invalid double interval");
         in_a = true;
@@ -457,7 +457,7 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
     bool b_point = false;
     if (sweep_points[i].b_idx!=-1) { // we are at a value in B
       b_point = true;
-      if (other.intervals[(size_t)sweep_points[i].b_idx]) { // this is a starting point of an interval in B
+      if (other.intervals[static_cast<size_t>(sweep_points[i].b_idx)]) { // this is a starting point of an interval in B
         b_interval = true;
         if (in_b) FATAL_ERROR("RangeListConstraint::set_operation(): invalid double interval");
         in_b = true;
@@ -479,15 +479,15 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
     {
       LIMITTYPE first, second;
       if (sweep_points[i-1].a_idx!=-1) {
-        first = values[(size_t)sweep_points[i-1].a_idx];
+        first = values[static_cast<size_t>(sweep_points[i-1].a_idx)];
       } else {
-        if (sweep_points[i-1].b_idx!=-1) first = other.values[(size_t)sweep_points[i-1].b_idx];
+        if (sweep_points[i-1].b_idx!=-1) first = other.values[static_cast<size_t>(sweep_points[i-1].b_idx)];
         else FATAL_ERROR("RangeListConstraint::set_operation()");
       }
       if (sweep_points[i].a_idx!=-1) {
-        second = values[(size_t)sweep_points[i].a_idx];
+        second = values[static_cast<size_t>(sweep_points[i].a_idx)];
       } else {
-        if (sweep_points[i].b_idx!=-1) second = other.values[(size_t)sweep_points[i].b_idx];
+        if (sweep_points[i].b_idx!=-1) second = other.values[static_cast<size_t>(sweep_points[i].b_idx)];
         else FATAL_ERROR("RangeListConstraint::set_operation()");
       }
       if (first.is_adjacent(second)) {
@@ -506,9 +506,9 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
         } else {
           LIMITTYPE l;
           if (sweep_points[i].a_idx!=-1) {
-            l = values[(size_t)sweep_points[i].a_idx];
+            l = values[static_cast<size_t>(sweep_points[i].a_idx)];
           } else {
-            if (sweep_points[i].b_idx!=-1) l = other.values[(size_t)sweep_points[i].b_idx];
+            if (sweep_points[i].b_idx!=-1) l = other.values[static_cast<size_t>(sweep_points[i].b_idx)];
             else FATAL_ERROR("RangeListConstraint::set_operation()");
           }
           ret_val.values.add(l);
@@ -521,9 +521,9 @@ RangeListConstraint<LIMITTYPE> RangeListConstraint<LIMITTYPE>::set_operation(con
         } else {
           LIMITTYPE l;
           if (sweep_points[i].a_idx!=-1) {
-            l = values[(size_t)sweep_points[i].a_idx];
+            l = values[static_cast<size_t>(sweep_points[i].a_idx)];
           } else {
-            if (sweep_points[i].b_idx!=-1) l = other.values[(size_t)sweep_points[i].b_idx];
+            if (sweep_points[i].b_idx!=-1) l = other.values[static_cast<size_t>(sweep_points[i].b_idx)];
             else FATAL_ERROR("RangeListConstraint::set_operation()");
           }
           ret_val.values.add(l);
@@ -808,8 +808,8 @@ void StringSizeAndValueListConstraint<BITCNT,ELEMSIZE>::canonicalize(map<string,
     // calculate the number of all possible values
     size_t size = values_lengths.get_nth_key(i); // length of string
     size_t count = *(values_lengths.get_nth_elem(i)); // number of strings with this length
-    size_t all_values_count = ~((size_t)0); // fake infinity
-    if (BITCNT*size<sizeof(size_t)*8) all_values_count = ( ((size_t)1) << (BITCNT*size) );
+    size_t all_values_count = ~(static_cast<size_t>(0)); // fake infinity
+    if (BITCNT*size<sizeof(size_t)*8) all_values_count = ( (static_cast<size_t>(1)) << (BITCNT*size) );
     if (count==all_values_count) {
       // delete all values which have this size
       for (size_t hv_idx=0; hv_idx<values.size(); hv_idx++) {
@@ -829,9 +829,9 @@ void StringSizeAndValueListConstraint<BITCNT,ELEMSIZE>::canonicalize(map<string,
         for (size_t elem_idx=0; elem_idx<size; elem_idx++) { // for every element
           size_t ei = ( ( act_value >> (elem_idx*BITCNT) ) & ( (1<<BITCNT) - 1 ) );
           if (BITCNT==1) {
-            str += '0' + (char)ei;
+            str += '0' + static_cast<char>(ei);
           } else if (BITCNT==4) {
-            str += (ei<10) ? ('0' + (char)ei) : ('A' + ((char)ei-10));
+            str += (ei<10) ? ('0' + static_cast<char>(ei)) : ('A' + (static_cast<char>(ei-10)));
           } else if (BITCNT==8) {
             char c = ei & 0x0F;
             str += (c<10) ? ('0' + c) : ('A' + (c-10));

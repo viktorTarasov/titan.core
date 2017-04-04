@@ -64,8 +64,8 @@ namespace Ttcn {
   void StatementBlock::dump(unsigned int level) const
   {
     size_t n = stmts.size();
-    DEBUG(level, "StatementBlock at %p with %lu", (const void*)this,
-      (unsigned long) n);
+    DEBUG(level, "StatementBlock at %p with %lu", static_cast<const void*>(this),
+      static_cast<unsigned long>( n ));
     for (size_t i = 0; i < n; ++i) {
       stmts[i]->dump(level+1);
     }
@@ -1502,7 +1502,7 @@ namespace Ttcn {
 
   void Statement::dump(unsigned int level) const
   {
-    DEBUG(level, "Statement at %p, a(n) %s", (const void *)this,
+    DEBUG(level, "Statement at %p, a(n) %s", static_cast<const void *>(this),
           get_stmt_name());
     switch (statementtype) {
     case S_TESTCASE_INSTANCE:
@@ -5100,7 +5100,7 @@ error:
           // make sure all possible indices are allowed by the subtype
           Ttcn::ArrayDimension* dim = p_array_dims->get_dim_byIndex(0);
           for (size_t i = 0; i < dim->get_size(); ++i) {
-            Value v(Value::V_INT, dim->get_offset() + (Int)i);
+            Value v(Value::V_INT, dim->get_offset() + static_cast<Int>(i));
             ref_type->get_sub_type()->chk_this_value(&v);
           }
         }
@@ -5130,7 +5130,7 @@ error:
               if (dim->get_size() != nof_dims) {
                 p_index_ref->error("Size of integer array is invalid: the %s array"
                   " has %lu dimensions, but the integer array has %lu element%s",
-                  p_array_type, (unsigned long)nof_dims, (unsigned long)dim->get_size(),
+                  p_array_type, static_cast<unsigned long>(nof_dims), static_cast<unsigned long>(dim->get_size()),
                   dim->get_size() == 1 ? "" : "s");
                 error_flag = TRUE;
               }
@@ -5148,10 +5148,10 @@ error:
               // type's subtype
               for (size_t i = 0; i < nof_dims; ++i) {
                 Error_Context context(p_index_ref, "In dimension #%lu",
-                  (unsigned long)(i + 1));
+                  static_cast<unsigned long>(i + 1));
                 ArrayDimension* dim = p_array_dims->get_dim_byIndex(i);
                 for (size_t j = 0; j < dim->get_size(); ++j) {
-                  Value v(Value::V_INT, dim->get_offset() + (Int)j);
+                  Value v(Value::V_INT, dim->get_offset() + static_cast<Int>(j));
                   of_type->get_sub_type()->chk_this_value(&v);
                 }
               }
@@ -6794,14 +6794,14 @@ error:
   {
     const string& mytmpid=ilt->get_my_tmpid();
     bool toplevel=ilt->is_toplevel();
-    size_t goto_label_num=toplevel?(size_t)-1:ilt->get_new_label_num();
+    size_t goto_label_num=toplevel?static_cast<size_t>(-1):ilt->get_new_label_num();
     char*& out_branches=ilt->get_out_branches();
     out_branches=update_location_object(out_branches);
     string state_cond;
     if(toplevel) state_cond="";
     else {
       char *label_end = mprintf("%s_l%lu", mytmpid.c_str(),
-        (unsigned long) goto_label_num);
+        static_cast<unsigned long>( goto_label_num ));
       ags->set_il_label_end (label_end);
       Free(label_end);
       ILT_branch *branch=ilt->get_as_branch();
@@ -6810,12 +6810,12 @@ error:
       state_cond=branch->get_state_cond();
       if(!state_cond.empty()) state_cond+=" && ";
       char *s=mprintf("%s_state[%lu]==%lu", mytmpid.c_str(),
-                      (unsigned long) state_var, (unsigned long) state_var_val);
+                      static_cast<unsigned long>( state_var ), static_cast<unsigned long>( state_var_val ));
       state_cond+=s;
       Free(s);
       out_branches=mputprintf(out_branches, "%s_state[%lu]=%lu;\n",
         mytmpid.c_str(),
-        (unsigned long) state_var, (unsigned long) state_var_val);
+        static_cast<unsigned long>( state_var), static_cast<unsigned long>( state_var_val ));
     }
     for(size_t i=0; i<ags->get_nof_ags(); i++) {
       AltGuard *ag=ags->get_ag_byIndex(i);
@@ -6829,13 +6829,13 @@ error:
       if(!toplevel)
         out_branches=mputprintf(out_branches, "%s_state[%lu]=%lu;\n",
           mytmpid.c_str(),
-          (unsigned long) state_var, (unsigned long) state_var_val);
+          static_cast<unsigned long>( state_var), static_cast<unsigned long>( state_var_val ));
     } // for
     if(!toplevel)
       out_branches=mputprintf(out_branches, "goto %s;\n"
                               "%s_l%lu:\n",
                               mytmpid.c_str(),
-                              mytmpid.c_str(), (unsigned long) goto_label_num);
+                              mytmpid.c_str(), static_cast<unsigned long>( goto_label_num ));
   }
 
   void Statement::ilt_generate_code_alt(ILT *ilt)
@@ -6843,7 +6843,7 @@ error:
     const string& mytmpid=ilt->get_my_tmpid();
     size_t goto_label_num=ilt->get_new_label_num();
     char *label_end = mprintf("%s_l%lu", mytmpid.c_str(),
-      (unsigned long) goto_label_num);
+      static_cast<unsigned long>( goto_label_num ));
     ags->set_il_label_end (label_end);
     ILT_branch *branch=ilt->get_as_branch();
     string state_cond=branch->get_state_cond();
@@ -6862,8 +6862,8 @@ error:
     out_branches=mputprintf(out_branches, "%s_state[%lu]=%lu;\n"
                             "goto %s;\n"
                             "%s:\n",
-                            mytmpid.c_str(), (unsigned long) state_var,
-                            (unsigned long) state_var_val,
+                            mytmpid.c_str(), static_cast<unsigned long>( state_var ),
+                            static_cast<unsigned long>( state_var_val ),
                             mytmpid.c_str(), label_end);
     Free(label_end);
   }
@@ -6883,10 +6883,10 @@ error:
     out_branches=mputprintf(out_branches, "%s_state[%lu]=%lu;\n"
                             "goto %s;\n"
                             "%s_l%lu:\n",
-                            mytmpid.c_str(), (unsigned long) state_var,
-                            (unsigned long) state_var_val,
+                            mytmpid.c_str(), static_cast<unsigned long>( state_var ),
+                            static_cast<unsigned long>( state_var_val ),
                             mytmpid.c_str(), mytmpid.c_str(),
-                            (unsigned long) goto_label_num);
+                            static_cast<unsigned long>( goto_label_num ));
   }
 
   void Statement::ilt_generate_code_def(ILT *ilt)
@@ -6895,7 +6895,7 @@ error:
     str=update_location_object(str);
     {
       char *genname=mprintf("%s_d%lu_%s", ilt->get_my_tmpid().c_str(),
-                            (unsigned long) ilt->get_new_tmpnum(),
+                            static_cast<unsigned long>( ilt->get_new_tmpnum() ),
 			    def->get_id().get_name().c_str());
       def->set_genname(string(genname));
       Free(genname);
@@ -6907,7 +6907,7 @@ error:
   {
     char *end_label=mprintf("%s_l%lu",
                              ilt->get_my_tmpid().c_str(),
-                             (unsigned long) ilt->get_new_label_num());
+                             static_cast<unsigned long>( ilt->get_new_label_num() ));
     bool unreach=false;
     if_stmt.ics->ilt_generate_code(ilt, end_label, unreach);
     if(if_stmt.elseblock && !unreach)
@@ -7030,7 +7030,7 @@ error:
     // generate code for them anyway
     if (loop.for_stmt.varinst) {
       char *genname = mprintf("%s_d%lu_", ilt->get_my_tmpid().c_str(),
-	(unsigned long) ilt->get_new_tmpnum());
+	static_cast<unsigned long>( ilt->get_new_tmpnum() ));
       loop.for_stmt.init_varinst->set_genname(string(genname));
       Free(genname);
       loop.for_stmt.init_varinst->ilt_generate_code(ilt);
@@ -7044,7 +7044,7 @@ error:
     if (final_is_false) str = mputstr(str, "/* never occurs */;\n");
     else {
       char *label_prefix = mprintf("%s_l%lu_", ilt->get_my_tmpid().c_str(),
-	(unsigned long) ilt->get_new_label_num());
+	static_cast<unsigned long>( ilt->get_new_label_num() ));
       str = mputprintf(str, "%sbegin:\n", label_prefix);
       // do not generate the exit condition for infinite loops
       if (!final_is_true) {
@@ -7089,7 +7089,7 @@ error:
     if (expr_is_false) str = mputstr(str, "/* never occurs */;\n");
     else {
       char *label_prefix = mprintf("%s_l%lu_", ilt->get_my_tmpid().c_str(),
-	(unsigned long) ilt->get_new_label_num());
+	static_cast<unsigned long>( ilt->get_new_label_num() ));
       str = mputprintf(str, "%sbegin:\n", label_prefix);
       loop.is_ilt = true;
       if (loop.has_brk) {
@@ -7130,7 +7130,7 @@ error:
     char *label_prefix = 0;
     if (!loop.iterate_once || loop.has_brk || loop.has_cnt)
       label_prefix = mprintf("%s_l%lu_", ilt->get_my_tmpid().c_str(),
-	(unsigned long) ilt->get_new_label_num());
+	static_cast<unsigned long>( ilt->get_new_label_num() ));
     loop.is_ilt = true;
     if (loop.has_brk) {
       loop.il_label_end = new string(label_prefix);
@@ -7645,14 +7645,14 @@ error:
         str = mputprintf(str, "%s%s_err_descr_ptr = &%s_%lu_err_descr;\n",
           prefix.c_str(), refd_obj->get_lhs_name().c_str(),
           refd_obj->get_lhs_name().c_str(),
-          (unsigned long) refd_obj->get_err_descr()->get_descr_index(this));
+          static_cast<unsigned long>( refd_obj->get_err_descr()->get_descr_index(this) ));
       }
       else {
         // store the descriptor's address in the constant/template
         str = mputprintf(str, "%s%s.set_err_descr(&%s_%lu_err_descr);\n",
           prefix.c_str(), refd_obj->get_lhs_name().c_str(),
           refd_obj->get_lhs_name().c_str(),
-          (unsigned long) refd_obj->get_err_descr()->get_descr_index(this));
+          static_cast<unsigned long>( refd_obj->get_err_descr()->get_descr_index(this) ));
       }
     }
     else {
@@ -7674,7 +7674,7 @@ error:
     Code::init_expr(&expr);
     expr.expr = mputstr(expr.expr, "TTCN_Runtime::set_port_state(");
     if (!setstate_op.val->is_unfoldable()) {
-      expr.expr = mputprintf(expr.expr, "%i", (int)setstate_op.val->get_val_Int()->get_val());
+      expr.expr = mputprintf(expr.expr, "%i", static_cast<int>( setstate_op.val->get_val_Int()->get_val() ));
     } else {
       setstate_op.val->generate_code_expr(&expr);
     }
@@ -8559,7 +8559,7 @@ error:
             val->error("The length of the string to be assigned to a string "
                        "element of type `%s' should be 1 instead of %lu",
                        type->get_typename().c_str(),
-                       (unsigned long)string_len);
+                       static_cast<unsigned long>(string_len));
             goto error;
           }
         }
@@ -9176,7 +9176,7 @@ error:
       for (size_t i = 0; i < ves->get_nof_ves(); i++) {
         VariableEntry *t_ve = ves->get_ve_byIndex(i);
 	Error_Context cntxt2(t_ve, "In variable entry #%lu",
-         (unsigned long) (i + 1));
+         static_cast<unsigned long>(i + 1));
 	chk_variable_ref(t_ve->get_ref(), 0);
       }
       break;
@@ -9321,8 +9321,8 @@ error:
       error("Too %s variable entries compared to the number of %s/inout "
 	"parameters in signature `%s': %lu was expected instead of %lu",
 	nof_ves > nof_pars ? "many" : "few", is_out ? "out" : "in",
-	p_sig->get_typename().c_str(), (unsigned long) nof_pars,
-        (unsigned long) nof_ves);
+	p_sig->get_typename().c_str(), static_cast<unsigned long>( nof_pars ),
+        static_cast<unsigned long>( nof_ves ));
     }
     for (size_t i = 0; i < nof_ves; i++) {
       VariableEntry *t_ve = ves->get_ve_byIndex(i);
@@ -9330,11 +9330,11 @@ error:
 	SignatureParam *t_par = is_out ? p_parlist->get_out_param_byIndex(i)
 	  : p_parlist->get_in_param_byIndex(i);
 	Error_Context cntxt(t_ve, "In variable entry #%lu (for parameter `%s')",
-	  (unsigned long) (i + 1), t_par->get_id().get_dispname().c_str());
+	  static_cast<unsigned long>(i + 1), t_par->get_id().get_dispname().c_str());
         chk_variable_ref(t_ve->get_ref(), t_par->get_type());
       } else {
 	Error_Context cntxt(t_ve, "In variable entry #%lu",
-          (unsigned long) (i + 1));
+          static_cast<unsigned long>(i + 1));
         chk_variable_ref(t_ve->get_ref(), 0);
       }
     }
@@ -9772,7 +9772,7 @@ error:
               "if (buff.get_read_len() != 0) {\n"
               "TTCN_error(\"Parameter redirect (for parameter '%s') failed, "
               "because the buffer was not empty after decoding. "
-              "Remaining octets: %%d.\", (int)buff.get_read_len());\n"
+              "Remaining octets: %%d.\", static_cast<int>( buff.get_read_len() ));\n"
               "}\n", par_name,
               ve->get_dec_type()->get_genname_typedescriptor(scope).c_str(),
               ve->get_dec_type()->get_coding(false).c_str(), par_name);
@@ -10003,7 +10003,7 @@ error:
       return;
     }
     for (size_t i = 0; i < v.size(); ++i) {
-      Error_Context cntxt2(v[i], "In redirect #%d", (int)(i + 1));
+      Error_Context cntxt2(v[i], "In redirect #%d", static_cast<int>(i + 1));
       v[i]->get_var_ref()->chk_variable_ref();
       Value* str_enc = v[i]->get_str_enc();
       if (str_enc != NULL) {
@@ -10027,7 +10027,7 @@ error:
         for (size_t i = 0; i < v.size(); ++i) {
           if (v[i]->get_subrefs() != NULL) {
             invalid_type = true;
-            Error_Context cntxt2(v[i], "In redirect #%d", (int)(i + 1));
+            Error_Context cntxt2(v[i], "In redirect #%d", static_cast<int>(i + 1));
             v[i]->error("Cannot redirect fields of type '%s', because it is not a "
               "record or set", p_type->get_typename().c_str());
           }
@@ -10043,7 +10043,7 @@ error:
     for (size_t i = 0; i < v.size(); ++i) {
       Type* var_type = v[i]->get_var_ref()->chk_variable_ref();
       FieldOrArrayRefs* subrefs = v[i]->get_subrefs();
-      Error_Context cntxt2(v[i], "In redirect #%d", (int)(i + 1));
+      Error_Context cntxt2(v[i], "In redirect #%d", static_cast<int>(i + 1));
       Type* exp_type = NULL;
       if (subrefs != NULL) {
         // a field of the value is redirected to the referenced variable
@@ -10179,11 +10179,11 @@ error:
         Type* ref_type = v[i]->get_var_ref()->chk_variable_ref()->get_type_refd_last();
         Type* member_type = v[i]->is_decoded() ? v[i]->get_dec_type() : ref_type;
         string type_str = member_type->get_genname_value(scope);
-        members_str = mputprintf(members_str, "%s* ptr_%d;\n", type_str.c_str(), (int)i);
+        members_str = mputprintf(members_str, "%s* ptr_%d;\n", type_str.c_str(), static_cast<int>(i));
         constr_params_str = mputprintf(constr_params_str, "%s* par_%d",
-          type_str.c_str(), (int)i);
+          type_str.c_str(), static_cast<int>(i));
         constr_init_list_str = mputprintf(constr_init_list_str,
-          "ptr_%d(par_%d)", (int)i, (int)i);
+          "ptr_%d(par_%d)", static_cast<int>(i), static_cast<int>(i));
         // generate the sub-references' code in a separate expression structure and
         // insert it into the set_values function
         expression_struct subrefs_expr;
@@ -10192,7 +10192,7 @@ error:
         if (v[i]->get_subrefs() != NULL) {
           v[i]->get_subrefs()->generate_code(&subrefs_expr, value_type);
           if (redir_type->get_ownertype() == Type::OT_COMP_FIELD) {
-            CompField* cf = (CompField*)redir_type->get_owner();
+            CompField* cf = static_cast<CompField*>( redir_type->get_owner() );
             if (cf->get_is_optional()) {
               opt_suffix = "()";
             }
@@ -10241,7 +10241,7 @@ error:
               redir_coding_expr.preamble = mprintf(
                 "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
                 "get_character_coding(enc_fmt_%d, \"decoded parameter redirect\");\n",
-                (int)i);
+                static_cast<int>(i));
               redir_coding_expr.expr = mcopystr("coding");
             }
           }
@@ -10378,7 +10378,7 @@ error:
           if (use_decmatch_result) {
             set_values_str = mputprintf(set_values_str,
               "*ptr_%d = *((%s*)((*ptr_matched_temp)%s.get_decmatch_dec_res()));\n",
-              (int)i, type_str.c_str(), subrefs_str);
+              static_cast<int>(i), type_str.c_str(), subrefs_str);
           }
           if (needs_decode) {
             need_par = TRUE;
@@ -10388,7 +10388,7 @@ error:
             Type::typetype_t tt = redir_type->get_type_refd_last()->get_typetype_ttcn3();
             if (member_type->is_coding_by_function(false)) {
               set_values_str = mputprintf(set_values_str, "BITSTRING buff_%d(",
-                (int)i);
+                static_cast<int>(i));
               switch (tt) {
               case Type::T_BSTR:
                 set_values_str = mputprintf(set_values_str, "(*par)%s%s",
@@ -10431,12 +10431,12 @@ error:
                   }
                   Code::free_expr(&str_enc_expr);
                   members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
-                    (int)i);
+                    static_cast<int>(i));
                   constr_params_str = mputprintf(constr_params_str,
-                    ", CHARSTRING par_fmt_%d", (int)i);
+                    ", CHARSTRING par_fmt_%d", static_cast<int>(i));
                   constr_init_list_str = mputprintf(constr_init_list_str,
-                    ", enc_fmt_%d(par_fmt_%d)", (int)i, (int)i);
-                  set_values_str = mputprintf(set_values_str, "enc_fmt_%d", (int)i);
+                    ", enc_fmt_%d(par_fmt_%d)", static_cast<int>(i), static_cast<int>(i));
+                  set_values_str = mputprintf(set_values_str, "enc_fmt_%d", static_cast<int>(i));
                 }
                 set_values_str = mputstr(set_values_str, "))");
                 break;
@@ -10454,28 +10454,28 @@ error:
                 "buff_%d.lengthof());\n"
                 "}\n", member_type->get_coding_function(false)->
                 get_genname_from_scope(scope).c_str(),
-                (int)i, (int)i, (int)(i + 1), (int)i, (int)(i + 1), (int)i);
+                static_cast<int>(i), static_cast<int>(i), static_cast<int>(i + 1), static_cast<int>(i), static_cast<int>(i + 1), static_cast<int>(i));
             }
             else { // built-in decoding
               switch (tt) {
               case Type::T_OSTR:
               case Type::T_CSTR:
                 set_values_str = mputprintf(set_values_str,
-                  "TTCN_Buffer buff_%d((*par)%s%s);\n", (int)i, subrefs_str, opt_suffix);
+                  "TTCN_Buffer buff_%d((*par)%s%s);\n", static_cast<int>(i), subrefs_str, opt_suffix);
                 break;
               case Type::T_BSTR:
                 set_values_str = mputprintf(set_values_str,
                   "OCTETSTRING os(bit2oct((*par)%s%s));\n"
-                  "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
+                  "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, static_cast<int>(i));
                 break;
               case Type::T_HSTR:
                 set_values_str = mputprintf(set_values_str,
                   "OCTETSTRING os(hex2oct((*par)%s%s));\n"
-                  "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, (int)i);
+                  "TTCN_Buffer buff_%d(os);\n", subrefs_str, opt_suffix, static_cast<int>(i));
                 break;
               case Type::T_USTR:
                 set_values_str = mputprintf(set_values_str, "TTCN_Buffer buff_%d;\n",
-                  (int)i);
+                  static_cast<int>(i));
                 if (v[i]->get_str_enc() == NULL || !v[i]->get_str_enc()->is_unfoldable()) {
                   // if the encoding format is missing or is known at compile-time, then
                   // use the appropriate string encoding function
@@ -10483,19 +10483,19 @@ error:
                     v[i]->get_str_enc()->get_val_str() : string("UTF-8");
                   if (str_enc == "UTF-8") {
                     set_values_str = mputprintf(set_values_str,
-                      "(*par)%s%s.encode_utf8(buff_%d, false);\n", subrefs_str, opt_suffix, (int)i);
+                      "(*par)%s%s.encode_utf8(buff_%d, false);\n", subrefs_str, opt_suffix, static_cast<int>(i));
                   }
                   else if (str_enc == "UTF-16" || str_enc == "UTF-16LE" ||
                            str_enc == "UTF-16BE") {
                     set_values_str = mputprintf(set_values_str,
                       "(*par)%s%s.encode_utf16(buff_%d, CharCoding::UTF16%s);\n", subrefs_str,
-                      opt_suffix, (int)i, (str_enc == "UTF-16LE") ? "LE" : "BE");
+                      opt_suffix, static_cast<int>(i), (str_enc == "UTF-16LE") ? "LE" : "BE");
                   }
                   else if (str_enc == "UTF-32" || str_enc == "UTF-32LE" ||
                            str_enc == "UTF-32BE") {
                     set_values_str = mputprintf(set_values_str,
                       "(*par)%s%s.encode_utf32(buff_%d, CharCoding::UTF32%s);\n", subrefs_str,
-                      opt_suffix, (int)i, (str_enc == "UTF-32LE") ? "LE" : "BE");
+                      opt_suffix, static_cast<int>(i), (str_enc == "UTF-32LE") ? "LE" : "BE");
                   }
                 }
                 else {
@@ -10514,18 +10514,18 @@ error:
                   }
                   Code::free_expr(&str_enc_expr);
                   members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
-                    (int)i);
+                    static_cast<int>(i));
                   constr_params_str = mputprintf(constr_params_str,
-                    ", CHARSTRING par_fmt_%d", (int)i);
+                    ", CHARSTRING par_fmt_%d", static_cast<int>(i));
                   constr_init_list_str = mputprintf(constr_init_list_str,
-                    ", enc_fmt_%d(par_fmt_%d)", (int)i, (int)i);
+                    ", enc_fmt_%d(par_fmt_%d)", static_cast<int>(i), static_cast<int>(i));
                   if (!use_decmatch_result) {
                     // if the decmatch result code is generated too, then this variable
                     // was already generated before the main 'if'
                     set_values_str = mputprintf(set_values_str,
                       "CharCoding::CharCodingType coding = UNIVERSAL_CHARSTRING::"
                       "get_character_coding(enc_fmt_%d, \"decoded value redirect\");\n",
-                      (int)i);
+                      static_cast<int>(i));
                   }
                   set_values_str = mputprintf(set_values_str,
                     "switch (coding) {\n"
@@ -10544,8 +10544,8 @@ error:
                     "break;\n"
                     "default:\n"
                     "break;\n"
-                    "}\n", subrefs_str, opt_suffix, (int)i, subrefs_str, opt_suffix,
-                    (int)i, subrefs_str, opt_suffix, (int)i);
+                    "}\n", subrefs_str, opt_suffix, static_cast<int>(i), subrefs_str, opt_suffix,
+                    static_cast<int>(i), subrefs_str, opt_suffix, static_cast<int>(i));
                 }
                 break;
               default:
@@ -10556,10 +10556,10 @@ error:
                 "if (buff_%d.get_read_len() != 0) {\n"
                 "TTCN_error(\"Value redirect #%d failed, because the buffer was "
                 "not empty after decoding. Remaining octets: %%d.\", "
-                "(int)buff_%d.get_read_len());\n"
+                "static_cast<int>( buff_%d.get_read_len() ));\n"
                 "}\n",
-                (int)i, member_type->get_genname_typedescriptor(scope).c_str(), (int)i,
-                member_type->get_coding(false).c_str(), (int)i, (int)(i + 1), (int)i);
+                static_cast<int>(i), member_type->get_genname_typedescriptor(scope).c_str(), static_cast<int>(i),
+                member_type->get_coding(false).c_str(), static_cast<int>(i), static_cast<int>(i + 1), static_cast<int>(i));
             }
             if (use_decmatch_result) {
               set_values_str = mputstr(set_values_str, "}\n");
@@ -10578,13 +10578,13 @@ error:
               "TTCN_error(\"Failed to convert redirected value #%d from type `%s' "
               "to type `%s'.\");\n"
               "}\n",
-              TypeConv::get_conv_func(redir_type, ref_type, mod).c_str(), (int)i,
-              subrefs_str, opt_suffix, (int)(i + 1), redir_type->get_typename().c_str(),
+              TypeConv::get_conv_func(redir_type, ref_type, mod).c_str(), static_cast<int>(i),
+              subrefs_str, opt_suffix, static_cast<int>(i + 1), redir_type->get_typename().c_str(),
               ref_type->get_typename().c_str());
           }
           else {
             set_values_str = mputprintf(set_values_str, "*ptr_%d = (*par)%s%s;\n",
-              (int)i, subrefs_str, opt_suffix);
+              static_cast<int>(i), subrefs_str, opt_suffix);
           }
         }
         if (subrefs_expr.postamble != NULL) {
@@ -11368,7 +11368,7 @@ error:
       size_t blockcount=0;
       label=mprintf("%s_l%lu",
                     ilt->get_my_tmpid().c_str(),
-                    (unsigned long) ilt->get_new_label_num());
+                    static_cast<unsigned long>( ilt->get_new_label_num() ));
       str=expr->update_location_object(str);
       str=expr->generate_code_tmp(str, "if(!", blockcount);
       str=mputprintf(str, ") goto %s;\n", label);
@@ -11545,7 +11545,7 @@ error:
   }
 
   void IfClauses::dump(unsigned int level) const {
-    DEBUG(level, "%lu if clauses", (unsigned long)ics.size());
+    DEBUG(level, "%lu if clauses", static_cast<unsigned long>(ics.size()));
     for (size_t i = 0; i < ics.size(); i++)
       ics[i]->dump(level + 1);
   }
@@ -11645,14 +11645,14 @@ error:
               omit_in_value_list ? ", TRUE" : "");
           else str=mputprintf(str, "%s == %s", expr_name, exprs.expr);
           str=mputprintf(str, ") goto %s_%lu;\n", tmp_prefix,
-            (unsigned long) idx);
+            static_cast<unsigned long>( idx ));
           Code::free_expr(&exprs);
         }
         else {
           str=mputprintf(str, "{\nboolean %s_%lub;\n", tmp_prefix,
-            (unsigned long) idx);
+            static_cast<unsigned long>( idx ));
           char *s=exprs.expr;
-          exprs.expr=mprintf("%s_%lub = ", tmp_prefix, (unsigned long) idx);
+          exprs.expr=mprintf("%s_%lub = ", tmp_prefix, static_cast<unsigned long>( idx ));
           if(!is_value)
             exprs.expr=mputprintf(exprs.expr, "%s.match(%s%s)", s, expr_name,
               omit_in_value_list ? ", TRUE" : "");
@@ -11660,13 +11660,13 @@ error:
           Free(s);
           str=Code::merge_free_expr(str, &exprs);
           str=mputprintf(str, "if(%s_%lub) goto %s_%lu;\n}\n",
-            tmp_prefix, (unsigned long) idx, tmp_prefix, (unsigned long) idx);
+            tmp_prefix, static_cast<unsigned long>( idx ), tmp_prefix, static_cast<unsigned long>( idx ));
         }
       } // for i
     } // if tis
     else {
       unreach=true; // else statement
-      str=mputprintf(str, "goto %s_%lu;\n", tmp_prefix, (unsigned long) idx);
+      str=mputprintf(str, "goto %s_%lu;\n", tmp_prefix, static_cast<unsigned long>( idx ));
     }
     return str;
   }
@@ -11712,7 +11712,7 @@ error:
   {
     if(unreach) return str;
     if(!tis) unreach=true;
-    str=mputprintf(str, "%s_%lu:\n{\n", tmp_prefix, (unsigned long) idx);
+    str=mputprintf(str, "%s_%lu:\n{\n", tmp_prefix, static_cast<unsigned long>( idx ));
     if (debugger_active) {
       str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
     }
@@ -11727,7 +11727,7 @@ error:
     if(unreach) return;
     if(!tis) unreach=true;
     char*& str=ilt->get_out_branches();
-    str=mputprintf(str, "%s_%lu:\n", tmp_prefix, (unsigned long) idx);
+    str=mputprintf(str, "%s_%lu:\n", tmp_prefix, static_cast<unsigned long>( idx ));
     bool has_recv=block->has_receiving_stmt();
     if(!has_recv) {
       str=mputstr(str, "{\n");
@@ -12752,7 +12752,7 @@ error:
       AltGuard *ag = ags[i];
       if (ag->get_type() == AltGuard::AG_ELSE) break;
       str = mputprintf(str, "alt_status %s_alt_flag_%lu = %s;\n",
-	label_str, (unsigned long) i,
+	label_str, static_cast<unsigned long>( i ),
         ag->get_guard_expr() ? "ALT_UNCHECKED" : "ALT_MAYBE");
     }
     if (!has_else_branch) {
@@ -12788,7 +12788,7 @@ error:
 	if (guard_expr) {
 	  // the branch has a boolean guard expression
 	  str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_UNCHECKED) {\n",
-	    label_str, (unsigned long) i);
+	    label_str, static_cast<unsigned long>( i ));
 	  str = guard_expr->update_location_object(str);
 	  expression_struct expr;
 	  Code::init_expr(&expr);
@@ -12796,20 +12796,20 @@ error:
 	  str = mputstr(str, expr.preamble);
 	  str = mputprintf(str, "if (%s) %s_alt_flag_%lu = ALT_MAYBE;\n"
 	    "else %s_alt_flag_%lu = ALT_NO;\n", expr.expr, label_str,
-	    (unsigned long) i, label_str, (unsigned long) i);
+	    static_cast<unsigned long>( i ), label_str, static_cast<unsigned long>( i ));
 	  str = mputstr(str, expr.postamble);
 	  Code::free_expr(&expr);
 	  str = mputstr(str, "}\n");
 	}
 	// evaluation of guard operation or altstep
 	str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_MAYBE) {\n",
-	  label_str, (unsigned long) i);
+	  label_str, static_cast<unsigned long>( i ));
 	// indicates whether the guard operation might return ALT_REPEAT
 	bool can_repeat;
 	expression_struct expr;
 	Code::init_expr(&expr);
 	expr.expr = mputprintf(expr.expr, "%s_alt_flag_%lu = ", label_str,
-          (unsigned long) i);
+          static_cast<unsigned long>( i ));
 	switch (agtype) {
 	case AltGuard::AG_OP: {
 	  // the guard operation is a receiving statement
@@ -12842,15 +12842,15 @@ error:
 	str = Code::merge_free_expr(str, &expr);
 	if (can_repeat) {
 	  str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_REPEAT) goto %s;\n",
-	    label_str, (unsigned long) i, label_str);
+	    label_str, static_cast<unsigned long>( i ), label_str);
 	}
         if (agtype == AltGuard::AG_REF || agtype == AltGuard::AG_INVOKE) {
           str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_BREAK) break;\n",
-             label_str, (unsigned long) i);
+             label_str, static_cast<unsigned long>( i ));
         }
 	// execution of statement block if the guard was successful
 	str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_YES) ", label_str,
-          (unsigned long) i);
+          static_cast<unsigned long>( i ));
 	StatementBlock *block = ag->get_block();
 	if (block && block->get_nof_stmts() > 0) {
 	  str = mputstr(str, "{\n");
@@ -12880,7 +12880,7 @@ error:
       str = mputstr(str, "if (");
       for (size_t i = 0; i < ags.size(); i++)
 	str = mputprintf(str, "%s_alt_flag_%lu == ALT_NO && ", label_str,
-          (unsigned long) i);
+          static_cast<unsigned long>( i ));
       str = mputprintf(str,"%s_default_flag == ALT_NO) "
 	  "TTCN_error(\"None of the branches can be chosen in the alt "
 	  "statement in file ", label_str);
@@ -13031,7 +13031,7 @@ error:
     // temporary variables used for caching of status codes
     for (size_t i = 0; i < ags.size(); i++)
       str = mputprintf(str, "alt_status %s_alt_flag_%lu = %s;\n",
-                       label_str, (unsigned long) i,
+                       label_str, static_cast<unsigned long>( i ),
                        ags[i]->get_guard_expr()?"ALT_UNCHECKED":"ALT_MAYBE");
     str = loc.update_location_object(str);
     // the first snapshot is taken in non-blocking mode
@@ -13047,7 +13047,7 @@ error:
 	// the branch has a boolean guard expression
 	str = mputprintf(str,
                          "if (%s_alt_flag_%lu == ALT_UNCHECKED) {\n", // (2)
-                         label_str, (unsigned long) i);
+                         label_str, static_cast<unsigned long>( i ));
 	str = guard_expr->update_location_object(str);
 	expression_struct expr;
 	Code::init_expr(&expr);
@@ -13055,32 +13055,32 @@ error:
 	str = mputstr(str, expr.preamble);
 	str = mputprintf(str, "if (%s) %s_alt_flag_%lu = ALT_MAYBE;\n"
                          "else %s_alt_flag_%lu = ALT_NO;\n",
-                         expr.expr, label_str, (unsigned long) i,
-                         label_str, (unsigned long) i);
+                         expr.expr, label_str, static_cast<unsigned long>( i ),
+                         label_str, static_cast<unsigned long>( i ));
 	str = mputstr(str, expr.postamble);
 	Code::free_expr(&expr);
 	str = mputstr(str, "}\n"); // (2)
       }
       // evaluation of guard operation
       str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_MAYBE) {\n", // (2)
-                       label_str, (unsigned long) i);
+                       label_str, static_cast<unsigned long>( i ));
       expression_struct expr;
       Code::init_expr(&expr);
       expr.expr = mputprintf(expr.expr, "%s_alt_flag_%lu = ", label_str,
-        (unsigned long) i);
+        static_cast<unsigned long>( i ));
       Statement *stmt = ag->get_guard_stmt();
       str = stmt->update_location_object(str);
       stmt->generate_code_expr(&expr);
       str = Code::merge_free_expr(str, &expr);
       // execution of statement block if the guard was successful
       str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_YES) ", label_str,
-        (unsigned long) i);
+        static_cast<unsigned long>( i ));
       StatementBlock *block = ag->get_block();
       if(in_interleave) {
         if(block && block->get_nof_stmts() > 0) {
           if(block->has_receiving_stmt()) {
             str = mputprintf(str, "goto %s_branch%lu;\n",
-                             label_str, (unsigned long) i);
+                             label_str, static_cast<unsigned long>( i ));
           }
           else {
             str = mputstr(str, "{\n"); // (3)
@@ -13111,7 +13111,7 @@ error:
     for (size_t i = 0; i < ags.size(); i++) {
       if (i > 0) str = mputstr(str, " && ");
       str = mputprintf(str, "%s_alt_flag_%lu == ALT_NO", label_str,
-        (unsigned long) i);
+        static_cast<unsigned long>( i ));
     }
     str = mputstr(str, ") TTCN_error(\"None of the branches can be chosen in "
       "the response and exception handling part of call statement in file ");
@@ -13132,7 +13132,7 @@ error:
     for(size_t i=0; i<ags.size(); i++) {
       StatementBlock *block = ags[i]->get_block();
       if (block && block->has_receiving_stmt()) {
-        str = mputprintf(str, "%s_branch%lu:\n", label_str, (unsigned long) i);
+        str = mputprintf(str, "%s_branch%lu:\n", label_str, static_cast<unsigned long>( i ));
         block->ilt_generate_code(ilt);
         str = mputprintf(str, "goto %s_end;\n", label_str);
       }

@@ -318,7 +318,7 @@ namespace Ttcn {
   {
     for (size_t i = 0; i < dims.size(); i++) {
       ArrayDimension *dim = dims[i];
-      Error_Context cntxt(dim, "In array dimension #%lu", (unsigned long)(i+1));
+      Error_Context cntxt(dim, "In array dimension #%lu", static_cast<unsigned long>(i+1));
       dim->chk();
     }
   }
@@ -341,26 +341,26 @@ namespace Ttcn {
 	  subref->get_id()->get_dispname().c_str(), def_name);
 	return;
       }
-      Error_Context cntxt(subref, "In array index #%lu", (unsigned long)(i+1));
+      Error_Context cntxt(subref, "In array index #%lu", static_cast<unsigned long>(i+1));
       dims[i]->chk_index(subref->get_val(), exp_val);
     }
     if (nof_refs < nof_dims) {
       if (!allow_slicing && !any_from) {
         ref->error("Too few indices in a reference to a %s array without the "
           "'any from' clause: the array has %lu dimensions, but the reference "
-          "has only %lu array %s", def_name, (unsigned long)nof_dims,
-          (unsigned long)nof_refs, nof_refs > 1 ? "indices" : "index");
+          "has only %lu array %s", def_name, static_cast<unsigned long>(nof_dims),
+          static_cast<unsigned long>(nof_refs), nof_refs > 1 ? "indices" : "index");
       }
     } else if (nof_refs > nof_dims) {
       ref->error("Too many indices in a reference to a %s array: the reference "
         "has %lu array indices, but the array has only %lu dimension%s",
-        def_name, (unsigned long) nof_refs, (unsigned long) nof_dims,
+        def_name, static_cast<unsigned long>( nof_refs ), static_cast<unsigned long>( nof_dims ),
         nof_dims > 1 ? "s" : "");
     }
     else if (any_from) { // nof_refs == nof_dims
       ref->error("Too many indices in a reference to a %s array with the "
         "'any from' clause : the reference has as many array indices as the "
-        "array has dimensions (%lu)", def_name, (unsigned long) nof_refs);
+        "array has dimensions (%lu)", def_name, static_cast<unsigned long>( nof_refs ));
     }
   }
 
@@ -422,7 +422,7 @@ namespace Ttcn {
 
   void ArrayDimensions::dump(unsigned level) const
   {
-    DEBUG(level, "Array dimensions: (%lu pcs.)", (unsigned long) dims.size());
+    DEBUG(level, "Array dimensions: (%lu pcs.)", static_cast<unsigned long>( dims.size() ));
     for (size_t i = 0; i < dims.size(); i++) dims[i]->dump(level + 1);
   }
 

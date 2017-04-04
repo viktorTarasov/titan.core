@@ -416,9 +416,9 @@ char* generate_code_debugger_function_init(char* str, Common::Assignment* func_a
         break;
       }
       fp_names_str = mputprintf(fp_names_str,
-        "param_names[%d] = \"%s\";\n", (int)i, fp->get_id().get_ttcnname().c_str());
+        "param_names[%d] = \"%s\";\n", static_cast<int>(i), fp->get_id().get_ttcnname().c_str());
       fp_types_str = mputprintf(fp_types_str,
-        "param_types[%d] = \"%s\";\n", (int)i, fp_type_str);
+        "param_types[%d] = \"%s\";\n", static_cast<int>(i), fp_type_str);
       fp_add_var_str = generate_code_debugger_add_var(fp_add_var_str, fp);
     }
     str = mputprintf(str,

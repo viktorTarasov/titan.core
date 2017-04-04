@@ -931,7 +931,7 @@ namespace Asn {
 
   void Assignments::dump(unsigned level) const
   {
-    DEBUG(level, "Assignments (%lu pcs.)", (unsigned long) asss_v.size());
+    DEBUG(level, "Assignments (%lu pcs.)", static_cast<unsigned long>( asss_v.size()));
     for(size_t i = 0; i < asss_v.size(); i++) asss_v[i]->dump(level + 1);
   }
 

@@ -646,7 +646,7 @@ namespace Asn {
 
   void TokenBuf::dump(unsigned level) const
   {
-    DEBUG(level, "Tokens: (%lu pcs.)", (unsigned long) tokens->size());
+    DEBUG(level, "Tokens: (%lu pcs.)", static_cast<unsigned long>( tokens->size() ));
     level++;
     for(size_t i=0; i<tokens->size(); i++)
       (*tokens)[i]->dump(level);

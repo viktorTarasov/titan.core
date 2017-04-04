@@ -161,8 +161,8 @@ ustring::ustring(const string& s)
   bool isUTF8 = true;
   size_t len = s.size();
   for (size_t i = 0; i < len; ++i) {
-    octet_str += Common::hexdigit_to_char((unsigned char)(s[i]) / 16);
-    octet_str += Common::hexdigit_to_char((unsigned char)(s[i]) % 16);
+    octet_str += Common::hexdigit_to_char(static_cast<unsigned char>(s[i]) / 16);
+    octet_str += Common::hexdigit_to_char(static_cast<unsigned char>(s[i]) % 16);
   }
   if (isUTF8) {
     string* ret = Common::get_stringencoding(octet_str);

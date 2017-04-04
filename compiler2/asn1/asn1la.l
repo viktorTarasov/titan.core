@@ -373,8 +373,8 @@ TITAN_ID [A-Za-z0-9 \-_]+
 . {
   Location loc(asn1_infile, yylineno);
   loc.error("`%c' (0x%02X) character is not used in ASN.1",
-            (unsigned char)yytext[0]>31?(unsigned char)yytext[0]:'?',
-            (unsigned char)yytext[0]);
+            static_cast<unsigned char>(yytext[0])>31?static_cast<unsigned char>(yytext[0]):'?',
+            static_cast<unsigned char>(yytext[0]));
 }
 
 <INITIAL><<EOF>> {

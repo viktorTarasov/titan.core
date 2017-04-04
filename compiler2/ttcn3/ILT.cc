@@ -127,7 +127,7 @@ namespace Ttcn {
     state_var_vals.add(new size_t(1));
     size_t newvar=state_var_vals.size()-1;
     out_statevars=mputprintf(out_statevars, "%s_state[%lu]=%s;\n",
-      mytmpid.c_str(), (unsigned long) newvar, toplevel?"2":"0");
+      mytmpid.c_str(), static_cast<unsigned long>( newvar ), toplevel?"2":"0");
     return newvar;
   }
 
@@ -153,12 +153,12 @@ namespace Ttcn {
     str=mputstr(str, "{\n"); // (1)
     // the state vars: definition
     str=mputprintf(str, "size_t %s_state[%lu];\n",
-                   mytmpid.c_str(), (unsigned long) state_var_vals.size());
+                   mytmpid.c_str(), static_cast<unsigned long>( state_var_vals.size()));
     // the state vars: initialization
     str=mputstr(str, out_statevars);
     // the alt status flags: definition
     str=mputprintf(str, "alt_status %s_alt_flag[%lu];\n",
-                   mytmpid.c_str(), (unsigned long) (c_b+1));
+                   mytmpid.c_str(), static_cast<unsigned long>(c_b+1) );
     // the definitions
     str=mputstr(str, out_def);
     // the core of the interleave
@@ -169,13 +169,13 @@ namespace Ttcn {
                    "TTCN_Snapshot::take_new(FALSE);\n"
                    "for( ; ; ) {\n" // (2)
                    "if(", mytmpid.c_str(),
-                   (unsigned long) c_b, mytmpid.c_str(),
-                   mytmpid.c_str(), (unsigned long) c_b);
+                   static_cast<unsigned long>( c_b ), mytmpid.c_str(),
+                   mytmpid.c_str(), static_cast<unsigned long>( c_b ));
     // checking for final condition
     for(size_t i=0; i<branches.size(); i++) {
       ILT_branch *b=branches[i];
       str=mputprintf(str, "%s%s_state[%lu]==1",
-        i?" && ":"", mytmpid.c_str(), (unsigned long) b->get_my_state_var());
+        i?" && ":"", mytmpid.c_str(), static_cast<unsigned long>( b->get_my_state_var() ));
     }
     str=mputstr(str, ") break;\n");
     // the altsteps :)
@@ -187,17 +187,17 @@ namespace Ttcn {
                      " break;\n"
                    "else if(%s_alt_flag[%lu]==ALT_REPEAT) goto %s;\n"
                    "}\n",
-                   mytmpid.c_str(), (unsigned long) c_b,
-                   mytmpid.c_str(), (unsigned long) c_b,
-                   mytmpid.c_str(), (unsigned long) c_b,
-                   mytmpid.c_str(), (unsigned long) c_b,
-                   mytmpid.c_str(), (unsigned long) c_b,
+                   mytmpid.c_str(), static_cast<unsigned long>( c_b ),
+                   mytmpid.c_str(), static_cast<unsigned long>( c_b ),
+                   mytmpid.c_str(), static_cast<unsigned long>( c_b ),
+                   mytmpid.c_str(), static_cast<unsigned long>( c_b ),
+                   mytmpid.c_str(), static_cast<unsigned long>( c_b ),
                    mytmpid.c_str());
     str=il->update_location_object(str);
     // checking deadlock
     str=mputprintf(str, "for(size_t tmp_i=0; tmp_i<%lu; tmp_i++)"
                    " if(%s_alt_flag[tmp_i]!=ALT_NO) goto %s_newsnapshot;\n",
-                   (unsigned long) (c_b+1), mytmpid.c_str(), mytmpid.c_str());
+                   static_cast<unsigned long>(c_b+1), mytmpid.c_str(), mytmpid.c_str());
     str = mputstr(str, "TTCN_error(\"None of the branches can be chosen in the "
       "interleave statement in file ");
     str = Code::translate_string(str, il->get_filename());
@@ -223,7 +223,7 @@ namespace Ttcn {
   ILT_branch::ILT_branch(branchtype_t p_bt, AltGuard *p_ag,
                          string p_state_cond, size_t p_state_var,
                          size_t p_state_var_val, size_t p_goto_label_num)
-    : branchtype(p_bt), root(0), branch_i((size_t)-1),
+    : branchtype(p_bt), root(0), branch_i(static_cast<size_t>(-1)),
       state_cond(p_state_cond), state_var(p_state_var),
       state_var_val(p_state_var_val), goto_label_num(p_goto_label_num)
   {
@@ -244,7 +244,7 @@ namespace Ttcn {
   ILT_branch::ILT_branch(branchtype_t p_bt, Statement *p_stmt,
                          string p_state_cond, size_t p_state_var,
                          size_t p_state_var_val, size_t p_goto_label_num)
-    : branchtype(p_bt), root(0), branch_i((size_t)-1),
+    : branchtype(p_bt), root(0), branch_i(static_cast<size_t>(-1)),
       state_cond(p_state_cond), state_var(p_state_var),
       state_var_val(p_state_var_val), goto_label_num(p_goto_label_num)
   {
@@ -352,12 +352,12 @@ namespace Ttcn {
       out_code=mputprintf(out_code,
                           "if(%s_alt_flag[%lu]==ALT_UNCHECKED) {\n" // (1)
                           "if(",
-                          mytmpid.c_str(), (unsigned long) branch_i);
+                          mytmpid.c_str(), static_cast<unsigned long>( branch_i ));
       if(!state_cond.empty())
         out_code=mputprintf(out_code, "%s && ", state_cond.c_str());
       out_code=mputprintf(out_code, "%s_state[%lu]==%lu) {\n", // (2)
-                          mytmpid.c_str(), (unsigned long) state_var,
-                          (unsigned long) state_var_val);
+                          mytmpid.c_str(), static_cast<unsigned long>( state_var ),
+                          static_cast<unsigned long>( state_var_val ));
       // only alt branch can have guard expression
       Value *guard_expr=branchtype==BT_ALT?ag->get_guard_expr():0;
       if(guard_expr) {
@@ -368,25 +368,25 @@ namespace Ttcn {
         out_code=mputstr(out_code, expr.preamble);
         out_code=mputprintf(out_code,
                             "%s_alt_flag[%lu]=(%s)?ALT_MAYBE:ALT_NO;\n",
-                            mytmpid.c_str(), (unsigned long) branch_i,
+                            mytmpid.c_str(), static_cast<unsigned long>( branch_i ),
                             expr.expr);
         out_code=mputstr(out_code, expr.postamble);
         Code::free_expr(&expr);
       } // if guard_expr
       else out_code=mputprintf(out_code,
                                "%s_alt_flag[%lu]=ALT_MAYBE;\n",
-                               mytmpid.c_str(), (unsigned long) branch_i);
+                               mytmpid.c_str(), static_cast<unsigned long>( branch_i ));
       out_code=mputprintf(out_code,
                           "}\n" // (2)
                           "else %s_alt_flag[%lu]=ALT_NO;\n"
                           "}\n", // (1)
-                          mytmpid.c_str(), (unsigned long) branch_i);
+                          mytmpid.c_str(), static_cast<unsigned long>( branch_i ));
     }
     // ALT_MAYBE -> ALT_YES or ALT_REPEAT or ALT_NO (guard stmt)
     {
       out_code=mputprintf(out_code,
                           "if(%s_alt_flag[%lu]==ALT_MAYBE) {\n", // (1)
-                          mytmpid.c_str(), (unsigned long) branch_i);
+                          mytmpid.c_str(), static_cast<unsigned long>( branch_i ));
       expression_struct expr;
       Code::init_expr(&expr);
       recv_stmt->generate_code_expr(&expr);
@@ -397,7 +397,7 @@ namespace Ttcn {
         out_code=mputstr(out_code, expr.preamble);
       }
       out_code=mputprintf(out_code, "%s_alt_flag[%lu]=%s;\n",
-                          mytmpid.c_str(), (unsigned long) branch_i, expr.expr);
+                          mytmpid.c_str(), static_cast<unsigned long>( branch_i), expr.expr);
       if(expr.preamble || expr.postamble) {
         out_code=mputstr(out_code, expr.postamble);
         out_code=mputstr(out_code, "}\n");
@@ -406,18 +406,18 @@ namespace Ttcn {
       if(can_repeat)
         out_code=mputprintf(out_code,
                             "if(%s_alt_flag[%lu]==ALT_REPEAT) goto %s;\n",
-                            mytmpid.c_str(), (unsigned long) branch_i,
+                            mytmpid.c_str(), static_cast<unsigned long>( branch_i),
                             mytmpid.c_str());
     }
     if(branchtype==BT_RECV)
       out_code=mputprintf(out_code,
                           "if(%s_alt_flag[%lu]==ALT_YES) goto %s_l%lu;\n",
-                          mytmpid.c_str(), (unsigned long) branch_i,
-                          mytmpid.c_str(), (unsigned long) goto_label_num);
+                          mytmpid.c_str(), static_cast<unsigned long>( branch_i),
+                          mytmpid.c_str(), static_cast<unsigned long>( goto_label_num));
     else {
       out_code=mputprintf(out_code,
                           "if(%s_alt_flag[%lu]==ALT_YES) ",
-                          mytmpid.c_str(), (unsigned long) branch_i);
+                          mytmpid.c_str(), static_cast<unsigned long>( branch_i));
       // statement block code generation;
       StatementBlock *block=ag->get_block();
       bool has_recv=block->has_receiving_stmt();
@@ -425,9 +425,9 @@ namespace Ttcn {
       if(has_recv) {
         out_code=mputprintf(out_code,
                             "goto %s_branch%lu;\n",
-                            mytmpid.c_str(), (unsigned long) branch_i);
+                            mytmpid.c_str(), static_cast<unsigned long>( branch_i));
         out_stmt=mputprintf(out_stmt, "%s_branch%lu:\n",
-                            mytmpid.c_str(), (unsigned long) branch_i);
+                            mytmpid.c_str(), static_cast<unsigned long>( branch_i));
         block->ilt_generate_code(this);
       }
       else {
@@ -437,7 +437,7 @@ namespace Ttcn {
       }
       if(branchtype==BT_IL) {
         out_stmt=mputprintf(out_stmt, "%s_state[%lu]=1;\n",
-                            mytmpid.c_str(), (unsigned long) state_var);
+                            mytmpid.c_str(), static_cast<unsigned long>( state_var));
         if(!ilt->is_toplevel()) {
           vector<ILT_branch>& ilt_branches = ilt->get_as_branch()->branches;
           bool use_loop=ilt_branches.size() > 8;
@@ -456,7 +456,7 @@ namespace Ttcn {
             out_stmt=mputprintf(out_stmt,
               "for(size_t tmp_i=%lu; tmp_i<%lu; tmp_i++)"
               " if (%s_state[tmp_i]!=1) goto %s;\n",
-              (unsigned long) bmin, (unsigned long) bmax+1,
+              static_cast<unsigned long>( bmin), static_cast<unsigned long>( bmax+1 ),
               mytmpid.c_str(), mytmpid.c_str());
           } else if (ilt_branches.size() > 1) {
             // Check if any branches of non top level interleave need to be exe.
@@ -465,18 +465,18 @@ namespace Ttcn {
               if (b != this)
                 out_stmt=mputprintf(out_stmt, "%s%s_state[%lu]!=1",
                   j++?" || ":"if (", mytmpid.c_str(),
-                  (unsigned long) b->get_my_state_var());
+                  static_cast<unsigned long>( b->get_my_state_var() ));
             }
             out_stmt=mputprintf(out_stmt, ") goto %s;\n", mytmpid.c_str());
           }
           // non top level interleave: Handle finish case
           out_stmt=mputprintf(out_stmt, "goto %s_l%lu;\n",
-                              mytmpid.c_str(), (unsigned long) goto_label_num);
+                              mytmpid.c_str(), static_cast<unsigned long>( goto_label_num ));
         } else // top level: finish condition is checked at the beginning
           out_stmt=mputprintf(out_stmt, "goto %s;\n", mytmpid.c_str());
       } else // not interleave: finish after one branch execution
         out_stmt=mputprintf(out_stmt, "goto %s_l%lu;\n",
-          mytmpid.c_str(), (unsigned long) goto_label_num);
+          mytmpid.c_str(), static_cast<unsigned long>( goto_label_num ));
       if(!has_recv)
         out_stmt=mputstr(out_stmt, "}\n"); // (2)
     }

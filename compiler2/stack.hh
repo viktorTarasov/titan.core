@@ -48,7 +48,7 @@ private:
 
 public:
 
-  static const size_t max_stack_length = -1;
+  static const size_t max_stack_length = static_cast<size_t>(-1 );
 
   /** Creates an empty stack. */
   stack() : num_s(0), max_s(0), s_ptr(NULL) { }

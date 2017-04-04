@@ -2193,50 +2193,50 @@ ModuleDef:
 | TypeDef
   {
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)
-      Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 | TemplateDef
   {
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)
-      Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 | FunctionDef
   {
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)
-      Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 | SignatureDef
   {
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)
-      Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 | TestcaseDef
   {
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)
-      Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 | AltstepDef
   {
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)
-      Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 | ExtFunctionDef
   {
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)
-      Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 | ExtConstDef { $$ = $1; }
@@ -2777,14 +2777,14 @@ PortTypeList:
   PortType
   {
     $$.nElements = 1;
-    $$.elements = (Ttcn::Reference**)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Reference**>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 | PortTypeList ',' optError PortType
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (Ttcn::Reference**)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Reference**>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)) );
     $$.elements[$$.nElements - 1] = $4;
   }
 ;
@@ -3232,8 +3232,8 @@ PortInstance: // 85
   PortKeyword PortType PortElementList
   {
     $$.nElements = $3.nElements;
-    $$.elements = (Ttcn::Definition**)
-      Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc($$.nElements*sizeof(*$$.elements)));
     for (size_t i = 0; i < $3.nElements; i++) {
       Ttcn::Reference *ref = i > 0 ? $2->clone() : $2;
       $$.elements[i] = new Ttcn::Def_Port($3.elements[i].id, ref,
@@ -3248,14 +3248,14 @@ PortElementList:
   optError PortElement
   {
     $$.nElements = 1;
-    $$.elements = (YYSTYPE::portelement_t*)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::portelement_t*>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $2;
   }
 | PortElementList ',' optError PortElement
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (YYSTYPE::portelement_t*)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::portelement_t*>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)) );
     $$.elements[$$.nElements - 1] = $4;
   }
 | PortElementList ',' error { $$ = $1; }
@@ -3280,8 +3280,8 @@ ConstDef: // 88
   ConstKeyword Type ConstList
   {
     $$.nElements = $3.nElements;
-    $$.elements = (Ttcn::Definition**)
-      Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc($$.nElements*sizeof(*$$.elements)));
     for (size_t i = 0; i < $$.nElements; i++) {
       Type *type;
       if (i > 0) {
@@ -3309,14 +3309,14 @@ ConstList: // 98
   optError SingleConstDef
   {
     $$.nElements = 1;
-    $$.elements = (YYSTYPE::singlevarinst_t*)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singlevarinst_t*>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $2;
   }
 | ConstList ',' optError SingleConstDef
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (YYSTYPE::singlevarinst_t*)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singlevarinst_t*>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)) );
     $$.elements[$$.nElements - 1] = $4;
   }
 ;
@@ -4224,7 +4224,7 @@ FunctionStatementOrDef: // (172 in 3.2.1)
   FunctionLocalDef // constant or template definition
   {
     $$.nElements=$1.nElements;
-    $$.elements=(Statement**)Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements=static_cast<Statement**>(Malloc($$.nElements*sizeof(*$$.elements)));
     for(size_t i=0; i<$1.nElements; i++) {
       $$.elements[i]=new Statement(Statement::S_DEF, $1.elements[i]);
       $$.elements[i]->set_location(*$1.elements[i]);
@@ -4234,7 +4234,7 @@ FunctionStatementOrDef: // (172 in 3.2.1)
 | FunctionLocalInst // variable or timer instance
   {
     $$.nElements=$1.nElements;
-    $$.elements=(Statement**)Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements=static_cast<Statement**>(Malloc($$.nElements*sizeof(*$$.elements)));
     for(size_t i=0; i<$1.nElements; i++) {
       $$.elements[i]=new Statement(Statement::S_DEF, $1.elements[i]);
       $$.elements[i]->set_location(*$1.elements[i]);
@@ -4244,7 +4244,7 @@ FunctionStatementOrDef: // (172 in 3.2.1)
 | FunctionStatement
   {
     $$.nElements=1;
-    $$.elements=(Statement**)Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements=static_cast<Statement**>(Malloc($$.nElements*sizeof(*$$.elements)));
     $$.elements[0]=$1;
   }
 ;
@@ -4260,7 +4260,7 @@ FunctionLocalDef: // 179
   {
     $1->set_local();
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 ;
@@ -4730,8 +4730,8 @@ AltstepLocalDefList: // 215
 | AltstepLocalDefList optError AltstepLocalDef optSemiColon
   {
     $$.nElements = $1.nElements + $3.nElements;
-    $$.elements = (Ttcn::Definition**)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)));
     memcpy($$.elements + $1.nElements, $3.elements,
            $3.nElements * sizeof(*$$.elements));
     Free($3.elements);
@@ -4746,7 +4746,7 @@ AltstepLocalDef: // 216
   {
     $1->set_local();
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $1;
   }
 ;
@@ -5208,8 +5208,8 @@ ExtConstDef: // 279
   ExtKeyword ConstKeyword Type IdentifierList
   {
     $$.nElements = $4.nElements;
-    $$.elements = (Ttcn::Definition**)
-      Malloc($$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc($$.nElements * sizeof(*$$.elements)));
     for (size_t i = 0; i < $$.nElements; i++) {
       Type *type;
       if (i > 0) {
@@ -5227,15 +5227,15 @@ IdentifierList: // 280 ExtConstIdentifierList
   optError IDentifier
   {
     $$.nElements = 1;
-    $$.elements = (YYSTYPE::extconstidentifier_t*)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::extconstidentifier_t*>(Malloc(sizeof(*$$.elements)));
     $$.elements[0].id = $2;
     $$.elements[0].yyloc = @2;
   }
 | IdentifierList ',' optError IDentifier
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (YYSTYPE::extconstidentifier_t*)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::extconstidentifier_t*>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)) );
     $$.elements[$1.nElements].id = $4;
     $$.elements[$1.nElements].yyloc = @4;
   }
@@ -5255,8 +5255,8 @@ MultiTypedModuleParList: // 284
 | MultiTypedModuleParList optError ModulePar optSemiColon
   {
     $$.nElements = $1.nElements + $3.nElements;
-    $$.elements = (Ttcn::Definition**)
-          Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+          Realloc($1.elements, $$.nElements * sizeof(*$$.elements)));
     memcpy($$.elements + $1.nElements, $3.elements,
       $3.nElements * sizeof(*$$.elements));
     Free($3.elements);
@@ -5267,8 +5267,8 @@ ModulePar: // 285
   Type ModuleParList
   {
     $$.nElements = $2.nElements;
-    $$.elements = (Ttcn::Definition**)
-      Malloc($$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc($$.nElements * sizeof(*$$.elements)));
     for(size_t i = 0; i < $2.nElements; i++) {
       Type *type;
       if (i > 0) {
@@ -5284,7 +5284,7 @@ ModulePar: // 285
 | TemplateKeyword Type TemplateModuleParList
   {
     $$.nElements = $3.nElements;
-    $$.elements = (Ttcn::Definition**)Malloc($$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(Malloc($$.nElements * sizeof(*$$.elements)));
     for(size_t i = 0; i < $3.nElements; i++) {
       Type *type;
       if (i > 0) {
@@ -5302,14 +5302,14 @@ ModuleParList: // 287
   optError SingleModulePar
   {
     $$.nElements = 1;
-    $$.elements = (YYSTYPE::singlemodulepar_t*)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singlemodulepar_t*>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $2;
   }
 | ModuleParList ',' optError SingleModulePar
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (YYSTYPE::singlemodulepar_t*)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singlemodulepar_t*>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)) );
     $$.elements[$$.nElements - 1] = $4;
   }
 ;
@@ -5318,14 +5318,14 @@ TemplateModuleParList: // 287
   optError SingleTemplateModulePar
   {
     $$.nElements = 1;
-    $$.elements = (YYSTYPE::singletemplatemodulepar_t*)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singletemplatemodulepar_t*>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $2;
   }
 | TemplateModuleParList ',' optError SingleTemplateModulePar
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (YYSTYPE::singletemplatemodulepar_t*)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singletemplatemodulepar_t*>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)) );
     $$.elements[$$.nElements - 1] = $4;
   }
 ;
@@ -5365,8 +5365,8 @@ FriendModuleDef: // 289
   FriendKeyword TTCN3ModuleKeyword IdentifierList optSemiColon
   {
     $$.nElements = $3.nElements;
-    $$.elements = (Ttcn::FriendMod**)
-      Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::FriendMod**>(
+      Malloc($$.nElements*sizeof(*$$.elements)) );
     for (size_t i = 0; i < $$.nElements; i++) {
       $$.elements[i] = new FriendMod($3.elements[i].id);
       $$.elements[i]->set_location(infile, $3.elements[i].yyloc);
@@ -5416,7 +5416,7 @@ ControlStatementOrDef: // 294
   FunctionLocalDef
   {
     $$.nElements=$1.nElements;
-    $$.elements=(Statement**)Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements=static_cast<Statement**>(Malloc($$.nElements*sizeof(*$$.elements)));
     for(size_t i=0; i<$1.nElements; i++) {
       $$.elements[i]=new Statement(Statement::S_DEF, $1.elements[i]);
       $$.elements[i]->set_location(*$1.elements[i]);
@@ -5426,7 +5426,7 @@ ControlStatementOrDef: // 294
 |  FunctionLocalInst
   {
     $$.nElements=$1.nElements;
-    $$.elements=(Statement**)Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements=static_cast<Statement**>(Malloc($$.nElements*sizeof(*$$.elements)));
     for(size_t i=0; i<$1.nElements; i++) {
       $$.elements[i]=new Statement(Statement::S_DEF, $1.elements[i]);
       $$.elements[i]->set_location(*$1.elements[i]);
@@ -5436,7 +5436,7 @@ ControlStatementOrDef: // 294
 | ControlStatement
   {
     $$.nElements=1;
-    $$.elements=(Statement**)Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements=static_cast<Statement**>(Malloc($$.nElements*sizeof(*$$.elements)));
     $$.elements[0]=$1;
   }
 ;
@@ -5458,8 +5458,8 @@ VarInstance: // 296
   VarKeyword optLazyOrFuzzyModifier Type VarList
   {
     $$.nElements = $4.nElements;
-    $$.elements = (Ttcn::Definition**)
-      Malloc($$.nElements*sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc($$.nElements*sizeof(*$$.elements)));
     for (size_t i = 0; i < $$.nElements; i++) {
       Type *type;
       if (i > 0) {
@@ -5484,8 +5484,8 @@ VarInstance: // 296
 | VarKeyword TemplateOptRestricted optLazyOrFuzzyModifier Type TempVarList
   {
     $$.nElements = $5.nElements;
-    $$.elements = (Ttcn::Definition**)
-      Malloc($$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Malloc($$.nElements * sizeof(*$$.elements)));
     for (size_t i = 0; i < $$.nElements; i++) {
       Type *type;
       if (i > 0) {
@@ -5514,14 +5514,14 @@ VarList: // 297
   optError SingleVarInstance
   {
     $$.nElements = 1;
-    $$.elements = (YYSTYPE::singlevarinst_t*)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singlevarinst_t*>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $2;
   }
 | VarList ',' optError SingleVarInstance
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (YYSTYPE::singlevarinst_t*)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singlevarinst_t*>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)) );
     $$.elements[$$.nElements - 1] = $4;
   }
 ;
@@ -5547,14 +5547,14 @@ TempVarList: // 302
   optError SingleTempVarInstance
   {
     $$.nElements = 1;
-    $$.elements = (YYSTYPE::singletempvarinst_t*)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singletempvarinst_t*>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $2;
   }
 | TempVarList ',' optError SingleTempVarInstance
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (YYSTYPE::singletempvarinst_t*)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::singletempvarinst_t*>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)) );
     $$.elements[$$.nElements - 1] = $4;
   }
 ;
@@ -5597,14 +5597,14 @@ TimerList: // 307
   optError SingleTimerInstance
   {
     $$.nElements = 1;
-    $$.elements = (Ttcn::Definition**)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(Malloc(sizeof(*$$.elements)));
     $$.elements[0] = $2;
   }
 | TimerList ',' optError SingleTimerInstance
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (Ttcn::Definition**)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<Ttcn::Definition**>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)));
     $$.elements[$$.nElements - 1] = $4;
   }
 ;
@@ -6130,7 +6130,7 @@ StopTCStatement: // 337
   }
 | AllKeyword ComponentKeyword DotStopKeyword
   {
-    $$ = new Statement(Statement::S_STOP_COMP, (Value*)0);
+    $$ = new Statement(Statement::S_STOP_COMP, static_cast<Value*>(0));
     $$->set_location(infile, @$);
   }
 ;
@@ -6156,7 +6156,7 @@ KillTCStatement: // 349
   }
 | AllKeyword ComponentKeyword DotKillKeyword
   {
-    $$ = new Statement(Statement::S_KILL, (Value*)0);
+    $$ = new Statement(Statement::S_KILL, static_cast<Value*>(0));
     $$->set_location(infile, @$);
   }
 ;
@@ -6568,14 +6568,14 @@ SingleValueSpecList:
   SingleValueSpec
   {
     $$.nElements = 1;
-    $$.elements = (SingleValueRedirect**)Malloc(sizeof(SingleValueRedirect*));
+    $$.elements = static_cast<SingleValueRedirect**>(Malloc(sizeof(SingleValueRedirect*)) );
     $$.elements[0] = $1;
   }
 | SingleValueSpecList ',' SingleValueSpec
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (SingleValueRedirect**)Realloc($1.elements,
-      $$.nElements * sizeof(SingleValueRedirect*));
+    $$.elements = static_cast<SingleValueRedirect**>(Realloc($1.elements,
+      $$.nElements * sizeof(SingleValueRedirect*)) );
     $$.elements[$$.nElements - 1] = $3;
   }
 ;
@@ -7282,7 +7282,7 @@ StartStatement: // 430
 /*  Port DotPortStartKeyword -- covered by StartTimerStatement */
   AllKeyword PortKeyword DotStartKeyword
   {
-    $$=new Statement(Statement::S_START_PORT, (Ttcn::Reference*)0);
+    $$=new Statement(Statement::S_START_PORT, static_cast<Ttcn::Reference*>(0));
     $$->set_location(infile, @$);
   }
 ;
@@ -7291,7 +7291,7 @@ StopStatement: // 432
 /*  Port DotPortStopKeyword -- covered by StopTimerStatement */
   AllKeyword PortKeyword DotStopKeyword
   {
-    $$=new Statement(Statement::S_STOP_PORT, (Ttcn::Reference*)0);
+    $$=new Statement(Statement::S_STOP_PORT, static_cast<Ttcn::Reference*>(0));
     $$->set_location(infile, @$);
   }
 ;
@@ -7320,7 +7320,7 @@ TimerOps: // 440
 StartTimerStatement: // 441
   VariableRef DotStartKeyword
   {
-    $$ = new Statement(Statement::S_START_UNDEF, $1, (Value*)0);
+    $$ = new Statement(Statement::S_START_UNDEF, $1, static_cast<Value*>(0));
     $$->set_location(infile, @$);
   }
 | VariableRef DotStartKeyword '(' Expression optError ')'
@@ -7340,12 +7340,12 @@ StartTimerStatement: // 441
 StopTimerStatement: // 442
   TimerRef DotStopKeyword
   {
-    $$ = new Statement(Statement::S_STOP_UNDEF, $1, (Value*)0);
+    $$ = new Statement(Statement::S_STOP_UNDEF, $1, static_cast<Value*>(0));
     $$->set_location(infile, @$);
   }
 | AllKeyword TimerKeyword DotStopKeyword
   {
-    $$ = new Statement(Statement::S_STOP_TIMER, (Ttcn::Reference*)0);
+    $$ = new Statement(Statement::S_STOP_TIMER, static_cast<Ttcn::Reference*>(0));
     $$->set_location(infile, @$);
   }
 ;
@@ -7526,8 +7526,8 @@ optArrayDef: // [467]
 | optArrayDef ArrayIndex
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (ArrayDimension**)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<ArrayDimension**>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)) );
     $$.elements[$1.nElements] = $2;
   }
 ;
@@ -7733,14 +7733,14 @@ UIDlike:
   Cstring
   {
     $$.nElements = 1;
-    $$.elements = (const char**)
-      Realloc($$.elements, ($$.nElements) * sizeof(*$$.elements));
+    $$.elements = static_cast<const char**>(
+      Realloc($$.elements, ($$.nElements) * sizeof(*$$.elements)) );
     $$.elements[$$.nElements-1] = $1;
   }
 | UIDlike optError ',' optError Cstring {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (const char**)
-      Realloc($1.elements, ($$.nElements) * sizeof(*$$.elements));
+    $$.elements = static_cast<const char**>(
+      Realloc($1.elements, ($$.nElements) * sizeof(*$$.elements)) );
     $$.elements[$$.nElements-1] = $5;
   }
 ;
@@ -8249,7 +8249,7 @@ SetLocalVerdict: // 546
   }
 | SetVerdictKeyword '(' Expression optError ')'
   {
-    $$=new Statement(Statement::S_SETVERDICT, $3, (LogArguments*)0);
+    $$=new Statement(Statement::S_SETVERDICT, $3, static_cast<LogArguments*>(0));
     $$->set_location(infile, @$);
   }
 | SetVerdictKeyword '(' error ')'
@@ -8272,7 +8272,7 @@ GetLocalVerdict: // 548
 SUTStatements: // 549
   ActionKeyword '(' ')'
   {
-    $$=new Statement(Statement::S_ACTION, (LogArguments*)0);
+    $$=new Statement(Statement::S_ACTION, static_cast<LogArguments*>(0));
     $$->set_location(infile, @$);
   }
 | ActionKeyword '(' LogItemList optError ')'
@@ -8298,7 +8298,7 @@ StopExecutionStatement:
 StopTestcaseStatement:
   TestcaseKeyword DotStopKeyword
   {
-    $$ = new Statement(Statement::S_STOP_TESTCASE, (LogArguments*)0);
+    $$ = new Statement(Statement::S_STOP_TESTCASE, static_cast<LogArguments*>(0));
     $$->set_location(infile, @$);
   }
 | TestcaseKeyword DotStopKeyword '(' LogItemList optError ')'
@@ -8373,7 +8373,7 @@ ProfilerRunningOp:
 ReturnStatement: // 552
   ReturnKeyword
   {
-    $$=new Statement(Statement::S_RETURN, (Template*)0);
+    $$=new Statement(Statement::S_RETURN, static_cast<Template*>(0));
     $$->set_location(infile, @$);
   }
 | ReturnKeyword TemplateBody
@@ -8592,7 +8592,7 @@ ReferOp:
 DeactivateStatement: // 574
   DeactivateKeyword
   {
-    $$=new Statement(Statement::S_DEACTIVATE, (Value*)0);
+    $$=new Statement(Statement::S_DEACTIVATE, static_cast<Value*>(0));
     $$->set_location(infile, @$);
   }
 | DeactivateKeyword '(' Expression optError ')'
@@ -8815,7 +8815,7 @@ Expression: // 579
 /* These are needed for template concatenation */
 | AnyValue
   {
-    $$ = new Value(Value::V_ANY_VALUE, (LengthRestriction*)NULL);
+    $$ = new Value(Value::V_ANY_VALUE, static_cast<LengthRestriction*>(NULL));
     $$->set_location(infile, @$);
   }
 | AnyValue LengthMatch
@@ -8825,7 +8825,7 @@ Expression: // 579
   }
 | AnyOrOmit
   {
-    $$ = new Value(Value::V_ANY_OR_OMIT, (LengthRestriction*)NULL);
+    $$ = new Value(Value::V_ANY_OR_OMIT, static_cast<LengthRestriction*>(NULL));
     $$->set_location(infile, @$);
   }
 | AnyOrOmit LengthMatch
@@ -9119,7 +9119,7 @@ SingleExpression: // 595
 /* These are needed for template concatenation */
 | AnyValue
   {
-    $$ = new Value(Value::V_ANY_VALUE, (LengthRestriction*)NULL);
+    $$ = new Value(Value::V_ANY_VALUE, static_cast<LengthRestriction*>(NULL));
     $$->set_location(infile, @$);
   }
 | AnyValue LengthMatch
@@ -9129,7 +9129,7 @@ SingleExpression: // 595
   }
 | AnyOrOmit
   {
-    $$ = new Value(Value::V_ANY_OR_OMIT, (LengthRestriction*)NULL);
+    $$ = new Value(Value::V_ANY_OR_OMIT, static_cast<LengthRestriction*>(NULL));
     $$->set_location(infile, @$);
   }
 | AnyOrOmit LengthMatch
@@ -9150,8 +9150,8 @@ optExtendedFieldReference:
 | optExtendedFieldReference FieldOrArrayReference
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (FieldOrArrayRef**)
-      Realloc($1.elements, ($$.nElements) * sizeof(*$$.elements));
+    $$.elements = static_cast<FieldOrArrayRef**>(
+      Realloc($1.elements, ($$.nElements) * sizeof(*$$.elements)) );
     $$.elements[$1.nElements] = $2;
   }
 ;
@@ -9268,7 +9268,7 @@ PredefinedOps:
   }
 | PredefinedOpKeyword3 '(' optError Expression optError ')'
   {
-    $$ = new Value($1, $4, (Common::Value*)NULL);
+    $$ = new Value($1, $4, static_cast<Common::Value*>(NULL));
     $$->set_location(infile, @$);
   }
 | PredefinedOpKeyword3 '(' error ')'
@@ -9517,7 +9517,7 @@ PredefinedOps:
     if ($3->get_nof_logargs() != 1) {
       Location loc(infile, @1);
       loc.error("The any2unistr function takes exactly one argument, not %lu.",
-        (unsigned long)($3->get_nof_logargs()));
+        static_cast<unsigned long>($3->get_nof_logargs()));
         delete $3;
         $$ = new Value(Value::OPTYPE_ANY2UNISTR, new LogArguments());
         $$->set_location(infile, @$);
@@ -9722,7 +9722,7 @@ String2TtcnStatement:
 LogStatement: // 619
   LogKeyword '(' ')'
   {
-    $$=new Statement(Statement::S_LOG, (LogArguments*)0);
+    $$=new Statement(Statement::S_LOG, static_cast<LogArguments*>(0));
     $$->set_location(infile, @$);
   }
 | LogKeyword '(' LogItemList optError ')'
@@ -9931,15 +9931,15 @@ IdentifierListOrPredefType:
   optError IDentifier
   {
     $$.nElements = 1;
-    $$.elements = (YYSTYPE::extconstidentifier_t*)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::extconstidentifier_t*>(Malloc(sizeof(*$$.elements)));
     $$.elements[0].id = $2;
     $$.elements[0].yyloc = @2;
   }
 | IdentifierListOrPredefType ',' optError IDentifier
   {
     $$.nElements = $1.nElements + 1;
-    $$.elements = (YYSTYPE::extconstidentifier_t*)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::extconstidentifier_t*>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)));
     $$.elements[$1.nElements].id = $4;
     $$.elements[$1.nElements].yyloc = @4;
   }
@@ -9952,7 +9952,7 @@ IdentifierListOrPredefType:
     Identifier* type_id = new Identifier(Identifier::ID_TTCN, at_field);
 
     $$.nElements = 1;
-    $$.elements = (YYSTYPE::extconstidentifier_t*)Malloc(sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::extconstidentifier_t*>(Malloc(sizeof(*$$.elements)));
     $$.elements[0].id = type_id;
     $$.elements[0].yyloc = @2;
   }
@@ -9965,8 +9965,8 @@ IdentifierListOrPredefType:
     Identifier* type_id = new Identifier(Identifier::ID_TTCN, at_field);
 
     $$.nElements = $1.nElements + 1;
-    $$.elements = (YYSTYPE::extconstidentifier_t*)
-      Realloc($1.elements, $$.nElements * sizeof(*$$.elements));
+    $$.elements = static_cast<YYSTYPE::extconstidentifier_t*>(
+      Realloc($1.elements, $$.nElements * sizeof(*$$.elements)));
     $$.elements[$1.nElements].id = type_id;
     $$.elements[$1.nElements].yyloc = @4;
   }
@@ -10226,7 +10226,7 @@ Ttcn::ErroneousAttributeSpec* ttcn3_parse_erroneous_attr_spec_string(
   is_erroneous_parsed = true;
   act_ttcn3_erroneous_attr_spec = NULL;
   string titan_err_str("$#&&&(#TITANERRONEOUS$#&&^#% ");
-  int hack_str_len = (int)titan_err_str.size();
+  int hack_str_len = static_cast<int>(titan_err_str.size());
   string *parsed_string = parse_charstring_value(p_str, str_loc);
   titan_err_str += *parsed_string;
   delete parsed_string;

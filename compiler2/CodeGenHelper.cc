@@ -198,7 +198,8 @@ void CodeGenHelper::update_intervals(output_struct* const output) {
     output->intervals.function_bodies_size++;
     if (output->intervals.function_bodies_size >= output->intervals.function_bodies_max_size) {
       output->intervals.function_bodies_max_size *= 2;
-      output->intervals.function_bodies = (size_t*)Realloc(output->intervals.function_bodies, output->intervals.function_bodies_max_size * sizeof(size_t));
+      output->intervals.function_bodies = static_cast<size_t*>(
+        Realloc(output->intervals.function_bodies, output->intervals.function_bodies_max_size * sizeof(size_t)) );
     }
     output->intervals.function_bodies[output->intervals.function_bodies_size] = tmp;
   }
@@ -207,7 +208,8 @@ void CodeGenHelper::update_intervals(output_struct* const output) {
     output->intervals.methods_size++;
     if (output->intervals.methods_size >= output->intervals.methods_max_size) {
       output->intervals.methods_max_size *= 2;
-      output->intervals.methods = (size_t*)Realloc(output->intervals.methods, output->intervals.methods_max_size * sizeof(size_t));
+      output->intervals.methods = static_cast<size_t*>(
+        Realloc(output->intervals.methods, output->intervals.methods_max_size * sizeof(size_t)));
     }
     output->intervals.methods[output->intervals.methods_size] = tmp;
   }
@@ -216,7 +218,8 @@ void CodeGenHelper::update_intervals(output_struct* const output) {
     output->intervals.static_conversion_function_bodies_size++;
     if (output->intervals.static_conversion_function_bodies_size >= output->intervals.static_conversion_function_bodies_max_size) {
       output->intervals.static_conversion_function_bodies_max_size *= 2;
-      output->intervals.static_conversion_function_bodies = (size_t*)Realloc(output->intervals.static_conversion_function_bodies, output->intervals.static_conversion_function_bodies_max_size * sizeof(size_t));
+      output->intervals.static_conversion_function_bodies = static_cast<size_t*>(
+        Realloc(output->intervals.static_conversion_function_bodies, output->intervals.static_conversion_function_bodies_max_size * sizeof(size_t)) );
     }
     output->intervals.static_conversion_function_bodies[output->intervals.static_conversion_function_bodies_size] = tmp;
   }
@@ -225,7 +228,8 @@ void CodeGenHelper::update_intervals(output_struct* const output) {
     output->intervals.static_function_bodies_size++;
     if (output->intervals.static_function_bodies_size >= output->intervals.static_function_bodies_max_size) {
       output->intervals.static_function_bodies_max_size *= 2;
-      output->intervals.static_function_bodies = (size_t*)Realloc(output->intervals.static_function_bodies, output->intervals.static_function_bodies_max_size * sizeof(size_t));
+      output->intervals.static_function_bodies = static_cast<size_t*>(
+        Realloc(output->intervals.static_function_bodies, output->intervals.static_function_bodies_max_size * sizeof(size_t)) );
     }
     output->intervals.static_function_bodies[output->intervals.static_function_bodies_size] = tmp;
   }
@@ -408,7 +412,7 @@ string CodeGenHelper::get_key(Type& type) const {
     case Type::T_SEQ_T:
     case Type::T_SET_A:
     case Type::T_SET_T:
-      retval += typetypemap[(int)tt];
+      retval += typetypemap[static_cast<int>(tt)];
       break;
     default:
       // put it into the module (no suffix)
@@ -492,7 +496,7 @@ void CodeGenHelper::write_output() {
           if (i == 0) { // The first slice has the module's name
             fname = output->module_dispname;
           } else {
-            sprintf(buffer, "_part_%d", (int)i);
+            sprintf(buffer, "_part_%d", static_cast<int>(i));
             fname = output->module_dispname + "_" + buffer;
           }
           if (i == 0 || !generated_code.has_key(fname)) {
@@ -541,7 +545,7 @@ void CodeGenHelper::write_output() {
       } else {
         // Create empty files.
         for (i = 1; i < slice_num; i++) {
-          sprintf(buffer, "_part_%d", (int)i);
+          sprintf(buffer, "_part_%d", static_cast<int>(i));
           fname = output->module_dispname + "_" + buffer;
           if (!generated_code.has_key(fname)) {
             generated_output_t* go = new generated_output_t;

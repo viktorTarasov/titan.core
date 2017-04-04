@@ -145,7 +145,7 @@ namespace Ttcn {
   void Qualifiers::dump(unsigned level) const
   {
     DEBUG(level, "has %lu qualifiers",
-        (unsigned long)get_nof_qualifiers());
+        static_cast<unsigned long>( get_nof_qualifiers() ));
     for(size_t i = 0; i < qualifiers.size(); i++)
       qualifiers[i]->dump(level);
   }
@@ -421,38 +421,38 @@ namespace Ttcn {
   {
     // values
     for (size_t i=0; i<values_m.size(); i++) {
-      str = values_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_v"+Int2string((int)values_m.get_nth_key(i)));
+      str = values_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_v"+Int2string(static_cast<int>( values_m.get_nth_key(i) )));
     }
     // embedded descriptors
     for (size_t i=0; i<descr_m.size(); i++) {
-      str = descr_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_d"+Int2string((int)descr_m.get_nth_key(i)));
+      str = descr_m.get_nth_elem(i)->generate_code_embedded_str(str, def, genname+"_d"+Int2string(static_cast<int>( descr_m.get_nth_key(i) )));
     }
     // values vector
     if (values_m.size()>0) {
       str = mputprintf(str, "%sErroneous_values_t %s_valsvec[%d] = { ",
-        split_to_slices ? "" : "static ", genname.c_str(), (int)values_m.size());
+        split_to_slices ? "" : "static ", genname.c_str(), static_cast<int>( values_m.size() ));
       for (size_t i=0; i<values_m.size(); i++) {
         if (i>0) str = mputstr(str, ", ");
-        int key_i = (int)values_m.get_nth_key(i);
+        int key_i = static_cast<int>( values_m.get_nth_key(i) );
         str = values_m.get_nth_elem(i)->generate_code_struct_str(str, genname+"_v"+Int2string(key_i), key_i);
       }
       str = mputstr(str, " };\n");
       if (split_to_slices) {
-        def = mputprintf(def, "extern Erroneous_values_t %s_valsvec[%d];\n", genname.c_str(), (int)values_m.size());
+        def = mputprintf(def, "extern Erroneous_values_t %s_valsvec[%d];\n", genname.c_str(), static_cast<int>( values_m.size() ));
       }
     }
     // embedded descriptor vector
     if (descr_m.size()>0) {
       str = mputprintf(str, "%sErroneous_descriptor_t %s_embvec[%d] = { ",
-        split_to_slices ? "" : "static ", genname.c_str(), (int)descr_m.size());
+        split_to_slices ? "" : "static ", genname.c_str(), static_cast<int>( descr_m.size() ));
       for (size_t i=0; i<descr_m.size(); i++) {
         if (i>0) str = mputstr(str, ", ");
-        int key_i = (int)descr_m.get_nth_key(i);
+        int key_i = static_cast<int>( descr_m.get_nth_key(i) );
         str = descr_m.get_nth_elem(i)->generate_code_struct_str(str, def, genname+"_d"+Int2string(key_i), key_i);
       }
       str = mputstr(str, " };\n");
       if (split_to_slices) {
-        def = mputprintf(def, "extern Erroneous_descriptor_t %s_embvec[%d];\n", genname.c_str(), (int)descr_m.size());
+        def = mputprintf(def, "extern Erroneous_descriptor_t %s_embvec[%d];\n", genname.c_str(), static_cast<int>( descr_m.size() ));
       }
     }
     return str;
@@ -461,10 +461,10 @@ namespace Ttcn {
   char* ErroneousDescriptor::generate_code_init_str(char *str, string genname)
   {
     for (size_t i=0; i<values_m.size(); i++) {
-      str = values_m.get_nth_elem(i)->generate_code_init_str(str, genname+"_v"+Int2string((int)values_m.get_nth_key(i)));
+      str = values_m.get_nth_elem(i)->generate_code_init_str(str, genname+"_v"+Int2string(static_cast<int>( values_m.get_nth_key(i) )));
     }
     for (size_t i=0; i<descr_m.size(); i++) {
-      str = descr_m.get_nth_elem(i)->generate_code_init_str(str, genname+"_d"+Int2string((int)descr_m.get_nth_key(i)));
+      str = descr_m.get_nth_elem(i)->generate_code_init_str(str, genname+"_d"+Int2string(static_cast<int>( descr_m.get_nth_key(i) )));
     }
     return str;
   }
@@ -477,8 +477,8 @@ namespace Ttcn {
       field_index,
       omit_before, (omit_before==-1)?"NULL":("\""+omit_before_name+"\"").c_str(),
       omit_after,  (omit_after==-1)?"NULL":("\""+omit_after_name+"\"").c_str(),
-      (int)values_m.size(), (values_m.size()>0) ? genname_values_vec.c_str(): "NULL",
-      (int)descr_m.size(), (descr_m.size()>0) ? genname_embedded_vec.c_str(): "NULL");
+      static_cast<int>( values_m.size() ), (values_m.size()>0) ? genname_values_vec.c_str(): "NULL",
+      static_cast<int>( descr_m.size() ), (descr_m.size()>0) ? genname_embedded_vec.c_str(): "NULL");
     return str;
   }
 
@@ -531,14 +531,14 @@ namespace Ttcn {
   {
     size_t i = descr_map.find_key(p_update_statement);
     return descr_map.get_nth_elem(i)->generate_code_init_str(str,
-      genname + string("_") + Int2string((int)i) + string("_err_descr"));
+      genname + string("_") + Int2string(static_cast<int>(i)) + string("_err_descr"));
   }
   
   char* ErroneousDescriptors::generate_code_str(Statement* p_update_statement, char *str, char *& def, string genname)
   {
     size_t i = descr_map.find_key(p_update_statement);
     return descr_map.get_nth_elem(i)->generate_code_str(str, def,
-      genname + string("_") + Int2string((int)i));
+      genname + string("_") + Int2string(static_cast<int>(i)));
   }
   
   void ErroneousDescriptors::chk_recursions(ReferenceChain& refch)
@@ -694,13 +694,13 @@ namespace Ttcn {
       field_err_t& act_field_err = fld_array[i];
       if (act_field_err.subrefs_array.size()<1) FATAL_ERROR("ErroneousAttributes::build_descr_tree()");
       size_t fld_idx = act_field_err.subrefs_array[0];
-      if (omit_before_qual && (err_descr->omit_before!=-1) && (err_descr->omit_before>(int)fld_idx)) {
+      if (omit_before_qual && (err_descr->omit_before!=-1) && (err_descr->omit_before>static_cast<int>(fld_idx))) {
         act_field_err.qualifier->error(
           "Field `%s' cannot be referenced because all fields before field `%s' have been omitted",
           act_field_err.qualifier->get_stringRepr().c_str(), omit_before_qual->get_stringRepr().c_str());
         continue;
       }
-      if (omit_after_qual && (err_descr->omit_after!=-1) && (err_descr->omit_after<(int)fld_idx)) {
+      if (omit_after_qual && (err_descr->omit_after!=-1) && (err_descr->omit_after<static_cast<int>(fld_idx))) {
         act_field_err.qualifier->error(
           "Field `%s' cannot be referenced because all fields after field `%s' have been omitted",
           act_field_err.qualifier->get_stringRepr().c_str(), omit_after_qual->get_stringRepr().c_str());
@@ -1031,7 +1031,7 @@ namespace Ttcn {
   void MultiWithAttrib::dump(unsigned level) const
   {
     DEBUG(level,"with attrib parameters (%lu pcs)",
-      (unsigned long) elements.size());
+      static_cast<unsigned long>( elements.size() ));
     for(size_t i = 0; i < elements.size(); i++)
     {
       elements[i]->dump(level + 1);
@@ -1111,7 +1111,7 @@ namespace Ttcn {
     DEBUG(level, "WithAttribPath");
     if (!m_w_attrib) return;
     DEBUG(level+1, "%lu elements",
-      (unsigned long)m_w_attrib->get_nof_elements());
+      static_cast<unsigned long>( m_w_attrib->get_nof_elements() ));
     for (size_t i=0; i < m_w_attrib->get_nof_elements(); ++i) {
       const SingleWithAttrib* a = m_w_attrib->get_element(i);
       if (!a) continue;

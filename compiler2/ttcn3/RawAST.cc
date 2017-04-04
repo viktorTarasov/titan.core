@@ -209,26 +209,26 @@ void copy_rawAST_to_struct(RawAST *from, raw_attrib_struct *to){
     to->extension_bit=from->extension_bit;
     to->ext_bit_goup_num=from->ext_bit_goup_num;
     if (from->ext_bit_goup_num > 0)
-      to->ext_bit_groups = (rawAST_coding_ext_group*)
-        Malloc(from->ext_bit_goup_num * sizeof(*to->ext_bit_groups));
+      to->ext_bit_groups = static_cast<rawAST_coding_ext_group*>(
+        Malloc(from->ext_bit_goup_num * sizeof(*to->ext_bit_groups)) );
     else to->ext_bit_groups = NULL;
     to->hexorder=from->hexorder;
     to->padding=from->padding;
     to->lengthto_num=from->lengthto_num;
     if (from->lengthto_num > 0)
-      to->lengthto = (int*)Malloc(from->lengthto_num * sizeof(int));
+      to->lengthto = static_cast<int*>( Malloc(from->lengthto_num * sizeof(int)) );
     else to->lengthto = NULL;
     to->pointerto=-1;
     to->ptroffset=from->ptroffset;
     to->unit=from->unit;
     if (from->lengthindex != NULL)
-      to->lengthindex = (rawAST_coding_fields*)
-	Malloc(sizeof(rawAST_coding_fields));
+      to->lengthindex = static_cast<rawAST_coding_fields*>(
+        Malloc(sizeof(rawAST_coding_fields)) );
     else to->lengthindex = NULL;
     to->crosstaglist.nElements = from->crosstaglist.nElements;
     if (to->crosstaglist.nElements > 0) {
-      to->crosstaglist.list = (rawAST_coding_taglist*)
-         Malloc(to->crosstaglist.nElements * sizeof(rawAST_coding_taglist));
+      to->crosstaglist.list = static_cast<rawAST_coding_taglist*>(
+         Malloc(to->crosstaglist.nElements * sizeof(rawAST_coding_taglist)) );
       for (int i = 0; i < to->crosstaglist.nElements; i++) {
 	to->crosstaglist.list[i].nElements = 0;
 	to->crosstaglist.list[i].fields = NULL;
@@ -236,8 +236,8 @@ void copy_rawAST_to_struct(RawAST *from, raw_attrib_struct *to){
     } else to->crosstaglist.list = NULL;
     to->taglist.nElements = from->taglist.nElements;
     if (to->taglist.nElements > 0) {
-      to->taglist.list = (rawAST_coding_taglist*)
-         Malloc(to->taglist.nElements * sizeof(rawAST_coding_taglist));
+      to->taglist.list = static_cast<rawAST_coding_taglist*>(
+         Malloc(to->taglist.nElements * sizeof(rawAST_coding_taglist)) );
       for (int i = 0; i < to->taglist.nElements; i++) {
 	to->taglist.list[i].nElements = 0;
 	to->taglist.list[i].fields = NULL;
@@ -245,8 +245,8 @@ void copy_rawAST_to_struct(RawAST *from, raw_attrib_struct *to){
     } else to->taglist.list = NULL;
     to->presence.nElements = from->presence.nElements;
     if (to->presence.nElements > 0)
-      to->presence.fields=(rawAST_coding_field_list*)
-         Malloc(to->presence.nElements * sizeof(rawAST_coding_field_list));
+      to->presence.fields = static_cast<rawAST_coding_field_list*>(
+         Malloc(to->presence.nElements * sizeof(rawAST_coding_field_list)) );
     else to->presence.fields = NULL;
     to->topleveleind=from->topleveleind;
     to->toplevel.bitorder=from->toplevel.bitorder;

@@ -497,7 +497,7 @@ namespace Common {
                      oidstate_t& state)
   {
     Error_Context ec(this, "In component #%lu of OBJECT IDENTIFIER value",
-                     (unsigned long) (index + 1));
+                     static_cast<unsigned long>(index + 1));
     switch (formtype) {
     case NAMEFORM: {
       Int v_Int = detect_nameform(state);
@@ -540,7 +540,7 @@ namespace Common {
   void OID_comp::chk_ROID(ReferenceChain& refch, size_t index)
   {
     Error_Context ec(this, "In component #%lu of RELATIVE-OID value",
-      (unsigned long) (index + 1));
+      static_cast<unsigned long> (index + 1));
     switch (formtype) {
     case DEFDVALUE:
       chk_defdvalue_ROID(refch);
@@ -725,7 +725,7 @@ namespace Common {
       return;
     }
     const int_val_t *v_Num = v->get_val_Int();
-    if (v_Num->get_val() > (Int)UINT_MAX) {
+    if (v_Num->get_val() > static_cast<Int>(UINT_MAX)) {
       number->error("An integer value less than `%u' was expected in the "
         "number form instead of `%s'", UINT_MAX, (v_Num->t_str()).c_str());
       state = LATER;
@@ -820,7 +820,7 @@ namespace Common {
 	(name_str.size() != 1 || name_str[0] != 'a' + v_Int - 1))
 	number->warning("Identifier `%c' was expected instead of `%s' for "
 	  "number %s in the NameAndNumberForm as the third OBJECT IDENTIFIER "
-	  "component", (char)('a' + v_Int - 1), name->get_dispname().c_str(),
+	  "component", static_cast<char>('a' + v_Int - 1), name->get_dispname().c_str(),
 	  Int2string(v_Int).c_str());
       break;
     default:
@@ -834,7 +834,7 @@ namespace Common {
   {
     bool ret_val = true;
     for (const nameform_t *nf = p_names; nf->name != NULL; nf++) {
-      if ((unsigned int)p_number == nf->value) {
+      if (static_cast<unsigned int>(p_number) == nf->value) {
 	if (p_name == nf->name) return true;
 	else ret_val = false;
       }
@@ -847,14 +847,14 @@ namespace Common {
   {
     size_t nof_expected_names = 0;
     for (const nameform_t *nf = p_names; nf->name != NULL; nf++) {
-      if ((unsigned int)p_number == nf->value) nof_expected_names++;
+      if (static_cast<unsigned int>(p_number) == nf->value) nof_expected_names++;
     }
     if (nof_expected_names <= 0)
       FATAL_ERROR("OID_comp::get_expected_name_for_number()");
     string ret_val;
     size_t i = 0;
     for (const nameform_t *nf = p_names; nf->name != NULL; nf++) {
-      if ((unsigned int)p_number == nf->value) {
+      if (static_cast<unsigned int>(p_number) == nf->value) {
 	if (i > 0) {
 	  if (i < nof_expected_names - 1) ret_val += ", ";
 	  else ret_val += " or ";

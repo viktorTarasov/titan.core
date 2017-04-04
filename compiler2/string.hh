@@ -57,7 +57,7 @@ class string {
 
 public:
   /** The largest possible value of type size_t. That is, size_t(-1). */
-  static const size_t max_string_len = (size_t)-1 -
+  static const size_t max_string_len = static_cast<size_t>(-1) -
     (sizeof(string_struct) - sizeof(size_t) + 1);
 
   /** Constructs an empty string. */

@@ -81,7 +81,7 @@ private:
 
 public:
 
-  static const size_t max_map_length = (size_t) -1;
+  static const size_t max_map_length = static_cast<size_t>( -1 );
 
   /** Creates an empty map. */
   map() : num_m(0), max_m(0), last_searched_key(0), m_ptr(NULL) { }

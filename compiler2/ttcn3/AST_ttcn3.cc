@@ -200,7 +200,7 @@ namespace Ttcn {
     if (ref_type != FIELD_REF) FATAL_ERROR("FieldOrArrayRef::set_field_name_to_lowercase()");
     string new_name = u.id->get_name();
     if (isupper(new_name[0])) {
-      new_name[0] = (char)tolower(new_name[0]);
+      new_name[0] = static_cast<char>( tolower(new_name[0] ));
       if (new_name[new_name.size() - 1] == '_') {
         // an underscore is inserted at the end of the field name if it's
         // a basic type's name (since it would conflict with the class generated
@@ -376,7 +376,7 @@ namespace Ttcn {
         if (pt->get_typetype() == Type::T_ARRAY || pt->get_typetype() == Type::T_SEQOF) {
           int len = 0, start = 0;
           if (pt->get_typetype() == Type::T_ARRAY) {
-            len = (int)pt->get_dimension()->get_size();
+            len = static_cast<int>( pt->get_dimension()->get_size() );
             start = pt->get_dimension()->get_offset();
           } else if (pt->get_typetype() == Type::T_SEQOF) {
             len = pt->get_sub_type()->get_length_restriction();
@@ -1775,7 +1775,7 @@ namespace Ttcn {
 
   void Imports::dump(unsigned level) const
   {
-    DEBUG(level, "Imports (%lu pcs.)", (unsigned long) impmods_v.size());
+    DEBUG(level, "Imports (%lu pcs.)", static_cast<unsigned long>( impmods_v.size() ));
     for (size_t i = 0; i < impmods_v.size(); i++)
       impmods_v[i]->dump(level + 1);
   }
@@ -1950,7 +1950,7 @@ namespace Ttcn {
 
   void Definitions::dump(unsigned level) const
   {
-    DEBUG(level, "Definitions: (%lu pcs.)", (unsigned long) ass_v.size());
+    DEBUG(level, "Definitions: (%lu pcs.)", static_cast<unsigned long>( ass_v.size() ));
     for(size_t i = 0; i < ass_v.size(); i++) ass_v[i]->dump(level + 1);
   }
 
@@ -2091,13 +2091,13 @@ namespace Ttcn {
   {
     DEBUG(level, "Group: %s", id->get_dispname().c_str());
     DEBUG(level + 1, "Nested groups: (%lu pcs.)",
-      (unsigned long) group_v.size());
+      static_cast<unsigned long>( group_v.size() ));
     for(size_t i = 0; i < group_v.size(); i++) group_v[i]->dump(level + 2);
     DEBUG(level + 1, "Nested definitions: (%lu pcs.)",
-      (unsigned long) ass_v.size());
+      static_cast<unsigned long>( ass_v.size() ));
     for(size_t i = 0; i < ass_v.size(); i++) ass_v[i]->dump(level + 2);
     DEBUG(level + 1, "Nested imports: (%lu pcs.)",
-      (unsigned long) impmods_v.size());
+      static_cast<unsigned long>( impmods_v.size() ));
     for(size_t i = 0; i < impmods_v.size(); i++) impmods_v[i]->dump(level + 2);
     if (w_attrib_path) {
       MultiWithAttrib *attrib = w_attrib_path->get_with_attr();
@@ -3416,7 +3416,7 @@ namespace Ttcn {
 
   void Def_Type::dump_internal(unsigned level) const
   {
-    DEBUG(level, "Type def: %s @ %p", id->get_dispname().c_str(), (const void*)this);
+    DEBUG(level, "Type def: %s @ %p", id->get_dispname().c_str(), static_cast<const void*>(this));
     type->dump(level + 1);
   }
 
@@ -3661,7 +3661,7 @@ namespace Ttcn {
 
   void Def_Const::dump_internal(unsigned level) const
   {
-    DEBUG(level, "Constant: %s @%p", id->get_dispname().c_str(), (const void*)this);
+    DEBUG(level, "Constant: %s @%p", id->get_dispname().c_str(), static_cast<const void*>(this));
     type->dump(level + 1);
     value->dump(level + 1);
   }
@@ -3760,7 +3760,7 @@ namespace Ttcn {
 
   void Def_ExtConst::dump_internal(unsigned level) const
   {
-    DEBUG(level, "External constant: %s @ %p", id->get_dispname().c_str(), (const void*)this);
+    DEBUG(level, "External constant: %s @ %p", id->get_dispname().c_str(), static_cast<const void*>(this));
     type->dump(level + 1);
   }
 
@@ -3930,7 +3930,7 @@ namespace Ttcn {
 
   void Def_Modulepar::dump_internal(unsigned level) const
   {
-    DEBUG(level, "Module parameter: %s @ %p", id->get_dispname().c_str(), (const void*)this);
+    DEBUG(level, "Module parameter: %s @ %p", id->get_dispname().c_str(), static_cast<const void*>(this));
     type->dump(level + 1);    
     if (def_value) def_value->dump(level + 1);
     else DEBUG(level + 1, "No default value");
@@ -4102,7 +4102,7 @@ namespace Ttcn {
 
   void Def_Modulepar_Template::dump_internal(unsigned level) const
   {
-    DEBUG(level, "Module parameter: %s @ %p", id->get_dispname().c_str(), (const void*)this);
+    DEBUG(level, "Module parameter: %s @ %p", id->get_dispname().c_str(), static_cast<const void*>(this));
     type->dump(level + 1);
     if (def_template) def_template->dump(level + 1);
     else DEBUG(level + 1, "No default template");
@@ -4390,8 +4390,8 @@ namespace Ttcn {
     if (nof_local_fps < nof_base_fps) {
       error("The modified template has fewer formal parameters than base "
         "template `%s': at least %lu parameter%s expected instead of %lu",
-        ass->get_fullname().c_str(), (unsigned long)nof_base_fps,
-        nof_base_fps > 1 ? "s were" : " was", (unsigned long)nof_local_fps);
+        ass->get_fullname().c_str(), static_cast<unsigned long>(nof_base_fps),
+        nof_base_fps > 1 ? "s were" : " was", static_cast<unsigned long>(nof_local_fps));
       min_fps = nof_local_fps;
     } else min_fps = nof_base_fps;
 
@@ -4399,7 +4399,7 @@ namespace Ttcn {
       FormalPar *base_fp = base_fpl->get_fp_byIndex(i);
       FormalPar *local_fp = fp_list->get_fp_byIndex(i);
       Error_Context cntxt(local_fp, "In formal parameter #%lu",
-        (unsigned long)(i + 1));
+        static_cast<unsigned long>(i + 1));
       // Check for parameter kind equivalence (value or template).
       if (base_fp->get_asstype() != local_fp->get_asstype())
         local_fp->error("The kind of parameter is not the same as in base "
@@ -4545,7 +4545,7 @@ namespace Ttcn {
         target->functions.post_init = mputprintf(target->functions.post_init,
           "%s_err_descr_ptr = &%s_%lu_err_descr;\n",
           body->get_lhs_name().c_str(), body->get_lhs_name().c_str(),
-          (unsigned long) body->get_err_descr()->get_descr_index(NULL));
+          static_cast<unsigned long>( body->get_err_descr()->get_descr_index(NULL) ));
       }
       function_body = mputstr(function_body, "return ret_val;\n");
       // if the template modifies a parameterized template, then the inherited
@@ -4618,7 +4618,7 @@ namespace Ttcn {
       if (body->get_err_descr() != NULL && body->get_err_descr()->has_descr(NULL)) {
         cdef.init = mputprintf(cdef.init, "%s.set_err_descr(&%s_%lu_err_descr);\n",
           body->get_lhs_name().c_str(), body->get_lhs_name().c_str(),
-          (unsigned long) body->get_err_descr()->get_descr_index(NULL));
+          static_cast<unsigned long>( body->get_err_descr()->get_descr_index(NULL) ));
       }
       target->header.global_vars = mputstr(target->header.global_vars,
         cdef.decl);
@@ -5379,11 +5379,11 @@ namespace Ttcn {
           if (array_size > nof_vs) {
             dur->error("Too few elements in the default duration of timer "
                        "array: %lu was expected instead of %lu",
-                       (unsigned long)array_size, (unsigned long)nof_vs);
+                       static_cast<unsigned long>(array_size), static_cast<unsigned long>(nof_vs));
           } else if (array_size < nof_vs) {
             dur->error("Too many elements in the default duration of timer "
                        "array: %lu was expected instead of %lu",
-                       (unsigned long)array_size, (unsigned long)nof_vs);
+                       static_cast<unsigned long>(array_size), static_cast<unsigned long>(nof_vs));
           }
         }
         bool last_dimension = start_dim + 1 >= dimensions->get_nof_dims();
@@ -5403,7 +5403,7 @@ namespace Ttcn {
           if (last_dimension) chk_single_duration(array_v);
           else chk_array_duration(array_v, start_dim + 1);
           Error_Context cntxt(this, "In timer array element %lu",
-                              (unsigned long)(i + 1));
+                              static_cast<unsigned long>(i + 1));
           Value *index = v->get_index_byIndex(i);
           dim->chk_index(index, Type::EXPECTED_DYNAMIC_VALUE);
           if (index->get_value_refd_last()->get_valuetype() == Value::V_INT) {
@@ -5420,11 +5420,11 @@ namespace Ttcn {
                 index->error("Duplicate index value `%s' for timer array "
                              "elements `%s' and `%s'",
                              Int2string(index_val).c_str(),
-                             Int2string((Int)i + 1).c_str(),
+                             Int2string(static_cast<Int>(i) + 1).c_str(),
                              Int2string(*index_map[index_val]).c_str());
                 index->set_valuetype(Value::V_ERROR);
               } else {
-                index_map.add(index_val, new Int((Int)i + 1));
+                index_map.add(index_val, new Int(static_cast<Int>(i + 1)));
               }
             }
           }
@@ -5441,7 +5441,7 @@ namespace Ttcn {
       if (array_size_known) {
         dur->error("An array value (with %lu elements) was expected as "
                    "default duration of timer array",
-                   (unsigned long)array_size);
+                   static_cast<unsigned long>(array_size));
       } else {
         dur->error("An array value was expected as default duration of timer "
                    "array");
@@ -5539,13 +5539,13 @@ namespace Ttcn {
             str = mputprintf(str, "{\n"
                              "%s& %s = %s.array_element(%lu);\n",
                              dimensions->get_timer_type(start_dim + 1).c_str(),
-                             tmp_str, object_name, (unsigned long)i);
+                             tmp_str, object_name, static_cast<unsigned long>(i));
             str = generate_code_array_duration(str, tmp_str, v_elem,
                                                start_dim + 1);
             str = mputstr(str, "}\n");
           } else {
             char *tmp_str = mprintf("%s.array_element(%lu)", object_name,
-                                    (unsigned long)i);
+                                    static_cast<unsigned long>(i));
             str = generate_code_array_duration(str, tmp_str, v_elem,
                                                start_dim + 1);
             Free(tmp_str);
@@ -5560,7 +5560,7 @@ namespace Ttcn {
           Code::init_expr(&expr);
           expr.expr = mputprintf(expr.expr,
                                  "%s.array_element(%lu).set_default_duration(",
-                                 object_name, (unsigned long)i);
+                                 object_name, static_cast<unsigned long>(i));
           v_elem->generate_code_expr(&expr);
           expr.expr = mputc(expr.expr, ')');
           str = Code::merge_free_expr(str, &expr);
@@ -5695,7 +5695,7 @@ namespace Ttcn {
       def = dimensions->generate_element_names(def, dispname);
       def = mputprintf(def, " };\n"
         "%s.set_name(%lu, timer_names);\n"
-        "}\n", genname_str, (unsigned long) dimensions->get_array_size());
+        "}\n", genname_str, static_cast<unsigned long>( dimensions->get_array_size() ));
       if (default_duration) init = generate_code_array_duration(init,
         genname_str, default_duration);
     } else {
@@ -6073,7 +6073,7 @@ namespace Ttcn {
         }
       } else {
         fp_list->error("The function must have one parameter instead of %lu "
-          "for attribute `prototype(%s)'", (unsigned long) fp_list->get_nof_fps(),
+          "for attribute `prototype(%s)'", static_cast<unsigned long>( fp_list->get_nof_fps() ),
           get_prototype_name());
       }
     } else { // not PROTOTYPE_CONVERT
@@ -6121,7 +6121,7 @@ namespace Ttcn {
       } else {
         fp_list->error("The function must have two parameters for attribute "
           "`prototype(%s)' instead of %lu", get_prototype_name(),
-          (unsigned long) fp_list->get_nof_fps());
+          static_cast<unsigned long>( fp_list->get_nof_fps()) );
       }
     }
     // checking the return type
@@ -9214,7 +9214,7 @@ namespace Ttcn {
     if (nof_type_pars != nof_function_pars) {
       p_fp_list->error("Too %s parameters: %lu was expected instead of %lu",
         nof_type_pars < nof_function_pars ? "many" : "few",
-        (unsigned long) nof_type_pars, (unsigned long) nof_function_pars);
+        static_cast<unsigned long>( nof_type_pars ), static_cast<unsigned long>( nof_function_pars)) ;
     }
     size_t upper_limit =
       nof_type_pars < nof_function_pars ? nof_type_pars : nof_function_pars;
@@ -9222,7 +9222,7 @@ namespace Ttcn {
       FormalPar *type_par = pars_v[i];
       FormalPar *function_par = p_fp_list->pars_v[i];
       Error_Context cntxt(function_par, "In parameter #%lu",
-      (unsigned long) (i + 1));
+      static_cast<unsigned long> (i + 1));
       FormalPar::asstype_t type_par_asstype = type_par->get_asstype();
       FormalPar::asstype_t function_par_asstype = function_par->get_asstype();
       // check for parameter kind equivalence
@@ -9405,7 +9405,7 @@ namespace Ttcn {
       if (actual_pars != formal_pars) {
         p_tis->error("Too %s parameters: %lu was expected "
           "instead of %lu", actual_pars < formal_pars ? "few" : "many",
-          (unsigned long) formal_pars, (unsigned long) actual_pars);
+          static_cast<unsigned long>( formal_pars), static_cast<unsigned long>( actual_pars));
         error_flag = true;
       }
     } else {
@@ -9413,12 +9413,12 @@ namespace Ttcn {
       if (actual_pars < min_nof_pars) {
         p_tis->error("Too few parameters: at least %lu "
           "was expected instead of %lu",
-          (unsigned long) min_nof_pars, (unsigned long) actual_pars);
+          static_cast<unsigned long>( min_nof_pars), static_cast<unsigned long>( actual_pars));
         error_flag = true;
       } else if (actual_pars > formal_pars) {
         p_tis->error("Too many parameters: at most %lu "
           "was expected instead of %lu",
-          (unsigned long) formal_pars, (unsigned long) actual_pars);
+          static_cast<unsigned long>( formal_pars), static_cast<unsigned long>( actual_pars));
         error_flag = true;
       }
     }
@@ -9431,7 +9431,7 @@ namespace Ttcn {
       // the formal parameter for the current actual parameter
       FormalPar *fp = pars_v[i];
       Error_Context cntxt(ti, "In parameter #%lu for `%s'",
-        (unsigned long) (i + 1), fp->get_id().get_dispname().c_str());
+        static_cast<unsigned long> (i + 1), fp->get_id().get_dispname().c_str());
       if (!ti->get_Type() && !ti->get_DerivedRef() && ti->get_Template()
           ->get_templatetype() == Template::TEMPLATE_NOTUSED) {
         if (fp->has_defval()) {
@@ -9507,7 +9507,7 @@ namespace Ttcn {
             "definition within a statement block and may have shorter "
             "lifespan than the activated default. Only references to "
             "variables and timers defined in the component type can be passed "
-            "to activated defaults", (unsigned long) (i + 1), p_description,
+            "to activated defaults", static_cast<unsigned long> (i + 1), p_description,
             t_par_ass->get_description().c_str());
           ret_val = false;
         }
@@ -9531,7 +9531,7 @@ namespace Ttcn {
           t_ref->error("Parameter #%lu of %s refers to %s, which may have "
             "shorter lifespan than the activated default. Only references to "
             "variables and timers defined in the component type can be passed "
-            "to activated defaults", (unsigned long) (i + 1), p_description,
+            "to activated defaults", static_cast<unsigned long> (i + 1), p_description,
             t_par_ass->get_description().c_str());
           ret_val = false;
         } }
@@ -9603,7 +9603,7 @@ namespace Ttcn {
   void FormalParList::dump(unsigned level) const
   {
     size_t nof_pars = pars_v.size();
-    DEBUG(level, "formal parameters: %lu pcs.", (unsigned long) nof_pars);
+    DEBUG(level, "formal parameters: %lu pcs.", static_cast<unsigned long>( nof_pars));
     for(size_t i = 0; i < nof_pars; i++) pars_v[i]->dump(level + 1);
   }
 
@@ -10412,7 +10412,7 @@ namespace Ttcn {
   void ActualParList::dump(unsigned level) const
   {
     DEBUG(level, "actual parameter list: %lu parameters",
-      (unsigned long) params.size());
+      static_cast<unsigned long>( params.size()));
     for (size_t i = 0; i < params.size(); i++)
       params[i]->dump(level + 1);
   }

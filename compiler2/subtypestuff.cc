@@ -205,13 +205,13 @@ void size_limit_t::check_interval_start() const
 string size_limit_t::to_string() const
 {
   if (infinity) return string("infinity");
-  return Int2string((Int)size);
+  return Int2string(static_cast<Int>(size));
 }
 
 int_limit_t size_limit_t::to_int_limit() const
 {
   if (infinity) return int_limit_t(int_limit_t::PLUS_INFINITY);
-  return int_limit_t(int_val_t((Int)size)); // FIXME: size_t -> Int
+  return int_limit_t(int_val_t(static_cast<Int>(size))); // FIXME: size_t -> Int
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -246,7 +246,7 @@ char_limit_t char_limit_t::previous() const
 
 string char_limit_t::to_string() const
 {
-  return string((char)chr).get_stringRepr();
+  return string(static_cast<char>(chr)).get_stringRepr();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,16 +258,16 @@ void universal_char_limit_t::check_value() const
 
 unsigned int universal_char_limit_t::uchar2codepoint(const ustring::universal_char& uchr)
 {
-  return ( (((unsigned int)uchr.group)<<24) + (((unsigned int)uchr.plane)<<16) + (((unsigned int)uchr.row)<<8) + ((unsigned int)uchr.cell) );
+  return ( ((static_cast<unsigned int>(uchr.group))<<24) + ((static_cast<unsigned int>(uchr.plane))<<16) + ((static_cast<unsigned int>(uchr.row))<<8) + (static_cast<unsigned int>(uchr.cell)) );
 }
 
 ustring::universal_char universal_char_limit_t::codepoint2uchar(unsigned int cp)
 {
   ustring::universal_char uchr;
-  uchr.cell  = (unsigned char)(cp & 0xFF);
-  uchr.row   = (unsigned char)((cp>>8) & 0xFF);
-  uchr.plane = (unsigned char)((cp>>16) & 0xFF);
-  uchr.group = (unsigned char)((cp>>24) & 0xFF);
+  uchr.cell  = static_cast<unsigned char>(cp & 0xFF);
+  uchr.row   = static_cast<unsigned char>((cp>>8) & 0xFF);
+  uchr.plane = static_cast<unsigned char>((cp>>16) & 0xFF);
+  uchr.group = static_cast<unsigned char>((cp>>24) & 0xFF);
   return uchr;
 }
 
@@ -406,7 +406,7 @@ bool convert_int_to_size(const RangeListConstraint<int_limit_t>& int_range, Rang
         size_range = RangeListConstraint<size_limit_t>(size_limit_t::minimum, size_limit_t::maximum);
         return false;
       }
-      sl = size_limit_t((size_t)number.get_val());
+      sl = size_limit_t(static_cast<size_t>(number.get_val()));
     } break;
     case int_limit_t::PLUS_INFINITY:
       sl = size_limit_t::maximum;

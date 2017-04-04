@@ -529,7 +529,7 @@ namespace Asn {
           pos2++;
         pos2+=is_constraint(pos2);
         if(tb->get_at(pos2)->get_token()==KW_OF) {
-          pos2+=tb->get_at(pos2+1)->get_token()==TOK_LowerIdentifier?(size_t)2:(size_t)1;
+          pos2+=tb->get_at(pos2+1)->get_token()==TOK_LowerIdentifier?static_cast<size_t>(2):static_cast<size_t>(1);
           pos2+=is_type(pos2);
         }
       }

@@ -156,7 +156,7 @@ namespace Asn {
       if(nof_act_pars != nof_formal_pars)
         error("Too %s parameters: %lu was expected instead of %lu",
               nof_act_pars<nof_formal_pars?"few":"many",
-              (unsigned long) nof_formal_pars, (unsigned long) nof_act_pars);
+              static_cast<unsigned long>( nof_formal_pars), static_cast<unsigned long>( nof_act_pars));
 
       /* building the new assignments */
       asss=new Assignments();
@@ -370,7 +370,7 @@ namespace Asn {
     for(size_t i=0; i<nof_fields-1; i++) {
       Identifier *curr_fn = fn->get_field_byIndex(i);
       Error_Context ec_1(this, "While examining part #%lu (`%s') of FieldName",
-	(unsigned long) (i + 1), curr_fn->get_dispname().c_str());
+	static_cast<unsigned long> (i + 1), curr_fn->get_dispname().c_str());
       FieldSpec *curr_fspec =
 	t_oc->get_fss()->get_fs_byId(*curr_fn)->get_last();
       if(curr_fspec->get_fstype()==FieldSpec::FS_ERROR) goto error;

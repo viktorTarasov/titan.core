@@ -299,9 +299,9 @@ TITAN "$#&&&(#TITANERRONEOUS$#&&^#% "
   Error_Context cntxt(&loc, "In preprocessor line marker");
   /* parsing out the line number */
   int lineno_begin = marker_begin + 1;
-  while (!isdigit((unsigned char)yytext[lineno_begin])) lineno_begin++;
+  while (!isdigit(static_cast<unsigned char>( yytext[lineno_begin] ))) lineno_begin++;
   int lineno_end = lineno_begin + 1;
-  while (isdigit((int)yytext[lineno_end])) lineno_end++;
+  while (isdigit(static_cast<int>( yytext[lineno_end] ))) lineno_end++;
   errno = 0;
   int new_lineno = strtol(yytext + lineno_begin, NULL, 10);
   if (errno != 0) {
@@ -776,7 +776,7 @@ NULL RETURN(NullValue);
   . {
     Location loc(infile, current_line, current_column, current_line,
       current_column + 1);
-    int c = (unsigned char)yytext[0];
+    int c = static_cast<unsigned char>( yytext[0] );
     loc.error("Invalid character `%c' (0x%02X) in binary string",
       isprint(c) ? c : '?', c);
     MD5_Update(&md5_ctx, binstr, strlen(binstr));
@@ -1000,7 +1000,7 @@ NULL RETURN(NullValue);
 . {
   fill_location();
   Location loc(infile, yylloc);
-  int c = (unsigned char)yytext[0];
+  int c = static_cast<unsigned char>( yytext[0] );
   loc.error("Character `%c' (0x%02X) is not used in TTCN-3",
     isprint(c) ? c : '?', c);
 }

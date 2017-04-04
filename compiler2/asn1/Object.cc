@@ -163,7 +163,7 @@ namespace Asn {
       DEBUG(level, "with unparsed block");
     if(fss) {
       DEBUG(level, "with fieldspecs (%lu pcs):",
-        (unsigned long) fss->get_nof_fss());
+        static_cast<unsigned long>( fss->get_nof_fss()));
       fss->dump(level+1);
     }
     if(ocs) {
@@ -974,7 +974,7 @@ namespace Asn {
 
   void FieldSpecs::dump(unsigned level) const
   {
-    DEBUG(level, "Fieldspecs (%lu pcs.)", (unsigned long) fss.size());
+    DEBUG(level, "Fieldspecs (%lu pcs.)", static_cast<unsigned long>( fss.size()));
     level++;
     for(size_t i=0; i<fss_v.size(); i++)
       fss_v[i]->dump(level);
@@ -2036,7 +2036,7 @@ namespace Asn {
     if(block) DEBUG(level, "with unparsed block");
     if(objs) {
       DEBUG(level, "with collected objects (%lu pcs)",
-        (unsigned long) objs->get_nof_objs());
+        static_cast<unsigned long>( objs->get_nof_objs()));
       objs->dump(level+1);
     }
     else DEBUG(level, "with uncollected objects");
