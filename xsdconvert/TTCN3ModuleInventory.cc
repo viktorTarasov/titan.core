@@ -380,12 +380,12 @@ RootType * TTCN3ModuleInventory::lookup(const Mstring& name, const Mstring& nsur
 }
 
 void TTCN3ModuleInventory::dump() const {
-  fprintf(stderr, "Dumping %lu modules.\n", (unsigned long) definedModules.size());
+  fprintf(stderr, "Dumping %lu modules.\n", static_cast<unsigned long>( definedModules.size() ));
   for (List<TTCN3Module*>::iterator module = definedModules.begin(); module; module = module->Next) {
     module->Data->dump();
   }
 
-  fprintf(stderr, "Dumping %lu types\n", (unsigned long) typenames.size());
+  fprintf(stderr, "Dumping %lu types\n", static_cast<unsigned long>( typenames.size() ));
 
   Item<QualifiedName> *o = typenames.begin();
   for (; o != NULL; o = o->Next) {

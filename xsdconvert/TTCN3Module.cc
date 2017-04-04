@@ -69,7 +69,7 @@ TTCN3Module::TTCN3Module(const char * a_filename, XMLParser * a_parser)
   char *posix = NULL;
   ssize_t needed = cygwin_conv_path(CCP_WIN_A_TO_POSIX | CCP_RELATIVE, a_filename, NULL, 0);
   if (needed >= 0) {
-    posix = (char*) Malloc(needed);
+    posix = static_cast<char*>( Malloc(needed) );
     if (cygwin_conv_path(CCP_WIN_A_TO_POSIX | CCP_RELATIVE, a_filename, posix, needed)) {
       posix = NULL; // conversion failed
     }
@@ -394,7 +394,7 @@ void TTCN3Module::TargetNamespace2ModuleName() {
   }
   // any character except "A" to "Z", "a" to "z" or "0" to "9" and "_" shall be removed
   for (size_t i = 0; i != res.size(); ++i) {
-    if (!isalpha((const unsigned char) res[i]) && !isdigit((const unsigned char) res[i]) && (res[i] != '_')) {
+    if (!isalpha(static_cast<const unsigned char>( res[i] )) && !isdigit(static_cast<const unsigned char>( res[i] )) && (res[i] != '_')) {
       res.eraseChar(i);
       i--;
     }
@@ -422,7 +422,7 @@ void TTCN3Module::TargetNamespace2ModuleName() {
 
   if (res.empty()) {
     res = "x";
-  } else if (isdigit((const unsigned char) res[0])) {
+  } else if (isdigit(static_cast<const unsigned char>( res[0] ))) {
     res.insertChar(0, 'x');
   }
 
@@ -460,7 +460,7 @@ void TTCN3Module::TargetNamespace2ModuleName() {
 
 void TTCN3Module::dump() const {
   fprintf(stderr, "Module '%s' at %p (from %s)\n",
-    modulename.c_str(), (const void*) this, schemaname.c_str());
+    modulename.c_str(), static_cast<const void*>( this ), schemaname.c_str());
   
   for (List<RootType*>::iterator type = constantDefs.begin(); type; type = type->Next) {
     type->Data->dump(1);

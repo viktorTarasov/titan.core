@@ -1551,20 +1551,20 @@ void ValueType::applyFacets() // only for integer and float types
     double r = pow(10.0, facet_totalDigits);
 
     if (base == "integer") {
-      lower = (int) -(r - 1);
-      upper = (int) (r - 1);
+      lower = static_cast<int>( -(r - 1) );
+      upper = static_cast<int>(r - 1);
     } else if (base == "positiveInteger") {
       lower = 1;
-      upper = (int) (r - 1);
+      upper = static_cast<int>(r - 1);
     } else if (base == "nonPositiveInteger") {
-      lower = (int) -(r - 1);
+      lower = static_cast<int>( -(r - 1) );
       upper = 0;
     } else if (base == "negativeInteger") {
-      lower = (int) -(r - 1);
+      lower = static_cast<int>( -(r - 1) );
       upper = -1;
     } else if (base == "nonNegativeInteger") {
       lower = 0;
-      upper = (int) (r - 1);
+      upper = static_cast<int>(r - 1);
     } else if (base == "long" ||
       base == "unsignedLong" ||
       base == "int" ||
@@ -1573,11 +1573,11 @@ void ValueType::applyFacets() // only for integer and float types
       base == "unsignedShort" ||
       base == "byte" ||
       base == "unsignedByte") {
-      lower = (int) -(r - 1);
-      upper = (int) (r - 1);
+      lower = static_cast<int>( -(r - 1) );
+      upper = static_cast<int>(r - 1);
     } else if (base == "decimal") {
-      lower = (int) -(r - 1);
-      upper = (int) (r - 1);
+      lower = static_cast<int>( -(r - 1) );
+      upper = static_cast<int>(r - 1);
     } else {
       printWarning(parent->getModule()->getSchemaname(), parent->getName().convertedValue,
         Mstring("Facet 'totalDigits' is not applicable for type '") + base + Mstring("'."));

@@ -103,11 +103,11 @@ char * Mstring::foundAt(const char * s) const {
 }
 
 void Mstring::setCapitalized() {
-  text[0] = (char)toupper(text[0]);
+  text[0] = static_cast<char>( toupper(text[0] ));
 }
 
 void Mstring::setUncapitalized() {
-  text[0] = (char)tolower(text[0]);
+  text[0] = static_cast<char>( tolower(text[0] ));
 }
 
 Mstring Mstring::getPrefix(const char delimiter) const {
@@ -127,7 +127,7 @@ void Mstring::removeWSfromBegin() {
   size_t i = 0;
   size_t s = mstrlen(text);
   for (; i < s; ++i)
-    if (!isspace((const unsigned char) text[i])) break;
+    if (!isspace(static_cast<const unsigned char>( text[i] ))) break;
   memmove(text, text + i, s - i);
   text = mtruncstr(text, s - i);
 }
@@ -135,7 +135,7 @@ void Mstring::removeWSfromBegin() {
 void Mstring::removeWSfromEnd() {
   size_t i = mstrlen(text);
   for (; i > 0; --i)
-    if (!isspace((const unsigned char) text[i - 1])) break;
+    if (!isspace(static_cast<const unsigned char>( text[i - 1] ))) break;
   text = mtruncstr(text, i);
 }
 
