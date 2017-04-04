@@ -782,7 +782,7 @@ void BITSTRING::BER_encode_putbits(unsigned char *target,
     target[0]=0x00;
     return;
   }
-  target[0]=(unsigned char)(nof_octets*8-bit_count);
+  target[0] = static_cast<unsigned char>(nof_octets*8-bit_count);
   for(i=0; i<nof_octets-1; i++) {
     c=0;
     for(j=0; j<8; j++) {

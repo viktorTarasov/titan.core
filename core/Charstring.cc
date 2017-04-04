@@ -2988,8 +2988,8 @@ void CHARSTRING_template::set_param(Module_Param& param) {
     set_selection(VALUE_RANGE);
     value_range.min_is_set = TRUE;
     value_range.max_is_set = TRUE;
-    value_range.min_value = (char)(lower_uchar.uc_cell);
-    value_range.max_value = (char)(upper_uchar.uc_cell);
+    value_range.min_value = static_cast<char>(lower_uchar.uc_cell);
+    value_range.max_value = static_cast<char>(upper_uchar.uc_cell);
     set_min_exclusive(mp->get_is_min_exclusive());
     set_max_exclusive(mp->get_is_max_exclusive());
   } break;

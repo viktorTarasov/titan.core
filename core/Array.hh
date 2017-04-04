@@ -1096,8 +1096,8 @@ VALUE_ARRAY<T_type,array_size,index_offset>
 VALUE_ARRAY<T_type,array_size,index_offset>::
 operator>>=(int rotate_count) const {
   unsigned int rc;
-  if (rotate_count>=0) rc = (unsigned int)rotate_count % array_size;
-  else rc = array_size - ((unsigned int)(-rotate_count) % array_size);
+  if (rotate_count>=0) rc = static_cast<unsigned int>(rotate_count) % array_size;
+  else rc = array_size - (static_cast<unsigned int>(-rotate_count) % array_size);
   if (rc == 0) return *this;
   VALUE_ARRAY<T_type,array_size,index_offset> ret_val;
   for (unsigned int i=0; i<array_size; i++) {
@@ -2937,7 +2937,7 @@ boolean match_permutation_array(const Base_Type *value_ptr,
   // permutation
   if (nof_permutations == 1 && template_ptr->get_permutation_start(0) == 0 &&
     template_ptr->get_permutation_end(0) ==
-      (unsigned int)(template_size - 1))
+      static_cast<unsigned int>(template_size - 1))
     return match_set_of(value_ptr, value_size, template_ptr, template_size,
       match_function, legacy);
 

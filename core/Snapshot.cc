@@ -45,7 +45,7 @@
 #include "Event_Handler.hh"
 
 
-static const int MAX_INT_VAL = (int) ((unsigned int) -2 >> 1u);
+static const int MAX_INT_VAL = static_cast<int>(static_cast<unsigned int>( -2 ) >> 1u);
 
 /******************************************************************************
  * class FdMap                                                                *

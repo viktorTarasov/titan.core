@@ -1219,7 +1219,7 @@ boolean match_record_of(const Base_Type *value_ptr, int value_size,
   // permutation
   if (nof_permutations == 1 && template_ptr->get_permutation_start(0) == 0 &&
     template_ptr->get_permutation_end(0) ==
-      (unsigned int)(template_size - 1))
+      static_cast<unsigned int>(template_size - 1) )
     return match_set_of(value_ptr, value_size, template_ptr, template_size,
       match_function, legacy);
 
