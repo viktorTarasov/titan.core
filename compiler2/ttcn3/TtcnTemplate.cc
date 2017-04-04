@@ -2720,7 +2720,7 @@ end:
           new_templates->add_t(t);
           break; }
         case TEMPLATE_LIST:
-       // case VALUE_LIST:
+        case VALUE_LIST:
        // case COMPLEMENTED_LIST:
        // case SUPERSET_MATCH:
        // case SUBSET_MATCH: 
