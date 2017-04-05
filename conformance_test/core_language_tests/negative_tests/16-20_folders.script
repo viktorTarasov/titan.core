@@ -2434,7 +2434,7 @@ module NegSyn_1901_assignments_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `:=': syntax error, unexpected :=, expecting ','
+error: at or before token `:=': syntax error, unexpected :=, expecting ')' or ','
 <END_RESULT>
 
 <END_TC>
