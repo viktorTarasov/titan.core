@@ -53,7 +53,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 15_templates 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that there's an error for re-assignment of a global non-parameterized template >
+<TC - 1503_001 Ensure that there's an error for re-assignment of a global non-parameterized template >
 
 <COMPILE>
 
@@ -94,7 +94,7 @@ error: Reference to a variable or template variable was expected instead of temp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that there's an error for re-assignment of a global non-parameterized template >
+<TC - 1503_002 Ensure that there's an error for re-assignment of a global non-parameterized template >
 
 <COMPILE>
 
@@ -135,7 +135,7 @@ error: Reference to a variable or template variable was expected instead of temp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that there's an error for re-assignment of a global parameterized template >
+<TC - 1503_003 Ensure that there's an error for re-assignment of a global parameterized template >
 
 <COMPILE>
 
@@ -178,7 +178,7 @@ error: Reference to parameterized definition `t' without actual parameter list
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that there's an error for re-assignment of a local parameterized template >
+<TC - 1503_004 Ensure that there's an error for re-assignment of a local parameterized template >
 
 <COMPILE>
 
@@ -221,7 +221,7 @@ error: Reference to parameterized definition `t' without actual parameter list
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that there's an error if no value is assigned in a global non-parameterized template declaration >
+<TC - 1503_001 Ensure that there's an error if no value is assigned in a global non-parameterized template declaration >
 
 <COMPILE>
 
@@ -256,7 +256,7 @@ error: at or before token `;': syntax error, unexpected ';', expecting ModifiesK
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that there's an error if no value is assigned in a local non-parameterized template declaration >
+<TC - 1503_002 Ensure that there's an error if no value is assigned in a local non-parameterized template declaration >
 
 <COMPILE>
 
@@ -295,7 +295,7 @@ error: at or before token `;': syntax error, unexpected ';', expecting ModifiesK
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that there's an error if no value is assigned in a global parameterized template declaration >
+<TC - 1503_003 Ensure that there's an error if no value is assigned in a global parameterized template declaration >
 
 <COMPILE>
 
@@ -330,7 +330,7 @@ error: at or before token `;': syntax error, unexpected ';', expecting :=
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that there's an error if no value is assigned in a local parameterized template declaration >
+<TC - 1503_004 Ensure that there's an error if no value is assigned in a local parameterized template declaration >
 
 <COMPILE>
 
@@ -373,7 +373,7 @@ error: at or before token `;': syntax error, unexpected ';', expecting :=
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a modified template does not refer to itself. >
+<TC - 1505_001 Ensure that a modified template does not refer to itself. >
 
 <COMPILE>
 
@@ -410,7 +410,7 @@ error: While checking the chain of base templates: Circular reference: `@NegSem_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a modified template does not omit possible parameters of the base >
+<TC - 1505_002 Ensure that a modified template does not omit possible parameters of the base >
 
 <COMPILE>
 
@@ -456,7 +456,7 @@ error: The modified template has fewer formal parameters than base template `@Ne
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a modified template does not omit possible parameters introduced in any modification step. >
+<TC - 1505_003 Ensure that a modified template does not omit possible parameters introduced in any modification step. >
 
 <COMPILE>
 
@@ -506,7 +506,7 @@ error: The modified template has fewer formal parameters than base template `@Ne
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that parameter names in modified templates are the same. >
+<TC - 1505_004 Ensure that parameter names in modified templates are the same. >
 
 <COMPILE>
 
@@ -553,7 +553,7 @@ error: The name of parameter is not the same as in base template `@NegSem_1505_M
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the dash in default parameter values of a modified templates is only accepted when the base template actually has a default value. >
+<TC - 1505_005 Ensure that the dash in default parameter values of a modified templates is only accepted when the base template actually has a default value. >
 
 <COMPILE>
 
@@ -603,7 +603,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the same parameter name is used when modifying the base template. >
+<TC - 1505_006 Ensure that the same parameter name is used when modifying the base template. >
 
 <COMPILE>
 
@@ -656,7 +656,7 @@ error: Not used symbol \(`-'\) doesn't have the corresponding default parameter 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the same parameter type is used when modifying the base template. >
+<TC - 1505_007 Ensure that the same parameter type is used when modifying the base template. >
 
 <COMPILE>
 
@@ -703,7 +703,7 @@ error: The type of parameter is not the same as in base template `@NegSem_1505_M
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the base template and modified template cannot be the same >
+<TC - 1505_001 Ensure that the base template and modified template cannot be the same >
 
 <COMPILE>
 
@@ -761,7 +761,7 @@ error: Duplicate definition with name `m_templateTwo'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the referencing of individual string elements inside templates or template fields is forbidden. >
+<TC - 150601_001 Ensure that the referencing of individual string elements inside templates or template fields is forbidden. >
 
 <COMPILE>
 
@@ -810,7 +810,7 @@ error: Reference to template variable `m_char1' can not be indexed
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that fields with omit values on the right-hand side of an assignment are rejected. >
+<TC - 150602_001 Ensure that fields with omit values on the right-hand side of an assignment are rejected. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -867,7 +867,7 @@ Dynamic test case error: Copying an uninitialized/unsupported record/set templat
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that fields with omit values on the right-hand side of an assignment are rejected. >
+<TC - 150602_003 Ensure that fields with omit values on the right-hand side of an assignment are rejected. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -945,7 +945,7 @@ Dynamic test case error: Copying an uninitialized/unsupported record/set templat
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that complement lists on the right-hand side of an assignment are not accepted. >
+<TC - 150602_004 Ensure that complement lists on the right-hand side of an assignment are not accepted. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1022,7 +1022,7 @@ Dynamic test case error: Copying an uninitialized/unsupported record/set templat
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that referencing a template field with the ifpresent attribute causes a rejection. >
+<TC - 150602_005 Ensure that referencing a template field with the ifpresent attribute causes a rejection. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1071,7 +1071,7 @@ Dynamic test case error: Accessing field f1 of a non-specific template of type @
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that referencing an element within a value list causes an error in the context of record of. >
+<TC - 150603_001 Ensure that referencing an element within a value list causes an error in the context of record of. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1120,7 +1120,7 @@ Dynamic test case error: Accessing an element of a non-specific template for typ
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that access to unitialized fields in the context of record of is rejected. >
+<TC - 150603_002 Ensure that access to unitialized fields in the context of record of is rejected. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1168,7 +1168,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that anyvalueornone fields in the context of record of is rejected. >
+<TC - 150603_003 Ensure that anyvalueornone fields in the context of record of is rejected. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1215,7 +1215,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that complement value lists in the context of record of are rejected. >
+<TC - 150603_004 Ensure that complement value lists in the context of record of are rejected. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1262,7 +1262,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that subset in the context of record of are rejected. >
+<TC - 150603_005 Ensure that subset in the context of record of are rejected. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1317,7 +1317,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that superset in the context of record of are rejected. >
+<TC - 150603_006 Ensure that superset in the context of record of are rejected. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1370,7 +1370,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that access to record of indexes is forbidden when a previous index entry is a permutation with a *. >
+<TC - 150603_008 Ensure that access to record of indexes is forbidden when a previous index entry is a permutation with a *. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1417,7 +1417,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that access to ifpresent fields is not allowed. >
+<TC - 150603_009 Ensure that access to ifpresent fields is not allowed. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1466,7 +1466,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that referencing AnyValueOrNone fields is not allowed. >
+<TC - 150603_010 Ensure that referencing AnyValueOrNone fields is not allowed. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1525,7 +1525,7 @@ Dynamic test case error: Matching with an uninitialized/unsupported integer temp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that referencing uninitialized fields is not allowed. >
+<TC - 150603_011 Ensure that referencing uninitialized fields is not allowed. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1583,7 +1583,7 @@ Dynamic test case error: Copying an uninitialized/unsupported integer template.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that referencing uninitialized fields is not allowed. >
+<TC - 150603_012 Ensure that referencing uninitialized fields is not allowed. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1641,7 +1641,7 @@ Dynamic test case error: Copying an uninitialized/unsupported integer template.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that referencing uninitialized fields is not allowed. >
+<TC - 150603_013 Ensure that referencing uninitialized fields is not allowed. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1698,7 +1698,7 @@ Dynamic test case error: Assignment of an unbound integer value.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that referencing an element within a value list causes an error in the context of set of. >
+<TC - 150603_014 Ensure that referencing an element within a value list causes an error in the context of set of. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1747,7 +1747,7 @@ Dynamic test case error: Accessing an element of a non-specific template for typ
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template variables does not allow referencing alternatives inside an union with omit >
+<TC - 150605_001 Ensure that template variables does not allow referencing alternatives inside an union with omit >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1815,7 +1815,7 @@ Dynamic test case error: Accessing field u1 in a non-specific template of union 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template variables does not allow referencing alternatives inside an union with AnyValueOrNone >
+<TC - 150605_002 Ensure that template variables does not allow referencing alternatives inside an union with AnyValueOrNone >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1884,7 +1884,7 @@ Dynamic test case error: Accessing field u1 in a non-specific template of union 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with anyvalue(?). >
+<TC - 1508_001 Ensure that template(omit) is rejected with anyvalue(?). >
 
 <COMPILE>
 
@@ -1919,7 +1919,7 @@ error: Restriction on template definition does not allow usage of any value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with setof template. >
+<TC - 1508_002 Ensure that template(omit) is rejected with setof template. >
 
 <COMPILE>
 
@@ -1954,7 +1954,7 @@ error: Restriction on template definition does not allow usage of value list mat
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with anyvalueornone(*). >
+<TC - 1508_003 Ensure that template(omit) is rejected with anyvalueornone(*). >
 
 <COMPILE>
 
@@ -1989,7 +1989,7 @@ error: Restriction on template definition does not allow usage of any or omit
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with value ranges. >
+<TC - 1508_004 Ensure that template(omit) is rejected with value ranges. >
 
 <COMPILE>
 
@@ -2024,7 +2024,7 @@ error: Restriction on template definition does not allow usage of value range ma
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with supersets. >
+<TC - 1508_005 Ensure that template(omit) is rejected with supersets. >
 
 <COMPILE>
 
@@ -2059,7 +2059,7 @@ error: Restriction on template definition does not allow usage of superset match
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with supersets. >
+<TC - 1508_006 Ensure that template(omit) is rejected with supersets. >
 
 <COMPILE>
 
@@ -2094,7 +2094,7 @@ error: Restriction on template definition does not allow usage of subset match
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with patterns. >
+<TC - 1508_007 Ensure that template(omit) is rejected with patterns. >
 
 <COMPILE>
 
@@ -2129,7 +2129,7 @@ error: Restriction on template definition does not allow usage of character stri
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with anyelement inside values. >
+<TC - 1508_008 Ensure that template(omit) is rejected with anyelement inside values. >
 
 <COMPILE>
 
@@ -2164,7 +2164,7 @@ error: Restriction on template definition does not allow usage of any value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with anyelementornone inside values. >
+<TC - 1508_009 Ensure that template(omit) is rejected with anyelementornone inside values. >
 
 <COMPILE>
 
@@ -2199,7 +2199,7 @@ error: Restriction on template definition does not allow usage of any or omit
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with permutation inside values. >
+<TC - 1508_010 Ensure that template(omit) is rejected with permutation inside values. >
 
 <COMPILE>
 
@@ -2234,7 +2234,7 @@ error: Restriction on template definition does not allow usage of permutation ma
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with length restrictions. >
+<TC - 1508_011 Ensure that template(omit) is rejected with length restrictions. >
 
 <COMPILE>
 
@@ -2268,7 +2268,7 @@ error: Restriction on template definition does not allow usage of length restric
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with length restrictions. >
+<TC - 1508_012 Ensure that template(omit) is rejected with length restrictions. >
 
 <COMPILE>
 
@@ -2305,7 +2305,7 @@ error: `ifpresent' is not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) is rejected with length restrictions. >
+<TC - 1508_013 Ensure that template(omit) is rejected with length restrictions. >
 
 <COMPILE>
 
@@ -2339,7 +2339,7 @@ error: Restriction on template definition does not allow usage of complemented l
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with anyvalue(?). >
+<TC - 1508_014 Ensure that template(value) is rejected with anyvalue(?). >
 
 <COMPILE>
 
@@ -2374,7 +2374,7 @@ error: Restriction on template definition does not allow usage of any value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with valuelist. >
+<TC - 1508_015 Ensure that template(value) is rejected with valuelist. >
 
 <COMPILE>
 
@@ -2409,7 +2409,7 @@ error: Restriction on template definition does not allow usage of value list mat
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with anyvalueornone(*). >
+<TC - 1508_016 Ensure that template(value) is rejected with anyvalueornone(*). >
 
 <COMPILE>
 
@@ -2444,7 +2444,7 @@ error: Restriction on template definition does not allow usage of any or omit
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with value ranges. >
+<TC - 1508_017 Ensure that template(value) is rejected with value ranges. >
 
 <COMPILE>
 
@@ -2479,7 +2479,7 @@ error: Restriction on template definition does not allow usage of value range ma
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with supersets. >
+<TC - 1508_018 Ensure that template(value) is rejected with supersets. >
 
 <COMPILE>
 
@@ -2514,7 +2514,7 @@ error: Restriction on template definition does not allow usage of superset match
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with supersets. >
+<TC - 1508_019 Ensure that template(value) is rejected with supersets. >
 
 <COMPILE>
 
@@ -2549,7 +2549,7 @@ error: Restriction on template definition does not allow usage of subset match
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with patterns. >
+<TC - 1508_020 Ensure that template(value) is rejected with patterns. >
 
 <COMPILE>
 
@@ -2584,7 +2584,7 @@ error: Restriction on template definition does not allow usage of character stri
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with anyelement inside values. >
+<TC - 1508_021 Ensure that template(value) is rejected with anyelement inside values. >
 
 <COMPILE>
 
@@ -2620,7 +2620,7 @@ error: Restriction on template definition does not allow usage of any value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with permutation inside values. >
+<TC - 1508_022 Ensure that template(value) is rejected with permutation inside values. >
 
 <COMPILE>
 
@@ -2655,7 +2655,7 @@ error: Restriction on template definition does not allow usage of permutation ma
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with length restrictions. >
+<TC - 1508_023 Ensure that template(value) is rejected with length restrictions. >
 
 <COMPILE>
 
@@ -2689,7 +2689,7 @@ error: Restriction on template definition does not allow usage of length restric
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with length restrictions. >
+<TC - 1508_024 Ensure that template(value) is rejected with length restrictions. >
 
 <COMPILE>
 
@@ -2726,7 +2726,7 @@ error: `ifpresent' is not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) is rejected with length restrictions. >
+<TC - 1508_025 Ensure that template(value) is rejected with length restrictions. >
 
 <COMPILE>
 
@@ -2761,7 +2761,7 @@ error: Restriction on template definition does not allow usage of omit value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(value) refuses omit as a whole. >
+<TC - 1508_026 Ensure that template(value) refuses omit as a whole. >
 
 <COMPILE>
 
@@ -2796,7 +2796,7 @@ error: Restriction on template definition does not allow usage of omit value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the template(present) with anyvalue(?) can't be assigned to an omit restricted variable template >
+<TC - 1508_029 Ensure that the template(present) with anyvalue(?) can't be assigned to an omit restricted variable template >
 
 <COMPILE>
 
@@ -2854,7 +2854,7 @@ error: Restriction on template does not allow usage of any value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that unrestricted template with anyvalue(?) can't be assigned to an omit restricted variable template >
+<TC - 1508_030 Ensure that unrestricted template with anyvalue(?) can't be assigned to an omit restricted variable template >
 
 <COMPILE>
 
@@ -2913,7 +2913,7 @@ error: Restriction on template does not allow usage of any value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(omit) can't be assigned to a variable template(value) if omit >
+<TC - 1508_031 Ensure that template(omit) can't be assigned to a variable template(value) if omit >
 
 <COMPILE>
 
@@ -2969,7 +2969,7 @@ error: Restriction on template does not allow usage of omit value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that template(present) can't be assigned to a template(value) variable if contains anyvalueornone(*) >
+<TC - 1508_032 Ensure that template(present) can't be assigned to a template(value) variable if contains anyvalueornone(*) >
 
 <COMPILE>
 
@@ -3027,7 +3027,7 @@ error: Restriction on template does not allow usage of any or omit
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that an unrestricted template can't be assigned to a template(value) variable if contains anyvalueornone(*) >
+<TC - 1508_033 Ensure that an unrestricted template can't be assigned to a template(value) variable if contains anyvalueornone(*) >
 
 <COMPILE>
 
@@ -3085,7 +3085,7 @@ error: Restriction on template does not allow usage of any or omit
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that a template with omit restriction can't be assigned to a template(present)variable if omit >
+<TC - 1508_034 Ensure that a template with omit restriction can't be assigned to a template(present)variable if omit >
 
 <COMPILE>
 
@@ -3139,7 +3139,7 @@ error: Restriction on template does not allow usage of omit value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that an unrestricted template can't be assigned to a template(present)variable if omit >
+<TC - 1508_035 Ensure that an unrestricted template can't be assigned to a template(present)variable if omit >
 
 <COMPILE>
 
@@ -3193,7 +3193,7 @@ error: Restriction on template does not allow usage of omit value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that template(present) can't be parameter to a template(omit) if contains anyvalueornone(*) >
+<TC - 1508_036 Ensure that template(present) can't be parameter to a template(omit) if contains anyvalueornone(*) >
 
 <COMPILE>
 
@@ -3249,7 +3249,7 @@ error: Formal parameter with template restriction `present' not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that template(present) can't be parameter to template(omit) if contains anyvalue(?) >
+<TC - 1508_037 Ensure that template(present) can't be parameter to template(omit) if contains anyvalue(?) >
 
 <COMPILE>
 
@@ -3303,7 +3303,7 @@ error: Formal parameter with template restriction `present' not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that template(present) can't be parameter to template(value) if it contains anyvalueornone(*) >
+<TC - 1508_038 Ensure that template(present) can't be parameter to template(value) if it contains anyvalueornone(*) >
 
 <COMPILE>
 
@@ -3359,7 +3359,7 @@ error: Formal parameter with template restriction `present' not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that unrestricted template can't be parameter to template(value) if it contains anyvalueornone(*) >
+<TC - 1508_039 Ensure that unrestricted template can't be parameter to template(value) if it contains anyvalueornone(*) >
 
 <COMPILE>
 
@@ -3412,7 +3412,7 @@ error: Formal parameter without template restriction not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that template(present) can't be parameter to a template(omit) >
+<TC - 1508_040 Ensure that template(present) can't be parameter to a template(omit) >
 
 <COMPILE>
 
@@ -3464,7 +3464,7 @@ error: Formal parameter with template restriction `present' not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that unrestricted template cannot be parameter to template(value) >
+<TC - 1508_041 Ensure that unrestricted template cannot be parameter to template(value) >
 
 <COMPILE>
 
@@ -3518,7 +3518,7 @@ error: Formal parameter without template restriction not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that template(present) cannot be parameter to template(value) >
+<TC - 1508_042 Ensure that template(present) cannot be parameter to template(value) >
 
 <COMPILE>
 
@@ -3572,7 +3572,7 @@ error: Formal parameter with template restriction `present' not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that template(present) can be parameter to template(omit) >
+<TC - 1508_043 Ensure that template(present) can be parameter to template(omit) >
 
 <COMPILE>
 
@@ -3622,15 +3622,15 @@ error: Formal parameter without template restriction not allowed here
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_1508_TemplateRestrictions_045 negative test
+:h3. NegSem_1508_TemplateRestrictions_044 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that the restrictiveness of parameters template(value)->template(present) is handled correctly. >
+<TC - 1508_044 Ensure that the restrictiveness of parameters template(value)->template(present) is handled correctly. >
 
 <COMPILE>
 
-<MODULE TTCN NegSem_1508_TemplateRestrictions_045 NegSem_1508_TemplateRestrictions_045.ttcn >
+<MODULE TTCN NegSem_1508_TemplateRestrictions_044 NegSem_1508_TemplateRestrictions_044.ttcn >
 /******************************************************************************
  ** @version  0.0.1
  ** @purpose  1:15.8, Ensure that the restrictiveness of parameters template(value)->template(present) is handled correctly.
@@ -3685,7 +3685,7 @@ error: The restriction of parameter is not the same or more restrictive as in ba
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that the restrictiveness of parameters template(value)->template(omit) is handled correctly. >
+<TC - 1508_045 Ensure that the restrictiveness of parameters template(value)->template(omit) is handled correctly. >
 
 <COMPILE>
 
@@ -3745,7 +3745,7 @@ error: The restriction of parameter is not the same or more restrictive as in ba
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the restrictiveness of parameters template(value)->template is handled correctly. >
+<TC - 1508_046 Ensure that the restrictiveness of parameters template(value)->template is handled correctly. >
 
 <COMPILE>
 
@@ -3805,7 +3805,7 @@ error: The restriction of parameter is not the same or more restrictive as in ba
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly. >
+<TC - 1508_047 Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly. >
 
 <COMPILE>
 
@@ -3864,7 +3864,7 @@ error: The restriction of parameter is not the same or more restrictive as in ba
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly. >
+<TC - 1508_048 Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly. >
 
 <COMPILE>
 
@@ -3924,7 +3924,7 @@ error: The restriction of parameter is not the same or more restrictive as in ba
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly. >
+<TC - 1508_049 Ensure that the restrictiveness of parameters template(omit)->template(present) is handled correctly. >
 
 <COMPILE>
 
@@ -3984,7 +3984,7 @@ error: The restriction of parameter is not the same or more restrictive as in ba
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that decoded content match is not allowed for omit template restriction >
+<TC - 1508_050 Ensure that decoded content match is not allowed for omit template restriction >
 
 <COMPILE>
 
@@ -4068,7 +4068,7 @@ error: Restriction on template definition does not allow usage of decoded conten
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that decoded content match is not allowed for omit template restriction >
+<TC - 1508_051 Ensure that decoded content match is not allowed for omit template restriction >
 
 <COMPILE>
 
@@ -4152,7 +4152,7 @@ error: Restriction on template definition does not allow usage of decoded conten
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -  Ensure that the match operation refuses two templates as actual parameters. >
+<TC - 1509_001 Ensure that the match operation refuses two templates as actual parameters. >
 
 <COMPILE>
 
@@ -4201,7 +4201,7 @@ error: Reference to a value was expected instead of template `@NegSem_1509_Match
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the valueof function works correctly on omit. >
+<TC - 1510_001 Ensure that the valueof function works correctly on omit. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4245,7 +4245,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the valueof function works correctly on templates with wildcards. >
+<TC - 1510_002 Ensure that the valueof function works correctly on templates with wildcards. >
 
 <COMPILE>
 
@@ -4301,7 +4301,7 @@ error: A specific value was expected instead of any or omit
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the valueof function works correctly on regular value templates. >
+<TC - 1510_003 Ensure that the valueof function works correctly on regular value templates. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4353,7 +4353,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the valueof function works correctly on range templates. >
+<TC - 1510_004 Ensure that the valueof function works correctly on range templates. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4398,7 +4398,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the valueof function works correctly on range templates. >
+<TC - 1510_005 Ensure that the valueof function works correctly on range templates. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4447,7 +4447,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that concatenation of octetstring types yields an even number of digits. >
+<TC - 1511_001 Ensure that concatenation of octetstring types yields an even number of digits. >
 
 <COMPILE>
 
@@ -4492,7 +4492,7 @@ error: at or before token `'O': syntax error, unexpected OctetStringMatch
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a simple concatenation of non-wildcard octetstring must not yield in a non-even number of hexadecimals. >
+<TC - 1511_003 Ensure that a simple concatenation of non-wildcard octetstring must not yield in a non-even number of hexadecimals. >
 
 <COMPILE>
 
@@ -4534,7 +4534,7 @@ error: Octetstring value contains odd number of hexadecimal digits
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the inline template definitions are correctly concatenated. >
+<TC - 1511_004 Ensure that the inline template definitions are correctly concatenated. >
 
 <COMPILE>
 
@@ -4591,7 +4591,7 @@ error: Operands of charstring template concatenation must be specific value temp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the inline template definitions are correctly concatenated. >
+<TC - 1511_005 Ensure that the inline template definitions are correctly concatenated. >
 
 <COMPILE>
 

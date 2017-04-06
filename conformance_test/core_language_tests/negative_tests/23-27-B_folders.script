@@ -53,7 +53,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 23_timer_oper
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer operations are not allowed outside of module control, test case, function, altstep >
+<TC - 23_001 Ensure timer operations are not allowed outside of module control, test case, function, altstep >
 
 <COMPILE>
 
@@ -96,7 +96,7 @@ error: A static value was expected instead of operation `timer read'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer operations are not allowed outside of module control, test case, function, altstep >
+<TC - 23_002 Ensure timer operations are not allowed outside of module control, test case, function, altstep >
 
 <COMPILE>
 
@@ -139,7 +139,7 @@ error: A static value was expected instead of operation `timer running'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer operations are not allowed outside of module control, test case, function, altstep >
+<TC - 23_001 Ensure timer operations are not allowed outside of module control, test case, function, altstep >
 
 <COMPILE>
 
@@ -169,7 +169,7 @@ error: at or before token `all': syntax error, unexpected AllKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer operations are not allowed outside of module control, test case, function, altstep >
+<TC - 23_002 Ensure timer operations are not allowed outside of module control, test case, function, altstep >
 
 <COMPILE>
 
@@ -199,7 +199,7 @@ error: at or before token `any': syntax error, unexpected AnyKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure infinity is not allowed >
+<TC - 2302_001 Ensure infinity is not allowed >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -248,7 +248,7 @@ Dynamic test case error: Starting timer t_timer with a non-numeric float value \
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure not_a_number is not allowed >
+<TC - 2302_002 Ensure not_a_number is not allowed >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -297,7 +297,7 @@ Dynamic test case error: Starting timer t_timer with a non-numeric float value \
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure negative value is not allowed >
+<TC - 2302_003 Ensure negative value is not allowed >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -346,7 +346,7 @@ Dynamic test case error: Starting timer t_timer with a negative duration \(-1\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure negative infinity is not allowed >
+<TC - 2302_004 Ensure negative infinity is not allowed >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -395,7 +395,7 @@ Dynamic test case error: Starting timer t_timer with a negative duration \(-inf\
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_001 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -439,7 +439,7 @@ error: at or before token `\)': syntax error, unexpected '\)'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_002 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -485,7 +485,7 @@ error: at or before token `\]': syntax error, unexpected '\]'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_003 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -530,7 +530,7 @@ error: at or before token `\)': syntax error, unexpected '\)'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_004 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -576,7 +576,7 @@ error: at or before token `1.0': syntax error, unexpected FloatValue
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_005 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -622,7 +622,7 @@ error: at or before token `start': syntax error, unexpected StartKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_006 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -668,7 +668,7 @@ error: at or before token `1.0': syntax error, unexpected FloatValue
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_007 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -714,7 +714,7 @@ error: at or before token `start': syntax error, unexpected StartKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_009 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -760,7 +760,7 @@ error: at or before token `start': syntax error, unexpected StartKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_010 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -806,7 +806,7 @@ error: at or before token `start': syntax error, unexpected DotStartKeyword, exp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_011 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -852,7 +852,7 @@ error: at or before token `start': syntax error, unexpected DotStartKeyword, exp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_012 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -898,7 +898,7 @@ error: at or before token `start': syntax error, unexpected DotStartKeyword, exp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer start syntax >
+<TC - 2302_013 Ensure timer start syntax >
 
 <COMPILE>
 
@@ -945,7 +945,7 @@ error: at or before token `start': syntax error, unexpected DotStartKeyword, exp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer stop syntax >
+<TC - 2303_001 Ensure timer stop syntax >
 
 <COMPILE>
 
@@ -989,7 +989,7 @@ error: at or before token `stop': syntax error, unexpected StopKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer stop syntax >
+<TC - 2303_002 Ensure timer stop syntax >
 
 <COMPILE>
 
@@ -1034,7 +1034,7 @@ error: at or before token `\]': syntax error, unexpected '\]'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer stop syntax >
+<TC - 2303_003 Ensure timer stop syntax >
 
 <COMPILE>
 
@@ -1079,7 +1079,7 @@ error: at or before token `stop': syntax error, unexpected DotStopKeyword, expec
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer stop syntax >
+<TC - 2303_004 Ensure timer stop syntax >
 
 <COMPILE>
 
@@ -1122,7 +1122,7 @@ error: at or before token `stop': syntax error, unexpected DotStopKeyword, expec
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer stop syntax >
+<TC - 2303_005 Ensure timer stop syntax >
 
 <COMPILE>
 
@@ -1165,7 +1165,7 @@ error: at or before token `stop': syntax error, unexpected StopKeyword, expectin
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer stop syntax >
+<TC -2303_006 Ensure timer stop syntax >
 
 <COMPILE>
 
@@ -1208,7 +1208,7 @@ error: at or before token `stop': syntax error, unexpected DotStopKeyword, expec
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer read syntax >
+<TC - 2304_001 Ensure timer read syntax >
 
 <COMPILE>
 
@@ -1251,7 +1251,7 @@ error: at or before token `\]': syntax error, unexpected '\]'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer read syntax >
+<TC - 2304_002 Ensure timer read syntax >
 
 <COMPILE>
 
@@ -1293,7 +1293,7 @@ error: at or before token `read': syntax error, unexpected ReadKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer read syntax >
+<TC - 2304_003 Ensure timer read syntax >
 
 <COMPILE>
 
@@ -1335,7 +1335,7 @@ error: at or before token `read': syntax error, unexpected ReadKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer read syntax: disallow any timer.read >
+<TC - 2304_004 Ensure timer read syntax: disallow any timer.read >
 
 <COMPILE>
 
@@ -1377,7 +1377,7 @@ error: at or before token `read': syntax error, unexpected DotReadKeyword, expec
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer read syntax >
+<TC - 2304_005 Ensure timer read syntax >
 
 <COMPILE>
 
@@ -1418,7 +1418,7 @@ error: at or before token `timer': syntax error, unexpected TimerKeyword, expect
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer running syntax >
+<TC - 2305_001 Ensure timer running syntax >
 
 <COMPILE>
 
@@ -1459,7 +1459,7 @@ error: at or before token `running': syntax error, unexpected RunningKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer running syntax >
+<TC - 2305_002 Ensure timer running syntax >
 
 <COMPILE>
 
@@ -1501,7 +1501,7 @@ error: at or before token `\]': syntax error, unexpected '\]'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer running syntax >
+<TC - 2305_003 Ensure timer running syntax >
 
 <COMPILE>
 
@@ -1543,7 +1543,7 @@ error: at or before token `running': syntax error, unexpected RunningKeyword, ex
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer running syntax >
+<TC - 2305_004 Ensure timer running syntax >
 
 <COMPILE>
 
@@ -1585,7 +1585,7 @@ error: at or before token `timer': syntax error, unexpected TimerKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer running syntax >
+<TC - 2305_005 Ensure timer running syntax >
 
 <COMPILE>
 
@@ -1627,7 +1627,7 @@ error: at or before token `timer': syntax error, unexpected TimerKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer running syntax: disallow all timer.running >
+<TC - 2305_006 Ensure timer running syntax: disallow all timer.running >
 
 <COMPILE>
 
@@ -1669,7 +1669,7 @@ error: at or before token `timer': syntax error, unexpected TimerKeyword, expect
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer timeout syntax >
+<TC - 2306_001 Ensure timer timeout syntax >
 
 <COMPILE>
 
@@ -1712,7 +1712,7 @@ error: at or before token `\]': syntax error, unexpected '\]'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer timeout can`t be used in boolean expressions >
+<TC - 2306_002 Ensure timer timeout can`t be used in boolean expressions >
 
 <COMPILE>
 
@@ -1757,7 +1757,7 @@ error: at or before token `timeout': syntax error, unexpected DotTimeoutKeyword,
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer timeout syntax >
+<TC - 2306_003 Ensure timer timeout syntax >
 
 <COMPILE>
 
@@ -1799,7 +1799,7 @@ error: at or before token `\(': syntax error, unexpected '\('
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer timeout syntax >
+<TC - 2306_004 Ensure timer timeout syntax >
 
 <COMPILE>
 
@@ -1840,7 +1840,7 @@ error: at or before token `\(': syntax error, unexpected '\('
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer timeout syntax >
+<TC - 2306_005 Ensure timer timeout syntax >
 
 <COMPILE>
 
@@ -1882,7 +1882,7 @@ error: at or before token `timeout': syntax error, unexpected TimeoutKeyword, ex
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer timeout syntax >
+<TC - 2306_006 Ensure timer timeout syntax >
 
 <COMPILE>
 
@@ -1924,7 +1924,7 @@ error: at or before token `timeout': syntax error, unexpected TimeoutKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer timeout syntax >
+<TC - 2306_007 Ensure timer timeout syntax >
 
 <COMPILE>
 
@@ -1970,7 +1970,7 @@ error: at or before token `timeout': syntax error, unexpected DotTimeoutKeyword,
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure getverdict is not allowed in constant initialization in control part >
+<TC - 24_001 Ensure getverdict is not allowed in constant initialization in control part >
 
 <COMPILE>
 
@@ -2012,7 +2012,7 @@ error: An evaluable constant value was expected instead of operation `getverdict
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure getverdict is not allowed in parameter initialization in control part. >
+<TC - 24_002 Ensure getverdict is not allowed in parameter initialization in control part. >
 
 <COMPILE>
 
@@ -2052,7 +2052,7 @@ error: Operation `getverdict\(\)' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure getverdict is not allowed in variable definition in control part. >
+<TC - 24_003 Ensure getverdict is not allowed in variable definition in control part. >
 
 <COMPILE>
 
@@ -2092,7 +2092,7 @@ error: Operation `getverdict\(\)' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure setverdict is not allowed in part whithin compound statement. >
+<TC - 24_004 Ensure setverdict is not allowed in part whithin compound statement. >
 
 <COMPILE>
 
@@ -2135,7 +2135,7 @@ error: Setverdict statement is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure setverdict is not allowed in control part at the top level. >
+<TC - 24_005 Ensure setverdict is not allowed in control part at the top level. >
 
 <COMPILE>
 
@@ -2177,7 +2177,7 @@ error: at or before token `setverdict': syntax error, unexpected SetVerdictKeywo
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that setverdict can't set error verdict >
+<TC - 2401_001 Ensure that setverdict can't set error verdict >
 
 <COMPILE>
 
@@ -2230,7 +2230,7 @@ error: Error verdict cannot be set by the setverdict operation
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure setverdict accepts parameters of verdicttype only >
+<TC - 2402_001 Ensure setverdict accepts parameters of verdicttype only >
 
 <COMPILE>
 
@@ -2270,7 +2270,7 @@ error: A value or expression of type verdict was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure setverdict accepts parameters of verdicttype only >
+<TC - 2402_002 Ensure setverdict accepts parameters of verdicttype only >
 
 <COMPILE>
 
@@ -2312,7 +2312,7 @@ error: A value or expression of type verdict was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure setverdict accepts parameters of verdicttype only >
+<TC - 2402_003 Ensure setverdict accepts parameters of verdicttype only >
 
 <COMPILE>
 
@@ -2352,7 +2352,7 @@ error: Reference to a value was expected instead of template variable `v_pass'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure setverdict accepts values only as the parameter >
+<TC - 2402_004 Ensure setverdict accepts values only as the parameter >
 
 <COMPILE>
 
@@ -2392,7 +2392,7 @@ error: Reference to a value was expected instead of template variable `v_pass'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure setverdict accepts values only as the parameter >
+<TC - 2402_005 Ensure setverdict accepts values only as the parameter >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -2440,7 +2440,7 @@ Dynamic test case error: Using non-selected field verdicttype in a value of unio
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that non-float timeout parameters in the execute statement are rejected (in this case int).>
+<TC - 2601_001 Ensure that non-float timeout parameters in the execute statement are rejected (in this case int).>
 
 <COMPILE>
 
@@ -2478,7 +2478,7 @@ error: A value or expression of type float was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that non-float timeout parameters in the execute statement are rejected (in this case charstring).>
+<TC - 2601_002 Ensure that non-float timeout parameters in the execute statement are rejected (in this case charstring).>
 
 <COMPILE>
 
@@ -2516,7 +2516,7 @@ error: A value or expression of type float was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that execution rejects test case execution with infinity timer guard >
+<TC - 2601_004 Ensure that execution rejects test case execution with infinity timer guard >
 
 <COMPILE>
 
@@ -2555,7 +2555,7 @@ error: The testcase guard timer duration cannot be INF
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that setverdict statements are not allowed in the control part. >
+<TC - 2602_001 Ensure that setverdict statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -2589,7 +2589,7 @@ error: at or before token `setverdict': syntax error, unexpected SetVerdictKeywo
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the create component is not allowed in the control part. >
+<TC - 2602_002 Ensure that the create component is not allowed in the control part. >
 
 <COMPILE>
 
@@ -2629,7 +2629,7 @@ error: Operation `create\(\)' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the create alive component is not allowed in the control part. >
+<TC - 2602_003 Ensure that the create alive component is not allowed in the control part. >
 
 <COMPILE>
 
@@ -2669,7 +2669,7 @@ error: Operation `create\(\)' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the start statement is not allowed in the control part. >
+<TC - 2602_004 Ensure that the start statement is not allowed in the control part. >
 
 <COMPILE>
 
@@ -2718,7 +2718,7 @@ error: Component operation is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the stop statement is not allowed in the control part. >
+<TC - 2602_005 Ensure that the stop statement is not allowed in the control part. >
 
 <COMPILE>
 
@@ -2768,7 +2768,7 @@ error: Component operation is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the kill statement is not allowed in the control part. >
+<TC - 2602_006 Ensure that the kill statement is not allowed in the control part. >
 
 <COMPILE>
 
@@ -2818,7 +2818,7 @@ error: at or before token `kill': syntax error, unexpected DotKillKeyword, expec
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the alive operation is not allowed in the control part. >
+<TC - 2602_007 Ensure that the alive operation is not allowed in the control part. >
 
 <COMPILE>
 
@@ -2869,7 +2869,7 @@ error: Operation `alive' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the running operation is not allowed in the control part. >
+<TC - 2602_008 Ensure that the running operation is not allowed in the control part. >
 
 <COMPILE>
 
@@ -2920,7 +2920,7 @@ error: Operation `component running' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the done operation is not allowed in the control part. >
+<TC - 2602_009 Ensure that the done operation is not allowed in the control part. >
 
 <COMPILE>
 
@@ -2970,7 +2970,7 @@ error: at or before token `done': syntax error, unexpected DotDoneKeyword, expec
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the done operation is not allowed in the control part. >
+<TC - 2602_010 Ensure that the done operation is not allowed in the control part. >
 
 <COMPILE>
 
@@ -3021,7 +3021,7 @@ error: at or before token `killed': syntax error, unexpected DotKilledKeyword, e
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the connect statements are not allowed in the control part. >
+<TC - 2602_011 Ensure that the connect statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3073,7 +3073,7 @@ error: at or before token `connect': syntax error, unexpected ConnectKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the disconnect statements are not allowed in the control part. >
+<TC - 2602_012 Ensure that the disconnect statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3125,7 +3125,7 @@ error: at or before token `disconnect': syntax error, unexpected DisconnectKeywo
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the map statements are not allowed in the control part. >
+<TC - 2602_013 Ensure that the map statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3177,7 +3177,7 @@ error: at or before token `map': syntax error, unexpected MapKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the unmap statements are not allowed in the control part. >
+<TC - 2602_014 Ensure that the unmap statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3229,7 +3229,7 @@ error: at or before token `unmap': syntax error, unexpected UnmapKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the send statements are not allowed in the control part. >
+<TC - 2602_015 Ensure that the send statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3276,7 +3276,7 @@ error: at or before token `send': syntax error, unexpected DotSendOpKeyword, exp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the receive statements are not allowed in the control part. >
+<TC - 2602_016 Ensure that the receive statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3323,7 +3323,7 @@ error: at or before token `receive': syntax error, unexpected DotReceiveOpKeywor
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the call statements are not allowed in the control part. >
+<TC - 2602_017 Ensure that the call statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3374,7 +3374,7 @@ error: at or before token `call': syntax error, unexpected DotCallOpKeyword, exp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the reply statements are not allowed in the control part. >
+<TC - 2602_018 Ensure that the reply statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3424,7 +3424,7 @@ error: at or before token `reply': syntax error, unexpected DotReplyKeyword, exp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the raise statements are not allowed in the control part. >
+<TC - 2602_019 Ensure that the raise statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3476,7 +3476,7 @@ error: at or before token `raise': syntax error, unexpected DotRaiseKeyword, exp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the trigger statements are not allowed in the control part. >
+<TC - 2602_020 Ensure that the trigger statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3524,7 +3524,7 @@ error: at or before token `trigger': syntax error, unexpected DotTriggerOpKeywor
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the getcall statements are not allowed in the control part. >
+<TC - 2602_021 Ensure that the getcall statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3573,7 +3573,7 @@ error: at or before token `getcall': syntax error, unexpected DotGetCallOpKeywor
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the getreply statements are not allowed in the control part. >
+<TC - 2602_022 Ensure that the getreply statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3621,7 +3621,7 @@ error: at or before token `getreply': syntax error, unexpected DotGetReplyOpKeyw
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the catch statements are not allowed in the control part. >
+<TC - 2602_023 Ensure that the catch statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3669,7 +3669,7 @@ error: at or before token `catch': syntax error, unexpected DotCatchOpKeyword, e
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the check statements are not allowed in the control part. >
+<TC - 2602_024 Ensure that the check statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3717,7 +3717,7 @@ error: at or before token `check': syntax error, unexpected DotCheckOpKeyword, e
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the clear statements are not allowed in the control part. >
+<TC - 2602_025 Ensure that the clear statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3765,7 +3765,7 @@ error: at or before token `clear': syntax error, unexpected DotClearOpKeyword, e
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the start statements on ports are not allowed in the control part. >
+<TC - 2602_026 Ensure that the start statements on ports are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3813,7 +3813,7 @@ error: The argument of start operation is missing, although it cannot be a start
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the stop statements on ports are not allowed in the control part. >
+<TC - 2602_027 Ensure that the stop statements on ports are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3864,7 +3864,7 @@ error: Referencing fields of a component is not allowed
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the halt statements are not allowed in the control part. >
+<TC - 2602_028 Ensure that the halt statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3912,7 +3912,7 @@ error: at or before token `halt': syntax error, unexpected DotHaltKeyword, expec
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that alternative behaviours are only used to control timer behavior in the control part. >
+<TC - 2602_029 Ensure that alternative behaviours are only used to control timer behavior in the control part. >
 
 <COMPILE>
 
@@ -3963,7 +3963,7 @@ error: Reference to a port or port parameter was expected instead of variable `v
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that getverdict statements are not allowed in the control part. >
+<TC - 2602_030 Ensure that getverdict statements are not allowed in the control part. >
 
 <COMPILE>
 
@@ -3998,7 +3998,7 @@ error: Operation `getverdict\(\)' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that execute statements are not executed from test cases. >
+<TC - 2602_031 Ensure that execute statements are not executed from test cases. >
 
 <COMPILE>
 
@@ -4042,7 +4042,7 @@ error: A definition that has `runs on' clause cannot execute testcases
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the create alive named component is not allowed in the control part. >
+<TC - 2602_032 Ensure that the create alive named component is not allowed in the control part. >
 
 <COMPILE>
 
@@ -4082,7 +4082,7 @@ error: Operation `create\(\)' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the create named component is not allowed in the control part. >
+<TC - 2602_033 Ensure that the create named component is not allowed in the control part. >
 
 <COMPILE>
 
@@ -4122,7 +4122,7 @@ error: Operation `create\(\)' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the create named component on host is not allowed in the control part. >
+<TC - 2602_034 Ensure that the create named component on host is not allowed in the control part. >
 
 <COMPILE>
 
@@ -4161,7 +4161,7 @@ error: Operation `create\(\)' is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that alternative behaviours are only used to control timer behavior in the control part. >
+<TC - 2602_035 Ensure that alternative behaviours are only used to control timer behavior in the control part. >
 
 <COMPILE>
 
@@ -4198,7 +4198,7 @@ error: Port operation is not allowed in the control part
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of omitted values >
+<TC - B010101_001 Ensure that the IUT correctly handles template matching of omitted values >
 
 <COMPILE>
 
@@ -4276,7 +4276,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of * values  >
+<TC - B010204_001 Ensure that the IUT correctly handles template matching of * values  >
 
 <COMPILE>
 
@@ -4377,7 +4377,7 @@ error: Using `\*' for mandatory field
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of * values  >
+<TC - B010204_002 Ensure that the IUT correctly handles template matching of * values  >
 
 <COMPILE>
 
@@ -4483,7 +4483,7 @@ error: Using `\*' for mandatory field
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of value range definitions >
+<TC - B010205_001 Ensure that the IUT correctly handles template matching of value range definitions >
 
 <COMPILE>
 
@@ -4570,7 +4570,7 @@ error: value range match cannot be used for enumerated type `@NegSem_B010205_val
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of value range definitions  >
+<TC - B010205_002 Ensure that the IUT correctly handles template matching of value range definitions  >
 
 <COMPILE>
 
@@ -4658,7 +4658,7 @@ error: The lower boundary is higher than the upper boundary
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of value range definitions >
+<TC - B010205_003 Ensure that the IUT correctly handles template matching of value range definitions >
 
 <COMPILE>
 
@@ -4745,7 +4745,7 @@ error: The lower boundary has higher character code than the upper boundary
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of superset definitions >
+<TC - B010206_001 Ensure that the IUT correctly handles template matching of superset definitions >
 
 <COMPILE>
 
@@ -4802,7 +4802,7 @@ error: superset match cannot be used for `record of' type `@NegSem_B010206_super
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of superset definitions >
+<TC - B010206_002 Ensure that the IUT correctly handles template matching of superset definitions >
 
 <COMPILE>
 
@@ -4862,7 +4862,7 @@ error: superset match cannot be used for set type `@NegSem_B010206_superset_002.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of superset definition >
+<TC - B010206_004 Ensure that the IUT correctly handles template matching of superset definition >
 
 <COMPILE>
 
@@ -4935,7 +4935,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of subset definition >
+<TC - B010206_005 Ensure that the IUT correctly handles template matching of subset definition >
 
 <COMPILE>
 
@@ -5007,7 +5007,7 @@ error: A template of type '@NegSem_B010206_superset_005.SoI' can not be used as 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of superset definition >
+<TC - B010206_006 Ensure that the IUT correctly handles template matching of superset definition >
 
 <COMPILE>
 
@@ -5079,7 +5079,7 @@ error: A template of type '@NegSem_B010206_superset_006.SoI' can not be used as 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of superset definitions >
+<TC - B010206_007 Ensure that the IUT correctly handles template matching of superset definitions >
 
 <COMPILE>
 
@@ -5152,7 +5152,7 @@ error: 'all from' can not refer to permutation or AnyElementsOrNone
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of superset definition >
+<TC - B010206_008 Ensure that the IUT correctly handles template matching of superset definition >
 
 <COMPILE>
 
@@ -5228,7 +5228,7 @@ error: permutation match cannot be used for type `integer'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of subset definitions >
+<TC - B010207_001 Ensure that the IUT correctly handles template matching of subset definitions >
 
 <COMPILE>
 
@@ -5284,7 +5284,7 @@ error: subset match cannot be used for `record of' type `@NegSem_B010207_subset_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of subset definitions >
+<TC - B010207_002 Ensure that the IUT correctly handles template matching of subset definitions >
 
 <COMPILE>
 
@@ -5353,7 +5353,7 @@ error: subset match cannot be used for set type `@NegSem_B010207_subset_002.SetT
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of subset definitions >
+<TC - B010207_004 Ensure that the IUT correctly handles template matching of subset definitions >
 
 <COMPILE>
 
@@ -5426,7 +5426,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of subset definitions >
+<TC - B010207_005 Ensure that the IUT correctly handles template matching of subset definitions >
 
 <COMPILE>
 
@@ -5499,7 +5499,7 @@ error: A template of type '@NegSem_B010207_subset_005.SoI' can not be used as ta
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of subset definitions >
+<TC - B010207_006 Ensure that the IUT correctly handles template matching of subset definitions >
 
 <COMPILE>
 
@@ -5572,7 +5572,7 @@ error: A template of type '@NegSem_B010207_subset_006.SoI' can not be used as ta
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of subset definitions >
+<TC - B010207_007 Ensure that the IUT correctly handles template matching of subset definitions >
 
 <COMPILE>
 
@@ -5645,7 +5645,7 @@ error: 'all from' can not refer to permutation or AnyElementsOrNone
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of subset definitions >
+<TC - B010207_008 Ensure that the IUT correctly handles template matching of subset definitions >
 
 <COMPILE>
 
@@ -5723,7 +5723,7 @@ error: permutation match cannot be used for type `integer'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of omit values >
+<TC - B010208_001 Ensure that the IUT correctly handles template matching of omit values >
 
 <COMPILE>
 
@@ -5825,7 +5825,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of omit values >
+<TC - B010208_002 Ensure that the IUT correctly handles template matching of omit values >
 
 <COMPILE>
 
@@ -5927,7 +5927,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of ? symbols in value elements >
+<TC - B010303_001 Ensure that the IUT correctly handles template matching of ? symbols in value elements >
 
 <COMPILE>
 
@@ -6004,7 +6004,7 @@ error: permutation match cannot be used for `set of' type `@NegSem_B010303_permu
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that all from operand can be a record of or set of only >
+<TC - B010303_002 Ensure that all from operand can be a record of or set of only >
 
 <COMPILE>
 
@@ -6056,7 +6056,7 @@ error: A template of type 'integer' can not be used as target of 'all from'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that type restriction for permutation elements is applied >
+<TC - B010303_003 Ensure that type restriction for permutation elements is applied >
 
 <COMPILE>
 
@@ -6108,7 +6108,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify restriction on individual members of all from operand in permutation >
+<TC - B010303_005 Verify restriction on individual members of all from operand in permutation >
 
 <COMPILE>
 
@@ -6162,7 +6162,7 @@ error: Matching mechanism can not be used as target of 'all from'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify restriction on individual members of all from operand in permutation >
+<TC - B010303_006 Verify restriction on individual members of all from operand in permutation >
 
 <COMPILE>
 
@@ -6222,7 +6222,7 @@ error: permutation match cannot be used for type `integer'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of value length definitions >
+<TC - B010401_002 Ensure that the IUT correctly handles template matching of value length definitions >
 
 <COMPILE>
 
@@ -6309,7 +6309,7 @@ error: There are fewer \(5\) elements in the string than it is allowed by the le
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of value length definitions >
+<TC - B010401_004 Ensure that the IUT correctly handles template matching of value length definitions >
 
 <COMPILE>
 
@@ -6391,7 +6391,7 @@ error: There are more \(4\) elements in the template than it is allowed by the l
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of ifpresent indicators >
+<TC - B010402_001 Ensure that the IUT correctly handles template matching of ifpresent indicators >
 
 <COMPILE>
 
@@ -6475,7 +6475,7 @@ error: `ifpresent' is not allowed here
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of character pattern set expressions >
+<TC - B010501_001 Ensure that the IUT correctly handles template matching of character pattern set expressions >
 
 <COMPILE>
 
@@ -6525,7 +6525,7 @@ error: Unmatched `\]'. Did you mean `\\\]'\?
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles template matching of character pattern reference characters >
+<TC - B010504_001 Ensure that the IUT correctly handles template matching of character pattern reference characters >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -6612,7 +6612,7 @@ Dynamic test case error: The length of the charstring must be of length one, whe
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles character pattern metacharacters
+<TC - B010505_001 Ensure that the IUT correctly handles character pattern metacharacters
  compatibility rules of template matching >
 
 <COMPILE>

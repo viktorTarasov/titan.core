@@ -53,7 +53,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 07_expression
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - function without return clause in expression  >
+<TC - 07_001 function without return clause in expression  >
 
 <COMPILE>
 
@@ -100,7 +100,7 @@ error: Reference to a value was expected instead of a call of function `@NegSem_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - template used as expression operand  >
+<TC - 07_002 template used as expression operand  >
 
 <COMPILE>
 
@@ -150,7 +150,7 @@ error: Reference to a value was expected instead of template variable `vm_num'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - uninitialized value in an expression >
+<TC - 07_003 uninitialized value in an expression >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -202,7 +202,7 @@ Dynamic test case error: Using the value of an optional field containing omit.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that Arithmetic operators are for integer and float values  >
+<TC - 070101_001 Ensure that Arithmetic operators are for integer and float values  >
 
 <COMPILE>
 
@@ -251,7 +251,7 @@ error: The operands of operation `\*' should be of same type
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that arithmetic operators can handle same type of variables  >
+<TC - 070101_002 Ensure that arithmetic operators can handle same type of variables  >
 
 <COMPILE>
 
@@ -295,7 +295,7 @@ error: The operands of operation `\*' should be of same type
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that mod arithmetic operator can handle integer variables >
+<TC - 070101_003 Ensure that mod arithmetic operator can handle integer variables >
 
 <COMPILE>
 
@@ -341,7 +341,7 @@ error: Right operand of operation `mod' should be integer value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that rem arithmetic operator can handle integer variables >
+<TC - 070101_004 Ensure that rem arithmetic operator can handle integer variables >
 
 <COMPILE>
 
@@ -387,7 +387,7 @@ error: Right operand of operation `rem' should be integer value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that in x mod y arithmetic operator y is non-zero positive number >
+<TC - 070101_008 Ensure that in x mod y arithmetic operator y is non-zero positive number >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -432,7 +432,7 @@ Dynamic test case error: The right operand of mod operator is zero.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that in x rem y arithmetic operator y is non-zero positive number >
+<TC - 070101_009 Ensure that in x rem y arithmetic operator y is non-zero positive number >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -477,7 +477,7 @@ Dynamic test case error: Integer division by zero.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that in x rem y arithmetic operator y is non-zero positive number >
+<TC - 070101_010 Ensure that in x rem y arithmetic operator y is non-zero positive number >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -523,7 +523,7 @@ Dynamic test case error: Integer division by zero.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the equals operator on records is evaluated correctly. >
+<TC - 070103_002 Ensure that the equals operator on records is evaluated correctly. >
 
 <COMPILE>
 
@@ -594,7 +594,7 @@ error: Right operand of operation `&' should be a string, `record of' or `set of
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the equals operator on records is evaluated correctly. >
+<TC - 070103_003 Ensure that the equals operator on records is evaluated correctly. >
 
 <COMPILE>
 
@@ -666,7 +666,7 @@ error: Right operand of operation `&' should be a string, `record of' or `set of
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the equals operator on records is evaluated correctly. >
+<TC - 070103_004 Ensure that the equals operator on records is evaluated correctly. >
 
 <COMPILE>
 
@@ -741,7 +741,7 @@ error: Right operand of operation `&' should be a string, `record of' or `set of
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a module definition with multiple language specifications is rejected.  >
+<TC - 0801_001 Ensure that a module definition with multiple language specifications is rejected.  >
 
 <COMPILE>
 
@@ -769,7 +769,7 @@ error: at or before token `,': syntax error, unexpected ',', expecting '\{'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that name handling of imported enumerations is properly handled  >
+<TC - 08020301_002 Ensure that name handling of imported enumerations is properly handled  >
 
 <COMPILE>
 
@@ -809,7 +809,7 @@ error: Type mismatch: a value of type `@NegSem_08020301_GeneralFormatOfImport_00
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that name handling of imported enumerations is properly handled  >
+<TC - 08020301_003 Ensure that name handling of imported enumerations is properly handled  >
 
 <COMPILE>
 
@@ -870,7 +870,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that transitive import rules are properly handled  >
+<TC - 08020301_004 Ensure that transitive import rules are properly handled  >
 
 <COMPILE>
 
@@ -929,7 +929,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Make sure that the identifier of the current module cannot be used for prefixing imported entities >
+<TC - 08020301_005 Make sure that the identifier of the current module cannot be used for prefixing imported entities >
 
 <COMPILE>
 
@@ -985,7 +985,7 @@ error: There is no definition with name `c_test' in module `NegSem_08020301_Gene
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the only top-level visible definitions of a module may be imported.  >
+<TC - 08020301_006 Ensure that the only top-level visible definitions of a module may be imported.  >
 
 <COMPILE>
 
@@ -1041,7 +1041,7 @@ error: There is no local or imported definition with name `c_test'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that information about message types is imported together with port type  >
+<TC - 08020301_007 Verify that information about message types is imported together with port type  >
 
 <COMPILE>
 
@@ -1104,7 +1104,7 @@ error: Incompatible explicit type specification: `integer' was expected instead 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that definition from inside an imported function cannot be referenced  >
+<TC - 08020301_038 Verify that definition from inside an imported function cannot be referenced  >
 
 <COMPILE>
 
@@ -1152,7 +1152,7 @@ error: There is no local or imported definition with name `c_test'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that import statement cannot be used in test case blocks  >
+<TC - 08020301_001 Ensure that import statement cannot be used in test case blocks  >
 
 <COMPILE>
 
@@ -1205,7 +1205,7 @@ error: at or before token `import': syntax error, unexpected ImportKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that import statement cannot be used in module control part  >
+<TC - 08020301_002 Ensure that import statement cannot be used in module control part  >
 
 <COMPILE>
 
@@ -1258,7 +1258,7 @@ error: at or before token `import': syntax error, unexpected ImportKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the import of import statements works for import all.  >
+<TC - 08020307_001 Ensure that the import of import statements works for import all.  >
 
 <COMPILE>
 
@@ -1320,7 +1320,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the import of import statements works for import all.  >
+<TC - 08020307_002 Ensure that the import of import statements works for import all.  >
 
 <COMPILE>
 
@@ -1384,7 +1384,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the import of import statements works for import all.  >
+<TC - 080204_001 Ensure that the import of import statements works for import all.  >
 
 <COMPILE>
 
@@ -1436,7 +1436,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that private definitions are not made visible by friend declarations (for a constant sample definition). >
+<TC - 080204_002 Ensure that private definitions are not made visible by friend declarations (for a constant sample definition). >
 
 <COMPILE>
 
@@ -1489,7 +1489,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that private definition (in this case a sample constant) is not visible using a normal import. >
+<TC - 080205_001 Ensure that private definition (in this case a sample constant) is not visible using a normal import. >
 
 <COMPILE>
 
@@ -1541,7 +1541,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that private definition (in this case a sample constant) is not visible using an import of a friend module. >
+<TC - 080205_002 Ensure that private definition (in this case a sample constant) is not visible using an import of a friend module. >
 
 <COMPILE>
 
@@ -1596,7 +1596,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that friend definition (in this case a sample constant) is not visible using a group import of a non-friend module. >
+<TC - 080205_003 Ensure that friend definition (in this case a sample constant) is not visible using a group import of a non-friend module. >
 
 <COMPILE>
 
@@ -1651,7 +1651,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that friend definition (in this case a sample constant) is not visible using a group import of a non-friend module. >
+<TC - 080205_004 Ensure that friend definition (in this case a sample constant) is not visible using a group import of a non-friend module. >
 
 <COMPILE>
 
@@ -1706,7 +1706,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that private definition (in this case a sample constant) is not visible using a group import of a friend module. >
+<TC - 080205_005 Ensure that private definition (in this case a sample constant) is not visible using a group import of a friend module. >
 
 <COMPILE>
 
@@ -1763,7 +1763,7 @@ error: There is no local or imported definition with name `c_myconst'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that there is not more than one control part. >
+<TC - 0803_001 Ensure that there is not more than one control part. >
 
 <COMPILE>
 
@@ -1803,7 +1803,7 @@ error: at or before token `control': syntax error, unexpected ControlKeyword, ex
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that it is not possible to connect a mapped port  >
+<TC - 0901_002 Ensure that it is not possible to connect a mapped port  >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1863,7 +1863,7 @@ Dynamic test case error: Connect operation cannot be performed on a mapped port 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that it is not possible to map a connected port  >
+<TC - 0901_004 Verify that it is not possible to map a connected port  >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1926,7 +1926,7 @@ Dynamic test case error: Map operation is not allowed on a connected port \(p1\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that a two TSI port cannot be connected  >
+<TC - 0901_007 Verify that a two TSI port cannot be connected  >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1977,7 +1977,7 @@ Dynamic test case error: Both arguments of map operation refer to system ports.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that connections within the test system interface are not allowed  >
+<TC - 0901_009 Verify that connections within the test system interface are not allowed  >
 
 <COMPILE>
 
@@ -2025,7 +2025,7 @@ error: Both endpoints of the mapping are system ports
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that a two TSI port cannot be connected  >
+<TC - 0901_001 Verify that a two TSI port cannot be connected  >
 
 <COMPILE>
 
@@ -2080,7 +2080,7 @@ error: The `system' component reference shall not be used in `connect' operation
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the two system interf. port cannot connect   >
+<TC - 0901_003 Ensure that the two system interf. port cannot connect   >
 
 <COMPILE>
 
@@ -2133,7 +2133,7 @@ error: Both endpoints of the mapping are system ports
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign rnd to constant used in type, not allowed since constant expressions used in types have to be known at compile-time.  >
+<TC - 10_001 Assign rnd to constant used in type, not allowed since constant expressions used in types have to be known at compile-time.  >
 
 <COMPILE>
 
@@ -2174,7 +2174,7 @@ error: An evaluable constant value was expected instead of operation `rnd \(seed
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - A value is assigned only once to a constant.  >
+<TC - 10_002 A value is assigned only once to a constant.  >
 
 <COMPILE>
 
@@ -2213,7 +2213,7 @@ error: Reference to a variable or template variable was expected instead of cons
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Constant shall not be of port type  >
+<TC - 10_003 Constant shall not be of port type  >
 
 <COMPILE>
 
@@ -2261,7 +2261,7 @@ error: Constant cannot be defined for port type `@NegSem_10_Constants_003.MyMess
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Variables should be assigned only by values  >
+<TC - 1101_001 Variables should be assigned only by values  >
 
 <COMPILE>
 
@@ -2297,7 +2297,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Define variables in module scope >
+<TC - 1101_001 Define variables in module scope >
 
 <COMPILE>
 
@@ -2324,7 +2324,7 @@ error: at or before token `var': syntax error, unexpected VarKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Template variables should be assigned with unitialized variables >
+<TC - 1102_001 Template variables should be assigned with unitialized variables >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -2363,7 +2363,7 @@ Dynamic test case error: Copying an uninitialized/unsupported integer template.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Define template variables in module scope >
+<TC - 1102_001 Define template variables in module scope >
 
 <COMPILE>
 
@@ -2394,7 +2394,7 @@ error: at or before token `var': syntax error, unexpected VarKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer can not be initialized with negative duration >
+<TC - 12_001 Ensure timer can not be initialized with negative duration >
 
 <COMPILE>
 
@@ -2437,7 +2437,7 @@ error: A non-negative float value was expected as timer duration instead of `-1.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer in array can not be initialized with negative duration >
+<TC - 12_002 Ensure timer in array can not be initialized with negative duration >
 
 <COMPILE>
 
@@ -2480,7 +2480,7 @@ error: A non-negative float value was expected as timer duration instead of `-1.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure uninitialized timer can't be started >
+<TC - 12_003 Ensure uninitialized timer can't be started >
 
 <COMPILE>
 
@@ -2523,7 +2523,7 @@ error: Missing duration: timer `@NegSem_12_toplevel_timer_003.TComp.t_timer' doe
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure uninitialized timer in array can't be started >
+<TC - 12_004 Ensure uninitialized timer in array can't be started >
 
 <COMPILE>
 
@@ -2565,7 +2565,7 @@ error: Missing duration: timer `@NegSem_12_toplevel_timer_004.TComp.t_timer' doe
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure uninitialized timer in array can't be started >
+<TC - 12_005 Ensure uninitialized timer in array can't be started >
 
 <COMPILE>
 
@@ -2608,7 +2608,7 @@ error: Missing duration: timer `@NegSem_12_toplevel_timer_005.TComp.t_timer' doe
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer declaration syntax - reject single timer instance initialized with array >
+<TC - 12_006 Ensure timer declaration syntax - reject single timer instance initialized with array >
 
 <COMPILE>
 
@@ -2654,7 +2654,7 @@ error: Reference to single timer `@NegSem_12_toplevel_timer_006.TComp.t_timer' c
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer declaration syntax -- reject array initialization with wrong number of initializers >
+<TC - 12_007 Ensure timer declaration syntax -- reject array initialization with wrong number of initializers >
 
 <COMPILE>
 
@@ -2696,7 +2696,7 @@ error: Too few elements in the default duration of timer array: 4 was expected i
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer declaration syntax -- reject array of timers initizlized with a single float value >
+<TC - 12_008 Ensure timer declaration syntax -- reject array of timers initizlized with a single float value >
 
 <COMPILE>
 
@@ -2739,7 +2739,7 @@ error: An array value \(with 4 elements\) was expected as default duration of ti
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer can`t be used in module control parts when declared in components >
+<TC - 12_001 Ensure timer can`t be used in module control parts when declared in components >
 
 <COMPILE>
 
@@ -2795,7 +2795,7 @@ error: There is no local or imported definition with name `t_timer'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer declaration syntax >
+<TC - 12_002 Ensure timer declaration syntax >
 
 <COMPILE>
 
@@ -2837,7 +2837,7 @@ error: at or before token `:=': syntax error, unexpected :=, expecting Identifie
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer declaration syntax >
+<TC - 12_003 Ensure timer declaration syntax >
 
 <COMPILE>
 
@@ -2879,7 +2879,7 @@ error: at or before token `;': syntax error, unexpected ';'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer declaration syntax >
+<TC - 12_004 Ensure timer declaration syntax >
 
 <COMPILE>
 
@@ -2922,7 +2922,7 @@ error: at or before token `0.0': syntax error, unexpected FloatValue
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer declaration syntax >
+<TC - 12_005 Ensure timer declaration syntax >
 
 <COMPILE>
 
@@ -2965,7 +2965,7 @@ error: A value or expression of type float was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer array declaration syntax >
+<TC - 12_006 Ensure timer array declaration syntax >
 
 <COMPILE>
 
@@ -3009,7 +3009,7 @@ error: at or before token `1.0': syntax error, unexpected FloatValue, expecting 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure timer array declaration syntax >
+<TC - 12_007 Ensure timer array declaration syntax >
 
 <COMPILE>
 
@@ -3055,7 +3055,7 @@ error: at or before token `1.0': syntax error, unexpected FloatValue, expecting 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that nonblocking signature contains in parameter >
+<TC - 1400_001 Ensure that nonblocking signature contains in parameter >
 
 <COMPILE>
 
@@ -3125,7 +3125,7 @@ error: A non-blocking signature cannot have `out' parameter
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that blocking calls needs response or exception handling >
+<TC - 1400_002 Ensure that blocking calls needs response or exception handling >
 
 <COMPILE>
 
