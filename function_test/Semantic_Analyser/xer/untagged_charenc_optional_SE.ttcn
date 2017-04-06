@@ -39,7 +39,6 @@ type union uni {
 	variant "untagged";
 }
 
-// No top level untagged warning for unions and anytype
 external function enc_uni(in uni u) return octetstring
 with { extension "prototype(convert) encode(XER:XER_EXTENDED)" }
 

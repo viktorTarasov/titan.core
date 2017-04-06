@@ -1,0 +1,62 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+
+// Tests of standard ES 202 781 Ports with translation capability
+
+module PortClause_SE { //^In TTCN-3 module//
+
+	type component MyComp {
+
+	}
+
+	type port P1 message { //^In type definition \`P1\'\:// //^error\: Port variables can only be used when the port is a translation port\.//
+		in integer
+		var integer i := 6;
+	} with {
+		extension "provider"
+	}
+
+	type port P2 message map to P1 { //^In type definition \`P2\'\:// //^In type mapping\:// //^In \`function\' mapping\:// //^In translation capability\:// //^error\: The function function \`\@PortClause_SE\.int_to_int\' has a port clause of \`P2\' but referenced in another port \`P3\'//
+		in integer from integer with int_to_int();
+		var integer i := 6;  //^Previous definition with identifier \`i\' in higher scope unit is here//
+	}
+
+	type port P3 message {
+		in integer
+	}
+
+	function f() port MyPort { //^In function definition \`f\'\:// //^In \`port\' clause\:// //^error\: There is no local or imported definition with name \`MyPort\'//
+
+	} 
+
+	function g() port MyComp { //^In function definition \`g\'\:// //^In \`port\' clause\:// //^error\: Reference \`MyComp\' does not refer to a port type\.//
+
+	}
+
+	function h() runs on MyComp port P1 { //^In function definition \`h\'\://  //^error\: A \`runs on\' and a \`port\' clause cannot be present at the same time\.//
+
+	} 
+
+	function j() port P2 { //^In function definition \`j\'\:// 
+		var integer i := 4; //^error\: Definition with identifier \`i\' is not unique in the scope hierarchy//
+	} 
+
+	function int_to_int(in integer input, out integer output) port P3 {
+
+	} with {
+		extension "prototype(fast)"
+	}
+
+	control { //^In control part\://
+		j(); //^In function instance\:// //^error\: Function with \`port\' clause cannot be called directly\.//
+	}
+}

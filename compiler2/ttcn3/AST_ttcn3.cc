@@ -1213,6 +1213,77 @@ namespace Ttcn {
   }
   
   // =================================
+  // ===== PortScope
+  // =================================
+
+  PortScope::PortScope(Type *p_porttype)
+    : Scope(), port_type(p_porttype)
+  {
+    if (!p_porttype || p_porttype->get_typetype() != Type::T_PORT)
+      FATAL_ERROR("PortScope::PortScope()");
+    port_type->set_ownertype(Type::OT_PORT_SCOPE, this);
+    PortTypeBody* ptb = p_porttype->get_PortBody();
+    if (!ptb)
+      FATAL_ERROR("PortScope::PortScope()");
+    vardefs = ptb->get_vardefs();
+    set_scope_name("port `" + p_porttype->get_fullname() + "'");
+  }
+
+  PortScope *PortScope::clone() const
+  {
+    FATAL_ERROR("PortScope::clone()");
+  }
+
+  void PortScope::chk_uniq()
+  {
+    if (!vardefs) return;
+    if (vardefs->get_nof_asss() == 0) return;
+    // do not perform this check if the port type is defined in the same
+    // module as the 'port' clause
+    if (parent_scope->get_scope_mod() == vardefs->get_scope_mod())
+      return;
+    
+    size_t nof_defs = vardefs->get_nof_asss();
+    for (size_t i = 0; i < nof_defs; i++) {
+      Common::Assignment *vardef = vardefs->get_ass_byIndex(i);
+      const Identifier& id = vardef->get_id();
+      if (parent_scope->has_ass_withId(id)) {
+        vardef->warning("Imported port element definition `%s' hides a "
+          "definition at module scope", vardef->get_fullname().c_str());
+        Reference ref(0, id.clone());
+        Common::Assignment *hidden_ass = parent_scope->get_ass_bySRef(&ref);
+        hidden_ass->warning("Hidden definition `%s' is here",
+          hidden_ass->get_fullname().c_str());
+      }
+    }
+  }
+
+  PortScope *PortScope::get_scope_port()
+  {
+    return this;
+  }
+
+  Common::Assignment *PortScope::get_ass_bySRef(Ref_simple *p_ref)
+  {
+    if (!p_ref) FATAL_ERROR("Ttcn::PortScope::get_ass_bySRef()");
+    if (p_ref->get_modid()) return parent_scope->get_ass_bySRef(p_ref);
+    else {
+      const Identifier& id = *p_ref->get_id();
+      if (vardefs->has_local_ass_withId(id)) {
+        Common::Assignment* ass = vardefs->get_local_ass_byId(id);
+        if (!ass) FATAL_ERROR("Ttcn::PortScope::get_ass_bySRef()");
+        return ass;
+      } else return parent_scope->get_ass_bySRef(p_ref);
+    }
+  }
+
+  bool PortScope::has_ass_withId(const Identifier& p_id)
+  {
+    return vardefs->has_ass_withId(p_id)
+      || parent_scope->has_ass_withId(p_id);
+  }
+
+  // =================================
   // ===== FriendMod
   // =================================
 
@@ -2238,6 +2309,9 @@ namespace Ttcn {
     for (size_t i = 0; i < runs_on_scopes.size(); i++)
       delete runs_on_scopes[i];
     runs_on_scopes.clear();
+    for (size_t i = 0; i < port_scopes.size(); i++)
+      delete port_scopes[i];
+    port_scopes.clear();
     delete w_attrib_path;
   }
 
@@ -2766,7 +2840,15 @@ namespace Ttcn {
     ret_val->chk_uniq();
     return ret_val;
   }
-
+  
+  PortScope *Module::get_port_scope(Type *porttype)
+  {
+    PortScope *ret_val = new PortScope(porttype);
+    port_scopes.add(ret_val);
+    ret_val->set_parent_scope(asss);
+    ret_val->chk_uniq();
+    return ret_val;
+  }
 
   void Module::dump(unsigned level) const
   {
@@ -6178,13 +6260,15 @@ namespace Ttcn {
   // =================================
 
   Def_Function::Def_Function(Identifier *p_id, FormalParList *p_fpl,
-                             Reference *p_runs_on_ref, Type *p_return_type,
+                             Reference *p_runs_on_ref, Reference *p_port_ref,
+                             Type *p_return_type,
                              bool returns_template,
                              template_restriction_t p_template_restriction,
                              StatementBlock *p_block)
     : Def_Function_Base(false, p_id, p_fpl, p_return_type, returns_template,
         p_template_restriction),
-        runs_on_ref(p_runs_on_ref), runs_on_type(0), block(p_block),
+        runs_on_ref(p_runs_on_ref), runs_on_type(0),
+        port_ref(p_port_ref), port_type(0), block(p_block),
         is_startable(false), transparent(false)
   {
     if (!p_block) FATAL_ERROR("Def_Function::Def_Function()");
@@ -6194,6 +6278,7 @@ namespace Ttcn {
   Def_Function::~Def_Function()
   {
     delete runs_on_ref;
+    delete port_ref;
     delete block;
   }
 
@@ -6206,6 +6291,7 @@ namespace Ttcn {
   {
     Def_Function_Base::set_fullname(p_fullname);
     if (runs_on_ref) runs_on_ref->set_fullname(p_fullname + ".<runs_on_type>");
+    if (port_ref) port_ref->set_fullname(p_fullname + ".<port_type>");
     block->set_fullname(p_fullname + ".<statement_block>");
   }
 
@@ -6216,6 +6302,7 @@ namespace Ttcn {
 
     Def_Function_Base::set_my_scope(&bridgeScope);
     if (runs_on_ref) runs_on_ref->set_my_scope(&bridgeScope);
+    if (port_ref) port_ref->set_my_scope(&bridgeScope);
     block->set_my_scope(fp_list);
   }
 
@@ -6223,6 +6310,12 @@ namespace Ttcn {
   {
     if (!checked) chk();
     return runs_on_type;
+  }
+  
+  Type *Def_Function::get_PortType()
+  {
+    if (!checked) chk();
+    return port_type;
   }
 
   RunsOnScope *Def_Function::get_runs_on_scope(Type *comptype)
@@ -6232,12 +6325,23 @@ namespace Ttcn {
     return my_module->get_runs_on_scope(comptype);
   }
   
+  PortScope *Def_Function::get_port_scope(Type *porttype)
+  {
+    Module *my_module = dynamic_cast<Module*>(my_scope->get_scope_mod());
+    if (!my_module) FATAL_ERROR("Def_Function::get_port_scope()");
+    return my_module->get_port_scope(porttype);
+  }
+
   void Def_Function::chk()
   {
     if (checked) return;
     checked = true;
     Error_Context cntxt(this, "In function definition `%s'",
       id->get_dispname().c_str());
+    // `runs on' clause and `port' clause are mutually exclusive
+    if (runs_on_ref && port_ref) {
+      runs_on_ref->error("A `runs on' and a `port' clause cannot be present at the same time.");
+    }
     // checking the `runs on' clause
     if (runs_on_ref) {
       Error_Context cntxt2(runs_on_ref, "In `runs on' clause");
@@ -6249,39 +6353,7 @@ namespace Ttcn {
         fp_list->set_my_scope(runs_on_scope);
       }
     }
-    // checking the formal parameter list
-    fp_list->chk(asstype);
-    // checking of return type
-    if (return_type) {
-      Error_Context cntxt2(return_type, "In return type");
-      return_type->chk();
-      return_type->chk_as_return_type(asstype == A_FUNCTION_RVAL,"function");
-    }
-    // decision of startability
-    is_startable = runs_on_ref != 0;
-    if (is_startable && !fp_list->get_startability()) is_startable = false;
-    if (is_startable && return_type && return_type->is_component_internal())
-          is_startable = false;
-    // checking of statement block
-    block->chk();
-    if (return_type) {
-      // checking the presence of return statements
-      switch (block->has_return()) {
-      case StatementBlock::RS_NO:
-        error("The function has return type, but it does not have any return "
-          "statement");
-        break;
-      case StatementBlock::RS_MAYBE:
-            error("The function has return type, but control might leave it "
-          "without reaching a return statement");
-      default:
-        break;
-      }
-    }
-    if (!semantic_check_only) {
-      fp_list->set_genname(get_genname());
-      block->set_code_section(GovernedSimple::CS_INLINE);
-    }
+    
     if (w_attrib_path) {
       w_attrib_path->chk_global_attrib();
       w_attrib_path->chk_no_qualif();
@@ -6325,8 +6397,65 @@ namespace Ttcn {
       }
     }
     chk_prototype();
+    
+    // checking the `port' clause
+   if (port_ref) {
+      Error_Context cntxt2(port_ref, "In `port' clause");
+      Assignment *ass = port_ref->get_refd_assignment();
+      if (ass) {
+        port_type = ass->get_Type();
+        if (port_type) {
+          switch (port_type->get_typetype()) {
+            case Type::T_PORT: {
+              Scope *port_scope = get_port_scope(port_type);
+              port_scope->set_parent_scope(my_scope);
+              fp_list->set_my_scope(port_scope);
+              break; }
+            default:
+              port_ref->error(
+                "Reference `%s' does not refer to a port type.",
+                port_ref->get_dispname().c_str());
+          }
+        } else {
+          FATAL_ERROR("Def_Function::chk()");
+        }
+      }
+    }
+    // checking the formal parameter list
+    fp_list->chk(asstype);
+    // checking of return type
+    if (return_type) {
+      Error_Context cntxt2(return_type, "In return type");
+      return_type->chk();
+      return_type->chk_as_return_type(asstype == A_FUNCTION_RVAL,"function");
+    }
+    // decision of startability
+    is_startable = runs_on_ref != 0;
+    if (is_startable && !fp_list->get_startability()) is_startable = false;
+    if (is_startable && return_type && return_type->is_component_internal())
+          is_startable = false;
+    // checking of statement block
+    block->chk();
+    if (return_type) {
+      // checking the presence of return statements
+      switch (block->has_return()) {
+      case StatementBlock::RS_NO:
+        error("The function has return type, but it does not have any return "
+          "statement");
+        break;
+      case StatementBlock::RS_MAYBE:
+            error("The function has return type, but control might leave it "
+          "without reaching a return statement");
+      default:
+        break;
+      }
+    }
+    if (!semantic_check_only) {
+      fp_list->set_genname(get_genname());
+      block->set_code_section(GovernedSimple::CS_INLINE);
+    }
   }
-
+    
   bool Def_Function::chk_startable()
   {
     if (!checked) chk();
@@ -6346,8 +6475,14 @@ namespace Ttcn {
     return false;
   }
 
-  void Def_Function::generate_code(output_struct *target, bool)
+  void Def_Function::generate_code(output_struct *target, bool clean_up)
   {
+    // Functions with 'port' clause are generated into the port type's class def
+    // Reuse of clean_up variable to allow or disallow the generation.
+    // clean_up is true when it is called from PortTypeBody::generate_code())
+    if (port_type && !clean_up) {
+      return;
+    }
     transparency_holder glass(*this);
     const string& t_genname = get_genname();
     const char *genname_str = t_genname.c_str();
@@ -6384,15 +6519,21 @@ namespace Ttcn {
     fp_list->generate_code_defval(target);
     // function prototype
     target->header.function_prototypes =
-      mputprintf(target->header.function_prototypes, "extern %s %s(%s);\n",
+      mputprintf(target->header.function_prototypes, "%s%s %s(%s);\n",
+        get_PortType() && clean_up ? "" : "extern ",
         return_type_str, genname_str, formal_par_list);
 
     // function body    
     target->source.function_bodies = mputprintf(target->source.function_bodies,
-      "%s %s(%s)\n"
+      "%s %s%s%s%s(%s)\n"
       "{\n"
       "%s"
-      "}\n\n", return_type_str, genname_str, formal_par_list, body);
+      "}\n\n",
+      return_type_str,
+      port_type && clean_up ? port_type->get_genname_own().c_str() : "",
+      port_type && clean_up && port_type->get_PortBody()->get_testport_type() != PortTypeBody::TP_INTERNAL ? "_BASE" : "",
+      port_type && clean_up ? "::" : "",
+      genname_str, formal_par_list, body);
     Free(formal_par_list);
     Free(body);
 

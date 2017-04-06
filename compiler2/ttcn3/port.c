@@ -1654,6 +1654,26 @@ void defPortClass(const port_def* pdef, output_struct* output)
       def = mputprintf(def, "%s* p_%i;\n", pdef->provider_msg_outlist.elements[i].name, (int)i);
     }
     def = mputstr(def, "translation_port_state port_state;\n");
+    
+    // Declarations of port variables
+    if (pdef->var_decls != NULL) {
+      def = mputstr(def, pdef->var_decls);
+    }
+    
+    if (pdef->var_defs != NULL) {
+      def = mputstr(def, "void init_port_variables();\n");
+      src = mputprintf(src,
+        "void %s::init_port_variables() {\n%s}\n\n", class_name, pdef->var_defs);
+    }
+    
+    // Declarations of mapping function which have this port in the 'port' clause
+    if (pdef->mapping_func_decls != NULL) {
+      def = mputstr(def, pdef->mapping_func_decls);
+    }
+    
+    if (pdef->mapping_func_defs != NULL) {
+      src = mputstr(src,  pdef->mapping_func_defs);
+    }
   }
   
   // Port type variables in the provider types.
@@ -2073,19 +2093,19 @@ void defPortClass(const port_def* pdef, output_struct* output)
     // add_port and remove_port is called after the map and unmap statements.
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
       def = mputprintf(def, "void add_port(%s* p);\n", pdef->provider_msg_outlist.elements[i].name);
-      src = mputprintf(src, "void %s::add_port(%s*p) {\n p_%i = p;\n}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i);
+      src = mputprintf(src, "void %s::add_port(%s*p) {\np_%i = p;\n}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i);
       
       def = mputprintf(def, "void remove_port(%s*);\n", pdef->provider_msg_outlist.elements[i].name);
-      src = mputprintf(src, "void %s::remove_port(%s*) {\n p_%i = NULL;\n}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i);
+      src = mputprintf(src, "void %s::remove_port(%s*) {\np_%i = NULL;\n}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i);
     }
     
     // in_translation_mode returns true if one of the port type variables are not null
     def = mputstr(def, "boolean in_translation_mode() const;\n");
     src = mputprintf(src, "boolean %s::in_translation_mode() const {\nreturn ", class_name);
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
-      src = mputprintf(src, "p_%i != NULL %s",
+      src = mputprintf(src, "p_%i != NULL%s",
         (int)i,
-        i != pdef->provider_msg_outlist.nElements - 1 ? "|| " : "");
+        i != pdef->provider_msg_outlist.nElements - 1 ? " || " : "");
     }
     src = mputstr(src, ";\n}\n\n");
     
@@ -2103,6 +2123,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
       src = mputprintf(src, "p_%i = NULL;\n", (int)i);
     }
     src = mputstr(src, "}\n\n");
+    
   }
   // Port type variables in the provider types.
   if (pdef->n_mapper_name > 0) {

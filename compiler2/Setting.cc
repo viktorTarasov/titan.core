@@ -18,6 +18,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Tatarka, Gabor
  *
@@ -569,6 +570,12 @@ namespace Common {
   Ttcn::RunsOnScope *Scope::get_scope_runs_on()
   {
     if (parent_scope) return parent_scope->get_scope_runs_on();
+    else return 0;
+  }
+  
+  Ttcn::PortScope *Scope::get_scope_port()
+  {
+    if (parent_scope) return parent_scope->get_scope_port();
     else return 0;
   }
 

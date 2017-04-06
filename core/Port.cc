@@ -2149,6 +2149,12 @@ void PORT::map(const char *system_port)
   TTCN_Logger::log_port_misc(
     TitanLoggerApi::Port__Misc_reason::port__was__mapped__to__system,
     port_name, SYSTEM_COMPREF, system_port);
+  
+  // Only has effect when the translation port has port variables with
+  // default values. Only call when it is mapped first.
+  if (n_system_mappings == 0) {
+    init_port_variables();
+  }
 
   // the mapping shall be registered in the table only if user_map() was
   // successful
@@ -2202,7 +2208,9 @@ void PORT::unmap(const char *system_port)
   // Currently the requirement is that the port needs to map only when mapped 
   // to one port. If it would be mapped to more ports then this call would
   // remove all translation capability.
-  reset_port_variables();
+  if (n_system_mappings == 0) {
+    reset_port_variables();
+  }
 
   TTCN_Logger::log_port_misc(
     TitanLoggerApi::Port__Misc_reason::port__was__unmapped__from__system,
@@ -2212,6 +2220,10 @@ void PORT::unmap(const char *system_port)
 }
 
 void PORT::reset_port_variables() {
+  
+}
+
+void PORT::init_port_variables() {
   
 }
 

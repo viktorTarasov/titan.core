@@ -375,7 +375,7 @@ namespace Ttcn {
     }
   }
 
-  void TypeMappingTarget::chk_function(Type *source_type, bool legacy, bool incoming)
+  void TypeMappingTarget::chk_function(Type *source_type, Type *port_type, bool legacy, bool incoming)
   {
     Error_Context cntxt(this, "In `function' mapping");
     Assignment *t_ass = u.func.function_ref->get_refd_assignment(false);
@@ -478,6 +478,17 @@ namespace Ttcn {
             output_type->get_typename().c_str());
         }
       }
+      
+      // Check that if the function has a port clause it matches the port type
+      // that it is defined in.
+      Type *port_clause = u.func.function_ptr->get_PortType();
+      if (!legacy && port_clause && port_clause != port_type) {
+        u.func.function_ref->error("The function %s has a port clause of `%s'"
+          " but referenced in another port `%s'",
+          u.func.function_ptr->get_description().c_str(),
+          port_type->get_dispname().c_str(),
+          port_clause->get_dispname().c_str());
+      }
     }
   }
 
@@ -517,7 +528,7 @@ namespace Ttcn {
     if (u.encdec.eb_list) u.encdec.eb_list->chk();
   }
 
-  void TypeMappingTarget::chk(Type *source_type, bool legacy, bool incoming)
+  void TypeMappingTarget::chk(Type *source_type, Type *port_type, bool legacy, bool incoming)
   {
     if (checked) return;
     checked = true;
@@ -532,7 +543,7 @@ namespace Ttcn {
     case TM_DISCARD:
       break;
     case TM_FUNCTION:
-      chk_function(source_type, legacy, incoming);
+      chk_function(source_type, port_type, legacy, incoming);
       break;
     case TM_ENCODE:
       chk_encode(source_type);
@@ -726,7 +737,7 @@ namespace Ttcn {
     targets->set_my_scope(p_scope);
   }
 
-  void TypeMapping::chk(bool legacy, bool incoming)
+  void TypeMapping::chk(Type *port_type, bool legacy, bool incoming)
   {
     Error_Context cntxt(this, "In type mapping");
     {
@@ -737,7 +748,7 @@ namespace Ttcn {
     bool has_sliding = false, has_non_sliding = false;
     for (size_t i = 0; i < nof_targets; i++) {
       TypeMappingTarget *target = targets->get_target_byIndex(i);
-      target->chk(source_type, legacy, incoming);
+      target->chk(source_type, port_type, legacy, incoming);
       if (nof_targets > 1) {
         switch (target->get_mapping_type()) {
         case TypeMappingTarget::TM_DISCARD:
@@ -862,14 +873,14 @@ namespace Ttcn {
     return mappings_m[p_type->get_typename()];
   }
 
-  void TypeMappings::chk(bool legacy, bool incoming)
+  void TypeMappings::chk(Type *port_type, bool legacy, bool incoming)
   {
     if (checked) return;
     checked = true;
     size_t nof_mappings = mappings_v.size();
     for (size_t i = 0; i < nof_mappings; i++) {
       TypeMapping *mapping = mappings_v[i];
-      mapping->chk(legacy, incoming);
+      mapping->chk(port_type, legacy, incoming);
       Type *source_type = mapping->get_source_type();
       if (source_type->get_type_refd_last()->get_typetype() != Type::T_ERROR) {
         const string& source_type_name = source_type->get_typename();
@@ -1023,7 +1034,7 @@ namespace Ttcn {
 
   PortTypeBody::PortTypeBody(PortOperationMode_t p_operation_mode,
     Types *p_in_list, Types *p_out_list, Types *p_inout_list,
-    bool p_in_all, bool p_out_all, bool p_inout_all)
+    bool p_in_all, bool p_out_all, bool p_inout_all, Definitions *defs)
     : Node(), Location(), my_type(0), operation_mode(p_operation_mode),
     in_list(p_in_list), out_list(p_out_list), inout_list(p_inout_list),
     in_all(p_in_all), out_all(p_out_all), inout_all(p_inout_all),
@@ -1031,7 +1042,7 @@ namespace Ttcn {
     in_msgs(0), out_msgs(0), in_sigs(0), out_sigs(0),
     testport_type(TP_REGULAR), port_type(PT_REGULAR),
     provider_refs(), provider_types(), mapper_types(),
-    in_mappings(0), out_mappings(0)
+    in_mappings(0), out_mappings(0), vardefs(defs)
   {
   }
 
@@ -1052,6 +1063,7 @@ namespace Ttcn {
     mapper_types.clear();
     delete in_mappings;
     delete out_mappings;
+    delete vardefs;
   }
 
   PortTypeBody *PortTypeBody::clone() const
@@ -1073,8 +1085,8 @@ namespace Ttcn {
       provider_refs[i]->set_fullname(p_fullname + ".<provider_ref>");
     }
     if (in_mappings) in_mappings->set_fullname(p_fullname + ".<in_mappings>");
-    if (out_mappings)
-      out_mappings->set_fullname(p_fullname + ".<out_mappings>");
+    if (out_mappings) out_mappings->set_fullname(p_fullname + ".<out_mappings>");
+    vardefs->set_fullname(p_fullname + ".<port_var>");
   }
 
   void PortTypeBody::set_my_scope(Scope *p_scope)
@@ -1087,6 +1099,7 @@ namespace Ttcn {
     }
     if (in_mappings) in_mappings->set_my_scope(p_scope);
     if (out_mappings) out_mappings->set_my_scope(p_scope);
+    vardefs->set_parent_scope(p_scope);
   }
 
   void PortTypeBody::set_my_type(Type *p_type)
@@ -1118,6 +1131,12 @@ namespace Ttcn {
   {
     if (!checked) FATAL_ERROR("PortTypeBody::get_out_sigs()");
     return out_sigs;
+  }
+  
+  Definitions *PortTypeBody::get_vardefs() const
+  {
+    if (!checked) FATAL_ERROR("PortTypeBody::get_vardefs()");
+    return vardefs;
   }
 
   bool PortTypeBody::has_queue() const
@@ -1528,7 +1547,7 @@ namespace Ttcn {
     // checking the incoming mappings
     if (legacy && in_mappings) {
       Error_Context cntxt2(in_mappings, "In `in' mappings");
-      in_mappings->chk(legacy, true);
+      in_mappings->chk(my_type, legacy, true);
       // checking source types
       if (provider_body) {
         if (provider_body->in_msgs) {
@@ -1587,7 +1606,7 @@ namespace Ttcn {
     // checking the outgoing mappings
     if (legacy && out_mappings) {
       Error_Context cntxt2(out_mappings, "In `out' mappings");
-      out_mappings->chk(legacy, false);
+      out_mappings->chk(my_type, legacy, false);
       // checking source types
       if (out_msgs) {
         // check if all source types are present on the `out' list
@@ -1710,12 +1729,14 @@ namespace Ttcn {
     }
     if (!legacy) {
       if (out_mappings) {
-        out_mappings->chk(legacy, false);
+        out_mappings->chk(my_type, legacy, false);
       }
       if (in_mappings) {
-        in_mappings->chk(legacy, true);
+        in_mappings->chk(my_type, legacy, true);
       }
       chk_map_translation();
+      vardefs->chk_uniq();
+      vardefs->chk();
     }
   }
 
@@ -1752,6 +1773,10 @@ namespace Ttcn {
     if (inout_list) {
       Error_Context cntxt(inout_list, "In `inout' list");
       chk_list(inout_list, true, true);
+    }
+    
+    if (provider_refs.size() == 0 && vardefs->get_nof_asss() > 0) {
+      error("Port variables can only be used when the port is a translation port.");
     }
   }
 
@@ -1810,8 +1835,13 @@ namespace Ttcn {
           ea.warning("Duplicate attribute `provider'");
           break; }
         case PortTypeBody::PT_USER: {
+          if (legacy) {
           ea.error("Attributes `user' and `provider' "
             "cannot be used at the same time");
+          } else {
+            ea.error("The `provider' attribute "
+            "cannot be used on translation ports");
+          }
           break; }
         default:
           FATAL_ERROR("coding_attrib_parse(): invalid testport type");
@@ -1828,7 +1858,11 @@ namespace Ttcn {
             "cannot be used at the same time");
           break; }
         case PortTypeBody::PT_USER: {
-          ea.error("Duplicate attribute `user'");
+          if (legacy) {
+            ea.error("Duplicate attribute `user'");
+          } else {
+            ea.error("Attribute `user' cannot be used on translation ports.");
+          }
           break; }
         default:
           FATAL_ERROR("coding_attrib_parse(): invalid testport type");
@@ -2318,6 +2352,84 @@ namespace Ttcn {
             } // for mapping->get_nof_targets()
           } // for in_mappings->get_nof_mappings()
         } // if in_mappings // todo inout?
+        
+        // Variable declarations and definitions
+        for (size_t i = 0; i < vardefs->get_nof_asss(); i++) {
+          Definition* def = static_cast<Definition*>(vardefs->get_ass_byIndex(i));
+          string type;
+          switch (def->get_asstype()) {
+            case Assignment::A_VAR:
+            case Assignment::A_CONST:
+              type = def->get_Type()->get_genname_value(my_scope);
+              break;
+            case Assignment::A_VAR_TEMPLATE:
+              type = def->get_Type()->get_genname_template(my_scope);
+              break;
+            default:
+              FATAL_ERROR("PortTypeBody::generate_code()");
+          }
+          
+          pdef.var_decls = 
+            mputprintf(pdef.var_decls,
+              "%s %s;\n",
+              type.c_str(),
+              def->get_genname().c_str());
+
+          size_t len = pdef.var_defs ? strlen(pdef.var_defs) : 0;
+          pdef.var_defs = def->generate_code_init_comp(pdef.var_defs, def);
+          
+          // If the def does not have default value then clean it up to
+          // restore to unbound. (for constants the generate_code_init_comp does nothing)
+          if ((pdef.var_defs == NULL || len == strlen(pdef.var_defs)) && def->get_asstype() != Assignment::A_CONST) {
+            pdef.var_defs = mputprintf(pdef.var_defs, "%s.clean_up();\n",
+              def->get_genname().c_str());
+          }
+        }
+        
+        
+        // Collect the generated code of functions with 'port' clause 
+        // which belongs to this port type
+        output_struct os;
+        Code::init_output(&os);
+        map<Def_Function_Base*, int> funs;
+        if (out_mappings) {
+          for (size_t i = 0; i < out_mappings->get_nof_mappings(); i++) {
+            TypeMapping* tm = out_mappings->get_mapping_byIndex(i);
+            for (size_t j = 0; j < tm->get_nof_targets(); j++) {
+              TypeMappingTarget* tmt = tm->get_target_byIndex(j);
+              if (tmt->get_mapping_type() == TypeMappingTarget::TM_FUNCTION) {
+                Def_Function_Base* fun = tmt->get_function();
+                Type * fun_port_type = fun->get_PortType();
+                if (fun_port_type && fun_port_type == my_type && !funs.has_key(fun)) {
+                  // Reuse of clean_up parameter here.
+                  fun->generate_code(&os, true);
+                  funs.add(fun, 0);
+                }
+              }
+            }
+          }
+        }
+        if (in_mappings) {
+          for (size_t i = 0; i < in_mappings->get_nof_mappings(); i++) {
+            TypeMapping* tm = in_mappings->get_mapping_byIndex(i);
+            for (size_t j = 0; j < tm->get_nof_targets(); j++) {
+              TypeMappingTarget* tmt = tm->get_target_byIndex(j);
+              if (tmt->get_mapping_type() == TypeMappingTarget::TM_FUNCTION) {
+                Def_Function_Base* fun = tmt->get_function();
+                Type * fun_port_type = fun->get_PortType();
+                if (fun_port_type && fun_port_type == my_type && !funs.has_key(fun)) {
+                  // Reuse of clean_up parameter here.
+                  fun->generate_code(&os, true);
+                  funs.add(fun, 0);
+                }
+              }
+            }
+          }
+        }
+        pdef.mapping_func_decls = mcopystr(os.header.function_prototypes);
+        pdef.mapping_func_defs = mcopystr(os.source.function_bodies);
+        funs.clear();
+        Code::free_output(&os);
       } // if legacy
     } else {
       // "internal provider" is the same as "internal"
@@ -2337,7 +2449,7 @@ namespace Ttcn {
         pdef.mapper_name[i] = pool.add(mapper_types[i]->get_genname_value(my_scope));
       }
     }
-
+    
     defPortClass(&pdef, target);
     if (generate_skeleton && testport_type != TP_INTERNAL &&
         (port_type != PT_USER || !legacy)) generateTestPortSkeleton(&pdef);
@@ -2355,6 +2467,10 @@ namespace Ttcn {
       Free(pdef.provider_msg_outlist.elements[i].out_msg_type_names);
     Free(pdef.provider_msg_outlist.elements);
     Free(pdef.mapper_name);
+    Free(pdef.var_decls);
+    Free(pdef.var_defs);
+    Free(pdef.mapping_func_decls);
+    Free(pdef.mapping_func_defs);
   }
 
   void PortTypeBody::dump(unsigned level) const

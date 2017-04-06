@@ -9,6 +9,9 @@
  *   Szabo, Bence Janos
  *
  ******************************************************************************/
+
+// Tests of standard ES 202 781 Ports with translation capability
+
 module Setstate_SE { //^In TTCN-3 module//
 
 	const integer i1 := 4;

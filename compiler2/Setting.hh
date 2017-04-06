@@ -18,6 +18,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Tatarka, Gabor
  *   Zalanyi, Balazs Andor
@@ -55,6 +56,7 @@ namespace Ttcn {
   class FieldOrArrayRefs;
   class ActualParList;
   class RunsOnScope;
+  class PortScope;
   class StatementBlock;
   struct ErroneousDescriptor;
   class ErroneousDescriptors;
@@ -597,6 +599,9 @@ public:
     /** Returns the scope unit of the hierarchy that belongs to a
      * 'runs on' clause. */
     virtual Ttcn::RunsOnScope *get_scope_runs_on();
+    /** Returns the scope unit of the hierarchy that belongs to a
+     * 'port' clause. */
+    virtual Ttcn::PortScope *get_scope_port();
     /** Returns the assignments/module definitions scope. */
     virtual Assignments *get_scope_asss();
     /** Gets the module scope. This function returns this scope or a

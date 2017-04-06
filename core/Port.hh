@@ -302,7 +302,11 @@ protected:
   virtual boolean process_exception(const char *signature_name,
     Text_Buf& incoming_buf, component sender_component);
   
+  // Resets the port type variables to NULL after unmap
   virtual void reset_port_variables();
+  
+  // Initializes the port variables after map
+  virtual void init_port_variables();
   
 private:
   port_connection *add_connection(component remote_component,

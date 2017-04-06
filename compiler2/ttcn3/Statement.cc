@@ -3121,10 +3121,13 @@ error:
   {
     Error_Context cntxt(this, "In function instance");
     Common::Assignment *t_ass = ref_pard->get_refd_assignment();
+    if (t_ass->get_PortType()) {
+      ref_pard->error("Function with `port' clause cannot be called directly.");
+    }
     my_sb->chk_runs_on_clause(t_ass, *ref_pard, "call");
     if (t_ass->get_Type())
       ref_pard->warning("The value returned by %s is not used",
-	t_ass->get_description().c_str());
+	      t_ass->get_description().c_str());
   }
 
   void Statement::chk_block()

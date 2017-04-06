@@ -457,6 +457,37 @@ namespace Ttcn {
     virtual Common::Assignment *get_ass_bySRef(Ref_simple *p_ref);
     virtual bool has_ass_withId(const Identifier& p_id);
   };
+  
+  /**
+   * Class Ttcn::PortScope.
+   * Implements the scoping rules for functions that
+   * have a 'port' clause. First looks for the variable definitions in the given
+   * port type first then it searches in its parent scope.
+   * Note: This scope unit cannot access the parent scope of the port type.
+   */
+  class PortScope : public Scope {
+    /** Points to the port type. */
+    Type *port_type;
+    /** Shortcut to the definitions within \a port_type. */
+    Definitions *vardefs;
+
+    /** Not implemented. Causes \a FATAL_ERROR. */
+    PortScope(const PortScope& p);
+    /** %Assignment not implemented */
+    PortScope& operator=(const PortScope& p);
+  public:
+    PortScope(Type *p_porttype);
+    virtual PortScope *clone() const;
+
+    Type *get_port_type() const { return port_type; }
+    /** Checks the uniqueness of definitions within \a portdefs and
+     * reports warnings in case of hiding. */
+    void chk_uniq();
+
+    virtual PortScope *get_scope_port();
+    virtual Common::Assignment *get_ass_bySRef(Ref_simple *p_ref);
+    virtual bool has_ass_withId(const Identifier& p_id);
+  };
 
   /**
    * Class Ttcn::Definitions.
@@ -599,8 +630,9 @@ namespace Ttcn {
     Imports *imp;
     ControlPart* controlpart;
     /** For caching the scope objects that are created in
-     * \a get_runs_on_scope(). */
+     * \a get_runs_on_scope() and get_port_scope(). */
     vector<RunsOnScope> runs_on_scopes;
+    vector<PortScope> port_scopes;
   private:
     /** Copy constructor not implemented */
     Module(const Module& p);
@@ -638,6 +670,10 @@ namespace Ttcn {
      * object has been created for a component type it will be returned later
      * instead of creating a new one. */
     RunsOnScope *get_runs_on_scope(Type *comptype);
+    /* The same as get_runs_on_scope except that the returned scope can access
+     * the port types definitions.
+     */
+    PortScope *get_port_scope(Type *porttype);
     virtual void dump(unsigned level) const;
     void set_language_spec(const char *p_language_spec);
     void add_ass(Definition* p_ass);
@@ -858,7 +894,6 @@ namespace Ttcn {
       : Common::Assignment(p), genname(), parentgroup(0),
         w_attrib_path(0), erroneous_attrs(0), local_scope(false)
       { }
-    virtual string get_genname() const;
 
     namedbool has_implicit_omit_attr() const;
   private:
@@ -879,13 +914,14 @@ namespace Ttcn {
     /** Marks the (template) definition as local to a func/altstep/default */
     inline void set_local() { local_scope = true; }
 
+    virtual string get_genname() const;
     void set_genname(const string& p_genname) { genname = p_genname; }
     /** Check if two definitions are (almost) identical, the type and dimensions
      * must always be identical, the initial values can be different depending
      * on the definition type. If error was reported the return value is false.
      * The initial values (if applicable) may be present/absent, different or
      * unfoldable. The function must be overridden to be used.
-     */
+     */ 
     virtual bool chk_identical(Definition *p_def);
     /** Parse and check the erroneous attribute data,
       * returns erroneous attributes or NULL */
@@ -1366,6 +1402,14 @@ namespace Ttcn {
      * It is NULL if the function has no 'runs on' clause or \a runs_on_ref is
      * erroneous. */
     Type *runs_on_type;
+    /** The 'port' clause (i.e. a reference to a TTCN-3 port type)
+     * It is NULL if the function has no 'port' clause. */
+    Reference *port_ref;
+    /** Points to the object describing the port type referred by
+     * 'port' clause.
+     * It is NULL if the function has no 'port' clause or \a port_ref is
+     * erroneous. */
+    Type *port_type;
     /** The body of the function */
     StatementBlock *block;
     /** Indicates whether the function is startable. That is, it can be
@@ -1389,13 +1433,15 @@ namespace Ttcn {
      * @param p_id function name
      * @param p_fpl formal parameter list
      * @param p_runs_on_ref "runs on", else NULL
+     * @param p_port_ref "port", else NULL
      * @param p_return_type return type, may be NULL
      * @param returns_template true if the return value is a template
      * @param p_template_restriction restriction type
      * @param p_block the body of the function
      */
     Def_Function(Identifier *p_id, FormalParList *p_fpl,
-                 Reference *p_runs_on_ref, Type *p_return_type,
+                 Reference *p_runs_on_ref, Reference *p_port_ref,
+                 Type *p_return_type,
                  bool returns_template,
                  template_restriction_t p_template_restriction,
                  StatementBlock *p_block);
@@ -1404,9 +1450,13 @@ namespace Ttcn {
     virtual void set_fullname(const string& p_fullname);
     virtual void set_my_scope(Scope *p_scope);
     virtual Type *get_RunsOnType();
+    virtual Type *get_PortType();
     /** Returns a scope that can access the definitions within component type
      * \a comptype and its parent is \a parent_scope.*/
     RunsOnScope *get_runs_on_scope(Type *comptype);
+    /** Returns a scope that can access the definitions within port type
+     * \a porttype and its parent is \a parent_scope.*/
+    PortScope *get_port_scope(Type *porttype);
     virtual void chk();
     /** Checks and returns whether the function is startable.
      * Reports the appropriate error message(s) if not. */
@@ -1414,6 +1464,8 @@ namespace Ttcn {
 
     bool is_transparent() const { return transparent; }
 
+    // Reuse of clean_up variable to allow or disallow the generation.
+    // clean_up is true when it is called from PortTypeBody::generate_code()
     virtual void generate_code(output_struct *target, bool clean_up = false);
     virtual void generate_code(CodeGenHelper& cgh);
     virtual void dump_internal(unsigned level) const;

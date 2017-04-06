@@ -284,6 +284,8 @@ static const string anyname("anytype");
     Ttcn::Types *in_list, *out_list, *inout_list;
     bool in_all, out_all, inout_all;
     TypeMappings *in_mappings, *out_mappings;
+    size_t varnElements;
+    Ttcn::Definition **varElements;
   } portdefbody;
   
   struct {
@@ -1018,7 +1020,7 @@ static const string anyname("anytype");
 %type <refpard> FunctionInstance AltstepInstance
 %type <reference> PortType optDerivedDef DerivedDef IndexSpec Signature
   VariableRef TimerRef Port PortOrAll ValueStoreSpec
-  SenderSpec ComponentType optRunsOnSpec RunsOnSpec optSystemSpec
+  SenderSpec ComponentType optRunsOnSpec RunsOnSpec optSystemSpec optPortSpec
 %type <reference_or_any> PortOrAny TimerRefOrAny
 %type <valuerange> Range
 %type <type> NestedEnumDef NestedRecordDef NestedRecordOfDef NestedSetDef
@@ -1049,7 +1051,7 @@ AllOrTypeListWithTo TypeListWithFrom TypeListWithTo
 %type <def_list> AltstepLocalDef AltstepLocalDefList ComponentElementDef
   ConstDef ExtConstDef FunctionLocalDef FunctionLocalInst ModuleDef ModulePar
   ModuleParDef MultiTypedModuleParList PortInstance TimerInstance TimerList
-  VarInstance
+  VarInstance PortElementVarDef
 %type <stmt_list> FunctionStatementOrDef ControlStatementOrDef
 
 %type <rangedef> RangeDef
@@ -1500,6 +1502,7 @@ FriendModuleDef
 USI
 UIDlike
 PortTypeList
+PortElementVarDef
 
 
 %destructor {
@@ -1533,6 +1536,10 @@ StructOfDefBody
   delete $$.inout_list;
   delete $$.in_mappings;
   delete $$.out_mappings;
+  for (size_t i = 0; i < $$.varnElements; i++) {
+    delete $$.varElements[i];
+  }
+  delete $$.varElements;
 }
 PortDefList
 PortDefLists
@@ -1866,12 +1873,12 @@ optDecodedModifier
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 65
+%expect 66
 
 %start GrammarRoot
 
 /*
-XXX Source of conflicts (65 S/R):
+XXX Source of conflicts (66 S/R):
 
 1.) 9 conflicts in one state
 The Expression after 'return' keyword is optional in ReturnStatement.
@@ -1941,6 +1948,9 @@ This is only relevant for template concatenation:
 ex.: template octetstring t := 'AB'O & ? length (3);
 Because the parser shifts, the length restriction here is applied to the '?'
 instead of the concatenation result, which is the expected behavior.
+
+12.) 1 conflict in PortDefLists
+PortElementVarDef contains optSemicolon which causes 1 conflict
 
 Note that the parser implemented by bison always chooses to shift instead of
 reduce in case of conflicts.
@@ -2803,9 +2813,14 @@ PortDefBody: // 57
 PortDefAttribs: // 60
   PortOperationMode PortDefLists
   {
+    Definitions * defs = new Definitions();
+    for (size_t i = 0; i < $2.varnElements; i++) {
+      defs->add_ass($2.varElements[i]);
+    }
+    Free($2.varElements);
     PortTypeBody *body = new PortTypeBody($1,
       $2.in_list, $2.out_list, $2.inout_list,
-      $2.in_all, $2.out_all, $2.inout_all);
+      $2.in_all, $2.out_all, $2.inout_all, defs);
     body->set_location(infile, @$);
     $$ = new Type(Type::T_PORT, body);
     $$->set_location(infile, @$);
@@ -2815,9 +2830,14 @@ PortDefAttribs: // 60
 | 
   PortOperationMode MapKeyword ToKeyword PortTypeList PortDefLists
   {
+    Definitions * defs = new Definitions();
+    for (size_t i = 0; i < $5.varnElements; i++) {
+      defs->add_ass($5.varElements[i]);
+    }
+    Free($5.varElements);
     PortTypeBody *body = new PortTypeBody($1,
       $5.in_list, $5.out_list, $5.inout_list,
-      $5.in_all, $5.out_all, $5.inout_all);
+      $5.in_all, $5.out_all, $5.inout_all, defs);
     body->set_location(infile, @$);
     $$ = new Type(Type::T_PORT, body);
     body->add_user_attribute($4.elements, $4.nElements, $5.in_mappings, $5.out_mappings, false);
@@ -2845,6 +2865,8 @@ PortDefLists:
     $$.inout_all = false;
     $$.in_mappings = 0;
     $$.out_mappings = 0;
+    $$.varnElements = 0;
+    $$.varElements = 0;
   }
 ;
 
@@ -2905,6 +2927,16 @@ seqPortDefList:
         loc.warning("Duplicate directive `inout all' in port type definition");
       } else $$.inout_all = true;
     }
+    if ($2.varnElements > 0) {
+      size_t i = $$.varnElements;
+      $$.varnElements += $2.varnElements;
+      $$.varElements = static_cast<Ttcn::Definition**>(Realloc($$.varElements, $$.varnElements * sizeof(Ttcn::Definition*)));
+      // Intentional j start
+      for (size_t j = 0; i < $$.varnElements; i++, j++) {
+        $$.varElements[i] = $2.varElements[j];
+      }
+      Free($2.varElements);
+    }
   }
 ;
 
@@ -2930,6 +2962,8 @@ PortDefList:
     $$.inout_list = 0;
     $$.out_mappings = 0;
     $$.inout_all = false;
+    $$.varnElements = 0;
+    $$.varElements = 0;
   }
 | OutParKeyword AllOrTypeListWithTo
   {
@@ -2952,6 +2986,8 @@ PortDefList:
     $$.in_mappings = 0;
     $$.inout_list = 0;
     $$.inout_all = false;
+    $$.varnElements = 0;
+    $$.varElements = 0;
   }
 | InOutParKeyword AllOrTypeList
   {
@@ -2970,6 +3006,8 @@ PortDefList:
     delete $2.mappings;
     $$.in_mappings = 0;
     $$.out_mappings = 0;
+    $$.varnElements = 0;
+    $$.varElements = 0;
   }
 | InParKeyword error
   {
@@ -2981,6 +3019,8 @@ PortDefList:
     $$.inout_all = false;
     $$.in_mappings = 0;
     $$.out_mappings = 0;
+    $$.varnElements = 0;
+    $$.varElements = 0;
   }
 | OutParKeyword error
   {
@@ -2992,6 +3032,8 @@ PortDefList:
     $$.inout_all = false;
     $$.in_mappings = 0;
     $$.out_mappings = 0;
+    $$.varnElements = 0;
+    $$.varElements = 0;
   }
 | InOutParKeyword error
   {
@@ -3003,7 +3045,25 @@ PortDefList:
     $$.inout_all = false;
     $$.in_mappings = 0;
     $$.out_mappings = 0;
+    $$.varnElements = 0;
+    $$.varElements = 0;
   }
+| PortElementVarDef optSemiColon {
+    $$.in_list = 0;
+    $$.out_list = 0;
+    $$.inout_list = 0;
+    $$.in_all = false;
+    $$.out_all = false;
+    $$.inout_all = false;
+    $$.in_mappings = 0;
+    $$.out_mappings = 0;
+    $$.varnElements = $1.nElements;
+    $$.varElements = static_cast<Ttcn::Definition**>(Malloc($$.varnElements * sizeof(Ttcn::Definition*)));
+    for (size_t i = 0; i < $$.varnElements; i++) {
+      $$.varElements[i] = $1.elements[i];
+    }
+    delete $1.elements;
+}
 ;
 
 WithList:
@@ -3108,6 +3168,10 @@ TypeListWithTo:
   }
 | TypeListWithTo optError ',' error { $$ = $1; }
 ;
+
+PortElementVarDef:
+  VarInstance { $$ = $1; }
+| ConstDef { $$ = $1; }
 
 ComponentDef: // 78
   ComponentKeyword IDentifier
@@ -4099,11 +4163,11 @@ ValueofOp: // 162
 
 FunctionDef: // 164
   FunctionKeyword optDeterministicModifier IDentifier '(' optFunctionFormalParList ')'
-  optRunsOnSpec optReturnType optError StatementBlock
+  optRunsOnSpec optPortSpec optReturnType optError StatementBlock
   {
     $5->set_location(infile, @4, @6);
-    $$ = new Def_Function($3, $5, $7, $8.type, $8.returns_template,
-                          $8.template_restriction, $10);
+    $$ = new Def_Function($3, $5, $7, $8, $9.type, $9.returns_template,
+                          $9.template_restriction, $11);
     $$->set_location(infile, @$);
   }
 ;
@@ -4189,6 +4253,12 @@ optRunsOnSpec:
 RunsOnSpec: // 171
   RunsKeyword OnKeyword ComponentType { $$ = $3; }
 ;
+
+optPortSpec:
+  /* empty */ { $$ = 0; }
+| PortKeyword Port { $$ = $2; }
+;
+
 
   /* StatementBlock changed in 4.1.2 to explicitly prevent statements
    * followed by definitions. TITAN still allows them to be mixed. */

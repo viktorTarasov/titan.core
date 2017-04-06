@@ -4556,7 +4556,7 @@ namespace Common {
             maps = encode ? maps : inmaps;
             maps->set_my_scope(this->get_my_scope());
             // The first param should be true, the other is not important if the first is true
-            maps->chk(true, false);
+            maps->chk(this, true, false);
             // look for coding settings
             t = encode ? this : Type::get_pooltype(T_BSTR);
             mapping = maps->get_mapping_byType(t);

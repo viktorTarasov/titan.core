@@ -16,9 +16,9 @@ module PortTranslation {
 	function MyRec_to_oct(in MyRec i, out octetstring j) {
 		if (i.types == Oct) {
 			j := i.val;
-			port.setstate(0, "Some message"); // translated
+			port.setstate(0, "Translated"); // translated
 		} else {
-			port.setstate(1); // not translated
+			port.setstate(1, "Not translated"); // not translated
 		}
 	} with {
 		extension "prototype(fast)";

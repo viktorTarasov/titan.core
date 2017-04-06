@@ -259,6 +259,7 @@ namespace Common {
       OT_OCFT, ///< another Type (T_OCFT), ASN.1 obj.class field type
       OT_TEMPLATE_INST, ///< a TemplateInstance (TTCN-3)
       OT_RUNSON_SCOPE, ///< a RunsOnScope (TTCN-3)
+      OT_PORT_SCOPE, ///< a port scope
       OT_EXC_SPEC, ///< exception Specification (ExcSpec)
       OT_SIG_PAR, ///< signature parameter (SignatureParam)
       OT_POOL ///< It's a pool type, owned by the type pool

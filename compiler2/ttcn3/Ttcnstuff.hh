@@ -180,7 +180,7 @@ private:
    *               syntax in the standard was used.
      Param incoming: true if the mapping is in the in list of port, false if the
    *                 mapping is in the out list of the port.*/
-  void chk_function(Common::Type *source_type, bool legacy, bool incoming);
+  void chk_function(Common::Type *source_type, Common::Type *port_type, bool legacy, bool incoming);
   /** Check "encode()" mapping. */
   void chk_encode(Common::Type *source_type);
   /** Check "decode()" mapping. */
@@ -190,7 +190,7 @@ public:
    *               syntax in the standard was used.
      Param incoming: true if the mapping is in the in list of port, false if the
    *                 mapping is in the out list of the port.*/
-  void chk(Common::Type *source_type, bool legacy, bool incoming);
+  void chk(Common::Type *source_type, Common::Type *port_type, bool legacy, bool incoming);
   /** Fills the appropriate data structure \a target for code generation. */
   bool fill_type_mapping_target(port_msg_type_mapping_target *target,
     Common::Type *source_type, Common::Scope *p_scope, stringpool& pool);
@@ -249,7 +249,7 @@ public:
    *               syntax in the standard was used.
      Param incoming: true if the mapping is in the in list of port, false if the
    *                 mapping is in the out list of the port.*/
-  void chk(bool legacy, bool incoming);
+  void chk(Common::Type *port_type, bool legacy, bool incoming);
   virtual void dump(unsigned level) const;
 };
 
@@ -278,7 +278,7 @@ public:
    *               syntax in the standard was used.
      Param incoming: true if the mapping is in the in list of port, false if the
    *                 mapping is in the out list of the port.*/
-  void chk(bool legacy, bool incoming);
+  void chk(Common::Type *port_type, bool legacy, bool incoming);
   virtual void dump(unsigned level) const;
 };
 
@@ -404,6 +404,7 @@ private:
   vector<Common::Type> mapper_types; ///< the types that map this port.
                                      ///< only for PT_USER && !legacy
   TypeMappings *in_mappings, *out_mappings; ///< mappings for PT_USER
+  Definitions *vardefs; ///< variable definitions inside the port
   /** Copy constructor not implemented */
   PortTypeBody(const PortTypeBody& p);
   /** Assignment disabled */
@@ -411,7 +412,7 @@ private:
 public:
   PortTypeBody(PortOperationMode_t p_operation_mode,
     Types *p_in_list, Types *p_out_list, Types *p_inout_list,
-    bool p_in_all, bool p_out_all, bool p_inout_all);
+    bool p_in_all, bool p_out_all, bool p_inout_all, Definitions *defs);
   ~PortTypeBody();
   virtual PortTypeBody *clone() const;
   virtual void set_fullname(const string& p_fullname);
@@ -422,6 +423,7 @@ public:
   TypeSet *get_out_msgs() const;
   TypeSet *get_in_sigs() const;
   TypeSet *get_out_sigs() const;
+  Definitions *get_vardefs() const;
   bool has_queue() const;
   bool getreply_allowed() const;
   bool catch_allowed() const;

@@ -120,6 +120,10 @@ typedef struct port_def_tag {
   port_msg_mapped_type_list provider_msg_in;
   boolean has_sliding;
   boolean legacy;
+  char *var_decls;
+  char *var_defs;
+  char *mapping_func_decls;
+  char *mapping_func_defs;
 } port_def;
 
 #ifdef __cplusplus

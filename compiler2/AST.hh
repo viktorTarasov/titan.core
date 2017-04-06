@@ -18,6 +18,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
@@ -588,6 +589,9 @@ namespace Common {
     /** Returns the component type referred by the 'runs on' clause of a
      * TTCN-3 definition */
     virtual Type *get_RunsOnType();
+    /** Returns the port type referred by the 'port' clause of a
+     * TTCN-3 function definition */
+    virtual Type *get_PortType();
     /** Semantic check */
     virtual void chk() = 0;
     /** Checks whether the assignment has a valid TTCN-3 identifier,
