@@ -53,7 +53,7 @@ This TD contains syntactic tests with empty modules from ETSI TTCN3 Conformance 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a "plain" module definition is accepted. >
+<TC - 0801_001 Ensure that a "plain" module definition is accepted. >
 
 <COMPILE>
 
@@ -81,7 +81,7 @@ error
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a module definition with language specification is accepted. >
+<TC - 0801_002 Ensure that a module definition with language specification is accepted. >
 
 <COMPILE>
 
@@ -109,7 +109,7 @@ error
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a module definition with package and without language is accepted. >
+<TC - 0801_004 Ensure that a module definition with package and without language is accepted. >
 
 <COMPILE>
 
@@ -137,7 +137,7 @@ error
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a module definition with ed4.3.1 language and package is accepted. >
+<TC - 0801_005 Ensure that a module definition with ed4.3.1 language and package is accepted. >
 
 <COMPILE>
 
@@ -165,7 +165,7 @@ error
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a module definition with ed4.4.1 language and package is accepted. >
+<TC - 0801_006 Ensure that a module definition with ed4.4.1 language and package is accepted. >
 
 <COMPILE>
 
@@ -193,7 +193,7 @@ error
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a module definition with ed4.5.1 language and package is accepted. >
+<TC - 0801_007 Ensure that a module definition with ed4.5.1 language and package is accepted. >
 
 <COMPILE>
 
@@ -221,7 +221,7 @@ error
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a module definition with ed4.6.1 language and package is accepted. >
+<TC - 0801_008 Ensure that a module definition with ed4.6.1 language and package is accepted. >
 
 <COMPILE>
 
@@ -249,7 +249,7 @@ error
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that a module definition with ed4.7.1 language and package is accepted. >
+<TC - 0801_009 Ensure that a module definition with ed4.7.1 language and package is accepted. >
 
 <COMPILE>
 
@@ -277,7 +277,7 @@ error
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that an empty control part is accepted. >
+<TC - 0803_003 Ensure that an empty control part is accepted. >
 
 <COMPILE>
 

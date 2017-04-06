@@ -55,7 +55,7 @@ This TD contains tests with not pass verdicts from ETSI TTCN3 Conformance Test's
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: inconc can overwrite none. >
+<TC - 2401_002 Ensure overwriting rules for global verdict: inconc can overwrite none. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -111,7 +111,7 @@ Verdict: inconc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: fail can overwrite none. >
+<TC - 2401_003 Ensure overwriting rules for global verdict: fail can overwrite none. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -167,7 +167,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: inconc can overwrite pass. >
+<TC - 2401_005 Ensure overwriting rules for global verdict: inconc can overwrite pass. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -223,7 +223,7 @@ Verdict: inconc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: fail can overwrite pass. >
+<TC - 2401_006 Ensure overwriting rules for global verdict: fail can overwrite pass. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -279,7 +279,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: none can't overwrite inconc. >
+<TC - 2401_007 Ensure overwriting rules for global verdict: none can't overwrite inconc. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -335,7 +335,7 @@ Verdict: inconc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: pass can't overwrite inconc. >
+<TC - 2401_008 Ensure overwriting rules for global verdict: pass can't overwrite inconc. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -391,7 +391,7 @@ Verdict: inconc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: fail can overwrite inconc. >
+<TC - 2401_009 Ensure overwriting rules for global verdict: fail can overwrite inconc. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -447,7 +447,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: none can't overwrite fail. >
+<TC - 2401_010 Ensure overwriting rules for global verdict: none can't overwrite fail. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -503,7 +503,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: pass can't overwrite fail. >
+<TC - 2401_011 Ensure overwriting rules for global verdict: pass can't overwrite fail. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -559,7 +559,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for global verdict: inconc can't overwrite fail. >
+<TC - 2401_012 Ensure overwriting rules for global verdict: inconc can't overwrite fail. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -615,7 +615,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: inconc can overwrite none. >
+<TC - 2401_002 Ensure overwriting rules for local verdict: inconc can overwrite none. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -662,7 +662,7 @@ Verdict: inconc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: fail can overwrite none. >
+<TC - 2401_003 Ensure overwriting rules for local verdict: fail can overwrite none. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -709,7 +709,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: inconc can overwrite pass. >
+<TC - 2401_005 Ensure overwriting rules for local verdict: inconc can overwrite pass. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -756,7 +756,7 @@ Verdict: inconc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: fail can overwrite pass. >
+<TC - 2401_006 Ensure overwriting rules for local verdict: fail can overwrite pass. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -803,7 +803,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: none can't overwrite inconc. >
+<TC - 2401_007 Ensure overwriting rules for local verdict: none can't overwrite inconc. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -850,7 +850,7 @@ Verdict: inconc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: pass can't overwrite inconc. >
+<TC - 2401_008 Ensure overwriting rules for local verdict: pass can't overwrite inconc. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -897,7 +897,7 @@ Verdict: inconc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: fail can overwrite inconc. >
+<TC - 2401_009 Ensure overwriting rules for local verdict: fail can overwrite inconc. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -944,7 +944,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: none can't overwrite fail. >
+<TC - 2401_010 Ensure overwriting rules for local verdict: none can't overwrite fail. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -991,7 +991,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: pass can't overwrite fail. >
+<TC - 2401_011 Ensure overwriting rules for local verdict: pass can't overwrite fail. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1038,7 +1038,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure overwriting rules for local verdict: inconc can't overwrite fail. >
+<TC - 2401_012 Ensure overwriting rules for local verdict: inconc can't overwrite fail. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1085,7 +1085,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure getverdict returns the actual verdict inconc >
+<TC - 2403_002 Ensure getverdict returns the actual verdict inconc >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1132,7 +1132,7 @@ Verdict: inconc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure getverdict returns the actual verdict fail >
+<TC - 2403_004 Ensure getverdict returns the actual verdict fail >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1183,7 +1183,7 @@ Verdict: fail
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the timeout specified with the execute statement is respected. >
+<TC - 2601_003 Ensure that the timeout specified with the execute statement is respected. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1233,7 +1233,7 @@ Dynamic test case error: Guard timer has expired. Execution of current test case
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the verdict none works correctly. >
+<TC - 2601_004 Ensure that the verdict none works correctly. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1286,7 +1286,7 @@ Verdict: pass
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the verdict inconc works correctly. >
+<TC - 2601_006 Ensure that the verdict inconc works correctly. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1339,7 +1339,7 @@ Verdict: pass
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the user error sets the verdict error correctly. >
+<TC - 2601_008 Ensure that the user error sets the verdict error correctly. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1380,7 +1380,7 @@ Verdict: error
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the selection of test cases can be achieven based on resulting verdict types. >
+<TC - 2602_003 Ensure that the selection of test cases can be achieven based on resulting verdict types. >
 
 <COMPILE>
 <EXECUTE_PARALLEL>

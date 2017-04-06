@@ -53,7 +53,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 16_functions_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles function definitions >
+<TC - 1601_001 Ensure that the IUT correctly handles function definitions >
 
 <COMPILE>
 
@@ -109,7 +109,7 @@ error: Incompatible value: `float' value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles function definitions >
+<TC - 1601_002 Ensure that the IUT correctly handles function definitions >
 
 <COMPILE>
 
@@ -155,7 +155,7 @@ error: Reference to a value was expected instead of template parameter `p_ostrin
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles function definitions >
+<TC - 1601_003 Ensure that the IUT correctly handles function definitions >
 
 <COMPILE>
 
@@ -213,7 +213,7 @@ error: A definition without `runs on' clause cannot call function `@NegSem_1601_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles function definitions >
+<TC - 1601_004 Ensure that the IUT correctly handles function definitions >
 
 <COMPILE>
 
@@ -266,7 +266,7 @@ error: A definition without `runs on' clause cannot call function `@NegSem_1601_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles function definitions >
+<TC - 1601_005 Ensure that the IUT correctly handles function definitions >
 
 <COMPILE>
 
@@ -322,7 +322,7 @@ error: The function has return type, but control might leave it without reaching
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles function definitions >
+<TC - 1601_006 Ensure that the IUT correctly handles function definitions >
 
 <COMPILE>
 
@@ -378,7 +378,7 @@ error: There is no local or imported definition with name `v_comp'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_001 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -417,7 +417,7 @@ error: The operand of operation `int2char\(\)' should be in range 0..127
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_002 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -456,7 +456,7 @@ error: The operand of operation `int2char\(\)' should be in range 0..127
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_003 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -499,7 +499,7 @@ error: The operand of operation `int2char\(\)' should be in range 0..127
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_004 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -542,7 +542,7 @@ error: Value 256 does not fit in length 2
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_005 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -585,7 +585,7 @@ error: The operand of operation `char2int\(\)' should be of length 1
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_006 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -629,7 +629,7 @@ Dynamic test case error: Performing lengthof\(\) operation on a hexstring templa
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_007 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -672,7 +672,7 @@ error: There are fewer \(1\) elements in the string than it is allowed by the le
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_008 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -717,7 +717,7 @@ Dynamic test case error: Performing lengthof\(\) operation on a bitstring templa
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_010 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -762,7 +762,7 @@ error: There are more \(at least 3\) elements in the template than it is allowed
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_017 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -807,7 +807,7 @@ Dynamic test case error: The third argument \(groupno\) of function regexp\(\) i
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_018 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -851,7 +851,7 @@ error: Third operand of operation `regexp\(\)' should not be negative
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_019 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -895,7 +895,7 @@ error: at or before token `\)': syntax error, unexpected '\)', expecting ','
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_021 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -938,7 +938,7 @@ error: Second operand of operation `substr\(\)' should not be negative
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_022 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -981,7 +981,7 @@ error: Third operand of operation `substr\(\)' should not be negative
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_023 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -1024,7 +1024,7 @@ error: The sum of second operand `index' \(3\) and third operand `returncount' \
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_024 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -1067,7 +1067,7 @@ error: Second operand of operation `replace\(\)' should not be negative
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_025 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -1110,7 +1110,7 @@ error: Third operand of operation `replace\(\)' should not be negative
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_026 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -1153,7 +1153,7 @@ error: The sum of second operand `index' \(1\) and third operand `len' \(13\) is
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_027 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -1196,7 +1196,7 @@ error: Fourth operand of operation `replace\(\)' is of type `hexstring', but a v
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_029 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -1263,7 +1263,7 @@ error: Reference to a value was expected instead of type `@NegSem_160102_predefi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_030 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1334,7 +1334,7 @@ Dynamic test case error: Assigning invalid numeric value 4 to a variable of enum
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_031 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 
@@ -1383,7 +1383,7 @@ error: The operand of operation `rnd \(seed\)' cannot be INF, it must be a numer
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that an error is generated when the parameter of the encvalue function contains a matching symbol >
+<TC - 160102_032 Ensure that an error is generated when the parameter of the encvalue function contains a matching symbol >
 
 <COMPILE>
 
@@ -1433,7 +1433,7 @@ error: A specific value was expected instead of any value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that an error is detected when the parameter of the encvalue function contains an unitialized value >
+<TC - 160102_033 Ensure that an error is detected when the parameter of the encvalue function contains an unitialized value >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1482,7 +1482,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that an error is detected when the parameter of the encvalue function contains a partially initialized value >
+<TC - 160102_034 Ensure that an error is detected when the parameter of the encvalue function contains a partially initialized value >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1536,7 +1536,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that an error is detected when the first parameter of the decvalue function contains an uninitialized value >
+<TC - 160102_035 Ensure that an error is detected when the first parameter of the decvalue function contains an uninitialized value >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1582,7 +1582,7 @@ Dynamic test case error: The argument of function bit2oct\(\) is an unbound bits
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_036 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1637,7 +1637,7 @@ Dynamic test case error: The first argument of function substr\(\) is a template
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
+<TC - 160102_037 Ensure that the IUT recognizes predefined functions and correctly evaluates them (as specified by Annex C) >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1692,7 +1692,7 @@ Dynamic test case error: The first argument of function substr\(\) is a template
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes altstep definitions and correctly evaluates them >
+<TC - 1602_005 Ensure that the IUT recognizes altstep definitions and correctly evaluates them >
 
 <COMPILE>
 
@@ -1762,7 +1762,7 @@ error: There is no local or imported definition with name `messagePort'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes altstep definitions and correctly evaluates them >
+<TC - 1602_006 Ensure that the IUT recognizes altstep definitions and correctly evaluates them >
 
 <COMPILE>
 
@@ -1843,7 +1843,7 @@ error: A definition without `runs on' clause cannot call function `@NegSem_1602_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes altstep definitions and correctly evaluates them >
+<TC - 1602_001 Ensure that the IUT recognizes altstep definitions and correctly evaluates them >
 
 <COMPILE>
 
@@ -1920,7 +1920,7 @@ error: at or before token `var': syntax error, unexpected VarKeyword, expecting 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT recognizes altstep definitions and correctly evaluates them >
+<TC - 160201_001 Ensure that the IUT recognizes altstep definitions and correctly evaluates them >
 
 <COMPILE>
 
@@ -2011,7 +2011,7 @@ error: Runs on clause mismatch: A definition that runs on component type `@NegSe
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates invocation of testcases >
+<TC - 1603_001 Ensure that the IUT properly evaluates invocation of testcases >
 
 <COMPILE>
 
@@ -2056,7 +2056,7 @@ error: A definition that has `runs on' clause cannot execute testcases
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates invocation of testcases >
+<TC - 1603_002 Ensure that the IUT properly evaluates invocation of testcases >
 
 <COMPILE>
 
@@ -2103,7 +2103,7 @@ error: Reference to a function or altstep was expected instead of testcase `@Neg
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates assignment statements >
+<TC - 1901_001 Ensure that the IUT properly evaluates assignment statements >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -2148,7 +2148,7 @@ Dynamic test case error: Assignment of an unbound integer value.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates assignment statements >
+<TC - 1901_002 Ensure that the IUT properly evaluates assignment statements >
 
 <COMPILE>
 
@@ -2191,7 +2191,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates assignment statements >
+<TC - 1901_003 Ensure that the IUT properly evaluates assignment statements >
 
 <COMPILE>
 
@@ -2234,7 +2234,7 @@ error: A template body with matching symbols cannot be assigned to a variable
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that omit assignment to a record non-optional value is not allowed >
+<TC - 1901_004 Ensure that omit assignment to a record non-optional value is not allowed >
 
 <COMPILE>
 
@@ -2291,7 +2291,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that omit assignment to set of non-optional value is not allowed >
+<TC - 1901_005 Ensure that omit assignment to set of non-optional value is not allowed >
 
 <COMPILE>
 
@@ -2345,7 +2345,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that omit assignment to an array is not allowed  >
+<TC - 1901_006 Ensure that omit assignment to an array is not allowed  >
 
 <COMPILE>
 
@@ -2399,7 +2399,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - nsure that the IUT properly evaluates assignment statements  >
+<TC - 1901_001 Ensure that the IUT properly evaluates assignment statements  >
 
 <COMPILE>
 
@@ -2434,7 +2434,7 @@ module NegSyn_1901_assignments_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `:=': syntax error, unexpected :=, expecting ')' or ','
+error: at or before token `:=': syntax error, unexpected :=, expecting ','
 <END_RESULT>
 
 <END_TC>
@@ -2445,7 +2445,7 @@ error: at or before token `:=': syntax error, unexpected :=, expecting ')' or ',
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates assignment statements >
+<TC - 1902_001 Ensure that the IUT properly evaluates assignment statements >
 
 <COMPILE>
 
@@ -2490,7 +2490,7 @@ error: at or before token `setverdict': syntax error, unexpected SetVerdictKeywo
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that header part of select-union statements cannot contain anything else than union instances >
+<TC - 190302_001 verify that header part of select-union statements cannot contain anything else than union instances >
 
 <COMPILE>
 
@@ -2548,7 +2548,7 @@ error: The head must be of a union type or anytype
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that uninitialized value cannot be used in select union header >
+<TC - 190302_002 verify that uninitialized value cannot be used in select union header >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -2615,7 +2615,7 @@ Dynamic test case error: The union in the head shall be initialized
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that unknown alternatives cannot be use in case statements >
+<TC - 190302_003 verify that unknown alternatives cannot be use in case statements >
 
 <COMPILE>
 
@@ -2678,7 +2678,7 @@ error: In the 4. branch: 'boolOption' is not an alternative of union type '@NegS
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that the same alternative cannot be used in two case statements (simple case) >
+<TC - 190302_004 verify that the same alternative cannot be used in two case statements (simple case) >
 
 <COMPILE>
 
@@ -2740,7 +2740,7 @@ error: The 'intOption' is already present in the 1. branch of select union
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that the same alternative cannot be used in two case statements (list item) >
+<TC - 190302_005 verify that the same alternative cannot be used in two case statements (list item) >
 
 <COMPILE>
 
@@ -2797,7 +2797,7 @@ error: The 'intOption' is already present in the 1. branch of select union
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates for statements >
+<TC - 1904_001 Ensure that the IUT properly evaluates for statements >
 
 <COMPILE>
 
@@ -2841,7 +2841,7 @@ error: There is no local or imported definition with name `v_i'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates while statements >
+<TC - 1905_001 Ensure that the IUT properly evaluates while statements >
 
 <COMPILE>
 
@@ -2889,7 +2889,7 @@ error: There is no local or imported definition with name `v_j'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates do-while statements >
+<TC - 1906_001 Ensure that the IUT properly evaluates do-while statements >
 
 <COMPILE>
 
@@ -2938,7 +2938,7 @@ error: There is no local or imported definition with name `v_j'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles label naming uniqueness. >
+<TC - 1907_001 Ensure that the IUT correctly handles label naming uniqueness. >
 
 <COMPILE>
 
@@ -3029,7 +3029,7 @@ error: Duplicate label `L1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles label syntax. >
+<TC - 1907_001 Ensure that the IUT correctly handles label syntax. >
 
 <COMPILE>
 
@@ -3124,7 +3124,7 @@ error: at or before token `label': syntax error, unexpected LabelKeyword, expect
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles label syntax. >
+<TC - 1907_002 Ensure that the IUT correctly handles label syntax. >
 
 <COMPILE>
 
@@ -3218,7 +3218,7 @@ error: at or before token `label': syntax error, unexpected LabelKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles goto statements. >
+<TC - 1908_001 Ensure that the IUT correctly handles goto statements. >
 
 <COMPILE>
 
@@ -3311,7 +3311,7 @@ error: Label `L2' is used, but not defined
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles goto statements. >
+<TC - 1908_002 Ensure that the IUT correctly handles goto statements. >
 
 <COMPILE>
 
@@ -3358,7 +3358,7 @@ error: Label `L1' is used, but not defined
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles goto statements. >
+<TC - 1908_003 Ensure that the IUT correctly handles goto statements. >
 
 <COMPILE>
 
@@ -3409,7 +3409,7 @@ error: Label `L1' is used, but not defined
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles return statements. >
+<TC - 1910_001 Ensure that the IUT correctly handles return statements. >
 
 <COMPILE>
 
@@ -3451,7 +3451,7 @@ error: Return statement cannot be used in a testcase. It is allowed only in func
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT properly evaluates log statements. >
+<TC - 1911_001 Ensure that the IUT properly evaluates log statements. >
 
 <COMPILE>
 
@@ -3505,7 +3505,7 @@ error: Reference to a value, template, timer or port was expected instead of a c
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - dynamic error if a test component is completely blocked >
+<TC - 2002_001 dynamic error if a test component is completely blocked >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -3570,7 +3570,7 @@ Dynamic test case error: None of the branches can be chosen in the alt statement
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly processes repeat statements >
+<TC - 2003_001 Ensure that the IUT correctly processes repeat statements >
 
 <COMPILE>
 
@@ -3631,7 +3631,7 @@ error: Repeat statement cannot be used outside alt statements, altsteps or respo
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - goto inside interleave >
+<TC - 2004_004 goto inside interleave >
 
 <COMPILE>
 
@@ -3694,7 +3694,7 @@ error: Goto statement is not allowed within an interleave statement
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - repeat inside interleave >
+<TC - 2004_008 repeat inside interleave >
 
 <COMPILE>
 
@@ -3756,7 +3756,7 @@ error: Repeat statement is not allowed within an interleave statement
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - return inside interleave >
+<TC - 2004_009 return inside interleave >
 
 <COMPILE>
 
@@ -3821,7 +3821,7 @@ error: Return statement is not allowed within an interleave statement
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - explicit altstep call inside interleave >
+<TC - 2004_010 explicit altstep call inside interleave >
 
 <COMPILE>
 
@@ -3889,7 +3889,7 @@ error: Invocation of an altstep is not allowed within an interleave statement
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Validate that interleave statements are properly handled. >
+<TC - 2004_001 Validate that interleave statements are properly handled. >
 
 <COMPILE>
 
@@ -3973,7 +3973,7 @@ error: at or before token `else': syntax error, unexpected ElseKeyword, expectin
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Validate that interleave statements are properly handled. >
+<TC - 2004_002 Validate that interleave statements are properly handled. >
 
 <COMPILE>
 
@@ -4056,7 +4056,7 @@ error: at or before token `v': syntax error, unexpected Identifier, expecting '\
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify unsuccessful default termination >
+<TC - 200501_004 verify unsuccessful default termination >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4141,7 +4141,7 @@ Dynamic test case error: None of the branches can be chosen in the alt statement
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify error is generated if activated alstep runs on incompatible component >
+<TC - 200502_001 verify error is generated if activated alstep runs on incompatible component >
 
 <COMPILE>
 
@@ -4197,7 +4197,7 @@ error: Runs on clause mismatch: A definition that runs on component type `@NegSe
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify error is generated when passing local timer >
+<TC - 200502_002 verify error is generated when passing local timer >
 
 <COMPILE>
 
@@ -4248,7 +4248,7 @@ error: Parameter #1 of altstep `@NegSem_200502_the_activate_operation_002.a' ref
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify error is generated when activating function >
+<TC - 200502_005 verify error is generated when activating function >
 
 <COMPILE>
 
@@ -4297,7 +4297,7 @@ error: Reference to an altstep was expected in the argument instead of function 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - local timer as a parameter of activated altstep in module control >
+<TC - 200502_006 local timer as a parameter of activated altstep in module control >
 
 <COMPILE>
 
@@ -4362,7 +4362,7 @@ error: Parameter #1 of altstep `@NegSem_200502_the_activate_operation_006.a' ref
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - local timer (referenced through timer parameter) as a parameter of activated altstep in module control >
+<TC - 200502_007 local timer (referenced through timer parameter) as a parameter of activated altstep in module control >
 
 <COMPILE>
 
@@ -4432,7 +4432,7 @@ error: Parameter #1 of altstep `@NegSem_200502_the_activate_operation_007.a' ref
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that deactivate uninitialized default causes error >
+<TC - 200503_002 verify that deactivate uninitialized default causes error >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4501,7 +4501,7 @@ Dynamic test case error: Performing a deactivate operation on an unbound default
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated when deactivated reference is on incorrect type >
+<TC - 200503_003 verify that error is generated when deactivated reference is on incorrect type >
 
 <COMPILE>
 

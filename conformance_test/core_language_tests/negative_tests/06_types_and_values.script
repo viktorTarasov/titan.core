@@ -54,7 +54,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 06_types_and_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign float to integer values >
+<TC - 060100_001 Assign float to integer values >
 
 <COMPILE>
 
@@ -81,7 +81,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign boolean to integer values >
+<TC - 060100_002 Assign boolean to integer values >
 
 <COMPILE>
 
@@ -108,7 +108,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign integer to float values >
+<TC - 060100_003 Assign integer to float values >
 
 <COMPILE>
 
@@ -135,7 +135,7 @@ error: float value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign boolean to float values >
+<TC - 060100_004 Assign boolean to float values >
 
 <COMPILE>
 
@@ -162,7 +162,7 @@ error: float value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign verdicttype to float values >
+<TC - 060100_005 Assign verdicttype to float values >
 
 <COMPILE>
 
@@ -189,7 +189,7 @@ error: float value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign integer to verdicttype values >
+<TC - 060100_006 Assign integer to verdicttype values >
 
 <COMPILE>
 
@@ -216,7 +216,7 @@ error: verdict value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid bitstring value >
+<TC - 060101_001 Assign invalid bitstring value >
 
 <COMPILE>
 
@@ -243,7 +243,7 @@ error: Bitstring value contains invalid character
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign string to bitstring values >
+<TC - 060101_002 Assign string to bitstring values >
 
 <COMPILE>
 
@@ -270,7 +270,7 @@ error: bitstring value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign octetstring to bitstring values >
+<TC - 060101_003 Assign octetstring to bitstring values >
 
 <COMPILE>
 
@@ -297,7 +297,7 @@ error: bitstring value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid hexstring value >
+<TC - 060101_004 Assign invalid hexstring value >
 
 <COMPILE>
 
@@ -324,7 +324,7 @@ error: Invalid character `H' \(0x48\) in binary string
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign string to hexstring values >
+<TC - 060101_005 Assign string to hexstring values >
 
 <COMPILE>
 
@@ -351,7 +351,7 @@ error: hexstring value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign octetstring to hexstring values >
+<TC - 060101_006 Assign octetstring to hexstring values >
 
 <COMPILE>
 
@@ -378,7 +378,7 @@ error: hexstring value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid octetstring value >
+<TC - 060101_007 Assign invalid octetstring value >
 
 <COMPILE>
 
@@ -405,7 +405,7 @@ error: Octetstring value contains odd number of hexadecimal digits
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign string to octetstring values >
+<TC - 060101_008 Assign string to octetstring values >
 
 <COMPILE>
 
@@ -432,7 +432,7 @@ error: octetstring value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign hexstring to octetstring values >
+<TC - 060101_009 Assign hexstring to octetstring values >
 
 <COMPILE>
 
@@ -459,7 +459,7 @@ error: octetstring value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid hexstring value >
+<TC - 060101_010 Assign invalid hexstring value >
 
 <COMPILE>
 
@@ -486,7 +486,7 @@ error: Invalid character `H' \(0x48\) in binary string
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign values to restricted bitstring. >
+<TC - 06010201_001 Assign values to restricted bitstring. >
 
 <COMPILE>
 
@@ -524,7 +524,7 @@ error: '00'B is not a valid value for type `bitstring' which has subtype length\
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign values to restricted hexstring. >
+<TC - 06010201_002 Assign values to restricted hexstring. >
 
 <COMPILE>
 
@@ -562,7 +562,7 @@ error: '00'H is not a valid value for type `hexstring' which has subtype \('01'H
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign values to restricted octetstring. >
+<TC - 06010201_003 Assign values to restricted octetstring. >
 
 <COMPILE>
 
@@ -600,7 +600,7 @@ error: '00'O is not a valid value for type `octetstring' which has subtype \('01
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign values to restricted charstring. >
+<TC - 06010201_004 Assign values to restricted charstring. >
 
 <COMPILE>
 
@@ -638,7 +638,7 @@ error: "d" is not a valid value for type `charstring' which has subtype \("a","a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign values to restricted integer. >
+<TC - 06010201_005 Assign values to restricted integer. >
 
 <COMPILE>
 
@@ -676,7 +676,7 @@ error: 2 is not a valid value for type `integer' which has subtype \(1,5\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign values to restricted float. >
+<TC - 06010201_006 Assign values to restricted float. >
 
 <COMPILE>
 
@@ -714,7 +714,7 @@ error: 2.0e0 is not a valid value for type `float' which has subtype \(1.0e0,5.0
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to list of types restricted bitstring. >
+<TC - 06010202_001 Assign invalid values to list of types restricted bitstring. >
 
 <COMPILE>
 
@@ -754,7 +754,7 @@ error: '11'B is not a valid value for type `bitstring' which has subtype length\
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to list of types restricted hexstring. >
+<TC - 06010202_002 Assign invalid values to list of types restricted hexstring. >
 
 <COMPILE>
 
@@ -795,7 +795,7 @@ error: 'FE70'H is not a valid value for type `hexstring' which has subtype \('00
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to list of types restricted octetstring. >
+<TC - 06010202_003 Assign invalid values to list of types restricted octetstring. >
 
 <COMPILE>
 
@@ -836,7 +836,7 @@ error: '0014'O is not a valid value for type `octetstring' which has subtype \('
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to list of types restricted charstring. >
+<TC - 06010202_004 Assign invalid values to list of types restricted charstring. >
 
 <COMPILE>
 
@@ -877,7 +877,7 @@ error: "xyz" is not a valid value for type `charstring' which has subtype \("abc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to list of types restricted universal charstrings. >
+<TC - 06010202_005 Assign invalid values to list of types restricted universal charstrings. >
 
 <COMPILE>
 
@@ -917,7 +917,7 @@ error: "\?" is not a valid value for type `universal charstring' which has subty
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to list of types restricted integers. >
+<TC - 06010202_006 Assign invalid values to list of types restricted integers. >
 
 <COMPILE>
 
@@ -958,7 +958,7 @@ error: 15 is not a valid value for type `integer' which has subtype \(0..9,20..3
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to list of types restricted floats. >
+<TC - 06010202_007 Assign invalid values to list of types restricted floats. >
 
 <COMPILE>
 
@@ -999,7 +999,7 @@ error: 1.55e1 is not a valid value for type `float' which has subtype \(1.0e0..9
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to list of types restricted boolean value. >
+<TC - 06010202_008 Assign invalid values to list of types restricted boolean value. >
 
 <COMPILE>
 
@@ -1040,7 +1040,7 @@ error: true is not a valid value for type `boolean' which has subtype \(false\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to list of types restricted verdicttype. >
+<TC - 06010202_009 Assign invalid values to list of types restricted verdicttype. >
 
 <COMPILE>
 
@@ -1081,7 +1081,7 @@ error: fail is not a valid value for type `verdicttype' which has subtype \(none
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to restricted integer. >
+<TC - 06010203_001 Assign invalid values to restricted integer. >
 
 <COMPILE>
 
@@ -1119,7 +1119,7 @@ error: -1 is not a valid value for type `integer' which has subtype \(0..255\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to restricted integer. >
+<TC - 06010203_002 Assign invalid values to restricted integer. >
 
 <COMPILE>
 
@@ -1157,7 +1157,7 @@ error: 1 is not a valid value for type `integer' which has subtype \(-infinity..
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assure that not_a_number is not allowed in float range subtyping. >
+<TC - 06010203_003 Assure that not_a_number is not allowed in float range subtyping. >
 
 <COMPILE>
 
@@ -1196,7 +1196,7 @@ error: upper boundary cannot be not_a_number in float subtype range
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to restricted integer with exclusive bounds. >
+<TC - 06010203_004 Assign invalid values to restricted integer with exclusive bounds. >
 
 <COMPILE>
 
@@ -1234,7 +1234,7 @@ error: -3 is not a valid value for type `integer' which has subtype \(-2..0\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to restricted integer with exclusive bounds. >
+<TC - 06010203_005 Assign invalid values to restricted integer with exclusive bounds. >
 
 <COMPILE>
 
@@ -1272,7 +1272,7 @@ error: 0 is not a valid value for type `integer' which has subtype \(-infinity..
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign range to boolean not permitted. >
+<TC - 06010203_006 Assign range to boolean not permitted. >
 
 <COMPILE>
 
@@ -1313,7 +1313,7 @@ error: Range subtyping is not allowed for type `boolean'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid value to range constrained charstring. >
+<TC - 06010203_007 Assign invalid value to range constrained charstring. >
 
 <COMPILE>
 
@@ -1352,7 +1352,7 @@ error: "a" is not a valid value for type `charstring' which has subtype from\("b
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid value to range constrained charstring. >
+<TC - 06010203_008 Assign invalid value to range constrained charstring. >
 
 <COMPILE>
 
@@ -1391,7 +1391,7 @@ error: "f" is not a valid value for type `charstring' which has subtype from\("a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid value to range constrained charstring. >
+<TC - 06010203_009 Assign invalid value to range constrained charstring. >
 
 <COMPILE>
 
@@ -1430,7 +1430,7 @@ error: "g" is not a valid value for type `charstring' which has subtype from\("a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to restricted float. >
+<TC - 06010203_010 Assign invalid values to restricted float. >
 
 <COMPILE>
 
@@ -1468,7 +1468,7 @@ error: 1.0e0 is not a valid value for type `float' which has subtype \(-INF..0.0
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to restricted float. >
+<TC - 06010203_011 Assign invalid values to restricted float. >
 
 <COMPILE>
 
@@ -1506,7 +1506,7 @@ error: 1.0e1 is not a valid value for type `float' which has subtype \(-5.0e0..0
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to range excluded restricted float. >
+<TC - 06010203_012 Assign invalid values to range excluded restricted float. >
 
 <COMPILE>
 
@@ -1544,7 +1544,7 @@ error: 1.0e1 is not a valid value for type `float' which has subtype \(-1.0e0..!
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid value to range constrained universal charstring. >
+<TC - 06010203_013 Assign invalid value to range constrained universal charstring. >
 
 <COMPILE>
 
@@ -1583,7 +1583,7 @@ error: char\(0, 0, 1, 100\) is not a valid value for type `universal charstring'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid value to range constrained universal charstring with mixed bounds. >
+<TC - 06010203_014 Assign invalid value to range constrained universal charstring with mixed bounds. >
 
 <COMPILE>
 
@@ -1622,7 +1622,7 @@ error: char\(0, 0, 1, 113\) is not a valid value for type `universal charstring'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid value to range constrained charstring. >
+<TC - 06010203_015 Assign invalid value to range constrained charstring. >
 
 <COMPILE>
 
@@ -1661,7 +1661,7 @@ error: "abcgef" is not a valid value for type `charstring' which has subtype fro
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Invalid value infinity for range constrained charstring. >
+<TC - 06010203_016 Invalid value infinity for range constrained charstring. >
 
 <COMPILE>
 
@@ -1700,7 +1700,7 @@ error: upper boundary of a charstring subtype range cannot be infinity
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Invalid value -infinity for range constrained charstring. >
+<TC - 06010203_017 Invalid value -infinity for range constrained charstring. >
 
 <COMPILE>
 
@@ -1739,7 +1739,7 @@ error: lower boundary of a charstring subtype range cannot be -infinity
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Invalid value -infinity for range constrained charstring. >
+<TC - 06010204_001 Invalid value -infinity for range constrained charstring. >
 
 <COMPILE>
 
@@ -1777,7 +1777,7 @@ error: '111'B is not a valid value for type `bitstring' which has subtype length
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to length restricted bitstring. >
+<TC - 06010204_002 Assign invalid values to length restricted bitstring. >
 
 <COMPILE>
 
@@ -1815,7 +1815,7 @@ error: '111'B is not a valid value for type `bitstring' which has subtype length
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to length restricted hexstring >
+<TC - 06010204_003 Assign invalid values to length restricted hexstring >
 
 <COMPILE>
 
@@ -1854,7 +1854,7 @@ error: 'FE00'H is not a valid value for type `hexstring' which has subtype lengt
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to length restricted hexstring >
+<TC - 06010204_004 Assign invalid values to length restricted hexstring >
 
 <COMPILE>
 
@@ -1893,7 +1893,7 @@ error: 'A'H is not a valid value for type `hexstring' which has subtype length\(
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to length restricted octetstring >
+<TC - 06010204_005 Assign invalid values to length restricted octetstring >
 
 <COMPILE>
 
@@ -1932,7 +1932,7 @@ error: 'FE8001'O is not a valid value for type `octetstring' which has subtype l
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to length restricted octetstring >
+<TC - 06010204_006 Assign invalid values to length restricted octetstring >
 
 <COMPILE>
 
@@ -1971,7 +1971,7 @@ error: 'FE'O is not a valid value for type `octetstring' which has subtype lengt
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to length restricted charstring >
+<TC - 06010204_007 Assign invalid values to length restricted charstring >
 
 <COMPILE>
 
@@ -2010,7 +2010,7 @@ error: "a" is not a valid value for type `charstring' which has subtype length\(
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to length restricted charstring >
+<TC - 06010204_008 Assign invalid values to length restricted charstring >
 
 <COMPILE>
 
@@ -2049,7 +2049,7 @@ error: "abc" is not a valid value for type `charstring' which has subtype length
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - upper boundary should be greater than lower boundary in string length restictions >
+<TC - 06010204_001 upper boundary should be greater than lower boundary in string length restictions >
 
 <COMPILE>
 
@@ -2077,7 +2077,7 @@ error: The upper boundary of the length restriction \(1\) cannot be smaller than
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - boundary integers should be non negative integers >
+<TC - 06010204_002 boundary integers should be non negative integers >
 
 <COMPILE>
 
@@ -2105,7 +2105,7 @@ error: The upper boundary of the length restriction must be a non-negative integ
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to pattern restricted character strings. >
+<TC - 06010205_001 Assign invalid values to pattern restricted character strings. >
 
 <COMPILE>
 
@@ -2143,7 +2143,7 @@ error: "abcyz" is not a valid value for type `charstring' which has subtype patt
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign values to pattern restricted character strings without @nocase modifier. >
+<TC - 06010205_001 Assign values to pattern restricted character strings without @nocase modifier. >
 
 <COMPILE>
 
@@ -2182,7 +2182,7 @@ error: "ABc1234xYz" is not a valid value for type `charstring' which has subtype
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign quadruple values to pattern restricted character strings. >
+<TC - 06010205_002 Assign quadruple values to pattern restricted character strings. >
 
 <COMPILE>
 
@@ -2221,7 +2221,7 @@ error: char\(0, 0, 0, 197\) & char\(0, 0, 0, 180\) \& "abc" is not a valid value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to mixed restricted floats. >
+<TC - 0601020601_001 Assign invalid values to mixed restricted floats. >
 
 <COMPILE>
 
@@ -2259,7 +2259,7 @@ error: 4.0e0 is not a valid value for type `float' which has subtype \(-INF..3.1
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to mixed restricted integers. >
+<TC - 0601020601_002 Assign invalid values to mixed restricted integers. >
 
 <COMPILE>
 
@@ -2297,7 +2297,7 @@ error: 6 is not a valid value for type `integer' which has subtype \(1,5,10,100.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to mixed restricted character strings. >
+<TC - 0601020602_001 Assign invalid values to mixed restricted character strings. >
 
 <COMPILE>
 
@@ -2335,7 +2335,7 @@ error: "abcyz" is not a valid value for type `charstring' which has subtype \(pa
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to mixed restricted character strings. >
+<TC - 0601020602_002 Assign invalid values to mixed restricted character strings. >
 
 <COMPILE>
 
@@ -2373,7 +2373,7 @@ error: "abc123xyz" is not a valid value for type `charstring' which has subtype 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to mixed restricted character strings. >
+<TC - 0601020602_003 Assign invalid values to mixed restricted character strings. >
 
 <COMPILE>
 
@@ -2411,7 +2411,7 @@ error: "abc1xyz" is not a valid value for type `charstring' which has subtype \(
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to mixed restricted bit strings. >
+<TC - 0601020602_004 Assign invalid values to mixed restricted bit strings. >
 
 <COMPILE>
 
@@ -2449,7 +2449,7 @@ error: '111'B is not a valid value for type `bitstring' which has subtype \('101
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Assign invalid values to mixed restricted hex strings. >
+<TC - 0601020602_005 Assign invalid values to mixed restricted hex strings. >
 
 <COMPILE>
 
@@ -2487,7 +2487,7 @@ error: '1F1'H is not a valid value for type `hexstring' which has subtype \('103
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -Assign invalid values to mixed restricted octet strings. >
+<TC - 0601020602_006 Assign invalid values to mixed restricted octet strings. >
 
 <COMPILE>
 
@@ -2529,7 +2529,7 @@ error: 'FF1111'O is not a valid value for type `octetstring' which has subtype \
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that value list notation can not be used for a union type. >
+<TC - 0602_001 Ensure that value list notation can not be used for a union type. >
 
 <COMPILE>
 
@@ -2574,7 +2574,7 @@ error: union value was expected for type `@NegSem_0602_TopLevel_001.MyUnion'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that indexed notation can not be used for a record type. >
+<TC - 0602_002 Ensure that indexed notation can not be used for a record type. >
 
 <COMPILE>
 
@@ -2626,7 +2626,7 @@ error: Type `@NegSem_0602_TopLevel_002.MyRecord' cannot be indexed
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that indexed notation can not be used for a set type.  >
+<TC - 0602_003 Ensure that indexed notation can not be used for a set type.  >
 
 <COMPILE>
 
@@ -2678,7 +2678,7 @@ error: Type `@NegSem_0602_TopLevel_003.MySet' cannot be indexed
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that indexed notation can not be used for a union type. >
+<TC - 0602_004 Ensure that indexed notation can not be used for a union type. >
 
 <COMPILE>
 
@@ -2728,7 +2728,7 @@ error: Type `@NegSem_0602_TopLevel_004.MyUnion' cannot be indexed
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Invalid recursive union type definition causing an error >
+<TC - 0602_001 Invalid recursive union type definition causing an error >
 
 <COMPILE>
 
@@ -2762,7 +2762,7 @@ error: While checking embedded recursions: Circular reference: `@NegSyn_0602_Top
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Invalid recursive record type definition causing an error >
+<TC - 0602_002 Invalid recursive record type definition causing an error >
 
 <COMPILE>
 
@@ -2794,7 +2794,7 @@ error: While checking embedded recursions: Circular reference: `@NegSyn_0602_Top
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Combined value list and assignment notation not allowed in the same (immediate) context. >
+<TC - 0602_003 Combined value list and assignment notation not allowed in the same (immediate) context. >
 
 <COMPILE>
 
@@ -2830,7 +2830,7 @@ error: at or before token `"': syntax error, unexpected Cstring
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The omit keyword shall not be used for mandatory fields. >
+<TC - 060201_001 The omit keyword shall not be used for mandatory fields. >
 
 <COMPILE>
 
@@ -2867,7 +2867,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The omit keyword shall not be used for mandatory fields. >
+<TC - 060201_002 The omit keyword shall not be used for mandatory fields. >
 
 <COMPILE>
 
@@ -2904,7 +2904,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The omit keyword shall not be used for mandatory fields. >
+<TC - 06020101_001 The omit keyword shall not be used for mandatory fields. >
 
 <COMPILE>
 
@@ -2954,7 +2954,7 @@ error: 11 is not a valid value for type `integer' which has subtype \(1..10\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The omit keyword shall not be used for mandatory fields. >
+<TC - 06020101_002 The omit keyword shall not be used for mandatory fields. >
 
 <COMPILE>
 
@@ -3007,7 +3007,7 @@ error: While checking referenced type: Circular reference: `@NegSem_06020101_Ref
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The omit keyword shall not be used for mandatory fields. >
+<TC - 06020101_003 The omit keyword shall not be used for mandatory fields. >
 
 <COMPILE>
 
@@ -3065,7 +3065,7 @@ Dynamic test case error: Unbound left operand of integer comparison.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The omit keyword shall not be used for mandatory fields. >
+<TC - 06020101_004 The omit keyword shall not be used for mandatory fields. >
 
 <COMPILE>
 
@@ -3124,7 +3124,7 @@ Dynamic test case error: Using the value of an optional field containing omit.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The omit keyword shall not be used for mandatory fields. >
+<TC - 060202_001 The omit keyword shall not be used for mandatory fields. >
 
 <COMPILE>
 
@@ -3175,7 +3175,7 @@ error: 11 is not a valid value for type `integer' which has subtype \(1..10\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The omit keyword shall not be used for mandatory fields. >
+<TC - 060202_001 The omit keyword shall not be used for mandatory fields. >
 
 <COMPILE>
 
@@ -3212,7 +3212,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The omit keyword shall not be used for mandatory fields. >
+<TC - 060202_002 The omit keyword shall not be used for mandatory fields. >
 
 <COMPILE>
 
@@ -3249,7 +3249,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that the inner type referencing is correctly handled >
+<TC - 060203_001 ensure that the inner type referencing is correctly handled >
 
 <COMPILE>
 
@@ -3292,7 +3292,7 @@ error: 11 is not a valid value for type `integer' which has subtype \(1..10\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that the inner type referencing is correctly handled >
+<TC - 060203_002 ensure that the inner type referencing is correctly handled >
 
 <COMPILE>
 
@@ -3336,7 +3336,7 @@ error: \{ 8, 1, 2, 3, 4, 5, 6, 7 \} is not a valid value for type `@NegSem_06020
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - negative index applied to a record of value on the right hand side of an assignment >
+<TC - 060203_003 negative index applied to a record of value on the right hand side of an assignment >
 
 <COMPILE>
 
@@ -3383,7 +3383,7 @@ error: A non-negative integer value was expected for indexing type `@NegSem_0602
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - negative index applied to a set of value on the right hand side of an assignment >
+<TC - 060203_004 negative index applied to a set of value on the right hand side of an assignment >
 
 <COMPILE>
 
@@ -3430,7 +3430,7 @@ error: A non-negative integer value was expected for indexing type `@NegSem_0602
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -negative index applied to a record of value on the left hand side of an assignment >
+<TC - 060203_005 negative index applied to a record of value on the left hand side of an assignment >
 
 <COMPILE>
 
@@ -3477,7 +3477,7 @@ error: A non-negative integer value was expected for indexing type `@NegSem_0602
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -negative index applied to a set of value on the left hand side of an assignment >
+<TC - 060203_006 negative index applied to a set of value on the left hand side of an assignment >
 
 <COMPILE>
 
@@ -3524,7 +3524,7 @@ error: A non-negative integer value was expected for indexing type `@NegSem_0602
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC -wrong index type applied to a record of value on the right hand side of an assignment >
+<TC - 060203_007 wrong index type applied to a record of value on the right hand side of an assignment >
 
 <COMPILE>
 
@@ -3571,7 +3571,7 @@ error: A value or expression of type integer was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - wrong index type applied to a set of value on the right hand side of an assignment >
+<TC - 060203_008 wrong index type applied to a set of value on the right hand side of an assignment >
 
 <COMPILE>
 
@@ -3618,7 +3618,7 @@ error: A value or expression of type integer was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - wrong index type applied to a record of value on the left hand side of an assignment >
+<TC - 060203_009 wrong index type applied to a record of value on the left hand side of an assignment >
 
 <COMPILE>
 
@@ -3665,7 +3665,7 @@ error: A value or expression of type integer was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - wrong index type applied to a set of value on the left hand side of an assignment >
+<TC - 060203_010 wrong index type applied to a set of value on the left hand side of an assignment >
 
 <COMPILE>
 
@@ -3712,7 +3712,7 @@ error: A value or expression of type integer was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - wrong index type applied to a record of value on the right hand side of an assignment >
+<TC - 060203_013 wrong index type applied to a record of value on the right hand side of an assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -3761,7 +3761,7 @@ Dynamic test case error: Index overflow in a value of type @PreGenRecordOf.PREGE
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - wrong index type applied to a record of value on the right hand side of an assignment >
+<TC - 060203_014 wrong index type applied to a record of value on the right hand side of an assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -3810,7 +3810,7 @@ Dynamic test case error: Index overflow in a value of type @PreGenRecordOf.PREGE
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify than an error is generated when sending a partially initialized record of value >
+<TC - 060203_015 verify than an error is generated when sending a partially initialized record of value >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -3864,7 +3864,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - array as a record-of value index on right hand side (less items than record-of dimension) >
+<TC - 060203_016 array as a record-of value index on right hand side (less items than record-of dimension) >
 
 <COMPILE>
 
@@ -3917,7 +3917,7 @@ error: The type `integer\[3\]' contains too many indexes \(3\) in the short-hand
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - array as a record-of value index on left hand side (less items than record-of dimension) >
+<TC - 060203_017 array as a record-of value index on left hand side (less items than record-of dimension) >
 
 <COMPILE>
 
@@ -3971,7 +3971,7 @@ error: The type `integer\[3\]' contains too many indexes \(3\) in the short-hand
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - fixed-size record-of as a record-of value index on right hand side (less items than record-of dimension) >
+<TC - 060203_018 fixed-size record-of as a record-of value index on right hand side (less items than record-of dimension) >
 
 <COMPILE>
 
@@ -4025,7 +4025,7 @@ error: The type `@NegSem_060203_records_and_sets_of_single_types_018.Indexer' co
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - fixed-size record-of as a record-of value index on left hand side (less items than record-of dimension) >
+<TC - 060203_019 fixed-size record-of as a record-of value index on left hand side (less items than record-of dimension) >
 
 <COMPILE>
 
@@ -4080,7 +4080,7 @@ error: The type `@NegSem_060203_records_and_sets_of_single_types_019.Indexer' co
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - fixed-size set-of as a record-of value index on right hand side >
+<TC - 060203_020 fixed-size set-of as a record-of value index on right hand side >
 
 <COMPILE>
 
@@ -4137,7 +4137,7 @@ error: The operands of operation `==' should be of compatible types
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - fixed-size set-of as a record-of value index on left hand side >
+<TC - 060203_021 fixed-size set-of as a record-of value index on left hand side >
 
 <COMPILE>
 
@@ -4195,7 +4195,7 @@ error: record of value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - variable-size record-of as a record-of value index on right hand side >
+<TC - 060203_022 variable-size record-of as a record-of value index on right hand side >
 
 <COMPILE>
 
@@ -4249,7 +4249,7 @@ error: The type `@NegSem_060203_records_and_sets_of_single_types_022.Indexer' mu
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - variable-size record-of as a record-of value index on left hand side (less items than record-of dimension) >
+<TC - 060203_023 variable-size record-of as a record-of value index on left hand side (less items than record-of dimension) >
 
 <COMPILE>
 
@@ -4304,7 +4304,7 @@ error: The type `@NegSem_060203_records_and_sets_of_single_types_023.Indexer' mu
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that value list cannot contain an empty assignment >
+<TC - 060203_001 ensure that value list cannot contain an empty assignment >
 
 <COMPILE>
 
@@ -4350,7 +4350,7 @@ error: at or before token `,': syntax error, unexpected ','
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - not unique identifiers in enumerated type declaration >
+<TC - 060204_001 not unique identifiers in enumerated type declaration >
 
 <COMPILE>
 
@@ -4386,7 +4386,7 @@ error: Duplicate enumeration identifier `Monday'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - two equal user-assigned enumerated values >
+<TC - 060204_002 two equal user-assigned enumerated values >
 
 <COMPILE>
 
@@ -4421,7 +4421,7 @@ error: Duplicate numeric value 2 for enumeration `Wednesday'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using enumerated value number directly (left hand side of assignments) >
+<TC - 060204_003 using enumerated value number directly (left hand side of assignments) >
 
 <COMPILE>
 
@@ -4475,7 +4475,7 @@ error: enumerated value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using enumerated value number directly (right hand side of assignments) >
+<TC - 060204_004 using enumerated value number directly (right hand side of assignments) >
 
 <COMPILE>
 
@@ -4530,7 +4530,7 @@ error: Type mismatch: a value of type `integer' was expected instead of `@NegSem
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using enumerated value without implicit or explicit type reference >
+<TC - 060204_005 using enumerated value without implicit or explicit type reference >
 
 <COMPILE>
 
@@ -4580,7 +4580,7 @@ error: Cannot determine the type of the operands in operation `!='
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - assignment notation for union values with two items >
+<TC - 060205_001 assignment notation for union values with two items >
 
 <COMPILE>
 
@@ -4628,7 +4628,7 @@ error: Only one field was expected in union value instead of 2
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - assignment notation for union values with unknown alternative >
+<TC - 060205_002 assignment notation for union values with unknown alternative >
 
 <COMPILE>
 
@@ -4677,7 +4677,7 @@ error: Reference to non-existent field `option3' in union value for type `@NegSe
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - "not used" symbol in union value notations >
+<TC - 060205_003 "not used" symbol in union value notations >
 
 <COMPILE>
 
@@ -4724,7 +4724,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - omit symbol in union value notations >
+<TC - 060205_004 omit symbol in union value notations >
 
 <COMPILE>
 
@@ -4771,7 +4771,7 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value list notation used for union value definition >
+<TC - 060205_005 value list notation used for union value definition >
 
 <COMPILE>
 
@@ -4817,7 +4817,7 @@ error: union value was expected for type `@NegSem_060205_top_level_005.U'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - union type declaration with two equal identifiers >
+<TC - 060205_001 union type declaration with two equal identifiers >
 
 <COMPILE>
 
@@ -4855,7 +4855,7 @@ error: Duplicate union field name `option1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - unknown union alternative in value dot notation >
+<TC - 06020501_001 unknown union alternative in value dot notation >
 
 <COMPILE>
 
@@ -4907,7 +4907,7 @@ error: Reference to non-existent field `option3' in type `@NegSem_06020501_refer
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - unknown union alternative in extended type reference >
+<TC - 06020501_002 unknown union alternative in extended type reference >
 
 <COMPILE>
 
@@ -4960,7 +4960,7 @@ error: Reference to non-existent field `option3' in type `@NegSem_06020501_refer
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - union alternative referencing itself >
+<TC - 06020501_003 union alternative referencing itself >
 
 <COMPILE>
 
@@ -5007,7 +5007,7 @@ error: While checking referenced type: Circular reference: `@NegSem_06020501_ref
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - union alternative referencing indirectly itself >
+<TC - 06020501_004 union alternative referencing indirectly itself >
 
 <COMPILE>
 
@@ -5055,7 +5055,7 @@ error: While checking referenced type: Circular reference: `@NegSem_06020501_ref
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - union alternative costraint passed through extended type reference >
+<TC - 06020501_005 union alternative costraint passed through extended type reference >
 
 <COMPILE>
 
@@ -5107,7 +5107,7 @@ error: 100 is not a valid value for type `integer' which has subtype \(1..10\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - referencing not chosen alternative on right hand side of assignment >
+<TC - 06020501_006 referencing not chosen alternative on right hand side of assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -5158,7 +5158,7 @@ Dynamic test case error: Using non-selected field option2 in a value of union ty
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - referencing not chosen alternative on right hand side of assignment >
+<TC - 06020501_007 referencing not chosen alternative on right hand side of assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -5215,7 +5215,7 @@ Dynamic test case error: Using non-selected field option1 in a value of union ty
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - referencing alternative of omitted union on right hand side of assignment >
+<TC - 06020501_008 referencing alternative of omitted union on right hand side of assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -5273,7 +5273,7 @@ Dynamic test case error: Using the value of an optional field containing omit.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - referencing alternative of omitted union on right hand side of assignment >
+<TC - 06020502_001 referencing alternative of omitted union on right hand side of assignment >
 
 <COMPILE>
 
@@ -5308,7 +5308,7 @@ error: at or before token `optional': syntax error, unexpected OptionalKeyword, 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that after redeclaration of an anytype value the old type and value are lost >
+<TC - 060206_001 ensure that after redeclaration of an anytype value the old type and value are lost >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -5364,7 +5364,7 @@ Dynamic test case error: Using non-selected field integer in a value of union ty
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that anytype can not be address type if not explicitly declareted in the module >
+<TC - 060206_002 Ensure that anytype can not be address type if not explicitly declareted in the module >
 
 <COMPILE>
 
@@ -5417,7 +5417,7 @@ error: Type `address' is not defined in this module
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that anytype cannot be port type >
+<TC - 060206_002 ensure that anytype cannot be port type >
 
 <COMPILE>
 
@@ -5471,7 +5471,7 @@ error: Reference to a value was expected instead of port `@NegSyn_060206_anytype
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that the value limitation is correctly handled within array >
+<TC - 060207_001 ensure that the value limitation is correctly handled within array >
 
 <COMPILE>
 
@@ -5514,7 +5514,7 @@ error: 11 is not a valid value for type `integer' which has subtype \(1..10\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that the inner type referencing is correctly handled >
+<TC - 060207_002 ensure that the inner type referencing is correctly handled >
 
 <COMPILE>
 
@@ -5557,7 +5557,7 @@ error: Too many elements in the array value: 5 was expected instead of 7
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - negative index applied to an array on the right hand side of an assignment >
+<TC - 060207_003 negative index applied to an array on the right hand side of an assignment >
 
 <COMPILE>
 
@@ -5606,7 +5606,7 @@ error: Array index underflow: the index value must be at least `0' instead of `-
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - negative index applied to an array on the left hand side of an assignment >
+<TC - 060207_004 negative index applied to an array on the left hand side of an assignment >
 
 <COMPILE>
 
@@ -5655,7 +5655,7 @@ error: Array index underflow: the index value must be at least `0' instead of `-
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - wrong index type applied to an array on the right hand side of an assignment >
+<TC - 060207_005 wrong index type applied to an array on the right hand side of an assignment >
 
 <COMPILE>
 
@@ -5710,7 +5710,7 @@ error: A value or expression of type integer was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - wrong index type applied to an array on the left hand side of an assignment >
+<TC - 060207_006 wrong index type applied to an array on the left hand side of an assignment >
 
 <COMPILE>
 
@@ -5765,7 +5765,7 @@ error: A value or expression of type integer was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - array index greater than the upper bound (left-hand side) >
+<TC - 060207_007 array index greater than the upper bound (left-hand side) >
 
 <COMPILE>
 
@@ -5813,7 +5813,7 @@ error: Array index overflow: the index value must be at most `4' instead of `5'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - wrong index type applied to an array on the right hand side of an assignment >
+<TC - 060207_008 wrong index type applied to an array on the right hand side of an assignment >
 
 <COMPILE>
 
@@ -5861,7 +5861,7 @@ error: Array index overflow: the index value must be at most `4' instead of `5'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify than an error is generated when sending a partially initialized array >
+<TC - 060207_009 verify than an error is generated when sending a partially initialized array >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -5912,7 +5912,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that the value limitation is correctly handled within array >
+<TC - 060207_010 ensure that the value limitation is correctly handled within array >
 
 <COMPILE>
 
@@ -5965,7 +5965,7 @@ error: 0 is not a valid value for type `integer' which has subtype \(1..10\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - runtime resolved constant in array type declaration >
+<TC - 060207_011 runtime resolved constant in array type declaration >
 
 <COMPILE>
 
@@ -6019,7 +6019,7 @@ error: Reference to a constant value was expected instead of the return value of
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - runtime resolved constant in array variable declaration >
+<TC - 060207_012 runtime resolved constant in array variable declaration >
 
 <COMPILE>
 
@@ -6072,7 +6072,7 @@ error: Reference to a constant value was expected instead of the return value of
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - variable in array variable declaration >
+<TC - 060207_013 variable in array variable declaration >
 
 <COMPILE>
 
@@ -6124,7 +6124,7 @@ error: Reference to a constant value was expected instead of variable `v_dimensi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - modulepar in array variable declaration >
+<TC - 060207_014 modulepar in array variable declaration >
 
 <COMPILE>
 
@@ -6177,7 +6177,7 @@ error: Reference to an \(evaluable\) constant value was expected instead of modu
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - zero dimension array >
+<TC - 060207_015 zero dimension array >
 
 <COMPILE>
 
@@ -6222,7 +6222,7 @@ error: A positive integer value was expected as array size instead of `0'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - array with negative dimension >
+<TC - 060207_016 array with negative dimension >
 
 <COMPILE>
 
@@ -6267,7 +6267,7 @@ error: A positive integer value was expected as array size instead of `-1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - float instead of integer in array dimension >
+<TC - 060207_019 float instead of integer in array dimension >
 
 <COMPILE>
 
@@ -6312,7 +6312,7 @@ error: A value or expression of type integer was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - integer array with too many items as multidimensional array index >
+<TC - 060207_020 integer array with too many items as multidimensional array index >
 
 <COMPILE>
 
@@ -6360,7 +6360,7 @@ error: The type `integer\[3\]' contains too many indexes \(3\) in the short-hand
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - variable-size record of integer as multidimensional array index >
+<TC - 060207_021 variable-size record of integer as multidimensional array index >
 
 <COMPILE>
 
@@ -6411,7 +6411,7 @@ error: The type `@NegSem_060207_arrays_021.RI' must have single size length rest
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using lower than allowed custom array index on the right hand side of assignments >
+<TC - 060207_022 using lower than allowed custom array index on the right hand side of assignments >
 
 <COMPILE>
 
@@ -6457,7 +6457,7 @@ error: Array index underflow: the index value must be at least `2' instead of `0
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using lower than allowed custom array index on the left hand side of assignments >
+<TC - 060207_023 using lower than allowed custom array index on the left hand side of assignments >
 
 <COMPILE>
 
@@ -6503,7 +6503,7 @@ error: Array index underflow: the index value must be at least `2' instead of `0
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using greater than allowed custom array index on the right hand side of assignments >
+<TC - 060207_024 using greater than allowed custom array index on the right hand side of assignments >
 
 <COMPILE>
 
@@ -6548,7 +6548,7 @@ error: Array index overflow: the index value must be at most `5' instead of `6'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using greater than allowed custom array index on the left hand side of assignments >
+<TC - 060207_025 using greater than allowed custom array index on the left hand side of assignments >
 
 <COMPILE>
 
@@ -6593,7 +6593,7 @@ error: Array index overflow: the index value must be at most `5' instead of `6'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using greater than allowed custom array index on the left hand side of assignments >
+<TC - 060207_026 using greater than allowed custom array index on the left hand side of assignments >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -6647,7 +6647,7 @@ Dynamic test case error: Assignment of an unbound integer value.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using greater than allowed custom array index on the left hand side of assignments >
+<TC - 060207_027 using greater than allowed custom array index on the left hand side of assignments >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -6700,7 +6700,7 @@ Dynamic test case error: Copying an unbound integer value.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - using greater than allowed custom array index on the left hand side of assignments >
+<TC - 060207_028 using greater than allowed custom array index on the left hand side of assignments >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -6753,7 +6753,7 @@ Dynamic test case error: Using the value of an optional field containing omit
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that array cannot contain an empty assignment >
+<TC - 060207_001 ensure that array cannot contain an empty assignment >
 
 <COMPILE>
 
@@ -6796,7 +6796,7 @@ error: at or before token `,': syntax error, unexpected ','
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that array field cannot contain an empty index >
+<TC - 060207_002 ensure that array field cannot contain an empty index >
 
 <COMPILE>
 
@@ -6839,7 +6839,7 @@ error: at or before token `\]': syntax error, unexpected '\]'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that array field cannot contain an empty index >
+<TC - 060207_003 ensure that array field cannot contain an empty index >
 
 <COMPILE>
 
@@ -6883,7 +6883,7 @@ error: at or before token `\]': syntax error, unexpected '\]'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - infinity in array variable dimension >
+<TC - 060207_004 infinity in array variable dimension >
 
 <COMPILE>
 
@@ -6922,7 +6922,7 @@ error: A value or expression of type integer was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that an error is generated when a message port type definition contains no message typess >
+<TC - 060209_004 Verify that an error is generated when a message port type definition contains no message typess >
 
 <COMPILE>
 
@@ -6975,7 +6975,7 @@ error: at or before token `\}': syntax error, unexpected '\}', expecting InOutPa
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that an error is generated when a procedure port type definition contains no signatures >
+<TC - 060209_005 Verify that an error is generated when a procedure port type definition contains no signatures >
 
 <COMPILE>
 
@@ -7028,7 +7028,7 @@ error: at or before token `\}': syntax error, unexpected '\}', expecting InOutPa
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that cyclic extension is not allowed >
+<TC - 060210_001 Ensure that cyclic extension is not allowed >
 
 <COMPILE>
 
@@ -7088,7 +7088,7 @@ error: While checking component type extensions: Circular reference: `@NegSyn_06
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that cyclic extension is not allowed >
+<TC - 060210_002 Ensure that cyclic extension is not allowed >
 
 <COMPILE>
 
@@ -7149,7 +7149,7 @@ error: Local definition `MyInt' collides with definition inherited from componen
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that cyclic extension is not allowed >
+<TC - 060210_003 Ensure that cyclic extension is not allowed >
 
 <COMPILE>
 
@@ -7208,7 +7208,7 @@ error: Local definition `MyInt' collides with definition inherited from componen
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The length subtyping check for 'record of' or 'set of' types >
+<TC - 06021301_001 The length subtyping check for 'record of' or 'set of' types >
 
 <COMPILE>
 
@@ -7239,7 +7239,7 @@ error: The subtype restriction is not a subset of the restriction on the parent 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The length subtyping check for 'record of' or 'set of' types >
+<TC - 06021301_002 The length subtyping check for 'record of' or 'set of' types >
 
 <COMPILE>
 
@@ -7270,7 +7270,7 @@ error: The subtype restriction is not a subset of the restriction on the parent 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The length subtyping check for 'record of' or 'set of' types >
+<TC - 06021301_003 The length subtyping check for 'record of' or 'set of' types >
 
 <COMPILE>
 
@@ -7300,7 +7300,7 @@ error: at or before token `!': syntax error, unexpected '!'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - The length subtyping check for 'record of' or 'set of' types >
+<TC - 06021301_004 The length subtyping check for 'record of' or 'set of' types >
 
 <COMPILE>
 
@@ -7330,7 +7330,7 @@ error: at or before token `!': syntax error, unexpected '!'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that list subtyping check for record types is properly handled >
+<TC - 06021302_001 ensure that list subtyping check for record types is properly handled >
 
 <COMPILE>
 
@@ -7372,7 +7372,7 @@ error: The subtype restriction is not a subset of the restriction on the parent 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - ensure that list subtyping check for record types is properly handled >
+<TC - 06021302_002 ensure that list subtyping check for record types is properly handled >
 
 <COMPILE>
 
@@ -7418,7 +7418,7 @@ error: The subtype restriction is not a subset of the restriction on the parent 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles assignments from compatible size restrictions  >
+<TC - 060301_007 Ensure that the IUT correctly handles assignments from compatible size restrictions  >
 
 <COMPILE>
 
@@ -7463,7 +7463,7 @@ error: Type mismatch: `integer\[1\]' and `integer\[2\]' are not compatible: Arra
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles assignments from compatible size restrictions  >
+<TC - 060301_008 Ensure that the IUT correctly handles assignments from compatible size restrictions  >
 
 <COMPILE>
 
@@ -7508,7 +7508,7 @@ error: Type mismatch: `float\[1\]' and `float\[2\]' are not compatible: Array ty
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Reject assignment of other enumerated types since they are only compatible to synonym types  >
+<TC - 060302_001 Reject assignment of other enumerated types since they are only compatible to synonym types  >
 
 <COMPILE>
 
@@ -7555,7 +7555,7 @@ error: Type mismatch: a value of type `@NegSem_060302_structured_types_001.Enume
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT rejects assignments from incompatible types or type ranges  >
+<TC - 060302_002 Ensure that the IUT rejects assignments from incompatible types or type ranges  >
 
 <COMPILE>
 
@@ -7610,7 +7610,7 @@ error: Type mismatch: `@NegSem_060302_structured_types_002.RecordType2.f' of typ
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT rejects assignments from incompatible types or type ranges >
+<TC - 060302_004 Ensure that the IUT rejects assignments from incompatible types or type ranges >
 
 <COMPILE>
 
@@ -7666,7 +7666,7 @@ error: Type mismatch: `@NegSem_060302_structured_types_004.SetType.b' of type `i
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT rejects assignments from incompatible types or type ranges >
+<TC - 060302_009 Ensure that the IUT rejects assignments from incompatible types or type ranges >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -7725,7 +7725,7 @@ Dynamic test case error: Values or templates of types `@NegSem_060302_structured
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT rejects assignments from incompatible types or type ranges >
+<TC - 060302_010 Ensure that the IUT rejects assignments from incompatible types or type ranges >
 
 <COMPILE>
 
@@ -7785,7 +7785,7 @@ error: Type mismatch: `@NegSem_060302_structured_types_010.UnionType' and `@NegS
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT rejects assignments from structures having incompatible anytypes >
+<TC - 060302_011 Ensure that the IUT rejects assignments from structures having incompatible anytypes >
 
 <COMPILE>
 
@@ -7858,7 +7858,7 @@ error: Type mismatch: `@NegSem_060302_structured_types_011_importA.anytype' and 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT rejects assignments between incompatible structures >
+<TC - 060302_016 Ensure that the IUT rejects assignments between incompatible structures >
 
 <COMPILE>
 
@@ -7912,7 +7912,7 @@ error: Type mismatch: `integer\[2\]' and `@NegSem_060302_structured_types_016.Se
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT rejects assignments between incompatible structures >
+<TC - 060302_018 Ensure that the IUT rejects assignments between incompatible structures >
 
 <COMPILE>
 
@@ -7962,7 +7962,7 @@ error: Type mismatch: `integer\[3\]' and `@NegSem_060302_structured_types_018.Se
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles component incompatibility due to differing list of constant definitions >
+<TC - 060303_001 Ensure that the IUT correctly handles component incompatibility due to differing list of constant definitions >
 
 <COMPILE>
 
@@ -8023,7 +8023,7 @@ error: Runs on clause mismatch: A definition that runs on component type `@NegSe
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles component incompatibility due to differing list of constant definitions >
+<TC - 060303_002 Ensure that the IUT correctly handles component incompatibility due to differing list of constant definitions >
 
 <COMPILE>
 

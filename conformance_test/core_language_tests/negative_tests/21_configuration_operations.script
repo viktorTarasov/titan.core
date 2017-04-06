@@ -53,7 +53,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 21_configurat
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that connect operation cannot contain a system port >
+<TC - 2101_001 Verify that connect operation cannot contain a system port >
 
 <COMPILE>
 
@@ -99,7 +99,7 @@ error: The `system' component reference shall not be used in `connect' operation
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that map operation fails if both operands are component ports >
+<TC - 2101_002 Verify that map operation fails if both operands are component ports >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -147,7 +147,7 @@ Dynamic test case error: Both arguments of map operation refer to test component
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that connect operation rejects ports with incompatible message type lists >
+<TC - 210101_001 Verify that connect operation rejects ports with incompatible message type lists >
 
 <COMPILE>
 
@@ -223,7 +223,7 @@ error: The connection between port types `@NegSem_210101_connect_and_map_operati
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that connect operation rejects ports with only partially compatible message type lists >
+<TC - 210101_002 Verify that connect operation rejects ports with only partially compatible message type lists >
 
 <COMPILE>
 
@@ -306,7 +306,7 @@ error: The connection between port types `@NegSem_210101_connect_and_map_operati
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that map operation rejects ports with incompatible message type lists >
+<TC - 210101_003 Verify that map operation rejects ports with incompatible message type lists >
 
 <COMPILE>
 
@@ -378,7 +378,7 @@ error: The mapping between system port type `@NegSem_210101_connect_and_map_oper
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that connect operation rejects ports with only partially compatible message type lists >
+<TC - 210101_004 Verify that connect operation rejects ports with only partially compatible message type lists >
 
 <COMPILE>
 
@@ -457,7 +457,7 @@ error: The mapping between system port type `@NegSem_210101_connect_and_map_oper
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - violation of strong typing rules for local ports in connect operations >
+<TC - 210101_008 violation of strong typing rules for local ports in connect operations >
 
 <COMPILE>
 
@@ -517,7 +517,7 @@ error: Component type `@NegSem_210101_connect_and_map_operations_008.GeneralComp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - violation of strong typing rules for PTC ports in connect operations >
+<TC - 210101_010 violation of strong typing rules for PTC ports in connect operations >
 
 <COMPILE>
 
@@ -574,7 +574,7 @@ error: Component type `@NegSem_210101_connect_and_map_operations_010.GeneralComp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - violation of strong typing rules for PTC ports in map operations >
+<TC - 210101_013 violation of strong typing rules for PTC ports in map operations >
 
 <COMPILE>
 
@@ -632,7 +632,7 @@ error: Component type `@NegSem_210101_connect_and_map_operations_013.GeneralComp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the the IUT does not allows two output port connection >
+<TC - 210101_001 Ensure that the the IUT does not allows two output port connection >
 
 <COMPILE>
 
@@ -684,7 +684,7 @@ error: The connection between port types `@NegSem_210101_connect_operation_001.m
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that IUT cannot map input port with output port >
+<TC - 210101_002 Ensure that IUT cannot map input port with output port >
 
 <COMPILE>
 
@@ -745,7 +745,7 @@ error: The mapping between test component port type `@NegSem_210101_map_operatio
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that unmap operation cannot contain a system port reference >
+<TC - 210102_001 Verify that unmap operation cannot contain a system port reference >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -800,7 +800,7 @@ Dynamic test case error: Both arguments of unmap operation refer to test compone
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - violation of strong typing rules for local ports in disconnect operations >
+<TC - 210102_008 violation of strong typing rules for local ports in disconnect operations >
 
 <COMPILE>
 
@@ -861,7 +861,7 @@ error: Component type `@NegSem_210102_disconnect_and_unmap_operations_008.Genera
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - violation of strong typing rules for PTC ports in disconnect operations >
+<TC - 210102_010 violation of strong typing rules for PTC ports in disconnect operations >
 
 <COMPILE>
 
@@ -920,7 +920,7 @@ error: Component type `@NegSem_210102_disconnect_and_unmap_operations_010.Genera
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - violation of strong typing rules for PTC ports in disconnect operations >
+<TC - 210102_013 violation of strong typing rules for PTC ports in disconnect operations >
 
 <COMPILE>
 
@@ -979,7 +979,7 @@ error: Component type `@NegSem_210102_disconnect_and_unmap_operations_013.Genera
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that mapped port cannot disconnect >
+<TC - 210102_001 Ensure that mapped port cannot disconnect >
 
 <COMPILE>
 
@@ -1038,7 +1038,7 @@ module NegSem_210102_disconnect_operation_001{
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Stopping test case >
+<TC - 2102_001 Stopping test case >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1084,7 +1084,7 @@ Dynamic test case error: testcase.stop
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that named components on hosts are accepted >
+<TC - 210301_001 Ensure that named components on hosts are accepted >
 
 <COMPILE>
 
@@ -1121,7 +1121,7 @@ error: First operand of operation `create\(\)' should be charstring value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that named components on hosts are accepted >
+<TC - 210301_002 Ensure that named components on hosts are accepted >
 
 <COMPILE>
 
@@ -1158,7 +1158,7 @@ error: First operand of operation `create\(\)' should be charstring value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that named components on hosts are accepted >
+<TC - 210301_003 Ensure that named components on hosts are accepted >
 
 <COMPILE>
 
@@ -1195,7 +1195,7 @@ error: Second operand of operation `create\(\)' should be charstring value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that non-alive ptc cannot start again >
+<TC - 210302_001 Ensure that non-alive ptc cannot start again >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1242,7 +1242,7 @@ Dynamic test case error:
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that only component type is allowed for ptc declaration >
+<TC - 210302_002 Ensure that only component type is allowed for ptc declaration >
 
 <COMPILE>
 
@@ -1289,7 +1289,7 @@ error: Type mismatch: The type of the operand should be a component type instead
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that only component type is allowed for ptc declaration >
+<TC - 210302_003 Ensure that only component type is allowed for ptc declaration >
 
 <COMPILE>
 
@@ -1347,7 +1347,7 @@ error: Reference to a function was expected in the argument instead of altstep `
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - starting behaviour on already running non-alive component >
+<TC - 210302_004 starting behaviour on already running non-alive component >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1399,7 +1399,7 @@ Dynamic test case error: Error message was received from MC: PTC with component 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - starting behaviour on already running non-alive component >
+<TC - 210302_005 starting behaviour on already running non-alive component >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1451,7 +1451,7 @@ Dynamic test case error: Error message was received from MC: PTC with component 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - function invocation in the start operation doesn't return a component >
+<TC - 210302_006 function invocation in the start operation doesn't return a component >
 
 <COMPILE>
 
@@ -1507,7 +1507,7 @@ error: Type mismatch: The type of the operand should be a component type instead
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - starting function with incompatible "runs on" clause >
+<TC - 210302_007 starting function with incompatible "runs on" clause >
 
 <COMPILE>
 
@@ -1563,7 +1563,7 @@ error: Component type mismatch: The component reference is of type `@NegSem_2103
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - passing port to started component function >
+<TC - 210302_008 passing port to started component function >
 
 <COMPILE>
 
@@ -1620,7 +1620,7 @@ error: Function `@NegSem_210302_Start_test_component_008.f_behaviour' cannot be 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - passing default to started component function >
+<TC - 210302_009 passing default to started component function >
 
 <COMPILE>
 
@@ -1674,7 +1674,7 @@ error: Default type cannot be a parameter or embedded in a parameter of a functi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - passing timer to started component function >
+<TC - 210302_010 passing timer to started component function >
 
 <COMPILE>
 
@@ -1726,7 +1726,7 @@ error: Function `@NegSem_210302_Start_test_component_010.f_behaviour' cannot be 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - passing structured value containing ports to started component function >
+<TC - 210302_011 passing structured value containing ports to started component function >
 
 <COMPILE>
 
@@ -1785,7 +1785,7 @@ error: Port type `@NegSem_210302_Start_test_component_011.P' cannot be a paramet
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - passing structured value containing ports to started component function >
+<TC - 210302_012 passing structured value containing ports to started component function >
 
 <COMPILE>
 
@@ -1843,7 +1843,7 @@ error: Default type cannot be a parameter or embedded in a parameter of a functi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - restarting explicitly stopped non-alive component >
+<TC - 210303_001 restarting explicitly stopped non-alive component >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1899,7 +1899,7 @@ Dynamic test case error: Error message was received from MC: PTC with component 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - stopping all PTCs from a PTC >
+<TC - 210303_002 stopping all PTCs from a PTC >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1954,7 +1954,7 @@ Dynamic test case error: Operation 'all component.stop' can only be performed on
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying stop operation to a variable of a different than component type >
+<TC - 210303_003 applying stop operation to a variable of a different than component type >
 
 <COMPILE>
 
@@ -2012,7 +2012,7 @@ error: Type mismatch: The type of the operand should be a component type instead
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying stop operation to a variable of a different than component type >
+<TC - 210303_004 applying stop operation to a variable of a different than component type >
 
 <COMPILE>
 
@@ -2076,7 +2076,7 @@ error: Type mismatch: The type of the operand should be a component type instead
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - restarting explicitly killed non-alive component >
+<TC - 210304_001 restarting explicitly killed non-alive component >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -2134,7 +2134,7 @@ Dynamic test case error: PTC with component reference 3 is not alive anymore. St
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - restarting explicitly killed alive component >
+<TC - 210304_002 restarting explicitly killed alive component >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -2192,7 +2192,7 @@ Dynamic test case error: PTC with component reference 3 is not alive anymore. St
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - killing all PTCs from a PTC >
+<TC - 210304_003 killing all PTCs from a PTC >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -2247,7 +2247,7 @@ Dynamic test case error: Operation 'all component.kill' can only be performed on
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying kill operation to a variable of a different than component type >
+<TC - 210304_004 applying kill operation to a variable of a different than component type >
 
 <COMPILE>
 
@@ -2305,7 +2305,7 @@ error: Type mismatch: The type of the operand should be a component type instead
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying kill operation to a function call result of a different than component type >
+<TC - 210304_005 applying kill operation to a function call result of a different than component type >
 
 <COMPILE>
 
@@ -2369,7 +2369,7 @@ error: Type mismatch: The type of the operand should be a component type instead
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from alive is applied to single component >
+<TC - 210305_001 Verify that error occurs when any from alive is applied to single component >
 
 <COMPILE>
 
@@ -2422,7 +2422,7 @@ error: The operand of operation `alive': Type mismatch: component array referenc
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from alive is applied to 1D array and index target has wrong type >
+<TC - 210305_003 Verify that error occurs when any from alive is applied to 1D array and index target has wrong type >
 
 <COMPILE>
 
@@ -2484,7 +2484,7 @@ error: Indices of component arrays can only be redirected to an integer, an inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from alive index redirection for multi-D arrays requires arrays of correct size >
+<TC - 210305_004 Verify that any from alive index redirection for multi-D arrays requires arrays of correct size >
 
 <COMPILE>
 
@@ -2553,7 +2553,7 @@ error: Array index overflow: the index value must be at most `0' instead of `1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from alive index redirection for multi-D arrays requires arrays >
+<TC - 210305_005 Verify that any from alive index redirection for multi-D arrays requires arrays >
 
 <COMPILE>
 
@@ -2619,7 +2619,7 @@ error: Indices of multi-dimensional component arrays can only be redirected to a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in component.alive operation >
+<TC - 210305_001 Verify that error occurs when using index redirection in component.alive operation >
 
 <COMPILE>
 
@@ -2674,7 +2674,7 @@ error: at or before token `->': syntax error, unexpected ->
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in any component.alive operation >
+<TC - 210305_002 Verify that error occurs when using index redirection in any component.alive operation >
 
 <COMPILE>
 
@@ -2729,7 +2729,7 @@ error: at or before token `->': syntax error, unexpected ->
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in all component.alive operation >
+<TC - 210305_003 Verify that error occurs when using index redirection in all component.alive operation >
 
 <COMPILE>
 
@@ -2784,7 +2784,7 @@ error: at or before token `->': syntax error, unexpected ->
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in function instance.alive operation >
+<TC - 210305_004 Verify that error occurs when using index redirection in function instance.alive operation >
 
 <COMPILE>
 
@@ -2843,7 +2843,7 @@ error: at or before token `->': syntax error, unexpected ->
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from running is applied to single component >
+<TC - 210306_001 Verify that error occurs when any from running is applied to single component >
 
 <COMPILE>
 
@@ -2897,7 +2897,7 @@ error: The operand of operation `component running': Type mismatch: component ar
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from running is applied to 1D array and index target is array >
+<TC - 210306_002 Verify that error occurs when any from running is applied to 1D array and index target is array >
 
 <COMPILE>
 
@@ -2960,7 +2960,7 @@ error: Indices of one-dimensional component arrays can only be redirected to an 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from running is applied to 1D array and index target has wrong type >
+<TC - 210306_003 Verify that error occurs when any from running is applied to 1D array and index target has wrong type >
 
 <COMPILE>
 
@@ -3023,7 +3023,7 @@ error: Indices of component arrays can only be redirected to an integer, an inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from running index redirection for multi-D arrays requires arrays of correct size >
+<TC - 210306_004 Verify that any from running index redirection for multi-D arrays requires arrays of correct size >
 
 <COMPILE>
 
@@ -3092,7 +3092,7 @@ error: Array index overflow: the index value must be at most `0' instead of `1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from running index redirection for multi-D arrays requires arrays >
+<TC - 210306_005 Verify that any from running index redirection for multi-D arrays requires arrays >
 
 <COMPILE>
 
@@ -3159,7 +3159,7 @@ error: Indices of multi-dimensional component arrays can only be redirected to a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in component.running operation >
+<TC - 210306_001 Verify that error occurs when using index redirection in component.running operation >
 
 <COMPILE>
 
@@ -3215,7 +3215,7 @@ error: at or before token `->': syntax error, unexpected ->
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in any component.running operation >
+<TC - 210306_002 Verify that error occurs when using index redirection in any component.running operation >
 
 <COMPILE>
 
@@ -3271,7 +3271,7 @@ error: at or before token `->': syntax error, unexpected ->
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in all component.running operation >
+<TC - 210306_003 Verify that error occurs when using index redirection in all component.running operation >
 
 <COMPILE>
 
@@ -3327,7 +3327,7 @@ error: at or before token `->': syntax error, unexpected ->
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in function instance.running operation >
+<TC - 210306_004 Verify that error occurs when using index redirection in function instance.running operation >
 
 <COMPILE>
 
@@ -3387,7 +3387,7 @@ error: at or before token `->': syntax error, unexpected ->
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that done operator can be used only for ptcs. >
+<TC - 210307_001 Ensure that done operator can be used only for ptcs. >
 
 <COMPILE>
 
@@ -3434,7 +3434,7 @@ error: Reference to a value was expected instead of type `@NegSem_210307_done_op
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from done is applied to single component >
+<TC - 210307_002 Verify that error occurs when any from done is applied to single component >
 
 <COMPILE>
 
@@ -3485,7 +3485,7 @@ error: Type mismatch: The type of the operand should be a component array type i
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from done is applied to 1D array and index target is array >
+<TC - 210307_003 Verify that error occurs when any from done is applied to 1D array and index target is array >
 
 <COMPILE>
 
@@ -3553,7 +3553,7 @@ error: Indices of one-dimensional component arrays can only be redirected to an 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from done is applied to 1D array and index target has wrong type >
+<TC - 210307_004 Verify that error occurs when any from done is applied to 1D array and index target has wrong type >
 
 <COMPILE>
 
@@ -3621,7 +3621,7 @@ error: Indices of component arrays can only be redirected to an integer, an inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from done index redirection for multi-D arrays requires arrays of correct size >
+<TC - 210307_005 Verify that any from done index redirection for multi-D arrays requires arrays of correct size >
 
 <COMPILE>
 
@@ -3696,7 +3696,7 @@ error: Array index overflow: the index value must be at most `0' instead of `1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from done index redirection for multi-D arrays requires arrays >
+<TC - 210307_006 Verify that any from done index redirection for multi-D arrays requires arrays >
 
 <COMPILE>
 
@@ -3768,7 +3768,7 @@ error: Indices of multi-dimensional component arrays can only be redirected to a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - partially initialized array in any from ComponentArrayRef.done >
+<TC - 210307_010 partially initialized array in any from ComponentArrayRef.done >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -3821,7 +3821,7 @@ Dynamic test case error: Performing done operation on an unbound component refer
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in component.done operation >
+<TC - 210307_001 Verify that error occurs when using index redirection in component.done operation >
 
 <COMPILE>
 
@@ -3874,7 +3874,7 @@ error: Index redirect cannot be used without the 'any from' clause
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in any component.done operation >
+<TC - 210307_002 Verify that error occurs when using index redirection in any component.done operation >
 
 <COMPILE>
 
@@ -3930,7 +3930,7 @@ error: at or before token `control': syntax error, unexpected ControlKeyword, ex
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in all component.done operation >
+<TC - 210307_003 Verify that error occurs when using index redirection in all component.done operation >
 
 <COMPILE>
 
@@ -3986,7 +3986,7 @@ error: at or before token `control': syntax error, unexpected ControlKeyword, ex
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in function instance.done operation >
+<TC - 210307_004 Verify that error occurs when using index redirection in function instance.done operation >
 
 <COMPILE>
 
@@ -4042,7 +4042,7 @@ error: Type mismatch: The type of the operand should be a component array type i
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that killed operator is only valid for ptcs. >
+<TC - 210308_001 Ensure that killed operator is only valid for ptcs. >
 
 <COMPILE>
 
@@ -4092,7 +4092,7 @@ error: at or before token `killed': syntax error, unexpected DotKilledKeyword, e
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from killed is applied to single component >
+<TC - 210308_002 Verify that error occurs when any from killed is applied to single component >
 
 <COMPILE>
 
@@ -4143,7 +4143,7 @@ error: Type mismatch: The type of the operand should be a component array type i
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from killed is applied to 1D array and index target is array >
+<TC - 210308_003 Verify that error occurs when any from killed is applied to 1D array and index target is array >
 
 <COMPILE>
 
@@ -4211,7 +4211,7 @@ error: Indices of one-dimensional component arrays can only be redirected to an 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from killed is applied to 1D array and index target has wrong type >
+<TC - 210308_004 Verify that error occurs when any from killed is applied to 1D array and index target has wrong type >
 
 <COMPILE>
 
@@ -4279,7 +4279,7 @@ error: Indices of component arrays can only be redirected to an integer, an inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from killed index redirection for multi-D arrays requires arrays of correct size >
+<TC - 210308_005 Verify that any from killed index redirection for multi-D arrays requires arrays of correct size >
 
 <COMPILE>
 
@@ -4354,7 +4354,7 @@ error: Array index overflow: the index value must be at most `0' instead of `1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from killed index redirection for multi-D arrays requires arrays >
+<TC - 210308_006 Verify that any from killed index redirection for multi-D arrays requires arrays >
 
 <COMPILE>
 
@@ -4426,7 +4426,7 @@ error: Indices of multi-dimensional component arrays can only be redirected to a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - partially initialized array in any from ComponentArrayRef.killed >
+<TC - 210308_010 partially initialized array in any from ComponentArrayRef.killed >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4479,7 +4479,7 @@ Dynamic test case error: Performing killed operation on an unbound component ref
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in component.killed operation >
+<TC - 210308_001 Verify that error occurs when using index redirection in component.killed operation >
 
 <COMPILE>
 
@@ -4535,7 +4535,7 @@ error: at or before token `control': syntax error, unexpected ControlKeyword, ex
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in any component.killed operation >
+<TC - 210308_002 Verify that error occurs when using index redirection in any component.killed operation >
 
 <COMPILE>
 
@@ -4591,7 +4591,7 @@ error: at or before token `control': syntax error, unexpected ControlKeyword, ex
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in all component.killed operation >
+<TC - 210308_003 Verify that error occurs when using index redirection in all component.killed operation >
 
 <COMPILE>
 
@@ -4647,7 +4647,7 @@ error: at or before token `control': syntax error, unexpected ControlKeyword, ex
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in function instance.killed operation >
+<TC - 210308_004 Verify that error occurs when using index redirection in function instance.killed operation >
 
 <COMPILE>
 

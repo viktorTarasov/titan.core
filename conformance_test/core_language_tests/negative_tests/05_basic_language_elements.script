@@ -55,7 +55,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 05_basic_lang
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that when the IUT loads a module containing some definitions before the module declaration then the module is rejected. >
+<TC - 05_001 Ensure that when the IUT loads a module containing some definitions before the module declaration then the module is rejected. >
 
 <COMPILE>
 
@@ -89,7 +89,7 @@ error: Cannot recognize file `NegSyn_05_TopLevel_001.ttcn' as an ASN.1 or TTCN-3
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that cannot pass a charstring value to an integer variable.  >
+<TC - 0501_001 Ensure that cannot pass a charstring value to an integer variable.  >
 
 <COMPILE>
 
@@ -127,7 +127,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that when the IUT loads a module containing an identifier named with a keyword then the module is rejected.  >
+<TC - 0501_001 Ensure that when the IUT loads a module containing an identifier named with a keyword then the module is rejected.  >
 
 <COMPILE>
 
@@ -169,7 +169,7 @@ error: at or before token `component': syntax error, unexpected ComponentKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles definitions of local scope  >
+<TC - 0502_001 Ensure that the IUT correctly handles definitions of local scope  >
 
 <COMPILE>
 
@@ -216,7 +216,7 @@ error: There is no local or imported definition with name `v_function'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles definitions of local scope  >
+<TC - 0502_002 Ensure that the IUT correctly handles definitions of local scope  >
 
 <COMPILE>
 
@@ -262,7 +262,7 @@ error: There is no local or imported definition with name `v_control'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles definitions of local scope  >
+<TC - 0502_003 Ensure that the IUT correctly handles definitions of local scope  >
 
 <COMPILE>
 
@@ -311,7 +311,7 @@ error: There is no local or imported definition with name `v_statement'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+<TC - 050202_001 Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
 
 <COMPILE>
 
@@ -347,7 +347,7 @@ error: Definition with identifier `cl_int' is not unique in the scope hierarchy
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+<TC - 050202_004 Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
 
 <COMPILE>
 
@@ -387,7 +387,7 @@ error: Definition with identifier `c_int' is not unique in the scope hierarchy
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+<TC - 050202_005 Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
 
 <COMPILE>
 
@@ -428,7 +428,7 @@ error: Definition with identifier `c_int' is not unique in the scope hierarchy
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+<TC - 050202_006 Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
 
 <COMPILE>
 
@@ -464,7 +464,7 @@ error: Definition with identifier `repeatedIdentifier' is not unique in the scop
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+<TC - 050202_007 Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
 
 <COMPILE>
 
@@ -544,7 +544,7 @@ error: Definition with identifier `repeatedIdentifier' is not unique in the scop
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+<TC - 050202_009 Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
 
 <COMPILE>
 
@@ -584,7 +584,7 @@ error: Definition with identifier `repeatedIdentifier' is not unique in the scop
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
+<TC - 050202_010 Ensure that the IUT correctly handles the uniqueness of variable names in its scope  >
 
 <COMPILE>
 
@@ -629,7 +629,7 @@ error: Definition with identifier `repeatedIdentifier' is not unique in the scop
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that declarations are in the allowed ordering >
+<TC - 0503_001 Ensure that declarations are in the allowed ordering >
 
 <COMPILE>
 
@@ -684,7 +684,7 @@ error: There is no local or imported definition with name `v_nested_statement'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles received testcase parametrization type incompatibility. >
+<TC - 0504_001 Ensure that the IUT correctly handles received testcase parametrization type incompatibility. >
 
 <COMPILE>
 
@@ -763,7 +763,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT rejects forbidden module parametrization types. >
+<TC - 0504_002 Ensure that the IUT rejects forbidden module parametrization types. >
 
 <COMPILE>
 
@@ -804,7 +804,7 @@ error: at or before token `timer': syntax error, unexpected TimerKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated for incompatible actual value of in parameter >
+<TC - 050401_001 verify that error is generated for incompatible actual value of in parameter >
 
 <COMPILE>
 
@@ -865,7 +865,7 @@ error: Type mismatch: `@NegSem_050401_top_level_001.R2.option2' of type `integer
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated for incompatible actual value of out parameter >
+<TC - 050401_002 verify that error is generated for incompatible actual value of out parameter >
 
 <COMPILE>
 
@@ -925,7 +925,7 @@ error: Type mismatch: `@NegSem_050401_top_level_002.R2.option2' of type `integer
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that in value formal parameters of template cannot used dash as default value >
+<TC - 05040101_001 verify that in value formal parameters of template cannot used dash as default value >
 
 <COMPILE>
 
@@ -971,7 +971,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that modified template cannot used dash as default value when original value parameter had no default value >
+<TC - 05040101_002 verify that modified template cannot used dash as default value when original value parameter had no default value >
 
 <COMPILE>
 
@@ -1081,7 +1081,7 @@ error: A template cannot have `out' value parameter
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template definitions cannot contain inout value formal parameters >
+<TC - 05040101_004 verify that template definitions cannot contain inout value formal parameters >
 
 <COMPILE>
 
@@ -1140,7 +1140,7 @@ error: A template cannot have `inout' value parameter
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that out value formal parameters cannot have default values >
+<TC - 05040101_005 verify that out value formal parameters cannot have default values >
 
 <COMPILE>
 
@@ -1187,7 +1187,7 @@ error: Reference to a variable or value parameter was expected for an `out' valu
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that inout value formal parameters cannot have default values >
+<TC - 05040101_006 verify that inout value formal parameters cannot have default values >
 
 <COMPILE>
 
@@ -1234,7 +1234,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that incompatible value in default value assignment of value formal parameters causes error >
+<TC - 05040101_007 verify that incompatible value in default value assignment of value formal parameters causes error >
 
 <COMPILE>
 
@@ -1279,7 +1279,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that default value of value formal parameters cannot reference component variables >
+<TC - 05040101_008 verify that default value of value formal parameters cannot reference component variables >
 
 <COMPILE>
 
@@ -1325,7 +1325,7 @@ error: Reference to a static value was expected instead of variable `@NegSem_050
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that default value of value formal parameters cannot reference other parameters >
+<TC - 05040101_009 verify that default value of value formal parameters cannot reference other parameters >
 
 <COMPILE>
 
@@ -1370,7 +1370,7 @@ error: There is no local or imported definition with name `p_int'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that default value of value formal parameters cannot invoke functions with runs on clause >
+<TC - 05040101_010 verify that default value of value formal parameters cannot invoke functions with runs on clause >
 
 <COMPILE>
 
@@ -1421,7 +1421,7 @@ error: Reference to a static value was expected instead of the return value of f
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated if formal value parameter of function contains dash >
+<TC - 05040101_011 verify that error is generated if formal value parameter of function contains dash >
 
 <COMPILE>
 
@@ -1468,7 +1468,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated if formal value parameter of altstep contains dash >
+<TC - 05040101_012 verify that error is generated if formal value parameter of altstep contains dash >
 
 <COMPILE>
 
@@ -1516,7 +1516,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated if formal value parameter of test case contains dash >
+<TC - 05040101_013 verify that error is generated if formal value parameter of test case contains dash >
 
 <COMPILE>
 
@@ -1559,7 +1559,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that out formal value parameters cannot have lazy modifier >
+<TC - 05040101_014 verify that out formal value parameters cannot have lazy modifier >
 
 <COMPILE>
 
@@ -1607,7 +1607,7 @@ error: at or before token `@lazy': syntax error, unexpected LazyKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that out formal value parameters cannot have fuzzy modifier >
+<TC - 05040101_015 verify that out formal value parameters cannot have fuzzy modifier >
 
 <COMPILE>
 
@@ -1655,7 +1655,7 @@ error: at or before token `@fuzzy': syntax error, unexpected FuzzyKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that inout formal value parameters cannot have lazy modifier >
+<TC - 05040101_016 verify that inout formal value parameters cannot have lazy modifier >
 
 <COMPILE>
 
@@ -1703,7 +1703,7 @@ error: at or before token `@lazy': syntax error, unexpected LazyKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that inout formal value parameters cannot have fuzzy modifier >
+<TC - 05040101_017 verify that inout formal value parameters cannot have fuzzy modifier >
 
 <COMPILE>
 
@@ -1751,7 +1751,7 @@ error: at or before token `@fuzzy': syntax error, unexpected FuzzyKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that const definition cannot be parameterized >
+<TC - 05040101_001 verify that const definition cannot be parameterized >
 
 <COMPILE>
 
@@ -1785,7 +1785,7 @@ error: at or before token `\(': syntax error, unexpected '\(', expecting := or '
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that var definition cannot be parameterized >
+<TC - 05040101_002 verify that var definition cannot be parameterized >
 
 <COMPILE>
 
@@ -1821,7 +1821,7 @@ error: at or before token `\(': syntax error, unexpected '\('
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variable definition cannot be parameterized >
+<TC - 05040101_003 verify that template variable definition cannot be parameterized >
 
 <COMPILE>
 
@@ -1857,7 +1857,7 @@ error: at or before token `\(': syntax error, unexpected '\('
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that timer definition cannot be parameterized >
+<TC - 05040101_004 verify that timer definition cannot be parameterized >
 
 <COMPILE>
 
@@ -1893,7 +1893,7 @@ error: at or before token `\(': syntax error, unexpected '\('
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that control definition cannot be parameterized >
+<TC - 05040101_005 verify that control definition cannot be parameterized >
 
 <COMPILE>
 
@@ -1929,7 +1929,7 @@ error: at or before token `\(': syntax error, unexpected '\('
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that record of definition cannot be parameterized >
+<TC - 05040101_006 verify that record of definition cannot be parameterized >
 
 <COMPILE>
 
@@ -1963,7 +1963,7 @@ error: at or before token `integer': syntax error, unexpected IntegerKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that set of definition cannot be parameterized >
+<TC - 05040101_007 verify that set of definition cannot be parameterized >
 
 <COMPILE>
 
@@ -1997,7 +1997,7 @@ error: at or before token `integer': syntax error, unexpected IntegerKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that enumerated definition cannot be parameterized >
+<TC - 05040101_008 verify that enumerated definition cannot be parameterized >
 
 <COMPILE>
 
@@ -2031,7 +2031,7 @@ error: at or before token `\(': syntax error, unexpected '\(', expecting '\{'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that port definition cannot be parameterized >
+<TC - 05040101_009 verify that port definition cannot be parameterized >
 
 <COMPILE>
 
@@ -2068,7 +2068,7 @@ error: at or before token `map': syntax error, unexpected MapKeyword, expecting 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that component definition cannot be parameterized >
+<TC - 05040101_010 verify that component definition cannot be parameterized >
 
 <COMPILE>
 
@@ -2104,7 +2104,7 @@ error: at or before token `\(': syntax error, unexpected '\(', expecting Extends
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that subtype definition cannot be parameterized >
+<TC - 05040101_011 verify that subtype definition cannot be parameterized >
 
 <COMPILE>
 
@@ -2138,7 +2138,7 @@ error: at or before token `integer': syntax error, unexpected IntegerKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that group definition cannot be parameterized >
+<TC - 05040101_012 verify that group definition cannot be parameterized >
 
 <COMPILE>
 
@@ -2174,7 +2174,7 @@ error: at or before token `\(': syntax error, unexpected '\(', expecting '\{'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that import definition cannot be parameterized >
+<TC - 05040101_013 verify that import definition cannot be parameterized >
 
 <COMPILE>
 
@@ -2208,7 +2208,7 @@ error: at or before token `\(': syntax error, unexpected '\(', expecting AllKeyw
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that in template formal parameters of template cannot used dash as default value >
+<TC - 05040102_001 verify that in template formal parameters of template cannot used dash as default value >
 
 <COMPILE>
 
@@ -2254,7 +2254,7 @@ error: Only modified templates are allowed to use the not used symbol \(`-'\) as
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that modified template cannot used dash as default value when original template parameter had no default value >
+<TC - 05040102_002 that modified template cannot used dash as default value when original template parameter had no default value >
 
 <COMPILE>
 
@@ -2305,7 +2305,7 @@ error: Not used symbol \(`-'\) doesn't have the corresponding default parameter 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template definitions cannot contain out template formal parameters >
+<TC - 05040102_003 verify that template definitions cannot contain out template formal parameters >
 
 <COMPILE>
 
@@ -2364,7 +2364,7 @@ error: A template cannot have `out' template parameter
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template definitions cannot contain inout template formal parameters >
+<TC - 05040102_004 verify that template definitions cannot contain inout template formal parameters >
 
 <COMPILE>
 
@@ -2423,7 +2423,7 @@ error: A template cannot have `inout' template parameter
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that out template formal parameters cannot have default values >
+<TC - 05040102_005 verify that out template formal parameters cannot have default values >
 
 <COMPILE>
 
@@ -2470,7 +2470,7 @@ error: Reference to a template variable or template parameter was expected for a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that inout template formal parameters cannot have default values >
+<TC - 05040102_006 verify that inout template formal parameters cannot have default values >
 
 <COMPILE>
 
@@ -2517,7 +2517,7 @@ error: Reference to a template variable or template parameter was expected for a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that incompatible template instance in default template assignment of template formal parameters causes error >
+<TC - 05040102_007 verify that incompatible template instance in default template assignment of template formal parameters causes error >
 
 <COMPILE>
 
@@ -2562,7 +2562,7 @@ error: integer value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that default template instance of template formal parameters cannot reference component elements >
+<TC - 05040102_008 verify that default template instance of template formal parameters cannot reference component elements >
 
 <COMPILE>
 
@@ -2610,7 +2610,7 @@ Dynamic test case error: Copying an uninitialized/unsupported integer template.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that default template instance of template formal parameters cannot reference component elements >
+<TC - 05040102_009 verify that default template instance of template formal parameters cannot reference component elements >
 
 <COMPILE>
 
@@ -2655,7 +2655,7 @@ error: There is no local or imported definition with name `p_int'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that default template instance of template formal parameters cannot reference component elements >
+<TC - 05040102_010 verify that default template instance of template formal parameters cannot reference component elements >
 
 <COMPILE>
 
@@ -2708,7 +2708,7 @@ Dynamic test case error: Unbound left operand of integer addition.
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that out formal template parameters cannot have lazy modifier >
+<TC - 05040102_014 verify that out formal template parameters cannot have lazy modifier >
 
 <COMPILE>
 
@@ -2756,7 +2756,7 @@ error: at or before token `@lazy': syntax error, unexpected LazyKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that out formal template parameters cannot have fuzzy modifier >
+<TC - 05040102_015 verify that out formal template parameters cannot have fuzzy modifier >
 
 <COMPILE>
 
@@ -2804,7 +2804,7 @@ error: at or before token `@fuzzy': syntax error, unexpected FuzzyKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that inout formal template parameters cannot have lazy modifier >
+<TC - 05040102_016 verify that inout formal template parameters cannot have lazy modifier >
 
 <COMPILE>
 
@@ -2852,7 +2852,7 @@ error: at or before token `@lazy': syntax error, unexpected LazyKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that inout formal template parameters cannot have fuzzy modifier >
+<TC - 05040102_017 verify that inout formal template parameters cannot have fuzzy modifier >
 
 <COMPILE>
 
@@ -2900,7 +2900,7 @@ error: at or before token `@fuzzy': syntax error, unexpected FuzzyKeyword
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as in formal value parameters of functions >
+<TC - 050402_001 verify that template parameters cannot be used as in formal value parameters of functions >
 
 <COMPILE>
 
@@ -2951,7 +2951,7 @@ error: Reference to a value was expected instead of template `@NegSem_050402_act
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variables cannot be used as in formal value parameters of functions >
+<TC - 050402_002 verify that template variables cannot be used as in formal value parameters of functions >
 
 <COMPILE>
 
@@ -3001,7 +3001,7 @@ error: Reference to a value was expected instead of template variable `vm_msg'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template in parameters cannot be used as in formal value parameters of functions >
+<TC - 050402_003 verify that template in parameters cannot be used as in formal value parameters of functions >
 
 <COMPILE>
 
@@ -3055,7 +3055,7 @@ error: Reference to a value was expected instead of template parameter `p_val'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template out parameters cannot be used as in formal value parameters of functions >
+<TC - 050402_004 verify that template out parameters cannot be used as in formal value parameters of functions >
 
 <COMPILE>
 
@@ -3111,7 +3111,7 @@ error: Reference to a value was expected instead of `out' template parameter `p_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template inout parameters cannot be used as in formal value parameters of functions >
+<TC - 050402_005 verify that template inout parameters cannot be used as in formal value parameters of functions >
 
 <COMPILE>
 
@@ -3166,7 +3166,7 @@ error: Reference to a value was expected instead of `inout' template parameter `
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as in formal value parameters of templates >
+<TC - 050402_006 verify that template parameters cannot be used as in formal value parameters of templates >
 
 <COMPILE>
 
@@ -3218,7 +3218,7 @@ error: Reference to a value was expected instead of template `@NegSem_050402_act
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variables cannot be used as in formal value parameters of templates >
+<TC - 050402_007 verify that template variables cannot be used as in formal value parameters of templates >
 
 <COMPILE>
 
@@ -3269,7 +3269,7 @@ error: Reference to a value was expected instead of template variable `vm_msg'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template in parameters cannot be used as in formal value parameters of templates >
+<TC - 050402_008 verify that template in parameters cannot be used as in formal value parameters of templates >
 
 <COMPILE>
 
@@ -3324,7 +3324,7 @@ error: Reference to a value was expected instead of template parameter `p_val'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template out parameters cannot be used as in formal value parameters of templates >
+<TC - 050402_009 verify that template out parameters cannot be used as in formal value parameters of templates >
 
 <COMPILE>
 
@@ -3381,7 +3381,7 @@ error: Reference to a value was expected instead of `out' template parameter `p_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template out parameters cannot be used as in formal value parameters of templates >
+<TC - 050402_010 verify that template out parameters cannot be used as in formal value parameters of templates >
 
 <COMPILE>
 
@@ -3437,7 +3437,7 @@ error: Reference to a value was expected instead of `inout' template parameter `
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as in formal value parameters of altsteps >
+<TC - 050402_011 verify that template parameters cannot be used as in formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -3492,7 +3492,7 @@ error: Reference to a value was expected instead of template `@NegSem_050402_act
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variables cannot be used as in formal value parameters of altsteps >
+<TC - 050402_012 verify that template variables cannot be used as in formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -3546,7 +3546,7 @@ error: Reference to a value was expected instead of template variable `vm_msg'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template out parameters cannot be used as in formal value parameters of altsteps >
+<TC - 050402_014 verify that template out parameters cannot be used as in formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -3606,7 +3606,7 @@ error: Reference to a value was expected instead of `out' template parameter `p_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template inout parameters cannot be used as in formal value parameters of altsteps >
+<TC - 050402_015 verify that template inout parameters cannot be used as in formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -3665,7 +3665,7 @@ error: Reference to a value was expected instead of `inout' template parameter `
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template inout parameters cannot be used as in formal value parameters of altsteps >
+<TC - 050402_016 verify that template inout parameters cannot be used as in formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -3712,7 +3712,7 @@ error: Reference to a value was expected instead of template `@NegSem_050402_act
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variables cannot be used as in formal value parameters of test cases >
+<TC - 050402_017 verify that template variables cannot be used as in formal value parameters of test cases >
 
 <COMPILE>
 
@@ -3758,7 +3758,7 @@ error: Reference to a value was expected instead of template variable `vm_msg'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template in parameters cannot be used as in formal value parameters of test cases >
+<TC - 050402_018 verify that template in parameters cannot be used as in formal value parameters of test cases >
 
 <COMPILE>
 
@@ -3807,7 +3807,7 @@ error: Reference to a value was expected instead of template parameter `p_val'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template out parameters cannot be used as in formal value parameters of test cases >
+<TC - 050402_019 verify that template out parameters cannot be used as in formal value parameters of test cases >
 
 <COMPILE>
 
@@ -3858,7 +3858,7 @@ error: Reference to a value was expected instead of `out' template parameter `p_
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template inout parameters cannot be used as in formal value parameters of test cases >
+<TC - 050402_020 verify that template inout parameters cannot be used as in formal value parameters of test cases >
 
 <COMPILE>
 
@@ -3908,7 +3908,7 @@ error: Reference to a value was expected instead of `inout' template parameter `
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as inout formal value parameters of functions >
+<TC - 050402_021 verify that literals cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -3956,7 +3956,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as inout formal value parameters of functions >
+<TC -050402_022 verify that literals cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4006,7 +4006,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that constants cannot be used as inout formal value parameters of functions >
+<TC - 050402_023 verify that constants cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4056,7 +4056,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that function calls cannot be used as inout formal value parameters of functions >
+<TC - 050402_024 verify that function calls cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4108,7 +4108,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that expressions cannot be used as inout formal value parameters of functions >
+<TC - 050402_025 verify that expressions cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4161,7 +4161,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as inout formal value parameters of functions >
+<TC - 050402_026 verify that template parameters cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4211,7 +4211,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variables cannot be used as inout formal value parameters of functions >
+<TC - 050402_027 verify that template variables cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4260,7 +4260,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template in parameters cannot be used as inout formal value parameters of functions >
+<TC - 050402_028 verify that template in parameters cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4313,7 +4313,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template out parameters cannot be used as inout formal value parameters of functions >
+<TC - 050402_029 verify that template out parameters cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4368,7 +4368,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template inout parameters cannot be used as inout formal value parameters of functions >
+<TC - 050402_030 verify that template inout parameters cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4422,7 +4422,7 @@ error: Reference to a value was expected instead of `inout' template parameter `
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variable element reference cannot be used as inout formal value parameters of functions >
+<TC - 050402_031 verify that template variable element reference cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4475,7 +4475,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that reference to elements of formal value parameters cannot be used as inout formal value parameters of functions >
+<TC - 050402_032 verify that reference to elements of formal value parameters cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -4531,7 +4531,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_033 verify that literals cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -4583,7 +4583,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that module parameters cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_034 verify that module parameters cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -4637,7 +4637,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that constants cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_035 verify that constants cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -4691,7 +4691,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that function calls cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_036 verify that function calls cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -4747,7 +4747,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that expressions cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_037 verify that expressions cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -4804,7 +4804,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_038 verify that template parameters cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -4858,7 +4858,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variables cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_039 verify that template variables cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -4911,7 +4911,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template in parameters cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_040 verify that template in parameters cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -4968,7 +4968,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template out parameters cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_041 verify that template out parameters cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -5027,7 +5027,7 @@ error: Reference to a variable or value parameter was expected for an `inout' va
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template inout parameters cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_042 verify that template inout parameters cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -5085,7 +5085,7 @@ module NegSem_050402_actual_parameters_042 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variable element reference cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_043 verify that template variable element reference cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -5142,7 +5142,7 @@ module NegSem_050402_actual_parameters_043 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that reference to elements of formal value parameters cannot be used as inout formal value parameters of altsteps >
+<TC - 050402_044 verify that reference to elements of formal value parameters cannot be used as inout formal value parameters of altsteps >
 
 <COMPILE>
 
@@ -5202,7 +5202,7 @@ module NegSem_050402_actual_parameters_044 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as inout formal value parameters of test cases >
+<TC - 050402_045 verify that literals cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5246,7 +5246,7 @@ module NegSem_050402_actual_parameters_045 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that module parameters cannot be used as inout formal value parameters of test cases >
+<TC - 050402_046 verify that module parameters cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5292,7 +5292,7 @@ module NegSem_050402_actual_parameters_046 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that constants cannot be used as inout formal value parameters of test cases >
+<TC - 050402_047 verify that constants cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5338,7 +5338,7 @@ module NegSem_050402_actual_parameters_047 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that function calls cannot be used as inout formal value parameters of test cases >
+<TC - 050402_048 verify that function calls cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5386,7 +5386,7 @@ module NegSem_050402_actual_parameters_048 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that expressions cannot be used as inout formal value parameters of test cases >
+<TC - 050402_049 verify that expressions cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5435,7 +5435,7 @@ module NegSem_050402_actual_parameters_049 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as inout formal value parameters of test cases >
+<TC - 050402_050 verify that template parameters cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5481,7 +5481,7 @@ module NegSem_050402_actual_parameters_050 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variables cannot be used as inout formal value parameters of test cases >
+<TC - 050402_051 verify that template variables cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5525,7 +5525,7 @@ module NegSem_050402_actual_parameters_051 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template in parameters cannot be used as inout formal value parameters of test cases >
+<TC - 050402_052 verify that template in parameters cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5573,7 +5573,7 @@ module NegSem_050402_actual_parameters_052 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template in parameters cannot be used as inout formal value parameters of test cases >
+<TC - 050402_053 verify that template in parameters cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5623,7 +5623,7 @@ module NegSem_050402_actual_parameters_053 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template inout parameters cannot be used as inout formal value parameters of test cases >
+<TC - 050402_054 verify that template inout parameters cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5672,7 +5672,7 @@ module NegSem_050402_actual_parameters_054 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template variable element reference cannot be used as inout formal value parameters of test cases >
+<TC - 050402_055 verify that template variable element reference cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5721,7 +5721,7 @@ module NegSem_050402_actual_parameters_055 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that reference to elements of formal value parameters cannot be used as inout formal value parameters of test cases >
+<TC - 050402_056 verify that reference to elements of formal value parameters cannot be used as inout formal value parameters of test cases >
 
 <COMPILE>
 
@@ -5773,7 +5773,7 @@ module NegSem_050402_actual_parameters_056 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as out formal template parameters of functions >
+<TC - 050402_057 verify that literals cannot be used as out formal template parameters of functions >
 
 <COMPILE>
 
@@ -5822,7 +5822,7 @@ module NegSem_050402_actual_parameters_057 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that module parameters cannot be used as out formal template parameters of functions >
+<TC - 050402_058 verify that module parameters cannot be used as out formal template parameters of functions >
 
 <COMPILE>
 
@@ -5873,7 +5873,7 @@ module NegSem_050402_actual_parameters_058 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that constants cannot be used as out formal template parameters of functions >
+<TC - 050402_059 verify that constants cannot be used as out formal template parameters of functions >
 
 <COMPILE>
 
@@ -5924,7 +5924,7 @@ module NegSem_050402_actual_parameters_059 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that function calls cannot be used as out formal template parameters of functions >
+<TC - 050402_060 verify that function calls cannot be used as out formal template parameters of functions >
 
 <COMPILE>
 
@@ -5977,7 +5977,7 @@ module NegSem_050402_actual_parameters_060 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that expressions cannot be used as out formal template parameters of functions >
+<TC - 050402_061 verify that expressions cannot be used as out formal template parameters of functions >
 
 <COMPILE>
 
@@ -6031,7 +6031,7 @@ module NegSem_050402_actual_parameters_061 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as out formal template parameters of functions >
+<TC - 050402_062 verify that template parameters cannot be used as out formal template parameters of functions >
 
 <COMPILE>
 
@@ -6082,7 +6082,7 @@ module NegSem_050402_actual_parameters_062 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as out formal template parameters of altsteps >
+<TC - 050402_063 verify that literals cannot be used as out formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -6135,7 +6135,7 @@ module NegSem_050402_actual_parameters_063 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that module parameters cannot be used as out formal template parameters of altsteps >
+<TC - 050402_064 verify that module parameters cannot be used as out formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -6190,7 +6190,7 @@ module NegSem_050402_actual_parameters_064 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that constants cannot be used as out formal template parameters of altsteps >
+<TC - 050402_065 verify that constants cannot be used as out formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -6245,7 +6245,7 @@ module NegSem_050402_actual_parameters_065 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that function calls cannot be used as out formal template parameters of altsteps >
+<TC - 050402_066 verify that function calls cannot be used as out formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -6302,7 +6302,7 @@ module NegSem_050402_actual_parameters_066 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that expressions cannot be used as out formal template parameters of altsteps >
+<TC - 050402_067 verify that expressions cannot be used as out formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -6360,7 +6360,7 @@ module NegSem_050402_actual_parameters_067 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as out formal template parameters of altsteps >
+<TC - 050402_068 verify that template parameters cannot be used as out formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -6415,7 +6415,7 @@ module NegSem_050402_actual_parameters_068 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as out formal template parameters of test cases >
+<TC - 050402_069 verify that literals cannot be used as out formal template parameters of test cases >
 
 <COMPILE>
 
@@ -6460,7 +6460,7 @@ module NegSem_050402_actual_parameters_069 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that module parameters cannot be used as out formal template parameters of test cases >
+<TC - 050402_070 verify that module parameters cannot be used as out formal template parameters of test cases >
 
 <COMPILE>
 
@@ -6507,7 +6507,7 @@ module NegSem_050402_actual_parameters_070 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that constants cannot be used as out formal template parameters of test cases >
+<TC - 050402_071 verify that constants cannot be used as out formal template parameters of test cases >
 
 <COMPILE>
 
@@ -6554,7 +6554,7 @@ module NegSem_050402_actual_parameters_071 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that function calls cannot be used as out formal template parameters of test cases >
+<TC - 050402_072 verify that function calls cannot be used as out formal template parameters of test cases >
 
 <COMPILE>
 
@@ -6603,7 +6603,7 @@ module NegSem_050402_actual_parameters_072 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that expressions cannot be used as out formal template parameters of test cases >
+<TC - 050402_073 verify that expressions cannot be used as out formal template parameters of test cases >
 
 <COMPILE>
 
@@ -6653,7 +6653,7 @@ module NegSem_050402_actual_parameters_073 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as out formal template parameters of test cases >
+<TC - 050402_074 verify that template parameters cannot be used as out formal template parameters of test cases >
 
 <COMPILE>
 
@@ -6700,7 +6700,7 @@ module NegSem_050402_actual_parameters_074 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as inout formal template parameters of functions >
+<TC - 050402_075 verify that literals cannot be used as inout formal template parameters of functions >
 
 <COMPILE>
 
@@ -6749,7 +6749,7 @@ module NegSem_050402_actual_parameters_075 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that module parameters cannot be used as inout formal template parameters of functions >
+<TC - 050402_076 verify that module parameters cannot be used as inout formal template parameters of functions >
 
 <COMPILE>
 
@@ -6800,7 +6800,7 @@ module NegSem_050402_actual_parameters_076 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that constants cannot be used as inout formal template parameters of functions >
+<TC - 050402_077 verify that constants cannot be used as inout formal template parameters of functions >
 
 <COMPILE>
 
@@ -6851,7 +6851,7 @@ module NegSem_050402_actual_parameters_077 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that constants cannot be used as inout formal template parameters of functions >
+<TC - 050402_078 verify that constants cannot be used as inout formal template parameters of functions >
 
 <COMPILE>
 
@@ -6904,7 +6904,7 @@ module NegSem_050402_actual_parameters_078 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that expressions cannot be used as inout formal template parameters of functions >
+<TC - 050402_079 verify that expressions cannot be used as inout formal template parameters of functions >
 
 <COMPILE>
 
@@ -6958,7 +6958,7 @@ module NegSem_050402_actual_parameters_079 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as inout formal template parameters of functions >
+<TC - 050402_080 verify that template parameters cannot be used as inout formal template parameters of functions >
 
 <COMPILE>
 
@@ -7009,7 +7009,7 @@ module NegSem_050402_actual_parameters_080 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as inout formal template parameters of altsteps >
+<TC - 050402_081 verify that literals cannot be used as inout formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -7061,7 +7061,7 @@ module NegSem_050402_actual_parameters_081 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that module parameters cannot be used as inout formal template parameters of altsteps >
+<TC - 050402_082 verify that module parameters cannot be used as inout formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -7115,7 +7115,7 @@ module NegSem_050402_actual_parameters_082 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that module parameters cannot be used as inout formal template parameters of altsteps >
+<TC - 050402_083 verify that module parameters cannot be used as inout formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -7170,7 +7170,7 @@ module NegSem_050402_actual_parameters_083 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that function calls cannot be used as inout formal template parameters of altsteps >
+<TC - 050402_084 verify that function calls cannot be used as inout formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -7227,7 +7227,7 @@ module NegSem_050402_actual_parameters_084 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that expressions cannot be used as inout formal template parameters of altsteps >
+<TC - 050402_085 verify that expressions cannot be used as inout formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -7285,7 +7285,7 @@ module NegSem_050402_actual_parameters_085 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as inout formal template parameters of altsteps >
+<TC - 050402_086 verify that template parameters cannot be used as inout formal template parameters of altsteps >
 
 <COMPILE>
 
@@ -7340,7 +7340,7 @@ module NegSem_050402_actual_parameters_086 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that literals cannot be used as inout formal template parameters of test cases >
+<TC - 050402_087 verify that literals cannot be used as inout formal template parameters of test cases >
 
 <COMPILE>
 
@@ -7385,7 +7385,7 @@ module NegSem_050402_actual_parameters_087 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that module parameters cannot be used as inout formal template parameters of test cases >
+<TC - 050402_088 verify that module parameters cannot be used as inout formal template parameters of test cases >
 
 <COMPILE>
 
@@ -7432,7 +7432,7 @@ module NegSem_050402_actual_parameters_088 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that constants cannot be used as inout formal template parameters of test cases >
+<TC - 050402_089 verify that constants cannot be used as inout formal template parameters of test cases >
 
 <COMPILE>
 
@@ -7479,7 +7479,7 @@ module NegSem_050402_actual_parameters_089 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that function calls cannot be used as inout formal template parameters of test cases >
+<TC - 050402_090 verify that function calls cannot be used as inout formal template parameters of test cases >
 
 <COMPILE>
 
@@ -7528,7 +7528,7 @@ module NegSem_050402_actual_parameters_090 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that expressions cannot be used as inout formal template parameters of test cases >
+<TC - 050402_091 verify that expressions cannot be used as inout formal template parameters of test cases >
 
 <COMPILE>
 
@@ -7578,7 +7578,7 @@ module NegSem_050402_actual_parameters_091 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that template parameters cannot be used as inout formal template parameters of test cases >
+<TC - 050402_092 verify that template parameters cannot be used as inout formal template parameters of test cases >
 
 <COMPILE>
 
@@ -7625,7 +7625,7 @@ module NegSem_050402_actual_parameters_092 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that referencing errors are detected in actual parameters passed to in formal value parameters >
+<TC - 050402_093 verify that referencing errors are detected in actual parameters passed to in formal value parameters >
 
 <COMPILE>
 
@@ -7687,7 +7687,7 @@ Dynamic test case error: Using the value of an optional field containing omit
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that referencing errors are detected in actual parameters passed to in formal template parameters >
+<TC - 050402_094 verify that referencing errors are detected in actual parameters passed to in formal template parameters >
 
 <COMPILE>
 
@@ -7748,7 +7748,7 @@ error: Reference to field `subfield1' of any or omit `@NegSem_050402_actual_para
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that referencing errors are detected in actual parameters passed to in formal template parameters >
+<TC - 050402_095 verify that referencing errors are detected in actual parameters passed to in formal template parameters >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -7811,7 +7811,7 @@ Dynamic test case error: Matching with an uninitialized/unsupported integer temp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that referencing rules are correctly applied to actual parameters of inout formal template parameters >
+<TC - 050402_096 verify that referencing rules are correctly applied to actual parameters of inout formal template parameters >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -7875,7 +7875,7 @@ Dynamic test case error: Matching with an uninitialized/unsupported integer temp
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that string item references cannot be used as inout formal value parameters of functions >
+<TC - 050402_097 verify that string item references cannot be used as inout formal value parameters of functions >
 
 <COMPILE>
 
@@ -7926,7 +7926,7 @@ error: Reference to a string element of type `charstring' cannot be used in this
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that ordinary values cannot be passed to timer parameters >
+<TC - 050402_098 verify that ordinary values cannot be passed to timer parameters >
 
 <COMPILE>
 
@@ -7974,7 +7974,7 @@ error: Reference to a timer or timer parameter was expected for a timer paramete
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that values cannot be passed to port parameters >
+<TC - 050402_099 verify that values cannot be passed to port parameters >
 
 <COMPILE>
 
@@ -8027,7 +8027,7 @@ error: Reference to a port or port parameter was expected for a port parameter i
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that list notation containing actual parameters in wrong order is not accepted >
+<TC - 050402_100 verify that list notation containing actual parameters in wrong order is not accepted >
 
 <COMPILE>
 
@@ -8076,7 +8076,7 @@ error: character string value was expected
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that list notation containing less actual parameters than required is not accepted >
+<TC - 050402_101 verify that list notation containing less actual parameters than required is not accepted >
 
 <COMPILE>
 
@@ -8122,7 +8122,7 @@ error: Too few parameters: 2 was expected instead of 1
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that parameter without default value cannot be skipped >
+<TC - 050402_102 verify that parameter without default value cannot be skipped >
 
 <COMPILE>
 
@@ -8168,7 +8168,7 @@ error: Not used symbol \(`-'\) cannot be used for parameter that does not have d
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that mixing list and assignment notation is not allowed in parameterized calls (value as actual parameter) >
+<TC - 050402_103 verify that mixing list and assignment notation is not allowed in parameterized calls (value as actual parameter) >
 
 <COMPILE>
 
@@ -8215,7 +8215,7 @@ error: at or before token `"': syntax error, unexpected Cstring
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that mixing list and assignment notation is not allowed in parameterized calls (skipped actual parameter) >
+<TC - 050402_104 verify that mixing list and assignment notation is not allowed in parameterized calls (skipped actual parameter) >
 
 <COMPILE>
 
@@ -8262,7 +8262,7 @@ error: at or before token `-': syntax error, unexpected '-'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that parameters cannot be assigned more than once in assignment notation >
+<TC - 050402_105 verify that parameters cannot be assigned more than once in assignment notation >
 
 <COMPILE>
 
@@ -8309,7 +8309,7 @@ error: at or before token `\)': syntax error, unexpected '\)'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that assignment notation that doesn't contain all parameters is not accepted >
+<TC - 050402_106 verify that assignment notation that doesn't contain all parameters is not accepted >
 
 <COMPILE>
 
@@ -8355,7 +8355,7 @@ error: Parameter not specified
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that incompatible values cannot be passed to in formal parameters >
+<TC - 050402_107 verify that incompatible values cannot be passed to in formal parameters >
 
 <COMPILE>
 
@@ -8413,7 +8413,7 @@ error: Type mismatch: `@NegSem_050402_actual_parameters_107.R1.field2' of type `
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that incompatible values cannot be passed from out formal parameters >
+<TC - 050402_108 verify that incompatible values cannot be passed from out formal parameters >
 
 <COMPILE>
 
@@ -8473,7 +8473,7 @@ error: Type mismatch: `@NegSem_050402_actual_parameters_108.R1.field2' of type `
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that incompatible values cannot be passed to inout formal parameters >
+<TC - 050402_109 verify that incompatible values cannot be passed to inout formal parameters >
 
 <COMPILE>
 
@@ -8530,7 +8530,7 @@ error: Type mismatch: `@NegSem_050402_actual_parameters_109.R1.field2' of type `
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that incompatible templates cannot be passed to template parameters with omit restriction >
+<TC - 050402_111 verify that incompatible templates cannot be passed to template parameters with omit restriction >
 
 <COMPILE>
 
@@ -8577,7 +8577,7 @@ error: Restriction on template formal parameter does not allow usage of value ra
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that compatible templates can be passed to template parameters with value restriction >
+<TC - 050402_112 verify that compatible templates can be passed to template parameters with value restriction >
 
 <COMPILE>
 
@@ -8624,7 +8624,7 @@ error: Restriction on template formal parameter does not allow usage of value li
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that compatible templates can be passed to template parameters with present restriction >
+<TC - 050402_113 verify that compatible templates can be passed to template parameters with present restriction >
 
 <COMPILE>
 
@@ -8671,7 +8671,7 @@ error: Restriction on template formal parameter does not allow usage of any or o
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that compatible templates can be passed to template parameters with present restriction >
+<TC - 050402_114 verify that compatible templates can be passed to template parameters with present restriction >
 
 <COMPILE>
 
@@ -8728,7 +8728,7 @@ error: Reference to parameterized definition `mw_rec' without actual parameter l
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated when no actual parameter list is used for functions with no parameters >
+<TC - 050402_115 verify that error is generated when no actual parameter list is used for functions with no parameters >
 
 <COMPILE>
 
@@ -8777,7 +8777,7 @@ error: Reference to parameterized definition `f_test' without actual parameter l
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated when no actual parameter list is used for test cases with no parameters >
+<TC - 050402_116 verify that error is generated when no actual parameter list is used for test cases with no parameters >
 
 <COMPILE>
 
@@ -8821,7 +8821,7 @@ error: at or before token `\)': syntax error, unexpected '\)', expecting '\('
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated when no actual parameter list is used for altsteps with no parameters >
+<TC - 050402_117 verify that error is generated when no actual parameter list is used for altsteps with no parameters >
 
 <COMPILE>
 
@@ -8879,7 +8879,7 @@ error: at or before token `control': syntax error, unexpected ControlKeyword, ex
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - verify that error is generated when empty actual parameter list is used for templates with no parameters >
+<TC - 050402_118 verify that error is generated when empty actual parameter list is used for templates with no parameters >
 
 <COMPILE>
 
@@ -8931,7 +8931,7 @@ error: The referenced template `@NegSem_050402_actual_parameters_118.mw_allInt' 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that an error is detected when two constants reference each other >
+<TC - 0505_001 Verify that an error is detected when two constants reference each other >
 
 <COMPILE>
 
@@ -8977,7 +8977,7 @@ error: While searching referenced value: Circular reference: `@NegSem_0505_cycli
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that an error is detected when a forbidded cyclic reference occurs in cyclic import >
+<TC - 0505_002 Verify that an error is detected when a forbidded cyclic reference occurs in cyclic import >
 
 <COMPILE>
 

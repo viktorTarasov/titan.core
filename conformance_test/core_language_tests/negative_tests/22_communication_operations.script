@@ -53,7 +53,7 @@ This TD contains negative tests from ETSI TTCN3 Conformance Test's 22_communicat
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles message sending operations >
+<TC - 220201_001 Ensure that the IUT correctly handles message sending operations >
 
 <COMPILE>
 
@@ -177,7 +177,7 @@ error: A specific value was expected instead of any or omit
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles message sending operations  >
+<TC - 220201_002 Ensure that the IUT correctly handles message sending operations  >
 
 <COMPILE>
 
@@ -301,7 +301,7 @@ error: A specific value was expected instead of any value
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles message sending operations  >
+<TC - 220201_003 Ensure that the IUT correctly handles message sending operations  >
 
 <COMPILE>
 
@@ -359,7 +359,7 @@ error: Incompatible explicit type specification: `integer' was expected instead 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles message sending operations  >
+<TC - 220201_004 Ensure that the IUT correctly handles message sending operations  >
 
 <COMPILE>
 
@@ -447,7 +447,7 @@ error: The type of send parameter is signature `@NegSem_220201_SendOperation_004
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - missing to clause in case of one-to-many connections  >
+<TC - 220201_005 missing to clause in case of one-to-many connections  >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -519,7 +519,7 @@ Dynamic test case error: Port p has more than one active connections. Message ca
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - partially initialized template  >
+<TC - 220201_006 partially initialized template  >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -576,7 +576,7 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - no type prefix in inline template  >
+<TC - 220201_007 no type prefix in inline template  >
 
 <COMPILE>
 
@@ -638,7 +638,7 @@ error: Cannot determine the type of the outgoing message
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component in the to clause of send operation  >
+<TC - 220201_010 null component in the to clause of send operation  >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -692,7 +692,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - send operation on disconnected and unmapped ports  >
+<TC - 220201_011 send operation on disconnected and unmapped ports  >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -742,7 +742,7 @@ Dynamic test case error: Port p has neither connections nor mappings. Message ca
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles message receiving operations  >
+<TC - 220202_001 Ensure that the IUT correctly handles message receiving operations  >
 
 <COMPILE>
 
@@ -825,7 +825,7 @@ error: Message-based operation `receive' is not applicable to a procedure-based 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - no type prefix in ambiguous inline template  >
+<TC - 220202_002 no type prefix in ambiguous inline template  >
 
 <COMPILE>
 
@@ -886,7 +886,7 @@ error: Cannot determine the type of the incoming message
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - type mismatch in redirect value assignment  >
+<TC - 220202_003 type mismatch in redirect value assignment  >
 
 <COMPILE>
 
@@ -942,7 +942,7 @@ error: Type mismatch in value redirect: A variable of type `integer' or of a com
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - type mismatch in redirect assignment of message fields >
+<TC - 220202_004 type mismatch in redirect assignment of message fields >
 
 <COMPILE>
 
@@ -1006,7 +1006,7 @@ error: Type mismatch in value redirect: A variable of type `charstring' or of a 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying @decoded to a forbidden field  >
+<TC - 220202_005 applying @decoded to a forbidden field  >
 
 <COMPILE>
 
@@ -1072,7 +1072,7 @@ error: The '@decoded' modifier is only available to value redirects of string ty
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - decoding error in @decoded redirect assignment  >
+<TC - 220202_006 decoding error in @decoded redirect assignment  >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1139,7 +1139,7 @@ Dynamic test case error: Value redirect #1 failed, because the buffer was not em
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - invalid format value in @decoded redirect assignment  >
+<TC - 220202_007 invalid format value in @decoded redirect assignment  >
 
 <COMPILE>
 
@@ -1204,7 +1204,7 @@ error: 'proprietary' is not a valid encoding format
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value of wrong type in @decoded redirect assignment  >
+<TC - 220202_008 value of wrong type in @decoded redirect assignment  >
 
 <COMPILE>
 
@@ -1269,7 +1269,7 @@ error: Type mismatch: a value of type `charstring' was expected instead of `inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value of wrong type in @decoded redirect assignment  >
+<TC - 220202_009 value of wrong type in @decoded redirect assignment  >
 
 <COMPILE>
 
@@ -1335,7 +1335,7 @@ error: The encoding format parameter for the '@decoded' modifier is only availab
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - attempting to store component name in redirect assignment >
+<TC - 220202_010 attempting to store component name in redirect assignment >
 
 <COMPILE>
 
@@ -1389,7 +1389,7 @@ error: The type of the variable should be a component type instead of `charstrin
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - attempting to receive a type missing from the port list >
+<TC - 220202_011 attempting to receive a type missing from the port list >
 
 <COMPILE>
 
@@ -1447,7 +1447,7 @@ error: Incompatible explicit type specification: `integer' was expected instead 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value redirect assignment in receive any message statement >
+<TC - 220202_012 value redirect assignment in receive any message statement >
 
 <COMPILE>
 
@@ -1503,7 +1503,7 @@ error: Value redirect cannot be used without receive parameter
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - type mismatch in sender redirect assignment >
+<TC - 220202_014 type mismatch in sender redirect assignment >
 
 <COMPILE>
 
@@ -1558,7 +1558,7 @@ error: The type of the variable should be a component type instead of `charstrin
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component reference in from clause of receive operation >
+<TC - 220202_015 null component reference in from clause of receive operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -1614,7 +1614,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - index redirection in standard port.receive >
+<TC - 220202_017 index redirection in standard port.receive >
 
 <COMPILE>
 
@@ -1669,7 +1669,7 @@ error: Index redirect cannot be used without the 'any from' clause
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - insufficient value range of variable in index redirection >
+<TC - 220202_019 insufficient value range of variable in index redirection >
 
 <COMPILE>
 
@@ -1722,7 +1722,7 @@ error: 3 is not a valid value for type `integer' which has subtype \(0..2\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - insufficient array dimension of variable in index redirection >
+<TC - 220202_020 insufficient array dimension of variable in index redirection >
 
 <COMPILE>
 
@@ -1774,7 +1774,7 @@ error: Size of integer array is invalid: the port array has 3 dimensions, but th
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - insufficient array dimension of variable in index redirection >
+<TC - 220202_021 insufficient array dimension of variable in index redirection >
 
 <COMPILE>
 
@@ -1830,7 +1830,7 @@ error: 3 is not a valid value for type `integer' which has subtype \(0..2\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - incompatible from and sender clause  >
+<TC - 220202_022 incompatible from and sender clause  >
 
 <COMPILE>
 
@@ -1889,7 +1889,7 @@ error: The type of the variable should be a component type instead of `integer'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles message trigger operations >
+<TC - 220203_001 Ensure that the IUT correctly handles message trigger operations >
 
 <COMPILE>
 
@@ -1974,7 +1974,7 @@ error: Message-based operation `trigger' is not applicable to a procedure-based 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - no type prefix in ambiguous inline template >
+<TC - 220203_002 no type prefix in ambiguous inline template >
 
 <COMPILE>
 
@@ -2037,7 +2037,7 @@ error: Cannot determine the type of the incoming message
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - type mismatch in redirect value assignment >
+<TC - 220203_003 type mismatch in redirect value assignment >
 
 <COMPILE>
 
@@ -2093,7 +2093,7 @@ error: Type mismatch in value redirect: A variable of type `integer' or of a com
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - type mismatch in redirect assignment of message fields >
+<TC - 220203_004 type mismatch in redirect assignment of message fields >
 
 <COMPILE>
 
@@ -2156,7 +2156,7 @@ error: Type mismatch in value redirect: A variable of type `charstring' or of a 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying @decoded to a forbidden field >
+<TC - 220203_005 applying @decoded to a forbidden field >
 
 <COMPILE>
 
@@ -2221,7 +2221,7 @@ error: The '@decoded' modifier is only available to value redirects of string ty
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - decoding error in @decoded redirect assignment >
+<TC - 220203_006 decoding error in @decoded redirect assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -2287,7 +2287,7 @@ Dynamic test case error: Value redirect #1 failed, because the buffer was not em
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - invalid format value in @decoded redirect assignment >
+<TC - 220203_007 invalid format value in @decoded redirect assignment >
 
 <COMPILE>
 
@@ -2352,7 +2352,7 @@ error: 'proprietary' is not a valid encoding format
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value of wrong type in @decoded redirect assignment >
+<TC - 220203_008 value of wrong type in @decoded redirect assignment >
 
 <COMPILE>
 
@@ -2417,7 +2417,7 @@ error: Type mismatch: a value of type `charstring' was expected instead of `inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - encoding parameter of @decoded redirect assignment applied to incorrect type >
+<TC - 220203_009 encoding parameter of @decoded redirect assignment applied to incorrect type >
 
 <COMPILE>
 
@@ -2483,7 +2483,7 @@ error: The encoding format parameter for the '@decoded' modifier is only availab
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - attempting to store component name in redirect assignment >
+<TC - 220203_010 attempting to store component name in redirect assignment >
 
 <COMPILE>
 
@@ -2540,7 +2540,7 @@ error: The type of the variable should be a component type instead of `charstrin
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - attempting to receive a type missing from the port list >
+<TC - 220203_011 attempting to receive a type missing from the port list >
 
 <COMPILE>
 
@@ -2597,7 +2597,7 @@ error: Incompatible explicit type specification: `integer' was expected instead 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value redirect assignment in receive any message statement >
+<TC - 220203_012 value redirect assignment in receive any message statement >
 
 <COMPILE>
 
@@ -2651,7 +2651,7 @@ error: Value redirect cannot be used without receive parameter
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - type mismatch in sender redirect assignment >
+<TC - 220203_014 type mismatch in sender redirect assignment >
 
 <COMPILE>
 
@@ -2707,7 +2707,7 @@ error: The type of the variable should be a component type instead of `charstrin
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component reference in from clause of trigger operation >
+<TC - 220203_015 null component reference in from clause of trigger operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -2760,63 +2760,11 @@ Dynamic test case error: The second argument of connect operation contains the n
 :exmp
 
 *---------------------------------------------------------------------*
-:h3. NegSem_220203_TriggerOperation_019 negative test
-.*---------------------------------------------------------------------*
-:xmp tab=0.
-
-<TC - insufficient value range of variable in index redirection >
-
-<COMPILE>
-
-<MODULE TTCN NegSem_220203_TriggerOperation_019 NegSem_220203_TriggerOperation_019.ttcn >
-/******************************************************************************
- ** @version  0.0.1
- ** @purpose  1:22.2.3, insufficient value range of variable in index redirection 
- ** @verdict  pass reject
- *****************************************************************/
-
-// The following requirements are tested:
-// If the index redirection is used for single-dimensional port arrays, the type of the 
-// integer variable shall allow storing the highest index of the respective array.
-
-module NegSem_220203_TriggerOperation_019 {
-    type integer RestrInt(0..2);
-	type port P message {
-		inout integer;
-	} with {extension "internal"}
-	
-    type component GeneralComp {
-		port P p[10];
-	}
-	    
-    testcase TC_NegSem_220203_TriggerOperation_019() runs on GeneralComp {
-        var RestrInt v_int;
-
-		connect(self:p[5], self:p[5]);
-        p[5].send(100);
-        any from p.trigger(integer:?) -> @index value v_int;
-        setverdict(pass);
-    }
-
-    control {
-        execute(TC_NegSem_220203_TriggerOperation_019(), 5.0);
-    }
-}
-<END_MODULE>
-
-<RESULT COUNT 1>
-error: 3 is not a valid value for type `integer' which has subtype \(0..2\)
-<END_RESULT>
-
-<END_TC>
-:exmp
-
-*---------------------------------------------------------------------*
 :h3. NegSem_220203_TriggerOperation_017 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - index redirection in standard port.trigger >
+<TC - 220203_017 index redirection in standard port.trigger >
 
 <COMPILE>
 
@@ -2864,11 +2812,63 @@ error: Index redirect cannot be used without the 'any from' clause
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_220203_TriggerOperation_019 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 220203_019 insufficient value range of variable in index redirection >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_220203_TriggerOperation_019 NegSem_220203_TriggerOperation_019.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:22.2.3, insufficient value range of variable in index redirection 
+ ** @verdict  pass reject
+ *****************************************************************/
+
+// The following requirements are tested:
+// If the index redirection is used for single-dimensional port arrays, the type of the 
+// integer variable shall allow storing the highest index of the respective array.
+
+module NegSem_220203_TriggerOperation_019 {
+    type integer RestrInt(0..2);
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+	
+    type component GeneralComp {
+		port P p[10];
+	}
+	    
+    testcase TC_NegSem_220203_TriggerOperation_019() runs on GeneralComp {
+        var RestrInt v_int;
+
+		connect(self:p[5], self:p[5]);
+        p[5].send(100);
+        any from p.trigger(integer:?) -> @index value v_int;
+        setverdict(pass);
+    }
+
+    control {
+        execute(TC_NegSem_220203_TriggerOperation_019(), 5.0);
+    }
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: 3 is not a valid value for type `integer' which has subtype \(0..2\)
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_220203_TriggerOperation_020 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - insufficient array dimension of variable in index redirection >
+<TC - 220203_020 insufficient array dimension of variable in index redirection >
 
 <COMPILE>
 
@@ -2921,7 +2921,7 @@ error: Size of integer array is invalid: the port array has 3 dimensions, but th
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - insufficient element value range of variable in index redirection >
+<TC - 220203_021 insufficient element value range of variable in index redirection >
 
 <COMPILE>
 
@@ -2975,7 +2975,7 @@ error: 3 is not a valid value for type `integer' which has subtype \(0..2\)
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - incompatible from and sender clause  >
+<TC - 220203_022 incompatible from and sender clause  >
 
 <COMPILE>
 
@@ -3038,7 +3038,7 @@ error: The type of the variable should be a component type instead of `integer'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly handles procedure call operations  >
+<TC - 220301_001 Ensure that the IUT correctly handles procedure call operations  >
 
 <COMPILE>
 
@@ -3096,7 +3096,7 @@ error: Procedure-based operation `call' is not applicable to a message-based por
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that the IUT correctly procedure calls >
+<TC - 220301_002 Ensure that the IUT correctly procedure calls >
 
 <COMPILE>
 
@@ -3238,7 +3238,7 @@ error: Catching of `timeout' exception is not allowed because the previous `call
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component in the to clause of the call operation >
+<TC - 220301_003 null component in the to clause of the call operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -3292,7 +3292,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that getcall operations are only used on procedure based ports  >
+<TC - 220302_001 Ensure that getcall operations are only used on procedure based ports  >
 
 <COMPILE>
 
@@ -3348,7 +3348,7 @@ error: Procedure-based operation `getcall' is not applicable to a message-based 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that getcall operation does not allow value assignment >
+<TC - 220302_002 Ensure that getcall operation does not allow value assignment >
 
 <COMPILE>
 
@@ -3494,7 +3494,7 @@ error: at or before token `testcase': syntax error, unexpected TestcaseKeyword, 
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that getcall for any call does not allow param assignment >
+<TC - 220302_003 Ensure that getcall for any call does not allow param assignment >
 
 <COMPILE>
 
@@ -3635,7 +3635,7 @@ error: Parameter redirect cannot be used without signature template
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from getcall is applied to single port >
+<TC - 220302_004 Verify that error occurs when any from getcall is applied to single port >
 
 <COMPILE>
 
@@ -3696,7 +3696,7 @@ error: Reference to a port array was expected instead of a port
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from getcall is applied to 1D array and index target is array >
+<TC - 220302_005 Verify that error occurs when any from getcall is applied to 1D array and index target is array >
 
 <COMPILE>
 
@@ -3768,7 +3768,7 @@ error: Indices of one-dimensional port arrays can only be redirected to an integ
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from getcall is applied to 1D array and index target has wrong type >
+<TC - 220302_006 Verify that error occurs when any from getcall is applied to 1D array and index target has wrong type >
 
 <COMPILE>
 
@@ -3840,7 +3840,7 @@ error: Indices of port arrays can only be redirected to an integer, an integer a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from getcall index redirection for multi-D arrays requires arrays of correct size >
+<TC - 220302_007 Verify that any from getcall index redirection for multi-D arrays requires arrays of correct size >
 
 <COMPILE>
 
@@ -3920,7 +3920,7 @@ error: Array index overflow: the index value must be at most `0' instead of `1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from getcall index redirection for multi-D arrays requires arrays >
+<TC - 220302_008 Verify that any from getcall index redirection for multi-D arrays requires arrays >
 
 <COMPILE>
 
@@ -3996,7 +3996,7 @@ error: Indices of multi-dimensional port arrays can only be redirected to an int
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component in the from clause of the getcall operation >
+<TC - 220302_009 null component in the from clause of the getcall operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4061,7 +4061,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying @decoded to a forbidden field >
+<TC - 220302_011 applying @decoded to a forbidden field >
 
 <COMPILE>
 
@@ -4131,7 +4131,7 @@ error: The '@decoded' modifier is only available to parameter redirects of strin
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - decoding error in @decoded redirect assignment >
+<TC - 220302_012 decoding error in @decoded redirect assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4201,7 +4201,7 @@ Dynamic test case error: Parameter redirect \(for parameter 'p__par'\) failed, b
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - invalid format value in @decoded redirect assignment >
+<TC - 220302_013 invalid format value in @decoded redirect assignment >
 
 <COMPILE>
 
@@ -4270,7 +4270,7 @@ error: 'proprietary' is not a valid encoding format
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value of wrong type in @decoded redirect assignment >
+<TC - 220302_014 value of wrong type in @decoded redirect assignment >
 
 <COMPILE>
 
@@ -4339,7 +4339,7 @@ error: Type mismatch: a value of type `charstring' was expected instead of `inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - encoding parameter of @decoded redirect assignment applied to incorrect type >
+<TC - 220302_015 encoding parameter of @decoded redirect assignment applied to incorrect type >
 
 <COMPILE>
 
@@ -4409,7 +4409,7 @@ error: The encoding format parameter for the '@decoded' modifier is only availab
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - incompatible from and sender clause in getcall operation >
+<TC - 220302_016 incompatible from and sender clause in getcall operation >
 
 <COMPILE>
 
@@ -4479,7 +4479,7 @@ error: The types in `from' clause and `sender' redirect are not the same: `@NegS
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in port.getcall operation >
+<TC - 220302_001 Verify that error occurs when using index redirection in port.getcall operation >
 
 <COMPILE>
 
@@ -4541,7 +4541,7 @@ error: Index redirect cannot be used without the 'any from' clause
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Ensure that reply operations are only used on procedure based ports >
+<TC - 220303_001 Ensure that reply operations are only used on procedure based ports >
 
 <COMPILE>
 
@@ -4602,7 +4602,7 @@ error: The type of parameter is `integer', which is not a signature
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component in the to clause of the reply operation >
+<TC - 220303_002 null component in the to clause of the reply operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -4667,7 +4667,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from getreply is applied to single port >
+<TC - 220304_001 Verify that error occurs when any from getreply is applied to single port >
 
 <COMPILE>
 
@@ -4730,7 +4730,7 @@ error: Reference to a port array was expected instead of a port
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from getreply is applied to 1D array and index target is array >
+<TC - 220304_002 Verify that error occurs when any from getreply is applied to 1D array and index target is array >
 
 <COMPILE>
 
@@ -4809,7 +4809,7 @@ error: Indices of one-dimensional port arrays can only be redirected to an integ
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from getreply is applied to 1D array and index target has wrong type >
+<TC - 220304_003 Verify that error occurs when any from getreply is applied to 1D array and index target has wrong type >
 
 <COMPILE>
 
@@ -4888,7 +4888,7 @@ error: Indices of port arrays can only be redirected to an integer, an integer a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from getreply index redirection for multi-D arrays requires arrays of correct size >
+<TC - 220304_004 Verify that any from getreply index redirection for multi-D arrays requires arrays of correct size >
 
 <COMPILE>
 
@@ -4977,7 +4977,7 @@ error: Array index overflow: the index value must be at most `0' instead of `1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from getreply index redirection for multi-D arrays requires arrays >
+<TC - 220304_005 Verify that any from getreply index redirection for multi-D arrays requires arrays >
 
 <COMPILE>
 
@@ -5062,7 +5062,7 @@ error: Indices of multi-dimensional port arrays can only be redirected to an int
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component in the from clause of the getreply operation >
+<TC - 220304_006 null component in the from clause of the getreply operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -5128,7 +5128,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component in the multicast list of the from clause of the getreply operation >
+<TC - 220304_007 null component in the multicast list of the from clause of the getreply operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -5191,7 +5191,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying @decoded to a forbidden parameter field >
+<TC - 220304_008 applying @decoded to a forbidden parameter field >
 
 <COMPILE>
 
@@ -5263,7 +5263,7 @@ error: The '@decoded' modifier is only available to parameter redirects of strin
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - decoding error in @decoded redirect parameter assignment >
+<TC - 220304_009 decoding error in @decoded redirect parameter assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -5331,7 +5331,7 @@ Dynamic test case error: Parameter redirect \(for parameter 'p__par'\) failed, b
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - invalid format value in @decoded redirect parameter assignment >
+<TC - 220304_010 invalid format value in @decoded redirect parameter assignment >
 
 <COMPILE>
 
@@ -5400,7 +5400,7 @@ error: 'proprietary' is not a valid encoding format
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value of wrong type in @decoded redirect parameter assignment >
+<TC - 220304_011 value of wrong type in @decoded redirect parameter assignment >
 
 <COMPILE>
 
@@ -5468,7 +5468,7 @@ error: Type mismatch: a value of type `charstring' was expected instead of `inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - encoding parameter of @decoded redirect parameter assignment applied to incorrect type >
+<TC - 220304_012 encoding parameter of @decoded redirect parameter assignment applied to incorrect type >
 
 <COMPILE>
 
@@ -5537,7 +5537,7 @@ error: The encoding format parameter for the '@decoded' modifier is only availab
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - incompatible from and sender clause in getreply operation >
+<TC - 220304_013 incompatible from and sender clause in getreply operation >
 
 <COMPILE>
 
@@ -5605,7 +5605,7 @@ error: The types in `from' clause and `sender' redirect are not the same: `@NegS
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying @decoded to a forbidden parameter field >
+<TC - 220304_015 applying @decoded to a forbidden parameter field >
 
 <COMPILE>
 
@@ -5682,7 +5682,7 @@ error: The '@decoded' modifier is only available to value redirects of string ty
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - decoding error in @decoded redirect value assignment >
+<TC - 220304_016 decoding error in @decoded redirect value assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -5755,7 +5755,7 @@ Dynamic test case error: Value redirect #1 failed, because the buffer was not em
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - invalid format value in @decoded redirect value assignment >
+<TC - 220304_017 invalid format value in @decoded redirect value assignment >
 
 <COMPILE>
 
@@ -5829,7 +5829,7 @@ module NegSem_220304_getreply_operation_017 {
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value of wrong type in @decoded redirect value assignment >
+<TC - 220304_018 value of wrong type in @decoded redirect value assignment >
 
 <COMPILE>
 
@@ -5900,7 +5900,7 @@ error: Type mismatch: a value of type `charstring' was expected instead of `inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - encoding parameter of @decoded redirect value assignment applied to incorrect type >
+<TC - 220304_019 encoding parameter of @decoded redirect value assignment applied to incorrect type >
 
 <COMPILE>
 
@@ -5974,7 +5974,7 @@ error: The encoding format parameter for the '@decoded' modifier is only availab
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in port.getreply operation >
+<TC - 220304_001 Verify that error occurs when using index redirection in port.getreply operation >
 
 <COMPILE>
 
@@ -6038,7 +6038,7 @@ error: Index redirect cannot be used without the 'any from' clause
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - raised exception type not in the list of available exceptions >
+<TC - 220305_001 raised exception type not in the list of available exceptions >
 
 <COMPILE>
 
@@ -6102,7 +6102,7 @@ error: Type `integer' is not present on the exception list of signature `@NegSem
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - exception raised for a signature with no exception list >
+<TC - 220305_002 exception raised for a signature with no exception list >
 
 <COMPILE>
 
@@ -6166,7 +6166,7 @@ error: Signature `@NegSem_220305_raise_operation_002.S' does not have exceptions
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - raised exception type is ambiguous >
+<TC - 220305_003 raised exception type is ambiguous >
 
 <COMPILE>
 
@@ -6233,7 +6233,7 @@ error: Type of the exception is ambiguous: `integer' is compatible with more tha
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - missing to clause in case of 1 to n connection >
+<TC - 220305_004 missing to clause in case of 1 to n connection >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -6299,7 +6299,7 @@ Dynamic test case error: Port p has more than one active connections. Message ca
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - exception on a message port >
+<TC - 220305_005 exception on a message port >
 
 <COMPILE>
 
@@ -6365,7 +6365,7 @@ error: Procedure-based operation `raise' is not applicable to a message-based po
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - exception procedure signature not in the port list >
+<TC - 220305_006 exception procedure signature not in the port list >
 
 <COMPILE>
 
@@ -6426,7 +6426,7 @@ error: Signature `@NegSem_220305_raise_operation_006.S2' is not present on the i
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value of incorrect type in the to clause of the raise operation >
+<TC - 220305_007 value of incorrect type in the to clause of the raise operation >
 
 <COMPILE>
 
@@ -6488,7 +6488,7 @@ error: A component reference was expected as operand
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null in the to clause of the raise operation >
+<TC - 220305_008 null in the to clause of the raise operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -6550,7 +6550,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - raise operation on disconnected and unmapped ports >
+<TC - 220305_009 raise operation on disconnected and unmapped ports >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -6612,7 +6612,7 @@ Dynamic test case error: Port p has neither connections nor mappings. Message ca
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from catch is applied to single port >
+<TC - 220306_001 Verify that error occurs when any from catch is applied to single port >
 
 <COMPILE>
 
@@ -6675,7 +6675,7 @@ error: Reference to a port array was expected instead of a port
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from catch is applied to 1D array and index target is array >
+<TC - 220306_002 Verify that error occurs when any from catch is applied to 1D array and index target is array >
 
 <COMPILE>
 
@@ -6754,7 +6754,7 @@ error: Indices of one-dimensional port arrays can only be redirected to an integ
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when any from catch is applied to 1D array and index target has wrong type >
+<TC - 220306_003 Verify that error occurs when any from catch is applied to 1D array and index target has wrong type >
 
 <COMPILE>
 
@@ -6833,7 +6833,7 @@ error: Indices of port arrays can only be redirected to an integer, an integer a
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from catch index redirection for multi-D arrays requires arrays of correct size >
+<TC - 220306_004  that any from catch index redirection for multi-D arrays requires arrays of correct size >
 
 <COMPILE>
 
@@ -6921,7 +6921,7 @@ error: Array index overflow: the index value must be at most `0' instead of `1'
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that any from catch index redirection for multi-D arrays requires arrays >
+<TC - 220306_005 Verify that any from catch index redirection for multi-D arrays requires arrays >
 
 <COMPILE>
 
@@ -7006,7 +7006,7 @@ error: Indices of multi-dimensional port arrays can only be redirected to an int
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component in the from clause of the catch operation >
+<TC - 220306_006 null component in the from clause of the catch operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -7071,7 +7071,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component in the multicast list of the from clause of the catch operation >
+<TC - 220306_007 null component in the multicast list of the from clause of the catch operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -7135,7 +7135,7 @@ Dynamic test case error: The second argument of connect operation contains the n
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - applying @decoded to a forbidden exception field >
+<TC - 220306_008 applying @decoded to a forbidden exception field >
 
 <COMPILE>
 
@@ -7212,7 +7212,7 @@ error: The '@decoded' modifier is only available to value redirects of string ty
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - decoding error in @decoded redirect value assignment >
+<TC - 220306_009 decoding error in @decoded redirect value assignment >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
@@ -7283,7 +7283,7 @@ Dynamic test case error: Value redirect #1 failed, because the buffer was not em
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - invalid format value in @decoded redirect value assignment >
+<TC - 220306_010 invalid format value in @decoded redirect value assignment >
 
 <COMPILE>
 
@@ -7356,7 +7356,7 @@ error: 'proprietary' is not a valid encoding format
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - value of wrong type in @decoded redirect value assignment >
+<TC - 220306_011 value of wrong type in @decoded redirect value assignment >
 
 <COMPILE>
 
@@ -7428,7 +7428,7 @@ error: Type mismatch: a value of type `charstring' was expected instead of `inte
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - encoding parameter of @decoded redirect value assignment applied to incorrect type >
+<TC - 220306_012 encoding parameter of @decoded redirect value assignment applied to incorrect type >
 
 <COMPILE>
 
@@ -7502,7 +7502,7 @@ error: The encoding format parameter for the '@decoded' modifier is only availab
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - incompatible from and sender clause in catch operation >
+<TC - 220306_013 incompatible from and sender clause in catch operation >
 
 <COMPILE>
 
@@ -7571,7 +7571,7 @@ error: The types in `from' clause and `sender' redirect are not the same: `@NegS
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - Verify that error occurs when using index redirection in port.catch operation >
+<TC - 220306_001 Verify that error occurs when using index redirection in port.catch operation >
 
 <COMPILE>
 
@@ -7639,7 +7639,7 @@ error: Index redirect cannot be used without the 'any from' clause
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - null component reference in from clause of check operation >
+<TC - 2204_001 null component reference in from clause of check operation >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
