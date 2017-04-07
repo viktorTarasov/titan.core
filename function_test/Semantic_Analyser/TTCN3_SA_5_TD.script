@@ -3594,10 +3594,10 @@ template integer 	i1 :=  1 & 2
 
 }
 <END_MODULE>
-<RESULT COUNT 1>
-(?im)template.+?concatenation.+?cannot.+?be.+?used.+?for.+?type.+?`integer'
+<RESULT COUNT 2>
+(?im)Templates.+?of.+?type.+?`integer'.+?cannot.+?be.+?concatenated
 <END_RESULT>
-<RESULT COUNT 1>
+<RESULT COUNT 2>
 (?is)\berror:
 <END_RESULT>
 <RESULT>
@@ -3754,10 +3754,10 @@ template float 	f1 :=  1.0 & 2E-1
 
 }
 <END_MODULE>
-<RESULT COUNT 1>
-(?im)template.+?concatenation.+?cannot.+?be.+?used.+?for.+?type.+?`float'
+<RESULT COUNT 2>
+(?im)Templates.+?of.+?type.+?`float'.+?cannot.+?be.+?concatenated
 <END_RESULT>
-<RESULT COUNT 1>
+<RESULT COUNT 2>
 (?is)\berror:
 <END_RESULT>
 <RESULT>
@@ -3963,10 +3963,10 @@ template boolean 	b1 :=  true & false
 
 }
 <END_MODULE>
-<RESULT COUNT 1>
-(?im)template.+?concatenation.+?cannot.+?be.+?used.+?for.+?type.+?`boolean'
+<RESULT COUNT 2>
+(?im)Templates.+?of.+?type.+?`boolean'.+?cannot.+?be.+?concatenated
 <END_RESULT>
-<RESULT COUNT 1>
+<RESULT COUNT 2>
 (?is)\berror:
 <END_RESULT>
 <RESULT>
@@ -4715,10 +4715,10 @@ template rtype	r3 := r1 & r2
 
 }
 <END_MODULE>
-<RESULT COUNT 1>
-(?im)template.+?concatenation.+?cannot.+?be.+?used.+?for.+?type.+?`@Temp.rtype'
+<RESULT COUNT 2>
+(?im)Templates.+?of.+?type.+?`@Temp.rtype'.+?cannot.+?be.+?concatenated
 <END_RESULT>
-<RESULT COUNT 1>
+<RESULT COUNT 2>
 (?is)\berror:
 <END_RESULT>
 <RESULT>
@@ -9206,7 +9206,7 @@ module ModuleA {
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 5>
-(?im)template.+?concatenation.+?cannot.+?be.+?used.+?for.+?type.+?`integer'
+(?im)integer.+?value.+?was.+?expected
 <END_RESULT>
 <RESULT COUNT 5>
 (?is)\berror:
@@ -9331,7 +9331,7 @@ module ModuleA {
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 5>
-(?im)template.+?concatenation.+?cannot.+?be.+?used.+?for.+?type.+?`integer'
+(?im)integer.+?value.+?was.+?expected
 <END_RESULT>
 <RESULT COUNT 5>
 (?is)\berror:
@@ -9562,7 +9562,7 @@ module ModuleA {
 }
 <END_MODULE>
 <RESULT IF_PASS COUNT 5>
-(?im)template.+?concatenation.+?cannot.+?be.+?used.+?for.+?type.+?`integer'
+(?im)integer.+?value.+?was.+?expected
 <END_RESULT>
 <RESULT COUNT 5>
 (?is)\berror:

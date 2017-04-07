@@ -754,21 +754,21 @@ namespace Ttcn {
   Value* LengthRestriction::get_single_value()
   {
     if (is_range) FATAL_ERROR("LengthRestriction::get_single_value()");
-    if (!checked) FATAL_ERROR("LengthRestriction::get_single_value()");
+    //if (!checked) FATAL_ERROR("LengthRestriction::get_single_value()");
     return single->get_value_refd_last();
   }
 
   Value *LengthRestriction::get_lower_value()
   {
     if (!is_range) FATAL_ERROR("LengthRestriction::get_lower_value()");
-    if (!checked) FATAL_ERROR("LengthRestriction::get_lower_value()");
+    //if (!checked) FATAL_ERROR("LengthRestriction::get_lower_value()");
     return range.lower->get_value_refd_last();
   }
 
   Value *LengthRestriction::get_upper_value()
   {
     if (!is_range) FATAL_ERROR("LengthRestriction::get_upper_value()");
-    if (!checked) FATAL_ERROR("LengthRestriction::get_upper_value()");
+    //if (!checked) FATAL_ERROR("LengthRestriction::get_upper_value()");
     return range.upper ? range.upper->get_value_refd_last() : 0;
   }
 

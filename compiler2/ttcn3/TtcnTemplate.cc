@@ -888,6 +888,21 @@ namespace Ttcn {
       else
         FATAL_ERROR("Template::set_templatetype()");
       break;
+    case TEMPLATE_CONCAT:
+      switch (p_templatetype) {
+      case SPECIFIC_VALUE:
+      case ANY_VALUE:
+      case BSTR_PATTERN:
+      case HSTR_PATTERN:
+      case OSTR_PATTERN:
+        // OK
+        delete u.concat.op1;
+        delete u.concat.op2;
+        break;
+      default:
+        FATAL_ERROR("Template::set_templatetype()");
+      }
+      break;
     default:
       FATAL_ERROR("Template::set_templatetype()");
     }
@@ -1112,35 +1127,6 @@ namespace Ttcn {
         goto error;
       }
       break; }
-    case TEMPLATE_CONCAT: {
-      Type* t1 = u.concat.op1->get_expr_governor(exp_val);
-      Type* t2 = u.concat.op2->get_expr_governor(exp_val);
-      if (t1 == NULL) {
-        if (t2 == NULL) {
-          return NULL;
-        }
-        return t2;
-      }
-      else {
-        if (t2 == NULL) {
-          return t1;
-        }
-        Type::typetype_t tt1 = t1->get_type_refd_last()->get_typetype_ttcn3();
-        Type::typetype_t tt2 = t2->get_type_refd_last()->get_typetype_ttcn3();
-        if (tt1 == Type::T_CSTR && tt2 == Type::T_USTR) {
-          return t2;
-        }
-        if (tt1 == Type::T_USTR && tt2 == Type::T_CSTR) {
-          return t1;
-        }
-        if (tt1 != tt2) {
-          error("Operands of template concatenation are not compatible with "
-            "each other");
-          goto error;
-        }
-        return t1;
-      }
-    }
     default:
       return Type::get_pooltype(get_expr_returntype(exp_val));
     }
@@ -1386,38 +1372,108 @@ namespace Ttcn {
   Template* Template::get_template_refd_last(ReferenceChain *refch)
   {
     // return this for non-referenced templates
-    if (templatetype != TEMPLATE_REFD) return this;
-    // use the cached template if present
-    else if (u.ref.refd_last) return u.ref.refd_last;
-    else {
-      Common::Assignment *t_ass = u.ref.ref->get_refd_assignment();
-      // escape from invalid recursion loops
-      if (templatetype != TEMPLATE_REFD) return this;
-      if (!t_ass) FATAL_ERROR("Template::get_template_refd_last()");
-      if (t_ass->get_asstype() != Common::Assignment::A_TEMPLATE) {
-        // return this if the reference does not point to a template
-        u.ref.refd_last = this;
-        return u.ref.refd_last;
+    if (templatetype != TEMPLATE_REFD &&
+        templatetype != TEMPLATE_CONCAT) return this;
+    if (templatetype == TEMPLATE_REFD) {
+      // use the cached template if present
+      if (u.ref.refd_last) return u.ref.refd_last;
+      else {
+        Common::Assignment *t_ass = u.ref.ref->get_refd_assignment();
+        // escape from invalid recursion loops
+        if (templatetype != TEMPLATE_REFD) return this;
+        if (!t_ass) FATAL_ERROR("Template::get_template_refd_last()");
+        if (t_ass->get_asstype() != Common::Assignment::A_TEMPLATE) {
+          // return this if the reference does not point to a template
+          u.ref.refd_last = this;
+          return u.ref.refd_last;
+        }
       }
+      // otherwise evaluate the reference
     }
-    // otherwise evaluate the reference
     bool destroy_refch;
     if (refch) {
       refch->mark_state();
       destroy_refch = false;
     } else {
-      refch = new ReferenceChain(this, "While searching referenced template");
+      refch = new ReferenceChain(this, templatetype == TEMPLATE_REFD ?
+        "While searching for referenced template" :
+        "While evaluating template concatenation");
       destroy_refch = true;
     }
     Template *ret_val;
     if (refch->add(get_fullname())) {
-      Template *t_refd = get_template_refd(refch);
-      // get_template_refd() may set u.ref.refd_last if there are unfoldable
-      // sub-references in u.ref.ref
-      if (!u.ref.refd_last) {
-        u.ref.refd_last = t_refd->get_template_refd_last(refch);
+      if (templatetype == TEMPLATE_REFD) {
+        Template *t_refd = get_template_refd(refch);
+        // get_template_refd() may set u.ref.refd_last if there are unfoldable
+        // sub-references in u.ref.ref
+        if (!u.ref.refd_last) {
+          u.ref.refd_last = t_refd->get_template_refd_last(refch);
+        }
+        ret_val = u.ref.refd_last;
       }
-      ret_val = u.ref.refd_last;
+      else {
+        // evaluate the template concatenation, if the operands are known at
+        // compile-time
+        set_lowerid_to_ref();
+        Type::typetype_t tt = get_expr_returntype(Type::EXPECTED_TEMPLATE);
+        // evaluate the operands first
+        Template* t1 = u.concat.op1->get_template_refd_last(refch);
+        Template* t2 = u.concat.op2->get_template_refd_last(refch);
+        switch (tt) {
+        case Type::T_BSTR:
+        case Type::T_HSTR:
+        case Type::T_OSTR:
+        case Type::T_CSTR:
+        case Type::T_USTR: {
+          // only string concatenations can be evaluated at compile-time
+          // case 1: concatenating two values results in a value
+          if (t1->templatetype == SPECIFIC_VALUE &&
+              t2->templatetype == SPECIFIC_VALUE) {
+            Value* v = new Value(Value::OPTYPE_CONCAT, t1->u.specific_value->clone(),
+               t2->u.specific_value->clone());
+            v->set_location(*this);
+            v->set_my_scope(get_my_scope());
+            v->set_fullname(get_fullname());
+            if (!destroy_refch) {
+              // the value has the same fullname as the template, so adding it
+              // to the reference chain would cause a 'circular reference' error,
+              // which is why the template's name is removed from the chain here
+              refch->prev_state();
+              refch->mark_state();
+            }
+            // calling get_value_refd_last evaluates the value
+            v->get_value_refd_last(destroy_refch ? NULL : refch);
+            set_templatetype(SPECIFIC_VALUE);
+            u.specific_value = v;
+          }
+          // the rest of the cases are only possible for binary strings
+          else if (tt == Type::T_BSTR || tt == Type::T_HSTR || tt == Type::T_OSTR) {
+            // case 2: ? & ? = ?
+            if (t1->templatetype == ANY_VALUE && t2->templatetype == ANY_VALUE &&
+                t1->length_restriction == NULL && t2->length_restriction == NULL) {
+              set_templatetype(ANY_VALUE);
+            }
+            // case 3: operands are values, patterns, '?' or '?'/'*' with fixed
+            // length restriction => result is a binary string pattern
+            string* patt_ptr = new string;
+            bool evaluated = t1->concat_to_bin_pattern(*patt_ptr, tt) &&
+              t2->concat_to_bin_pattern(*patt_ptr, tt);
+            if (evaluated) {
+              set_templatetype(tt == Type::T_BSTR ? BSTR_PATTERN :
+                (tt == Type::T_HSTR ? HSTR_PATTERN : OSTR_PATTERN));
+              u.pattern = patt_ptr;
+            }
+            else {
+              // erroneous or cannot be evaluated => leave it as it is
+              delete patt_ptr;
+            }
+          }
+          break; }
+        default:
+          break;
+        }
+        ret_val = this;    
+      }
     } else {
       // a circular reference was found
       set_templatetype(TEMPLATE_ERROR);
@@ -1447,20 +1503,91 @@ namespace Ttcn {
         // unfoldable stuff
         return this;
       case SPECIFIC_VALUE:
-        (void)t->u.specific_value->get_refd_sub_value(
-          subrefs, i, usedInIsbound, refch, silent); // only to report errors
+        /*(void)t->u.specific_value->get_refd_sub_value(
+          subrefs, i, usedInIsbound, refch, silent); // only to report errors*/
         break;
       default:
         break;
       } // switch
       Ttcn::FieldOrArrayRef *ref=subrefs->get_ref(i);
-      if(ref->get_type() == Ttcn::FieldOrArrayRef::FIELD_REF)
+      if(ref->get_type() == Ttcn::FieldOrArrayRef::FIELD_REF) {
+        if (t->get_my_governor()->get_type_refd_last()->get_typetype() == 
+            Type::T_OPENTYPE) {
+          // allow the alternatives of open types as both lower and upper identifiers
+          ref->set_field_name_to_lowercase();
+        }
         t=t->get_refd_field_template(*ref->get_id(), *ref, usedInIsbound,
             refch, silent);
+      }
       else t=t->get_refd_array_template(ref->get_val(), usedInIsbound, refch,
         silent);
     }
     return t;
+  }
+  
+  bool Template::concat_to_bin_pattern(string& patt_str, Type::typetype_t exp_tt) const
+  {
+    switch (templatetype) {
+    case SPECIFIC_VALUE:
+      if (!u.specific_value->is_unfoldable()) {
+        patt_str += u.specific_value->get_val_str();
+        return true;
+      }
+      break;
+    case BSTR_PATTERN:
+      if (exp_tt == Type::T_BSTR) {
+        patt_str += *u.pattern;
+        return true;
+      }
+      break;
+    case HSTR_PATTERN:
+      if (exp_tt == Type::T_HSTR) {
+        patt_str += *u.pattern;
+        return true;
+      }
+      break;
+    case OSTR_PATTERN:
+      if (exp_tt == Type::T_OSTR) {
+        patt_str += *u.pattern;
+        return true;
+      }
+      break;
+    case ANY_VALUE:
+    case ANY_OR_OMIT:
+      if (length_restriction != NULL) {
+        int len;
+        if (length_restriction->get_is_range()) {
+          Value* lower = length_restriction->get_lower_value();
+          Value* upper = length_restriction->get_upper_value();
+          if (lower->is_unfoldable() || upper == NULL || upper->is_unfoldable() ||
+              lower->get_val_Int()->get_val() != upper->get_val_Int()->get_val()) {
+            break;
+          }
+          len = lower->get_val_Int()->get_val();
+        }
+        else {
+          Value* single = length_restriction->get_single_value();
+          if (single->is_unfoldable()) {
+            break;
+          }
+          len = single->get_val_Int()->get_val();
+        }
+        for (int i = 0; i < len; ++i) {
+          patt_str += '?';
+        }
+        return true;
+      }
+      else if (templatetype == ANY_VALUE) {
+        if (patt_str.empty() || patt_str[patt_str.size() - 1] != '*') {
+          patt_str += '*';
+        }
+        return true;
+      }
+      break;
+    default:
+      break;
+    }
+    return false;
   }
   
   Value* Template::get_string_encoding() const

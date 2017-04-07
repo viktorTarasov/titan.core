@@ -30,9 +30,7 @@ template universal charstring c_u4 := char(1,2,3,4) & char(5,6,7,8);
 template universal charstring tu := pattern "\N{c_u}";
 template universal charstring tu2 := pattern "\N{c_u2}"; //^In template definition \`tu2\'// //^In universal string pattern// //^error\: The length of the universal charstring must be of length one\, when it is being referenced in a pattern with \\N\{ref\}//
 template universal charstring tu3 := pattern "\N{c_u3}";
-/* template concatenations are currently not evaluated at compile-time
-template universal charstring tu4 := pattern "\N{c_u4}"; /^In template definition \`tu4\'/ /^In universal string pattern/ /^error\: The length of the universal charstring must be of length one\, when it is being referenced in a pattern with \\N\{ref\}/
-*/
+template universal charstring tu4 := pattern "\N{c_u4}"; //^In template definition \`tu4\'// //^In universal string pattern// //^error\: The length of the universal charstring must be of length one\, when it is being referenced in a pattern with \\N\{ref\}//
 
 modulepar charstring c_m := "a";
 modulepar charstring c_m2 := "aa";

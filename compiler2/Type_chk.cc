@@ -3241,6 +3241,12 @@ bool Type::chk_this_value(Value *value, Common::Assignment *lhs, expected_value_
       return self_ref;
     }
     break;
+  case Value::V_ANY_VALUE:
+  case Value::V_ANY_OR_OMIT:
+    value->error("%s is not allowed in this context",
+      value->get_valuetype() == Value::V_ANY_VALUE ? "any value" : "any or omit");
+    value->set_valuetype(Value::V_ERROR);
+    return self_ref;
   default:
     break;
   }
@@ -5519,12 +5525,13 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
   namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
-  if (OMIT_ALLOWED != allow_omit && t->get_template_refd_last()->get_templatetype() ==
-      Ttcn::Template::OMIT_VALUE) {
+  // get_template_refd_last evaluates concatenations between templates known at
+  // compile-time
+  Ttcn::Template::templatetype_t tt = t->get_template_refd_last()->get_templatetype();
+  if (OMIT_ALLOWED != allow_omit && tt == Ttcn::Template::OMIT_VALUE) {
       t->error("`omit' value is not allowed in this context");
   }
-  if (ANY_OR_OMIT_ALLOWED != allow_any_or_omit && t->get_template_refd_last()->get_templatetype() ==
-      Ttcn::Template::ANY_OR_OMIT) {
+  if (ANY_OR_OMIT_ALLOWED != allow_any_or_omit && tt == Ttcn::Template::ANY_OR_OMIT) {
       t->error("Using `*' for mandatory field");
   }
 
@@ -5631,6 +5638,25 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
   case Ttcn::Template::TEMPLATE_REFD:
     self_ref = chk_this_refd_template(t, lhs);
     break;
+  case Ttcn::Template::TEMPLATE_CONCAT:
+    {
+      Error_Context cntxt(t, "In template concatenation");
+      Template* t_left = t->get_concat_operand(true);
+      Template* t_right = t->get_concat_operand(false);
+      {
+        Error_Context cntxt2(t, "In first operand");
+        self_ref |= chk_this_template_concat_operand(t_left, implicit_omit, lhs);
+      }
+      {
+        Error_Context cntxt2(t, "In second operand");
+        self_ref |= chk_this_template_concat_operand(t_right, implicit_omit, lhs);
+      }
+      if (t_left->get_templatetype() == Ttcn::Template::TEMPLATE_ERROR ||
+          t_right->get_templatetype() == Ttcn::Template::TEMPLATE_ERROR) {
+        t->set_templatetype(Ttcn::Template::TEMPLATE_ERROR);
+      }
+    }
+    break;
   default:
     self_ref = chk_this_template(t, incomplete_allowed, sub_chk, implicit_omit, lhs);
     break;
@@ -5696,6 +5722,90 @@ bool Type::chk_this_refd_template(Template *t, Common::Assignment *lhs)
     }
   }
   return (lhs == ass);
+}
+
+bool Type::chk_this_template_concat_operand(Template* t, namedbool implicit_omit,
+                                            Common::Assignment *lhs)
+{
+  Type* governor = t->get_expr_governor(EXPECTED_TEMPLATE);
+  if (governor == NULL) {
+    governor = this;
+  }
+  else if (!is_compatible(governor, NULL, t)) {
+    t->error("Type mismatch: a value or template of type `%s' was expected "
+      "instead of `%s'", get_typename().c_str(), governor->get_typename().c_str());
+    t->set_templatetype(Ttcn::Template::TEMPLATE_ERROR);
+    return false;
+  }
+  t->set_my_governor(governor);
+  bool self_ref = governor->chk_this_template_generic(t, INCOMPLETE_NOT_ALLOWED,
+    OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
+  Template* t_last = t->get_template_refd_last();
+  if (t->get_templatetype() == Ttcn::Template::TEMPLATE_ERROR ||
+      t_last->get_templatetype() == Ttcn::Template::TEMPLATE_ERROR) {
+    return self_ref;
+  }
+  typetype_t tt = get_type_refd_last()->get_typetype_ttcn3();
+  switch (tt) {
+  case T_BSTR:
+  case T_HSTR:
+  case T_OSTR:
+  case T_CSTR:
+  case T_USTR:
+  case T_SEQOF:
+  case T_SETOF:
+    switch (t_last->get_templatetype()) {
+    case Ttcn::Template::ANY_OR_OMIT:
+      if (tt != T_CSTR && tt != T_USTR && t_last->get_length_restriction() == NULL) {
+        t->error("%s with no length restriction is not a valid "
+          "concatenation operand", t_last->get_templatetype_str());
+        t->set_templatetype(Ttcn::Template::TEMPLATE_ERROR);
+        break;
+      }
+      // else fall through
+    case Ttcn::Template::ANY_VALUE:
+      if (tt != T_CSTR && tt != T_USTR) {
+        Ttcn::LengthRestriction* len_res = t_last->get_length_restriction();
+        if (len_res != NULL && len_res->get_is_range() &&
+            (len_res->get_upper_value() == NULL ||
+             (!len_res->get_lower_value()->is_unfoldable() &&
+              !len_res->get_upper_value()->is_unfoldable() &&
+              len_res->get_lower_value()->get_val_Int()->get_val() !=
+              len_res->get_upper_value()->get_val_Int()->get_val()))) {
+          // range length restriction is allowed if the upper and lower limits
+          // are the same
+          t->error("%s with non-fixed length restriction is not a valid "
+            "concatenation operand", t_last->get_templatetype_str());
+        }
+      }
+      else { // charstring or universal charstring
+        t->error("%s is not allowed in %scharstring template concatenation",
+          t_last->get_templatetype_str(), tt != T_CSTR ? "universal " : "");
+        t->set_templatetype(Ttcn::Template::TEMPLATE_ERROR);
+      }
+      break;
+    case Ttcn::Template::SPECIFIC_VALUE:
+    case Ttcn::Template::BSTR_PATTERN:
+    case Ttcn::Template::HSTR_PATTERN:
+    case Ttcn::Template::OSTR_PATTERN:
+    case Ttcn::Template::TEMPLATE_CONCAT:
+    case Ttcn::Template::TEMPLATE_REFD:
+    case Ttcn::Template::TEMPLATE_LIST: // is every list element allowed... ?
+    case Ttcn::Template::INDEXED_TEMPLATE_LIST:
+      break;
+    default:
+      t->error("%s is not a valid concatenation operand",
+        t_last->get_templatetype_str());
+      t->set_templatetype(Ttcn::Template::TEMPLATE_ERROR);
+      break;
+    }
+    break;
+  default:
+    t->error("Templates of type `%s' cannot be concatenated",
+      get_typename().c_str());
+    t->set_templatetype(Ttcn::Template::TEMPLATE_ERROR);
+  }
+  return self_ref;
 }
 
 bool Type::chk_this_template(Template *t, namedbool incomplete_allowed, namedbool,
@@ -5884,32 +5994,6 @@ bool Type::chk_this_template_Str(Template *t, namedbool implicit_omit,
         }
         self_ref |= str_enc->chk_string_encoding(lhs);
       }
-    }
-    break;
-  case Ttcn::Template::TEMPLATE_CONCAT:
-    {
-      Error_Context cntxt(t, "In template concatenation");
-      t->set_lowerid_to_ref();
-      Template* t_left = t->get_concat_operand(true);
-      Template* t_right = t->get_concat_operand(false);
-      if (tt == T_CSTR || tt == T_USTR) {
-        if (t_left->get_templatetype() != Ttcn::Template::SPECIFIC_VALUE &&
-            t_left->get_templatetype() != Ttcn::Template::TEMPLATE_CONCAT &&
-            t_left->get_templatetype() != Ttcn::Template::TEMPLATE_REFD) {
-          t_left->error("Operands of %s template concatenation must be "
-            "specific value templates", get_typename_builtin(tt));
-        }
-        if (t_right->get_templatetype() != Ttcn::Template::SPECIFIC_VALUE &&
-            t_right->get_templatetype() != Ttcn::Template::TEMPLATE_CONCAT &&
-            t_right->get_templatetype() != Ttcn::Template::TEMPLATE_REFD) {
-          t_right->error("Operands of %s template concatenation must be "
-            "specific value templates", get_typename_builtin(tt));
-        }
-      }
-      self_ref = chk_this_template_generic(t_left, INCOMPLETE_NOT_ALLOWED,
-        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
-      self_ref = chk_this_template_generic(t_right, INCOMPLETE_NOT_ALLOWED,
-        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
     }
     break;
   default:
@@ -6439,18 +6523,6 @@ bool Type::chk_this_template_SeqOf(Template *t, namedbool incomplete_allowed,
       delete index_map.get_nth_elem(i);
     index_map.clear();
     break; }
-  case Ttcn::Template::TEMPLATE_CONCAT:
-    {
-      Error_Context cntxt(t, "In template concatenation");
-      Template* t_left = t->get_concat_operand(true);
-      Template* t_right = t->get_concat_operand(false);
-      t->set_lowerid_to_ref();
-      self_ref = chk_this_template_generic(t_left, incomplete_allowed,
-        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
-      self_ref = chk_this_template_generic(t_right, incomplete_allowed,
-        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
-    }
-    break;
   default:
     t->error("%s cannot be used for `record of' type `%s'",
       t->get_templatetype_str(), get_typename().c_str());
@@ -6585,18 +6657,6 @@ bool Type::chk_this_template_SetOf(Template *t, namedbool incomplete_allowed,
       delete index_map.get_nth_elem(i);
     index_map.clear();
     break; }
-  case Ttcn::Template::TEMPLATE_CONCAT:
-    {
-      Error_Context cntxt(t, "In template concatenation");
-      Template* t_left = t->get_concat_operand(true);
-      Template* t_right = t->get_concat_operand(false);
-      t->set_lowerid_to_ref();
-      self_ref = chk_this_template_generic(t_left, incomplete_allowed,
-        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
-      self_ref = chk_this_template_generic(t_right, incomplete_allowed,
-        OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, NO_SUB_CHK, implicit_omit, lhs);
-    }
-    break;
   default:
     t->error("%s cannot be used for `set of' type `%s'",
       t->get_templatetype_str(), get_typename().c_str());

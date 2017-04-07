@@ -300,6 +300,12 @@ namespace Ttcn {
                                     bool usedInIsbound,
                                     ReferenceChain *refch,
                                     bool silent = false);
+    /** Converts this template to a pattern of the specified binary string type,
+      * and adds it to the result. Used when evaluating concatenations between
+      * binary string templates.
+      * @param patt_str contains the resulting binary string pattern
+      * @param exp_tt contains the type of the resulting binary string pattern */
+    bool concat_to_bin_pattern(string& patt_str, Type::typetype_t exp_tt) const;
     Value* get_string_encoding() const;
     TemplateInstance* get_decode_target() const;
     Template* get_concat_operand(bool first) const;

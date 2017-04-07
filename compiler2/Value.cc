@@ -3020,6 +3020,8 @@ namespace Common {
     case V_NOTUSED:
     case V_REFER:
     case V_FAT_NULL:
+    case V_ANY_VALUE:
+    case V_ANY_OR_OMIT:
       return Type::T_UNDEF;
     case V_NAMEDINT:
     case V_NAMEDBITS:
@@ -9029,8 +9031,14 @@ error:
         break;
       } // switch
       Ttcn::FieldOrArrayRef *ref = subrefs->get_ref(i);
-      if (ref->get_type() == Ttcn::FieldOrArrayRef::FIELD_REF)
+      if (ref->get_type() == Ttcn::FieldOrArrayRef::FIELD_REF) {
+        if (v->get_my_governor()->get_type_refd_last()->get_typetype() == 
+            Type::T_OPENTYPE) {
+          // allow the alternatives of open types as both lower and upper identifiers
+          ref->set_field_name_to_lowercase();
+        }
         v = v->get_refd_field_value(*ref->get_id(), usedInIsbound, *ref, silent);
+      }
       else v = v->get_refd_array_value(ref->get_val(), usedInIsbound, refch, silent);
     }
     return v;

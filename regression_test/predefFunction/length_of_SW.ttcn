@@ -27,13 +27,11 @@ const integer lofbi4 := lengthof(lofb1 & lofb1)
 const integer lofbi5 := lengthof(substr(lofb1,0,lengthof(lofb1)))
 
 testcase lengthof_bitstr() runs on PDTestComponent{ //In testcase definition//
-  /* some of these tests are temporarily disabled, because template concatenation is not evaluated yet at compile-time
 	if ((lofbi == 2*lengthof(lofb))
 	and (lofbi == lengthof(lofb & lofb)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofbi1 == lengthof(lofb))
 	and (lofbi1 == lengthof(substr(lofb,0,lengthof(lofb)))))
 	     {setverdict(pass);}
@@ -44,17 +42,16 @@ testcase lengthof_bitstr() runs on PDTestComponent{ //In testcase definition//
 	     {setverdict(pass);}
 	else {setverdict(fail);} //^In else statement// \
                              //^warning\: Control never reaches this code because of previous effective condition\(s\)//
-	/*if ((lofbi3 == 10)
+	if ((lofbi3 == 10)
 	and (lofbi3 == lengthof(lofb & lofb1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofbi4 == 0)
 	and (lofbi4 == lengthof(lofb1 & lofb1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofbi5 == 0)
 	and (lofbi5 == lengthof(substr(lofb1,0,lengthof(lofb1)))))
 	     {setverdict(pass);}
@@ -75,13 +72,11 @@ const integer lofhi4 := lengthof(lofh1 & lofh1)
 const integer lofhi5 := lengthof(substr(lofh1,0,lengthof(lofh1)))
 
 testcase lengthof_hexstr() runs on PDTestComponent{ //In testcase definition//
-  /* some of these tests are temporarily disabled, because template concatenation is not evaluated yet at compile-time
 	if ((lofhi == 2*lengthof(lofh))
 	and (lofhi == lengthof(lofh & lofh)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofhi1 == lengthof(lofh))
 	and (lofhi1 == lengthof(substr(lofh,0,lengthof(lofh)))))
 	     {setverdict(pass);}
@@ -92,17 +87,16 @@ testcase lengthof_hexstr() runs on PDTestComponent{ //In testcase definition//
 	     {setverdict(pass);}
 	else {setverdict(fail);} //^In else statement// \
                              //^warning\: Control never reaches this code because of previous effective condition\(s\)//
-	/*if ((lofhi3 == 10)
+	if ((lofhi3 == 10)
 	and (lofhi3 == lengthof(lofh & lofh1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofhi4 == 0)
 	and (lofhi4 == lengthof(lofh1 & lofh1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofhi5 == 0)
 	and (lofhi5 == lengthof(substr(lofh1,0,lengthof(lofh1)))))
 	     {setverdict(pass);}
@@ -123,13 +117,11 @@ const integer lofoi4 := lengthof(lofo1 & lofo1)
 const integer lofoi5 := lengthof(substr(lofo1,0,lengthof(lofo1)))
 
 testcase lengthof_octetstr() runs on PDTestComponent{ //In testcase definition//
-  /* some of these tests are temporarily disabled, because template concatenation is not evaluated yet at compile-time
 	if ((lofoi == 2*lengthof(lofo))
 	and (lofoi == lengthof(lofo & lofo)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofoi1 == lengthof(lofo))
 	and (lofoi1 == lengthof(substr(lofo,0,lengthof(lofo)))))
 	     {setverdict(pass);}
@@ -140,17 +132,16 @@ testcase lengthof_octetstr() runs on PDTestComponent{ //In testcase definition//
 	     {setverdict(pass);}
 	else {setverdict(fail);} //^In else statement// \
                              //^warning\: Control never reaches this code because of previous effective condition\(s\)//
-	/*if ((lofoi3 == 10)
+	if ((lofoi3 == 10)
 	and (lofoi3 == lengthof(lofo & lofo1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofoi4 == 0)
 	and (lofoi4 == lengthof(lofo1 & lofo1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofoi5 == 0)
 	and (lofoi5 == lengthof(substr(lofo1,0,lengthof(lofo1)))))
 	     {setverdict(pass);}
@@ -172,13 +163,11 @@ const integer lofci4 := lengthof(lofc1 & lofc1)
 const integer lofci5 := lengthof(substr(lofc1,0,lengthof(lofc1)))
 
 testcase lengthof_charstr() runs on PDTestComponent{ //In testcase definition//
-  /* some of these tests are temporarily disabled, because template concatenation is not evaluated yet at compile-time
 	if ((lofci == 2*lengthof(lofc))
 	and (lofci == lengthof(lofc & lofc)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofci1 == lengthof(lofc))
 	and (lofci1 == lengthof(substr(lofc,0,lengthof(lofc)))))
 	     {setverdict(pass);}
@@ -189,17 +178,16 @@ testcase lengthof_charstr() runs on PDTestComponent{ //In testcase definition//
 	     {setverdict(pass);}
 	else {setverdict(fail);} //^In else statement// \
                              //^warning\: Control never reaches this code because of previous effective condition\(s\)//
-	/*if ((lofci3 == 10)
+	if ((lofci3 == 10)
 	and (lofci3 == lengthof(lofc & lofc1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofci4 == 0)
 	and (lofci4 == lengthof(lofc1 & lofc1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofci5 == 0)
 	and (lofci5 == lengthof(substr(lofc1,0,lengthof(lofc1)))))
 	     {setverdict(pass);}
@@ -221,13 +209,11 @@ const integer lofuci4 := lengthof(lofuc1 & lofuc1)
 const integer lofuci5 := lengthof(substr(lofuc1,0,lengthof(lofuc1)))
 
 testcase lengthof_ucharstr() runs on PDTestComponent{ //In testcase definition//
-  /* some of these tests are temporarily disabled, because template concatenation is not evaluated yet at compile-time
 	if ((lofuci == 2*lengthof(lofuc))
 	and (lofuci == lengthof(lofuc & lofuc)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofuci1 == lengthof(lofuc))
 	and (lofuci1 == lengthof(substr(lofuc,0,lengthof(lofuc)))))
 	     {setverdict(pass);}
@@ -238,17 +224,16 @@ testcase lengthof_ucharstr() runs on PDTestComponent{ //In testcase definition//
 	     {setverdict(pass);}
 	else {setverdict(fail);} //^In else statement// \
                              //^warning\: Control never reaches this code because of previous effective condition\(s\)//
-	/*if ((lofuci3 == 10)
+	if ((lofuci3 == 10)
 	and (lofuci3 == lengthof(lofuc & lofuc1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofuci4 == 0)
 	and (lofuci4 == lengthof(lofuc1 & lofuc1)))
 	     {setverdict(pass);}
-	else {setverdict(fail);} /^In else statement/ \
-                             /^warning\: Control never reaches this code because of previous effective condition\(s\)/
-	*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((lofuci5 == 0)
 	and (lofuci5 == lengthof(substr(lofuc1,0,lengthof(lofuc1)))))
 	     {setverdict(pass);}

@@ -880,6 +880,8 @@ namespace Common {
   private:
     bool chk_this_refd_template(Template *t, Common::Assignment *lhs);
     void chk_this_template_length_restriction(Template *t);
+    bool chk_this_template_concat_operand(Template* t, namedbool implicit_omit,
+      Common::Assignment *lhs);
     bool chk_this_template(Template *t, namedbool incomplete_allowed, namedbool sub_chk,
       namedbool implicit_omit, Common::Assignment *);
     bool chk_this_template_Str(Template *t, namedbool implicit_omit,
