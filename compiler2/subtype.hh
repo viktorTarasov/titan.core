@@ -117,7 +117,7 @@ public:
   bool MaxExclusive() const;
   /** Return the length restriction object.
    *
-   * @ore selection is STP_LENGTH, or else FATAL_ERROR
+   * @pre selection is STP_LENGTH, or else FATAL_ERROR
    */
   Ttcn::LengthRestriction *Length() const;
   Ttcn::PatternString *Pattern() const;
