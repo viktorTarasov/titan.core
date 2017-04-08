@@ -213,4 +213,4 @@ const char * XSD_type_to_xml_type(const XSD_types xsd_type) {
       FATAL_ERROR("XSD_Types::XSD_type_to_xml_type - invalid XSD type");
       return NULL;
   }
-} 
+}
