@@ -1429,8 +1429,14 @@ namespace Ttcn {
           // case 1: concatenating two values results in a value
           if (t1->templatetype == SPECIFIC_VALUE &&
               t2->templatetype == SPECIFIC_VALUE) {
-            Value* v = new Value(Value::OPTYPE_CONCAT, t1->u.specific_value->clone(),
-               t2->u.specific_value->clone());
+            // take the specific values from the operands and use them in the
+            // creation of the new value
+            Value* v = new Value(Value::OPTYPE_CONCAT, t1->u.specific_value,
+               t2->u.specific_value);
+            // set their specific value pointers to null, so they are not
+            // deleted when the template operands are deleted by set_templatetype
+            t1->u.specific_value = NULL;
+            t2->u.specific_value = NULL;
             v->set_location(*this);
             v->set_my_scope(get_my_scope());
             v->set_fullname(get_fullname());
