@@ -86,7 +86,15 @@ void P1_PROVIDER::outgoing_send(const OCTETSTRING& send_par)
 
 void P1_PROVIDER::outgoing_send(const BITSTRING& send_par)
 {
-	incoming_message(send_par);
+	// Test that the receive mapping handles fragmented case
+	if (send_par.lengthof() == 48) {
+		for (int i = 0; i < 48; i++) {
+			BITSTRING bs = send_par[i];
+			incoming_message(bs);
+		}
+	} else {
+		incoming_message(send_par);
+	}
 }
 
 void P1_PROVIDER::outgoing_send(const CHARSTRING& send_par)
@@ -95,6 +103,11 @@ void P1_PROVIDER::outgoing_send(const CHARSTRING& send_par)
 }
 
 void P1_PROVIDER::outgoing_send(const INTEGER& send_par)
+{
+	incoming_message(send_par);
+}
+
+void P1_PROVIDER::outgoing_send(const HEXSTRING& send_par)
 {
 	incoming_message(send_par);
 }

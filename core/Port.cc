@@ -302,6 +302,12 @@ void PORT::activate_port()
     msg_tail_count = 0;
     proc_head_count = 0;
     proc_tail_count = 0;
+    
+    // Only has effect when the translation port has port variables with
+    // default values. Only call when it is activated.
+    if (n_system_mappings == 0) {
+      init_port_variables();
+    }
   }
 }
 
@@ -2149,12 +2155,6 @@ void PORT::map(const char *system_port)
   TTCN_Logger::log_port_misc(
     TitanLoggerApi::Port__Misc_reason::port__was__mapped__to__system,
     port_name, SYSTEM_COMPREF, system_port);
-  
-  // Only has effect when the translation port has port variables with
-  // default values. Only call when it is mapped first.
-  if (n_system_mappings == 0) {
-    init_port_variables();
-  }
 
   // the mapping shall be registered in the table only if user_map() was
   // successful

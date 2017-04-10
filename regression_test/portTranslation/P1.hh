@@ -51,10 +51,12 @@ public:
 	void outgoing_send(const BITSTRING& send_par);
 	void outgoing_send(const CHARSTRING& send_par);
 	void outgoing_send(const INTEGER& send_par);
+	void outgoing_send(const HEXSTRING& send_par);
 	virtual void incoming_message(const INTEGER& incoming_par) = 0;
 	virtual void incoming_message(const BITSTRING& incoming_par) = 0;
 	virtual void incoming_message(const OCTETSTRING& incoming_par) = 0;
 	virtual void incoming_message(const CHARSTRING& incoming_par) = 0;
+	virtual void incoming_message(const HEXSTRING& incoming_par) = 0;
 };
 
 } /* end of namespace */

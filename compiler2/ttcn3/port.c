@@ -81,6 +81,9 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
         }
       }
       src = mputstr(src, ") {\n");
+      // Beginning of the loop of the PARTIALLY_TRANSLATED case to process all
+      // messages
+      src = mputstr(src, "do {\n");
       src = mputstr(src, "TTCN_Runtime::set_translation_mode(TRUE, this);\n");
       // Set to unset
       src = mputstr(src, "TTCN_Runtime::set_port_state(-1, \"by test environment.\", TRUE);\n");
@@ -168,7 +171,7 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
     if (!pdef->legacy && pdef->port_type == USER) {
       src = mputstr(src,
         "TTCN_Runtime::set_translation_mode(FALSE, NULL);\n"
-        "if (port_state == TRANSLATED) {\n");
+        "if (port_state == TRANSLATED || port_state == PARTIALLY_TRANSLATED) {\n");
     }
     src = mputprintf(src, "if (TTCN_Logger::log_this_event("
       "TTCN_Logger::PORTEVENT_DUALSEND)) {\n"
@@ -195,7 +198,13 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
       if (pdef->testport_type != INTERNAL) src = mputstr(src, "}\n");
     }
     if (has_condition) {
+      if (!pdef->legacy && pdef->port_type == USER) {
+        src = mputstr(src, "if (port_state != PARTIALLY_TRANSLATED) {\n");
+      }
       src = mputstr(src, "return;\n");
+      if (!pdef->legacy && pdef->port_type == USER) {
+        src = mputstr(src, "}\n");
+      }
       if (pdef->legacy) {
         src = mputstr(src, "}\n");
       }
@@ -203,12 +212,16 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
     }
     if (!pdef->legacy && pdef->port_type == USER) {
       src = mputprintf(src,
+        "} else if (port_state == FRAGMENTED) {\n"
+        "return;\n"
         "} else if (port_state == UNSET) {\n"
         "TTCN_error(\"The state of the port %%s remained unset after the mapping function %s finished.\", port_name);\n"
         "}\n", target->mapping.function.dispname);
     }
     if (mapped_type->nTargets > 1) src = mputstr(src, "}\n");
     if (!pdef->legacy && pdef->port_type == USER) {
+      // End of the do while loop to process all the messages
+      src = mputstr(src, "} while (port_state == PARTIALLY_TRANSLATED);\n");
       // end of the outgoing messages of port with mapping target check
       src = mputstr(src, "}\n");
     }
@@ -255,8 +268,11 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
       /* has_buffer will be set to TRUE later */
     }
     if (!pdef->legacy && pdef->port_type == USER) {
+      // Beginning of the loop of the PARTIALLY_TRANSLATED case to process all
+      // messages
+      src = mputstr(src, "do {\n");
       src = mputstr(src, "TTCN_Runtime::set_translation_mode(TRUE, this);\n");
-      src = mputstr(src, "port_state = UNSET;\n");
+      src = mputstr(src, "TTCN_Runtime::set_port_state(-1, \"by test environment.\", TRUE);\n");
     }
     if (mapped_type->nTargets > 1) src = mputstr(src, "{\n");
     switch (target->mapping_type) {
@@ -380,7 +396,7 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
       "new_item->sender_component = sender_component;\n",
       !pdef->legacy && pdef->port_type == USER ?
         "TTCN_Runtime::set_translation_mode(FALSE, NULL);\n"
-        "if (port_state == TRANSLATED) {\n" : "",
+        "if (port_state == TRANSLATED || port_state == PARTIALLY_TRANSLATED) {\n" : "",
       target->target_dispname,
       (unsigned long) target->target_index,
       (unsigned long) target->target_index);
@@ -405,6 +421,10 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
           "}");
         if (pdef->port_type == USER && !pdef->legacy) {
           src = mputprintf(src,
+            " else if (port_state == FRAGMENTED) {\n"
+            "delete mapped_par;\n"
+            "return;\n"
+            "}"
             " else if (port_state == UNSET) {\n"
             "delete mapped_par;\n"
             "TTCN_error(\"The state of the port %%s remained unset after the mapping function %s finished.\", port_name);\n"
@@ -415,6 +435,9 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
       report_error = TRUE;
     }
     if (mapped_type->nTargets > 1) src = mputstr(src, "}\n");
+    if (pdef->port_type == USER && !pdef->legacy) {
+      src = mputstr(src, "} while (port_state == PARTIALLY_TRANSLATED);\n");
+    }
   } /* next mapping target */
   if (has_discard) {
     if (mapped_type->nTargets > 1) {
@@ -2528,12 +2551,12 @@ void defPortClass(const port_def* pdef, output_struct* output)
       "}\n", mapped_type->dispname);
       // Print the simple mapping after the not simple mappings
       if (!is_simple || !pdef->legacy) {
-        if (!pdef->legacy) {
+        if (!pdef->legacy && mapped_type->nTargets > (is_simple ? 1 : 0)) {
           // If in translation mode then receive according to incoming mappings
           src = mputstr(src, "if (in_translation_mode()) {\n");
         }
         src = generate_incoming_mapping(src, pdef, mapped_type, is_simple);
-        if (!pdef->legacy) {
+        if (!pdef->legacy && mapped_type->nTargets > (is_simple ? 1 : 0)) {
           src = mputstr(src, "}\n");
         }
       }

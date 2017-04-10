@@ -292,7 +292,6 @@ module PortVariables {
 			}
 			t.stop;
 		}
-
 	}
 
 	control {
