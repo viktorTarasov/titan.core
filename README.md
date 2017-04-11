@@ -122,6 +122,7 @@ Compressed update site and SHA512 checksum:
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.DUA.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.EAP.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.GRE.git 
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.HTTP2.git
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.M2PA.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.NDP.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.NTAF.git 
