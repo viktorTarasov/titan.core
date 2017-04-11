@@ -37,6 +37,7 @@
 #include "Constraint.hh"
 #include "../common/JSON_Tokenizer.hh"
 #include "ttcn3/Ttcn2Json.hh"
+#include "main.hh"
 
 #include <limits.h>
 
@@ -1952,7 +1953,11 @@ void SubType::chk_this_template(Template *templ)
     break;
   case Template::ALL_FROM:
   case Template::DECODE_MATCH:
+    break;
   case Template::TEMPLATE_CONCAT:
+    if (!use_runtime_2) {
+      FATAL_ERROR("SubType::chk_this_template()");
+    }
     break;
   case Template::SUPERSET_MATCH:
   case Template::SUBSET_MATCH:

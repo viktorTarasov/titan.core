@@ -185,6 +185,7 @@ OCTETSTRING OCTETSTRING::operator+(const OCTETSTRING_ELEMENT& other_value) const
   return ret_val;
 }
 
+#ifdef TITAN_RUNTIME_2
 OCTETSTRING OCTETSTRING::operator+(const OPTIONAL<OCTETSTRING>& other_value) const
 {
   if (other_value.is_present()) {
@@ -192,6 +193,7 @@ OCTETSTRING OCTETSTRING::operator+(const OPTIONAL<OCTETSTRING>& other_value) con
   }
   TTCN_error("Unbound or omitted right operand of octetstring concatenation.");
 }
+#endif
 
 OCTETSTRING& OCTETSTRING::operator+=(const OCTETSTRING& other_value)
 {
@@ -1462,6 +1464,7 @@ OCTETSTRING OCTETSTRING_ELEMENT::operator+
   return OCTETSTRING(2, result);
 }
 
+#ifdef TITAN_RUNTIME_2
 OCTETSTRING OCTETSTRING_ELEMENT::operator+(
   const OPTIONAL<OCTETSTRING>& other_value) const
 {
@@ -1470,6 +1473,7 @@ OCTETSTRING OCTETSTRING_ELEMENT::operator+(
   }
   TTCN_error("Unbound or omitted right operand of octetstring concatenation.");
 }
+#endif
 
 OCTETSTRING OCTETSTRING_ELEMENT::operator~() const
 {
@@ -1836,6 +1840,7 @@ OCTETSTRING_template& OCTETSTRING_template::operator=
   return *this;
 }
 
+#ifdef TITAN_RUNTIME_2
 void OCTETSTRING_template::concat(Vector<unsigned short>& v) const
 {
   switch (template_selection) {
@@ -2080,6 +2085,7 @@ OCTETSTRING_template operator+(template_sel left_template_sel,
   TTCN_error("Operand of octetstring template concatenation is an "
     "unbound or omitted record/set field.");
 }
+#endif // TITAN_RUNTIME_2
 
 OCTETSTRING_ELEMENT OCTETSTRING_template::operator[](int index_value)
 {

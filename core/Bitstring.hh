@@ -30,7 +30,9 @@
 #include "RAW.hh"
 #include "BER.hh"
 #include "Error.hh"
+#ifdef TITAN_RUNTIME_2
 #include "Vector.hh"
+#endif
 
 class INTEGER;
 class HEXSTRING;
@@ -110,7 +112,9 @@ public:
 
   BITSTRING operator+(const BITSTRING& other_value) const;
   BITSTRING operator+(const BITSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   BITSTRING operator+(const OPTIONAL<BITSTRING>& other_value) const;
+#endif
 
   BITSTRING operator~() const;
   BITSTRING operator&(const BITSTRING& other_value) const;
@@ -229,7 +233,9 @@ public:
 
   BITSTRING operator+(const BITSTRING& other_value) const;
   BITSTRING operator+(const BITSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   BITSTRING operator+(const OPTIONAL<BITSTRING>& other_value) const;
+#endif
 
   BITSTRING operator~() const;
   BITSTRING operator&(const BITSTRING& other_value) const;
@@ -259,6 +265,7 @@ public:
 #endif
   struct bitstring_pattern_struct;
 private:
+#ifdef TITAN_RUNTIME_2
   friend BITSTRING_template operator+(const BITSTRING& left_value,
     const BITSTRING_template& right_template);
   friend BITSTRING_template operator+(const BITSTRING_ELEMENT& left_value,
@@ -279,6 +286,7 @@ private:
     const BITSTRING_ELEMENT& right_value);
   friend BITSTRING_template operator+(template_sel left_template_sel,
     const OPTIONAL<BITSTRING>& right_value);
+#endif
   
   BITSTRING single_value;
   union {
@@ -294,9 +302,11 @@ private:
   static boolean match_pattern(const bitstring_pattern_struct *string_pattern,
     const BITSTRING::bitstring_struct *string_value);
 
+#ifdef TITAN_RUNTIME_2
   void concat(Vector<unsigned char>& v) const;
   static void concat(Vector<unsigned char>& v, const BITSTRING& val);
   static void concat(Vector<unsigned char>& v, template_sel sel);
+#endif
   
 public:
   BITSTRING_template();
@@ -316,11 +326,13 @@ public:
   BITSTRING_template& operator=(const OPTIONAL<BITSTRING>& other_value);
   BITSTRING_template& operator=(const BITSTRING_template& other_value);
   
+#ifdef TITAN_RUNTIME_2
   BITSTRING_template operator+(const BITSTRING_template& other_value) const;
   BITSTRING_template operator+(const BITSTRING& other_value) const;
   BITSTRING_template operator+(const BITSTRING_ELEMENT& other_value) const;
   BITSTRING_template operator+(const OPTIONAL<BITSTRING>& other_value) const;
   BITSTRING_template operator+(template_sel other_template_sel) const;
+#endif
 
   BITSTRING_ELEMENT operator[](int index_value);
   BITSTRING_ELEMENT operator[](const INTEGER& index_value);
@@ -364,6 +376,7 @@ public:
 #endif
 };
 
+#ifdef TITAN_RUNTIME_2
 extern BITSTRING_template operator+(const BITSTRING& left_value,
   const BITSTRING_template& right_template);
 extern BITSTRING_template operator+(const BITSTRING_ELEMENT& left_value,
@@ -384,5 +397,6 @@ extern BITSTRING_template operator+(template_sel left_template_sel,
   const BITSTRING_ELEMENT& right_value);
 extern BITSTRING_template operator+(template_sel left_template_sel,
   const OPTIONAL<BITSTRING>& right_value);
+#endif
 
 #endif

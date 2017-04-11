@@ -505,6 +505,7 @@ boolean Restricted_Length_Template::is_any_or_omit() const
     length_restriction_type == NO_LENGTH_RESTRICTION;
 }
 
+#ifdef TITAN_RUNTIME_2
 template_sel operator+(template_sel left_template_sel, template_sel right_template_sel)
 {
   if (left_template_sel == ANY_VALUE && right_template_sel == ANY_VALUE) {
@@ -513,6 +514,7 @@ template_sel operator+(template_sel left_template_sel, template_sel right_templa
   TTCN_error("Operand of template concatenation is an uninitialized or "
     "unsupported template.");
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

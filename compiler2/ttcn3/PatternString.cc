@@ -21,6 +21,7 @@
 #include "../CompilerError.hh"
 #include "../Code.hh"
 #include "../../common/JSON_Tokenizer.hh"
+#include "../main.hh"
 
 #include "TtcnTemplate.hh"
 
@@ -170,6 +171,9 @@ namespace Ttcn {
         v_last = templ->get_specific_value();
         break;
       case Template::TEMPLATE_CONCAT:
+        if (!use_runtime_2) {
+          FATAL_ERROR("PatternString::ps_elem_t::chk_ref()");
+        }
         if (templ->is_Value()) {
           v = templ->get_Value();
           v->set_my_governor(refcheckertype);

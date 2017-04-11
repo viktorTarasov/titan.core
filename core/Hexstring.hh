@@ -27,7 +27,9 @@
 #include "Basetype.hh"
 #include "Template.hh"
 #include "Error.hh"
+#ifdef TITAN_RUNTIME_2
 #include "Vector.hh"
+#endif
 
 class INTEGER;
 class BITSTRING;
@@ -83,7 +85,9 @@ public:
 
   HEXSTRING operator+(const HEXSTRING& other_value) const;
   HEXSTRING operator+(const HEXSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   HEXSTRING operator+(const OPTIONAL<HEXSTRING>& other_value) const;
+#endif
 
   HEXSTRING operator~() const;
   HEXSTRING operator&(const HEXSTRING& other_value) const;
@@ -182,7 +186,9 @@ public:
 
   HEXSTRING operator+(const HEXSTRING& other_value) const;
   HEXSTRING operator+(const HEXSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   HEXSTRING operator+(const OPTIONAL<HEXSTRING>& other_value) const;
+#endif
 
   HEXSTRING operator~() const;
   HEXSTRING operator&(const HEXSTRING& other_value) const;
@@ -212,6 +218,8 @@ public:
 #endif
   struct hexstring_pattern_struct;
 private:
+  
+#ifdef TITAN_RUNTIME_2
   friend HEXSTRING_template operator+(const HEXSTRING& left_value,
     const HEXSTRING_template& right_template);
   friend HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
@@ -232,6 +240,7 @@ private:
     const HEXSTRING_ELEMENT& right_value);
   friend HEXSTRING_template operator+(template_sel left_template_sel,
     const OPTIONAL<HEXSTRING>& right_value);
+#endif
   
   HEXSTRING single_value;
   union {
@@ -247,9 +256,11 @@ private:
   static boolean match_pattern(const hexstring_pattern_struct *string_pattern,
     const HEXSTRING::hexstring_struct *string_value);
 
+#ifdef TITAN_RUNTIME_2
   void concat(Vector<unsigned char>& v) const;
   static void concat(Vector<unsigned char>& v, const HEXSTRING& val);
   static void concat(Vector<unsigned char>& v, template_sel sel);
+#endif
   
 public:
   HEXSTRING_template();
@@ -269,11 +280,13 @@ public:
   HEXSTRING_template& operator=(const OPTIONAL<HEXSTRING>& other_value);
   HEXSTRING_template& operator=(const HEXSTRING_template& other_value);
   
+#ifdef TITAN_RUNTIME_2
   HEXSTRING_template operator+(const HEXSTRING_template& other_value) const;
   HEXSTRING_template operator+(const HEXSTRING& other_value) const;
   HEXSTRING_template operator+(const HEXSTRING_ELEMENT& other_value) const;
   HEXSTRING_template operator+(const OPTIONAL<HEXSTRING>& other_value) const;
   HEXSTRING_template operator+(template_sel other_template_sel) const;
+#endif
 
   HEXSTRING_ELEMENT operator[](int index_value);
   HEXSTRING_ELEMENT operator[](const INTEGER& index_value);
@@ -317,6 +330,7 @@ public:
 #endif
 };
 
+#ifdef TITAN_RUNTIME_2
 extern HEXSTRING_template operator+(const HEXSTRING& left_value,
   const HEXSTRING_template& right_template);
 extern HEXSTRING_template operator+(const HEXSTRING_ELEMENT& left_value,
@@ -337,5 +351,6 @@ extern HEXSTRING_template operator+(template_sel left_template_sel,
   const HEXSTRING_ELEMENT& right_value);
 extern HEXSTRING_template operator+(template_sel left_template_sel,
   const OPTIONAL<HEXSTRING>& right_value);
+#endif
 
 #endif

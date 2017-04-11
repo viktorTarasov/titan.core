@@ -653,7 +653,7 @@ namespace Ttcn {
             break;
           case Type::T_USTR:
             if (!type->has_encoding(Type::CT_XER) && !type->has_encoding(Type::CT_JSON)) {
-              act_attr->error("A `raw' %s value was used for erroneous type `%s' which has no XER or JSON encoding.",
+              act_attr->error("A `raw' %s value was used for erroneous type `%s' which has no XER or JSON encodings.",
                               ti_type->get_typename().c_str(), type->get_typename().c_str());
             }
             break;

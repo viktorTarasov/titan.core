@@ -3594,7 +3594,10 @@ template integer 	i1 :=  1 & 2
 
 }
 <END_MODULE>
-<RESULT COUNT 2>
+<RESULT LTRT COUNT 2>
+(?im)operand.+?should.+?be.+?string.+?value
+<END_RESULT>
+<RESULT FTRT COUNT 2>
 (?im)Templates.+?of.+?type.+?`integer'.+?cannot.+?be.+?concatenated
 <END_RESULT>
 <RESULT COUNT 2>
@@ -3754,7 +3757,10 @@ template float 	f1 :=  1.0 & 2E-1
 
 }
 <END_MODULE>
-<RESULT COUNT 2>
+<RESULT LTRT COUNT 2>
+(?im)operand.+?should.+?be.+?string.+?value
+<END_RESULT>
+<RESULT FTRT COUNT 2>
 (?im)Templates.+?of.+?type.+?`float'.+?cannot.+?be.+?concatenated
 <END_RESULT>
 <RESULT COUNT 2>
@@ -3963,7 +3969,10 @@ template boolean 	b1 :=  true & false
 
 }
 <END_MODULE>
-<RESULT COUNT 2>
+<RESULT LTRT COUNT 2>
+(?im)operand.+?should.+?be.+?string.+?value
+<END_RESULT>
+<RESULT FTRT COUNT 2>
 (?im)Templates.+?of.+?type.+?`boolean'.+?cannot.+?be.+?concatenated
 <END_RESULT>
 <RESULT COUNT 2>
@@ -4715,10 +4724,19 @@ template rtype	r3 := r1 & r2
 
 }
 <END_MODULE>
-<RESULT COUNT 2>
+<RESULT LTRT COUNT 2>
+(?im)operand.+?should.+?be.+?string.+?value
+<END_RESULT>
+<RESULT LTRT COUNT 2>
+(?im)reference.+?to.+?value.+?expected.+?instead.+?of.+?template
+<END_RESULT>
+<RESULT FTRT COUNT 2>
 (?im)Templates.+?of.+?type.+?`@Temp.rtype'.+?cannot.+?be.+?concatenated
 <END_RESULT>
-<RESULT COUNT 2>
+<RESULT LTRT COUNT 4>
+(?is)\berror:
+<END_RESULT>
+<RESULT FTRT COUNT 2>
 (?is)\berror:
 <END_RESULT>
 <RESULT>

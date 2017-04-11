@@ -8505,6 +8505,9 @@ namespace Ttcn {
       chk_defpar_template(body->get_decode_target()->get_Template(), exp_val);
       break;
     case Template::TEMPLATE_CONCAT:
+      if (!use_runtime_2) {
+        FATAL_ERROR("template concatenation in default parameter");
+      }
       chk_defpar_template(body->get_concat_operand(true), exp_val);
       chk_defpar_template(body->get_concat_operand(false), exp_val);
       break;

@@ -542,6 +542,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+
   return ret_val;
 }
 
+#ifdef TITAN_RUNTIME_2
 UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+(
   const OPTIONAL<CHARSTRING>& other_value) const
 {
@@ -551,6 +552,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+(
   TTCN_error("Unbound or omitted right operand of universal charstring "
     "concatenation.");
 }
+#endif
 
 UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+
   (const UNIVERSAL_CHARSTRING& other_value) const
@@ -653,6 +655,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+(
   const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const
 {
@@ -662,6 +665,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator+(
   TTCN_error("Unbound or omitted right operand of universal charstring "
     "concatenation.");
 }
+#endif
 
 UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING::operator<<=
   (int rotate_count) const
@@ -3371,6 +3375,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+(
   const OPTIONAL<CHARSTRING>& other_value) const
 {
@@ -3380,6 +3385,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+(
   TTCN_error("Unbound or omitted right operand of universal charstring "
     "concatenation.");
 }
+#endif
 
 UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+
   (const UNIVERSAL_CHARSTRING& other_value) const
@@ -3470,6 +3476,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+(
   const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const
 {
@@ -3479,6 +3486,7 @@ UNIVERSAL_CHARSTRING UNIVERSAL_CHARSTRING_ELEMENT::operator+(
   TTCN_error("Unbound or omitted right operand of universal charstring "
     "concatenation.");
 }
+#endif
 
 const universal_char& UNIVERSAL_CHARSTRING_ELEMENT::get_uchar() const
 {
@@ -3596,6 +3604,7 @@ UNIVERSAL_CHARSTRING operator+(const universal_char& uchar_value,
   }
 }
 
+#ifdef TITAN_RUNTIME_2
 UNIVERSAL_CHARSTRING operator+(const OPTIONAL<UNIVERSAL_CHARSTRING>& left_value,
   const UNIVERSAL_CHARSTRING& right_value)
 {
@@ -3649,6 +3658,7 @@ UNIVERSAL_CHARSTRING operator+(const OPTIONAL<UNIVERSAL_CHARSTRING>& left_value,
   }
   return (const UNIVERSAL_CHARSTRING&)left_value + (const CHARSTRING&)right_value;
 }
+#endif // TITAN_RUNTIME_2
 
 boolean operator==(const char *string_value,
   const UNIVERSAL_CHARSTRING& other_value)
@@ -4077,6 +4087,7 @@ UNIVERSAL_CHARSTRING_template& UNIVERSAL_CHARSTRING_template::operator=
   return *this;
 }
 
+#ifdef TITAN_RUNTIME_2
 UNIVERSAL_CHARSTRING_template UNIVERSAL_CHARSTRING_template::operator+(
   const UNIVERSAL_CHARSTRING_template& other_value) const
 {
@@ -4253,6 +4264,7 @@ UNIVERSAL_CHARSTRING_template operator+(const CHARSTRING_template& left_template
   }
   return left_template.single_value + right_template.single_value;
 }
+#endif // TITAN_RUNTIME_2
 
 UNIVERSAL_CHARSTRING_ELEMENT UNIVERSAL_CHARSTRING_template::operator[](int index_value)
 {

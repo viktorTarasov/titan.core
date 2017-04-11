@@ -6874,10 +6874,16 @@ control {
 }
 }
 <END_MODULE>
-<RESULT IF_PASS COUNT 2>
+<RESULT IF_PASS LTRT COUNT 2>
 (?im)error: Subtype mismatch: subtype length\(2\) has no common value with a string element
 <END_RESULT>
-<RESULT IF_PASS COUNT 6>
+RESULT IF_PASS FTRT COUNT 3>
+(?im)error: Subtype mismatch: subtype length\(2\) has no common value with a string element
+<END_RESULT>
+<RESULT IF_PASS COUNT LTRT 6>
+(?im)error: Subtype mismatch: subtype length\(2\) has no common value with subtype length\(1\)
+<END_RESULT>
+<RESULT IF_PASS COUNT FTRT 7>
 (?im)error: Subtype mismatch: subtype length\(2\) has no common value with subtype length\(1\)
 <END_RESULT>
 <RESULT IF_PASS COUNT 4>
@@ -6889,7 +6895,10 @@ control {
 <RESULT IF_PASS COUNT 2>
 (?im)error: Reference to a string element of type `octetstring' cannot be used in this context
 <END_RESULT>
-<RESULT COUNT 15>
+<RESULT COUNT LTRT 15>
+(?is)\berror:
+<END_RESULT>
+<RESULT COUNT FTRT 17>
 (?is)\berror:
 <END_RESULT>
 <END_TC>
@@ -7174,8 +7183,8 @@ const MYREC c_myrec22 := {i:=1} with {
   erroneous (r) "value := omit"
   erroneous (r.i) "value := 1"
 }
-const MySeq c_myrec23 := {i:=1} with { erroneous (b) "value(raw) := ""proba""" }
-const MySeq c_myrec24 := {i:=1} with { erroneous (b) "value(raw) := universal charstring:""proba""" }
+const MYREC2 c_myrec23 := {i:=1} with { erroneous (i) "value(raw) := ""proba""" }
+const MYREC2 c_myrec24 := {i:=1} with { erroneous (i) "value(raw) := universal charstring:""proba""" }
 const MYREC2 c_myrec25 := {i:=1} with { erroneous (i) "value(raw) := '1010'B" }
 const MYREC c_myrec26 := {i:=1} with { erroneous (b) "value := MyCharstring1:""haha""" }
 const MYREC c_myrec27 := {i:=1} with { erroneous (b) "value := MYREC2:{i:=1}" }
@@ -7285,15 +7294,15 @@ control {} with{erroneous ""}
 <END_RESULT>
 
 <RESULT FTRT COUNT 1>
-(?im)\berror: A `raw' charstring value was used for erroneous type `@Virag.MySeq' which has no TEXT or XER encodings.
+(?im)\berror: A `raw' charstring value was used for erroneous type `@virag.MYREC2' which has no TEXT, XER or JSON encodings.
 <END_RESULT>
 
 <RESULT FTRT COUNT 1>
-(?im)\berror: A `raw' universal charstring value was used for erroneous type `@Virag.MySeq' which has no XER encoding.
+(?im)\berror: A `raw' universal charstring value was used for erroneous type `@virag.MYREC2' which has no XER or JSON encodings.
 <END_RESULT>
 
 <RESULT FTRT COUNT 1>
-(?im)\berror: A `raw' bitstring value was used for erroneous type `@virag.MYREC2' which has no RAW or PER encodings.
+(?im)\berror: A `raw' bitstring value was used for erroneous type `@virag.MYREC2' which has no RAW encoding.
 <END_RESULT>
 
 <RESULT FTRT COUNT 1>

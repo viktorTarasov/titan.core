@@ -36,9 +36,11 @@ class Text_Buf;
 class Module_Param;
 class Module_Param_Name;
 class Module_Param_Length_Restriction;
+#ifdef TITAN_RUNTIME_2
 class OCTETSTRING_template;
 class HEXSTRING_template;
 class BITSTRING_template;
+#endif
 
 enum template_sel {
   UNINITIALIZED_TEMPLATE = -1,
@@ -161,12 +163,15 @@ class Restricted_Length_Template : public Base_Template
   , public RefdIndexInterface
 #endif
 {
+  
+#ifdef TITAN_RUNTIME_2
   friend OCTETSTRING_template operator+(template_sel left_template_sel,
     const OCTETSTRING_template& right_template);
   friend HEXSTRING_template operator+(template_sel left_template_sel,
     const HEXSTRING_template& right_template);
   friend BITSTRING_template operator+(template_sel left_template_sel,
     const BITSTRING_template& right_template);
+#endif
   
 protected:
   enum length_restriction_type_t {
@@ -217,8 +222,10 @@ public:
   boolean is_any_or_omit() const;
 };
 
+#ifdef TITAN_RUNTIME_2
 template_sel operator+(template_sel left_template_sel,
   template_sel right_template_sel);
+#endif
 
 #ifndef TITAN_RUNTIME_2
 

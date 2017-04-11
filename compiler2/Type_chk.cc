@@ -5640,6 +5640,9 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
     break;
   case Ttcn::Template::TEMPLATE_CONCAT:
     {
+      if (!use_runtime_2) {
+        FATAL_ERROR("Type::chk_this_template_generic()");
+      }
       Error_Context cntxt(t, "In template concatenation");
       Template* t_left = t->get_concat_operand(true);
       Template* t_right = t->get_concat_operand(false);

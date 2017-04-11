@@ -62,14 +62,14 @@ namespace Ttcn {
       SUPERSET_MATCH, /**< superset match */
       SUBSET_MATCH, /**< subset match */
       PERMUTATION_MATCH, /**< permutation match */
-      ALL_FROM, /**< "all from" as part of a larger list e.g. permutation, superset, subset, etc. */
+      ALL_FROM, /**< "all from" clause */
       BSTR_PATTERN, /**< bitstring pattern */
       HSTR_PATTERN, /**< hexstring pattern */
       OSTR_PATTERN, /**< octetstring pattern */
       CSTR_PATTERN, /**< character string pattern */
       USTR_PATTERN, /**< universal charstring pattern */
       DECODE_MATCH, /**< decoded content match */
-      TEMPLATE_CONCAT /**< concatenation of two templates */
+      TEMPLATE_CONCAT /**< concatenation of two templates (runtime2 only) */
     };
 
     /** Status codes for the verification of template body completeness. */

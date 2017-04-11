@@ -29,7 +29,9 @@
 #include "Basetype.hh"
 #include "Template.hh"
 #include "Error.hh"
+#ifdef TITAN_RUNTIME_2
 #include "Vector.hh"
+#endif
 
 class INTEGER;
 class BITSTRING;
@@ -87,7 +89,9 @@ public:
 
   OCTETSTRING operator+(const OCTETSTRING& other_value) const;
   OCTETSTRING operator+(const OCTETSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   OCTETSTRING operator+(const OPTIONAL<OCTETSTRING>& other_value) const;
+#endif
 
   OCTETSTRING& operator+=(const OCTETSTRING& other_value);
   OCTETSTRING& operator+=(const OCTETSTRING_ELEMENT& other_value);
@@ -212,7 +216,9 @@ public:
 
   OCTETSTRING operator+(const OCTETSTRING& other_value) const;
   OCTETSTRING operator+(const OCTETSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   OCTETSTRING operator+(const OPTIONAL<OCTETSTRING>& other_value) const;
+#endif
   
   OCTETSTRING operator~() const;
   OCTETSTRING operator&(const OCTETSTRING& other_value) const;
@@ -243,6 +249,8 @@ public:
 #endif
   struct octetstring_pattern_struct;
 private:
+
+#ifdef TITAN_RUNTIME_2
   friend OCTETSTRING_template operator+(const OCTETSTRING& left_value,
     const OCTETSTRING_template& right_template);
   friend OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
@@ -263,6 +271,7 @@ private:
     const OCTETSTRING_ELEMENT& right_value);
   friend OCTETSTRING_template operator+(template_sel left_template_sel,
     const OPTIONAL<OCTETSTRING>& right_value);
+#endif
   
   OCTETSTRING single_value;
   union {
@@ -278,9 +287,11 @@ private:
   static boolean match_pattern(const octetstring_pattern_struct *string_pattern,
     const OCTETSTRING::octetstring_struct *string_value);
 
+#ifdef TITAN_RUNTIME_2
   void concat(Vector<unsigned short>& v) const;
   static void concat(Vector<unsigned short>& v, const OCTETSTRING& val);
   static void concat(Vector<unsigned short>& v, template_sel sel);
+#endif
   
 public:
   OCTETSTRING_template();
@@ -300,11 +311,13 @@ public:
   OCTETSTRING_template& operator=(const OPTIONAL<OCTETSTRING>& other_value);
   OCTETSTRING_template& operator=(const OCTETSTRING_template& other_value);
   
+#ifdef TITAN_RUNTIME_2
   OCTETSTRING_template operator+(const OCTETSTRING_template& other_value) const;
   OCTETSTRING_template operator+(const OCTETSTRING& other_value) const;
   OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& other_value) const;
   OCTETSTRING_template operator+(const OPTIONAL<OCTETSTRING>& other_value) const;
   OCTETSTRING_template operator+(template_sel other_template_sel) const;
+#endif
 
   OCTETSTRING_ELEMENT operator[](int index_value);
   OCTETSTRING_ELEMENT operator[](const INTEGER& index_value);
@@ -348,6 +361,7 @@ public:
 #endif
 };
 
+#ifdef TITAN_RUNTIME_2
 extern OCTETSTRING_template operator+(const OCTETSTRING& left_value,
   const OCTETSTRING_template& right_template);
 extern OCTETSTRING_template operator+(const OCTETSTRING_ELEMENT& left_value,
@@ -368,5 +382,6 @@ extern OCTETSTRING_template operator+(template_sel left_template_sel,
   const OCTETSTRING_ELEMENT& right_value);
 extern OCTETSTRING_template operator+(template_sel left_template_sel,
   const OPTIONAL<OCTETSTRING>& right_value);
+#endif
 
 #endif

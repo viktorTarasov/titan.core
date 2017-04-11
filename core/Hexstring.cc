@@ -263,6 +263,7 @@ HEXSTRING HEXSTRING::operator+(const HEXSTRING_ELEMENT& other_value) const
   return ret_val;
 }
 
+#ifdef TITAN_RUNTIME_2
 HEXSTRING HEXSTRING::operator+(const OPTIONAL<HEXSTRING>& other_value) const
 {
   if (other_value.is_present()) {
@@ -270,6 +271,7 @@ HEXSTRING HEXSTRING::operator+(const OPTIONAL<HEXSTRING>& other_value) const
   }
   TTCN_error("Unbound or omitted right operand of hexstring concatenation.");
 }
+#endif
 
 HEXSTRING HEXSTRING::operator~() const
 {
@@ -1233,6 +1235,7 @@ HEXSTRING HEXSTRING_ELEMENT::operator+(const HEXSTRING_ELEMENT& other_value) con
   return HEXSTRING(2, &result);
 }
 
+#ifdef TITAN_RUNTIME_2
 HEXSTRING HEXSTRING_ELEMENT::operator+(
   const OPTIONAL<HEXSTRING>& other_value) const
 {
@@ -1241,6 +1244,7 @@ HEXSTRING HEXSTRING_ELEMENT::operator+(
   }
   TTCN_error("Unbound or omitted right operand of hexstring concatenation.");
 }
+#endif
 
 HEXSTRING HEXSTRING_ELEMENT::operator~() const
 {
@@ -1594,6 +1598,7 @@ HEXSTRING_template& HEXSTRING_template::operator=(
   return *this;
 }
 
+#ifdef TITAN_RUNTIME_2
 void HEXSTRING_template::concat(Vector<unsigned char>& v) const
 {
   switch (template_selection) {
@@ -1838,6 +1843,7 @@ HEXSTRING_template operator+(template_sel left_template_sel,
   TTCN_error("Operand of hexstring template concatenation is an "
     "unbound or omitted record/set field.");
 }
+#endif // TITAN_RUNTIME_2
 
 HEXSTRING_ELEMENT HEXSTRING_template::operator[](int index_value)
 {

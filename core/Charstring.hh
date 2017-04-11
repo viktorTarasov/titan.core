@@ -40,7 +40,9 @@ class OCTETSTRING;
 class CHARSTRING_ELEMENT;
 class UNIVERSAL_CHARSTRING;
 class UNIVERSAL_CHARSTRING_ELEMENT;
+#ifdef TITAN_RUNTIME_2
 class UNIVERSAL_CHARSTRING_template;
+#endif
 
 class Module_Param;
 
@@ -159,12 +161,16 @@ public:
   CHARSTRING operator+(const char* other_value) const;
   CHARSTRING operator+(const CHARSTRING& other_value) const;
   CHARSTRING operator+(const CHARSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   CHARSTRING operator+(const OPTIONAL<CHARSTRING>& other_value) const;
+#endif
   UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING& other_value) const;
   UNIVERSAL_CHARSTRING operator+
     (const UNIVERSAL_CHARSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   UNIVERSAL_CHARSTRING operator+(
     const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const;
+#endif
 
   CHARSTRING& operator+=(char other_value);
   CHARSTRING& operator+=(const char *other_value);
@@ -312,12 +318,16 @@ public:
   CHARSTRING operator+(const char *other_value) const;
   CHARSTRING operator+(const CHARSTRING& other_value) const;
   CHARSTRING operator+(const CHARSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   CHARSTRING operator+(const OPTIONAL<CHARSTRING>& other_value) const;
+#endif
   UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING& other_value) const;
   UNIVERSAL_CHARSTRING operator+
     (const UNIVERSAL_CHARSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   UNIVERSAL_CHARSTRING operator+(
     const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const;
+#endif
 
   inline boolean is_bound() const { return bound_flag; }
   inline boolean is_present() const { return bound_flag; }
@@ -351,6 +361,7 @@ extern CHARSTRING operator+(const char* string_value,
                             const CHARSTRING& other_value);
 extern CHARSTRING operator+(const char* string_value,
                             const CHARSTRING_ELEMENT& other_value);
+#ifdef TITAN_RUNTIME_2
 extern CHARSTRING operator+(const OPTIONAL<CHARSTRING>& left_value,
   const CHARSTRING& right_value);
 extern CHARSTRING operator+(const OPTIONAL<CHARSTRING>& left_value,
@@ -361,6 +372,7 @@ extern UNIVERSAL_CHARSTRING operator+(const OPTIONAL<CHARSTRING>& left_value,
   const UNIVERSAL_CHARSTRING_ELEMENT& right_value);
 extern UNIVERSAL_CHARSTRING operator+(const OPTIONAL<CHARSTRING>& left_value,
   const OPTIONAL<UNIVERSAL_CHARSTRING>& right_value);
+#endif
 
 extern CHARSTRING operator<<=(const char *string_value,
                               const INTEGER& rotate_count);
@@ -375,6 +387,7 @@ class CHARSTRING_template : public Restricted_Length_Template {
 
   friend class UNIVERSAL_CHARSTRING_template;
   
+#ifdef TITAN_RUNTIME_2
   friend CHARSTRING_template operator+(const CHARSTRING& left_value,
     const CHARSTRING_template& right_template);
   friend CHARSTRING_template operator+(const CHARSTRING_ELEMENT& left_value,
@@ -393,6 +406,7 @@ class CHARSTRING_template : public Restricted_Length_Template {
   friend UNIVERSAL_CHARSTRING_template operator+(
     const CHARSTRING_template& left_template,
     const UNIVERSAL_CHARSTRING_template& right_template);
+#endif
 
 private:
   CHARSTRING single_value;
@@ -457,6 +471,7 @@ public:
   CHARSTRING_template& operator=(const OPTIONAL<CHARSTRING>& other_value);
   CHARSTRING_template& operator=(const CHARSTRING_template& other_value);
   
+#ifdef TITAN_RUNTIME_2
   CHARSTRING_template operator+(const CHARSTRING_template& other_value) const;
   CHARSTRING_template operator+(const CHARSTRING& other_value) const;
   CHARSTRING_template operator+(const CHARSTRING_ELEMENT& other_value) const;
@@ -467,6 +482,7 @@ public:
     const UNIVERSAL_CHARSTRING_ELEMENT& other_value) const;
   UNIVERSAL_CHARSTRING_template operator+(
     const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const;
+#endif
 
   CHARSTRING_ELEMENT operator[](int index_value);
   CHARSTRING_ELEMENT operator[](const INTEGER& index_value);
@@ -519,6 +535,7 @@ public:
   const CHARSTRING& get_single_value() const;
 };
 
+#ifdef TITAN_RUNTIME_2
 extern CHARSTRING_template operator+(const CHARSTRING& left_value,
   const CHARSTRING_template& right_template);
 extern CHARSTRING_template operator+(const CHARSTRING_ELEMENT& left_value,
@@ -534,6 +551,7 @@ extern UNIVERSAL_CHARSTRING_template operator+(
 extern UNIVERSAL_CHARSTRING_template operator+(
   const OPTIONAL<UNIVERSAL_CHARSTRING>& left_value,
   const CHARSTRING_template& right_template);
+#endif
 
 typedef CHARSTRING NumericString;
 typedef CHARSTRING PrintableString;

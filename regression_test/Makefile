@@ -48,14 +48,14 @@ XML ipv6 implicitOmit testcase_defparam transparent HQ16404 cfgFile \
 all_from lazyEval tryCatch text2ttcn json ttcn2json profiler templateOmit \
 customEncoding makefilegen uidChars checkstate hostid templateIstemplatekind \
 selectUnion templateExclusiveRange any_from templatePatternRef indexWithRecofArray \
-connectMapOperTest fuzzy portTranslation templateConcat
+connectMapOperTest fuzzy portTranslation
 
 ifdef DYN
 DIRS += loggerplugin junitlogger 
 endif
 
 ifdef RT2
-DIRS += typeCompat negativeTest
+DIRS += typeCompat negativeTest templateConcat
 endif
 
 ifeq (LTTNGUSTLOGGER, yes)

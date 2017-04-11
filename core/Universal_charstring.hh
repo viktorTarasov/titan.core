@@ -228,12 +228,16 @@ public:
   UNIVERSAL_CHARSTRING operator+(const char* other_value) const;
   UNIVERSAL_CHARSTRING operator+(const CHARSTRING& other_value) const;
   UNIVERSAL_CHARSTRING operator+(const CHARSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   UNIVERSAL_CHARSTRING operator+(const OPTIONAL<CHARSTRING>& other_value) const;
+#endif
   UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING& other_value) const;
   UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING_ELEMENT&
     other_value) const;
+#ifdef TITAN_RUNTIME_2
   UNIVERSAL_CHARSTRING operator+(
     const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const;
+#endif
   /** @} */
 
   /** @name Rotation
@@ -474,12 +478,16 @@ public:
   UNIVERSAL_CHARSTRING operator+(const char* other_value) const;
   UNIVERSAL_CHARSTRING operator+(const CHARSTRING& other_value) const;
   UNIVERSAL_CHARSTRING operator+(const CHARSTRING_ELEMENT& other_value) const;
+#ifdef TITAN_RUNTIME_2
   UNIVERSAL_CHARSTRING operator+(const OPTIONAL<CHARSTRING>& other_value) const;
+#endif
   UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING& other_value) const;
   UNIVERSAL_CHARSTRING operator+(const UNIVERSAL_CHARSTRING_ELEMENT&
     other_value) const;
+#ifdef TITAN_RUNTIME_2
   UNIVERSAL_CHARSTRING operator+(
     const OPTIONAL<UNIVERSAL_CHARSTRING>& other_value) const;
+#endif
 
   inline boolean is_bound() const { return bound_flag; }
   inline boolean is_present() const { return bound_flag; }
@@ -518,6 +526,7 @@ extern UNIVERSAL_CHARSTRING operator+(const universal_char& uchar_value,
   const UNIVERSAL_CHARSTRING& other_value);
 extern UNIVERSAL_CHARSTRING operator+(const universal_char& uchar_value,
   const UNIVERSAL_CHARSTRING_ELEMENT& other_value);
+#ifdef TITAN_RUNTIME_2
 extern UNIVERSAL_CHARSTRING operator+(
   const OPTIONAL<UNIVERSAL_CHARSTRING>& left_value,
   const UNIVERSAL_CHARSTRING& right_value);
@@ -533,6 +542,7 @@ extern UNIVERSAL_CHARSTRING operator+(
 extern UNIVERSAL_CHARSTRING operator+(
   const OPTIONAL<UNIVERSAL_CHARSTRING>& left_value,
   const OPTIONAL<CHARSTRING>& right_value);
+#endif
 
 extern boolean operator==(const char *string_value,
   const UNIVERSAL_CHARSTRING& other_value);
@@ -561,6 +571,8 @@ struct unichar_decmatch_struct;
 
 class UNIVERSAL_CHARSTRING_template : public Restricted_Length_Template {
 private:
+  
+#ifdef TITAN_RUNTIME_2
   friend UNIVERSAL_CHARSTRING_template operator+(
     const UNIVERSAL_CHARSTRING& left_value,
     const UNIVERSAL_CHARSTRING_template& right_template);
@@ -581,6 +593,7 @@ private:
   friend UNIVERSAL_CHARSTRING_template operator+(
     const CHARSTRING_template& left_template,
     const UNIVERSAL_CHARSTRING_template& right_template);
+#endif
   
   UNIVERSAL_CHARSTRING single_value;
   CHARSTRING* pattern_string;
@@ -643,6 +656,7 @@ public:
   UNIVERSAL_CHARSTRING_template& operator=
     (const UNIVERSAL_CHARSTRING_template& other_value);
   
+#ifdef TITAN_RUNTIME_2
   UNIVERSAL_CHARSTRING_template operator+(
     const UNIVERSAL_CHARSTRING_template& other_value) const;
   UNIVERSAL_CHARSTRING_template operator+(
@@ -658,7 +672,8 @@ public:
     const OPTIONAL<CHARSTRING>& other_value) const;
   UNIVERSAL_CHARSTRING_template operator+(
     const CHARSTRING_template& other_value) const;
-
+#endif
+  
   UNIVERSAL_CHARSTRING_ELEMENT operator[](int index_value);
   UNIVERSAL_CHARSTRING_ELEMENT operator[](const INTEGER& index_value);
   const UNIVERSAL_CHARSTRING_ELEMENT operator[](int index_value) const;
@@ -711,6 +726,7 @@ public:
   const CHARSTRING& get_single_value() const;
 };
 
+#ifdef TITAN_RUNTIME_2
 extern UNIVERSAL_CHARSTRING_template operator+(
   const UNIVERSAL_CHARSTRING& left_value,
   const UNIVERSAL_CHARSTRING_template& right_template);
@@ -728,6 +744,7 @@ extern UNIVERSAL_CHARSTRING_template operator+(const OPTIONAL<CHARSTRING>& left_
   const UNIVERSAL_CHARSTRING_template& right_template);
 extern UNIVERSAL_CHARSTRING_template operator+(const CHARSTRING_template& left_template,
   const UNIVERSAL_CHARSTRING_template& right_template);
+#endif
 
 typedef UNIVERSAL_CHARSTRING BMPString;
 typedef UNIVERSAL_CHARSTRING UniversalString;
