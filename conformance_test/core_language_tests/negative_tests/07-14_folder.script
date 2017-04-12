@@ -2286,7 +2286,7 @@ module NegSem_1101_ValueVars_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: integer value was expected
+error: any value is not allowed in this context
 <END_RESULT>
 
 <END_TC>
