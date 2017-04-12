@@ -2399,14 +2399,14 @@ error: `omit' value is not allowed in this context
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - 1901_001 Ensure that the IUT properly evaluates assignment statements  >
+<TC - 1901_001 Ensure that the IUT properly evaluates assignment statements syntaxis >
 
 <COMPILE>
 
 <MODULE TTCN NegSyn_1901_assignments_001 NegSyn_1901_assignments_001.ttcn >
 /***************************************************
  ** @version  0.0.1
- ** @purpose  1:19.1, Ensure that the IUT properly evaluates assignment statements
+ ** @purpose  1:19.1, Ensure that the IUT properly evaluates assignment statements syntaxis
  ** @verdict  pass  reject
  ***************************************************/
 module NegSyn_1901_assignments_001 {
@@ -2434,7 +2434,7 @@ module NegSyn_1901_assignments_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `:=': syntax error, unexpected :=, expecting ','
+error: at or before token `:=': syntax error, unexpected :=, expecting '\)' or ','
 <END_RESULT>
 
 <END_TC>

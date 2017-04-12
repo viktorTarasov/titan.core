@@ -4580,7 +4580,7 @@ module NegSem_1511_ConcatenatingTemplatesOfStringAndListTypes_004 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: Operands of charstring template concatenation must be specific value templates
+error: any or omit is not allowed in charstring template concatenation
 <END_RESULT>
 
 <END_TC>

@@ -6964,7 +6964,7 @@ module NegSem_060209_CommunicationPortTypes_004 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `\}': syntax error, unexpected '\}', expecting InOutParKeyword or InParKeyword or OutParKeyword
+error: at or before token `\}': syntax error, unexpected '\}'
 <END_RESULT>
 
 <END_TC>
@@ -7017,7 +7017,7 @@ module NegSem_060209_CommunicationPortTypes_005 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `\}': syntax error, unexpected '\}', expecting InOutParKeyword or InParKeyword or OutParKeyword
+error: at or before token `\}': syntax error, unexpected '\}'
 <END_RESULT>
 
 <END_TC>
