@@ -26,8 +26,8 @@ LCOV := no
 ifeq ($(LCOV), yes)
 SCRIPTFLAGS += -coverage
 endif
-# Runtime selection, doesn't have effect on BER/RAW tests yet
-RT2 := no
+# Runtime selection
+#RT2 := yes
 ifeq ($(RT2), yes)
 SCRIPTFLAGS += -rt2
 endif
