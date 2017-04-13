@@ -14,7 +14,11 @@ if [ -z "${perlexe}" ] ; then
 
 GCCVER=`strings -a -10 ${1+"$@"} | sed -n '
 s/.*TITAN: [0-9][0-9]* PLATFORM: [A-Z0-9][A-Z0-9]* //
-/GCC/ {
+/GCC: (GNU)/ {
+p
+}
+s/.*TITAN: [0-9][0-9]* PLATFORM: [A-Z0-9][A-Z0-9]* //
+/Clang: (GNU)/ {
 p
 }
 /Sun C++/ {
@@ -43,7 +47,7 @@ if 0;
 use strict;
 use vars qw($r $v);
 
-my $compiler = 'GCC';
+my $compiler = 'Compiler';
 
 my %versions;
 
@@ -62,28 +66,30 @@ open (PIPE, $cmdline = "$objdump -s -j " . join(' -j ', @sections) . " @ARGV |")
 
 my $obj = '?';
 
+sub match_comment() {
+    if (length($comment)) {
+        ($found_ver) = $comment =~ /((GCC|Clang): \([^)]*\) \d\.\d+(?:\.\d+)?)/;
+	if ($found_ver) {
+          print "$compiler version was $found_ver for $obj\n" if $v;
+
+          push @{$versions{$found_ver}}, $obj;
+
+          if (defined $r and $r ne $found_ver) {
+            if (!$v) { # found version was not written, do it now
+                warn "$compiler was $found_ver for $obj\n";
+            }
+          die      "        $r was expected\n";
+          }
+        }
+    }
+}
+
 while (<PIPE>)
 {
   chomp;
   next unless length;
   if (/^([^:]+):\s+file format/) {
-    if (length($comment)) {
-        ($found_ver) = $comment =~ /GCC: \([^)]*\) (\d\.\d+(?:\.\d+)?)/;
-        $found_ver ||= 'unknown!';
-
-        print "$compiler version was $found_ver for $obj\n" if $v;
-
-        push @{$versions{$found_ver}}, $obj;
-
-        if (defined $r and $r ne $found_ver)
-        {
-            if (!$v) { # found version was not written, do it now
-                warn "$compiler was $found_ver for $obj\n";
-            }
-
-            die      "        $r was expected\n";
-        }
-    }
+    match_comment();
     $obj = $1;
     $comment = '';
   }
@@ -101,10 +107,11 @@ while (<PIPE>)
   \s\s
   (.+)             # up to 16 characters of "plain" text
   $/x) {
-
     $comment .= $text;
   }
 }
+
+match_comment();
 
 close (PIPE) or die "close failed: $!";
 

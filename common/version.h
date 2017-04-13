@@ -92,11 +92,11 @@
 
 #ifdef __clang__
   #define CLANG_VERSION (__clang_major__ * 10000 + __clang_minor__ * 100)
+  #define COMPILER_VERSION_STRING " Clang: (GNU) " STR(__clang_major__) "." STR(__clang_minor__) "." STR(__clang_patchlevel__)
 #else
   #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100)
+  #define COMPILER_VERSION_STRING " GCC: (GNU) " STR(__GNUC__) "." STR(__GNUC_MINOR__) GCC_PATCHLEVEL_STRING
 #endif
-  /* Ignore __GNUC_PATCHLEVEL__ */
-#define COMPILER_VERSION_STRING " GCC: (GNU) " STR(__GNUC__) "." STR(__GNUC_MINOR__) GCC_PATCHLEVEL_STRING
 
 
   static const char titan_[] __attribute__ ((section (".titan"))) = \
