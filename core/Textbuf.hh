@@ -46,7 +46,7 @@ public:
   inline int get_pos() const { return buf_pos - buf_begin; }
   inline void buf_seek(int new_pos) { buf_pos = buf_begin + new_pos; }
   inline const char *get_data() const
-    { return (const char*)data_ptr + buf_begin; }
+    { return reinterpret_cast<const char*>(data_ptr) + buf_begin; }
 
   void push_int(const int_val_t& value);
   void push_int(const RInt& value);

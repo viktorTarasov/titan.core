@@ -102,7 +102,7 @@ public:
   inline unsigned short get_port() const { return ntohs(m_addr.sin_port); }
   inline void set_port(unsigned short p_port) { m_addr.sin_port = htons(p_port); }
   bool set_addr(const char *p_addr, unsigned short p_port = 0);
-  inline const struct sockaddr *get_addr() const { return (const struct sockaddr *)&m_addr; }
+  inline const struct sockaddr *get_addr() const { return reinterpret_cast<const struct sockaddr *>(&m_addr); }
   inline socklen_type get_addr_len() const { return sizeof(m_addr); }
   inline const char *get_host_str() const { return strlen(m_host_str) > 0 ? m_host_str : m_addr_str; }
   inline const char *get_addr_str() const { return strlen(m_addr_str) > 0 ? m_addr_str : m_host_str; }
@@ -135,7 +135,7 @@ public:
   inline unsigned short get_port() const { return ntohs(m_addr.sin6_port); }
   inline void set_port(unsigned short p_port) { m_addr.sin6_port = htons(p_port); }
   bool set_addr(const char *p_addr, unsigned short p_port = 0);
-  inline const struct sockaddr *get_addr() const { return (const struct sockaddr *)&m_addr; }
+  inline const struct sockaddr *get_addr() const { return reinterpret_cast<const struct sockaddr *>(&m_addr); }
   inline socklen_type get_addr_len() const { return sizeof(m_addr); }
   inline const char *get_host_str() const { return strlen(m_host_str) > 0 ? m_host_str : m_addr_str; }
   const char *get_addr_str() const;

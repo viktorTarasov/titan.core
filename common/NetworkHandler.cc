@@ -205,12 +205,12 @@ int IPv4Address::accept(int p_sockfd)
 {
   clean_up();
   socklen_type addrlen = sizeof(m_addr);
-  int fd = ::accept(p_sockfd, (struct sockaddr *)&m_addr, &addrlen);
+  int fd = ::accept(p_sockfd, reinterpret_cast<struct sockaddr *>(&m_addr), &addrlen);
   if (fd >= 0) {
     strncpy(m_addr_str, inet_ntoa(m_addr.sin_addr), sizeof(m_addr_str));
     if (m_addr.sin_addr.s_addr != htonl(INADDR_ANY)) {
       struct hostent *hptr =
-        gethostbyaddr((const char *)&m_addr.sin_addr,
+        gethostbyaddr(reinterpret_cast<const char *>(&m_addr.sin_addr),
                       sizeof(m_addr.sin_addr), m_addr.sin_family);
       if (hptr != NULL && static_cast<size_t>(hptr->h_length) == sizeof(struct in_addr)) {
         strncpy(m_host_str, hptr->h_name, sizeof(m_host_str));
@@ -224,12 +224,12 @@ int IPv4Address::getsockname(int p_sockfd)
 {
   clean_up();
   socklen_type addrlen = sizeof(m_addr);
-  int s = ::getsockname(p_sockfd, (struct sockaddr *)&m_addr, &addrlen);
+  int s = ::getsockname(p_sockfd, reinterpret_cast<struct sockaddr *>(&m_addr), &addrlen);
   if (s >= 0) {
     strncpy(m_addr_str, inet_ntoa(m_addr.sin_addr), sizeof(m_addr_str));
     if (m_addr.sin_addr.s_addr != htonl(INADDR_ANY)) {
       struct hostent *hptr =
-        gethostbyaddr((const char *)&m_addr.sin_addr,
+        gethostbyaddr(reinterpret_cast<const char *>(&m_addr.sin_addr),
                       sizeof(m_addr.sin_addr), m_addr.sin_family);
       if (hptr != NULL && static_cast<size_t>(hptr->h_length) == sizeof(struct in_addr)) {
         strncpy(m_host_str, hptr->h_name, sizeof(m_host_str));
@@ -344,13 +344,13 @@ int IPv6Address::accept(int p_sockfd)
 {
   clean_up();
   socklen_type addrlen = sizeof(m_addr);
-  int fd = ::accept(p_sockfd, (struct sockaddr *)&m_addr, &addrlen);
+  int fd = ::accept(p_sockfd, reinterpret_cast<struct sockaddr *>(&m_addr), &addrlen);
   if (fd >= 0) {
     if (!inet_ntop(AF_INET6, &m_addr.sin6_addr, m_addr_str, sizeof(m_addr_str))) {
       fprintf(stderr, "IPv6Address::accept(): Unable to convert IPv6 address "
               "from binary to text form: %s\n", strerror(errno));
     }
-    int s = getnameinfo((struct sockaddr *)&m_addr, sizeof(m_addr),
+    int s = getnameinfo(reinterpret_cast<struct sockaddr *>(&m_addr), sizeof(m_addr),
                         m_host_str, sizeof(m_host_str), NULL, 0, 0);
     if (s != 0) {
       fprintf(stderr, "IPv6Address::accept(): Address to name translation "
@@ -364,13 +364,13 @@ int IPv6Address::getsockname(int p_sockfd)
 {
   clean_up();
   socklen_type addrlen = sizeof(m_addr);
-  int s1 = ::getsockname(p_sockfd, (struct sockaddr *)&m_addr, &addrlen);
+  int s1 = ::getsockname(p_sockfd, reinterpret_cast<struct sockaddr *>(&m_addr), &addrlen);
   if (s1 >= 0) {
     if (!inet_ntop(AF_INET6, &m_addr.sin6_addr, m_addr_str, sizeof(m_addr_str))) {
       fprintf(stderr, "IPv6Address::getsockname(): Unable to convert IPv6 "
               "address from binary to text form: %s\n", strerror(errno));
     }
-    int s2 = getnameinfo((struct sockaddr *)&m_addr, sizeof(m_addr),
+    int s2 = getnameinfo(reinterpret_cast<struct sockaddr *>(&m_addr), sizeof(m_addr),
                          m_host_str, sizeof(m_host_str), NULL, 0, 0);
     if (s2 != 0) {
       fprintf(stderr, "IPv6Address::getsockname(): Address to name "
