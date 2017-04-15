@@ -79,8 +79,8 @@ using namespace Common;
 
 const char *output_dir = NULL;
 const char *tcov_file_name = NULL;
-const char *profiler_file_name = NULL;
-const char *file_list_file_name = NULL;
+static const char *profiler_file_name = NULL;
+static const char *file_list_file_name = NULL;
 tcov_file_list *tcov_files = NULL;
 expstring_t effective_module_lines = NULL;
 expstring_t effective_module_functions = NULL;
