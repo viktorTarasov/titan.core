@@ -23,20 +23,20 @@
 /* clang defines __GNUC__ but also has its own version numbers */
 #ifdef __clang__
 
-unsigned int
-compiler_major = __clang_major__,
-compiler_minor = __clang_minor__,
-compiler_patchlevel = __clang_patchlevel__;
+static unsigned int compiler_major = __clang_major__;
+static unsigned int compiler_minor = __clang_minor__;
+static unsigned int compiler_patchlevel = __clang_patchlevel__;
 #define COMPILER_NAME_STRING "clang"
 
 #else
 
 #define COMPILER_NAME_STRING "GCC"
-unsigned int compiler_major = __GNUC__, compiler_minor = __GNUC_MINOR__;
+static unsigned int compiler_major = __GNUC__;
+static unsigned int compiler_minor = __GNUC_MINOR__;
 # ifdef __GNUC_PATCHLEVEL__
-unsigned int compiler_patchlevel = __GNUC_PATCHLEVEL__;
+static unsigned int compiler_patchlevel = __GNUC_PATCHLEVEL__;
 # else
-unsigned int compiler_patchlevel = 0; /* GCC below 3.0 */
+static unsigned int compiler_patchlevel = 0; /* GCC below 3.0 */
 # endif
 
 #endif /* __clang__ */
@@ -46,13 +46,15 @@ unsigned int compiler_patchlevel = 0; /* GCC below 3.0 */
 # if !defined(__SUNPRO_C)
 #  define __SUNPRO_C __SUNPRO_CC
 # endif
-unsigned int compiler_major      = (__SUNPRO_C & 0xF00) >> 8;
-unsigned int compiler_minor      = (__SUNPRO_C & 0x0F0) >> 4;
-unsigned int compiler_patchlevel = (__SUNPRO_C & 0x00F);
+static unsigned int compiler_major      = (__SUNPRO_C & 0xF00) >> 8;
+static unsigned int compiler_minor      = (__SUNPRO_C & 0x0F0) >> 4;
+static unsigned int compiler_patchlevel = (__SUNPRO_C & 0x00F);
 
 #else
 /* unknown compiler */
-unsigned int compiler_major = 0, compiler_minor = 0, compiler_patchlevel = 0;
+static unsigned int compiler_major = 0;
+static unsigned int compiler_minor = 0;
+static unsigned int compiler_patchlevel = 0;
 #endif
 
 int main(void)
