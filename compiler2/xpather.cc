@@ -71,7 +71,7 @@ void fatal_error(const char * filename, int lineno, const char * fmt, ...)
   abort();
 }
 
-ProjectGenHelper& projGenHelper = ProjectGenHelper::Instance();
+static ProjectGenHelper& projGenHelper = ProjectGenHelper::Instance();
 
 /// Run an XPath query and return an xmlXPathObjectPtr, which must be freed
 xmlXPathObjectPtr run_xpath(xmlXPathContextPtr xpathCtx, const char *xpathExpr)
@@ -530,7 +530,7 @@ void append_to_library_list (const char* prjName,
 
 // data structures and functions to manage excluded folders/files
 
-map<cstring, const char> excluded_files;
+static map<cstring, const char> excluded_files;
 
 boolean is_excluded_file(const cstring& path, const char* project) {
   if (!excluded_files.has_key(path)) return false;
@@ -539,7 +539,7 @@ boolean is_excluded_file(const cstring& path, const char* project) {
   return false;
 }
 
-vector<const char> excluded_folders;
+static vector<const char> excluded_folders;
 
 // Unfortunately, when "docs" is excluded, we need to drop
 // files in "docs/", "docs/pdf/", "docs/txt/", "docs/txt/old/" etc;

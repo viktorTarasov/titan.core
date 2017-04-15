@@ -32,7 +32,7 @@
 
 // The new (T)itan(C)overage(D)ata is born!
 const std::string tcd_ext(".tcd");
-size_t tcd_ext_len = tcd_ext.size();
+static size_t tcd_ext_len = tcd_ext.size();
 
 #ifdef WIN32
 #define P_SEP "\\"
