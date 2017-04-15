@@ -514,7 +514,7 @@ VERDICTTYPE_template::VERDICTTYPE_template
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a verdict template from an unbound optional field.");
   }
 }
@@ -568,7 +568,7 @@ VERDICTTYPE_template& VERDICTTYPE_template::operator=
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a verdict "
       "template.");
   }

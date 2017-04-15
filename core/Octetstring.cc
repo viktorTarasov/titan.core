@@ -1750,7 +1750,7 @@ OCTETSTRING_template::OCTETSTRING_template
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating an octetstring template from an unbound optional "
       "field.");
   }
@@ -1823,7 +1823,7 @@ OCTETSTRING_template& OCTETSTRING_template::operator=
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to an octetstring "
       "template.");
   }

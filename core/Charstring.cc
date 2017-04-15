@@ -2216,7 +2216,7 @@ CHARSTRING_template::CHARSTRING_template(const OPTIONAL<CHARSTRING>& other_value
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a charstring template from an unbound optional "
       "field.");
   }
@@ -2287,7 +2287,7 @@ CHARSTRING_template& CHARSTRING_template::operator=
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a charstring "
       "template.");
   }

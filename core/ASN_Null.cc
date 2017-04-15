@@ -389,7 +389,7 @@ ASN_NULL_template::ASN_NULL_template(const OPTIONAL<ASN_NULL>& other_value)
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of ASN.1 NULL type from an unbound "
       "optional field.");
   }
@@ -441,7 +441,7 @@ ASN_NULL_template& ASN_NULL_template::operator=
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of "
       "ASN.1 NULL type.");
   }

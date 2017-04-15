@@ -3924,7 +3924,7 @@ UNIVERSAL_CHARSTRING_template::UNIVERSAL_CHARSTRING_template
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a universal charstring template from an unbound "
       "optional field.");
   }
@@ -3941,7 +3941,7 @@ UNIVERSAL_CHARSTRING_template::UNIVERSAL_CHARSTRING_template
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a universal charstring template from an unbound "
       "optional field.");
   }
@@ -4043,7 +4043,7 @@ UNIVERSAL_CHARSTRING_template& UNIVERSAL_CHARSTRING_template::operator=
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a universal "
       "charstring template.");
   }
@@ -4062,7 +4062,7 @@ UNIVERSAL_CHARSTRING_template& UNIVERSAL_CHARSTRING_template::operator=
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a universal "
       "charstring template.");
   }

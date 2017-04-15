@@ -1629,7 +1629,7 @@ BITSTRING_template::BITSTRING_template(const OPTIONAL<BITSTRING>& other_value)
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a bitstring template from an unbound optional field.");
   }
 }
@@ -1692,7 +1692,7 @@ BITSTRING_template& BITSTRING_template::operator=
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a bitstring "
       "template.");
   }

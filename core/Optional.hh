@@ -440,7 +440,7 @@ OPTIONAL<T_type>::OPTIONAL(const OPTIONAL& other_value)
     break;
   case OPTIONAL_OMIT:
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     break;
   }
 }
@@ -458,7 +458,7 @@ OPTIONAL<T_type>::OPTIONAL(const OPTIONAL<T_tmp>& other_value)
     break;
   case OPTIONAL_OMIT:
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     break;
   }
 }
@@ -510,7 +510,7 @@ OPTIONAL<T_type>& OPTIONAL<T_type>::operator=(const OPTIONAL& other_value)
   case OPTIONAL_OMIT:
     if (&other_value != this) set_to_omit();
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     clean_up();
     break;
   }
@@ -535,7 +535,7 @@ OPTIONAL<T_type>::operator=(const OPTIONAL<T_tmp>& other_value)
   case OPTIONAL_OMIT:
     set_to_omit();
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     clean_up();
     break;
   }
@@ -622,7 +622,7 @@ boolean OPTIONAL<T_type>::is_equal(const T_tmp& other_value) const
     return *optional_value == other_value;
   case OPTIONAL_OMIT:
     return FALSE;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("The left operand of comparison is an unbound optional value.");
   }
   return FALSE;
@@ -669,7 +669,7 @@ boolean OPTIONAL<T_type>::is_bound() const
   case OPTIONAL_PRESENT:
   case OPTIONAL_OMIT:
     return TRUE;
-  default:
+  case OPTIONAL_UNBOUND:
     if (NULL != optional_value) {
       return optional_value->is_bound();
     }
@@ -684,7 +684,7 @@ boolean OPTIONAL<T_type>::is_present() const
   case OPTIONAL_PRESENT:
     return TRUE;
   case OPTIONAL_OMIT:
-  default:
+  case OPTIONAL_UNBOUND:
     if (NULL != optional_value) {
       return optional_value->is_bound();
     }
@@ -706,7 +706,7 @@ boolean OPTIONAL<T_type>::ispresent() const
     }
 #endif
     return FALSE;
-  default:
+  case OPTIONAL_UNBOUND:
 #ifdef TITAN_RUNTIME_2
     if (NULL != optional_value && optional_value->is_bound()) {
       return TRUE;
@@ -746,7 +746,7 @@ void OPTIONAL<T_type>::log() const
   case OPTIONAL_OMIT:
     TTCN_Logger::log_event_str("omit");
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_Logger::log_event_unbound();
     break;
   }
@@ -780,7 +780,7 @@ Module_Param* OPTIONAL<T_type>::get_param(Module_Param_Name& param_name) const
     return optional_value->get_param(param_name);
   case OPTIONAL_OMIT:
     return new Module_Param_Omit();
-  default:
+  case OPTIONAL_UNBOUND:
     return new Module_Param_Unbound();
   }
 }
@@ -801,7 +801,7 @@ void OPTIONAL<T_type>::encode_text(Text_Buf& text_buf) const
     text_buf.push_int((RInt)TRUE);
     optional_value->encode_text(text_buf);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Text encoder: Encoding an unbound optional value.");
   }
 }
@@ -827,7 +827,7 @@ int OPTIONAL<T_type>::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokeni
     return optional_value->JSON_encode(p_td, p_tok);
   case OPTIONAL_OMIT:
     return p_tok.put_next_token(JSON_TOKEN_LITERAL_NULL, NULL);
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound optional value.");
     return -1;
@@ -845,7 +845,7 @@ int OPTIONAL<T_type>::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_de
     return optional_value->JSON_encode_negtest(p_err_descr, p_td, p_tok);
   case OPTIONAL_OMIT:
     return p_tok.put_next_token(JSON_TOKEN_LITERAL_NULL, NULL);
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound optional value.");
     return -1;
@@ -942,7 +942,7 @@ OPTIONAL<T_type>::BER_encode_TLV(const TTCN_Typedescriptor_t& p_td,
     return optional_value->BER_encode_TLV(p_td, p_coding);
   case OPTIONAL_OMIT:
     return ASN_BER_TLV_t::construct();
-  default:
+  case OPTIONAL_UNBOUND:
     return ASN_BER_V2TLV(BER_encode_chk_bound(FALSE), p_td, p_coding);
   }
 }
@@ -963,7 +963,7 @@ OPTIONAL<T_type>::BER_encode_TLV_negtest(const Erroneous_descriptor_t* p_err_des
     return optional_value->BER_encode_TLV_negtest(p_err_descr, p_td, p_coding);
   case OPTIONAL_OMIT:
     return ASN_BER_TLV_t::construct();
-  default:
+  case OPTIONAL_UNBOUND:
     return ASN_BER_V2TLV(BER_encode_chk_bound(FALSE), p_td, p_coding);
   }
 }
@@ -993,7 +993,7 @@ OPTIONAL<T_type>::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& buf, unsi
     return optional_value->XER_encode(p_td, buf, flavor, flavor2, indent, emb_val);
   case OPTIONAL_OMIT:
     return 0; // nothing to do !
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_EncDec_ErrorContext::error(
       TTCN_EncDec::ET_UNBOUND, "Encoding an unbound optional value.");
     return 0;
@@ -1012,7 +1012,7 @@ OPTIONAL<T_type>::XER_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
     return optional_value->XER_encode_negtest(p_err_descr, p_td, buf, flavor, flavor2, indent, emb_val);
   case OPTIONAL_OMIT:
     return 0; // nothing to do !
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_EncDec_ErrorContext::error(
       TTCN_EncDec::ET_UNBOUND, "Encoding an unbound optional value.");
     return 0;
@@ -1141,7 +1141,7 @@ char ** OPTIONAL<T_type>::collect_ns(const XERdescriptor_t& p_td, size_t& num, b
     def_ns = FALSE;
     num = 0;
     return 0;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_EncDec_ErrorContext::error(
       TTCN_EncDec::ET_UNBOUND, "Encoding an unbound value.");
     return 0;

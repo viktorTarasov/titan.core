@@ -1513,7 +1513,7 @@ HEXSTRING_template::HEXSTRING_template(const OPTIONAL<HEXSTRING>& other_value)
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a hexstring template from an unbound optional field.");
   }
 }
@@ -1581,7 +1581,7 @@ HEXSTRING_template& HEXSTRING_template::operator=(
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a hexstring "
       "template.");
   }

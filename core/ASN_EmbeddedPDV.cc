@@ -1017,7 +1017,7 @@ EMBEDDED_PDV_identification_template::EMBEDDED_PDV_identification_template(const
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of union type EMBEDDED PDV.identification from an unbound optional field.");
   }
 }
@@ -1058,7 +1058,7 @@ EMBEDDED_PDV_identification_template& EMBEDDED_PDV_identification_template::oper
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of union type EMBEDDED PDV.identification.");
   }
   return *this;
@@ -2033,7 +2033,7 @@ EMBEDDED_PDV_identification_syntaxes_template::EMBEDDED_PDV_identification_synta
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of type EMBEDDED PDV.identification.syntaxes from an unbound optional field.");
   }
 }
@@ -2074,7 +2074,7 @@ EMBEDDED_PDV_identification_syntaxes_template& EMBEDDED_PDV_identification_synta
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of type EMBEDDED PDV.identification.syntaxes.");
   }
   return *this;
@@ -2775,7 +2775,7 @@ EMBEDDED_PDV_identification_context__negotiation_template::EMBEDDED_PDV_identifi
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of type EMBEDDED PDV.identification.context-negotiation from an unbound optional field.");
   }
 }
@@ -2816,7 +2816,7 @@ EMBEDDED_PDV_identification_context__negotiation_template& EMBEDDED_PDV_identifi
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of type EMBEDDED PDV.identification.context-negotiation.");
   }
   return *this;
@@ -3664,7 +3664,7 @@ EMBEDDED_PDV_template::EMBEDDED_PDV_template(const OPTIONAL<EMBEDDED_PDV>& other
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of type EMBEDDED PDV from an unbound optional field.");
   }
 }
@@ -3705,7 +3705,7 @@ EMBEDDED_PDV_template& EMBEDDED_PDV_template::operator=(const OPTIONAL<EMBEDDED_
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of type EMBEDDED PDV.");
   }
   return *this;

@@ -2001,7 +2001,7 @@ INTEGER_template::INTEGER_template(const OPTIONAL<INTEGER>& other_value)
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating an integer template from an unbound optional field.");
   }
 }
@@ -2064,7 +2064,7 @@ INTEGER_template& INTEGER_template::operator=
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to an integer "
       "template.");
   }

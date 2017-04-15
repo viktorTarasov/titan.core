@@ -1022,7 +1022,7 @@ CHARACTER_STRING_identification_template::CHARACTER_STRING_identification_templa
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of union type CHARACTER STRING.identification from an unbound optional field.");
   }
 }
@@ -1063,7 +1063,7 @@ CHARACTER_STRING_identification_template& CHARACTER_STRING_identification_templa
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of union type CHARACTER STRING.identification.");
   }
   return *this;
@@ -2029,7 +2029,7 @@ CHARACTER_STRING_identification_syntaxes_template::CHARACTER_STRING_identificati
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of type CHARACTER STRING.identification.syntaxes from an unbound optional field.");
   }
 }
@@ -2070,7 +2070,7 @@ CHARACTER_STRING_identification_syntaxes_template& CHARACTER_STRING_identificati
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of type CHARACTER STRING.identification.syntaxes.");
   }
   return *this;
@@ -2763,7 +2763,7 @@ CHARACTER_STRING_identification_context__negotiation_template::CHARACTER_STRING_
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of type CHARACTER STRING.identification.context-negotiation from an unbound optional field.");
   }
 }
@@ -2804,7 +2804,7 @@ CHARACTER_STRING_identification_context__negotiation_template& CHARACTER_STRING_
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of type CHARACTER STRING.identification.context-negotiation.");
   }
   return *this;
@@ -3647,7 +3647,7 @@ CHARACTER_STRING_template::CHARACTER_STRING_template(const OPTIONAL<CHARACTER_ST
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of type CHARACTER STRING from an unbound optional field.");
   }
 }
@@ -3688,7 +3688,7 @@ CHARACTER_STRING_template& CHARACTER_STRING_template::operator=(const OPTIONAL<C
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of type CHARACTER STRING.");
   }
   return *this;

@@ -1268,7 +1268,7 @@ FLOAT_template::FLOAT_template(const OPTIONAL<FLOAT>& other_value)
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a float template from an unbound optional field.");
   }
 }
@@ -1321,7 +1321,7 @@ FLOAT_template& FLOAT_template::operator=(const OPTIONAL<FLOAT>& other_value)
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a float template.");
   }
   return *this;

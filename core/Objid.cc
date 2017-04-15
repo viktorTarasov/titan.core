@@ -721,7 +721,7 @@ OBJID_template::OBJID_template(const OPTIONAL<OBJID>& other_value)
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating an objid template from an unbound optional field.");
   }
 }
@@ -766,7 +766,7 @@ OBJID_template& OBJID_template::operator=(const OPTIONAL<OBJID>& other_value)
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to an objid template.");
   }
   return *this;

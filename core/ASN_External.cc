@@ -1412,7 +1412,7 @@ EXTERNAL_identification_template::EXTERNAL_identification_template(const OPTIONA
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of union type EXTERNAL.identification from an unbound optional field.");
   }
 }
@@ -1453,7 +1453,7 @@ EXTERNAL_identification_template& EXTERNAL_identification_template::operator=(co
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of union type EXTERNAL.identification.");
   }
   return *this;
@@ -2335,7 +2335,7 @@ EXTERNAL_identification_syntaxes_template::EXTERNAL_identification_syntaxes_temp
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of type EXTERNAL.identification.syntaxes from an unbound optional field.");
   }
 }
@@ -2376,7 +2376,7 @@ EXTERNAL_identification_syntaxes_template& EXTERNAL_identification_syntaxes_temp
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of type EXTERNAL.identification.syntaxes.");
   }
   return *this;
@@ -2982,7 +2982,7 @@ EXTERNAL_identification_context__negotiation_template::EXTERNAL_identification_c
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of type EXTERNAL.identification.context-negotiation from an unbound optional field.");
   }
 }
@@ -3023,7 +3023,7 @@ EXTERNAL_identification_context__negotiation_template& EXTERNAL_identification_c
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of type EXTERNAL.identification.context-negotiation.");
   }
   return *this;
@@ -3753,7 +3753,7 @@ EXTERNAL_template::EXTERNAL_template(const OPTIONAL<EXTERNAL>& other_value)
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Creating a template of type EXTERNAL from an unbound optional field.");
   }
 }
@@ -3794,7 +3794,7 @@ EXTERNAL_template& EXTERNAL_template::operator=(const OPTIONAL<EXTERNAL>& other_
   case OPTIONAL_OMIT:
     set_selection(OMIT_VALUE);
     break;
-  default:
+  case OPTIONAL_UNBOUND:
     TTCN_error("Assignment of an unbound optional field to a template of type EXTERNAL.");
   }
   return *this;
