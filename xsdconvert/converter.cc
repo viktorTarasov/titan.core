@@ -28,6 +28,8 @@
 #include <unistd.h> // for using "getopt" function
 #include <sys/stat.h>
 
+#include "converter.hh"
+
 bool c_flag_used = false;
 int  d_flag_used = 0;
 bool e_flag_used = false;

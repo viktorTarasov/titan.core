@@ -23,6 +23,7 @@
 #include "ImportStatement.hh"
 #include "Annotation.hh"
 #include "Constant.hh"
+#include "converter.hh"
 
 #include "../common/version_internal.h"
 

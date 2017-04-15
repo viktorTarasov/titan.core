@@ -20,6 +20,7 @@
 #include "SimpleType.hh"
 #include "TTCN3Module.hh"
 #include "ImportStatement.hh"
+#include "converter.hh"
 
 #include <cctype> // for using "toupper" function
 #include <cstring>

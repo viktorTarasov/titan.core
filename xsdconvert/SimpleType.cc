@@ -22,6 +22,7 @@
 #include "TTCN3Module.hh"
 #include "ComplexType.hh"
 #include "Constant.hh"
+#include "converter.hh"
 
 #include <math.h>
 #include <cfloat>

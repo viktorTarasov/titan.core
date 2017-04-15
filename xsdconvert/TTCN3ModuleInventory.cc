@@ -23,6 +23,7 @@
 #include "SimpleType.hh"
 #include "ComplexType.hh"
 #include "Constant.hh"
+#include "converter.hh"
 
 extern bool h_flag_used;
 extern bool q_flag_used;

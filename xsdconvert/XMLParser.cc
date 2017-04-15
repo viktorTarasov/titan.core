@@ -17,6 +17,7 @@
 #include "TTCN3Module.hh"
 #include "SimpleType.hh"
 #include "ComplexType.hh"
+#include "converter.hh"
 
 #include "GeneralFunctions.hh"
 
