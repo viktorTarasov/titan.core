@@ -144,7 +144,8 @@ namespace Common {
 
     /** Constructor with filename and two location info.
      *
-     * @param p_filename
+     * @param p_filename contains the name of the file
+     *        Stores pointer \p p_filename into \c filename.
      * @param p_firstloc holds the location of the beginning.
      *        Its   \p first_line and       \p first_column are copied into
      *        \c yyloc.first_line and \c yyloc.first_column.
@@ -175,7 +176,8 @@ namespace Common {
     void set_location(const char *p_filename, const YYLTYPE& p_yyloc);
     /** Setter with filename and two location info.
      *
-     * @param p_filename
+     * @param p_filename contains the name of the file
+     *        Stores pointer \p p_filename into \c filename.
      * @param p_firstloc holds the location of the beginning.
      *        Its   \p first_line and       \p first_column are copied into
      *        \c yyloc.first_line and \c yyloc.first_column.
@@ -765,7 +767,8 @@ public:
   public:
     /** Constructor.
      *
-     * @param p_loc
+     * @param p_loc the location to report the error to
+     *        stores \p p_loc into \c my_loc
      * @param p_str string describing the operation being performed
      */
     ReferenceChain(const Location *p_loc, const char *p_str=0);
