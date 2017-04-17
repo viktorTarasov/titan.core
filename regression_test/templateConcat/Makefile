@@ -12,6 +12,11 @@
 TOPDIR := ..
 include $(TOPDIR)/Makefile.regression
 
+#only works with RT2
+ifndef RT2
+$(error note: templateConcat requires RT2)
+endif
+
 .SUFFIXES: .ttcn .asn .hh
 .PHONY: all clean dep run
 
