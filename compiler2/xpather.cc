@@ -1256,7 +1256,7 @@ static tpd_result config_struct_get_required_configs(struct config_struct* const
   return TPD_SUCCESS;
 }
 
-static tpd_result process_tpd_internal(const char *p_tpd_name, char* tpdName, const char *actcfg,
+static tpd_result process_tpd_internal(const char **p_tpd_name, char* tpdName, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv, boolean* p_free_argv,
   int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
@@ -1276,7 +1276,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char* tpdName, co
   struct string2_list* run_command_list, map<cstring, int>& seen_tpd_files, struct string2_list* required_configs, struct string_list** profiled_file_list,
   const char **search_paths, size_t n_search_paths, char** makefileScript, struct config_struct * const all_configs);
 
-extern "C" tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
+extern "C" tpd_result process_tpd(const char **p_tpd_name, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv, boolean* p_free_argv,
   int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
@@ -1437,7 +1437,7 @@ failure:
 // process_tpd() may alter these strings; new values will be on the heap.
 // If process_tpd() preserves the content of such a string (e.g. ets_name),
 // it must nevertheless make a copy on the heap via mcopystr().
-static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, const char *actcfg,
+static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, const char *actcfg,
   const char *file_list_path, int *p_argc, char ***p_argv, boolean* p_free_argv,
   int *p_optind, char **p_ets_name, char **p_project_name,
   boolean *p_gflag, boolean *p_sflag, boolean *p_cflag, boolean *p_aflag, boolean *preprocess,
@@ -1469,17 +1469,16 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
     || local_optind == 0); // if called for a referenced project
 
   assert(local_argc   >= local_optind);
-
-  autostring tpd_dir(get_dir_from_path(p_tpd_name));
+  
+  autostring tpd_dir(get_dir_from_path(*p_tpd_name));
   autostring abs_tpd_dir(get_absolute_dir(tpd_dir, NULL, FALSE));
-  boolean free_name = FALSE;
   struct stat buf;
   //Only referenced project, when first try is failed,              and when not absolute path
-  if(0 == local_optind && p_tpd_name != NULL && stat(p_tpd_name, &buf) && tpdName != NULL) {
+  if(0 == local_optind && *p_tpd_name != NULL && stat(*p_tpd_name, &buf) && tpdName != NULL) {
     //Find the first search_path that has the tpd
     for(size_t i = 0; i<n_search_paths; i++) {
       boolean need_slash = search_paths[i][strlen(search_paths[i]) - 1] != '/';
-      NOTIFY("Cannot find %s, trying with %s%s%s\n", p_tpd_name, search_paths[i], need_slash ? "/" : "", tpdName);
+      NOTIFY("Cannot find %s, trying with %s%s%s\n", *p_tpd_name, search_paths[i], need_slash ? "/" : "", tpdName);
       //Create path
       char * prefixed_file_path = (char*)Malloc((strlen(search_paths[i]) + strlen(tpdName) + 1 + need_slash) * sizeof(char));
       strcpy(prefixed_file_path, search_paths[i]);
@@ -1493,16 +1492,16 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
 
       if(!stat(prefixed_file_path, &buf)){
         //Ok, tpd found
-        p_tpd_name = prefixed_file_path;
-        free_name = TRUE;
+        Free(const_cast<char*>(*p_tpd_name));
+        *p_tpd_name = prefixed_file_path;
         NOTIFY("TPD with name %s found at %s.", tpdName, search_paths[i]);
         break;
-      }else {
+      } else {
         //tpd not found, continue search
         abs_tpd_dir = NULL;
         Free(prefixed_file_path);
       }
-    }
+    } 
     //Error if tpd is not found in either search paths
     if(NULL == (const char*)abs_tpd_dir) {
       //Only write out the name in the error message (without .tpd)
@@ -1516,9 +1515,14 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
     ERROR("absolute TPD directory could not be retrieved from %s", (const char*)tpd_dir);
     return TPD_FAILED;
   }
-  autostring tpd_filename(get_file_from_path(p_tpd_name));
+  autostring tpd_filename(get_file_from_path(*p_tpd_name));
   autostring abs_tpd_name(compose_path_name(abs_tpd_dir, tpd_filename));
-
+  
+  if (local_optind == 0) {
+    Free(const_cast<char*>(*p_tpd_name));
+    *p_tpd_name = mcopystr((const char*)abs_tpd_name);
+  }
+    
   if (seen_tpd_files.has_key(abs_tpd_name)) {
     ++*seen_tpd_files[abs_tpd_name];
     return TPD_SKIPPED; // nothing to do
@@ -1541,9 +1545,9 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
 
   vector<char> base_files; // values Malloc'd but we pass them to the caller
 
-  XmlDoc doc(xmlParseFile(p_tpd_name));
+  XmlDoc doc(xmlParseFile(*p_tpd_name));
   if (doc == NULL) {
-    fprintf(stderr, "Error: unable to parse file \"%s\"\n", p_tpd_name);
+    fprintf(stderr, "Error: unable to parse file \"%s\"\n", *p_tpd_name);
     return TPD_FAILED;
   }
 
@@ -1557,9 +1561,9 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
       expstring_t xsd_file_name = mprintf("%s%setc/xsd/TPD.xsd", ttcn3_dir, ends_with_slash?"":"/");
       autostring xsd_file_name_as(xsd_file_name);
       if (get_path_status(xsd_file_name)==PS_FILE) {
-        if (validate_tpd(doc, p_tpd_name, xsd_file_name)) {
+        if (validate_tpd(doc, *p_tpd_name, xsd_file_name)) {
           tpd_is_valid = true;
-          NOTIFY("TPD file `%s' validated successfully with schema file `%s'", p_tpd_name, xsd_file_name);
+          NOTIFY("TPD file `%s' validated successfully with schema file `%s'", *p_tpd_name, xsd_file_name);
         }
       } else {
         ERROR("Cannot find XSD for schema for validation of TPD on path `%s'", xsd_file_name);
@@ -1607,6 +1611,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
       projGenHelper.setToplevelProjectName(*p_project_name);
       ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
       if (projDesc) projDesc->setProjectAbsTpdDir((const char*)abs_tpd_dir);
+      projGenHelper.insertAndCheckProjectName((const char*)abs_tpd_name, *p_project_name);
     }
   }
   
@@ -1841,7 +1846,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   if (projDesc) {
     projDesc->setProjectAbsWorkingDir((const char*)proj_abs_workdir);
     projDesc->setProjectWorkingDir(real_workdir);
-    projDesc->setTPDFileName(p_tpd_name);
+    projDesc->setTPDFileName(*p_tpd_name);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -2925,7 +2930,7 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
 
         ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(*p_project_name);
         if (projDesc) projDesc->addToReferencedProjects(name);
-         
+        
         const char *my_actcfg = NULL;
         int my_argc = 0;
         char *my_args[] = { NULL };
@@ -2982,7 +2987,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
           }
         }
       
-        tpd_result success = process_tpd_internal((const char*)abs_projectLocationURI, tpdName_loc,
+        const char* abs_projectLocationURIchar = abs_projectLocationURI.extract();
+        tpd_result success = process_tpd_internal(&abs_projectLocationURIchar, tpdName_loc,
           my_actcfg, file_list_path, &my_argc, &my_argv, &my_free_argv, &my_optind, &my_ets, &my_proj_name,
           &my_gflag, &my_sflag, &my_cflag, &my_aflag, preprocess, &my_Rflag, &my_lflag,
           &my_mflag, &my_Pflag, &my_Lflag, recursive, force_overwrite, gen_only_top_level, NULL, &sub_proj_abs_work_dir,
@@ -2997,7 +3003,14 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
           search_paths, n_search_paths, makefileScript, all_configs);
         
         autostring sub_proj_abs_work_dir_as(sub_proj_abs_work_dir); // ?!
-
+        abs_projectLocationURI = abs_projectLocationURIchar;
+        if (get_config_mode) {
+          if (!projGenHelper.insertAndCheckProjectName((const char*)abs_projectLocationURI, name)) {
+            ERROR("In project `%s', the referenced project `%s's name attribute should be the same as the referenced project's name.",
+              *p_tpd_name, (const char*)abs_projectLocationURI);
+          }
+        }
+        
         if (success == TPD_SUCCESS && !get_config_mode) {
           my_actcfg = get_act_config(required_configs, my_proj_name);
           if (recursive) { // call ttcn3_makefilegen on referenced project's tpd file
@@ -3195,8 +3208,8 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
   }
   // Print the TPD too.
   if (*p_Pflag) {
-    autostring dir_part(get_dir_from_path(p_tpd_name));
-    autostring file_part(get_file_from_path(p_tpd_name));
+    autostring dir_part(get_dir_from_path(*p_tpd_name));
+    autostring file_part(get_file_from_path(*p_tpd_name));
     if (*p_aflag) {
       puts((const char *)abs_tpd_name);
     } else {
@@ -3253,10 +3266,6 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
     Free(const_cast<char*>(folders.get_nth_elem(i)));
   }
   folders.clear();
-  
-  if(free_name) {
-    Free(const_cast<char*>(p_tpd_name));
-  }
 
   excluded_files.clear();
   excluded_folders.clear();
@@ -3264,6 +3273,6 @@ static tpd_result process_tpd_internal(const char *p_tpd_name, char *tpdName, co
 
   xmlCleanupParser();
   // ifdef debug
-    xmlMemoryDump();
+  xmlMemoryDump();
   return result;
 }

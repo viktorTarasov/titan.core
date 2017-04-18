@@ -11,7 +11,7 @@
   <ProjectName>Main</ProjectName>
   <ReferencedProjects>
     <ReferencedProject name="DepTpd1" projectLocationURI="../dep1/Test1/DepTpd1.tpd" />
-    <ReferencedProject name="Second" tpdName="DepTpd2.tpd" projectLocationURI="../bad/path/Test.tpd" />
+    <ReferencedProject name="DepTpd2" tpdName="DepTpd2.tpd" projectLocationURI="../bad/path/Test.tpd" />
     <ReferencedProject name="DepTpd3" projectLocationURI="../bad/path/Test.tpd" />
   </ReferencedProjects>
   <Folders>

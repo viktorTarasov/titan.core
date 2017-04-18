@@ -136,6 +136,7 @@ public:
   void print();
   bool sanityCheck(); // tests if the structure generated from TPDs is consistent
   void cleanUp();
+  bool insertAndCheckProjectName(const char *absPath, const char *projName);
 
 private:
     ProjectGenHelper();
@@ -158,6 +159,8 @@ private:
   bool Hflag; // hierarchical make structure
   std::map<const std::string, ProjectDescriptor> projs;
   std::map<const std::string, const ProjectDescriptor*> checkedProjs;
+  // Key is the absolute path name, and the value is the name of the referenced project
+  std::map<const std::string, const std::string> projsNameWithAbsPath;
 };
 
 #endif // _LIB_GEN_HELPER_HH

@@ -270,7 +270,7 @@ extern "C"
 #else
 enum
 #endif
-tpd_result process_tpd(const char *p_tpd_name, const char *actcfg,
+tpd_result process_tpd(const char **p_tpd_name, const char *actcfg,
   const char *file_list_path,
   int *argc, char ***argv, boolean* p_free_argv,
   int *optind, char **ets_name, char **project_name,

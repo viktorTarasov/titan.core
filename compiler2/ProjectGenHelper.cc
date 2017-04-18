@@ -315,7 +315,8 @@ ProjectGenHelper::ProjectGenHelper() :
   Wflag(false),
   Hflag(false),
   projs(),
-  checkedProjs()
+  checkedProjs(),
+  projsNameWithAbsPath()
 {}
 
 void ProjectGenHelper::addTarget(const char* projName)
@@ -787,3 +788,17 @@ bool ProjectGenHelper::DynamicLibraryChecker(const ProjectDescriptor* desc,
   return found;
 }
 
+bool ProjectGenHelper::insertAndCheckProjectName(const char *absPath, const char *projName) {
+  if (projName == NULL) return true;
+  std::string absPathStr = std::string(absPath);
+  std::map<const std::string, const std::string>::iterator it = projsNameWithAbsPath.find(absPathStr);
+   if (it == projsNameWithAbsPath.end()) {
+    projsNameWithAbsPath.insert(std::pair<const std::string, const std::string>(absPathStr, std::string(projName)));
+    return true;
+  } else {
+    if (it->second != projName) {
+      return false;
+    }
+  }
+  return true;
+}

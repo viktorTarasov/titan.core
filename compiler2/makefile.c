@@ -5345,7 +5345,7 @@ int main(int argc, char *argv[])
     // while the wflag still holds the value of the command line parameter -w
     boolean temp_wflag = FALSE;
 
-    tpd_processed = process_tpd(tpd_file_name, tpd_build_config, file_list_path,
+    tpd_processed = process_tpd(&tpd_file_name, tpd_build_config, file_list_path,
       &argc, &argv, &free_argv, &optind, &ets_name, &project_name,
       &gflag, &sflag, &cflag, &aflag, &pflag,
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
