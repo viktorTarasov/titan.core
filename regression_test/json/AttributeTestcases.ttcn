@@ -352,6 +352,8 @@ testcase tc_attribute_metainfo_for_unbound_arrays() runs on MTC {
   f_bool2verdict( log2str(f_dec_meta_arr(os)) == log2str(arr) );
 }
 
+// Encoding a record with one field without field names (attribute 'as value')
+// The record value's encoding in this case is equal to the field's encoding
 testcase tc_attribute_as_value_rec() runs on MTC {
   var RecAsValue val := { field := 10 };
   var bitstring enc_exp := oct2bit(char2oct("10"));
@@ -377,6 +379,9 @@ testcase tc_attribute_as_value_rec() runs on MTC {
   }
 }
 
+// Encoding a record with one field without any variant attributes
+// (The code generated in this case is different, because of the possibility of
+// adding the 'as value' attribute for a subtype)
 testcase tc_attribute_not_as_value_rec() runs on MTC {
   var RecNotAsValue val := { field := { 1.0, 2.0 } };
   var bitstring enc_exp := oct2bit(char2oct("{\"field\":[1.000000,2.000000]}"));
@@ -402,6 +407,10 @@ testcase tc_attribute_not_as_value_rec() runs on MTC {
   }
 }
 
+// Encoding a set, whose fields are encoded without field names (attribute 'as value' for the fields)
+// The base types of the fields do not have the 'as value' attribute set, only when they are used as
+// fields of this set (one of the fields is an anytype, which cannot have this attribute otherwise).
+// The set itself is encoded with field names, but its fields are encoded as values.
 testcase tc_attribute_as_value_fields() runs on MTC {
   var SetWithAsValueFields val := {
     uni := { i := -3 },
