@@ -1207,7 +1207,7 @@ void Type::generate_code_Choice(output_struct *target)
         sdef.elements[i].xerUseUnion = cftype->xerattrib->useUnion_;
       }
     }
-    if (sdef.jsonAsValue) {
+    if (sdef.hasJson && enable_json()) {
       // Determine the JSON value type of each field to make decoding faster
       typetype_t tt = cftype->get_type_refd_last()->typetype;
       switch(tt) {
@@ -1253,11 +1253,16 @@ void Type::generate_code_Choice(output_struct *target)
       case T_SEQ_A:
       case T_SET_T:
       case T_SET_A:
+        if (cftype->get_type_refd_last()->get_nof_comps() > 1) {
+          sdef.elements[i].jsonValueType = JSON_OBJECT;
+          break;
+        }
+        // else fall through
       case T_CHOICE_T:
       case T_CHOICE_A:
       case T_ANYTYPE:
       case T_OPENTYPE:
-        sdef.elements[i].jsonValueType = JSON_OBJECT;
+        sdef.elements[i].jsonValueType = JSON_ANY_VALUE;
         break;
       case T_SEQOF:
       case T_SETOF:
@@ -1270,10 +1275,6 @@ void Type::generate_code_Choice(output_struct *target)
     }
     if (cftype->jsonattrib) {
       sdef.elements[i].jsonAlias = cftype->jsonattrib->alias;
-      if (sdef.jsonAsValue && cftype->jsonattrib->as_value) {
-        // Override the JSON_OBJECT value given in the switch
-        sdef.elements[i].jsonValueType = JSON_ANY_VALUE;
-      }
     }
   }
   if(rawattrib) {

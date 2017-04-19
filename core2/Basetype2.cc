@@ -5758,6 +5758,12 @@ int Record_Type::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
     return -1;
   }
   
+  if (NULL != p_td.json && p_td.json->as_value) {
+    // if 'as value' is set, then the record/set has only one field,
+    // encode that without any brackets or field names
+    return get_at(0)->JSON_encode(*fld_descr(0), p_tok);
+  }
+  
   int enc_len = p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
   
   int field_count = get_count();
@@ -5786,7 +5792,7 @@ int Record_Type::JSON_encode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
 }
 
 int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
-                                     const TTCN_Typedescriptor_t& /*p_td*/,
+                                     const TTCN_Typedescriptor_t& p_td,
                                      JSON_Tokenizer& p_tok) const 
 {
   if (!is_bound()) {
@@ -5795,7 +5801,9 @@ int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
     return -1;
   }
   
-  int enc_len = p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+  boolean as_value = NULL != p_td.json && p_td.json->as_value;
+  
+  int enc_len = as_value ? 0 : p_tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
   
   int values_idx = 0;
   int edescr_idx = 0;
@@ -5809,7 +5817,7 @@ int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
     const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(i, values_idx);
     const Erroneous_descriptor_t* emb_descr = p_err_descr->next_field_emb_descr(i, edescr_idx);
     
-    if (NULL != err_vals && NULL != err_vals->before) {
+    if (!as_value && NULL != err_vals && NULL != err_vals->before) {
       if (NULL == err_vals->before->errval) {
         TTCN_error("internal error: erroneous before value missing");
       }
@@ -5836,16 +5844,20 @@ int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
             TTCN_error("internal error: erroneous before typedescriptor missing");
           }
           // only replace the field's value, keep the field name
-          enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, field_name);
+          if (!as_value) {
+            enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, field_name);
+          }
           enc_len += err_vals->value->errval->JSON_encode(*(err_vals->value->type_descr), p_tok);
         }
       }
     } else {
       boolean metainfo_unbound = NULL != fld_descr(i)->json && fld_descr(i)->json->metainfo_unbound;
       if ((NULL != fld_descr(i)->json && fld_descr(i)->json->omit_as_null) || 
-          get_at(i)->is_present() || metainfo_unbound) {
-        enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, field_name);
-        if (metainfo_unbound && !get_at(i)->is_bound()) {
+          get_at(i)->is_present() || metainfo_unbound || as_value) {
+        if (!as_value) {
+          enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, field_name);
+        }
+        if (!as_value && metainfo_unbound && !get_at(i)->is_bound()) {
           enc_len += p_tok.put_next_token(JSON_TOKEN_LITERAL_NULL);
           char* metainfo_str = mprintf("metainfo %s", field_name);
           enc_len += p_tok.put_next_token(JSON_TOKEN_NAME, metainfo_str);
@@ -5860,7 +5872,7 @@ int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
       }
     }
     
-    if (NULL != err_vals && NULL != err_vals->after) {
+    if (!as_value && NULL != err_vals && NULL != err_vals->after) {
       if (NULL == err_vals->after->errval) {
         TTCN_error("internal error: erroneous after value missing");
       }
@@ -5881,12 +5893,19 @@ int Record_Type::JSON_encode_negtest(const Erroneous_descriptor_t* p_err_descr,
     }
   }
   
-  enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+  if (!as_value) {
+    enc_len += p_tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+  }
   return enc_len;
 }
 
-int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokenizer& p_tok, boolean p_silent)
+int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)
 {
+  if (NULL != p_td.json && p_td.json->as_value) {
+    // if 'as value' is set, then the record/set has only one field,
+    // decode that without the need of any brackets or field names 
+    return get_at(0)->JSON_decode(*fld_descr(0), p_tok, p_silent);
+  }
   json_token_t token = JSON_TOKEN_NONE;
   size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);
   if (JSON_TOKEN_ERROR == token) {

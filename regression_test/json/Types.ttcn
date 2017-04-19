@@ -264,6 +264,34 @@ with { variant "JSON: metainfo for unbound"; }
 type float MetainfoArray[3]
 with { variant "JSON: metainfo for unbound"; }
 
+type record RecAsValue {
+  integer field
+}
+with {
+  variant "JSON: as value";
+}
+
+type record RecNotAsValue {
+  RoF field
+}
+
+type union UniNotAsValue {
+  integer i,
+  octetstring o
+}
+
+type set SetWithAsValueFields {
+  UniNotAsValue uni,
+  RecNotAsValue rec,
+  record of anytype list
+}
+with {
+  variant (uni) "JSON: as value";
+  variant (rec) "JSON: as value";
+  variant (list[-]) "JSON: as value";
+}
+
 } with {
   encode "JSON";
+  extension "anytype integer, charstring, R, RoI, Thing";
 }

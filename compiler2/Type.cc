@@ -2780,8 +2780,22 @@ namespace Common {
           "field of a record or set.");
       }
 
-      if (jsonattrib->as_value && T_CHOICE_T != get_type_refd_last()->typetype) {
-        error("Invalid attribute, 'as value' is only allowed for unions");
+      if (jsonattrib->as_value) {
+        Type* last = get_type_refd_last();
+        switch (last->typetype) {
+        case T_CHOICE_T:
+        case T_ANYTYPE:
+          break; // OK
+        case T_SEQ_T:
+        case T_SET_T:
+          if (last->get_nof_comps() == 1) {
+            break; // OK
+          }
+          // else fall through
+        default:
+          error("Invalid attribute, 'as value' is only allowed for unions, "
+            "the anytype, or records or sets with one field");
+        }
       }
 
       if (NULL != jsonattrib->alias) {
@@ -2792,9 +2806,34 @@ namespace Common {
             "record, set or union.");
         }
         if (NULL != parent && NULL != parent->jsonattrib && 
-            T_CHOICE_T == parent->typetype && parent->jsonattrib->as_value) {
-          warning("Attribute 'name as ...' will be ignored, because parent union "
-            "is encoded without field names.");
+            parent->jsonattrib->as_value) {
+          const char* parent_type_name = NULL;
+          switch (parent->typetype) {
+          case T_SEQ_T:
+            if (parent->get_nof_comps() == 1) {
+              parent_type_name = "record";
+            }
+            break;
+          case T_SET_T:
+            if (parent->get_nof_comps() == 1) {
+              parent_type_name = "set";
+            }
+            break;
+          case T_CHOICE_T:
+            parent_type_name = "union";
+            break;
+          case T_ANYTYPE:
+            parent_type_name = "anytype";
+            break;
+          default:
+            break;
+          }
+          if (parent_type_name != NULL) {
+            // parent_type_name remains null if the 'as value' attribute is set
+            // for an invalid type
+            warning("Attribute 'name as ...' will be ignored, because parent %s "
+              "is encoded without field names.", parent_type_name);
+          }
         }
       }
 
@@ -2846,24 +2885,29 @@ namespace Common {
         delete[] checked_keywords;
       }
       if (jsonattrib->metainfo_unbound) {
+        Type* last = get_type_refd_last();
         Type* parent = get_parent_type();
-        if (T_SEQ_T == get_type_refd_last()->typetype ||
-            T_SET_T == get_type_refd_last()->typetype) {
+        if (T_SEQ_T == last->typetype || T_SET_T == last->typetype) {
           // if it's set for the record/set, pass it onto its fields
-          size_t nof_comps = get_nof_comps();
-          for (size_t i = 0; i < nof_comps; i++) {
-            Type* comp_type = get_comp_byIndex(i)->get_type();
-            if (NULL == comp_type->jsonattrib) {
-              comp_type->jsonattrib = new JsonAST;
+          size_t nof_comps = last->get_nof_comps();
+          if (jsonattrib->as_value && nof_comps == 1) {
+            warning("Attribute 'metainfo for unbound' will be ignored, because "
+              "the %s is encoded without field names.",
+              T_SEQ_T == last->typetype ? "record" : "set");
+          }
+          else {
+            for (size_t i = 0; i < nof_comps; i++) {
+              Type* comp_type = last->get_comp_byIndex(i)->get_type();
+              if (NULL == comp_type->jsonattrib) {
+                comp_type->jsonattrib = new JsonAST;
+              }
+              comp_type->jsonattrib->metainfo_unbound = true;
             }
-            comp_type->jsonattrib->metainfo_unbound = true;
           }
         }
-        else if (T_SEQOF != get_type_refd_last()->typetype &&
-                 T_SETOF != get_type_refd_last()->typetype &&
-                 T_ARRAY != get_type_refd_last()->typetype &&
-                 (NULL == parent || (T_SEQ_T != parent->typetype &&
-                  T_SET_T != parent->typetype))) {
+        else if (T_SEQOF != last->typetype && T_SETOF != last->typetype &&
+                 T_ARRAY != last->typetype && (NULL == parent ||
+                 (T_SEQ_T != parent->typetype && T_SET_T != parent->typetype))) {
           // only allowed if it's an array type or a field of a record/set
           error("Invalid attribute 'metainfo for unbound', requires record, set, "
             "record of, set of, array or field of a record or set");

@@ -352,6 +352,91 @@ testcase tc_attribute_metainfo_for_unbound_arrays() runs on MTC {
   f_bool2verdict( log2str(f_dec_meta_arr(os)) == log2str(arr) );
 }
 
+testcase tc_attribute_as_value_rec() runs on MTC {
+  var RecAsValue val := { field := 10 };
+  var bitstring enc_exp := oct2bit(char2oct("10"));
+  var bitstring enc := encvalue(val);
+  if (enc != enc_exp) {
+    setverdict(fail, "Encoding failed. Expected: ", enc_exp, ", got: ", enc);
+  }
+  else {
+    var RecAsValue dec;
+    var integer res := decvalue(enc, dec);
+    if (res != 0) {
+      setverdict(fail, "Decoding failed. Result: ", res);
+    }
+    else if (lengthof(enc) != 0) {
+      setverdict(fail, "Decoding failed. Remaining bits: ", enc);
+    }
+    else if (dec != val) {
+      setverdict(fail, "Decoding failed. Expected value: ", val, ", got: ", dec);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+}
+
+testcase tc_attribute_not_as_value_rec() runs on MTC {
+  var RecNotAsValue val := { field := { 1.0, 2.0 } };
+  var bitstring enc_exp := oct2bit(char2oct("{\"field\":[1.000000,2.000000]}"));
+  var bitstring enc := encvalue(val);
+  if (enc != enc_exp) {
+    setverdict(fail, "Encoding failed. Expected: ", enc_exp, ", got: ", enc);
+  }
+  else {
+    var RecNotAsValue dec;
+    var integer res := decvalue(enc, dec);
+    if (res != 0) {
+      setverdict(fail, "Decoding failed. Result: ", res);
+    }
+    else if (lengthof(enc) != 0) {
+      setverdict(fail, "Decoding failed. Remaining bits: ", enc);
+    }
+    else if (dec != val) {
+      setverdict(fail, "Decoding failed. Expected value: ", val, ", got: ", dec);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+}
+
+testcase tc_attribute_as_value_fields() runs on MTC {
+  var SetWithAsValueFields val := {
+    uni := { i := -3 },
+    rec := { field := { 1.0, 2.0 } },
+    list := {
+      { integer := 12 },
+      { charstring := "abc" },
+      { R := { i := 6, cs := "xy", b := false, d := Wednesday } },
+      { Thing := { bval := true } },
+      { RoI := { 1, 2, 3 } }
+    }
+  };
+  var bitstring enc_exp := oct2bit(char2oct("{\"uni\":-3,\"rec\":[1.000000,2.000000],\"list\":[12,\"abc\",{\"i\":6,\"cs\":\"xy\",\"b\":false,\"d\":\"Wednesday\"},true,[1,2,3]]}"));
+  var bitstring enc := encvalue(val);
+  if (enc != enc_exp) {
+    setverdict(fail, "Encoding failed. Expected: ", enc_exp, ", got: ", enc);
+  }
+  else {
+    var SetWithAsValueFields dec;
+    var integer res := decvalue(enc, dec);
+    if (res != 0) {
+      setverdict(fail, "Decoding failed. Result: ", res);
+    }
+    else if (lengthof(enc) != 0) {
+      setverdict(fail, "Decoding failed. Remaining bits: ", enc);
+    }
+    else if (dec != val) {
+      setverdict(fail, "Decoding failed. Expected value: ", val, ", got: ", dec);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+}
+
 
 control {
   execute(tc_NoAttributeOnUpperLevel())
@@ -372,5 +457,8 @@ control {
   execute(tc_attribute_metainfo_for_unbound_negtest());
   execute(tc_attribute_metainfo_for_unbound_empty_rec());
   execute(tc_attribute_metainfo_for_unbound_arrays());
+  execute(tc_attribute_as_value_rec());
+  execute(tc_attribute_not_as_value_rec());
+  execute(tc_attribute_as_value_fields());
 }
 }
