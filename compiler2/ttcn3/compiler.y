@@ -2087,7 +2087,17 @@ GlobalModuleId: // 5
 
 optLanguageSpec:
   /* empty */ { $$ = NULL; }
-| LanguageKeyword FreeText { $$ = $2; } // sort-of 7 LanguageSpec
+| LanguageKeyword FreeText optPackageNameList { $$ = $2; } // sort-of 7 LanguageSpec
+;
+
+optPackageNameList:
+  /* empty */
+| PackageNameList
+;
+
+PackageNameList:
+  ',' FreeText
+|  PackageNameList ',' FreeText
 ;
 
 ModuleBody:
