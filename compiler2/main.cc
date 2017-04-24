@@ -98,7 +98,8 @@ boolean generate_skeleton = FALSE, force_overwrite = FALSE,
   implicit_json_encoding = FALSE, json_refs_for_all_types = TRUE,
   force_gen_seof = FALSE, omit_in_value_list = FALSE,
   warnings_for_bad_variants = FALSE, debugger_active = FALSE,
-  legacy_unbound_union_fields = FALSE, split_to_slices = FALSE;
+  legacy_unbound_union_fields = FALSE, split_to_slices = FALSE,
+  legacy_untagged_union;
 
 // Default code splitting mode is set to 'no splitting'.
 CodeGenHelper::split_type code_splitting_mode = CodeGenHelper::SPLIT_NONE;
@@ -387,7 +388,7 @@ static boolean is_valid_asn1_filename(const char* file_name)
 static void usage()
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abcdEfgijlLMnOpqrRsStuwxXyY] [-J file] [-K file] [-z file] [-V verb_level]\n"
+    "usage: %s [-abcdEfgijlLMnNOpqrRsStuwxXyY] [-J file] [-K file] [-z file] [-V verb_level]\n"
     "	[-o dir] [-U none|type|'number'] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
     "	[-T] module.ttcn [-A] module.asn ...\n"
     "	or  %s -v\n"
@@ -410,6 +411,7 @@ static void usage()
     "	-L:		add source line info for logging\n"
     "	-M:		allow 'omit' in template value lists (legacy behavior)\n"
     "	-n:		activate debugger (generates extra code for debugging)\n"
+    "	-N:		ignore UNTAGGED encoding instruction on top level unions (legacy behaviour)\n"
     "	-o dir:		output files will be placed into dir\n"
     "	-p:		parse only (no semantic check or code generation)\n"
     "	-P pduname:	define top-level pdu\n"
@@ -487,7 +489,7 @@ int main(int argc, char *argv[])
     s0flag = false, Cflag = false, yflag = false, Uflag = false, Qflag = false,
     Sflag = false, Kflag = false, jflag = false, zflag = false, Fflag = false,
     Mflag = false, Eflag = false, nflag = false, Bflag = false, errflag = false,
-    print_usage = false, ttcn2json = false; 
+    print_usage = false, ttcn2json = false, Nflag = false; 
 
   CodeGenHelper cgh;
 
@@ -581,7 +583,7 @@ int main(int argc, char *argv[])
 
   if (!ttcn2json) {
     for ( ; ; ) {
-      int c = getopt(argc, argv, "aA:bBcC:dEfFgijJ:K:lLMno:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
+      int c = getopt(argc, argv, "aA:bBcC:dEfFgijJ:K:lLMnNo:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
       if (c == -1) break;
       switch (c) {
       case 'a':
@@ -758,6 +760,10 @@ int main(int argc, char *argv[])
       case 'n':
         SET_FLAG(n);
         debugger_active = TRUE;
+        break;
+      case 'N':
+        SET_FLAG(N);
+        legacy_untagged_union = TRUE;
         break;
       case 'B':
         SET_FLAG(B);

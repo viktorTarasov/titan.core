@@ -6806,9 +6806,9 @@ namespace Ttcn {
           if (Common::Type::CT_XER == encoding_type) {
             Type* last = input_type->get_type_refd_last();
             if (last->is_untagged() &&
-               last->get_typetype() != Type::T_CHOICE_A &&
+               ((last->get_typetype() != Type::T_CHOICE_A &&
                last->get_typetype() != Type::T_CHOICE_T &&
-               last->get_typetype() != Type::T_ANYTYPE) {
+               last->get_typetype() != Type::T_ANYTYPE) || legacy_untagged_union == TRUE)) {
               // "untagged" on the (toplevel) input type will have no effect,
               // unless it is union or anytype
               warning("UNTAGGED encoding attribute is ignored on top-level type");

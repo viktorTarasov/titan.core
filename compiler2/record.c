@@ -2290,7 +2290,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       );
       if (i > start_at + num_attributes) { // First field's embed value is already processed
         src = mputprintf(src, 
-          "if (e_xer && (p_td.xer_bits & UNTAGGED && !(p_td.xer_bits & EMBED_VALUES) && 0 != emb_val_parent\n"
+          "if (e_xer && ((p_td.xer_bits & UNTAGGED) && !(p_td.xer_bits & EMBED_VALUES) && 0 != emb_val_parent\n"
           "  %s%s%s)) {\n"
           "  if (0 != emb_val_parent->embval_array_reg) {\n"
           "    if (emb_val_parent->embval_index < emb_val_parent->embval_array_reg->size_of()) {\n"
@@ -3000,7 +3000,7 @@ void gen_xer(const struct_def *sdef, char **pdef, char **psrc)
       , sdef->elements[i].dispname);
     
     src = mputprintf(src, 
-      "  if (p_td.xer_bits & UNTAGGED && 0 != emb_val_parent) {\n"
+      "  if ((p_td.xer_bits & UNTAGGED) && 0 != emb_val_parent) {\n"
       "    if (p_reader.NodeType() == XML_READER_TYPE_TEXT) {\n"
       "      UNIVERSAL_CHARSTRING emb_ustr((const char*)p_reader.Value());\n"
       "      if (0 != emb_val_parent->embval_array_reg) {\n"

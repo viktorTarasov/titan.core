@@ -1520,11 +1520,15 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "  if (is_exer(p_flavor)) flavor_1 &= ~XER_RECOF;\n"
       "  if (!(p_flavor & XER_LIST)) flavor_2 |= FROM_UNION_USETYPE;\n"
       "  boolean omit_tag = begin_xml(p_td, p_buf, flavor_1, p_indent, FALSE, "
-      "(collector_fn)&%s::collect_ns%s, flavor_2 | THIS_UNION);\n"
-      // Top level union can be untagged, so don't increase the indentation
-      "  int p_indent_tmp = (is_exer(p_flavor) && p_indent == 0 && (p_td.xer_bits & UNTAGGED)) ? p_indent : p_indent + (!p_indent || !omit_tag);\n"
+      "(collector_fn)&%s::collect_ns%s, flavor_2%s);\n"
       , sdef->name
-      , sdef->xerUseTypeAttr ? ", type_atr" : ", 0");
+      , sdef->xerUseTypeAttr ? ", type_atr" : ", 0"
+      , legacy_untagged_union == FALSE ? " | THIS_UNION" : "");
+    if (legacy_untagged_union == FALSE) {
+      // Top level union can be untagged, so don't increase the indentation
+      src = mputstr(src,
+        "  int p_indent_tmp = (is_exer(p_flavor) && p_indent == 0 && (p_td.xer_bits & UNTAGGED)) ? p_indent : p_indent + (!p_indent || !omit_tag);\n");
+    }
     src = mputprintf(src,
       "  unsigned int flavor_0 = (p_flavor & XER_MASK)%s;\n"
       "  switch (union_selection) {\n"
@@ -1533,11 +1537,12 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       src = mputprintf(src, "  case %s_%s:\n"
 	"    ec_1.set_msg(\"%s': \");\n"
 	"    field_%s->XER_encode(%s_xer_, p_buf, flavor_0, "
-	"flavor_2, p_indent_tmp, 0);\n"
+	"flavor_2, p_indent%s, 0);\n"
 	"    break;\n",
 	selection_prefix, sdef->elements[i].name,
 	sdef->elements[i].dispname,
-	sdef->elements[i].name, sdef->elements[i].typegen);
+	sdef->elements[i].name, sdef->elements[i].typegen,
+  legacy_untagged_union == FALSE ? "_tmp" : " + (!p_indent || !omit_tag)");
     }
     src = mputprintf(src, "  case %s:\n"
       "    (void)flavor_0;\n" /* warning reduction for empty union */
@@ -1547,10 +1552,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     if (sdef->xerUseTypeAttr) {
       src = mputstr(src, "  if (p_buf.get_data()[p_buf.get_len()-1] != '\\n') flavor_1 |= SIMPLE_TYPE;\n");
     }
-    src = mputstr(src,
-      "  end_xml(p_td, p_buf, flavor_1, p_indent, 0, flavor_2 | THIS_UNION);\n"
+    src = mputprintf(src,
+      "  end_xml(p_td, p_buf, flavor_1, p_indent, 0, flavor_2%s);\n"
       "  return (int)p_buf.get_len() - encoded_length;\n"
-      "}\n\n");
+      "}\n\n"
+      , legacy_untagged_union == FALSE ? " | THIS_UNION" : "");
       
     if (use_runtime_2) {
       def = mputstr(def,
@@ -1741,6 +1747,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       "  int rd_ok=1, xml_depth=-1;\n"
       "%s%s"
       "  unsigned long xerbits = p_td.xer_bits;\n"
+      "%s"
       "  if (xerbits & USE_TYPE_ATTR) p_flavor &= ~XER_RECOF;\n"
       "  boolean own_tag = !(e_xer && ((xerbits & (ANY_ELEMENT | UNTAGGED)) "
       "|| (p_flavor & (USE_NIL|(e_xer ? XER_LIST : XER_RECOF)))));\n"
@@ -1756,6 +1763,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       , name
       , sdef->xerUseTypeAttr ? "  const char * typeatr = 0;\n" : ""
       , sdef->xerUseUnion ? "  boolean attribute = (p_td.xer_bits & XER_ATTRIBUTE) ? TRUE : FALSE;\n" : ""
+      , legacy_untagged_union ? "  if (p_flavor & XER_TOPLEVEL) xerbits &= ~UNTAGGED;\n" : ""
       , sdef->xerUseUnion ? "if (!attribute) " : ""
       , sdef->xerUseUnion ? " || (p_flavor & USE_TYPE_ATTR)" : ""
       , sdef->xerUseUnion ? "if (!(p_flavor & USE_TYPE_ATTR)) " : ""
