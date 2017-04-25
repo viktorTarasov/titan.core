@@ -4398,24 +4398,27 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - 1510_005 Ensure that the valueof function works correctly on range templates. >
+<TC - 1510_005 check that runtime error occurs if valueof is applied to uninitialized template >
 
 <COMPILE>
 <EXECUTE_PARALLEL>
 
 <MODULE TTCN NegSem_1510_ValueOfOperation_005 NegSem_1510_ValueOfOperation_005.ttcn >
-/*****************************************************************
+/******************************************************************************
  ** @version  0.0.1
- ** @purpose  1:15.10,  Ensure that the valueof function works correctly on range templates.
+ ** @purpose  1:15.10, check that runtime error occurs if valueof is applied to uninitialized template
  ** @verdict  pass reject
- *****************************************************************/
+ ***************************************************/
 
-module NegSem_1510_ValueOfOperation_004 {
+// The following requirement is tested:
+// The template shall be completely initialized and resolve to a specific value.
+
+module NegSem_1510_ValueOfOperation_005 {
 
 	type component GeneralComp { }
 
-	testcase TC_NegSem_1510_ValueOfOperation_004() runs on GeneralComp {
-		var template integer v_test := (1..5);
+	testcase TC_NegSem_1510_ValueOfOperation_005() runs on GeneralComp {
+		var template integer v_test;
 
 		var integer v_second := valueof(v_test);
 	
@@ -4425,7 +4428,61 @@ module NegSem_1510_ValueOfOperation_004 {
 	}
 
 	control{
-		execute(TC_NegSem_1510_ValueOfOperation_004());
+		execute(TC_NegSem_1510_ValueOfOperation_005());
+	}
+
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+Dynamic test case error: Performing a valueof or send operation on a non-specific integer template
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
+:h3. NegSem_1510_ValueOfOperation_006 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 1510_006 check that runtime error occurs if valueof is applied to partially initialized template >
+
+<COMPILE>
+<EXECUTE_PARALLEL>
+
+<MODULE TTCN NegSem_1510_ValueOfOperation_006 NegSem_1510_ValueOfOperation_006.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:15.10, check that runtime error occurs if valueof is applied to partially initialized template
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirement is tested:
+// The template shall be completely initialized and resolve to a specific value.
+
+module NegSem_1510_ValueOfOperation_006 {
+
+	type component GeneralComp { }
+	
+	type record R {
+		integer field1,
+		integer field2
+	}
+
+	testcase TC_NegSem_1510_ValueOfOperation_006() runs on GeneralComp {
+		var template R v_test;
+		var R v_result; 
+		v_test.field1 := 1; // field2 is left uninitialized
+		v_result := valueof(v_test);
+	
+		// if we get here, something must be wrong as valueof on v_test shall cause an error
+		// as it is not a template.
+		setverdict(fail);
+	}
+
+	control{
+		execute(TC_NegSem_1510_ValueOfOperation_006());
 	}
 
 }

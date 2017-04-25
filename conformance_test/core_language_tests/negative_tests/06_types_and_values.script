@@ -5297,7 +5297,7 @@ module NegSyn_06020502_option_and_union_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: at or before token `optional': syntax error, unexpected OptionalKeyword, expecting '\}' or ','
+error: at or before token `optional': syntax error, unexpected OptionalKeyword, expecting ',' or '\}'
 <END_RESULT>
 
 <END_TC>

@@ -680,6 +680,60 @@ error: The connection between port types `@NegSem_210101_connect_operation_001.m
 :exmp
 
 *---------------------------------------------------------------------*
+:h3. NegSem_210101_connect_operation_002 negative test
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - 210101_001 Ensure that the the IUT does not allow connecting incompatible ports >
+
+<COMPILE>
+
+<MODULE TTCN NegSem_210101_connect_operation_002 NegSem_210101_connect_operation_002.ttcn >
+/******************************************************************************
+ ** @version  0.0.1
+ ** @purpose  1:21.1.1, Ensure that the the IUT does not allow connecting incompatible ports
+ ** @verdict  pass reject
+ ***************************************************/
+//Test the two input port cannot connect 
+module NegSem_210101_connect_operation_002{ 
+  
+	type port myport message {
+	  in integer
+	} with {extension "internal"}
+	
+	type component Mysystem
+	{
+	 	port myport messagePort;
+	}
+	
+	testcase TC_NegSem_210101_connect_operation_002() runs on Mysystem system Mysystem {
+	   	var Mysystem MyCompA;
+	   	var Mysystem MyCompB;
+	
+		MyCompA:=Mysystem.create;
+		MyCompB:=Mysystem.create;
+
+		connect(MyCompB:messagePort, MyCompA:messagePort); //not allowed messageports are output
+		//connect(self:messagePort, self:messagePort);
+
+		messagePort.send(5);
+
+	}
+
+	control{
+		execute(TC_NegSem_210101_connect_operation_002());
+	}
+}
+<END_MODULE>
+
+<RESULT COUNT 1>
+error: Port type `@NegSem_210101_connect_operation_002.myport' does not have any outgoing message types
+<END_RESULT>
+
+<END_TC>
+:exmp
+
+*---------------------------------------------------------------------*
 :h3. NegSem_210101_map_operation_002 negative test
 .*---------------------------------------------------------------------*
 :xmp tab=0.

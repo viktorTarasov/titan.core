@@ -26,8 +26,8 @@ module NegSem_210101_connect_operation_002{
 		MyCompA:=Mysystem.create;
 		MyCompB:=Mysystem.create;
 
-		//connect(MyCompA:messagePort, MyCompB:messagePort); //not allowed messageports are output
-		connect(self:messagePort, self:messagePort);
+		connect(MyCompB:messagePort, MyCompA:messagePort); //not allowed messageports are output
+		//connect(self:messagePort, self:messagePort);
 
 		messagePort.send(5);
 
