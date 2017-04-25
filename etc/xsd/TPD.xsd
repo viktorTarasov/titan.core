@@ -137,6 +137,7 @@
                     <xs:element name="CxxCompiler" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
                     <xs:element name="optimizationLevel" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
                     <xs:element name="otherOptimizationFlags" minOccurs="0" maxOccurs="1" type="xs:string" />
+                    <xs:element name="ignoreUntaggedOnTopLevelUnion" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="profiledFileList" minOccurs="0" maxOccurs="1" type="ResourceType" />
 
                     <xs:element name="SolarisSpecificLibraries" minOccurs="0" maxOccurs="1">

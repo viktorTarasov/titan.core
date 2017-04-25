@@ -1268,7 +1268,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char* tpdName, c
   struct string_list* prep_defines, struct string_list* prep_undefines, char **p_csmode, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
-  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean *p_Eflag, boolean* p_nflag,
+  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean *p_Eflag, boolean* p_nflag, boolean* p_Nflag,
   boolean* p_diflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   struct string_list* linkerlibs, struct string_list* additionalObjects, struct string_list* linkerlibsearchp, boolean Vflag, boolean Dflag,
@@ -1288,7 +1288,7 @@ extern "C" tpd_result process_tpd(const char **p_tpd_name, const char *actcfg,
   struct string_list* prep_defines, struct string_list* prep_undefines, char **p_csmode, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag, 
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
-  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean* p_Eflag, boolean* p_nflag,
+  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean* p_Eflag, boolean* p_nflag, boolean* p_Nflag,
   boolean* p_diflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
@@ -1318,7 +1318,8 @@ extern "C" tpd_result process_tpd(const char **p_tpd_name, const char *actcfg,
       prep_undefines, p_csmode, p_quflag, p_dsflag, cxxcompiler,
       optlevel, optflags, p_dbflag, p_drflag, p_dtflag, p_dxflag, p_djflag,
       p_fxflag, p_doflag, p_gfflag, p_lnflag, p_isflag,
-      p_asflag, p_swflag, p_Yflag, p_Mflag, p_Eflag, p_nflag, p_diflag, solspeclibs, sol8speclibs,
+      p_asflag, p_swflag, p_Yflag, p_Mflag, p_Eflag, p_nflag, p_Nflag,
+      p_diflag, solspeclibs, sol8speclibs,
       linuxspeclibs, freebsdspeclibs, win32speclibs, ttcn3prep,
       linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag, p_Zflag,
       p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
@@ -1346,7 +1347,8 @@ extern "C" tpd_result process_tpd(const char **p_tpd_name, const char *actcfg,
       prep_undefines, p_csmode, p_quflag, p_dsflag, cxxcompiler,
       optlevel, optflags, p_dbflag, p_drflag, p_dtflag, p_dxflag, p_djflag,
       p_fxflag, p_doflag, p_gfflag, p_lnflag, p_isflag,
-      p_asflag, p_swflag, p_Yflag, p_Mflag, p_Eflag, p_nflag, p_diflag, solspeclibs, sol8speclibs,
+      p_asflag, p_swflag, p_Yflag, p_Mflag, p_Eflag, p_nflag, p_Nflag,
+      p_diflag, solspeclibs, sol8speclibs,
       linuxspeclibs, freebsdspeclibs, win32speclibs, ttcn3prep,
       linkerlibs, additionalObjects, linkerlibsearchp, Vflag, Dflag, p_Zflag,
       p_Hflag, generatorCommandOutput, target_placement_list, prefix_workdir, 
@@ -1449,7 +1451,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
   struct string_list* prep_defines, struct string_list* prep_undefines, char **p_csmode, boolean *p_quflag, boolean* p_dsflag,
   char** cxxcompiler, char** optlevel, char** optflags, boolean* p_dbflag, boolean* p_drflag, boolean* p_dtflag, boolean* p_dxflag,
   boolean* p_djflag, boolean* p_fxflag, boolean* p_doflag, boolean* p_gfflag, boolean* p_lnflag, boolean* p_isflag,
-  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean* p_Eflag, boolean* p_nflag,
+  boolean* p_asflag, boolean* p_swflag, boolean* p_Yflag, boolean* p_Mflag, boolean* p_Eflag, boolean* p_nflag, boolean* p_Nflag,
   boolean* p_diflag, struct string_list* solspeclibs, struct string_list* sol8speclibs,
   struct string_list* linuxspeclibs, struct string_list* freebsdspeclibs, struct string_list* win32speclibs, char** ttcn3prep,
   string_list* linkerlibs, string_list* additionalObjects, string_list* linkerlibsearchp, boolean Vflag, boolean Dflag, boolean *p_Zflag,
@@ -2054,6 +2056,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
   xsdbool2boolean(xpathCtx, actcfg, "warningsForBadVariants", p_Eflag);
   xsdbool2boolean(xpathCtx, actcfg, "activateDebugger", p_nflag);
   xsdbool2boolean(xpathCtx, actcfg, "disablePredefinedExternalFolder", p_diflag);
+  xsdbool2boolean(xpathCtx, actcfg, "ignoreUntaggedOnTopLevelUnion", p_Nflag);
 
   projDesc = projGenHelper.getTargetOfProject(*p_project_name);
   if (projDesc) projDesc->setLinkingStrategy(*p_lflag);
@@ -2944,6 +2947,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           my_dtflag = 0, my_dxflag = 0, my_djflag = 0, my_fxflag = 0, my_doflag = 0, 
           my_gfflag = 0, my_lnflag = 0, my_isflag = 0, my_asflag = 0, 
           my_swflag = 0, my_Yflag = 0, my_Mflag = *p_Mflag, my_Eflag = 0, my_nflag = *p_nflag,
+          my_Nflag = 0,
           my_diflag = *p_diflag;
 
         char *my_ets = NULL;
@@ -2996,7 +3000,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           prep_includes, prep_defines, prep_undefines, &my_csmode,
           &my_quflag, &my_dsflag, cxxcompiler, optlevel, optflags, &my_dbflag, &my_drflag,
           &my_dtflag, &my_dxflag, &my_djflag, &my_fxflag, &my_doflag,
-          &my_gfflag, &my_lnflag, &my_isflag, &my_asflag, &my_swflag, &my_Yflag, &my_Mflag, &my_Eflag, &my_nflag, &my_diflag,
+          &my_gfflag, &my_lnflag, &my_isflag, &my_asflag, &my_swflag, &my_Yflag, &my_Mflag, &my_Eflag, &my_nflag, &my_Nflag, &my_diflag,
           solspeclibs, sol8speclibs, linuxspeclibs, freebsdspeclibs, win32speclibs,
           ttcn3prep, linkerlibs, additionalObjects, linkerlibsearchp, Vflag, FALSE, &my_Zflag, 
           &my_Hflag, NULL, NULL, prefix_workdir, run_command_list, seen_tpd_files, required_configs, profiled_file_list,

@@ -28,7 +28,7 @@ CODIRS := dynamicTemplate styleGuide topLevelPdu \
 	isbound namedActualParameters assignmentNotation \
 	attribQualif HT48786 selectCase openTypeNames \
 	defaultParamUsageBeforeDecl deterministic readFromFile \
-	asn1_hyphen nameClash portTranslation
+	asn1_hyphen nameClash portTranslation UntaggedOnTopLevelUnionSwitch
 
 ifdef DYN
 CODIRS +=  mfgen-xsd
