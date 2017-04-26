@@ -440,6 +440,12 @@ namespace Common {
       * 'any from' clause) of the 'done' function needs to be generated for
       * this type. */
     bool needs_any_from_done;
+    
+    /** True if JSON coder functions need to be generated for this type.
+      * This is not the same as enabling JSON encoding, since other types that
+      * refer to this type may have JSON encoding, in which case this type needs
+      * to have JSON coder functions to code them. */
+    bool gen_json_coder_functions;
 
     /** Copy constructor, for the use of Type::clone() only. */
     Type(const Type& p);
@@ -1065,8 +1071,16 @@ namespace Common {
     bool hasNeedofXerAttrs();
     bool hasVariantAttrs();
     /** Returns whether the type has the encoding attribute specified by
-      * the parameter (either in its own 'with' statement or in the module's) */
+      * the parameter. The function also checks the qualified attributes of
+      * parent types. Always returns true for ASN.1 types, when checking for a
+      * JSON encoding attribute. */
     bool hasEncodeAttr(const char* encoding_name);
+    /** Helper function for hasEncodeAttr. Checks this type's qualified encoding
+      * attributes that refer to the specified type (target_type) and returns
+      * true if any of them match the specified encoding (encoding_name).
+      * Recursive function (calls the parent type's hasEncodeAttrForType function
+      * if no matching attributes are found). */
+    bool hasEncodeAttrForType(Type* target_type, const char* encoding_name);
     /** Returns whether \a this can be encoded according to rules
      * \a p_encoding.
      * @note Should be called only during code generation, after the entire
@@ -1251,6 +1265,8 @@ namespace Common {
     inline void set_pard_type_instance() { pard_type_instance = true; }
     
     inline void set_needs_any_from_done() { needs_any_from_done = true; }
+    
+    inline void set_gen_json_coder_functions() { gen_json_coder_functions = true; }
     
     /** Calculates the type's display name from the genname (replaces double
       * underscore characters with single ones) */

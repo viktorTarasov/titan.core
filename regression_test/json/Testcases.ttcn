@@ -15,6 +15,7 @@ module Testcases {
 import from Functions all;
 import from Types all;
 import from JsonData language "ASN.1" all;
+import from OtherTypes all;
 
 modulepar R tsp_r := {
   i:= 1,
@@ -632,6 +633,172 @@ testcase tc_binary_strings_with_invalid_chars() runs on MTC {
   }
 }
 
+// Coding a type alias with JSON encoding, whose base type is a record with no JSON encoding support.
+testcase tc_type_alias_record() runs on MTC {
+  var SupportedRec x := { x := 1 };
+  var octetstring os := char2oct("{\"x\":1}");
+  f_check_encoding(encoded:= f_enc_type_alias_rec(x), expected := os);
+  f_bool2verdict(match(f_dec_type_alias_rec(os), x));
+}
+
+// Coding a type alias with JSON encoding, whose base type is a 'set of' with no JSON encoding support.
+testcase tc_type_alias_setof() runs on MTC {
+  var SupportedList x := { "abc", "xyz" };
+  var octetstring os := char2oct("[\"abc\",\"xyz\"]");
+  f_check_encoding(encoded:= f_enc_type_alias_list(x), expected := os);
+  f_bool2verdict(match(f_dec_type_alias_list(os), x));
+}
+
+// Coding a type alias with JSON encoding, whose base type is a union with no JSON encoding support.
+testcase tc_type_alias_union() runs on MTC {
+  var SupportedUni x := { x := 1 };
+  var octetstring os := char2oct("{\"x\":1}");
+  f_check_encoding(encoded:= f_enc_type_alias_uni(x), expected := os);
+  f_bool2verdict(match(f_dec_type_alias_uni(os), x));
+}
+
+// Coding a type alias with JSON encoding, whose base type is an enumerated with no JSON encoding support.
+testcase tc_type_alias_enumerated() runs on MTC {
+  var SupportedEnum x := val1;
+  var octetstring os := char2oct("\"val1\"");
+  f_check_encoding(encoded:= f_enc_type_alias_enum(x), expected := os);
+  f_bool2verdict(match(f_dec_type_alias_enum(os), x));
+}
+
+// Coding a type alias with JSON encoding, whose base type is an anytype with no JSON encoding support.
+testcase tc_type_alias_anytype() runs on MTC {
+  var SupportedAny x := { integer := 1 };
+  var octetstring os := char2oct("{\"integer\":1}");
+  f_check_encoding(encoded:= f_enc_type_alias_any(x), expected := os);
+  f_bool2verdict(match(f_dec_type_alias_any(os), x));
+}
+
+const RecWithEncAttrInFields c_fields := {
+  rec := { x := 1 },
+  list := { "abc", "xyz" },
+  uni := { x := 1 }
+}
+
+const RecWithEncAttr c_fields2 := {
+  en := val1,
+  at := { integer := 1 }
+}
+
+// Coding a record field with JSON encoding, whose base type is a record with no JSON encoding support.
+testcase tc_field_record() runs on MTC {
+  var octetstring os := char2oct("{\"x\":1}");
+  f_check_encoding(encoded:= f_enc_field_rec(c_fields.rec), expected := os);
+  f_bool2verdict(match(f_dec_field_rec(os), c_fields.rec));
+}
+
+// Coding a record field with JSON encoding, whose base type is a 'set of' with no JSON encoding support.
+testcase tc_field_setof() runs on MTC {
+  var octetstring os := char2oct("[\"abc\",\"xyz\"]");
+  f_check_encoding(encoded:= f_enc_field_list(c_fields.list), expected := os);
+  f_bool2verdict(match(f_dec_field_list(os), c_fields.list));
+}
+
+// Coding a record field with JSON encoding, whose base type is a union with no JSON encoding support.
+testcase tc_field_union() runs on MTC {
+  var octetstring os := char2oct("{\"x\":1}");
+  f_check_encoding(encoded:= f_enc_field_uni(c_fields.uni), expected := os);
+  f_bool2verdict(match(f_dec_field_uni(os), c_fields.uni));
+}
+
+// Coding a record field with JSON encoding, whose base type is an enumerated with no JSON encoding support.
+testcase tc_field_enumerated() runs on MTC {
+  var octetstring os := char2oct("\"val1\"");
+  f_check_encoding(encoded:= f_enc_field_enum(c_fields2.en), expected := os);
+  f_bool2verdict(match(f_dec_field_enum(os), c_fields2.en));
+}
+
+// Coding a record field with JSON encoding, whose base type is an anytype with no JSON encoding support.
+testcase tc_field_anytype() runs on MTC {
+  var octetstring os := char2oct("{\"integer\":1}");
+  f_check_encoding(encoded:= f_enc_field_any(c_fields2.at), expected := os);
+  f_bool2verdict(match(f_dec_field_any(os), c_fields2.at));
+}
+
+// Coding a 'record of' element with JSON encoding, whose base type is a record with no JSON encoding support.
+testcase tc_elem_record() runs on MTC {
+  var RecOfRec x := { { x := 1 } };
+  var octetstring os := char2oct("{\"x\":1}");
+  f_check_encoding(encoded:= f_enc_elem_rec(x[0]), expected := os);
+  f_bool2verdict(match(f_dec_elem_rec(os), x[0]));
+}
+
+// Coding a 'record of' element with JSON encoding, whose base type is a 'set of' with no JSON encoding support.
+testcase tc_elem_setof() runs on MTC {
+  var RecOfList x := { { "abc", "xyz" } };
+  var octetstring os := char2oct("[\"abc\",\"xyz\"]");
+  f_check_encoding(encoded:= f_enc_elem_list(x[0]), expected := os);
+  f_bool2verdict(match(f_dec_elem_list(os), x[0]));
+}
+
+// Coding a 'record of' element with JSON encoding, whose base type is a union with no JSON encoding support.
+testcase tc_elem_union() runs on MTC {
+  var RecOfUni x := { { x := 1 } };
+  var octetstring os := char2oct("{\"x\":1}");
+  f_check_encoding(encoded:= f_enc_elem_uni(x[0]), expected := os);
+  f_bool2verdict(match(f_dec_elem_uni(os), x[0]));
+}
+
+// Coding a 'record of' element with JSON encoding, whose base type is an enumerated with no JSON encoding support.
+testcase tc_elem_enumerated() runs on MTC {
+  var RecOfEnum x := { val1 };
+  var octetstring os := char2oct("\"val1\"");
+  f_check_encoding(encoded:= f_enc_elem_enum(x[0]), expected := os);
+  f_bool2verdict(match(f_dec_elem_enum(os), x[0]));
+}
+
+// Coding a 'record of' element with JSON encoding, whose base type is an anytype with no JSON encoding support.
+testcase tc_elem_anytype() runs on MTC {
+  var RecOfAny x := { { integer := 1 } };
+  var octetstring os := char2oct("{\"integer\":1}");
+  f_check_encoding(encoded:= f_enc_elem_any(x[0]), expected := os);
+  f_bool2verdict(match(f_dec_elem_any(os), x[0]));
+}
+
+// Coding an embedded field type (in a multi-level structure) with JSON encoding, whose base type is a record with no JSON encoding support.
+testcase tc_embedded_record() runs on MTC {
+  var UniWithEmbEncAttr x := { rec := { rec := { x := 1 }, list := omit } };
+  var octetstring os := char2oct("{\"x\":1}");
+  f_check_encoding(encoded:= f_enc_embedded_rec(x.rec.rec), expected := os);
+  f_bool2verdict(match(f_dec_embedded_rec(os), x.rec.rec));
+}
+
+// Coding an embedded field type (in a multi-level structure) with JSON encoding, whose base type is a 'set of' with no JSON encoding support.
+testcase tc_embedded_setof() runs on MTC {
+  var UniWithEmbEncAttr x := { rec := { rec := omit, list := { "abc", "xyz" } } };
+  var octetstring os := char2oct("[\"abc\",\"xyz\"]");
+  f_check_encoding(encoded:= f_enc_embedded_list(x.rec.list), expected := os);
+  f_bool2verdict(match(f_dec_embedded_list(os), x.rec.list));
+}
+
+// Coding an embedded element type (in a multi-level structure) with JSON encoding, whose base type is a union with no JSON encoding support.
+testcase tc_embedded_union() runs on MTC {
+  var UniWithEmbEncAttr x := { uni_list := { { x := 1 } } };
+  var octetstring os := char2oct("{\"x\":1}");
+  f_check_encoding(encoded:= f_enc_embedded_uni(x.uni_list[0]), expected := os);
+  f_bool2verdict(match(f_dec_embedded_uni(os), x.uni_list[0]));
+}
+
+// Coding an embedded field type (in a multi-level structure) with JSON encoding, whose base type is an enumerated with no JSON encoding support.
+testcase tc_embedded_enumerated() runs on MTC {
+  var UniWithEmbEncAttr x := { emb_list := { { en := val1, at_list := omit } } };
+  var octetstring os := char2oct("\"val1\"");
+  f_check_encoding(encoded:= f_enc_embedded_enum(x.emb_list[0].en), expected := os);
+  f_bool2verdict(match(f_dec_embedded_enum(os), x.emb_list[0].en));
+}
+
+// Coding an embedded element type (in a multi-level structure) with JSON encoding, whose base type is an anytype with no JSON encoding support.
+testcase tc_embedded_anytype() runs on MTC {
+  var UniWithEmbEncAttr x := { emb_list := { { en := omit, at_list := { { integer := 1 } } } } };
+  var octetstring os := char2oct("{\"integer\":1}");
+  f_check_encoding(encoded:= f_enc_embedded_any(x.emb_list[0].at_list[0]), expected := os);
+  f_bool2verdict(match(f_dec_embedded_any(os), x.emb_list[0].at_list[0]));
+}
+
 //=========================================================================
 // Control
 //=========================================================================
@@ -698,6 +865,27 @@ control {
   
   execute(tc_binary_strings_with_white_spaces());
   execute(tc_binary_strings_with_invalid_chars());
+  
+  execute(tc_type_alias_record());
+  execute(tc_type_alias_setof());
+  execute(tc_type_alias_union());
+  execute(tc_type_alias_enumerated());
+  execute(tc_type_alias_anytype());
+  execute(tc_field_record());
+  execute(tc_field_setof());
+  execute(tc_field_union());
+  execute(tc_field_enumerated());
+  execute(tc_field_anytype());
+  execute(tc_elem_record());
+  execute(tc_elem_setof());
+  execute(tc_elem_union());
+  execute(tc_elem_enumerated());
+  execute(tc_elem_anytype());
+  execute(tc_embedded_record());
+  execute(tc_embedded_setof());
+  execute(tc_embedded_union());
+  execute(tc_embedded_enumerated());
+  execute(tc_embedded_anytype());
 }
 
 

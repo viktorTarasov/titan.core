@@ -121,7 +121,7 @@ void Type::chk()
       textattrib = new TextAST;
     if(!xerattrib && hasVariantAttrs() &&  hasNeedofXerAttrs())
       xerattrib = new XerAttributes;
-    if (!jsonattrib && (hasVariantAttrs() || hasEncodeAttr(get_encoding_name(CT_JSON)) || hasNeedofJsonAttrs())) {
+    if (!jsonattrib && hasVariantAttrs() && hasNeedofJsonAttrs()) {
       jsonattrib = new JsonAST;
     }
     break;
@@ -258,7 +258,7 @@ void Type::parse_attributes()
   }
 
   if ((hasVariantAttrs())
-      && (enable_text() || enable_raw() || enable_xer())) {
+      && (enable_text() || enable_raw() || enable_xer() || enable_json())) {
 #ifndef NDEBUG
     if (rawAST_debug) {
       const char *fn = get_fullname().c_str();

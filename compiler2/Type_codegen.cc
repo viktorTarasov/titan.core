@@ -276,8 +276,8 @@ void Type::generate_code_typedescriptor(output_struct *target)
   // FIXME: force_xer should be elminated. if a type needs a descriptor,
   // it should say so via get_genname_typedescriptor()
 
-  /* genname{type,ber,raw,text,xer}descriptor == gennameown is true if
-   * the type needs its own {type,ber,raw,text,xer}descriptor
+  /* genname{type,ber,raw,text,xer,json}descriptor == gennameown is true if
+   * the type needs its own {type,ber,raw,text,xer,json}descriptor
    * and can't use the descriptor of one of the built-in types.
    */
   if (gennametypedescriptor == gennameown
@@ -1102,7 +1102,7 @@ void Type::generate_code_Enum(output_struct *target)
   e_def.hasText = textattrib!=NULL;
   e_def.hasRaw = rawattrib!=NULL;
   e_def.hasXer = has_encoding(CT_XER);
-  e_def.hasJson = has_encoding(CT_JSON);
+  e_def.hasJson = gen_json_coder_functions;
   if (xerattrib) {
     e_def.xerUseNumber = xerattrib->useNumber_;
   }
@@ -1143,7 +1143,7 @@ void Type::generate_code_Choice(output_struct *target)
   sdef.isASN1 = is_asn1();
   sdef.hasText = textattrib!=NULL;
   sdef.hasXer = has_encoding(CT_XER);
-  sdef.hasJson = has_encoding(CT_JSON);
+  sdef.hasJson = gen_json_coder_functions;
   sdef.has_opentypes = get_has_opentypes();
   sdef.opentype_outermost = get_is_opentype_outermost();
   sdef.ot = generate_code_ot(pool);
@@ -1544,7 +1544,7 @@ void Type::generate_code_Se(output_struct *target)
   sdef.opentype_outermost = get_is_opentype_outermost();
   sdef.ot = NULL;
   sdef.hasXer = has_encoding(CT_XER);
-  sdef.hasJson = has_encoding(CT_JSON);
+  sdef.hasJson = gen_json_coder_functions;
   if (xerattrib){
     Module *my_module = get_my_scope()->get_scope_mod();
     sdef.xerHasNamespaces = my_module->get_nof_ns() != 0;
@@ -2005,7 +2005,7 @@ void Type::generate_code_SeOf(output_struct *target)
   sofdef.isASN1 = is_asn1();
   sofdef.hasText = textattrib!=NULL;
   sofdef.hasXer = has_encoding(CT_XER);
-  sofdef.hasJson = has_encoding(CT_JSON);
+  sofdef.hasJson = gen_json_coder_functions;
   if (xerattrib) {
     //sofdef.xerList      = xerattrib->list_;
     sofdef.xerAttribute = xerattrib->attribute_;

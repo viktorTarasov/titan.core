@@ -1155,6 +1155,12 @@ namespace Ttcn {
       {
         case SingleWithAttrib::AT_ENCODE:
         {
+          if (temp_attrib->get_attribQualifiers() != NULL &&
+              temp_attrib->get_attribQualifiers()->get_nof_qualifiers() != 0) {
+            // TODO: check the attributes grouped per qualifier (for now
+            // ignoring this check for attributes with qualifiers is enough)
+            break;
+          }
           if(has_encode)
           {
             temp_attrib->warning("Only the last encode "
