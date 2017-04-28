@@ -15,6 +15,7 @@ module Functions
 
 import from Types all;
 import from JsonData language "ASN.1" all;
+import from OtherTypes all;
 
 //=================== Encoders =====================================
 
@@ -134,6 +135,66 @@ external function f_enc_meta_setof(in MetainfoSetOf x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
 
 external function f_enc_meta_arr(in MetainfoArray x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_type_alias_rec(in SupportedRec x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_type_alias_list(in SupportedList x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_type_alias_uni(in SupportedUni x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_type_alias_enum(in SupportedEnum x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_type_alias_any(in SupportedAny x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_field_rec(in RecWithEncAttrInFields.rec x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_field_list(in RecWithEncAttrInFields.list x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_field_uni(in RecWithEncAttrInFields.uni x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_field_enum(in RecWithEncAttr.en x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_field_any(in RecWithEncAttr.at x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_elem_rec(in RecOfRec[-] x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_elem_list(in RecOfList[-] x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_elem_uni(in RecOfUni[-] x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_elem_enum(in RecOfEnum[-] x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_elem_any(in RecOfAny[-] x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_embedded_rec(in UniWithEmbEncAttr.rec.rec x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_embedded_list(in UniWithEmbEncAttr.rec.list x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_embedded_uni(in UniWithEmbEncAttr.uni_list[-] x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_embedded_enum(in UniWithEmbEncAttr.emb_list[-].en x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_embedded_any(in UniWithEmbEncAttr.emb_list[-].at_list[-] x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
 
 // for ASN.1 types
@@ -267,6 +328,66 @@ external function f_dec_meta_setof(in octetstring x) return MetainfoSetOf
   with { extension "prototype(convert) decode(JSON)" }
   
 external function f_dec_meta_arr(in octetstring x) return MetainfoArray
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_type_alias_rec(in octetstring x) return SupportedRec
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_type_alias_list(in octetstring x) return SupportedList
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_type_alias_uni(in octetstring x) return SupportedUni
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_type_alias_enum(in octetstring x) return SupportedEnum
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_type_alias_any(in octetstring x) return SupportedAny
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_field_rec(in octetstring x) return RecWithEncAttrInFields.rec
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_field_list(in octetstring x) return RecWithEncAttrInFields.list
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_field_uni(in octetstring x) return RecWithEncAttrInFields.uni
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_field_enum(in octetstring x) return RecWithEncAttr.en
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_field_any(in octetstring x) return RecWithEncAttr.at
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_elem_rec(in octetstring x) return RecOfRec[-]
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_elem_list(in octetstring x) return RecOfList[-]
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_elem_uni(in octetstring x) return RecOfUni[-]
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_elem_enum(in octetstring x) return RecOfEnum[-]
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_elem_any(in octetstring x) return RecOfAny[-]
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_embedded_rec(in octetstring x) return UniWithEmbEncAttr.rec.rec
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_embedded_list(in octetstring x) return UniWithEmbEncAttr.rec.list
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_embedded_uni(in octetstring x) return UniWithEmbEncAttr.uni_list[-]
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_embedded_enum(in octetstring x) return UniWithEmbEncAttr.emb_list[-].en
+  with { extension "prototype(convert) decode(JSON)" }
+  
+external function f_dec_embedded_any(in octetstring x) return UniWithEmbEncAttr.emb_list[-].at_list[-]
   with { extension "prototype(convert) decode(JSON)" }
 
 // for ASN.1 types

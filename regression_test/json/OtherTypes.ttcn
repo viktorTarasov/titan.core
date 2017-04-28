@@ -1,0 +1,84 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// more type definitions, but this time there's not 'encode' attribute at module-level
+module OtherTypes {
+
+// 'base' types that do not support JSON encoding
+type record NotSuppRec {
+  integer x
+}
+
+type set of charstring NotSuppList;
+
+type union NotSuppUni {
+  integer x
+}
+
+type enumerated NotSuppEnum { val1 };
+
+// type aliases that give JSON encoding support to the 'base' types
+type NotSuppRec SupportedRec with { encode "JSON" };
+type NotSuppList SupportedList with { encode "JSON" };
+type NotSuppUni SupportedUni with { encode "JSON" };
+type NotSuppEnum SupportedEnum with { encode "JSON" };
+type anytype SupportedAny with { encode "JSON" };
+
+// types that use the 'base' types as fields/elements, and give them JSON encoding support
+type record RecWithEncAttrInFields {
+  NotSuppRec rec,
+  NotSuppList list,
+  NotSuppUni uni
+}
+with {
+  encode (rec) "JSON";
+  encode (list) "JSON";
+  encode (uni) "JSON";
+}
+
+type record RecWithEncAttr {
+  NotSuppEnum en,
+  anytype at
+}
+with {
+  encode "JSON";
+}
+
+type record of NotSuppRec RecOfRec with { encode "JSON" };
+type record of NotSuppList RecOfList with { encode "JSON" };
+type record of NotSuppUni RecOfUni with { encode ([-]) "JSON" };
+type record of NotSuppEnum RecOfEnum with { encode ([-]) "JSON" };
+type record of anytype RecOfAny with { encode ([-]) "JSON" };
+
+type union UniWithEmbEncAttr {
+  record {
+    NotSuppRec rec optional,
+    NotSuppList list optional
+  } rec,
+  record of NotSuppUni uni_list,
+  record of record {
+    SupportedEnum en optional,
+    record of anytype at_list optional
+  } emb_list
+}
+with {
+  encode (rec.rec) "JSON";
+  encode (rec.list) "JSON";
+  encode (uni_list[-]) "JSON";
+  encode (emb_list[-].en) "JSON";
+  encode (emb_list[-].at_list[-]) "JSON";
+}
+
+}
+with {
+  extension "anytype integer, charstring"
+}

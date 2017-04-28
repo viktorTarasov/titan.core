@@ -607,6 +607,7 @@ namespace Common {
     chk_finished = false;
     pard_type_instance = false;
     needs_any_from_done = false;
+    gen_json_coder_functions = false;
     default_encoding.type = CODING_UNSET;
     default_decoding.type = CODING_UNSET;
   }
@@ -1759,8 +1760,7 @@ namespace Common {
           t->u.array.dimension->chk_index(index_value, expected_index);
         } else {
           // perform a generic index check for other types
-          if (refch == 0 // variable assignment
-            || index_value->get_valuetype() != Value::V_NOTUSED) {
+          if (index_value->get_valuetype() != Value::V_NOTUSED) {
             Error_Context cntxt(index_value, "In index value");
             index_value->chk_expr_int(expected_index);
           }
@@ -3120,6 +3120,7 @@ namespace Common {
       case T_SEQ_A:
       case T_SET_T:
       case T_SET_A:
+      case T_ANYTYPE:
         jsonattrib = new JsonAST;
         break;
       default:
@@ -5631,20 +5632,14 @@ namespace Common {
   
   bool Type::hasEncodeAttr(const char* encoding_name)
   {
-    if (0 == strcmp(encoding_name, "JSON") && (implicit_json_encoding
-        || is_asn1() || (is_ref() && get_type_refd()->is_asn1()))) {
+    if (0 == strcmp(encoding_name, "JSON") &&
+        (implicit_json_encoding || is_asn1())) {
       // ASN.1 types automatically support JSON encoding
       return true;
     }
-    // Check the type itself first, then the root type
-    WithAttribPath *aps[2] = { 0, 0 };
-    size_t num_aps = ((aps[0] = get_attrib_path()) != 0);
-    // assign, compare, then add 0 or 1
-    if (is_ref()) {
-      num_aps += ((aps[num_aps] = get_type_refd()->get_attrib_path()) != 0);
-    }
-    for (size_t a = 0; a < num_aps; ++a) {
-      const vector<SingleWithAttrib>& real = aps[a]->get_real_attrib();
+    WithAttribPath* ap = get_attrib_path();
+    if (ap != NULL) {
+      const vector<SingleWithAttrib>& real = ap->get_real_attrib();
       const size_t num_atr = real.size();
       for (size_t i = 0; i < num_atr; ++i) {
         const SingleWithAttrib& s = *real[i];
@@ -5655,13 +5650,64 @@ namespace Common {
           }
         } // if ENCODE
       } // for
-    } // next a
+    } // if ap
+    
+    if ((ownertype == OT_COMP_FIELD || ownertype == OT_RECORD_OF ||
+        ownertype == OT_ARRAY) && parent_type != NULL &&
+        parent_type->get_attrib_path() != NULL &&
+        parent_type->hasEncodeAttrForType(this, encoding_name)) {
+      // the encode attribute might be in the parent type
+      return true;
+    }
+    return false;
+  }
+  
+  bool Type::hasEncodeAttrForType(Type* target_type, const char* encoding_name)
+  {
+    // if this type has an encode attribute, that also extends to its
+    // fields/elements
+    if (hasEncodeAttr(encoding_name)) {
+      return true;
+    }
+    // otherwise search this type's qualified attributes
+    MultiWithAttrib* mwa = get_attrib_path()->get_with_attr();
+    if (mwa != NULL) {
+      for (size_t i = 0; i < mwa->get_nof_elements(); ++i) {
+        const SingleWithAttrib* swa = mwa->get_element(i);
+        if (swa->get_attribKeyword() == SingleWithAttrib::AT_ENCODE &&
+            swa->get_attribSpec().get_spec() == encoding_name) {
+          // search the attribute's qualifiers for one that refers to the
+          // target type
+          Ttcn::Qualifiers* quals = swa->get_attribQualifiers();
+          for (size_t j = 0; j < quals->get_nof_qualifiers(); ++j) {
+            Ttcn::Qualifier* qual = const_cast<Ttcn::Qualifier*>(
+              quals->get_qualifier(j));
+            if (get_field_type(qual, EXPECTED_CONSTANT) == target_type) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    if ((ownertype == OT_COMP_FIELD || ownertype == OT_RECORD_OF ||
+        ownertype == OT_ARRAY) && parent_type != NULL &&
+        parent_type->get_attrib_path() != NULL) {
+      return parent_type->hasEncodeAttrForType(target_type, encoding_name);
+    }
     return false;
   }
 
   namespace { // unnamed
 
-  enum state { PROCESSING = -1, ANSWER_NO, ANSWER_YES };
+  enum state {
+    PROCESSING = -1, // the type is now being checked
+    ANSWER_NO, // the type (and any types referencing this type) can never have
+    // the desired encoding type
+    ANSWER_YES, // the type (and any types referencing this type) has the
+    // desired encoding type
+    MISSING_ATTRIBUTE // the type does not have the desired encoding type, but a
+    // type referencing this type still could, with the right 'encode' attribute
+  };
 
   struct memoizer : private map<Type*, state> {
     memoizer() : map<Type*, state>() {}
@@ -5732,6 +5778,8 @@ namespace Common {
           return false;
         case ANSWER_YES:
           return true;
+        case MISSING_ATTRIBUTE:
+          FATAL_ERROR("Type::has_encoding");
         }
       }
 
@@ -5800,6 +5848,8 @@ namespace Common {
                 case ANSWER_YES:
                   subresult = true;
                   break;
+                case MISSING_ATTRIBUTE:
+                  FATAL_ERROR("Type::has_encoding");
                 }
               }
               else {
@@ -5837,6 +5887,8 @@ namespace Common {
               case ANSWER_YES:
                 subresult = true;
                 break;
+              case MISSING_ATTRIBUTE:
+                FATAL_ERROR("Type::has_encoding");
               }
             }
             else {
@@ -5960,7 +6012,8 @@ namespace Common {
         }
       }
       
-    case CT_JSON:
+    case CT_JSON: {
+      Type* type_w_enc_attr = NULL;
       while (true) {
         if (json_mem.has_key(t)) {
           switch (*json_mem.get(t)) {
@@ -5968,12 +6021,22 @@ namespace Common {
             break;
           case ANSWER_NO:
             return false;
+          case MISSING_ATTRIBUTE:
           case ANSWER_YES:
-            return true;
+            if (type_w_enc_attr != NULL) {
+              return json_mem.remember(type_w_enc_attr, ANSWER_YES);
+            }
+            return *json_mem.get(t) == ANSWER_YES;
           }
         }
         if (t->jsonattrib) {
+          t->get_type_refd_last()->set_gen_json_coder_functions();
           return json_mem.remember(t, ANSWER_YES);
+        }
+        // an 'encode' attribute is not enough, structured types must still be
+        // checked; this keeps track of which type had the 'encode' attribute
+        if (type_w_enc_attr == NULL && t->hasEncodeAttr(get_encoding_name(CT_JSON))) {
+          type_w_enc_attr = t;
         }
         if (t->is_ref()) {
           t = t->get_type_refd();
@@ -6033,6 +6096,7 @@ namespace Common {
                   // Avoids infinite recursion for self-referencing types. 
                   continue;
                 case ANSWER_NO:
+                case MISSING_ATTRIBUTE:
                   // One field is not OK => the structure is not OK
                   return json_mem.remember(t, ANSWER_NO);
                 }
@@ -6062,6 +6126,7 @@ namespace Common {
                 // can always be broken with an empty record-of.
                 break;
               case ANSWER_NO:
+              case MISSING_ATTRIBUTE:
                 return json_mem.remember(t, ANSWER_NO);
                 break;
               }
@@ -6083,14 +6148,27 @@ namespace Common {
           default:
             return json_mem.remember(t, ANSWER_NO);
           } // switch
-          return json_mem.remember(t, hasEncodeAttr(get_encoding_name(CT_JSON)) ? ANSWER_YES : ANSWER_NO);
+          if (type_w_enc_attr != NULL) {
+            t->set_gen_json_coder_functions();
+            return json_mem.remember(type_w_enc_attr, ANSWER_YES);
+          }
+          return json_mem.remember(t, MISSING_ATTRIBUTE);
         } // else
       } // while
-      
+    } // case
     case CT_CUSTOM:
       // the encoding name parameter has to be the same as the encoding name
       // specified for the type
-      return custom_encoding ? hasEncodeAttr(custom_encoding->c_str()) : false;
+      if (custom_encoding == NULL) {
+        return false;
+      }
+      if (hasEncodeAttr(custom_encoding->c_str())) {
+        return true;
+      }
+      if (is_ref()) {
+        return get_type_refd()->has_encoding(encoding_type, custom_encoding);
+      }
+      return false;
 
     default:
       FATAL_ERROR("Type::has_encoding()");
@@ -6530,6 +6608,7 @@ namespace Common {
        * descriptor.
        */
       if (t->is_tagged() || t->rawattrib || t->textattrib || t->jsonattrib ||
+          (!is_asn1() && t->hasEncodeAttr(get_encoding_name(CT_JSON))) ||
           (t->xerattrib && !t->xerattrib->empty() ))
       {
         return t->get_genname_own(p_scope);
@@ -6651,7 +6730,7 @@ namespace Common {
   {
     Type *t = this;
     while (true) {
-      if (t->jsonattrib) return t->get_genname_own(my_scope);
+      if (t->has_encoding(CT_JSON)) return t->get_genname_own(my_scope);
       else if (t->is_ref()) t = t->get_type_refd();
       else break;
     }

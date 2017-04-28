@@ -19,7 +19,7 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = Types.ttcn Functions.ttcn AttributeTestcases.ttcn Testcases.ttcn SemanticCheck.ttcn
+TTCN3_MODULES = Types.ttcn Functions.ttcn AttributeTestcases.ttcn Testcases.ttcn SemanticCheck.ttcn OtherTypes.ttcn
 
 ASN1_MODULES = JsonData.asn
 
