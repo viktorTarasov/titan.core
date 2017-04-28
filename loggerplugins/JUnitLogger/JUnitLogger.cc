@@ -46,6 +46,7 @@ JUnitLogger::JUnitLogger()
   minor_version_ = 0;
   name_ = mcopystr("JUnitLogger");
   help_ = mcopystr("JUnitLogger writes JUnit-compatible XML");
+  error_message = "";
 //printf("%5lu:constructed\n", (unsigned long)getpid());
 }
 
@@ -251,11 +252,13 @@ void JUnitLogger::log(const TitanLoggerApi::TitanLogEvent& event,
 
       case TitanLoggerApi::Verdict::v4error:
         fprintf(file_stream_, "    <error type='DTE'>%s</error>\n",
-          (const char*)escape_xml_element(tct.reason()));
+          (const char*)error_message);
         break;
       }
       // error or skip based on verdict
       fputs("  </testcase>\n", file_stream_);
+      // erase the stored error message
+      error_message = "";
       break; }
 
     case TitanLoggerApi::TestcaseEvent_choice::UNBOUND_VALUE:
@@ -266,10 +269,9 @@ void JUnitLogger::log(const TitanLoggerApi::TitanLogEvent& event,
     break; } // testcaseOp
 
   case TitanLoggerApi::LogEventType_choice::ALT_errorLog: {
-    // A DTE is about to be thrown
-    const TitanLoggerApi::Categorized& cat = choice.errorLog();
-    fprintf(file_stream_, "    <error type='DTE'>%s</error>\n",
-      (const char*)escape_xml_element(cat.text()));
+    // A DTE is about to be thrown,
+    // store the error message until the testcase finished event
+    error_message += escape_xml_element(choice.errorLog().text());
     break; }
 
   default:

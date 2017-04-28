@@ -50,6 +50,7 @@ private:
   // working values
   char *filename_;
   FILE *file_stream_;
+  CHARSTRING error_message;
 };
 
 #endif  // JUnitLogger_HH
