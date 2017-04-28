@@ -120,16 +120,17 @@
                     <xs:element name="disableJSON" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="forceXERinASN.1" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="defaultasOmit" minOccurs="0" maxOccurs="1" type="xs:boolean" />
-                    <xs:element name="enumHackProperty" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+                    <xs:element name="enumHackProperty" minOccurs="0" maxOccurs="1" type="xs:boolean" /> <!-- deprecated -->
                     <xs:element name="forceOldFuncOutParHandling" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="gccMessageFormat" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="lineNumbersOnlyInMessages" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="includeSourceInfo" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="addSourceLineInfo" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="suppressWarnings" minOccurs="0" maxOccurs="1" type="xs:boolean" />
-                    <xs:element name="outParamBoundness" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+                    <xs:element name="outParamBoundness" minOccurs="0" maxOccurs="1" type="xs:boolean" /> <!-- deprecated -->
                     <xs:element name="omitInValueList" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="warningsForBadVariants" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+                    <xs:element name="ignoreUntaggedOnTopLevelUnion" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="activateDebugger" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="quietly" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="namingRules" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
@@ -137,7 +138,6 @@
                     <xs:element name="CxxCompiler" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
                     <xs:element name="optimizationLevel" minOccurs="0" maxOccurs="1" type="xs:normalizedString" />
                     <xs:element name="otherOptimizationFlags" minOccurs="0" maxOccurs="1" type="xs:string" />
-                    <xs:element name="ignoreUntaggedOnTopLevelUnion" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="profiledFileList" minOccurs="0" maxOccurs="1" type="ResourceType" />
 
                     <xs:element name="SolarisSpecificLibraries" minOccurs="0" maxOccurs="1">
