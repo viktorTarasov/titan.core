@@ -9253,7 +9253,7 @@ error:
     case Type::T_OSTR:
     case Type::T_CSTR:
       if (str_enc != NULL) {
-        str_enc->error("The encoding format parameter for the '@decoded' modifier "
+        str_enc->error("The encoding formal parameter for the '@decoded' modifier "
           "is only available to parameter redirects of universal charstrings");
         error_flag = true;
       }
