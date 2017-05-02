@@ -9052,8 +9052,8 @@ Assignment: // 594
 
 /* This can not be a single CompoundExpression (as opposed to Expression) */
 SingleExpression: // 595
-  '(' SingleExpression ')' { $$ = $2; }
-| '(' error SingleExpression ')' { $$ = $3; }
+  '(' SingleExpression ')' { $$ = $2; $$->set_is_in_brackets(); }
+| '(' error SingleExpression ')' { $$ = $3; $$->set_is_in_brackets(); }
 | '(' error ')'
   {
     $$ = new Value(Value::V_ERROR);

@@ -119,4 +119,8 @@ template HexSubtype t_hex7 := t_hex_value & * length(3) & '5'H; //^In template d
 template CharSubtype t_char7 := "abc" & c_char; //^In template definition// //is not a valid value for type `charstring' which has subtype//
 template UnicharSubtype t_unichar7 := c_char & t_unichar_value; //^In template definition// //is not a valid value for type `universal charstring' which has subtype//
 
+/* testing double length restriction (both the second operand and the concatenation result have length restrictions and they're not separated by brackets) */
+template octetstring t_oct8 := 'ABCD'O & ? length(2) length(4); //^In template definition// //Two length restrictions are not allowed next to each other// //Try using brackets around the template concatenation//
+template RecOfInt t_recof8 := t_recof & * length(2) length(4..5); //^In template definition// //Two length restrictions are not allowed next to each other// //Try using brackets around the template concatenation//
+
 }

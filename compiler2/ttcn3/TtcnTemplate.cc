@@ -102,6 +102,7 @@ namespace Ttcn {
       }
       u.concat.op1 = p.u.concat.op1->clone();
       u.concat.op2 = p.u.concat.op2->clone();
+      u.concat.in_brackets = p.u.concat.in_brackets;
       break;
 //    default:
 //      FATAL_ERROR("Template::Template()");
@@ -315,9 +316,15 @@ namespace Ttcn {
       if (!use_runtime_2) {
         FATAL_ERROR("Template::create_stringRepr()");
       }
+      if (u.concat.in_brackets) {
+        ret_val += " ( ";
+      }
       ret_val += u.concat.op1->create_stringRepr();
       ret_val += " & ";
       ret_val += u.concat.op2->create_stringRepr();
+      if (u.concat.in_brackets) {
+        ret_val += " ) ";
+      }
       break;
     default:
       ret_val += "<unknown template>";
@@ -374,6 +381,7 @@ namespace Ttcn {
         u.concat.op1->set_location(*v->get_concat_operand(true));
         u.concat.op2 = new Template(v->get_concat_operand(false)->clone());
         u.concat.op2->set_location(*v->get_concat_operand(false));
+        u.concat.in_brackets = v->get_is_in_brackets();
         delete v;
         break;
       }
@@ -1202,7 +1210,9 @@ namespace Ttcn {
   void Template::set_length_restriction(LengthRestriction *p_lr)
   {
     if (p_lr == NULL) return;
-    if (length_restriction) FATAL_ERROR("Template::set_length_restriction()");
+    if (length_restriction != NULL) {
+      p_lr->error("Two length restrictions are not allowed next to each other");
+    }
     length_restriction = p_lr;
   }
 
@@ -1721,7 +1731,7 @@ namespace Ttcn {
     }
     return first ? u.concat.op1 : u.concat.op2;
   }
-
+  
   Template* Template::get_template_refd(ReferenceChain *refch)
   {
     unsigned int const prev_err_count = get_error_count();
@@ -2438,6 +2448,17 @@ end:
       parlist->set_fullname(get_fullname());
       parlist->set_my_scope(get_my_scope());
       u.invoke.ap_list = parlist;
+    }
+  }
+  
+  void Template::chk_concat_double_length_res()
+  {
+    if (templatetype == TEMPLATE_CONCAT && length_restriction != NULL &&
+        u.concat.op2->length_restriction != NULL && !u.concat.in_brackets) {
+      length_restriction->error("Two length restrictions are not allowed next "
+        "to each other");
+      note("Try using brackets around the template concatenation");
+      set_templatetype(TEMPLATE_ERROR);
     }
   }
 

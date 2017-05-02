@@ -5525,6 +5525,7 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
   namedbool implicit_omit, Common::Assignment *lhs)
 {
   bool self_ref = false;
+  t->chk_concat_double_length_res();
   // get_template_refd_last evaluates concatenations between templates known at
   // compile-time
   Ttcn::Template::templatetype_t tt = t->get_template_refd_last()->get_templatetype();

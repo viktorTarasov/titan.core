@@ -78,6 +78,7 @@ namespace Common {
 
   Value::Value(const Value& p)
     : GovernedSimple(p), valuetype(p.valuetype), my_governor(0)
+    , in_brackets(p.in_brackets)
   {
     switch(valuetype) {
     case V_ERROR:
@@ -697,7 +698,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     switch(valuetype) {
     case V_NULL:
@@ -719,7 +720,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, bool p_val_bool)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     switch(valuetype) {
     case V_BOOL:
@@ -731,7 +732,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, const Int& p_val_Int)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     switch(valuetype) {
     case V_INT:
@@ -743,7 +744,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, int_val_t *p_val_Int)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     switch(valuetype){
     case V_INT:
@@ -755,7 +756,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, string *p_val_str)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if(!p_val_str) FATAL_ERROR("NULL parameter");
     switch(valuetype) {
@@ -772,7 +773,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, ustring *p_val_ustr)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if (p_vt != V_USTR || !p_val_ustr) FATAL_ERROR("Value::Value()");
     set_val_ustr(p_val_ustr);
@@ -780,7 +781,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, CharSyms *p_char_syms)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if (!p_char_syms) FATAL_ERROR("NULL parameter");
     switch (valuetype) {
@@ -793,7 +794,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, Identifier *p_val_id)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if(!p_val_id)
       FATAL_ERROR("NULL parameter");
@@ -809,7 +810,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, Identifier *p_id, Value *p_val)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if(!p_id || !p_val)
       FATAL_ERROR("NULL parameter");
@@ -824,7 +825,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, const Real& p_val_Real)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     switch(valuetype) {
     case V_REAL:
@@ -836,7 +837,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, Values *p_vs)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if(!p_vs) FATAL_ERROR("NULL parameter");
     switch(valuetype) {
@@ -852,7 +853,7 @@ namespace Common {
 
   Value::Value(valuetype_t p_vt, Value *p_v,
     Ttcn::ParsedActualParameters *p_t_list)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if(!p_v || !p_t_list) FATAL_ERROR("NULL parameter");
     switch(valuetype) {
@@ -868,7 +869,7 @@ namespace Common {
 
   // -
   Value::Value(operationtype_t p_optype)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -894,7 +895,7 @@ namespace Common {
 
   // v1
   Value::Value(operationtype_t p_optype, Value *p_v1)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -950,7 +951,7 @@ namespace Common {
   // v1 [r2] b4
   Value::Value(operationtype_t p_optype, Value* p_v1, Ttcn::Ref_base *p_r2,
                bool p_b4)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -971,7 +972,7 @@ namespace Common {
 
   // ti1
   Value::Value(operationtype_t p_optype, TemplateInstance *p_ti1)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -997,7 +998,7 @@ namespace Common {
 
   // r1
   Value::Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1015,7 +1016,7 @@ namespace Common {
   // r1 [r2] b4
   Value::Value(operationtype_t p_optype, Ttcn::Ref_base* p_r1, Ttcn::Ref_base* p_r2,
                bool p_b4)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1036,7 +1037,7 @@ namespace Common {
   // v1 t_list2
   Value::Value(operationtype_t p_optype, Value *p_v1,
       Ttcn::ParsedActualParameters *p_ap_list)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1054,7 +1055,7 @@ namespace Common {
   //v1 t_list2 v3
   Value::Value(operationtype_t p_optype, Value *p_v1,
     Ttcn::ParsedActualParameters *p_t_list2, Value *p_v3)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1072,7 +1073,7 @@ namespace Common {
 
   // r1 [v2] or [r1] v2
   Value::Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Value *p_v2)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1096,7 +1097,7 @@ namespace Common {
   // r1 [v2] [v3] b4
   Value::Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1,
                Value *p_v2, Value *p_v3, bool p_b4)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1115,7 +1116,7 @@ namespace Common {
 
   // v1 v2
   Value::Value(operationtype_t p_optype, Value *p_v1, Value *p_v2)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1166,7 +1167,7 @@ namespace Common {
   // ti1 v2 v3 ti4
   Value::Value(operationtype_t p_optype, TemplateInstance *p_ti1, Value *p_v2,
     Value *p_v3, TemplateInstance *p_ti4) :
-      GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+      GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1185,7 +1186,7 @@ namespace Common {
 
   // v1 v2 v3
   Value::Value(operationtype_t p_optype, Value *p_v1, Value *p_v2, Value *p_v3)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1203,7 +1204,7 @@ namespace Common {
 
   // ti1 [v2]
   Value::Value(operationtype_t p_optype, TemplateInstance *p_ti1,  Value *p_v2)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1221,7 +1222,7 @@ namespace Common {
   
   // ti1 v2 v3
   Value::Value(operationtype_t p_optype, TemplateInstance *p_ti1, Value *p_v2, Value *p_v3)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype=p_optype;
     u.expr.state=EXPR_NOT_CHECKED;
@@ -1240,7 +1241,7 @@ namespace Common {
   // ti1 t2 v3 b4
   Value::Value(operationtype_t p_optype, TemplateInstance *p_ti1,
                TemplateInstance *p_t2, Value *p_v3, bool p_b4)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype=p_optype;
     u.expr.state=EXPR_NOT_CHECKED;
@@ -1259,7 +1260,7 @@ namespace Common {
 
   // v1 t2
   Value::Value(operationtype_t p_optype, Value *p_v1, TemplateInstance *p_t2)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1277,7 +1278,7 @@ namespace Common {
   // r1 i2
   Value::Value(operationtype_t p_optype, Ttcn::Reference *p_r1,
                Identifier *p_i2)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1293,7 +1294,7 @@ namespace Common {
   }
 
   Value::Value(operationtype_t p_optype, LogArguments *p_logargs)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1309,7 +1310,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, macrotype_t p_macrotype)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if (p_vt != V_MACRO) FATAL_ERROR("Value::Value()");
     switch (p_macrotype) {
@@ -1330,7 +1331,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, NamedValues *p_nvs)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if(!p_nvs) FATAL_ERROR("NULL parameter");
     switch(valuetype) {
@@ -1344,7 +1345,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, Reference *p_ref)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if (!p_ref) FATAL_ERROR("NULL parameter: Value::Value()");
     switch(p_vt) {
@@ -1361,7 +1362,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, Block *p_block)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if(!p_block) FATAL_ERROR("NULL parameter");
     switch(valuetype) {
@@ -1374,7 +1375,7 @@ namespace Common {
   }
 
   Value::Value(valuetype_t p_vt, verdict_t p_verdict)
-    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0)
+    : GovernedSimple(S_V), valuetype(p_vt), my_governor(0), in_brackets(false)
   {
     if (valuetype != V_VERDICT) FATAL_ERROR("Value::Value()");
     switch (p_verdict) {
@@ -1391,7 +1392,7 @@ namespace Common {
   }
 
   Value::Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -1412,7 +1413,7 @@ namespace Common {
   // r1 r2 [v3]
   Value::Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2,
           Value *p_v3)
-    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
   {
     u.expr.v_optype = p_optype;
     u.expr.state = EXPR_NOT_CHECKED;
@@ -14467,6 +14468,16 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     default:
       DEBUG(level, "Value: unknown type: %d", valuetype);
     } // switch
+  }
+  
+  void Value::set_is_in_brackets()
+  {
+    in_brackets = true;
+  }
+  
+  bool Value::get_is_in_brackets() const
+  {
+    return in_brackets;
   }
 
   void Value::add_string_element(size_t index, Value *v_element,
