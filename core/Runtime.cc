@@ -1801,7 +1801,7 @@ void TTCN_Runtime::disconnect_port(
 
 void TTCN_Runtime::map_port(
   const COMPONENT& src_compref, const char *src_port,
-  const COMPONENT& dst_compref, const char *dst_port)
+  const COMPONENT& dst_compref, const char *dst_port, boolean translation)
 {
   check_port_name(src_port, "map", "first");
   check_port_name(dst_port, "map", "second");
@@ -1849,17 +1849,17 @@ void TTCN_Runtime::map_port(
   case SINGLE_TESTCASE:
     if (comp_reference != MTC_COMPREF) TTCN_error("Only the ports of mtc "
       "can be mapped in single mode.");
-    PORT::map_port(comp_port, system_port);
+    PORT::map_port(comp_port, system_port, translation);
     break;
   case MTC_TESTCASE:
     TTCN_Communication::send_map_req(comp_reference, comp_port,
-      system_port);
+      system_port, translation);
     executor_state = MTC_MAP;
     wait_for_state_change();
     break;
   case PTC_FUNCTION:
     TTCN_Communication::send_map_req(comp_reference, comp_port,
-      system_port);
+      system_port, translation);
     executor_state = PTC_MAP;
     wait_for_state_change();
     break;
@@ -1879,7 +1879,7 @@ void TTCN_Runtime::map_port(
 
 void TTCN_Runtime::unmap_port(
   const COMPONENT& src_compref, const char *src_port,
-  const COMPONENT& dst_compref, const char *dst_port)
+  const COMPONENT& dst_compref, const char *dst_port, boolean translation)
 {
   check_port_name(src_port, "unmap", "first");
   check_port_name(dst_port, "unmap", "second");
@@ -1927,17 +1927,17 @@ void TTCN_Runtime::unmap_port(
   case SINGLE_TESTCASE:
     if (comp_reference != MTC_COMPREF) TTCN_error("Only the ports of mtc "
       "can be unmapped in single mode.");
-    PORT::unmap_port(comp_port, system_port);
+    PORT::unmap_port(comp_port, system_port, translation);
     break;
   case MTC_TESTCASE:
     TTCN_Communication::send_unmap_req(comp_reference, comp_port,
-      system_port);
+      system_port, translation);
     executor_state = MTC_UNMAP;
     wait_for_state_change();
     break;
   case PTC_FUNCTION:
     TTCN_Communication::send_unmap_req(comp_reference, comp_port,
-      system_port);
+      system_port, translation);
     executor_state = PTC_UNMAP;
     wait_for_state_change();
     break;

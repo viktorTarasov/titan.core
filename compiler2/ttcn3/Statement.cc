@@ -7446,6 +7446,39 @@ error:
   {
     expression_struct expr;
     Code::init_expr(&expr);
+    bool warning = false;
+    if (!config_op.compref1->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
+      warning = true;
+      if (strcmp(opname, "map") == 0) {
+        config_op.compref2->warning(
+          "Cannot determine the type of the component in the first parameter."
+          "The port translation will not work.");
+      }
+    }
+    if (!config_op.compref2->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
+      warning = true;
+      if (strcmp(opname, "map") == 0) {
+        config_op.compref2->warning(
+          "Cannot determine the type of the component in the second parameter."
+          "The port translation will not work.");
+      }
+    }
+    if (config_op.translate == true && warning == false) {
+      expr.expr = mputstr(expr.expr, "if (!(");
+      config_op.portref1->generate_code_portref(&expr, my_sb);
+      expr.expr = mputstr(expr.expr, ".port_is_started())) {\n");
+      config_op.portref1->generate_code_portref(&expr, my_sb);
+      expr.expr = mputstr(expr.expr, ".activate_port(TRUE);\n");
+      config_op.portref1->generate_code_portref(&expr, my_sb);
+      expr.expr = mputstr(expr.expr, ".start();\n}\n");
+      expr.expr = mputstr(expr.expr, "if (!(");
+      config_op.portref2->generate_code_portref(&expr, my_sb);
+      expr.expr = mputstr(expr.expr, ".port_is_started())) {\n");
+      config_op.portref2->generate_code_portref(&expr, my_sb);
+      expr.expr = mputstr(expr.expr, ".activate_port(TRUE);\n");
+      config_op.portref2->generate_code_portref(&expr, my_sb);
+      expr.expr = mputstr(expr.expr, ".start();\n}\n");
+    }
     expr.expr = mputprintf(expr.expr, "TTCN_Runtime::%s_port(", opname);
     config_op.compref1->generate_code_expr(&expr);
     expr.expr = mputstr(expr.expr, ", ");
@@ -7472,28 +7505,18 @@ error:
       // a simple string shall be formed from the port name and array indices
       generate_code_portref(&expr, config_op.portref2);
     }
+    if (config_op.translate == true && warning == false) {
+      expr.expr = mputstr(expr.expr, ", TRUE");
+    }
     expr.expr = mputstr(expr.expr, ")");
-    if (config_op.translate) {
-      bool warning = false;
-      if (!config_op.compref1->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
-        warning = true;
-        config_op.compref2->warning(
-          "Cannot determine the type of the component in the first parameter."
-          "The port translation will not work.");
-      }
-      if (!config_op.compref2->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE)) {
-        warning = true;
-        config_op.compref2->warning(
-          "Cannot determine the type of the component in the second parameter."
-          "The port translation will not work.");
-      }
+    if (config_op.translate == true) {
       string funcname;
       if (strcmp(opname, "map") == 0) {
         funcname = "add_port";
       } else if (strcmp(opname, "unmap") == 0) {
         funcname = "remove_port";
       } else {
-        //TODO connect, disconnect
+        //connect, disconnect are not supported
       }
       if (!funcname.empty() && warning == false) {
         expr.expr = mputstr(expr.expr, ";\n");

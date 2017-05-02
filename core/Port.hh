@@ -44,10 +44,16 @@ class PORT : public Fd_And_Timeout_Event_Handler {
   friend struct port_connection;
 
   static PORT *list_head, *list_tail;
+  
+  // Used during translation port activate. It will
+  // contains the provider ports. It is needed because the
+  // names of the ports of system component and the mtc
+  // can be the same.
+  static PORT *system_list_head, *system_list_tail;
 
-  void add_to_list();
-  void remove_from_list();
-  static PORT *lookup_by_name(const char *par_port_name);
+  void add_to_list(boolean system = FALSE);
+  void remove_from_list(boolean system);
+  static PORT *lookup_by_name(const char *par_port_name, boolean system = FALSE);
 
   struct port_parameter; // no user serviceable parts inside
   static port_parameter *parameter_head, *parameter_tail;
@@ -117,8 +123,8 @@ public:
 
   virtual void log() const;
 
-  void activate_port();
-  void deactivate_port();
+  void activate_port(boolean system = FALSE);
+  void deactivate_port(boolean system);
   static void deactivate_all();
 
   void clear();
@@ -129,6 +135,8 @@ public:
   static void all_stop();
   void halt();
   static void all_halt();
+  
+  boolean port_is_started();
   
   boolean check_port_state(const CHARSTRING& type) const;
   static boolean any_check_port_state(const CHARSTRING& type);
@@ -341,8 +349,8 @@ private:
   void handle_incoming_data(port_connection *conn_ptr);
   void process_last_message(port_connection *conn_ptr);
 
-  void map(const char *system_port);
-  void unmap(const char *system_port);
+  void map(const char *system_port, boolean translation);
+  void unmap(const char *system_port, boolean translation);
 
 public:
   static void process_connect_listen(const char *local_port,
@@ -358,8 +366,8 @@ public:
   static void terminate_local_connection(const char *src_port,
     const char *dest_port);
 
-  static void map_port(const char *component_port, const char *system_port);
-  static void unmap_port(const char *component_port, const char *system_port);
+  static void map_port(const char *component_port, const char *system_port, boolean translation);
+  static void unmap_port(const char *component_port, const char *system_port, boolean translation);
 };
 
 #endif

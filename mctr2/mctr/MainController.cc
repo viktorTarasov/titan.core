@@ -3381,10 +3381,11 @@ void MainController::send_disconnect_ack(component_struct *tc)
 }
 
 void MainController::send_map(component_struct *tc,
-  const char *local_port, const char *system_port)
+  const char *local_port, const char *system_port, boolean translation)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_MAP);
+  text_buf.push_int(translation == FALSE ? 0 : 1);
   text_buf.push_string(local_port);
   text_buf.push_string(system_port);
   send_message(tc->tc_fd, text_buf);
@@ -3398,10 +3399,11 @@ void MainController::send_map_ack(component_struct *tc)
 }
 
 void MainController::send_unmap(component_struct *tc,
-  const char *local_port, const char *system_port)
+  const char *local_port, const char *system_port, boolean translation)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_UNMAP);
+  text_buf.push_int(translation == FALSE ? 0 : 1);
   text_buf.push_string(local_port);
   text_buf.push_string(system_port);
   send_message(tc->tc_fd, text_buf);
@@ -5325,6 +5327,7 @@ void MainController::process_map_req(component_struct *tc)
 
   Text_Buf& text_buf = *tc->text_buf;
   component src_compref = text_buf.pull_int().get_val();
+  int_val_t translate = text_buf.pull_int();
   char *src_port = text_buf.pull_string();
   char *system_port = text_buf.pull_string();
 
@@ -5337,7 +5340,7 @@ void MainController::process_map_req(component_struct *tc)
   port_connection *conn = find_connection(src_compref, src_port,
     SYSTEM_COMPREF, system_port);
   if (conn == NULL) {
-    send_map(components[src_compref], src_port, system_port);
+    send_map(components[src_compref], src_port, system_port, translate == 0 ? FALSE : TRUE);
     conn = new port_connection;
     conn->head.comp_ref = src_compref;
     conn->head.port_name = src_port;
@@ -5378,16 +5381,23 @@ void MainController::process_mapped(component_struct *tc)
 
   Text_Buf& text_buf = *tc->text_buf;
   component src_compref = tc->comp_ref;
+  boolean translation = text_buf.pull_int().get_val() == 0 ? FALSE : TRUE;
   char *src_port = text_buf.pull_string();
   char *system_port = text_buf.pull_string();
 
-  port_connection *conn = find_connection(src_compref, src_port,
-    SYSTEM_COMPREF, system_port);
+  port_connection *conn = NULL;
+  if (translation == FALSE) { 
+    conn = find_connection(src_compref, src_port,
+      SYSTEM_COMPREF, system_port);
+  } else {
+    conn = find_connection(SYSTEM_COMPREF, src_port,
+      src_compref, system_port);
+  }
   if (conn == NULL) {
     send_error(tc->tc_fd, "The MAPPED message refers to a "
       "non-existent port mapping %d:%s - system:%s.",
       src_compref, src_port, system_port);
-  } else if (conn->conn_state != CONN_MAPPING) {
+  } else if (conn->conn_state != CONN_MAPPING && conn->conn_state != CONN_MAPPED && translation == TRUE) {
     send_error(tc->tc_fd, "Unexpected MAPPED message was "
       "received for port mapping %d:%s - system:%s.",
       src_compref, src_port, system_port);
@@ -5416,23 +5426,32 @@ void MainController::process_unmap_req(component_struct *tc)
 
   Text_Buf& text_buf = *tc->text_buf;
   component src_compref = text_buf.pull_int().get_val();
+  boolean translation = text_buf.pull_int().get_val() == 0 ? FALSE : TRUE;
   char *src_port = text_buf.pull_string();
   char *system_port = text_buf.pull_string();
-
+  
   if (!valid_endpoint(src_compref, FALSE, tc, "unmap")) {
     delete [] src_port;
     delete [] system_port;
     return;
   }
-
-  port_connection *conn = find_connection(src_compref, src_port,
-    SYSTEM_COMPREF, system_port);
+  port_connection *conn = NULL;
+  if (translation == FALSE) { 
+    conn = find_connection(src_compref, src_port,
+      SYSTEM_COMPREF, system_port);
+  } else {
+    conn = find_connection(SYSTEM_COMPREF, src_port,
+      src_compref, system_port);
+  }
   if (conn == NULL) {
     send_unmap_ack(tc);
+    if (translation == TRUE) {
+      send_unmap(components[src_compref], src_port, system_port, TRUE);
+    }
   } else {
     switch (conn->conn_state) {
     case CONN_MAPPED:
-      send_unmap(components[src_compref], src_port, system_port);
+      send_unmap(components[src_compref], src_port, system_port, translation);
       conn->conn_state = CONN_UNMAPPING;
     case CONN_UNMAPPING:
       add_requestor(&conn->requestors, tc);
@@ -5460,11 +5479,18 @@ void MainController::process_unmapped(component_struct *tc)
 
   Text_Buf& text_buf = *tc->text_buf;
   component src_compref = tc->comp_ref;
+  boolean translation = text_buf.pull_int().get_val() == 0 ? FALSE : TRUE;
   char *src_port = text_buf.pull_string();
   char *system_port = text_buf.pull_string();
 
-  port_connection *conn = find_connection(src_compref, src_port,
-    SYSTEM_COMPREF, system_port);
+  port_connection *conn = NULL;
+  if (translation == FALSE) { 
+    conn = find_connection(src_compref, src_port,
+      SYSTEM_COMPREF, system_port);
+  } else {
+    conn = find_connection(SYSTEM_COMPREF, src_port,
+      src_compref, system_port);
+  }
   if (conn != NULL) {
     switch (conn->conn_state) {
     case CONN_MAPPING:

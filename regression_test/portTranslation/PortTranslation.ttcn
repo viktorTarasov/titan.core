@@ -254,6 +254,11 @@ module PortTranslation {
 
 	type component MyComp {
 		port PT2 p;
+
+		// Extra port types to check if multiple map/unmaps does not make things go bad
+		port PT2 p11;
+		port PT2 p12;
+		port PT2 p13;
 	}
 
 	type component System {
@@ -261,13 +266,56 @@ module PortTranslation {
 		port P2 p2
 		port P3 p3
 
+		// Extra port types to check if multiple map/unmaps does not make things go bad
+		port P1 p11
+		port P1 p12
+		port P1 p13
+		port P1 p14
 	}
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
 	testcase tc_send() runs on MyComp system System {
+
+
+		// Several maps/unmaps but in the end only self:p and system:p1 will be mapped
 		map(self:p, system:p1);
+		map(self:p, system:p11);
+		map(self:p11, system:p1);
+		map(self:p, system:p11);
+		map(self:p, system:p12);
+		map(self:p, system:p13);
+		map(self:p, system:p14);
+		map(self:p, system:p13);
+		map(self:p, system:p12);
+		map(self:p, system:p11);
+
+		unmap(self:p, system:p11);
+		unmap(self:p, system:p11);
+		unmap(self:p11, system:p1);
+		unmap(self:p, system:p12);
+		unmap(self:p, system:p13);
+		unmap(self:p, system:p14);
+		unmap(self:p, system:p13);
+		unmap(self:p, system:p12);
+		unmap(self:p, system:p11);
+
+
+		map(self:p, system:p11);
+		map(self:p11, system:p1);
+		map(self:p11, system:p11);
+		map(self:p12, system:p11);
+		map(self:p13, system:p12);
+		map(self:p13, system:p12);
+
+		unmap(self:p, system:p11);
+		unmap(self:p11, system:p1);
+		unmap(self:p11, system:p11);
+		unmap(self:p12, system:p11);
+		unmap(self:p13, system:p12);
+		unmap(self:p13, system:p12);
+
 		var MyRec v_rec := { 'ABCDEF'O, Oct };
 
 		// Send octetstring with Oct, so the first mapping function will be successful
@@ -310,6 +358,7 @@ module PortTranslation {
 		v_rec := { '123456'O, None };
 		@try{
 			p.send(v_rec);
+			setverdict(fail, "DTE was expected");
 		} @catch (e) {
 			if (match(e, "Dynamic test case error: Outgoing message of type @PortTranslation.MyRec could not be handled by the type mapping rules on port p.")) {
 				setverdict(pass);
@@ -343,6 +392,25 @@ module PortTranslation {
 		t.stop;
 
 		unmap(self:p, system:p1);
+
+		// Map a lot of things to check if the next testcase runs independently
+
+		map(self:p, system:p1);
+		map(self:p, system:p11);
+		map(self:p, system:p11);
+		map(self:p, system:p12);
+		map(self:p, system:p13);
+		map(self:p, system:p14);
+		map(self:p, system:p13);
+		map(self:p, system:p12);
+		map(self:p, system:p11);
+
+		map(self:p, system:p11);
+		map(self:p11, system:p1);
+		map(self:p11, system:p11);
+		map(self:p12, system:p11);
+		map(self:p13, system:p12);
+		map(self:p13, system:p12);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -119,13 +119,13 @@ public:
   static void send_disconnected(const char *local_port,
     component remote_component, const char *remote_port);
   static void send_map_req(component src_component, const char *src_port,
-    const char *system_port);
+    const char *system_port, boolean translation);
   static void send_mapped(const char *local_port,
-    const char *system_port);
+    const char *system_port, boolean translation);
   static void send_unmap_req(component src_component,
-    const char *src_port, const char *system_port);
+    const char *src_port, const char *system_port, boolean translation);
   static void send_unmapped(const char *local_port,
-    const char *system_port);
+    const char *system_port, boolean translation);
 
   static void send_mtc_created();
   static void send_testcase_started(const char *testcase_module,
