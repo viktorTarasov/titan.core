@@ -3966,15 +3966,7 @@ static void print_makefile(struct makefile_struct *makefile)
       }
     }
     
-    for (i = 0; i < makefile->nBaseDirs; i++) {
-      fprintf(fp, "\n\n%s/%%.o: %s/%%.c\n"
-        "\t$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<\n\n", makefile->BaseDirs[i].dir_name, makefile->BaseDirs[i].dir_name);
-      fprintf(fp, "%s/%%.o: %s/%%.cc\n"
-            "\t$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<", makefile->BaseDirs[i].dir_name, makefile->BaseDirs[i].dir_name);
-    }
-    fputs("\n\n%.o: %.c $(GENERATED_HEADERS)\n"
-          "\t$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<\n\n", fp);
-    fputs("%.o: %.cc $(GENERATED_HEADERS)\n"
+    fputs("\n\n.cc.o .c.o:\n"
           "\t$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<\n\n", fp);
 
     if (makefile->gcc_dep) {
