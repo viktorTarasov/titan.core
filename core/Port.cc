@@ -54,11 +54,14 @@
 #include "../common/dbgnew.hh"
 
 PORT *PORT::list_head = NULL, *PORT::list_tail = NULL;
+PORT *PORT::system_list_head = NULL, *PORT::system_list_tail = NULL;
 
-void PORT::add_to_list()
+void PORT::add_to_list(boolean system)
 {
+  PORT **head = system == FALSE ? &list_head : &system_list_head;
+  PORT **tail = system == FALSE ? &list_tail : &system_list_tail;
   // check for duplicate names
-  for (PORT *p = list_head; p != NULL; p = p->list_next) {
+  for (PORT *p = *head; p != NULL; p = p->list_next) {
     // do nothing if this is already a member of the list
     if (p == this) return;
     else if (!strcmp(p->port_name, port_name))
@@ -66,28 +69,37 @@ void PORT::add_to_list()
         "name %s.", port_name);
   }
   // append this to the list
-  if (list_head == NULL) list_head = this;
-  else if (list_tail != NULL) list_tail->list_next = this;
-  list_prev = list_tail;
+  if (*head == NULL) *head = this;
+  else if (*tail != NULL) (*tail)->list_next = this;
+  list_prev = *tail;
   list_next = NULL;
-  list_tail = this;
+  *tail = this;
 }
 
-void PORT::remove_from_list()
+void PORT::remove_from_list(boolean system)
 {
+  PORT **head = system == FALSE ? &list_head : &system_list_head;
+  PORT **tail = system == FALSE ? &list_tail : &system_list_tail;
+  
   if (list_prev != NULL) list_prev->list_next = list_next;
-  else if (list_head == this) list_head = list_next;
+  else if (*head == this) *head = list_next;
   if (list_next != NULL) list_next->list_prev = list_prev;
-  else if (list_tail == this) list_tail = list_prev;
+  else if (*tail == this) *tail = list_prev;
   list_prev = NULL;
   list_next = NULL;
 }
 
-PORT *PORT::lookup_by_name(const char *par_port_name)
+PORT *PORT::lookup_by_name(const char *par_port_name, boolean system)
 {
-  for (PORT *port = list_head; port != NULL; port = port->list_next)
-    if (!strcmp(par_port_name, port->port_name)) return port;
-  return NULL;
+  if (system == FALSE) {
+    for (PORT *port = list_head; port != NULL; port = port->list_next)
+      if (!strcmp(par_port_name, port->port_name)) return port;
+    return NULL;
+  } else {
+    for (PORT *port = system_list_head; port != NULL; port = port->list_next)
+      if (!strcmp(par_port_name, port->port_name)) return port;
+    return NULL;
+  }
 }
 
 struct PORT::port_parameter {
@@ -115,10 +127,12 @@ void PORT::apply_parameter(port_parameter *par_ptr)
 
 void PORT::set_system_parameters(const char *system_port)
 {
-  for (port_parameter *par = parameter_head; par != NULL; par = par->next_par)
+  for (port_parameter *par = parameter_head; par != NULL; par = par->next_par) {
     if (par->component_id.id_selector == COMPONENT_ID_SYSTEM &&
-      (par->port_name == NULL || !strcmp(par->port_name, system_port)))
+      (par->port_name == NULL || !strcmp(par->port_name, system_port))) {
       set_parameter(par->parameter_name, par->parameter_value);
+    }
+  }
 }
 
 void PORT::add_parameter(const component_id_t& component_id,
@@ -278,7 +292,7 @@ PORT::PORT(const char *par_port_name)
 
 PORT::~PORT()
 {
-  if (is_active) deactivate_port();
+  if (is_active) deactivate_port(FALSE); //TODO false or true
 }
 
 void PORT::set_name(const char * name)
@@ -293,10 +307,10 @@ void PORT::log() const
   TTCN_Logger::log_event("port %s", port_name);
   }
 
-void PORT::activate_port()
+void PORT::activate_port(boolean system)
 {
   if (!is_active) {
-    add_to_list();
+    add_to_list(system);
     is_active = TRUE;
     msg_head_count = 0;
     msg_tail_count = 0;
@@ -311,7 +325,7 @@ void PORT::activate_port()
   }
 }
 
-void PORT::deactivate_port()
+void PORT::deactivate_port(boolean system)
 {
   if (is_active) {
     /* In order to proceed with the deactivation we must ignore the
@@ -343,11 +357,11 @@ void PORT::deactivate_port()
         TitanLoggerApi::Port__Misc_reason::removing__unterminated__mapping,
         port_name, NULL_COMPREF, system_port);
       try {
-        unmap(system_port);
+        unmap(system_port, system);
       } catch (const TC_Error&) { }
       if (is_parallel) {
         try {
-          TTCN_Communication::send_unmapped(port_name, system_port);
+          TTCN_Communication::send_unmapped(port_name, system_port, system);
         } catch (const TC_Error&) { }
       }
       Free(system_port);
@@ -365,14 +379,15 @@ void PORT::deactivate_port()
     Fd_And_Timeout_User::set_timer(this, 0.0);
     // File descriptor events of port connections are removed
     // in remove_connection
-    remove_from_list();
+    remove_from_list(system);
     is_active = FALSE;
   }
 }
 
 void PORT::deactivate_all()
 {
-  while (list_head != NULL) list_head->deactivate_port();
+  while (list_head != NULL) list_head->deactivate_port(FALSE);
+  while (system_list_head != NULL) system_list_head->deactivate_port(TRUE);
 }
 
 void PORT::clear()
@@ -391,6 +406,8 @@ void PORT::clear()
 void PORT::all_clear()
 {
   for (PORT *port = list_head; port != NULL; port = port->list_next)
+    port->clear();
+  for (PORT *port = system_list_head; port != NULL; port = port->list_next)
     port->clear();
 }
 
@@ -420,6 +437,8 @@ void PORT::all_start()
 {
   for (PORT *port = list_head; port != NULL; port = port->list_next)
     port->start();
+  for (PORT *port = system_list_head; port != NULL; port = port->list_next)
+    port->start();
 }
 
 void PORT::stop()
@@ -448,6 +467,8 @@ void PORT::all_stop()
 {
   for (PORT *port = list_head; port != NULL; port = port->list_next)
     port->stop();
+  for (PORT *port = system_list_head; port != NULL; port = port->list_next)
+    port->stop();
 }
 
 void PORT::halt()
@@ -474,6 +495,12 @@ void PORT::all_halt()
 {
   for (PORT *port = list_head; port != NULL; port = port->list_next)
     port->halt();
+  for (PORT *port = system_list_head; port != NULL; port = port->list_next)
+    port->halt();
+}
+
+boolean PORT::port_is_started() {
+  return is_started;
 }
 
 alt_status PORT::receive(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
@@ -2133,7 +2160,7 @@ void PORT::process_last_message(port_connection *conn_ptr)
   }
 }
 
-void PORT::map(const char *system_port)
+void PORT::map(const char *system_port, boolean translation)
 {
   if (!is_active) TTCN_error("Inactive port %s cannot be mapped.", port_name);
 
@@ -2142,19 +2169,33 @@ void PORT::map(const char *system_port)
     int str_diff = strcmp(system_port, system_mappings[new_posn]);
     if (str_diff < 0) break;
     else if (str_diff == 0) {
-      TTCN_warning("Port %s is already mapped to system:%s."
-        " Map operation was ignored.", port_name, system_port);
+      if (translation == FALSE) {
+        TTCN_warning("Port %s is already mapped to system:%s."
+          " Map operation was ignored.", port_name, system_port);
+      } else {
+        TTCN_warning("Port %s is already mapped to system:%s."
+          " Map operation was ignored.", system_port, port_name);
+      }
       return;
     }
   }
-
-  set_system_parameters(system_port);
+  if (translation == FALSE) {
+    set_system_parameters(system_port);
+  } else {
+    set_system_parameters(port_name);
+  }
 
   user_map(system_port);
 
-  TTCN_Logger::log_port_misc(
-    TitanLoggerApi::Port__Misc_reason::port__was__mapped__to__system,
-    port_name, SYSTEM_COMPREF, system_port);
+  if (translation == FALSE) {
+    TTCN_Logger::log_port_misc(
+      TitanLoggerApi::Port__Misc_reason::port__was__mapped__to__system,
+      port_name, SYSTEM_COMPREF, system_port);
+  } else {
+    TTCN_Logger::log_port_misc(
+      TitanLoggerApi::Port__Misc_reason::port__was__mapped__to__system,
+      system_port, SYSTEM_COMPREF, port_name);
+  }
 
   // the mapping shall be registered in the table only if user_map() was
   // successful
@@ -2170,7 +2211,7 @@ void PORT::map(const char *system_port)
     "addressing.", port_name);
 }
 
-void PORT::unmap(const char *system_port)
+void PORT::unmap(const char *system_port, boolean translation)
 {
   int del_posn;
   for (del_posn = 0; del_posn < n_system_mappings; del_posn++) {
@@ -2182,8 +2223,13 @@ void PORT::unmap(const char *system_port)
     }
   }
   if (del_posn >= n_system_mappings) {
-    TTCN_warning("Port %s is not mapped to system:%s. "
-      "Unmap operation was ignored.", port_name, system_port);
+    if (translation == FALSE) {
+      TTCN_warning("Port %s is not mapped to system:%s. "
+        "Unmap operation was ignored.", port_name, system_port);
+    } else {
+      TTCN_warning("Porta %s is not mapped to system:%s. "
+        "Unmap operation was ignored.", system_port, port_name);
+    }
     return;
   }
 
@@ -2439,27 +2485,42 @@ void PORT::terminate_local_connection(const char *src_port,
   }
 }
 
-void PORT::map_port(const char *component_port, const char *system_port)
+void PORT::map_port(const char *component_port, const char *system_port, boolean translation)
 {
-  PORT *port_ptr = lookup_by_name(component_port);
+  const char *port_name = translation == FALSE ? component_port : system_port;
+  PORT *port_ptr = lookup_by_name(port_name, translation);
   if (port_ptr == NULL) TTCN_error("Map operation refers to "
-    "non-existent port %s.", component_port);
+    "non-existent port %s.", port_name);
   if (port_ptr->connection_list_head != NULL) {
-    TTCN_error("Map operation is not allowed on a connected port (%s).", component_port);
+    TTCN_error("Map operation is not allowed on a connected port (%s).", port_name);
   }
-  port_ptr->map(system_port);
-  if (!TTCN_Runtime::is_single())
-    TTCN_Communication::send_mapped(component_port, system_port);
+  if (translation == FALSE) {
+    port_ptr->map(system_port, translation);
+  } else {
+    port_ptr->map(component_port, translation);
+  }
+  if (!TTCN_Runtime::is_single()) {
+    if (translation == FALSE) {
+      TTCN_Communication::send_mapped(component_port, system_port, translation);
+    } else {
+      TTCN_Communication::send_mapped(system_port, component_port, translation);
+    }
+  }
 }
 
-void PORT::unmap_port(const char *component_port, const char *system_port)
+void PORT::unmap_port(const char *component_port, const char *system_port, boolean translation)
 {
-  PORT *port_ptr = lookup_by_name(component_port);
+  const char *port_name = translation == FALSE ? component_port : system_port;
+  PORT *port_ptr = lookup_by_name(port_name, translation);
   if (port_ptr == NULL) TTCN_error("Unmap operation refers to "
-    "non-existent port %s.", component_port);
-  port_ptr->unmap(system_port);
+    "non-existent port %s.", port_name);
+  if (translation == FALSE) {
+    port_ptr->unmap(system_port, translation);
+  } else {
+    port_ptr->unmap(component_port, translation);
+  }
   if (!TTCN_Runtime::is_single())
-    TTCN_Communication::send_unmapped(component_port, system_port);
+    TTCN_Communication::send_unmapped(component_port, system_port, translation);
 }
 
 boolean PORT::check_port_state(const CHARSTRING& type) const
@@ -2489,6 +2550,12 @@ boolean PORT::any_check_port_state(const CHARSTRING& type)
       return TRUE;
     }
   }
+  for (PORT *port = system_list_head; port != NULL; port = port->list_next) {
+    result = port->check_port_state(type);
+    if (result) {
+      return TRUE;
+    }
+  }
   return FALSE;
 }
 
@@ -2496,6 +2563,9 @@ boolean PORT::all_check_port_state(const CHARSTRING& type)
 {
   boolean result = TRUE;
   for (PORT *port = list_head; port != NULL && result; port = port->list_next) {
+    result = port->check_port_state(type);
+  }
+  for (PORT *port = system_list_head; port != NULL && result; port = port->list_next) {
     result = port->check_port_state(type);
   }
   return result;

@@ -72,11 +72,11 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
     if (!pdef->legacy && pdef->port_type == USER) {
       // Mappings should only happen if the port it is mapped to has the same
       // outgoing message type as the mapping target.
-      src = mputstr(src, "if (false");
+      src = mputstr(src, "if (FALSE");
       for (size_t j = 0; j < pdef->provider_msg_outlist.nElements; j++) {
         for (size_t k = 0; k < pdef->provider_msg_outlist.elements[j].n_out_msg_type_names; k++) {
           if (strcmp(target->target_name, pdef->provider_msg_outlist.elements[j].out_msg_type_names[k]) == 0) {
-            src = mputprintf(src, " || p_%i != NULL", (int)j);
+            src = mputprintf(src, " || n_%i != 0", (int)j);
           }
         }
       }
@@ -268,9 +268,6 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
       /* has_buffer will be set to TRUE later */
     }
     if (!pdef->legacy && pdef->port_type == USER) {
-      // Beginning of the loop of the PARTIALLY_TRANSLATED case to process all
-      // messages
-      src = mputstr(src, "do {\n");
       src = mputstr(src, "TTCN_Runtime::set_translation_mode(TRUE, this);\n");
       src = mputstr(src, "TTCN_Runtime::set_port_state(-1, \"by test environment.\", TRUE);\n");
     }
@@ -435,9 +432,6 @@ static char *generate_incoming_mapping(char *src, const port_def *pdef,
       report_error = TRUE;
     }
     if (mapped_type->nTargets > 1) src = mputstr(src, "}\n");
-    if (pdef->port_type == USER && !pdef->legacy) {
-      src = mputstr(src, "} while (port_state == PARTIALLY_TRANSLATED);\n");
-    }
   } /* next mapping target */
   if (has_discard) {
     if (mapped_type->nTargets > 1) {
@@ -1674,7 +1668,9 @@ void defPortClass(const port_def* pdef, output_struct* output)
     def = mputstr(def, "private:\n");
     // Port type variables which can be the mapped ports for translation
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
-      def = mputprintf(def, "%s* p_%i;\n", pdef->provider_msg_outlist.elements[i].name, (int)i);
+      def = mputprintf(def,
+        "%s** p_%i;\n"
+        "size_t n_%i;\n", pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i);
     }
     def = mputstr(def, "translation_port_state port_state;\n");
     
@@ -1703,7 +1699,9 @@ void defPortClass(const port_def* pdef, output_struct* output)
   if (pdef->n_mapper_name > 0) {
     def = mputstr(def, "private:\n");
     for (i = 0; i < pdef->n_mapper_name; i++) {
-      def = mputprintf(def, "%s* p_%i;\n", pdef->mapper_name[i], (int)i);
+      def = mputprintf(def,
+        "%s** p_%i;\n"
+        "size_t n_%i;\n", pdef->mapper_name[i], (int)i, (int)i);
     }
   }
   
@@ -1728,13 +1726,17 @@ void defPortClass(const port_def* pdef, output_struct* output)
     "proc_queue_tail = NULL;\n");
   if (pdef->port_type == USER && !pdef->legacy) {
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
-      src = mputprintf(src, "p_%i = NULL;\n", (int)i);
+      src = mputprintf(src,
+        "p_%i = NULL;\n"
+        "n_%i = 0;\n", (int)i, (int)i);
     }
     src = mputprintf(src, "port_state = UNSET;\n");
   }
   // Port type variables in the provider types.
   for (i = 0; i < pdef->n_mapper_name; i++) {
-    src = mputprintf(src, "p_%i = NULL;\n", (int)i);
+    src = mputprintf(src,
+      "p_%i = NULL;\n"
+      "n_%i = 0;\n", (int)i, (int)i);
   }
   src = mputstr(src, "}\n\n");
 
@@ -2116,17 +2118,48 @@ void defPortClass(const port_def* pdef, output_struct* output)
     // add_port and remove_port is called after the map and unmap statements.
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
       def = mputprintf(def, "void add_port(%s* p);\n", pdef->provider_msg_outlist.elements[i].name);
-      src = mputprintf(src, "void %s::add_port(%s*p) {\np_%i = p;\n}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i);
+      src = mputprintf(src,
+        "void %s::add_port(%s*p) {\n"
+        "n_%i++;\n"
+        "p_%i = static_cast<%s**>(Realloc(p_%i, n_%i * sizeof(%s*)));\n"
+        "p_%i[n_%i-1] = p;\n"
+        "}\n\n",
+        class_name, pdef->provider_msg_outlist.elements[i].name, (int)i,
+        (int)i, pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i,
+        pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i);
       
-      def = mputprintf(def, "void remove_port(%s*);\n", pdef->provider_msg_outlist.elements[i].name);
-      src = mputprintf(src, "void %s::remove_port(%s*) {\np_%i = NULL;\n}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i);
+      def = mputprintf(def, "void remove_port(%s* p);\n", pdef->provider_msg_outlist.elements[i].name);
+      src = mputprintf(src,
+        "void %s::remove_port(%s* p) {\n"
+        "for (size_t i = 0; i < n_%i; i++) {\n"
+        "if (p_%i[i] == p) {\n"
+        "p_%i[i]->remove_port(static_cast<%s*>(this));\n"
+        "p_%i[i] = NULL;\n"
+        "}\n"
+        "}\n"
+        "size_t size = 0;\n"
+        "%s** port_list = NULL;\n"
+        "for (size_t i = 0; i < n_%i; i++) {\n"
+        "if (p_%i[i] != NULL) {\n"
+        "size++;\n"
+        "port_list = static_cast<%s**>(Realloc(port_list, size * sizeof(%s*)));\n"
+        "port_list[size-1] = p_%i[i];\n"
+        "}\n"
+        "}\n"
+        "Free(p_%i);\n"
+        "p_%i = port_list;\n"
+        "n_%i = size;\n"
+        "}\n\n", class_name, pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i,
+        (int)i, pdef->name, (int)i, pdef->provider_msg_outlist.elements[i].name, (int)i, (int)i,
+        pdef->provider_msg_outlist.elements[i].name, pdef->provider_msg_outlist.elements[i].name,
+        (int)i, (int)i, (int)i, (int)i);
     }
     
     // in_translation_mode returns true if one of the port type variables are not null
     def = mputstr(def, "boolean in_translation_mode() const;\n");
     src = mputprintf(src, "boolean %s::in_translation_mode() const {\nreturn ", class_name);
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
-      src = mputprintf(src, "p_%i != NULL%s",
+      src = mputprintf(src, "n_%i != 0%s",
         (int)i,
         i != pdef->provider_msg_outlist.nElements - 1 ? " || " : "");
     }
@@ -2143,7 +2176,13 @@ void defPortClass(const port_def* pdef, output_struct* output)
     def = mputstr(def, "void reset_port_variables();\n");
     src = mputprintf(src, "void %s::reset_port_variables() {\n", class_name);
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
-      src = mputprintf(src, "p_%i = NULL;\n", (int)i);
+      src = mputprintf(src,
+        "for (size_t i = 0; i < n_%i; i++) {\n"
+        "p_%i[i]->remove_port(static_cast<%s*>(this));\n"
+        "}\n"
+        "Free(p_%i);\n"
+        "p_%i = NULL;\n"
+        "n_%i = 0;\n", (int)i, (int)i, pdef->name, (int)i, (int)i, (int)i);
     }
     src = mputstr(src, "}\n\n");
     
@@ -2154,17 +2193,49 @@ void defPortClass(const port_def* pdef, output_struct* output)
     // add_port and remove_port is called after the map and unmap statements.
     for (i = 0; i < pdef->n_mapper_name; i++) {
       def = mputprintf(def, "void add_port(%s* p);\n", pdef->mapper_name[i]);
-      src = mputprintf(src, "void %s::add_port(%s*p) {\n p_%i = p;\n}\n\n", class_name, pdef->mapper_name[i], (int)i);
+      src = mputprintf(src,
+        "void %s::add_port(%s*p) {\n"
+        "n_%i++;\n"
+        "p_%i = static_cast<%s**>(Realloc(p_%i, n_%i * sizeof(%s*)));\n"
+        "p_%i[n_%i-1] = p;\n"
+        "}\n\n", class_name, pdef->mapper_name[i], (int)i, (int)i,
+        pdef->mapper_name[i], (int)i, (int)i, pdef->mapper_name[i],
+        (int)i, (int)i);
       
       def = mputprintf(def, "void remove_port(%s*);\n", pdef->mapper_name[i]);
-      src = mputprintf(src, "void %s::remove_port(%s*) {\n p_%i = NULL;\n}\n\n", class_name, pdef->mapper_name[i], (int)i);
+      src = mputprintf(src,
+        "void %s::remove_port(%s* p) {\n"
+        "for (size_t i = 0; i < n_%i; i++) {\n"
+        "if (p_%i[i] == p) {\n"
+        "p_%i[i] = NULL;\n"
+        "}\n"
+        "}\n"
+        "size_t size = 0;\n"
+        "%s** port_list = NULL;\n"
+        "for (size_t i = 0; i < n_%i; i++) {\n"
+        "if (p_%i[i] != NULL) {\n"
+        "size++;\n"
+        "port_list = static_cast<%s**>(Realloc(port_list, size * sizeof(%s*)));\n"
+        "port_list[size-1] = p_%i[i];\n"
+        "}\n"
+        "}\n"
+        "Free(p_%i);\n"
+        "p_%i = port_list;\n"
+        "n_%i = size;\n"
+        "}\n\n", class_name, pdef->mapper_name[i], (int)i,
+        (int)i, (int)i, pdef->mapper_name[i], (int)i, (int)i,
+        pdef->mapper_name[i], pdef->mapper_name[i],
+        (int)i, (int)i, (int)i, (int)i);
     }
     def = mputstr(def, "private:\n");
     // Resets all port type variables to NULL
     def = mputstr(def, "void reset_port_variables();\n");
     src = mputprintf(src, "void %s::reset_port_variables() {\n", class_name);
     for (i = 0; i < pdef->n_mapper_name; i++) {
-      src = mputprintf(src, "p_%i = NULL;\n", (int)i);
+      src = mputprintf(src,
+        "Free(p_%i);\n"
+        "p_%i = NULL;\n"
+        "n_%i = 0;\n", (int)i, (int)i, (int)i);
     }
     src = mputstr(src, "}\n\n");
   }
@@ -2221,9 +2292,11 @@ void defPortClass(const port_def* pdef, output_struct* output)
             }
             if (found) {
               src = mputprintf(src,
-                "if (p_%i != NULL) {\n"
-                "p_%i->outgoing_send(send_par);\n"
-                "return;\n}\n", (int)j, (int)j);
+                "for (size_t i = 0; i < n_%i; i++) {\n"
+                "if (p_%i[i] != NULL) {\n"
+                "p_%i[i]->outgoing_send(send_par);\n"
+                "return;\n}\n"
+                "}\n", (int)j, (int)j, (int)j);
             }
           }
           found = FALSE;
@@ -2282,9 +2355,11 @@ void defPortClass(const port_def* pdef, output_struct* output)
               }
               if (found) {
                 src = mputprintf(src,
-                  "if (p_%i != NULL) {\n"
-                  "p_%i->outgoing_send(send_par);\n"
-                  "return;\n}\n", (int)k, (int)k);
+                  "for (size_t i = 0; i < n_%i; i++) {\n"
+                  "if (p_%i[i] != NULL) {\n"
+                  "p_%i[i]->outgoing_send(send_par);\n"
+                  "return;\n}\n"
+                  "}\n", (int)k, (int)k, (int)k);
               }
             }
             found = FALSE;
@@ -2344,9 +2419,10 @@ void defPortClass(const port_def* pdef, output_struct* output)
       }
       def = mputstr(def, ") = 0;\n");
     }
-    def = mputstr(def, "public:\n");
   }
-
+  
+  def = mputstr(def, "public:\n");
+  
   /* Generic receive routines (without message type) */
   if (has_msg_queue) {
     /* generic receive function */
@@ -2609,10 +2685,12 @@ void defPortClass(const port_def* pdef, output_struct* output)
         // We forward the incoming_message to the mapped port
         for (size_t j = 0; j < pdef->n_mapper_name; j++) {
           src = mputprintf(src,
-            "if (p_%i != NULL) {\n"
-            "p_%i->incoming_message(incoming_par, sender_component);\n"
-            "return;\n}\n",
-            (int)j, (int)j);
+            "for (size_t i = 0; i < n_%i; i++) {\n"
+            "if (p_%i[i] != NULL) {\n"
+            "p_%i[i]->incoming_message(incoming_par, sender_component);\n"
+            "return;\n}"
+            "}\n",
+            (int)j, (int)j, (int)j);
         }
       }
       src = mputstr(src,

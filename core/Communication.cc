@@ -1021,42 +1021,46 @@ void TTCN_Communication::send_disconnected(const char *local_port,
 }
 
 void TTCN_Communication::send_map_req(component src_component,
-  const char *src_port, const char *system_port)
+  const char *src_port, const char *system_port, boolean translation)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_MAP_REQ);
   text_buf.push_int(src_component);
+  text_buf.push_int(translation == FALSE ? 0 : 1);
   text_buf.push_string(src_port);
   text_buf.push_string(system_port);
   send_message(text_buf);
 }
 
 void TTCN_Communication::send_mapped(const char *local_port,
-  const char *system_port)
+  const char *system_port, boolean translation)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_MAPPED);
+  text_buf.push_int(translation == FALSE ? 0 : 1);
   text_buf.push_string(local_port);
   text_buf.push_string(system_port);
   send_message(text_buf);
 }
 
 void TTCN_Communication::send_unmap_req(component src_component,
-  const char *src_port, const char *system_port)
+  const char *src_port, const char *system_port, boolean translation)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_UNMAP_REQ);
   text_buf.push_int(src_component);
+  text_buf.push_int(translation == FALSE ? 0 : 1);
   text_buf.push_string(src_port);
   text_buf.push_string(system_port);
   send_message(text_buf);
 }
 
 void TTCN_Communication::send_unmapped(const char *local_port,
-  const char *system_port)
+  const char *system_port, boolean translation)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_UNMAPPED);
+  text_buf.push_int(translation == FALSE ? 0 : 1);
   text_buf.push_string(local_port);
   text_buf.push_string(system_port);
   send_message(text_buf);
@@ -1734,12 +1738,16 @@ void TTCN_Communication::process_disconnect_ack()
 
 void TTCN_Communication::process_map()
 {
+  boolean translation = incoming_buf.pull_int().get_val() == 0 ? FALSE : TRUE;
   char *local_port = incoming_buf.pull_string();
   char *system_port = incoming_buf.pull_string();
   incoming_buf.cut_message();
 
   try {
-    PORT::map_port(local_port, system_port);
+    PORT::map_port(local_port, system_port, FALSE);
+    if (translation == TRUE) {
+      PORT::map_port(local_port, system_port, TRUE);
+    }
   } catch (...) {
     delete [] local_port;
     delete [] system_port;
@@ -1769,12 +1777,16 @@ void TTCN_Communication::process_map_ack()
 
 void TTCN_Communication::process_unmap()
 {
+  boolean translation = incoming_buf.pull_int().get_val() == 0 ? FALSE : TRUE;
   char *local_port = incoming_buf.pull_string();
   char *system_port = incoming_buf.pull_string();
   incoming_buf.cut_message();
 
   try {
-    PORT::unmap_port(local_port, system_port);
+    PORT::unmap_port(local_port, system_port, FALSE);
+    if (translation == TRUE) {
+      PORT::unmap_port(local_port, system_port, TRUE);
+    }
   } catch (...) {
     delete [] local_port;
     delete [] system_port;
