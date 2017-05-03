@@ -299,6 +299,7 @@ namespace Common {
 
     valuetype_t valuetype;
     Type *my_governor;
+    bool in_brackets;
     union {
       bool val_bool;
       int_val_t  *val_Int;
@@ -1024,6 +1025,8 @@ namespace Common {
     bool needs_short_circuit();
   public:
     virtual void dump(unsigned level) const;
+    void set_is_in_brackets();
+    bool get_is_in_brackets() const;
   private:
     inline void set_val_str(string *p_val_str)
       { u.str.val_str = p_val_str; u.str.str_elements = 0; }

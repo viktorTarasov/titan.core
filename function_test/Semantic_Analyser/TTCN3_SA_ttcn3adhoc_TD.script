@@ -7309,11 +7309,15 @@ control {} with{erroneous ""}
 (?im)\berror: Type `@virag.MYREC2' and type `@virag.MYREC' have no common encoding
 <END_RESULT>
 
+RESULT FTRT COUNT 1>
+(?im)\berror: Type `VisibleString' and type `@virag.MYREC' have no common encoding
+<END_RESULT>
+
 <RESULT COUNT 3>
 (?im)\berror: The `erroneous' attribute can be used only on template and constant definitions
 <END_RESULT>
 
-<RESULT FTRT COUNT 32>
+<RESULT FTRT COUNT 33>
 (?is)\berror:
 <END_RESULT>
 

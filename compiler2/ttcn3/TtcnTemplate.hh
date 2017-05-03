@@ -132,6 +132,7 @@ namespace Ttcn {
       struct {
         Template* op1;
         Template* op2;
+        bool in_brackets;
       } concat;
     } u;
 
@@ -359,6 +360,7 @@ namespace Ttcn {
     void chk_specific_value(bool allow_omit);
     void chk_specific_value_generic();
     void chk_invoke();
+    void chk_concat_double_length_res();
 
     /** Copy template elements from the "all from" into the template.
      *
