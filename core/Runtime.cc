@@ -1849,7 +1849,10 @@ void TTCN_Runtime::map_port(
   case SINGLE_TESTCASE:
     if (comp_reference != MTC_COMPREF) TTCN_error("Only the ports of mtc "
       "can be mapped in single mode.");
-    PORT::map_port(comp_port, system_port, translation);
+    PORT::map_port(comp_port, system_port, FALSE);
+    if (translation == TRUE) {
+      PORT::map_port(comp_port, system_port, TRUE);
+    }
     break;
   case MTC_TESTCASE:
     TTCN_Communication::send_map_req(comp_reference, comp_port,
@@ -1927,7 +1930,10 @@ void TTCN_Runtime::unmap_port(
   case SINGLE_TESTCASE:
     if (comp_reference != MTC_COMPREF) TTCN_error("Only the ports of mtc "
       "can be unmapped in single mode.");
-    PORT::unmap_port(comp_port, system_port, translation);
+    PORT::unmap_port(comp_port, system_port, FALSE);
+    if (translation == TRUE) {
+      PORT::unmap_port(comp_port, system_port, TRUE);
+    }
     break;
   case MTC_TESTCASE:
     TTCN_Communication::send_unmap_req(comp_reference, comp_port,

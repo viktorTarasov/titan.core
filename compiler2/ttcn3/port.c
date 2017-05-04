@@ -2243,8 +2243,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
   if (pdef->testport_type != INTERNAL &&
      (pdef->port_type == REGULAR || (pdef->port_type == USER && !pdef->legacy))) {
     /* virtual functions for transmission (implemented by the test port) */
-    def = mputprintf(def, "%s:\n",
-      (pdef->port_type == USER && !pdef->legacy) ? "public" : "protected");
+    def = mputstr(def, "protected:\n");
     /* outgoing_send functions */
     size_t n_used = 0;
     const char** used = NULL;
@@ -2291,10 +2290,12 @@ void defPortClass(const port_def* pdef, output_struct* output)
               }
             }
             if (found) {
+              // Call outgoing_public_send so the outgoing_send can remain
+              // protected
               src = mputprintf(src,
                 "for (size_t i = 0; i < n_%i; i++) {\n"
                 "if (p_%i[i] != NULL) {\n"
-                "p_%i[i]->outgoing_send(send_par);\n"
+                "p_%i[i]->outgoing_public_send(send_par);\n"
                 "return;\n}\n"
                 "}\n", (int)j, (int)j, (int)j);
             }
@@ -2354,10 +2355,12 @@ void defPortClass(const port_def* pdef, output_struct* output)
                 }
               }
               if (found) {
+                // Call outgoing_public_send so the outgoing_send can remain
+                // protected
                 src = mputprintf(src,
                   "for (size_t i = 0; i < n_%i; i++) {\n"
                   "if (p_%i[i] != NULL) {\n"
-                  "p_%i[i]->outgoing_send(send_par);\n"
+                  "p_%i[i]->outgoing_public_send(send_par);\n"
                   "return;\n}\n"
                   "}\n", (int)k, (int)k, (int)k);
               }
@@ -2422,6 +2425,18 @@ void defPortClass(const port_def* pdef, output_struct* output)
   }
   
   def = mputstr(def, "public:\n");
+  
+  // Generate new functions for provider types to avoid changing the visibility of outgoing_send
+  if (pdef->n_mapper_name > 0) {
+    for (i = 0; i < pdef->msg_out.nElements; i++) {
+      def = mputprintf(def, "void outgoing_public_send("
+        "const %s& send_par);\n", pdef->msg_out.elements[i].name);
+      src = mputprintf(src,
+        "void %s::outgoing_public_send(const %s& send_par) {\n"
+        "outgoing_send(send_par);\n"
+        "}\n\n", class_name, pdef->msg_out.elements[i].name);
+    }
+  }
   
   /* Generic receive routines (without message type) */
   if (has_msg_queue) {
@@ -3308,9 +3323,6 @@ void generateTestPortSkeleton(const port_def *pdef)
       class_name, base_class_name, class_name,
       pdef->port_type == REGULAR || pdef->port_type == USER ? " = NULL" : "", class_name);
 
-    if (pdef->port_type == PROVIDER && pdef->n_mapper_name > 0) {
-      fprintf(fp, "public:\n");
-    }
     for (i = 0; i < pdef->msg_out.nElements; i++) {
       fprintf(fp, "\tvoid outgoing_send(const %s& send_par",
         pdef->msg_out.elements[i].name);

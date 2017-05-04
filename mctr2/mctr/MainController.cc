@@ -5435,19 +5435,10 @@ void MainController::process_unmap_req(component_struct *tc)
     delete [] system_port;
     return;
   }
-  port_connection *conn = NULL;
-  if (translation == FALSE) { 
-    conn = find_connection(src_compref, src_port,
+  port_connection *conn = find_connection(src_compref, src_port,
       SYSTEM_COMPREF, system_port);
-  } else {
-    conn = find_connection(SYSTEM_COMPREF, src_port,
-      src_compref, system_port);
-  }
   if (conn == NULL) {
     send_unmap_ack(tc);
-    if (translation == TRUE) {
-      send_unmap(components[src_compref], src_port, system_port, TRUE);
-    }
   } else {
     switch (conn->conn_state) {
     case CONN_MAPPED:

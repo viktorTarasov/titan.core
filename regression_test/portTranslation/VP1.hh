@@ -45,7 +45,6 @@ protected:
 	void user_start();
 	void user_stop();
 
-public:
 	void outgoing_send(const INTEGER& send_par);
 	void outgoing_send(const CHARSTRING& send_par);
 	void outgoing_send(const RoI& send_par);

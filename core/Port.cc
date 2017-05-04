@@ -2173,7 +2173,7 @@ void PORT::map(const char *system_port, boolean translation)
         TTCN_warning("Port %s is already mapped to system:%s."
           " Map operation was ignored.", port_name, system_port);
       } else {
-        TTCN_warning("Port %s is already mapped to system:%s."
+        TTCN_warning("System:%s is already mapped to port %s."
           " Map operation was ignored.", system_port, port_name);
       }
       return;
@@ -2227,7 +2227,7 @@ void PORT::unmap(const char *system_port, boolean translation)
       TTCN_warning("Port %s is not mapped to system:%s. "
         "Unmap operation was ignored.", port_name, system_port);
     } else {
-      TTCN_warning("Porta %s is not mapped to system:%s. "
+      TTCN_warning("System:%s is not mapped to port %s. "
         "Unmap operation was ignored.", system_port, port_name);
     }
     return;
@@ -2254,6 +2254,8 @@ void PORT::unmap(const char *system_port, boolean translation)
   // Currently the requirement is that the port needs to map only when mapped 
   // to one port. If it would be mapped to more ports then this call would
   // remove all translation capability.
+  // This does not resets the 'port' variables in the port type definition, but
+  // the internal c++ port variables of the port type.
   if (n_system_mappings == 0) {
     reset_port_variables();
   }

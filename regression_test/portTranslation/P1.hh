@@ -49,7 +49,6 @@ protected:
 	void user_start();
 	void user_stop();
 
-public:
 	void outgoing_send(const MyRec& send_par);
 	void outgoing_send(const OCTETSTRING& send_par);
 	void outgoing_send(const BITSTRING& send_par);
