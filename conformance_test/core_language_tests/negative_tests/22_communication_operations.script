@@ -4398,7 +4398,7 @@ module NegSem_220302_GetcallOperation_015 {
 <END_MODULE>
 
 <RESULT COUNT >
-error: The encoding format parameter for the '@decoded' modifier is only available to parameter redirects of universal charstrings
+error: The encoding formal parameter for the '@decoded' modifier is only available to parameter redirects of universal charstrings
 <END_RESULT>
 
 <END_TC>
@@ -5526,7 +5526,7 @@ module NegSem_220304_getreply_operation_012 {
 <END_MODULE>
 
 <RESULT COUNT >
-error: The encoding format parameter for the '@decoded' modifier is only available to parameter redirects of universal charstrings
+error: The encoding formal parameter for the '@decoded' modifier is only available to parameter redirects of universal charstrings
 <END_RESULT>
 
 <END_TC>
