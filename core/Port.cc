@@ -503,6 +503,15 @@ boolean PORT::port_is_started() {
   return is_started;
 }
 
+PORT* PORT::get_provider_port() {
+  get_default_destination();
+  PORT* p = lookup_by_name(system_mappings[0], TRUE);
+  if (p == NULL) {
+    p = lookup_by_name(system_mappings[0], FALSE);
+  }
+  return p;
+}
+
 alt_status PORT::receive(const COMPONENT_template&, COMPONENT *, Index_Redirect*)
 {
   TTCN_Logger::log_matching_problem(

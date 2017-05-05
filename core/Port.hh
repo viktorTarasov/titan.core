@@ -138,6 +138,12 @@ public:
   
   boolean port_is_started();
   
+  // Returns the outer message port it is mapped to 
+  // when the port works in translation mode. Otherwise returns NULL.
+  // Emits errors when the port is mapped to more than one port or
+  // has both connections or mappings.
+  PORT* get_provider_port();
+  
   boolean check_port_state(const CHARSTRING& type) const;
   static boolean any_check_port_state(const CHARSTRING& type);
   static boolean all_check_port_state(const CHARSTRING& type);
