@@ -799,6 +799,31 @@ testcase tc_embedded_anytype() runs on MTC {
   f_bool2verdict(match(f_dec_embedded_any(os), x.emb_list[0].at_list[0]));
 }
 
+const MultiLevelRec c_multi_rec := {
+  uni := { x := 1 },
+  list := { val1 },
+  set_ := {
+    at := { integer := 1 },
+    list := { "abc", "xyz" }
+  }
+}
+
+// Coding a record with JSON encoding, whose fields are (sometimes multi-level) structures with no JSON encoding support.
+testcase tc_multi_level_record() runs on MTC {
+  var MultiLevelRec x := c_multi_rec;
+  var octetstring os := char2oct("{\"uni\":{\"x\":1},\"list\":[\"val1\"],\"set_\":{\"at\":{\"integer\":1},\"list\":[\"abc\",\"xyz\"]}}");
+  f_check_encoding(encoded:= f_enc_multi_rec(x), expected := os);
+  f_bool2verdict(match(f_dec_multi_rec(os), x));
+}
+
+// Coding a record of with JSON encoding, whose elements are multi-level structures with no JSON encoding support.
+testcase tc_multi_level_recordof() runs on MTC {
+  var MultiLevelList x := { c_multi_rec };
+  var octetstring os := char2oct("[{\"uni\":{\"x\":1},\"list\":[\"val1\"],\"set_\":{\"at\":{\"integer\":1},\"list\":[\"abc\",\"xyz\"]}}]");
+  f_check_encoding(encoded:= f_enc_multi_list(x), expected := os);
+  f_bool2verdict(match(f_dec_multi_list(os), x));
+}
+
 //=========================================================================
 // Control
 //=========================================================================
@@ -886,6 +911,8 @@ control {
   execute(tc_embedded_union());
   execute(tc_embedded_enumerated());
   execute(tc_embedded_anytype());
+  execute(tc_multi_level_record());
+  execute(tc_multi_level_recordof());
 }
 
 

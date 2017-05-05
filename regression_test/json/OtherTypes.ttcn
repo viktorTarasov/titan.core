@@ -78,6 +78,27 @@ with {
   encode (emb_list[-].at_list[-]) "JSON";
 }
 
+type record of NotSuppEnum NotSuppRecOfEnum;
+
+type set NotSuppSet {
+  anytype at,
+  NotSuppList list
+}
+
+type record MultiLevelRec {
+  NotSuppUni uni,
+  NotSuppRecOfEnum list,
+  NotSuppSet set_
+}
+with {
+  encode "JSON";
+}
+
+type record of MultiLevelRec MultiLevelList
+with {
+  encode "JSON";
+}
+
 }
 with {
   extension "anytype integer, charstring"
