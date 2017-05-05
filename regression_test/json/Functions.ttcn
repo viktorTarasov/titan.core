@@ -196,6 +196,12 @@ external function f_enc_embedded_enum(in UniWithEmbEncAttr.emb_list[-].en x) ret
   
 external function f_enc_embedded_any(in UniWithEmbEncAttr.emb_list[-].at_list[-] x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
+  
+external function f_enc_multi_rec(in MultiLevelRec x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+
+external function f_enc_multi_list(in MultiLevelList x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
 
 // for ASN.1 types
 external function f_enc_seqofint(in SeqOfInt x) return octetstring
@@ -388,6 +394,12 @@ external function f_dec_embedded_enum(in octetstring x) return UniWithEmbEncAttr
   with { extension "prototype(convert) decode(JSON)" }
   
 external function f_dec_embedded_any(in octetstring x) return UniWithEmbEncAttr.emb_list[-].at_list[-]
+  with { extension "prototype(convert) decode(JSON)" }
+
+external function f_dec_multi_rec(in octetstring x) return MultiLevelRec
+  with { extension "prototype(convert) decode(JSON)" }
+
+external function f_dec_multi_list(in octetstring x) return MultiLevelList
   with { extension "prototype(convert) decode(JSON)" }
 
 // for ASN.1 types

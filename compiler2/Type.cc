@@ -6087,7 +6087,9 @@ namespace Common {
               if (json_mem.has_key(t2)) {
                 switch (*json_mem.get(t2)) {
                 case ANSWER_YES:
-                  // This field is OK, but we still need to check the others
+                case MISSING_ATTRIBUTE:
+                  // This field is OK (or it's only missing an 'encode'
+                  // attribute), but we still need to check the others
                 case PROCESSING:
                   // This type contains itself and is in the process
                   // of being checked. Pretend it doesn't exist.
@@ -6096,18 +6098,29 @@ namespace Common {
                   // Avoids infinite recursion for self-referencing types. 
                   continue;
                 case ANSWER_NO:
-                case MISSING_ATTRIBUTE:
                   // One field is not OK => the structure is not OK
                   return json_mem.remember(t, ANSWER_NO);
                 }
               }
               else {
                 json_mem.remember(t2, PROCESSING);
-                bool enabled = t2->has_encoding(CT_JSON);
-                json_mem.remember(t2, enabled ? ANSWER_YES : ANSWER_NO);
-                if (!enabled) {
-                  // One field is not OK => the structure is not OK
-                  return json_mem.remember(t, ANSWER_NO);
+                if (t2->has_encoding(CT_JSON)) {
+                  // This field is OK
+                  json_mem.remember(t2, ANSWER_YES);
+                }
+                else {
+                  Type* t2_last = t2->get_type_refd_last();
+                  if (json_mem.has_key(t2_last) &&
+                      *json_mem.get(t2_last) == MISSING_ATTRIBUTE) {
+                    // This field is missing an 'encode' attribute, otherwise
+                    // it's OK
+                    json_mem.remember(t2, MISSING_ATTRIBUTE);
+                  }
+                  else {
+                    // One field is not OK => the structure is not OK
+                    json_mem.remember(t2, ANSWER_NO);
+                    return json_mem.remember(t, ANSWER_NO);
+                  }
                 }
               }
             }
@@ -6120,24 +6133,38 @@ namespace Common {
             if (json_mem.has_key(t2)) {
               switch (*json_mem.get(t2)) {
               case ANSWER_YES:
-                // Continue checking
+              case MISSING_ATTRIBUTE:
+                // The element type is OK (or it's only missing an 'encode'
+                // attribute)
               case PROCESSING:
                 // Recursive record-of. This is OK because the recursion
                 // can always be broken with an empty record-of.
                 break;
               case ANSWER_NO:
-              case MISSING_ATTRIBUTE:
+                // The element type is no OK => the structure is not OK
                 return json_mem.remember(t, ANSWER_NO);
                 break;
               }
             }
             else {
               json_mem.remember(t2, PROCESSING);
-              bool enabled = t2->has_encoding(CT_JSON);
-              json_mem.remember(t2, enabled ? ANSWER_YES : ANSWER_NO);
-              if (!enabled) {
-                // One field is not OK => the structure is not OK
-                return json_mem.remember(t, ANSWER_NO);
+              if (t2->has_encoding(CT_JSON)) {
+                // The element type is OK
+                json_mem.remember(t2, ANSWER_YES);
+              }
+              else {
+                Type* t2_last = t2->get_type_refd_last();
+                if (json_mem.has_key(t2_last) &&
+                    *json_mem.get(t2_last) == MISSING_ATTRIBUTE) {
+                  // The element type is missing an 'encode' attribute,
+                  // otherwise it's OK
+                  json_mem.remember(t2, MISSING_ATTRIBUTE);
+                }
+                else {
+                  // The element type is no OK => the structure is not OK
+                  json_mem.remember(t2, ANSWER_NO);
+                  return json_mem.remember(t, ANSWER_NO);
+                }
               }
             }
             break; // check for an encode attribute
