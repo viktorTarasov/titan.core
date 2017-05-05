@@ -17,7 +17,7 @@
 
 # Flags for the TTCN-3 and ASN.1 compiler:
 COMPILER_FLAGS := -s -g
-ifeq ($(RT2), yes)
+ifdef RT2
 COMPILER_FLAGS += -R
 endif
 

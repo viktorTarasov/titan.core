@@ -28,7 +28,7 @@ SCRIPTFLAGS += -coverage
 endif
 # Runtime selection
 #RT2 := yes
-ifeq ($(RT2), yes)
+ifdef RT2
 SCRIPTFLAGS += -rt2
 endif
 
