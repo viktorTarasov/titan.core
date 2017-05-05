@@ -4379,7 +4379,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"
       "      \"Encoding an unbound value of type %s.\");\n"
       "    return -1;\n"
-      "  }\n\n", name, !sdef->jsonAsValue ? " p_td" : "", dispname);
+      "  }\n\n", name, (sdef->nElements == 1 && !sdef->jsonAsValue) ? " p_td" : "", dispname);
     if (sdef->nElements == 1) {
       if (!sdef->jsonAsValue) {
         src = mputstr(src, "  if (NULL != p_td.json && p_td.json->as_value) {\n");
@@ -4428,7 +4428,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     // JSON decode, RT1
     src = mputprintf(src,
       "int %s::JSON_decode(const TTCN_Typedescriptor_t&%s, JSON_Tokenizer& p_tok, boolean p_silent)\n"
-      "{\n", name, !sdef->jsonAsValue ? " p_td" : "");
+      "{\n", name, (sdef->nElements == 1 && !sdef->jsonAsValue) ? " p_td" : "");
     
     if (sdef->nElements == 1) {
       if (!sdef->jsonAsValue) {
