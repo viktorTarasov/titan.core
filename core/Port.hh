@@ -139,10 +139,15 @@ public:
   boolean port_is_started();
   
   // Returns the outer message port it is mapped to 
-  // when the port works in translation mode. Otherwise returns NULL.
+  // when the port works in translation mode. 
+  // In the case of dual faced ports it returns the port object
+  // it is called on (this).
+  // Otherwise returns NULL.
   // Emits errors when the port is mapped to more than one port or
-  // has both connections or mappings.
-  PORT* get_provider_port();
+  // has both connections and mappings.
+  // This function is overridden only in the class of a port with translation
+  // capability and dual faced ports.
+  virtual PORT* get_provider_port();
   
   boolean check_port_state(const CHARSTRING& type) const;
   static boolean any_check_port_state(const CHARSTRING& type);

@@ -2112,9 +2112,29 @@ void defPortClass(const port_def* pdef, output_struct* output)
       "}\n\n", class_name, sig->name);
   }
 
+  if (pdef->port_type == USER) {
+    def = mputstr(def, "public:\n");
+    def = mputstr(def, "PORT* get_provider_port();");
+    src = mputprintf(src,
+      "PORT* %s::get_provider_port() {\n"
+      "(void)get_default_destination();\n", class_name);
+    if (pdef->legacy) {
+      src = mputstr(src, "return this;\n");
+    } else {
+      for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
+        src = mputprintf(src,
+          "for (size_t i = 0; i < n_%i; i++) {\n"
+          "if (p_%i[i] != NULL) {\n"
+          "return p_%i[i];\n"
+          "}\n"
+          "}\n", (int)i, (int)i, (int)i);
+      }
+      src = mputstr(src, "return NULL;\n");
+    }
+    src = mputstr(src, "}\n\n");
+  }
     
   if (pdef->port_type == USER && !pdef->legacy) {
-    def = mputstr(def, "public:\n");
     // add_port and remove_port is called after the map and unmap statements.
     for (i = 0; i < pdef->provider_msg_outlist.nElements; i++) {
       def = mputprintf(def, "void add_port(%s* p);\n", pdef->provider_msg_outlist.elements[i].name);
@@ -2170,7 +2190,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
       "void %s::change_port_state(translation_port_state state) {\n"
       "port_state = state;\n"
       "}\n\n", class_name);
-    
+        
     def = mputstr(def, "private:\n");
     // Resets all port type variables to NULL
     def = mputstr(def, "void reset_port_variables();\n");
