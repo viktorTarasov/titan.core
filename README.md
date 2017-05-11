@@ -133,7 +133,8 @@ Compressed update site and SHA512 checksum:
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.TLS.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.WTP.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SCTP.git 
-
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.CoAP.git 
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MQTT.git 
 
 ## Libraries:
 
