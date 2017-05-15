@@ -79,7 +79,9 @@ Compressed update site and SHA512 checksum:
 * https://github.com/eclipse/titan.TestPorts.TELNETasp
 * https://github.com/eclipse/titan.TestPorts.UDPasp
 * https://github.com/eclipse/titan.TestPorts.UNIX_DOMAIN_SOCKETasp
-* git://git.eclipse.org/gitroot/titan/titan.TestPorts.SocketCANasp.git
+* git://git.eclipse.org/gitroot/titan/titan.TestPorts.GPIO.git
+* git://git.eclipse.org/gitroot/titan/titan.TestPorts.MTP3.git
+* git://git.eclipse.org/gitroot/titan/titan.TestPorts.SocketCANasp.git 
  
  
 ## Protocol Modules:
@@ -135,6 +137,12 @@ Compressed update site and SHA512 checksum:
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SCTP.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.CoAP.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MQTT.git 
+
+
+## Protocol Emulations
+
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.SCCP.git
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.M3UA.git
 
 ## Libraries:
 
