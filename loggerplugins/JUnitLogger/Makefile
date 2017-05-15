@@ -37,7 +37,7 @@ CPPFLAGS += -I../../core -I$(ABS_SRC)/../../common -I$(ABS_SRC)/../../core
 # RT2 needs core2 (for RT2/TitanLoggerAPI.hh) in addition to core
 CPPFLAGS_RT2 := $(CPPFLAGS) -I$(ABS_SRC)/../../core2 -DTITAN_RUNTIME_2
 
-CXXFLAGS += -Werror
+CXXFLAGS +=
 
 LDFLAGS_ORIG	     := $(LDFLAGS)
 LDFLAGS              += -g -L$(ABS_SRC)/../../core  -Wl,-soname,$(SHARED_LIB).$(MAJOR) 				    -o $(SHARED_LIB).$(MAJOR).$(MINOR)
