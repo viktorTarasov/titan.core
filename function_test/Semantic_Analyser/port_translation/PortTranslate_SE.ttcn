@@ -130,7 +130,8 @@ module PortTranslate_SE { //^In TTCN-3 module//
 		out integer to charstring with bad_int_to_char2() : charstring with bad_int_to_char3() //^In \`function\' mapping\:// //error\: The input type of function \`\@PortTranslate_SE\.bad_int_to_char2\' must be the same as the source type of the mapping\: \`integer\' was expected instead of \`octetstring\'// //^error\: The output type of function \`\@PortTranslate_SE\.bad_int_to_char3\' must be the same as the target type of the mapping\: \`charstring\' was expected instead of \`octetstring\'//
 	}
 
-	function bad_int_to_char2(in octetstring a, out charstring b) {
+	/* No in before the first parameter to check if the first parameter defaults to in param */
+	function bad_int_to_char2(octetstring a, out charstring b) {
 
 	} with {
 		extension "prototype(fast)"

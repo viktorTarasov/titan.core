@@ -6354,6 +6354,17 @@ namespace Ttcn {
       }
     }
     
+    
+    // checking the formal parameter list, the check must come before the 
+    // chk_prototype() function call.
+    fp_list->chk(asstype);
+    // checking of return type
+    if (return_type) {
+      Error_Context cntxt2(return_type, "In return type");
+      return_type->chk();
+      return_type->chk_as_return_type(asstype == A_FUNCTION_RVAL,"function");
+    }
+    
     if (w_attrib_path) {
       w_attrib_path->chk_global_attrib();
       w_attrib_path->chk_no_qualif();
@@ -6421,14 +6432,7 @@ namespace Ttcn {
         }
       }
     }
-    // checking the formal parameter list
-    fp_list->chk(asstype);
-    // checking of return type
-    if (return_type) {
-      Error_Context cntxt2(return_type, "In return type");
-      return_type->chk();
-      return_type->chk_as_return_type(asstype == A_FUNCTION_RVAL,"function");
-    }
+
     // decision of startability
     is_startable = runs_on_ref != 0;
     if (is_startable && !fp_list->get_startability()) is_startable = false;
