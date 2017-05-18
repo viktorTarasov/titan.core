@@ -17,7 +17,8 @@
     <FolderResource projectRelativePath="src" relativeURI="src"/>
   </Folders>
   <Files>
-    <FileResource projectRelativePath="src/ModuleB.ttcn" relativeURI="src/ModuleB.ttcn"/>
+    <!-- ModuleBDiff.ttcn contains ModuleB TTCN module to check this case in the makefilegen -->
+    <FileResource projectRelativePath="src/ModuleBDiff.ttcn" relativeURI="src/ModuleBDiff.ttcn"/>
     <FileResource projectRelativePath="src/ModuleB2.ttcnpp" relativeURI="src/ModuleB2.ttcnpp"/>
     <FileResource projectRelativePath="src/ModuleB3.asn" relativeURI="src/ModuleB3.asn"/>
     <FileResource projectRelativePath="src/ModuleB4.xsd" relativeURI="src/ModuleB4.xsd"/>

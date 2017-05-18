@@ -2647,10 +2647,12 @@ static void print_makefile(struct makefile_struct *makefile)
     fputs("\nGENERATED_HEADERS =", fp);
     if (makefile->gnu_make) {
       int n_slices;
-      // If GNU make and split to slices code splitting set, then if we would
+      // If GNU make and any splitting set, then if we would
       // use the .cc=.hh then the _part_i.hh header files would be printed into
       // the makefile that would cause weird behavior.
-      if (makefile->code_splitting_mode != NULL && (n_slices = atoi(makefile->code_splitting_mode + 2))) {
+      if (makefile->code_splitting_mode != NULL &&
+           ((n_slices = atoi(makefile->code_splitting_mode + 2)) ||
+             strcmp(makefile->code_splitting_mode, "-U type") == 0)) {
         if (makefile->TTCN3ModulesRegular) {
           fputs(" $(TTCN3_MODULES:.ttcn=.hh)", fp);
           if (makefile->preprocess) {
@@ -2723,7 +2725,7 @@ static void print_makefile(struct makefile_struct *makefile)
             "modules of\n"
             "# central project(s):\n"
             "BASE_GENERATED_SOURCES =", fp);
-      if (makefile->gnu_make && ((makefile->BaseTTCN3ModulesRegular) || (!makefile->BaseTTCN3ModulesRegular && makefile->nXSDModules))) {
+      if (makefile->gnu_make && (makefile->BaseTTCN3ModulesRegular)) {
         fputs(" $(BASE_TTCN3_MODULES:.ttcn=.cc)", fp);
         if (makefile->code_splitting_mode) {
           for (i = 0; i < makefile->nTTCN3Modules; i++) {
@@ -2803,10 +2805,12 @@ static void print_makefile(struct makefile_struct *makefile)
       fputs("\nBASE_GENERATED_HEADERS =", fp);
       if (makefile->gnu_make) {
         int n_slices;
-        // If GNU make and split to slices code splitting set, then if we would
+        // If GNU make and any code splitting set, then if we would
         // use the .cc=.hh then the _part_i.hh header files would be printed into
         // the makefile that would cause weird behavior.
-        if (makefile->code_splitting_mode != NULL && (n_slices = atoi(makefile->code_splitting_mode + 2))) {
+        if (makefile->code_splitting_mode != NULL &&
+           ((n_slices = atoi(makefile->code_splitting_mode + 2)) ||
+             strcmp(makefile->code_splitting_mode, "-U type") == 0)) {
           if (makefile->TTCN3ModulesRegular) {
             fputs(" $(BASE_TTCN3_MODULES:.ttcn=.hh)", fp);
             if (makefile->preprocess) {
@@ -4545,11 +4549,11 @@ static void run_makefilegen_commands(struct string2_list* run_command_list)
     if ((error_count == 0) && act_elem->str1 && act_elem->str2) {
       int rv;
       char* sub_proj_effective_work_dir = act_elem->str1;
-      char* command = act_elem->str2;
       char* orig_dir = get_working_dir();
       rv = set_working_dir(sub_proj_effective_work_dir);
       if (rv) ERROR("Could not set working dir to `%s'", sub_proj_effective_work_dir);
       else {
+        char* command = act_elem->str2;
         fprintf(stderr, "Executing `%s' in working directory `%s'...\n",
                 command, sub_proj_effective_work_dir);
         rv = system(command);
