@@ -2098,12 +2098,16 @@ void Type::generate_code_Array(output_struct *target)
   if (has_encoding(CT_JSON)) {
     target->header.class_decls = mputprintf(target->header.class_decls,
       "class %s;\n", own_name);
+    string base_name = u.array.dimension->get_value_type(u.array.element_type, my_scope);
     target->header.class_defs = mputprintf(target->header.class_defs,
       "class %s : public %s {\n"
       "const TTCN_Typedescriptor_t* get_elem_descr() const;\n"
+      "public:\n"
+      "%s(): %s() {}\n"
+      "%s(const %s& p): %s(p) {}\n"
       "};\n\n",
-      own_name, 
-      u.array.dimension->get_value_type(u.array.element_type, my_scope).c_str());
+      own_name, base_name.c_str(), own_name, base_name.c_str(),
+      own_name, base_name.c_str(), base_name.c_str());
     target->source.methods = mputprintf(target->source.methods,
       "const TTCN_Typedescriptor_t* %s::get_elem_descr() const { return &%s_descr_; }\n\n",
       own_name, u.array.element_type->get_genname_typedescriptor(my_scope).c_str());
