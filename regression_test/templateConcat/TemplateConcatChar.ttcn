@@ -62,7 +62,7 @@ testcase tc_char_vt_values() runs on CT {
 
   var template charstring vt_char4 := "xx" & t_char & "xx";
   var template charstring vt_char4_exp := "xxdefxx";
-  
+
   if (log2str(vt_char1) != log2str(vt_char1_exp)) {
     setverdict(fail, "Expected: ", vt_char1_exp, ", got: ", vt_char1);
   }
