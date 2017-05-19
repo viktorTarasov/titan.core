@@ -6219,7 +6219,8 @@ namespace Common {
       else if (rawattrib && enable_raw()) return false;
       else if (textattrib && enable_text()) return false;
       else if (enable_xer()) return false;
-      else if (jsonattrib && enable_json()) return false;
+      else if ((jsonattrib || (!is_asn1() &&
+        hasEncodeAttr(get_encoding_name(CT_JSON)))) && enable_json()) return false;
       else return true;
     default:
       return false;
@@ -6635,7 +6636,7 @@ namespace Common {
        * descriptor.
        */
       if (t->is_tagged() || t->rawattrib || t->textattrib || t->jsonattrib ||
-          (!is_asn1() && t->hasEncodeAttr(get_encoding_name(CT_JSON))) ||
+          (!t->is_asn1() && t->hasEncodeAttr(get_encoding_name(CT_JSON))) ||
           (t->xerattrib && !t->xerattrib->empty() ))
       {
         return t->get_genname_own(p_scope);

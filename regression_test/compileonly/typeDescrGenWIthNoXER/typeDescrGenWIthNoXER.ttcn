@@ -1,0 +1,73 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// This module contains tests for the semantic analysis and code generation of
+// list types (record of, set of) with JSON encoding support.
+// Previously, the type descriptors of the lists' element types were not generated
+// if the XER codec was disabled (with the compiler option -X).
+
+module typeDescrGenWIthNoXER {
+
+// structured types used as element types
+type record Rec {
+  integer num,
+  charstring str
+}
+
+type record of integer IntList;
+
+type union Uni {
+  integer num,
+  octetstring oct
+}
+
+type bitstring BitArray[4];
+
+type enumerated Enum { val1, val2 }
+
+// 'record of' and 'set of' types with structured element types
+type record of Rec RecList;
+
+type set of IntList IntListList;
+
+type record of Uni UniList;
+
+type set of BitArray BitArrayList;
+
+type record of Enum EnumList;
+
+type set of anytype AnyList;
+
+// JSON coder functions for the list types
+external function f_enc_rec_list(in RecList x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" }
+
+external function f_dec_list_list(in octetstring x) return IntListList
+  with { extension "prototype(convert) decode(JSON)" }
+
+external function f_dec_uni_list(in octetstring x, out UniList y)
+  with { extension "prototype(fast) decode(JSON)" }
+
+external function f_dec_array_list(in BitArrayList x, out octetstring y)
+  with { extension "prototype(fast) encode(JSON)" }
+
+external function f_dec_enum_list(in octetstring x, out EnumList y) return integer
+  with { extension "prototype(backtrack) decode(JSON)" }
+
+external function f_dec_any_list(inout octetstring x, out AnyList y) return integer
+  with { extension "prototype(sliding) decode(JSON)" }
+
+}
+with {
+  encode "JSON";
+  extension "anytype integer, boolean";
+}
