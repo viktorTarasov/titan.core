@@ -1,0 +1,9 @@
+circularImport2
+circularImport2.exe
+ImportedAsn*.cc
+ImportedAsn*.hh
+ImportedLowerAsn*.cc
+ImportedLowerAsn*.hh
+ImportingAsn*.cc
+ImportingAsn*.hh
+compile

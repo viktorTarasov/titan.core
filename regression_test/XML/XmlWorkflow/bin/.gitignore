@@ -10,3 +10,4 @@ XmlTest
 XmlTest.exe
 *.stackdump
 *.txt
+XmlTest.log

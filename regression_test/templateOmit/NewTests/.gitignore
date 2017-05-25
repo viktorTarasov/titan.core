@@ -1,0 +1,12 @@
+templateOmitNew
+templateOmitNew.exe
+NewTestcases*.cc
+NewTestcases*.hh
+Templates*.cc
+Templates*.hh
+Templates.ttcn
+Types*.cc
+Types*.hh
+Types.ttcn
+templateOmitNew*.log
+compile

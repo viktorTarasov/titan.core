@@ -1,0 +1,17 @@
+PortTranslation
+PortTranslation.exe
+PortTranslation*.cc
+PortTranslation*.hh
+PortVariables*.cc
+PortVariables*.hh
+Setstate_neg*.cc
+Setstate_neg*.hh
+NP1*.cc
+NP1*.hh
+NPT2*.cc
+NPT2*.hh
+NVP1*.cc
+NVP1*.hh
+*.d
+PortTranslation*.log
+compile

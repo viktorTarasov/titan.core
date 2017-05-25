@@ -3,4 +3,7 @@ io
 io.exe
 io.d
 io.log
+IOAsn*.cc
+IOAsn*.hh
+IOAsn.d
 compile

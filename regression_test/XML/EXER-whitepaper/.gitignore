@@ -115,4 +115,4 @@ Whitespace_se[qt]of.cc
 Whitespace_union.cc
 Whitespace.ttcn
 *.d
-/EXERtest.log
+/EXERtest*.log

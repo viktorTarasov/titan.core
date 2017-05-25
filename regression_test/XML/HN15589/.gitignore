@@ -5,6 +5,8 @@ HN15589.??
 xtd[lp].??
 HN15589
 HN15589.exe
+HN15589-rt2
+HN15589-rt2.exe
 *result.xml
 *.d
-/HN15589.log
+HN15589*.log

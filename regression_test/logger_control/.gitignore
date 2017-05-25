@@ -1,6 +1,6 @@
 compile
 *.d
-TitanLoggerControl.??
+TitanLoggerControl.*
 logcontrol.??
 logcontrol
 logcontrol.exe

@@ -12,3 +12,12 @@ ucharstrOper.log
 cstr_content*.??
 *.gcno
 *.gcda
+EncDecvalueUnichar*.cc
+EncDecvalueUnichar*.hh
+Any2Unistr*.cc
+Any2Unistr*.hh
+Base64Testcases*.cc
+Base64Testcases*.hh
+UTF*Testcases*.cc
+UTF*Testcases*.hh
+compile

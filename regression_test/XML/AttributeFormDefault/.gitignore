@@ -1,0 +1,7 @@
+AttributeFormDefault
+AttributeFormDefault.exe
+AttributeForm*.cc
+AttributeForm*.hh
+*.d
+AttributeFormDefault.log
+compile

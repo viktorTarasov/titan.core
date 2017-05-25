@@ -1,0 +1,7 @@
+ustr
+ustr.exe
+ustr*.cc
+ustr*.hh
+*.d
+ustr.log
+compile

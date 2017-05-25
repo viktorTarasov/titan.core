@@ -1,0 +1,12 @@
+templateOmitLegacy
+templateOmitLegacy.exe
+LegacyTestcases*.cc
+LegacyTestcases*.hh
+Templates*.cc
+Templates*.hh
+Templates.ttcn
+Types*.cc
+Types*.hh
+Types.ttcn
+templateOmitLegacy*.log
+compile

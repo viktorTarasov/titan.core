@@ -1,0 +1,5 @@
+TemplatePatternRefTest
+TemplatePatternRefTest.exe
+TemplatePatternRefTest*.cc
+TemplatePatternRefTest*.hh
+TemplatePatternRefTest.log

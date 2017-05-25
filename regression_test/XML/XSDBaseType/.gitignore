@@ -1,0 +1,11 @@
+XSDBaseTypeTest
+XSDBaseTypeTest.exe
+XSDBaseTypeTest*.cc
+XSDBaseTypeTest*.hh
+schema*.cc
+schema*.hh
+UsefulTtcn3Types*
+XSD*
+*.d
+XSDBaseTypeTest.log
+compile

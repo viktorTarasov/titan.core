@@ -1,2 +1,9 @@
 compile*
+separate_ttcn
+separate_ttcn.exe
+separate_ttcn*.cc
+separate_ttcn*.hh
+separate_ttcnpp.ttcn
+separate_ttcnpp*.cc
+separate_ttcnpp*.hh
 Makefile
