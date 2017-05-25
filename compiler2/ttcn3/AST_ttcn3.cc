@@ -5563,11 +5563,12 @@ namespace Ttcn {
         "extern TIMER %s;\n", genname_str);
       if (default_duration) {
         // has default duration
-        if (default_duration->has_single_expr()) {
+        Value *v = default_duration->get_value_refd_last();
+        if (v->get_valuetype() == Value::V_REAL) {
           // duration is known at compilation time -> set in the constructor
           target->source.global_vars = mputprintf(target->source.global_vars,
             "TIMER %s(\"%s\", %s);\n", genname_str, dispname.c_str(),
-            default_duration->get_single_expr().c_str());
+            v->get_single_expr().c_str());
         } else {
           // duration is known only at runtime -> set in post_init
           target->source.global_vars = mputprintf(target->source.global_vars,
