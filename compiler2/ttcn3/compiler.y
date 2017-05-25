@@ -2096,8 +2096,8 @@ optPackageNameList:
 ;
 
 PackageNameList:
-  ',' FreeText
-|  PackageNameList ',' FreeText
+  ',' FreeText { Free($2); }
+|  PackageNameList ',' FreeText { Free($3); }
 ;
 
 ModuleBody:
