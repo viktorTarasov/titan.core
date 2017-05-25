@@ -396,15 +396,15 @@ function f_encDecTest_SIP_MessageType(in MessageType pl_pdu, in charstring pl_ex
 
 testcase tc_XmlTest_CAI3G_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict(xsd2ttcn_command & "Bulk.xsd GenericCai3gType.xsd Provisioning.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & " -z -g Bulk.xsd GenericCai3gType.xsd Provisioning.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
-      "schemas_ericsson_com_cai3g1_1.ttcn","schemas_ericsson_com_cai3g1_1_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "schemas_ericsson_com_cai3g1_1.ttcn","schemas_ericsson_com_cai3g1_1_e.ttcn", c_numOfDiff);
     f_compareFiles(
-      "schemas_ericsson_com_upg_bulkprovisioning_1_0.ttcn","schemas_ericsson_com_upg_bulkprovisioning_1_0_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "schemas_ericsson_com_upg_bulkprovisioning_1_0.ttcn","schemas_ericsson_com_upg_bulkprovisioning_1_0_e.ttcn", c_numOfDiff);
     f_compareFiles(
-      "schemas_ericsson_com_upg_provisioning_1_0.ttcn","schemas_ericsson_com_upg_provisioning_1_0_e.ttcn", c_numOfDiff_headerModNameAndNamespace);
+      "schemas_ericsson_com_upg_provisioning_1_0.ttcn","schemas_ericsson_com_upg_provisioning_1_0_e.ttcn", c_numOfDiff+1); // import misses _e
   }
 }
 
@@ -414,19 +414,19 @@ testcase tc_XmlTest_CCAPI_converter() runs on xmlTest_CT
 
   if(getverdict==pass) {
     f_compareFiles(
-      "NoTargetNamespace.ttcn","NoTargetNamespace_CCAPI_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "NoTargetNamespace.ttcn","NoTargetNamespace_CCAPI_e.ttcn", c_numOfDiff+1); // Module name
   }
 }
 
 testcase tc_XmlTest_HSS_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict(xsd2ttcn_command & "avg.xsd cai3g1.2_provisioning.xsd eps.xsd hssla_types.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "-z -g avg.xsd cai3g1.2_provisioning.xsd eps.xsd hssla_types.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
-      "schemas_ericsson_com_cai3g1_2.ttcn","schemas_ericsson_com_cai3g1_2_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "schemas_ericsson_com_cai3g1_2.ttcn","schemas_ericsson_com_cai3g1_2_e.ttcn", c_numOfDiff);
     f_compareFiles(
-      "schemas_ericsson_com_ma_HSS.ttcn","schemas_ericsson_com_ma_HSS_e.ttcn", 4+c_numOfDiff_headerAndModuleName);
+      "schemas_ericsson_com_ma_HSS.ttcn","schemas_ericsson_com_ma_HSS_e.ttcn", c_numOfDiff+1); // Import misses _e
   }
 }
 
@@ -436,41 +436,41 @@ testcase tc_XmlTest_JMdict_converter() runs on xmlTest_CT
 
   if(getverdict==pass) {
     f_compareFiles(
-      "NoTargetNamespace.ttcn","NoTargetNamespace_JMdict_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "NoTargetNamespace.ttcn","NoTargetNamespace_JMdict_e.ttcn", c_numOfDiff);
   }
 }
 
 testcase tc_XmlTest_MGW_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict(xsd2ttcn_command & "confd.xsd IntegratedSite.xsd IsTypes.xsd MainSwitch.xsd Mgw_R9B27.xsd Misc.xsd xml.xsd XMLSchema.xsd", "",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "-z confd.xsd IntegratedSite.xsd IsTypes.xsd MainSwitch.xsd Mgw_R9B27.xsd Misc.xsd xml.xsd XMLSchema.xsd", "",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
-      "tail_f_com_ns_confd_1_0.ttcn","tail_f_com_ns_confd_1_0_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "tail_f_com_ns_confd_1_0.ttcn","tail_f_com_ns_confd_1_0_e.ttcn", c_numOfDiff);
     f_compareFiles(
-      "www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02.ttcn","www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02_e.ttcn", 8+c_numOfDiff_headerAndModuleName);
+      "www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02.ttcn","www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02_e.ttcn", c_numOfDiff+2);// Imports misses _e
     f_compareFiles(
-      "www_ericsson_com_is_isco_IsTypes_R4L06_R4AB_1_02.ttcn","www_ericsson_com_is_isco_IsTypes_R4L06_R4AB_1_02_e.ttcn", 4+c_numOfDiff_headerAndModuleName);
+      "www_ericsson_com_is_isco_IsTypes_R4L06_R4AB_1_02.ttcn","www_ericsson_com_is_isco_IsTypes_R4L06_R4AB_1_02_e.ttcn", c_numOfDiff+1);// Import misses _e
     f_compareFiles(
-      "www_ericsson_com_is_isco_MainSwitch_R4L06_R4AB_1_02.ttcn","www_ericsson_com_is_isco_MainSwitch_R4L06_R4AB_1_02_e.ttcn", 8+c_numOfDiff_headerAndModuleName);
+      "www_ericsson_com_is_isco_MainSwitch_R4L06_R4AB_1_02.ttcn","www_ericsson_com_is_isco_MainSwitch_R4L06_R4AB_1_02_e.ttcn", c_numOfDiff+2);// Imports misses _e
     f_compareFiles(
-      "www_ericsson_com_is_isco_Mgw_R9B27.ttcn","www_ericsson_com_is_isco_Mgw_R9B27_e.ttcn", 8+c_numOfDiff_headerAndModuleName);
+      "www_ericsson_com_is_isco_Mgw_R9B27.ttcn","www_ericsson_com_is_isco_Mgw_R9B27_e.ttcn", c_numOfDiff);
     f_compareFiles(
-      "www_ericsson_com_is_isco_Misc_R4L06_R4AB_1_02.ttcn","www_ericsson_com_is_isco_Misc_R4L06_R4AB_1_02_e.ttcn", 4+c_numOfDiff_headerAndModuleName);
+      "www_ericsson_com_is_isco_Misc_R4L06_R4AB_1_02.ttcn","www_ericsson_com_is_isco_Misc_R4L06_R4AB_1_02_e.ttcn", c_numOfDiff+1);// Import misses _e
     f_compareFiles(
-      "www_w3_org_XML_1998_namespace.ttcn","www_w3_org_XML_1998_namespace_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "www_w3_org_XML_1998_namespace.ttcn","www_w3_org_XML_1998_namespace_e.ttcn", c_numOfDiff);
   }
 }
 
 testcase tc_XmlTest_MGW_HK84933_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict(xsd2ttcn_command & "IntegratedSite_HK84933.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & " -z IntegratedSite_HK84933.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
       "www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02.ttcn",
       "www_ericsson_com_is_isco_IntegratedSite_R4L06_R4AB_1_02_HK84933_e.ttcn",
-      c_numOfDiff_headerAndModuleName);
+      c_numOfDiff);
   }
 }
 
@@ -485,43 +485,43 @@ testcase tc_XmlTest_PAP_converter() runs on xmlTest_CT
 
   if(getverdict==pass) {
     f_compareFiles(
-      "NoTargetNamespace.ttcn","NoTargetNamespace_PAP_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "NoTargetNamespace.ttcn","NoTargetNamespace_PAP_e.ttcn", c_numOfDiff);
   }
 }
 
 testcase tc_XmlTest_ParlayX_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict(xsd2ttcn_command & "parlayx_common_types_2_0.xsd parlayx_payment_amount_charging_interface_2_0.xsd parlayx_payment_reserve_amount_charging_interface_2_0.xsd parlayx_payment_reserve_volume_charging_interface_2_0.xsd parlayx_payment_types_2_0.xsd parlayx_payment_volume_charging_interface_2_0.xsd", "",c_shell_successWithoutWarningAndError);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "-z parlayx_common_types_2_0.xsd parlayx_payment_amount_charging_interface_2_0.xsd parlayx_payment_reserve_amount_charging_interface_2_0.xsd parlayx_payment_reserve_volume_charging_interface_2_0.xsd parlayx_payment_types_2_0.xsd parlayx_payment_volume_charging_interface_2_0.xsd", "",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
-      "www_csapi_org_schema_parlayx_common_v2_0.ttcn","www_csapi_org_schema_parlayx_common_v2_0_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "www_csapi_org_schema_parlayx_common_v2_0.ttcn","www_csapi_org_schema_parlayx_common_v2_0_e.ttcn", c_numOfDiff);
     f_compareFiles(
-      "www_csapi_org_schema_parlayx_payment_amount_charging_v2_0_local.ttcn","www_csapi_org_schema_parlayx_payment_amount_charging_v2_0_local_e.ttcn", 8+c_numOfDiff_headerAndModuleName);
+      "www_csapi_org_schema_parlayx_payment_amount_charging_v2_0_local.ttcn","www_csapi_org_schema_parlayx_payment_amount_charging_v2_0_local_e.ttcn", 2+c_numOfDiff); // Imports misses _e
     f_compareFiles(
-      "www_csapi_org_schema_parlayx_payment_reserve_amount_charging_v2_0_local.ttcn","www_csapi_org_schema_parlayx_payment_reserve_amount_charging_v2_0_local_e.ttcn", 8+c_numOfDiff_headerAndModuleName);
+      "www_csapi_org_schema_parlayx_payment_reserve_amount_charging_v2_0_local.ttcn","www_csapi_org_schema_parlayx_payment_reserve_amount_charging_v2_0_local_e.ttcn", 2+c_numOfDiff);  // Imports misses _e
     f_compareFiles(
-      "www_csapi_org_schema_parlayx_payment_reserve_volume_charging_v2_0_local.ttcn","www_csapi_org_schema_parlayx_payment_reserve_volume_charging_v2_0_local_e.ttcn", 8+c_numOfDiff_headerAndModuleName);
+      "www_csapi_org_schema_parlayx_payment_reserve_volume_charging_v2_0_local.ttcn","www_csapi_org_schema_parlayx_payment_reserve_volume_charging_v2_0_local_e.ttcn", 2+c_numOfDiff); // Imports misses _e
     f_compareFiles(
-      "www_csapi_org_schema_parlayx_payment_v2_0.ttcn","www_csapi_org_schema_parlayx_payment_v2_0_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "www_csapi_org_schema_parlayx_payment_v2_0.ttcn","www_csapi_org_schema_parlayx_payment_v2_0_e.ttcn", c_numOfDiff);
     f_compareFiles(
-      "www_csapi_org_schema_parlayx_payment_volume_charging_v2_0_local.ttcn","www_csapi_org_schema_parlayx_payment_volume_charging_v2_0_local_e.ttcn", 8+c_numOfDiff_headerAndModuleName);
+      "www_csapi_org_schema_parlayx_payment_volume_charging_v2_0_local.ttcn","www_csapi_org_schema_parlayx_payment_volume_charging_v2_0_local_e.ttcn", 2+c_numOfDiff); // Imports misses _e
   }
 }
 
 testcase tc_XmlTest_PIDF_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict(xsd2ttcn_command & "pidf.xsd rlmi.xsd testschema.xsd xml_PIDF.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "-z pidf.xsd rlmi.xsd testschema.xsd xml_PIDF.xsd","",c_shell_successWithWarning);
 
   if(getverdict==pass) {
     f_compareFiles(
-      "ietf_params_xml_ns_pidf.ttcn","ietf_params_xml_ns_pidf_e.ttcn", 4+c_numOfDiff_headerAndModuleName);
+      "ietf_params_xml_ns_pidf.ttcn","ietf_params_xml_ns_pidf_e.ttcn", 1+c_numOfDiff); // Import misses _e
     f_compareFiles(
-      "ietf_params_xml_ns_pidf_status.ttcn","ietf_params_xml_ns_pidf_status_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "ietf_params_xml_ns_pidf_status.ttcn","ietf_params_xml_ns_pidf_status_e.ttcn", c_numOfDiff);
     f_compareFiles(
-      "ietf_params_xml_ns_rlmi.ttcn","ietf_params_xml_ns_rlmi_e.ttcn", 4+c_numOfDiff_headerAndModuleName);
+      "ietf_params_xml_ns_rlmi.ttcn","ietf_params_xml_ns_rlmi_e.ttcn", 1+c_numOfDiff); // Import misses _e
     f_compareFiles(
-      "www_w3_org_XML_1998_namespace.ttcn","www_w3_org_XML_1998_namespace_PIDF_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "www_w3_org_XML_1998_namespace.ttcn","www_w3_org_XML_1998_namespace_PIDF_e.ttcn", c_numOfDiff);
   }
 }
 
@@ -531,43 +531,53 @@ testcase tc_XmlTest_RLP_converter() runs on xmlTest_CT
 
   if(getverdict==pass) {
     f_compareFiles(
-      "NoTargetNamespace.ttcn","NoTargetNamespace_RLP_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "NoTargetNamespace.ttcn","NoTargetNamespace_RLP_e.ttcn", c_numOfDiff);
   }
 }
 
 testcase tc_XmlTest_RLXML_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict(xsd2ttcn_command & "RLXML_small.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "-z RLXML_small.xsd","",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
-      "ietf_params_xml_ns_resource_lists.ttcn","ietf_params_xml_ns_resource_lists_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "ietf_params_xml_ns_resource_lists.ttcn","ietf_params_xml_ns_resource_lists_e.ttcn", c_numOfDiff);
   }
 }
 
 testcase tc_XmlTest_ShData_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict(xsd2ttcn_command & "ShDataType.xsd","",c_shell_successWithWarning);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "-z ShDataType.xsd","",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
-      "schemas_ericsson_com_upg_dm_hss_sh_4_1.ttcn","schemas_ericsson_com_upg_dm_hss_sh_4_1_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "schemas_ericsson_com_upg_dm_hss_sh_4_1.ttcn","schemas_ericsson_com_upg_dm_hss_sh_4_1_e.ttcn", c_numOfDiff);
   }
 }
 
 testcase tc_XmlTest_SIPserver_converter() runs on xmlTest_CT
 {
-  f_shellCommandWithVerdict(xsd2ttcn_command & "SIP.xsd","",c_shell_successWithoutWarningAndError);
+  f_shellCommandWithVerdict(xsd2ttcn_command & "-z SIP.xsd","",c_shell_successWithoutWarningAndError);
 
   if(getverdict==pass) {
     f_compareFiles(
-      "uri_etsi_org_ngn_params_xml_simservs_sci.ttcn","uri_etsi_org_ngn_params_xml_simservs_sci_e.ttcn", c_numOfDiff_headerAndModuleName);
+      "uri_etsi_org_ngn_params_xml_simservs_sci.ttcn","uri_etsi_org_ngn_params_xml_simservs_sci_e.ttcn", c_numOfDiff);
   }
 }
 
 testcase tc_XmlTest_SIPserver_crgt_encDec() runs on xmlTest_CT
 {
   f_encDecTest_SIP_MessageType(c_sipserver_pdu1,c_sipserver_expectedEncodedPdu,c_sipserver_pdu1);
+}
+
+testcase tc_XmlTest_XML_RPC_converter() runs on xmlTest_CT
+{
+  f_shellCommandWithVerdict(xsd2ttcn_command & "-z XML_RPC.xsd","",c_shell_successWithWarning);
+
+  if(getverdict==pass) {
+    f_compareFiles(
+      "NoTargetNamespace_XML_RPC_e.ttcn","NoTargetNamespace.ttcn", c_numOfDiff);
+  }
 }
 
 //=========================================================================

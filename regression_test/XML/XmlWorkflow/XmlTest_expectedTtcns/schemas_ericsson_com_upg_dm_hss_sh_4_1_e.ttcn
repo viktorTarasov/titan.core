@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
@@ -25,17 +25,22 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- ShDataType.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "http://schemas.ericsson.com/upg/dm/hss-sh/4.1" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module schemas_ericsson_com_upg_dm_hss_sh_4_1 {
+module schemas_ericsson_com_upg_dm_hss_sh_4_1_e {
 
 
 import from XSD all;
@@ -378,6 +383,8 @@ with {
 type XSD.Boolean TBool
 with {
   variant "name as uncapitalized";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 };
 
 
@@ -537,8 +544,8 @@ type record TCSLocationInformation
 	TLocationNumber locationNumber optional,
 	union {
 		record length(0 .. 1) of TCellGlobalId cellGlobalId_list,
-		record length(0 .. 1) of TServiceAreaId serviceAreaId_list,
-		record length(0 .. 1) of TLocationAreaId locationAreaId_list
+		record length(1) of TServiceAreaId serviceAreaId_list,
+		record length(1) of TLocationAreaId locationAreaId_list
 	} choice,
 	TGeographicalInformation geographicalInformation optional,
 	TGeodeticInformation geodeticInformation optional,
@@ -575,8 +582,8 @@ type record TPSLocationInformation
 {
 	union {
 		record length(0 .. 1) of TCellGlobalId cellGlobalId_list,
-		record length(0 .. 1) of TServiceAreaId serviceAreaId_list,
-		record length(0 .. 1) of TLocationAreaId locationAreaId_list
+		record length(1) of TServiceAreaId serviceAreaId_list,
+		record length(1) of TLocationAreaId locationAreaId_list
 	} choice,
 	TRoutingAreaId routingAreaId optional,
 	TGeographicalInformation geographicalInformation optional,
@@ -639,9 +646,9 @@ type record TPublicIdentity
 {
 	union {
 		record length(0 .. 1) of TIdentitySet allIdentities_list,
-		record length(0 .. 1) of TIdentitySet registeredIdentities_list,
-		record length(0 .. 1) of TIdentitySet implicitIdentities_list,
-		record length(0 .. 1) of TIdentitySet aliasIdentities_list
+		record length(1) of TIdentitySet registeredIdentities_list,
+		record length(1) of TIdentitySet implicitIdentities_list,
+		record length(1) of TIdentitySet aliasIdentities_list
 	} choice,
 	record of TMSISDN mSISDN_list,
 	TPublicIdentityExtension extension_ optional,

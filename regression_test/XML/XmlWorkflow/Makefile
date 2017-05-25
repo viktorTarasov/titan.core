@@ -8,30 +8,19 @@
 # Contributors:
 #   Balasko, Jeno
 #   Raduly, Csaba
+#   Szabo, Bence Janos
 #
 ##############################################################################
 TOPDIR := ../..
 include   ../../Makefile.regression
 
-all: all1
+all: all1 all2
 
-run: run1
+run: run1 run2
 
-clean: clean1
+clean: clean1 clean2
 
-distclean: distclean1
-
-ifeq ($(XMLWORKFLOW),2)
-# Add more prerequisites to the targets
-all: all2
-
-run: run2
-
-clean: clean2
-
-distclean: distclean2
-endif
-
+distclean: distclean1 distclean2
 
 # for general XML tests
 all1: bin/Makefile

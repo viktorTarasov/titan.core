@@ -25,17 +25,22 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- cai3g1.2_provisioning.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "http://schemas.ericsson.com/cai3g1.2/" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module schemas_ericsson_com_cai3g1_2 {
+module schemas_ericsson_com_cai3g1_2_e {
 
 
 import from XSD all;
@@ -294,35 +299,47 @@ with {
 type record AbstractCreateAttributeType
 {
 
+}
+with {
+  variant "abstract";
 };
 
 
 type record AbstractSetAttributeType
 {
 
+}
+with {
+  variant "abstract";
 };
 
 
 type record AbstractGetAttributeType
 {
 
+}
+with {
+  variant "abstract";
 };
 
 
 type AbstractCreateAttributeType CreateMODefinition
 with {
+  variant "abstract";
   variant "element";
 };
 
 
 type AbstractSetAttributeType SetMODefinition
 with {
+  variant "abstract";
   variant "element";
 };
 
 
 type AbstractGetAttributeType GetMODefinition
 with {
+  variant "abstract";
   variant "element";
 };
 

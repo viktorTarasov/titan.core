@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_XML_RPC.ttcn
+//  File:          NoTargetNamespace.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -25,17 +25,22 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- XML_RPC.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "NoTargetNamespace" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_XML_RPC {
+module NoTargetNamespace_XML_RPC_e {
 
 
 import from XSD all;
@@ -52,7 +57,7 @@ type record MethodCall
 		methodName,
 		params
 	} order,
-	ASCIIString methodName,
+	XSD.String methodName (pattern "([A-Za-z0-9]|/|.|:|_)*"),
 	record {
 		record of ParamType param_list
 	} params optional
@@ -66,13 +71,13 @@ with {
 };
 
 
-/* What can appear inside a fault is very restricted */
 type record MethodResponse
 {
 	union {
 		record {
 			ParamType param_
 		} params,
+		/* What can appear inside a fault is very restricted */
 		record {
 			record {
 				record {
@@ -166,6 +171,10 @@ type XSD.String ASCIIString (pattern "([ -~]|\n|\r|\t)*");
 
 
 type XSD.Boolean NumericBoolean;
+//with {
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
+//};
 
 
 }

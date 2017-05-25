@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_PAP.ttcn
+//  File:          NoTargetNamespace.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -25,20 +25,43 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- PAP.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "NoTargetNamespace" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_PAP {
+module NoTargetNamespace_PAP_e {
 
 
 import from XSD all;
+
+
+const Push_message.replace_method c_defaultForEmpty_1 := all_;
+
+
+const Push_message.progress_notes_requested c_defaultForEmpty_2 := false_;
+
+
+const Quality_of_service.priority c_defaultForEmpty_3 := medium;
+
+
+const Quality_of_service.delivery_method c_defaultForEmpty_4 := notspecified;
+
+
+const Quality_of_service.network_required c_defaultForEmpty_5 := false_;
+
+
+const Quality_of_service.bearer_required c_defaultForEmpty_6 := false_;
 
 
 type record Address
@@ -80,6 +103,7 @@ with {
   variant (push_id) "name as 'push-id'";
   variant (push_id) "attribute";
   variant (address_list) "untagged";
+  variant (address_list[-]) "name as 'address'";
 };
 
 
@@ -94,6 +118,7 @@ with {
   variant (push_id) "name as 'push-id'";
   variant (push_id) "attribute";
   variant (cancel_result_list) "untagged";
+  variant (cancel_result_list[-]) "name as 'cancel-result'";
 };
 
 
@@ -109,6 +134,7 @@ with {
   variant (code) "attribute";
   variant (desc) "attribute";
   variant (address_list) "untagged";
+  variant (address_list[-]) "name as 'address'";
 };
 
 
@@ -205,13 +231,13 @@ type record Push_message
 	XSD.AnySimpleType deliver_before_timestamp optional,
 	XSD.AnySimpleType ppg_notify_requested_to optional,
 	enumerated {
-		true_,
-		false_
+		false_,
+		true_
 	} progress_notes_requested optional,
 	XSD.AnySimpleType push_id,
 	enumerated {
-		pending_only,
-		all_
+		all_,
+		pending_only
 	} replace_method optional,
 	XSD.AnySimpleType replace_push_id optional,
 	XSD.AnySimpleType source_reference optional,
@@ -229,21 +255,22 @@ with {
   variant (ppg_notify_requested_to) "attribute";
   variant (progress_notes_requested) "text 'false_' as 'false'";
   variant (progress_notes_requested) "text 'true_' as 'true'";
+  variant (progress_notes_requested) "defaultForEmpty as c_defaultForEmpty_2";
   variant (progress_notes_requested) "name as 'progress-notes-requested'";
-  variant (progress_notes_requested) "defaultForEmpty as 'false'";
   variant (progress_notes_requested) "attribute";
   variant (push_id) "name as 'push-id'";
   variant (push_id) "attribute";
   variant (replace_method) "text 'all_' as 'all'";
   variant (replace_method) "text 'pending_only' as 'pending-only'";
+  variant (replace_method) "defaultForEmpty as c_defaultForEmpty_1";
   variant (replace_method) "name as 'replace-method'";
-  variant (replace_method) "defaultForEmpty as 'all'";
   variant (replace_method) "attribute";
   variant (replace_push_id) "name as 'replace-push-id'";
   variant (replace_push_id) "attribute";
   variant (source_reference) "name as 'source-reference'";
   variant (source_reference) "attribute";
   variant (address_list) "untagged";
+  variant (address_list[-]) "name as 'address'";
   variant (quality_of_service) "name as 'quality-of-service'";
 };
 
@@ -269,6 +296,7 @@ with {
   variant (sender_name) "name as 'sender-name'";
   variant (sender_name) "attribute";
   variant (progress_note_list) "untagged";
+  variant (progress_note_list[-]) "name as 'progress-note'";
   variant (response_result) "name as 'response-result'";
 };
 
@@ -277,24 +305,24 @@ type record Quality_of_service
 {
 	XSD.AnySimpleType bearer optional,
 	enumerated {
-		true_,
-		false_
+		false_,
+		true_
 	} bearer_required optional,
 	enumerated {
 		confirmed,
+		notspecified,
 		preferconfirmed,
-		unconfirmed,
-		notspecified
+		unconfirmed
 	} delivery_method optional,
 	XSD.AnySimpleType network optional,
 	enumerated {
-		true_,
-		false_
+		false_,
+		true_
 	} network_required optional,
 	enumerated {
 		high,
-		medium,
-		low
+		low,
+		medium
 	} priority optional
 }
 with {
@@ -303,19 +331,19 @@ with {
   variant (bearer) "attribute";
   variant (bearer_required) "text 'false_' as 'false'";
   variant (bearer_required) "text 'true_' as 'true'";
+  variant (bearer_required) "defaultForEmpty as c_defaultForEmpty_6";
   variant (bearer_required) "name as 'bearer-required'";
-  variant (bearer_required) "defaultForEmpty as 'false'";
   variant (bearer_required) "attribute";
+  variant (delivery_method) "defaultForEmpty as c_defaultForEmpty_4";
   variant (delivery_method) "name as 'delivery-method'";
-  variant (delivery_method) "defaultForEmpty as 'notspecified'";
   variant (delivery_method) "attribute";
   variant (network) "attribute";
   variant (network_required) "text 'false_' as 'false'";
   variant (network_required) "text 'true_' as 'true'";
+  variant (network_required) "defaultForEmpty as c_defaultForEmpty_5";
   variant (network_required) "name as 'network-required'";
-  variant (network_required) "defaultForEmpty as 'false'";
   variant (network_required) "attribute";
-  variant (priority) "defaultForEmpty as 'medium'";
+  variant (priority) "defaultForEmpty as c_defaultForEmpty_3";
   variant (priority) "attribute";
 };
 
@@ -339,14 +367,14 @@ type record Resultnotification_message
 	XSD.AnySimpleType desc optional,
 	XSD.AnySimpleType event_time optional,
 	enumerated {
-		rejected,
-		pending,
-		delivered,
-		undeliverable,
-		expired,
 		aborted,
-		timeout_,
 		cancelled,
+		delivered,
+		expired,
+		pending,
+		rejected,
+		timeout_,
+		undeliverable,
 		unknown
 	} message_state,
 	XSD.AnySimpleType push_id,
@@ -408,6 +436,7 @@ with {
   variant (push_id) "name as 'push-id'";
   variant (push_id) "attribute";
   variant (address_list) "untagged";
+  variant (address_list[-]) "name as 'address'";
 };
 
 
@@ -422,6 +451,7 @@ with {
   variant (push_id) "name as 'push-id'";
   variant (push_id) "attribute";
   variant (statusquery_result_list) "untagged";
+  variant (statusquery_result_list[-]) "name as 'statusquery-result'";
 };
 
 
@@ -431,14 +461,14 @@ type record Statusquery_result
 	XSD.AnySimpleType desc optional,
 	XSD.AnySimpleType event_time optional,
 	enumerated {
-		rejected,
-		pending,
-		delivered,
-		undeliverable,
-		expired,
 		aborted,
-		timeout_,
 		cancelled,
+		delivered,
+		expired,
+		pending,
+		rejected,
+		timeout_,
+		undeliverable,
 		unknown
 	} message_state,
 	record of Address address_list,
@@ -455,6 +485,7 @@ with {
   variant (message_state) "name as 'message-state'";
   variant (message_state) "attribute";
   variant (address_list) "untagged";
+  variant (address_list[-]) "name as 'address'";
   variant (quality_of_service) "name as 'quality-of-service'";
 };
 

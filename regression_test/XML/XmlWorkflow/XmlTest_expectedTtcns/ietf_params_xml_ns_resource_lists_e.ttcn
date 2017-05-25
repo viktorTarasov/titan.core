@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
@@ -25,17 +25,22 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- RLXML_small.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "urn:ietf:params:xml:ns:resource-lists" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module ietf_params_xml_ns_resource_lists {
+module ietf_params_xml_ns_resource_lists_e {
 
 
 import from XSD all;
@@ -46,21 +51,20 @@ import from XSD all;
 
 type record ListType
 {
-	record of XSD.String attr,
 	XSD.String name optional,
+	record of XSD.String attr optional,
 	Display_nameType display_name optional,
 	record of record {
 		union {
-			record {
-			} list
+			ListType list
 		} choice
 	} sequence_list,
 	record of XSD.String elem_list
 }
 with {
   variant "name as uncapitalized";
-  variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
   variant (name) "attribute";
+  variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
   variant (display_name) "name as 'display-name'";
   variant (sequence_list) "untagged";
   variant (sequence_list[-]) "untagged";

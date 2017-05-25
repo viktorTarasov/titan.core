@@ -25,20 +25,31 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- Bulk.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "http://schemas.ericsson.com/upg/bulkprovisioning/1.0" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module schemas_ericsson_com_upg_bulkprovisioning_1_0 {
+module schemas_ericsson_com_upg_bulkprovisioning_1_0_e {
 
 
 import from XSD all;
+
+
+const XSD.UnsignedInt c_defaultForEmpty_1 := 1;
+
+
+const XSD.Boolean c_defaultForEmpty_2 := true;
 
 
 type record Resources
@@ -73,10 +84,12 @@ with {
   variant (resource_list[-].keys.key_list) "untagged";
   variant (resource_list[-].keys.key_list[-]) "name as 'key'";
   variant (resource_list[-].keys.key_list[-].name) "attribute";
-  variant (resource_list[-].keys.key_list[-].priority) "defaultForEmpty as '1'";
+  variant (resource_list[-].keys.key_list[-].priority) "defaultForEmpty as c_defaultForEmpty_1";
   variant (resource_list[-].keys.key_list[-].priority) "attribute";
-  variant (resource_list[-].keys.key_list[-].searchable) "defaultForEmpty as 'true'";
+  variant (resource_list[-].keys.key_list[-].searchable) "defaultForEmpty as c_defaultForEmpty_2";
   variant (resource_list[-].keys.key_list[-].searchable) "attribute";
+  //variant (resource_list[-].keys.key_list[-].searchable) "text 'true' as '1'";
+  //variant (resource_list[-].keys.key_list[-].searchable) "text 'false' as '0'";
   variant (resource_list[-].keys.key_list[-].value_) "name as 'value'";
   variant (resource_list[-].keys.key_list[-].value_) "attribute";
   variant (resource_list[-].resourceHomes.dataSource_list) "untagged";

@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
@@ -21,31 +21,39 @@
 //  References:
 //  Rev:
 //  Prodnr:
-//  Updated:       Thu Jan 28 15:35:13 2010
+//  Updated:
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- confd.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "http://tail-f.com/ns/confd/1.0" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module tail_f_com_ns_confd_1_0 {
+module tail_f_com_ns_confd_1_0_e {
 
 
 import from XSD all;
 
 
+/* This Schema is documented in the confd_ns(5) manual page. */
+
+
 type union InetAddress
 {
+	InetAddressDNS inetAddressDNS,
 	InetAddressIPv4 inetAddressIPv4,
-	InetAddressIPv6 inetAddressIPv6,
-	InetAddressDNS inetAddressDNS
+	InetAddressIPv6 inetAddressIPv6
 }
 with {
   variant "name as uncapitalized";
@@ -64,12 +72,16 @@ with {
 };
 
 
+/* IPV4 Address: The value space representation is as defined in
+        confd_types(3). */
 type XSD.String InetAddressIPv4 (pattern "(([0-1]#(0,1)[0-9]#(0,1)[0-9]|2[0-4][0-9]|25[0-5]).)#(1,3)([0-1]#(0,1)[0-9]#(0,1)[0-9]|2[0-4][0-9]|25[0-5])") length(7 .. 15)
 with {
   variant "name as uncapitalized";
 };
 
 
+/* IPV6 Address: The value space representation is as defined in
+        confd_types(3). */
 /* Full */
 /* Mixed */
 /* Shortened */
@@ -86,12 +98,14 @@ with {
 };
 
 
+/* RFC 4001 (INET-ADDRESS-MIB) */
 type XSD.UnsignedShort InetPortNumber
 with {
   variant "name as uncapitalized";
 };
 
 
+/* Number of bytes, e.g. S1G243K4B equals 1GB+243KB+4B. */
 type XSD.String Size (pattern "S([0-9]+G)#(0,1)([0-9]+M)#(0,1)([0-9]+K)#(0,1)([0-9]+B)#(0,1)")
 with {
   variant "name as uncapitalized";
@@ -107,51 +121,107 @@ type XSD.String DES3CBCEncryptedString;
 type XSD.String AESCFB128EncryptedString;
 
 
+/* For internal use only. */
 type XSD.String Atom
 with {
   variant "name as uncapitalized";
 };
 
 
+/* For internal use only. */
 type XSD.String HexValue (pattern "[0-9a-fA-F]*")
 with {
   variant "name as uncapitalized";
 };
 
 
+/* Hexadecimal List:
+        A list of octets on hexadecimal format separated with colons.
+	Example: 00:4F:4C:41 */
 type XSD.String HexList
 with {
   variant "name as uncapitalized";
 };
 
 
+/* Octet List: 
+        A list of octets on decimal format separated with dots.
+	Example: 192.168.0.1 */
 type XSD.String OctetList (pattern "(([0-1]#(0,1)[0-9]#(0,1)[0-9]|2[0-4][0-9]|25[0-5]).)*([0-1]#(0,1)[0-9]#(0,1)[0-9]|2[0-4][0-9]|25[0-5])")
 with {
   variant "name as uncapitalized";
 };
 
 
+/* Object Identifier: 
+        A list of integers separated with dots.
+        Example: 1.3.6.1.6.1.1
+	The OIDs are used in SNMP. */
 type XSD.String Oid (pattern "(([0-9]#(0,1)[0-9]*).)*([0-9]#(0,1)[0-9]*)#(0,1)")
 with {
   variant "name as uncapitalized";
 };
 
 
+/* Object reference:
+	An XPath reference to some element. */
 type XSD.String ObjectRef
 with {
   variant "name as uncapitalized";
 };
 
 
+/* From RFC 2578 (SMIv2) 7.1.6:
+
+	The Counter32 type represents a non-negative integer which
+	monotonically increases until it reaches a maximum value of 2^32-1
+	(4294967295 decimal), when it wraps around and starts increasing
+	again from zero.
+
+	Counters have no defined "initial" value, and thus, a single value of
+	a Counter has (in general) no information content.  Discontinuities
+	in the monotonically increasing value normally occur at re-
+	initialization of the management system, and at other times as
+	specified in the description of an object-type using this type. */
 type XSD.UnsignedInt Counter32;
 
 
+/* From RFC 2578 (SMIv2) 7.1.10:
+
+	The Counter64 type represents a non-negative integer which
+	monotonically increases until it reaches a maximum value of 2^64-1
+	(18446744073709551615 decimal), when it wraps around and starts
+	increasing again from zero.
+
+	Counters have no defined "initial" value, and thus, a single value of
+	a Counter has (in general) no information content.  Discontinuities
+	in the monotonically increasing value normally occur at re-
+	initialization of the management system, and at other times as
+	specified in the description of an object-type using this type. */
 type XSD.UnsignedLong Counter64;
 
 
+/* From RFC 2578 (SMIv2) 7.1.7:
+
+	The Gauge32 type represents a non-negative integer, which may
+	increase or decrease, but shall never exceed a maximum value, nor
+	fall below a minimum value.  The maximum value can not be greater
+	than 2^32-1 (4294967295 decimal), and the minimum value can not be
+	smaller than 0.  The value of a Gauge32 has its maximum value
+	whenever the information being modeled is greater than or equal to
+	its maximum value, and has its minimum value whenever the information
+	being modeled is smaller than or equal to its minimum value.  If the
+	information being modeled subsequently decreases below (increases
+	above) the maximum (minimum) value, the Gauge32 also decreases
+	(increases).  (Note that despite of the use of the term "latched" in
+	the original definition of this type, it does not become "stuck" at
+	its maximum or minimum value.) */
 type XSD.UnsignedInt Gauge32;
 
 
+/* The ipPrefix type represents an IP prefix and
+        is IP version neutral. The format of the textual
+        representations implies the IP version. */
 type union IpPrefix
 {
 	Ipv4Prefix alt_,
@@ -165,6 +235,17 @@ with {
 };
 
 
+/* The ipv4Prefix type represents an IPv4 address prefix.
+        The prefix length is given by the number following the
+        slash character and must be less than or equal 32. 
+
+        A prefix length value of n corresponds to an IP address
+        mask which has n contiguous 1-bits from the most
+        significant bit (MSB) and all other bits set to 0.
+
+        The IPv4 address represented in dotted quad notation 
+        should have all bits that do not belong to the prefix
+        set to zero. */
 /* Pattern is not converted due to using character categories and blocks in patterns is not supported. */
 type XSD.String Ipv4Prefix
 with {
@@ -172,6 +253,16 @@ with {
 };
 
 
+/* The ipv6Prefix type represents an IPv6 address prefix.
+        The prefix length is given by the number following the
+        slash character and must be less than or equal 128. 
+
+        A prefix length value of n corresponds to an IP address
+        mask which has n contiguous 1-bits from the most
+        significant bit (MSB) and all other bits set to 0.
+
+        The IPv6 address should have all bits that do not belong to
+        the prefix set to zero. */
 /* Pattern is not converted due to using character categories and blocks in patterns is not supported. */
 type XSD.String Ipv6Prefix
 with {
@@ -179,6 +270,38 @@ with {
 };
 
 
+/* The confdc compiler generates an XML W3C Schema whenever it
+        links a number of .xso files into a final .fxs file. This W3C
+        XML Schema can be used to describe, using a standard notation,
+        what actually goes over the wire, e.g. as a result to a
+        get-config operation.
+
+        Whenever an element has a default value the generated schema
+        uses this attribute, as a foreign attribute, rather than the
+        standard 'xs:default' attribute.
+
+        Consider this example: */
+/* < */
+/* xs:element name="size" type="xs:long" minOccurs="0"
+                    xmlns:confd="http://tail-f.com/ns/confd/1.0" confd:default="42" */
+/* > */
+/* In an instance document this means:
+
+        o If the size tag is left out; "42" is stored in the
+          configuration database. 
+        o If the size tag is empty, i.e. */
+/* < */
+/* size/ */
+/* > */
+/* , the empty string is
+          stored in the configuration database.
+        
+        Using the standard attribute this would have happened:
+
+        o If the size tag is left out no value would have been stored
+          in the configuration database. 
+        o If the size tag is empty "42" would have been stored in the
+          configuration database. */
 type XSD.AnySimpleType Default
 with {
   variant "name as uncapitalized";
@@ -186,13 +309,61 @@ with {
 };
 
 
+/* When the confdc compiler generates an XML W3C Schema, elements
+	to be used as operational data, i.e., having config="false",
+	are supplied with an xs:appinfo element, with the attribute
+	confd:config="false". */
 type XSD.Boolean Config
 with {
   variant "name as uncapitalized";
   variant "attribute";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 };
 
 
+/* Used to add custom error message to facets used in restritive
+	xs:simpleType constructs in confspec files.
+
+        Consider this example: */
+/* < */
+/* xs:simpleType name="foo" */
+/* > */
+/* < */
+/* xs:restriction base="xs:string" */
+/* > */
+/* < */
+/* xs:minLength value="7"/ */
+/* > */
+/* < */
+/* xs:maxLength value="15"/ */
+/* > */
+/* < */
+/* xs:pattern value="[a-z]*" */
+/* > */
+/* < */
+/* confd:error-app-tag */
+/* > */
+/* ... */
+/* < */
+/* /confd:error-app-tag */
+/* > */
+/* < */
+/* confd:error-message */
+/* > */
+/* ... */
+/* < */
+/* /confd:error-message */
+/* > */
+/* < */
+/* /xs:pattern */
+/* > */
+/* < */
+/* /xs:restriction */
+/* > */
+/* < */
+/* /xs:simpleType */
+/* > */
 type XSD.String ErrorMessage
 with {
   variant "name as uncapitalized";

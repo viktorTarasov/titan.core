@@ -25,25 +25,28 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- avg.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "http://schemas.ericsson.com/ma/HSS/" */
-//
 //	- eps.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "http://schemas.ericsson.com/ma/HSS/" */
-//
 //	- hssla_types.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "http://schemas.ericsson.com/ma/HSS/" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module schemas_ericsson_com_ma_HSS {
+module schemas_ericsson_com_ma_HSS_e {
 
 
 import from XSD all;
@@ -256,6 +259,8 @@ with {
 type XSD.Boolean EpsRoamingAllowedType
 with {
   variant "name as uncapitalized";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 };
 
 
@@ -282,7 +287,7 @@ with {
 /* AVG types */
 
 
-type XSD.String AvgEncryptedKType (pattern "[0-9A-F]#32")
+type XSD.String AvgEncryptedKType (pattern "[0-9A-F]#(32)")
 with {
   variant "name as uncapitalized";
 };
@@ -300,7 +305,7 @@ with {
 };
 
 
-type XSD.String AvgAmfType (pattern "[0-9A-F]#4")
+type XSD.String AvgAmfType (pattern "[0-9A-F]#(4)")
 with {
   variant "name as uncapitalized";
 };

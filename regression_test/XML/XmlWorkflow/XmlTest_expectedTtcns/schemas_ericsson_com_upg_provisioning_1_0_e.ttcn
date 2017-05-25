@@ -25,23 +25,34 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- Provisioning.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "http://schemas.ericsson.com/upg/provisioning/1.0" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module schemas_ericsson_com_upg_provisioning_1_0 {
+module schemas_ericsson_com_upg_provisioning_1_0_e {
 
 
 import from XSD all;
 
 
 import from schemas_ericsson_com_cai3g1_1_e all;
+
+
+const XSD.Int c_defaultForEmpty_1 := 1;
+
+
+const XSD.Boolean c_defaultForEmpty_2 := true;
 
 
 type record AnyDocumentType
@@ -152,10 +163,12 @@ with {
   variant (resourceId) "name as capitalized";
   variant (resourceId) "attribute";
   variant (resourceId_1) "name as 'ResourceId'";
+  variant (priority) "defaultForEmpty as c_defaultForEmpty_1";
   variant (priority) "name as capitalized";
-  variant (priority) "defaultForEmpty as '1'";
+  variant (searchable) "defaultForEmpty as c_defaultForEmpty_2";
   variant (searchable) "name as capitalized";
-  variant (searchable) "defaultForEmpty as 'true'";
+  //variant (searchable) "text 'true' as '1'";
+  //variant (searchable) "text 'false' as '0'";
 };
 
 
@@ -225,10 +238,12 @@ with {
   variant (resourceId) "name as capitalized";
   variant (resourceId) "attribute";
   variant (resourceId_1) "name as 'ResourceId'";
+  variant (priority) "defaultForEmpty as c_defaultForEmpty_1";
   variant (priority) "name as capitalized";
-  variant (priority) "defaultForEmpty as '1'";
+  variant (searchable) "defaultForEmpty as c_defaultForEmpty_2";
   variant (searchable) "name as capitalized";
-  variant (searchable) "defaultForEmpty as 'true'";
+  //variant (searchable) "text 'true' as '1'";
+  //variant (searchable) "text 'false' as '0'";
 };
 
 
@@ -249,10 +264,12 @@ with {
   variant (resourceId) "name as capitalized";
   variant (resourceId) "attribute";
   variant (resourceId_1) "name as 'ResourceId'";
+  variant (priority) "defaultForEmpty as c_defaultForEmpty_1";
   variant (priority) "name as capitalized";
-  variant (priority) "defaultForEmpty as '1'";
+  variant (searchable) "defaultForEmpty as c_defaultForEmpty_2";
   variant (searchable) "name as capitalized";
-  variant (searchable) "defaultForEmpty as 'true'";
+  //variant (searchable) "text 'true' as '1'";
+  //variant (searchable) "text 'false' as '0'";
 };
 
 
@@ -294,10 +311,7 @@ with {
 };
 
 
-type record CreateRepositoryIdsAttributesType
-{
-
-};
+type AbstractCreateAttributeType CreateRepositoryIdsAttributesType;
 
 
 type SetRepositoryIdsAttributesType SetRepositoryIdsAttributes

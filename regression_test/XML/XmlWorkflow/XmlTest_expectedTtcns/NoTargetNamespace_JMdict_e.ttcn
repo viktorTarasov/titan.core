@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_JMdict.ttcn
+//  File:          NoTargetNamespace.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -25,17 +25,22 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- jmdict-good.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "NoTargetNamespace" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_JMdict {
+module NoTargetNamespace_JMdict_e {
 
 
 import from XSD all;
@@ -48,6 +53,7 @@ type record JMdict
 with {
   variant "element";
   variant (entry_list) "untagged";
+  variant (entry_list[-]) "name as 'entry'";
 };
 
 
@@ -63,8 +69,11 @@ with {
   variant "name as uncapitalized";
   variant "element";
   variant (k_ele_list) "untagged";
+  variant (k_ele_list[-]) "name as 'k_ele'";
   variant (r_ele_list) "untagged";
+  variant (r_ele_list[-]) "name as 'r_ele'";
   variant (sense_list) "untagged";
+  variant (sense_list[-]) "name as 'sense'";
 };
 
 
@@ -85,7 +94,9 @@ with {
   variant "name as uncapitalized";
   variant "element";
   variant (ke_inf_list) "untagged";
+  variant (ke_inf_list[-]) "name as 'ke_inf'";
   variant (ke_pri_list) "untagged";
+  variant (ke_pri_list[-]) "name as 'ke_pri'";
 };
 
 
@@ -125,8 +136,11 @@ with {
   variant "element";
   variant (choice) "untagged";
   variant (choice.re_restr_list) "untagged";
+  variant (choice.re_restr_list[-]) "name as 're_restr'";
   variant (re_inf_list) "untagged";
+  variant (re_inf_list[-]) "name as 're_inf'";
   variant (re_pri_list) "untagged";
+  variant (re_pri_list[-]) "name as 're_pri'";
 };
 
 
@@ -215,7 +229,7 @@ type record Sense
 	S_inf s_inf optional,
 	union {
 		record of Dial dial_list,
-		record of Lsource lsource_list
+		record length(1 .. infinity) of Lsource lsource_list
 	} choice,
 	record of Gloss gloss_list
 }
@@ -223,16 +237,26 @@ with {
   variant "name as uncapitalized";
   variant "element";
   variant (stagk_list) "untagged";
+  variant (stagk_list[-]) "name as 'stagk'";
   variant (stagr_list) "untagged";
+  variant (stagr_list[-]) "name as 'stagr'";
   variant (pos_list) "untagged";
+  variant (pos_list[-]) "name as 'pos'";
   variant (xref_list) "untagged";
+  variant (xref_list[-]) "name as 'xref'";
   variant (ant_list) "untagged";
+  variant (ant_list[-]) "name as 'ant'";
   variant (field_list) "untagged";
+  variant (field_list[-]) "name as 'field'";
   variant (misc_list) "untagged";
+  variant (misc_list[-]) "name as 'misc'";
   variant (choice) "untagged";
   variant (choice.dial_list) "untagged";
+  variant (choice.dial_list[-]) "name as 'dial'";
   variant (choice.lsource_list) "untagged";
+  variant (choice.lsource_list[-]) "name as 'lsource'";
   variant (gloss_list) "untagged";
+  variant (gloss_list[-]) "name as 'gloss'";
 };
 
 

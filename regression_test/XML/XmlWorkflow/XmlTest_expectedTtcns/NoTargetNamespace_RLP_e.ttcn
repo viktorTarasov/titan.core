@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_RLP.ttcn
+//  File:          NoTargetNamespace.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -25,20 +25,109 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- RLP_SVC.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "NoTargetNamespace" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_RLP {
+module NoTargetNamespace_RLP_e {
 
 
 import from XSD all;
+
+
+const Client.type_ c_defaultForEmpty_1 := x1;
+
+
+const Esrd.type_ c_defaultForEmpty_2 := nA;
+
+
+const Esrk.type_ c_defaultForEmpty_3 := nA;
+
+
+const Loc_type.type_ c_defaultForEmpty_4 := cURRENT;
+
+
+const Msid.type_ c_defaultForEmpty_5 := mSISDN;
+
+
+const Msid.enc c_defaultForEmpty_6 := aSC;
+
+
+const Poi.flag c_defaultForEmpty_7 := oFF;
+
+
+const Prio.type_ c_defaultForEmpty_8 := nORMAL;
+
+
+const Requestmode.type_ c_defaultForEmpty_9 := pASSIVE;
+
+
+const Requestor.type_ c_defaultForEmpty_10 := mSISDN;
+
+
+const Resp_req.type_ c_defaultForEmpty_11 := dELAY_TOL;
+
+
+const XSD.AnySimpleType c_defaultForEmpty_12 := "1.0.0";
+
+
+const Serving_node_action.active_type c_defaultForEmpty_13 := pOSITION_NOT_ALLOWED;
+
+
+const Srlir.res_type c_defaultForEmpty_14 := sYNC;
+
+
+const XSD.AnySimpleType c_defaultForEmpty_15 := "0000";
+
+
+const Supported_shapes.point c_defaultForEmpty_16 := nO;
+
+
+const Supported_shapes.lineString c_defaultForEmpty_17 := nO;
+
+
+const Supported_shapes.polygon c_defaultForEmpty_18 := nO;
+
+
+const Supported_shapes.box c_defaultForEmpty_19 := nO;
+
+
+const Supported_shapes.circularArea c_defaultForEmpty_20 := nO;
+
+
+const Supported_shapes.circularArcArea c_defaultForEmpty_21 := nO;
+
+
+const Supported_shapes.ellipticalArea c_defaultForEmpty_22 := nO;
+
+
+const Supported_shapes.multiLineString c_defaultForEmpty_23 := nO;
+
+
+const Supported_shapes.multiPoint c_defaultForEmpty_24 := nO;
+
+
+const Supported_shapes.multiPolygon c_defaultForEmpty_25 := nO;
+
+
+const Supported_shapes.linearRing c_defaultForEmpty_26 := nO;
+
+
+const Supported_shapes.altitude c_defaultForEmpty_27 := nO;
+
+
+const Uc_id.status c_defaultForEmpty_28 := cURRENT;
 
 
 type record Box
@@ -141,6 +230,7 @@ with {
   variant (gid) "attribute";
   variant (srsName) "attribute";
   variant (coord_list) "untagged";
+  variant (coord_list[-]) "name as 'coord'";
 };
 
 
@@ -160,6 +250,7 @@ with {
   variant (coord_1) "name as 'coord'";
   variant (coord_2) "name as 'coord'";
   variant (coord_list) "untagged";
+  variant (coord_list[-]) "name as 'coord'";
 };
 
 
@@ -174,6 +265,7 @@ with {
   variant (gid) "attribute";
   variant (srsName) "attribute";
   variant (lineString_list) "untagged";
+  variant (lineString_list[-]) "name as 'LineString'";
 };
 
 
@@ -188,6 +280,7 @@ with {
   variant (gid) "attribute";
   variant (srsName) "attribute";
   variant (point_list) "untagged";
+  variant (point_list[-]) "name as 'Point'";
 };
 
 
@@ -242,6 +335,7 @@ with {
   variant (gid) "attribute";
   variant (srsName) "attribute";
   variant (innerBoundaryIs_list) "untagged";
+  variant (innerBoundaryIs_list[-]) "name as 'innerBoundaryIs'";
 };
 
 
@@ -456,8 +550,8 @@ with {
 type record Change_area
 {
 	enumerated {
-		tRUE,
-		fALSE
+		fALSE,
+		tRUE
 	} loc_estimates,
 	enumerated {
 		mS_ENTERING,
@@ -502,8 +596,8 @@ with {
   variant (type_) "text 'x1' as '1'";
   variant (type_) "text 'x2' as '2'";
   variant (type_) "text 'x3' as '3'";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_1";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as '1'";
   variant (type_) "attribute";
 };
 
@@ -626,19 +720,20 @@ with {
   variant (eme_trigger) "text 'eME_REL' as capitalized";
   variant (eme_trigger) "attribute";
   variant (eme_pos_list) "untagged";
+  variant (eme_pos_list[-]) "name as 'eme_pos'";
 };
 
 
 type record Eme_pos
 {
 	enumerated {
-		cELL,
-		oTDOA,
-		gPS,
 		a_GPS,
+		cELL,
 		e_OTD,
-		u_TDOA,
-		oTHER
+		gPS,
+		oTDOA,
+		oTHER,
+		u_TDOA
 	} pos_method optional,
 	Msid msid,
 	union {
@@ -693,8 +788,8 @@ with {
   variant "embedValues";
   variant "element";
   variant (type_) "text 'nA' as capitalized";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_2";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as 'NA'";
   variant (type_) "attribute";
 };
 
@@ -711,8 +806,8 @@ with {
   variant "embedValues";
   variant "element";
   variant (type_) "text 'nA' as capitalized";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_3";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as 'NA'";
   variant (type_) "attribute";
 };
 
@@ -915,10 +1010,10 @@ type record Loc_type
 {
 	enumerated {
 		cURRENT,
-		lAST,
 		cURRENT_OR_LAST,
 		cURRENT_OR_LAST_AS_FALLBACK,
-		iNITIAL
+		iNITIAL,
+		lAST
 	} type_ optional
 }
 with {
@@ -929,8 +1024,8 @@ with {
   variant (type_) "text 'cURRENT_OR_LAST_AS_FALLBACK' as capitalized";
   variant (type_) "text 'iNITIAL' as capitalized";
   variant (type_) "text 'lAST' as capitalized";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_4";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as 'CURRENT'";
   variant (type_) "attribute";
 };
 
@@ -1002,16 +1097,16 @@ type record Msid
 		cRP
 	} enc optional,
 	enumerated {
-		mSISDN,
-		iMSI,
-		iMEI,
-		mIN,
-		mDN,
-		eME_MSID,
 		aSID,
-		oPE_ID,
+		eME_MSID,
+		iMEI,
+		iMSI,
 		iPV4,
 		iPV6,
+		mDN,
+		mIN,
+		mSISDN,
+		oPE_ID,
 		sESSID,
 		sIP_URI,
 		tEL_URL
@@ -1023,7 +1118,7 @@ with {
   variant "element";
   variant (enc) "text 'aSC' as capitalized";
   variant (enc) "text 'cRP' as capitalized";
-  variant (enc) "defaultForEmpty as 'ASC'";
+  variant (enc) "defaultForEmpty as c_defaultForEmpty_6";
   variant (enc) "attribute";
   variant (type_) "text 'aSID' as capitalized";
   variant (type_) "text 'eME_MSID' as capitalized";
@@ -1038,8 +1133,8 @@ with {
   variant (type_) "text 'sESSID' as capitalized";
   variant (type_) "text 'sIP_URI' as capitalized";
   variant (type_) "text 'tEL_URL' as capitalized";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_5";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as 'MSISDN'";
   variant (type_) "attribute";
 };
 
@@ -1078,6 +1173,7 @@ with {
   variant (choice_list[-].sequence) "untagged";
   variant (choice_list[-].sequence_1) "untagged";
   variant (choice_list[-].sequence_1.codeword_list) "untagged";
+  variant (choice_list[-].sequence_1.codeword_list[-]) "name as 'codeword'";
 };
 
 
@@ -1154,6 +1250,7 @@ with {
   variant "name as uncapitalized";
   variant "element";
   variant (nmr_element_list) "untagged";
+  variant (nmr_element_list[-]) "name as 'nmr_element'";
 };
 
 
@@ -1248,8 +1345,8 @@ with {
 type record Poi
 {
 	enumerated {
-		oN,
-		oFF
+		oFF,
+		oN
 	} flag optional
 }
 with {
@@ -1257,7 +1354,7 @@ with {
   variant "element";
   variant (flag) "text 'oFF' as capitalized";
   variant (flag) "text 'oN' as capitalized";
-  variant (flag) "defaultForEmpty as 'OFF'";
+  variant (flag) "defaultForEmpty as c_defaultForEmpty_7";
   variant (flag) "attribute";
 };
 
@@ -1265,13 +1362,13 @@ with {
 type record Pos
 {
 	enumerated {
-		cELL,
-		oTDOA,
-		gPS,
 		a_GPS,
+		cELL,
 		e_OTD,
-		u_TDOA,
-		oTHER
+		gPS,
+		oTDOA,
+		oTHER,
+		u_TDOA
 	} pos_method optional,
 	Msid msid,
 	union {
@@ -1320,8 +1417,8 @@ with {
 type record Prio
 {
 	enumerated {
-		nORMAL,
-		hIGH
+		hIGH,
+		nORMAL
 	} type_ optional
 }
 with {
@@ -1329,8 +1426,8 @@ with {
   variant "element";
   variant (type_) "text 'hIGH' as capitalized";
   variant (type_) "text 'nORMAL' as capitalized";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_8";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as 'NORMAL'";
   variant (type_) "attribute";
 };
 
@@ -1443,8 +1540,8 @@ with {
   variant "element";
   variant (type_) "text 'aCTIVE' as capitalized";
   variant (type_) "text 'pASSIVE' as capitalized";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_9";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as 'PASSIVE'";
   variant (type_) "attribute";
   variant (choice) "untagged";
 };
@@ -1454,12 +1551,12 @@ type record Requestor
 {
 	record of XSD.String embed_values,
 	enumerated {
+		eMAIL,
+		iMS,
 		mSISDN,
 		nAME,
-		eMAIL,
-		uRL,
 		sIPURL,
-		iMS
+		uRL
 	} type_ optional
 }
 with {
@@ -1472,8 +1569,8 @@ with {
   variant (type_) "text 'nAME' as capitalized";
   variant (type_) "text 'sIPURL' as capitalized";
   variant (type_) "text 'uRL' as capitalized";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_10";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as 'MSISDN'";
   variant (type_) "attribute";
 };
 
@@ -1481,9 +1578,9 @@ with {
 type record Resp_req
 {
 	enumerated {
-		nO_DELAY,
+		dELAY_TOL,
 		lOW_DELAY,
-		dELAY_TOL
+		nO_DELAY
 	} type_ optional
 }
 with {
@@ -1492,8 +1589,8 @@ with {
   variant (type_) "text 'dELAY_TOL' as capitalized";
   variant (type_) "text 'lOW_DELAY' as capitalized";
   variant (type_) "text 'nO_DELAY' as capitalized";
+  variant (type_) "defaultForEmpty as c_defaultForEmpty_11";
   variant (type_) "name as 'type'";
-  variant (type_) "defaultForEmpty as 'DELAY_TOL'";
   variant (type_) "attribute";
 };
 
@@ -1524,7 +1621,7 @@ with {
 
 type record Rlp_hdr
 {
-	XSD.AnySimpleType ver optional,
+	XSD.AnySimpleType ver (c_defaultForEmpty_12) optional,
 	Locationserver locationserver,
 	Client client optional,
 	Serving_node_action serving_node_action optional,
@@ -1534,21 +1631,21 @@ type record Rlp_hdr
 with {
   variant "name as uncapitalized";
   variant "element";
-  variant (ver) "defaultForEmpty as '1.0.0'";
+  variant (ver) "defaultForEmpty as c_defaultForEmpty_12";
   variant (ver) "attribute";
 };
 
 
 type record Rlp_svc_init
 {
-	XSD.AnySimpleType ver optional,
+	XSD.AnySimpleType ver (c_defaultForEmpty_12) optional,
 	Rlp_hdr rlp_hdr,
 	Srlir srlir
 }
 with {
   variant "name as uncapitalized";
   variant "element";
-  variant (ver) "defaultForEmpty as '1.0.0'";
+  variant (ver) "defaultForEmpty as c_defaultForEmpty_12";
   variant (ver) "attribute";
 };
 
@@ -1623,6 +1720,7 @@ with {
   variant (sequence_list) "untagged";
   variant (sequence_list[-]) "untagged";
   variant (sequence_list[-].ndc_list) "untagged";
+  variant (sequence_list[-].ndc_list[-]) "name as 'ndc'";
 };
 
 
@@ -1651,18 +1749,18 @@ with {
 type record Serving_node_action
 {
 	enumerated {
-		pOSITION_NOT_ALLOWED,
-		pOSITION,
 		nOTIFY_AND_POSITION,
+		pOSITION,
+		pOSITION_IF_ALLOWED,
 		pOSITION_IF_NOT_DISALLOWED,
-		pOSITION_IF_ALLOWED
+		pOSITION_NOT_ALLOWED
 	} active_type optional,
 	enumerated {
-		pOSITION_NOT_ALLOWED,
-		pOSITION,
 		nOTIFY_AND_POSITION,
+		pOSITION,
+		pOSITION_IF_ALLOWED,
 		pOSITION_IF_NOT_DISALLOWED,
-		pOSITION_IF_ALLOWED
+		pOSITION_NOT_ALLOWED
 	} passive_type
 }
 with {
@@ -1673,7 +1771,7 @@ with {
   variant (active_type) "text 'pOSITION_IF_ALLOWED' as capitalized";
   variant (active_type) "text 'pOSITION_IF_NOT_DISALLOWED' as capitalized";
   variant (active_type) "text 'pOSITION_NOT_ALLOWED' as capitalized";
-  variant (active_type) "defaultForEmpty as 'POSITION_NOT_ALLOWED'";
+  variant (active_type) "defaultForEmpty as c_defaultForEmpty_13";
   variant (active_type) "attribute";
   variant (passive_type) "text 'nOTIFY_AND_POSITION' as capitalized";
   variant (passive_type) "text 'pOSITION' as capitalized";
@@ -1800,10 +1898,10 @@ type record Srlir
 		vLS
 	} recv_role,
 	enumerated {
-		sYNC,
-		aSYNC
+		aSYNC,
+		sYNC
 	} res_type optional,
-	XSD.AnySimpleType ver optional,
+	XSD.AnySimpleType ver (c_defaultForEmpty_12) optional,
 	Msid msid,
 	Codeword codeword optional,
 	Eqop eqop optional,
@@ -1821,9 +1919,9 @@ with {
   variant (recv_role) "attribute";
   variant (res_type) "text 'aSYNC' as capitalized";
   variant (res_type) "text 'sYNC' as capitalized";
-  variant (res_type) "defaultForEmpty as 'SYNC'";
+  variant (res_type) "defaultForEmpty as c_defaultForEmpty_14";
   variant (res_type) "attribute";
-  variant (ver) "defaultForEmpty as '1.0.0'";
+  variant (ver) "defaultForEmpty as c_defaultForEmpty_12";
   variant (ver) "attribute";
 };
 
@@ -1858,7 +1956,7 @@ with {
   variant "name as uncapitalized";
   variant "embedValues";
   variant "element";
-  variant (utc_off) "defaultForEmpty as '0000'";
+  variant (utc_off) "defaultForEmpty as c_defaultForEmpty_15";
   variant (utc_off) "attribute";
 };
 
@@ -1893,7 +1991,7 @@ with {
   variant "name as uncapitalized";
   variant "embedValues";
   variant "element";
-  variant (utc_off) "defaultForEmpty as '0000'";
+  variant (utc_off) "defaultForEmpty as c_defaultForEmpty_15";
   variant (utc_off) "attribute";
 };
 
@@ -1976,63 +2074,63 @@ with {
   variant "element";
   variant (altitude) "text 'nO' as capitalized";
   variant (altitude) "text 'yES' as capitalized";
+  variant (altitude) "defaultForEmpty as c_defaultForEmpty_27";
   variant (altitude) "name as capitalized";
-  variant (altitude) "defaultForEmpty as 'NO'";
   variant (altitude) "attribute";
   variant (box) "text 'nO' as capitalized";
   variant (box) "text 'yES' as capitalized";
+  variant (box) "defaultForEmpty as c_defaultForEmpty_19";
   variant (box) "name as capitalized";
-  variant (box) "defaultForEmpty as 'NO'";
   variant (box) "attribute";
   variant (circularArcArea) "text 'nO' as capitalized";
   variant (circularArcArea) "text 'yES' as capitalized";
+  variant (circularArcArea) "defaultForEmpty as c_defaultForEmpty_21";
   variant (circularArcArea) "name as capitalized";
-  variant (circularArcArea) "defaultForEmpty as 'NO'";
   variant (circularArcArea) "attribute";
   variant (circularArea) "text 'nO' as capitalized";
   variant (circularArea) "text 'yES' as capitalized";
+  variant (circularArea) "defaultForEmpty as c_defaultForEmpty_20";
   variant (circularArea) "name as capitalized";
-  variant (circularArea) "defaultForEmpty as 'NO'";
   variant (circularArea) "attribute";
   variant (ellipticalArea) "text 'nO' as capitalized";
   variant (ellipticalArea) "text 'yES' as capitalized";
+  variant (ellipticalArea) "defaultForEmpty as c_defaultForEmpty_22";
   variant (ellipticalArea) "name as capitalized";
-  variant (ellipticalArea) "defaultForEmpty as 'NO'";
   variant (ellipticalArea) "attribute";
   variant (lineString) "text 'nO' as capitalized";
   variant (lineString) "text 'yES' as capitalized";
+  variant (lineString) "defaultForEmpty as c_defaultForEmpty_17";
   variant (lineString) "name as capitalized";
-  variant (lineString) "defaultForEmpty as 'NO'";
   variant (lineString) "attribute";
   variant (linearRing) "text 'nO' as capitalized";
   variant (linearRing) "text 'yES' as capitalized";
+  variant (linearRing) "defaultForEmpty as c_defaultForEmpty_26";
   variant (linearRing) "name as capitalized";
-  variant (linearRing) "defaultForEmpty as 'NO'";
   variant (linearRing) "attribute";
   variant (multiLineString) "text 'nO' as capitalized";
   variant (multiLineString) "text 'yES' as capitalized";
+  variant (multiLineString) "defaultForEmpty as c_defaultForEmpty_23";
   variant (multiLineString) "name as capitalized";
-  variant (multiLineString) "defaultForEmpty as 'NO'";
   variant (multiLineString) "attribute";
   variant (multiPoint) "text 'nO' as capitalized";
   variant (multiPoint) "text 'yES' as capitalized";
+  variant (multiPoint) "defaultForEmpty as c_defaultForEmpty_24";
   variant (multiPoint) "name as capitalized";
-  variant (multiPoint) "defaultForEmpty as 'NO'";
   variant (multiPoint) "attribute";
   variant (multiPolygon) "text 'nO' as capitalized";
   variant (multiPolygon) "text 'yES' as capitalized";
+  variant (multiPolygon) "defaultForEmpty as c_defaultForEmpty_25";
   variant (multiPolygon) "name as capitalized";
-  variant (multiPolygon) "defaultForEmpty as 'NO'";
   variant (multiPolygon) "attribute";
   variant (point) "text 'nO' as capitalized";
   variant (point) "text 'yES' as capitalized";
+  variant (point) "defaultForEmpty as c_defaultForEmpty_16";
   variant (point) "name as capitalized";
-  variant (point) "defaultForEmpty as 'NO'";
   variant (point) "attribute";
   variant (polygon) "text 'nO' as capitalized";
   variant (polygon) "text 'yES' as capitalized";
+  variant (polygon) "defaultForEmpty as c_defaultForEmpty_18";
   variant (polygon) "name as capitalized";
-  variant (polygon) "defaultForEmpty as 'NO'";
   variant (polygon) "attribute";
 };
 
@@ -2065,6 +2163,7 @@ with {
   variant (choice) "untagged";
   variant (choice.sequence) "untagged";
   variant (choice.plmn_list) "untagged";
+  variant (choice.plmn_list[-]) "name as 'plmn'";
 };
 
 
@@ -2077,7 +2176,7 @@ with {
   variant "name as uncapitalized";
   variant "embedValues";
   variant "element";
-  variant (utc_off) "defaultForEmpty as '0000'";
+  variant (utc_off) "defaultForEmpty as c_defaultForEmpty_15";
   variant (utc_off) "attribute";
 };
 
@@ -2121,17 +2220,17 @@ with {
 type record Trl_pos
 {
 	enumerated {
-		cELL,
-		oTDOA,
-		gPS,
 		a_GPS,
+		cELL,
 		e_OTD,
-		u_TDOA,
-		oTHER
+		gPS,
+		oTDOA,
+		oTHER,
+		u_TDOA
 	} pos_method optional,
 	enumerated {
-		mS_AVAIL,
-		cHANGE_AREA
+		cHANGE_AREA,
+		mS_AVAIL
 	} trl_trigger,
 	Msid msid,
 	union {
@@ -2195,8 +2294,8 @@ type record Uc_id
 {
 	record of XSD.String embed_values,
 	enumerated {
-		sTALE,
 		cURRENT,
+		sTALE,
 		uNKNOWN
 	} status optional
 }
@@ -2207,7 +2306,7 @@ with {
   variant (status) "text 'cURRENT' as capitalized";
   variant (status) "text 'sTALE' as capitalized";
   variant (status) "text 'uNKNOWN' as capitalized";
-  variant (status) "defaultForEmpty as 'CURRENT'";
+  variant (status) "defaultForEmpty as c_defaultForEmpty_28";
   variant (status) "attribute";
 };
 

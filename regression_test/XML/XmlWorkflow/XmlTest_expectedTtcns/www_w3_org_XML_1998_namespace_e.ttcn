@@ -21,26 +21,47 @@
 //  References:
 //  Rev:
 //  Prodnr:
-//  Updated:       Thu Jan 28 15:35:13 2010
+//  Updated:
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- xml.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "http://www.w3.org/XML/1998/namespace" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_w3_org_XML_1998_namespace {
+module www_w3_org_XML_1998_namespace_e {
 
 
 import from XSD all;
 
 
+/* lang (as an attribute name) */
+/* denotes an attribute whose value
+       is a language code for the natural language of the content of
+       any element; its value is inherited.  This name is reserved
+       by virtue of its definition in the XML specification. */
+/* Notes */
+/* Attempting to install the relevant ISO 2- and 3-letter
+      codes as the enumerated possible values is probably never
+      going to be a realistic possibility. */
+/* See BCP 47 at */
+/* http://www.rfc-editor.org/rfc/bcp/bcp47.txt */
+/* and the IANA language subtag registry at */
+/* http://www.iana.org/assignments/language-subtag-registry */
+/* for further information. */
+/* The union allows for the 'un-declaration' of xml:lang with
+      the empty string. */
 type union Lang
 {
 	XSD.Language language_,
@@ -53,14 +74,17 @@ with {
   variant "useUnion";
   variant "attribute";
   variant (language_) "name as 'language'";
-  variant (alt_) "text 'x' as ''";
-  variant (alt_) "text 'x' as ''";
-  variant (alt_) "text 'x' as ''";
-  variant (alt_) "text 'x' as ''";
   variant (alt_) "name as ''";
+  variant (alt_) "text 'x' as ''";
 };
 
 
+/* space (as an attribute name) */
+/* denotes an attribute whose
+       value is a keyword indicating what whitespace processing
+       discipline is intended for the content of the element; its
+       value is inherited.  This name is reserved by virtue of its
+       definition in the XML specification. */
 type enumerated Space
 {
 	default_,
@@ -73,6 +97,15 @@ with {
 };
 
 
+/* base (as an attribute name) */
+/* denotes an attribute whose value
+       provides a URI to be used as the base for interpreting any
+       relative URIs in the scope of the element on which it
+       appears; its value is inherited.  This name is reserved
+       by virtue of its definition in the XML Base specification. */
+/* See */
+/* http://www.w3.org/TR/xmlbase/ */
+/* for information about this attribute. */
 type XSD.AnyURI Base
 with {
   variant "name as uncapitalized";
@@ -80,7 +113,15 @@ with {
 };
 
 
-type ID Id
+/* id (as an attribute name) */
+/* denotes an attribute whose value
+       should be interpreted as if declared to be of type ID.
+       This name is reserved by virtue of its definition in the
+       xml:id specification. */
+/* See */
+/* http://www.w3.org/TR/xml-id/ */
+/* for information about this attribute. */
+type XSD.ID Id
 with {
   variant "name as uncapitalized";
   variant "attribute";
@@ -90,7 +131,6 @@ with {
 }
 with {
   encode "XML";
-  variant "namespace as 'http://www.w3.org/XML/1998/namespace' prefix 'exemel'";
+  variant "namespace as 'http://www.w3.org/XML/1998/namespace'";
   variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-  variant "elementFormQualified";
 }

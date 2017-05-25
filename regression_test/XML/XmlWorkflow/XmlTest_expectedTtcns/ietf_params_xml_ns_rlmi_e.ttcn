@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
@@ -25,17 +25,22 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- rlmi.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "urn:ietf:params:xml:ns:rlmi" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module ietf_params_xml_ns_rlmi {
+module ietf_params_xml_ns_rlmi_e {
 
 
 import from XSD all;
@@ -46,47 +51,52 @@ import from www_w3_org_XML_1998_namespace_e all;
 
 type record List
 {
-	record of XSD.String attr,
 	XSD.String cid optional,
 	XSD.Boolean fullState,
 	XSD.AnyURI uri,
 	XSD.UnsignedInt version,
+	record of XSD.String attr optional,
 	record of XSD.Name name_list,
 	record of Resource resource_list
 }
 with {
   variant "name as uncapitalized";
   variant "element";
-  variant (attr) "anyAttributes";
   variant (cid) "attribute";
   variant (fullState) "attribute";
+  //variant (fullState) "text 'true' as '1'";
+  //variant (fullState) "text 'false' as '0'";
   variant (uri) "attribute";
   variant (version) "attribute";
+  variant (attr) "anyAttributes";
   variant (name_list) "untagged";
+  variant (name_list[-]) "name as 'name'";
   variant (resource_list) "untagged";
+  variant (resource_list[-]) "name as 'resource'";
 };
 
 
 type record Resource
 {
-	record of XSD.String attr,
 	XSD.AnyURI uri,
+	record of XSD.String attr optional,
 	record of XSD.Name name_list,
 	record of Instance instance_list
 }
 with {
   variant "name as uncapitalized";
   variant "element";
-  variant (attr) "anyAttributes";
   variant (uri) "attribute";
+  variant (attr) "anyAttributes";
   variant (name_list) "untagged";
+  variant (name_list[-]) "name as 'name'";
   variant (instance_list) "untagged";
+  variant (instance_list[-]) "name as 'instance'";
 };
 
 
 type record Instance
 {
-	record of XSD.String attr,
 	XSD.String cid optional,
 	XSD.String id,
 	XSD.String reason optional,
@@ -95,16 +105,17 @@ type record Instance
 		pending,
 		terminated
 	} state,
+	record of XSD.String attr optional,
 	record of XSD.String elem_list
 }
 with {
   variant "name as uncapitalized";
   variant "element";
-  variant (attr) "anyAttributes";
   variant (cid) "attribute";
   variant (id) "attribute";
   variant (reason) "attribute";
   variant (state) "attribute";
+  variant (attr) "anyAttributes";
   variant (elem_list) "untagged";
   variant (elem_list[-]) "anyElement";
 };

@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
@@ -21,21 +21,26 @@
 //  References:
 //  Rev:
 //  Prodnr:
-//  Updated:       Mon Dec 14 16:19:47 2009
+//  Updated:
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- SIP.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/simservs/sci" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module uri_etsi_org_ngn_params_xml_simservs_sci {
+module uri_etsi_org_ngn_params_xml_simservs_sci_e {
 
 
 import from XSD all;
@@ -51,6 +56,8 @@ import from XSD all;
 type XSD.Boolean BitType
 with {
   variant "name as uncapitalized";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
 };
 
 

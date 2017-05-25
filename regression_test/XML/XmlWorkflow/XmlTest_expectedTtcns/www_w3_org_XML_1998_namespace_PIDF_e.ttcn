@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          www_w3_org_XML_1998_namespace_PIDF.ttcn
+//  File:          www_w3_org_XML_1998_namespace.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -25,20 +25,28 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- xml_PIDF.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "http://www.w3.org/XML/1998/namespace" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_w3_org_XML_1998_namespace_PIDF {
+module www_w3_org_XML_1998_namespace_PIDF_e {
 
 
 import from XSD all;
+
+
+const Space c_defaultForEmpty_1 := preserve;
 
 
 /* See http://www.w3.org/XML/1998/namespace.html and
@@ -116,7 +124,8 @@ import from XSD all;
    in order to remain compatible with the latest version of XML Schema
    itself.  In other words, if the XML Schema namespace changes, the version
    of this document at
-   http://www.w3.org/2001/xml.xsd will change
+   http://www.w3. */
+/* org/2001/xml.xsd will change
    accordingly; the version at
    http://www.w3.org/2001/03/xml.xsd will not change. */
 
@@ -137,8 +146,8 @@ type enumerated Space
 }
 with {
   variant "text 'default_' as 'default'";
+  variant "defaultForEmpty as c_defaultForEmpty_1";
   variant "name as uncapitalized";
-  variant "defaultForEmpty as 'preserve'";
   variant "attribute";
 };
 

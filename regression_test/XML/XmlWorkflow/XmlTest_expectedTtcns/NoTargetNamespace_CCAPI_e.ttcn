@@ -16,7 +16,7 @@
 *
 ******************************************************************************/
 //
-//  File:          NoTargetNamespace_CCAPI.ttcn
+//  File:          NoTargetNamespace.ttcn
 //  Description:
 //  References:
 //  Rev:
@@ -25,17 +25,23 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
 //
 //	- CCAPI.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "NoTargetNamespace" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module NoTargetNamespace_CCAPI {
+module NoTargetNamespace_CCAPI_e {
 
 
 import from XSD all;
@@ -95,6 +101,7 @@ type record DedicatedAccounts
 with {
   variant "element";
   variant (dedicatedAccount_list) "untagged";
+  variant (dedicatedAccount_list[-]) "name as 'DedicatedAccount'";
 };
 
 
@@ -126,6 +133,7 @@ type record UsageAccumulators
 with {
   variant "element";
   variant (usageAccumulator_list) "untagged";
+  variant (usageAccumulator_list[-]) "name as 'UsageAccumulator'";
 };
 
 

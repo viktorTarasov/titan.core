@@ -59,6 +59,9 @@
                 <File path="../PIPEasp_CNL113334/src/PIPEasp_Types.ttcn" />
                 <File path="../PIPEasp_CNL113334/demo/PIPEasp_Templates.ttcn" />
             </File_Group>
+            <File_Group name="externals" >
+                <File path="../src/external.cc" />
+            </File_Group>
             <File_Group name="XmlTest_xsds" >
                 <File path="../XmlTest_protocolXSDs/CAI3G/Bulk.xsd" />
                 <File path="../XmlTest_protocolXSDs/CAI3G/GenericCai3gType.xsd" />
@@ -134,7 +137,6 @@
                 <File path="../XmlTest_expectedTtcns/www_w3_org_XML_1998_namespace_PIDF_e.ttcn" />
                 <File path="../XmlTest_expectedTtcns/www_w3_org_XML_1998_namespace_e.ttcn" />
                 <File path="../XmlTest_expectedTtcns/www_ericsson_com_is_isco_MainSwitch_R4L06_R4AB_1_02_e.ttcn" />
-                <File path="../XmlTest_expectedTtcns/schemas_xmlsoap_org_soap_envelope_e.ttcn" />
             </File_Group>
         </File_Groups>
     </File_Group>

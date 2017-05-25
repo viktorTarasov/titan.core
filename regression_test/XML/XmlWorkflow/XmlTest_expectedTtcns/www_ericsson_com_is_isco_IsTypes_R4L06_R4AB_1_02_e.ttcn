@@ -25,17 +25,22 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- IsTypes.xsd
 //			/* xml version = "1.0" encoding = "UTF-8" */
 //			/* targetnamespace = "http://www.ericsson.com/is/isco/IsTypes/R4L06/R4AB_1.02" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_ericsson_com_is_isco_IsTypes_R4L06_R4AB_1_02 {
+module www_ericsson_com_is_isco_IsTypes_R4L06_R4AB_1_02_e {
 
 
 import from XSD all;

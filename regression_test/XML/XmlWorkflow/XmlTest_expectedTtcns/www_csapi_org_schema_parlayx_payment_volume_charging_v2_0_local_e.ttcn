@@ -1,4 +1,4 @@
-/******************************************************************************
+/*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
 * XSD to TTCN-3 Translator
@@ -25,17 +25,22 @@
 //  Contact:       http://ttcn.ericsson.se
 //
 ////////////////////////////////////////////////////////////////////////////////
-//
 //	Generated from file(s):
-//
 //	- parlayx_payment_volume_charging_interface_2_0.xsd
 //			/* xml version = "1.0" */
 //			/* targetnamespace = "http://www.csapi.org/schema/parlayx/payment/volume_charging/v2_0/local" */
-//
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
 
-module www_csapi_org_schema_parlayx_payment_volume_charging_v2_0_local {
+module www_csapi_org_schema_parlayx_payment_volume_charging_v2_0_local_e {
 
 
 import from XSD all;
