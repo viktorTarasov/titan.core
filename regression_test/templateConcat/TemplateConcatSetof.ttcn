@@ -97,6 +97,8 @@ testcase tc_setof_vt_w_refs_and_literals() runs on CT {
   var template SetOfInt vt_setof4 := ? length(2..2) & { 4, 5 } & * length(3);
   var template SetOfInt vt_setof4_exp := { ?, ?, 4, 5, ?, ?, ? };
   
+  var template SetOfInt vt_setof5 := t_setof_op1 & {};
+  
   if (log2str(vt_setof1) != log2str(vt_setof1_exp)) {
     setverdict(fail, "Expected: ", vt_setof1_exp, ", got: ", vt_setof1);
   }
@@ -108,6 +110,9 @@ testcase tc_setof_vt_w_refs_and_literals() runs on CT {
   }
   else if (log2str(vt_setof4) != log2str(vt_setof4_exp)) {
     setverdict(fail, "Expected: ", vt_setof4_exp, ", got: ", vt_setof4);
+  }
+  else if (log2str(vt_setof5) != log2str(t_setof_op1)) {
+    setverdict(fail, "Expected: ", t_setof_op1, ", got: ", vt_setof4);
   }
   else {
     setverdict(pass);

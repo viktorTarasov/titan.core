@@ -729,7 +729,7 @@ testcase setofCompUnbound() runs on setofOper_mycomp{
 testcase setofListOperator() runs on setofOper_mycomp{
   var setofOper_mysetof1 x1:={1,2};
   var setofOper_mysetof1 x2,x3,x4,x5,x6;	//set of basic types
-  var setofOper_mysetof1 res1, res2, res3, res4;
+  var setofOper_mysetof1 res1, res2, res3, res4, res5;
   x2:={ 1, 2 };
   x3:={1};
   x4:={1};
@@ -740,6 +740,7 @@ testcase setofListOperator() runs on setofOper_mycomp{
   res2 := x1 & x3;
   res3 := x2 & x3 & x5;
   res4 := x3 & x4;
+  res5 := x1 & {};
   if (res1 == {1,2,1,2}) {setverdict(pass);}
   else {setverdict(fail);}
   if (res2 == {1,2,1}) {setverdict(pass);}
@@ -747,6 +748,8 @@ testcase setofListOperator() runs on setofOper_mycomp{
   if (res3 == {1,2,1}) {setverdict(pass);}
   else {setverdict(fail);}
   if (res4 == {1,1,3}) {setverdict(pass);}
+  else {setverdict(fail);}
+  if (res5 == {1,2}) {setverdict(pass);}
   else {setverdict(fail);}
 }
 

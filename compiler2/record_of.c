@@ -3225,6 +3225,14 @@ void defRecordOfClass2(const struct_of_def *sdef, output_struct *output)
     "}\n"
     "TTCN_error(\"Unbound or omitted right operand of %s concatenation.\");\n"
     "}\n\n", name, name, name, name, sdef->dispname);
+  
+  def = mputprintf(def,
+    "%s operator+(null_type) const;\n\n", name);
+  src = mputprintf(src,
+    "%s %s::operator+(null_type) const\n"
+    "{\n"
+    "return *this;\n"
+    "}\n\n", name, name);
 
   /* substr() */
   def = mputprintf(def,
@@ -4725,6 +4733,14 @@ void defRecordOfTemplate2(const struct_of_def *sdef, output_struct *output)
     "ret_val.concat(pos);\n"
     "return ret_val;\n"
     "}\n\n", name, name, name, name);
+  
+  def = mputprintf(def,
+    "%s_template operator+(null_type) const;\n\n", name);
+  src = mputprintf(src,
+    "%s_template %s_template::operator+(null_type) const\n"
+    "{\n"
+    "return *this;\n"
+    "}\n\n", name, name);
   
   /* indexing operators */
   def = mputprintf(def,
