@@ -137,10 +137,10 @@ int main(int argc, char **argv) {
     }
   }
 
-  int first_module = f_flag_used ? 0 : optind;
   int last_module = f_flag_used ? 0 : argc;
   char **module_names = f_flag_used ? NULL : argv;
   try {
+    int first_module = f_flag_used ? 0 : optind;
     if (f_flag_used) {
       // Idea from CR_TR00015706.
       module_names = readModulesFromFile(from_file, &last_module);

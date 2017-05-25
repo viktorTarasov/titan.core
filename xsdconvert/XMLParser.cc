@@ -326,7 +326,9 @@ void XMLParser::startelementHandler(const xmlChar * localname,
         }
         if(actualTagName == n_annotation ||
           actualTagName == n_appinfo ||
-          actualTagName == n_documentation){
+          actualTagName == n_documentation ||
+          actualTagName == n_label ||
+          actualTagName == n_definition){
           inside_annotation.push_back(actualTagName);
           module->getLastMainType().loadWithValues();
         }else if(inside_annotation.empty()){
@@ -383,7 +385,9 @@ void XMLParser::endelementHandler(const xmlChar * localname) {
 
   if(tag == n_annotation ||
      tag == n_appinfo ||
-     tag == n_documentation){
+     tag == n_documentation ||
+     tag == n_label ||
+     tag == n_definition) {
     inside_annotation.pop_back();
   }
   

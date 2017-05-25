@@ -217,7 +217,7 @@ void AttributeType::printToFile(FILE* file, unsigned level) {
     printMinOccursMaxOccurs(file, false);
     fprintf(file, "enumerated {\n");
     enumeration.sortFacets();
-    enumeration.printToFile(file);
+    enumeration.printToFile(file, level);
     indent(file, level);
     fprintf(file, "\n} %s", name.convertedValue.c_str());
   } else if (enumeration.modified) {
@@ -229,7 +229,7 @@ void AttributeType::printToFile(FILE* file, unsigned level) {
     } else {
       fprintf(file, "enumerated {\n");
       enumeration.sortFacets();
-      enumeration.printToFile(file);
+      enumeration.printToFile(file, level);
       fprintf(file, "\n");
       indent(file, level);
       fprintf(file, "} %s", name.convertedValue.c_str());

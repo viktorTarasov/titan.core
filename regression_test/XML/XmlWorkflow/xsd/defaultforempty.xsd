@@ -49,7 +49,22 @@
 
 <xs:element name="BooleanFixed3" type="xs:boolean" fixed="0"/>
 
+<xs:element name='AnySimpleTypeDefault' type="xs:anySimpleType" default='1.0.0'/>
 
+<xs:element name='AnySimpleTypeFixed' type="xs:anySimpleType" fixed='1.0.0'/>
+
+<!-- Unsupported anytype and QName -->
+<xs:element name='AnyTypeDefault' default='1.0.0'/>
+
+<xs:element name='AnyTypeFixed' fixed='1.0.0'/>
+
+<xs:element name='AnyTypeDefault2' type="xs:anyType" default='1.0.0'/>
+
+<xs:element name='AnyTypeFixed2' type="xs:anyType" fixed='1.0.0'/>
+
+<xs:element name='QNameDefault' type="xs:QName" default='Name'/>
+
+<xs:element name='QNameFixed' type="xs:QName" fixed='Name'/>
 
 <!-- Check if the name conversion follows to the constants too -->
 <xs:element name="AttrfixedMyString3_"/>
@@ -135,6 +150,123 @@
 		<xs:enumeration value="-3"/>
 	</xs:restriction>
 </xs:simpleType>
+
+<xs:attribute name="LocalEnumAttributeDefault1" default='false'>
+	<xs:simpleType>
+		<xs:restriction base='xs:string'>
+			<xs:enumeration value='true'/>
+			<xs:enumeration value='false'/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:attribute>
+
+<xs:attribute name="LocalEnumAttributeFixed1" fixed='false'>
+	<xs:simpleType>
+		<xs:restriction base='xs:string'>
+			<xs:enumeration value='true'/>
+			<xs:enumeration value='false'/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:attribute>
+
+<xs:simpleType name="mystring">
+	<xs:restriction base="xs:string"/>
+</xs:simpleType>
+
+<xs:attribute name="LocalEnumAttributeDefault2" default='false'>
+	<xs:simpleType>
+		<xs:restriction base='dfe:mystring'>
+			<xs:enumeration value='true'/>
+			<xs:enumeration value='false'/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:attribute>
+
+<xs:attribute name="LocalEnumAttributeFixed2" fixed='false'>
+	<xs:simpleType>
+		<xs:restriction base='dfe:mystring'>
+			<xs:enumeration value='true'/>
+			<xs:enumeration value='false'/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:attribute>
+
+<xs:attribute name="LocalEnumElementDefault1" default='false'>
+	<xs:simpleType>
+		<xs:restriction base='xs:string'>
+			<xs:enumeration value='true'/>
+			<xs:enumeration value='false'/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:attribute>
+
+<xs:attribute name="LocalEnumElementFixed1" fixed='false'>
+	<xs:simpleType>
+		<xs:restriction base='xs:string'>
+			<xs:enumeration value='true'/>
+			<xs:enumeration value='false'/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:attribute>
+
+<xs:attribute name="LocalEnumElementDefault2" default='false'>
+	<xs:simpleType>
+		<xs:restriction base='dfe:mystring'>
+			<xs:enumeration value='true'/>
+			<xs:enumeration value='false'/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:attribute>
+
+<xs:attribute name="LocalEnumElementFixed2" fixed='false'>
+	<xs:simpleType>
+		<xs:restriction base='dfe:mystring'>
+			<xs:enumeration value='true'/>
+			<xs:enumeration value='false'/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:attribute>
+
+
+<xs:element name='Element'>
+	<xs:complexType>
+		<xs:sequence maxOccurs="5">
+			<xs:element name='LocalEnumElementDefault1' default='false'>
+				<xs:simpleType>
+					<xs:restriction base='xs:string'>
+						<xs:enumeration value='true'/>
+						<xs:enumeration value='false'/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name='LocalEnumElementDefault2' default='false'>
+				<xs:simpleType>
+					<xs:restriction base='dfe:mystring'>
+						<xs:enumeration value='true'/>
+						<xs:enumeration value='false'/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name='progress-notes-requested' default='false'>
+			<xs:simpleType>
+				<xs:restriction base='xs:string'>
+					<xs:enumeration value='true'/>
+					<xs:enumeration value='false'/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name='progress-notes-requested2' default='false'>
+			<xs:simpleType>
+				<xs:restriction base='dfe:mystring'>
+					<xs:enumeration value='true'/>
+					<xs:enumeration value='false'/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+</xs:element>
+
 
 
 </xs:schema>

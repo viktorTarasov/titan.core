@@ -1,7 +1,7 @@
 /*******************************************************************************
 * Copyright (c) 2000-2017 Ericsson Telecom AB
 *
-* XSD to TTCN-3 Translator                       
+* XSD to TTCN-3 Translator
 *
 * All rights reserved. This program and the accompanying materials
 * are made available under the terms of the Eclipse Public License v1.0
@@ -73,31 +73,70 @@ const XSD.Boolean c_defaultForEmpty_9 := true;
 const XSD.Boolean c_defaultForEmpty_10 := false;
 
 
-const MyString_1 c_defaultForEmpty_11 := "fix";
+const XSD.AnySimpleType c_defaultForEmpty_11 := "1.0.0";
 
 
-const MyString2_1 c_defaultForEmpty_12 := "fix";
+const MyString_1 c_defaultForEmpty_12 := "fix";
 
 
-const EnumString c_defaultForEmpty_13 := a;
+const MyString2_1 c_defaultForEmpty_13 := "fix";
 
 
-const EnumDate c_defaultForEmpty_14 := x1888_01_01;
+const EnumString c_defaultForEmpty_14 := a;
 
 
-const EnumFloat c_defaultForEmpty_15 := infinity;
+const EnumDate c_defaultForEmpty_15 := x1888_01_01;
 
 
-const EnumFloat c_defaultForEmpty_16 := not_a_number;
+const EnumFloat c_defaultForEmpty_16 := infinity;
 
 
-const EnumFloat c_defaultForEmpty_17 := 1.0;
+const EnumFloat c_defaultForEmpty_17 := not_a_number;
 
 
-const EnumInteger c_defaultForEmpty_18 := int3;
+const EnumFloat c_defaultForEmpty_18 := 1.0;
 
 
-const EnumInteger c_defaultForEmpty_19 := int_3;
+const EnumInteger c_defaultForEmpty_19 := int3;
+
+
+const EnumInteger c_defaultForEmpty_20 := int_3;
+
+
+const LocalEnumAttributeDefault1 c_defaultForEmpty_21 := false_;
+
+
+const LocalEnumAttributeFixed1 c_defaultForEmpty_22 := false_;
+
+
+const LocalEnumAttributeDefault2 c_defaultForEmpty_23 := false_;
+
+
+const LocalEnumAttributeFixed2 c_defaultForEmpty_24 := false_;
+
+
+const LocalEnumElementDefault1 c_defaultForEmpty_25 := false_;
+
+
+const LocalEnumElementFixed1 c_defaultForEmpty_26 := false_;
+
+
+const LocalEnumElementDefault2 c_defaultForEmpty_27 := false_;
+
+
+const LocalEnumElementFixed2 c_defaultForEmpty_28 := false_;
+
+
+const Element.sequence_list[-].localEnumElementDefault1 c_defaultForEmpty_29 := false_;
+
+
+const Element.sequence_list[-].localEnumElementDefault2 c_defaultForEmpty_30 := false_;
+
+
+const Element.progress_notes_requested c_defaultForEmpty_31 := false_;
+
+
+const Element.progress_notes_requested2 c_defaultForEmpty_32 := false_;
 
 
 /* Basic defaultForEmpty */
@@ -269,6 +308,59 @@ with {
 };
 
 
+type XSD.AnySimpleType AnySimpleTypeDefault
+with {
+  variant "defaultForEmpty as c_defaultForEmpty_11";
+  variant "element";
+};
+
+
+type XSD.AnySimpleType AnySimpleTypeFixed (c_defaultForEmpty_11)
+with {
+  variant "defaultForEmpty as c_defaultForEmpty_11";
+  variant "element";
+};
+
+
+/* Unsupported anytype and QName */
+
+
+type XSD.AnyType AnyTypeDefault
+with {
+  variant "element";
+};
+
+
+type XSD.AnyType AnyTypeFixed
+with {
+  variant "element";
+};
+
+
+type XSD.AnyType AnyTypeDefault2
+with {
+  variant "element";
+};
+
+
+type XSD.AnyType AnyTypeFixed2
+with {
+  variant "element";
+};
+
+
+type XSD.QName QNameDefault
+with {
+  variant "element";
+};
+
+
+type XSD.QName QNameFixed
+with {
+  variant "element";
+};
+
+
 /* Check if the name conversion follows to the constants too */
 
 
@@ -299,9 +391,9 @@ with {
 };
 
 
-type MyString_1 MyStringFixed (c_defaultForEmpty_11)
+type MyString_1 MyStringFixed (c_defaultForEmpty_12)
 with {
-  variant "defaultForEmpty as c_defaultForEmpty_11";
+  variant "defaultForEmpty as c_defaultForEmpty_12";
   variant "element";
 };
 
@@ -312,16 +404,16 @@ with {
 };
 
 
-type MyString2_1 MyStringFixed2 (c_defaultForEmpty_12)
+type MyString2_1 MyStringFixed2 (c_defaultForEmpty_13)
 with {
-  variant "defaultForEmpty as c_defaultForEmpty_12";
+  variant "defaultForEmpty as c_defaultForEmpty_13";
   variant "element";
 };
 
 
-type MyString_1 AttrfixedMyString3_1 (c_defaultForEmpty_11)
+type MyString_1 AttrfixedMyString3_1 (c_defaultForEmpty_12)
 with {
-  variant "defaultForEmpty as c_defaultForEmpty_11";
+  variant "defaultForEmpty as c_defaultForEmpty_12";
   variant "name as 'AttrfixedMyString3'";
   variant "attribute";
 };
@@ -330,25 +422,25 @@ with {
 type record Complex
 {
 	XSD.Integer attrfixedInteger (c_defaultForEmpty_4) optional,
-	MyString2_1 attrfixedMyString2 (c_defaultForEmpty_12) optional,
+	MyString2_1 attrfixedMyString2 (c_defaultForEmpty_13) optional,
 	AttrfixedMyString3_1 attrfixedMyString3 optional,
 	MyString_1 birthPlaceAttrGroup optional,
-	MyString_1 myStringFixed (c_defaultForEmpty_11),
-	MyString2_1 myStringFixed2 (c_defaultForEmpty_12)
+	MyString_1 myStringFixed (c_defaultForEmpty_12),
+	MyString2_1 myStringFixed2 (c_defaultForEmpty_13)
 }
 with {
   variant (attrfixedInteger) "defaultForEmpty as c_defaultForEmpty_4";
   variant (attrfixedInteger) "name as capitalized";
   variant (attrfixedInteger) "attribute";
-  variant (attrfixedMyString2) "defaultForEmpty as c_defaultForEmpty_12";
+  variant (attrfixedMyString2) "defaultForEmpty as c_defaultForEmpty_13";
   variant (attrfixedMyString2) "name as capitalized";
   variant (attrfixedMyString2) "attribute";
   variant (attrfixedMyString3) "name as capitalized";
   variant (attrfixedMyString3) "attribute";
   variant (birthPlaceAttrGroup) "attribute";
-  variant (myStringFixed) "defaultForEmpty as c_defaultForEmpty_11";
+  variant (myStringFixed) "defaultForEmpty as c_defaultForEmpty_12";
   variant (myStringFixed) "name as capitalized";
-  variant (myStringFixed2) "defaultForEmpty as c_defaultForEmpty_12";
+  variant (myStringFixed2) "defaultForEmpty as c_defaultForEmpty_13";
   variant (myStringFixed2) "name as capitalized";
 };
 
@@ -356,9 +448,9 @@ with {
 /* Enumerations */
 
 
-type EnumString EnumStringFixed (c_defaultForEmpty_13)
+type EnumString EnumStringFixed (c_defaultForEmpty_14)
 with {
-  variant "defaultForEmpty as c_defaultForEmpty_13";
+  variant "defaultForEmpty as c_defaultForEmpty_14";
   variant "element";
 };
 
@@ -374,9 +466,9 @@ with {
 };
 
 
-type EnumDate EnumDateFixed (c_defaultForEmpty_14)
+type EnumDate EnumDateFixed (c_defaultForEmpty_15)
 with {
-  variant "defaultForEmpty as c_defaultForEmpty_14";
+  variant "defaultForEmpty as c_defaultForEmpty_15";
   variant "element";
 };
 
@@ -392,30 +484,30 @@ with {
 };
 
 
-type EnumFloat EnumFloatFixed (c_defaultForEmpty_15)
-with {
-  variant "defaultForEmpty as c_defaultForEmpty_15";
-  variant "element";
-};
-
-
-type EnumFloat EnumFloatFixed2 (c_defaultForEmpty_16)
+type EnumFloat EnumFloatFixed (c_defaultForEmpty_16)
 with {
   variant "defaultForEmpty as c_defaultForEmpty_16";
   variant "element";
 };
 
 
-type EnumFloat EnumFloatFixed3 (c_defaultForEmpty_17)
+type EnumFloat EnumFloatFixed2 (c_defaultForEmpty_17)
 with {
   variant "defaultForEmpty as c_defaultForEmpty_17";
   variant "element";
 };
 
 
-type EnumFloat EnumFloatFixed4 (c_defaultForEmpty_17)
+type EnumFloat EnumFloatFixed3 (c_defaultForEmpty_18)
 with {
-  variant "defaultForEmpty as c_defaultForEmpty_17";
+  variant "defaultForEmpty as c_defaultForEmpty_18";
+  variant "element";
+};
+
+
+type EnumFloat EnumFloatFixed4 (c_defaultForEmpty_18)
+with {
+  variant "defaultForEmpty as c_defaultForEmpty_18";
   variant "element";
 };
 
@@ -423,16 +515,16 @@ with {
 type XSD.Float EnumFloat (1.0, infinity, not_a_number);
 
 
-type EnumInteger EnumIntegerFixed (c_defaultForEmpty_18)
+type EnumInteger EnumIntegerFixed (c_defaultForEmpty_19)
 with {
-  variant "defaultForEmpty as c_defaultForEmpty_18";
+  variant "defaultForEmpty as c_defaultForEmpty_19";
   variant "element";
 };
 
 
-type EnumInteger EnumIntegerFixed2 (c_defaultForEmpty_19)
+type EnumInteger EnumIntegerFixed2 (c_defaultForEmpty_20)
 with {
-  variant "defaultForEmpty as c_defaultForEmpty_19";
+  variant "defaultForEmpty as c_defaultForEmpty_20";
   variant "element";
 };
 
@@ -444,6 +536,162 @@ type enumerated EnumInteger
 }
 with {
   variant "useNumber";
+};
+
+
+type enumerated LocalEnumAttributeDefault1
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+  variant "defaultForEmpty as c_defaultForEmpty_21";
+  variant "attribute";
+};
+
+
+type enumerated LocalEnumAttributeFixed1
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+  variant "defaultForEmpty as c_defaultForEmpty_22";
+  variant "attribute";
+};
+
+
+type XSD.String Mystring
+with {
+  variant "name as uncapitalized";
+};
+
+
+type enumerated LocalEnumAttributeDefault2
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+  variant "defaultForEmpty as c_defaultForEmpty_23";
+  variant "attribute";
+};
+
+
+type enumerated LocalEnumAttributeFixed2
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+  variant "defaultForEmpty as c_defaultForEmpty_24";
+  variant "attribute";
+};
+
+
+type enumerated LocalEnumElementDefault1
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+  variant "defaultForEmpty as c_defaultForEmpty_25";
+  variant "attribute";
+};
+
+
+type enumerated LocalEnumElementFixed1
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+  variant "defaultForEmpty as c_defaultForEmpty_26";
+  variant "attribute";
+};
+
+
+type enumerated LocalEnumElementDefault2
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+  variant "defaultForEmpty as c_defaultForEmpty_27";
+  variant "attribute";
+};
+
+
+type enumerated LocalEnumElementFixed2
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+  variant "defaultForEmpty as c_defaultForEmpty_28";
+  variant "attribute";
+};
+
+
+type record Element
+{
+	enumerated {
+		false_,
+		true_
+	} progress_notes_requested optional,
+	enumerated {
+		false_,
+		true_
+	} progress_notes_requested2 optional,
+	record length(1 .. 5) of record {
+		enumerated {
+			true_,
+			false_
+		} localEnumElementDefault1,
+		enumerated {
+			true_,
+			false_
+		} localEnumElementDefault2
+	} sequence_list
+}
+with {
+  variant "element";
+  variant (progress_notes_requested) "text 'false_' as 'false'";
+  variant (progress_notes_requested) "text 'true_' as 'true'";
+  variant (progress_notes_requested) "defaultForEmpty as c_defaultForEmpty_31";
+  variant (progress_notes_requested) "name as 'progress-notes-requested'";
+  variant (progress_notes_requested) "attribute";
+  variant (progress_notes_requested2) "text 'false_' as 'false'";
+  variant (progress_notes_requested2) "text 'true_' as 'true'";
+  variant (progress_notes_requested2) "defaultForEmpty as c_defaultForEmpty_32";
+  variant (progress_notes_requested2) "name as 'progress-notes-requested2'";
+  variant (progress_notes_requested2) "attribute";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
+  variant (sequence_list[-].localEnumElementDefault1) "defaultForEmpty as c_defaultForEmpty_29";
+  variant (sequence_list[-].localEnumElementDefault1) "name as capitalized";
+  variant (sequence_list[-].localEnumElementDefault1) "text 'false_' as 'false'";
+  variant (sequence_list[-].localEnumElementDefault1) "text 'true_' as 'true'";
+  variant (sequence_list[-].localEnumElementDefault2) "defaultForEmpty as c_defaultForEmpty_30";
+  variant (sequence_list[-].localEnumElementDefault2) "name as capitalized";
+  variant (sequence_list[-].localEnumElementDefault2) "text 'false_' as 'false'";
+  variant (sequence_list[-].localEnumElementDefault2) "text 'true_' as 'true'";
 };
 
 
