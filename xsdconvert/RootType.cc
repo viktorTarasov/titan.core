@@ -293,6 +293,11 @@ void TypeType::checkBuintInTypeReference() {
       }
     }
   }
+  
+  // Third chance. NoTargetNamespace module without a prefix.
+  if (t_module->getTargetNamespace() == "NoTargetNamespace" && refPrefix.empty()) {
+    found = true;
+  }
   if (!found) {
     printError(t_module->getSchemaname(), t_parser->getActualLineNumber(), Mstring("Cannot find the namespace of type: ") + originalValueWoPrefix);
     t_parser->incrNumErrors();

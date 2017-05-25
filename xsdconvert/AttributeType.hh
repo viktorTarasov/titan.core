@@ -98,6 +98,10 @@ public:
   bool isAnyAttribute() const {
     return isAnyAttr;
   }
+  
+  Mstring getPath() {
+    return actualPath;
+  }
 
   void printToFile(FILE* file) {
     printToFile(file, 0);

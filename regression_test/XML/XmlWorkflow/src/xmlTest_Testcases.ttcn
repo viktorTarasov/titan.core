@@ -2413,7 +2413,7 @@ group Elements{
 
   testcase tc_defaultforempty() runs on xmlTest_CT {
 
-    f_shellCommandWithVerdict(xsd2ttcn_command & " defaultforempty.xsd","",c_shell_successWithoutWarningAndError)
+    f_shellCommandWithVerdict(xsd2ttcn_command & " defaultforempty.xsd","",c_shell_successWithWarning)
 
     if(getverdict==pass) {
       f_compareFiles(

@@ -21,6 +21,7 @@ class Constant : public RootType {
   // Points to the constant which have the same type and value as this
   Constant* alterego; // not owned
   bool checked;
+  bool unsupported;
   
   public:  
     Constant(SimpleType* p_parent, Mstring p_type, Mstring p_value);
@@ -49,6 +50,10 @@ class Constant : public RootType {
       } else {
         return this;
       }
+    }
+    
+    bool isUnsupported() const {
+      return unsupported;
     }
     
     // Remove 'equal' constants and give them names.

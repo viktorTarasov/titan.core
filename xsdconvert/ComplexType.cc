@@ -21,6 +21,7 @@
 #include "TTCN3Module.hh"
 #include "TTCN3ModuleInventory.hh"
 #include "Annotation.hh"
+#include "Constant.hh"
 
 #include <assert.h>
 
@@ -1097,11 +1098,6 @@ void ComplexType::subFinalModification() {
       delete field->Data;
       field->Data = NULL;
       attribfields.remove(field);
-    } else if (field->Data->getUseVal() == prohibited || !field->Data->isVisible()) {
-      //Not visible attribute removed
-      delete field->Data;
-      field->Data = NULL;
-      attribfields.remove(field);
     } else {
       field->Data->SimpleType::finalModification();
     }
@@ -1144,8 +1140,16 @@ void ComplexType::subFinalModification2() {
     //Recursive call
     field->Data->subFinalModification2();
   }
-  for (List<AttributeType*>::iterator field = attribfields.begin(); field; field = field->Next) {
-    field->Data->SimpleType::finalModification2();
+  for (List<AttributeType*>::iterator field = attribfields.begin(), nextField; field; field = nextField) {
+    nextField = field->Next;
+    if (field->Data->getUseVal() == prohibited || !field->Data->isVisible()) {
+      //Not visible attribute removed
+      delete field->Data;
+      field->Data = NULL;
+      attribfields.remove(field);
+    } else {
+      field->Data->SimpleType::finalModification2();
+    }
   }
 }
 
@@ -1699,6 +1703,7 @@ void ComplexType::resolveAttribute(AttributeType* attr) {
   if (attr->getXsdtype() == n_attribute && !attr->getReference().empty()) {
     SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(attr, want_BOTH);
     if (st != NULL) {
+      attr->setBuiltInBase(st->getBuiltInBase());
       if (attr->isFromRef()) {
         addNameSpaceAsVariant(attr, st);
         attr->setTypeOfField(st->getName().convertedValue);

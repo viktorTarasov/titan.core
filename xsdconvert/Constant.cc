@@ -10,16 +10,18 @@
  *
  ******************************************************************************/
 #include "Constant.hh"
+#include "ComplexType.hh"
 
 
 Constant::Constant(SimpleType* p_parent, Mstring p_type, Mstring p_value)
   : RootType(p_parent->getParser(), p_parent->getModule(), p_parent->getConstruct())
 {
   parent = p_parent;
-  type.upload(p_type);
+  type.upload(p_type, false);
   value = p_value;
   alterego = NULL;
   checked = false;
+  unsupported = false;
 }
 
 void Constant::nameConversion(const NameConversionMode conversion_mode, const List<NamespaceType> & ns) {
@@ -89,6 +91,23 @@ void Constant::finalModification() {
     tmp_type = type.originalValueWoPrefix;
   }
   
+  // If the element or attribute is an unnamed enumeration and has default
+  // or fixed attribute
+  if (parent->getEnumeration().modified &&
+     (parent->getReference().get_ref() == NULL ||
+      !((SimpleType*)(parent->getReference().get_ref()))->getEnumeration().modified)) {
+    Mstring newtype = Mstring("");
+    // If the unnamed enumeration is a field of a type
+    if (parent->getMainType() != NULL) {
+      newtype = parent->getMainType()->getName().convertedValue + ".";
+      newtype += parent->getPath();
+    } else {
+      // If the unnamed enumeration is a top level attribute or element
+      newtype = parent->getName().convertedValue;
+    }
+    type.upload(newtype);
+  }
+  
   // String and time types need the quote character around the value
   if (parent->getEnumeration().modified ||
      (parent->getReference().get_ref() != NULL &&
@@ -117,7 +136,7 @@ void Constant::finalModification() {
         j++;
       }
     }
-  } else if (isStringType(tmp_type) || isTimeType(tmp_type)) {
+  } else if (isStringType(tmp_type) || isTimeType(tmp_type) || tmp_type == "anySimpleType") {
     value = Mstring("\"") + value + Mstring("\"");
   } else if (isFloatType(tmp_type)) {
     value = xmlFloat2TTCN3FloatStr(value);
@@ -129,12 +148,11 @@ void Constant::finalModification() {
     }
   } else if (isQNameType(tmp_type) || isAnyType(tmp_type)) {
     // These are not supported by TITAN.
-    // Do not generate constant to a Qname or anytype fixed or default value
-    // Little hack: set the name of the constant to the value with apostrophes
-    name.convertedValue = "'" + value + "'";
-    // Set the constant to invisible so it won't be generated into the code
-    // but in the defaultForEmpty variant the name will be generated which
-    // contains the value for the defaultForempty
+    // Reset the default value and fixed value
+    parent->getValue().default_value = "";
+    parent->getValue().fixed_value = "";
+    unsupported = true;
+    // Set the constant to invisible so it won't be generated into the code.
     setInvisible();
   }
   checked = true;

@@ -847,7 +847,7 @@ void SimpleType::finalModification() {
 void SimpleType::finalModification2() {
   // Delayed adding the defaultForEmpty variant after the nameconversion
   // happened on the constants
-  if (defaultForEmptyConstant != NULL) {
+  if (defaultForEmptyConstant != NULL && !defaultForEmptyConstant->isUnsupported()) {
     TTCN3Module * mod = parent != NULL ? parent->getModule() : getModule();
     addVariant(V_defaultForEmpty, defaultForEmptyConstant->getAlterego()->getConstantName(mod));
   }
@@ -880,6 +880,15 @@ bool SimpleType::hasRestrictionOrExtension() const {
     pattern.modified ||
     whitespace.modified;
 }
+
+ ComplexType * SimpleType::getMainType() {
+    ComplexType * par = parent;
+    if (par == NULL) return NULL;
+    while (par->parent != NULL) {
+      par = par->parent;
+    }
+    return par;
+  }
 
 void SimpleType::printToFile(FILE * file) {
   if (!visible) {
@@ -1536,7 +1545,7 @@ void ValueType::applyFacets() // only for integer and float types
     if (facet_maxInclusive != DBL_MAX && upper > facet_maxInclusive) upper = facet_maxInclusive;
     if (facet_minExclusive != -DBL_MAX && lower < facet_minExclusive) lower = facet_minExclusive;
     if (facet_maxExclusive != DBL_MAX && upper > facet_maxExclusive) upper = facet_maxExclusive;
-  } else if (isAnyType(base) || isTimeType(base) || isBooleanType(base)) {
+  } else if ((isAnyType(base) && base.getValueWithoutPrefix(':') != "anyType") || isTimeType(base) || isBooleanType(base)) {
   } else if (isStringType(base) && (
     base.getValueWithoutPrefix(':') != "hexBinary" && base.getValueWithoutPrefix(':') != "base64Binary")) {
   } else if (base.empty()) {

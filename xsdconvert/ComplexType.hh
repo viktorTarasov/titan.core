@@ -154,6 +154,7 @@ public:
   void modifyList();
   void setNameDep(SimpleType * dep) { nameDep = dep; }
   void setParentTypeSubsGroup(ComplexType * dep) { parentTypeSubsGroup = dep; }
+  Mstring getPath() { return actualPath; }
 
   void dump(unsigned int depth) const;
 
