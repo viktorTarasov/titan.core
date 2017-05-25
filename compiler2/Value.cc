@@ -10586,7 +10586,6 @@ error:
     case OPTYPE_TMR_RUNNING: // r1
       // boolvar := a_timer.running -- assume no self-ref
       break;
-      break;
       
     case OPTYPE_ANY2UNISTR:
     case OPTYPE_LOG2STR: {// logargs
@@ -14469,7 +14468,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
       DEBUG(level, "Value: unknown type: %d", valuetype);
     } // switch
   }
-  
+
   void Value::set_is_in_brackets()
   {
     in_brackets = true;
