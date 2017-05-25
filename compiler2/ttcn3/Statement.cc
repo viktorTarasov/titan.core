@@ -7509,7 +7509,7 @@ error:
     }
     if (config_op.translate == true && warning == false) {
       expr.expr = mputstr(expr.expr, ", TRUE");
-    }
+      }
     expr.expr = mputstr(expr.expr, ")");
     if (config_op.translate == true) {
       string funcname;
@@ -12756,11 +12756,11 @@ error:
       case AltGuard::AG_REF:
       case AltGuard::AG_INVOKE:
 	// an altstep may return ALT_REPEAT
-	label_needed = true;
-	break;
+        label_needed = true;
+        break;
       case AltGuard::AG_ELSE:
-	has_else_branch = true;
-	break;
+        has_else_branch = true;
+        break;
       default:
         FATAL_ERROR("AltGuards::generate_code_alt()");
       }
@@ -12795,105 +12795,105 @@ error:
       AltGuard *ag = ags[i];
       AltGuard::altguardtype_t agtype = ag->get_type();
       if (agtype == AltGuard::AG_ELSE) {
-	// an else branch was found
-	str = mputstr(str, "TTCN_Snapshot::else_branch_reached();\n");
-	StatementBlock *block = ag->get_block();
-	if (block->get_nof_stmts() > 0) {
-	  str = mputstr(str, "{\n");
-	  if (debugger_active) {
-	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
-	  }
-	  str = block->generate_code(str, def_glob_vars, src_glob_vars);
-	  str = mputstr(str, "}\n");
-	}
-	// jump out of the infinite for() loop
-	if (block->has_return() != StatementBlock::RS_YES)
-	  str = mputstr(str, "break;\n");
-	// do not generate code for further branches
-	break;
+        // an else branch was found
+        str = mputstr(str, "TTCN_Snapshot::else_branch_reached();\n");
+        StatementBlock *block = ag->get_block();
+        if (block->get_nof_stmts() > 0) {
+          str = mputstr(str, "{\n");
+          if (debugger_active) {
+            str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+          }
+          str = block->generate_code(str, def_glob_vars, src_glob_vars);
+          str = mputstr(str, "}\n");
+        }
+        // jump out of the infinite for() loop
+        if (block->has_return() != StatementBlock::RS_YES)
+          str = mputstr(str, "break;\n");
+        // do not generate code for further branches
+        break;
       } else {
-	Value *guard_expr = ag->get_guard_expr();
-	if (guard_expr) {
-	  // the branch has a boolean guard expression
-	  str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_UNCHECKED) {\n",
-	    label_str, static_cast<unsigned long>( i ));
-	  str = guard_expr->update_location_object(str);
-	  expression_struct expr;
-	  Code::init_expr(&expr);
-	  guard_expr->generate_code_expr(&expr);
-	  str = mputstr(str, expr.preamble);
-	  str = mputprintf(str, "if (%s) %s_alt_flag_%lu = ALT_MAYBE;\n"
-	    "else %s_alt_flag_%lu = ALT_NO;\n", expr.expr, label_str,
-	    static_cast<unsigned long>( i ), label_str, static_cast<unsigned long>( i ));
-	  str = mputstr(str, expr.postamble);
-	  Code::free_expr(&expr);
-	  str = mputstr(str, "}\n");
-	}
-	// evaluation of guard operation or altstep
-	str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_MAYBE) {\n",
-	  label_str, static_cast<unsigned long>( i ));
-	// indicates whether the guard operation might return ALT_REPEAT
-	bool can_repeat;
-	expression_struct expr;
-	Code::init_expr(&expr);
-	expr.expr = mputprintf(expr.expr, "%s_alt_flag_%lu = ", label_str,
+        Value *guard_expr = ag->get_guard_expr();
+        if (guard_expr) {
+          // the branch has a boolean guard expression
+          str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_UNCHECKED) {\n",
+            label_str, static_cast<unsigned long>( i ));
+          str = guard_expr->update_location_object(str);
+          expression_struct expr;
+          Code::init_expr(&expr);
+          guard_expr->generate_code_expr(&expr);
+          str = mputstr(str, expr.preamble);
+          str = mputprintf(str, "if (%s) %s_alt_flag_%lu = ALT_MAYBE;\n"
+            "else %s_alt_flag_%lu = ALT_NO;\n", expr.expr, label_str,
+            static_cast<unsigned long>( i ), label_str, static_cast<unsigned long>( i ));
+          str = mputstr(str, expr.postamble);
+          Code::free_expr(&expr);
+          str = mputstr(str, "}\n");
+        }
+        // evaluation of guard operation or altstep
+        str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_MAYBE) {\n",
+          label_str, static_cast<unsigned long>( i ));
+        // indicates whether the guard operation might return ALT_REPEAT
+        bool can_repeat;
+        expression_struct expr;
+        Code::init_expr(&expr);
+        expr.expr = mputprintf(expr.expr, "%s_alt_flag_%lu = ", label_str,
           static_cast<unsigned long>( i ));
-	switch (agtype) {
-	case AltGuard::AG_OP: {
-	  // the guard operation is a receiving statement
-	  Statement *stmt = ag->get_guard_stmt();
-	  str = stmt->update_location_object(str);
-	  stmt->generate_code_expr(&expr);
-	  can_repeat = stmt->can_repeat();
-	  break; }
-	case AltGuard::AG_REF: {
-	  // the guard operation is an altstep instance
-	  Ref_pard *ref = ag->get_guard_ref();
-	  str = ref->update_location_object(str);
-	  Common::Assignment *altstep = ref->get_refd_assignment();
-	  expr.expr = mputprintf(expr.expr, "%s_instance(",
-	    altstep->get_genname_from_scope(my_scope).c_str());
-	  ref->get_parlist()->generate_code_alias(&expr,
-	    altstep->get_FormalParList(), altstep->get_RunsOnType(), false);
-	  expr.expr = mputc(expr.expr, ')');
-	  can_repeat = true;
-	  break; }
-	case AltGuard::AG_INVOKE: {
+        switch (agtype) {
+        case AltGuard::AG_OP: {
+          // the guard operation is a receiving statement
+          Statement *stmt = ag->get_guard_stmt();
+          str = stmt->update_location_object(str);
+          stmt->generate_code_expr(&expr);
+          can_repeat = stmt->can_repeat();
+          break; }
+        case AltGuard::AG_REF: {
+          // the guard operation is an altstep instance
+          Ref_pard *ref = ag->get_guard_ref();
+          str = ref->update_location_object(str);
+          Common::Assignment *altstep = ref->get_refd_assignment();
+          expr.expr = mputprintf(expr.expr, "%s_instance(",
+            altstep->get_genname_from_scope(my_scope).c_str());
+          ref->get_parlist()->generate_code_alias(&expr,
+            altstep->get_FormalParList(), altstep->get_RunsOnType(), false);
+          expr.expr = mputc(expr.expr, ')');
+          can_repeat = true;
+          break; }
+        case AltGuard::AG_INVOKE: {
           // the guard operation is an altstep invocation
           str = ag->update_location_object(str);
           ag->generate_code_invoke_instance(&expr);
           can_repeat = true;
           break; }
-	default:
-	  FATAL_ERROR("AltGuards::generate_code_alt()");
-	}
-	str = Code::merge_free_expr(str, &expr);
-	if (can_repeat) {
-	  str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_REPEAT) goto %s;\n",
-	    label_str, static_cast<unsigned long>( i ), label_str);
-	}
+        default:
+          FATAL_ERROR("AltGuards::generate_code_alt()");
+        }
+        str = Code::merge_free_expr(str, &expr);
+        if (can_repeat) {
+          str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_REPEAT) goto %s;\n",
+            label_str, static_cast<unsigned long>( i ), label_str);
+        }
         if (agtype == AltGuard::AG_REF || agtype == AltGuard::AG_INVOKE) {
           str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_BREAK) break;\n",
              label_str, static_cast<unsigned long>( i ));
         }
-	// execution of statement block if the guard was successful
-	str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_YES) ", label_str,
+        // execution of statement block if the guard was successful
+        str = mputprintf(str, "if (%s_alt_flag_%lu == ALT_YES) ", label_str,
           static_cast<unsigned long>( i ));
-	StatementBlock *block = ag->get_block();
-	if (block && block->get_nof_stmts() > 0) {
-	  str = mputstr(str, "{\n");
-	  if (debugger_active) {
-	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
-	  }
-	  str = block->generate_code(str, def_glob_vars, src_glob_vars);
-	  if (block->has_return() != StatementBlock::RS_YES)
-	    str = mputstr(str, "break;\n");
-	  str = mputstr(str, "}\n");
-	} else str = mputstr(str, "break;\n");
-	// closing of if() block
-	str = mputstr(str, "}\n");
-      }
-    }
+        StatementBlock *block = ag->get_block();
+        if (block && block->get_nof_stmts() > 0) {
+          str = mputstr(str, "{\n");
+          if (debugger_active) {
+            str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+          }
+          str = block->generate_code(str, def_glob_vars, src_glob_vars);
+          if (block->has_return() != StatementBlock::RS_YES)
+            str = mputstr(str, "break;\n");
+          str = mputstr(str, "}\n");
+        } else str = mputstr(str, "break;\n");
+        // closing of if() block
+        str = mputstr(str, "}\n");
+      } //if
+    } // for
     if (!has_else_branch) {
       // calling of defaults
       str = mputprintf(str, "if (%s_default_flag == ALT_MAYBE) {\n"
@@ -12938,109 +12938,109 @@ error:
       AltGuard *ag = ags[i];
       AltGuard::altguardtype_t agtype = ag->get_type();
       if (agtype == AltGuard::AG_ELSE) {
-	// an else branch was found
-	str = mputstr(str, "TTCN_Snapshot::else_branch_reached();\n");
-	StatementBlock *block = ag->get_block();
-	if (block->get_nof_stmts() > 0) {
-	  str = mputstr(str, "{\n");
-	  if (debugger_active) {
-	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
-	  }
-	  str = block->generate_code(str, def_glob_vars, src_glob_vars);
-	  str = mputstr(str, "}\n");
-	}
-	if (block->has_return() != StatementBlock::RS_YES)
-	  str = mputstr(str, "return ALT_YES;\n");
-	// do not generate code for further branches
-	break;
+      // an else branch was found
+      str = mputstr(str, "TTCN_Snapshot::else_branch_reached();\n");
+      StatementBlock *block = ag->get_block();
+      if (block->get_nof_stmts() > 0) {
+        str = mputstr(str, "{\n");
+        if (debugger_active) {
+          str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+        }
+        str = block->generate_code(str, def_glob_vars, src_glob_vars);
+        str = mputstr(str, "}\n");
+      }
+      if (block->has_return() != StatementBlock::RS_YES)
+        str = mputstr(str, "return ALT_YES;\n");
+      // do not generate code for further branches
+      break;
       } else {
         size_t blockcount = 0;
-	Value *guard_expr = ag->get_guard_expr();
-	if (guard_expr) {
-	  // the branch has a boolean guard expression
-	  str = guard_expr->update_location_object(str);
-	  str = guard_expr->generate_code_tmp(str, "if (", blockcount);
-	  str = mputstr(str, ") {\n");
-	  blockcount++;
-	}
-	// indicates whether the guard operation might return ALT_REPEAT
-	bool can_repeat;
-	expression_struct expr;
-	Code::init_expr(&expr);
-	switch (agtype) {
-	case AltGuard::AG_OP: {
-	  // the guard operation is a receiving statement
-	  Statement *stmt = ag->get_guard_stmt();
-	  str = stmt->update_location_object(str);
-	  stmt->generate_code_expr(&expr);
-	  can_repeat = stmt->can_repeat();
-	  break; }
-	case AltGuard::AG_REF: {
-	  // the guard operation is an altstep instance
-	  Ref_pard *ref = ag->get_guard_ref();
-	  str = ref->update_location_object(str);
-	  Common::Assignment *altstep = ref->get_refd_assignment();
-	  expr.expr = mputprintf(expr.expr, "%s_instance(",
-	    altstep->get_genname_from_scope(my_scope).c_str());
-	  ref->get_parlist()->generate_code_alias(&expr,
-	    altstep->get_FormalParList(), altstep->get_RunsOnType(), false);
-	  expr.expr = mputc(expr.expr, ')');
-	  can_repeat = true;
-	  break; }
-	case AltGuard::AG_INVOKE: {
+      Value *guard_expr = ag->get_guard_expr();
+      if (guard_expr) {
+        // the branch has a boolean guard expression
+        str = guard_expr->update_location_object(str);
+        str = guard_expr->generate_code_tmp(str, "if (", blockcount);
+        str = mputstr(str, ") {\n");
+        blockcount++;
+      }
+      // indicates whether the guard operation might return ALT_REPEAT
+      bool can_repeat;
+      expression_struct expr;
+      Code::init_expr(&expr);
+      switch (agtype) {
+      case AltGuard::AG_OP: {
+        // the guard operation is a receiving statement
+        Statement *stmt = ag->get_guard_stmt();
+        str = stmt->update_location_object(str);
+        stmt->generate_code_expr(&expr);
+        can_repeat = stmt->can_repeat();
+        break; }
+      case AltGuard::AG_REF: {
+        // the guard operation is an altstep instance
+        Ref_pard *ref = ag->get_guard_ref();
+        str = ref->update_location_object(str);
+        Common::Assignment *altstep = ref->get_refd_assignment();
+        expr.expr = mputprintf(expr.expr, "%s_instance(",
+          altstep->get_genname_from_scope(my_scope).c_str());
+        ref->get_parlist()->generate_code_alias(&expr,
+          altstep->get_FormalParList(), altstep->get_RunsOnType(), false);
+        expr.expr = mputc(expr.expr, ')');
+        can_repeat = true;
+        break; }
+      case AltGuard::AG_INVOKE: {
           str = ag->update_location_object(str);
           ag->generate_code_invoke_instance(&expr);
           can_repeat = true;
-	  break; }
-	default:
-	  FATAL_ERROR("AltGuards::generate_code_altstep()");
+        break; }
+      default:
+        FATAL_ERROR("AltGuards::generate_code_altstep()");
         }
-	if (expr.preamble || expr.postamble) {
-	  if (blockcount == 0) {
-	    // open a statement block if it is not done so far
-	    str = mputstr(str, "{\n");
-	    blockcount++;
-	  }
-	  const string& tmp_id = my_mod->get_temporary_id();
-	  const char *tmp_id_str = tmp_id.c_str();
-	  str = mputprintf(str, "alt_status %s;\n"
-	    "{\n", tmp_id_str);
-	  str = mputstr(str, expr.preamble);
-	  str = mputprintf(str, "%s = %s;\n", tmp_id_str, expr.expr);
-	  str = mputstr(str, expr.postamble);
-	  str = mputprintf(str, "}\n"
-	    "switch (%s) {\n", tmp_id_str);
-	} else {
-	  str = mputprintf(str, "switch (%s) {\n", expr.expr);
-	}
-	Code::free_expr(&expr);
-	str = mputstr(str, "case ALT_YES:\n");
-	StatementBlock *block = ag->get_block();
-	if (block && block->get_nof_stmts() > 0) {
-	  str = mputstr(str, "{\n");
-	  if (debugger_active) {
-	    str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
-	  }
-	  str = block->generate_code(str, def_glob_vars, src_glob_vars);
-	  str = mputstr(str, "}\n");
-	}
-	if (!block || block->has_return() != StatementBlock::RS_YES)
-	  str = mputstr(str, "return ALT_YES;\n");
-	if (can_repeat)
-	  str = mputstr(str, "case ALT_REPEAT:\n"
-	    "return ALT_REPEAT;\n");
-        if (agtype == AltGuard::AG_REF || agtype == AltGuard::AG_INVOKE) {
-          str = mputprintf(str, "case ALT_BREAK:\n"
-	    "return ALT_BREAK;\n");
+      if (expr.preamble || expr.postamble) {
+        if (blockcount == 0) {
+          // open a statement block if it is not done so far
+          str = mputstr(str, "{\n");
+          blockcount++;
         }
-	if (!has_else_branch)
-	  str = mputstr(str, "case ALT_MAYBE:\n"
-	    "ret_val = ALT_MAYBE;\n");
-	str = mputstr(str, "default:\n"
-	  "break;\n"
-	  "}\n");
-	// closing statement blocks
-	for ( ; blockcount > 0; blockcount--) str = mputstr(str, "}\n");
+        const string& tmp_id = my_mod->get_temporary_id();
+        const char *tmp_id_str = tmp_id.c_str();
+        str = mputprintf(str, "alt_status %s;\n"
+          "{\n", tmp_id_str);
+        str = mputstr(str, expr.preamble);
+        str = mputprintf(str, "%s = %s;\n", tmp_id_str, expr.expr);
+        str = mputstr(str, expr.postamble);
+        str = mputprintf(str, "}\n"
+          "switch (%s) {\n", tmp_id_str);
+      } else {
+        str = mputprintf(str, "switch (%s) {\n", expr.expr);
+      }
+      Code::free_expr(&expr);
+      str = mputstr(str, "case ALT_YES:\n");
+      StatementBlock *block = ag->get_block();
+      if (block && block->get_nof_stmts() > 0) {
+        str = mputstr(str, "{\n");
+        if (debugger_active) {
+          str = mputstr(str, "TTCN3_Debug_Scope debug_scope;\n");
+        }
+        str = block->generate_code(str, def_glob_vars, src_glob_vars);
+        str = mputstr(str, "}\n");
+      }
+      if (!block || block->has_return() != StatementBlock::RS_YES)
+        str = mputstr(str, "return ALT_YES;\n");
+      if (can_repeat)
+        str = mputstr(str, "case ALT_REPEAT:\n"
+          "return ALT_REPEAT;\n");
+      if (agtype == AltGuard::AG_REF || agtype == AltGuard::AG_INVOKE) {
+        str = mputprintf(str, "case ALT_BREAK:\n"
+        "return ALT_BREAK;\n");
+      }
+      if (!has_else_branch)
+        str = mputstr(str, "case ALT_MAYBE:\n"
+          "ret_val = ALT_MAYBE;\n");
+      str = mputstr(str, "default:\n"
+        "break;\n"
+        "}\n");
+      // closing statement blocks
+      for ( ; blockcount > 0; blockcount--) str = mputstr(str, "}\n");
       }
     }
     if (!has_else_branch) str = mputstr(str, "return ret_val;\n");
