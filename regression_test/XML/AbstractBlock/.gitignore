@@ -1,0 +1,7 @@
+AbstractBlock
+AbstractBlock.exe
+AbstractBlock*.cc
+AbstractBlock*.hh
+*.d
+AbstractBlock.log
+compile

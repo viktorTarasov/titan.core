@@ -2,6 +2,7 @@ compile
 General_Types.??
 gtpctest.??
 GTPv2_Types.??
+*.d
 gtpctest
 gtpctest.exe
-
+gtpctest.log

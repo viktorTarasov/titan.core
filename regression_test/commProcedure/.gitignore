@@ -14,5 +14,7 @@ ProcPort_se[qt].cc
 ProcPort_se[qt]of.cc
 ProcPort_union.cc
 ProcPort.hh
+AdvancedRedirects*.cc
+AdvancedRedirects*.hh
 *.log
 compile

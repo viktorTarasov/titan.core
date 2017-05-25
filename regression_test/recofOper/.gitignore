@@ -4,4 +4,12 @@ TrecofOper_se[qt].cc
 TrecofOper_se[qt]of.cc
 TrecofOper_union.cc
 TrecofOper.hh
+BerType*.cc
+BerType*.hh
+Circular*.cc
+Circular*.hh
+TrecofCompat*.cc
+TrecofCompat*.hh
+TrecofParamRef*.cc
+TrecofParamRef*.hh
 recofOper.log

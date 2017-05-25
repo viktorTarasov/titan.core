@@ -1,0 +1,11 @@
+UseNilLong
+UseNilLong.exe
+UseNilLong*.cc
+UseNilLong*.hh
+UsefulTtcn3Types*.cc
+UsefulTtcn3Types*.hh
+XSD*.cc
+XSD*.hh
+*.d
+UseNilLong.log
+compile

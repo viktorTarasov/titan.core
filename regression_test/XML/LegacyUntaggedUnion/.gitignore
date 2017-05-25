@@ -1,0 +1,12 @@
+LegacyUnionUntagged
+LegacyUnionUntagged.exe
+LegacyUnionUntagged-rt2
+LegacyUnionUntagged-rt2.exe
+LegacyUntaggedUnion.ttcn
+LegacyUntaggedUnion*.cc
+LegacyUntaggedUnion*.hh
+converter*.cc
+converter*.hh
+*.d
+LegacyUnionUntagged*.log
+compile

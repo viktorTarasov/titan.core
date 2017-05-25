@@ -16,6 +16,8 @@ compile
 *.log
 Xertest
 Xertest.exe
+Xertest-rt2
+Xertest-rt2.exe
 byhand
 *.gc??
 gcov.out

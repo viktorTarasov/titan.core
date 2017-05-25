@@ -12,4 +12,12 @@ ImplMsgEncData_se[qt].cc
 ImplMsgEncData_se[qt]of.cc
 ImplMsgEncData_union.cc
 ImplMsgEncData.hh
+AddressPortNegTest*.cc
+AddressPortNegTest*.hh
+HS41022*.cc
+HS41022*.hh
+PortType*.cc
+PortType*.hh
+TmultipleRedirects*.cc
+TmultipleRedirects*.hh
 *.log

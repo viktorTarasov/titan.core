@@ -1,0 +1,9 @@
+Test
+Test.exe
+Test*.cc
+Test*.hh
+Module*.cc
+Module*.hh
+*.d
+Test.log
+compile

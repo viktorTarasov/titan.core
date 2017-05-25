@@ -4,4 +4,6 @@ compile
 *.d
 HN25015
 HN25015.exe
-HN25015.log
+HN25015-rt2
+HN25015-rt2.exe
+HN25015*.log

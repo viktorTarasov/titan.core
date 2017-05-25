@@ -1,0 +1,8 @@
+templateConcat
+templateConcat.exe
+TemplateConcat*.cc
+TemplateConcat*.hh
+Types*.cc
+Types*.hh
+templateConcat.log
+compile

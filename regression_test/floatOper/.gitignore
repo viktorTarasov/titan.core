@@ -1,7 +1,10 @@
-TfloatOper
+TfloatOperTests
+TfloatOperTests.exe
 TfloatOper.cc
 TfloatOper_se[qt].cc
 TfloatOper_se[qt]of.cc
 TfloatOper_union.cc
 TfloatOper.hh
+TfloatOperSpecial*.cc
+TfloatOperSpecial*.hh
 floatOper.log

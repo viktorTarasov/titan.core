@@ -1,0 +1,12 @@
+RecordOmit
+RecordOmit.exe
+RecordOmit-rt2
+RecordOmit-rt2.exe
+RecordOmit.ttcn
+RecordOmit*.cc
+RecordOmit*.hh
+converter*.cc
+converter*.hh
+*.d
+RecordOmit*.log
+compile
