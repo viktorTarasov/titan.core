@@ -728,7 +728,7 @@ void TTCN_Default::restore_control_defaults()
   if (!control_defaults_saved)
     TTCN_error("Internal error: Control part defaults are not saved.");
   if (list_head != NULL)
-    TTCN_error("Internal error: There are defaults timers. "
+    TTCN_error("Internal error: There are active defaults. "
       "Control part defaults cannot be restored.");
   // restore the list of control part defaults from the backup
   list_head = backup_head;
