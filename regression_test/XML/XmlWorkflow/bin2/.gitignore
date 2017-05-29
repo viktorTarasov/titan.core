@@ -12,3 +12,4 @@ XmlTest.exe
 rlxml.xml
 soap.xml
 wsdl.xml
+*.log

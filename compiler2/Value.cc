@@ -287,6 +287,8 @@ namespace Common {
       case OPTYPE_ENCODE:
       case OPTYPE_ISPRESENT:
       case OPTYPE_TTCN2STRING:
+      case OPTYPE_ISVALUE:
+      case OPTYPE_ISBOUND:
         u.expr.ti1=p.u.expr.ti1->clone();
         break;
       case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2]
@@ -355,6 +357,10 @@ namespace Common {
       case OPTYPE_LOG2STR:
       case OPTYPE_ANY2UNISTR:
         u.expr.logargs = p.u.expr.logargs->clone();
+        break;
+      case OPTYPE_ISTEMPLATEKIND:
+        u.expr.ti1 = p.u.expr.ti1->clone();
+        u.expr.v2 = p.u.expr.v2->clone();
         break;
       default:
         FATAL_ERROR("Value::Value()");
