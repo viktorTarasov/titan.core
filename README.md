@@ -126,6 +126,7 @@ Compressed update site and SHA512 checksum:
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.GRE.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.HTTP2.git
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.M2PA.git 
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.M2UA.git
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.NDP.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.NTAF.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.ROSE.git 
@@ -141,8 +142,9 @@ Compressed update site and SHA512 checksum:
 
 ## Protocol Emulations
 
-* git://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.SCCP.git
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.M3UA.git
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.SCCP.git
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolEmulations.SUA.git
 
 ## Libraries:
 
