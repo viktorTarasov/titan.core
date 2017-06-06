@@ -99,7 +99,7 @@ boolean generate_skeleton = FALSE, force_overwrite = FALSE,
   force_gen_seof = FALSE, omit_in_value_list = FALSE,
   warnings_for_bad_variants = FALSE, debugger_active = FALSE,
   legacy_unbound_union_fields = FALSE, split_to_slices = FALSE,
-  legacy_untagged_union;
+  legacy_untagged_union, disable_user_info;
 
 // Default code splitting mode is set to 'no splitting'.
 CodeGenHelper::split_type code_splitting_mode = CodeGenHelper::SPLIT_NONE;
@@ -388,7 +388,7 @@ static boolean is_valid_asn1_filename(const char* file_name)
 static void usage()
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abcdEfgijlLMnNOpqrRsStuwxXyY] [-J file] [-K file] [-z file] [-V verb_level]\n"
+    "usage: %s [-abcdDEfgijlLMnNOpqrRsStuwxXyY] [-J file] [-K file] [-z file] [-V verb_level]\n"
     "	[-o dir] [-U none|type|'number'] [-P modulename.top_level_pdu_name] [-Q number] ...\n"
     "	[-T] module.ttcn [-A] module.asn ...\n"
     "	or  %s -v\n"
@@ -400,6 +400,7 @@ static void usage()
     "	-B:		allow selected union field to be unbound (legacy behavior)\n"
     "	-c:		write out checksums in case of error\n"
     "	-d:		treat default fields as omit\n"
+    "	-D:		disable user and time information generation in the generated files\n"
     "	-E:		display only warnings for unrecognized encoding variants\n"
     "	-f:		force overwriting of output files\n"
     "	-g:		emulate GCC error/warning message format\n"
@@ -489,7 +490,7 @@ int main(int argc, char *argv[])
     s0flag = false, Cflag = false, yflag = false, Uflag = false, Qflag = false,
     Sflag = false, Kflag = false, jflag = false, zflag = false, Fflag = false,
     Mflag = false, Eflag = false, nflag = false, Bflag = false, errflag = false,
-    print_usage = false, ttcn2json = false, Nflag = false; 
+    print_usage = false, ttcn2json = false, Nflag = false, Dflag = false; 
 
   CodeGenHelper cgh;
 
@@ -583,7 +584,7 @@ int main(int argc, char *argv[])
 
   if (!ttcn2json) {
     for ( ; ; ) {
-      int c = getopt(argc, argv, "aA:bBcC:dEfFgijJ:K:lLMnNo:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
+      int c = getopt(argc, argv, "aA:bBcC:dDEfFgijJ:K:lLMnNo:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
       if (c == -1) break;
       switch (c) {
       case 'a':
@@ -640,6 +641,10 @@ int main(int argc, char *argv[])
       case 'd':
         SET_FLAG(d);
         default_as_optional = TRUE;
+        break;
+      case 'D':
+        SET_FLAG(D);
+        disable_user_info = TRUE;
         break;
       case 'f':
         SET_FLAG(f);
@@ -814,7 +819,7 @@ int main(int argc, char *argv[])
         bflag || fflag || iflag || lflag || oflag || pflag || qflag ||
         rflag || sflag || tflag || uflag || wflag || xflag || Xflag || Rflag ||
         Uflag || yflag || Kflag || jflag || zflag || Fflag || Mflag || Eflag ||
-        nflag || Bflag) {
+        nflag || Bflag || Dflag) {
         errflag = true;
         print_usage = true;
       }
