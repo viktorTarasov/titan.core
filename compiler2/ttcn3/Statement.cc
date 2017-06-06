@@ -3251,40 +3251,44 @@ error:
     Error_Context cntxt(this, "In select union statement");
     select_union.expr->set_lowerid_to_ref();
     Type *t_gov=select_union.expr->get_expr_governor_last();
-    
+    boolean error = FALSE;
     if (t_gov == NULL || t_gov->get_typetype() == Type::T_ERROR) {
       select.expr->error("Cannot determine the type of the head expression");
-      return;
+      error = TRUE;
     }
     
-    Type::typetype_t tt=t_gov->get_typetype();
-    if (tt != Type::T_CHOICE_T && tt != Type::T_CHOICE_A && tt != Type::T_ANYTYPE) {
-      select.expr->error("The head must be of a union type or anytype");
-      return;
+    if (error == FALSE) {
+      Type::typetype_t tt = t_gov->get_typetype();
+      if (tt != Type::T_CHOICE_T && tt != Type::T_CHOICE_A && tt != Type::T_ANYTYPE) {
+        select.expr->error("The head must be of a union type or anytype");
+        error = TRUE;
+      }
     }
     
-    for(size_t i=0; i<select_union.sus->get_nof_sus(); i++) {
-      size_t size = select_union.sus->get_su_byIndex(i)->get_ids().size();
-      for(size_t j=0; j<size; j++) {
-        const Identifier *id = select_union.sus->get_su_byIndex(i)->get_id_byIndex(j);
-        if (!t_gov->has_comp_withName(*id)) {
-          select_union.sus->get_su_byIndex(i)->error("In the %lu. branch: '%s' is not an alternative of union type '%s'", i+1, id->get_ttcnname().c_str(), t_gov->get_typename().c_str());
-          continue;
-        }
-        for(size_t i2=i; i2<select_union.sus->get_nof_sus(); i2++) {
-          size_t size2 = select_union.sus->get_su_byIndex(i2)->get_ids().size();
-          for(size_t j2=j; j2<size2; j2++) {
-            if (i == i2 && j == j2) continue;
-            const Identifier *id2 = select_union.sus->get_su_byIndex(i2)->get_id_byIndex(j2);
-            if (id->get_ttcnname() == id2->get_ttcnname()) {
-              select_union.sus->get_su_byIndex(i2)->error("The '%s' is already present in the %lu. branch of select union", id->get_ttcnname().c_str(), i+1);
+    if (error == FALSE) {
+      for(size_t i=0; i<select_union.sus->get_nof_sus(); i++) {
+        size_t size = select_union.sus->get_su_byIndex(i)->get_ids().size();
+        for(size_t j=0; j<size; j++) {
+          const Identifier *id = select_union.sus->get_su_byIndex(i)->get_id_byIndex(j);
+          if (!t_gov->has_comp_withName(*id)) {
+            select_union.sus->get_su_byIndex(i)->error("In the %lu. branch: '%s' is not an alternative of union type '%s'", i+1, id->get_ttcnname().c_str(), t_gov->get_typename().c_str());
+            continue;
+          }
+          for(size_t i2=i; i2<select_union.sus->get_nof_sus(); i2++) {
+            size_t size2 = select_union.sus->get_su_byIndex(i2)->get_ids().size();
+            for(size_t j2=j; j2<size2; j2++) {
+              if (i == i2 && j == j2) continue;
+              const Identifier *id2 = select_union.sus->get_su_byIndex(i2)->get_id_byIndex(j2);
+              if (id->get_ttcnname() == id2->get_ttcnname()) {
+                select_union.sus->get_su_byIndex(i2)->error("The '%s' is already present in the %lu. branch of select union", id->get_ttcnname().c_str(), i+1);
+              }
             }
           }
         }
       }
     }
     
-    select_union.sus->chk(t_gov);
+    select_union.sus->chk();
   }
   void Statement::chk_for()
   {
@@ -5639,7 +5643,6 @@ error:
       return;
     }
     Common::Assignment* refd_ass = update_op.ref->get_refd_assignment(false);
-    Type* ref_type = NULL;
     if (refd_ass != NULL) {
       switch (refd_ass->get_asstype()) {
       case Definition::A_CONST:
@@ -5650,7 +5653,7 @@ error:
           "expected instead of %s", refd_ass->get_assname());
         return;
       }
-      ref_type = refd_ass->get_Type();
+      Type* ref_type = refd_ass->get_Type();
       if (ref_type != NULL &&
           !ErroneousDescriptors::can_have_err_attribs(ref_type)) {
         update_op.ref->error("Type `%s' cannot have erroneous attributes",
@@ -12031,7 +12034,7 @@ error:
     ids.add(id);
   }
 
-  void SelectUnion::chk(Type */*p_gov*/)
+  void SelectUnion::chk()
   {
     Error_Context cntxt(this, "In select union statement");
     block->chk();
@@ -12171,10 +12174,10 @@ error:
     return false;
   }
 
-  void SelectUnions::chk(Type *p_gov)
+  void SelectUnions::chk()
   {
     for(size_t i = 0; i < sus.size(); i++) {
-      sus[i]->chk(p_gov);
+      sus[i]->chk();
     }
   }
 

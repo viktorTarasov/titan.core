@@ -2983,6 +2983,54 @@ with {
 <END_TC>
 :exmp.
 
+.*---------------------------------------------------------------------*
+:h4.TTCN-3::SelectUnion: Head is erroneous and checking blocks
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+<TC - TTCN-3::SelectUnion: Head is erroneous and checking blocks>
+
+<COMPILE>
+<VERDICT_LEAF PASS>
+<MODULE TTCN ModuleA ModuleA.ttcn>
+module ModuleA {
+
+   function A()
+   {
+      var integer result;
+      var anytype msg;
+
+      select union (4)
+      {
+          case (integer)
+              { result := "abc"; }
+           case (charstring, charstring)
+              { result := 2; }
+           case (octetstring)
+              { result := 3; }
+           case (bitstring)
+              { result := 4; }
+      }
+      log("Result:  ", result);
+
+   }
+}
+with {
+   extension "anytype integer, charstring, bitstring, octetstring";
+}
+<END_MODULE>
+<RESULT IF_PASS COUNT 1>
+(?im)\berror\b.+?\bThe.+?\bhead.+?\bmust.+?\bbe.+?\bof.+?\bunion.+?\btype.+?\bor.+?\banytype
+<END_RESULT>
+<RESULT IF_PASS COUNT 1>
+(?im)\berror\b.+?\binteger.+?\bvalue.+?\bwas.+?\bexpected
+<END_RESULT>
+<RESULT IF_PASS POSITIVE>
+(?im)\bnotify\b.+?\bcode\b.+?\bnot\b.+?\bgenerated\b
+<END_RESULT>
+
+<END_TC>
+:exmp.
+
 
 :p.
 .*---------------------------------------------------------------------*

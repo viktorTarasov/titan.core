@@ -1489,7 +1489,7 @@ namespace Ttcn {
     StatementBlock *get_block() const { return block; }
     void add_id(Identifier* id);
     /* checking functions */
-    void chk(Type *p_gov);
+    void chk();
     void set_code_section(GovernedSimple::code_section_t p_code_section);
     char* generate_code_case(char *str, char*& def_glob_vars, char*& src_glob_vars,
       const char *type_name, bool &else_branch);
@@ -1524,8 +1524,7 @@ namespace Ttcn {
     StatementBlock::returnstatus_t has_return() const;
     bool has_receiving_stmt() const;
     /* checking functions */
-    /** p_gov is the governor type of select expression */
-    void chk(Type *p_gov);
+    void chk();
     /** checks whether all embedded statements are allowed in an interleaved
      * construct */
     void chk_allowed_interleave();
