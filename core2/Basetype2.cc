@@ -5976,7 +5976,7 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
         if (JSON_TOKEN_NUMBER != token && JSON_TOKEN_STRING != token &&
             JSON_TOKEN_LITERAL_TRUE != token && JSON_TOKEN_LITERAL_FALSE != token &&
             JSON_TOKEN_LITERAL_NULL != token) {
-          TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, (int)name_len, name);
+          JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_FIELD_TOKEN_ERROR, (int)name_len, name);
           return JSON_ERROR_FATAL;
         }
         continue;
