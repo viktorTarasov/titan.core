@@ -2104,7 +2104,12 @@ void Type::chk_xer() { // XERSTUFF semantic check
           ||ownertype == OT_COMP_FIELD) {
           // Name,Namespace is not inherited, X.693 amd1, 13.6
           // are you sure about the namespace?
-          XerAttributes::FreeNameChange(newx->name_);
+          // Anytype fields cannot have variants, so we must allow
+          // temporarily the inheritance of 'name as' variant in the
+          // anytype fields.
+          if (parent_type == NULL || parent_type->typetype != T_ANYTYPE) {
+            XerAttributes::FreeNameChange(newx->name_);
+          }
           //XerAttributes::FreeNamespace(newx->namespace_); // HR39678 bugfix beta
         }
       }

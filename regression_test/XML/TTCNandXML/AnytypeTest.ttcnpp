@@ -248,6 +248,77 @@ testcase tc_dec_anytype_DFE() runs on SAP {
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+// Test that the 'name as' variant of the anytype field's type inherited in the anytype field.
+
+type record MyRecord {
+  integer i
+} with {
+  variant "name as 'AAA'";
+}
+
+type record of MyRecord MyRecordOf
+with {
+  variant "name as 'BBB'";
+}
+
+const anytype c_anytype_nameas := {MyRecord := { i := 666} };
+
+const universal charstring c_anytype_nameas_str :=
+"<AAA>\n"&
+"\t<i>666</i>\n"&
+"</AAA>\n\n";
+
+const anytype c_anytype_nameas_ro := {MyRecordOf := {{ i := 666}} };
+
+const universal charstring c_anytype_nameas_ro_str :=
+"<BBB>\n"&
+"\t<AAA>\n"&
+"\t\t<i>666</i>\n"&
+"\t</AAA>\n"&
+"</BBB>\n\n";
+
+
+const RoAnytype c_anytypero_nameas := {{MyRecord := { i := 666} }};
+
+const universal charstring c_anytypero_nameas_str :=
+"<RoAnytype>\n"&
+"\t<AAA>\n"&
+"\t\t<i>666</i>\n"&
+"\t</AAA>\n"&
+"</RoAnytype>\n\n";
+
+const RoAnytype c_anytypero_nameas_ro := {{MyRecordOf := {{ i := 666}} }};
+
+const universal charstring c_anytypero_nameas_ro_str :=
+"<RoAnytype>\n"&
+"\t<BBB>\n"&
+"\t\t<AAA>\n"&
+"\t\t\t<i>666</i>\n"&
+"\t\t</AAA>\n"&
+"\t</BBB>\n"&
+"</RoAnytype>\n\n";
+
+
+testcase enc_anytype_name_as() runs on SAP
+{
+  CHECK_METHOD(exer_enc_at, c_anytype_nameas, c_anytype_nameas_str);
+  CHECK_METHOD(exer_enc_at, c_anytype_nameas_ro, c_anytype_nameas_ro_str);
+
+  CHECK_METHOD(exer_enc_roat, c_anytypero_nameas, c_anytypero_nameas_str);
+  CHECK_METHOD(exer_enc_roat, c_anytypero_nameas_ro, c_anytypero_nameas_ro_str);
+}
+
+testcase dec_anytype_name_as() runs on SAP
+{
+  CHECK_DECODE(exer_dec_at, c_anytype_nameas_str, anytype, c_anytype_nameas);
+  CHECK_DECODE(exer_dec_at, c_anytype_nameas_ro_str, anytype, c_anytype_nameas_ro);
+
+  CHECK_DECODE(exer_dec_roat, c_anytypero_nameas_str, RoAnytype, c_anytypero_nameas);
+  CHECK_DECODE(exer_dec_roat, c_anytypero_nameas_ro_str, RoAnytype, c_anytypero_nameas_ro);
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
 control {
   execute(enc_anytype());
   execute(dec_anytype());
@@ -265,6 +336,9 @@ control {
   execute(tc_dec_anytype_ro_untagged());
 
   execute(tc_dec_anytype_DFE());
+
+  execute(enc_anytype_name_as());
+  execute(dec_anytype_name_as());
 }
 
 
@@ -273,5 +347,5 @@ control {
 with {
   encode "XML"
   variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
-  extension "anytype integer, MyBool, charstring, octetstring"}
+  extension "anytype integer, MyBool, charstring, octetstring, MyRecord, MyRecordOf"}
 
