@@ -2736,7 +2736,7 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
       default:
         FATAL_ERROR("Type::generate_code_isbound(): invalid reference type");
       }
-    }
+    }//for
 
     Free(tmp_generalid_str);
     expr->expr = mputstr(expr->expr, closing_brackets);
