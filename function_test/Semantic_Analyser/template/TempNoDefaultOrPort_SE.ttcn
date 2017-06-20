@@ -1,0 +1,37 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+module TempNoDefaultOrPort_SE { //^In TTCN-3 module//
+
+type record MyRecordDefault { //In type \`\@TempNoDefaultOrPort\_SE\.MyRecordDefault\'// 
+    default def //In field \`def\':// //In type \`\@TempNoDefaultOrPort_SE\.MyRecordDefault\.def\'// //A template cannot contain a field with default type at any level//
+  }
+
+  type record MyRecordDefault2 { //In type \`\@TempNoDefaultOrPort\_SE\.MyRecordDefault2\'// 
+    default def //In field \`def\':// //In type \`\@TempNoDefaultOrPort_SE\.MyRecordDefault2\.def\'// //A template cannot contain a field with default type at any level//
+  }
+
+  type record of MyRecordDefault MyRecordOfDefault; //In type \`\@TempNoDefaultOrPort\_SE\.MyRecordOfDefault\'//
+
+
+  type union MyUnion { //In type \`\@TempNoDefaultOrPort\_SE\.MyUnion\':// 
+    integer choice1,
+    MyRecordOfDefault a, //In field \`a\'://
+    anytype b //In type \`\@TempNoDefaultOrPort_SE\.anytype\'// //In field \`b\'://
+  }
+
+  template MyUnion m_integerChosen := { //In template definition//
+    choice1 := 5
+  }
+
+} with {
+  extension "anytype MyRecordDefault2" //In field \`MyRecordDefault2\'\://
+}

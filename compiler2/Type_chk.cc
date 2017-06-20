@@ -5525,6 +5525,46 @@ bool Type::chk_this_template_ref_pard(Ttcn::Ref_pard* ref_pard, Common::Assignme
   return false;
 }
 
+void Type::chk_this_template_incorrect_field() {
+  Type *t = get_type_refd_last();
+  if (t->checked_incorrect_field) return;
+  t->checked_incorrect_field = true;
+  t->chk();
+  Error_Context cntxt(t, "In type `%s'", t->get_fullname().c_str());
+  switch(t->typetype) {
+    case T_ANYTYPE:
+    case T_CHOICE_T:
+    case T_SEQ_T:
+    case T_SET_T:
+    case T_OPENTYPE:
+      for (size_t i = 0; i < t->get_nof_comps(); i++) {
+        Error_Context cntxt(t->get_comp_byIndex(i), "In field `%s'", t->get_comp_byIndex(i)->get_name().get_dispname().c_str());
+        t->get_comp_byIndex(i)->get_type()->chk_this_template_incorrect_field();
+      }
+      break;
+    case T_SEQOF:
+    case T_SETOF:
+    case T_ARRAY:
+      t->get_ofType()->chk_this_template_incorrect_field();
+      break;
+    case T_COMPONENT:
+      for (size_t i = 0; i < t->get_CompBody()->get_nof_asss(); i++) {
+        Assignment* ass = t->get_CompBody()->get_ass_byIndex(i);
+        Error_Context cntxt(ass, "In field `%s'", ass->get_id().get_dispname().c_str());
+        ass->get_Type()->chk_this_template_incorrect_field();
+      }
+      break;
+    case T_DEFAULT:
+      t->error("A template cannot contain a field with default type at any level.");
+      break;
+    case T_PORT:
+      t->error("A template cannot contain a field with port type at any level.");
+      break;
+    default:
+      break;
+  }
+}
+
 bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
   namedbool allow_omit, namedbool allow_any_or_omit, namedbool sub_chk,
   namedbool implicit_omit, Common::Assignment *lhs)
@@ -5677,7 +5717,7 @@ bool Type::chk_this_template_generic(Template *t, namedbool incomplete_allowed,
     /* Note: A "permuation" itself has no type - it is just a fragment. */
     if(sub_type!=NULL) sub_type->chk_this_template_generic(t);
   }
-
+  
   return self_ref;
 }
 

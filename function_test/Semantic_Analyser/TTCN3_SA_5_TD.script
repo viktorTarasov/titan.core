@@ -13,6 +13,7 @@
 .*   Lovassy, Arpad
 .*   Pandi, Krisztian
 .*   Szabados, Kristof
+.*   Szabo, Bence Janos
 .*   Szabo, Janos Zoltan – initial implementation
 .*   Szalai, Endre
 .*   Tatarka, Gabor
@@ -5154,7 +5155,10 @@ module ModuleA {
 <RESULT IF_PASS COUNT 1>
 (?im)\berror\b.+?Type.+?mismatch.+?default.+?expected
 <END_RESULT>
-<RESULT IF_PASS COUNT 3>
+<RESULT IF_PASS COUNT 1>
+(?im)\berror\b.+?template.+?cannot.+?contain.+?field.+?default
+<END_RESULT>
+<RESULT IF_PASS COUNT 4>
 (?is)\berror:
 <END_RESULT>
 <RESULT IF_PASS POSITIVE>

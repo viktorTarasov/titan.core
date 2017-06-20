@@ -1435,8 +1435,6 @@ namespace Ttcn {
 
           for (size_t t = 0; t < imp.impmods_v.size(); t++) {
             const ImpMod *im = imp.impmods_v[t];
-            const Identifier& im_id = im->get_modid();
-            Common::Module *cm = modules->get_mod_byId(im_id); // never NULL
 
             refch.mark_state();
             if (PRIVATE != im->get_visibility()) {
@@ -1448,6 +1446,8 @@ namespace Ttcn {
                 refch.prev_state();
                 continue;
               } else {
+                const Identifier& im_id = im->get_modid();
+                Common::Module *cm = modules->get_mod_byId(im_id); // never NULL
                 refch.add(m->get_fullname());
                 cm->chk_imp(refch, moduleStack);
               }
@@ -4123,6 +4123,7 @@ namespace Ttcn {
         checked = true;
         type->chk_this_template_generic(def_template, INCOMPLETE_ALLOWED,
           OMIT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, IMPLICIT_OMIT == has_implicit_omit_attr() ? IMPLICIT_OMIT : NOT_IMPLICIT_OMIT, 0);
+        type->chk_this_template_incorrect_field();
         if (!semantic_check_only) {
           def_template->set_genname_prefix("modulepar_");
           def_template->set_genname_recursive(get_genname());
@@ -4321,7 +4322,7 @@ namespace Ttcn {
       derived_ref != NULL ? INCOMPLETE_ALLOWED : WARNING_FOR_INCOMPLETE,
       OMIT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK,
       IMPLICIT_OMIT == has_implicit_omit_attr() ? IMPLICIT_OMIT : NOT_IMPLICIT_OMIT, 0);
-
+    type->chk_this_template_incorrect_field();
     erroneous_attrs = chk_erroneous_attr(w_attrib_path, type, get_my_scope(),
       get_fullname(), false);
     if (erroneous_attrs) body->add_err_descr(NULL, erroneous_attrs->get_err_descr());
@@ -4718,10 +4719,6 @@ namespace Ttcn {
 
   char *Def_Template::generate_code_str(char *str)
   {
-    const string& t_genname = get_genname();
-    const char *genname_str = t_genname.c_str();
-    const string& type_genname = type->get_genname_template(my_scope);
-    const char *type_genname_str = type_genname.c_str();
     if (fp_list) {
       const char *dispname_str = id->get_dispname().c_str();
       NOTSUPP("Code generation for parameterized local template `%s'",
@@ -4729,6 +4726,10 @@ namespace Ttcn {
       str = mputprintf(str, "/* NOT SUPPORTED: template %s */\n",
                        dispname_str);
     } else {
+      const string& t_genname = get_genname();
+      const char *genname_str = t_genname.c_str();
+      const string& type_genname = type->get_genname_template(my_scope);
+      const char *type_genname_str = type_genname.c_str();
       if (base_template) {
         // non-parameterized modified template
         if (use_runtime_2 && body->get_needs_conversion()) {
@@ -4785,8 +4786,6 @@ namespace Ttcn {
 
   void Def_Template::ilt_generate_code(ILT *ilt)
   {
-    const string& t_genname = get_genname();
-    const char *genname_str = t_genname.c_str();
     char*& def=ilt->get_out_def();
     char*& init=ilt->get_out_branches();
     if (fp_list) {
@@ -4797,6 +4796,8 @@ namespace Ttcn {
       init = mputprintf(init, "/* NOT SUPPORTED: template %s */\n",
         dispname_str);
     } else {
+      const string& t_genname = get_genname();
+      const char *genname_str = t_genname.c_str();
       // non-parameterized template
       // use the default constructor for initialization
       def = mputprintf(def, "%s %s;\n",
@@ -5113,6 +5114,7 @@ namespace Ttcn {
       gen_restriction_check =
         initial_value->chk_restriction("template variable definition",
                                        template_restriction, initial_value);
+      type->chk_this_template_incorrect_field();
       if (!semantic_check_only) {
         initial_value->set_genname_recursive(get_genname());
         initial_value->set_code_section(GovernedSimple::CS_INLINE);
@@ -5242,10 +5244,10 @@ namespace Ttcn {
     const string& t_genname = get_genname();
     const char *genname_str = t_genname.c_str();
     char*& def=ilt->get_out_def();
-    char*& init=ilt->get_out_branches();
     def = mputprintf(def, "%s %s;\n",
       type->get_genname_template(my_scope).c_str(), genname_str);
     if (initial_value) {
+      char*& init=ilt->get_out_branches();
       init = initial_value->generate_code_init(init, genname_str);
       if (template_restriction!=TR_NONE && gen_restriction_check)
         init = Template::generate_restriction_check_code(init, genname_str,

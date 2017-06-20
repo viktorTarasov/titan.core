@@ -610,6 +610,7 @@ namespace Common {
     gen_json_coder_functions = false;
     default_encoding.type = CODING_UNSET;
     default_decoding.type = CODING_UNSET;
+    checked_incorrect_field = false;
   }
 
   void Type::clean_up()
@@ -2267,12 +2268,12 @@ namespace Common {
       int used_bits = 0; // number of bits used to store all previous fields
       for(size_t i = 0; i < get_nof_comps(); i++) { // field attributes
         CompField *cf = get_comp_byIndex(i);
-        const Identifier& field_id = cf->get_name();
         Type *field_type = cf->get_type();
-        Type *field_type_last = field_type->get_type_refd_last();
         field_type->force_raw();
         RawAST *rawpar = field_type->rawattrib;
         if (rawpar) {
+          const Identifier& field_id = cf->get_name();
+          Type *field_type_last = field_type->get_type_refd_last();
           if (rawpar->prepadding != 0) {
             used_bits = (used_bits + rawpar->prepadding - 1) / rawpar->prepadding *
               rawpar->prepadding;

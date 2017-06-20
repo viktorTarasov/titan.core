@@ -18,6 +18,7 @@
  *   Kovacs, Ferenc
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Tatarka, Gabor
@@ -446,6 +447,10 @@ namespace Common {
       * refer to this type may have JSON encoding, in which case this type needs
       * to have JSON coder functions to code them. */
     bool gen_json_coder_functions;
+    
+    /** True if we already checked this type for default or port field*/
+    bool checked_incorrect_field;
+    
 
     /** Copy constructor, for the use of Type::clone() only. */
     Type(const Type& p);
@@ -883,6 +888,8 @@ namespace Common {
     bool chk_this_template_generic(Template *t, namedbool incomplete_allowed,
      namedbool allow_omit, namedbool allow_any_or_omit, namedbool sub_chk,
      namedbool implicit_omit, Common::Assignment *lhs);
+    /** Checks if a template's type contains default or port field somehow.*/
+    void chk_this_template_incorrect_field();
   private:
     bool chk_this_refd_template(Template *t, Common::Assignment *lhs);
     void chk_this_template_length_restriction(Template *t);
