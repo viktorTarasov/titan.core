@@ -129,9 +129,6 @@ modulepar template boolean mptb2 := false;
 modulepar template CT mptcomp1 := (null, mtc, system);
 modulepar template CT mptcomp2;
 
-modulepar template default mptdef1 := null;
-modulepar template default mptdef2;
-
 modulepar template verdicttype mptvt1 := none;
 modulepar template verdicttype mptvt2 := (pass, fail, error);
 modulepar template verdicttype mptvt3;
@@ -322,15 +319,6 @@ testcase tc_ref_component() runs on CT
   template CT t_mpcomp2 := null;
   if (not match(mpcomp2, t_mpcomp2)) {
     setverdict(fail, "Expected(mpcomp2): ", t_mpcomp2, ", got: ", mpcomp2);
-  }
-  setverdict(pass);
-}
-
-testcase tc_ref_default() runs on CT
-{
-  template default t_mpdef2 := null;
-  if (not match(mpdef2, t_mpdef2)) {
-    setverdict(fail, "Expected(mpdef2): ", t_mpdef2, ", got: ", mpdef2);
   }
   setverdict(pass);
 }
@@ -582,15 +570,6 @@ testcase tc_ref_component_template() runs on CT
   setverdict(pass);
 }
 
-testcase tc_ref_default_template() runs on CT
-{
-  template default mptdef2_exp := null;
-  if (log2str(mptdef2) != log2str(mptdef2_exp)) {
-    setverdict(fail, "Expected(mptdef2): ", mptdef2_exp, ", got: ", mptdef2);
-  }
-  setverdict(pass);
-}
-
 testcase tc_ref_enumerated_template() runs on CT
 {
   template Size mptenum1_exp := (Small, Large);
@@ -758,7 +737,6 @@ control {
   execute(tc_ref_objid());
   execute(tc_ref_verdicttype());
   execute(tc_ref_component());
-  execute(tc_ref_default());
   execute(tc_ref_enumerated());
   execute(tc_ref_record_of());
   execute(tc_ref_record());
@@ -776,7 +754,6 @@ control {
   execute(tc_ref_objid_template());
   execute(tc_ref_verdicttype_template());
   execute(tc_ref_component_template());
-  execute(tc_ref_default_template());
   execute(tc_ref_enumerated_template());
   execute(tc_ref_record_of_template());
   execute(tc_ref_record_template());
