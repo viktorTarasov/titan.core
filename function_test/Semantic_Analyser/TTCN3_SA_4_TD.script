@@ -1735,10 +1735,10 @@ module ModuleA {
                         MyRecord    field32,
 	                address       field41,
 	                address       field42,
-                  default       field61,
-                  default       field62,
 	                MyCT        field51,
 	                MyCT        field52,
+                  default     field61,
+                  default     field62,
 	                float       field71,
 	                float       field72
     }
@@ -1751,12 +1751,12 @@ module ModuleA {
                       in MyRecord       par_32,
                       address             par_41,    // address
                       in address          par_42,
-                      template float    par_51,      // template
-                      in template float par_52,
-                      MyCT                par_61,    // component type
-                      in MyCT             par_62,
-                      default           par_71,      // default
-                      in default        par_72 ) := {
+                      MyCT                par_51,    // component type
+                      in MyCT             par_52,
+                      default           par_61,      // default
+                      in default        par_62,
+                      template float    par_71,      // template
+                      in template float par_72 ) := {
                                                       field11 := par_11,
                                                       field12 := par_12,
                                                       field21 := par_21,
@@ -1764,13 +1764,13 @@ module ModuleA {
                                                       field31 := par_31,
                                                       field32 := par_32,
                                                       field41 := par_41,
-                                                      field42 := par_42,    
-                                                      field61 := par_71,    
-                                                      field62 := par_72,
-                                                      field51 := par_61,    
-                                                      field52 := par_62,
-                                                      field71 := par_51,
-                                                      field72 := par_52
+                                                      field42 := par_42,
+                                                      field51 := par_51,    
+                                                      field52 := par_52,    
+                                                      field61 := par_61,    
+                                                      field62 := par_62,
+                                                      field71 := par_71,
+                                                      field72 := par_72
                       }
     function MyFunc( template MyRec mytemp ) {}
     control {
@@ -1782,7 +1782,7 @@ module ModuleA {
 	var MyCT myct_1, myct_2;
 	var default mydef_1, mydef_2;
         MyFunc(MyTemp( 1,myint, myoctet,'A5'O, myrecord,{6.7,true}, {5},myadd,
-	               mytemp,7.8, myct_1,myct_2, mydef_1,mydef_1));
+	               myct_1,myct_2, mydef_1,mydef_1, mytemp,7.8));
     }
 }
 <END_MODULE>
@@ -1833,13 +1833,13 @@ module ModuleA {
         MyRecord          par_31  := {6.7,true},// user-defined structured type
         in MyRecord       par_32  := {6.7,true},
         address           par_41  := {5},       // address
-        in address        par_42  := {5},
-        template float    par_51  := 7.8,       // template
-        in template float par_52  := 7.8,
-        MyCT              par_61,               // component type
-        in MyCT           par_62,
-        default           par_71,               // default
-        in default        par_72 ) := {
+        in address        par_42  := {5},               // default
+        MyCT              par_51,               // component type
+        in MyCT           par_52,
+        in default        par_62,
+        default           par_61,
+        template float    par_71  := 7.8,       // template
+        in template float par_72  := 7.8 ) := {
             field11 := par_11,
             field12 := par_12,
             field21 := par_21,
@@ -1848,12 +1848,12 @@ module ModuleA {
             field32 := par_32,
             field41 := par_41,
             field42 := par_42,
-            field51 := par_61,    
-            field52 := par_62,    
-            field61 := par_71,    
-            field62 := par_72,
-            field71 := par_51,
-            field72 := par_52
+            field51 := par_51,    
+            field52 := par_52,    
+            field61 := par_61,    
+            field62 := par_62,
+            field71 := par_71,
+            field72 := par_72
         }
     function MyFunc( template MyRec mytemp ) {}
     control {
@@ -1865,7 +1865,7 @@ module ModuleA {
 	var MyCT myct_1, myct_2;
 	var default mydef_1, mydef_2;
         MyFunc(MyTemp( 1,myint, myoctet,'A5'O, myrecord,{6.7,true}, {5},myadd,
-	               mytemp,7.8, myct_1,myct_2, mydef_1,mydef_1));
+	               myct_1,myct_2, mydef_1,mydef_1, mytemp,7.8));
     }
 }
 <END_MODULE>
