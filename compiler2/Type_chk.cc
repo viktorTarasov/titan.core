@@ -5555,10 +5555,10 @@ void Type::chk_this_template_incorrect_field() {
       }
       break;
     case T_DEFAULT:
-      t->error("A template cannot contain a field with default type at any level.");
+      t->warning("A template should not contain a field with default type at any level.");
       break;
     case T_PORT:
-      t->error("A template cannot contain a field with port type at any level.");
+      t->warning("A template should not contain a field with port type at any level.");
       break;
     default:
       break;

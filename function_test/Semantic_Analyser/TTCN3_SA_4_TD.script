@@ -811,20 +811,23 @@ module ModuleA {
         charstring field2,
         MySet      field3,
 	address    field4,
-	MyCT       field5
+	MyCT       field5,
+  default    field6
     }
-    template MyRec MyTempE := {?,?,?,?,?}          // empty parameter list
+    template MyRec MyTempE := {?,?,?,?,?,?}          // empty parameter list
     template MyRec MyTemp (
         charstring     par_1,
 	address        par_2,
 	MyCT           par_3,
+  default        par_4,
 	MySet          par_5,
 	template float par_6 ) := {
 			            field1 := par_6,
 			            field2 := par_1,
 			            field3 := par_5,
 			            field4 := par_2,
-			            field5 := par_3
+			            field5 := par_3,
+                  field6 := par_4
     }
 }
 <END_MODULE>
@@ -1732,6 +1735,8 @@ module ModuleA {
                         MyRecord    field32,
 	                address       field41,
 	                address       field42,
+                  default       field61,
+                  default       field62,
 	                MyCT        field51,
 	                MyCT        field52,
 	                float       field71,
@@ -1759,7 +1764,11 @@ module ModuleA {
                                                       field31 := par_31,
                                                       field32 := par_32,
                                                       field41 := par_41,
-                                                      field42 := par_42,
+                                                      field42 := par_42,    
+                                                      field61 := par_71,    
+                                                      field62 := par_72,
+                                                      field51 := par_61,    
+                                                      field52 := par_62,
                                                       field71 := par_51,
                                                       field72 := par_52
                       }
@@ -1811,6 +1820,8 @@ module ModuleA {
 	address       field42,
 	MyCT        field51,
 	MyCT        field52,
+  default     field61,
+  default     field62,
 	float       field71,
 	float       field72
     }
@@ -1837,6 +1848,10 @@ module ModuleA {
             field32 := par_32,
             field41 := par_41,
             field42 := par_42,
+            field51 := par_61,    
+            field52 := par_62,    
+            field61 := par_71,    
+            field62 := par_72,
             field71 := par_51,
             field72 := par_52
         }
@@ -1918,9 +1933,9 @@ module ModuleA {
 (?im)\berror\b.+?template.+?cannot.+?have.+?inout.+?parameter
 <END_RESULT>
 <RESULT IF_PASS COUNT 1>
-(?im)\berror\b.+?template.+?cannot.+?contain.+?field.+?default
+(?im)\bwarning\b.+?template.+?should.+?not.+?contain.+?field.+?default
 <END_RESULT>
-<RESULT IF_PASS COUNT 15>
+<RESULT IF_PASS COUNT 14>
 (?is)\berror:
 <END_RESULT>
 <RESULT IF_PASS POSITIVE>

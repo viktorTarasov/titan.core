@@ -12,11 +12,11 @@
 module TempNoDefaultOrPort_SE { //^In TTCN-3 module//
 
 type record MyRecordDefault { //In type \`\@TempNoDefaultOrPort\_SE\.MyRecordDefault\'// 
-    default def //In field \`def\':// //In type \`\@TempNoDefaultOrPort_SE\.MyRecordDefault\.def\'// //A template cannot contain a field with default type at any level//
+    default def //In field \`def\':// //In type \`\@TempNoDefaultOrPort_SE\.MyRecordDefault\.def\'// //A template should not contain a field with default type at any level//
   }
 
   type record MyRecordDefault2 { //In type \`\@TempNoDefaultOrPort\_SE\.MyRecordDefault2\'// 
-    default def //In field \`def\':// //In type \`\@TempNoDefaultOrPort_SE\.MyRecordDefault2\.def\'// //A template cannot contain a field with default type at any level//
+    default def //In field \`def\':// //In type \`\@TempNoDefaultOrPort_SE\.MyRecordDefault2\.def\'// //A template should not contain a field with default type at any level//
   }
 
   type record of MyRecordDefault MyRecordOfDefault; //In type \`\@TempNoDefaultOrPort\_SE\.MyRecordOfDefault\'//

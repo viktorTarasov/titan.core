@@ -2030,9 +2030,9 @@ module Temp {
 (?im)template.+?cannot.+?\bbe\b.+?defined.+?\bfor\b.+?port.+?type
 <END_RESULT>
 <RESULT COUNT 1>
-(?im)\berror\b.+?template.+?cannot.+?contain.+?field.+?port
+(?im)\bwarning\b.+?template.+?should.+?not.+?contain.+?field.+?port
 <END_RESULT>
-<RESULT COUNT 2>
+<RESULT COUNT 1>
 (?is)\berror:
 <END_RESULT>
 <RESULT>

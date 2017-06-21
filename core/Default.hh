@@ -114,7 +114,6 @@ inline boolean operator!=(Default_Base *default_value,
   { return !(default_value == other_value); }
 
 
-//FIXME: It is not possible to create default templates (NegSem_15_TopLevel_003)
 class DEFAULT_template : public Base_Template {
   union {
     Default_Base *single_value;
