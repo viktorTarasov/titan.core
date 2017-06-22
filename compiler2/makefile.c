@@ -4864,7 +4864,7 @@ static void usage(void)
     "	-f:		force overwriting of the output Makefile\n"
     "	-g:		generate Makefile for use with GNU make\n"
     "	-I path:	Add path to the search paths when using TPD files\n"
-    "	-J file:	The names of files taken from file instead of command line"
+    "	-J file:	The names of files taken from file instead of command line\n"
     "	-K file:	enable selective code coverage\n"
     "	-l:		use dynamic linking\n"
     "	-L:		create makefile with library archive as the default target\n"
