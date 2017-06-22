@@ -5550,8 +5550,18 @@ void Type::chk_this_template_incorrect_field() {
     case T_COMPONENT:
       for (size_t i = 0; i < t->get_CompBody()->get_nof_asss(); i++) {
         Assignment* ass = t->get_CompBody()->get_ass_byIndex(i);
-        Error_Context cntxt(ass, "In field `%s'", ass->get_id().get_dispname().c_str());
-        ass->get_Type()->chk_this_template_incorrect_field();
+        switch(ass->get_asstype()) {
+          case Assignment::A_CONST:          /**< value (const) */
+          case Assignment::A_VAR:            /**< variable (TTCN-3) */
+          case Assignment::A_VAR_TEMPLATE:   /**< template variable, dynamic template (TTCN-3) */
+          case Assignment::A_PORT:           /**< port (TTCN-3) */
+          {
+            Error_Context cntxt(ass, "In field `%s'", ass->get_id().get_dispname().c_str());
+            ass->get_Type()->chk_this_template_incorrect_field();
+          }
+        default:
+          break;
+        }
       }
       break;
     case T_DEFAULT:

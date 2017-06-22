@@ -21,11 +21,23 @@ type record MyRecordDefault { //In type \`\@TempNoDefaultOrPort\_SE\.MyRecordDef
 
   type record of MyRecordDefault MyRecordOfDefault; //In type \`\@TempNoDefaultOrPort\_SE\.MyRecordOfDefault\'//
 
+  type port P message { //warning\: A template should not contain a field with port type at any level\.// //In type \`\@TempNoDefaultOrPort_SE\.P\'\://
+    inout integer
+  }
+
+  type component MyComp { //In type \`\@TempNoDefaultOrPort_SE\.MyComp\'\://
+    port P p; //In field \`p\'\://
+    timer t; /* This shound not cause FATAL_ERROR */
+    var integer i;
+    const integer i3 := 4;
+    var template integer i4;
+  }
 
   type union MyUnion { //In type \`\@TempNoDefaultOrPort\_SE\.MyUnion\':// 
     integer choice1,
     MyRecordOfDefault a, //In field \`a\'://
-    anytype b //In type \`\@TempNoDefaultOrPort_SE\.anytype\'// //In field \`b\'://
+    anytype b, //In type \`\@TempNoDefaultOrPort_SE\.anytype\'// //In field \`b\'://
+    MyComp cmp //In field \`cmp\'\://
   }
 
   template MyUnion m_integerChosen := { //In template definition//
