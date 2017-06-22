@@ -150,14 +150,14 @@ _EOF
 #
 -fh)
     cat $FILES | $AWK '/el_action_t/ { print $3 }' | \
-    sort | tr '[:lower:]' '[:upper:]' | $AWK '
+    sort | tr '[:lower:]' '[:upper:]' | tr -d "\r"| $AWK '
 	BEGIN {
 	    printf("/* Automatically generated file, do not edit */\n");
 	    printf("#ifndef _h_fcns_c\n#define _h_fcns_c\n");
 	    count = 0;
 	}
 	{
-	    printf("#define\t%-30.30s\t%3d\n", $1, count++);
+	    printf("#define\t%-30.30s%3d\n", $1, count++);
 	}
 	END {
 	    printf("#define\t%-30.30s\t%3d\n", "EL_NUM_FCNS", count);
@@ -171,7 +171,8 @@ _EOF
 #	generate fcns.c from various .h files
 #
 -fc)
-    cat $FILES | $AWK '/el_action_t/ { print $3 }' | sort | $AWK '
+    cat $FILES | $AWK '/el_action_t/ { print $3 }' | \
+    sort  | tr -d "\r" | $AWK '
 	BEGIN {
 	    printf("/* Automatically generated file, do not edit */\n");
 	    printf("#include \"config.h\"\n#include \"el.h\"\n");
