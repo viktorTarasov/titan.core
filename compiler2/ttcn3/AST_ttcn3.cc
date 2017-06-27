@@ -3630,7 +3630,7 @@ namespace Ttcn {
       break;
     default:
       value_under_check = true;
-      type->chk_this_value(value, 0, Type::EXPECTED_CONSTANT, WARNING_FOR_INCOMPLETE,
+        type->chk_this_value(value, 0, Type::EXPECTED_STATIC_VALUE, WARNING_FOR_INCOMPLETE,
         OMIT_NOT_ALLOWED, SUB_CHK, has_implicit_omit_attr());
       value_under_check = false;
       erroneous_attrs = chk_erroneous_attr(w_attrib_path, type, get_my_scope(),
@@ -3688,9 +3688,15 @@ namespace Ttcn {
     const_def cdef;
     Code::init_cdef(&cdef);
     type->generate_code_object(&cdef, value);
+    if (value->is_unfoldable()) {
+    cdef.post = update_location_object(cdef.post);
+    cdef.post = value->generate_code_init(cdef.post,
+      value->get_lhs_name().c_str());
+    } else {
     cdef.init = update_location_object(cdef.init);
     cdef.init = value->generate_code_init(cdef.init,
       value->get_lhs_name().c_str());
+    }
     Code::merge_cdef(target, &cdef);
     Code::free_cdef(&cdef);
   }

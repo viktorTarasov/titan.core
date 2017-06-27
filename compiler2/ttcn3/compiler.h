@@ -96,6 +96,7 @@ extern "C" {
     char *def;
     /* char *cdef; */
     char *init;
+    char *post;
   } const_def;
 
   /* Commonly used functions and variables */

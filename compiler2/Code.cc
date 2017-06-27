@@ -182,6 +182,7 @@ namespace Common {
     cdef->def = NULL;
     //cdef->cdef = NULL;
     cdef->init = NULL;
+    cdef->post = NULL;
   }
 
   void Code::merge_cdef(output_struct *dest, const_def *cdef)
@@ -189,6 +190,7 @@ namespace Common {
     dest->header.global_vars = mputstr(dest->header.global_vars, cdef->decl);
     dest->source.global_vars = mputstr(dest->source.global_vars, cdef->def);
     dest->functions.pre_init = mputstr(dest->functions.pre_init, cdef->init);
+    dest->functions.post_init = mputstr(dest->functions.post_init, cdef->post);
   }
 
   void Code::free_cdef(const_def *cdef)
@@ -197,6 +199,7 @@ namespace Common {
     Free(cdef->def);
     //Free(cdef->cdef);
     Free(cdef->init);
+    Free(cdef->post);
   }
 
   void Code::init_expr(expression_struct *expr)
