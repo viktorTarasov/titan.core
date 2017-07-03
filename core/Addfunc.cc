@@ -14,6 +14,7 @@
  *   Forstner, Matyas
  *   Kovacs, Ferenc
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -34,6 +35,7 @@
 #include "Snapshot.hh"
 #include "TitanLoggerApi.hh"
 #include "../common/UnicharPattern.hh"
+#include "JSON.hh"
 
 #include <openssl/bn.h>
 
@@ -452,8 +454,6 @@ OCTETSTRING int2oct(const INTEGER& value, int length)
       (const char *)value_str);
     if (length < 0) TTCN_error("The second argument (length) of function "
       "int2oct() is a negative integer value: %d.", length);
-    OCTETSTRING ret_val(length);
-    unsigned char *octets_ptr = ret_val.val_ptr->octets_ptr;
     BIGNUM *value_tmp = BN_dup(value_int.get_val_openssl());
     int bytes = BN_num_bytes(value_tmp);
     if (bytes > length) {
@@ -462,6 +462,8 @@ OCTETSTRING int2oct(const INTEGER& value, int length)
         "does not fit in %d octet%s.", (const char *)value_str, length,
         length > 1 ? "s" : "");
     } else {
+      OCTETSTRING ret_val(length);
+      unsigned char *octets_ptr = ret_val.val_ptr->octets_ptr;
       unsigned char* tmp = (unsigned char*)Malloc(bytes * sizeof(unsigned char));
       BN_bn2bin(value_tmp, tmp);
       for (int i = length - 1; i >= 0; i--) {
@@ -1564,7 +1566,6 @@ UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
   Free(user_groups);
 
   char* instr_conv = instr.convert_to_regexp_form();
-  int instr_len = instr.lengthof() * 8;
   
   if (nocase) {
     unichar_pattern.convert_regex_str_to_lowercase(instr_conv);
@@ -1576,6 +1577,7 @@ UNIVERSAL_CHARSTRING regexp(const UNIVERSAL_CHARSTRING& instr,
     int begin_index = pmatch[nmatch].rm_so, end_index = pmatch[nmatch].rm_eo;
     Free(pmatch);
     regfree(&posix_regexp);
+    int instr_len = instr.lengthof() * 8;
     if (end_index > instr_len) TTCN_error("Internal error: The end index "
       "of the substring (%d) to be returned in function regexp() is greater "
       "than the length of the input string (%d).", end_index, instr_len);
@@ -3136,3 +3138,30 @@ OCTETSTRING decode_base64(const CHARSTRING& b64)
   return ret_val;
 }
 
+
+
+OCTETSTRING json2cbor(const UNIVERSAL_CHARSTRING& value) {
+  OCTETSTRING result;
+  TTCN_Buffer buff;
+  value.encode_utf8(buff);
+  const unsigned char* ustr = buff.get_data();
+  const size_t ustr_len = buff.get_len();
+  char* json_str = mcopystr((const char*)ustr);
+  JSON_Tokenizer tok(json_str, ustr_len);
+  Free(json_str);
+  buff.clear();
+  size_t num_of_items = 0;
+  json2cbor_coding(buff, tok, num_of_items);
+  buff.get_string(result);
+  return result;
+}
+
+UNIVERSAL_CHARSTRING cbor2json(const OCTETSTRING& value) {
+  UNIVERSAL_CHARSTRING result;
+  TTCN_Buffer buff;
+  buff.put_os(value);
+  JSON_Tokenizer tok;
+  cbor2json_coding(buff, tok, false);
+  result.decode_utf8(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
+  return result;
+}

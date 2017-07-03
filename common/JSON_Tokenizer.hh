@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Baranyi, Botond
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 
@@ -86,13 +87,7 @@ private:
     * Returns true if a valid string is found before the end of the buffer
     * is reached, otherwise returns false. */
   bool check_for_string();
-  
-  /** Attempts to find a JSON number at the current buffer position.
-    * For number format see http://json.org/.
-    * Returns true if a valid number is found before the end of the buffer
-    * is reached, otherwise returns false. */
-  bool check_for_number();
-  
+
   /** Checks if the current character in the buffer is a valid JSON separator.
     * Separators are: commas (,), colons (:) and curly and square brackets ({}[]).
     * This function also steps over the separator if it's a comma.
@@ -167,6 +162,14 @@ public:
     * @param p_data [in] Pointer to the beginning of the data
     * @param p_len [in] Length of the data in bytes */
   void put_raw_data(const char* p_data, size_t p_len);
+  
+  /** Attempts to find a JSON number at the current buffer position.
+  * For number format see http://json.org/.
+  * Returns true if a valid number is found before the end of the buffer
+  * is reached, otherwise returns false.
+  * is_float variable is true if the number is a float. The result
+  * should be used only if this function returns true. */
+  bool check_for_number(bool* is_float = NULL);
   
 }; // class JSON_Tokenizer
 

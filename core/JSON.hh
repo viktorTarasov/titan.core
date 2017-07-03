@@ -8,12 +8,16 @@
  * Contributors:
  *   Balasko, Jeno
  *   Baranyi, Botond
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 #ifndef JSON_HH_
 #define	JSON_HH_
 
 #include "Types.h"
+
+class TTCN_Buffer;
+class JSON_Tokenizer;
 
 /** Descriptor for JSON encoding/decoding during runtime */
 struct TTCN_JSONdescriptor_t 
@@ -130,6 +134,11 @@ enum json_metainfo_t {
 #define JSON_DEC_METAINFO_NAME_ERROR "Meta info provided for non-existent field '%.*s'"
 #define JSON_DEC_METAINFO_VALUE_ERROR "Invalid meta info for field '%s'"
 #define JSON_DEC_METAINFO_NOT_APPLICABLE "Meta info not applicable to field '%s'"
+
+
+// Functions for conversion between json and cbor and vice versa
+void json2cbor_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, size_t& num_of_items);
+void cbor2json_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object);
 
 #endif	/* JSON_HH_ */
 

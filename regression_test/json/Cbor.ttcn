@@ -1,0 +1,981 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+module Cbor {
+
+	type component EmptyCT {
+
+	}
+
+	testcase tc_cbor_integer() runs on EmptyCT {
+		var octetstring os;
+		var universal charstring json, decoded, decoded_json;
+
+		json := "0"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "1"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "23"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "24"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "233"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "255" // 8 bit max
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "256"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "25056"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "65535"  // 16 bit max
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "65536"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "6553235"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "2147483647" // 32 bit max
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "2147483648"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "214732483648"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "9223372036854775807" // 64 bit max
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-0"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		json := "0";
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-1"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-23"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-24"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-233"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-255" 
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-256" // 8 bit max
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-257"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-25056"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-65535"  
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-65536" // 16 bit max
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-65537"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-6553235"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-2147483647" // 32 bit max
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-2147483648"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-214732483648"
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "-9223372036854775807" // 64 bit max
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		// Bignums
+		json := "18446744073709551616"
+		decoded_json := "\"AQAAAAAAAAAA\"";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		json := "-1844674407370955161634"
+		decoded_json := "\"~ZAAAAAAAAAAh\"";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+
+		setverdict(pass);
+	}
+
+	testcase tc_cbor_string() runs on EmptyCT {
+		var universal charstring json, decoded;
+		var octetstring os;
+
+		json := "\"a\"";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "\"abc\"";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "\"\n\t\"";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "\"Á\"";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "\"Á	Ä	Č	Ď	É	Í	Ĺ	Ľ	Ň	Ó	Ô	Ŕ	Š	Ť	Ú	Ý	Ž\"";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		setverdict(pass);
+	}
+
+	testcase tc_cbor_array() runs on EmptyCT {
+		var universal charstring json, decoded;
+		var octetstring os;
+
+		json := "[]";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "[0]";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "[1]";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "[1,2,3]";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "[\"abc\"]";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "[\"abc\",414,\"Ň\n\",34]";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "[1,[2]]";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "[1,2,[3,4,[\"ot\",6,7],5432535353535432,-4242.243200],2524254242232,false,3.130000,true,null]"; //todo float es minden mas tipus is listaba es a masikba
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		setverdict(pass);
+	}
+
+	testcase tc_cbor_map() runs on EmptyCT {
+		var universal charstring json, decoded;
+		var octetstring os;
+
+		json := "{}";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":1}";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":\"abc\"}";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[[1,2,3],[\"ab\"]]}";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":[[1,2,3],[\"ab\"]]}";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":1,\"b\":2}";
+		os := json2cbor(json);
+		log(os);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":1,\"b\":2,\"abcd\":[[1,2,3],[\"ab\"]]}";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":1,\"b\":2,\"abcd\":[[1,2,3],[\"ab\"]],\"osg\":{\"a\":1,\"b\":2},\"aa\":false,\"fdg\":true,\"aad\":null}";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":1,\"b\":2,\"abcd\":[[1,2,3],{\"a\":1,\"b\":2,\"abcd\":[[1,2,3],[\"ab\"]],\"osg\":{\"a\":1,\"rr\":2421.113453,\"b\":2}}],\"osg\":{\"a\":1,\"b\":2}}";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		setverdict(pass);
+	}
+
+	testcase tc_cbor_bool() runs on EmptyCT {
+		var universal charstring json, decoded;
+		var octetstring os;
+
+		json := "false";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "true";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		setverdict(pass);
+	}
+
+	testcase tc_cbor_null() runs on EmptyCT {
+		var universal charstring json, decoded;
+		var octetstring os;
+
+		json := "null";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		setverdict(pass);
+	}
+
+	testcase tc_cbor_float() runs on EmptyCT {
+		var universal charstring json, decoded, decoded_json;
+		var octetstring os;
+
+		json := "1.0";
+		decoded_json := "1.000000";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		json := "1.1111";
+		decoded_json := "1.111100";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		json := "-1.1111";
+		decoded_json := "-1.111100";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		json := "2311.1111";
+		decoded_json := "2311.111100";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		json := "1.0e+300";
+		decoded_json := "1.000000e+300";
+		os := json2cbor(json);
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		// Infinity and NAN is not present in JSON and encoded as strings
+
+		// 16 bit float decodings from the standard: https://tools.ietf.org/html/rfc7049#section-2.3
+		os := 'f90000'O;
+		decoded_json := "0.000000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f98000'O;
+		decoded_json := "-0.000000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f93c00'O;
+		decoded_json := "1.000000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f93e00'O;
+		decoded_json := "1.500000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f97bff'O;
+		decoded_json := "65504.000000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f90001'O;
+		decoded_json := "5.960464e-08";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f90400'O;
+		decoded_json := "6.103516e-05";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f9c400'O;
+		decoded_json := "-4.000000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f97c00'O;
+		decoded_json := "\"infinity\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f9fc00'O;
+		decoded_json := "\"-infinity\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'f97e00'O;
+		decoded_json := "\"not_a_number\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '82F9C400F97BFF'O;
+		decoded_json := "[-4.000000,65504.000000]";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'A26161F9C4006162F97BFF'O;
+		decoded_json := "{\"a\":-4.000000,\"b\":65504.000000}";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		// 32 bit float decodings from the standard: https://tools.ietf.org/html/rfc7049#section-2.3
+
+		os := 'fa47c35000'O;
+		decoded_json := "100000.000000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'fa7f7fffff'O;
+		decoded_json := "3.402823e+38";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'fa7f800000'O;
+		decoded_json := "\"infinity\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'faff800000'O;
+		decoded_json := "\"-infinity\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'fa7fc00000'O;
+		decoded_json := "\"not_a_number\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'fa47c35000'O;
+		decoded_json := "100000.000000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '82FA47C35000fa7f7fffff'O;
+		decoded_json := "[100000.000000,3.402823e+38]";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'A26161FA47C350006162fa7f7fffff'O;
+		decoded_json := "{\"a\":100000.000000,\"b\":3.402823e+38}";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		// 64 bit float decodings from the standard: https://tools.ietf.org/html/rfc7049#section-2.3
+
+		os := 'fb3ff199999999999a'O;
+		decoded_json := "1.100000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'fb7e37e43c8800759c'O;
+		decoded_json := "1.000000e+300";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'fbc010666666666666'O;
+		decoded_json := "-4.100000";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'fb7ff0000000000000'O;
+		decoded_json := "\"infinity\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'fbfff0000000000000'O;
+		decoded_json := "\"-infinity\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'fb7ff8000000000000'O;
+		decoded_json := "\"not_a_number\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '82FBC010666666666666fbfff0000000000000'O;
+		decoded_json := "[-4.100000,\"-infinity\"]";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'A26161FBC0106666666666666162fbfff0000000000000'O;
+		decoded_json := "{\"a\":-4.100000,\"b\":\"-infinity\"}";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		setverdict(pass);
+	}
+
+
+	testcase tc_cbor_bytestring() runs on EmptyCT {
+		var universal charstring json, decoded, decoded_json;
+		var octetstring os;
+
+		os := '420102'O;
+		decoded_json := "\"AQI\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '4421426597'O;
+		decoded_json := "\"IUJllw\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '456449455446'O;
+		decoded_json := "\"ZElFVEY\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '5821644945544ABCDAD3432ADCF342785410246532643652135421421ABCDACDC6B536'O;
+		decoded_json := "\"ZElFVEq82tNDKtzzQnhUECRlMmQ2UhNUIUIavNrNxrU2\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '8243010103425345'O;
+		decoded_json := "[\"AQED\",\"U0U\"]";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'A26161430101036162425345'O;
+		decoded_json := "{\"a\":\"AQED\",\"b\":\"U0U\"}";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		// With base64url tag
+		os := 'D7420102'O;
+		decoded_json := "\"AQI\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'D74421426597'O;
+		decoded_json := "\"IUJllw\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'D7456449455446'O;
+		decoded_json := "\"ZElFVEY\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'D75821644945544ABCDAD3432ADCF342785410246532643652135421421ABCDACDC6B536'O;
+		decoded_json := "\"ZElFVEq82tNDKtzzQnhUECRlMmQ2UhNUIUIavNrNxrU2\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '82D743010103D7425345'O;
+		decoded_json := "[\"AQED\",\"U0U\"]";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'A26161D7430101036162D7425345'O;
+		decoded_json := "{\"a\":\"AQED\",\"b\":\"U0U\"}";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		// With base64 encoding tag
+		os := 'D6420102'O;
+		decoded_json := "\"AQI=\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'D64421426597'O;
+		decoded_json := "\"IUJllw==\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'D6456449455446'O;
+		decoded_json := "\"ZElFVEY=\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'D65821644945544ABCDAD3432ADCF342785410246532643652135421421ABCDACDC6B536'O;
+		decoded_json := "\"ZElFVEq82tNDKtzzQnhUECRlMmQ2UhNUIUIavNrNxrU2\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '82D643010103D6425345'O;
+		decoded_json := "[\"AQED\",\"U0U=\"]";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'A26161D6430101036162D6425345'O;
+		decoded_json := "{\"a\":\"AQED\",\"b\":\"U0U=\"}";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		// With base16 encoding tag
+		os := 'D5420102'O;
+		decoded_json := "\"0102\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'D54421426597'O;
+		decoded_json := "\"21426597\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'D5456449455446'O;
+		decoded_json := "\"6449455446\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'D55821644945544ABCDAD3432ADCF342785410246532643652135421421ABCDACDC6B536'O;
+		decoded_json := "\"644945544ABCDAD3432ADCF342785410246532643652135421421ABCDACDC6B536\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := '82D543010103D5425345'O;
+		decoded_json := "[\"010103\",\"5345\"]";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'A26161D5430101036162D5425345'O;
+		decoded_json := "{\"a\":\"010103\",\"b\":\"5345\"}";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		setverdict(pass);
+	}
+
+	testcase tc_cbor_simple_values() runs on EmptyCT {
+		var universal charstring json, decoded, decoded_json;
+		var octetstring os;
+
+		os := 'F0'O;
+		decoded_json := "16";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'F7'O;
+		decoded_json := "23";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'F818'O;
+		decoded_json := "24";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		os := 'F8FF'O;
+		decoded_json := "255";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		setverdict(pass);
+	}
+
+
+	// tags other than 2,3,21,22,23 are ignored
+	testcase tc_cbor_decode_other_tags() runs on EmptyCT {
+		var universal charstring json, decoded, decoded_json;
+		var octetstring os;
+
+		// tag 17
+		os := 'D14401020304'O; // this will be decoded to a base64url string by default
+		decoded_json := "\"AQIDBA\"";
+		decoded := cbor2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		setverdict(pass);
+	}
+
+	control {
+
+		execute(tc_cbor_integer());
+		execute(tc_cbor_string());
+		execute(tc_cbor_array());
+		execute(tc_cbor_map());
+		execute(tc_cbor_bool());
+		execute(tc_cbor_null());
+		execute(tc_cbor_float());
+		execute(tc_cbor_bytestring());
+		execute(tc_cbor_simple_values());
+		execute(tc_cbor_decode_other_tags());
+
+	}
+}

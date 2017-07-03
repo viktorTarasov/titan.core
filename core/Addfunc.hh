@@ -13,6 +13,7 @@
  *   Forstner, Matyas
  *   Kovacs, Ferenc
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Zalanyi, Balazs Andor
  *
@@ -483,5 +484,8 @@ extern OCTETSTRING remove_bom(const OCTETSTRING& encoded__value);
 extern CHARSTRING encode_base64(const OCTETSTRING& msg, boolean use_linebreaks);
 extern CHARSTRING encode_base64(const OCTETSTRING& msg);
 extern OCTETSTRING decode_base64(const CHARSTRING& b64);
+
+extern OCTETSTRING json2cbor(const UNIVERSAL_CHARSTRING& value);
+extern UNIVERSAL_CHARSTRING cbor2json(const OCTETSTRING& value);
 
 #endif

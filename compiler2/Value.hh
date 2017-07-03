@@ -272,6 +272,9 @@ namespace Common {
       OPTYPE_CHECKSTATE_ALL, // [r1] v2, port or all
       OPTYPE_HOSTID, // [v1]
       OPTYPE_ISTEMPLATEKIND, // ti1 v2
+      
+      OPTYPE_CBOR2JSON, // v1
+      OPTYPE_JSON2CBOR, // v1
 
       NUMBER_OF_OPTYPES // must be last
     };

@@ -183,6 +183,7 @@ namespace Common {
       case OPTYPE_BIT2INT:
       case OPTYPE_BIT2OCT:
       case OPTYPE_BIT2STR:
+      case OPTYPE_CBOR2JSON:
       case OPTYPE_CHAR2INT:
       case OPTYPE_CHAR2OCT:
       case OPTYPE_FLOAT2INT:
@@ -195,6 +196,7 @@ namespace Common {
       case OPTYPE_INT2FLOAT:
       case OPTYPE_INT2STR:
       case OPTYPE_INT2UNICHAR:
+      case OPTYPE_JSON2CBOR:
       case OPTYPE_OCT2BIT:
       case OPTYPE_OCT2CHAR:
       case OPTYPE_OCT2HEX:
@@ -523,6 +525,7 @@ namespace Common {
     case OPTYPE_BIT2INT:
     case OPTYPE_BIT2OCT:
     case OPTYPE_BIT2STR:
+    case OPTYPE_CBOR2JSON:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
     case OPTYPE_FLOAT2INT:
@@ -535,6 +538,7 @@ namespace Common {
     case OPTYPE_INT2FLOAT:
     case OPTYPE_INT2STR:
     case OPTYPE_INT2UNICHAR:
+    case OPTYPE_JSON2CBOR:
     case OPTYPE_OCT2BIT:
     case OPTYPE_OCT2CHAR:
     case OPTYPE_OCT2HEX:
@@ -914,6 +918,7 @@ namespace Common {
     case OPTYPE_BIT2INT:
     case OPTYPE_BIT2OCT:
     case OPTYPE_BIT2STR:
+    case OPTYPE_CBOR2JSON:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
     case OPTYPE_FLOAT2INT:
@@ -926,6 +931,7 @@ namespace Common {
     case OPTYPE_INT2FLOAT:
     case OPTYPE_INT2STR:
     case OPTYPE_INT2UNICHAR:
+    case OPTYPE_JSON2CBOR:
     case OPTYPE_OCT2BIT:
     case OPTYPE_OCT2CHAR:
     case OPTYPE_OCT2HEX:
@@ -1608,6 +1614,7 @@ namespace Common {
     case OPTYPE_BIT2INT:
     case OPTYPE_BIT2OCT:
     case OPTYPE_BIT2STR:
+    case OPTYPE_CBOR2JSON:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
     case OPTYPE_FLOAT2INT:
@@ -1620,6 +1627,7 @@ namespace Common {
     case OPTYPE_INT2FLOAT:
     case OPTYPE_INT2STR:
     case OPTYPE_INT2UNICHAR:
+    case OPTYPE_JSON2CBOR:
     case OPTYPE_OCT2BIT:
     case OPTYPE_OCT2CHAR:
     case OPTYPE_OCT2HEX:
@@ -1826,6 +1834,7 @@ namespace Common {
     case OPTYPE_BIT2INT:
     case OPTYPE_BIT2OCT:
     case OPTYPE_BIT2STR:
+    case OPTYPE_CBOR2JSON:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
     case OPTYPE_FLOAT2INT:
@@ -1838,6 +1847,7 @@ namespace Common {
     case OPTYPE_INT2FLOAT:
     case OPTYPE_INT2STR:
     case OPTYPE_INT2UNICHAR:
+    case OPTYPE_JSON2CBOR:
     case OPTYPE_OCT2BIT:
     case OPTYPE_OCT2CHAR:
     case OPTYPE_OCT2HEX:
@@ -2164,6 +2174,7 @@ namespace Common {
       case OPTYPE_BIT2INT:
       case OPTYPE_BIT2OCT:
       case OPTYPE_BIT2STR:
+      case OPTYPE_CBOR2JSON:
       case OPTYPE_CHAR2INT:
       case OPTYPE_CHAR2OCT:
       case OPTYPE_FLOAT2INT:
@@ -2176,6 +2187,7 @@ namespace Common {
       case OPTYPE_INT2FLOAT:
       case OPTYPE_INT2STR:
       case OPTYPE_INT2UNICHAR:
+      case OPTYPE_JSON2CBOR:
       case OPTYPE_OCT2BIT:
       case OPTYPE_OCT2CHAR:
       case OPTYPE_OCT2HEX:
@@ -3327,6 +3339,7 @@ namespace Common {
       case OPTYPE_OCT2UNICHAR:
       case OPTYPE_ENCVALUE_UNICHAR:
       case OPTYPE_ANY2UNISTR:
+      case OPTYPE_CBOR2JSON:
         return Type::T_USTR;
       case OPTYPE_INT2BIT:
       case OPTYPE_HEX2BIT:
@@ -3340,6 +3353,7 @@ namespace Common {
       case OPTYPE_STR2HEX:
         return Type::T_HSTR;
       case OPTYPE_INT2OCT:
+      case OPTYPE_JSON2CBOR:
       case OPTYPE_CHAR2OCT:
       case OPTYPE_HEX2OCT:
       case OPTYPE_BIT2OCT:
@@ -3615,6 +3629,8 @@ namespace Common {
       return "bit2oct()";
     case OPTYPE_BIT2STR:
       return "bit2str()";
+    case OPTYPE_CBOR2JSON:
+      return "cbor2json()";
     case OPTYPE_CHAR2INT:
       return "char2int()";
     case OPTYPE_CHAR2OCT:
@@ -3639,6 +3655,8 @@ namespace Common {
       return "int2str()";
     case OPTYPE_INT2UNICHAR:
       return "int2unichar()";
+    case OPTYPE_JSON2CBOR:
+      return "json2cbor()";
     case OPTYPE_OCT2BIT:
       return "oct2bit()";
     case OPTYPE_OCT2CHAR:
@@ -6708,6 +6726,7 @@ error:
       }
       break;
     case OPTYPE_OCT2BIT:
+    case OPTYPE_CBOR2JSON:
     case OPTYPE_OCT2HEX:
     case OPTYPE_OCT2STR:
       v1=u.expr.v1;
@@ -6821,6 +6840,16 @@ error:
         v1->set_lowerid_to_ref();
         tt1=v1->get_expr_returntype(exp_val);
         chk_expr_operandtype_cstr(tt1, second, opname, v1);
+        chk_expr_eval_value(v1, t_chk, refch, exp_val);
+      }
+      break;
+    case OPTYPE_JSON2CBOR: // v1
+      v1=u.expr.v1;
+      {
+        Error_Context cntxt(this, "In the operand of operation `%s'", opname);
+        v1->set_lowerid_to_ref();
+        tt1=v1->get_expr_returntype(exp_val);
+        chk_expr_operandtype_charstr(tt1, the, opname, v1);
         chk_expr_eval_value(v1, t_chk, refch, exp_val);
       }
       break;
@@ -7560,6 +7589,8 @@ error:
     case OPTYPE_CHECKSTATE_ALL:
     case OPTYPE_HOSTID:
     case OPTYPE_ISTEMPLATEKIND: // ti1 v2
+    case OPTYPE_CBOR2JSON: // v1
+    case OPTYPE_JSON2CBOR: // v1
       break;
     case OPTYPE_TESTCASENAME: { // -
       if (!my_scope) FATAL_ERROR("Value::evaluate_value()");
@@ -8862,6 +8893,8 @@ error:
       case OPTYPE_CHECKSTATE_ALL:
       case OPTYPE_HOSTID:
       case OPTYPE_ISTEMPLATEKIND: // ti1 v2
+      case OPTYPE_CBOR2JSON:
+      case OPTYPE_JSON2CBOR:
         return true;
       case OPTYPE_COMP_NULL: // -
         return false;
@@ -10095,6 +10128,7 @@ error:
     case OPTYPE_BIT2INT:
     case OPTYPE_BIT2OCT:
     case OPTYPE_BIT2STR:
+    case OPTYPE_CBOR2JSON:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
     case OPTYPE_FLOAT2INT:
@@ -10107,6 +10141,7 @@ error:
     case OPTYPE_INT2FLOAT:
     case OPTYPE_INT2STR:
     case OPTYPE_INT2UNICHAR:
+    case OPTYPE_JSON2CBOR:
     case OPTYPE_OCT2BIT:
     case OPTYPE_OCT2CHAR:
     case OPTYPE_OCT2HEX:
@@ -10471,6 +10506,7 @@ error:
     case OPTYPE_BIT2INT: // v1
     case OPTYPE_BIT2OCT: // v1
     case OPTYPE_BIT2STR: // v1
+    case OPTYPE_CBOR2JSON: // v1
     case OPTYPE_CHAR2INT: // v1
     case OPTYPE_CHAR2OCT: // v1
     case OPTYPE_FLOAT2INT: // v1
@@ -10483,6 +10519,7 @@ error:
     case OPTYPE_INT2FLOAT: // v1
     case OPTYPE_INT2STR: // v1
     case OPTYPE_INT2UNICHAR: // v1
+    case OPTYPE_JSON2CBOR: // v1
     case OPTYPE_OCT2BIT: // v1
     case OPTYPE_OCT2CHAR: // v1
     case OPTYPE_OCT2HEX: // v1
@@ -10847,6 +10884,8 @@ error:
         return create_stringRepr_predef1("bit2oct");
       case OPTYPE_BIT2STR:
         return create_stringRepr_predef1("bit2str");
+      case OPTYPE_CBOR2JSON:
+        return create_stringRepr_predef1("cbor2json");
       case OPTYPE_CHAR2INT:
         return create_stringRepr_predef1("char2int");
       case OPTYPE_CHAR2OCT:
@@ -10869,6 +10908,8 @@ error:
         return create_stringRepr_predef1("int2float");
       case OPTYPE_INT2STR:
         return create_stringRepr_predef1("int2str");
+      case OPTYPE_JSON2CBOR:
+        return create_stringRepr_predef1("json2cbor");
       case OPTYPE_INT2UNICHAR:
         return create_stringRepr_predef1("int2unichar");
       case OPTYPE_OCT2BIT:
@@ -11842,6 +11883,7 @@ error:
       case OPTYPE_BIT2INT:
       case OPTYPE_BIT2OCT:
       case OPTYPE_BIT2STR:
+      case OPTYPE_CBOR2JSON:
       case OPTYPE_CHAR2INT:
       case OPTYPE_CHAR2OCT:
       case OPTYPE_FLOAT2INT:
@@ -11854,6 +11896,7 @@ error:
       case OPTYPE_INT2FLOAT:
       case OPTYPE_INT2STR:
       case OPTYPE_INT2UNICHAR:
+      case OPTYPE_JSON2CBOR:
       case OPTYPE_OCT2BIT:
       case OPTYPE_OCT2CHAR:
       case OPTYPE_OCT2HEX:
@@ -12121,6 +12164,9 @@ error:
     case OPTYPE_BIT2STR:
       generate_code_expr_predef1(expr, "bit2str", u.expr.v1);
       break;
+    case OPTYPE_CBOR2JSON:
+      generate_code_expr_predef1(expr, "cbor2json", u.expr.v1);
+      break;  
     case OPTYPE_CHAR2INT:
       generate_code_expr_predef1(expr, "char2int", u.expr.v1);
       break;
@@ -12157,6 +12203,9 @@ error:
     case OPTYPE_INT2UNICHAR:
       generate_code_expr_predef1(expr, "int2unichar", u.expr.v1);
       break;
+    case OPTYPE_JSON2CBOR:
+      generate_code_expr_predef1(expr, "json2cbor", u.expr.v1);
+      break;  
     case OPTYPE_OCT2BIT:
       generate_code_expr_predef1(expr, "oct2bit", u.expr.v1);
       break;
@@ -14085,6 +14134,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     case OPTYPE_BIT2INT:
     case OPTYPE_BIT2OCT:
     case OPTYPE_BIT2STR:
+    case OPTYPE_CBOR2JSON:
     case OPTYPE_CHAR2INT:
     case OPTYPE_CHAR2OCT:
     case OPTYPE_FLOAT2INT:
@@ -14097,6 +14147,7 @@ void Value::generate_code_expr_encvalue_unichar(expression_struct *expr)
     case OPTYPE_INT2FLOAT:
     case OPTYPE_INT2STR:
     case OPTYPE_INT2UNICHAR:
+    case OPTYPE_JSON2CBOR:
     case OPTYPE_OCT2BIT:
     case OPTYPE_OCT2CHAR:
     case OPTYPE_OCT2HEX:

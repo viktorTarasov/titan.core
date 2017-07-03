@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Baranyi, Botond
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 
@@ -97,7 +98,7 @@ bool JSON_Tokenizer::check_for_string()
   return false;
 }
 
-bool JSON_Tokenizer::check_for_number()
+bool JSON_Tokenizer::check_for_number(bool* is_float /* = NULL */)
 {
   bool first_digit = false; // first non-zero digit reached
   bool zero = false; // first zero digit reached
@@ -156,10 +157,16 @@ bool JSON_Tokenizer::check_for_number()
       exponent_sign = true;
       break;
     default:
+      if (is_float != NULL) {
+        *is_float = decimal_point || exponent_mark;
+      }
       return first_digit || zero;
     }
     
     ++buf_pos; 
+  }
+  if (is_float != NULL) {
+    *is_float = decimal_point || exponent_mark;
   }
   return first_digit || zero;
 }
@@ -187,10 +194,10 @@ bool JSON_Tokenizer::check_for_separator()
 bool JSON_Tokenizer::check_for_literal(const char* p_literal)
 {
   size_t len = strlen(p_literal);
-  size_t start_pos = buf_pos;
   
   if (buf_len - buf_pos >= len && 
       0 == strncmp(buf_ptr + buf_pos, p_literal, len)) {
+    size_t start_pos = buf_pos;
     buf_pos += len;
     if (!skip_white_spaces() || check_for_separator()) {
       return true;
