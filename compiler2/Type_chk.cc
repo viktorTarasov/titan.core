@@ -4632,7 +4632,8 @@ bool Type::chk_this_value_SeOf(Value *value, Common::Assignment *lhs, expected_v
     } else {
       // Only constant values with constant indicies can be checked at
       // compile time.  Constant expressions evaluated.
-      bool check_holes = expected_value == EXPECTED_CONSTANT;
+      bool check_holes = expected_value == EXPECTED_CONSTANT
+                        || expected_value == EXPECTED_STATIC_VALUE;
       Int max_index = -1;
       map<Int, Int> index_map;
       for (size_t i = 0; i < value->get_nof_comps(); i++) {
@@ -4775,7 +4776,8 @@ bool Type::chk_this_value_Array(Value *value, Common::Assignment *lhs, expected_
       // Indexed-list notation.
       bool array_size_known = !dim->get_has_error();
       bool check_holes = array_size_known
-                         && expected_value == EXPECTED_CONSTANT;
+                         && (expected_value == EXPECTED_CONSTANT
+                            || expected_value == EXPECTED_STATIC_VALUE);
       size_t array_size = 0;
       if (array_size_known) array_size = dim->get_size();
       map<Int, Int> index_map;
