@@ -1531,7 +1531,7 @@ int CHARSTRING::RAW_encode(const TTCN_Typedescriptor_t& p_td,
   RAW_enc_tree& myleaf) const
 {
   int bl = val_ptr->n_chars * 8; // bit length
-  int align_length = p_td.raw->fieldlength ? p_td.raw->fieldlength - bl : 0;
+  int align_length = p_td.raw->fieldlength>0 ? p_td.raw->fieldlength - bl : 0;
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound value.");
@@ -1543,9 +1543,19 @@ int CHARSTRING::RAW_encode(const TTCN_Typedescriptor_t& p_td,
     align_length = 0;
   }
   if (myleaf.must_free) Free(myleaf.body.leaf.data_ptr);
-  myleaf.must_free = FALSE;
-  myleaf.data_ptr_used = TRUE;
-  myleaf.body.leaf.data_ptr = (unsigned char*) val_ptr->chars_ptr;
+  if(p_td.raw->fieldlength>=0){
+    myleaf.must_free = FALSE;
+    myleaf.data_ptr_used = TRUE;
+    myleaf.body.leaf.data_ptr = (unsigned char*) val_ptr->chars_ptr;
+  } else {
+    // NULL terminated
+    myleaf.body.leaf.data_ptr = (unsigned char*)Malloc( val_ptr->n_chars + 1 );
+    memcpy(myleaf.body.leaf.data_ptr, val_ptr->chars_ptr , val_ptr->n_chars);
+    myleaf.body.leaf.data_ptr[val_ptr->n_chars] = 0;
+    myleaf.must_free = TRUE;
+    myleaf.data_ptr_used = TRUE;
+    bl+=8;
+  }
   if (p_td.raw->endianness == ORDER_MSB) myleaf.align = -align_length;
   else myleaf.align = align_length;
   return myleaf.length = bl + align_length;
@@ -1557,8 +1567,9 @@ int CHARSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td,
 {
   int prepaddlength = buff.increase_pos_padd(p_td.raw->prepadding);
   limit -= prepaddlength;
-  int decode_length = p_td.raw->fieldlength == 0
+  int decode_length = p_td.raw->fieldlength <= 0
     ? (limit / 8) * 8 : p_td.raw->fieldlength;
+
   if ( decode_length > limit
     || decode_length > (int) buff.unread_len_bit()) {
     if (no_err) return -TTCN_EncDec::ET_LEN_ERR;
@@ -1577,11 +1588,32 @@ int CHARSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td,
   cp.byteorder = orders ? ORDER_MSB : ORDER_LSB;
   cp.fieldorder = p_td.raw->fieldorder;
   cp.hexorder = ORDER_LSB;
-  clean_up();
-  init_struct(decode_length / 8);
-  buff.get_b((size_t) decode_length, (unsigned char*) val_ptr->chars_ptr, cp,
-    top_bit_ord);
-
+  if(p_td.raw->fieldlength >= 0){
+    clean_up();
+    init_struct(decode_length / 8);
+    buff.get_b((size_t) decode_length, (unsigned char*) val_ptr->chars_ptr, cp,
+      top_bit_ord);
+  } else {
+    // NULL terminated
+    TTCN_Buffer temp_buff;
+    unsigned char ch=0;
+    int str_len=0;
+    int null_found=0;
+    while( str_len<decode_length ){
+      buff.get_b(8, &ch, cp, top_bit_ord);
+      if(ch == 0 ){
+        null_found=1;
+        break;
+      }
+      temp_buff.put_c(ch);
+      str_len+=8;
+    }
+    if(null_found==0){
+      return -1;
+    }
+    temp_buff.get_string(*this);
+    decode_length=str_len+8;
+  }
   if (p_td.raw->length_restrition != -1) {
     val_ptr->n_chars = p_td.raw->length_restrition;
     if (p_td.raw->endianness == ORDER_MSB) memmove(val_ptr->chars_ptr,

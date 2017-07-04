@@ -1916,7 +1916,7 @@ namespace Common {
     case T_HSTR:
     case T_OSTR:
     case T_CSTR:
-      if(rawattrib && rawattrib->fieldlength) raw_length=rawattrib->fieldlength;
+      if(rawattrib && rawattrib->fieldlength>0) raw_length=rawattrib->fieldlength;
       else raw_length=-1;
       break;
     case T_ENUM_T:
@@ -2288,7 +2288,7 @@ namespace Common {
                 field_id.get_dispname().c_str());
             }
           }
-          else {
+          else if(rawpar->fieldlength>0) {
             used_bits += rawpar->fieldlength;
           }
           if (rawpar->padding != 0) {

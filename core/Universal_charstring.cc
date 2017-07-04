@@ -2367,9 +2367,14 @@ int UNIVERSAL_CHARSTRING::RAW_encode(const TTCN_Typedescriptor_t& p_td,
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_INTERNAL,
       "Invalid string serialization type.");
   }
+  if(p_td.raw->fieldlength < 0){
+    // NULL terminated string
+    buff.put_c(0);
+  }
+  
   int buff_len = buff.get_len();
   int bl = buff_len * 8; // bit length
-  int align_length = p_td.raw->fieldlength ? p_td.raw->fieldlength - bl : 0;
+  int align_length = p_td.raw->fieldlength > 0 ? p_td.raw->fieldlength - bl : 0;
   if (align_length < 0) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_LEN_ERR,
       "There are insufficient bits to encode '%s': ", p_td.name);

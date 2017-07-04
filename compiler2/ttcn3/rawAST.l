@@ -320,6 +320,7 @@ word16      { yylval.enumval = 16; RETURN(XOctets); }
 dword32     { yylval.enumval = 32; RETURN(XOctets); }
 elements    { yylval.enumval = -1; RETURN(XOctets); }
 variable    { yylval.intval = 0; RETURN(XNumber);}
+null_terminated    { yylval.intval = -1; RETURN(XNumber);}
 IEEE754[ ]double    { yylval.intval = 64; RETURN(XNumber);}
 IEEE754[ ]float    { yylval.intval = 32; RETURN(XNumber);}
 left        { yylval.enumval = XDEFLEFT; RETURN(XLeft); }
