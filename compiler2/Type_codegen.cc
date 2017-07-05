@@ -112,6 +112,9 @@ void Type::generate_code(output_struct *target)
     if (sub_type) sub_type->generate_code(*target);
   }
   CodeGenHelper::update_intervals(target);
+  if (!legacy_codec_handling) {
+    generate_code_coding_handlers(target);
+  }
 }
 
 void Type::generate_code_include(const string& sourcefile, output_struct *target)
@@ -282,33 +285,38 @@ void Type::generate_code_typedescriptor(output_struct *target)
    */
   if (gennametypedescriptor == gennameown
     || force_xer) {
+    Type* last = get_type_refd_last();
     // the type has its own type descriptor
-    bool generate_ber = has_encoding(CT_BER) && enable_ber();
+    bool generate_ber = enable_ber() && (legacy_codec_handling ?
+      has_encoding(CT_BER) : last->get_gen_coder_functions(CT_BER));
     const string& gennameberdescriptor = get_genname_berdescriptor();
     if (generate_ber && gennameberdescriptor == gennameown)
       generate_code_berdescriptor(target);
 
-    bool generate_raw = has_encoding(CT_RAW) && enable_raw();
+    bool generate_raw = enable_raw() && (legacy_codec_handling ?
+      has_encoding(CT_RAW) : last->get_gen_coder_functions(CT_RAW));
     const string& gennamerawdescriptor = get_genname_rawdescriptor();
     if (generate_raw && gennamerawdescriptor == gennameown)
       generate_code_rawdescriptor(target);
 
-    bool generate_text = has_encoding(CT_TEXT) && enable_text();
+    bool generate_text = enable_text() && (legacy_codec_handling ?
+      has_encoding(CT_TEXT) : last->get_gen_coder_functions(CT_TEXT));
     const string& gennametextdescriptor = get_genname_textdescriptor();
     if (generate_text && gennametextdescriptor == gennameown)
       generate_code_textdescriptor(target);
 
-    bool generate_xer = has_encoding(CT_XER) && enable_xer();
+    bool generate_xer = enable_xer() && (legacy_codec_handling ?
+      has_encoding(CT_XER) : last->get_gen_coder_functions(CT_XER));
     const string& gennamexerdescriptor = get_genname_xerdescriptor();
     if (generate_xer && gennamexerdescriptor == gennameown)
       generate_code_xerdescriptor(target);
     else target->source.global_vars=mputprintf(target->source.global_vars,
       "// No XER for %s\n", gennamexerdescriptor.c_str());
     
+    bool generate_json = enable_json() && (legacy_codec_handling ?
+      has_encoding(CT_JSON) : last->get_gen_coder_functions(CT_JSON));
     const string& gennamejsondescriptor = get_genname_jsondescriptor();
-    bool generate_json = has_encoding(CT_JSON) && enable_json() && 
-      gennamejsondescriptor == gennameown;
-    if (generate_json) {
+    if (generate_json && gennamejsondescriptor == gennameown) {
       generate_code_jsondescriptor(target);
     }
 
@@ -356,7 +364,7 @@ void Type::generate_code_typedescriptor(output_struct *target)
       target->source.global_vars = mputprintf(target->source.global_vars,
         "&%s_json_, ", gennamejsondescriptor.c_str());
     } else {
-      switch(get_type_refd_last()->typetype) {
+      switch(last->typetype) {
       case T_BOOL:
       case T_INT:
       case T_INT_A:
@@ -384,23 +392,28 @@ void Type::generate_code_typedescriptor(output_struct *target)
       case T_ROID:
       case T_ANY:
         // use predefined JSON descriptors instead of null pointers for basic types
-        target->source.global_vars = mputprintf(target->source.global_vars,
-          "&%s_json_, ", gennamejsondescriptor.c_str());
-        break;
+        if (legacy_codec_handling) {
+          target->source.global_vars = mputprintf(target->source.global_vars,
+            "&%s_json_, ", last->get_genname_typename(my_scope).c_str());
+          break;
+        }
+        // else fall through (to the default branch)
       case T_ENUM_T:
       case T_ENUM_A:
         // use a predefined JSON descriptor for enumerated types
-        target->source.global_vars = mputstr(target->source.global_vars,
-          "&ENUMERATED_json_, ");
-        break;
+        if (legacy_codec_handling) {
+          target->source.global_vars = mputstr(target->source.global_vars,
+            "&ENUMERATED_json_, ");
+          break;
+        }
+        // else fall through
       default:
         target->source.global_vars = mputstr(target->source.global_vars,
           "NULL, ");
       }
     }
     
-    if (T_SEQOF == get_type_refd_last()->typetype || 
-        T_SETOF == get_type_refd_last()->typetype) {
+    if (T_SEQOF == last->typetype || T_SETOF == last->typetype) {
       target->source.global_vars=mputprintf(target->source.global_vars,
         "&%s_descr_, ", get_type_refd_last()->u.seof.ofType->get_genname_typedescriptor(my_scope).c_str());
     }
@@ -675,6 +688,10 @@ void Type::generate_code_rawdescriptor(output_struct *target)
     "extern const TTCN_RAWdescriptor_t %s_raw_;\n", gennameown_str);
   char *str = mprintf("const TTCN_RAWdescriptor_t %s_raw_ = {",
     gennameown_str);
+  bool dummy_raw = rawattrib == NULL;
+  if (dummy_raw) {
+    rawattrib = new RawAST(get_type_refd_last()->typetype == T_INT);
+  }
   if (rawattrib->intx) {
     str = mputstr(str, "RAW_INTX,");
   }
@@ -723,10 +740,18 @@ void Type::generate_code_rawdescriptor(output_struct *target)
       (rawattrib->stringformat == CharCoding::UTF16 ? "UTF16" : "UNKNOWN"));
   target->source.global_vars = mputstr(target->source.global_vars, str);
   Free(str);
+  if (dummy_raw) {
+    delete rawattrib;
+    rawattrib = NULL;
+  }
 }
 
 void Type::generate_code_textdescriptor(output_struct *target)
 {
+  bool dummy_text = textattrib == NULL;
+  if (dummy_text) {
+    textattrib = new TextAST();
+  }
   const char *gennameown_str = get_genname_own().c_str();
   char *union_member_name=NULL;
   Common::Module *mymod=my_scope->get_scope_mod();
@@ -1007,6 +1032,10 @@ void Type::generate_code_textdescriptor(output_struct *target)
     target->source.global_vars = mputstr(target->source.global_vars,
       "{NULL}};\n");
   }
+  if (dummy_text) {
+    delete textattrib;
+    textattrib = NULL;
+  }
 }
 
 void Type::generate_code_jsondescriptor(output_struct *target)
@@ -1099,10 +1128,13 @@ void Type::generate_code_Enum(output_struct *target)
     Malloc(e_def.nElements*sizeof(*e_def.elements));
   e_def.firstUnused = u.enums.first_unused;
   e_def.secondUnused = u.enums.second_unused;
-  e_def.hasText = textattrib!=NULL;
-  e_def.hasRaw = rawattrib!=NULL;
-  e_def.hasXer = has_encoding(CT_XER);
-  e_def.hasJson = gen_json_coder_functions;
+  e_def.hasText = legacy_codec_handling ? textattrib != NULL :
+    get_gen_coder_functions(CT_TEXT);
+  e_def.hasRaw = legacy_codec_handling ? rawattrib != NULL :
+    get_gen_coder_functions(CT_RAW);
+  e_def.hasXer = legacy_codec_handling ? has_encoding(CT_XER) :
+    get_gen_coder_functions(CT_XER);
+  e_def.hasJson = get_gen_coder_functions(CT_JSON);
   if (xerattrib) {
     e_def.xerUseNumber = xerattrib->useNumber_;
   }
@@ -1141,9 +1173,13 @@ void Type::generate_code_Choice(output_struct *target)
   }
   else sdef.kind = UNION;
   sdef.isASN1 = is_asn1();
-  sdef.hasText = textattrib!=NULL;
-  sdef.hasXer = has_encoding(CT_XER);
-  sdef.hasJson = gen_json_coder_functions;
+  sdef.hasRaw = legacy_codec_handling ? rawattrib != NULL :
+    get_gen_coder_functions(CT_RAW);
+  sdef.hasText = legacy_codec_handling ? textattrib != NULL :
+    get_gen_coder_functions(CT_TEXT);
+  sdef.hasXer = legacy_codec_handling ? has_encoding(CT_XER) :
+    get_gen_coder_functions(CT_XER);
+  sdef.hasJson = get_gen_coder_functions(CT_JSON);
   sdef.has_opentypes = get_has_opentypes();
   sdef.opentype_outermost = get_is_opentype_outermost();
   sdef.ot = generate_code_ot(pool);
@@ -1277,9 +1313,12 @@ void Type::generate_code_Choice(output_struct *target)
       sdef.elements[i].jsonAlias = cftype->jsonattrib->alias;
     }
   }
-  if(rawattrib) {
+  if(sdef.hasRaw) {
+    bool dummy_raw = rawattrib == NULL;
+    if (dummy_raw) {
+      rawattrib = new RawAST;
+    }
     copy_rawAST_to_struct(rawattrib,&(sdef.raw));
-    sdef.hasRaw=TRUE;
     // building taglist
     for(int c=0;c<rawattrib->taglist.nElements;c++){
       if(rawattrib->taglist.tag[c].nElements)
@@ -1352,7 +1391,11 @@ void Type::generate_code_Choice(output_struct *target)
         }
       }
     }
-  } else sdef.hasRaw=FALSE;
+    if (dummy_raw) {
+      delete rawattrib;
+      rawattrib = NULL;
+    }
+  }
   if (xerattrib) {
     Module *my_module = get_my_scope()->get_scope_mod();
     sdef.xerHasNamespaces = my_module->get_nof_ns() != 0;
@@ -1367,7 +1410,7 @@ void Type::generate_code_Choice(output_struct *target)
 
   free_code_ot(sdef.ot);
   sdef.ot=0;
-  if (rawattrib) {
+  if (sdef.hasRaw) {
     free_raw_attrib_struct(&sdef.raw);
   }
   Free(sdef.elements);
@@ -1538,13 +1581,17 @@ void Type::generate_code_Se(output_struct *target)
   default:
     FATAL_ERROR("Type::generate_code_Se()");
   } // switch
-  sdef.hasText = textattrib!=NULL;
+  sdef.hasRaw = legacy_codec_handling ? rawattrib != NULL :
+    get_gen_coder_functions(CT_RAW);
+  sdef.hasText = legacy_codec_handling ? textattrib != NULL :
+    get_gen_coder_functions(CT_TEXT);
   sdef.nElements = sdef.totalElements = get_nof_comps();
   sdef.has_opentypes = get_has_opentypes();
   sdef.opentype_outermost = get_is_opentype_outermost();
   sdef.ot = NULL;
-  sdef.hasXer = has_encoding(CT_XER);
-  sdef.hasJson = gen_json_coder_functions;
+  sdef.hasXer = legacy_codec_handling ? has_encoding(CT_XER) :
+    get_gen_coder_functions(CT_XER);
+  sdef.hasJson = get_gen_coder_functions(CT_JSON);
   if (xerattrib){
     Module *my_module = get_my_scope()->get_scope_mod();
     sdef.xerHasNamespaces = my_module->get_nof_ns() != 0;
@@ -1680,9 +1727,12 @@ void Type::generate_code_Se(output_struct *target)
   }
   se_comps.clear();
 
-  if(rawattrib) {
+  if(sdef.hasRaw) {
+    bool dummy_raw = rawattrib == NULL;
+    if (dummy_raw) {
+      rawattrib = new RawAST;
+    }
     copy_rawAST_to_struct(rawattrib,&(sdef.raw));
-    sdef.hasRaw=TRUE;
     // building taglist
     for(int c=0;c<rawattrib->taglist.nElements;c++) {
       if(rawattrib->taglist.tag[c].nElements)
@@ -1928,12 +1978,15 @@ void Type::generate_code_Se(output_struct *target)
         sdef.elements[i].hasRaw=FALSE;
       }
     }
+    if (dummy_raw) {
+      delete rawattrib;
+      rawattrib = NULL;
+    }
   }
   else {
     for(size_t i = 0; i < sdef.totalElements; i++) {
       sdef.elements[i].hasRaw=FALSE;
     }
-    sdef.hasRaw=FALSE;
   }
 
   defRecordClass(&sdef, target);
@@ -1944,7 +1997,7 @@ void Type::generate_code_Se(output_struct *target)
     if (sdef.elements[i].xerAnyNum > 0) Free(sdef.elements[i].xerAnyUris);
   } // next i
 
-  if (rawattrib) {
+  if (sdef.hasRaw) {
     free_raw_attrib_struct(&sdef.raw);
     for (size_t i = 0; i < sdef.totalElements; i++) {
       if (sdef.elements[i].hasRaw) {
@@ -2003,9 +2056,13 @@ void Type::generate_code_SeOf(output_struct *target)
   sofdef.dispname = get_fullname().c_str();
   sofdef.kind = typetype == T_SEQOF ? RECORD_OF : SET_OF;
   sofdef.isASN1 = is_asn1();
-  sofdef.hasText = textattrib!=NULL;
-  sofdef.hasXer = has_encoding(CT_XER);
-  sofdef.hasJson = gen_json_coder_functions;
+  sofdef.hasRaw = legacy_codec_handling ? rawattrib != NULL :
+    get_gen_coder_functions(CT_RAW);
+  sofdef.hasText = legacy_codec_handling ? textattrib != NULL :
+    get_gen_coder_functions(CT_TEXT);
+  sofdef.hasXer = legacy_codec_handling ? has_encoding(CT_XER) :
+    get_gen_coder_functions(CT_XER);
+  sofdef.hasJson = get_gen_coder_functions(CT_JSON);
   if (xerattrib) {
     //sofdef.xerList      = xerattrib->list_;
     sofdef.xerAttribute = xerattrib->attribute_;
@@ -2074,10 +2131,17 @@ void Type::generate_code_SeOf(output_struct *target)
     break;
   }
 
-  if(rawattrib) {
+  if(sofdef.hasRaw) {
+    bool dummy_raw = rawattrib == NULL;
+    if (dummy_raw) {
+      rawattrib = new RawAST;
+    }
     copy_rawAST_to_struct(rawattrib,&(sofdef.raw));
-    sofdef.hasRaw=TRUE;
-  } else sofdef.hasRaw=FALSE;
+    if (dummy_raw) {
+      delete rawattrib;
+      rawattrib = NULL;
+    }
+  }
 
   if (optimized_memalloc) {
     defRecordOfClassMemAllocOptimized(&sofdef, target);
@@ -2254,6 +2318,164 @@ void Type::generate_code_Signature(output_struct *target)
   defSignatureClasses(&sdef, target);
   Free(sdef.parameters.elements);
   Free(sdef.exceptions.elements);
+}
+
+void Type::generate_code_coding_handlers(output_struct* target)
+{
+  Type* t = get_type_w_coding_table();
+  if (t == NULL || get_genname_coder(my_scope) != get_genname_own()) {
+    return;
+  }
+  
+  // default coding (global variable)
+  string default_coding;
+  if (t->coding_table.size() == 1) {
+    default_coding = t->coding_table[0]->built_in ?
+      get_encoding_name(t->coding_table[0]->built_in_coding) :
+      t->coding_table[0]->custom_coding.name;
+  }
+  target->header.global_vars = mputprintf(target->header.global_vars,
+    "extern UNIVERSAL_CHARSTRING %s_default_coding;\n", get_genname_own().c_str());
+  target->source.global_vars = mputprintf(target->source.global_vars,
+    "UNIVERSAL_CHARSTRING %s_default_coding(\"%s\");\n",
+    get_genname_own().c_str(), default_coding.c_str());
+  
+  // encoder and decoder functions
+  target->header.function_prototypes = mputprintf(
+    target->header.function_prototypes,
+    "extern void %s_encoder(const %s& input_value, OCTETSTRING& output_stream, "
+    "const UNIVERSAL_CHARSTRING& coding_name);\n"
+    "extern INTEGER %s_decoder(OCTETSTRING& input_stream, %s& output_value, "
+    "const UNIVERSAL_CHARSTRING& coding_name);\n",
+    get_genname_own().c_str(), get_genname_value(my_scope).c_str(),
+    get_genname_own().c_str(), get_genname_value(my_scope).c_str());
+  
+  char* enc_str = mprintf("void %s_encoder(const %s& input_value, "
+    "OCTETSTRING& output_stream, const UNIVERSAL_CHARSTRING& coding_name)\n"
+    "{\n", get_genname_own().c_str(), get_genname_value(my_scope).c_str());
+  char* dec_str = mprintf("INTEGER %s_decoder(OCTETSTRING& input_stream, "
+    "%s& output_value, const UNIVERSAL_CHARSTRING& coding_name)\n"
+    "{\n", get_genname_own().c_str(), get_genname_value(my_scope).c_str());
+  
+  // user defined codecs
+  for (size_t i = 0; i < t->coding_table.size(); ++i) {
+    if (!t->coding_table[i]->built_in) {
+      // encoder
+      enc_str = mputprintf(enc_str, "if (coding_name == \"%s\") {\n",
+        t->coding_table[i]->custom_coding.name);
+      Assignment* enc_func = t->coding_table[i]->custom_coding.enc_func;
+      if (enc_func != NULL && t == this) {
+        enc_str = mputprintf(enc_str,
+          "output_stream = bit2oct(%s(input_value));\n"
+          "return;\n",
+          enc_func->get_genname_from_scope(my_scope).c_str());
+      }
+      else {
+        enc_str = mputprintf(enc_str,
+          "TTCN_error(\"No `%s' encoding function defined for type `%s'\");\n",
+          t->coding_table[i]->custom_coding.name, get_typename().c_str());
+      }
+      enc_str = mputstr(enc_str, "}\n");
+      
+      // decoder
+      dec_str = mputprintf(dec_str, "if (coding_name == \"%s\") {\n",
+        t->coding_table[i]->custom_coding.name);
+      Assignment* dec_func = t->coding_table[i]->custom_coding.dec_func;
+      if (dec_func != NULL && t == this) {
+        dec_str = mputprintf(dec_str,
+          "BITSTRING bit_stream(oct2bit(input_stream));\n"
+          "INTEGER ret_val = %s(bit_stream, output_value);\n"
+          "input_stream = bit2oct(bit_stream);\n"
+          "return ret_val;\n",
+          dec_func->get_genname_from_scope(my_scope).c_str());
+      }
+      else {
+        dec_str = mputprintf(dec_str,
+          "TTCN_error(\"No `%s' decoding function defined for type `%s'\");\n",
+          t->coding_table[i]->custom_coding.name, get_typename().c_str());
+      }
+      dec_str = mputstr(dec_str, "}\n");
+    }
+  }
+  
+  // built-in codecs
+  enc_str = mputstr(enc_str,
+    "TTCN_EncDec::coding_t coding_type;\n"
+    "unsigned int extra_options = 0;\n"
+    "TTCN_EncDec::get_coding_from_str(coding_name, &coding_type, "
+    "&extra_options, TRUE);\n");
+  dec_str = mputstr(dec_str,
+    "TTCN_EncDec::coding_t coding_type;\n"
+    "unsigned int extra_options = 0;\n"
+    "TTCN_EncDec::get_coding_from_str(coding_name, &coding_type, "
+    "&extra_options, FALSE);\n");
+  char* codec_check_str = NULL;
+  for (size_t i = 0; i < t->coding_table.size(); ++i) {
+    if (t->coding_table[i]->built_in) {
+      if (codec_check_str != NULL) {
+        codec_check_str = mputstr(codec_check_str, " && ");
+      }
+      codec_check_str = mputprintf(codec_check_str,
+        "coding_type != TTCN_EncDec::CT_%s",
+        get_encoding_name(t->coding_table[i]->built_in_coding));
+    }
+  }
+  if (codec_check_str != NULL) {
+    enc_str = mputprintf(enc_str, "if (%s) {\n", codec_check_str);
+    dec_str = mputprintf(dec_str, "if (%s) {\n", codec_check_str);
+  }
+  char* codec_error_str = mprintf(
+    "TTCN_Logger::begin_event_log2str();\n"
+    "coding_name.log();\n"
+    "TTCN_error(\"Type `%s' does not support %%s encoding\", "
+    "(const char*) TTCN_Logger::end_event_log2str());\n", get_typename().c_str());
+  enc_str = mputstr(enc_str, codec_error_str);
+  dec_str = mputstr(dec_str, codec_error_str);
+  Free(codec_error_str);
+  if (codec_check_str != NULL) {
+    Free(codec_check_str);
+    enc_str = mputprintf(enc_str, 
+      "}\n"
+      "TTCN_Buffer ttcn_buf;\n"
+      "input_value.encode(%s_descr_, ttcn_buf, coding_type, extra_options);\n"
+      "ttcn_buf.get_string(output_stream);\n",
+      get_genname_typedescriptor(my_scope).c_str());
+    dec_str = mputprintf(dec_str, 
+      "}\n"
+      "TTCN_Buffer ttcn_buf(input_stream);\n"
+      "output_value.decode(%s_descr_, ttcn_buf, coding_type, extra_options);\n"
+      "switch (TTCN_EncDec::get_last_error_type()) {\n"
+      "case TTCN_EncDec::ET_NONE:\n"
+      "ttcn_buf.cut();\n"
+      "ttcn_buf.get_string(input_stream);\n"
+      "return 0;\n"
+      "case TTCN_EncDec::ET_INCOMPL_MSG:\n"
+      "case TTCN_EncDec::ET_LEN_ERR:\n"
+      "return 2;\n"
+      "default:\n"
+      "return 1;\n"
+      "}\n", get_genname_typedescriptor(my_scope).c_str());
+  }
+  enc_str = mputstr(enc_str, "}\n\n");
+  dec_str = mputstr(dec_str, "}\n\n");
+  target->source.function_bodies = mputstr(target->source.function_bodies, enc_str);
+  target->source.function_bodies = mputstr(target->source.function_bodies, dec_str);
+  Free(enc_str);
+  Free(dec_str);
+}
+
+bool Type::has_built_in_encoding()
+{
+  Type* t = get_type_w_coding_table();
+  if (t == NULL) {
+    return false;
+  }
+  for (size_t i = 0; i < t->coding_table.size(); ++i) {
+    if (t->coding_table[i]->built_in) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool Type::needs_alias()

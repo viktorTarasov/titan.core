@@ -187,6 +187,9 @@ void Type::chk()
       break;
     }
   }
+  if (!legacy_codec_handling && my_scope != NULL) {
+    chk_encodings();
+  }
   checked = true;
   if(tags) tags->set_plicit(this);
 
@@ -627,6 +630,91 @@ void change_name(string &name, XerAttributes::NameChange change) {
     name = change.nn_;
     break;
   } // switch for NAME
+}
+
+void Type::chk_encodings()
+{
+  if (legacy_codec_handling) {
+    FATAL_ERROR("Type::chk_encodings");
+  }
+  switch (get_type_refd_last()->get_typetype_ttcn3()) {
+  case T_NULL:
+  case T_BOOL:
+  case T_INT:
+  case T_REAL:
+  case T_ENUM_T:
+  case T_BSTR:
+  case T_HSTR:
+  case T_OSTR:
+  case T_CSTR:
+  case T_USTR:
+  case T_OID:
+  case T_CHOICE_T:
+  case T_SEQOF:
+  case T_SETOF:
+  case T_SEQ_T:
+  case T_SET_T:
+  case T_VERDICT:
+  case T_ARRAY:
+  case T_ANYTYPE:
+    if (!is_asn1()) {
+      WithAttribPath* ap = get_attrib_path();
+      if (ap != NULL) {
+        MultiWithAttrib* mwa = ap->get_with_attr();
+        if (mwa != NULL) {
+          for (size_t i = 0; i < mwa->get_nof_elements(); ++i) {
+            const SingleWithAttrib* swa = mwa->get_element(i);
+            if (swa->get_attribKeyword() == SingleWithAttrib::AT_ENCODE) {
+              Ttcn::Qualifiers* quals = swa->get_attribQualifiers();
+              if (quals != NULL && quals->get_nof_qualifiers() != 0) {
+                for (size_t j = 0; j < quals->get_nof_qualifiers(); ++j) {
+                  Ttcn::Qualifier* qual = const_cast<Ttcn::Qualifier*>(
+                    quals->get_qualifier(j));
+                  get_field_type(qual, EXPECTED_CONSTANT)->
+                    add_coding(swa->get_attribSpec().get_spec());
+                }
+              }
+              else {
+                add_coding(swa->get_attribSpec().get_spec());
+              }
+            }
+          }
+        }
+        if (coding_table.size() == 0) {
+          const vector<SingleWithAttrib>& real = ap->get_real_attrib();
+          for (size_t i = 0; i < real.size(); ++i) {
+            const SingleWithAttrib* swa = real[i];
+            if (swa->get_attribKeyword() == SingleWithAttrib::AT_ENCODE) {
+              add_coding(swa->get_attribSpec().get_spec());
+            }
+          }
+        }
+      }
+    }
+    else {
+      switch (ownertype) {
+      case OT_TYPE_ASS:
+      case OT_RECORD_OF:
+      case OT_COMP_FIELD:
+      case OT_SELTYPE:
+        // ASN.1 types automatically have BER, PER, XER and JSON encoding
+        add_coding(string("BER:2002"));
+        add_coding(string(get_encoding_name(CT_PER)));
+        add_coding(string(get_encoding_name(CT_JSON)));
+        if (asn1_xer) {
+          // XER encoding for ASN.1 types can be disabled with a command line option
+          add_coding(string(get_encoding_name(CT_XER)));
+        }
+        break;
+      default:
+        break;
+      }      
+    }
+    break;
+  default:
+    // the rest of the types can't have 'encode' attributes
+    break;
+  }
 }
 
 void Type::chk_xer_any_attributes()

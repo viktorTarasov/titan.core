@@ -110,6 +110,10 @@ INTEGER f__dec__recof(BITSTRING& b, RecOf& x)
   return 0;
 }
 
+} // namespace Custom1
+
+namespace AsnAndPer {
+
 BITSTRING f__enc__seqof(const Types::SeqOf& x)
 {
   TTCN_EncDec::set_error_behavior(TTCN_EncDec::ET_ALL, TTCN_EncDec::EB_DEFAULT);
@@ -160,9 +164,9 @@ INTEGER f__dec__choice(BITSTRING& x, Types::Choice& y)
   }
 }
 
-} // namespace Custom1
+} // namespace AsnAndPer
 
-namespace Custom5 {
+namespace Phantom {
 
 BITSTRING f__enc__set(const Custom3::Set& x)
 {
@@ -207,4 +211,4 @@ INTEGER f__dec__setof(BITSTRING& x, Types::SetOf& y)
   }
 }
 
-} // namespace Custom5
+} // namespace Phantom

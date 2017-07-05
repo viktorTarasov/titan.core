@@ -72,7 +72,7 @@ external function f_dec_uni1(inout bitstring x, out AUnion y) return integer
 
 function f2() { //^In function definition//
   var AUnion x := { field := '1234'O };
-  var bitstring y := encvalue(x); //^In variable definition// //^In the parameter of encvalue//
+  var bitstring y := encvalue(x); //^In variable definition// //^In the first parameter of encvalue//
   var integer res := decvalue(y, x);
 }
 

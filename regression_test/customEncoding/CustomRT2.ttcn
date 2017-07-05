@@ -1,0 +1,56 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// This module contains further tests for custom encodings
+// (in features only available in the Function Test Runtime).
+module CustomRT2 {
+
+import from Custom1 all;
+import from Custom2 all;
+import from Custom3 all;
+
+// Test 19 (RT2 only).
+// Using custom encoding on a decoded value redirect.
+// Same input value as in test 1.
+testcase tc_custom_value_redirect() runs on CT
+{
+  connect(self:pt_msg, self:pt_msg);
+  var Rec val := { num := 3, str := "ttcn" };
+  var Msg msg := { data := bit2oct(encvalue(val)), list := { } };
+  var Rec res;
+  var Rec exp := { num := 3, str := "c++" };
+  pt_msg.send(msg);
+  timer tmr := 1.0;
+  tmr.start;
+  alt {
+    [] pt_msg.receive(msg) -> value (res := @decoded data) {
+      if (res != exp) {
+        setverdict(fail, "Invalid decoded value. Expected: ", exp, ", got: ", res);
+      }
+      else {
+        setverdict(pass);
+      }
+    }
+    [] pt_msg.receive(?) {
+      setverdict(fail, "Invalid message received.");
+    }
+    [] tmr.timeout {
+      setverdict(fail, "Timed out.");
+    }
+  }
+}
+
+control {
+  execute(tc_custom_value_redirect());
+}
+
+}

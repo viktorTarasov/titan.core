@@ -14,5 +14,7 @@ Testcases*.cc
 Testcases*.hh
 Types*.cc
 Types*.hh
+Cbor*.cc
+Cbor*.hh
 logs
 compile

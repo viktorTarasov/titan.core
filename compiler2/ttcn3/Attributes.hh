@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Balasko, Jeno
+ *   Baranyi, Botond
  *   Delic, Adam
  *   Raduly, Csaba
  *   Szabados, Kristof
@@ -229,15 +230,20 @@ namespace Ttcn {
     AttributeSpec& operator=(const AttributeSpec& p);
   private:
     string spec; ///< The attribute specification (free text)
+    string encoding; ///< Encoding specification for variant attributes (free text)
+    // TODO: check that the variant indeed belongs to the specified encoding
     /// Copy constructor, for clone() only
     AttributeSpec(const AttributeSpec& p)
-      : Node(p), Location(p), spec(p.spec) { }
+      : Node(p), Location(p), spec(p.spec), encoding(p.encoding) { }
   public:
     AttributeSpec(const string& p_spec)
-      : Node(), Location(), spec(p_spec) { }
+      : Node(), Location(), spec(p_spec), encoding() { }
+    AttributeSpec(const string& p_spec, const string& p_encoding)
+      : Node(), Location(), spec(p_spec), encoding(p_encoding) { }
     virtual AttributeSpec* clone() const;
     virtual void set_fullname(const string& p_fullname);
     const string& get_spec() const { return spec; }
+    const string& get_encoding() const { return encoding; }
     virtual void dump(unsigned level) const;
   };
 

@@ -13,7 +13,7 @@
 
 #include "Custom2.hh"
 #include "Custom1.hh"
-#include "Custom5.hh"
+#include "Phantom.hh"
 
 #ifndef CODERS_HH
 #define CODERS_HH
@@ -40,6 +40,10 @@ namespace Custom1 {
 BITSTRING f__enc__recof(const RecOf& x);
 INTEGER f__dec__recof(BITSTRING& b, RecOf& x);
 
+}
+
+namespace AsnAndPer {
+
 // "PER" coder functions, using the built-in JSON codec
 extern BITSTRING f__enc__seqof(const Types::SeqOf& x);
 extern INTEGER f__dec__seqof(BITSTRING& x, Types::SeqOf& y);
@@ -47,7 +51,7 @@ extern INTEGER f__dec__choice(BITSTRING& x, Types::Choice& y);
 
 }
 
-namespace Custom5 {
+namespace Phantom {
 
 // Coding functions for the set type in test 5
 BITSTRING f__enc__set(const Custom3::Set& x);

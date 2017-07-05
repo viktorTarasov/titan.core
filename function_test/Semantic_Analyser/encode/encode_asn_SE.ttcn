@@ -46,7 +46,7 @@ external function f_dec_seq1(inout bitstring x, out Seq y) return integer
 
 function f1() { //^In function definition//
   var Seq x := { num := 2, str := "x" };
-  var bitstring y := encvalue(x); //^In variable definition// //^In the parameter of encvalue//
+  var bitstring y := encvalue(x); //^In variable definition// //^In the first parameter of encvalue//
   var integer res := decvalue(y, x);
 }
 
@@ -86,7 +86,7 @@ external function f_dec_seqof1(inout bitstring x, out SeqOf y) return integer
 
 function f3() { //^In function definition//
   var SeqOf x := { 1, 2 };
-  var bitstring y := encvalue(x); //^In variable definition// //^In the parameter of encvalue//
+  var bitstring y := encvalue(x); //^In variable definition// //^In the first parameter of encvalue//
   var integer res := decvalue(y, x);
 }
 

@@ -276,6 +276,8 @@ namespace Asn {
     /** Generates the debugger variable printing function, which can print values
       * and templates of all types defined in this module (excluding subtypes). */
     virtual void generate_debugger_functions(output_struct *output);
+    
+    void add_impmod(ImpMod* p_impmod);
   };
 
   /**

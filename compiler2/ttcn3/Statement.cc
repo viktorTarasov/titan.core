@@ -9661,7 +9661,8 @@ error:
             set_params_str = mputstr(set_params_str, "}\nelse {\n");
           }
           Type::typetype_t tt = par->get_type()->get_type_refd_last()->get_typetype_ttcn3();
-          if (ve->get_dec_type()->is_coding_by_function(false)) {
+          if (legacy_codec_handling &&
+              ve->get_dec_type()->is_coding_by_function(false)) {
             set_params_str = mputstr(set_params_str, "BITSTRING buff(");
             switch (tt) {
             case Type::T_BSTR:
@@ -9717,7 +9718,7 @@ error:
               "}\n", ve->get_dec_type()->get_coding_function(false)->
               get_genname_from_scope(scope).c_str(), par_name, par_name, par_name);
           }
-          else { // built-in decoding
+          else if (legacy_codec_handling) { // legacy codec handling with built-in decoding
             switch (tt) {
             case Type::T_OSTR:
             case Type::T_CSTR:
@@ -9807,6 +9808,65 @@ error:
               "}\n", par_name,
               ve->get_dec_type()->get_genname_typedescriptor(scope).c_str(),
               ve->get_dec_type()->get_coding(false).c_str(), par_name);
+          }
+          else { // new codec handling
+            set_params_str = mputstr(set_params_str, "OCTETSTRING buff(");
+            switch (tt) {
+            case Type::T_BSTR:
+              set_params_str = mputprintf(set_params_str, "bit2oct(par.%s())",
+                par_name);
+              break;
+            case Type::T_HSTR:
+              set_params_str = mputprintf(set_params_str, "hex2oct(par.%s())",
+                par_name);
+              break;
+            case Type::T_OSTR:
+              set_params_str = mputprintf(set_params_str, "par.%s()", par_name);
+              break;
+            case Type::T_CSTR:
+              set_params_str = mputprintf(set_params_str, "char2oct(par.%s())",
+                par_name);
+              break;
+            case Type::T_USTR:
+              set_params_str = mputprintf(set_params_str,
+                "unichar2oct(par.%s(), ", par_name);
+              if (ve->get_str_enc() == NULL || !ve->get_str_enc()->is_unfoldable()) {
+                // encoding format is missing or is known at compile-time
+                set_params_str = mputprintf(set_params_str, "\"%s\"",
+                  ve->get_str_enc() != NULL ?
+                  ve->get_str_enc()->get_val_str().c_str() : "UTF-8");
+              }
+              else {
+                // the encoding format is not known at compile-time, so an extra
+                // member and constructor parameter is needed to store it
+                members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%s;\n",
+                  par_name);
+                constr_params_str = mputprintf(constr_params_str,
+                  ", CHARSTRING par_fmt_%s = CHARSTRING()", par_name);
+                constr_init_list_str = mputprintf(constr_init_list_str,
+                  ", enc_fmt_%s(par_fmt_%s)", par_name, par_name);
+                set_params_str = mputprintf(set_params_str, "enc_fmt_%s", par_name);
+              }
+              set_params_str = mputstr(set_params_str, ")");
+              break;
+            default:
+              FATAL_ERROR("ParamRedirect::generate_code_decoded");
+            }
+            set_params_str = mputprintf(set_params_str,
+              ");\n"
+              "if (%s_decoder(buff, *ptr_%s_dec, %s_default_coding) != 0) {\n"
+              "TTCN_error(\"Decoding failed in parameter redirect "
+              "(for parameter '%s').\");\n"
+              "}\n"
+              "if (buff.lengthof() != 0) {\n"
+              "TTCN_error(\"Parameter redirect (for parameter '%s') failed, "
+              "because the buffer was not empty after decoding. "
+              "Remaining bits: %%d.\", buff.lengthof());\n"
+              "}\n",
+              ve->get_dec_type()->get_genname_coder(scope).c_str(),
+              par_name,
+              ve->get_dec_type()->get_genname_coder(scope).c_str(),
+              par_name, par_name);
           }
           if (use_decmatch_result) {
             set_params_str = mputstr(set_params_str, "}\n");
@@ -10417,7 +10477,7 @@ error:
               set_values_str = mputstr(set_values_str, "}\nelse {\n");
             }
             Type::typetype_t tt = redir_type->get_type_refd_last()->get_typetype_ttcn3();
-            if (member_type->is_coding_by_function(false)) {
+            if (legacy_codec_handling && member_type->is_coding_by_function(false)) {
               set_values_str = mputprintf(set_values_str, "BITSTRING buff_%d(",
                 static_cast<int>(i));
               switch (tt) {
@@ -10485,9 +10545,10 @@ error:
                 "buff_%d.lengthof());\n"
                 "}\n", member_type->get_coding_function(false)->
                 get_genname_from_scope(scope).c_str(),
-                static_cast<int>(i), static_cast<int>(i), static_cast<int>(i + 1), static_cast<int>(i), static_cast<int>(i + 1), static_cast<int>(i));
+                static_cast<int>(i), static_cast<int>(i), static_cast<int>(i + 1),
+                static_cast<int>(i), static_cast<int>(i + 1), static_cast<int>(i));
             }
-            else { // built-in decoding
+            else if (legacy_codec_handling) { // legacy codec handing with built-in decoding
               switch (tt) {
               case Type::T_OSTR:
               case Type::T_CSTR:
@@ -10591,6 +10652,79 @@ error:
                 "}\n",
                 static_cast<int>(i), member_type->get_genname_typedescriptor(scope).c_str(), static_cast<int>(i),
                 member_type->get_coding(false).c_str(), static_cast<int>(i), static_cast<int>(i + 1), static_cast<int>(i));
+            }
+            else { // new codec handling
+              set_values_str = mputprintf(set_values_str, "OCTETSTRING buff_%d(",
+                static_cast<int>(i));
+              switch (tt) {
+              case Type::T_BSTR:
+                set_values_str = mputprintf(set_values_str, "bit2oct((*par)%s%s)",
+                  subrefs_str, opt_suffix);
+                break;
+              case Type::T_HSTR:
+                set_values_str = mputprintf(set_values_str, "hex2oct((*par)%s%s)",
+                  subrefs_str, opt_suffix);
+                break;
+              case Type::T_OSTR:
+                set_values_str = mputprintf(set_values_str, "(*par)%s%s",
+                  subrefs_str, opt_suffix);
+                break;
+              case Type::T_CSTR:
+                set_values_str = mputprintf(set_values_str,
+                  "char2oct((*par)%s%s)", subrefs_str, opt_suffix);
+                break;
+              case Type::T_USTR:
+                set_values_str = mputprintf(set_values_str,
+                  "unichar2oct((*par)%s%s, ", subrefs_str, opt_suffix);
+                if (v[i]->get_str_enc() == NULL || !v[i]->get_str_enc()->is_unfoldable()) {
+                  // encoding format is missing or is known at compile-time
+                  set_values_str = mputprintf(set_values_str, "\"%s\"",
+                    v[i]->get_str_enc() != NULL ?
+                    v[i]->get_str_enc()->get_val_str().c_str() : "UTF-8");
+                }
+                else {
+                  // the encoding format is not known at compile-time, so an extra
+                  // member and constructor parameter is needed to store it
+                  inst_params_str = mputstr(inst_params_str, ", ");
+                  expression_struct str_enc_expr;
+                  Code::init_expr(&str_enc_expr);
+                  v[i]->get_str_enc()->generate_code_expr(&str_enc_expr);
+                  inst_params_str = mputstr(inst_params_str, str_enc_expr.expr);
+                  if (str_enc_expr.preamble != NULL) {
+                    expr->preamble = mputstr(expr->preamble, str_enc_expr.preamble);
+                  }
+                  if (str_enc_expr.postamble != NULL) {
+                    expr->postamble = mputstr(expr->postamble, str_enc_expr.postamble);
+                  }
+                  Code::free_expr(&str_enc_expr);
+                  members_str = mputprintf(members_str, "CHARSTRING enc_fmt_%d;\n",
+                    static_cast<int>(i));
+                  constr_params_str = mputprintf(constr_params_str,
+                    ", CHARSTRING par_fmt_%d", static_cast<int>(i));
+                  constr_init_list_str = mputprintf(constr_init_list_str,
+                    ", enc_fmt_%d(par_fmt_%d)", static_cast<int>(i), static_cast<int>(i));
+                  set_values_str = mputprintf(set_values_str, "enc_fmt_%d", static_cast<int>(i));
+                }
+                set_values_str = mputstr(set_values_str, ")");
+                break;
+              default:
+                FATAL_ERROR("ValueRedirect::generate_code");
+              }
+              set_values_str = mputprintf(set_values_str,
+                ");\n"
+                "if (%s_decoder(buff_%d, *ptr_%d, %s_default_coding) != 0) {\n"
+                "TTCN_error(\"Decoding failed in value redirect #%d.\");\n"
+                "}\n"
+                "if (buff_%d.lengthof() != 0) {\n"
+                "TTCN_error(\"Value redirect #%d failed, because the buffer was "
+                "not empty after decoding. Remaining octets: %%d.\", "
+                "buff_%d.lengthof());\n"
+                "}\n",
+                member_type->get_genname_coder(scope).c_str(),
+                static_cast<int>(i), static_cast<int>(i),
+                member_type->get_genname_coder(scope).c_str(),
+                static_cast<int>(i + 1), static_cast<int>(i),
+                static_cast<int>(i + 1), static_cast<int>(i));
             }
             if (use_decmatch_result) {
               set_values_str = mputstr(set_values_str, "}\n");

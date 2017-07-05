@@ -8268,6 +8268,20 @@ AttribSpec: // 542
     $$->set_location(infile, @$);
     Free($1);
   }
+| FreeText '.' FreeText
+  {
+    if (legacy_codec_handling) {
+      Location loc(infile, @$);
+      loc.error("Invalid attribute format. Dot notation is only allowed for "
+        "variant attributes when using legacy codec handling.");
+    }
+    else {
+      $$ = new AttributeSpec(string($3), string($1));
+      $$->set_location(infile, @$);
+    }
+    Free($1);
+    Free($3);
+  }
 ;
 
 /* A.1.6.7 Behaviour statements */
@@ -9423,7 +9437,19 @@ PredefinedOps:
   }
 | encvalueKeyword '(' optError TemplateInstance optError ')'
   {
-    $$ = new Value(Value::OPTYPE_ENCODE, $4);
+    $$ = new Value(Value::OPTYPE_ENCODE, $4, NULL, NULL);
+    $$->set_location(infile, @$);
+  }
+| encvalueKeyword '(' optError TemplateInstance optError ',' optError
+  SingleExpression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_ENCODE, $4, $8, NULL);
+    $$->set_location(infile, @$);
+  }
+| encvalueKeyword '(' optError TemplateInstance optError ',' optError
+  SingleExpression optError ',' optError SingleExpression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_ENCODE, $4, $8, $12);
     $$->set_location(infile, @$);
   }
 | encvalueKeyword '(' error ')'
@@ -9481,6 +9507,19 @@ PredefinedOps:
 | decvalueKeyword '(' optError DecValueArg optError ',' optError DecValueArg optError ')'
   {
     $$ = new Value(Value::OPTYPE_DECODE, $4, $8);
+    $$->set_location(infile, @$);
+  }
+| decvalueKeyword '(' optError DecValueArg optError ',' optError DecValueArg
+  optError ',' optError SingleExpression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_DECODE, $4, $8, $12);
+    $$->set_location(infile, @$);
+  }
+| decvalueKeyword '(' optError DecValueArg optError ',' optError DecValueArg
+  optError ',' optError SingleExpression optError ',' optError SingleExpression
+  optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_DECODE, $4, $8, $12, $16);
     $$->set_location(infile, @$);
   }
 | decvalueKeyword '(' error ')'
@@ -9629,6 +9668,19 @@ PredefinedOps:
     $$ = new Value(Value::OPTYPE_ENCVALUE_UNICHAR, $4, $8);
     $$->set_location(infile, @$);
   }
+| encvalue_unicharKeyWord '(' optError TemplateInstance optError ',' optError
+  Expression optError ',' optError SingleExpression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_ENCVALUE_UNICHAR, $4, $8, $12);
+    $$->set_location(infile, @$);
+  }
+| encvalue_unicharKeyWord '(' optError TemplateInstance optError ',' optError
+  Expression optError ',' optError SingleExpression optError ','
+  optError SingleExpression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_ENCVALUE_UNICHAR, $4, $8, $12, $16);
+    $$->set_location(infile, @$);
+  }
 | encvalue_unicharKeyWord '(' optError TemplateInstance optError ')'
   {
     $$ = new Value(Value::OPTYPE_ENCVALUE_UNICHAR, $4);
@@ -9653,6 +9705,20 @@ PredefinedOps:
   DecValueArg optError ',' optError Expression optError ')'
   {
     $$ = new Value(Value::OPTYPE_DECVALUE_UNICHAR, $4, $8, $12);
+    $$->set_location(infile, @$);
+  }
+| decvalue_unicharKeyWord '(' optError DecValueArg optError ',' optError
+  DecValueArg optError ',' optError Expression optError ',' optError
+  SingleExpression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_DECVALUE_UNICHAR, $4, $8, $12, $16);
+    $$->set_location(infile, @$);
+  }
+| decvalue_unicharKeyWord '(' optError DecValueArg optError ',' optError
+  DecValueArg optError ',' optError Expression optError ',' optError
+  SingleExpression optError ',' optError SingleExpression optError ')'
+  {
+    $$ = new Value(Value::OPTYPE_DECVALUE_UNICHAR, $4, $8, $12, $16, $20);
     $$->set_location(infile, @$);
   }
 | decvalue_unicharKeyWord '(' error ')'

@@ -277,17 +277,34 @@ namespace Common {
     };
     
     /**
-     * Structure containing the default encoding or decoding settings for a type.
+     * Structure containing the default encoding or decoding settings for a type
+     * when using legacy codec handling.
      * These settings determine how values of the type are encoded or decoded by
      * the following TTCN-3 language elements:
      * 'encvalue' (encode), 'encvalue_unichar' (encode), 'decvalue' (decode),
      * 'decvalue_unichar' (decode), 'decmatch' (decode) and '@decoded' (decode).
      */
-    struct coding_t {
+    struct legacy_coding_t {
       coding_type_t type; ///< Type of encoding/decoding
       union {
         MessageEncodingType_t built_in_coding; ///< Built-in codec (if type is CODING_BUILT_IN)
         Assignment* function_def; ///< Pointer to external function definition (if type is CODING_BY_FUNCTION)
+      };
+    };
+    
+    /** Stores information related to an encoding type (codec), when using new
+      * codec handling. */
+    struct coding_t {
+      boolean built_in; ///< built-in or user defined codec
+      union {
+        MessageEncodingType_t built_in_coding; ///< built-in codec
+        struct {
+          char* name; ///< name of the user defined codec (the string in the 'encode' attribute)
+          Assignment* enc_func; ///< definition of the encoder function
+          boolean enc_conflict; ///< indicates whether there are multiple encoder functions for this type and codec
+          Assignment* dec_func; ///< definition of the decoder function
+          boolean dec_conflict; ///< indicates whether there are multiple decoder functions for this type and codec
+        } custom_coding;
       };
     };
 
@@ -334,8 +351,12 @@ namespace Common {
     vector<SubTypeParse> *parsed_restr; ///< parsed subtype restrictions are stored here until they are moved to the sub_type member
     SubType *sub_type; ///< effective/aggregate subtype of this type, NULL if neither inherited nor own subtype restrictions exist
 
-    coding_t default_encoding; ///< default settings for encoding values of this type
-    coding_t default_decoding; ///< default settings for decoding values of this type
+    legacy_coding_t default_encoding; ///< default settings for encoding values of this type (when using legacy codec handling)
+    legacy_coding_t default_decoding; ///< default settings for decoding values of this type (when using legacy codec handling)
+    
+    /** Stores the list of encodings this type supports (when using new codec
+     * handling). */
+    vector<coding_t> coding_table;
     
     /** What kind of AST element owns the type.
      *  It may not be known at creation type, so it's initially OT_UNKNOWN.
@@ -442,15 +463,24 @@ namespace Common {
       * this type. */
     bool needs_any_from_done;
     
-    /** True if JSON coder functions need to be generated for this type.
-      * This is not the same as enabling JSON encoding, since other types that
-      * refer to this type may have JSON encoding, in which case this type needs
-      * to have JSON coder functions to code them. */
-    bool gen_json_coder_functions;
-    
     /** True if we already checked this type for default or port field*/
     bool checked_incorrect_field;
     
+    /** Contains a list of the built-in coder functions that need to be
+      * generated for this type.
+      * When using legacy codec handling, only the JSON coders are set with this
+      * method. */
+    vector<MessageEncodingType_t> coders_to_generate;
+    
+    /** Helper class that tracks the execution of a type's 'can_have_coding'
+      * function to prevent infinite recursions. */
+    class CodingCheckTracker {
+      static map<Type*, void> types;
+    public:
+      CodingCheckTracker(Type* t) { types.add(t, NULL); }
+      ~CodingCheckTracker() { types.erase(types.get_nth_key(types.size() - 1)); }
+      static bool is_happening(Type* t) { return types.has_key(t); }
+    };
 
     /** Copy constructor, for the use of Type::clone() only. */
     Type(const Type& p);
@@ -591,6 +621,34 @@ namespace Common {
     virtual void set_my_scope(Scope *p_scope);
     /** Checks the type (including tags). */
     virtual void chk();
+    
+    /** Checks the encodings supported by the type (when using new codec handling).
+      * TTCN-3 types need to have an 'encode' attribute to support an encoding.
+      * ASN.1 types automatically support BER, PER and JSON encodings, and XER
+      * encoding, if set by the compiler option. */
+    void chk_encodings();
+    
+    /** Adds support for an encoding by the type (when using new codec handling),
+      * if the type can have that encoding.
+      * @param name name of the encoding as it appears in the 'encode' attribute;
+      * this may be the name of a built-in or a user-defined encoding */
+    void add_coding(const string& name);
+    
+    /** Sets the encoder or decoder function for the user-defined encoding with
+      * the specified name (when using new codec handling). */
+    void set_coding_function(const char* coding_name, boolean encode,
+      Assignment* function_def);
+    
+    /** Returns the type that contains this type's coding table (since types
+      * with no 'encode' attributes of their own inherit the 'encode' attributes
+      * of a referenced type or a parent type).
+      * Only used with new codec handling. */
+    Type* get_type_w_coding_table();
+    
+    /** Returns whether this type can have the specified encoding.
+      * Only used with new codec handling. */
+    bool can_have_coding(MessageEncodingType_t coding);
+    
     /** Return whether the two typetypes are compatible.  Sometimes, this is
      *  just a question of \p p_tt1 == \p p_tt2.  When there are multiple
      *  typetypes for a type (e.g. T_ENUM_A and T_ENUM_T) then all
@@ -694,10 +752,11 @@ namespace Common {
     bool is_list_type(bool allow_array);
 
     /** Sets the encoding or decoding function for the type (in case of custom
-      * or PER encoding). */
-    void set_coding_function(bool encode, Assignment* function_def);
+      * or PER encoding). Only used with legacy codec handling. */
+    void set_legacy_coding_function(bool encode, Assignment* function_def);
     
-    /** Sets the codec to use when encoding or decoding the ASN.1 type */
+    /** Sets the codec to use when encoding or decoding the ASN.1 type.
+      * Only used with legacy codec handling. */
     void set_asn_coding(bool encode, MessageEncodingType_t new_coding);
     
     /** Determines the method of encoding or decoding for values of this type
@@ -724,7 +783,7 @@ namespace Common {
     Assignment* get_coding_function(bool encode) const;
     
   private:
-    static MessageEncodingType_t get_enc_type(const Ttcn::SingleWithAttrib& enc);
+    MessageEncodingType_t get_enc_type(const string& enc);
 
     void chk_Int_A();
     void chk_Enum_A();
@@ -1126,6 +1185,7 @@ namespace Common {
     void generate_code_Array(output_struct *target);
     void generate_code_Fat(output_struct *target);
     void generate_code_Signature(output_struct *target);
+    void generate_code_coding_handlers(output_struct *target);
     /** Returns whether the type needs an explicit C++ typedef alias and/or
      * an alias to a type descriptor of another type. It returns true for those
      * types that are defined in module-level type definitions hence are
@@ -1148,6 +1208,11 @@ namespace Common {
       * or false if it still needs to be generated */
     bool is_pregenerated();
   public:
+    
+    /** Returns true if the type supports at least one built-in encoding.
+      * Only used with new codec handling. */
+    bool has_built_in_encoding();
+    
     /** Generates type specific call for the reference used in isbound call
      * into argument \a expr. Argument \a subrefs holds the reference path
      * that needs to be checked. Argument \a module is the actual module of
@@ -1215,6 +1280,7 @@ namespace Common {
     /** User visible type name for built-in types */
     static const char * get_typename_builtin(typetype_t tt);
     string get_genname_typedescriptor(Scope *p_scope);
+    string get_genname_coder(Scope* p_scope);
   private:
     /** Returns the name prefix of type descriptors, etc. that belong to the
      * equivalent C++ class referenced from the module of scope \a p_scope.
@@ -1273,7 +1339,8 @@ namespace Common {
     
     inline void set_needs_any_from_done() { needs_any_from_done = true; }
     
-    inline void set_gen_json_coder_functions() { gen_json_coder_functions = true; }
+    bool get_gen_coder_functions(MessageEncodingType_t coding);
+    void set_gen_coder_functions(MessageEncodingType_t coding);
     
     /** Calculates the type's display name from the genname (replaces double
       * underscore characters with single ones) */

@@ -181,7 +181,7 @@ namespace Common {
       OPTYPE_UNICHAR2OCT, // v1 [v2]
       OPTYPE_ENUM2INT, // v1
 
-      OPTYPE_ENCODE, // ti1 35
+      OPTYPE_ENCODE, // ti1 [v2] [v3] 35
 
       OPTYPE_RNDWITHVAL, /** \todo -> SEED */ // v1
 
@@ -213,7 +213,7 @@ namespace Common {
       OPTYPE_INT2HEX, // v1 v2
       OPTYPE_INT2OCT, // v1 v2
 
-      OPTYPE_DECODE, // r1 r2
+      OPTYPE_DECODE, // r1 r2 [v3] [v4]
 
       OPTYPE_SUBSTR, // ti1 v2 v3
       OPTYPE_REGEXP, // ti1 t2 v3 b4
@@ -264,8 +264,8 @@ namespace Common {
       OPTYPE_LOG2STR, // logargs
       OPTYPE_PROF_RUNNING, // -     99
       
-      OPTYPE_ENCVALUE_UNICHAR, // ti1 [v2]
-      OPTYPE_DECVALUE_UNICHAR, // r1 r2 [v3]
+      OPTYPE_ENCVALUE_UNICHAR, // ti1 [v2] [v3] [v4]
+      OPTYPE_DECVALUE_UNICHAR, // r1 r2 [v3] [v4] [v5]
       
       OPTYPE_ANY2UNISTR, // logarg, length = 1
       OPTYPE_CHECKSTATE_ANY, // [r1] v2, port or any
@@ -355,6 +355,7 @@ namespace Common {
           TemplateInstance *ti4;
           bool b4;
         };
+        Value* v5;
       } expr;
       macrotype_t macro;
       struct {
@@ -443,6 +444,9 @@ namespace Common {
     /** Constructor used by V_EXPR "ti1 t2 v3 b4" */
     Value(operationtype_t p_optype, TemplateInstance *p_ti1, TemplateInstance *p_t2,
       Value *p_v3, bool p_b4);
+    /** Constructor used by V_EXPR "ti1 v2 v3 v4" */
+    Value(operationtype_t p_optype, TemplateInstance* p_ti1, Value* p_v2,
+      Value* p_v3, Value* p_v4);
     /** Constructor used by V_EXPR "ti1 v2 v3 ti4" */
     Value(operationtype_t p_optype, TemplateInstance *p_ti1, Value *p_v2,
       Value *p_v3, TemplateInstance *p_ti4);
@@ -462,6 +466,12 @@ namespace Common {
     Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2);
     /** Constructor used by decvalue_unichar*/
     Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2, Value *p_v3);
+    /** Constructor used by V_EXPR "r1 r2 v3 v4" */
+    Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1, Ttcn::Ref_base *p_r2,
+      Value *p_v3, Value* p_v4);
+    /** Constructor used by V_EXPR "r1 r2 v3 v4 v5" */
+    Value(operationtype_t p_optype, Ttcn::Ref_base* p_r1, Ttcn::Ref_base* p_r2,
+      Value* p_v3, Value* p_v4, Value* p_v5);
     /** Constructor used by V_ANY_VALUE and V_ANY_OR_OMIT */
     Value(valuetype_t p_vt, Ttcn::LengthRestriction* p_len_res);
     virtual ~Value();
@@ -663,7 +673,8 @@ namespace Common {
     void chk_expr_operand_encode(ReferenceChain *refch,
       Type::expected_value_t exp_val);
     /** \a has two possible value: OPTYPE_DECODE | OPTYPE_DECVALUE_UNICHAR */
-    void chk_expr_operands_decode(operationtype_t p_optype);
+    void chk_expr_operands_decode(ReferenceChain *refch,
+      Type::expected_value_t exp_val);
     /** Checks whether \a this can be compared with omit value (i.e. \a this
      * should be a referenced value pointing to a optional record/set field. */
     void chk_expr_omit_comparison(Type::expected_value_t exp_val);
