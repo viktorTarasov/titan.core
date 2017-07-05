@@ -34,6 +34,7 @@ void JsonAST::init_JsonAST()
   as_value = false;
   default_value = NULL;
   metainfo_unbound = false;
+  as_number = false;
 }
 
 JsonAST::JsonAST(const JsonAST *other_val)
@@ -44,6 +45,7 @@ JsonAST::JsonAST(const JsonAST *other_val)
     alias = (NULL != other_val->alias) ? mcopystr(other_val->alias) : NULL;
     as_value = other_val->as_value;
     default_value = (NULL != other_val->default_value) ? mcopystr(other_val->default_value) : NULL;
+    as_number = other_val->as_number;
     for (size_t i = 0; i < other_val->schema_extensions.size(); ++i) {
       schema_extensions.add(new JsonSchemaExtension(*other_val->schema_extensions[i]));
     }
@@ -77,6 +79,9 @@ void JsonAST::print_JsonAST() const
   }
   if (default_value) {
     printf("Default value: %s\n\r", default_value);
+  }
+  if (as_number) {
+    printf("Encoding enumerated values as numbers\n\r");
   }
   if (0 != schema_extensions.size()) {
     printf("Extensions:");

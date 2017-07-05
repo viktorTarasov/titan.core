@@ -1016,20 +1016,21 @@ void Type::generate_code_jsondescriptor(output_struct *target)
   
   if (NULL == jsonattrib) {
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "const TTCN_JSONdescriptor_t %s_json_ = { FALSE, NULL, FALSE, NULL, FALSE };\n"
+      "const TTCN_JSONdescriptor_t %s_json_ = { FALSE, NULL, FALSE, NULL, FALSE, FALSE };\n"
       , get_genname_own().c_str());
   } else {
     char* alias = jsonattrib->alias ? mputprintf(NULL, "\"%s\"", jsonattrib->alias) : NULL;
     char* def_val = jsonattrib->default_value ?
       mputprintf(NULL, "\"%s\"", jsonattrib->default_value) : NULL;
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "const TTCN_JSONdescriptor_t %s_json_ = { %s, %s, %s, %s, %s };\n"
+      "const TTCN_JSONdescriptor_t %s_json_ = { %s, %s, %s, %s, %s, %s };\n"
       , get_genname_own().c_str() 
       , jsonattrib->omit_as_null ? "TRUE" : "FALSE"
       , alias ? alias : "NULL"
       , jsonattrib->as_value ? "TRUE" : "FALSE"
       , def_val ? def_val : "NULL"
-      , jsonattrib->metainfo_unbound ? "TRUE" : "FALSE");
+      , jsonattrib->metainfo_unbound ? "TRUE" : "FALSE"
+      , jsonattrib->as_number ? "TRUE" : "FALSE");
     Free(alias);
     Free(def_val);
   }

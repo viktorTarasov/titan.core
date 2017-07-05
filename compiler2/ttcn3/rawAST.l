@@ -462,6 +462,7 @@ extend        RETURN(XKWextend);
 metainfo      RETURN(XKWmetainfo);
 for           RETURN(XKWfor);
 unbound       RETURN(XKWunbound);
+number        RETURN(XKWnumber);
 [(]           { BEGIN(jsonvalue); RETURN(XJsonValueStart); }
 {IDENTIFIER}  { yylval.str = mcopystr(yytext); RETURN(XAliasToken); }
 [^: \t]       { rawAST_error("invalid JSON token"); }

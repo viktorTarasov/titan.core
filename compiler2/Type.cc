@@ -2914,6 +2914,11 @@ namespace Common {
             "record of, set of, array or field of a record or set");
         }
       }
+      if (jsonattrib->as_number &&
+          get_type_refd_last()->get_typetype_ttcn3() != T_ENUM_T) {
+        error("Invalid attribute, 'as number' is only allowed for enumerated "
+          "types");
+      }
     }
   }
   

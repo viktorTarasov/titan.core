@@ -287,6 +287,7 @@ static void yyprint(FILE *file, int type, const YYSTYPE& value);
 %token XKWmetainfo        "metainfo"
 %token XKWfor             "for"
 %token XKWunbound         "unbound"
+%token XKWnumber          "number"
 %token XJsonValueStart    "("
 %token XJsonValueEnd      ")"
 %token XJsonValueSegment  "JSON value"
@@ -1604,6 +1605,7 @@ XJsonAttribute:
 | XDefault
 | XExtend
 | XMetainfoForUnbound
+| XAsNumber
 ;
 
 XOmitAsNull:
@@ -1653,6 +1655,9 @@ XJsonValueCore:
 XMetainfoForUnbound:
   XKWmetainfo XOptSpaces XKWfor XOptSpaces XKWunbound { jsonstruct->metainfo_unbound = true; }
 ;
+
+XAsNumber:
+  XKWas XOptSpaces XKWnumber { jsonstruct->as_number = true; }
 
 XOptSpaces:
   /* Empty */

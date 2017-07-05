@@ -291,6 +291,15 @@ with {
   variant (list[-]) "JSON: as value";
 }
 
+type record RecWithAsNumber {
+  record of enumerated { Short(0), Medium(50), Long(100) } lengths,
+  record of Days days
+}
+with {
+  variant (lengths[-]) "JSON: as number";
+  variant (days[-]) "JSON: as number";
+}
+
 } with {
   encode "JSON";
   extension "anytype integer, charstring, R, RoI, Thing";

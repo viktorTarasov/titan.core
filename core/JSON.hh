@@ -59,6 +59,11 @@ struct TTCN_JSONdescriptor_t
     * with the meta information is found.
     * Example: [ value1, value2, { "metainfo []" : "unbound" }, value3 ] */
   boolean metainfo_unbound;
+  
+  /** If set, the enumerated value's numeric form will be encoded as a JSON
+    * number, instead of its name form as a JSON string (affects both encoding
+    * and decoding). */
+  boolean as_number;
 };
 
 /** This macro makes sure that coding errors will only be displayed if the silent

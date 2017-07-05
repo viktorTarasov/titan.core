@@ -446,6 +446,64 @@ testcase tc_attribute_as_value_fields() runs on MTC {
   }
 }
 
+testcase tc_attribute_as_number() runs on MTC {
+  var RecWithAsNumber val := {
+    lengths := { Short, Medium, Long },
+    days := { Monday, Saturday, Thursday }
+  };
+  var bitstring enc_exp := oct2bit(char2oct("{\"lengths\":[0,50,100],\"days\":[0,5,3]}"));
+  var bitstring enc := encvalue(val);
+  if (enc != enc_exp) {
+    setverdict(fail, "Encoding failed. Expected: ", bit2oct(enc_exp), ", got: ", bit2oct(enc));
+  }
+  else {
+    var RecWithAsNumber dec;
+    var integer res := decvalue(enc, dec);
+    if (res != 0) {
+      setverdict(fail, "Decoding failed. Result: ", res);
+    }
+    else if (lengthof(enc) != 0) {
+      setverdict(fail, "Decoding failed. Remaining bits: ", enc);
+    }
+    else if (dec != val) {
+      setverdict(fail, "Decoding failed. Expected value: ", val, ", got: ", dec);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+}
+
+testcase tc_attribute_as_number_negtest() runs on MTC {
+  var RecWithAsNumber.lengths[-] val;
+  var bitstring stream := oct2bit(char2oct("\"Short\"")); // name form instead of number form
+  var integer res := decvalue(stream, val);
+  if (res == 0) {
+    setverdict(fail, "Decoding #1 successful, expected failure. Decoded value: ", val);
+  }
+  stream := oct2bit(char2oct("0.5")); // real number
+  res := decvalue(stream, val);
+  if (res == 0) {
+    setverdict(fail, "Decoding #2 successful, expected failure. Decoded value: ", val);
+  }
+  stream := oct2bit(char2oct("50e-1")); // real number
+  res := decvalue(stream, val);
+  if (res == 0) {
+    setverdict(fail, "Decoding #3 successful, expected failure. Decoded value: ", val);
+  }
+  stream := oct2bit(char2oct("100E5")); // real number
+  res := decvalue(stream, val);
+  if (res == 0) {
+    setverdict(fail, "Decoding #4 successful, expected failure. Decoded value: ", val);
+  }
+  stream := oct2bit(char2oct("22")); // integer that doesn't match any enumerated value
+  res := decvalue(stream, val);
+  if (res == 0) {
+    setverdict(fail, "Decoding #5 successful, expected failure. Decoded value: ", val);
+  }
+  setverdict(pass);
+}
+
 
 control {
   execute(tc_NoAttributeOnUpperLevel())
@@ -469,5 +527,7 @@ control {
   execute(tc_attribute_as_value_rec());
   execute(tc_attribute_not_as_value_rec());
   execute(tc_attribute_as_value_fields());
+  execute(tc_attribute_as_number());
+  execute(tc_attribute_as_number_negtest());
 }
 }

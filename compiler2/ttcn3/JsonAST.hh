@@ -40,6 +40,7 @@ class JsonAST {
     char* default_value;
     vector<JsonSchemaExtension> schema_extensions;
     boolean metainfo_unbound;
+    boolean as_number;
   
     JsonAST() { init_JsonAST(); }
     JsonAST(const JsonAST *other_val);
