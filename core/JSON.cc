@@ -507,7 +507,7 @@ void cbor2json_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object) {
           double val;
           if (exp == 0) val = ldexp(mant, -24);
           else if (exp != 31) val = ldexp(mant + 1024, exp - 25);
-          else val = mant == 0 ? INFINITY : NAN;
+          else val = mant == 0 ? PLUS_INFINITY : NOT_A_NUMBER;
           val = half & 0x8000 ? -val : val;
           FLOAT f = val;
           f.JSON_encode(cbor_float_descr_, tok);
@@ -534,7 +534,7 @@ void cbor2json_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object) {
           FLOAT f;
           OCTETSTRING os(8, check_and_get_buffer(buff, 8));
           INTEGER i = oct2int(os);
-          if (i.get_long_long_val() != 0x7FF8000000000000) { // NAN    
+          if (i.get_long_long_val() != 0x7FF8000000000000ULL) { // NAN    
             f.decode(FLOAT_descr_, buff, TTCN_EncDec::CT_RAW);
             f.JSON_encode(cbor_float_descr_, tok);
           } else {
