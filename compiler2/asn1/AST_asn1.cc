@@ -652,6 +652,11 @@ namespace Asn {
       Free(overwrite_str);
     }
   }
+  
+  void Module::add_impmod(ImpMod* p_impmod)
+  {
+    imp->add_impmod(p_impmod);
+  }
 
   // =================================
   // ===== Assignments

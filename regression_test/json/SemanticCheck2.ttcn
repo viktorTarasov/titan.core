@@ -6,48 +6,24 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Balasko, Jeno
  *   Baranyi, Botond
  *
  ******************************************************************************/
-module SemanticCheck {
+module SemanticCheck2 {
 
-// Recursive type checks (type Inner doesn't have JSON encoding explicitly,
-// but it can be encoded as part of Outer1)
-type union Inner {
-  integer num,
-  charstring str
-}
+import from SemanticCheck all;
 
-type record Outer1 {
+// Same thing as Outer1 from module SemanticCheck, but Outer2 only has a 
+// JSON variant attribute to specify the encoding instead of an 'encode' attribute
+// (this only works when using legacy codec handling)
+type record Outer2 {
   octetstring bytes,
   Inner rec
 } with {
-  encode "JSON";
+  variant(rec) "JSON : name as stuff";
 }
 
-external function f_enc1(in Outer1 x) return octetstring
+external function f_enc2(in Outer2 x) return octetstring
   with { extension "prototype(convert) encode(JSON)" }
-
-// Embedded union with the "as value" attribute
-type record HasUnion
-{
-  charstring str,
-  EmbeddedUnion val
-}
-with {
-  encode "JSON";
-}
-
-
-
-type union EmbeddedUnion
-{
-  integer num,
-  octetstring bytes
-}
-with {
-  variant "JSON: as value";
-}
 
 }

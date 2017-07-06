@@ -10,7 +10,7 @@
  *
  ******************************************************************************/
 
-module Custom5 {
+module Phantom {
 
 import from Custom3 all;
 import from Types all;

@@ -6834,12 +6834,20 @@ namespace Ttcn {
             }
             else if (input_type->is_ref()) {
               // let the input type know that this is its encoding function
-              input_type->get_type_refd()->set_coding_function(true, this);
+              if (legacy_codec_handling) {
+                input_type->get_type_refd()->set_legacy_coding_function(true, this);
+              }
+              else {
+                input_type->get_type_refd()->set_coding_function(
+                  encoding_type == Common::Type::CT_PER ? "PER" :
+                  encoding_options->c_str(), TRUE, this);
+              }
               // treat this as a manual external function during code generation
               function_type = EXTFUNC_MANUAL;
             }
           }
-          else if (input_type->is_ref() && input_type->get_type_refd()->is_asn1()) {
+          else if (legacy_codec_handling && // for now, this only works with legacy codec handling
+                   input_type->is_ref() && input_type->get_type_refd()->is_asn1()) {
             // let the input ASN.1 type know that this is its encoding type
             input_type->get_type_refd()->set_asn_coding(true, encoding_type);
           }
@@ -6956,12 +6964,20 @@ namespace Ttcn {
           }
           else if (output_type != NULL && output_type->is_ref()) {
             // let the output type know that this is its decoding function
-            output_type->get_type_refd()->set_coding_function(false, this);
+            if (legacy_codec_handling) {
+              output_type->get_type_refd()->set_legacy_coding_function(false, this);
+            }
+            else {
+              output_type->get_type_refd()->set_coding_function(
+                encoding_type == Common::Type::CT_PER ? "PER" :
+                encoding_options->c_str(), FALSE, this);
+            }
             // treat this as a manual external function during code generation
             function_type = EXTFUNC_MANUAL;
           }
         }
-        else if (output_type != NULL && output_type->is_ref() &&
+        else if (legacy_codec_handling && // for now, this only works with legacy codec handling
+                 output_type != NULL && output_type->is_ref() &&
                  output_type->get_type_refd()->is_asn1()) {
           // let the output ASN.1 type know that this is its decoding type
           output_type->get_type_refd()->set_asn_coding(false, encoding_type);

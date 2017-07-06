@@ -57,6 +57,9 @@ LTTNGUSTLOGGER := no
 # Use code splitting into slices when running the tests
 #SPLIT_TO_SLICES := 30
 
+# Use legacy codec handling when running the tests
+LEGACY_CODEC_HANDLING := yes
+
 ifdef RT2
 # add command line option to generate code for alternative runtime
 RT2_FLAG := -R
@@ -201,6 +204,10 @@ INTERIX_LIBS = -L${XMLDIR}/lib -lxml2 -liconv -lncurses
 # Include local preferences
 #
 -include $(TOPDIR)/Makefile.personal
+
+ifdef LEGACY_CODEC_HANDLING
+TTCN3_COMPILER += -e
+endif
 
 ifeq (${XMLDIR}, default)
 CPPFLAGS += -I/usr/include/libxml2

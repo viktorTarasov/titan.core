@@ -261,7 +261,6 @@ control{
 
 }
 with {
-encode "RAW"
 extension "anytype bitstring,boolean,charstring,universal charstring,integer,octetstring,/*hexstring,verdicttype,*/float,/*default,*/objid,address, rof_string,fooref,pifunc,myrecord,level4, AT_integer"
 //                 \-- predefined types, in the order of PredefinedType in compiler.y:6179 (address is missing here ^^) ---------/
 

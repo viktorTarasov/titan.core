@@ -19,11 +19,19 @@ include $(TOPDIR)/Makefile.regression
 
 TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
-TTCN3_MODULES = Custom1.ttcn Custom2.ttcn Custom3.ttcn Custom5.ttcn
+TTCN3_MODULES = Custom1.ttcn Custom2.ttcn Custom3.ttcn Phantom.ttcn
 ASN1_MODULES = Types.asn
 
 ifdef RT2
-TTCN3_MODULES += Custom4.ttcn
+TTCN3_MODULES += CustomRT2.ttcn
+endif
+
+ifdef LEGACY_CODEC_HANDLING
+TTCN3_MODULES += AsnAndPer.ttcn
+LEGACY_SUFFIX := -legacy
+ifdef RT2
+TTCN3_MODULES += AsnAndPerRT2.ttcn
+endif
 endif
 
 USER_SOURCES = Coders.cc
@@ -62,7 +70,7 @@ clean distclean:
 dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
 
-run: $(TARGET) config$(RT2_SUFFIX).cfg
+run: $(TARGET) config$(RT2_SUFFIX)$(LEGACY_SUFFIX).cfg
 	./$^
 
 .NOTPARALLEL:

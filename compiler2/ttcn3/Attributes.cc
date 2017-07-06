@@ -896,6 +896,9 @@ namespace Ttcn {
   void AttributeSpec::dump(unsigned level) const
   {
     DEBUG(level,"spec: %s", spec.c_str());
+    if (!encoding.empty()) {
+      DEBUG(level, "encoding: %s", encoding.c_str());
+    }
   }
 
   // ==== SingleWithAttrib ====
@@ -1155,8 +1158,9 @@ namespace Ttcn {
       {
         case SingleWithAttrib::AT_ENCODE:
         {
-          if (temp_attrib->get_attribQualifiers() != NULL &&
-              temp_attrib->get_attribQualifiers()->get_nof_qualifiers() != 0) {
+          if (!legacy_codec_handling ||
+              (temp_attrib->get_attribQualifiers() != NULL &&
+              temp_attrib->get_attribQualifiers()->get_nof_qualifiers() != 0)) {
             // TODO: check the attributes grouped per qualifier (for now
             // ignoring this check for attributes with qualifiers is enough)
             break;

@@ -4910,35 +4910,51 @@ compile_time:
       target_type->get_genname_value(my_scope).c_str(), class_tmp_id.c_str(),
       target_type->get_genname_template(my_scope).c_str(), class_tmp_id.c_str(),
       target_type->get_genname_value(my_scope).c_str());
-    bool dec_by_func = target_type->is_coding_by_function(false);
-    if (dec_by_func) {
+    
+    bool legacy_dec_by_func = legacy_codec_handling && target_type->is_coding_by_function(false);
+    if (legacy_codec_handling) {
+      if (legacy_dec_by_func) {
+        str = mputprintf(str,
+          // convert the TTCN_Buffer into a bitstring
+          "OCTETSTRING os;\n"
+          "buff.get_string(os);\n"
+          "BITSTRING bs(oct2bit(os));\n"
+          // decode the value (with the user function)
+          "if (%s(bs, *dec_val) != 0) {\n"
+          "TTCN_warning(\"Decoded content matching failed, because the data could "
+          "not be decoded by the provided function.\");\n"
+          "ret_val = FALSE;\n"
+          "}\n"
+          // make sure the bitstring is empty after decoding, display a warning otherwise
+          "else if (bs.lengthof() != 0) {\n",
+          target_type->get_coding_function(false)->get_genname_from_scope(my_scope).c_str());
+      }
+      else {
+        str = mputprintf(str,
+          // decode the value (with a built-in decoder)
+          "dec_val->decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
+          // make sure no errors occurred (these already displayed warnings during
+          // decoding)
+          "if (TTCN_EncDec::get_last_error_type() != TTCN_EncDec::ET_NONE) "
+          "ret_val = FALSE;\n"
+          // make sure the buffer is empty after decoding, display a warning otherwise
+          "else if (buff.get_read_len() != 0) {\n",
+          target_type->get_genname_typedescriptor(my_scope).c_str(),
+          target_type->get_coding(false).c_str());
+      }
+    }
+    else { // new codec handling
       str = mputprintf(str,
-        // convert the TTCN_Buffer into a bitstring
         "OCTETSTRING os;\n"
         "buff.get_string(os);\n"
-        "BITSTRING bs(oct2bit(os));\n"
-        // decode the value (with the user function)
-        "if (%s(bs, *dec_val) != 0) {\n"
+        "if (%s_decoder(os, *dec_val, %s_default_coding) != 0) {\n"
         "TTCN_warning(\"Decoded content matching failed, because the data could "
-        "not be decoded by the provided function.\");\n"
+        "not be decoded.\");\n"
         "ret_val = FALSE;\n"
         "}\n"
-        // make sure the bitstring is empty after decoding, display a warning otherwise
-        "else if (bs.lengthof() != 0) {\n",
-        target_type->get_coding_function(false)->get_genname_from_scope(my_scope).c_str());
-    }
-    else {
-      str = mputprintf(str,
-        // decode the value (with a built-in decoder)
-        "dec_val->decode(%s_descr_, buff, TTCN_EncDec::CT_%s);\n"
-        // make sure no errors occurred (these already displayed warnings during
-        // decoding)
-        "if (TTCN_EncDec::get_last_error_type() != TTCN_EncDec::ET_NONE) "
-        "ret_val = FALSE;\n"
-        // make sure the buffer is empty after decoding, display a warning otherwise
-        "else if (buff.get_read_len() != 0) {\n",
-        target_type->get_genname_typedescriptor(my_scope).c_str(),
-        target_type->get_coding(false).c_str());
+        "else if (os.lengthof() != 0) {\n",
+        target_type->get_genname_coder(my_scope).c_str(),
+        target_type->get_genname_coder(my_scope).c_str());
     }
     str = mputprintf(str,
       "TTCN_warning(\"Decoded content matching failed, because the buffer was not "
@@ -4968,8 +4984,9 @@ compile_time:
       "const TTCN_Typedescriptor_t* get_type_descr() const { return &%s_descr_; }\n"
       "};\n"
       "%s.set_type(DECODE_MATCH);\n"
-      "{\n", dec_by_func ? "bits" : "octets",
-      dec_by_func ? "bs.lengthof()" : "(int)buff.get_read_len()",
+      "{\n", legacy_dec_by_func ? "bits" : "octets",
+      !legacy_codec_handling ? "os.lengthof()" :
+      (legacy_dec_by_func ? "bs.lengthof()" : "(int)buff.get_read_len()"),
       omit_in_value_list ? ", TRUE" : "", type_name.c_str(),
       target_type->get_genname_typedescriptor(my_scope).c_str(), name);
     

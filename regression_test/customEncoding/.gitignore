@@ -4,5 +4,9 @@ Custom*.cc
 Custom*.hh
 Types*.cc
 Types*.hh
+AsnAndPer*.cc
+AsnAndPer*.hh
+Phantom*.cc
+Phantom*.hh
 customEncoding.log
 compile
