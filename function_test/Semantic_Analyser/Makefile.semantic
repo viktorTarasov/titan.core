@@ -13,7 +13,7 @@
 #
 ##############################################################################
 SADIRS := ver xer encode param template any_from pattern_ref float recof_index \
-port_translation
+port_translation mtc_and_system_clause
 ifdef RT2
 SADIRS += deprecated erroneous_attributes template_concat
 endif

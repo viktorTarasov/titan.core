@@ -3695,6 +3695,73 @@ namespace Common {
     }
     }
   }
+  
+
+  bool Type::is_compatible_component_by_port(Type *p_type) {
+    chk();
+    p_type->chk();
+    Type *t1 = get_type_refd_last();
+    Type *t2 = p_type->get_type_refd_last();
+    if (t1->typetype != T_COMPONENT || t2->typetype != T_COMPONENT) {
+      return false;
+    }
+    ComponentTypeBody* b1 = t1->get_CompBody();
+    ComponentTypeBody* b2 = t2->get_CompBody();
+    
+    // Does b2 contains every port with the same type and name as b1?
+    for (size_t i = 0; i < b1->get_nof_asss(); i++) {
+      Assignment * ass = b1->get_ass_byIndex(i);
+      if (ass->get_asstype() == Assignment::A_PORT) {
+        Type *port_type = ass->get_Type()->get_type_refd_last();
+        const Identifier& id = ass->get_id();
+        bool found = false;
+        for (size_t j = 0; j < b2->get_nof_asss(); j++) {
+          Assignment * ass2 = b2->get_ass_byIndex(j);
+          const Identifier& id2 = ass2->get_id();
+          if (id == id2 && ass2->get_asstype() == Assignment::A_PORT) {
+            Type *port_type2 = ass2->get_Type()->get_type_refd_last();
+            if (port_type != port_type2) {
+              return false;
+            } else {
+              found = true;
+              break;
+            }
+          }
+        }
+        if (!found) {
+          return false;
+        }
+      }
+    }
+    
+    // Does b1 contains every port with the same type and name as b2?
+    for (size_t i = 0; i < b2->get_nof_asss(); i++) {
+      Assignment * ass = b2->get_ass_byIndex(i);
+      if (ass->get_asstype() == Assignment::A_PORT) {
+        Type *port_type = ass->get_Type()->get_type_refd_last();
+        const Identifier& id = ass->get_id();
+        bool found = false;
+        for (size_t j = 0; j < b1->get_nof_asss(); j++) {
+          Assignment * ass2 = b1->get_ass_byIndex(j);
+          const Identifier& id2 = ass2->get_id();
+          if (id == id2 && ass2->get_asstype() == Assignment::A_PORT) {
+            Type *port_type2 = ass2->get_Type()->get_type_refd_last();
+            if (port_type != port_type2) {
+              return false;
+            } else {
+              found = true;
+              break;
+            }
+          }
+        }
+        if (!found) {
+          return false;
+        }
+      }
+    }
+    
+    return true;
+  }
 
   bool Type::is_compatible(Type *p_type, TypeCompatInfo *p_info, Location* p_loc,
                            TypeChain *p_left_chain, TypeChain *p_right_chain,

@@ -470,6 +470,11 @@ static const string anyname("anytype");
     Ttcn::Reference *runsonref;
     Ttcn::Reference *systemref;
   } configspec;
+  
+  struct {
+    Ttcn::Reference *mtcref;
+    Ttcn::Reference *systemref;
+  } alt_tc_configspec;
 
   struct {
     Value *name;
@@ -1023,6 +1028,7 @@ static const string anyname("anytype");
 %type <reference> PortType optDerivedDef DerivedDef IndexSpec Signature
   VariableRef TimerRef Port PortOrAll ValueStoreSpec
   SenderSpec ComponentType optRunsOnSpec RunsOnSpec optSystemSpec optPortSpec
+  optMtcSpec
 %type <reference_or_any> PortOrAny TimerRefOrAny
 %type <valuerange> Range
 %type <type> NestedEnumDef NestedRecordDef NestedRecordOfDef NestedSetDef
@@ -1089,6 +1095,7 @@ AllOrTypeListWithTo TypeListWithFrom TypeListWithTo
 %type <reforid> Reference
 %type <initial> Initial
 %type <configspec> ConfigSpec
+%type <alt_tc_configspec> AltOrTcConfigSpec
 %type <createpar> optCreateParameter
 %type <applyop> ApplyOp
 %type <identifier_list> IdentifierList IdentifierListOrPredefType
@@ -1442,6 +1449,7 @@ optExtendsDef
 optFromClause
 optFunctionActualParList
 optFunctionFormalParList
+optMtcSpec
 optParDefaultValue
 optPortCallBody
 optReceiveParameter
@@ -1744,6 +1752,12 @@ Initial
   delete $$.systemref;
 }
 ConfigSpec
+
+%destructor {
+  delete $$.mtcref;
+  delete $$.systemref;
+}
+AltOrTcConfigSpec
 
 %destructor {
   delete $$.name;
@@ -4175,11 +4189,11 @@ ValueofOp: // 162
 
 FunctionDef: // 164
   FunctionKeyword optDeterministicModifier IDentifier '(' optFunctionFormalParList ')'
-  optRunsOnSpec optPortSpec optReturnType optError StatementBlock
+  optRunsOnSpec AltOrTcConfigSpec optPortSpec optReturnType optError StatementBlock
   {
     $5->set_location(infile, @4, @6);
-    $$ = new Def_Function($3, $5, $7, $8, $9.type, $9.returns_template,
-                          $9.template_restriction, $11);
+    $$ = new Def_Function($3, $5, $7, $8.mtcref, $8.systemref, $9, $10.type, $10.returns_template,
+                          $10.template_restriction, $12);
     $$->set_location(infile, @$);
   }
 ;
@@ -4664,10 +4678,24 @@ ConfigSpec: // 202
   }
 ;
 
+AltOrTcConfigSpec:
+  optMtcSpec optSystemSpec
+  {
+    $$.mtcref=$1;
+    $$.systemref=$2;
+  }
+;
+
 optSystemSpec: // [203]
   /* empty */ { $$ = 0; }
 | SystemKeyword ComponentType { $$ = $2; }
 | SystemKeyword error { $$ = 0; }
+;
+
+optMtcSpec:
+  /* empty */ { $$ = 0; }
+| MTCKeyword ComponentType { $$ = $2; }
+| MTCKeyword error { $$ = 0; }
 ;
 
 TestcaseInstance: // 205
@@ -4782,17 +4810,17 @@ TestcaseActualPar:
 
 AltstepDef: // 211
   AltstepKeyword IDentifier '(' optAltstepFormalParList ')' optRunsOnSpec
-  optError '{' AltstepLocalDefList AltGuardList optError '}'
+  AltOrTcConfigSpec optError '{' AltstepLocalDefList AltGuardList optError '}'
   {
     StatementBlock *sb = new StatementBlock;
-    for (size_t i = 0; i < $9.nElements; i++) {
-      Statement *stmt = new Statement(Statement::S_DEF, $9.elements[i]);
-      stmt->set_location(*$9.elements[i]);
+    for (size_t i = 0; i < $10.nElements; i++) {
+      Statement *stmt = new Statement(Statement::S_DEF, $10.elements[i]);
+      stmt->set_location(*$10.elements[i]);
       sb->add_stmt(stmt);
     }
-    Free($9.elements);
+    Free($10.elements);
     $4->set_location(infile, @4);
-    $$ = new Def_Altstep($2, $4, $6, sb, $10);
+    $$ = new Def_Altstep($2, $4, $6, $7.mtcref, $7.systemref, sb, $11);
     $$->set_location(infile, @$);
   }
 ;

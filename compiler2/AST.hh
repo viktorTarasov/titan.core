@@ -589,6 +589,12 @@ namespace Common {
     /** Returns the component type referred by the 'runs on' clause of a
      * TTCN-3 definition */
     virtual Type *get_RunsOnType();
+    /** Returns the component type referred by the 'mtc' clause of a
+     * TTCN-3 definition */
+    virtual Type *get_MtcType();
+    /** Returns the component type referred by the 'system' clause of a
+     * TTCN-3 definition */
+    virtual Type *get_SystemType();
     /** Returns the port type referred by the 'port' clause of a
      * TTCN-3 function definition */
     virtual Type *get_PortType();

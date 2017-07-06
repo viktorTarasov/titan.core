@@ -5628,7 +5628,7 @@ void Type::chk_this_template_incorrect_field() {
     case T_SET_T:
     case T_OPENTYPE:
       for (size_t i = 0; i < t->get_nof_comps(); i++) {
-        Error_Context cntxt(t->get_comp_byIndex(i), "In field `%s'", t->get_comp_byIndex(i)->get_name().get_dispname().c_str());
+        Error_Context cntxt2(t->get_comp_byIndex(i), "In field `%s'", t->get_comp_byIndex(i)->get_name().get_dispname().c_str());
         t->get_comp_byIndex(i)->get_type()->chk_this_template_incorrect_field();
       }
       break;
@@ -5646,7 +5646,7 @@ void Type::chk_this_template_incorrect_field() {
           case Assignment::A_VAR_TEMPLATE:   /**< template variable, dynamic template (TTCN-3) */
           case Assignment::A_PORT:           /**< port (TTCN-3) */
           {
-            Error_Context cntxt(ass, "In field `%s'", ass->get_id().get_dispname().c_str());
+            Error_Context cntxt2(ass, "In field `%s'", ass->get_id().get_dispname().c_str());
             ass->get_Type()->chk_this_template_incorrect_field();
           }
         default:

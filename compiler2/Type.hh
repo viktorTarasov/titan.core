@@ -682,6 +682,9 @@ namespace Common {
                        TypeChain *p_left_chain = NULL,
                        TypeChain *p_right_chain = NULL,
                        bool p_is_inline_template = false);
+    /** Check if the port definitions of the component types are the same
+     */
+    bool is_compatible_component_by_port(Type *p_type);
     /** Check if the restrictions of a T_SEQOF/T_SETOF are "compatible" with
      *  the given type \a p_type.  Can be called only as a T_SEQOF/T_SETOF.
      *  Currently, used for structured types only.  \a p_type can be any kind

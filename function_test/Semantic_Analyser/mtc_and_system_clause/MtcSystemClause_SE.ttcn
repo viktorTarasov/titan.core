@@ -1,0 +1,102 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+
+module MtcSystemClause_SE { //^In TTCN-3 module//
+
+	type port P1 message {
+		inout integer;
+	} with {
+		extension "internal";
+	}
+
+	type component Comp1 {
+		var charstring cs;
+		port P1 p1;
+		timer mytimer;
+	}
+
+	type component Comp2 {
+		var integer i;
+		port P1 p2; /* Different name */
+		timer mytimer;
+	}
+
+	function diff_mtc() mtc Comp1 {
+	}
+
+	function diff_system() system Comp1 {
+	}
+
+	function diff_mtc_and_system() mtc Comp1 system Comp1 {
+	}
+
+	altstep alt_diff_mtc() runs on Comp1 mtc Comp1 {
+		[]mytimer.timeout{
+
+		}
+	}
+
+	altstep alt_diff_system() runs on Comp1 system Comp1 {
+		[]mytimer.timeout{
+
+		}
+	}
+
+	altstep alt_diff_mtc_and_system() runs on Comp1 mtc Comp1 system Comp1 {
+		[]mytimer.timeout{
+
+		}
+	}
+
+	altstep alt_diff_mtc_bad() runs on Comp2 mtc Comp1 {
+		[]mytimer.timeout{
+
+		}
+	}
+
+	altstep alt_diff_system_bad() runs on Comp2 system Comp1 {
+		[]mytimer.timeout{
+
+		}
+	}
+
+	altstep alt_diff_mtc_and_system_bad() runs on Comp2 mtc Comp1 system Comp1 {
+		[]mytimer.timeout{
+
+		}
+	}
+
+
+
+	testcase tc_positive() runs on Comp1 system Comp1 {
+		diff_mtc(); 
+		diff_system(); 
+		diff_mtc_and_system();
+
+		alt_diff_mtc();
+		alt_diff_system();
+		alt_diff_mtc_and_system();
+	}
+
+	testcase tc_negative() runs on Comp2 system Comp2 { //^In testcase definition \`tc_negative\'\://
+		diff_mtc(); //^In function instance\:// //^error\: Mtc clause mismatch\: A definition that runs on component type \`\@MtcSystemClause_SE\.Comp2\' cannot call function \`\@MtcSystemClause_SE\.diff_mtc\'\, which mtc clause is \`\@MtcSystemClause_SE\.Comp1\'//
+		diff_system(); //^In function instance\:// //^error\: System clause mismatch\: A definition with system component type \`\@MtcSystemClause_SE\.Comp2\' cannot call function \`\@MtcSystemClause_SE\.diff_system\'\, which system clause is \`\@MtcSystemClause_SE\.Comp1\'//
+		diff_mtc_and_system(); //^In function instance\:// //^error\: System clause mismatch\: A definition with system component type \`\@MtcSystemClause_SE\.Comp2\' cannot call function \`\@MtcSystemClause_SE\.diff_mtc_and_system\'\, which system clause is \`\@MtcSystemClause_SE\.Comp1\'// //^error\: Mtc clause mismatch\: A definition that runs on component type \`\@MtcSystemClause_SE\.Comp2\' cannot call function \`\@MtcSystemClause_SE\.diff_mtc_and_system\'\, which mtc clause is \`\@MtcSystemClause_SE\.Comp1\'//
+
+		alt_diff_mtc_bad(); //^In altstep instance\:// //^error\: Mtc clause mismatch\: A definition that runs on component type \`\@MtcSystemClause_SE\.Comp2\' cannot call altstep \`\@MtcSystemClause_SE\.alt_diff_mtc_bad\'\, which mtc clause is \`\@MtcSystemClause_SE\.Comp1\'//
+		alt_diff_system_bad(); //^In altstep instance\:// //^error\: System clause mismatch\: A definition with system component type \`\@MtcSystemClause_SE\.Comp2\' cannot call altstep \`\@MtcSystemClause_SE\.alt_diff_system_bad\'\, which system clause is \`\@MtcSystemClause_SE\.Comp1\'//
+		alt_diff_mtc_and_system_bad(); //^In altstep instance\:// //^error\: System clause mismatch\: A definition with system component type \`\@MtcSystemClause_SE\.Comp2\' cannot call altstep \`\@MtcSystemClause_SE\.alt_diff_mtc_and_system_bad\'\, which system clause is \`\@MtcSystemClause_SE\.Comp1\'// //^error\: Mtc clause mismatch\: A definition that runs on component type \`\@MtcSystemClause_SE\.Comp2\' cannot call altstep \`\@MtcSystemClause_SE\.alt_diff_mtc_and_system_bad\'\, which mtc clause is \`\@MtcSystemClause_SE\.Comp1\'//
+	}
+
+
+
+}

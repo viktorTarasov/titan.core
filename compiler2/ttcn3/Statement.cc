@@ -3125,6 +3125,11 @@ error:
       ref_pard->error("Function with `port' clause cannot be called directly.");
     }
     my_sb->chk_runs_on_clause(t_ass, *ref_pard, "call");
+    
+    bool in_control_part = my_sb->get_my_def() == NULL;
+    my_sb->chk_mtc_clause(t_ass, *ref_pard, "call", in_control_part);
+    my_sb->chk_system_clause(t_ass, *ref_pard, "call", in_control_part);
+    
     if (t_ass->get_Type())
       ref_pard->warning("The value returned by %s is not used",
 	      t_ass->get_description().c_str());
@@ -3375,6 +3380,9 @@ error:
     Error_Context cntxt(this, "In altstep instance");
     Common::Assignment *t_ass = ref_pard->get_refd_assignment();
     my_sb->chk_runs_on_clause(t_ass, *ref_pard, "call");
+    bool in_control_part = my_sb->get_my_def() == NULL;
+    my_sb->chk_mtc_clause(t_ass, *ref_pard, "call", in_control_part);
+    my_sb->chk_system_clause(t_ass, *ref_pard, "call", in_control_part);
   }
 
   void Statement::chk_return()

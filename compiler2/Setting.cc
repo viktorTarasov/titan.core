@@ -692,6 +692,56 @@ namespace Common {
 	refd_comptype->get_typename().c_str());
     }
   }
+  
+  void Scope::chk_mtc_clause(Assignment *p_ass, const Location& p_loc,
+    const char *p_what, bool in_control_part)
+  {
+    // component type of the referred definition
+    Type *refd_comptype = p_ass->get_MtcType();
+    // definitions without 'mtc' can be called from anywhere
+    if (!refd_comptype) return;
+    if (in_control_part) {
+      p_loc.error("Function with mtc or system clause is not allowed in control part.");
+      return;
+    }
+    Type *t_comptype = get_mtc_system_comptype(false);
+    if (t_comptype) {
+      if (!refd_comptype->is_compatible_component_by_port(t_comptype)) {
+        // the 'mtc' clause of the referred definition is not compatible
+        // with that of the current scope (i.e. the referring definition)
+        p_loc.error("Mtc clause mismatch: A definition that runs on "
+          "component type `%s' cannot %s %s, which mtc clause is `%s'",
+          t_comptype->get_typename().c_str(), p_what,
+          p_ass->get_description().c_str(),
+          refd_comptype->get_typename().c_str());
+      }
+    }
+  }
+  
+  void Scope::chk_system_clause(Assignment *p_ass, const Location& p_loc,
+    const char *p_what, bool in_control_part)
+  {
+    // component type of the referred definition
+    Type *refd_comptype = p_ass->get_SystemType();
+    // definitions without 'system' can be called from anywhere
+    if (!refd_comptype) return;
+    if (in_control_part) {
+      p_loc.error("Function with mtc or system clause is not allowed in control part.");
+      return;
+    }
+    Type *t_comptype = get_mtc_system_comptype(true);
+    if (t_comptype) {
+      if (!refd_comptype->is_compatible_component_by_port(t_comptype)) {
+        // the 'system' clause of the referred definition is not compatible
+        // with that of the current scope (i.e. the referring definition)
+        p_loc.error("System clause mismatch: A definition with system "
+          "component type `%s' cannot %s %s, which system clause is `%s'",
+          t_comptype->get_typename().c_str(), p_what,
+          p_ass->get_description().c_str(),
+          refd_comptype->get_typename().c_str());
+      }
+    }
+  }
 
   // =================================
   // ===== Reference

@@ -1928,6 +1928,16 @@ namespace Common {
     return 0;
   }
   
+  Type *Assignment::get_MtcType()
+  {
+    return 0;
+  }
+  
+  Type *Assignment::get_SystemType()
+  {
+    return 0;
+  }
+  
   Type *Assignment::get_PortType()
   {
     return 0;

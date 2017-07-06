@@ -6268,7 +6268,8 @@ namespace Ttcn {
   // =================================
 
   Def_Function::Def_Function(Identifier *p_id, FormalParList *p_fpl,
-                             Reference *p_runs_on_ref, Reference *p_port_ref,
+                             Reference *p_runs_on_ref, Reference *p_mtc_ref,
+                             Reference *p_system_ref, Reference *p_port_ref,
                              Type *p_return_type,
                              bool returns_template,
                              template_restriction_t p_template_restriction,
@@ -6276,6 +6277,8 @@ namespace Ttcn {
     : Def_Function_Base(false, p_id, p_fpl, p_return_type, returns_template,
         p_template_restriction),
         runs_on_ref(p_runs_on_ref), runs_on_type(0),
+        mtc_ref(p_mtc_ref), mtc_type(0),
+        system_ref(p_system_ref), system_type(0),
         port_ref(p_port_ref), port_type(0), block(p_block),
         is_startable(false), transparent(false)
   {
@@ -6286,6 +6289,8 @@ namespace Ttcn {
   Def_Function::~Def_Function()
   {
     delete runs_on_ref;
+    delete mtc_ref;
+    delete system_ref;
     delete port_ref;
     delete block;
   }
@@ -6299,6 +6304,8 @@ namespace Ttcn {
   {
     Def_Function_Base::set_fullname(p_fullname);
     if (runs_on_ref) runs_on_ref->set_fullname(p_fullname + ".<runs_on_type>");
+    if (mtc_ref) mtc_ref->set_fullname(p_fullname + ".<mtc_type>");
+    if (system_ref) system_ref->set_fullname(p_fullname + ".<system_type>");
     if (port_ref) port_ref->set_fullname(p_fullname + ".<port_type>");
     block->set_fullname(p_fullname + ".<statement_block>");
   }
@@ -6310,10 +6317,24 @@ namespace Ttcn {
 
     Def_Function_Base::set_my_scope(&bridgeScope);
     if (runs_on_ref) runs_on_ref->set_my_scope(&bridgeScope);
+    if (mtc_ref) mtc_ref->set_my_scope(&bridgeScope);
+    if (system_ref) system_ref->set_my_scope(&bridgeScope);
     if (port_ref) port_ref->set_my_scope(&bridgeScope);
     block->set_my_scope(fp_list);
   }
 
+  Type *Def_Function::get_MtcType()
+  {
+    if (!checked) chk();
+    return mtc_type;
+  }
+  
+  Type *Def_Function::get_SystemType()
+  {
+    if (!checked) chk();
+    return system_type;
+  }
+  
   Type *Def_Function::get_RunsOnType()
   {
     if (!checked) chk();
@@ -6362,6 +6383,17 @@ namespace Ttcn {
       }
     }
     
+    // checking the `mtc' clause
+    if (mtc_ref) {
+      Error_Context cntxt2(mtc_ref, "In `mtc' clause");
+      mtc_type = mtc_ref->chk_comptype_ref();
+    }
+    
+    // checking the `system' clause
+    if (system_ref) {
+      Error_Context cntxt2(system_ref, "In `system' clause");
+      system_type = system_ref->chk_comptype_ref();
+    }
     
     // checking the formal parameter list, the check must come before the 
     // chk_prototype() function call.
@@ -7584,10 +7616,12 @@ namespace Ttcn {
   // =================================
 
   Def_Altstep::Def_Altstep(Identifier *p_id, FormalParList *p_fpl,
-                           Reference *p_runs_on_ref, StatementBlock *p_sb,
+                           Reference *p_runs_on_ref, Reference *p_mtc_ref,
+                           Reference *p_system_ref, StatementBlock *p_sb,
                            AltGuards *p_ags)
     : Definition(A_ALTSTEP, p_id), fp_list(p_fpl), runs_on_ref(p_runs_on_ref),
-      runs_on_type(0), sb(p_sb), ags(p_ags)
+      runs_on_type(0), mtc_ref(p_mtc_ref), mtc_type(0),
+      system_ref(p_system_ref), system_type(0), sb(p_sb), ags(p_ags)
   {
     if (!p_fpl || !p_sb || !p_ags)
       FATAL_ERROR("Def_Altstep::Def_Altstep()");
@@ -7601,6 +7635,8 @@ namespace Ttcn {
   {
     delete fp_list;
     delete runs_on_ref;
+    delete mtc_ref;
+    delete system_ref;
     delete sb;
     delete ags;
   }
@@ -7615,6 +7651,8 @@ namespace Ttcn {
     Definition::set_fullname(p_fullname);
     fp_list->set_fullname(p_fullname + ".<formal_par_list>");
     if (runs_on_ref) runs_on_ref->set_fullname(p_fullname + ".<runs_on_type>");
+    if (mtc_ref) mtc_ref->set_fullname(p_fullname + ".<mtc_type>");
+    if (system_ref) system_ref->set_fullname(p_fullname + ".<system_type>");
     sb->set_fullname(p_fullname+".<block>");
     ags->set_fullname(p_fullname + ".<guards>");
   }
@@ -7627,6 +7665,8 @@ namespace Ttcn {
     Definition::set_my_scope(&bridgeScope);
     // the scope of the parameter list is set during checking
     if (runs_on_ref) runs_on_ref->set_my_scope(&bridgeScope);
+    if (mtc_ref) mtc_ref->set_my_scope(&bridgeScope);
+    if (system_ref) system_ref->set_my_scope(&bridgeScope);
     sb->set_my_scope(fp_list);
     ags->set_my_scope(sb);
   }
@@ -7635,6 +7675,18 @@ namespace Ttcn {
   {
     if (!checked) chk();
     return runs_on_type;
+  }
+  
+  Type *Def_Altstep::get_MtcType()
+  {
+    if (!checked) chk();
+    return mtc_type;
+  }
+  
+  Type *Def_Altstep::get_SystemType()
+  {
+    if (!checked) chk();
+    return system_type;
   }
 
   FormalParList *Def_Altstep::get_FormalParList()
@@ -7665,6 +7717,14 @@ namespace Ttcn {
         runs_on_scope->set_parent_scope(my_scope);
         parlist_scope = runs_on_scope;
       }
+    }
+    if (mtc_ref) {
+      Error_Context cntxt2(mtc_ref, "In `mtc' clause");
+      mtc_type = mtc_ref->chk_comptype_ref();
+    }
+    if (system_ref) {
+      Error_Context cntxt2(system_ref, "In `system' clause");
+      system_type = system_ref->chk_comptype_ref();
     }
     fp_list->set_my_scope(parlist_scope);
     fp_list->chk(asstype);
@@ -7831,6 +7891,14 @@ namespace Ttcn {
     if (runs_on_ref) {
       DEBUG(level + 1, "Runs on clause:");
       runs_on_ref->dump(level + 2);
+    }
+    if (mtc_ref) {
+      DEBUG(level + 1, "Mtc clause:");
+      mtc_ref->dump(level + 2);
+    }
+    if (system_ref) {
+      DEBUG(level + 1, "System clause:");
+      system_ref->dump(level + 2);
     }
     /*
     DEBUG(level + 1, "Local definitions:");

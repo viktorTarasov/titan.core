@@ -1402,6 +1402,22 @@ namespace Ttcn {
      * It is NULL if the function has no 'runs on' clause or \a runs_on_ref is
      * erroneous. */
     Type *runs_on_type;
+    /** The 'mtc' clause (i.e. a reference to a TTCN-3 component type)
+     * It is NULL if the function has no 'mtc' clause. */
+    Reference *mtc_ref;
+    /** Points to the object describing the component type referred by
+     * 'mtc' clause.
+     * It is NULL if the function has no 'mtc' clause or \a mtc_ref is
+     * erroneous. */
+    Type *mtc_type;
+    /** The 'system' clause (i.e. a reference to a TTCN-3 component type)
+     * It is NULL if the function has no 'system' clause. */
+    Reference *system_ref;
+    /** Points to the object describing the component type referred by
+     * 'system' clause.
+     * It is NULL if the function has no 'system' clause or \a system_ref is
+     * erroneous. */
+    Type *system_type;
     /** The 'port' clause (i.e. a reference to a TTCN-3 port type)
      * It is NULL if the function has no 'port' clause. */
     Reference *port_ref;
@@ -1433,6 +1449,8 @@ namespace Ttcn {
      * @param p_id function name
      * @param p_fpl formal parameter list
      * @param p_runs_on_ref "runs on", else NULL
+     * @param p_mtc_ref "mtc", else NULL
+     * @param p_system_ref "system", else NULL
      * @param p_port_ref "port", else NULL
      * @param p_return_type return type, may be NULL
      * @param returns_template true if the return value is a template
@@ -1440,7 +1458,8 @@ namespace Ttcn {
      * @param p_block the body of the function
      */
     Def_Function(Identifier *p_id, FormalParList *p_fpl,
-                 Reference *p_runs_on_ref, Reference *p_port_ref,
+                 Reference *p_runs_on_ref, Reference *p_mtc_ref,
+                 Reference *p_system_ref, Reference *p_port_ref,
                  Type *p_return_type,
                  bool returns_template,
                  template_restriction_t p_template_restriction,
@@ -1450,6 +1469,8 @@ namespace Ttcn {
     virtual void set_fullname(const string& p_fullname);
     virtual void set_my_scope(Scope *p_scope);
     virtual Type *get_RunsOnType();
+    virtual Type *get_MtcType();
+    virtual Type *get_SystemType();
     virtual Type *get_PortType();
     /** Returns a scope that can access the definitions within component type
      * \a comptype and its parent is \a parent_scope.*/
@@ -1586,6 +1607,22 @@ namespace Ttcn {
      * It is NULL if the altstep has no 'runs on' clause or \a runs_on_ref is
      * erroneous. */
     Type *runs_on_type;
+    /** The 'mtc' clause (i.e. a reference to a TTCN-3 component type)
+     * It is NULL if the altstep has no 'mtc' clause. */
+    Reference *mtc_ref;
+    /** Points to the object describing the component type referred by
+     * 'mtc' clause.
+     * It is NULL if the altstep has no 'mtc' clause or \a mtc_ref is
+     * erroneous. */
+    Type *mtc_type;
+    /** The 'system' clause (i.e. a reference to a TTCN-3 component type)
+     * It is NULL if the altstep has no 'system' clause. */
+    Reference *system_ref;
+    /** Points to the object describing the component type referred by
+     * 'system' clause.
+     * It is NULL if the altstep has no 'system' clause or \a system_ref is
+     * erroneous. */
+    Type *system_type;
     StatementBlock *sb; /**< contains the local definitions */
     AltGuards *ags;
 
@@ -1597,13 +1634,16 @@ namespace Ttcn {
     Def_Altstep& operator=(const Def_Altstep& p);
   public:
     Def_Altstep(Identifier *p_id, FormalParList *p_fpl,
-                Reference *p_runs_on_ref, StatementBlock *p_sb,
+                Reference *p_runs_on_ref, Reference *p_mtc_ref,
+                Reference *p_system_ref, StatementBlock *p_sb,
                 AltGuards *p_ags);
     virtual ~Def_Altstep();
     virtual Def_Altstep *clone() const;
     virtual void set_fullname(const string& p_fullname);
     virtual void set_my_scope(Scope *p_scope);
     virtual Type *get_RunsOnType();
+    virtual Type *get_MtcType();
+    virtual Type *get_SystemType();
     virtual FormalParList *get_FormalParList();
     /** Returns a scope that can access the definitions within component type
      * \a comptype and its parent is \a parent_scope.*/

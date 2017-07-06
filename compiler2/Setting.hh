@@ -635,6 +635,18 @@ public:
      * \a p_what contains "call" or "activate". */
     void chk_runs_on_clause(Type *p_fat, const Location& p_loc,
       const char *p_what);
+    /** Checks the 'mtc' clause of definition \a p_ass that it can
+     * be called from this scope unit. Parameters \a p_loc and \a
+     * p_what are used in error messages. \a p_what contains "call" or
+     * "activate". */
+    void chk_mtc_clause(Assignment *p_ass, const Location& p_loc,
+      const char *p_what, bool in_control_part);
+    /** Checks the 'system' clause of definition \a p_ass that it can
+     * be called from this scope unit. Parameters \a p_loc and \a
+     * p_what are used in error messages. \a p_what contains "call" or
+     * "activate". */
+    void chk_system_clause(Assignment *p_ass, const Location& p_loc,
+      const char *p_what, bool in_control_part);
   };
 
   /**
