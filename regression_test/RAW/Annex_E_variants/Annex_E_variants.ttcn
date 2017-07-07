@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Baranyi, Botond
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 
@@ -28,10 +29,10 @@
 module Annex_E_variants {
 
 // E.2.1.0 Signed and unsigned single byte integers
-type integer Byte (-128 .. 127) with { variant "8 bit" };
+type integer Byte (-128 .. 127) with { variant "8 bits" }; // bits is also supported and does the same as bit
 type integer ByteEq (-128 .. 127) with { variant "FIELDLENGTH(8), COMP(signbit), BYTEORDER(last)" };
 
-type integer UnsignedByte (0 .. 255) with { variant "unsigned 8 bit" };
+type integer UnsignedByte (0 .. 255) with { variant "unsigned 8 bits" }; // bits is also supported and does the same as bit
 type integer UnsignedByteEq (0 .. 255) with { variant "FIELDLENGTH(8), COMP(nosign), BYTEORDER(last)" };
 
 // E.2.1.1 Signed and unsigned short integers

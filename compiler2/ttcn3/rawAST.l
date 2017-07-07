@@ -12,6 +12,7 @@
  *   Forstner, Matyas
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *   Zalanyi, Balazs Andor
@@ -299,6 +300,7 @@ HEXORDER    { BEGIN(rawcodec); RETURN(XHexOrderKeyword); }
 TOPLEVEL    { BEGIN(rawcodec); RETURN(XToplevelKeyword); }
 IntX        { RETURN(XIntXKeyword); }
 bit         { RETURN(XBitKeyword); }
+bits        { RETURN(XBitKeyword); }
 unsigned    { RETURN(XUnsignedKeyword); }
 "UTF-8"     { RETURN(XUTF8Keyword); }
 "UTF-16"    { RETURN(XUTF16Keyword); }
