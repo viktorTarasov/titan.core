@@ -7302,13 +7302,13 @@ error:
     if (port_op.s.call.body) {
       str = mputstr(str, "{\n");
       if (port_op.s.call.timer) {
-	str = port_op.s.call.timer->update_location_object(str);
-	str = mputstr(str, "TIMER call_timer;\n");
-	Code::init_expr(&expr);
-	expr.expr = mputstr(expr.expr, "call_timer.start(");
-	port_op.s.call.timer->generate_code_expr(&expr);
-	expr.expr = mputc(expr.expr, ')');
-	str = Code::merge_free_expr(str, &expr);
+        str = port_op.s.call.timer->update_location_object(str);
+        str = mputstr(str, "TIMER call_timer;\n");
+        Code::init_expr(&expr);
+        expr.expr = mputstr(expr.expr, "call_timer.start(");
+        port_op.s.call.timer->generate_code_expr(&expr);
+        expr.expr = mputc(expr.expr, ')');
+        str = Code::merge_free_expr(str, &expr);
       }
       // the label name is used for prefixing local variables
       if(!my_sb) FATAL_ERROR("Statement::generate_code_call()");
@@ -7589,6 +7589,8 @@ error:
       if (expr_reason.postamble)
         expr.postamble = mputprintf(expr.postamble, "%s;\n",
                                     expr_reason.postamble);
+      //TODO: when there is more than 1 reason parameter
+      // the resulting string should be extracted into a temporary variable.
       expr.expr = mputprintf(expr.expr, "%s", expr_reason.expr);
       Code::free_expr(&expr_reason);
     }
@@ -13269,8 +13271,8 @@ error:
         if (block && block->get_nof_stmts() > 0) {
           str = mputstr(str, "{\n"); // (3)
           str = block->generate_code(str, def_glob_vars, src_glob_vars);
-	  if (block->has_return() != StatementBlock::RS_YES)
-	    str = mputstr(str, "break;\n");
+            if (block->has_return() != StatementBlock::RS_YES)
+              str = mputstr(str, "break;\n");
           str = mputstr(str, "}\n"); // (3)
         }
         else str = mputstr(str, "break;\n");
