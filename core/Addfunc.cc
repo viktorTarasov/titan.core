@@ -323,10 +323,15 @@ BITSTRING int2bit(const INTEGER& value, int length)
     tmp_value >>= 1;
   }
   if (tmp_value != 0) {
+    int i = 0;
+    while(tmp_value != 0) {
+      tmp_value >>= 1;
+      i++;
+    }
     char *value_str = value.get_val().as_string(); // not tmp_value!
     TTCN_error("The first argument of function int2bit(), which is %s, "
-      "does not fit in %d bit%s.", value_str, length,
-      length > 1 ? "s" :"");
+      "does not fit in %d bit%s, needs at least %d.", value_str, length,
+      length > 1 ? "s" :"", length + i);
     Free(value_str);
   }
   return ret_val;
