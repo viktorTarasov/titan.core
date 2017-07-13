@@ -645,6 +645,8 @@ namespace Common {
       * Only used with new codec handling. */
     Type* get_type_w_coding_table();
     
+    const vector<coding_t>& get_coding_table() const { return coding_table; }
+    
     /** Returns whether this type can have the specified encoding.
       * Only used with new codec handling. */
     bool can_have_coding(MessageEncodingType_t coding);
@@ -785,9 +787,9 @@ namespace Common {
       * Used during code generation for types encoded/decoded by functions. */
     Assignment* get_coding_function(bool encode) const;
     
+    static MessageEncodingType_t get_enc_type(const string& enc);
+    
   private:
-    MessageEncodingType_t get_enc_type(const string& enc);
-
     void chk_Int_A();
     void chk_Enum_A();
     void chk_Enum_item(EnumItem *ei, bool after_ellipsis,
@@ -1284,6 +1286,7 @@ namespace Common {
     static const char * get_typename_builtin(typetype_t tt);
     string get_genname_typedescriptor(Scope *p_scope);
     string get_genname_coder(Scope* p_scope);
+    string get_genname_default_coding(Scope* p_scope);
   private:
     /** Returns the name prefix of type descriptors, etc. that belong to the
      * equivalent C++ class referenced from the module of scope \a p_scope.

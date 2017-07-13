@@ -4974,8 +4974,8 @@ namespace Common {
           if (!t->coding_table[i]->built_in) {
             // all user-defined encodings must have exactly one encoder/decoder
             // function set
-            boolean& conflict = encode ? coding_table[i]->custom_coding.enc_conflict :
-              coding_table[i]->custom_coding.dec_conflict;
+            boolean& conflict = encode ? t->coding_table[i]->custom_coding.enc_conflict :
+              t->coding_table[i]->custom_coding.dec_conflict;
             if (conflict) {
               error("Multiple `%s' %scoder functions defined for type `%s'",
                 t->coding_table[i]->custom_coding.name, encode ? "en" : "de",
@@ -4991,8 +4991,8 @@ namespace Common {
             }
             Assignment* func_def = encode ? t->coding_table[i]->custom_coding.enc_func :
               t->coding_table[i]->custom_coding.dec_func;
-            if (func_def == NULL) {
-              error("No `%s' %scoder function defined for type `%s'",
+            if (func_def == NULL && !is_asn1()) {
+              warning("No `%s' %scoder function defined for type `%s'",
                 t->coding_table[i]->custom_coding.name, encode ? "en" : "de",
                 get_typename().c_str());
             }
@@ -7163,7 +7163,7 @@ namespace Common {
     if (legacy_codec_handling) {
       FATAL_ERROR("Type::get_genname_coder");
     }
-    Type *t = this;
+    Type* t = this;
     for ( ; ; ) {
       // if the type has an 'encode' or 'variant' attribute, then it needs its
       // own coder functions
@@ -7177,6 +7177,33 @@ namespace Common {
       }
       else {
         return string();
+      }
+    }
+  }
+  
+  string Type::get_genname_default_coding(Scope* p_scope)
+  {
+    if (legacy_codec_handling) {
+      FATAL_ERROR("Type::get_genname_default_coding");
+    }
+    Type* t = this;
+    for ( ; ; ) {
+      // types defined in TTCN-3 or ASN.1 code and their field and element types
+      // have their own default coding variables
+      switch (t->ownertype) {
+      case OT_TYPE_ASS:
+      case OT_TYPE_DEF:
+      case OT_ARRAY:
+      case OT_COMP_FIELD:
+      case OT_RECORD_OF:
+        return t->get_genname_own(p_scope);
+      default:
+        if (t->is_ref()) {
+          t = t->get_type_refd();
+        }
+        else {
+          return string();
+        }
       }
     }
   }

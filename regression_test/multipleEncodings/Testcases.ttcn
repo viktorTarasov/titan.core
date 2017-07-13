@@ -1,0 +1,460 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// This module contains tests for the new handling of 'encode' and 'variant'
+// attributes, needed for types with multiple encodings.
+// It also tests the 'setencode' command.
+// (Contains tests for both runtimes.)
+module Testcases {
+
+import from TtcnTypes all;
+import from AsnTypes all;
+
+// Testing encvalue both with and without the dynamic encoding string argument.
+testcase tc_ttcn_encvalue() runs on CT {
+  var template R1 x1 := { f1 := val1 };
+  var octetstring exp := char2oct("abc");
+  var octetstring enc := bit2oct(encvalue(x1, "", "abc"));
+  if (exp != enc) {
+    setverdict(fail, "Expected: ", exp, ", got: ", enc);
+  }
+  
+  exp := char2oct("<f1>val1</f1>\n\n");
+  enc := bit2oct(encvalue(x1.f1, "", "XML"));
+  if (exp != enc) {
+    setverdict(fail, "Expected: ", exp, ", got: ", enc);
+  }
+  
+  var U2 x2 := { alt1 := 10 };
+  exp := char2oct("10");
+  enc := bit2oct(encvalue(x2, "dummy")); // encvalue knows which encoding to use, since U2 only has JSON encoding
+  if (exp != enc) {
+    setverdict(fail, "Expected: ", exp, ", got: ", enc);
+  }
+  setverdict(pass);
+}
+
+// Negative tests for encvalue
+testcase tc_ttcn_encvalue_negtest() runs on CT {
+  var R1 x := { val2 };
+  @try {
+    var bitstring dummy := encvalue(x); // encvalue doesn't know which encoding to use, because R1 has 2 encodings (XER and the user defined "abc" encoding)
+    setverdict(fail, "Error expected.");
+  }
+  @catch (msg) {
+    var template charstring msg_exp := pattern "*Missing dynamic encoding string or default encoding string";
+    if (not match(msg, msg_exp)) {
+      setverdict(fail, "Invalid error message: ", msg);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+  
+  @try {
+    var bitstring dummy := encvalue(x, "", "ab" & char(0, 1, 2, 3)); // invalid encoding
+    setverdict(fail, "Error expected.");
+  }
+  @catch (msg) {
+    var template charstring msg_exp := pattern "*Invalid encoding string*";
+    if (not match(msg, msg_exp)) {
+      setverdict(fail, "Invalid error message: ", msg);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+}
+
+// Testing decvalue both with and without the dynamic encoding string argument.
+testcase tc_ttcn_decvalue() runs on CT {
+  var bitstring data := oct2bit(char2oct("<R1>val1</R1>"));
+  var R1 exp1 := { f1 := val1 };
+  var R1 dec1;
+  var integer res := decvalue(data, dec1, "", "XER");
+  if (exp1 != dec1) {
+    setverdict(fail, "Expected: ", exp1, ", got: ", dec1);
+  }
+  
+  data := oct2bit('0001'O);
+  var R1.f1 exp2 := val2;
+  var R1.f1 dec2;
+  res := decvalue(data, dec2, "dummy", "RAW");
+  if (exp2 != dec2) {
+    setverdict(fail, "Expected: ", exp2, ", got: ", dec2);
+  }
+  
+  data := oct2bit(char2oct("{\"alt1\":3}"));
+  var U1 exp3 := { alt1 := 3 };
+  var U1 dec3;
+  res := decvalue(data, dec3);
+  if (exp3 != dec3) {
+    setverdict(fail, "Expected: ", exp3, ", got: ", dec3);
+  }
+  setverdict(pass);
+}
+
+// Testing encvalue_unichar both with and without the dynamic encoding string argument.
+testcase tc_ttcn_encvalue_unichar() runs on CT {
+  var R1.f1 x1 := val3;
+  var universal charstring exp := "<f1>val3</f1>\n\n";
+  var universal charstring enc := encvalue_unichar(x1, "UTF-8", "", "XML");
+  if (exp != enc) {
+    setverdict(fail, "Expected: ", exp, ", got: ", enc);
+  }
+  
+  var template E1 x2 := val2;
+  exp := "val2";
+  enc := encvalue_unichar(x2, "UTF-8", "");
+  if (exp != enc) {
+    setverdict(fail, "Expected: ", exp, ", got: ", enc);
+  }
+  setverdict(pass);
+}
+
+// Testing decvalue_unichar both with and without the dynamic encoding string argument.
+testcase tc_ttcn_decvalue_unichar() runs on CT {
+  var universal charstring data := "abc";
+  var R2 exp1 := { f1 := val1 };
+  var R2 dec1;
+  var integer res := decvalue_unichar(data, dec1, "UTF-8", "", "abc");
+  if (exp1 != dec1) {
+    setverdict(fail, "Expected: ", exp1, ", got: ", dec1);
+  }
+  
+  data := "-4";
+  var U2 exp2 := { alt1 := -4 };
+  var U2 dec2;
+  res := decvalue_unichar(data, dec2);
+  if (exp2 != dec2) {
+    setverdict(fail, "Expected: ", exp2, ", got: ", dec2);
+  }
+  setverdict(pass);
+}
+
+// Testing decmatch templates (there's no dynamic encoding string in this case,
+// so the type used must have only one encoding).
+testcase tc_ttcn_decmatch() runs on CT {
+  var U2 x := { alt1 := 6 };
+  var octetstring os := char2oct("6");
+  var template octetstring vt := decmatch x;
+  if (match(os, vt)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail);
+  }
+}
+
+// Testing decoded parameter redirects (there's no dynamic encoding string in this case,
+// so the type used must have only one encoding).
+testcase tc_ttcn_param_redirect() runs on CT {
+  connect(self:pt2, self:pt2);
+  var U1 x := { alt1 := 2 };
+  var charstring cs := "{\"alt1\":2}";
+  pt2.reply(Sig: { cs });
+  var U1 y;
+  var charstring bad_msg;
+  timer t;
+  t.start(0.5);
+  alt {
+    [] pt2.getreply(Sig: { cs }) -> param (y := @decoded p) {
+      if (y == x) {
+        setverdict(pass);
+      }
+      else {
+        setverdict(fail, "Decoding failed. Expected: ", x, ", got: ", y);
+      }
+    }
+    [] pt2.getreply(Sig: { ? }) -> param (bad_msg := p) {
+      setverdict(fail, "Invalid reply received: ", bad_msg);
+    }
+    [] t.timeout {
+      setverdict(fail, "Timeout");
+    }
+  }
+}
+
+// Testing setencode on encvalue and decvalue, with a type that has 2 encodings.
+testcase tc_ttcn_setencode() runs on CT {
+  var R1 x := { f1 := val1 };
+  self.setencode(R1, "abc");
+  var bitstring exp := oct2bit(char2oct("abc"));
+  var bitstring enc := encvalue(x);
+  if (exp != enc) {
+    setverdict(fail, "Encvalue test failed. Expected: ", bit2oct(exp), ", got: ", bit2oct(enc));
+  }
+  
+  var R1 dec;
+  var integer res := decvalue(enc, dec);
+  if (x != dec) {
+    setverdict(fail, "Decvalue test failed. Expected: ", x, ", got: ", dec);
+  }
+  setverdict(pass);
+}
+
+// Negative tests for the setencode command
+testcase tc_ttcn_setencode_negtest() runs on CT {
+  // This tests that the default encoding set by the 'setencode' command
+  // in the previous testcase is erased properly when a new testcase starts.
+  var R1 x := { val2 };
+  @try {
+    var bitstring dummy := encvalue(x);
+    setverdict(fail, "Error expected.");
+  }
+  @catch (msg) {
+    var template charstring msg_exp := pattern "*Missing dynamic encoding string or default encoding string";
+    if (not match(msg, msg_exp)) {
+      setverdict(fail, "Invalid error message: ", msg);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+  
+  // invalid encoding (this has to be a variable, because a bad literal or constant
+  // would cause a compiler error instead)
+  var universal charstring bad_coding := "bad";
+  self.setencode(R1, bad_coding);
+  @try {
+    var bitstring dummy := encvalue(x);
+    setverdict(fail, "Error expected.");
+  }
+  @catch (msg) {
+    var template charstring msg_exp := pattern "*Invalid encoding string*";
+    if (not match(msg, msg_exp)) {
+      setverdict(fail, "Invalid error message: ", msg);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+}
+
+// Testing setencode on reference types, with encvalue_unichar and decmatch.
+testcase tc_ttcn_setencode_ref_type() runs on CT {
+  // R2 has the same encodings as R1 and no extra variants,
+  // but they still have different default encodings.
+  self.setencode(R1, "XML"); // must not affect R2
+  self.setencode(R2, "abc"); // must not affect R1
+  
+  var R1 x1 := { f1 := val2 };
+  var universal charstring exp := "<R1>val2</R1>\n\n";
+  var universal charstring enc := encvalue_unichar(x1, "UTF-8");
+  if (exp != enc) {
+    setverdict(fail, "Encvalue_unichar test failed. Expected: ", exp, ", got: ", enc);
+  }
+  
+  var R2 x2 := { f1 := val1 };
+  enc := "abc";
+  var template universal charstring vt := decmatch("UTF-8") x2;
+  if (match(enc, vt)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Decmatch test failed.");
+  }
+}
+
+// Behavior function for the setencode parallel test.
+// Tests the decoded parameter redirect in the getcall operation (with the user-defined "abc" encoding),
+// and sends a reply encoded with XER.
+function f_setencode_parallel_behavior(in R2 x, in charstring cs_call, in charstring cs_reply) runs on CT {
+  self.setencode(R2, "abc");
+  timer t;
+  t.start(1.0);
+  var R2 y;
+  var charstring bad_msg;
+  alt {
+    [] pt2.getcall(Sig: { cs_call }) -> param (y := @decoded p) {
+      if (y == x) {
+        pt2.reply(Sig: { cs_reply });
+      }
+      else {
+        setverdict(fail, "Failed to decode getcall parameter. Expected: ", x, ", got: ", y);
+      }
+    }
+    [] pt2.getcall(Sig: { ? }) -> param (bad_msg := p) {
+      setverdict(fail, "Invalid call received: ", bad_msg);
+    }
+    [] t.timeout {
+      setverdict(fail, "Getcall timed out");
+    }
+  }
+}
+
+// Testing setencode in parallel mode.
+// The testcase sends a call encoded with the user-defined "abc" encoding to the
+// behavior function, and tests getreply's decoded parameter redirect on the reply
+// received (which is encoded with XER).
+testcase tc_ttcn_setencode_parallel() runs on CT {
+  self.setencode(R2, "XML");
+  var R2 x := { f1 := val1 };
+  var charstring cs_call := "abc";
+  var charstring cs_reply := "<R1>val1</R1>";
+  var CT ct := CT.create;
+  connect(self:pt2, ct:pt2);
+  ct.start(f_setencode_parallel_behavior(x, cs_call, cs_reply));
+  var R2 y;
+  var charstring bad_msg;
+  pt2.call(Sig: { cs_call }, 1.0) {
+    [] pt2.getreply(Sig: { cs_reply }) -> param (y := @decoded p) {
+      if (y == x) {
+        setverdict(pass);
+      }
+      else {
+        setverdict(fail, "Decoding failed. Expected: ", x, ", got: ", y);
+      }
+    }
+    [] pt2.getreply(Sig: { ? }) -> param (bad_msg := p) {
+      setverdict(fail, "Invalid reply received: ", bad_msg);
+    }
+    [] pt2.catch(timeout) {
+      setverdict(inconc, "Getreply timed out");
+    }
+  }
+  ct.done;
+}
+
+// Testing setencode on an ASN.1 type with BER encoding, with encvalue and decvalue.
+testcase tc_asn_setencode_ber() runs on CT {
+  var Seq x := { num := 3, str := "abc" };
+  self.setencode(Seq, "BER:2002");
+  var bitstring exp := oct2bit('30088001038103616263'O);
+  var bitstring enc := encvalue(x);
+  if (exp != enc) {
+    setverdict(fail, "Encvalue test failed. Expected: ", bit2oct(exp), ", got: ", bit2oct(enc));
+  }
+  
+  var Seq dec;
+  var integer res := decvalue(enc, dec);
+  if (x != dec) {
+    setverdict(fail, "Decvalue test failed. Expected: ", x, ", got: ", dec);
+  }
+  setverdict(pass);
+}
+
+// Testing setencode on an ASN.1 type with XML encoding, with encvalue_unichar and decvalue_unichar.
+testcase tc_asn_setencode_xer() runs on CT {
+  var Set x := { num := 3, str := "abc" };
+  self.setencode(Set, "XER");
+  var universal charstring exp := "<Set>\n\t<num>3</num>\n\t<str>abc</str>\n</Set>\n\n";
+  var universal charstring enc := encvalue_unichar(x);
+  if (exp != enc) {
+    setverdict(fail, "Encvalue test failed. Expected: ", exp, ", got: ", enc);
+  }
+  
+  var Set dec;
+  var integer res := decvalue_unichar(enc, dec);
+  if (x != dec) {
+    setverdict(fail, "Decvalue test failed. Expected: ", x, ", got: ", dec);
+  }
+  setverdict(pass);
+}
+
+// Testing setencode on an ASN.1 type with JSON encoding, with decoded content matching.
+testcase tc_asn_setencode_json() runs on CT {
+  var SeqOf x := { 1, 2, 4 };
+  self.setencode(SeqOf, "JSON");
+  var hexstring hs := oct2hex(char2oct("[1,2,4]"));
+  var template hexstring vt := decmatch x;
+  if (match(hs, vt)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail);
+  }
+}
+
+// Testing setencode on an ASN.1 type with PER (user-defined) encoding, with decoded parameter redirects.
+testcase tc_asn_setencode_per() runs on CT {
+  connect(self:pt2, self:pt2);
+  var SetOf x := { 0, 1 };
+  self.setencode(SetOf, "PER");
+  var charstring cs := "PER";
+  pt2.reply(Sig: { cs });
+  var SetOf y;
+  var charstring bad_msg;
+  timer t;
+  t.start(0.5);
+  alt {
+    [] pt2.getreply(Sig: { cs }) -> param (y := @decoded p) {
+      if (y == x) {
+        setverdict(pass);
+      }
+      else {
+        setverdict(fail, "Decoding failed. Expected: ", x, ", got: ", y);
+      }
+    }
+    [] pt2.getreply(Sig: { ? }) -> param (bad_msg := p) {
+      setverdict(fail, "Invalid reply received: ", bad_msg);
+    }
+    [] t.timeout {
+      setverdict(fail, "Timeout");
+    }
+  }
+}
+
+// Negative tests for setencode on ASN.1 types.
+testcase tc_asn_setencode_negtest() runs on CT {
+  var Seq x := { num := 3, str := "abc" };
+  
+  @try {
+    var bitstring dummy := encvalue(x); // no dynamic or default encoding set, this causes an error, since ASN.1 types have 4 encodings
+    setverdict(fail, "Error expected.");
+  }
+  @catch (msg) {
+    var template charstring msg_exp := pattern "*Missing dynamic encoding string or default encoding string";
+    if (not match(msg, msg_exp)) {
+      setverdict(fail, "Invalid error message: ", msg);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+  
+  self.setencode(Seq, "PER");
+  @try {
+    var bitstring dummy := encvalue(x); // PER encoding set, but no PER encoder function defined
+    setverdict(fail, "Error expected.");
+  }
+  @catch (msg) {
+    var template charstring msg_exp := pattern "*No `PER' encoding function defined for type*";
+    if (not match(msg, msg_exp)) {
+      setverdict(fail, "Invalid error message: ", msg);
+    }
+    else {
+      setverdict(pass);
+    }
+  }
+}
+
+control {
+  execute(tc_ttcn_encvalue());
+  execute(tc_ttcn_encvalue_negtest());
+  execute(tc_ttcn_decvalue());
+  execute(tc_ttcn_encvalue_unichar());
+  execute(tc_ttcn_decvalue_unichar());
+  execute(tc_ttcn_decmatch());
+  execute(tc_ttcn_param_redirect());
+  execute(tc_ttcn_setencode());
+  execute(tc_ttcn_setencode_negtest());
+  execute(tc_ttcn_setencode_ref_type());
+  execute(tc_ttcn_setencode_parallel());
+  execute(tc_asn_setencode_ber());
+  execute(tc_asn_setencode_xer());
+  execute(tc_asn_setencode_json());
+  execute(tc_asn_setencode_per());
+  execute(tc_asn_setencode_negtest());
+}
+
+}

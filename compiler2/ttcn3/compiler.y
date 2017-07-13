@@ -871,6 +871,7 @@ static const string anyname("anytype");
 %token replaceKeyword
 %token rndKeyword
 %token testcasenameKeyword
+%token setencodeKeyword
 %token sizeofKeyword
 %token str2floatKeyword
 %token str2intKeyword
@@ -1003,7 +1004,7 @@ static const string anyname("anytype");
   StartTimerStatement StopExecutionStatement StopStatement StopTCStatement
   StopTimerStatement TimeoutStatement TimerStatements TriggerStatement
   UnmapStatement VerdictStatements WhileStatement SelectCaseConstruct
-  SelectUnionConstruct UpdateStatement SetstateStatement
+  SelectUnionConstruct UpdateStatement SetstateStatement SetencodeStatement
   StopTestcaseStatement String2TtcnStatement ProfilerStatement int2enumStatement
 %type <statementblock> StatementBlock optElseClause FunctionStatementOrDefList
   ControlStatementOrDefList ModuleControlBody
@@ -1355,6 +1356,7 @@ SendParameter
 SendStatement
 SenderSpec
 SetDef
+SetencodeStatement
 SetLocalVerdict
 SetOfDef
 SetstateStatement
@@ -4375,6 +4377,7 @@ FunctionStatement: // 180
 | int2enumStatement { $$ = $1; }
 | UpdateStatement { $$ = $1; }
 | SetstateStatement { $$ = $1; }
+| SetencodeStatement { $$ = $1; }
 ;
 
 FunctionInstance: /* refpard */ // 181
@@ -8485,6 +8488,37 @@ SetstateStatement:
     $$ = new Statement(Statement::S_SETSTATE, $5, $7);
     $$->set_location(infile, @$);
   }
+
+SetencodeStatement:
+  IDentifier '.' setencodeKeyword '(' Type ',' SingleExpression ')'
+  {
+    delete $1;
+    delete $5;
+    delete $7;
+    Location loc(infile, @$);
+    loc.error("'Port.setencode' is not currently supported.");
+    $$ = new Statement(Statement::S_ERROR);
+    $$->set_location(infile, @$);
+  }
+| AllKeyword PortKeyword '.' setencodeKeyword '(' Type ',' SingleExpression ')'
+  {
+    delete $6;
+    delete $8;
+    Location loc(infile, @$);
+    loc.error("'all port.setencode' is not currently supported.");
+    $$ = new Statement(Statement::S_ERROR);
+    $$->set_location(infile, @$);
+  }
+| SelfKeyword '.' setencodeKeyword '(' Type ',' SingleExpression ')'
+  {
+    if (legacy_codec_handling) {
+      Location loc(infile, @$);
+      loc.error("'setencode' is not allowed when using legacy codec handling");
+    }
+    $$ = new Statement(Statement::S_SETENCODE, $5, $7);
+    $$->set_location(infile, @$);
+  }
+;
 
 ProfilerRunningOp:
   TitanSpecificProfilerKeyword DotRunningKeyword

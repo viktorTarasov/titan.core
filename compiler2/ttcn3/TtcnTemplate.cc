@@ -4880,13 +4880,14 @@ compile_time:
     // generate a new class for this decmatch template
     string class_tmp_id = my_scope->get_scope_mod_gen()->get_temporary_id();
     Type* target_type = u.dec_match.target->get_expr_governor(
-      Type::EXPECTED_TEMPLATE)->get_type_refd_last();
+      Type::EXPECTED_TEMPLATE);
+    Type* target_type_last = target_type->get_type_refd_last();
     // use the name of the type at the end of the reference chain for logging
     string type_name;
-    const char* type_name_ptr = target_type->get_typename_builtin(
-      target_type->get_typetype_ttcn3());
+    const char* type_name_ptr = target_type_last->get_typename_builtin(
+      target_type_last->get_typetype_ttcn3());
     if (type_name_ptr == NULL) {
-      type_name = target_type->get_type_refd_last()->get_dispname();
+      type_name = target_type_last->get_dispname();
     }
     else {
       type_name = type_name_ptr;
@@ -4911,7 +4912,8 @@ compile_time:
       target_type->get_genname_template(my_scope).c_str(), class_tmp_id.c_str(),
       target_type->get_genname_value(my_scope).c_str());
     
-    bool legacy_dec_by_func = legacy_codec_handling && target_type->is_coding_by_function(false);
+    bool legacy_dec_by_func = legacy_codec_handling &&
+      target_type_last->is_coding_by_function(false);
     if (legacy_codec_handling) {
       if (legacy_dec_by_func) {
         str = mputprintf(str,
@@ -4927,7 +4929,7 @@ compile_time:
           "}\n"
           // make sure the bitstring is empty after decoding, display a warning otherwise
           "else if (bs.lengthof() != 0) {\n",
-          target_type->get_coding_function(false)->get_genname_from_scope(my_scope).c_str());
+          target_type_last->get_coding_function(false)->get_genname_from_scope(my_scope).c_str());
       }
       else {
         str = mputprintf(str,
@@ -4940,7 +4942,7 @@ compile_time:
           // make sure the buffer is empty after decoding, display a warning otherwise
           "else if (buff.get_read_len() != 0) {\n",
           target_type->get_genname_typedescriptor(my_scope).c_str(),
-          target_type->get_coding(false).c_str());
+          target_type_last->get_coding(false).c_str());
       }
     }
     else { // new codec handling
@@ -4954,7 +4956,7 @@ compile_time:
         "}\n"
         "else if (os.lengthof() != 0) {\n",
         target_type->get_genname_coder(my_scope).c_str(),
-        target_type->get_genname_coder(my_scope).c_str());
+        target_type->get_genname_default_coding(my_scope).c_str());
     }
     str = mputprintf(str,
       "TTCN_warning(\"Decoded content matching failed, because the buffer was not "

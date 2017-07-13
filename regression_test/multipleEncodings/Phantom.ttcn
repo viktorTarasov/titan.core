@@ -1,0 +1,29 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// Module for testing phantom imports.
+module Phantom {
+
+import from TtcnTypes all;
+import from AsnTypes all;
+
+// R1's encoder in module TtcnTypes should be able to use this function,
+// even though this module is not imported into TtcnTypes directly.
+external function f_enc_abc(in R1 x) return bitstring
+  with { extension "prototype(convert) encode(abc)" }
+
+// SetOf's decoder in module AsnTypes should be able to use this function,
+// even though this module is not imported into AsnTypes directly.
+external function f_dec_per(inout bitstring x, out SetOf y) return integer
+  with { extension "prototype(sliding) decode(PER)" }
+
+}

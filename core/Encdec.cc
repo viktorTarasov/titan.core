@@ -163,11 +163,17 @@ void TTCN_EncDec::get_coding_from_str(const UNIVERSAL_CHARSTRING& coding_str,
                                       coding_t* coding, unsigned int* extra,
                                       boolean encode)
 {
-  if (coding_str == "BER") {
+  if (coding_str == "BER:2002" || coding_str == "CER:2002" ||
+      coding_str == "DER:2002") {
     *coding = CT_BER;
     if (extra != NULL) {
       if (encode) {
-        *extra = BER_ENCODE_DER;
+        if (coding_str == "CER:2002") {
+          *extra = BER_ENCODE_CER;
+        }
+        else {
+          *extra = BER_ENCODE_DER;
+        }
       }
       else {
         *extra = BER_ACCEPT_ALL;

@@ -13485,7 +13485,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
           expr2.expr, is_templ ? ".valueof()" : "");
     }
     else { // new codec handling
-      string coder_name = templ->get_my_governor()->get_genname_coder(scope);
+      Type* gov = templ->get_my_governor();
       if (expr2.preamble != NULL) {
         expr->preamble = mputstr(expr->preamble, expr2.preamble);
       }
@@ -13498,13 +13498,14 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         }
       }
       else {
-        expr3.expr = mprintf("%s_default_coding", coder_name.c_str());
+        expr3.expr = mprintf("%s_default_coding",
+          gov->get_genname_default_coding(scope).c_str());
       }
       const string& tmp_id = get_temporary_id();
       expr->preamble = mputprintf(expr->preamble,
         "OCTETSTRING %s;\n"
         "%s_encoder(%s%s, %s, %s);\n",
-        tmp_id.c_str(), coder_name.c_str(),
+        tmp_id.c_str(), gov->get_genname_coder(scope).c_str(),
         expr2.expr, is_templ ? ".valueof()" : "", tmp_id.c_str(), expr3.expr);
       
       expr->expr = mputprintf(expr->expr, "oct2bit(%s)", tmp_id.c_str());
@@ -13602,7 +13603,6 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         expr->postamble = mputprintf(expr->postamble, "%s", expr2.postamble);
     }
     else { // new codec handling
-      string coder_name = _type->get_genname_coder(scope);
       if (expr1.preamble != NULL) {
         expr->preamble = mputstr(expr->preamble, expr1.preamble);
       }
@@ -13618,7 +13618,8 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         }
       }
       else {
-        expr3.expr = mprintf("%s_default_coding", coder_name.c_str());
+        expr3.expr = mprintf("%s_default_coding",
+          _type->get_genname_default_coding(scope).c_str());
       }
       const string& buff_id = get_temporary_id();
       const string& retval_id = get_temporary_id();
@@ -13635,7 +13636,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         "%s = oct2bit(%s);\n"
         "}\n",
         buff_id.c_str(), expr1.expr,
-        retval_id.c_str(), coder_name.c_str(), buff_id.c_str(),
+        retval_id.c_str(), _type->get_genname_coder(scope).c_str(), buff_id.c_str(),
         expr2.expr, optional ? "()" : "", expr3.expr,
         retval_id.c_str(), expr1.expr, buff_id.c_str());
       if (_type->has_built_in_encoding()) {
@@ -13734,7 +13735,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       }
     }
     else { // new codec handling
-      string coder_name = templ->get_my_governor()->get_genname_coder(scope);
+      Type* gov = templ->get_my_governor();
       if (expr2.preamble != NULL) {
         expr->preamble = mputstr(expr->preamble, expr2.preamble);
       }
@@ -13747,13 +13748,14 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         }
       }
       else {
-        expr3.expr = mprintf("%s_default_coding", coder_name.c_str());
+        expr3.expr = mprintf("%s_default_coding",
+          gov->get_genname_default_coding(scope).c_str());
       }
       const string& tmp_id = get_temporary_id();
       expr->preamble = mputprintf(expr->preamble,
         "OCTETSTRING %s;\n"
         "%s_encoder(%s%s, %s, %s);\n",
-        tmp_id.c_str(), coder_name.c_str(),
+        tmp_id.c_str(), gov->get_genname_coder(scope).c_str(),
         expr2.expr, is_templ ? ".valueof()" : "", tmp_id.c_str(), expr3.expr);
       
       expr->expr = mputprintf(expr->expr, "oct2unichar(%s, %s)",
@@ -13873,7 +13875,6 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         expr->postamble = mputprintf(expr->postamble, "%s", expr2.postamble);
     }
     else { // new codec handling
-      string coder_name = _type->get_genname_coder(scope);
       if (expr1.preamble != NULL) {
         expr->preamble = mputstr(expr->preamble, expr1.preamble);
       }
@@ -13889,7 +13890,8 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         }
       }
       else {
-        expr3.expr = mprintf("%s_default_coding", coder_name.c_str());
+        expr3.expr = mprintf("%s_default_coding",
+          _type->get_genname_default_coding(scope).c_str());
       }
       const string& buff_id = get_temporary_id();
       const string& retval_id = get_temporary_id();
@@ -13906,7 +13908,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         "%s = oct2unichar(%s, %s);\n"
         "}\n",
         buff_id.c_str(), expr1.expr, v3_code,
-        retval_id.c_str(), coder_name.c_str(), buff_id.c_str(),
+        retval_id.c_str(), _type->get_genname_coder(scope).c_str(), buff_id.c_str(),
         expr2.expr, optional ? "()" : "", expr3.expr,
         retval_id.c_str(), expr1.expr, buff_id.c_str(), v3_code);
       if (_type->has_built_in_encoding()) {

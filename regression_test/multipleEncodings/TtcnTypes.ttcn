@@ -1,0 +1,74 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+module TtcnTypes {
+
+external function f_dec_abc(inout bitstring x, out R1 y) return integer
+  with { extension "prototype(sliding) decode(abc)" }
+  
+type enumerated E1 { val1, val2, val3 }
+with {
+  encode "TEXT";
+}
+
+type record R1 {
+  E1 f1
+}
+with {
+  encode "XML";
+  encode "abc";
+  encode (f1) "XML";
+  variant (f1) "XML"."untagged";
+  encode (f1) "RAW";
+  variant (f1) "RAW"."16 bit";
+}
+
+type R1 R2;
+
+type union U1 {
+  integer alt1
+}
+with {
+  encode "JSON";
+}
+
+type U1 U2
+with {
+  variant "JSON: as value";
+}
+
+type record Msg {
+  bitstring data
+}
+
+signature Sig(inout charstring p);
+
+type port PT1 message {
+  inout Msg
+}
+with {
+  extension "internal";
+}
+
+type port PT2 procedure {
+  inout Sig
+}
+with {
+  extension "internal";
+}
+
+type component CT {
+  port PT1 pt1;
+  port PT2 pt2;
+}
+
+}
