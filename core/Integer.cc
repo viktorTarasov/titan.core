@@ -257,6 +257,7 @@ INTEGER INTEGER::operator-() const
 
 INTEGER INTEGER::operator+(int other_value) const
 {
+  //TODO superfluous check
   must_bound("Unbound left operand of integer addition.");
   // Don't call out if slow.  Implement this specific case right here.
   return *this + INTEGER(other_value);
@@ -317,6 +318,7 @@ INTEGER INTEGER::operator+(const INTEGER& other_value) const
 
 INTEGER INTEGER::operator-(int other_value) const
 {
+  //TODO superfluous check
   must_bound("Unbound left operand of integer subtraction.");
   return *this - INTEGER(other_value);
 }
@@ -376,6 +378,7 @@ INTEGER INTEGER::operator-(const INTEGER& other_value) const
 
 INTEGER INTEGER::operator*(int other_value) const
 {
+  //TODO superfluous check
   must_bound("Unbound left operand of integer multiplication.");
   return *this * INTEGER(other_value);
 }
