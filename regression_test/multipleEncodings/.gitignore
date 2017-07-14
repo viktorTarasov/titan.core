@@ -1,0 +1,12 @@
+multipleEncodings
+multipleEncodings.exe
+AsnTypes*.cc
+AsnTypes*.hh
+TtcnTypes*.cc
+TtcnTypes*.hh
+Testcases*.cc
+Testcases*.hh
+Phantom*.cc
+Phantom*.hh
+compile
+multipleEncodings*.log

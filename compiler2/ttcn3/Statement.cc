@@ -722,6 +722,10 @@ namespace Ttcn {
       delete setstate_op.val;
       delete setstate_op.ti;
       break;
+    case S_SETENCODE:
+      delete setencode_op.type;
+      delete setencode_op.encoding;
+      break;
     default:
       FATAL_ERROR("Statement::clean_up()");
     } // switch statementtype
@@ -1474,7 +1478,7 @@ namespace Ttcn {
     }
   }
   
-    Statement::Statement(statementtype_t p_st, Value* p_val, TemplateInstance* p_ti)
+  Statement::Statement(statementtype_t p_st, Value* p_val, TemplateInstance* p_ti)
   : statementtype(p_st), my_sb(0)
   {
     switch (statementtype) {
@@ -1484,6 +1488,22 @@ namespace Ttcn {
       }
       setstate_op.val = p_val;
       setstate_op.ti = p_ti;
+      break;
+    default:
+      FATAL_ERROR("Statement::Statement()");
+    }
+  }
+    
+  Statement::Statement(statementtype_t p_st, Type* p_type, Value* p_encoding)
+  : statementtype(p_st), my_sb(0)
+  {
+    switch (statementtype) {
+    case S_SETENCODE:
+      if (p_type == NULL || p_encoding == NULL) {
+        FATAL_ERROR("Statement::Statement()");
+      }
+      setencode_op.type = p_type;
+      setencode_op.encoding = p_encoding;
       break;
     default:
       FATAL_ERROR("Statement::Statement()");
@@ -1620,6 +1640,7 @@ namespace Ttcn {
     case S_STOP_PROFILER: return "@profiler.stop";
     case S_UPDATE: return "@update";
     case S_SETSTATE: return "setstate";
+    case S_SETENCODE: return "setencode";
     default:
       FATAL_ERROR("Statement::get_stmt_name()");
       return "";
@@ -1955,6 +1976,10 @@ namespace Ttcn {
         setstate_op.ti->set_my_scope(p_scope);
       }
       break;
+    case S_SETENCODE:
+      setencode_op.type->set_my_scope(p_scope);
+      setencode_op.encoding->set_my_scope(p_scope);
+      break;
     default:
       FATAL_ERROR("Statement::set_my_scope()");
     } // switch statementtype
@@ -2244,6 +2269,10 @@ namespace Ttcn {
       if (setstate_op.ti != NULL) {
         setstate_op.ti->set_fullname(p_fullname + ".ti");
       }
+      break;
+    case S_SETENCODE:
+      setencode_op.type->set_fullname(p_fullname + ".type");
+      setencode_op.encoding->set_fullname(p_fullname + ".encoding");
       break;
     default:
       FATAL_ERROR("Statement::set_fullname()");
@@ -2536,6 +2565,7 @@ namespace Ttcn {
     case S_INT2ENUM:
     case S_UPDATE:
     case S_SETSTATE:
+    case S_SETENCODE:
       return false;
     case S_ALT:
     case S_INTERLEAVE:
@@ -2795,6 +2825,9 @@ namespace Ttcn {
       break;
     case S_SETSTATE:
       chk_setstate();
+      break;
+    case S_SETENCODE:
+      chk_setencode();
       break;
     default:
       FATAL_ERROR("Statement::chk()");
@@ -5719,6 +5752,78 @@ error:
       }
     }
   }
+  
+  void Statement::chk_setencode()
+  {
+    if (legacy_codec_handling) {
+      FATAL_ERROR("Statement::chk_setencode");
+    }
+    Error_Context cntxt(this, "In setencode statement");
+    Common::Type* type = setencode_op.type;
+    type->chk();
+    Type* t_ct = type->get_type_w_coding_table();
+    bool type_error = (type->get_typetype() == Common::Type::T_ERROR);
+    if (!type_error) {
+      if (t_ct == NULL) {
+        type->error("The type argument has no encoding rules defined");
+        type_error = true;
+      }
+      else if (t_ct->get_coding_table().size() == 1) {
+        type->warning("The type argument has only one encoding rule defined. "
+          "The 'setencode' statement will be ignored");
+      }
+    }
+    {
+      Common::Value* enc_str = setencode_op.encoding;
+      Error_Context cntxt2(enc_str, "In the second argument");
+      enc_str->set_lowerid_to_ref();
+      Common::Type::get_pooltype(Type::T_USTR)->chk_this_value(enc_str, NULL,
+        Common::Type::EXPECTED_DYNAMIC_VALUE, INCOMPLETE_NOT_ALLOWED,
+        OMIT_NOT_ALLOWED, NO_SUB_CHK);
+      bool val_error = false;
+      if (!type_error && enc_str->get_valuetype() != Common::Value::V_ERROR &&
+          !enc_str->is_unfoldable()) {
+        ustring us = enc_str->get_val_ustr();
+        for (size_t i = 0; i < us.size(); ++i) {
+          const ustring::universal_char& uc = us[i];
+          if (uc.group != 0 || uc.plane != 0 || uc.row != 0) {
+            // this surely won't match any of the type's encodings, since
+            // 'encode' attributes cannot contain multi-byte characters
+            val_error = true;
+            break;
+          }
+        }
+        if (!val_error) {
+          string s(us);
+          Common::Type::MessageEncodingType_t coding = Common::Type::get_enc_type(s);
+          bool built_in = (coding != Common::Type::CT_PER &&
+            coding != Common::Type::CT_CUSTOM);
+          val_error = true;
+          const vector<Common::Type::coding_t>& ct = t_ct->get_coding_table();
+          for (size_t i = 0; i < ct.size(); ++i) {
+            if (built_in == ct[i]->built_in &&
+                ((built_in && coding == ct[i]->built_in_coding) ||
+                 (!built_in && s == ct[i]->custom_coding.name))) {
+              val_error = false;
+              break;
+            }
+          }
+        }
+        if (val_error) {
+          enc_str->error("The encoding string does not match any encodings of "
+            "type `%s'", type->get_typename().c_str());
+        }
+      }
+    }
+    RunsOnScope* runs_on_scope = my_sb->get_scope_runs_on();
+    if (runs_on_scope == NULL) {
+      error("'self.setencode' must be in a definition with a runs-on clause");
+    }
+    else if (!type_error && t_ct->get_coding_table().size() >= 2) {
+      runs_on_scope->get_component_type()->get_CompBody()->
+        add_default_coding_var(type);
+    }
+  }
 
   void Statement::set_code_section(
     GovernedSimple::code_section_t p_code_section)
@@ -5983,6 +6088,9 @@ error:
         setstate_op.ti->set_code_section(p_code_section);
       }
       break;
+    case S_SETENCODE:
+      setencode_op.encoding->set_code_section(p_code_section);
+      break;
     default:
       FATAL_ERROR("Statement::set_code_section()");
     } // switch statementtype
@@ -6181,6 +6289,9 @@ error:
       break;
     case S_SETSTATE:
       str = generate_code_setstate(str);
+      break;
+    case S_SETENCODE:
+      str = generate_code_setencode(str);
       break;
     default:
       FATAL_ERROR("Statement::generate_code()");
@@ -7730,6 +7841,30 @@ error:
     }
     return Code::merge_free_expr(str, &expr);
   }
+  
+  char* Statement::generate_code_setencode(char* str)
+  {
+    if (legacy_codec_handling) {
+      FATAL_ERROR("Statement::generate_code_setencode");
+    }
+    if (setencode_op.type->get_type_w_coding_table()->get_coding_table().size() == 1) {
+      // the 'setencode' statement is ignored if the type has only one encoding
+      return str;
+    }
+    expression_struct expr;
+    Code::init_expr(&expr);
+    setencode_op.encoding->generate_code_expr(&expr);
+    if (expr.preamble != NULL) {
+      str = mputstr(str, expr.preamble);
+    }
+    str = mputprintf(str, "%s_default_coding = %s;\n",
+      setencode_op.type->get_genname_default_coding(my_sb).c_str(), expr.expr);
+    if (expr.postamble != NULL) {
+      str = mputstr(str, expr.postamble);
+    }
+    Code::free_expr(&expr);
+    return str;
+  }
 
   void Statement::generate_code_expr_receive(expression_struct *expr,
     const char *opname)
@@ -8310,6 +8445,7 @@ error:
         case S_INT2ENUM:
         case S_UPDATE:
         case S_SETSTATE:
+        case S_SETENCODE:
           break;
         default:
           FATAL_ERROR("Statement::set_parent_path()");
@@ -9871,11 +10007,11 @@ error:
               "if (buff.lengthof() != 0) {\n"
               "TTCN_error(\"Parameter redirect (for parameter '%s') failed, "
               "because the buffer was not empty after decoding. "
-              "Remaining bits: %%d.\", buff.lengthof());\n"
+              "Remaining octets: %%d.\", buff.lengthof());\n"
               "}\n",
               ve->get_dec_type()->get_genname_coder(scope).c_str(),
               par_name,
-              ve->get_dec_type()->get_genname_coder(scope).c_str(),
+              ve->get_dec_type()->get_genname_default_coding(scope).c_str(),
               par_name, par_name);
           }
           if (use_decmatch_result) {
@@ -10732,7 +10868,7 @@ error:
                 "}\n",
                 member_type->get_genname_coder(scope).c_str(),
                 static_cast<int>(i), static_cast<int>(i),
-                member_type->get_genname_coder(scope).c_str(),
+                member_type->get_genname_default_coding(scope).c_str(),
                 static_cast<int>(i + 1), static_cast<int>(i),
                 static_cast<int>(i + 1), static_cast<int>(i));
             }

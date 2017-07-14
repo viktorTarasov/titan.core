@@ -72,6 +72,7 @@ private:
     * all components inherited along pure extends-keyword path have the value
     * equal to the key, others have NULL value */
   map<ComponentTypeBody*, ComponentTypeBody> compatible_m;
+  vector<string> default_coding_vars;
   void init_compatibility(CompTypeRefList *crl, bool is_standard_extends);
 private:
   /** Copy constructor not implemented */
@@ -141,6 +142,8 @@ public:
   char *generate_code_comptype_name(char *str);
 
   void set_parent_path(Ttcn::WithAttribPath* p_path);
+  
+  void add_default_coding_var(Type* p_type);
 };
 
 /** Class to represent a list of references to components */

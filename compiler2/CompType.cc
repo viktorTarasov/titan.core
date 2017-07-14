@@ -35,6 +35,10 @@ ComponentTypeBody::~ComponentTypeBody()
   all_defs_m.clear();
   orig_defs_m.clear();
   compatible_m.clear();
+  for (size_t i = 0; i < default_coding_vars.size(); ++i) {
+    delete default_coding_vars[i];
+  }
+  default_coding_vars.clear();
 }
 
 ComponentTypeBody *ComponentTypeBody::clone() const
@@ -532,6 +536,11 @@ void ComponentTypeBody::generate_code(output_struct* target)
       def->generate_code(target, true);
     }
   }
+  
+  for (size_t i = 0; i < default_coding_vars.size(); ++i) {
+    target->functions.init_comp = mputprintf(target->functions.init_comp,
+      "%s = \"\";\n", default_coding_vars[i]->c_str());
+  }
 
   // end of block in init_comp
   target->functions.init_comp = mputstr(target->functions.init_comp,
@@ -551,6 +560,31 @@ char *ComponentTypeBody::generate_code_comptype_name(char *str)
 void ComponentTypeBody::set_parent_path(Ttcn::WithAttribPath* p_path) {
   for (size_t i = 0; i < def_v.size(); i++)
     def_v[i]->set_parent_path(p_path);
+}
+
+void ComponentTypeBody::add_default_coding_var(Type* p_type)
+{
+  string var_name = p_type->get_genname_default_coding(this) + "_default_coding";
+  for (size_t i = 0; i < default_coding_vars.size(); ++i) {
+    if (var_name == *default_coding_vars[i]) {
+      return; // already added
+    }
+  }
+  default_coding_vars.add(new string(var_name));
+  Common::Module* comp_mod = get_scope_mod();
+  Common::Module* type_mod = p_type->get_my_scope()->get_scope_mod();
+  if (comp_mod != type_mod) {
+    // add a phantom import for the default coding variable's module, to make
+    // sure it is visible from the component's module
+    Ttcn::Module* comp_mod_ttcn = dynamic_cast<Ttcn::Module*>(comp_mod);
+    if (comp_mod_ttcn == NULL) {
+      FATAL_ERROR("ComponentTypeBody::add_default_coding_var");
+    }
+    Ttcn::ImpMod* new_imp = new Ttcn::ImpMod(type_mod->get_modid().clone());
+    new_imp->set_mod(type_mod);
+    new_imp->set_imptype(Ttcn::ImpMod::I_DEPENDENCY);
+    comp_mod_ttcn->add_impmod(new_imp);
+  }
 }
 
 // =================================

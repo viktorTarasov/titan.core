@@ -1,0 +1,114 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// This module contains tests for the new handling of 'encode' and 'variant'
+// attributes, needed for types with multiple encodings.
+// It also tests the 'setencode' command.
+// (Contains tests for runtime 2 only.)
+module TestcasesRT2 {
+
+import from TtcnTypes all;
+import from AsnTypes all;
+
+// Testing decoded value redirects, where the type only has one encoding.
+testcase tc_ttcn_value_redirect() runs on CT {
+  connect(self:pt1, self:pt1);
+  var U2 x := { alt1 := 100 };
+  var bitstring bs := oct2bit(char2oct("100"));
+  pt1.send(Msg: { bs });
+  var U2 y;
+  var bitstring bad_msg;
+  timer t;
+  t.start(0.5);
+  alt {
+    [] pt1.receive(Msg: { bs }) -> value (y := @decoded data) {
+      if (y == x) {
+        setverdict(pass);
+      }
+      else {
+        setverdict(fail, "Decoding failed. Expected: ", x, ", got: ", y);
+      }
+    }
+    [] pt1.receive(Msg: { ? }) -> value (bad_msg := data) {
+      setverdict(fail, "Invalid reply received: ", bad_msg);
+    }
+    [] t.timeout {
+      setverdict(fail, "Timeout");
+    }
+  }
+}
+
+// Testing setencode on a TTCN-3 type with 2 encodings, with decoded value redirects.
+testcase tc_ttcn_setencode_value_redirect() runs on CT {
+  connect(self:pt1, self:pt1);
+  var R2 x := { f1 := val2 };
+  self.setencode(R2, "XML");
+  var bitstring bs := oct2bit(char2oct("<R1>val2</R1>"));
+  pt1.send(Msg: { bs });
+  var R2 y;
+  var bitstring bad_msg;
+  timer t;
+  t.start(0.5);
+  alt {
+    [] pt1.receive(Msg: { bs }) -> value (y := @decoded data) {
+      if (y == x) {
+        setverdict(pass);
+      }
+      else {
+        setverdict(fail, "Decoding failed. Expected: ", x, ", got: ", y);
+      }
+    }
+    [] pt1.receive(Msg: { ? }) -> value (bad_msg := data) {
+      setverdict(fail, "Invalid reply received: ", bad_msg);
+    }
+    [] t.timeout {
+      setverdict(fail, "Timeout");
+    }
+  }
+}
+
+// Testing setencode on an ASN.1 type with BER encoding, with decoded value redirects.
+testcase tc_asn_setencode_value_redirect() runs on CT {
+  connect(self:pt1, self:pt1);
+  var Choice x := { str := "choice" };
+  self.setencode(Choice, "DER:2002");
+  var bitstring bs := oct2bit('810663686F696365'O);
+  pt1.send(Msg: { bs });
+  var Choice y;
+  var bitstring bad_msg;
+  timer t;
+  t.start(0.5);
+  alt {
+    [] pt1.receive(Msg: { bs }) -> value (y := @decoded data) {
+      if (y == x) {
+        setverdict(pass);
+      }
+      else {
+        setverdict(fail, "Decoding failed. Expected: ", x, ", got: ", y);
+      }
+    }
+    [] pt1.receive(Msg: { ? }) -> value (bad_msg := data) {
+      setverdict(fail, "Invalid reply received: ", bad_msg);
+    }
+    [] t.timeout {
+      setverdict(fail, "Timeout");
+    }
+  }
+}
+
+control {
+  execute(tc_ttcn_value_redirect());
+  execute(tc_ttcn_setencode_value_redirect());
+  execute(tc_asn_setencode_value_redirect());
+}
+
+}

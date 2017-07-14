@@ -237,6 +237,7 @@ namespace Ttcn {
       S_START_PORT, // port
       S_STOP_PORT, // port
       S_HALT, // port
+      S_SETSTATE, // setstate_op
       /* component statements */
       S_START_COMP, // comp_op
       S_START_COMP_REFD, // comp_op
@@ -268,7 +269,8 @@ namespace Ttcn {
       S_INT2ENUM, // convert_op
       /* update statement */
       S_UPDATE, // update_op
-      S_SETSTATE // setstate_op
+      /* encoding-related statements */
+      S_SETENCODE // setencode_op
     };
 
     enum component_t {
@@ -488,6 +490,11 @@ namespace Ttcn {
         Value* val;
         TemplateInstance* ti;
       } setstate_op; /**< S_SETSTATE */
+      
+      struct {
+        Type* type;
+        Value* encoding;
+      } setencode_op;
     };
 
     Statement(const Statement& p); ///< copy disabled
@@ -615,6 +622,8 @@ namespace Ttcn {
     Statement(statementtype_t p_st, Reference* p_ref, MultiWithAttrib* p_attrib);
     /** Constructor used by S_SETSTATE */
     Statement(statementtype_t p_st, Value* p_val, TemplateInstance* p_ti);
+    /** Constructor used by S_SETENCODE */
+    Statement(statementtype_t p_st, Type* p_type, Value* p_encoding);
     virtual ~Statement();
     virtual Statement* clone() const;
     virtual void dump(unsigned int level) const;
@@ -796,6 +805,7 @@ namespace Ttcn {
     void chk_int2enum();
     void chk_update();
     void chk_setstate();
+    void chk_setencode();
   public:
     /** Sets the code section selector of all embedded values and
      *  templates to \a p_code_section. */
@@ -868,6 +878,7 @@ namespace Ttcn {
     char *generate_code_execute_refd(char *str);
     char* generate_code_update(char *str, char*& def_glob_vars, char*& src_glob_vars);
     char* generate_code_setstate(char *str);
+    char* generate_code_setencode(char* str);
     /** used for receive, check-receive, trigger */
     void generate_code_expr_receive(expression_struct *expr,
       const char *opname);

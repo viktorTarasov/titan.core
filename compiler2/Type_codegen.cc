@@ -2324,22 +2324,30 @@ void Type::generate_code_Signature(output_struct *target)
 void Type::generate_code_coding_handlers(output_struct* target)
 {
   Type* t = get_type_w_coding_table();
-  if (t == NULL || get_genname_coder(my_scope) != get_genname_own()) {
+  if (t == NULL || get_genname_default_coding(my_scope) != get_genname_own()) {
     return;
   }
   
   // default coding (global variable)
   string default_coding;
   if (t->coding_table.size() == 1) {
-    default_coding = t->coding_table[0]->built_in ?
-      get_encoding_name(t->coding_table[0]->built_in_coding) :
-      t->coding_table[0]->custom_coding.name;
+    if (t->coding_table[0]->built_in) {
+      default_coding = t->coding_table[0]->built_in_coding == CT_BER ?
+        "BER:2002" : get_encoding_name(t->coding_table[0]->built_in_coding);
+    }
+    else {
+      default_coding = t->coding_table[0]->custom_coding.name;
+    }
   }
   target->header.global_vars = mputprintf(target->header.global_vars,
     "extern UNIVERSAL_CHARSTRING %s_default_coding;\n", get_genname_own().c_str());
   target->source.global_vars = mputprintf(target->source.global_vars,
     "UNIVERSAL_CHARSTRING %s_default_coding(\"%s\");\n",
     get_genname_own().c_str(), default_coding.c_str());
+  
+  if (get_genname_coder(my_scope) != get_genname_own()) {
+    return;
+  }
   
   // encoder and decoder functions
   target->header.function_prototypes = mputprintf(
