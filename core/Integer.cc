@@ -257,8 +257,6 @@ INTEGER INTEGER::operator-() const
 
 INTEGER INTEGER::operator+(int other_value) const
 {
-  //TODO superfluous check
-  must_bound("Unbound left operand of integer addition.");
   // Don't call out if slow.  Implement this specific case right here.
   return *this + INTEGER(other_value);
 }
@@ -318,8 +316,6 @@ INTEGER INTEGER::operator+(const INTEGER& other_value) const
 
 INTEGER INTEGER::operator-(int other_value) const
 {
-  //TODO superfluous check
-  must_bound("Unbound left operand of integer subtraction.");
   return *this - INTEGER(other_value);
 }
 
@@ -378,8 +374,6 @@ INTEGER INTEGER::operator-(const INTEGER& other_value) const
 
 INTEGER INTEGER::operator*(int other_value) const
 {
-  //TODO superfluous check
-  must_bound("Unbound left operand of integer multiplication.");
   return *this * INTEGER(other_value);
 }
 
@@ -430,8 +424,6 @@ INTEGER INTEGER::operator*(const INTEGER& other_value) const
 
 INTEGER INTEGER::operator/(int other_value) const
 {
-  must_bound("Unbound left operand of integer division.");
-  if (other_value == 0) TTCN_error("Integer division by zero.");
   return *this / INTEGER(other_value);
 }
 
@@ -520,7 +512,6 @@ boolean INTEGER::operator==(const INTEGER& other_value) const
 
 boolean INTEGER::operator<(int other_value) const
 {
-  must_bound("Unbound left operand of integer comparison.");
   return *this < INTEGER(other_value);
 }
 
@@ -551,7 +542,6 @@ boolean INTEGER::operator<(const INTEGER& other_value) const
 
 boolean INTEGER::operator>(int other_value) const
 {
-  must_bound("Unbound left operand of integer comparison.");
   return *this > INTEGER(other_value);
 }
 
@@ -1776,27 +1766,21 @@ int INTEGER::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_to
 
 INTEGER operator+(int int_value, const INTEGER& other_value)
 {
-  other_value.must_bound("Unbound right operand of integer addition.");
   return INTEGER(int_value) + other_value;
 }
 
 INTEGER operator-(int int_value, const INTEGER& other_value)
 {
-  other_value.must_bound("Unbound right operand of integer subtraction.");
   return INTEGER(int_value) - other_value;
 }
 
 INTEGER operator*(int int_value, const INTEGER& other_value)
 {
-  other_value.must_bound("Unbound right operand of integer multiplication.");
   return INTEGER(int_value) * other_value;
 }
 
 INTEGER operator/(int int_value, const INTEGER& other_value)
 {
-  other_value.must_bound("Unbound right operand of integer division.");
-  if (other_value.get_val() == 0)
-    TTCN_error("Integer division by zero.");
   return INTEGER(int_value) / other_value;
 }
 
@@ -1816,13 +1800,11 @@ INTEGER rem(const INTEGER& left_value, const INTEGER& right_value)
 
 INTEGER rem(const INTEGER& left_value, int right_value)
 {
-  left_value.must_bound("Unbound left operand of rem operator.");
   return rem(left_value, INTEGER(right_value));
 }
 
 INTEGER rem(int left_value, const INTEGER& right_value)
 {
-  right_value.must_bound("Unbound right operand of rem operator.");
   return rem(INTEGER(left_value), right_value);
 }
 
@@ -1858,31 +1840,26 @@ INTEGER mod(const INTEGER& left_value, const INTEGER& right_value)
 
 INTEGER mod(const INTEGER& left_value, int right_value)
 {
-  left_value.must_bound("Unbound left operand of mod operator.");
   return mod(left_value, INTEGER(right_value));
 }
 
 INTEGER mod(int left_value, const INTEGER& right_value)
 {
-  right_value.must_bound("Unbound right operand of mod operator.");
   return mod(INTEGER(left_value), right_value);
 }
 
 boolean operator==(int int_value, const INTEGER& other_value)
 {
-  other_value.must_bound("Unbound right operand of integer comparison.");
   return INTEGER(int_value) == other_value;
 }
 
 boolean operator<(int int_value, const INTEGER& other_value)
 {
-  other_value.must_bound("Unbound right operand of integer comparison.");
   return INTEGER(int_value) < other_value;
 }
 
 boolean operator>(int int_value, const INTEGER& other_value)
 {
-  other_value.must_bound("Unbound right operand of integer comparison.");
   return INTEGER(int_value) > other_value;
 }
 
