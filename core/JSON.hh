@@ -18,6 +18,8 @@
 
 class TTCN_Buffer;
 class JSON_Tokenizer;
+class CHARSTRING;
+class INTEGER;
 
 /** Descriptor for JSON encoding/decoding during runtime */
 struct TTCN_JSONdescriptor_t 
@@ -144,6 +146,10 @@ enum json_metainfo_t {
 // Functions for conversion between json and cbor and vice versa
 void json2cbor_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, size_t& num_of_items);
 void cbor2json_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object);
+
+// Functions for conversion between json and bson and vice versa
+void json2bson_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object, bool in_array, INTEGER& length, CHARSTRING& f_name, bool& is_special);
+void bson2json_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object, bool in_array);
 
 #endif	/* JSON_HH_ */
 

@@ -3170,3 +3170,31 @@ UNIVERSAL_CHARSTRING cbor2json(const OCTETSTRING& value) {
   result.decode_utf8(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
   return result;
 }
+
+UNIVERSAL_CHARSTRING bson2json(const OCTETSTRING& value) {
+  UNIVERSAL_CHARSTRING result;
+  TTCN_Buffer buff;
+  buff.put_os(value);
+  JSON_Tokenizer tok;
+  bson2json_coding(buff, tok, false, false);
+  result.decode_utf8(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
+  return result;
+}
+
+OCTETSTRING json2bson(const UNIVERSAL_CHARSTRING& value) {
+  OCTETSTRING result;
+  TTCN_Buffer buff;
+  value.encode_utf8(buff);
+  const unsigned char* ustr = buff.get_data();
+  const size_t ustr_len = buff.get_len();
+  char* json_str = mcopystr((const char*)ustr);
+  JSON_Tokenizer tok(json_str, ustr_len);
+  Free(json_str);
+  buff.clear();
+  INTEGER length = 0;
+  CHARSTRING cs;
+  bool is_special;
+  json2bson_coding(buff, tok, false, false, length, cs, is_special);
+  buff.get_string(result);
+  return result;
+}

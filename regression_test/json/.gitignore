@@ -16,5 +16,7 @@ Types*.cc
 Types*.hh
 Cbor*.cc
 Cbor*.hh
+Bson*.cc
+Bson*.hh
 logs
 compile

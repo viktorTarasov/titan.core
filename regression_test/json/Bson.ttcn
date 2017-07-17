@@ -1,0 +1,580 @@
+module Bson {
+	
+	type component EmptyCT {
+
+	}
+
+	testcase tc_bson_encdec() runs on EmptyCT {
+		var octetstring os, expected_os;
+		var universal charstring json, decoded, decoded_json;
+
+		json := "{}"
+		expected_os := '0500000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":\"b\"}"
+		expected_os := '0E00000002610002000000620000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"aaaab\":\"bbbbbbc\"}"
+		expected_os := '180000000261616161620008000000626262626262630000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"ááá\":\"óóó\"}"
+		expected_os := '1800000002C3A1C3A1C3A10007000000C3B3C3B3C3B30000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":\"b\",\"c\":\"d\"}"
+		expected_os := '1700000002610002000000620002630002000000640000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":1}"
+		expected_os := '0C0000001061000100000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":15614615}"
+		expected_os := '0E00000010616263009742EE0000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":-15614615}"
+		expected_os := '0E000000106162630069BD11FF00'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+
+		json := "{\"abc\":4586797657}"
+		expected_os := '12000000126162630059FA64110100000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":-4586797657}"
+		expected_os := '120000001261626300A7059BEEFEFFFFFF00'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":1.120000}"
+		expected_os := '090000000161626300EC51B81E85EBF13F00'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":-11321.120465}"
+		expected_os := '090000000161626300A8A9656B8F1CC6C000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":true}"
+		expected_os := '0900000008616263000100'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":false}"
+		expected_os := '0900000008616263000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":null}"
+		expected_os := '090000000A6162630000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":[1]}"
+		expected_os := '1600000004616263000C000000103000010000000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":[1,2,\"abc\"]}"
+		expected_os := '2800000004616263001E000000103000010000001031000200000002320004000000616263000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":[1,2,[3,4],\"abc\"]}"
+		expected_os := '3E00000004616263003400000010300001000000103100020000000432001300000010300003000000103100040000000002320004000000616263000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":{\"def\":4}}"
+		expected_os := '1800000003616263000E0000001064656600040000000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":{\"a\":[2]}}"
+		expected_os := '1E0000000361626300140000000461000C00000010300002000000000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":[2,{\"a\":4}]}"
+		expected_os := '2500000004616263001B000000103000020000000331000C00000010610004000000000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"abc\":{\"def\":4,\"dd\":[1,2,3,{\"q\":3},3]},\"w\":[{\"a\":3}]}"
+		expected_os := '6300000003616263004200000010646566000400000004646400300000001030000100000010310002000000103200030000000333000C0000001071000300000000103400030000000000047700140000000330000C00000010610003000000000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+
+		// Special cases
+
+		json := "{\"a\":{\"$binary\":\"VEVTVCBUM1NU\",\"$type\":\"01\"}}"
+		expected_os := '16000000056100090000000154455354205433535400'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$binary\":\"VEVTVCBUM1NU\",\"$type\":\"01\"},\"b\":3}"
+		expected_os := '1D00000005610009000000015445535420543353541062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$binary\":\"VEVTVCBUM1NU\",\"$type\":\"01\"}],\"b\":3}"
+		expected_os := '25000000046100160000000530000900000001544553542054335354001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"b\":[{\"a\":[{\"$binary\":\"VEVTVCBUM1NU\",\"$type\":\"01\"}],\"b\":3}],\"c\":4532}"
+		expected_os := '3C0000000462002D0000000330002500000004610016000000053000090000000154455354205433535400106200030000000000106300B411000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$date\":{\"$numberLong\":345}}}"
+		expected_os := '10000000096100590100000000000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$date\":{\"$numberLong\":345}}],\"b\":3}"
+		expected_os := '1F000000046100100000000930005901000000000000001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"b\":[{\"a\":[{\"$binary\":\"VEVTVCBUM1NU\",\"$type\":\"01\"},{\"$date\":{\"$numberLong\":34654776445}}],\"b\":3}],\"c\":4532}"
+		expected_os := '4700000004620038000000033000300000000461002100000005300009000000015445535420543353540930007DEC95110800000000106200030000000000106300B411000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$timestamp\":{\"t\":123,\"i\":456}}}"
+		expected_os := '10000000116100C80100007B00000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$timestamp\":{\"t\":123,\"i\":456}}],\"b\":3}"
+		expected_os := '1F00000004610010000000113000C80100007B000000001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$regex\":\"myregex\",\"$options\":\"gim\"}}"
+		expected_os := '140000000b61006d7972656765780067696d0000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$regex\":\"myregex\",\"$options\":\"gim\"}],\"b\":3}"
+		expected_os := '23000000046100140000000B30006D7972656765780067696D00001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$oid\":\"123456789ABCDEF123456789\"}}"
+		expected_os := '14000000076100123456789ABCDEF12345678900'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$oid\":\"123456789ABCDEF123456789\"}],\"b\":3}"
+		expected_os := '2300000004610014000000073000123456789ABCDEF123456789001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$ref\":\"myname\",\"$id\":\"123456789ABCDEF123456789\"}}"
+		expected_os := '1F0000000C6100070000006D796E616D6500123456789ABCDEF12345678900'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$ref\":\"myname\",\"$id\":\"123456789ABCDEF123456789\"}],\"b\":3}"
+		expected_os := '2E0000000461001F0000000C3000070000006D796E616D6500123456789ABCDEF123456789001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$undefined\":true}}"
+		expected_os := '0800000006610000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$undefined\":true}],\"b\":3}"
+		expected_os := '1700000004610008000000063000001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$minKey\":1}}"
+		expected_os := '08000000FF610000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$minKey\":1}],\"b\":3}"
+		expected_os := '1700000004610008000000FF3000001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$maxKey\":1}}"
+		expected_os := '080000007F610000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$maxKey\":1}],\"b\":3}"
+		expected_os := '17000000046100080000007F3000001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		// Bad maxkey, encode as embedded document
+		json := "{\"a\":{\"$maxKey\":2}}"
+		expected_os := '1A0000000361001200000010246D61784B657900020000000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":{\"$numberLong\":\"123\"}}"
+		expected_os := '100000001261007B0000000000000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded_json := "{\"a\":123}"
+		decoded := bson2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		json := "{\"a\":{\"$numberLong\":\"12332232323232\"}}"
+		expected_os := '10000000126100A0B05352370B000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded_json := "{\"a\":12332232323232}"
+		decoded := bson2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		json := "{\"a\":[{\"$numberLong\":\"12332232323232\"}],\"b\":3}"
+		expected_os := '1F00000004610010000000123000A0B05352370B0000001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded_json := "{\"a\":[12332232323232],\"b\":3}"
+		decoded := bson2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		json := "{\"a\":{\"$code\":\"aaa\",\"$scope\":{\"a\":\"b\"}}}"
+		expected_os := '220000000F61001A00000004000000616161000E0000000261000200000062000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":[{\"$code\":\"aaa\",\"$scope\":{\"a\":\"b\"}}],\"b\":3}"
+		expected_os := '31000000046100220000000F30001A00000004000000616161000E00000002610002000000620000001062000300000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":\"aaa\"}"
+		// Javascript code. Cannot be produced from json
+		os := '100000000D6100040000006161610000'O;
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		json := "{\"a\":\"aaa\"}"
+		// Symbol. Cannot be produced from json
+		os := '100000000E6100040000006161610000'O;
+		decoded := bson2json(os);
+		if (not match(decoded, json)) {
+			setverdict(fail, match(decoded, json));
+		}
+
+		setverdict(pass);
+	}
+
+	control {
+		execute(tc_bson_encdec());
+	}
+}

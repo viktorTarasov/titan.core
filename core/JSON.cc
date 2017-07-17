@@ -84,6 +84,10 @@ const TTCN_JSONdescriptor_t ENUMERATED_json_ = { FALSE, NULL, FALSE, NULL, FALSE
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+//// CBOR conversion
+////////////////////////////////////////////////////////////////////////////////
+
 // Never use buff.get_read_data() without checking if it has enough bytes in the
 // buffer.
 const unsigned char* check_and_get_buffer(const TTCN_Buffer& buff, int bytes) {
@@ -561,5 +565,946 @@ void cbor2json_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object) {
       break;
     default:
       TTCN_error("Unexpected major type %i while decoding using cbor2json().", major_type);
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+////  BSON conversion
+////////////////////////////////////////////////////////////////////////////////
+
+const TTCN_RAWdescriptor_t bson_float_raw_ = {64,SG_NO,ORDER_MSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1,CharCoding::UNKNOWN};
+const TTCN_Typedescriptor_t bson_float_descr_ = { NULL, NULL, &bson_float_raw_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+
+// Never use buff.get_read_data() without checking if it has enough bytes in the
+// buffer.
+const unsigned char* check_and_get_buffer_bson(const TTCN_Buffer& buff, int bytes) {
+  if (bytes < 0) {
+    TTCN_error("Incorrect length byte received: %d, while decoding using bson2json()", bytes);
+  }
+  if (buff.get_pos() + bytes > buff.get_len()) {
+    TTCN_error("Not enough bytes in bytestream while decoding using bson2json().");
+  }
+  return buff.get_read_data();
+}
+
+void encode_int_bson(TTCN_Buffer& buff, const INTEGER& int_num, INTEGER& length) {
+  if (int_num.is_native()) { // 32 bit
+    length = length + 4;
+    RInt value = (int)int_num;
+    for (size_t i = 0; i < 4; i++) {
+      buff.put_c(static_cast<unsigned char>(value >> i*8));
+    }
+  } else {
+    BIGNUM* bn = BN_dup(int_num.get_val().get_val_openssl());
+    INTEGER bn_length = BN_num_bytes(bn);
+    BN_free(bn);
+    long long int long_int = 0;
+    int bytes = 0;
+    if (bn_length <= 4) { // 32 bit
+      bytes = 4;
+      long_int = int_num.get_long_long_val();
+    } else if (bn_length <= 8) { //64 bit
+      bytes = 8;
+      long_int = int_num.get_long_long_val();
+    } else {
+      // The standard encodes max 64 bits
+      TTCN_error("An integer value which cannot be represented "
+                 "on 64bits cannot be encoded using json2bson()");
+    }
+    for (int i = 0; i < bytes; i++) {
+      buff.put_c(static_cast<unsigned char>(long_int >> i*8));
+    }
+    length = length + bytes;
+  }
+}
+
+INTEGER decode_int_bson(TTCN_Buffer& buff, int bytes) {
+  const unsigned char* uc = check_and_get_buffer_bson(buff, bytes);
+  buff.increase_pos(bytes);
+  if (bytes <= 4) { //32 bit
+    RInt value = 0;
+    for (size_t i = 0; i < 4; i++) {
+      value += uc[i] << i*8;
+    }
+    return INTEGER(value);
+  } else if (bytes <= 8) {
+    TTCN_Buffer tmp_buf;
+    for (int i = 0; i < bytes; i++) {
+      tmp_buf.put_c(uc[bytes-i-1]);
+    }
+    OCTETSTRING os;
+    tmp_buf.get_string(os);
+    INTEGER value = oct2int(os);
+    return value;
+  } else {
+    TTCN_error("An integer value larger than "
+               "64 bytes cannot be decoded using bson2json()");
+  }
+}
+
+void put_name(TTCN_Buffer& buff, INTEGER& length, CHARSTRING& name, bool in_array) {
+  if (in_array) {
+    buff.put_cs(name);
+    buff.put_c(0); // Closing 0
+    length = length + name.lengthof() + 1;
+    // TODO: is it very slow?
+    // Increment index
+    INTEGER num = str2int(name);
+    num = num + 1;
+    name = int2str(num);
+  } else {
+    buff.put_cs(name);
+    buff.put_c(0); // Closing 0
+    length = length + name.lengthof() + 1;
+  }
+}
+
+void get_name(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_array) {
+  const unsigned char* uc = buff.get_read_data();
+  // Copy until closing 0
+  char* tmp_str = mcopystr(reinterpret_cast<const char*>(uc));
+  if (in_array == false) { // We dont need name when in array
+    tok.put_next_token(JSON_TOKEN_NAME, tmp_str);
+  }
+  buff.increase_pos(strlen(tmp_str)+1);
+  Free(tmp_str);
+}
+
+bool encode_bson_binary(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  // Check if this is really binary
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_STRING) {
+    return false;
+  }
+  CHARSTRING cs2(len-2, content+1);
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NAME) {
+    return false;
+  }
+  CHARSTRING cs3(len, content);
+  if (cs3 != "$type") {
+    return false;
+  }
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_STRING) {
+    return false;
+  }
+  CHARSTRING cs4(len-2, content+1);
+  if (cs4.lengthof() != 2) {
+    return false;
+  }
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  
+  buff.put_c(5);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  OCTETSTRING os = decode_base64(cs2);
+  INTEGER os_len = os.lengthof();
+  encode_int_bson(buff, os_len, length);
+  unsigned int type = 0;
+  if (sscanf((const char*)cs4, "%02x", &type) != 1) {
+    TTCN_error("Incorrect binary format while encoding with json2bson()");
+  }
+  buff.put_c(type);
+  length = length + 1;
+  buff.put_os(os);
+  length = length + os_len;
+  return true;
+}
+
+bool encode_bson_date(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_START) {
+    return false;
+  }
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NAME) {
+    return false;
+  }
+  CHARSTRING cs(len, content);
+  if (cs != "$numberLong") {
+    return false;
+  }
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NUMBER) {
+    return false;
+  }
+  CHARSTRING cs2(len, content);
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  INTEGER int_num = str2int(cs2);
+  buff.put_c(9); // datetime
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  // Encode on 64 bit
+  long long int long_int = int_num.get_long_long_val();
+  for (int i = 0; i < 8; i++) {
+    buff.put_c(static_cast<unsigned char>(long_int >> i*8));
+  }
+  length = length + 8;
+  return true;
+}
+  
+
+bool encode_bson_timestamp(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_START) {
+    return false;
+  }
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NAME) {
+    return false;
+  }
+  CHARSTRING cs(len, content);
+  if (cs != "t") {
+    return false;
+  }
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NUMBER) {
+    return false;
+  }
+  CHARSTRING cs2(len, content);
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NAME) {
+    return false;
+  }
+  CHARSTRING cs3(len, content);
+  if (cs3 != "i") {
+    return false;
+  }
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NUMBER) {
+    return false;
+  }
+  CHARSTRING cs4(len, content);
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  INTEGER timestamp = str2int(cs2);
+  INTEGER increment = str2int(cs4);
+  buff.put_c(17);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  encode_int_bson(buff, increment, length);
+  encode_int_bson(buff, timestamp, length);
+  return true;
+}
+
+bool encode_bson_regex(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_STRING) {
+    return false;
+  }
+  CHARSTRING regex(len-2, content+1);
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NAME) {
+    return false;
+  }
+  CHARSTRING cs2(len, content);
+  if (cs2 != "$options") {
+    return false;
+  }
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_STRING) {
+    return false;
+  }
+  CHARSTRING options(len-2, content+1);
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  
+  buff.put_c(11);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  buff.put_cs(regex);
+  length = length + regex.lengthof();
+  buff.put_c(0); // Closing 0
+  length = length + 1;
+  buff.put_cs(options);
+  length = length + options.lengthof();
+  buff.put_c(0); // Closing 0
+  length = length + 1;
+  return true;
+}
+
+bool encode_bson_oid(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_STRING) {
+    return false;
+  }
+  CHARSTRING id(len-2, content+1);
+  if (id.lengthof() != 24) {
+    return false;
+  }
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  
+  buff.put_c(7);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  unsigned char hex[12];
+  for (size_t i = 0; i < 24; i = i + 2) {
+    if (sscanf(((const char*)id)+i, "%02x", (unsigned int*)&(hex[i/2])) != 1) {
+      TTCN_error("Incorrect binary format while encoding with json2bson()");
+    }
+  }
+  buff.put_s(12, hex);
+  length = length + 12;
+  return true;
+}
+
+bool encode_bson_ref(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_STRING) {
+    return false;
+  }
+  CHARSTRING name(len-2, content+1);
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NAME) {
+    return false;
+  }
+  CHARSTRING cs(len, content);
+  if (cs != "$id") {
+    return false;
+  }
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_STRING) {
+    return false;
+  }
+  CHARSTRING id(len-2, content+1);
+  if (id.lengthof() != 24) {
+    return false;
+  }
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+
+  buff.put_c(12);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  INTEGER name_length = name.lengthof()+1;
+  encode_int_bson(buff, name_length, length);
+  buff.put_cs(name);
+  buff.put_c(0); // Closing 0
+  length = length + name_length;
+  unsigned char hex[12];
+  for (size_t i = 0; i < 24; i = i + 2) {
+    if (sscanf(((const char*)id)+i, "%02x", (unsigned int*)&(hex[i/2])) != 1) {
+      TTCN_error("Incorrect binary format while encoding with json2bson()");
+    }
+  }
+  buff.put_s(12, hex);
+  length = length + 12;
+  return true;
+}
+
+bool encode_bson_undefined(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_LITERAL_TRUE) {
+    return false;
+  }
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  
+  buff.put_c(6);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  return true;
+}
+
+bool encode_bson_minkey(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NUMBER) {
+    return false;
+  }
+  CHARSTRING cs(len, content);
+  if (cs != "1") {
+    return false;
+  }
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  
+  buff.put_c(255);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  return true;
+}
+
+bool encode_bson_maxkey(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NUMBER) {
+    return false;
+  }
+  CHARSTRING cs(len, content);
+  if (cs != "1") {
+    return false;
+  }
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  
+  buff.put_c(127);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  return true;
+}
+
+bool encode_bson_numberlong(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_STRING) {
+    return false;
+  }
+  CHARSTRING cs(len-2, content+1);
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  
+  buff.put_c(18);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  INTEGER number = str2int(cs);
+  long long int value = number.get_long_long_val();
+  for (int i = 0; i < 8; i++) {
+    buff.put_c(static_cast<unsigned char>(value >> i*8));
+  }
+  length = length + 8;
+  return true;
+}
+
+bool encode_bson_code_with_scope(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
+  char *content;
+  size_t len;
+  json_token_t token;
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_STRING) {
+    return false;
+  }
+  CHARSTRING cs(len-2, content+1);
+  
+  tok.get_next_token(&token, &content, &len);
+  if (token != JSON_TOKEN_NAME) {
+    return false;
+  }
+  CHARSTRING cs2(len, content);
+  if (cs2 != "$scope") {
+    return false;
+  }
+  
+  INTEGER code_w_scope_length = 0;
+  bool is_special = false;
+  CHARSTRING f_name;
+  TTCN_Buffer sub_buff;
+  json2bson_coding(sub_buff, tok, false, false, code_w_scope_length, f_name, is_special);
+  
+  tok.get_next_token(&token, NULL, NULL);
+  if (token != JSON_TOKEN_OBJECT_END) {
+    return false;
+  }
+  
+  buff.put_c(15);
+  length = length + 1;
+  // We do not know the name here. It will be inserted later.
+  code_w_scope_length = code_w_scope_length + cs.lengthof() + 4 + 1;
+  encode_int_bson(buff, code_w_scope_length, code_w_scope_length);
+  encode_int_bson(buff, cs.lengthof()+1, length);
+  buff.put_string(cs);
+  buff.put_c(0); // Closing 0
+  buff.put_buf(sub_buff);
+  length = length + code_w_scope_length - 4; // We added the length of cs twice
+  return true;
+}
+
+
+void json2bson_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object,
+       bool in_array, INTEGER& length, CHARSTRING& obj_name, bool& is_special) {
+  json_token_t token;
+  char* content = NULL;
+  size_t len;
+  size_t prev_pos = tok.get_buf_pos();
+  tok.get_next_token(&token, &content, &len);
+  if (in_object == false && token != JSON_TOKEN_OBJECT_START) {
+    TTCN_error("Json document must be an object when encoding with json2bson()");
+  }
+  switch(token) {
+    case JSON_TOKEN_OBJECT_START: {
+      TTCN_Buffer sub_buff;
+      INTEGER sub_len = 0;
+      CHARSTRING subobj_name;
+      if (obj_name.is_bound()) {
+        subobj_name = obj_name;
+      }
+      while ((prev_pos = tok.get_buf_pos(), tok.get_next_token(&token, NULL, NULL))) {
+        if (token != JSON_TOKEN_OBJECT_END) {
+          tok.set_buf_pos(prev_pos);
+          json2bson_coding(sub_buff, tok, true, false, sub_len, subobj_name, is_special);
+          // We found a specially translated json
+          if (is_special) {
+            // The sub_buff contains the encoded bson except the obj_name.
+            // We put it in here after the first byte
+            TTCN_Buffer tmp_buff;
+            tmp_buff.put_c(*(sub_buff.get_data()));
+            put_name(tmp_buff, sub_len, subobj_name, in_array);
+            tmp_buff.put_s(sub_buff.get_len()-1, sub_buff.get_data()+1);
+            sub_buff = tmp_buff;
+            in_object = false;
+            break;
+          }
+        } else {
+          sub_buff.put_c(0);// Closing zero
+          sub_len = sub_len + 1;
+          break;
+        }
+      }
+      
+      if (in_object == true) {
+        TTCN_Buffer tmp_buff;
+        tmp_buff.put_c(3); // embedded document
+        length = length + 1;
+        put_name(tmp_buff, length, obj_name, in_array);
+        encode_int_bson(tmp_buff, sub_len, sub_len);
+        length = length + sub_len;
+        tmp_buff.put_buf(sub_buff);
+        sub_buff = tmp_buff;
+      } else if (is_special == false) {
+        length = length + sub_len;
+        encode_int_bson(buff, length, length);
+      } else {
+        length = length + sub_len;
+        is_special = false;
+      }
+      buff.put_buf(sub_buff);
+      break;
+    }
+    case JSON_TOKEN_OBJECT_END:
+      TTCN_error("Unexpected object end character while encoding using json2bson().");
+      break;
+    case JSON_TOKEN_NAME: {
+      CHARSTRING cs(len, content);
+      prev_pos = tok.get_buf_pos();
+      if (cs == "$binary") {
+        is_special = encode_bson_binary(buff, tok, length);
+      } else if (cs == "$date") {
+        is_special = encode_bson_date(buff, tok, length);
+      } else if (cs == "$timestamp") {
+        is_special = encode_bson_timestamp(buff, tok, length);
+      } else if (cs == "$regex") {
+        is_special = encode_bson_regex(buff, tok, length);
+      } else if (cs == "$oid") {
+        is_special = encode_bson_oid(buff, tok, length);
+      } else if (cs == "$ref") {
+        is_special = encode_bson_ref(buff, tok, length);
+      } else if (cs == "$undefined") {
+        is_special = encode_bson_undefined(buff, tok, length);
+      } else if (cs == "$minKey") {
+        is_special = encode_bson_minkey(buff, tok, length);
+      } else if (cs == "$maxKey") {
+        is_special = encode_bson_maxkey(buff, tok, length);
+      } else if (cs == "$numberLong") {
+        is_special = encode_bson_numberlong(buff, tok, length);
+      } else if (cs == "$code") {
+        is_special = encode_bson_code_with_scope(buff, tok, length);
+      } else {
+        obj_name = cs;
+      }
+      if (!is_special) {
+        tok.set_buf_pos(prev_pos);
+        obj_name = cs;
+      }
+      break; }
+    case JSON_TOKEN_STRING: {
+      buff.put_c(2); // string
+      length = length + 1;
+      put_name(buff, length, obj_name, in_array);
+      encode_int_bson(buff, len-1, length); // Remove "-s but add terminating null
+      char * tmp_str = mcopystrn(content+1, len-2); // Remove "-s
+      buff.put_string(tmp_str);
+      buff.put_c(0); // Closing 0
+      length = length + (int)len-1; // Remove "-s but add terminating null
+      Free(tmp_str);
+      break; }
+    case JSON_TOKEN_NUMBER: {
+      char *str = mcopystrn(content, len);
+      size_t curr_pos = tok.get_buf_pos();
+      tok.set_buf_pos(prev_pos);
+      bool is_float = false;
+      tok.check_for_number(&is_float);
+      tok.set_buf_pos(curr_pos);
+      if (is_float) {
+        buff.put_c(1); // 64bit float
+        put_name(buff, length, obj_name, in_array);
+        double d;
+        sscanf(str, "%lf", &d);
+        FLOAT f = d;
+        f.encode(bson_float_descr_, buff, TTCN_EncDec::CT_RAW);
+      } else {
+        INTEGER int_num = str2int(str);
+        if (int_num.is_native()) {
+          buff.put_c(16); //32bit integer
+          length = length + 1;
+        } else {
+          buff.put_c(18); // 64bit integer
+          length = length + 1;
+        }
+        put_name(buff, length, obj_name, in_array);
+        encode_int_bson(buff, int_num, length);
+      }
+      Free(str);
+      break; }
+    case JSON_TOKEN_LITERAL_FALSE: {
+      buff.put_c(8); // true or false
+      put_name(buff, length, obj_name, in_array);
+      buff.put_c(0); // false
+      break; }
+    case JSON_TOKEN_LITERAL_TRUE: {
+      buff.put_c(8); // true or false
+      put_name(buff, length, obj_name, in_array);
+      buff.put_c(1); // true
+      break; }
+    case JSON_TOKEN_LITERAL_NULL: {
+      buff.put_c(10); // null
+      put_name(buff, length, obj_name, in_array);
+      break; }
+    case JSON_TOKEN_ARRAY_START: {
+      buff.put_c(4); // array
+      length = length + 1;
+      put_name(buff, length, obj_name, in_array);
+      obj_name = "0"; // arrays are objects but the key is a number which increases
+      TTCN_Buffer sub_buff;
+      INTEGER sub_length = 0;
+      while ((prev_pos = tok.get_buf_pos(), tok.get_next_token(&token, NULL, NULL))) {
+        if (token != JSON_TOKEN_ARRAY_END) {
+          tok.set_buf_pos(prev_pos);
+          in_array = true;
+          json2bson_coding(sub_buff, tok, in_object, in_array, sub_length, obj_name, is_special);
+        } else {
+          sub_buff.put_c(0);// Closing zero
+          sub_length = sub_length + 1;
+          break;
+        }
+      }
+      encode_int_bson(buff, sub_length, sub_length);
+      length = length + sub_length;
+      buff.put_buf(sub_buff);
+      break; }
+    default:
+      TTCN_error("Unexpected json token %i, while encoding using json2bson().", token);
+  }
+}
+
+void bson2json_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object, bool in_array) {
+  INTEGER length = 0;
+  // Beginning of the document
+  if (in_object == false) {
+    length = decode_int_bson(buff, 4);
+    // Check if the input is long enough
+    check_and_get_buffer_bson(buff, length-4);
+    tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+    while (*(check_and_get_buffer_bson(buff, 1)) != 0) {
+      bson2json_coding(buff, tok, true, in_array);
+    }
+    buff.increase_pos(1);
+    tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+  } else {
+    const unsigned char* type = check_and_get_buffer_bson(buff, 1);
+    buff.increase_pos(1);
+    // There is always a name
+    get_name(buff, tok, in_array);
+    switch(*type) {
+      case 0: // document end
+        TTCN_error("Unexpected document end character while decoding with bson2json()");
+        break;
+      case 1: { // 64bit float
+        FLOAT f;
+        check_and_get_buffer_bson(buff, 8);
+        f.decode(bson_float_descr_, buff, TTCN_EncDec::CT_RAW);
+        f.JSON_encode(bson_float_descr_, tok);
+        break;
+      }
+      case 13: // Javascript code. Decoded as string
+      case 14: // Symbol. Decoded as string
+      case 2: { // UTF8 string
+        INTEGER len = decode_int_bson(buff, 4);
+        // Get the value of the pair
+        const unsigned char* uc = check_and_get_buffer_bson(buff, (int)len);
+        char *tmp_str = mcopystrn(reinterpret_cast<const char*>(uc), (int)len);
+        buff.increase_pos((int)len);
+        char* tmp_str2 = mprintf("\"%s\"", tmp_str);
+        tok.put_next_token(JSON_TOKEN_STRING, tmp_str2);
+        Free(tmp_str2);
+        Free(tmp_str);
+        break; }
+      case 3: { // Embedded document
+        length = decode_int_bson(buff, 4);
+        // Check if the input is long enough
+        check_and_get_buffer_bson(buff, length-4);
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        while (*(check_and_get_buffer_bson(buff, 1)) != 0) { // error message while converting
+          bson2json_coding(buff, tok, in_object, false);
+        }
+        buff.increase_pos(1); // Skip the closing 0
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        break; }
+      case 4: { // array
+        length = decode_int_bson(buff, 4);
+        // Check if the input is long enough
+        check_and_get_buffer_bson(buff, length-4);
+        tok.put_next_token(JSON_TOKEN_ARRAY_START, NULL);
+        in_array = true;
+        while (*(check_and_get_buffer_bson(buff, 1)) != 0) { // erorr message while converting
+          bson2json_coding(buff, tok, in_object, in_array);
+        }
+        buff.increase_pos(1); // Skip the closing 0
+        tok.put_next_token(JSON_TOKEN_ARRAY_END, NULL);
+        break; }
+      case 5: { // bytestring
+        // decode bytestring length
+        INTEGER bytestr_length = decode_int_bson(buff, 4);
+        OCTETSTRING os(1, check_and_get_buffer_bson(buff, 1));
+        buff.increase_pos(1);
+        INTEGER typestr_type = oct2int(os);
+        char* str_type = mprintf("\"%02x\"", (int)typestr_type);
+        OCTETSTRING data(bytestr_length, check_and_get_buffer_bson(buff, bytestr_length));
+        buff.increase_pos(bytestr_length);
+        CHARSTRING cs = encode_base64(data);
+        char* data_str = mprintf("\"%s\"", (const char*)cs);
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$binary");
+        tok.put_next_token(JSON_TOKEN_STRING, data_str);
+        tok.put_next_token(JSON_TOKEN_NAME, "$type");
+        tok.put_next_token(JSON_TOKEN_STRING, str_type);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        Free(data_str);
+        Free(str_type);
+        break; }
+      case 6: { // undefined
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$undefined");
+        tok.put_next_token(JSON_TOKEN_LITERAL_TRUE);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        break; }
+      case 7: { // oid
+        OCTETSTRING os(12, check_and_get_buffer_bson(buff, 12));
+        char* tmp_oct = NULL;
+        for (size_t i = 0; i < 12; i++) {
+          tmp_oct = mputprintf(tmp_oct, "%02X", os[i].get_octet());
+        }
+        char *str_hex = mprintf("\"%s\"", tmp_oct);
+        buff.increase_pos(12);
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$oid");
+        tok.put_next_token(JSON_TOKEN_STRING, str_hex);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        Free(str_hex);
+        Free(tmp_oct);
+        break; }
+      case 8: {  // true or false
+        const unsigned char* uc = check_and_get_buffer_bson(buff, 1);
+        if (*uc == 0) {
+          tok.put_next_token(JSON_TOKEN_LITERAL_FALSE, NULL);
+        } else {
+          tok.put_next_token(JSON_TOKEN_LITERAL_TRUE, NULL);
+        }
+        buff.increase_pos(1);
+        break;
+      }
+      case 9: { // datetime
+        INTEGER date = decode_int_bson(buff, 8);
+        char *tmp_str = mprintf("%lld", date.get_long_long_val());
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$date");
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$numberLong");
+        tok.put_next_token(JSON_TOKEN_NUMBER, tmp_str);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        Free(tmp_str);
+        break; }
+      case 10: { // null
+        tok.put_next_token(JSON_TOKEN_LITERAL_NULL, NULL);
+        break;
+      }
+      case 11: { // regex
+        // copy until closing 0
+        const unsigned char* uc = check_and_get_buffer_bson(buff, 1);
+        char *tmp_str = mcopystr(reinterpret_cast<const char*>(uc));
+        buff.increase_pos(strlen(tmp_str)+1);
+        char *regex = mprintf("\"%s\"", tmp_str);
+        Free(tmp_str);
+        uc = check_and_get_buffer_bson(buff, 1);
+        tmp_str = mcopystr(reinterpret_cast<const char*>(uc));
+        buff.increase_pos(strlen(tmp_str)+1);
+        char *options = mprintf("\"%s\"", tmp_str);
+        Free(tmp_str);
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$regex");
+        tok.put_next_token(JSON_TOKEN_STRING, regex);
+        tok.put_next_token(JSON_TOKEN_NAME, "$options");
+        tok.put_next_token(JSON_TOKEN_STRING, options);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        Free(options);
+        Free(regex);
+        break; }
+      case 12: { // dbref
+        INTEGER name_len = decode_int_bson(buff, 4);
+        const unsigned char* uc = check_and_get_buffer_bson(buff, (int)name_len);
+        char *tmp_name = mcopystrn(reinterpret_cast<const char*>(uc), (int)name_len);
+        buff.increase_pos((int)name_len);
+        char* tmp_str = mprintf("\"%s\"", tmp_name);
+        OCTETSTRING os(12, check_and_get_buffer_bson(buff, 12));
+        buff.increase_pos(12);
+        char* tmp_oct = NULL;
+        for (size_t i = 0; i < 12; i++) {
+          tmp_oct = mputprintf(tmp_oct, "%02X", os[i].get_octet());
+        }
+        char *str_hex = mprintf("\"%s\"", tmp_oct);
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$ref");
+        tok.put_next_token(JSON_TOKEN_STRING, tmp_str);
+        tok.put_next_token(JSON_TOKEN_NAME, "$id");
+        tok.put_next_token(JSON_TOKEN_STRING, str_hex);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        Free(tmp_oct);
+        Free(str_hex);
+        Free(tmp_str);
+        Free(tmp_name);
+        break; }
+      case 15: { // code_with_scope
+        INTEGER len = decode_int_bson(buff, 4);
+        check_and_get_buffer_bson(buff, (int)len-4); // len contains the length of itself
+        len = decode_int_bson(buff, 4);
+        const unsigned char* uc = check_and_get_buffer_bson(buff, (int)len);
+        char *tmp_str = mcopystrn(reinterpret_cast<const char*>(uc), (int)len);
+        char *tmp_str2 = mprintf("\"%s\"", tmp_str);
+        buff.increase_pos((int)len);
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$code");
+        tok.put_next_token(JSON_TOKEN_STRING, tmp_str2);
+        tok.put_next_token(JSON_TOKEN_NAME, "$scope");
+        bson2json_coding(buff, tok, false, false);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        Free(tmp_str2);
+        Free(tmp_str);
+        break; }
+      case 16: { // 32bit integer
+        INTEGER value = decode_int_bson(buff, 4);
+        char *tmp_str = mprintf("%d", (int)value);
+        tok.put_next_token(JSON_TOKEN_NUMBER, tmp_str);
+        Free(tmp_str);
+        break; }
+      case 17: { // timestamp
+        INTEGER increment = decode_int_bson(buff, 4);
+        INTEGER timestamp = decode_int_bson(buff, 4);
+        char *increment_str = mprintf("%i", (int)increment);
+        char *timestamp_str = mprintf("%i", (int)timestamp);
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$timestamp");
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "t");
+        tok.put_next_token(JSON_TOKEN_STRING, timestamp_str);
+        tok.put_next_token(JSON_TOKEN_NAME, "i");
+        tok.put_next_token(JSON_TOKEN_STRING, increment_str);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        Free(timestamp_str);
+        Free(increment_str);
+        break; }
+      case 18: { //64 bit integer
+        INTEGER value = decode_int_bson(buff, 8);
+        char *tmp_str = mprintf("%lld", value.get_long_long_val());
+        tok.put_next_token(JSON_TOKEN_NUMBER, tmp_str);
+        Free(tmp_str);
+        break; }
+      case 127: { // maxkey
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$maxKey");
+        tok.put_next_token(JSON_TOKEN_NUMBER, "1");
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        break; }
+      case 255: { // minkey
+        tok.put_next_token(JSON_TOKEN_OBJECT_START, NULL);
+        tok.put_next_token(JSON_TOKEN_NAME, "$minKey");
+        tok.put_next_token(JSON_TOKEN_NUMBER, "1");
+        tok.put_next_token(JSON_TOKEN_OBJECT_END, NULL);
+        break; }
+      default:
+        TTCN_error("Unexpected type %i while decoding using bson2json().", *type);
+    }
   }
 }

@@ -837,6 +837,7 @@ static const string anyname("anytype");
 %token bit2intKeyword
 %token bit2octKeyword
 %token bit2strKeyword
+%token bson2JsonKeyword
 %token cbor2JsonKeyword
 %token char2intKeyword
 %token char2octKeyword
@@ -859,6 +860,7 @@ static const string anyname("anytype");
 %token ischosenKeyword
 %token ispresentKeyword
 %token istemplatekindKeyword
+%token json2bsonKeyword
 %token json2CborKeyword
 %token lengthofKeyword
 %token oct2bitKeyword
@@ -9874,6 +9876,7 @@ PredefinedOpKeyword1:
 | bit2octKeyword { $$ = Value::OPTYPE_BIT2OCT; }
 | bit2strKeyword { $$ = Value::OPTYPE_BIT2STR; }
 | cbor2JsonKeyword { $$ = Value::OPTYPE_CBOR2JSON; }
+| bson2JsonKeyword { $$ = Value::OPTYPE_BSON2JSON; }
 | char2intKeyword { $$ = Value::OPTYPE_CHAR2INT; }
 | char2octKeyword { $$ = Value::OPTYPE_CHAR2OCT; }
 | float2intKeyword { $$ = Value::OPTYPE_FLOAT2INT; }
@@ -9887,6 +9890,7 @@ PredefinedOpKeyword1:
 | int2strKeyword { $$ = Value::OPTYPE_INT2STR; }
 | int2unicharKeyword { $$ = Value::OPTYPE_INT2UNICHAR; }
 | json2CborKeyword { $$ = Value::OPTYPE_JSON2CBOR; }
+| json2bsonKeyword { $$ = Value::OPTYPE_JSON2BSON; }
 | oct2bitKeyword { $$ = Value::OPTYPE_OCT2BIT; }
 | oct2charKeyword { $$ = Value::OPTYPE_OCT2CHAR; }
 | oct2hexKeyword { $$ = Value::OPTYPE_OCT2HEX; }

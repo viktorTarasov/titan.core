@@ -275,6 +275,8 @@ namespace Common {
       
       OPTYPE_CBOR2JSON, // v1
       OPTYPE_JSON2CBOR, // v1
+      OPTYPE_BSON2JSON, // v1
+      OPTYPE_JSON2BSON, // v1
 
       NUMBER_OF_OPTYPES // must be last
     };
