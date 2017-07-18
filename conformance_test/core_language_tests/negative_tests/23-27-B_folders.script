@@ -2001,7 +2001,7 @@ module NegSem_24_toplevel_001 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: An evaluable constant value was expected instead of operation `getverdict\(\)'
+error: A static value was expected instead of operation `getverdict\(\)'
 <END_RESULT>
 
 <END_TC>
