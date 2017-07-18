@@ -1,0 +1,46 @@
+/******************************************************************************
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
+ *
+ * Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.3.3, Ensure that the IUT correctly handles component compatibility of different system clauses
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+//System compatibility: a function or altstep referring to component type "A" in its system clause may be called
+//or started in any context that has a system clause of type "B" or a test case with a runs on clause of type "B"
+//and no system clause if all the port definitions of "A" have identical definitions in "B". If the type of the
+//system is unknown in the calling function, this can lead to runtime errors if the component type "A" is not
+//system-compatible with the type of the system the current test case was started on.  
+
+module Sem_060303_component_types_006 { 
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+
+	type component GeneralComp {
+		port P p1;
+        port P p2;
+	}
+    
+    type component GeneralCompEx {
+        port P p1;
+        port P p2;
+    }
+    
+    function f_test() runs on GeneralComp system GeneralComp {
+		setverdict(pass);
+    }
+
+	testcase TC_Sem_060303_component_types_006() runs on GeneralComp system GeneralCompEx{
+		f_test(); // GeneralCompEx and GeneralComp are system compatible
+		setverdict(pass);
+	}
+	
+	control{
+	    execute(TC_Sem_060303_component_types_006());
+	}
+}

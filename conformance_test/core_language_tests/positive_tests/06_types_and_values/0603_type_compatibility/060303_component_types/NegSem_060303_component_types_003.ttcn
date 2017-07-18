@@ -1,0 +1,42 @@
+/******************************************************************************
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
+ *
+ * Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.3.3, Ensure that the IUT correctly handles component compatibility of different runs on clauses
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// Runs on compatibility: a function or altstep referring to component type "A" in its runs on clause may be
+//called or started on a component instance of type 'B' if all the definitions of "A" have identical definitions in
+//"B". 
+
+module NegSem_060303_component_types_003 { 
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+
+	type component GeneralComp {
+		port P p;
+	}
+    
+    type component GeneralCompEx extends GeneralComp {
+        port P p2;
+    }
+    
+    function f_test() runs on GeneralCompEx {
+		setverdict(fail);
+    }
+
+	testcase TC_NegSem_060303_component_types_003() runs on GeneralComp {
+		f_test(); // is not allowed, because GeneralComp is not compatible with the "runs on" of the function
+		setverdict(pass);
+	}
+	
+	control{
+	    execute(TC_NegSem_060303_component_types_003());
+	}
+}

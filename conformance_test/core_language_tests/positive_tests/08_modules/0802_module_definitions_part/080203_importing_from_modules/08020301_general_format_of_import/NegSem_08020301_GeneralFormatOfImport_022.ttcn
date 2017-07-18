@@ -19,6 +19,7 @@
 module NegSem_08020301_GeneralFormatOfImport_022 {
 	import from NegSem_08020301_GeneralFormatOfImport_022_import { template m_test };
 	// PX_TEST should be undefined, because it is not automatically imported
+
 	const integer c_test := PX_TEST;
 
 	type component GeneralComp {}
