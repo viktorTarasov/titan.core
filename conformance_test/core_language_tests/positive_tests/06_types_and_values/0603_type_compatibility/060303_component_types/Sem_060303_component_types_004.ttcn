@@ -1,0 +1,46 @@
+/******************************************************************************
+ * Copyright (C) 2017 ETSI  All Rights Reserved.
+ *
+ * Adrien Kirjak
+ *
+ ** @version  0.0.1
+ ** @purpose  1:6.3.3, Ensure that the IUT correctly handles component compatibility of mtc and runs on clause
+ ** @verdict  pass reject
+ ***************************************************/
+
+// The following requirements are tested:
+// Mtc compatibility: a function or altstep referring to component type "A" in its mtc clause may be called or
+// started in any context that has a mtc clause of type "B" or a testcase with a runs on clause of type "B" if all the
+// port definitions of "A" have identical definitions in "B". If the type of the mtc is unknown in the calling
+// function, this can lead to runtime errors if the component type "A" is not mtc-compatible with the type of the
+// running mtc. 
+
+module Sem_060303_component_types_004 { 
+
+	type port P message {
+		inout integer;
+	} with {extension "internal"}
+
+	type component GeneralComp {
+		port P p1;
+		port P p2;
+	}
+    
+    type component GeneralCompEx {
+        port P p1;
+        port P p2;
+    }
+    
+    function f_test() runs on GeneralComp mtc GeneralCompEx {
+		setverdict(pass);
+    }
+
+	testcase TC_Sem_060303_component_types_004() runs on GeneralComp {
+		f_test(); // GeneralCompEx and GeneralComp are mtc compatible
+		setverdict(pass);
+	}
+	
+	control{
+	    execute(TC_Sem_060303_component_types_004());
+	}
+}
