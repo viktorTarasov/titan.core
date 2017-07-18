@@ -217,6 +217,7 @@ void Base_Type::XER_encode_chk_coding(unsigned& p_coding,
   }
   switch (p_coding) {
   case XER_BASIC:
+  case XER_BASIC | XER_CANONICAL:
   case XER_CANONICAL:
   case XER_EXTENDED:
   case XER_EXTENDED | XER_CANONICAL:

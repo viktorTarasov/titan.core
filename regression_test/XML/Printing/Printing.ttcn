@@ -1,0 +1,202 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+module Printing {
+
+
+	type component EmptyCT {
+
+	}
+
+	type union MyUnion {
+		integer i
+	}
+
+	type record of MyRec MyRecOf;
+
+	type record MyRec {
+		MyRecOf recof optional,
+		MyUnion un optional,
+		integer i optional
+	}
+
+
+	external function enc_compact0(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER) printing(compact)" }
+
+	external function enc_compact1(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER:XER_EXTENDED) printing(compact)" }
+
+	external function enc_compact2(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER:XER_BASIC) printing(compact)" }
+
+	external function enc_compact3(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER:XER_EXTENDED|XER_CANONICAL) printing(compact)" } // !!!
+
+
+	external function enc_pretty0(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER)" }
+
+	external function enc_pretty1(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER:XER_BASIC)" }
+
+	external function enc_pretty2(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER:XER_EXTENDED)" }
+
+	external function enc_pretty3(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER) printing(pretty)" }
+
+	external function enc_pretty4(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER:XER_EXTENDED) printing(pretty)" }
+
+	external function enc_pretty5(in MyRec a) return octetstring
+	 with { extension "prototype(convert) encode(XER:XER_BASIC) printing(pretty)" }
+
+
+	external function dec_basic(in octetstring a) return MyRec
+	 with { extension "prototype(convert) decode(XER:XER_BASIC)" }
+
+
+const MyRec c_myrec := { recof := {{recof := omit, un := {i := 1}, i := 3}, {recof := omit, un := omit, i := 4}}, un := { i := 4}, i := 5};
+const universal charstring c_compact :=
+"<MyRec>"&
+	"<recof>"&
+		"<MyRec>"&
+			"<un>"&
+				"<i>1</i>"&
+			"</un>"&
+			"<i>3</i>"&
+		"</MyRec>"&
+		"<MyRec>"&
+			"<i>4</i>"&
+		"</MyRec>"&
+	"</recof>"&
+	"<un>"&
+		"<i>4</i>"&
+	"</un>"&
+	"<i>5</i>"&
+"</MyRec>\n";
+
+const universal charstring c_pretty :=
+"<MyRec>\n"&
+"\t<recof>\n"&
+"\t\t<MyRec>\n"&
+"\t\t\t<un>\n"&
+"\t\t\t\t<i>1</i>\n"&
+"\t\t\t</un>\n"&
+"\t\t\t<i>3</i>\n"&
+"\t\t</MyRec>\n"&
+"\t\t<MyRec>\n"&
+"\t\t\t<i>4</i>\n"&
+"\t\t</MyRec>\n"&
+"\t</recof>\n"&
+"\t<un>\n"&
+"\t\t<i>4</i>\n"&
+"\t</un>\n"&
+"\t<i>5</i>\n"&
+"</MyRec>\n\n"
+
+
+testcase tc_compact() runs on EmptyCT {
+	var octetstring os;
+	var MyRec myrec;
+
+	os := enc_compact0(c_myrec);
+	if (oct2unichar(os) != c_compact) {
+		setverdict(fail, match(oct2unichar(os), c_compact));
+	}
+	myrec := dec_basic(os);
+	if (myrec != c_myrec) {
+		setverdict(fail, match(myrec, c_myrec));
+	}
+
+	os := enc_compact1(c_myrec);
+	if (oct2unichar(os) != c_compact) {
+		setverdict(fail, match(oct2unichar(os), c_compact));
+	}
+	myrec := dec_basic(os);
+	if (myrec != c_myrec) {
+		setverdict(fail, match(myrec, c_myrec));
+	}
+
+	os := enc_compact2(c_myrec);
+	if (oct2unichar(os) != c_compact) {
+		setverdict(fail, match(oct2unichar(os), c_compact));
+	}
+	myrec := dec_basic(os);
+	if (myrec != c_myrec) {
+		setverdict(fail, match(myrec, c_myrec));
+	}
+
+	os := enc_compact3(c_myrec);
+	if (oct2unichar(os) != c_compact) {
+		setverdict(fail, match(oct2unichar(os), c_compact));
+	}
+	myrec := dec_basic(os);
+	if (myrec != c_myrec) {
+		setverdict(fail, match(myrec, c_myrec));
+	}
+
+	setverdict(pass);
+}
+
+testcase tc_pretty() runs on EmptyCT {
+	var octetstring os;
+	var MyRec myrec;
+
+	os := enc_pretty0(c_myrec);
+	if (oct2unichar(os) != c_pretty) {
+		setverdict(fail, match(oct2unichar(os), c_pretty));
+	}
+	myrec := dec_basic(os);
+	if (myrec != c_myrec) {
+		setverdict(fail, match(myrec, c_myrec));
+	}
+
+	os := enc_pretty1(c_myrec);
+	if (oct2unichar(os) != c_pretty) {
+		setverdict(fail, match(oct2unichar(os), c_pretty));
+	}
+	myrec := dec_basic(os);
+	if (myrec != c_myrec) {
+		setverdict(fail, match(myrec, c_myrec));
+	}
+
+	os := enc_pretty2(c_myrec);
+	if (oct2unichar(os) != c_pretty) {
+		setverdict(fail, match(oct2unichar(os), c_pretty));
+	}
+	myrec := dec_basic(os);
+	if (myrec != c_myrec) {
+		setverdict(fail, match(myrec, c_myrec));
+	}
+
+	os := enc_pretty3(c_myrec);
+	if (oct2unichar(os) != c_pretty) {
+		setverdict(fail, match(oct2unichar(os), c_pretty));
+	}
+	myrec := dec_basic(os);
+	if (myrec != c_myrec) {
+		setverdict(fail, match(myrec, c_myrec));
+	}
+
+	setverdict(pass);
+}
+
+control {
+	execute(tc_compact());
+	execute(tc_pretty());
+}
+
+}
+with {
+  encode "XML";
+}

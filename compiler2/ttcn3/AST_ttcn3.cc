@@ -6740,8 +6740,8 @@ namespace Ttcn {
   {
     delete encoding_options;
     delete eb_list;
-    if (NULL != json_printing) {
-      delete json_printing;
+    if (NULL != printing) {
+      delete printing;
     }
   }
 
@@ -7131,7 +7131,7 @@ namespace Ttcn {
             break; }
           
           case ExtensionAttribute::PRINTING: {
-            json_printing = ea.get_printing();
+            printing = ea.get_printing();
             break; }
 
           case ExtensionAttribute::ANYTYPELIST:
@@ -7157,9 +7157,9 @@ namespace Ttcn {
     chk_prototype();
     chk_function_type();
     
-    if (NULL != json_printing && (EXTFUNC_ENCODE != function_type ||
-        Type::CT_JSON != encoding_type)) {
-      error("Attribute 'printing' is only allowed for JSON encoding functions.");
+    if (NULL != printing && (EXTFUNC_ENCODE != function_type ||
+        (Type::CT_JSON != encoding_type && Type::CT_XER != encoding_type))) {
+      error("Attribute 'printing' is only allowed for JSON and XER encoding functions.");
     }
   }
 
@@ -7194,14 +7194,27 @@ namespace Ttcn {
       input_type->get_genname_typedescriptor(my_scope).c_str(),
       Type::get_encoding_name(encoding_type));
     if (encoding_type == Type::CT_JSON) {
-      if (json_printing != NULL) {
-        str = json_printing->generate_code(str);
+      if (printing != NULL) {
+        str = printing->generate_code(str);
       } else {
         str = mputstr(str, ", 0");
       }
+    }  else if (encoding_type == Type::CT_XER) {
+      bool compact_printing =
+        printing != NULL && printing->get_printing() == PrintingType::PT_COMPACT;
+      if (compact_printing || encoding_options) {
+        str = mputstr(str, ", ");
+      }
+      if (compact_printing) {
+        str = mputprintf(str, "XER_CANONICAL%s",
+          encoding_options ? "|" : "");
+      }
+      if (encoding_options) str = mputprintf(str, "%s",
+        encoding_options->c_str());
+    } else {
+      if (encoding_options) str = mputprintf(str, ", %s",
+        encoding_options->c_str());
     }
-    if (encoding_options) str = mputprintf(str, ", %s",
-      encoding_options->c_str());
     str = mputstr(str, ");\n");
     const char *result_name;
     switch (prototype) {
@@ -7599,10 +7612,10 @@ namespace Ttcn {
       }
       
       // insert printing type
-      if (json_printing != NULL) {
+      if (printing != NULL) {
         json->put_next_token(JSON_TOKEN_NAME, "printing");
         json->put_next_token(JSON_TOKEN_STRING, 
-          (json_printing->get_printing() == PrintingType::PT_PRETTY) ? 
+          (printing->get_printing() == PrintingType::PT_PRETTY) ? 
           "\"pretty\"" : "\"compact\"");
       }
       

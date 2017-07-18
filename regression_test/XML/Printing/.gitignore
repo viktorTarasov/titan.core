@@ -1,0 +1,8 @@
+*.old
+*.log
+compile
+*.cc
+*.hh
+*.d
+Printing
+Printing.exe

@@ -1537,7 +1537,8 @@ namespace Ttcn {
     Type::MessageEncodingType_t encoding_type;
     string *encoding_options;
     Ttcn::ErrorBehaviorList *eb_list;
-    Ttcn::PrintingType *json_printing;
+    // pretty or compact printing for json or xml
+    Ttcn::PrintingType *printing;
     /// Copy constructor disabled
     Def_ExtFunction(const Def_ExtFunction& p);
     /// %Assignment disabled
@@ -1559,7 +1560,7 @@ namespace Ttcn {
       : Def_Function_Base(true, p_id, p_fpl, p_return_type, returns_template,
           p_template_restriction),
       function_type(EXTFUNC_MANUAL), encoding_type(Type::CT_UNDEF),
-      encoding_options(0), eb_list(0), json_printing(0) { }
+      encoding_options(0), eb_list(0), printing(0) { }
     ~Def_ExtFunction();
     virtual Def_ExtFunction *clone() const;
     virtual void set_fullname(const string& p_fullname);
