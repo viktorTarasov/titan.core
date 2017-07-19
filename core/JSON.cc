@@ -892,9 +892,11 @@ bool encode_bson_oid(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
   // We do not know the name here. It will be inserted later.
   unsigned char hex[12];
   for (size_t i = 0; i < 24; i = i + 2) {
-    if (sscanf(((const char*)id)+i, "%02x", (unsigned int*)&(hex[i/2])) != 1) {
+    unsigned int value;
+    if (sscanf(((const char*)id)+i, "%02x", &value) != 1) {
       TTCN_error("Incorrect binary format while encoding with json2bson()");
     }
+    hex[i/2] = value;
   }
   buff.put_s(12, hex);
   length = length + 12;
@@ -944,9 +946,11 @@ bool encode_bson_ref(TTCN_Buffer& buff, JSON_Tokenizer& tok, INTEGER& length) {
   length = length + name_length;
   unsigned char hex[12];
   for (size_t i = 0; i < 24; i = i + 2) {
-    if (sscanf(((const char*)id)+i, "%02x", (unsigned int*)&(hex[i/2])) != 1) {
+    unsigned int value;
+    if (sscanf(((const char*)id)+i, "%02x", &value) != 1) {
       TTCN_error("Incorrect binary format while encoding with json2bson()");
     }
+    hex[i/2] = value;
   }
   buff.put_s(12, hex);
   length = length + 12;

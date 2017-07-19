@@ -3193,7 +3193,7 @@ OCTETSTRING json2bson(const UNIVERSAL_CHARSTRING& value) {
   buff.clear();
   INTEGER length = 0;
   CHARSTRING cs;
-  bool is_special;
+  bool is_special = false;
   json2bson_coding(buff, tok, false, false, length, cs, is_special);
   buff.get_string(result);
   return result;
