@@ -4,7 +4,7 @@
  * Adrien Kirjak
  *
  ** @version  0.0.1
- ** @purpose  1:6.3.3, Ensure that the IUT correctly handles component compatibility of system and runs on clause
+ ** @purpose  1:6.3.3, Ensure that the IUT correctly handles component compatibility of different system clauses
  ** @verdict  pass reject
  ***************************************************/
 
@@ -29,11 +29,11 @@ module NegSem_060303_component_types_006 {
         port P p2;
     }
     
-    function f_test() runs on GeneralComp system GeneralComp {
+    function f_test() runs on GeneralComp system GeneralCompEx {
 		setverdict(fail);
     }
 
-	testcase TC_NegSem_060303_component_types_006() runs on GeneralCompEx {
+	testcase TC_NegSem_060303_component_types_006() runs on GeneralComp system GeneralComp {
 		f_test(); // is not allowed, because GeneralCompEx is not compatible with the system of the function
 		setverdict(pass);
 	}

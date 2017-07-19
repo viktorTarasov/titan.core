@@ -28,14 +28,13 @@ module Sem_060303_component_types_006 {
     
     type component GeneralCompEx {
         port P p1;
-        port P p2;
     }
     
-    function f_test() runs on GeneralComp system GeneralComp {
+    function f_test() runs on GeneralComp system GeneralCompEx {
 		setverdict(pass);
     }
 
-	testcase TC_Sem_060303_component_types_006() runs on GeneralComp system GeneralCompEx{
+	testcase TC_Sem_060303_component_types_006() runs on GeneralComp system GeneralComp{
 		f_test(); // GeneralCompEx and GeneralComp are system compatible
 		setverdict(pass);
 	}

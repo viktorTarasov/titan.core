@@ -28,7 +28,6 @@ module Sem_060303_component_types_004 {
     
     type component GeneralCompEx {
         port P p1;
-        port P p2;
     }
     
     function f_test() runs on GeneralComp mtc GeneralCompEx {
