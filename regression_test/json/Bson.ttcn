@@ -582,6 +582,30 @@ module Bson {
 			setverdict(fail, match(decoded, json));
 		}
 
+		json := "[1,2]"
+		expected_os := '13000000103000010000001031000200000000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded_json := "{\"0\":1,\"1\":2}";
+		decoded := bson2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
+		json := "[{\"$code\":\"aaa\",\"$scope\":{\"a\":\"b\"}},{\"a\":3},2,\"abc\"]"
+		expected_os := '430000000F30001A00000004000000616161000E000000026100020000006200000330000C000000106100030000000010310002000000023200040000006162630000'O;
+		os := json2bson(json);log(os);
+		if (not match(os, expected_os)) {
+			setverdict(fail, match(os, expected_os));
+		}
+		decoded_json := "{\"0\":{\"$code\":\"aaa\",\"$scope\":{\"a\":\"b\"}},\"0\":{\"a\":3},\"1\":2,\"2\":\"abc\"}"
+		decoded := bson2json(os);
+		if (not match(decoded, decoded_json)) {
+			setverdict(fail, match(decoded, decoded_json));
+		}
+
 		setverdict(pass);
 	}
 

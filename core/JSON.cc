@@ -1103,8 +1103,8 @@ void json2bson_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object,
   size_t len;
   size_t prev_pos = tok.get_buf_pos();
   tok.get_next_token(&token, &content, &len);
-  if (in_object == false && token != JSON_TOKEN_OBJECT_START) {
-    TTCN_error("Json document must be an object when encoding with json2bson()");
+  if (in_object == false && token != JSON_TOKEN_OBJECT_START && token != JSON_TOKEN_ARRAY_START) {
+    TTCN_error("Json document must be an object or array when encoding with json2bson()");
   }
   switch(token) {
     case JSON_TOKEN_OBJECT_START: {
@@ -1246,9 +1246,13 @@ void json2bson_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object,
       put_name(buff, length, obj_name, in_array);
       break; }
     case JSON_TOKEN_ARRAY_START: {
-      buff.put_c(4); // array
-      length = length + 1;
-      put_name(buff, length, obj_name, in_array);
+      if (in_object == false) { // The top level json is an array
+        in_object = true;
+      } else {
+        buff.put_c(4); // array
+        length = length + 1;
+        put_name(buff, length, obj_name, in_array);
+      }
       obj_name = "0"; // arrays are objects but the key is a number which increases
       TTCN_Buffer sub_buff;
       INTEGER sub_length = 0;
