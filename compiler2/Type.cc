@@ -1911,6 +1911,26 @@ namespace Common {
     return false;
   }
 
+  int Type::get_default_raw_fieldlength(){
+    switch(typetype) {
+    case T_REFD:
+      return get_type_refd_last()->get_default_raw_fieldlength();
+      break;
+    case T_INT:
+      return 8;
+      break;
+    case T_BOOL:
+      return 1;
+      break;
+    case T_REAL:
+      return 64;
+      break;
+    default:
+      break;
+    }
+    return 0;
+  }
+
   int Type::get_raw_length(){
     if(!raw_checked) FATAL_ERROR("Type::get_raw_length()");
     if(raw_length_calculated) return raw_length;
@@ -1919,13 +1939,11 @@ namespace Common {
     case T_REFD:
       raw_length=get_type_refd()->get_raw_length();
       break;
-    case T_INT:
-      if(rawattrib) raw_length=rawattrib->fieldlength;
-      else raw_length=8;
-      break;
     case T_BOOL:
+    case T_INT:
+    case T_REAL:
       if(rawattrib) raw_length=rawattrib->fieldlength;
-      else raw_length=1;
+      else raw_length=get_default_raw_fieldlength();
       break;
     case T_BSTR:
     case T_HSTR:
@@ -2011,10 +2029,7 @@ namespace Common {
       restrlength=(int)sub_type->get_length_restriction();
     if(restrlength!=-1){
       if(!rawattrib){
-        Type *t=get_type_refd_last();
-        typetype_t basic_type=t->typetype;
-        rawattrib=new RawAST(basic_type==T_INT);
-        if(basic_type==T_REAL) rawattrib->fieldlength=64;
+        rawattrib=new RawAST(get_default_raw_fieldlength());
       }
       rawattrib->length_restrition=restrlength;
     }
@@ -2199,14 +2214,10 @@ namespace Common {
             CompField *cfield=get_comp_byIndex(i);
             RawAST *field_rawattr=cfield->get_type()->rawattrib;
             if(field_rawattr==NULL){
-              Type *t=cfield->get_type()->get_type_refd_last();
-              typetype_t basic_type=t->typetype;
-              t=cfield->get_type();
+              Type *t=cfield->get_type();
               if(t->is_ref()) t=t->get_type_refd();
               while(!t->rawattrib && t->is_ref()) t=t->get_type_refd();
-              field_rawattr= new RawAST(t->rawattrib,basic_type==T_INT);
-              if(!t->rawattrib && basic_type==T_REAL) field_rawattr->fieldlength=64;
-              cfield->get_type()->rawattrib=field_rawattr;
+              cfield->get_type()->rawattrib= new RawAST(t->rawattrib,cfield->get_type()->get_default_raw_fieldlength());
             }
             if(field_rawattr->padding==0)
               field_rawattr->padding=rawattrib->padding;
@@ -2227,14 +2238,10 @@ namespace Common {
             CompField *cfield=get_comp_byIndex(i);
             RawAST *field_rawattr=cfield->get_type()->rawattrib;
             if(field_rawattr==NULL){
-              Type *t=cfield->get_type()->get_type_refd_last();
-              typetype_t basic_type=t->typetype;
-              t=cfield->get_type();
+              Type *t=cfield->get_type();
               if(t->is_ref()) t=t->get_type_refd();
               while(!t->rawattrib && t->is_ref()) t=t->get_type_refd();
-              field_rawattr= new RawAST(t->rawattrib,basic_type==T_INT);
-              if(!t->rawattrib && basic_type==T_REAL) field_rawattr->fieldlength=64;
-              cfield->get_type()->rawattrib=field_rawattr;
+              cfield->get_type()->rawattrib= new RawAST(t->rawattrib,cfield->get_type()->get_default_raw_fieldlength());
             }
             if(field_rawattr->fieldorder==XDEFDEFAULT)
               field_rawattr->fieldorder=rawattrib->fieldorder;
@@ -2604,7 +2611,7 @@ namespace Common {
       case T_ENUM_T:
       case T_SEQ_T:
       case T_SET_T:
-        rawattrib = new RawAST(false);
+        rawattrib = new RawAST(get_default_raw_fieldlength());
         break;
       default:
         if (is_ref()) get_type_refd()->force_raw();

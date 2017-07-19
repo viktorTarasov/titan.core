@@ -19,14 +19,14 @@
 #include "../main.hh"
 
 RawAST::RawAST(){
-    init_rawast(false);
+    init_rawast(0);
 }
 
-RawAST::RawAST(bool int_type){
-    init_rawast(int_type);
+RawAST::RawAST(int default_length){
+    init_rawast(default_length);
 }
 
-RawAST::RawAST(RawAST *other,bool int_type){
+RawAST::RawAST(RawAST *other, int default_length){
     if(other){
     fieldlength=other->fieldlength;
     comp=other->comp;
@@ -67,11 +67,11 @@ RawAST::RawAST(RawAST *other,bool int_type){
     intx = other->intx;
     stringformat = other->stringformat;
     }
-    else init_rawast(int_type);
+    else init_rawast(default_length);
 }
 
-void RawAST::init_rawast(bool int_type){
-    fieldlength=int_type?8:0;
+void RawAST::init_rawast(int default_length){
+    fieldlength=default_length;
     comp=XDEFDEFAULT;
     byteorder=XDEFDEFAULT;
     align=XDEFDEFAULT;

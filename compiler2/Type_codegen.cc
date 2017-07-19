@@ -690,7 +690,7 @@ void Type::generate_code_rawdescriptor(output_struct *target)
     gennameown_str);
   bool dummy_raw = rawattrib == NULL;
   if (dummy_raw) {
-    rawattrib = new RawAST(get_type_refd_last()->typetype == T_INT);
+    rawattrib = new RawAST(get_type_refd_last()->get_default_raw_fieldlength());
   }
   if (rawattrib->intx) {
     str = mputstr(str, "RAW_INTX,");
@@ -1317,7 +1317,7 @@ void Type::generate_code_Choice(output_struct *target)
   if(sdef.hasRaw) {
     bool dummy_raw = rawattrib == NULL;
     if (dummy_raw) {
-      rawattrib = new RawAST;
+      rawattrib = new RawAST(get_default_raw_fieldlength());
     }
     copy_rawAST_to_struct(rawattrib,&(sdef.raw));
     // building taglist
@@ -1731,7 +1731,7 @@ void Type::generate_code_Se(output_struct *target)
   if(sdef.hasRaw) {
     bool dummy_raw = rawattrib == NULL;
     if (dummy_raw) {
-      rawattrib = new RawAST;
+      rawattrib = new RawAST(get_default_raw_fieldlength());
     }
     copy_rawAST_to_struct(rawattrib,&(sdef.raw));
     // building taglist
@@ -2135,7 +2135,7 @@ void Type::generate_code_SeOf(output_struct *target)
   if(sofdef.hasRaw) {
     bool dummy_raw = rawattrib == NULL;
     if (dummy_raw) {
-      rawattrib = new RawAST;
+      rawattrib = new RawAST(get_default_raw_fieldlength());
     }
     copy_rawAST_to_struct(rawattrib,&(sofdef.raw));
     if (dummy_raw) {

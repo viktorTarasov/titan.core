@@ -838,6 +838,7 @@ namespace Common {
     void chk_raw();
     /** If the type does not have a rawattrib, create one. */
     void force_raw();
+    int get_default_raw_fieldlength();
     void chk_text();
     void chk_text_matching_values(textAST_matching_values *matching_values,
       const char *attrib_name);

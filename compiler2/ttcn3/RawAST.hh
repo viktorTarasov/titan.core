@@ -68,11 +68,12 @@ typedef struct{
 /** Parsed RAW encoder attributes */
 class RawAST{
 private:
-    void init_rawast(bool int_type);
+    void init_rawast(int default_length);
     /** No copying */
     RawAST(const RawAST&);
     /** No assignment */
     RawAST& operator=(const RawAST&);
+    RawAST();
 public:
     int fieldlength;            /**< Nr of bits per character, hexstring : 4,
                                      octetstring and charstring : 8, etc */
@@ -121,12 +122,12 @@ public:
     /** Default constructor.
      *  Calls \c init_rawast(false).
      *  \todo should be merged with the next one */
-    RawAST();
+//    RawAST();
     /** Constructor.
      *  Calls \c init_rawast(int_type). */
-    RawAST(bool int_type);
+    RawAST(int default_length);
     /** Sort-of copy constructor. */
-    RawAST(RawAST *other, bool int_type);
+    RawAST(RawAST *other, int default_length );
     ~RawAST();
     void print_RawAST();
 

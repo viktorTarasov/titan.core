@@ -116,7 +116,7 @@ void Type::chk()
     // If this sequence type has no attributes but one of its fields does,
     // create an empty attribute structure.
     if(!rawattrib && hasVariantAttrs() && hasNeedofRawAttrs())
-      rawattrib = new RawAST;
+      rawattrib = new RawAST(get_default_raw_fieldlength());
     if(!textattrib && hasVariantAttrs() && hasNeedofTextAttrs())
       textattrib = new TextAST;
     if(!xerattrib && hasVariantAttrs() &&  hasNeedofXerAttrs())
@@ -304,13 +304,10 @@ void Type::parse_attributes()
         }
       }
       if(!rawattrib && !override_ref){
-        Type *t=get_type_refd_last(&refch);
-        typetype_t basic_type=t->typetype;
-        t=this; // go back to the beginning
+        Type *t=this; 
         refch.reset();
         while(!t->rawattrib && t->is_ref()) t=t->get_type_refd(&refch);
-        rawattrib=new RawAST(t->rawattrib,basic_type==T_INT);
-        if(!t->rawattrib && basic_type==T_REAL) rawattrib->fieldlength=64;
+        rawattrib=new RawAST(t->rawattrib,t->get_default_raw_fieldlength());
         new_raw=true;
       }
       if(!textattrib && !override_ref){
@@ -350,8 +347,7 @@ void Type::parse_attributes()
     case T_VERDICT: // TTCN-3 verdict, for XER
 
       if(rawattrib==NULL){
-        rawattrib= new RawAST(typetype==T_INT);
-        if(typetype==T_REAL) rawattrib->fieldlength=64;
+        rawattrib= new RawAST(get_default_raw_fieldlength());
         new_raw=true;
       }
       if(textattrib==NULL){textattrib= new TextAST; new_text=true;}
@@ -407,7 +403,7 @@ void Type::parse_attributes()
     case T_SET_T:
     case T_ANYTYPE:
     case T_ARRAY:
-      if(rawattrib==NULL) {rawattrib= new RawAST; new_raw=true;}
+      if(rawattrib==NULL) {rawattrib= new RawAST(get_default_raw_fieldlength()); new_raw=true;}
       if(textattrib==NULL){textattrib= new TextAST; new_text=true;}
       if(xerattrib==NULL) {xerattrib = new XerAttributes; new_xer = true;}
       if(berattrib==NULL) {berattrib = new BerAST; new_ber = true;}
