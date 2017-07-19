@@ -29,12 +29,12 @@ module NegSem_060303_component_types_004 {
         port P p2;
     }
     
-    function f_test() runs on GeneralComp mtc GeneralComp {
+    function f_test() runs on GeneralComp mtc GeneralCompEx {
 		setverdict(fail);
     }
 
-	testcase TC_NegSem_060303_component_types_004() runs on GeneralCompEx {
-		f_test(); // is not allowed, because GeneralCompEx is not compatible with the mtc of the function
+	testcase TC_NegSem_060303_component_types_004() runs on GeneralComp {
+		f_test(); // is not allowed, because GeneralComp is not compatible with the mtc of the function
 		setverdict(pass);
 	}
 	

@@ -8172,12 +8172,12 @@ module NegSem_060303_component_types_004 {
         port P p2;
     }
     
-    function f_test() runs on GeneralComp mtc GeneralComp {
+    function f_test() runs on GeneralComp mtc GeneralCompEx {
 		setverdict(fail);
     }
 
-	testcase TC_NegSem_060303_component_types_004() runs on GeneralCompEx {
-		f_test(); // is not allowed, because GeneralCompEx is not compatible with the mtc of the function
+	testcase TC_NegSem_060303_component_types_004() runs on GeneralComp {
+		f_test(); // is not allowed, because GeneralComp is not compatible with the mtc of the function
 		setverdict(pass);
 	}
 	
@@ -8188,7 +8188,7 @@ module NegSem_060303_component_types_004 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: Mtc clause mismatch: A definition that runs on component type `@NegSem_060303_component_types_004.GeneralCompEx' cannot call function `@NegSem_060303_component_types_004.f_test', which mtc clause is `@NegSem_060303_component_types_004.GeneralComp'
+error: Mtc clause mismatch: A definition that runs on component type `@NegSem_060303_component_types_004.GeneralComp' cannot call function `@NegSem_060303_component_types_004.f_test', which mtc clause is `@NegSem_060303_component_types_004.GeneralCompEx'
 <END_RESULT>
 
 <END_TC>
@@ -8199,23 +8199,23 @@ error: Mtc clause mismatch: A definition that runs on component type `@NegSem_06
 .*---------------------------------------------------------------------*
 :xmp tab=0.
 
-<TC - 060303_005 Ensure that the IUT correctly handles component compatibility of mtc and runs on clause >
+<TC - 060303_005 Ensure that the IUT correctly handles component compatibility of system and runs on clause >
 
 <COMPILE>
 
 <MODULE TTCN NegSem_060303_component_types_005 NegSem_060303_component_types_005.ttcn >
 /******************************************************************************
  ** @version  0.0.1
- ** @purpose  1:6.3.3, Ensure that the IUT correctly handles component compatibility of mtc and runs on clause
+ ** @purpose  1:6.3.3, Ensure that the IUT correctly handles component compatibility of system and runs on clause
  ** @verdict  pass reject
  ***************************************************/
 
 // The following requirements are tested:
-// Mtc compatibility: a function or altstep referring to component type "A" in its mtc clause may be called or
-// started in any context that has a mtc clause of type "B" or a testcase with a runs on clause of type "B" if all the
-// port definitions of "A" have identical definitions in "B". If the type of the mtc is unknown in the calling
-// function, this can lead to runtime errors if the component type "A" is not mtc-compatible with the type of the
-// running mtc. 
+//System compatibility: a function or altstep referring to component type "A" in its system clause may be called
+//or started in any context that has a system clause of type "B" or a test case with a runs on clause of type "B"
+//and no system clause if all the port definitions of "A" have identical definitions in "B". If the type of the
+//system is unknown in the calling function, this can lead to runtime errors if the component type "A" is not
+//system-compatible with the type of the system the current test case was started on.  
 
 module NegSem_060303_component_types_005 { 
 
@@ -8231,12 +8231,12 @@ module NegSem_060303_component_types_005 {
         port P p2;
     }
     
-    function f_test() runs on GeneralComp mtc GeneralCompEx {
+    function f_test() runs on GeneralComp system GeneralCompEx {
 		setverdict(fail);
     }
 
 	testcase TC_NegSem_060303_component_types_005() runs on GeneralComp {
-		f_test(); // is not allowed, because GeneralComp is not compatible with the mtc of the function
+		f_test(); // is not allowed, because GeneralCompEx is not compatible with the system of the function
 		setverdict(pass);
 	}
 	
@@ -8247,7 +8247,7 @@ module NegSem_060303_component_types_005 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: Mtc clause mismatch: A definition that runs on component type `@NegSem_060303_component_types_005.GeneralComp' cannot call function `@NegSem_060303_component_types_005.f_test', which mtc clause is `@NegSem_060303_component_types_005.GeneralCompEx'
+error: System clause mismatch: A definition with system component type `@NegSem_060303_component_types_005.GeneralComp' cannot call function `@NegSem_060303_component_types_005.f_test', which system clause is `@NegSem_060303_component_types_005.GeneralCompEx'
 <END_RESULT>
 
 <END_TC>
@@ -8290,11 +8290,11 @@ module NegSem_060303_component_types_006 {
         port P p2;
     }
     
-    function f_test() runs on GeneralComp system GeneralComp {
+    function f_test() runs on GeneralComp system GeneralCompEx {
 		setverdict(fail);
     }
 
-	testcase TC_NegSem_060303_component_types_006() runs on GeneralCompEx {
+	testcase TC_NegSem_060303_component_types_006() runs on GeneralComp system GeneralComp {
 		f_test(); // is not allowed, because GeneralCompEx is not compatible with the system of the function
 		setverdict(pass);
 	}
@@ -8306,66 +8306,7 @@ module NegSem_060303_component_types_006 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: System clause mismatch: A definition with system component type `@NegSem_060303_component_types_006.GeneralCompEx' cannot call function `@NegSem_060303_component_types_006.f_test', which system clause is `@NegSem_060303_component_types_006.GeneralComp'
-<END_RESULT>
-
-<END_TC>
-:exmp
-
-*---------------------------------------------------------------------*
-:h3. NegSem_060303_component_types_007 negative test
-.*---------------------------------------------------------------------*
-:xmp tab=0.
-
-<TC - 060303_007 Ensure that the IUT correctly handles component compatibility of system and runs on clause >
-
-<COMPILE>
-
-<MODULE TTCN NegSem_060303_component_types_007 NegSem_060303_component_types_007.ttcn >
-/******************************************************************************
- ** @version  0.0.1
- ** @purpose  1:6.3.3, Ensure that the IUT correctly handles component compatibility of system and runs on clause
- ** @verdict  pass reject
- ***************************************************/
-
-// The following requirements are tested:
-//System compatibility: a function or altstep referring to component type "A" in its system clause may be called
-//or started in any context that has a system clause of type "B" or a test case with a runs on clause of type "B"
-//and no system clause if all the port definitions of "A" have identical definitions in "B". If the type of the
-//system is unknown in the calling function, this can lead to runtime errors if the component type "A" is not
-//system-compatible with the type of the system the current test case was started on.  
-
-module NegSem_060303_component_types_007 { 
-
-	type port P message {
-		inout integer;
-	} with {extension "internal"}
-
-	type component GeneralComp {
-		port P p;
-	}
-    
-    type component GeneralCompEx extends GeneralComp {
-        port P p2;
-    }
-    
-    function f_test() runs on GeneralComp system GeneralComp {
-		setverdict(fail);
-    }
-
-	testcase TC_NegSem_060303_component_types_007() runs on GeneralComp system GeneralCompEx {
-		f_test(); // is not allowed, because GeneralCompEx is not compatible with the system of the function
-		setverdict(pass);
-	}
-	
-	control{
-	    execute(TC_NegSem_060303_component_types_007());
-	}
-}
-<END_MODULE>
-
-<RESULT COUNT 1>
-error: System clause mismatch: A definition with system component type `@NegSem_060303_component_types_007.GeneralCompEx' cannot call function `@NegSem_060303_component_types_007.f_test', which system clause is `@NegSem_060303_component_types_007.GeneralComp'
+error: System clause mismatch: A definition with system component type `@NegSem_060303_component_types_006.GeneralComp' cannot call function `@NegSem_060303_component_types_006.f_test', which system clause is `@NegSem_060303_component_types_006.GeneralCompEx'
 <END_RESULT>
 
 <END_TC>
