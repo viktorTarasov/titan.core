@@ -232,7 +232,7 @@ CHARSTRING& CHARSTRING::operator=(const UNIVERSAL_CHARSTRING& other_value)
 boolean CHARSTRING::operator==(const char* other_value) const
 {
   must_bound("Unbound operand of charstring comparison.");
-  if (other_value == NULL) other_value = "";
+  if (other_value == NULL) return val_ptr->n_chars == 0;
   return !strcmp(val_ptr->chars_ptr, other_value);
 }
 
