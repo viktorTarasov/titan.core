@@ -201,7 +201,7 @@ RAW_enc_tree** init_nodes_of_enc_tree(int nodes_num);
 RAW_enc_tr_pos* init_lengthto_fields_list(int num);
 int* init_new_tree_pos(RAW_enc_tr_pos &old_pos,int new_levels, int* new_pos);
 void free_tree_pos(int* ptr);
-int min_of_ints(int num_of_int, ...);
+int min_of_ints(unsigned num_of_int, ...);
 
 extern const TTCN_RAWdescriptor_t INTEGER_raw_;
 extern const TTCN_RAWdescriptor_t BOOLEAN_raw_;

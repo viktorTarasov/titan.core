@@ -4884,7 +4884,7 @@ static char *genRawDecodeRecordField(char *src, const struct_def *sdef,
         );
       }
       src=mputprintf(src,
-        "  value_of_length_field%d+=(int)field_%s%s.%s%s()*%d;\n"
+        "  value_of_length_field%d+=field_%s%s.%s%s().get_long_long_val()*%d;\n"
         ,i,sdef->elements[i].name,sdef->elements[i].isOptional?"()":""
         ,sdef->elements[i].raw.lengthindex->nthfieldname
         ,sdef->elements[i].raw.lengthindex->fieldtype == OPTIONAL_FIELD?"()":""
@@ -4902,7 +4902,7 @@ static char *genRawDecodeRecordField(char *src, const struct_def *sdef,
 	sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "");
       for (m = 1; m < sdef->elements[i].raw.union_member_num + 1; m++) {
 	src = mputprintf(src, "  case %s%s%s:\n"
-	  "    value_of_length_field%d += (int)field_%s%s.%s() * %d;\n"
+	  "    value_of_length_field%d += field_%s%s.%s().get_long_long_val() * %d;\n"
 	  "    break;\n", sdef->elements[i].raw.member_name[0],
 	  "::ALT_",
 	  sdef->elements[i].raw.member_name[m], i, sdef->elements[i].name,
@@ -4916,7 +4916,7 @@ static char *genRawDecodeRecordField(char *src, const struct_def *sdef,
     }
     else{
       src=mputprintf(src,
-        "  value_of_length_field%d+=(int)field_%s%s*%d;\n"
+        "  value_of_length_field%d+=field_%s%s.get_long_long_val()*%d;\n"
         ,i,sdef->elements[i].name,sdef->elements[i].isOptional?"()":""
         ,sdef->elements[i].raw.unit==-1?1:sdef->elements[i].raw.unit
       );
