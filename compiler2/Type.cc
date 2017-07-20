@@ -2218,6 +2218,7 @@ namespace Common {
               if(t->is_ref()) t=t->get_type_refd();
               while(!t->rawattrib && t->is_ref()) t=t->get_type_refd();
               cfield->get_type()->rawattrib= new RawAST(t->rawattrib,cfield->get_type()->get_default_raw_fieldlength());
+              field_rawattr=cfield->get_type()->rawattrib;
             }
             if(field_rawattr->padding==0)
               field_rawattr->padding=rawattrib->padding;
@@ -2242,6 +2243,7 @@ namespace Common {
               if(t->is_ref()) t=t->get_type_refd();
               while(!t->rawattrib && t->is_ref()) t=t->get_type_refd();
               cfield->get_type()->rawattrib= new RawAST(t->rawattrib,cfield->get_type()->get_default_raw_fieldlength());
+              field_rawattr=cfield->get_type()->rawattrib;
             }
             if(field_rawattr->fieldorder==XDEFDEFAULT)
               field_rawattr->fieldorder=rawattrib->fieldorder;
