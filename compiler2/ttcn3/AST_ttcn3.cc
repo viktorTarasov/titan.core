@@ -7199,21 +7199,26 @@ namespace Ttcn {
       } else {
         str = mputstr(str, ", 0");
       }
-    }  else if (encoding_type == Type::CT_XER) {
+    } else if (encoding_type == Type::CT_XER) {
       bool compact_printing =
         printing != NULL && printing->get_printing() == PrintingType::PT_COMPACT;
       if (compact_printing || encoding_options) {
         str = mputstr(str, ", ");
+        if (compact_printing) {
+          str = mputprintf(str, "XER_CANONICAL%s",
+            encoding_options ? "|" : "");
+        }
+        if (encoding_options) str = mputprintf(str, "%s",
+          encoding_options->c_str());
+      } else {
+        str = mputstr(str, ", 0");
       }
-      if (compact_printing) {
-        str = mputprintf(str, "XER_CANONICAL%s",
-          encoding_options ? "|" : "");
-      }
-      if (encoding_options) str = mputprintf(str, "%s",
-        encoding_options->c_str());
     } else {
-      if (encoding_options) str = mputprintf(str, ", %s",
-        encoding_options->c_str());
+      if (encoding_options) {
+        str = mputprintf(str, ", %s", encoding_options->c_str());
+      } else {
+        str = mputstr(str, ", 0");
+      }
     }
     str = mputstr(str, ");\n");
     const char *result_name;
