@@ -177,11 +177,11 @@ void LegacyLogger::fatal_error(const char *err_msg, ...)
 void LegacyLogger::log(const TitanLoggerApi::TitanLogEvent& event,
     boolean log_buffered, boolean separate_file, boolean use_emergency_mask)
 {
-  const TTCN_Logger::Severity& severity = (const TTCN_Logger::Severity)(int)event.severity();
 
   if (separate_file) {
     log_file_emerg(event);
   } else {
+    const TTCN_Logger::Severity& severity = (const TTCN_Logger::Severity)(int)event.severity();
     if (use_emergency_mask) {
       if (TTCN_Logger::should_log_to_emergency(severity)
           ||
@@ -262,10 +262,10 @@ boolean LegacyLogger::log_file(const TitanLoggerApi::TitanLogEvent& event,
 {
   if (!this->log_fp_) return FALSE;
 
-  struct timeval event_timestamp = { (time_t)event.timestamp().seconds(),
-    (suseconds_t)event.timestamp().microSeconds() };
   if (this->is_disk_full_) {
     if (this->disk_full_action_.type == TTCN_Logger::DISKFULL_RETRY) {
+      struct timeval event_timestamp = { (time_t)event.timestamp().seconds(),
+        (suseconds_t)event.timestamp().microSeconds() };
       struct timeval diff;
       // If the specified time period has elapsed retry logging to file.
       if (event_timestamp.tv_usec < this->disk_full_time_.tv_usec) {
@@ -1801,10 +1801,10 @@ char *event_to_str(const TitanLoggerApi::TitanLogEvent& event,
           if (sourceinfo) sourceinfo = mputstr(sourceinfo, "->");
           const char *file_name = loc.filename();
           int line_number = loc.line();
-          const char *entity_name = loc.ent__name();
-          API::LocationInfo_ent__type entity_type = loc.ent__type();
           sourceinfo = mputprintf(sourceinfo, "%s:%u", file_name, line_number);
           if (TTCN_Logger::get_log_entity_name()) {
+            API::LocationInfo_ent__type entity_type = loc.ent__type();
+            const char *entity_name = loc.ent__name();
             switch (entity_type) {
             case API::LocationInfo_ent__type::controlpart:
               sourceinfo = mputprintf(sourceinfo, "(controlpart:%s)", entity_name);

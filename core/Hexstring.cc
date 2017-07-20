@@ -427,13 +427,13 @@ HEXSTRING HEXSTRING::operator>>(int shift_count) const
     int n_nibbles = val_ptr->n_nibbles;
     if (n_nibbles == 0) return *this;
     HEXSTRING ret_val(n_nibbles);
-    int n_bytes = (n_nibbles + 1) / 2;
     clear_unused_nibble();
     if (shift_count > n_nibbles) shift_count = n_nibbles;
     int shift_bytes = shift_count / 2;
     memset(ret_val.val_ptr->nibbles_ptr, 0, shift_bytes);
     if (shift_count % 2) {
       ret_val.val_ptr->nibbles_ptr[shift_bytes] = val_ptr->nibbles_ptr[0] << 4;
+      int n_bytes = (n_nibbles + 1) / 2;
       int byte_count = shift_bytes + 1;
       for (; byte_count < n_bytes; byte_count++) {
         ret_val.val_ptr->nibbles_ptr[byte_count]

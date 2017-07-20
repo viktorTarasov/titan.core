@@ -706,9 +706,9 @@ namespace Ttcn {
           act_field_err.qualifier->get_stringRepr().c_str(), omit_after_qual->get_stringRepr().c_str());
         continue;
       }
-      ErroneousAttributeSpec::indicator_t act_indicator = act_field_err.err_attr->get_indicator();
-      bool is_omit = act_field_err.err_attr->get_is_omit();
       if (act_field_err.subrefs_array.size()==1) { // erroneous value
+        ErroneousAttributeSpec::indicator_t act_indicator = act_field_err.err_attr->get_indicator();
+        bool is_omit = act_field_err.err_attr->get_is_omit();
         if (act_field_err.type_array.size()!=1) FATAL_ERROR("ErroneousAttributes::build_descr_tree()");
         if ((act_field_err.type_array[0]->get_typetype()==Type::T_SET_A) &&
             is_omit && (act_indicator!=ErroneousAttributeSpec::I_VALUE)) {

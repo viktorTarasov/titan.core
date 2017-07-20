@@ -52,7 +52,6 @@ int do_indent(TTCN_Buffer& buf, int level)
 const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, boolean exer)
 {
   const char *name = (const char*)reader.LocalName();
-  const char *nsuri= (const char*)reader.NamespaceUri(); // NULL if no ns
 
   const namespace_t *expected_ns = 0;
   if (p_td.my_module != 0 && p_td.ns_index != -1) {
@@ -72,6 +71,7 @@ const char* verify_name(XmlReaderWrap& reader, const XERdescriptor_t& p_td, bool
 
   if (exer) { // XML namespaces only apply to EXER
     const char *prefix = (const char*)reader.Prefix(); // may be NULL
+    const char *nsuri = (const char*)reader.NamespaceUri(); // NULL if no ns
     if (expected_ns == 0) { // get_ns was not called
       if (nsuri != 0) {
         TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_TAG,

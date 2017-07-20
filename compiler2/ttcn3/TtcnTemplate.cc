@@ -3129,9 +3129,9 @@ end:
     case NAMED_TEMPLATE_LIST:
       for (size_t i = 0;i < u.named_templates->get_nof_nts(); i++) {
         NamedTemplate *nt = u.named_templates->get_nt_byIndex(i);
-        Template* tmpl = nt->get_template();
         const string& name = nt->get_name().get_name();
         if (!checked_map.has_key(name)) {
+          Template* tmpl = nt->get_template();
           bool nrc = tmpl->chk_restriction(definition_name, TR_OMIT, usage_loc);
           needs_runtime_check = needs_runtime_check || nrc;
           checked_map.add(name, 0);

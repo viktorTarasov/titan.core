@@ -515,11 +515,11 @@ void append_to_library_list (const char* prjName,
     actcfg);
   XPathObject exeObj(run_xpath(xpathCtx, exeXpath));
   Free(exeXpath);
-  std::string lib_name;
   if (exeObj->nodesetval && exeObj->nodesetval->nodeNr > 0) {
     const char* target_executable = (const char*)exeObj->nodesetval->nodeTab[0]->content;
     autostring target_exe_dir(get_dir_from_path(target_executable));
     autostring target_exe_file(get_file_from_path(target_executable));
+    std::string lib_name;
     lib_name = target_exe_file;
     ProjectDescriptor* projDesc = projGenHelper.getTargetOfProject(prjName);
     if (projDesc) {
@@ -1588,8 +1588,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
   map<cstring, const char> path_vars;
   
   autostring workdir;
-  
-  autostring proj_abs_workdir;
 
   autostring abs_workdir;
 
@@ -1798,6 +1796,8 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
   }
   const char *real_workdir = folders[workdir]; // This is relative to the location of the tpd file
   excluded_folders.add(real_workdir); // excluded by convention
+  
+  autostring proj_abs_workdir;
 
   // If -D flag was specified then we ignore the workdir
   // in the TPD (the current dir is considered the work dir).
@@ -2193,7 +2193,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = preincludeObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)preincludeObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (ttcn3_prep_includes) {
@@ -2206,6 +2205,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)preincludeObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
       }
@@ -2223,7 +2223,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = ttcn3predefinesObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      const char* content = (const char*)ttcn3predefinesObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (ttcn3_prep_defines) {
@@ -2236,6 +2235,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        const char* content = (const char*)ttcn3predefinesObj->nodesetval->nodeTab[i]->content;
         last_elem->str = mcopystr(content);
       }
     }
@@ -2252,7 +2252,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = ttcn3preUndefinesObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      const char* content = (const char*)ttcn3preUndefinesObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (ttcn3_prep_undefines) {
@@ -2265,6 +2264,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        const char* content = (const char*)ttcn3preUndefinesObj->nodesetval->nodeTab[i]->content;
         last_elem->str = mcopystr(content);
       }
     }
@@ -2282,7 +2282,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = preincludesObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)preincludesObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (prep_includes) {
@@ -2295,6 +2294,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)preincludesObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
       }
@@ -2312,7 +2312,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = predefinesObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      const char* content = (const char*)predefinesObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (prep_defines) {
@@ -2325,6 +2324,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        const char* content = (const char*)predefinesObj->nodesetval->nodeTab[i]->content;
         last_elem->str = mcopystr(content);
       }
     }
@@ -2341,7 +2341,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = preUndefinesObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      const char* content = (const char*)preUndefinesObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (prep_undefines) {
@@ -2354,6 +2353,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        const char* content = (const char*)preUndefinesObj->nodesetval->nodeTab[i]->content;
         last_elem->str = mcopystr(content);
       }
     }
@@ -2406,12 +2406,11 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = solspeclibObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)solspeclibObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (solspeclibs) {
         // go to last element
-        struct string_list* last_elem =solspeclibs;
+        struct string_list* last_elem = solspeclibs;
         while (last_elem->next) last_elem = last_elem->next;
         // add string to last element if empty or create new last element and add it to that
         if (last_elem->str) {
@@ -2419,6 +2418,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)solspeclibObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
       }
@@ -2436,7 +2436,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = sol8speclibObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)sol8speclibObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (sol8speclibs) {
@@ -2449,6 +2448,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)sol8speclibObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
       }
@@ -2466,7 +2466,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = linuxspeclibObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)linuxspeclibObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (linuxspeclibs) {
@@ -2479,6 +2478,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)linuxspeclibObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
       }
@@ -2496,7 +2496,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = freebsdspeclibObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)freebsdspeclibObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (freebsdspeclibs) {
@@ -2509,6 +2508,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)freebsdspeclibObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
       }
@@ -2526,7 +2526,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = win32speclibObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)win32speclibObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (win32speclibs) {
@@ -2539,6 +2538,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)win32speclibObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
       }
@@ -2570,7 +2570,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = additionalObjectsObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)additionalObjectsObj->nodesetval->nodeTab[i]->content;
 
       // add to the end of list
       if (additionalObjects) {
@@ -2583,6 +2582,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)additionalObjectsObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
       }
@@ -2610,7 +2610,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = linkerlibsObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)linkerlibsObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (linkerlibs) {
@@ -2623,6 +2622,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)linkerlibsObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
 
@@ -2643,7 +2643,6 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
     xmlNodeSetPtr nodes = linkerlibsearchObj->nodesetval;
 
     if (nodes) for (int i = 0; i < nodes->nodeNr; ++i) {
-      char* content = (char*)linkerlibsearchObj->nodesetval->nodeTab[i]->content;
 
       // add includes to the end of list
       if (linkerlibsearchp) {
@@ -2656,6 +2655,7 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
           last_elem = last_elem->next;
           last_elem->next = NULL;
         }
+        char* content = (char*)linkerlibsearchObj->nodesetval->nodeTab[i]->content;
         replacechar(&content);
         last_elem->str = content;
 
@@ -2672,8 +2672,8 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
       actcfg);
     XPathObject generatorCommandObj(run_xpath(xpathCtx, generatorCommandXpath));
     Free(generatorCommandXpath);
-    autostring generatorCommand;
     if (generatorCommandObj->nodesetval && generatorCommandObj->nodesetval->nodeNr > 0) {
+      autostring generatorCommand;
       generatorCommand = mcopystr((const char*)generatorCommandObj->nodesetval->nodeTab[0]->content);
       // run the command and capture the output
       printf("Executing generator command `%s' specified in `%s'...\n", (const char*)generatorCommand, (const char*)abs_tpd_name);
@@ -3212,11 +3212,11 @@ static tpd_result process_tpd_internal(const char **p_tpd_name, char *tpdName, c
   }
   // Print the TPD too.
   if (*p_Pflag) {
-    autostring dir_part(get_dir_from_path(*p_tpd_name));
-    autostring file_part(get_file_from_path(*p_tpd_name));
     if (*p_aflag) {
       puts((const char *)abs_tpd_name);
     } else {
+      autostring dir_part(get_dir_from_path(*p_tpd_name));
+      autostring file_part(get_file_from_path(*p_tpd_name));
       autostring rel_dir_part(get_relative_dir(dir_part, file_list_path ? file_list_path : abs_tpd_dir));
       autostring rel_dir_file_part(compose_path_name(rel_dir_part, file_part));
       const char *rel_tpd_name = (const char *)rel_dir_file_part;

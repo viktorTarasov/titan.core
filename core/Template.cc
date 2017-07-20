@@ -2288,12 +2288,12 @@ void Set_Of_Template::log_matchv(const Base_Type* match_value, boolean legacy) c
       TTCN_Logger::print_logmatch_buffer();
       TTCN_Logger::log_event_str(" matched");
     } else {
-      size_t previous_size = TTCN_Logger::get_logmatch_buffer_len();
       if (template_selection == SPECIFIC_VALUE) {
         const Record_Of_Type* setof_value = static_cast<const Record_Of_Type*>(match_value);
         log_match_heuristics(setof_value, setof_value->size_of(), this,
           single_value.n_elements, match_function_specific, log_function, legacy);
       } else {
+        size_t previous_size = TTCN_Logger::get_logmatch_buffer_len();
         if (previous_size != 0) {
           TTCN_Logger::print_logmatch_buffer();
           TTCN_Logger::set_logmatch_buffer_len(previous_size);

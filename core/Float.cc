@@ -946,7 +946,7 @@ int FLOAT::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
 {
   bound_flag = FALSE;
   boolean exer  = is_exer(flavor);
-  int success = reader.Ok(), depth = -1;
+  int success = reader.Ok();
   if (success <= 0) return 0;
   boolean own_tag = !(exer && (p_td.xer_bits & UNTAGGED)) && !is_exerlist(flavor);
 
@@ -989,6 +989,7 @@ tagless:
     // Let the caller do reader.AdvanceAttribute();
   }
   else {
+    int depth = -1;
     for (; success == 1; success = reader.Read()) {
       int type = reader.NodeType();
       if (XML_READER_TYPE_ELEMENT == type) {

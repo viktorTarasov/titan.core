@@ -1256,7 +1256,6 @@ int Record_Of_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
   limit -= prepaddlength;
   int decoded_length = 0;
   int decoded_field_length = 0;
-  size_t start_of_field = 0;
   if (first_call) {
     set_size(0);
   }
@@ -1279,6 +1278,7 @@ int Record_Of_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td,
       if (!first_call) return -1;
       goto finished;
     }
+    size_t start_of_field = 0;
     while (limit > 0) {
       start_of_field = buff.get_pos_bit();
       Base_Type* field_bt = get_at(a); // non-const, extend the record-of
@@ -1587,10 +1587,9 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
   for (int nof_elements = 0; TRUE; ++nof_elements) {
     // Read value tokens until we reach some other token
     size_t buf_pos = p_tok.get_buf_pos();
-    size_t ret_val;
     if (NULL != p_td.json && p_td.json->metainfo_unbound) {
       // check for metainfo object
-      ret_val = p_tok.get_next_token(&token, NULL, NULL);
+      size_t ret_val = p_tok.get_next_token(&token, NULL, NULL);
       if (JSON_TOKEN_OBJECT_START == token) {
         char* value = NULL;
         size_t value_len = 0;
@@ -3413,7 +3412,6 @@ int Record_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff
 {
   int field_cnt = get_count();
   int opt_cnt = optional_count();
-  int mand_num = field_cnt - opt_cnt; // expected mandatory fields
 
   raw_order_t local_top_order;
   if (p_td.raw->top_bit_order == TOP_BIT_INHERITED) local_top_order = top_bit_ord;
@@ -3463,6 +3461,7 @@ int Record_Type::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff
 continue_while: ;
     }
     delete[] field_map;
+    int mand_num = field_cnt - opt_cnt; // expected mandatory fields
     if (mand_num > 0 && nof_mand_fields != mand_num) {
       /* Not all required fields were decoded. If there are no bits left,
        * that means that the last field was decoded successfully but used up
@@ -4062,10 +4061,6 @@ const XERdescriptor_t* Record_Type::xer_descr(int /*field_index*/) const
 char ** Record_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& def_ns, unsigned int flavor) const
 {
   const int field_cnt = get_count();
-  // The USE-ORDER member is first, unless preempted by EMBED-VALUES
-  const int uo_index = ((p_td.xer_bits & EMBED_VALUES) !=0);
-  // Index of the first "normal" member (after E-V and U-O)
-  const int start_at = uo_index + ((p_td.xer_bits & USE_ORDER) != 0);
 
   size_t num_collected = 0;
   // First, our own namespace. Sets num_collected to 0 or 1.
@@ -4083,7 +4078,12 @@ char ** Record_Type::collect_ns(const XERdescriptor_t& p_td, size_t& num, bool& 
 
       collected_ns[num_collected-1] = mprintf(" xmlns:%s='%s'", c_ns->px, c_ns->ns);
     }
-
+  
+    // The USE-ORDER member is first, unless preempted by EMBED-VALUES
+    const int uo_index = ((p_td.xer_bits & EMBED_VALUES) !=0);
+    // Index of the first "normal" member (after E-V and U-O)
+    const int start_at = uo_index + ((p_td.xer_bits & USE_ORDER) != 0);
+    
     // Collect namespace declarations from all components (recursively).
     // This is extremely nasty, but we can't prosecute you for that.
     // (Monty Python - Crunchy Frog sketch). This whole thing is O(n^3). Yuck.
@@ -4141,9 +4141,6 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
   const int num_attributes = get_xer_num_attr();
   // The USE-ORDER member is first, unless preempted by EMBED-VALUES
   const int uo_index = ((p_td.xer_bits & EMBED_VALUES) !=0);
-  // Index of the first "normal" member (after E-V and U-O)
-  const int start_at = uo_index + ((p_td.xer_bits & USE_ORDER) != 0);
-  const int first_nonattr = start_at + num_attributes;
   // start_tag_len is keeping track of how much was written at the end of the
   // start tag, i.e. the ">\n". This is used later to "back up" over it.
   int start_tag_len = 1 + indenting;
@@ -4282,7 +4279,11 @@ int Record_Type::XER_encode(const XERdescriptor_t& p_td, TTCN_Buffer& p_buf,
       flavor &= ~DEF_NS_PRESENT;
       flavor |=  DEF_NS_SQUASHED;
     }
-
+    
+    // Index of the first "normal" member (after E-V and U-O)
+    const int start_at = uo_index + ((p_td.xer_bits & USE_ORDER) != 0);
+    const int first_nonattr = start_at + num_attributes;
+    
     /* First all the attributes (not added to sub_len) */
     int i;
     for (i = start_at; i < first_nonattr; ++i) {
