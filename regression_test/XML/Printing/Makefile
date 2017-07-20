@@ -83,7 +83,7 @@ DEPFILES = $(USER_OBJECTS:.o=.d)  $(GENERATED_OBJECTS:.o=.d)
 OTHER_FILES = Makefile
 
 # The name of the executable test suite:
-TARGET = UseNilLong
+TARGET = Printing
 
 #
 # Rules for building the executable...
