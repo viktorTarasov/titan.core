@@ -172,17 +172,28 @@ namespace Ttcn {
   Type *StatementBlock::get_mtc_system_comptype(bool is_system)
   {
     // return NULL outside test cases
-    if (!my_def || my_def->get_asstype() != Common::Assignment::A_TESTCASE)
+    if (!my_def)
       return 0;
-    if (is_system) {
-      Def_Testcase *t_tc = dynamic_cast<Def_Testcase*>(my_def);
-      if (!t_tc) FATAL_ERROR("StatementBlock::get_mtc_system_comptype()");
-      Type *system_ct = t_tc->get_SystemType();
-      if (system_ct) return system_ct;
-      // otherwise (if the testcase has no system clause) the type of 'system'
-      // is the same as the type of 'mtc' (which is given in 'runs on' clause)
+    Common::Assignment::asstype_t asstype = my_def->get_asstype();
+    if (asstype == Common::Assignment::A_TESTCASE) {
+      if (is_system) {
+        Def_Testcase *t_tc = dynamic_cast<Def_Testcase*>(my_def);
+        if (!t_tc) FATAL_ERROR("StatementBlock::get_mtc_system_comptype()");
+        Type *system_ct = t_tc->get_SystemType();
+        if (system_ct) return system_ct;
+        // otherwise (if the testcase has no system clause) the type of 'system'
+        // is the same as the type of 'mtc' (which is given in 'runs on' clause)
+      }
+      return my_def->get_RunsOnType();
+    } else if (asstype == Common::Assignment::A_FUNCTION || asstype == Common::Assignment::A_ALTSTEP) {
+      if (is_system) {
+        return my_def->get_SystemType();
+      } else {
+        return my_def->get_MtcType();
+      }
+    } else {
+      return 0;
     }
-    return my_def->get_RunsOnType();
   }
 
   Ttcn::StatementBlock *StatementBlock::get_statementblock_scope()
