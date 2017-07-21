@@ -66,6 +66,28 @@ with {
 }
 
 /* * * * * * * * * * */
+
+group xer {
+
+type union Ex {
+  record {
+    integer i
+  } a,
+  record of universal charstring strs
+}
+
+external function enc_x(in Ex e, out bitstring o)
+with { extension "prototype(fast) encode(XER:XER_EXTENDED)" }
+
+external function dec_x(inout bitstring o, out Ex e) return integer
+with { extension "prototype(sliding) decode(XER:XER_EXTENDED)" }
+
+}
+with {
+  encode "XML";
+}
+
+/* * * * * * * * * * */
 type record Data {
   integer int,
   universal charstring str

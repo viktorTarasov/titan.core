@@ -7390,7 +7390,7 @@ namespace Ttcn {
     } else {
       // result handling and debug printout for sliding decoders
       str = mputstr(str, "switch (TTCN_EncDec::get_last_error_type()) {\n"
-        "case TTCN_EncDec::ET_NONE:\n"
+        "case TTCN_EncDec::ET_NONE: {\n"
         // TTCN_Buffer::get_string will call OCTETSTRING::clean_up()
         "ttcn_buffer.cut();\n");
       if (input_type->get_type_refd_last()->get_typetype_ttcn3() ==
@@ -7410,7 +7410,7 @@ namespace Ttcn {
         "%s.log();\n"
         "TTCN_Logger::end_event();\n"
         "}\n"
-        "%sreturn 0;\n"
+        "%sreturn 0; }\n"
         "case TTCN_EncDec::ET_INCOMPL_MSG:\n"
         "case TTCN_EncDec::ET_LEN_ERR:\n"
         "%sreturn 2;\n"
