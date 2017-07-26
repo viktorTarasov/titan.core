@@ -139,6 +139,7 @@ Compressed update site and SHA512 checksum:
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.CoAP.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MQTT.git 
 * git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.STOMP.git
+* git://git.eclipse.org/gitroot/titan/titan.ProtocolModules.MongoDB.git
 
 
 ## Protocol Emulations
