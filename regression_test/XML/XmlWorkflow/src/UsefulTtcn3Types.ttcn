@@ -21,48 +21,48 @@
 module UsefulTtcn3Types {
 
 
-    type integer byte (-128 .. 127) with { variant "/* 8 bit */" };
+    type integer byte (-128 .. 127) /*with { variant "8 bit" }*/;
 
-    type integer unsignedbyte (0 .. 255) with { variant "/*unsigned 8 bit*/" };
+    type integer unsignedbyte (0 .. 255) /*with { variant "unsigned 8 bit" }*/;
 
-    type integer short (-32768 .. 32767) with { variant "/*16 bit*/" };
+    type integer short (-32768 .. 32767) /*with { variant "16 bit" }*/;
 
-    type integer unsignedshort (0 .. 65535) with { variant "/*unsigned 16 bit*/" };
+    type integer unsignedshort (0 .. 65535) /*with { variant "unsigned 16 bit" }*/;
 
-    type integer long (-2147483648 .. 2147483647) with { variant "/*32 bit*/" };
+    type integer long (-2147483648 .. 2147483647) /*with { variant "32 bit" }*/;
 
-    type integer unsignedlong (0 .. 4294967295) with { variant "/*unsigned 32 bit*/" };
+    type integer unsignedlong (0 .. 4294967295) /*with { variant "unsigned 32 bit" }*/;
 
-    type integer longlong /* (  -9223372036854775808 .. 9223372036854775807 ) */ with { variant "/*64 bit*/" };
+    type integer longlong ( -9223372036854775808 .. 9223372036854775807 ) /*with { variant "64 bit" }*/;
 
-    type integer unsignedlonglong /* ( 0 .. 18446744073709551615 ) */ with { variant "/*unsigned 64 bit*/" };
+    type integer unsignedlonglong ( 0 .. 18446744073709551615 ) /*with { variant "unsigned 64 bit" }*/;
 
-    type float IEEE754float with { variant "/*IEEE754 float*/" };
+    type float IEEE754float /*with { variant "IEEE754 float" }*/;
 
-    type float IEEE754double with { variant "/*IEEE754 double*/" };
+    type float IEEE754double /*with { variant "IEEE754 double" }*/;
 
-    type float IEEE754extfloat with { variant "/*IEEE754 extended float*/" };
+    type float IEEE754extfloat /*with { variant "IEEE754 extended float" }*/;
 
-    type float IEEE754extdouble with { variant "/*IEEE754 extended double*/" };
+    type float IEEE754extdouble /*with { variant "IEEE754 extended double" }*/;
 
-    type universal charstring utf8string with { variant "/*UTF-8*/" };
+    type universal charstring utf8string /*with { variant "UTF-8" }*/;
 
-    type universal charstring bmpstring ( char ( 0,0,0,0 ) .. char ( 0,0,255,255) ) with { variant "/*UCS-2*/" };
+    type universal charstring bmpstring ( char ( 0,0,0,0 ) .. char ( 0,0,255,255) ) /*with { variant "UCS-2" }*/;
 
-    type universal charstring utf16string ( char ( 0,0,0,0 ) .. char ( 0,16,255,255) ) with { variant "/*UTF-16*/" };
+    type universal charstring utf16string ( char ( 0,0,0,0 ) .. char ( 0,16,255,255) ) /*with { variant "UTF-16" }*/;
 
-    type universal charstring iso8859string ( char ( 0,0,0,0 ) .. char ( 0,0,0,255) ) with { variant "/*8 bit*/" };
+    type universal charstring iso8859string ( char ( 0,0,0,0 ) .. char ( 0,0,0,255) ) /*with { variant "8 bit" }*/;
 
     type record IDLfixed
     {
-    	unsignedshort digits,
-    	short scale,
-    	charstring value_
+        unsignedshort digits,
+        short scale,
+        charstring value_
     }
-    with {
-    variant "/*IDL:fixed FORMAL/01-12-01 v.2.6*/";
-    };
-
+    /*with {
+    variant "IDL:fixed FORMAL/01-12-01 v.2.6";
+    }*/;
+    
     /*
     type charstring char length (1);
 

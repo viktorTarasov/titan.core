@@ -22,37 +22,37 @@ const char * moduleUsefulTtcn3Types = {
   "module UsefulTtcn3Types {\n\n\n"
 
 
-  "    type integer byte (-128 .. 127) with { variant \"/* 8 bit */\" };\n\n"
+  "    type integer byte (-128 .. 127) /*with { variant \"8 bit\" }*/;\n\n"
 
-  "    type integer unsignedbyte (0 .. 255) with { variant \"/*unsigned 8 bit*/\" };\n\n"
+  "    type integer unsignedbyte (0 .. 255) /*with { variant \"unsigned 8 bit\" }*/;\n\n"
 
-  "    type integer short (-32768 .. 32767) with { variant \"/*16 bit*/\" };\n\n"
+  "    type integer short (-32768 .. 32767) /*with { variant \"16 bit\" }*/;\n\n"
 
-  "    type integer unsignedshort (0 .. 65535) with { variant \"/*unsigned 16 bit*/\" };\n\n"
+  "    type integer unsignedshort (0 .. 65535) /*with { variant \"unsigned 16 bit\" }*/;\n\n"
 
-  "    type integer long (-2147483648 .. 2147483647) with { variant \"/*32 bit*/\" };\n\n"
+  "    type integer long (-2147483648 .. 2147483647) /*with { variant \"32 bit\" }*/;\n\n"
 
-  "    type integer unsignedlong (0 .. 4294967295) with { variant \"/*unsigned 32 bit*/\" };\n\n"
+  "    type integer unsignedlong (0 .. 4294967295) /*with { variant \"unsigned 32 bit\" }*/;\n\n"
 
-  "    type integer longlong ( -9223372036854775808 .. 9223372036854775807 ) with { variant \"/*64 bit*/\" };\n\n"
+  "    type integer longlong ( -9223372036854775808 .. 9223372036854775807 ) /*with { variant \"64 bit\" }*/;\n\n"
 
-  "    type integer unsignedlonglong ( 0 .. 18446744073709551615 ) with { variant \"/*unsigned 64 bit*/\" };\n\n"
+  "    type integer unsignedlonglong ( 0 .. 18446744073709551615 ) /*with { variant \"unsigned 64 bit\" }*/;\n\n"
 
-  "    type float IEEE754float with { variant \"/*IEEE754 float*/\" };\n\n"
+  "    type float IEEE754float /*with { variant \"IEEE754 float\" }*/;\n\n"
 
-  "    type float IEEE754double with { variant \"/*IEEE754 double*/\" };\n\n"
+  "    type float IEEE754double /*with { variant \"IEEE754 double\" }*/;\n\n"
 
-  "    type float IEEE754extfloat with { variant \"/*IEEE754 extended float*/\" };\n\n"
+  "    type float IEEE754extfloat /*with { variant \"IEEE754 extended float\" }*/;\n\n"
 
-  "    type float IEEE754extdouble with { variant \"/*IEEE754 extended double*/\" };\n\n"
+  "    type float IEEE754extdouble /*with { variant \"IEEE754 extended double\" }*/;\n\n"
 
-  "    type universal charstring utf8string with { variant \"/*UTF-8*/\" };\n\n"
+  "    type universal charstring utf8string /*with { variant \"UTF-8\" }*/;\n\n"
 
-  "    type universal charstring bmpstring ( char ( 0,0,0,0 ) .. char ( 0,0,255,255) ) with { variant \"/*UCS-2*/\" };\n\n"
+  "    type universal charstring bmpstring ( char ( 0,0,0,0 ) .. char ( 0,0,255,255) ) /*with { variant \"UCS-2\" }*/;\n\n"
 
-  "    type universal charstring utf16string ( char ( 0,0,0,0 ) .. char ( 0,16,255,255) ) with { variant \"/*UTF-16*/\" };\n\n"
+  "    type universal charstring utf16string ( char ( 0,0,0,0 ) .. char ( 0,16,255,255) ) /*with { variant \"UTF-16\" }*/;\n\n"
 
-  "    type universal charstring iso8859string ( char ( 0,0,0,0 ) .. char ( 0,0,0,255) ) with { variant \"/*8 bit*/\" };\n\n"
+  "    type universal charstring iso8859string ( char ( 0,0,0,0 ) .. char ( 0,0,0,255) ) /*with { variant \"8 bit\" }*/;\n\n"
 
   "    type record IDLfixed\n"
   "    {\n"
@@ -60,9 +60,9 @@ const char * moduleUsefulTtcn3Types = {
   "    	short scale,\n"
   "    	charstring value_\n"
   "    }\n"
-  "    with {\n"
-  "    variant \"/*IDL:fixed FORMAL/01-12-01 v.2.6*/\";\n"
-  "    };\n\n"
+  "    /*with {\n"
+  "    variant \"IDL:fixed FORMAL/01-12-01 v.2.6\";\n"
+  "    }*/;\n\n"
 
   "    /*\n"
   "    type charstring char length (1);\n\n"
