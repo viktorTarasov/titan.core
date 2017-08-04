@@ -1,7 +1,18 @@
 /******************************************************************************
- * Copyright (C) 2017 ETSI  All Rights Reserved.
+ * Copyright (c) ETSI 2017.
  *
- * Adrien Kirjak
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
  *
  ** @version  0.0.1
  ** @purpose  1:6.1.2.5, Assign quadruple values to pattern restricted character strings.
@@ -15,7 +26,7 @@ module NegSyn_06010205_StringPattern_002 {
     type component GeneralComp {}
     
     testcase TC_NegSyn_06010205_StringPattern_002() runs on GeneralComp {
-        var MyString v_c := "ÃÂÃÂ´abc";    //error: not a legal character of the TTCN 3 charstring type
+        var MyString v_c := "ÃÂÃÂÃÂÃÂ´abc";    //error: not a legal character of the TTCN 3 charstring type
     }
     
     control{
