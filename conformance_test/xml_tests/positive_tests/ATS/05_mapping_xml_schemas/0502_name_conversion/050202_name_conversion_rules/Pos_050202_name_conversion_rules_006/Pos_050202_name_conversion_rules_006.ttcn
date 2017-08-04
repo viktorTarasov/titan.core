@@ -1,7 +1,18 @@
 /******************************************************************************
- * Copyright (C) 2017 ETSI  All Rights Reserved.
+ * Copyright (c) ETSI 2017.
  *
- * Adrien Kirjak
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission
+ * is hereby granted, free of charge, to copy, reproduce and amend this file
+ * under the following conditions: It is provided "as is", without warranty of any
+ * kind, expressed or implied.
+ * 
+ * ETSI shall never be liable for any claim, damages, or other liability arising
+ * from its use or inability of use.This permission does not apply to any documentation
+ * associated with this file for which ETSI keeps all rights reserved. The present
+ * copyright notice shall be included in all copies of whole or part of this
+ * file and shall not imply any sub-license right.
+ *
+ * Modified by: Adrien Kirjak
  *
  ** @version  0.0.1
  ** @purpose  9:5.2.2, Verify that prefixing type names with "X" works correctly
@@ -43,7 +54,7 @@ module Pos_050202_name_conversion_rules_006 {
     testcase TC_Pos_050202_name_conversion_rules_006() runs on C system C {
         var Raw v_rcv;
     
-		var Raw  v_Raw:="<ns017:Ã¶01MyType xmlns:ns017='schema:Pos_050202_name_conversion_rules_006'>6</ns017:ö01MyType>\n";
+		var Raw  v_Raw:="<ns017:ö01MyType xmlns:ns017='schema:Pos_050202_name_conversion_rules_006'>6</ns017:ö01MyType>\n";
 
         connect(self:p, self:p1);	
 
