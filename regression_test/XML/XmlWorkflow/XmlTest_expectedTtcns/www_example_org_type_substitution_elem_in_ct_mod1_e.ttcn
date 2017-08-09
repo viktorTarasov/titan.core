@@ -108,7 +108,6 @@ type union String_derivations
 	Stringtype2 stringtype2
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
@@ -119,7 +118,6 @@ type union Stringtype_derivations
 	Stringtype2 stringtype2
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
@@ -144,7 +142,6 @@ type union RestrictedType_derivations
 	MorerestrictedType morerestrictedType
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
   variant (morerestrictedType) "block";
 };

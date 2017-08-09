@@ -157,7 +157,6 @@ type union RestrictedType_derivations
 	RestrictedType3 restrictedType3
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
   variant (restrictedType2_1) "name as 'restrictedType2.1'";
 };

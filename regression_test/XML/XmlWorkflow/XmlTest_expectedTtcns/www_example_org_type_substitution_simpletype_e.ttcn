@@ -148,7 +148,6 @@ type union String_derivations
 	Stringtype2 stringtype2
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
@@ -159,7 +158,6 @@ type union Stringtype_derivations
 	Stringtype2 stringtype2
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
@@ -170,7 +168,6 @@ type union Integer_derivations
 	ExtInt extInt
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
   variant (integer_) "name as 'integer'";
 };
@@ -182,7 +179,6 @@ type union Base64Binary_derivations
 	CrypBinary crypBinary
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
   variant (crypBinary) "name as capitalized";
 };

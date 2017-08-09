@@ -101,7 +101,6 @@ type union ExtendedType_derivations
 	RestrictedExtendedType restrictedExtendedType
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
   variant (restrictedExtendedType) "block";
 };

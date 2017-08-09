@@ -143,7 +143,6 @@ type union RequestAbstractType_derivations
 	MyProgrammingRequestType myProgrammingRequestType
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
   variant (requestAbstractType) "abstract";
 };

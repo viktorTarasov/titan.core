@@ -339,7 +339,7 @@ void SimpleType::addToSubstitutions(){
   substitutionGroup = empty_string;
   //Simpletype
   if(st->subsGroup == NULL){
-    ComplexType * head_element = new ComplexType(*st, ComplexType::fromTagSubstitution);
+    ComplexType * head_element = new ComplexType(*st, ComplexType::fromElementSubstitution);
     for(List<RootType*>::iterator simpletype = st->nameDepList.begin(); simpletype; simpletype = simpletype->Next){
       head_element->getNameDepList().push_back(simpletype->Data);
     }

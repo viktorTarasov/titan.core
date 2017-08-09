@@ -105,7 +105,6 @@ type union String_derivations
 	Stringtype4 stringtype4
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
@@ -118,7 +117,6 @@ type union Stringtype_derivations
 	Stringtype4 stringtype4
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
@@ -130,7 +128,6 @@ type union Stringtype2_derivations
 	Stringtype4 stringtype4
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
@@ -141,7 +138,6 @@ type union Stringtype3_derivations
 	Stringtype4 stringtype4
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 

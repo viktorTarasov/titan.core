@@ -165,7 +165,7 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
 , enumfields()
 , tagNames() {
 
-  if(c != fromTagSubstitution && c != fromTypeSubstitution){
+  if(c != fromElementSubstitution && c != fromTypeSubstitution){
     module->replaceLastMainType(this);
     module->setActualXsdConstruct(c_complexType);
   }
@@ -185,7 +185,7 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
       type.upload(Mstring("record"), false);
       xsdtype = n_complexType;
       break;
-    case fromTagSubstitution:
+    case fromElementSubstitution:
       type.upload(Mstring("union"), false);
       name.upload(getName().originalValueWoPrefix + Mstring("_group"));
       xsdtype = n_union;
@@ -860,7 +860,8 @@ void ComplexType::nameConversion_names(const List<NamespaceType> &) {
       break;
     }
   }
-  if (!found) {
+  // element or type substitution generated types do not need 'name as' variant
+  if (!found && subsGroup != this && typeSubsGroup != this) {
     addVariant(V_onlyValue, var);
   }
   for (List<RootType*>::iterator dep = nameDepList.begin(); dep; dep = dep->Next) {
@@ -2273,7 +2274,7 @@ void ComplexType::modifyAttributeParent() {
 void ComplexType::addSubstitution(SimpleType * st){
   ComplexType * element;
   if(st->getXsdtype() == n_NOTSET || !complexfields.empty()){
-    element = new ComplexType(*st, fromTagSubstitution);
+    element = new ComplexType(*st, fromElementSubstitution);
   }else {
     element = new ComplexType(*(ComplexType*)st);
     element->variant.clear();

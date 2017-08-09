@@ -154,7 +154,6 @@ type union RequestType_derivations
 	MyProductionRequestType4 myProductionRequestType4
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
@@ -167,7 +166,6 @@ type union MyProductionRequestType_derivations
 	MyProductionRequestType4 myProductionRequestType4
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
@@ -179,7 +177,6 @@ type union MyProductionRequestType2_derivations
 	MyProductionRequestType4 myProductionRequestType4
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 

@@ -50,7 +50,7 @@ public:
     fromTagUnion,
     fromTagNillable,
     fromTagComplexType,
-    fromTagSubstitution,
+    fromElementSubstitution,
     fromTypeSubstitution
   };
 

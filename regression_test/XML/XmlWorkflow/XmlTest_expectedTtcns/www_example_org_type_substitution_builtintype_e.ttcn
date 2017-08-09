@@ -96,7 +96,6 @@ type union String_derivations
 	Session session
 }
 with {
-  variant "name as uncapitalized";
   variant "useType";
 };
 
