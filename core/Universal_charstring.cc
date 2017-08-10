@@ -3043,7 +3043,9 @@ UNIVERSAL_CHARSTRING_ELEMENT& UNIVERSAL_CHARSTRING_ELEMENT::operator=
   bound_flag = TRUE;
   if (str_val.charstring) {
     if (other_value.is_char()) {
-      str_val.cstr.val_ptr->chars_ptr[uchar_pos] = other_value.uc_cell;
+      // The [] operator of CHARSTRING will change the reference into
+      // a copy if needed.
+      str_val.cstr[uchar_pos] = other_value.uc_cell;
       return *this;
     } else
       str_val.convert_cstr_to_uni();
@@ -3060,9 +3062,11 @@ UNIVERSAL_CHARSTRING_ELEMENT& UNIVERSAL_CHARSTRING_ELEMENT::operator=
     TTCN_error("Assignment of a charstring value with length other than 1 to "
       "a universal charstring element.");
   bound_flag = TRUE;
-  if (str_val.charstring)
-    str_val.cstr.val_ptr->chars_ptr[uchar_pos] = other_value[0];
-  else {
+  if (str_val.charstring) {
+    // The [] operator of CHARSTRING will change the reference into
+    // a copy if needed.
+    str_val.cstr[uchar_pos] = other_value[0];
+  } else {
     str_val.copy_value();
     str_val.val_ptr->uchars_ptr[uchar_pos].uc_group = 0;
     str_val.val_ptr->uchars_ptr[uchar_pos].uc_plane = 0;
@@ -3081,10 +3085,12 @@ UNIVERSAL_CHARSTRING_ELEMENT& UNIVERSAL_CHARSTRING_ELEMENT::operator=
     TTCN_error("Assignment of a charstring value with length other than 1 to "
       "a universal charstring element.");
   bound_flag = TRUE;
-  if (str_val.charstring)
-    str_val.cstr.val_ptr->chars_ptr[uchar_pos] =
+  if (str_val.charstring) {
+    // The [] operator of CHARSTRING will change the reference into
+    // a copy if needed.
+    str_val.cstr[uchar_pos] =
       other_value.val_ptr->chars_ptr[0];
-  else {
+  } else {
     str_val.copy_value();
     str_val.val_ptr->uchars_ptr[uchar_pos].uc_group = 0;
     str_val.val_ptr->uchars_ptr[uchar_pos].uc_plane = 0;
@@ -3101,9 +3107,11 @@ UNIVERSAL_CHARSTRING_ELEMENT& UNIVERSAL_CHARSTRING_ELEMENT::operator=
   other_value.must_bound("Assignment of an unbound charstring element to a "
     "universal charstring element.");
   bound_flag = TRUE;
-  if (str_val.charstring)
-    str_val.cstr.val_ptr->chars_ptr[uchar_pos] = other_value.get_char();
-  else {
+  if (str_val.charstring) {
+    // The [] operator of CHARSTRING will change the reference into
+    // a copy if needed.
+    str_val.cstr[uchar_pos] = other_value.get_char();
+  } else {
     str_val.copy_value();
     str_val.val_ptr->uchars_ptr[uchar_pos].uc_group = 0;
     str_val.val_ptr->uchars_ptr[uchar_pos].uc_plane = 0;
@@ -3136,10 +3144,12 @@ UNIVERSAL_CHARSTRING_ELEMENT& UNIVERSAL_CHARSTRING_ELEMENT::operator=
   if (&other_value != this) {
     bound_flag = TRUE;
     if (str_val.charstring) {
-      if (other_value.str_val.charstring)
-        str_val.cstr.val_ptr->chars_ptr[uchar_pos] =
+      if (other_value.str_val.charstring) {
+        // The [] operator of CHARSTRING will change the reference into
+        // a copy if needed.
+        str_val.cstr[uchar_pos] =
           other_value.str_val.cstr.val_ptr->chars_ptr[other_value.uchar_pos];
-      else {
+      } else {
         str_val.convert_cstr_to_uni();
         str_val.val_ptr->uchars_ptr[uchar_pos] =
           other_value.str_val.val_ptr->uchars_ptr[other_value.uchar_pos];

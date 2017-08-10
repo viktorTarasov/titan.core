@@ -9,6 +9,7 @@
  *   Balasko, Jeno
  *   Kovacs, Ferenc
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 module TucharstrOper
@@ -97,6 +98,115 @@ testcase CR_TR00018474() runs on ucharstrOper_comptype {
   if (match("BF" & char(0, 0, 0, 65), vtu2)) { setverdict(pass) } else { setverdict(fail) }
 }
 
+testcase ucharstr_Bug520457() runs on ucharstrOper_comptype {
+  var universal charstring ucs1 := "abc";
+  var universal charstring ucs2 := ucs1 & "";
+  ucs2[0] := "F";
+  if (ucs1 != "abc" or log2str(ucs1) != "\"abc\"") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abc";
+  var charstring cs1 := "";
+  ucs2 := ucs1 & cs1;
+  ucs2[0] := "F";
+  if (ucs1 != "abc" or log2str(ucs1) != "\"abc\"") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abc";
+  var universal charstring ucs3 := "";
+  ucs2 := ucs1 & ucs3;
+  ucs2[0] := "F";
+  if (ucs1 != "abc" or log2str(ucs1) != "\"abc\"") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abc";
+  cs1 := "";
+  ucs2 := cs1 & ucs1;
+  ucs2[0] := "F";
+  if (ucs1 != "abc" or log2str(ucs1) != "\"abc\"") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abcé";
+  ucs3 := "";
+  ucs2 := ucs1 & ucs3;
+  ucs2[0] := "F";
+  if (ucs1 != "abcé" or log2str(ucs1) != "\"abc\" & char(0, 0, 0, 233)") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abcé";
+  ucs3 := "";
+  ucs2 := ucs3 & ucs1;
+  ucs2[0] := "F";
+  if (ucs1 != "abcé" or log2str(ucs1) != "\"abc\" & char(0, 0, 0, 233)") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abc#";
+  ucs3 := "";
+  ucs2 := ucs3 & ucs1;
+  ucs2[0] := ucs1[1];
+  if (ucs1 != "abc#" or log2str(ucs1) != "\"abc#\"") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abc#";
+  ucs3 := "";
+  ucs2 := ucs3 & ucs1;
+  ucs3 := ucs1[2] & "abc";
+  if (ucs1 != "abc#" or log2str(ucs1) != "\"abc#\"") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abc#";
+  ucs2 := ucs1 <@ 0;
+  ucs2[0] := "F";
+  if (ucs1 != "abc#" or log2str(ucs1) != "\"abc#\"") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abcé";
+  ucs2 := ucs1 <@ 0;
+  ucs2[0] := "F";
+  if (ucs1 != "abcé" or log2str(ucs1) != "\"abc\" & char(0, 0, 0, 233)") {
+    setverdict(fail);
+  }
+
+  ucs1 := "";
+  ucs2 := ucs1 <@ 1;
+  ucs2[0] := "F";
+  if (ucs1 != "" or log2str(ucs1) != "\"\"") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abc#";
+  ucs2 := ucs1 @> 0;
+  ucs2[0] := "F";
+  if (ucs1 != "abc#" or log2str(ucs1) != "\"abc#\"") {
+    setverdict(fail);
+  }
+
+  ucs1 := "abcé";
+  ucs2 := ucs1 @> 0;
+  ucs2[0] := "F";
+  if (ucs1 != "abcé"  or log2str(ucs1) != "\"abc\" & char(0, 0, 0, 233)") {
+    setverdict(fail);
+  }
+
+  ucs1 := "";
+  ucs2 := ucs1 @> 1;
+  ucs2[0] := "F";
+  if (ucs1 != ""  or log2str(ucs1) != "\"\"") {
+    setverdict(fail);
+  }
+
+  setverdict(pass);
+}
+
 control {
   const universal charstring cl_1 := char(0, 0, 0, 0)
   const universal charstring cl_2 := "abcxyz"
@@ -107,5 +217,6 @@ control {
   execute(ucharstrIsvalue());
   execute(ucharstrIsbound());
   execute(CR_TR00018474());
+  execute(ucharstr_Bug520457());
 }
 }
