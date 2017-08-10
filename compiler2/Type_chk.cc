@@ -48,7 +48,9 @@ using Ttcn::Qualifiers;
 void Type::chk()
 {
   if(w_attrib_path) w_attrib_path->chk_global_attrib();
-  parse_attributes();
+  if (legacy_codec_handling) {
+    parse_attributes();
+  }
   if(!tags_checked) {
     tags_checked = true;
     if(tags) tags->chk();
@@ -112,28 +114,14 @@ void Type::chk()
   case T_SEQ_T:
   case T_SET_T:
   case T_CHOICE_T:
-    chk_SeCho_T();
-    // If this sequence type has no attributes but one of its fields does,
-    // create an empty attribute structure.
-    if(!rawattrib && hasVariantAttrs() && hasNeedofRawAttrs())
-      rawattrib = new RawAST(get_default_raw_fieldlength());
-    if(!textattrib && hasVariantAttrs() && hasNeedofTextAttrs())
-      textattrib = new TextAST;
-    if(!xerattrib && hasVariantAttrs() &&  hasNeedofXerAttrs())
-      xerattrib = new XerAttributes;
-    if (!jsonattrib && hasVariantAttrs() && hasNeedofJsonAttrs()) {
-      jsonattrib = new JsonAST;
-    }
+    chk_SeCho_T();    
     break;
   case T_CHOICE_A:
     chk_Choice_A();
-    // TODO create an empty XerAttrib as above, when ASN.1 gets XER ?
-    // The code was originally for TTCN-only encodings.
     break;
   case T_SEQ_A:
   case T_SET_A:
     chk_Se_A();
-    // TODO create an empty XerAttrib as above, when ASN.1 gets XER ?
     break;
   case T_SEQOF:
   case T_SETOF:
@@ -187,9 +175,6 @@ void Type::chk()
       break;
     }
   }
-  if (!legacy_codec_handling && my_scope != NULL) {
-    chk_encodings();
-  }
   checked = true;
   if(tags) tags->set_plicit(this);
 
@@ -208,14 +193,46 @@ void Type::chk()
    */
   if (!parent_type) chk_table_constraints();
 
-  if(rawattrib || is_root_basic()){
+  if (legacy_codec_handling) {
+    chk_coding_attribs();
+  }
+  else if (my_scope != NULL) {
+    chk_encodings();
+    chk_variants();
+  }
+  
+  chk_finished = true;
+}
+
+void Type::chk_coding_attribs()
+{
+  if (typetype == T_SEQ_T || typetype == T_SET_T || typetype == T_CHOICE_T) {
+    // If this record/set/union type has no attributes but one of its fields does,
+    // create an empty attribute structure.
+    // TODO: do the same for ASN.1 sequence/set/choice types, when ASN.1 gets XER ?
+    // The code was originally for TTCN-only encodings.
+    if (!rawattrib && hasVariantAttrs() && hasNeedofRawAttrs()) {
+      rawattrib = new RawAST(get_default_raw_fieldlength());
+    }
+    if (!textattrib && hasVariantAttrs() && hasNeedofTextAttrs()) {
+      textattrib = new TextAST;
+    }
+    if (!xerattrib && hasVariantAttrs() && hasNeedofXerAttrs()) {
+      xerattrib = new XerAttributes;
+    }
+    if (!jsonattrib && hasVariantAttrs() && hasNeedofJsonAttrs()) {
+      jsonattrib = new JsonAST;
+    }
+  }
+  
+  if (rawattrib != NULL || is_root_basic()) {
     chk_raw();
   }
-  if(textattrib || is_root_basic()) {
+  if (textattrib != NULL || is_root_basic()) {
     chk_text();
   }
   
-  if (jsonattrib || is_root_basic()) {
+  if (jsonattrib != NULL || is_root_basic()) {
     chk_json();
   }
   
@@ -223,7 +240,31 @@ void Type::chk()
   // XER attributes from parent types.
   chk_xer();
   
-  chk_finished = true;
+  if (!legacy_codec_handling) {
+    switch (typetype) {
+    case T_SEQ_T:
+    case T_SEQ_A:
+    case T_SET_T:
+    case T_SET_A:
+    case T_CHOICE_T:
+    case T_CHOICE_A:
+    case T_ANYTYPE:
+    case T_OPENTYPE:
+      for (size_t i = 0; i < get_nof_comps(); ++i) {
+        get_comp_byIndex(i)->get_type()->chk_coding_attribs();
+      }
+      break;
+
+    case T_ARRAY:
+    case T_SEQOF:
+    case T_SETOF:
+      get_ofType()->chk_coding_attribs();
+      break;
+
+    default:
+      break;
+    }
+  }
 }
 
 void Type::parse_attributes()
@@ -558,9 +599,10 @@ void Type::parse_attributes()
                 // Special case when trying to reference the inner type
                 // of a record-of when it wasn't a record-of.
                 if (tmp_id == underscore_zero) temp_qualifier->error(
-                  "Invalid field qualifier [-]");
-                else temp_qualifier->error("Invalid field qualifier %s",
-                  tmp_id.get_dispname().c_str());
+                  "Type `%s' cannot be indexed", get_typename().c_str());
+                else temp_qualifier->error(
+                  "Reference to non-existent field `%s' in type `%s'",
+                  tmp_id.get_dispname().c_str(), get_typename().c_str());
               }
               self_attribs->delete_element(i);
             }else{
@@ -666,8 +708,16 @@ void Type::chk_encodings()
                 for (size_t j = 0; j < quals->get_nof_qualifiers(); ++j) {
                   Ttcn::Qualifier* qual = const_cast<Ttcn::Qualifier*>(
                     quals->get_qualifier(j));
-                  get_field_type(qual, EXPECTED_CONSTANT)->
-                    add_coding(swa->get_attribSpec().get_spec());
+                  Type* t = get_field_type(qual, EXPECTED_CONSTANT);
+                  if (t != NULL) {
+                    if (t->my_scope != my_scope) {
+                      qual->warning("Encode attribute is ignored, because it "
+                        "refers to a type from a different type definition");
+                    }
+                    else {
+                      t->add_coding(swa->get_attribSpec().get_spec());
+                    }
+                  }
                 }
               }
               else {
@@ -676,7 +726,9 @@ void Type::chk_encodings()
             }
           }
         }
-        if (coding_table.size() == 0) {
+        if (get_type_w_coding_table() == NULL) {
+          // if there are no 'encode' attributes in this type, the referenced
+          // types, or the parent type, then try the nearest group or the module
           const vector<SingleWithAttrib>& real = ap->get_real_attrib();
           for (size_t i = 0; i < real.size(); ++i) {
             const SingleWithAttrib* swa = real[i];
@@ -710,6 +762,249 @@ void Type::chk_encodings()
   default:
     // the rest of the types can't have 'encode' attributes
     break;
+  }
+}
+
+void Type::chk_variants()
+{
+  if (legacy_codec_handling) {
+    FATAL_ERROR("Type::chk_encodings");
+  }
+  if (is_asn1() || ownertype != OT_TYPE_DEF) {
+    return;
+  }
+  // check global (group/module) variant attributes first
+  WithAttribPath* global_ap = NULL;
+  Ttcn::Def_Type* def = static_cast<Ttcn::Def_Type*>(owner);
+  Ttcn::Group* nearest_group = def->get_parent_group();
+
+  if (nearest_group != NULL) { // there is a group
+    global_ap = nearest_group->get_attrib_path();
+  }
+  else { // no group, use the module
+    Common::Module* mymod = my_scope->get_scope_mod();
+    // OT_TYPE_DEF is always from a TTCN-3 module
+    Ttcn::Module* my_ttcn_module = static_cast<Ttcn::Module *>(mymod);
+    global_ap = my_ttcn_module->get_attrib_path();
+  }
+  if (global_ap != NULL) {
+    MultiWithAttrib* mwa = global_ap->get_with_attr();
+    if (mwa != NULL) {
+      for (size_t i = 0; i < mwa->get_nof_elements(); ++i) {
+        const SingleWithAttrib* swa = mwa->get_element(i);
+        if (swa->get_attribKeyword() == SingleWithAttrib::AT_VARIANT) {
+          chk_this_variant(swa, true);
+        }
+      }
+    }
+  }
+  // check local variant attributes second, so they overwrite global ones if they
+  // conflict with each other
+  WithAttribPath* ap = get_attrib_path();
+  if (ap != NULL) {
+    MultiWithAttrib* mwa = ap->get_with_attr();
+    if (mwa != NULL) {
+      for (size_t i = 0; i < mwa->get_nof_elements(); ++i) {
+        const SingleWithAttrib* swa = mwa->get_element(i);
+        if (swa->get_attribKeyword() == SingleWithAttrib::AT_VARIANT) {
+          Ttcn::Qualifiers* quals = swa->get_attribQualifiers();
+          if (quals != NULL && quals->get_nof_qualifiers() != 0) {
+            for (size_t j = 0; j < quals->get_nof_qualifiers(); ++j) {
+              Ttcn::Qualifier* qual = const_cast<Ttcn::Qualifier*>(
+                quals->get_qualifier(j));
+              Type* t = get_field_type(qual, EXPECTED_CONSTANT);
+              if (t != NULL) {
+                if (t->my_scope != my_scope) {
+                  qual->warning("Variant attribute is ignored, because it refers "
+                    "to a type from a different type definition");
+                }
+                else {
+                  t->chk_this_variant(swa, false);
+                }
+              }
+            }
+          }
+          else {
+            chk_this_variant(swa, false);
+          }
+        }
+      }
+    }
+  }
+  // check the coding attributes set by the variants
+  chk_coding_attribs();
+}
+
+void Type::chk_this_variant(const Ttcn::SingleWithAttrib* swa, bool global)
+{
+  // TODO: use something other than get_typename...
+  Type* t = get_type_w_coding_table();
+  if (t == NULL) {
+    if (!global) {
+      swa->error("No encoding rules defined for type `%s'",
+        get_typename().c_str());
+    }
+  }
+  else {
+    const string& enc_str = swa->get_attribSpec().get_encoding();
+    MessageEncodingType_t coding = get_enc_type(enc_str);
+    bool erroneous = false;
+    if (enc_str.empty()) {
+      if (t->coding_table.size() > 1) {
+        if (!global) {
+          swa->error("The encoding reference is mandatory for variant attributes "
+            "of type `%s', which has multiple encodings", get_typename().c_str());
+        }
+        erroneous = true;
+      }
+      else if (t->coding_table[0]->built_in) {
+        coding = t->coding_table[0]->built_in_coding;
+      }
+      else if (strcmp(t->coding_table[0]->custom_coding.name, "PER") == 0) {
+        coding = CT_PER;
+      }
+      // else leave it as CT_CUSTOM
+    }
+    else {
+      if (!has_encoding(coding, &enc_str)) {
+        erroneous = true;
+        if (!global) {
+          if (coding != CT_CUSTOM) {
+            swa->error("Type `%s' does not support %s encoding",
+              get_typename().c_str(), get_encoding_name(coding));
+          }
+          else {
+            swa->error("Type `%s' does not support custom encoding `%s'",
+              get_typename().c_str(), enc_str.c_str());
+          }
+        }
+      }
+    }
+    if (!erroneous && coding != CT_PER && coding != CT_CUSTOM) {
+      bool new_ber = false;    // a BerAST object was allocated here
+      bool new_raw = false;    // a RawAST object was allocated here
+      bool new_text = false;   // a TextAST object was allocated here
+      bool new_xer = false;    // a XerAttribute object was allocated here
+      bool new_json = false;   // a JsonAST object was allocated here
+      bool ber_found = false;  // a BER attribute was found by the parser
+      bool raw_found = false;  // a RAW attribute was found by the parser
+      bool text_found = false; // a TEXT attribute was found by the parser
+      bool xer_found = false;  // a XER attribute was found by the parser
+      bool json_found = false; // a JSON attribute was found by the parser
+      if (berattrib == NULL) {
+        berattrib = new BerAST;
+        new_ber = true;
+      }
+      if (rawattrib == NULL) {
+        Type* t_refd = this;
+        while (t_refd->rawattrib == NULL && t_refd->is_ref()) {
+          t_refd = t_refd->get_type_refd();
+        }
+        rawattrib = new RawAST(t_refd->rawattrib, get_default_raw_fieldlength());
+        new_raw = true;
+      }
+      if (textattrib == NULL) {
+        Type* t_refd = this;
+        while (t_refd->textattrib == NULL && t_refd->is_ref()) {
+          t_refd = t_refd->get_type_refd();
+        }
+        textattrib = new TextAST(t_refd->textattrib);
+        new_text = true;
+      }
+      if (xerattrib == NULL) {
+        xerattrib = new XerAttributes;
+        new_xer = true;
+      }
+      if (jsonattrib == NULL) {
+        Type* t_refd = this;
+        while (t_refd->jsonattrib == NULL && t_refd->is_ref()) {
+          t_refd = t_refd->get_type_refd();
+        }
+        jsonattrib = new JsonAST(t_refd->jsonattrib);
+        new_json = true;
+      }
+      int ret = parse_rawAST(rawattrib, textattrib, xerattrib, berattrib, jsonattrib,
+        swa->get_attribSpec(), get_length_multiplier(), my_scope->get_scope_mod(), 
+        raw_found, text_found, xer_found, ber_found, json_found);
+      bool mismatch = false;
+      switch (coding) {
+      case CT_BER:
+        mismatch = !ber_found;
+        break;
+      case CT_RAW:
+        mismatch = !raw_found;
+        break;
+      case CT_TEXT:
+        mismatch = !text_found;
+        break;
+      case CT_XER:
+        mismatch = !xer_found;
+        break;
+      case CT_JSON:
+        mismatch = !json_found;
+        break;
+      default:
+        FATAL_ERROR("Type::chk_this_variant");
+        break;
+      }
+      if (mismatch && ret == 0) {
+        if (!global || !enc_str.empty()) {
+          // don't display this if there were parsing errors in the variant attribute
+          swa->error("Variant attribute is not related to %s encoding",
+            get_encoding_name(coding));
+        }
+      }
+      if (new_ber && !ber_found) {
+        delete berattrib;
+        berattrib = NULL;
+      }
+      if (new_raw && !raw_found) {
+        delete rawattrib;
+        rawattrib = NULL;
+      }
+      if (new_text && !text_found) {
+        delete textattrib;
+        textattrib = NULL;
+      }
+      if (new_xer && !xer_found) {
+        delete xerattrib;
+        xerattrib = NULL;
+      }
+      if (new_json && !json_found) {
+        delete jsonattrib;
+        jsonattrib = NULL;
+      }
+    }
+    else if (!erroneous && !global) { // PER or custom encoding
+      swa->warning("Variant attributes related to %s encoding are ignored",
+        get_encoding_name(coding));
+    }
+  } // if t != NULL
+  if (global) {
+    // send global variant attributes to field/element types
+    switch (typetype) {
+    case T_SEQ_T:
+    case T_SEQ_A:
+    case T_SET_T:
+    case T_SET_A:
+    case T_CHOICE_T:
+    case T_CHOICE_A:
+    case T_ANYTYPE:
+    case T_OPENTYPE:
+      for (size_t i = 0; i < get_nof_comps(); ++i) {
+        get_comp_byIndex(i)->get_type()->chk_this_variant(swa, global);
+      }
+      break;
+      
+    case T_ARRAY:
+    case T_SEQOF:
+    case T_SETOF:
+      get_ofType()->chk_this_variant(swa, global);
+      break;
+      
+    default:
+      break;
+    }
   }
 }
 
@@ -926,7 +1221,7 @@ Value *Type::new_value_for_dfe(Type *last, const char *dfe_str, Common::Referenc
       same_mod = true;
     }
     if (!is_compatible_tt_tt(last->typetype, t->typetype, last->is_asn1(), t->is_asn1(), same_mod)) {
-      v->get_reference()->error("Incompatible types were given to defaultForEmpty variant: `%s' instead of `%s'.\n",
+      v->get_reference()->error("Incompatible types were given to defaultForEmpty variant: `%s' instead of `%s'.",
         v->get_expr_governor_last()->get_typename().c_str(), last->get_typename().c_str());
       delete v;
       return 0;
@@ -1153,7 +1448,7 @@ void Type::chk_xer_dfe()
     }
     else {
       error("DEFAULT-FOR-EMPTY not supported for character-encodable type %s",
-        last->get_stringRepr().c_str());
+        get_typename().c_str());
     }
   }
   else if (last->typetype == T_SEQ_A || last->typetype == T_SEQ_T) {
@@ -1177,7 +1472,7 @@ void Type::chk_xer_dfe()
       }
       else {
         error("DEFAULT-FOR-EMPTY not supported for fields of type %s",
-          cft->get_stringRepr().c_str());
+          cft->get_typename().c_str());
       }
     } // endif comps >0
   } // if SEQ/SET
@@ -2147,7 +2442,7 @@ void Type::chk_xer_use_union()
     error("USE-UNION cannot be applied to anytype");
     break;
   default:
-    error("USE-UNION can only applied to a CHOICE/union type"); // 38.2.1
+    error("USE-UNION can only be applied to a CHOICE/union type"); // 38.2.1
     break;
   }
 
@@ -6126,8 +6421,9 @@ bool Type::chk_this_template_Str(Template *t, namedbool implicit_omit,
         target->get_Template(), (target->get_DerivedRef() != NULL) ?
         INCOMPLETE_ALLOWED : INCOMPLETE_NOT_ALLOWED,
         OMIT_NOT_ALLOWED, ANY_OR_OMIT_ALLOWED, SUB_CHK, implicit_omit, lhs);
-      target_type->get_type_refd_last()->chk_coding(false,
-        t->get_my_scope()->get_scope_mod());
+      Type* coding_type = legacy_codec_handling ?
+        target_type->get_type_refd_last() : target_type;
+      coding_type->chk_coding(false, t->get_my_scope()->get_scope_mod());
     }
     {
       Value* str_enc = t->get_string_encoding();

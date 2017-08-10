@@ -99,7 +99,7 @@ boolean generate_skeleton = FALSE, force_overwrite = FALSE,
   force_gen_seof = FALSE, omit_in_value_list = FALSE,
   warnings_for_bad_variants = FALSE, debugger_active = FALSE,
   legacy_unbound_union_fields = FALSE, split_to_slices = FALSE,
-  legacy_untagged_union, disable_user_info, legacy_codec_handling = TRUE/*FALSE*/;
+  legacy_untagged_union, disable_user_info, legacy_codec_handling = FALSE;
   // use legacy codec handling until the implementation of the new one is finished
 
 // Default code splitting mode is set to 'no splitting'.

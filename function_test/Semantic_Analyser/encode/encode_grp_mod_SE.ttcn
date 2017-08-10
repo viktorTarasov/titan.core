@@ -1,0 +1,69 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+module encode_grp_mod { //^In TTCN-3 module//
+
+type union Uni1 { //^In type definition//
+  integer f1
+}
+with {
+  variant "JSON: as value";
+  variant (f1) "FIELDLENGTH(20)"; //Variant attribute is not related to JSON encoding//
+}
+
+type union Uni2 { //^In type definition//
+  integer f1 //Attribute 'name as ...' will be ignored, because parent union is encoded without field names.//
+}
+with {
+  encode "RAW";
+  variant "JSON: as value"; //Variant attribute is not related to RAW encoding//
+  variant (f1) "FIELDLENGTH(16)";
+  variant (f1) "JSON: name as f2"; //Variant attribute is not related to RAW encoding//
+}
+
+group Group1 {
+  type union Uni3 { //^In type definition//
+    integer f1
+  }
+  with {
+    variant "JSON: as value"; //Variant attribute is not related to XER encoding//
+    variant (f1) "FIELDLENGTH(20)"; //Variant attribute is not related to XER encoding//
+  }
+}
+with {
+  encode "XML";
+}
+
+type Uni2 Uni4 //^In type definition//
+with {
+  variant "name as uncapitalized"; //Variant attribute is not related to RAW encoding//
+}
+
+type record of integer RecOf1
+with {
+  encode "TEXT";
+}
+
+type record of RecOf1 RecOf2 //^In type definition//
+with {
+  variant ([-]) "list"; //Variant attribute is not related to TEXT encoding//
+}
+
+type RecOf1 RecOf3 //^In type definition//
+with {
+  variant "BYTEORDER(first)"; //Variant attribute is not related to TEXT encoding//
+}
+
+}
+with {
+  encode "JSON";
+}

@@ -56,5 +56,20 @@ namespace TtcnTypes {
       return 1;
     }
   }
+  
+  INTEGER f__dec__abc2(BITSTRING& x, R1& y)
+  {
+    if (x == oct2bit(char2oct("abc"))) {
+      y.f1() = E1::val2;
+      x = BITSTRING(0, NULL);
+      return 0;
+    }
+    else if (x.lengthof() < 24) {
+      return 2;
+    }
+    else {
+      return 1;
+    }
+  }
 
 }

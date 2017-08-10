@@ -737,6 +737,10 @@ namespace Common {
     /** Checks that the value is (or evaluates to) a valid universal charstring
       * encoding format. */
     bool chk_string_encoding(Common::Assignment* lhs);
+    
+    /** Checks that the value is a valid dynamic encoding string for the
+      * specified type. */
+    void chk_dyn_enc_str(Type* type);
 
     /* if "infinity" or "-infinity" was parsed then this is a real value or
        a unary - expression containing a real value, where the real value is

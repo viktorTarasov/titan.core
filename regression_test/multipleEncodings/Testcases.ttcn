@@ -61,7 +61,8 @@ testcase tc_ttcn_encvalue_negtest() runs on CT {
   }
   
   @try {
-    var bitstring dummy := encvalue(x, "", "ab" & char(0, 1, 2, 3)); // invalid encoding
+    var universal charstring bad_coding := "ab" & char(0, 1, 2, 3);
+    var bitstring dummy := encvalue(x, "", bad_coding); // invalid encoding
     setverdict(fail, "Error expected.");
   }
   @catch (msg) {
@@ -182,6 +183,24 @@ testcase tc_ttcn_param_redirect() runs on CT {
       setverdict(fail, "Timeout");
     }
   }
+}
+
+// Testing encvalue_unichar and decvalue unichar with custom encoding on a type reference,
+// that has its own decoder function, separate from the referenced type
+testcase tc_ttcn_custom_coding_w_ref_types() runs on CT {
+  var R3 x := { f1 := val2 };
+  var universal charstring exp := "abc";
+  var universal charstring enc := encvalue_unichar(x, "UTF-8", "", "abc"); // uses R1's encoder: f_enc_abc
+  if (exp != enc) {
+    setverdict(fail, "Expected: ", exp, ", got: ", enc);
+  }
+
+  var R3 dec;
+  var integer res := decvalue_unichar(exp, dec, "UTF-8", "", "abc"); // uses its own decoder: f_dec_abc2
+  if (x != dec) {
+    setverdict(fail, "Expected: ", x, ", got: ", dec);
+  }
+  setverdict(pass);
 }
 
 // Testing setencode on encvalue and decvalue, with a type that has 2 encodings.
@@ -446,6 +465,7 @@ control {
   execute(tc_ttcn_decvalue_unichar());
   execute(tc_ttcn_decmatch());
   execute(tc_ttcn_param_redirect());
+  execute(tc_ttcn_custom_coding_w_ref_types());
   execute(tc_ttcn_setencode());
   execute(tc_ttcn_setencode_negtest());
   execute(tc_ttcn_setencode_ref_type());

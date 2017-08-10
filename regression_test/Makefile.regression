@@ -58,7 +58,7 @@ LTTNGUSTLOGGER := no
 #SPLIT_TO_SLICES := 30
 
 # Use legacy codec handling when running the tests
-LEGACY_CODEC_HANDLING := yes
+#LEGACY_CODEC_HANDLING := yes
 
 ifdef RT2
 # add command line option to generate code for alternative runtime

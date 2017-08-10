@@ -91,5 +91,5 @@ module UsefulTtcn3Types {
 
 }
 with {
-encode "X";
+encode "XML";
 }

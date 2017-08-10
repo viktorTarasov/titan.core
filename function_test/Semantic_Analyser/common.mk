@@ -21,9 +21,10 @@ ifdef RT2
 COMPILER_FLAGS += -R
 endif
 
-# Use the legacy handling of 'encode' and 'variant' for now.
-# Tests will be updated when the new handling is fully implemented (TODO).
+# Use the legacy handling of 'encode' and 'variant' in tests.
+ifdef LEGACY_CODEC_HANDLING
 COMPILER_FLAGS += -e
+endif
 
 # TTCN-3 modules of this project:
 TTCN3_MODULES := $(sort $(wildcard *A.ttcn *S[WE].ttcn *OK.ttcn))

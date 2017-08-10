@@ -6,6 +6,7 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
+#   Balasko, Jeno
 #   Baranyi, Botond
 #
 ##############################################################################

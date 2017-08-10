@@ -1401,7 +1401,8 @@ namespace Ttcn {
         }
       }
 
-      if(!par_has_encode && self_encode_index == -1 && self_has_variant)
+      if(legacy_codec_handling &&
+         !par_has_encode && self_encode_index == -1 && self_has_variant)
       {
         // There is no encode, but there is at least one variant.
         // Find them and issue warnings.

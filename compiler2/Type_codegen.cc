@@ -2372,12 +2372,20 @@ void Type::generate_code_coding_handlers(output_struct* target)
       // encoder
       enc_str = mputprintf(enc_str, "if (coding_name == \"%s\") {\n",
         t->coding_table[i]->custom_coding.name);
-      Assignment* enc_func = t->coding_table[i]->custom_coding.enc_func;
-      if (enc_func != NULL && t == this) {
-        enc_str = mputprintf(enc_str,
-          "output_stream = bit2oct(%s(input_value));\n"
-          "return;\n",
-          enc_func->get_genname_from_scope(my_scope).c_str());
+      coder_function_t* enc_func = get_coding_function(i, TRUE);
+      if (enc_func != NULL) {
+        if (enc_func->conflict) {
+          enc_str = mputprintf(enc_str,
+            "TTCN_error(\"Multiple `%s' encoding functions defined for type "
+            "`%s'\");\n",
+            t->coding_table[i]->custom_coding.name, get_typename().c_str());
+        }
+        else {
+          enc_str = mputprintf(enc_str,
+            "output_stream = bit2oct(%s(input_value));\n"
+            "return;\n",
+            enc_func->func_def->get_genname_from_scope(my_scope).c_str());
+        }
       }
       else {
         enc_str = mputprintf(enc_str,
@@ -2389,14 +2397,22 @@ void Type::generate_code_coding_handlers(output_struct* target)
       // decoder
       dec_str = mputprintf(dec_str, "if (coding_name == \"%s\") {\n",
         t->coding_table[i]->custom_coding.name);
-      Assignment* dec_func = t->coding_table[i]->custom_coding.dec_func;
-      if (dec_func != NULL && t == this) {
-        dec_str = mputprintf(dec_str,
-          "BITSTRING bit_stream(oct2bit(input_stream));\n"
-          "INTEGER ret_val = %s(bit_stream, output_value);\n"
-          "input_stream = bit2oct(bit_stream);\n"
-          "return ret_val;\n",
-          dec_func->get_genname_from_scope(my_scope).c_str());
+      coder_function_t* dec_func = get_coding_function(i, FALSE);
+      if (dec_func != NULL) {
+        if (dec_func->conflict) {
+          enc_str = mputprintf(enc_str,
+            "TTCN_error(\"Multiple `%s' decoding functions defined for type "
+            "`%s'\");\n",
+            t->coding_table[i]->custom_coding.name, get_typename().c_str());
+        }
+        else {
+          dec_str = mputprintf(dec_str,
+            "BITSTRING bit_stream(oct2bit(input_stream));\n"
+            "INTEGER ret_val = %s(bit_stream, output_value);\n"
+            "input_stream = bit2oct(bit_stream);\n"
+            "return ret_val;\n",
+            dec_func->func_def->get_genname_from_scope(my_scope).c_str());
+        }
       }
       else {
         dec_str = mputprintf(dec_str,

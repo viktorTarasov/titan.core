@@ -773,6 +773,16 @@ namespace Common {
     for (size_t i = 0; i < coding_table.size(); ++i) {
       if (!coding_table[i]->built_in) {
         Free(coding_table[i]->custom_coding.name);
+        for (size_t j = 0; j < coding_table[i]->custom_coding.encoders->size(); ++j) {
+          delete coding_table[i]->custom_coding.encoders->get_nth_elem(j);
+        }
+        coding_table[i]->custom_coding.encoders->clear();
+        delete coding_table[i]->custom_coding.encoders;
+        for (size_t j = 0; j < coding_table[i]->custom_coding.decoders->size(); ++j) {
+          delete coding_table[i]->custom_coding.decoders->get_nth_elem(j);
+        }
+        coding_table[i]->custom_coding.decoders->clear();
+        delete coding_table[i]->custom_coding.decoders;
       }
       delete coding_table[i];
     }
@@ -3128,7 +3138,7 @@ namespace Common {
     if (err) {
       if (last->typetype == T_ENUM_T) {
         error("Invalid JSON default value for enumerated type `%s'",
-          last->get_stringRepr().c_str());
+          last->get_typename().c_str());
       } else {
         error("Invalid %s JSON default value", get_typename_builtin(last->typetype));
       }
@@ -3293,11 +3303,9 @@ namespace Common {
     else {
       coding_t* new_coding = new coding_t;
       new_coding->built_in = FALSE;
-      new_coding->custom_coding.enc_func = NULL;
-      new_coding->custom_coding.enc_conflict = FALSE;
-      new_coding->custom_coding.dec_func = NULL;
-      new_coding->custom_coding.dec_conflict = FALSE;
       new_coding->custom_coding.name = mcopystr(name.c_str());
+      new_coding->custom_coding.encoders = new map<Type*, coder_function_t>;
+      new_coding->custom_coding.decoders = new map<Type*, coder_function_t>;
       coding_table.add(new_coding);
     }
   }
@@ -3308,19 +3316,24 @@ namespace Common {
     if (legacy_codec_handling) {
       FATAL_ERROR("Type::set_coding_function");
     }
-    // TODO: the coding table might be in a referenced type
-    for (size_t i = 0; i < coding_table.size(); ++i) {
-      if (!coding_table[i]->built_in &&
-          strcmp(coding_table[i]->custom_coding.name, coding_name) == 0) {
-        Assignment*& func_ptr = encode ? coding_table[i]->custom_coding.enc_func :
-          coding_table[i]->custom_coding.dec_func;
-        boolean& conflict = encode ? coding_table[i]->custom_coding.enc_conflict :
-          coding_table[i]->custom_coding.dec_conflict;
-        if (func_ptr != NULL) {
-          conflict = TRUE;
+    Type* t = get_type_w_coding_table();
+    if (t == NULL) {
+      return;
+    }
+    for (size_t i = 0; i < t->coding_table.size(); ++i) {
+      if (!t->coding_table[i]->built_in &&
+          strcmp(t->coding_table[i]->custom_coding.name, coding_name) == 0) {
+        map<Type*, coder_function_t>* coders = encode ?
+          t->coding_table[i]->custom_coding.encoders :
+          t->coding_table[i]->custom_coding.decoders;
+        if (coders->has_key(this)) {
+          (*coders)[this]->conflict = TRUE;
         }
-        else if (!conflict) {
-          func_ptr = function_def;
+        else {
+          coder_function_t* new_coder = new coder_function_t;
+          new_coder->func_def = function_def;
+          new_coder->conflict = FALSE;
+          coders->add(this, new_coder);
           Common::Module* func_mod = function_def->get_my_scope()->get_scope_mod();
           Common::Module* type_mod = my_scope->get_scope_mod();
           if (func_mod != type_mod) {
@@ -3345,6 +3358,32 @@ namespace Common {
         return;
       }
     }
+  }
+  
+  Type::coder_function_t* Type::get_coding_function(size_t index, boolean encode)
+  {
+    if (legacy_codec_handling) {
+      FATAL_ERROR("Type::get_coding_function");
+    }
+    Type* t_ct = get_type_w_coding_table();
+    if (t_ct == NULL || t_ct->coding_table.size() <= index ||
+        t_ct->coding_table[index]->built_in) {
+      FATAL_ERROR("Type::get_coding_function");
+    }
+    map<Type*, coder_function_t>* coders = encode ?
+      t_ct->coding_table[index]->custom_coding.encoders :
+      t_ct->coding_table[index]->custom_coding.decoders;
+    if (coders->has_key(this)) {
+      return (*coders)[this];
+    }
+    Type* t = this;
+    while (t->is_ref()) {
+      t = t->get_type_refd();
+      if (coders->has_key(t)) {
+        return (*coders)[t];
+      }
+    }
+    return NULL; // not found
   }
   
   Type* Type::get_type_w_coding_table()
@@ -4957,25 +4996,22 @@ namespace Common {
           if (!t->coding_table[i]->built_in) {
             // all user-defined encodings must have exactly one encoder/decoder
             // function set
-            boolean& conflict = encode ? t->coding_table[i]->custom_coding.enc_conflict :
-              t->coding_table[i]->custom_coding.dec_conflict;
-            if (conflict) {
-              error("Multiple `%s' %scoder functions defined for type `%s'",
-                t->coding_table[i]->custom_coding.name, encode ? "en" : "de",
-                get_typename().c_str());
-              // TODO: don't display this twice (once in the normal call and once in the delayed call)
-              continue;
-            }
             if (!delayed) {
               // there might still be unchecked external functions, so the check
               // must be delayed until everything else has been checked
               Modules::delay_type_encode_check(this, usage_mod, encode);
               return;
             }
-            Assignment* func_def = encode ? t->coding_table[i]->custom_coding.enc_func :
-              t->coding_table[i]->custom_coding.dec_func;
-            if (func_def == NULL && !is_asn1()) {
-              warning("No `%s' %scoder function defined for type `%s'",
+            coder_function_t* coding_func = get_coding_function(i, encode);
+            if (coding_func == NULL) {
+              if (!t->is_asn1()) {
+                warning("No `%s' %scoder function defined for type `%s'",
+                  t->coding_table[i]->custom_coding.name, encode ? "en" : "de",
+                  get_typename().c_str());
+              }
+            }
+            else if (coding_func->conflict) {
+              warning("Multiple `%s' %scoder functions defined for type `%s'",
                 t->coding_table[i]->custom_coding.name, encode ? "en" : "de",
                 get_typename().c_str());
             }
@@ -5187,7 +5223,7 @@ namespace Common {
     }
   }
   
-  Assignment* Type::get_coding_function(bool encode) const
+  Assignment* Type::get_legacy_coding_function(bool encode) const
   {
     if (!legacy_codec_handling) {
       FATAL_ERROR("Type::get_coding_function");
@@ -6220,8 +6256,10 @@ namespace Common {
         }
       }
       Type* last = get_type_refd_last();
-      if (last->is_structured_type() || last->get_typetype_ttcn3() == T_ENUM_T) {
-        // these types need an 'encode' attribute
+      if (encoding_type == CT_CUSTOM ||
+          last->is_structured_type() || last->get_typetype_ttcn3() == T_ENUM_T) {
+        // these types need an 'encode' attribute for built-in codecs, and all
+        // types need an 'encode' attribute for user-defined codecs
         return false;
       }
       return last->can_have_coding(encoding_type);
@@ -7147,6 +7185,10 @@ namespace Common {
       FATAL_ERROR("Type::get_genname_coder");
     }
     Type* t = this;
+    Type* t_ct = get_type_w_coding_table();
+    if (t_ct == NULL) {
+      return string();
+    }
     for ( ; ; ) {
       // if the type has an 'encode' or 'variant' attribute, then it needs its
       // own coder functions
@@ -7154,6 +7196,15 @@ namespace Common {
           t->is_tagged() || t->rawattrib || t->textattrib || t->jsonattrib ||
           (t->xerattrib && !t->xerattrib->empty())) {
         return t->get_genname_own(p_scope);
+      }
+      // if it has its own custom encoder or decoder functions set, then it needs
+      // its own coder functions
+      for (size_t i = 0; i < t_ct->coding_table.size(); ++i) {
+        if (!t_ct->coding_table[i]->built_in &&
+            (t_ct->coding_table[i]->custom_coding.encoders->has_key(t) ||
+             t_ct->coding_table[i]->custom_coding.decoders->has_key(t))) {
+          return t->get_genname_own(p_scope);
+        }
       }
       if (t->is_ref()) {
         t = t->get_type_refd();
@@ -7648,12 +7699,24 @@ namespace Common {
               get_encoding_name(coding_table[i]->built_in_coding));
           }
           else {
-            Assignment* enc_func = coding_table[i]->custom_coding.enc_func;
-            Assignment* def_func = coding_table[i]->custom_coding.dec_func;
-            DEBUG(level + 1, "%s (encoder: %s, decoder: %s)",
-              coding_table[i]->custom_coding.name,
-              (enc_func != NULL) ? enc_func->get_fullname().c_str() : "<unset>",
-              (def_func != NULL) ? def_func->get_fullname().c_str() : "<unset>");
+            DEBUG(level + 1, "%s (user-defined)",
+              coding_table[i]->custom_coding.name);
+            DEBUG(level + 1, "Encoders:");
+            map<Type*, coder_function_t>* encoders = coding_table[i]->custom_coding.encoders;
+            for (size_t j = 0; j < encoders->size(); ++j) {
+              DEBUG(level + 2, "Type: %s, function: %s",
+                encoders->get_nth_key(j)->get_fullname().c_str(),
+                encoders->get_nth_elem(j)->conflict ? "<multiple>" :
+                  encoders->get_nth_elem(j)->func_def->get_fullname().c_str());
+            }
+            DEBUG(level + 1, "Decoders:");
+            map<Type*, coder_function_t>* decoders = coding_table[i]->custom_coding.decoders;
+            for (size_t j = 0; j < decoders->size(); ++j) {
+              DEBUG(level + 2, "Type: %s, function: %s",
+                decoders->get_nth_key(j)->get_fullname().c_str(),
+                decoders->get_nth_elem(j)->conflict ? "<multiple>" :
+                  decoders->get_nth_elem(j)->func_def->get_fullname().c_str());
+            }
           }
         }
       }

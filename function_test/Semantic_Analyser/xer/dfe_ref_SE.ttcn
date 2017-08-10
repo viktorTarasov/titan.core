@@ -14,12 +14,12 @@ module dfe_ref_SE {	//^In TTCN-3 module `dfe_ref_SE'://
 const octetstring c_oct := 'AA'O;
 
 type record DFEConst { //^In type definition//
-  charstring cs, //^In record field \`cs\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_cs//
-  universal charstring us, //^In record field \`us\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_us//
-  integer i, //^In record field \`i\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_i//
-  float f, //^In record field \`f\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_f//
-  boolean b, //^In record field \`b\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_b//
-  charstring csmissing //^In record field \`csmissing\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type DFEConst_csmissing//
+  charstring cs, //^In record field \`cs\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type charstring//
+  universal charstring us, //^In record field \`us\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type universal charstring//
+  integer i, //^In record field \`i\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type integer//
+  float f, //^In record field \`f\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type float//
+  boolean b, //^In record field \`b\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type boolean//
+  charstring csmissing //^In record field \`csmissing\'\:// //^error: DEFAULT\-FOR\-EMPTY not supported for character\-encodable type charstring//
 }
 with {
   variant "element";

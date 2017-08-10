@@ -292,6 +292,12 @@ namespace Common {
       };
     };
     
+    /** Stores information about the custom encoder or decoder function of a type */
+    struct coder_function_t {
+      Assignment* func_def; ///< definition of the encoder or decoder function
+      boolean conflict; ///< indicates whether there are multiple encoder/decoder functions for this type and codec
+    };
+    
     /** Stores information related to an encoding type (codec), when using new
       * codec handling. */
     struct coding_t {
@@ -300,10 +306,9 @@ namespace Common {
         MessageEncodingType_t built_in_coding; ///< built-in codec
         struct {
           char* name; ///< name of the user defined codec (the string in the 'encode' attribute)
-          Assignment* enc_func; ///< definition of the encoder function
-          boolean enc_conflict; ///< indicates whether there are multiple encoder functions for this type and codec
-          Assignment* dec_func; ///< definition of the decoder function
-          boolean dec_conflict; ///< indicates whether there are multiple decoder functions for this type and codec
+          // note: other types that use this type's coding table may have their own encoder/decoder functions
+          map<Type*, coder_function_t>* encoders; ///< the map of encoder functions per type
+          map<Type*, coder_function_t>* decoders; ///< the map of decoder functions per type
         } custom_coding;
       };
     };
@@ -628,6 +633,19 @@ namespace Common {
       * encoding, if set by the compiler option. */
     void chk_encodings();
     
+    /** Checks the type's variant attributes (when using the new codec handling). */
+    void chk_variants();
+    
+    /** Parses the specified variant attribute and checks its validity (when 
+      * using the new codec handling). */
+    void chk_this_variant(const Ttcn::SingleWithAttrib* swa, bool global);
+    
+    /** Checks the coding instructions set by the parsed variant attributes.
+      * The check is performed recursively on the type's fields and elements
+      * when using the new codec handling.
+      * The check is only performed on this type, when using legacy codec handling. */
+    void chk_coding_attribs();
+    
     /** Adds support for an encoding by the type (when using new codec handling),
       * if the type can have that encoding.
       * @param name name of the encoding as it appears in the 'encode' attribute;
@@ -638,6 +656,10 @@ namespace Common {
       * the specified name (when using new codec handling). */
     void set_coding_function(const char* coding_name, boolean encode,
       Assignment* function_def);
+    
+    /** Returns the custom encoder or decoder function at the specified index in
+      * the coding table related to this type (when using the new codec handling). */
+    coder_function_t* get_coding_function(size_t index, boolean encode);
     
     /** Returns the type that contains this type's coding table (since types
       * with no 'encode' attributes of their own inherit the 'encode' attributes
@@ -784,8 +806,9 @@ namespace Common {
     string get_coding(bool encode) const;
     
     /** Returns the function definition of the type's encoder/decoder function.
-      * Used during code generation for types encoded/decoded by functions. */
-    Assignment* get_coding_function(bool encode) const;
+      * Used during code generation for types encoded/decoded by functions.
+      * Only used with legacy codec handling. */
+    Assignment* get_legacy_coding_function(bool encode) const;
     
     static MessageEncodingType_t get_enc_type(const string& enc);
     

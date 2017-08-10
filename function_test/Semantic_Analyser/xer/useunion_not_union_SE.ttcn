@@ -13,7 +13,7 @@
 module useunion_not_union_SE {	//^In TTCN-3 module `useunion_not_union_SE'://
 
 type record uu { //^In type definition// \
-                 //^error: USE-UNION can only applied to a CHOICE/union type//
+                 //^error: USE-UNION can only be applied to a CHOICE/union type//
 }
 with {
   variant "useUnion"
@@ -21,7 +21,7 @@ with {
 }
 
 type enumerated truth { //^In type definition// \
-                        //^error: USE-UNION can only applied to a CHOICE/union type//
+                        //^error: USE-UNION can only be applied to a CHOICE/union type//
   TRUE, FALSE, FILE_NOT_FOUND
 }
 with {
@@ -30,7 +30,7 @@ with {
 }
 
 type record of integer ints //^In type definition// \
-                            //^error: USE-UNION can only applied to a CHOICE/union type//
+                            //^error: USE-UNION can only be applied to a CHOICE/union type//
 with {
   variant "useUnion"
 }

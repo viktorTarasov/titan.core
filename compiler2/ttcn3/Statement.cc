@@ -5791,39 +5791,9 @@ error:
       Common::Type::get_pooltype(Type::T_USTR)->chk_this_value(enc_str, NULL,
         Common::Type::EXPECTED_DYNAMIC_VALUE, INCOMPLETE_NOT_ALLOWED,
         OMIT_NOT_ALLOWED, NO_SUB_CHK);
-      bool val_error = false;
       if (!type_error && enc_str->get_valuetype() != Common::Value::V_ERROR &&
           !enc_str->is_unfoldable()) {
-        ustring us = enc_str->get_val_ustr();
-        for (size_t i = 0; i < us.size(); ++i) {
-          const ustring::universal_char& uc = us[i];
-          if (uc.group != 0 || uc.plane != 0 || uc.row != 0) {
-            // this surely won't match any of the type's encodings, since
-            // 'encode' attributes cannot contain multi-byte characters
-            val_error = true;
-            break;
-          }
-        }
-        if (!val_error) {
-          string s(us);
-          Common::Type::MessageEncodingType_t coding = Common::Type::get_enc_type(s);
-          bool built_in = (coding != Common::Type::CT_PER &&
-            coding != Common::Type::CT_CUSTOM);
-          val_error = true;
-          const vector<Common::Type::coding_t>& ct = t_ct->get_coding_table();
-          for (size_t i = 0; i < ct.size(); ++i) {
-            if (built_in == ct[i]->built_in &&
-                ((built_in && coding == ct[i]->built_in_coding) ||
-                 (!built_in && s == ct[i]->custom_coding.name))) {
-              val_error = false;
-              break;
-            }
-          }
-        }
-        if (val_error) {
-          enc_str->error("The encoding string does not match any encodings of "
-            "type `%s'", type->get_typename().c_str());
-        }
+        enc_str->chk_dyn_enc_str(type);
       }
     }
     RunsOnScope* runs_on_scope = my_sb->get_scope_runs_on();
@@ -9872,7 +9842,7 @@ error:
               "TTCN_error(\"Parameter redirect (for parameter '%s') failed, "
               "because the buffer was not empty after decoding. "
               "Remaining bits: %%d.\", buff.lengthof());\n"
-              "}\n", ve->get_dec_type()->get_coding_function(false)->
+              "}\n", ve->get_dec_type()->get_legacy_coding_function(false)->
               get_genname_from_scope(scope).c_str(), par_name, par_name, par_name);
           }
           else if (legacy_codec_handling) { // legacy codec handling with built-in decoding
@@ -10700,7 +10670,7 @@ error:
                 "TTCN_error(\"Value redirect #%d failed, because the buffer was "
                 "not empty after decoding. Remaining bits: %%d.\", "
                 "buff_%d.lengthof());\n"
-                "}\n", member_type->get_coding_function(false)->
+                "}\n", member_type->get_legacy_coding_function(false)->
                 get_genname_from_scope(scope).c_str(),
                 static_cast<int>(i), static_cast<int>(i), static_cast<int>(i + 1),
                 static_cast<int>(i), static_cast<int>(i + 1), static_cast<int>(i));

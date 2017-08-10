@@ -5907,6 +5907,47 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     }
     if (error_flag) set_valuetype(V_ERROR);
   }
+  
+  void Value::chk_dyn_enc_str(Type* type)
+  {
+    if (legacy_codec_handling) {
+      FATAL_ERROR("Value::chk_dyn_enc_str()");
+    }
+    Type* t_ct = type->get_type_w_coding_table();
+    if (t_ct == NULL) {
+      return; // an error has already been displayed
+    }
+    bool val_error = false;
+    ustring us = get_val_ustr();
+    for (size_t i = 0; i < us.size(); ++i) {
+      const ustring::universal_char& uc = us[i];
+      if (uc.group != 0 || uc.plane != 0 || uc.row != 0) {
+        // this surely won't match any of the type's encodings, since
+        // 'encode' attributes cannot contain multi-byte characters
+        val_error = true;
+        break;
+      }
+    }
+    if (!val_error) {
+      string s(us);
+      Type::MessageEncodingType_t coding = Type::get_enc_type(s);
+      bool built_in = (coding != Type::CT_PER && coding != Type::CT_CUSTOM);
+      val_error = true;
+      const vector<Common::Type::coding_t>& ct = t_ct->get_coding_table();
+      for (size_t i = 0; i < ct.size(); ++i) {
+        if (built_in == ct[i]->built_in &&
+            ((built_in && coding == ct[i]->built_in_coding) ||
+             (!built_in && s == ct[i]->custom_coding.name))) {
+          val_error = false;
+          break;
+        }
+      }
+    }
+    if (val_error) {
+      error("The encoding string does not match any encodings of type `%s'",
+        type->get_typename().c_str());
+    }
+  }
 
   void Value::chk_expr_operand_encode(ReferenceChain *refch,
                                       Type::expected_value_t exp_val)
@@ -5914,9 +5955,10 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     const char* opname = u.expr.v_optype == OPTYPE_ENCODE ? "encvalue" :
       "encvalue_unichar";
     Type t_chk(Type::T_ERROR);
+    Type* t_type;
     {
       Error_Context cntxt(this, "In the first parameter of %s()", opname);
-      Type* t_type;
+      Type* t_type_last;
 
       Type::expected_value_t ti_exp_val = exp_val;
       if (ti_exp_val == Type::EXPECTED_DYNAMIC_VALUE)
@@ -5927,7 +5969,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         chk_expr_eval_ti(u.expr.ti1, t_type, refch, ti_exp_val);
         if (valuetype!=V_ERROR)
           u.expr.ti1->get_Template()->chk_specific_value(false);
-        t_type = t_type->get_type_refd_last();
+        t_type_last = t_type->get_type_refd_last();
       } else {
         error("Cannot determine type of value");
         set_valuetype(V_ERROR);
@@ -5943,10 +5985,11 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       }*/
 
       if(!disable_attribute_validation()) {
-        t_type->chk_coding(true, my_scope->get_scope_mod());
+        Type* t_type_coding = legacy_codec_handling ? t_type_last : t_type;
+        t_type_coding->chk_coding(true, my_scope->get_scope_mod());
       }
 
-      switch (t_type->get_typetype()) {
+      switch (t_type_last->get_typetype()) {
       case Type::T_UNDEF:
       case Type::T_ERROR:
       case Type::T_NULL:
@@ -5962,7 +6005,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       case Type::T_ALTSTEP:
       case Type::T_TESTCASE:
         error("Type of parameter of encvalue() cannot be '%s'",
-          t_type->get_typename().c_str());
+          t_type_last->get_typename().c_str());
         set_valuetype(V_ERROR);
         return;
       default:
@@ -5999,7 +6042,9 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       chk_expr_operandtype_charstr(tt, u.expr.v_optype == OPTYPE_ENCODE ?
         "Third" : "Fourth", opname, v_dyn_enc);
       chk_expr_eval_value(v_dyn_enc, t_chk, refch, exp_val);
-      // TODO: if foldable, check value against coding table
+      if (!legacy_codec_handling && !v_dyn_enc->is_unfoldable(refch, exp_val)) {
+        v_dyn_enc->chk_dyn_enc_str(t_type);
+      }
     }
   }
 
@@ -6008,127 +6053,131 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
   {
     const char* opname = u.expr.v_optype == OPTYPE_DECODE ? "decvalue" :
       "decvalue_unichar";
-    Error_Context cntxt(this, "In the parameters of %s()", opname);
-    Ttcn::Ref_base* ref = u.expr.r1;
-    Ttcn::FieldOrArrayRefs* t_subrefs = ref->get_subrefs();
     Type* t_type = 0;
-    Assignment* t_ass = ref->get_refd_assignment();
+    {
+      Error_Context cntxt(this, "In the parameters of %s()", opname);
+      Ttcn::Ref_base* ref = u.expr.r1;
+      Ttcn::FieldOrArrayRefs* t_subrefs = ref->get_subrefs();
+      Type* t_type_last = 0;
+      Assignment* t_ass = ref->get_refd_assignment();
 
-    if (!t_ass) {
-      error("Could not determine the assignment for first parameter");
-      goto error;
-    }
-    switch (t_ass->get_asstype()) {
-    case Assignment::A_PAR_VAL_IN:
-      t_ass->use_as_lvalue(*this);
-      break;
-    case Assignment::A_CONST:
-    case Assignment::A_EXT_CONST:
-    case Assignment::A_MODULEPAR:
-    case Assignment::A_MODULEPAR_TEMP:
-    case Assignment::A_TEMPLATE:
-      ref->error("Reference to '%s' cannot be used as the first operand of "
-                 "the 'decvalue' operation", t_ass->get_assname());
-      goto error;
-      break;
-    case Assignment::A_VAR:
-    case Assignment::A_PAR_VAL_OUT:
-    case Assignment::A_PAR_VAL_INOUT:
-      break;
-    case Assignment::A_VAR_TEMPLATE:
-    case Assignment::A_PAR_TEMPL_IN:
-    case Assignment::A_PAR_TEMPL_OUT:
-    case Assignment::A_PAR_TEMPL_INOUT: {
-      Template* t = new Template(ref->clone());
-      t->set_location(*ref);
-      t->set_my_scope(get_my_scope());
-      t->set_fullname(get_fullname()+".<operand>");
-      Template* t_last = t->get_template_refd_last();
-      if (t_last->get_templatetype() != Template::SPECIFIC_VALUE
-          && t_last != t) {
-        ref->error("Specific value template was expected instead of '%s'.",
-          t->get_template_refd_last()->get_templatetype_str());
-        delete t;
+      if (!t_ass) {
+        error("Could not determine the assignment for first parameter");
         goto error;
       }
-      delete t;
-      break; }
-    default:
-      ref->error("Reference to '%s' cannot be used.", t_ass->get_assname());
-      goto error;
-    }
-    t_type = t_ass->get_Type()->get_field_type(t_subrefs,
-                                                 Type::EXPECTED_DYNAMIC_VALUE);
-    if (!t_type) {
-      goto error;
-    }
-    switch(u.expr.v_optype) {
-      case OPTYPE_DECODE:
-        if (t_type->get_type_refd_last()->get_typetype() != Type::T_BSTR){
-          error("First parameter has to be a bitstring");
-          goto error;
-        }
+      switch (t_ass->get_asstype()) {
+      case Assignment::A_PAR_VAL_IN:
+        t_ass->use_as_lvalue(*this);
         break;
-      case OPTYPE_DECVALUE_UNICHAR:
-        if (t_type->get_type_refd_last()->get_typetype() != Type::T_USTR){
-          error("First parameter has to be a universal charstring");
+      case Assignment::A_CONST:
+      case Assignment::A_EXT_CONST:
+      case Assignment::A_MODULEPAR:
+      case Assignment::A_MODULEPAR_TEMP:
+      case Assignment::A_TEMPLATE:
+        ref->error("Reference to '%s' cannot be used as the first operand of "
+                   "the 'decvalue' operation", t_ass->get_assname());
+        goto error;
+        break;
+      case Assignment::A_VAR:
+      case Assignment::A_PAR_VAL_OUT:
+      case Assignment::A_PAR_VAL_INOUT:
+        break;
+      case Assignment::A_VAR_TEMPLATE:
+      case Assignment::A_PAR_TEMPL_IN:
+      case Assignment::A_PAR_TEMPL_OUT:
+      case Assignment::A_PAR_TEMPL_INOUT: {
+        Template* t = new Template(ref->clone());
+        t->set_location(*ref);
+        t->set_my_scope(get_my_scope());
+        t->set_fullname(get_fullname()+".<operand>");
+        Template* t_last = t->get_template_refd_last();
+        if (t_last->get_templatetype() != Template::SPECIFIC_VALUE
+            && t_last != t) {
+          ref->error("Specific value template was expected instead of '%s'.",
+            t->get_template_refd_last()->get_templatetype_str());
+          delete t;
           goto error;
         }
-        break; 
+        delete t;
+        break; }
       default:
-        FATAL_ERROR("Value::chk_expr_decode_operands()");
+        ref->error("Reference to '%s' cannot be used.", t_ass->get_assname());
+        goto error;
+      }
+      t_type = t_ass->get_Type()->get_field_type(t_subrefs,
+                                                   Type::EXPECTED_DYNAMIC_VALUE);
+      if (!t_type) {
+        goto error;
+      }
+      switch(u.expr.v_optype) {
+        case OPTYPE_DECODE:
+          if (t_type->get_type_refd_last()->get_typetype() != Type::T_BSTR){
+            error("First parameter has to be a bitstring");
+            goto error;
+          }
+          break;
+        case OPTYPE_DECVALUE_UNICHAR:
+          if (t_type->get_type_refd_last()->get_typetype() != Type::T_USTR){
+            error("First parameter has to be a universal charstring");
+            goto error;
+          }
+          break; 
+        default:
+          FATAL_ERROR("Value::chk_expr_decode_operands()");
+          break;
+      }
+
+      ref = u.expr.r2;
+      t_subrefs = ref->get_subrefs();
+      t_ass = ref->get_refd_assignment();
+
+      if (!t_ass) {
+        error("Could not determine the assignment for second parameter");
+        goto error;
+      }
+      // Extra check for HM59355.
+      switch (t_ass->get_asstype()) {
+      case Assignment::A_VAR:
+      case Assignment::A_PAR_VAL_IN:
+      case Assignment::A_PAR_VAL_OUT:
+      case Assignment::A_PAR_VAL_INOUT:
         break;
-    }
+      default:
+        ref->error("Reference to '%s' cannot be used.", t_ass->get_assname());
+        goto error;
+      }
+      t_type = t_ass->get_Type()->get_field_type(t_subrefs,
+                                                 Type::EXPECTED_DYNAMIC_VALUE);
+      if (!t_type) {
+        goto error;
+      }
+      t_type_last = t_type->get_type_refd_last();
+      switch (t_type_last->get_typetype()) {
+      case Type::T_UNDEF:
+      case Type::T_ERROR:
+      case Type::T_NULL:
+      case Type::T_REFD:
+      case Type::T_REFDSPEC:
+      case Type::T_SELTYPE:
+      case Type::T_VERDICT:
+      case Type::T_PORT:
+      case Type::T_COMPONENT:
+      case Type::T_DEFAULT:
+      case Type::T_SIGNATURE:
+      case Type::T_FUNCTION:
+      case Type::T_ALTSTEP:
+      case Type::T_TESTCASE:
+        error("Type of second parameter cannot be %s",
+              t_type_last->get_typename().c_str());
+        goto error;
+      default:
+        break;
+      }
 
-    ref = u.expr.r2;
-    t_subrefs = ref->get_subrefs();
-    t_ass = ref->get_refd_assignment();
-
-    if (!t_ass) {
-      error("Could not determine the assignment for second parameter");
-      goto error;
-    }
-    // Extra check for HM59355.
-    switch (t_ass->get_asstype()) {
-    case Assignment::A_VAR:
-    case Assignment::A_PAR_VAL_IN:
-    case Assignment::A_PAR_VAL_OUT:
-    case Assignment::A_PAR_VAL_INOUT:
-      break;
-    default:
-      ref->error("Reference to '%s' cannot be used.", t_ass->get_assname());
-      goto error;
-    }
-    t_type = t_ass->get_Type()->get_field_type(t_subrefs,
-                                               Type::EXPECTED_DYNAMIC_VALUE);
-    if (!t_type) {
-      goto error;
-    }
-    t_type = t_type->get_type_refd_last();
-    switch (t_type->get_typetype()) {
-    case Type::T_UNDEF:
-    case Type::T_ERROR:
-    case Type::T_NULL:
-    case Type::T_REFD:
-    case Type::T_REFDSPEC:
-    case Type::T_SELTYPE:
-    case Type::T_VERDICT:
-    case Type::T_PORT:
-    case Type::T_COMPONENT:
-    case Type::T_DEFAULT:
-    case Type::T_SIGNATURE:
-    case Type::T_FUNCTION:
-    case Type::T_ALTSTEP:
-    case Type::T_TESTCASE:
-      error("Type of second parameter cannot be %s",
-            t_type->get_typename().c_str());
-      goto error;
-    default:
-      break;
-    }
-
-    if(!disable_attribute_validation()) {
-      t_type->chk_coding(false, my_scope->get_scope_mod());
+      if(!disable_attribute_validation()) {
+        Type* t_type_coding = legacy_codec_handling ? t_type_last : t_type;
+        t_type_coding->chk_coding(false, my_scope->get_scope_mod());
+      }
     }
     
     {
@@ -6162,7 +6211,9 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         chk_expr_operandtype_charstr(tt, u.expr.v_optype == OPTYPE_DECODE ?
           "Fourth" : "Fifth", opname, v_dyn_enc);
         chk_expr_eval_value(v_dyn_enc, t_chk, refch, exp_val);
-        // TODO: if foldable, check value against coding table
+        if (!legacy_codec_handling && !v_dyn_enc->is_unfoldable(refch, exp_val)) {
+          v_dyn_enc->chk_dyn_enc_str(t_type);
+        }
       }
     }
 
@@ -11300,28 +11351,46 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
          if (u.expr.v2) return create_stringRepr_predef2("unichar2oct");
          else return create_stringRepr_predef1("unichar2oct");
       }
-      case OPTYPE_ENCVALUE_UNICHAR: { // TODO: update with new parameters
-         if (u.expr.v2) return create_stringRepr_predef2("encvalue_unichar");
-         else return create_stringRepr_predef1("encvalue_unichar");
-      }
+      case OPTYPE_ENCVALUE_UNICHAR: {
+        string ret_val("encvalue_unichar(");
+        u.expr.ti1->append_stringRepr(ret_val);
+        if (u.expr.v2 != NULL) {
+          ret_val += ", ";
+          ret_val += u.expr.v2->get_stringRepr();
+          if (u.expr.v3 != NULL) {
+            ret_val += ", ";
+            ret_val += u.expr.v3->get_stringRepr();
+            if (u.expr.v4 != NULL) {
+              ret_val += ", ";
+              ret_val += u.expr.v4->get_stringRepr();
+            }
+          }
+        }
+        ret_val += ')';
+        return ret_val; }
       case OPTYPE_HOSTID: {
         if (u.expr.v1) return create_stringRepr_predef1("hostid");   
         else return string("hostid()");
       }
-      case OPTYPE_DECVALUE_UNICHAR: { // TODO: update with new parameters
-         if (u.expr.v3) {
-           string ret_val("decvalue_unichar");
-           ret_val += '(';
-           ret_val += u.expr.v1->get_stringRepr();
-           ret_val += ", ";
-           ret_val += u.expr.v2->get_stringRepr();
-           ret_val += ", ";
-           ret_val += u.expr.v3->get_stringRepr();
-           ret_val += ')';
-           return ret_val;
-         }
-         else return create_stringRepr_predef2("decvalue_unichar");
-      }
+      case OPTYPE_DECVALUE_UNICHAR: {
+        string ret_val("decvalue_unichar(");
+        ret_val += u.expr.r1->get_dispname();
+        ret_val += ", ";
+        ret_val += u.expr.r2->get_dispname();
+        if (u.expr.v3 != NULL) {
+          ret_val += ", ";
+          ret_val += u.expr.v3->get_stringRepr();
+          if (u.expr.v4 != NULL) {
+            ret_val += ", ";
+            ret_val += u.expr.v4->get_stringRepr();
+            if (u.expr.v5 != NULL) {
+              ret_val += ", ";
+              ret_val += u.expr.v5->get_stringRepr();
+            }
+          }
+        }
+        ret_val += ')';
+        return ret_val; }
       case OPTYPE_STR2BIT:
         return create_stringRepr_predef1("str2bit");
       case OPTYPE_STR2FLOAT:
@@ -11338,10 +11407,34 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         return create_stringRepr_predef1("unichar2char");
       case OPTYPE_ENUM2INT:
         return create_stringRepr_predef1("enum2int");
-      case OPTYPE_ENCODE:
-        return create_stringRepr_predef1("encvalue"); // TODO: update with new parameters
-      case OPTYPE_DECODE:
-        return create_stringRepr_predef2("decvalue"); // TODO: update with new parameters
+      case OPTYPE_ENCODE: {
+        string ret_val("encvalue(");
+        u.expr.ti1->append_stringRepr(ret_val);
+        if (u.expr.v2 != NULL) {
+          ret_val += ", ";
+          ret_val += u.expr.v2->get_stringRepr();
+          if (u.expr.v3 != NULL) {
+            ret_val += ", ";
+            ret_val += u.expr.v3->get_stringRepr();
+          }
+        }
+        ret_val += ')';
+        return ret_val; }
+      case OPTYPE_DECODE: {
+        string ret_val("decvalue(");
+        ret_val += u.expr.r1->get_dispname();
+        ret_val += ", ";
+        ret_val += u.expr.r2->get_dispname();
+        if (u.expr.v3 != NULL) {
+          ret_val += ", ";
+          ret_val += u.expr.v3->get_stringRepr();
+          if (u.expr.v4 != NULL) {
+            ret_val += ", ";
+            ret_val += u.expr.v4->get_stringRepr();
+          }
+        }
+        ret_val += ')';
+        return ret_val; }
       case OPTYPE_RNDWITHVAL:
         return create_stringRepr_predef1("rnd");
       case OPTYPE_ADD:
@@ -11730,10 +11823,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
   {
     string ret_val(function_name);
     ret_val += '(';
-    if (u.expr.v_optype == OPTYPE_ENCODE || u.expr.v_optype == OPTYPE_ENCVALUE_UNICHAR) { // ti1, not v1
-      ret_val += u.expr.ti1->get_specific_value()->get_stringRepr();
-    }
-    else ret_val += u.expr.v1->get_stringRepr();
+    ret_val += u.expr.v1->get_stringRepr();
     ret_val += ')';
     return ret_val;
   }
@@ -13521,7 +13611,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
           expr->postamble = mputstr(expr->postamble, expr2.postamble);
       } else
         expr->expr = mputprintf(expr->expr, "%s(%s%s)",
-          gov_last->get_coding_function(true)->get_genname_from_scope(scope).c_str(),
+          gov_last->get_legacy_coding_function(true)->get_genname_from_scope(scope).c_str(),
           expr2.expr, is_templ ? ".valueof()" : "");
     }
     else { // new codec handling
@@ -13636,7 +13726,8 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         expr->expr = mputprintf(expr->expr, "%s", retval_id.c_str());
       } else
         expr->expr = mputprintf(expr->expr, "%s(%s, %s)",
-          _type_last->get_coding_function(false)->get_genname_from_scope(scope).c_str(), expr1.expr, expr2.expr);
+          _type_last->get_legacy_coding_function(false)->get_genname_from_scope(scope).c_str(),
+          expr1.expr, expr2.expr);
       if (expr1.postamble)
         expr->postamble = mputprintf(expr->postamble, "%s", expr1.postamble);
       if (expr2.postamble)
@@ -13770,7 +13861,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
           expr->postamble = mputstr(expr->postamble, expr2.postamble);
       } else {
         expr->expr = mputprintf(expr->expr, "oct2unichar(bit2oct(%s(%s%s)), %s)",
-          gov_last->get_coding_function(true)->get_genname_from_scope(scope).c_str(),
+          gov_last->get_legacy_coding_function(true)->get_genname_from_scope(scope).c_str(),
           expr2.expr, is_templ ? ".valueof()" : "", v2_code);
       }
     }
@@ -13904,7 +13995,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
           ustr_ref_id.c_str(), expr1.expr,
           bstr_id.c_str(), ustr_ref_id.c_str(), v3_code,
           ret_val_id.c_str(),
-          _type_last->get_coding_function(false)->get_genname_from_scope(scope).c_str(),
+          _type_last->get_legacy_coding_function(false)->get_genname_from_scope(scope).c_str(),
           bstr_id.c_str(), expr2.expr,
           ustr_ref_id.c_str(), bstr_id.c_str(), v3_code);
         expr->expr = mputprintf(expr->expr, "%s", ret_val_id.c_str());

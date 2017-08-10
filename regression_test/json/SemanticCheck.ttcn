@@ -47,6 +47,7 @@ type union EmbeddedUnion
   octetstring bytes
 }
 with {
+  encode "JSON";
   variant "JSON: as value";
 }
 

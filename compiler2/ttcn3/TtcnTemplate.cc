@@ -4929,7 +4929,7 @@ compile_time:
           "}\n"
           // make sure the bitstring is empty after decoding, display a warning otherwise
           "else if (bs.lengthof() != 0) {\n",
-          target_type_last->get_coding_function(false)->get_genname_from_scope(my_scope).c_str());
+          target_type_last->get_legacy_coding_function(false)->get_genname_from_scope(my_scope).c_str());
       }
       else {
         str = mputprintf(str,

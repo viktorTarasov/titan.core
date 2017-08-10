@@ -15,6 +15,9 @@ module TtcnTypes {
 external function f_dec_abc(inout bitstring x, out R1 y) return integer
   with { extension "prototype(sliding) decode(abc)" }
   
+external function f_dec_abc2(inout bitstring x, out R3 y) return integer
+  with { extension "prototype(sliding) decode(abc)" }
+  
 type enumerated E1 { val1, val2, val3 }
 with {
   encode "TEXT";
@@ -33,6 +36,8 @@ with {
 }
 
 type R1 R2;
+
+type R2 R3;
 
 type union U1 {
   integer alt1
