@@ -461,7 +461,6 @@ with { encode "TEXT" variant "" }
 type record R {
   charstring cs,
   octetstring os,
-  bitstring bs,
   ROF rof
 }
 with { encode "TEXT" variant "" }

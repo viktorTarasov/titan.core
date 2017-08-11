@@ -788,13 +788,12 @@ void Type::chk_variants()
     global_ap = my_ttcn_module->get_attrib_path();
   }
   if (global_ap != NULL) {
-    MultiWithAttrib* mwa = global_ap->get_with_attr();
-    if (mwa != NULL) {
-      for (size_t i = 0; i < mwa->get_nof_elements(); ++i) {
-        const SingleWithAttrib* swa = mwa->get_element(i);
-        if (swa->get_attribKeyword() == SingleWithAttrib::AT_VARIANT) {
-          chk_this_variant(swa, true);
-        }
+    // process all global variants, not just the closest group
+    const vector<SingleWithAttrib>& real = global_ap->get_real_attrib();
+    for (size_t i = 0; i < real.size(); ++i) {
+      const SingleWithAttrib* swa = real[i];
+      if (swa->get_attribKeyword() == SingleWithAttrib::AT_VARIANT) {
+        chk_this_variant(swa, true);
       }
     }
   }
@@ -927,29 +926,32 @@ void Type::chk_this_variant(const Ttcn::SingleWithAttrib* swa, bool global)
         swa->get_attribSpec(), get_length_multiplier(), my_scope->get_scope_mod(), 
         raw_found, text_found, xer_found, ber_found, json_found);
       bool mismatch = false;
-      switch (coding) {
-      case CT_BER:
-        mismatch = !ber_found;
-        break;
-      case CT_RAW:
-        mismatch = !raw_found;
-        break;
-      case CT_TEXT:
-        mismatch = !text_found;
-        break;
-      case CT_XER:
-        mismatch = !xer_found;
-        break;
-      case CT_JSON:
-        mismatch = !json_found;
-        break;
-      default:
-        FATAL_ERROR("Type::chk_this_variant");
-        break;
+      if (ber_found || raw_found || text_found || xer_found || json_found) {
+        switch (coding) {
+        case CT_BER:
+          mismatch = !ber_found;
+          break;
+        case CT_RAW:
+          mismatch = !raw_found;
+          break;
+        case CT_TEXT:
+          mismatch = !text_found;
+          break;
+        case CT_XER:
+          mismatch = !xer_found;
+          break;
+        case CT_JSON:
+          mismatch = !json_found;
+          break;
+        default:
+          FATAL_ERROR("Type::chk_this_variant");
+          break;
+        }
       }
       if (mismatch && ret == 0) {
         if (!global || !enc_str.empty()) {
-          // don't display this if there were parsing errors in the variant attribute
+          // don't display this if there were parsing errors in the variant 
+          // attribute, or if it was empty
           swa->error("Variant attribute is not related to %s encoding",
             get_encoding_name(coding));
         }

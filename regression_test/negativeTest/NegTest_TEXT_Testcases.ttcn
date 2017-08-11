@@ -41,11 +41,9 @@ external function encode_mySeqOJKL( in MySeqOJKL pdu) return charstring with { e
 external function encode_mySeqIOKL( in MySeqIOKL pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqCharstring(in MySeqCharstring pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqStr(in MySeqStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
-external function encode_mySeqBitStr(in MySeqBitStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqOctStr(in MySeqOctStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqIntCharstring( in MySeqIntCharstring pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqIntStr( in MySeqIntStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
-external function encode_mySeqIntBitStr( in MySeqIntBitStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqISKL( in MySeqISKL pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqIntSeqIntSeqInt2( in MySeqIntSeqIntSeqInt2 pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqIntSeqIntSeqInt2SeqCharstring2( in MySeqIntSeqIntSeqInt2SeqCharstring2 pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
@@ -64,9 +62,7 @@ external function encode_mySeqOfBool(in MySeqOfBool pdu) return charstring with 
 external function encode_mySeqOfInt(in MySeqOfInt pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqOfMyEnum(in MySeqOfMyEnum pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqOfCharstring( in MySeqOfCharstring pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
-external function encode_mySeqOfBitStr(in MySeqOfBitStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqOfOctStr(in MySeqOfOctStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
-external function encode_mySeqOfObjId(in MySeqOfObjId pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqOfMyUnionBT(in MySeqOfMyUnionBT pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqOfSeqSeqIntSeqInt2SeqCharstring2(in  MySeqOfSeqSeqIntSeqInt2SeqCharstring2 pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySeqOfMySeqIntSeqIntSeqInt2optoptSeqCharstring2(in MySeqOfMySeqIntSeqIntSeqInt2optoptSeqCharstring2 pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
@@ -92,11 +88,9 @@ external function encode_mySetOJKL( in MySetOJKL pdu) return charstring with { e
 external function encode_mySetIOKL( in MySetIOKL pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetCharstring(in MySetCharstring pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetStr(in MySetStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
-external function encode_mySetBitStr(in MySetBitStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetOctStr(in MySetOctStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetIntCharstring( in MySetIntCharstring pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetIntStr( in MySetIntStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
-external function encode_mySetIntBitStr( in MySetIntBitStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetISKL( in MySetISKL pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetISKLopt( in MySetISKLopt pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetIS2KLopt( in MySetIS2KLopt pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
@@ -121,9 +115,7 @@ external function encode_mySetOfBool(in MySetOfBool pdu) return charstring with 
 external function encode_mySetOfInt(in MySetOfInt pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetOfMyEnum(in MySetOfMyEnum pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetOfCharstring( in MySetOfCharstring pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
-external function encode_mySetOfBitStr(in MySetOfBitStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetOfOctStr(in MySetOfOctStr pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
-external function encode_mySetOfObjId(in MySetOfObjId pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetOfMyUnionBT(in MySetOfMyUnionBT pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 external function encode_mySetOfSeqSeqIntSeqInt2SeqCharstring2(in  MySetOfSeqSeqIntSeqInt2SeqCharstring2 pdu) return charstring with { extension "prototype(convert) encode(TEXT)" }
 
@@ -279,13 +271,10 @@ group Sequences{
   template MySeqStr t_msstr(template charstring p_s) := { s := p_s }
 
   //bitstring:
-  template MySeqBitStr t_msbitstr(template bitstring p_b) := { b := p_b };
   template MySeqOctStr t_msos(template octetstring p_o) := { o := p_o };
   template MySeqIntCharstring t_msir(template integer p_i, template charstring p_x ) := { i:=p_i, x:=p_x };
 
   template MySeqIntStr t_msistr(template integer p_i, template charstring p_s ) := { i:=p_i, s:=p_s };
-
-  template MySeqIntBitStr t_msibitstr(template integer p_i, template bitstring p_b ) := { i:=p_i, b:=p_b };
 
 
   //====set of related templates ========
@@ -298,9 +287,7 @@ group Sequences{
   template MyUnionBasicTypesT t_mubt_integerRaw( template integer p_i) := { i:= p_i } with { erroneous(i) "value(raw):='41424241'O" }
   template MyUnionBasicTypesT t_mubt_enumRaw( template MyEnum p_e) := { e:= p_e } with { erroneous(e) "value(raw):='41424241'O" }
   template MyUnionBasicTypesT t_mubt_stringRaw( template charstring p_r) := { r:= p_r } with { erroneous(r) "value(raw):='41424241'O" }
-  template MyUnionBasicTypesT t_mubt_bitstrRaw( template bitstring p_bs) := { bs:= p_bs } with { erroneous(bs) "value(raw):='41424241'O" }
   template MyUnionBasicTypesT t_mubt_octetstrRaw( template octetstring p_os) := { os:= p_os } with { erroneous(os) "value(raw):='41424241'O" }
-  template MyUnionBasicTypesT t_mubt_objidRaw( template objid p_oi) := { oi:= p_oi } with { erroneous(oi) "value(raw):='41424241'O" }
 
   template MyUnionComplexTypes t_muct_0_1( template charstring p_f1, template charstring p_f2, template charstring p_f3) := { sofcharstring:={p_f1,p_f2,p_f3} } with { erroneous(sofcharstring[0], sofcharstring[1]) "value :=omit" }
   template MyUnionComplexTypes t_muct_0_2( template charstring p_f1, template charstring p_f2, template charstring p_f3) := { sofcharstring:={p_f1,p_f2,p_f3} } with { erroneous(sofcharstring[0], sofcharstring[2]) "value :=omit" }
@@ -842,7 +829,6 @@ group SequenceOf {
   template MySeqOfInt   t_msoi(template integer p_i1, template integer p_i2, template integer p_i3):={p_i1,p_i2,p_i3};
   template MySeqOfMyEnum t_msome(template MyEnum p_e1, template MyEnum p_e2,template MyEnum p_e3) := {p_e1,p_e2,p_e3};
   template MySeqOfCharstring  t_msor(template  charstring p_f1, template charstring p_f2, template charstring p_f3, template charstring p_f4):= {p_f1, p_f2,p_f3,p_f4}
-  template MySeqOfBitStr t_msobs(template bitstring p_bs1, template bitstring p_bs2, template bitstring p_bs3):={p_bs1, p_bs2, p_bs3}
   template MySeqOfOctStr t_msoos(template octetstring p_os1, template octetstring p_os2, template octetstring p_os3):={p_os1, p_os2, p_os3}
 
   template MySeqOfBool  t_msobValueSameType(template boolean p_b1, template boolean p_b2, template boolean p_b3) := { p_b1, p_b2, p_b3 }
@@ -1514,13 +1500,10 @@ group Set {
   template MySetStr t_msetstr(template charstring p_s) := { s := p_s }
 
   //bitstring:
-  template MySetBitStr t_msetbitstr(template bitstring p_b) := { b := p_b };
   template MySetOctStr t_msetos(template octetstring p_o) := { o := p_o };
   template MySetIntCharstring t_msetir(template integer p_i, template charstring p_f ) := { i:=p_i, f:=p_f };
 
   template MySetIntStr t_msetistr(template integer p_i, template charstring p_s ) := { i:=p_i, s:=p_s };
-
-  template MySetIntBitStr t_msetibitstr(template integer p_i, template bitstring p_b ) := { i:=p_i, b:=p_b };
 
 
   //================================================
@@ -2047,7 +2030,6 @@ group SetOf {  //====set of related templates====
   template MySetOfInt   t_msetofi(template integer p_i1, template integer p_i2, template integer p_i3):={p_i1,p_i2,p_i3};
   template MySetOfMyEnum t_msetofme(template MyEnum p_e1, template MyEnum p_e2,template MyEnum p_e3) := {p_e1,p_e2,p_e3};
   template MySetOfCharstring  t_msetofr(template  charstring p_f1, template charstring p_f2, template charstring p_f3, template charstring p_f4):= {p_f1, p_f2,p_f3,p_f4}
-  template MySetOfBitStr t_msetofbs(template bitstring p_bs1, template bitstring p_bs2, template bitstring p_bs3):={p_bs1, p_bs2, p_bs3}
   template MySetOfOctStr t_msetofos(template octetstring p_os1, template octetstring p_os2, template octetstring p_os3):={p_os1, p_os2, p_os3}
 
   template MySetOfBool  t_msetofbValueSameType(template boolean p_b1, template boolean p_b2, template boolean p_b3) := { p_b1, p_b2, p_b3 }
@@ -2539,16 +2521,8 @@ group Union {
     f_compareAndVerdict(encode_myUnionBasicTypesT(valueof(t_mubt_stringRaw("Three"))), "<MyUnion>ABBA</MyUnion>" )
   }//tc_
 
-  testcase tc_myUnionBasicTypes_bitstrRaw() runs on MyComp {
-    f_compareAndVerdict(encode_myUnionBasicTypesT(valueof(t_mubt_bitstrRaw('101011111'B))), "<MyUnion>ABBA</MyUnion>" )
-  }//tc_
-
   testcase tc_myUnionBasicTypes_octetstrRaw() runs on MyComp {
     f_compareAndVerdict(encode_myUnionBasicTypesT(valueof(t_mubt_octetstrRaw('BABAB0B0'O))), "<MyUnion>ABBA</MyUnion>" )
-  }//tc_
-
-  testcase tc_myUnionBasicTypes_objidRaw() runs on MyComp {
-    f_compareAndVerdict(encode_myUnionBasicTypesT(valueof(t_mubt_objidRaw(objid{ itu_t identified_organization etsi(0) inDomain(1)}))), "<MyUnion>ABBA</MyUnion>" )
   }//tc_
 
   testcase tc_myUnionComplexTypes_omit_0_1() runs on MyComp {

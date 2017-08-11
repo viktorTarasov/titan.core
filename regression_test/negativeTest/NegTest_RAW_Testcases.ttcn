@@ -152,9 +152,6 @@ with { extension "prototype(convert) encode(RAW)" }
 external function encode_rawSeqOfOctStr(in RawSeqOfOctStr pdu) return octetstring
 with { extension "prototype(convert) encode(RAW)" }
 
-external function encode_rawSeqOfObjId(in RawSeqOfObjId pdu) return octetstring
-with { extension "prototype(convert) encode(RAW)" }
-
 external function encode_rawSeqOfRawUnionBT(in RawSeqOfRawUnionBT pdu) return octetstring
 with { extension "prototype(convert) encode(RAW)" }
 
@@ -315,9 +312,6 @@ external function encode_rawSetOfBitStr(in RawSetOfBitStr pdu) return octetstrin
 with { extension "prototype(convert) encode(RAW)" }
 
 external function encode_rawSetOfOctStr(in RawSetOfOctStr pdu) return octetstring
-with { extension "prototype(convert) encode(RAW)" }
-
-external function encode_rawSetOfObjId(in RawSetOfObjId pdu) return octetstring
 with { extension "prototype(convert) encode(RAW)" }
 
 external function encode_rawSetOfRawUnionBT(in RawSetOfRawUnionBT pdu) return octetstring
@@ -3058,15 +3052,6 @@ group Union {
 
   testcase tc_rawUnionBasicTypes_octetstrRaw() runs on RawComp {
     f_compareAndVerdict(encode_rawUnionBasicTypesT(valueof(t_mubt_octetstrRaw('BABAB0B0'O))), char2oct("ABBA") )
-  }//tc_
-
-  template RawUnionBasicTypesT t_mubt_objidRaw( template objid p_oi) := { oi:= p_oi }
-  with { erroneous(oi) "value(raw):='41424241'O" }
-
-  testcase tc_rawUnionBasicTypes_objidRaw() runs on RawComp {
-    f_compareAndVerdict(
-      encode_rawUnionBasicTypesT(valueof(t_mubt_objidRaw(objid{ itu_t identified_organization etsi(0) inDomain(1)}))),
-      char2oct("ABBA") )
   }//tc_
 
   template RawUnionComplexTypes t_muct_0_1( template charstring p_f1, template charstring p_f2, template charstring p_f3)

@@ -688,7 +688,8 @@ int parse_rawAST(RawAST *par, TextAST *textpar, XerAttributes *xerpar,
     BEGIN(INITIAL);
     int retn=rawAST_parse();
     yylex_destroy();
-    if(!raw_found) raw_found=raw_f || (!text_f && !xer_f && !ber_f && !json_f);
+    if(!raw_found) raw_found=raw_f || (legacy_codec_handling &&
+      !text_f && !xer_f && !ber_f && !json_f);
     // if none found, pretend some RAW attribute was found
     if(!text_found) text_found=text_f;
     if(!xer_found) xer_found=xer_f;

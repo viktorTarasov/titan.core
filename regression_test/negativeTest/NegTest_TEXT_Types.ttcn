@@ -34,11 +34,8 @@ type record MySeqCharstring { charstring x } with { variant "BEGIN('<MySeq>')"; 
 type record MySeqCharstring2 { charstring x, charstring y optional } with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
 type record MySeqStr { charstring s} with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
 type record MySeqStr2 { charstring s, charstring t} with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
-type record MySeqBitStr { bitstring b} with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
-type record MySeqBitStr2 { bitstring s, bitstring t} with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
 type record MySeqIntCharstring { integer i, charstring x } with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
 type record MySeqIntStr { integer i, charstring s} with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
-type record MySeqIntBitStr { integer i, bitstring b} with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
 type record MySeqOctStr { octetstring o} with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
 type record MySeqOJKL { octetstring o, integer j, integer k, integer l} with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
 type record MySeqIOKL { integer i, octetstring o, integer k, integer l } with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
@@ -89,10 +86,7 @@ type record MySeqBasicTypes {
   integer i,
   MyEnum e, 
   charstring  r,
-  bitstring bs,
-  octetstring os,
-  objid oi
-  //,relativeobjid
+  octetstring os
 } with { variant "BEGIN('<MySeq>')"; variant "END('</MySeq>')"; variant "TEXT_CODING()"}
 //2.Sequence of (record of)
 
@@ -102,9 +96,7 @@ type record of boolean MySeqOfBool with { variant "BEGIN('<MySeqOf>')"; variant 
 type record of integer MySeqOfInt with { variant "BEGIN('<MySeqOf>')"; variant "END('</MySeqOf>')"; variant "TEXT_CODING()"};
 type record of MyEnum MySeqOfMyEnum with { variant "BEGIN('<MySeqOf>')"; variant "END('</MySeqOf>')"; variant "TEXT_CODING()"};
 type record of charstring MySeqOfCharstring with { variant "BEGIN('<MySeqOf>')"; variant "END('</MySeqOf>')"; variant "TEXT_CODING()"};
-type record of bitstring MySeqOfBitStr with { variant "BEGIN('<MySeqOf>')"; variant "END('</MySeqOf>')"; variant "TEXT_CODING()"};
 type record of octetstring MySeqOfOctStr with { variant "BEGIN('<MySeqOf>')"; variant "END('</MySeqOf>')"; variant "TEXT_CODING()"};
-type record of objid MySeqOfObjId with { variant "BEGIN('<MySeqOf>')"; variant "END('</MySeqOf>')"; variant "TEXT_CODING()"};
 type record of MyUnionBasicTypes MySeqOfMyUnionBT with { variant "BEGIN('<MySeqOf>')"; variant "END('</MySeqOf>')"; variant "TEXT_CODING()"};
 type record of MySeqSeqIntSeqInt2SeqCharstring2 MySeqOfSeqSeqIntSeqInt2SeqCharstring2 with { variant "BEGIN('<MySeqOf>')"; variant "END('</MySeqOf>')"; variant "TEXT_CODING()"};
 type record of MySeqIntSeqIntSeqInt2optoptSeqCharstring2 MySeqOfMySeqIntSeqIntSeqInt2optoptSeqCharstring2 with { variant "BEGIN('<MySeqOf>')"; variant "END('</MySeqOf>')"; variant "TEXT_CODING()"};
@@ -131,12 +123,9 @@ type set MySetCharstring { charstring x } with { variant "BEGIN('<MySet>')"; var
 type set MySetCharstring2 { charstring x, charstring y } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
 type set MySetStr { charstring s } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
 type set MySetStr2 { charstring s, charstring t } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
-type set MySetBitStr { bitstring b } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
 type set MySetOctStr { octetstring o } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
-type set MySetBitStr2 { bitstring a, bitstring b } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
 type set MySetIntCharstring { integer i, charstring f } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
 type set MySetIntStr { integer i , charstring s } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
-type set MySetIntBitStr { integer i, bitstring b} with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
 type set MySetIntOctStr { integer i, octetstring o } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
 type set MySetOJKL { octetstring o, integer j, integer k, integer l } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
 type set MySetIOKL { integer i, octetstring o, integer k, integer l } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
@@ -170,10 +159,7 @@ type set MySetBasicTypes {
   integer i,
   MyEnum e,
   charstring r,
-  bitstring bs,
-  octetstring os,
-  objid oi
-  //RELATIVE_OID roi
+  octetstring os
 } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
 
 type set MySetEnum { MyEnum e } with { variant "BEGIN('<MySet>')"; variant "END('</MySet>')"; variant "TEXT_CODING()"}
@@ -185,9 +171,7 @@ type set of boolean MySetOfBool with { variant "BEGIN('<MySetOf>')"; variant "EN
 type set of integer MySetOfInt with { variant "BEGIN('<MySetOf>')"; variant "END('</MySetOf>')"; variant "TEXT_CODING()"};
 type set of MyEnum MySetOfMyEnum with { variant "BEGIN('<MySetOf>')"; variant "END('</MySetOf>')"; variant "TEXT_CODING()"};
 type set of charstring MySetOfCharstring with { variant "BEGIN('<MySetOf>')"; variant "END('</MySetOf>')"; variant "TEXT_CODING()"};
-type set of bitstring MySetOfBitStr with { variant "BEGIN('<MySetOf>')"; variant "END('</MySetOf>')"; variant "TEXT_CODING()"};
 type set of octetstring MySetOfOctStr with { variant "BEGIN('<MySetOf>')"; variant "END('</MySetOf>')"; variant "TEXT_CODING()"};
-type set of objid MySetOfObjId with { variant "BEGIN('<MySetOf>')"; variant "END('</MySetOf>')"; variant "TEXT_CODING()"};
 type set of MyUnionBasicTypes MySetOfMyUnionBT with { variant "BEGIN('<MySetOf>')"; variant "END('</MySetOf>')"; variant "TEXT_CODING()"};
 type set of MySeqSeqIntSeqInt2SeqCharstring2 MySetOfSeqSeqIntSeqInt2SeqCharstring2 with { variant "BEGIN('<MySetOf>')"; variant "END('</MySetOf>')"; variant "TEXT_CODING()"};
 type set of MySeqIntSeqIntSeqInt2optoptSeqCharstring2 MySetOfMySeqIntSeqIntSeqInt2optoptSeqCharstring2 with { variant "BEGIN('<MySetOf>')"; variant "END('</MySetOf>')"; variant "TEXT_CODING()"};
@@ -198,9 +182,7 @@ type union MyUnionBasicTypes {
   integer i,
   MyEnum e, 
   charstring r,
-  bitstring bs,
-  octetstring os,
-  objid oi
+  octetstring os
 } with { variant "TEXT_CODING()"}
 
 //Tagged version:
@@ -209,9 +191,7 @@ type union MyUnionBasicTypesT {
   integer i,
   MyEnum e, 
   charstring r,
-  bitstring bs,
-  octetstring os,
-  objid oi
+  octetstring os
 }  with { variant "BEGIN('<MyUnion>')"; variant "END('</MyUnion>')"; variant "TEXT_CODING()"}
 
 type union MyUnionComplexTypes {

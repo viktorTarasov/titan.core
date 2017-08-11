@@ -351,9 +351,7 @@ type record RawSeqBasicTypes {
   RawEnum e,
   charstring  r,
   bitstring bs,
-  octetstring os,
-  objid oi
-  //,relativeobjid
+  octetstring os
 }
 with {
   variant "COMP(2scompl)";
@@ -411,12 +409,6 @@ with {
   variant ""
 };
 
-type record of objid RawSeqOfObjId
-with {
-  variant "COMP(2scompl)";
-  variant "";
-  variant ""
-};
 
 type record of RawUnionBasicTypes RawSeqOfRawUnionBT
 with {
@@ -814,9 +806,7 @@ type set RawSetBasicTypes {
   RawEnum e,
   charstring r,
   bitstring bs,
-  octetstring os,
-  objid oi
-  //RELATIVE_OID roi
+  octetstring os
 }
 with {
   variant "COMP(2scompl)";
@@ -881,12 +871,6 @@ with {
   variant "";
   variant ""
 };
-type set of objid RawSetOfObjId
-with {
-  variant "COMP(2scompl)";
-  variant "";
-  variant ""
-};
 
 type set of RawUnionBasicTypes RawSetOfRawUnionBT
 with {
@@ -920,8 +904,7 @@ type union RawUnionBasicTypes {
   RawEnum e,
   charstring r,
   bitstring bs,
-  octetstring os,
-  objid oi
+  octetstring os
 }
 with {
   variant ""
@@ -933,8 +916,7 @@ type union RawUnionBasicTypes32 {
   RawEnum e,
   charstring r,
   bitstring bs,
-  octetstring os,
-  objid oi
+  octetstring os
 }
 with {
   variant (i) "FIELDLENGTH(32)"
@@ -947,8 +929,7 @@ type union RawUnionBasicTypesT {
   RawEnum e,
   charstring r,
   bitstring bs,
-  octetstring os,
-  objid oi
+  octetstring os
 }
 with {
   variant "";

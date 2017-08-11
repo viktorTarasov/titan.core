@@ -6361,7 +6361,6 @@ if ((enc_RAW_PDU_170(i) == o)and(dec_RAW_PDU_170(o) == i)) {setverdict(pass);}
 //=================================
 //   group raw attribute test 3
 //=================================
-/* temporarily removed, because the new codec handling only takes the nearest group's variants into consideration
 
 group RAW_group47 {
   group grp_v1 {
@@ -6478,7 +6477,7 @@ testcase TC_group_raw_attribute_test_6() runs on TempComp{
 
   if ((enc_RAW_PDU_174(i) == o)and(dec_RAW_PDU_174(o) == i)) {setverdict(pass);}
   else {setverdict(fail);}
-}*/
+}
 //=================================
 //   group raw attribute test 7
 //=================================
@@ -7044,10 +7043,10 @@ control {
   execute(TC_Raw_update_test_16());
   execute(TC_group_raw_attribute_test_1());
   execute(TC_group_raw_attribute_test_2()); 
-  /*execute(TC_group_raw_attribute_test_3());
+  execute(TC_group_raw_attribute_test_3());
   execute(TC_group_raw_attribute_test_4());
   execute(TC_group_raw_attribute_test_5());
-  execute(TC_group_raw_attribute_test_6());*/
+  execute(TC_group_raw_attribute_test_6());
   execute(TC_group_raw_attribute_test_7());
   execute(TC_Fast_enc_dec_function());
   execute(TC_Backtrack_decode_function());
