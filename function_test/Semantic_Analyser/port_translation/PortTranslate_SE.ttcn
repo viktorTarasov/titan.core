@@ -29,6 +29,12 @@ module PortTranslate_SE { //^In TTCN-3 module//
 		in integer
 	}
 
+	type port PTInternal message map to P2 {
+		in integer;
+	} with {
+		extension "internal"
+	}
+
 	type port P1 message {
 		in integer
 	}
@@ -77,6 +83,11 @@ module PortTranslate_SE { //^In TTCN-3 module//
 		extension "provider"
 	}
 
+	type component MyComp {
+		port PTInternal pt2;
+		port P1 p1;
+		port P2 p2;
+	}
 
 
 	type port PT3 message map to P3 { //^In translation capability\:// //^In type definition \`PT3\'\:// //error\: Incoming message type \`charstring\' is not present in the in\(out\) message list or in the from mapping types\, coming from port\: \`P3\'\.//
@@ -209,5 +220,10 @@ module PortTranslate_SE { //^In TTCN-3 module//
 		out hexstring
 	} with {
 		extension "user P9 out(hexstring -> hexstring: simple)"; //^error\: Attribute \`user\' cannot be used on translation ports\.//
+	}
+
+	testcase tc_test() runs on MyComp { //In testcase definition//
+		map(mtc:pt2, system:p2);
+		map(mtc:pt2, system:p1); //In map statement// //In first endpoint// //warning\: Port type \`\@PortTranslate_SE\.PTInternal\' was marked as \`internal\'//
 	}
 }

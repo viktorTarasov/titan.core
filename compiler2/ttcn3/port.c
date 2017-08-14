@@ -49,7 +49,7 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
 {
   size_t i;
   boolean has_buffer = FALSE, has_discard = FALSE, report_error = FALSE;
-  if (pdef->testport_type == INTERNAL) {
+  if (pdef->testport_type == INTERNAL && pdef->legacy) {
     src = mputstr(src, "if (destination_component == SYSTEM_COMPREF) "
       "TTCN_error(\"Message cannot be sent to system on internal port "
       "%s.\", port_name);\n");
@@ -183,7 +183,7 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
       src = mputstr(src,
         "outgoing_send(mapped_par, &destination_address);\n");
     } else {
-      if (pdef->testport_type != INTERNAL) {
+      if (pdef->testport_type != INTERNAL || !pdef->legacy) {
         src = mputprintf(src, "if (destination_component == "
           "SYSTEM_COMPREF) outgoing_%ssend(mapped_par%s);\n"
           "else {\n",
@@ -195,7 +195,7 @@ static char *generate_send_mapping(char *src, const port_def *pdef,
         "mapped_par.encode_text(text_buf);\n"
         "send_data(text_buf, destination_component);\n",
         target->target_dispname);
-      if (pdef->testport_type != INTERNAL) src = mputstr(src, "}\n");
+      if (pdef->testport_type != INTERNAL || !pdef->legacy) src = mputstr(src, "}\n");
     }
     if (has_condition) {
       if (!pdef->legacy && pdef->port_type == USER) {
@@ -2114,7 +2114,7 @@ void defPortClass(const port_def* pdef, output_struct* output)
 
   if (pdef->port_type == USER) {
     def = mputstr(def, "public:\n");
-    def = mputstr(def, "PORT* get_provider_port();");
+    def = mputstr(def, "PORT* get_provider_port();\n");
     src = mputprintf(src,
       "PORT* %s::get_provider_port() {\n"
       "(void)get_default_destination();\n", class_name);
@@ -2260,8 +2260,16 @@ void defPortClass(const port_def* pdef, output_struct* output)
     src = mputstr(src, "}\n\n");
   }
   
-  if (pdef->testport_type != INTERNAL &&
+  if ((pdef->testport_type != INTERNAL || !pdef->legacy) &&
      (pdef->port_type == REGULAR || (pdef->port_type == USER && !pdef->legacy))) {
+    
+    // Implement set_parameter to remove warnings from it in the PORT class.
+    if (pdef->testport_type == INTERNAL && !pdef->legacy) {
+      def = mputstr(def,
+        "public:\n"
+        "void set_parameter(const char*, const char*) {}\n");
+    }
+    
     /* virtual functions for transmission (implemented by the test port) */
     def = mputstr(def, "protected:\n");
     /* outgoing_send functions */
@@ -2278,13 +2286,17 @@ void defPortClass(const port_def* pdef, output_struct* output)
         }
       }
       if (!found) {
-        def = mputprintf(def, "virtual void outgoing_send("
-          "const %s& send_par", pdef->msg_out.elements[i].name);
-        if (pdef->testport_type == ADDRESS) {
-          def = mputprintf(def, ", const %s *destination_address",
-            pdef->address_name);
+        // Internal ports with translation capability do not need the implementable
+        // outgoing_send functions.
+        if (pdef->testport_type != INTERNAL || pdef->legacy) {
+          def = mputprintf(def, "virtual void outgoing_send("
+            "const %s& send_par", pdef->msg_out.elements[i].name);
+          if (pdef->testport_type == ADDRESS) {
+            def = mputprintf(def, ", const %s *destination_address",
+              pdef->address_name);
+          }
+          def = mputstr(def, ") = 0;\n");
         }
-        def = mputstr(def, ") = 0;\n");
         // When port translation is enabled
         // we call the outgoing_mapped_send instead of outgoing_send,
         // and this function will call one of the mapped port's outgoing_send
@@ -2327,8 +2339,10 @@ void defPortClass(const port_def* pdef, output_struct* output)
               break;
             }
           }
-          if (found) {
+          if (found && (pdef->testport_type != INTERNAL || pdef->legacy)) {
             src = mputprintf(src, "outgoing_send(send_par);\n");
+          } else if (pdef->testport_type == INTERNAL && !pdef->legacy) {
+            src = mputprintf(src, "TTCN_error(\"Cannot send message without successful mapping on a internal port with translation capability.\");\n");
           } else {
             src = mputprintf(src, "TTCN_error(\"Cannot send message correctly with type %s\");\n", pdef->msg_out.elements[i].name);
           }

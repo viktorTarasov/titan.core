@@ -119,7 +119,7 @@ typedef struct port_def_tag {
   size_t n_mapper_name;
   port_msg_mapped_type_list provider_msg_in;
   boolean has_sliding;
-  boolean legacy;
+  boolean legacy; // true if the old user port is used false if translation ports used
   char *var_decls;
   char *var_defs;
   char *mapping_func_decls;

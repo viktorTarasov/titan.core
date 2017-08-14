@@ -4839,10 +4839,6 @@ error:
       pt1 = chk_conn_endpoint(config_op.compref1, config_op.portref1, true);
       if (pt1) {
         ptb1 = pt1->get_PortBody();
-        if (ptb1->is_internal()) {
-          config_op.portref1->warning("Port type `%s' was marked as `internal'",
-                  pt1->get_typename().c_str());
-        }
       } else ptb1 = 0;
       Value *cref1 = config_op.compref1->get_value_refd_last();
       if (cref1->get_valuetype() == Value::V_EXPR) {
@@ -4864,10 +4860,6 @@ error:
       pt2 = chk_conn_endpoint(config_op.compref2, config_op.portref2, true);
       if (pt2) {
         ptb2 = pt2->get_PortBody();
-        if (ptb2->is_internal()) {
-          config_op.portref2->warning("Port type `%s' was marked as `internal'",
-            pt2->get_typename().c_str());
-        }
       } else ptb2 = 0;
       Value *cref2 = config_op.compref2->get_value_refd_last();
       if (cref2->get_valuetype() == Value::V_EXPR) {
@@ -4893,7 +4885,19 @@ error:
       return;
     }
     // checking consistency
-    if (!ptb1 || !ptb2) return;
+    if (!ptb1 || !ptb2) {
+      if (ptb1 && ptb1->is_internal()) {
+        Error_Context cntxt2(config_op.compref1, "In first endpoint");
+        config_op.portref1->warning("Port type `%s' was marked as `internal'",
+                pt1->get_typename().c_str());
+      }
+      if (ptb2 && ptb2->is_internal()) {
+        Error_Context cntxt2(config_op.compref2, "In second endpoint");
+        config_op.portref2->warning("Port type `%s' was marked as `internal'",
+                pt2->get_typename().c_str());
+      }
+      return;
+    }
     if (cref1_is_tc || cref2_is_system) {
       // The check for safe mapping was already checked in
       // PortTypeBody::chk_map_translation()
@@ -4919,6 +4923,18 @@ error:
       if (!config_op.translate && !ptb1->is_mappable(ptb1) && !ptb2->is_mappable(ptb1)) {
         error("The mapping between port types `%s' and `%s' is not consistent",
                 pt1->get_typename().c_str(), pt2->get_typename().c_str());
+      }
+    }
+    if (!config_op.translate) {
+      if (ptb1->is_internal()) {
+        Error_Context cntxt2(config_op.compref1, "In first endpoint");
+        config_op.portref1->warning("Port type `%s' was marked as `internal'",
+                pt1->get_typename().c_str());
+      }
+      if (ptb2->is_internal()) {
+        Error_Context cntxt2(config_op.compref2, "In second endpoint");
+        config_op.portref2->warning("Port type `%s' was marked as `internal'",
+                pt2->get_typename().c_str());
       }
     }
   }
