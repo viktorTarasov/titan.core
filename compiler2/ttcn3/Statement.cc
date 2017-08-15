@@ -4803,6 +4803,10 @@ error:
     }
     // checking consistency
     if (!ptb1 || !ptb2) return;
+    if (!ptb1->connect_can_receive_or_send(ptb2)) {
+      warning("Neither port type `%s' nor port type `%s' can send messages.",
+        pt1->get_typename().c_str(), pt2->get_typename().c_str());
+    }
     if (!ptb1->is_connectable(ptb2) ||
 	(ptb1 != ptb2 && !ptb2->is_connectable(ptb1))) {
       error("The connection between port types `%s' and `%s' is not consistent",
@@ -4908,6 +4912,10 @@ error:
           pt2->get_typename().c_str());
         ptb1->report_mapping_errors(ptb2);
       }
+      if (!config_op.translate && !ptb1->map_can_receive_or_send(ptb2)) {
+        warning("Port type `%s' cannot send or receive from system port type `%s'.",
+          pt1->get_typename().c_str(), pt2->get_typename().c_str());
+      }
     } else if (cref2_is_tc || cref1_is_system) {
       config_op.translate = !ptb2->is_legacy() && ptb2->is_translate(ptb1);
       if (!config_op.translate && !ptb2->is_mappable(ptb1)) {
@@ -4915,6 +4923,10 @@ error:
           "port type `%s' is not consistent", pt1->get_typename().c_str(),
           pt2->get_typename().c_str());
         ptb2->report_mapping_errors(ptb1);
+      }
+      if (!config_op.translate && !ptb2->map_can_receive_or_send(ptb1)) {
+        warning("Port type `%s' cannot send or receive from system port type `%s'.",
+          pt2->get_typename().c_str(), pt1->get_typename().c_str());
       }
     } else {
       // we have no idea which one is the system port

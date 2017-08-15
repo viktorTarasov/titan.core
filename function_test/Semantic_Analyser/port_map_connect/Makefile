@@ -6,27 +6,8 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
-#   Balasko, Jeno
-#   Baranyi, Botond
-#   Ormandi, Matyas
 #   Szabo, Bence Janos
 #
 ##############################################################################
-SADIRS := ver param template any_from pattern_ref float recof_index \
-port_translation mtc_and_system_clause port_map_connect
-ifdef RT2
-SADIRS += deprecated erroneous_attributes template_concat
-endif
-
-ifdef LEGACY_CODEC_HANDLING
-SADIRS += encode_legacy xer
-else
-SADIRS += encode
-endif
-
-#$(wildcard TTCN3_[a0-9]* ASN_[a0-9]*) ver xer
-
-all run check clean distclean:
-	for d in $(SADIRS); do $(MAKE) -C $$d $@ || exit 1; done
-
-
+NO3=3
+include ../common.mk

@@ -1966,6 +1966,48 @@ namespace Ttcn {
     }
     return false;
   }
+  
+  bool PortTypeBody::map_can_receive_or_send(PortTypeBody *p_other) const {
+    if (operation_mode == PortTypeBody::PO_MESSAGE &&
+        (out_msgs == NULL || out_msgs->get_nof_types() == 0) &&
+        (p_other->in_msgs == NULL  || p_other->in_msgs->get_nof_types() == 0)) {
+      return false;
+    }
+    if (operation_mode == PortTypeBody::PO_PROCEDURE &&
+        (out_sigs == NULL || out_sigs->get_nof_types() == 0) &&
+        (p_other->in_sigs == NULL  || p_other->in_sigs->get_nof_types() == 0)) {
+      return false;
+    }
+    if (operation_mode == PortTypeBody::PO_MIXED &&
+        (out_msgs == NULL || out_msgs->get_nof_types() == 0) &&
+        (p_other->in_msgs == NULL  || p_other->in_msgs->get_nof_types() == 0) &&
+        (out_sigs == NULL || out_sigs->get_nof_types() == 0) &&
+        (p_other->in_sigs == NULL  || p_other->in_sigs->get_nof_types() == 0)) {
+      return false;
+    }
+    return true;
+  }
+  
+  bool PortTypeBody::connect_can_receive_or_send(PortTypeBody *p_other) const {
+    if (operation_mode == PortTypeBody::PO_MESSAGE &&
+        (out_msgs == NULL || out_msgs->get_nof_types() == 0) &&
+        (p_other->out_msgs == NULL || p_other->out_msgs->get_nof_types() == 0)) {
+      return false;
+    }
+    if (operation_mode == PortTypeBody::PO_PROCEDURE &&
+        (out_sigs == NULL || out_sigs->get_nof_types() == 0) &&
+        (p_other->out_sigs == NULL || p_other->out_sigs->get_nof_types() == 0)) {
+      return false;
+    }
+    if (operation_mode == PortTypeBody::PO_MIXED &&
+        (out_msgs == NULL || out_msgs->get_nof_types() == 0) &&
+        (p_other->out_msgs == NULL || p_other->out_msgs->get_nof_types() == 0) &&
+        (out_sigs == NULL || out_sigs->get_nof_types() == 0) &&
+        (p_other->out_sigs == NULL || p_other->out_sigs->get_nof_types() == 0)) {
+      return false;
+    }
+    return true;
+  }
 
   bool PortTypeBody::is_mappable(PortTypeBody *p_other) const
   {

@@ -1,0 +1,115 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+
+module PortMapConnect_OK { //^In TTCN-3 module//
+
+	type port P message { in integer; }
+
+	type port P1 message { out integer; }
+
+	signature MyRemoteProcOne ();
+
+	type port P2 procedure { in MyRemoteProcOne; }
+
+	type port P3 procedure { out MyRemoteProcOne; }
+
+	type port P4 mixed { in MyRemoteProcOne; in integer; }
+
+	type port P5 mixed { out MyRemoteProcOne; out integer; }
+
+	type component C {
+		port P p;
+		port P1 p1;
+		port P2 p2;
+		port P3 p3;
+		port P4 p4;
+		port P5 p5;
+	}
+
+	type component System {
+		port P p;
+		port P1 p1;
+		port P2 p2;
+		port P3 p3;
+		port P4 p4;
+		port P5 p5;
+	}
+
+	testcase tc_map() runs on C system System { //In testcase definition//
+
+		// message ports
+		/* correct */
+		map(self:p, system:p);
+		map(self:p1, system:p1);
+
+		/* incorrect */
+		map(self:p, system:p1); //In map statement// //warning\: Port type \`\@PortMapConnect_OK\.P\' cannot send or receive from system port type \`\@PortMapConnect_OK\.P1\'\.//
+		map(system:p1, self:p); //In map statement// //warning\: Port type \`\@PortMapConnect_OK\.P\' cannot send or receive from system port type \`\@PortMapConnect_OK\.P1\'\.//
+
+/*---------------------------------------------*/
+
+		// procedure based ports
+		/* correct */
+		map(self:p2, system:p2);
+		map(self:p3, system:p3);
+
+		/* incorrect */
+		map(self:p2, system:p3); //In map statement// //warning\: Port type \`\@PortMapConnect_OK\.P2\' cannot send or receive from system port type \`\@PortMapConnect_OK\.P3\'\.//
+		map(system:p3, self:p2); //In map statement// //warning\: Port type \`\@PortMapConnect_OK\.P2\' cannot send or receive from system port type \`\@PortMapConnect_OK\.P3\'\.//
+
+/*---------------------------------------------*/
+		// mixed ports
+		/* correct */
+		map(self:p4, system:p4);
+		map(self:p5, system:p5);
+
+		/* incorrect */
+		map(self:p4, system:p5); //In map statement// //warning\: Port type \`\@PortMapConnect_OK\.P4\' cannot send or receive from system port type \`\@PortMapConnect_OK\.P5\'\.//
+		map(system:p5, self:p4); //In map statement// //warning\: Port type \`\@PortMapConnect_OK\.P4\' cannot send or receive from system port type \`\@PortMapConnect_OK\.P5\'\.//
+	}
+
+
+	testcase tc_connect() runs on C system System { //In testcase definition//
+		var System s := System.create;
+
+		// message ports
+		/* correct */
+		connect(self:p, s:p1);
+		connect(self:p1, s:p);
+
+		/* incorrect */
+		connect(self:p, s:p); //In connect statement// //warning\: Neither port type \`\@PortMapConnect_OK\.P\' nor port type \`\@PortMapConnect_OK\.P\' can send messages\.//
+
+		// procedure ports
+		/* correct */
+		connect(self:p2, s:p3);
+		connect(self:p3, s:p2);
+
+		/* incorrect */
+		connect(self:p2, s:p2); //In connect statement// //warning\: Neither port type \`\@PortMapConnect_OK\.P2\' nor port type \`\@PortMapConnect_OK\.P2\' can send messages\.//
+
+		// mixed ports
+		/* correct */
+		connect(self:p4, s:p5);
+		connect(self:p5, s:p4);
+
+		/* incorrect */
+		connect(self:p4, s:p4); //In connect statement// //warning\: Neither port type \`\@PortMapConnect_OK\.P4\' nor port type \`\@PortMapConnect_OK\.P4\' can send messages\.//
+
+
+	}
+
+	control {
+		execute(tc_map());
+		execute(tc_connect());
+	}
+}

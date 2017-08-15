@@ -464,6 +464,16 @@ public:
   void report_mapping_errors(PortTypeBody *p_other) const;
   /** True if the PortTypeBody has translation capability towards p_other */
   bool is_translate(PortTypeBody *p_other) const;
+  /** Special case when mapping a port that has out procedure/message but 
+   * the \a p_other does not have any, and \a p_other has in procedure/message but 'this'  
+   * does not have any. In that case it is not possible to send or receive anything.
+   */
+  bool map_can_receive_or_send(PortTypeBody *p_other) const;
+  /** Special case when connecting a port that has no out procedure/message
+   * and p_other has no out procedure/message.
+   * In that case it is not possible to send or receive anything.
+   */
+  bool connect_can_receive_or_send(PortTypeBody *p_other) const;
   Type* get_my_type() const { return my_type; }
   bool is_legacy() const { return legacy; }
   void add_mapper_type(Type* t) { mapper_types.add(t); }
