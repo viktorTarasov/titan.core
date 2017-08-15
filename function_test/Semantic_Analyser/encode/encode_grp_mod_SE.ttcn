@@ -63,6 +63,9 @@ with {
   variant "BYTEORDER(first)"; //Variant attribute is not related to TEXT encoding//
 }
 
+type component CT {}
+type port PT message { inout integer }
+
 }
 with {
   encode "JSON";

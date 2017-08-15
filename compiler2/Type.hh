@@ -481,9 +481,10 @@ namespace Common {
       * function to prevent infinite recursions. */
     class CodingCheckTracker {
       static map<Type*, void> types;
+      Type* key;
     public:
-      CodingCheckTracker(Type* t) { types.add(t, NULL); }
-      ~CodingCheckTracker() { types.erase(types.get_nth_key(types.size() - 1)); }
+      CodingCheckTracker(Type* t): key(t) { types.add(t, NULL); }
+      ~CodingCheckTracker() { types.erase(key); }
       static bool is_happening(Type* t) { return types.has_key(t); }
     };
 
@@ -650,7 +651,7 @@ namespace Common {
       * if the type can have that encoding.
       * @param name name of the encoding as it appears in the 'encode' attribute;
       * this may be the name of a built-in or a user-defined encoding */
-    void add_coding(const string& name);
+    void add_coding(const string& name, bool silent);
     
     /** Sets the encoder or decoder function for the user-defined encoding with
       * the specified name (when using new codec handling). */

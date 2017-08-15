@@ -715,13 +715,13 @@ void Type::chk_encodings()
                         "refers to a type from a different type definition");
                     }
                     else {
-                      t->add_coding(swa->get_attribSpec().get_spec());
+                      t->add_coding(swa->get_attribSpec().get_spec(), false);
                     }
                   }
                 }
               }
               else {
-                add_coding(swa->get_attribSpec().get_spec());
+                add_coding(swa->get_attribSpec().get_spec(), false);
               }
             }
           }
@@ -733,7 +733,7 @@ void Type::chk_encodings()
           for (size_t i = 0; i < real.size(); ++i) {
             const SingleWithAttrib* swa = real[i];
             if (swa->get_attribKeyword() == SingleWithAttrib::AT_ENCODE) {
-              add_coding(swa->get_attribSpec().get_spec());
+              add_coding(swa->get_attribSpec().get_spec(), true);
             }
           }
         }
@@ -746,12 +746,12 @@ void Type::chk_encodings()
       case OT_COMP_FIELD:
       case OT_SELTYPE:
         // ASN.1 types automatically have BER, PER, XER and JSON encoding
-        add_coding(string("BER:2002"));
-        add_coding(string(get_encoding_name(CT_PER)));
-        add_coding(string(get_encoding_name(CT_JSON)));
+        add_coding(string("BER:2002"), true);
+        add_coding(string(get_encoding_name(CT_PER)), true);
+        add_coding(string(get_encoding_name(CT_JSON)), true);
         if (asn1_xer) {
           // XER encoding for ASN.1 types can be disabled with a command line option
-          add_coding(string(get_encoding_name(CT_XER)));
+          add_coding(string(get_encoding_name(CT_XER)), true);
         }
         break;
       default:

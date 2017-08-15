@@ -137,4 +137,24 @@ function f2() runs on CT { //^In function definition//
   self.setencode(Rec4.f2, "TEXT"); //^In setencode statement// //^In the second argument// //The encoding string does not match any encodings of type//
 }
 
+type record Rec6 { //^In type definition// //Type `@encode_SE.Rec6' cannot have RAW encoding. Encode attribute ignored.// //Type `@encode_SE.Rec6' cannot have TEXT encoding. Encode attribute ignored.//
+  Int f1,
+  Rec1 f2,
+  Rec6 f3 optional,
+  SetOf2 f4,
+  record of Rec6 f5,
+  bitstring f6,
+  objid f7
+}
+with {
+  encode "XML";
+  encode "JSON";
+  encode "RAW";
+  encode "TEXT";
+  variant (f3) "JSON"."JSON: name as ff1";
+  variant (f5) "XML"."list";
+}
+
+type integer Int;
+
 }

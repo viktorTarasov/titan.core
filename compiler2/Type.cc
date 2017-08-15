@@ -3271,7 +3271,7 @@ namespace Common {
     }
   }
   
-  void Type::add_coding(const string& name)
+  void Type::add_coding(const string& name, bool silent)
   {
     if (legacy_codec_handling) {
       FATAL_ERROR("Type::add_coding");
@@ -3293,7 +3293,7 @@ namespace Common {
         coding_table.add(new_coding);
         get_type_refd_last()->set_gen_coder_functions(built_in_coding);
       }
-      else if (!is_asn1()) {
+      else if (!silent) {
         // TODO: if an ASN.1 type cannot have a specific encoding,
         // it shouldn't be given that encoding in 'Type::chk_encodings'
         warning("Type `%s' cannot have %s encoding. Encode attribute ignored.",
