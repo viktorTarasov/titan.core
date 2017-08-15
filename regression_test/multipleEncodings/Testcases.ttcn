@@ -457,6 +457,25 @@ testcase tc_asn_setencode_negtest() runs on CT {
   }
 }
 
+// Encoding and decoding a type, that has JSON encoding set on the top level, but its element type
+// and the element type's fields don't have JSON encoding. The entire structure must be encodable
+// with JSON.
+testcase tc_ttcn_codec_switch() runs on CT {
+  var RecOf x := { { f1 := val1 }, { f1 := val2 } };
+  var universal charstring exp := "[{\"f1\":\"val1\"},{\"f1\":\"val2\"}]";
+  var universal charstring enc := encvalue_unichar(x, "UTF-8");
+  if (exp != enc) {
+    setverdict(fail, "Encvalue_unichar test failed. Expected: ", exp, ", got: ", enc);
+  }
+  
+  var RecOf dec;
+  var integer res := decvalue_unichar(enc, dec);
+  if (x != dec) {
+    setverdict(fail, "Decvalue test failed. Expected: ", x, ", got: ", dec);
+  }
+  setverdict(pass);
+}
+
 control {
   execute(tc_ttcn_encvalue());
   execute(tc_ttcn_encvalue_negtest());
@@ -475,6 +494,7 @@ control {
   execute(tc_asn_setencode_json());
   execute(tc_asn_setencode_per());
   execute(tc_asn_setencode_negtest());
+  execute(tc_ttcn_codec_switch());
 }
 
 }

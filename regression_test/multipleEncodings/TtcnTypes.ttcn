@@ -51,6 +51,11 @@ with {
   variant "JSON: as value";
 }
 
+type record of R1 RecOf
+with {
+  encode "JSON";
+}
+
 type record Msg {
   bitstring data
 }

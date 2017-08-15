@@ -3252,19 +3252,13 @@ namespace Common {
     case T_OPENTYPE:
       for (size_t i = 0; i < get_nof_comps(); ++i) {
         Type* field_type = get_comp_byIndex(i)->get_type();
-        if (field_type->has_encoding(coding, NULL) ||
-            field_type->get_type_w_coding_table() == NULL) {
-          field_type->get_type_refd_last()->set_gen_coder_functions(coding);
-        }
+        field_type->get_type_refd_last()->set_gen_coder_functions(coding);
       }
       break;
     case T_SEQOF:
     case T_SETOF:
     case T_ARRAY:
-      if (get_ofType()->has_encoding(coding, NULL) ||
-          get_ofType()->get_type_w_coding_table() == NULL) {
-        get_ofType()->get_type_refd_last()->set_gen_coder_functions(coding);
-      }
+      get_ofType()->get_type_refd_last()->set_gen_coder_functions(coding);
       break;
     default:
       break;
