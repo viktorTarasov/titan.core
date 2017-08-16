@@ -1,0 +1,7 @@
+*.o
+compile
+LanguageSpec.exe
+LanguageSpec
+LanguageSpec*.cc
+LanguageSpec*.hh
+bin/
