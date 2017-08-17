@@ -8,6 +8,7 @@
  Contributors:
   Baji, Laszlo
   Balasko, Jeno
+  Baranyi, Botond
   Szabados, Kristof
   Zalanyi, Balazs Andor
 -->
@@ -28,7 +29,7 @@
     <td><a href="../titan_main.html" alt="contents"><img border="0" src="../images/ao.jpg" width="53" height="40"></a></td>
     <td><a href="../titan_index.html" alt="index"><img border="0" src="../images/up.jpg" width="53" height="40"></a></td>
     <td><a href="decode_base64.html" alt="previous"><img border="0" src="../images/left.jpg" width="53" height="40"></a></td>
-    <td><a href="default.html" alt="next"><img border="0" src="../images/right.jpg" width="53" height="40"></a></td>
+    <td><a href="decvalue_unichar.html" alt="next"><img border="0" src="../images/right.jpg" width="53" height="40"></a></td>
   </tr>
 </table>
 <p><br clear="all">
@@ -39,14 +40,18 @@
 <p>This built-in function decodes a value from a bitstring and cuts the consumed part from the bitstring.
 <ul>
   <li>The function return type is integer holding the error code: <b>0</b> - decoding was successful, <b>1</b> - unspecified cause of decoding failure, <b>2</b> - decoding failed because the
-  bitstring did not contained enough bits.</li>
+  bitstring did not contain enough bits.</li>
   <li>Decoded value returned through the second (out) argument.</li>
   <li>Type of the second argument has to have an <i>encoding method</i> explicitly set with its atributes.</li>
+  <li>The third argument is currently ignored.</li>
+  <li>The fourth argument selects the encoding method to use, if the type has multiple encoding methods set.</li>
 </ul>
 <p>Related keywords:</p>
 <ul>
   <li><a href="encode.html"><b><font face="Courier New" color="#003258" size="4">encode</font></b></a></li>
   <li><a href="encvalue.html"><b><font face="Courier New" color="#003258" size="4">encvalue</font></b></a></li>
+  <li><a href="encvalue_unichar.html"><b><font face="Courier New" color="#003258" size="4">encvalue_unichar</font></b></a></li>
+  <li><a href="decvalue_unichar.html"><b><font face="Courier New" color="#003258" size="4">decvalue_unichar</font></b></a></li>
 </ul>
 <hr align="left" width="50%">
 <div align="center">
@@ -54,19 +59,32 @@
 <table border="0" width="90%" bgcolor="#FFB599" cellpadding="4">
   <tr>
     <td width="100%">
-    <h3 align="center"><font face="Courier New" color="#003258" size="5"><b>decvalue(</b></font> <i>inout bitstring_value, out decoded_value</i> <font face="Courier New" color="#003258" size="5"><b>)
-    return integer;</b></font></h3>
+    <h3 align="center"><font face="Courier New" color="#003258" size="5"><b>decvalue(</b></font> <i>inout bitstring_value, out decoded_value
+    [, in encoding_info [, in dynamic_encoding]]</i> <font face="Courier New" color="#003258" size="5"><b>) return integer;</b></font></h3>
     </td>
   </tr>
 </table>
 </center>
 </div>
 <hr align="left" width="50%">
-<p>Example:
+<p>Example 1:
 <p><font face="Courier New">type float MyFloat with { encode "RAW" }</font>
 <p><font face="Courier New">var MyFloat f := 1.1;</font>
 <p><font face="Courier New">var bitstring bs := encvalue(f);</font>
 <p><font face="Courier New">var integer i := decvalue(bs, f);</font>
+<hr align="left" width="25%">
+<p>Example 2:
+<p><font face="Courier New">type record MyRecord {<br>
+&nbsp;&nbsp;&nbsp;integer num,<br>
+&nbsp;&nbsp;&nbsp;charstring str<br>
+}<br>
+with {<br>
+&nbsp;&nbsp;&nbsp;encode "XML";<br>
+&nbsp;&nbsp;&nbsp;encode "JSON";<br>
+}</font>
+<p><font face="Courier New">var MyRecord r := { num := 3, str := "abc" };</font>
+<p><font face="Courier New">var bitstring bs := encvalue(r, "", "JSON");</font>
+<p><font face="Courier New">var integer i := decvalue(bs, r, "", "JSON");</font>
 <hr align="left" width="25%">
 <hr align="left" width="25%">
 <p><a HREF="BNF.html#decvalue">BNF definition</a> of <font face="Courier New">decvalue</font></p>
