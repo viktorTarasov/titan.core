@@ -348,8 +348,8 @@ namespace Ttcn {
     /**
      * Generates code for checking if the reference
      * and the referred objects are bound or not.*/
-    void generate_code_ispresentbound(expression_struct_t *expr,
-      bool is_template, const bool isbound);
+    void generate_code_ispresentboundchosen(expression_struct_t *expr,
+      bool is_template, const Value::operationtype_t optype, const char* field);
     /** Lets the referenced assignment object know, that the reference is used
       * at least once (only relevant for formal parameters and external constants). */
     void ref_usage_found();

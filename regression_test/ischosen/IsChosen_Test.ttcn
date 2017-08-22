@@ -1,0 +1,455 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+//Purpose: To test function ischosen()
+//It should be run in parallel mode
+
+module IsChosen_Test {
+
+type component MTC_CT {
+}
+
+
+type record MyRecord {
+  MyUnion2 u optional,
+  anytype at
+}
+
+type record of charstring ROC;
+
+type union MyUnion1 {
+  ROC roc,
+  integer i,
+  MyRecord r,
+  MyUnion2 u,
+  record of anytype rat,
+  anytype aat[3]
+}
+
+type union MyUnion2 {
+  integer i,
+  record of MyUnion3 rou,
+  MyUnion3 u,
+  charstring cs
+}
+
+type union MyUnion3 {
+  integer i,
+  charstring cs
+}
+
+const MyUnion1 c_myunion1:= { roc:= { "1aa", "2bb", "3cc"}}
+const MyUnion1 c_myunion2:= { i:= 5 }
+const MyUnion1 c_myunion3:= { u := {i:=2} }
+const MyUnion1 c_myunion4:= { r := { u:= {i:=3}, at := {integer := 3} } }
+const MyUnion1 c_myunion5:= { u := {rou := {{i := 4}}}}; 
+const MyUnion1 c_myunion6:= { r := { u:= {i:=3}, at:= {integer:=3} } }
+const MyUnion1 c_myunion7:= { rat := {{integer := 4}, {charstring := "a"}} }
+
+template MyUnion1 t_myunion1:= { roc:= { "1aa", "2bb", "3cc"}}
+template MyUnion1 t_myunion2:= { i:= 5 }
+template MyUnion1 t_myunion3:= { u := {i:=2} }
+template MyUnion1 t_myunion4:= { r := { u:= {i:=3}, at := {integer := 3} } }
+template MyUnion1 t_myunion5:= { u := {rou := {({i := 4}, {cs := "4"})}}}; 
+template MyUnion1 t_myunion6:= { roc:= ? }
+template MyUnion1 t_myunion7:= { u := {rou := ?}}; 
+template MyUnion1 t_myunion8:= { u := ?}; 
+template MyUnion1 t_myunion9:= { r := { u:= {i:=?}, at := {integer := 3} } }
+template MyUnion1 t_myunion10:= { r := { u:= ({i:=(1,2,3)}, {i:=2}), at := {integer := 3} } }
+template MyUnion1 t_myunion11:= { r := { u:= ({i:=(1,2,3)}, ?), at := {integer := 3} } }
+template MyUnion1 t_myunion12:= { r := { u:= ({i:=(1,2,3)}, {cs := "a"}), at := {integer := 3} } }
+template MyUnion1 t_myunion13(in integer a := 1) := { r := { u:= ({i:=a}), at := {integer := 3} } }
+template MyUnion1 t_myunion14(in integer a := 1) := { r := { u:= *, at := {integer := 3} } }
+template MyUnion1 t_myunion15:= { r := { u:= {i:=3}, at:= {integer:=3} } }
+template MyUnion1 t_myunion16:= { rat := {{integer := 4}, {charstring := "a"}} }
+
+
+  //========= Compound =====
+  testcase tc_ischosen_on_variable() runs on MTC_CT {
+    var MyUnion1 vl_u;
+    // Unbound
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    vl_u := c_myunion1;
+    if(ischosen(vl_u.roc)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := c_myunion2;
+    if(ischosen(vl_u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := c_myunion3;
+    if(ischosen(vl_u.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := c_myunion4;
+    if(ischosen(vl_u.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := c_myunion5;
+    if(ischosen(vl_u.u.rou[0].i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.u.rou)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := c_myunion6;
+    if(ischosen(vl_u.r.at.integer)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[0].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := c_myunion7;
+    if(ischosen(vl_u.rat)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.rat[0].integer)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[0].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou)) {setverdict(fail)} else {setverdict(pass)}
+  }
+  
+  testcase tc_ischosen_on_const() runs on MTC_CT {
+
+    if(ischosen(c_myunion1.roc)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion1.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion1.r)) {setverdict(fail)} else {setverdict(pass)}
+    
+    if(ischosen(c_myunion2.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion2.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion2.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion2.r)) {setverdict(fail)} else {setverdict(pass)}
+    
+    if(ischosen(c_myunion3.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion3.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion3.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion3.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion3.r)) {setverdict(fail)} else {setverdict(pass)}
+    
+    if(ischosen(c_myunion4.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion4.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion4.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion4.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion4.rat)) {setverdict(fail)} else {setverdict(pass)}
+   
+    if(ischosen(c_myunion5.u.rou[0].i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion5.u.rou)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion5.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion5.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion5.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion5.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion5.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(c_myunion6.r.at.integer)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion6.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion6.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion6.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion6.rat)) {setverdict(fail)} else {setverdict(pass)}
+  }
+
+
+  testcase tc_ischosen_on_template() runs on MTC_CT {
+
+    if(ischosen(t_myunion1.roc)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion1.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion1.r)) {setverdict(fail)} else {setverdict(pass)}
+
+
+    if(ischosen(t_myunion2.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion2.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion2.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion2.r)) {setverdict(fail)} else {setverdict(pass)}
+    
+
+    if(ischosen(t_myunion3.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion3.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion3.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion3.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion3.r)) {setverdict(fail)} else {setverdict(pass)}
+    
+    if(ischosen(t_myunion4.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion4.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion4.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion4.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion4.rat)) {setverdict(fail)} else {setverdict(pass)}
+   
+    if(ischosen(t_myunion5.u.rou[0].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion5.u.rou)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion5.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion5.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion5.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion5.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion5.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion6.roc)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion6.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion6.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion6.rat)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion7.u.rou)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion7.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion7.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion7.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion7.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion7.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion8.u)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion8.u.rou)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion8.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion8.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion8.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion8.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion8.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion9.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion9.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion9.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion9.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion9.rat)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion10.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion10.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion10.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion10.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion10.rat)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion11.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion11.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion11.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion11.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion11.rat)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion12.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion12.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion12.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion12.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion12.rat)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion13.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion13.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion13.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion13.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion13.rat)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion14.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion14.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion14.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion14.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion14.rat)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion15.r.at.integer)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion15.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion15.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion15.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion15.rat)) {setverdict(fail)} else {setverdict(pass)}
+  }
+
+
+  testcase tc_ischosen_on_var_template() runs on MTC_CT {
+    var template MyUnion1 vl_u;
+    // Unbound
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion1;
+    if(ischosen(vl_u.roc)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+
+    vl_u := t_myunion2;
+    if(ischosen(vl_u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    
+
+    vl_u := t_myunion3;
+    if(ischosen(vl_u.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    
+    vl_u := t_myunion4;
+    if(ischosen(vl_u.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+   
+    vl_u := t_myunion5;
+    if(ischosen(vl_u.u.rou[0].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion6;
+    if(ischosen(vl_u.roc)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion7;
+    if(ischosen(vl_u.u.rou)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion8;
+    if(ischosen(vl_u.u)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.u.rou)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion9;
+    if(ischosen(vl_u.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion10;
+    if(ischosen(vl_u.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion11;
+    if(ischosen(vl_u.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion12;
+    if(ischosen(vl_u.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion13(4);
+    if(ischosen(vl_u.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion14;
+    if(ischosen(vl_u.r.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion15;
+    if(ischosen(vl_u.r.at.integer)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+  }
+
+  control {
+    execute(tc_ischosen_on_variable());
+    execute(tc_ischosen_on_const());
+    execute(tc_ischosen_on_template());
+    execute(tc_ischosen_on_var_template());
+  }
+
+}
+with {
+  extension "anytype integer, charstring, MyUnion1";
+}

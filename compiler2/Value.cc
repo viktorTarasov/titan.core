@@ -9370,7 +9370,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
            for valueof()... */
         return true;
       case OPTYPE_ISCHOSEN_V:
-        return u.expr.v1->is_unfoldable(refch, exp_val);
+        return true;
       case OPTYPE_LOG2STR:
       case OPTYPE_ANY2UNISTR:
       case OPTYPE_TTCN2STRING:
@@ -12872,18 +12872,45 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_ISCHOSEN: // r1 i2
       FATAL_ERROR("Value::generate_code_expr_expr()");
       break;
-    case OPTYPE_ISCHOSEN_V: // v1 i2
-      u.expr.v1->generate_code_expr_mandatory(expr);
-	expr->expr = mputprintf(expr->expr, ".ischosen(%s::ALT_%s)",
-	  u.expr.v1->get_my_governor()->get_genname_value(my_scope).c_str(),
-	  u.expr.i2->get_name().c_str());
-      break;
-    case OPTYPE_ISCHOSEN_T: // t1 i2
-      u.expr.t1->generate_code_expr(expr);
-	expr->expr = mputprintf(expr->expr, ".ischosen(%s::ALT_%s)",
-	  u.expr.t1->get_my_governor()->get_genname_value(my_scope).c_str(),
-	  u.expr.i2->get_name().c_str());
-      break;
+    case OPTYPE_ISCHOSEN_V: { // v1 i2
+      char* field = mprintf("%s::ALT_%s",
+        u.expr.v1->get_my_governor()->get_genname_value(my_scope).c_str(),
+        u.expr.i2->get_name().c_str());
+      if (u.expr.v1->get_valuetype() == Value::V_REFD) {
+        Ttcn::Reference* reference =
+            dynamic_cast<Ttcn::Reference*>(u.expr.v1->get_reference());
+        if (reference) {
+          reference->generate_code_ispresentboundchosen(expr, false,
+            u.expr.v_optype, field);
+        }
+      }
+      Free(field);
+      break; }
+    case OPTYPE_ISCHOSEN_T: { // t1 i2
+      char* field = mprintf("%s::ALT_%s",
+        u.expr.t1->get_my_governor()->get_genname_value(my_scope).c_str(),
+        u.expr.i2->get_name().c_str());
+      Template::templatetype_t temp = u.expr.t1->get_templatetype();
+      if (temp == Template::SPECIFIC_VALUE) {
+        Value* specific_value = u.expr.t1->get_specific_value();
+        if (specific_value->get_valuetype() == Value::V_REFD) {
+          Ttcn::Reference* reference =
+              dynamic_cast<Ttcn::Reference*>(specific_value->get_reference());
+          if (reference) {
+            reference->generate_code_ispresentboundchosen(expr, false,
+              u.expr.v_optype, field);
+          }
+        }
+      } else if (temp == Template::TEMPLATE_REFD) {
+          Ttcn::Reference* reference =
+            dynamic_cast<Ttcn::Reference*>(u.expr.t1->get_reference());
+          if (reference) {
+            reference->generate_code_ispresentboundchosen(expr, true,
+              u.expr.v_optype, field);
+         }
+      }
+      Free(field);
+      break; }
     case OPTYPE_ISPRESENT:
     case OPTYPE_ISBOUND: {
       Template::templatetype_t temp = u.expr.ti1->get_Template()
@@ -12895,18 +12922,18 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
           Ttcn::Reference* reference =
               dynamic_cast<Ttcn::Reference*>(specific_value->get_reference());
           if (reference) {
-            reference->generate_code_ispresentbound(expr, false,
-              u.expr.v_optype==OPTYPE_ISBOUND);
+            reference->generate_code_ispresentboundchosen(expr, false,
+              u.expr.v_optype, NULL);
             break;
           }
         }
-      } else if (temp == Template::TEMPLATE_REFD){
+      } else if (temp == Template::TEMPLATE_REFD) {
           Ttcn::Reference* reference =
             dynamic_cast<Ttcn::Reference*>(u.expr.ti1->get_Template()
               ->get_reference());
           if (reference) {
-            reference->generate_code_ispresentbound(expr, true,
-              u.expr.v_optype==OPTYPE_ISBOUND);
+            reference->generate_code_ispresentboundchosen(expr, true,
+              u.expr.v_optype, NULL);
             break;
          }
       }
@@ -14778,6 +14805,8 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_DECODE:
     case OPTYPE_ISBOUND:
     case OPTYPE_ISPRESENT:
+    case OPTYPE_ISCHOSEN_T:
+    case OPTYPE_ISCHOSEN_V: // v1 i2
     case OPTYPE_TTCN2STRING:
     case OPTYPE_ENCVALUE_UNICHAR:
     case OPTYPE_DECVALUE_UNICHAR:
@@ -14826,13 +14855,10 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_UNICHAR2CHAR:
     case OPTYPE_ENUM2INT:
     case OPTYPE_RNDWITHVAL:
-    case OPTYPE_ISCHOSEN_V: // v1 i2
     case OPTYPE_GET_STRINGENCODING:
     case OPTYPE_REMOVE_BOM:
     case OPTYPE_DECODE_BASE64:
       return u.expr.v1->has_single_expr();
-    case OPTYPE_ISCHOSEN_T: // t1 i2
-      return u.expr.t1->has_single_expr();
     case OPTYPE_ADD: // v1 v2
     case OPTYPE_SUBTRACT:
     case OPTYPE_MULTIPLY:

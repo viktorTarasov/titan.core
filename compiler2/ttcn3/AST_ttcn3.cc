@@ -777,8 +777,8 @@ namespace Ttcn {
   }
 
   //FIXME quick hack
-  void Reference::generate_code_ispresentbound(expression_struct_t *expr,
-    bool is_template, const bool isbound)
+  void Reference::generate_code_ispresentboundchosen(expression_struct_t *expr,
+    bool is_template, const Value::operationtype_t optype, const char* field)
   {
     ref_usage_found();
     Common::Assignment *ass = get_refd_assignment();
@@ -809,8 +809,18 @@ namespace Ttcn {
       isbound_expr.preamble = mputprintf(isbound_expr.preamble,
           "boolean %s = %s.is_bound();\n", tmp_generalid_str,
           ass_id_str);
-      ass->get_Type()->generate_code_ispresentbound(&isbound_expr, &subrefs, my_scope->get_scope_mod_gen(),
-          tmp_generalid, ass_id2, is_template, isbound);
+      namedbool p_optype;
+      if (optype == Value::OPTYPE_ISBOUND) {
+        p_optype = ISBOUND;
+      } else if (optype == Value::OPTYPE_ISPRESENT) {
+        p_optype = ISPRESENT;
+      } else if (optype == Value::OPTYPE_ISCHOSEN_T || optype == Value::OPTYPE_ISCHOSEN_V) {
+        p_optype = ISCHOSEN;
+      } else {
+        FATAL_ERROR("AST_ttcn3.cc::generate_code_ispresentboundchosen()");
+      }
+      ass->get_Type()->generate_code_ispresentboundchosen(&isbound_expr, &subrefs, my_scope->get_scope_mod_gen(),
+          tmp_generalid, ass_id2, is_template, p_optype, field);
 
       expr->preamble = mputstr(expr->preamble, isbound_expr.preamble);
       expr->preamble = mputstr(expr->preamble, isbound_expr.expr);
@@ -818,9 +828,22 @@ namespace Ttcn {
 
       expr->expr = mputprintf(expr->expr, "%s", tmp_generalid_str);
     } else {
-      expr->expr = mputprintf(expr->expr, "%s.%s(%s)", ass_id_str,
-        isbound ? "is_bound":"is_present",
-        (!isbound && is_template && omit_in_value_list) ? "TRUE" : "");
+      expr->expr = mputprintf(expr->expr, "%s.", ass_id_str);
+      switch (optype) {
+        case Value::OPTYPE_ISBOUND:
+          expr->expr = mputstr(expr->expr, "is_bound()");
+          break;
+        case Value::OPTYPE_ISPRESENT:
+          expr->expr = mputprintf(expr->expr, "is_present(%s)",
+            is_template && omit_in_value_list ? "TRUE" : "");
+          break;
+        case Value::OPTYPE_ISCHOSEN_T:
+        case Value::OPTYPE_ISCHOSEN_V:
+          expr->expr = mputprintf(expr->expr, "ischosen(%s)", field);
+          break;
+        default:
+          FATAL_ERROR("AST_ttcn3.cc::generate_code_ispresentboundchosen()");
+      }
     }
   }
 

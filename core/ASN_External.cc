@@ -939,7 +939,6 @@ const ASN_NULL& EXTERNAL_identification::fixed() const
 boolean EXTERNAL_identification::ischosen(union_selection_type checked_selection) const
 {
   if (checked_selection == UNBOUND_VALUE) TTCN_error("Internal error: Performing ischosen() operation on an invalid field of union type EXTERNAL.identification.");
-  if (union_selection == UNBOUND_VALUE) TTCN_error("Internal error: Performing ischosen() operation on an unbound value of union type EXTERNAL.identification.");
   return union_selection == checked_selection;
 }
 
@@ -1681,30 +1680,19 @@ boolean EXTERNAL_identification_template::ischosen(EXTERNAL_identification::unio
   if (checked_selection == EXTERNAL_identification::UNBOUND_VALUE) TTCN_error("Internal error: Performing ischosen() operation on an invalid field of union type EXTERNAL.identification.");
   switch (template_selection) {
   case SPECIFIC_VALUE:
-    if (single_value.union_selection == EXTERNAL_identification::UNBOUND_VALUE) TTCN_error("Internal error: Invalid selector in a specific value when performing ischosen() operation on a template of union type EXTERNAL.identification.");
     return single_value.union_selection == checked_selection;
   case VALUE_LIST:
     {
       if (value_list.n_values < 1)
         TTCN_error("Internal error: Performing ischosen() operation on a template of union type EXTERNAL.identification containing an empty list.");
       boolean ret_val = value_list.list_value[0].ischosen(checked_selection);
-      boolean all_same = TRUE;
-      for (unsigned int list_count = 1; list_count < value_list.n_values; list_count++) {
-        if (value_list.list_value[list_count].ischosen(checked_selection) != ret_val) {
-          all_same = FALSE;
-          break;
-        }
+      for (unsigned int list_count = 1; ret_val == TRUE && list_count < value_list.n_values; list_count++) {
+        ret_val = value_list.list_value[list_count].ischosen(checked_selection);
       }
-      if (all_same) return ret_val;
+      return ret_val;
     }
-    // FIXME really no break?
-  case ANY_VALUE:
-  case ANY_OR_OMIT:
-  case OMIT_VALUE:
-  case COMPLEMENTED_LIST:
-    TTCN_error("Performing ischosen() operation on a template of union type EXTERNAL.identification, which does not determine unambiguously the chosen field of the matching values.");
   default:
-    TTCN_error("Performing ischosen() operation on an uninitialized template of union type EXTERNAL.identification");
+    return FALSE;
   }
   return FALSE;
 }

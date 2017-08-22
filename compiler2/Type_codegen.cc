@@ -2668,10 +2668,10 @@ bool Type::ispresent_anyvalue_embedded_field(Type* t,
   return TRUE;
 }
 
-void Type::generate_code_ispresentbound(expression_struct *expr,
+void Type::generate_code_ispresentboundchosen(expression_struct *expr,
     Ttcn::FieldOrArrayRefs *subrefs, Common::Module* module,
     const string& global_id, const string& external_id, const bool is_template,
-    const bool isbound)
+    const namedbool optype, const char* field)
 {
   if (!subrefs) return;
 
@@ -2690,8 +2690,10 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
 
     if (is_template) {
       bool anyval_ret_val = TRUE;
-      if (!isbound) {
+      if (optype == ISPRESENT) {
         anyval_ret_val = ispresent_anyvalue_embedded_field(t, subrefs, i);
+      } else if (optype == ISCHOSEN) {
+        anyval_ret_val = FALSE;
       }
       expr->expr = mputprintf(expr->expr, "if(%s) {\n",global_id.c_str());
       expr->expr = mputprintf(expr->expr,
@@ -2746,7 +2748,7 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
       case T_ANYTYPE:
         break;
       default:
-        FATAL_ERROR("Type::generate_code_isbound()");
+        FATAL_ERROR("Type::generate_code_ispresentboundchosen()");
       }
 
       if (next_o) {
@@ -2775,7 +2777,7 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
             "break;\n"
             "default:\n",
             tmp_id_str, global_id.c_str(),global_id.c_str(),
-            isbound ? "TRUE" : "FALSE");
+            optype == ISBOUND ? "TRUE" : "FALSE");
           Free(tmp_generalid_str);
           tmp_generalid_str = mcopystr(tmp_id_str);
 
@@ -2789,10 +2791,15 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
             next_t->get_genname_value(module).c_str(),
             is_template?"_template":"", tmp_id_str);
 
-          expr->expr = mputprintf(expr->expr,
-            "%s = %s.%s(%s);\n", global_id.c_str(),
-            tmp_id2_str, isbound ? "is_bound" : "is_present",
-            (!isbound && is_template && omit_in_value_list) ? "TRUE" : "");
+          if (optype != ISCHOSEN) {
+            expr->expr = mputprintf(expr->expr,
+              "%s = %s.%s(%s);\n", global_id.c_str(),
+              tmp_id2_str, optype == ISBOUND ? "is_bound" : "is_present",
+              (optype != ISBOUND && is_template && omit_in_value_list) ? "TRUE" : "");
+          } else {
+            expr->expr = mputprintf(expr->expr,
+              "%s = %s.ischosen(%s);\n", global_id.c_str(), tmp_id2_str, field);
+          }
           Free(tmp_generalid_str);
           tmp_generalid_str = mcopystr(tmp_id2_str);
 
@@ -2860,10 +2867,21 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
           tmp_id2_str, tmp_id_str,
           t->typetype == T_ANYTYPE ? "AT_" : "", id.get_name().c_str());
 
-        expr->expr = mputprintf(expr->expr,
-          "%s = %s.%s(%s);\n", global_id.c_str(),
-          tmp_id2_str, isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
-          (!(isbound||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
+        if (optype != ISCHOSEN) {
+          expr->expr = mputprintf(expr->expr,
+            "%s = %s.%s(%s);\n", global_id.c_str(),
+            tmp_id2_str, optype == ISBOUND||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
+            (!(optype == ISBOUND||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
+        } else {
+          expr->expr = mputprintf(expr->expr,
+              "%s = %s.is_bound();\n", global_id.c_str(), tmp_id2_str);
+          if (i == nof_refs-1) {
+            expr->expr = mputprintf(expr->expr,
+              "if(%s) {\n"
+              "%s = %s.ischosen(%s);\n"
+              "}\n", global_id.c_str(), global_id.c_str(), tmp_id2_str, field);
+          }
+        }
         Free(tmp_generalid_str);
         tmp_generalid_str = mcopystr(tmp_id2_str);
       }
@@ -2905,7 +2923,7 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
       case T_GENERALIZEDTIME:
       case T_OBJECTDESCRIPTOR:
         if (subrefs->refers_to_string_element()) {
-          FATAL_ERROR("Type::generate_code_isbound()");
+          FATAL_ERROR("Type::generate_code_ispresentboundchosen()");
         } else {
           subrefs->set_string_element_ref();
           // string elements have the same type as the string itself
@@ -2914,7 +2932,7 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
           break;
         }
       default:
-         FATAL_ERROR("Type::generate_code_isbound()");
+         FATAL_ERROR("Type::generate_code_ispresentboundchosen()");
       }
 
       next_t = embedded_type;
@@ -2948,11 +2966,13 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
       const char *tmp_id_str = tmp_id.c_str();
 
       if (is_string_element) {
-        expr->expr = mputprintf(expr->expr,
-          "%s = %s[%s].%s(%s);\n", global_id.c_str(),
-          tmp_generalid_str, tmp_index_id_str,
-          isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
-          (!(isbound||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
+        if (optype != ISCHOSEN) {
+          expr->expr = mputprintf(expr->expr,
+            "%s = %s[%s].%s(%s);\n", global_id.c_str(),
+            tmp_generalid_str, tmp_index_id_str,
+            optype==ISBOUND||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
+            (!(optype==ISBOUND||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
+        }
       } else {
         if (is_template) {
             expr->expr = mputprintf(expr->expr,
@@ -2968,10 +2988,22 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
             tmp_index_id_str);
         }
         
-        expr->expr = mputprintf(expr->expr,
-          "%s = %s.%s(%s);\n", global_id.c_str(), tmp_id_str, 
-          isbound||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
-          (!(isbound||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
+        if (optype != ISCHOSEN) {
+          expr->expr = mputprintf(expr->expr,
+            "%s = %s.%s(%s);\n", global_id.c_str(), tmp_id_str, 
+            optype==ISBOUND||(i!=(nof_refs-1)) ? "is_bound" : "is_present",
+            (!(optype==ISBOUND||(i!=(nof_refs-1))) && is_template && omit_in_value_list) ? "TRUE" : "");
+        } else {
+          expr->expr = mputprintf(expr->expr,
+            "%s = %s.is_bound();\n", global_id.c_str(),
+            tmp_id_str);
+          if (i == nof_refs-1) {
+            expr->expr = mputprintf(expr->expr,
+              "if(%s) {\n"
+              "%s = %s.ischosen(%s);\n"
+              "}\n", global_id.c_str(), global_id.c_str(), tmp_id_str, field);
+          }
+        }
       }
 
       Free(tmp_generalid_str);
@@ -2981,7 +3013,7 @@ void Type::generate_code_ispresentbound(expression_struct *expr,
       t = next_t;
       break; }
       default:
-        FATAL_ERROR("Type::generate_code_isbound(): invalid reference type");
+        FATAL_ERROR("Type::generate_code_ispresentboundchosen(): invalid reference type");
       }
     }//for
 

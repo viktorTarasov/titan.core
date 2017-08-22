@@ -268,11 +268,8 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "{\n"
     "if (checked_selection == %s) TTCN_error(\"Internal error: Performing "
       "ischosen() operation on an invalid field of union type %s.\");\n"
-    "if (union_selection == %s) TTCN_error(\"Performing ischosen() operation "
-      "on an unbound value of union type %s.\");\n"
     "return union_selection == checked_selection;\n"
-    "}\n\n", name, selection_type, unbound_value, dispname, unbound_value,
-    dispname);
+    "}\n\n", name, selection_type, unbound_value, dispname);
 
   /* is_bound function */
   def = mputstr   (def, "boolean is_bound() const;\n");
@@ -2809,31 +2806,18 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
       "template of union type %s containing an empty list.\");\n"
     "boolean ret_val = "
       "value_list.list_value[0].ischosen(checked_selection);\n"
-    "boolean all_same = TRUE;\n"
-    "for (unsigned int list_count = 1; list_count < value_list.n_values; "
+    "for (unsigned int list_count = 1; ret_val == TRUE && list_count < value_list.n_values; "
       "list_count++) {\n"
-    "if (value_list.list_value[list_count].ischosen(checked_selection) != "
-      "ret_val) {\n"
-    "all_same = FALSE;\n"
-    "break;\n"
+    "ret_val = value_list.list_value[list_count].ischosen(checked_selection);\n"
     "}\n"
+    "return ret_val;\n"
     "}\n"
-    "if (all_same) return ret_val;\n"
-    "}\n"
-    "case ANY_VALUE:\n"
-    "case ANY_OR_OMIT:\n"
-    "case OMIT_VALUE:\n"
-    "case COMPLEMENTED_LIST:\n"
-    "TTCN_error(\"Performing ischosen() operation on a template of union type "
-      "%s, which does not determine unambiguously the chosen field of the "
-      "matching values.\");\n"
     "default:\n"
-    "TTCN_error(\"Performing ischosen() operation on an uninitialized "
-      "template of union type %s\");\n"
+    "return FALSE;\n"
     "}\n"
     "return FALSE;\n"
     "}\n\n", name, selection_type, unbound_value, dispname, unbound_value,
-    dispname, dispname, dispname, dispname);
+    dispname, dispname);
 
   if (use_runtime_2) {
     def = mputstr(def,

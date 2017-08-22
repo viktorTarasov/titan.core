@@ -46,7 +46,8 @@ enum namedbool { INCOMPLETE_NOT_ALLOWED = 0, INCOMPLETE_ALLOWED = 1, WARNING_FOR
   OMIT_NOT_ALLOWED = 0, OMIT_ALLOWED = 4,
   ANY_OR_OMIT_NOT_ALLOWED = 0, ANY_OR_OMIT_ALLOWED = 5,
   NOT_IMPLICIT_OMIT = 0, IMPLICIT_OMIT = 6,
-  NOT_STR_ELEM = 0, IS_STR_ELEM = 7
+  NOT_STR_ELEM = 0, IS_STR_ELEM = 7,
+  ISBOUND = 8, ISPRESENT = 9, ISCHOSEN = 10
 };
 
 namespace Asn {
@@ -1243,20 +1244,21 @@ namespace Common {
       * Only used with new codec handling. */
     bool has_built_in_encoding();
     
-    /** Generates type specific call for the reference used in isbound call
+    /** Generates type specific call for the reference used in isbound/ispresent/ischosen call
      * into argument \a expr. Argument \a subrefs holds the reference path
      * that needs to be checked. Argument \a module is the actual module of
      * the reference and is used to gain access to temporal identifiers.
      * Argument \a global_id is the name of the bool variable where the result
-     * of the isbound check is calculated. Argument \a external_id is the name
+     * of the isbound/ispresent/ischosen check is calculated. Argument \a external_id is the name
      * of the assignment where the call chain starts.
      * Argument \a is_template tells if the assignment is a template or not.
-     * Argument \a isbound tells if the function is isbound or ispresent.
+     * Argument \a optype tells if the function is isbound or ispresent or ischosen.
+     * Argument \a field contains the inspected field of the union when the optype is ischosen.
      */
-    void generate_code_ispresentbound(expression_struct *expr,
+    void generate_code_ispresentboundchosen(expression_struct *expr,
       Ttcn::FieldOrArrayRefs *subrefs, Common::Module* module,
       const string& global_id, const string& external_id,
-      const bool is_template, const bool isbound);
+      const bool is_template, const namedbool optype, const char* field);
 
     /** Extension attribute for optimized code generation of structured types:
      *    with { extension "optimize:xxx" }
