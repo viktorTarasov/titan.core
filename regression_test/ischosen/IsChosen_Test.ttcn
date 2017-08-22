@@ -53,6 +53,7 @@ const MyUnion1 c_myunion4:= { r := { u:= {i:=3}, at := {integer := 3} } }
 const MyUnion1 c_myunion5:= { u := {rou := {{i := 4}}}}; 
 const MyUnion1 c_myunion6:= { r := { u:= {i:=3}, at:= {integer:=3} } }
 const MyUnion1 c_myunion7:= { rat := {{integer := 4}, {charstring := "a"}} }
+const MyUnion1 c_myunion8:= { r := {u := {i := 3}} }
 
 template MyUnion1 t_myunion1:= { roc:= { "1aa", "2bb", "3cc"}}
 template MyUnion1 t_myunion2:= { i:= 5 }
@@ -70,6 +71,7 @@ template MyUnion1 t_myunion13(in integer a := 1) := { r := { u:= ({i:=a}), at :=
 template MyUnion1 t_myunion14(in integer a := 1) := { r := { u:= *, at := {integer := 3} } }
 template MyUnion1 t_myunion15:= { r := { u:= {i:=3}, at:= {integer:=3} } }
 template MyUnion1 t_myunion16:= { rat := {{integer := 4}, {charstring := "a"}} }
+template MyUnion1 t_myunion17:= { r := {u := {i := 3}} }
 
 
   //========= Compound =====
@@ -156,6 +158,18 @@ template MyUnion1 t_myunion16:= { rat := {{integer := 4}, {charstring := "a"}} }
     if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
     if(ischosen(vl_u.u.rou[0].i)) {setverdict(fail)} else {setverdict(pass)}
     if(ischosen(vl_u.u.rou)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := c_myunion8;
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.rat[0].integer)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[0].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou)) {setverdict(fail)} else {setverdict(pass)}
   }
   
   testcase tc_ischosen_on_const() runs on MTC_CT {
@@ -194,6 +208,17 @@ template MyUnion1 t_myunion16:= { rat := {{integer := 4}, {charstring := "a"}} }
     if(ischosen(c_myunion6.i)) {setverdict(fail)} else {setverdict(pass)}
     if(ischosen(c_myunion6.roc)) {setverdict(fail)} else {setverdict(pass)}
     if(ischosen(c_myunion6.rat)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(c_myunion7.rat)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion7.rat[0].integer)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion7.r)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion7.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion7.roc)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(c_myunion8.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion8.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(c_myunion8.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(c_myunion8.roc)) {setverdict(fail)} else {setverdict(pass)}
   }
 
 
@@ -291,6 +316,11 @@ template MyUnion1 t_myunion16:= { rat := {{integer := 4}, {charstring := "a"}} }
     if(ischosen(t_myunion15.i)) {setverdict(fail)} else {setverdict(pass)}
     if(ischosen(t_myunion15.roc)) {setverdict(fail)} else {setverdict(pass)}
     if(ischosen(t_myunion15.rat)) {setverdict(fail)} else {setverdict(pass)}
+
+    if(ischosen(t_myunion17.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion17.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(t_myunion17.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(t_myunion17.roc)) {setverdict(fail)} else {setverdict(pass)}
   }
 
 
@@ -440,6 +470,20 @@ template MyUnion1 t_myunion16:= { rat := {{integer := 4}, {charstring := "a"}} }
     if(ischosen(vl_u.rat)) {setverdict(fail)} else {setverdict(pass)}
     if(ischosen(vl_u.u.rou[1].i)) {setverdict(fail)} else {setverdict(pass)}
     if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+
+    vl_u := t_myunion17;
+    if(ischosen(vl_u.r)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.r.u.i)) {setverdict(pass)} else {setverdict(fail)}
+    if(ischosen(vl_u.rat[0].integer)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.roc)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[44].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.u.i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou[0].i)) {setverdict(fail)} else {setverdict(pass)}
+    if(ischosen(vl_u.u.rou)) {setverdict(fail)} else {setverdict(pass)}
+
+
   }
 
   control {
