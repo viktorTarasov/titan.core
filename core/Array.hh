@@ -1128,11 +1128,11 @@ template <typename T_type, unsigned int array_size, int index_offset>
 boolean VALUE_ARRAY<T_type,array_size,index_offset>::is_bound() const
 {
   for (unsigned int i = 0; i < array_size; ++i) {
-    if (!array_elements[i].is_bound()) {
-    	return FALSE;
+    if (array_elements[i].is_bound()) {
+    	return TRUE;
     }
   }
-  return TRUE;
+  return FALSE;
 }
 
 template <typename T_type, unsigned int array_size, int index_offset>

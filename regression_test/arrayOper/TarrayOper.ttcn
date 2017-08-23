@@ -392,9 +392,8 @@ if (not(ischosen(x1[1].x1))) {setverdict(pass);}
      else {setverdict(fail);}
 if (x2[2].x2==1.4) {setverdict(pass);}		//out of order
      else {setverdict(fail);}
-/* Temporarily disabled: Bug 521245 */ 
-/*if (ischosen(x2[2].x2)) {setverdict(pass);}
-     else {setverdict(fail);}*/
+if (ischosen(x2[2].x2)) {setverdict(pass);}
+     else {setverdict(fail);}
 if (not(ischosen(x2[2].x1))) {setverdict(pass);}
      else {setverdict(fail);}
 }

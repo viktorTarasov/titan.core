@@ -197,7 +197,7 @@ function f_string2ttcn_REC_BAI3_v_str(in charstring pl_cs, charstring pl_expecte
       log("str2ttcn() failed: ",err_str);
       setverdict(fail);
     }
-    if( pl_expected_result == log2str(vl_result) ) { setverdict(pass) } else { setverdict(fail) }
+    if( pl_expected_result == log2str(vl_result) ) { setverdict(pass) } else { setverdict(fail, match(pl_expected_result, log2str(vl_result))) }
   } 
   else 
   {
@@ -744,7 +744,7 @@ testcase tc_array_string2ttcn_i3_mod4v1() runs on MC {
   f_string2ttcn_REC_BAI3_t_str("{ b := true, ai3 := { 1, -, - } }", "{ b := true, ai3 := { 1, <uninitialized template>, <uninitialized template> } }")
   //f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, -, - } }", log2str(vl_rec),true)
   // partial array values are currently deleted if the array is an optional field or a union alternative (see artf708493)
-  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, -, - } }", "{ b := true, ai3 := <unbound> }" , true);
+  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, -, - } }", "{ b := true, ai3 := { 1, <unbound>, <unbound> } }" , true);
   log(tl_rec);
   log(vl_rec);
 }
@@ -755,7 +755,7 @@ testcase tc_array_string2ttcn_i3_mod4v2() runs on MC {
   f_string2ttcn_REC_BAI3_t_str("{ b := true, ai3 := { 1, 2, - } }", "{ b := true, ai3 := { 1, 2, <uninitialized template> } }")
   //f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, 2, - } }", log2str(vl_rec), true);
   // partial array values are currently deleted if the array is an optional field or a union alternative (see artf708493)
-  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, 2, - } }", "{ b := true, ai3 := <unbound> }" , true);
+  f_string2ttcn_REC_BAI3_v_str("{ b := true, ai3 := { 1, 2, - } }", "{ b := true, ai3 := { 1, 2, <unbound> } }" , true);
   log(tl_rec);
   log(vl_rec);
 }
