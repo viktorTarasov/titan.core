@@ -4851,7 +4851,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
 static void usage(void)
 {
   fprintf(stderr, "\n"
-    "usage: %s [-abc" C_flag "dDEfFglLmMnNprRsStTVwWXZ] [-K file] [-z file ] [-P dir]"
+    "usage: %s [-abc" C_flag "dDEfFgGlLmMnNprRsStTVwWXZ] [-K file] [-z file ] [-P dir]"
     " [-J file] [-U none|type|'number'] [-e ets_name] [-o dir|file]\n"
     "        [-t project_descriptor.tpd [-b buildconfig]]\n"
     "        [-O file] ... module_name ... testport_name ...\n"
@@ -4868,6 +4868,7 @@ static void usage(void)
     "	-E:		display only warnings for unrecognized encoding variants\n"
     "	-f:		force overwriting of the output Makefile\n"
     "	-g:		generate Makefile for use with GNU make\n"
+    "	-G:		enable legacy encoding rules\n"
     "	-I path:	Add path to the search paths when using TPD files\n"
     "	-J file:	The names of files taken from file instead of command line\n"
     "	-K file:	enable selective code coverage\n"
@@ -4925,8 +4926,7 @@ int main(int argc, char *argv[])
     Sflag = FALSE, Vflag = FALSE, Dflag = FALSE, Wflag = FALSE,
     djflag = FALSE, Zflag = FALSE, Hflag = FALSE, Mflag = FALSE,
     diflag = FALSE, zflag = FALSE, Eflag = FALSE, nflag = FALSE,
-    Nflag = FALSE;
-  boolean enable_legacy_encoding = FALSE;
+    Nflag = FALSE, Gflag = FALSE;
   boolean error_flag = FALSE;
   char *output_file = NULL;
   char *ets_name = NULL;
@@ -4986,7 +4986,7 @@ int main(int argc, char *argv[])
   }
 
   for ( ; ; ) {
-    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:EfFgI:J:K:o:lLmMnNpP:rRsSt:TU:vVwWXYz:ZH");
+    int c = getopt(argc, argv, "O:ab:c" C_flag "dDe:EfFgGI:J:K:o:lLmMnNpP:rRsSt:TU:vVwWXYz:ZH");
     if (c == -1) break;
     switch (c) {
     case 'O':
@@ -5041,6 +5041,9 @@ int main(int argc, char *argv[])
       break;
     case 'g':
       SET_FLAG(g);
+      break;
+    case 'G':
+      SET_FLAG(G);
       break;
     case 'H':
       SET_FLAG(H);
@@ -5162,7 +5165,7 @@ int main(int argc, char *argv[])
   if (vflag) {
     /* -v prints the version and exits, it's pointless to specify other flags */
     if ( aflag || bflag || cflag || Cflag || dflag || eflag || fflag || Fflag || gflag
-      || mflag || oflag || lflag || pflag || Pflag || rflag || Rflag || sflag
+      || mflag || oflag || lflag || pflag || Pflag || rflag || Rflag || sflag || Gflag
       || tflag || Tflag || Vflag || wflag || Xflag || Kflag || Dflag || Wflag || Yflag
       || Zflag || Hflag || Mflag || zflag || Eflag || nflag || n_other_files > 0 || n_search_paths > 0)
       error_flag = TRUE;
@@ -5363,7 +5366,7 @@ int main(int argc, char *argv[])
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
       create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csmode,
       &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
-      &asflag, &temp_wflag, &Yflag, &Mflag, &Eflag, &nflag, &Nflag, &diflag, &enable_legacy_encoding,
+      &asflag, &temp_wflag, &Yflag, &Mflag, &Eflag, &nflag, &Nflag, &diflag, &Gflag,
       solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
       linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &Zflag, &Hflag,
       &generatorCommandOutput, target_placement_list, Wflag, run_command_list, required_configs, &profiled_file_list, search_paths, n_search_paths, &makefileScript);
@@ -5412,7 +5415,7 @@ int main(int argc, char *argv[])
       file_list_file_name, Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
       ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, csmode, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
       drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, wflag, Yflag, Mflag, Eflag, nflag, Nflag, diflag,
-      enable_legacy_encoding, solspeclibraries, sol8speclibraries, linuxspeclibraries,
+      Gflag, solspeclibraries, sol8speclibraries, linuxspeclibraries,
       freebsdspeclibraries, win32speclibraries, ttcn3prep, linkerlibraries, additionalObjects,
       linkerlibsearchpath, generatorCommandOutput, target_placement_list);
     if (makefileScript != NULL) {
