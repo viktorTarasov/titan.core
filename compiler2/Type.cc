@@ -1986,7 +1986,7 @@ namespace Common {
           raw_length=-1;
           return raw_length;
         }
-        l=cf->get_type()->get_raw_length();
+        l=cf->get_type()->get_type_refd_last()->get_raw_length();
         if(l==-1){
           raw_length=-1;
           return raw_length;
@@ -2005,7 +2005,7 @@ namespace Common {
       for(size_t i = 0; i < get_nof_comps(); i++){
         CompField *cf=get_comp_byIndex(i);
         int l=0;
-        l=cf->get_type()->get_raw_length();
+        l=cf->get_type()->get_type_refd_last()->get_raw_length();
         if(l==-1){
           raw_length=-1;
           return raw_length;
@@ -2527,7 +2527,7 @@ namespace Common {
                   allow_omit = true;
               }
               if(!hiba){
-                Error_Context cntx(this, "In Raw parmeter CROSSTAG");
+                Error_Context cntx(this, "In Raw parameter CROSSTAG");
                 Value *v = rawpar->crosstaglist.tag[c].keyList[a].v_value;
                 v->set_my_scope(get_my_scope());
                 v->set_my_governor(t2);

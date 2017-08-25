@@ -11,13 +11,14 @@
 #   Hanko, Matyas
 #   Kovacs, Ferenc
 #   Raduly, Csaba
+#   Szabo, Bence Janos
 #   Szabo, Janos Zoltan – initial implementation
 #
 ##############################################################################
 TOPDIR := ..
 include $(TOPDIR)/Makefile.regression
 
-RDIRS = Examples HN25015 HQ26535 HQ49956 HS16977 ustr Annex_E_variants
+RDIRS = Examples HN25015 HQ26535 HQ49956 HS16977 ustr Annex_E_variants Bug521125
 
 all dep clean run distclean:
 	for dir in $(RDIRS); do (cd $$dir && $(MAKE) $@) || exit; done
