@@ -1434,6 +1434,7 @@ namespace Ttcn {
     bool is_startable;
     /** Opts out from location information */
     bool transparent;
+    bool deterministic;
 
     NameBridgingScope bridgeScope;
 
@@ -1446,6 +1447,7 @@ namespace Ttcn {
      *
      * Called from a single location in compiler.y
      *
+     * @param p_deterministic true if deterministic
      * @param p_id function name
      * @param p_fpl formal parameter list
      * @param p_runs_on_ref "runs on", else NULL
@@ -1457,7 +1459,7 @@ namespace Ttcn {
      * @param p_template_restriction restriction type
      * @param p_block the body of the function
      */
-    Def_Function(Identifier *p_id, FormalParList *p_fpl,
+    Def_Function(bool p_deterministic, Identifier *p_id, FormalParList *p_fpl,
                  Reference *p_runs_on_ref, Reference *p_mtc_ref,
                  Reference *p_system_ref, Reference *p_port_ref,
                  Type *p_return_type,
@@ -1539,6 +1541,7 @@ namespace Ttcn {
     Ttcn::ErrorBehaviorList *eb_list;
     // pretty or compact printing for json or xml
     Ttcn::PrintingType *printing;
+    bool deterministic;
     /// Copy constructor disabled
     Def_ExtFunction(const Def_ExtFunction& p);
     /// %Assignment disabled
@@ -1548,19 +1551,21 @@ namespace Ttcn {
      *
      * Called from a single location in compiler.y
      *
+     * @param p_deterministic true if deterministic function
      * @param p_id the name
      * @param p_fpl formal parameters
      * @param p_return_type the return type
      * @param returns_template true if it returns a template
      * @param p_template_restriction restriction type
      */
-    Def_ExtFunction(Identifier *p_id, FormalParList *p_fpl,
+    Def_ExtFunction(bool p_deterministic, Identifier *p_id, FormalParList *p_fpl,
       Type *p_return_type, bool returns_template,
       template_restriction_t p_template_restriction)
       : Def_Function_Base(true, p_id, p_fpl, p_return_type, returns_template,
           p_template_restriction),
       function_type(EXTFUNC_MANUAL), encoding_type(Type::CT_UNDEF),
-      encoding_options(0), eb_list(0), printing(0) { }
+      encoding_options(0), eb_list(0), printing(0),
+      deterministic(p_deterministic) { }
     ~Def_ExtFunction();
     virtual Def_ExtFunction *clone() const;
     virtual void set_fullname(const string& p_fullname);

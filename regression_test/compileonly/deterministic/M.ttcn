@@ -7,11 +7,11 @@
  *
  * Contributors:
  *   Baranyi, Botond
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 
 // Tests for the '@deterministic' modifier for functions
-// (which is currently ignored by the compiler, but must not cause errors)
 module M {
 
 function @deterministic f1() return integer {

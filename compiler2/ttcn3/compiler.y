@@ -923,7 +923,7 @@ static const string anyname("anytype");
  *********************************************************************/
 
 %type <bool_val> optAliveKeyword optOptionalKeyword optOverrideKeyword
-  optErrValueRaw optAllKeyword
+  optErrValueRaw optAllKeyword optDeterministicModifier
 %type <str> FreeText optLanguageSpec PatternChunk PatternChunkList
 %type <uchar_val> Group Plane Row Cell
 %type <id> FieldIdentifier FieldReference GlobalModuleId
@@ -4196,15 +4196,15 @@ FunctionDef: // 164
   optRunsOnSpec AltOrTcConfigSpec optPortSpec optReturnType optError StatementBlock
   {
     $5->set_location(infile, @4, @6);
-    $$ = new Def_Function($3, $5, $7, $8.mtcref, $8.systemref, $9, $10.type, $10.returns_template,
+    $$ = new Def_Function($2, $3, $5, $7, $8.mtcref, $8.systemref, $9, $10.type, $10.returns_template,
                           $10.template_restriction, $12);
     $$->set_location(infile, @$);
   }
 ;
 
 optDeterministicModifier:
-  /* empty */
-| DeterministicKeyword /* just ignore it for now */
+ /* empty */ { $$ = false; }
+| DeterministicKeyword { $$ = true; }
 ;
 
 optFunctionFormalParList: // [167]
@@ -5311,7 +5311,7 @@ ExtFunctionDef: // 276
   '(' optFunctionFormalParList ')' optReturnType
   {
     $6->set_location(infile, @5, @7);
-    $$ = new Def_ExtFunction($4, $6, $8.type, $8.returns_template,
+    $$ = new Def_ExtFunction($3, $4, $6, $8.type, $8.returns_template,
                              $8.template_restriction);
     $$->set_location(infile, @$);
   }

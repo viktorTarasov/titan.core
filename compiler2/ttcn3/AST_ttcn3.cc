@@ -6290,7 +6290,7 @@ namespace Ttcn {
   // ===== Def_Function
   // =================================
 
-  Def_Function::Def_Function(Identifier *p_id, FormalParList *p_fpl,
+  Def_Function::Def_Function(bool p_deterministic, Identifier *p_id, FormalParList *p_fpl,
                              Reference *p_runs_on_ref, Reference *p_mtc_ref,
                              Reference *p_system_ref, Reference *p_port_ref,
                              Type *p_return_type,
@@ -6303,7 +6303,7 @@ namespace Ttcn {
         mtc_ref(p_mtc_ref), mtc_type(0),
         system_ref(p_system_ref), system_type(0),
         port_ref(p_port_ref), port_type(0), block(p_block),
-        is_startable(false), transparent(false)
+        is_startable(false), transparent(false), deterministic(p_deterministic)
   {
     if (!p_block) FATAL_ERROR("Def_Function::Def_Function()");
     block->set_my_def(this);
@@ -6390,6 +6390,11 @@ namespace Ttcn {
     checked = true;
     Error_Context cntxt(this, "In function definition `%s'",
       id->get_dispname().c_str());
+    if (deterministic) {
+      note("Please ensure that the `%s' function complies with the requirements"
+        " in clause 16.1.4 of the TTCN-3 core language standard (ES 201 873-1)",
+        id->get_dispname().c_str());
+    }
     // `runs on' clause and `port' clause are mutually exclusive
     if (runs_on_ref && port_ref) {
       runs_on_ref->error("A `runs on' and a `port' clause cannot be present at the same time.");
@@ -6744,6 +6749,7 @@ namespace Ttcn {
       return_type->dump(level + 2);
       if (asstype == A_FUNCTION_RTEMP) DEBUG(level + 1, "Returns template");
     }
+    DEBUG(level + 1, "Deterministic: %s", deterministic ? "true" : "false");
     if (prototype != PROTOTYPE_NONE)
       DEBUG(level + 1, "Prototype: %s", get_prototype_name());
     //DEBUG(level + 1, "Statement block:");
@@ -7043,6 +7049,12 @@ namespace Ttcn {
       break;
     default:
       FATAL_ERROR("Def_ExtFunction::chk()");
+    }
+    if (deterministic) {
+      note("Please ensure that the `%s' external function complies with the"
+        " requirements in clause 16.1.4 of the TTCN-3 core language"
+        " standard (ES 201 873-1)",
+        id->get_dispname().c_str());
     }
   }
 
@@ -7524,6 +7536,7 @@ namespace Ttcn {
       return_type->dump(level + 2);
       if(asstype == A_EXT_FUNCTION_RTEMP) DEBUG(level + 1, "Returns template");
     }
+    DEBUG(level + 1, "Deterministic: %s", deterministic ? "true" : "false");
     if (prototype != PROTOTYPE_NONE)
       DEBUG(level + 1, "Prototype: %s", get_prototype_name());
     if (function_type != EXTFUNC_MANUAL) {
