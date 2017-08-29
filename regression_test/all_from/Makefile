@@ -128,7 +128,7 @@ $(GENERATED_SOURCES) $(GENERATED_HEADERS): compile
 clean distclean:
 	-$(RM) $(TARGET) $(OBJECTS) $(GENERATED_HEADERS) \
 	$(GENERATED_SOURCES) compile $(DEPFILES) \
-	tags *.log
+	tags *.log run.cfg
 
 dep: $(GENERATED_SOURCES) $(USER_SOURCES) ;
 

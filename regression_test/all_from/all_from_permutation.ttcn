@@ -9,6 +9,7 @@
  *   Balasko, Jeno
  *   Baranyi, Botond
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 module all_from_permutation
@@ -1789,6 +1790,16 @@ testcase tc_perm_varTemplate_len_res_unfoldable() runs on A
   var template RoI tl_unfoldable := { 6, 9 };
   var template RoI tl_len_res := { permutation ( 2, all from tl_unfoldable ) } length (3);
   var template RoI tl_len_res_eq := { permutation ( 2, 6, 9 ) } length (3);
+  f_checkRoITemplateEquivalence(tl_len_res, tl_len_res_eq);
+}
+
+testcase tc_perm_varTemplate_two_var_unfoldable() runs on A
+{
+  var template RoI tl_unfoldable := { 6, 9 };
+  var template RoI tl_unfoldable2 := { 5, 7 };
+  var template RoI tl_unfoldable3 := { 10, 11 };
+  var template RoI tl_len_res := { permutation ( 2, all from tl_unfoldable, all from tl_unfoldable2), permutation (all from tl_unfoldable3) };
+  var template RoI tl_len_res_eq := { permutation ( 2, 6, 9, 5, 7 ), permutation (10, 11) };
   f_checkRoITemplateEquivalence(tl_len_res, tl_len_res_eq);
 }
 
