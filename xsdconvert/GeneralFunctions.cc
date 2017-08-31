@@ -89,7 +89,7 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
     "int2bit", "int2char", "int2enum", "int2float", "int2hex", "int2oct", "int2str", "int2unichar",
     "isvalue", "ischosen", "ispresent",
     "lengthof", "log2str",
-    "oct2bit", "oct2char", "oct2hex", "oct2int", "oct2str", "oct2unichar"
+    "oct2bit", "oct2char", "oct2hex", "oct2int", "oct2str", "oct2unichar",
     "regexp", "replace", "rnd", "remove_bom", "get_stringencoding",
     "sizeof", "str2bit", "str2float", "str2hex", "str2int", "str2oct", "substr",
     "testcasename",

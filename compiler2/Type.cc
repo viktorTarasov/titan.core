@@ -2775,7 +2775,7 @@ namespace Common {
     "$ref", "type", "properties", "items", "anyOf", "enum", "pattern",
     "default", "minItems", "maxItems", "additionalProperties", "fieldOrder",
     "required", "$schema", "minLength", "maxLength", "minimum", "maximum",
-    "excludeMinimum", "excludeMaximum", "allOf"
+    "excludeMinimum", "excludeMaximum", "allOf",
     // TITAN-specific keywords
     "originalName", "unusedAlias", "subType", "numericValues", "omitAsNull",
     "encoding", "decoding", "valueList"
