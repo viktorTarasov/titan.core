@@ -1803,5 +1803,16 @@ testcase tc_perm_varTemplate_two_var_unfoldable() runs on A
   f_checkRoITemplateEquivalence(tl_len_res, tl_len_res_eq);
 }
 
+testcase tc_perm_varTemplate_array_unfoldable() runs on A
+{
+  var template RoI tl_unfoldable4 := { 6 };
+  var template IntArray tl_arr_res := { 1, permutation ( 2, all from tl_unfoldable4, 3), 4, 5 };
+  var template IntArray tl_arr_res_eq := { 1, permutation ( 2, 6, 3 ), 4, 5 };
+  if (log2str(tl_arr_res) != log2str(tl_arr_res_eq)) {
+    setverdict(fail, match(log2str(tl_arr_res), log2str(tl_arr_res_eq)));
+  }
+  setverdict(pass);
+}
+
 
 }  // end of module

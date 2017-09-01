@@ -9,6 +9,7 @@
  *   Balasko, Jeno
  *   Baranyi, Botond
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 module types {
@@ -56,6 +57,8 @@ type union MyUnion {
 
 type record of MyRecord RoMyRec;
 type record of MyUnion RoMyUnion;
+
+type integer IntArray[3..8];
 
 //==== Function Reference ====
 //this is just a dummy type to test all from for function references

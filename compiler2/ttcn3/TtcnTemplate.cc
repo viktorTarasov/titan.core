@@ -3914,228 +3914,17 @@ end:
         //   ^^^^^^^--- these ------------------------^^^^^
         //   are known at compile time, but the length of the "all from"
         //   is only known at run time.
-        // Collect the indices where there is an "all from".
-        
-        // variables.size() and templates.size() will be equal.
-        // templates[i] contains the variables[i] template.
-        dynamic_array<size_t> variables;
-        dynamic_array<size_t> templates;
-        size_t fixed_part = 0;
-        if (has_permutation) {
-          for (size_t i = 0; i < nof_ts; i++) {
-            Template *t = u.templates->get_t_byIndex(i);
-            if (t->templatetype == PERMUTATION_MATCH) {
-              size_t num_p = t->u.templates->get_nof_ts();
-              // t->u.templates is 2: "hello" and all from ...
-              for (size_t j = 0; j < num_p; ++j) {
-                Template *subt = t->u.templates->get_t_byIndex(j);
-                if (subt->templatetype == ALL_FROM) {
-                  templates.add(i);
-                  variables.add(j);
-                }
-                else fixed_part++;
-              }
-            }
-            else fixed_part++;
-          }
-
-          char* str_preamble = 0;
-          char* str_set_size = mputprintf(0, "%s.set_size(%lu", name,
-            (unsigned long)fixed_part);
-
-          // variable part
-          for (size_t i = 0, v = variables.size(); i < v; ++i) {
-            Template *t = u.templates->get_t_byIndex(templates[i]);
-            if (t->templatetype != PERMUTATION_MATCH) continue; // ?? really nothing to do ??
-            Template *subt = t->u.templates->get_t_byIndex(variables[i]);
-            if (subt->templatetype == ALL_FROM) {
-              Value *refv = subt->u.all_from->u.specific_value;
-              // don't call get_Value(), it rips out the value from the template
-
-              if (refv->get_valuetype()!=Value::V_REFD) FATAL_ERROR("%s", __FUNCTION__);
-              Common::Reference  *ref = refv->get_reference();
-              FieldOrArrayRefs   *subrefs = ref->get_subrefs();
-              Common::Assignment *ass = ref->get_refd_assignment();
-
-              str_set_size = mputstrn(str_set_size, " + ", 3);
-
-              Ref_pard* ref_pard = dynamic_cast<Ref_pard*>(ref);
-              if (ref_pard) {
-                // in case of parametrised references:
-                //  - temporary parameters need to be declared (stored in str_preamble)
-                //  - the same temporary needs to be used at each call (generate_code_cached call)
-                expression_struct expr;
-                Code::init_expr(&expr);
-
-                ref_pard->generate_code_cached(&expr);
-                str_set_size = mputprintf(str_set_size, "%s", expr.expr);
-                if (expr.preamble)
-                  str_preamble = mputstr(str_preamble, expr.preamble);
-
-                Code::free_expr(&expr);
-              }
-              else {
-                str_set_size = mputstr (str_set_size, ass->get_id().get_name().c_str());
-                if (subrefs) {
-                  expression_struct expr;
-                  Code::init_expr(&expr);
-
-                  subrefs->generate_code(&expr, ass);
-                  str_set_size = mputprintf(str_set_size, "%s", expr.expr);
-
-                  Code::free_expr(&expr);
-                }
-              }
-
-              switch(ass->get_asstype()) {
-              case Common::Assignment::A_CONST:
-              case Common::Assignment::A_EXT_CONST:
-              case Common::Assignment::A_MODULEPAR:
-              case Common::Assignment::A_VAR:
-              case Common::Assignment::A_PAR_VAL_IN:
-              case Common::Assignment::A_PAR_VAL_OUT:
-              case Common::Assignment::A_PAR_VAL_INOUT:
-              case Common::Assignment::A_FUNCTION_RVAL:
-              case Common::Assignment::A_EXT_FUNCTION_RVAL:
-                if (ass->get_Type()->field_is_optional(subrefs)) {
-                  str_set_size = mputstrn(str_set_size, "()", 2);
-                }
-                break;
-              default:
-                break;
-              }
-
-              str_set_size = mputstr(str_set_size, ".n_elem()");
-            }
-          }
-
-          str = mputstr(str, str_preamble);
-          str = mputstr(str, str_set_size);
-
-          Free(str_preamble);
-          Free(str_set_size);
-
-          str = mputstrn(str, ");\n", 3); // finally done set_size
           
-          size_t index = 0;
-          string skipper, hopper;
-          for (size_t i = 0; i < nof_ts; i++) {
+        size_t fixed_part = 0;
+        char* str_set_size = NULL;
+        char* str_preamble = NULL;
+        char* str_body = NULL;
+        string counter = get_temporary_id();
+        
+        if (has_permutation || has_allfrom()) {
+          str_body = mputprintf(str_body, "int %s = %lld;\n", counter.c_str(), index_offset);
+          for (size_t i = 0; i < nof_ts; ++i) {
             Template *t = u.templates->get_t_byIndex(i);
-            switch (t->templatetype) {
-            case ALL_FROM: {
-              break; }
-            case PERMUTATION_MATCH: {
-              size_t nof_perm_ts = t->u.templates->get_nof_ts();
-              for (size_t j = 0; j < nof_perm_ts; j++) {
-                Int ix(index_offset + index + j);
-                Template *permut_elem = t->u.templates->get_t_byIndex(j);
-                if (permut_elem->templatetype == ALL_FROM) {
-                  expression_struct expr;
-                  Code::init_expr(&expr);
-                  switch (permut_elem->u.all_from->templatetype) {
-                  case SPECIFIC_VALUE: {
-                    Value *spec = permut_elem->u.all_from->u.specific_value;
-                    switch (spec->get_valuetype()) {
-                    case Common::Value::V_REFD: {
-                      Common::Reference  *ref = spec->get_reference();
-                      
-                      Ref_pard* ref_pard = dynamic_cast<Ref_pard*>(ref);
-                      if (ref_pard)
-                        ref_pard->generate_code_cached(&expr);
-                      else
-                        ref->generate_code(&expr);
-
-                      Common::Assignment* ass = ref->get_refd_assignment();
-                      switch(ass->get_asstype()) {
-                      case Common::Assignment::A_CONST:
-                      case Common::Assignment::A_EXT_CONST:
-                      case Common::Assignment::A_MODULEPAR:
-                      case Common::Assignment::A_VAR:
-                      case Common::Assignment::A_PAR_VAL_IN:
-                      case Common::Assignment::A_PAR_VAL_OUT:
-                      case Common::Assignment::A_PAR_VAL_INOUT:
-                      case Common::Assignment::A_FUNCTION_RVAL:
-                      case Common::Assignment::A_EXT_FUNCTION_RVAL:
-                        if (ass->get_Type()->field_is_optional(ref->get_subrefs())) {
-                          expr.expr = mputstrn(expr.expr, "()", 2);
-                        }
-                        break;
-                      default:
-                        break;
-                      }
-                      
-                      break; }
-                    default:
-                      FATAL_ERROR("vtype %d", spec->get_valuetype());
-                      break;
-                    }
-                    break; }
-
-
-                  default:
-                    FATAL_ERROR("ttype %d", permut_elem->u.all_from->templatetype);
-                    break;
-                  }
-                  str = mputprintf(str,
-                    "for (int i_i = 0, i_lim = %s.n_elem(); i_i < i_lim; ++i_i) {\n",
-                    expr.expr);
-
-                  str = permut_elem->generate_code_init_seof_element(str, name,
-                    (Int2string(ix) + skipper + " + i_i").c_str(),
-                    oftype_name_str);
-
-                  str = mputstrn(str, "}\n", 2);
-                  skipper += "-1+";
-                  skipper += expr.expr;
-                  skipper += ".n_elem() /* 3005 */ ";
-                  Code::free_expr(&expr);
-                }
-                else {
-                  str = permut_elem->generate_code_init_seof_element(str, name,
-                    (Int2string(ix) + skipper).c_str(), oftype_name_str);
-                }
-              }
-              // do not consider index_offset in case of permutation indicators
-              str = mputprintf(str, "%s.add_permutation(%lu%s, %lu%s);\n", name,
-                (unsigned long)index,                     hopper.c_str(),
-                (unsigned long)(index + nof_perm_ts - 1), skipper.c_str());
-              hopper = skipper;
-              t->set_code_generated();
-              index += nof_perm_ts;
-              break; }
-
-            default:
-              str = t->generate_code_init_seof_element(str, name,
-                (Int2string(index_offset + index) + skipper).c_str(), oftype_name_str);
-              // no break
-            case TEMPLATE_NOTUSED:
-              index++;
-              break;
-            }
-          }
-
-          break;
-
-        }
-
-
-        if (!has_permutation && has_allfrom()) {
-          for (size_t i = 0; i < nof_ts; i++) {
-            Template *t = u.templates->get_t_byIndex(i);
-            if (t->templatetype == ALL_FROM) {
-              variables.add(i);
-            }
-            else {
-              fixed_part++;
-            }
-          }
-          char* str_preamble = 0;
-          char* str_set_size = mputprintf(0, "%s.set_size(%lu", name,
-            (unsigned long)fixed_part);
-
-          // variable part
-          for (size_t i = 0, v = variables.size(); i < v; ++i) {
-            Template *t = u.templates->get_t_byIndex(variables[i]);
             if (t->templatetype == ALL_FROM) {
               Value *refv = t->u.all_from->u.specific_value;
               // don't call get_Value(), it rips out the value from the template
@@ -4157,8 +3946,7 @@ end:
                 if (expr.preamble)
                   str_preamble = mputstr(str_preamble, expr.preamble);
                 Code::free_expr(&expr);
-              }
-              else {
+              } else {
                 str_set_size = mputstr (str_set_size, ass->get_id().get_name().c_str());
                 if (subrefs) {
                   expression_struct expr;
@@ -4188,21 +3976,6 @@ end:
               }
 
               str_set_size = mputstr(str_set_size, ".n_elem()");
-            }
-          }
-          str = mputstr(str, str_preamble);
-          str = mputstr(str, str_set_size);
-          Free(str_preamble);
-          Free(str_set_size);
-          str = mputstrn(str, ");\n", 3); // finally done set_size
-
-          size_t index = 0;
-          string skipper;
-          for (size_t i = 0; i < nof_ts; i++) {
-            Template *t = u.templates->get_t_byIndex(i);
-            Int ix(index_offset + i);
-            switch (t->templatetype) {
-            case ALL_FROM: {
               expression_struct expr;
               Code::init_expr(&expr);
               switch (t->u.all_from->templatetype) {
@@ -4210,14 +3983,14 @@ end:
                   Value *spec = t->u.all_from->u.specific_value;
                   switch (spec->get_valuetype()) {
                   case Common::Value::V_REFD: {
-                    Common::Reference  *ref = spec->get_reference();
-                    Ref_pard* ref_pard = dynamic_cast<Ref_pard*>(ref);
+                    ref = spec->get_reference();
+                    ref_pard = dynamic_cast<Ref_pard*>(ref);
                     if (ref_pard)
                       ref_pard->generate_code_cached(&expr);
                     else
                       ref->generate_code(&expr);
 
-                    Common::Assignment* ass = ref->get_refd_assignment();
+                    ass = ref->get_refd_assignment();
                     switch(ass->get_asstype()) {
                     case Common::Assignment::A_CONST:
                     case Common::Assignment::A_EXT_CONST:
@@ -4246,38 +4019,171 @@ end:
                   FATAL_ERROR("ttype %d", t->u.all_from->templatetype);
                   break; }
               }
-              str = mputprintf(str,
+              str_body = mputprintf(str_body,
                 "for (int i_i = 0, i_lim = %s.n_elem(); i_i < i_lim; ++i_i) {\n",
                 expr.expr);
-              str = t->generate_code_init_seof_element(str, name,
-                (Int2string(ix) + skipper + " + i_i").c_str(),
+              str_body = t->generate_code_init_seof_element(str_body, name,
+                (counter + " + i_i").c_str(),
                 oftype_name_str);
-              str = mputstrn(str, "}\n", 2);
-              skipper += "-1+";
-              skipper += expr.expr;
-              skipper += ".n_elem() ";
+              str_body = mputstrn(str_body, "}\n", 2);
+              str_body = mputprintf(str_body, "%s += %s.n_elem();\n", counter.c_str(), expr.expr);
               Code::free_expr(&expr);
               t->set_code_generated();
-              ++index;
-              break; }
-            default: {
-               str = t->generate_code_init_seof_element(str, name,
-                 (Int2string(index_offset + index) + skipper).c_str(), oftype_name_str);
-               // no break
-            case TEMPLATE_NOTUSED:
-               ++index;
-               break; }
+            } else if (t->templatetype == PERMUTATION_MATCH) {
+              string permutation_start = get_temporary_id();
+              str_body = mputprintf(str_body, "int %s = %s;\n",
+                permutation_start.c_str(), counter.c_str());
+              size_t nof_perm_ts = t->u.templates->get_nof_ts();
+              for (size_t j = 0; j < nof_perm_ts; j++) {
+                Template *subt = t->u.templates->get_t_byIndex(j);
+                if (subt->templatetype == ALL_FROM) {
+                  Value *refv = subt->u.all_from->u.specific_value;
+                  // don't call get_Value(), it rips out the value from the template
+                  if (refv->get_valuetype()!=Value::V_REFD) FATAL_ERROR("%s", __FUNCTION__);
+                  Common::Reference  *ref = refv->get_reference();
+                  FieldOrArrayRefs   *subrefs = ref->get_subrefs();
+                  Common::Assignment *ass = ref->get_refd_assignment();
+                  str_set_size = mputstrn(str_set_size, " + ", 3);
+                  Ref_pard* ref_pard = dynamic_cast<Ref_pard*>(ref);
+                  if (ref_pard) {
+                    // in case of parametrised references:
+                    //  - temporary parameters need to be declared (stored in str_preamble)
+                    //  - the same temporary needs to be used at each call (generate_code_cached call)
+                    expression_struct expr;
+                    Code::init_expr(&expr);
+
+                    ref_pard->generate_code_cached(&expr);
+                    str_set_size = mputprintf(str_set_size, "%s", expr.expr);
+                    if (expr.preamble)
+                      str_preamble = mputstr(str_preamble, expr.preamble);
+                    Code::free_expr(&expr);
+                  }
+                  else {
+                    str_set_size = mputstr (str_set_size, ass->get_id().get_name().c_str());
+                    if (subrefs) {
+                      expression_struct expr;
+                      Code::init_expr(&expr);
+                      subrefs->generate_code(&expr, ass);
+                      str_set_size = mputprintf(str_set_size, "%s", expr.expr);
+                      Code::free_expr(&expr);
+                    }
+                  }
+
+                  switch(ass->get_asstype()) {
+                  case Common::Assignment::A_CONST:
+                  case Common::Assignment::A_EXT_CONST:
+                  case Common::Assignment::A_MODULEPAR:
+                  case Common::Assignment::A_VAR:
+                  case Common::Assignment::A_PAR_VAL_IN:
+                  case Common::Assignment::A_PAR_VAL_OUT:
+                  case Common::Assignment::A_PAR_VAL_INOUT:
+                  case Common::Assignment::A_FUNCTION_RVAL:
+                  case Common::Assignment::A_EXT_FUNCTION_RVAL:
+                    if (ass->get_Type()->field_is_optional(subrefs)) {
+                      str_set_size = mputstrn(str_set_size, "()", 2);
+                    }
+                    break;
+                  default:
+                    break;
+                  }
+                  
+                  str_set_size = mputstr(str_set_size, ".n_elem()");
+                } else {
+                  fixed_part++;
+                  str_body = subt->generate_code_init_seof_element(str_body, name,
+                    counter.c_str(), oftype_name_str);
+                }
+                
+                if (subt->templatetype == ALL_FROM) {
+                  expression_struct expr;
+                  Code::init_expr(&expr);
+                  switch (subt->u.all_from->templatetype) {
+                  case SPECIFIC_VALUE: {
+                    Value *spec = subt->u.all_from->u.specific_value;
+                    switch (spec->get_valuetype()) {
+                    case Common::Value::V_REFD: {
+                      Common::Reference  *ref = spec->get_reference();
+                      Ref_pard* ref_pard = dynamic_cast<Ref_pard*>(ref);
+                      if (ref_pard)
+                        ref_pard->generate_code_cached(&expr);
+                      else
+                        ref->generate_code(&expr);
+
+                      Common::Assignment* ass = ref->get_refd_assignment();
+                      switch(ass->get_asstype()) {
+                      case Common::Assignment::A_CONST:
+                      case Common::Assignment::A_EXT_CONST:
+                      case Common::Assignment::A_MODULEPAR:
+                      case Common::Assignment::A_VAR:
+                      case Common::Assignment::A_PAR_VAL_IN:
+                      case Common::Assignment::A_PAR_VAL_OUT:
+                      case Common::Assignment::A_PAR_VAL_INOUT:
+                      case Common::Assignment::A_FUNCTION_RVAL:
+                      case Common::Assignment::A_EXT_FUNCTION_RVAL:
+                        if (ass->get_Type()->field_is_optional(ref->get_subrefs())) {
+                          expr.expr = mputstrn(expr.expr, "()", 2);
+                        }
+                        break;
+                      default:
+                        break;
+                      }
+
+                      break; }
+                    default:
+                      FATAL_ERROR("vtype %d", spec->get_valuetype());
+                      break;
+                    }
+                    break; }
+                  default:
+                    FATAL_ERROR("ttype %d", subt->u.all_from->templatetype);
+                    break;
+                  }
+                  str_body = mputprintf(str_body,
+                    "for (int i_i = 0, i_lim = %s.n_elem(); i_i < i_lim; ++i_i) {\n",
+                    expr.expr);
+
+                  str_body = subt->generate_code_init_seof_element(str_body, name,
+                    (counter + " + i_i").c_str(),
+                    oftype_name_str);
+
+                  str_body = mputstrn(str_body, "}\n", 2);
+                  str_body = mputprintf(str_body, "%s += %s.n_elem();\n", counter.c_str(), expr.expr);
+                  Code::free_expr(&expr);
+                }
+                else {
+                  str_body = subt->generate_code_init_seof_element(str_body, name,
+                    counter.c_str(), oftype_name_str);
+                  str_body = mputprintf(str_body, "%s++;\n", counter.c_str());
+                }
+                  
+              }
+              // do not consider index_offset in case of permutation indicators
+              str_body = mputprintf(str_body, "%s.add_permutation(%s-%lld, %s-%lld-1);\n", name,
+                permutation_start.c_str(), index_offset, counter.c_str(), index_offset);
+              t->set_code_generated();
+            } else {
+              fixed_part++;
+              str_body = t->generate_code_init_seof_element(str_body, name,
+                      counter.c_str(), oftype_name_str);
+              str_body = mputprintf(str_body, "%s++;\n", counter.c_str());
             }
           }
-          break;
+          str = mputstr(str, str_preamble);
+          str = mputprintf(str, "%s.set_size(%lu", name, fixed_part);
+          if (str_set_size != NULL) {
+            str = mputstr(str, str_set_size);
+          }
+          str = mputstr(str, ");\n");
+          str = mputstr(str, str_body);
+          Free(str_preamble);
+          Free(str_set_size);
+          Free(str_body);
+          return str;
         }
-
-        // else carry on
       }
 compile_time:
       // setting the size first
-      if (!has_allfrom())
-        str = mputprintf(str, "%s.set_size(%lu);\n", name, (unsigned long) get_nof_listitems());
+      str = mputprintf(str, "%s.set_size(%lu);\n", name, (unsigned long) get_nof_listitems());
       // determining the index offset based on the governor
 
       size_t index = 0;
