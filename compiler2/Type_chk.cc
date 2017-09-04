@@ -1489,7 +1489,7 @@ void Type::chk_xer_embed_values(int num_attributes)
 
   enum complaint_type { ALL_GOOD, HAVE_DEFAULT, UNTAGGED_EMBEDVAL,
     NOT_SEQUENCE, EMPTY_SEQUENCE, FIRST_NOT_SEQOF, SEQOF_NOT_STRING,
-    SEQOF_BAD_LENGTH, UNTAGGED_OTHER } ;
+    SEQOF_BAD_LENGTH, UNTAGGED_OTHER, ATTRIBUTE_EMBEDVAL } ;
   complaint_type complaint = ALL_GOOD;
   size_t expected_length = (size_t)-1;
   Type *cf0t = 0; // type of first component
@@ -1517,6 +1517,12 @@ void Type::chk_xer_embed_values(int num_attributes)
         if ( (cf0t->xerattrib && cf0t->xerattrib->untagged_)
           || (cfot->xerattrib && cfot->xerattrib->untagged_)) {
           complaint = UNTAGGED_EMBEDVAL; // 25.2.2
+          break;
+        }
+        // Either the type of the field or the last_refd type of the field
+        if ((cf0->get_type()->xerattrib && cf0->get_type()->xerattrib->attribute_)
+          || (cf0t->xerattrib && cf0t->xerattrib->attribute_)) {
+          complaint = ATTRIBUTE_EMBEDVAL;
           break;
         }
 
@@ -1588,6 +1594,9 @@ void Type::chk_xer_embed_values(int num_attributes)
     case UNTAGGED_OTHER:
       cf->error("There shall be no UNTAGGED on any character-encodable "
         "component of a type with DEFAULT-FOR-EMPTY"); // 25.2.3
+      break;
+    case ATTRIBUTE_EMBEDVAL:
+      error("The SEQUENCE-OF supporting EMBED-VALUES must not have ATTRIBUTE.");
       break;
     } // switch(complaint)
   } // if complaint and embedValues
