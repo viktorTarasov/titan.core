@@ -174,6 +174,24 @@ with {
 };
 
 
+type XSD.NMTOKENS NMTOKENSEnumeration;
+
+
+type XSD.IDREFS IDREFSEnumeration;
+
+
+type record Element
+{
+	NMTOKENSEnumeration modal optional,
+	IDREFSEnumeration modal2 optional
+}
+with {
+  variant "element";
+  variant (modal) "attribute";
+  variant (modal2) "attribute";
+};
+
+
 }
 with {
   encode "XML";

@@ -144,4 +144,28 @@
 	</xs:simpleType>
 </xs:element>
 
+
+<xs:simpleType name="NMTOKENSEnumeration">
+   <xs:restriction base="xs:NMTOKENS">
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+   </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="IDREFSEnumeration">
+  <xs:restriction base="xs:IDREFS">
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+   </xs:restriction>
+</xs:simpleType>
+
+<xs:element name="Element">
+  <xs:complexType>
+  <xs:sequence>
+  </xs:sequence>
+  <xs:attribute name="modal" type="this:NMTOKENSEnumeration" default="false"/>
+  <xs:attribute name="modal2" type="this:IDREFSEnumeration" default="false"/>
+</xs:complexType>
+</xs:element>
+
 </xs:schema>

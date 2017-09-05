@@ -108,8 +108,16 @@ void Constant::finalModification() {
     type.upload(newtype);
   }
   
-  // String and time types need the quote character around the value
-  if (parent->getEnumeration().modified ||
+  // Theese types do not support enumeration restriction
+  if (tmp_type == "NMTOKENS" || tmp_type == "IDREFS" || tmp_type == "ENTITIES") {
+    // These are not supported by TITAN.
+    // Reset the default value and fixed value
+    parent->getValue().default_value = "";
+    parent->getValue().fixed_value = "";
+    unsupported = true;
+    // Set the constant to invisible so it won't be generated into the code.
+    setInvisible();
+  } else if (parent->getEnumeration().modified ||
      (parent->getReference().get_ref() != NULL &&
      ((SimpleType*)(parent->getReference().get_ref()))->getEnumeration().modified)) {
     
@@ -136,6 +144,7 @@ void Constant::finalModification() {
         j++;
       }
     }
+  // String and time types need the quote character around the value
   } else if (isStringType(tmp_type) || isTimeType(tmp_type) || tmp_type == "anySimpleType") {
     value = Mstring("\"") + value + Mstring("\"");
   } else if (isFloatType(tmp_type)) {

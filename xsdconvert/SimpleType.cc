@@ -266,7 +266,7 @@ void SimpleType::applyDefaultAttribute(const Mstring& default_value) {
     value.default_value = default_value;
     const Mstring typeT = type.originalValueWoPrefix.getValueWithoutPrefix(':');
     //Not supported for hexBinary and base64Binary
-    if (typeT != "hexBinary" && typeT != "base64Binary") {
+    if (typeT != "hexBinary" && typeT != "base64Binary" && typeT != "NMTOKENS" && typeT != "IDREFS" && typeT != "ENTITIES") {
       Constant * c = new Constant(this, type.convertedValue, default_value);
       module->addConstant(c);
       defaultForEmptyConstant = c;
@@ -282,7 +282,7 @@ void SimpleType::applyFixedAttribute(const Mstring& fixed_value) {
     value.modified = true;
     const Mstring typeT = type.originalValueWoPrefix.getValueWithoutPrefix(':');
     //Not supported for hexBinary and base64Binary
-    if (typeT != "hexBinary" && typeT != "base64Binary") {
+    if (typeT != "hexBinary" && typeT != "base64Binary" && typeT != "NMTOKENS" && typeT != "IDREFS" && typeT != "ENTITIES") {
       Constant * c = new Constant(this, type.convertedValue, fixed_value);
       module->addConstant(c);
       defaultForEmptyConstant = c;
@@ -1344,7 +1344,7 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
     printWarning(parent->getModule()->getSchemaname(), parent->getName().convertedValue,
       Mstring("Enumeration restriction is not supported on type '") + base + Mstring("'."));
     TTCN3ModuleInventory::getInstance().incrNumWarnings();
-    parent->setInvisible();
+    modified = false;
   }
 }
 
