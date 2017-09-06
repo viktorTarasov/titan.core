@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://www.example.org/correct/ref/and/type"
+    xmlns:this="http://www.example.org/correct/ref/and/type">
+
+<xsd:group name="A">
+  <xsd:sequence>
+    <xsd:element name="aGroup"/>
+  </xsd:sequence>
+</xsd:group>
+
+<xsd:group name="B">
+  <xsd:sequence>
+    <xsd:element name="bGroup"/>
+    <xsd:group ref="this:A"/>
+  </xsd:sequence>
+</xsd:group>
+
+<xsd:complexType name="B">
+  <xsd:sequence>
+    <xsd:element name="baseElem" type="xsd:string"/>
+  </xsd:sequence>
+  <xsd:attribute name="baseAttr" type="this:A"/>
+</xsd:complexType>
+
+<xsd:attribute name="A" type="xsd:integer"/>
+
+<xsd:attribute name="B" type="xsd:integer"/>
+
+<xsd:attribute name="C" type="xsd:integer"/>
+
+<xsd:attributeGroup name="A">
+  <xsd:attribute name="Attr" type="xsd:integer"/>
+  <xsd:attribute ref="this:B"/>
+</xsd:attributeGroup>
+
+<xsd:element name="A" type="xsd:integer"/>
+
+<xsd:simpleType name="A">
+  <xsd:restriction base="xsd:string">
+    <xsd:enumeration value="SimpleType"/>
+    <xsd:enumeration value="SimpleType1"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+<xsd:simpleType name="C">
+  <xsd:union>
+    <xsd:simpleType>
+      <xsd:restriction base="xsd:integer"/>
+    </xsd:simpleType>
+    <xsd:simpleType>
+      <xsd:restriction base="xsd:string"/>
+    </xsd:simpleType>
+  </xsd:union>
+</xsd:simpleType> 
+
+
+<xsd:element name="Element">
+  <xsd:complexType>
+  <xsd:sequence>
+    <xsd:element ref="this:A"/>
+    <xsd:element name="SimpleTypeRef" type="this:A"/>
+    <xsd:element name="ComplexTypeRef" type="this:B"/>
+    <xsd:group ref="this:B"/>
+  </xsd:sequence>
+  <xsd:attribute ref="this:A"/>
+  <xsd:attribute name="SimpleTypeAttr" type="this:A"/>
+  <xsd:attribute name="SimpleTypeAttr2" type="this:C"/>
+  <xsd:attributeGroup ref="this:A"/>
+</xsd:complexType>
+</xsd:element>
+
+<xsd:simpleType name="AExtension">
+  <xsd:restriction base="this:A">
+    <xsd:enumeration value="SimpleType"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+<xsd:element name="AType" type="this:A"/>
+
+<xsd:attribute name="AAttr" type="this:A"/>
+
+<xsd:element name="BType" type="this:B"/>
+
+<xsd:attribute name="BAttr" type="this:B"/>
+
+<xsd:complexType name="SimpleTypExtension">
+  <xsd:simpleContent>
+    <xsd:extension base="this:A">
+      <xsd:attribute name="attr" type="xsd:integer"/>
+    </xsd:extension>
+  </xsd:simpleContent>
+</xsd:complexType>
+
+<xsd:complexType name="SimpleTypeRestriction">
+  <xsd:simpleContent>
+    <xsd:restriction base="this:A">
+      <xsd:enumeration value="SimpleType"/>
+    </xsd:restriction>
+  </xsd:simpleContent>
+</xsd:complexType>
+
+<xsd:complexType name="ComplexTypeExtension">
+  <xsd:complexContent>
+    <xsd:extension base="this:B">
+      <xsd:sequence>
+        <xsd:element name="Extelem" type="xsd:integer"/>
+      </xsd:sequence>
+      <xsd:attribute name="Extattr" type="this:A"/>
+    </xsd:extension>
+  </xsd:complexContent>
+</xsd:complexType>
+
+<xsd:complexType name="ComplexTypeRestriction">
+  <xsd:complexContent>
+    <xsd:restriction base="this:B">
+      <xsd:sequence>
+        <xsd:element name="baseElem" type="xsd:string"/>
+      </xsd:sequence>
+      <xsd:attribute name="baseAttr" type="this:A" use="prohibited"/>
+    </xsd:restriction>
+  </xsd:complexContent>
+</xsd:complexType>
+
+<xsd:complexType name="ComplexTypeGroup">
+  <xsd:sequence>
+    <xsd:group ref="this:B" maxOccurs="4"/>
+  </xsd:sequence>
+</xsd:complexType>
+
+
+</xsd:schema>

@@ -51,36 +51,36 @@ import from www_example_org_pref3 all;
 
 type record MyElement_2
 {
-	www_example_org_pref2.MyElement myElement optional,
-	www_example_org_pref2.MyElement2 myElement2 optional,
+	MyAttribute myAttribute optional,
+	MyAttribute2 myAttribute2 optional,
 	XSD.Integer myField,
 	www_example_org_pref2.MyType myField2,
-	www_example_org_pref2.MyElement myElement_1,
-	www_example_org_pref2.MyElement2 myElement2_1
+	www_example_org_pref2.MyElement myElement,
+	www_example_org_pref2.MyElement2 myElement2
 }
 with {
   variant "name as 'MyElement'";
   variant "element";
+  variant (myAttribute) "name as capitalized";
+  variant (myAttribute) "namespace as 'www.example.org/pref2' prefix 'ns2'";
+  variant (myAttribute) "attribute";
+  variant (myAttribute2) "name as capitalized";
+  variant (myAttribute2) "namespace as 'www.example.org/pref2' prefix 'ns2'";
+  variant (myAttribute2) "attribute";
   variant (myElement) "name as capitalized";
   variant (myElement) "namespace as 'www.example.org/pref2' prefix 'ns2'";
-  variant (myElement) "attribute";
   variant (myElement2) "name as capitalized";
   variant (myElement2) "namespace as 'www.example.org/pref2' prefix 'ns2'";
-  variant (myElement2) "attribute";
-  variant (myElement_1) "name as 'MyElement'";
-  variant (myElement_1) "namespace as 'www.example.org/pref2' prefix 'ns2'";
-  variant (myElement2_1) "name as 'MyElement2'";
-  variant (myElement2_1) "namespace as 'www.example.org/pref2' prefix 'ns2'";
 };
 
 
-type www_example_org_pref2.MyElement MyElement
+type www_example_org_pref2.MyType MyElement
 with {
   variant "element";
 };
 
 
-type www_example_org_pref2.MyElement2 MyElement_1
+type www_example_org_pref2.MyType MyElement_1
 with {
   variant "name as 'MyElement'";
   variant "element";

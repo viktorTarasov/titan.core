@@ -13,7 +13,7 @@
 
 <!-- Production implementation -->
 
-<xsd:element name="productionRequest" substitutionGroup="requestAbstractType" >
+<xsd:element name="productionRequest" substitutionGroup="requestAbstractType1" >
 	<xsd:complexType>
 		<xsd:complexContent>
 			<xsd:extension base="requestAbstractType">
@@ -26,7 +26,7 @@
 </xsd:element>
 
 <!-- Production implementation -->
-<xsd:element name="programmingRequest"  substitutionGroup="requestAbstractType" >
+<xsd:element name="programmingRequest"  substitutionGroup="requestAbstractType1" >
 	<xsd:complexType>
 		<xsd:complexContent>
 			<xsd:extension base="requestAbstractType">
@@ -35,6 +35,14 @@
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
+	</xsd:complexType>
+</xsd:element>
+
+<xsd:element name="ize">
+	<xsd:complexType>
+		<xsd:sequence>
+			<xsd:element ref="requestAbstractType1" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
 	</xsd:complexType>
 </xsd:element>
 

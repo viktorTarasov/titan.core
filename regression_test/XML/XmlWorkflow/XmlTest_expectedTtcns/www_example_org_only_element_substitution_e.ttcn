@@ -44,11 +44,13 @@ module www_example_org_only_element_substitution {
 import from XSD all;
 
 
-type RequestAbstractType_group RequestAbstractType1
+type record RequestAbstractType
+{
+	XSD.String commonName
+}
 with {
   variant "name as uncapitalized";
   variant "abstract";
-  variant "element";
 };
 
 
@@ -80,18 +82,28 @@ with {
 };
 
 
-type union RequestAbstractType_group
+type record Ize
 {
-	record {
-		XSD.String commonName
-	} requestAbstractType,
+	record of RequestAbstractType1_group requestAbstractType1_list
+}
+with {
+  variant "name as uncapitalized";
+  variant "element";
+  variant (requestAbstractType1_list) "untagged";
+  variant (requestAbstractType1_list[-]) "name as 'requestAbstractType1'";
+};
+
+
+type union RequestAbstractType1_group
+{
+	RequestAbstractType requestAbstractType1,
 	ProductionRequest productionRequest,
 	ProgrammingRequest programmingRequest
 }
 with {
   variant "untagged";
-  variant (requestAbstractType) "form as qualified";
-  variant (requestAbstractType) "abstract";
+  variant (requestAbstractType1) "form as qualified";
+  variant (requestAbstractType1) "abstract";
 };
 
 

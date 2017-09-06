@@ -56,11 +56,11 @@ with {
 type record Type
 {
 	Foobar something optional,
-	Foobar foobar
+	FoobarElem foobarElem
 }
 with {
   variant "element";
-  variant (foobar) "namespace as 'www.example.org/imported2' prefix 'other'";
+  variant (foobarElem) "namespace as 'www.example.org/imported2' prefix 'other'";
 };
 
 
@@ -68,8 +68,8 @@ type record OtherType
 {
 	Foobar billingAccountNumber,
 	Foobar something,
-	Bar something2,
-	Bar something3,
+	Bar_type something2,
+	Bar_type something3,
 	record {
 		XSD.String something
 	} something4
@@ -77,7 +77,6 @@ type record OtherType
 with {
   variant (billingAccountNumber) "namespace as 'www.example.org/imported2' prefix 'other'";
   variant (something) "namespace as 'www.example.org/imported2' prefix 'other'";
-  variant (something2) "namespace as 'www.example.org/imported2' prefix 'other'";
 };
 
 

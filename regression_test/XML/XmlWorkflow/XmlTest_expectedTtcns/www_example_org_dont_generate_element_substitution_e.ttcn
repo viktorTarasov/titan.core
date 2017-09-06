@@ -51,7 +51,14 @@ with {
 };
 
 
-type record ComplexEnum
+type ComplexEnum_type ComplexEnum
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type record ComplexEnum_type
 {
 	XSD.Integer bar optional,
 	XSD.Float foo optional,
@@ -59,7 +66,6 @@ type record ComplexEnum
 }
 with {
   variant "name as uncapitalized";
-  variant "element";
   variant (bar) "attribute";
   variant (foo) "attribute";
   variant (base) "untagged";

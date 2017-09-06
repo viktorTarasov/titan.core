@@ -92,7 +92,7 @@ with {
 };
 
 
-type Non_empty_string Non_empty_stringChild length(0 .. infinity)
+type XSD.String Non_empty_stringChild length(3)
 with {
   variant "name as 'Non-empty-stringChild'";
 };

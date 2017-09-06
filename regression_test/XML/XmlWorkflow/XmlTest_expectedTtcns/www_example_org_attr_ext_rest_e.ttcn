@@ -99,16 +99,9 @@ with {
 };
 
 
-type record E25seqd
-{
-	XSD.Integer gender optional,
-	XSD.Integer genderAttrBase,
-	XSD.Integer ageElemExt
-}
+type E25seqc E25seqd
 with {
   variant "name as uncapitalized";
-  variant (gender) "attribute";
-  variant (genderAttrBase) "attribute";
 };
 
 
@@ -147,7 +140,14 @@ with {
 };
 
 
-type record E23
+type E23_type E23
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type record E23_type
 {
 	XSD.Integer bar optional,
 	XSD.Integer base optional,
@@ -156,7 +156,6 @@ type record E23
 }
 with {
   variant "name as uncapitalized";
-  variant "element";
   variant (bar) "attribute";
   variant (base) "attribute";
   variant (foo) "attribute";
@@ -165,7 +164,14 @@ with {
 };
 
 
-type record E24
+type E24_type E24
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type record E24_type
 {
 	XSD.Integer bar optional,
 	XSD.Integer base optional,
@@ -175,7 +181,6 @@ type record E24
 }
 with {
   variant "name as uncapitalized";
-  variant "element";
   variant (bar) "attribute";
   variant (base) "attribute";
   variant (foo) "attribute";
@@ -185,7 +190,14 @@ with {
 };
 
 
-type record E25
+type E25_type E25
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type record E25_type
 {
 	XSD.Integer bar optional,
 	XSD.Integer goo,
@@ -193,7 +205,6 @@ type record E25
 }
 with {
   variant "name as uncapitalized";
-  variant "element";
   variant (bar) "attribute";
   variant (goo) "attribute";
   variant (base) "untagged";

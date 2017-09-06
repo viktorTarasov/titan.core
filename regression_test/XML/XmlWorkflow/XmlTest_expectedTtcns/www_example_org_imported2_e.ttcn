@@ -50,25 +50,38 @@ with {
 };
 
 
-type XSD.Integer Ding
-with {
-  variant "name as uncapitalized";
-};
-
-
-type record Bar
-{
-	XSD.String something optional
-}
+type Foobar FoobarElem
 with {
   variant "name as uncapitalized";
   variant "element";
 };
 
 
+type XSD.Integer Ding
+with {
+  variant "name as uncapitalized";
+};
+
+
+type Bar_type Bar
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type record Bar_type
+{
+	XSD.String something optional
+}
+with {
+  variant "name as uncapitalized";
+};
+
+
 }
 with {
   encode "XML";
-  variant "namespace as 'www.example.org/imported2'";
+  variant "namespace as 'www.example.org/imported2' prefix 'this'";
   variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

@@ -66,8 +66,8 @@ type record E29a
 	XSD.String ding
 }
 with {
-  variant "name as uncapitalized";
   variant "useOrder";
+  variant "untagged";
 };
 
 

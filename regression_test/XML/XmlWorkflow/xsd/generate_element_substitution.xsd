@@ -7,21 +7,21 @@
 
 <xsd:element name="head" type="string" />
 
-<xsd:element name="complexEnum">
-	<xsd:complexType>
-		<xsd:simpleContent>
-			<xsd:extension base="xsd:string">
-				<xsd:attribute name="foo" type="xsd:float"/>
-				<xsd:attribute name="bar" type="xsd:integer"/>
-			</xsd:extension>
-		</xsd:simpleContent>
-	</xsd:complexType>
-</xsd:element>
+<xsd:element name="complexEnum" type="this:complexEnum_type"/>
+
+<xsd:complexType name="complexEnum_type">
+	<xsd:simpleContent>
+		<xsd:extension base="xsd:string">
+			<xsd:attribute name="foo" type="xsd:float"/>
+			<xsd:attribute name="bar" type="xsd:integer"/>
+		</xsd:extension>
+	</xsd:simpleContent>
+</xsd:complexType>
 
 <xsd:element name="member2"  substitutionGroup="this:head">
 	<xsd:complexType >
 		<xsd:complexContent>
-			<xsd:extension base="this:complexEnum">
+			<xsd:extension base="this:complexEnum_type">
 				<xsd:sequence>
 				</xsd:sequence>
 				<xsd:attribute name="unitOfAge" type="xsd:string"/>

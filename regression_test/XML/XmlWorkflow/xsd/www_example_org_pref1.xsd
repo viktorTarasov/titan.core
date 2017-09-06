@@ -15,13 +15,13 @@
 			<element ref="ns2:MyElement"/>
 			<element ref="ns2:MyElement2"/>
 		</sequence>
-		<attribute ref="ns2:MyElement"/>
-		<attribute ref="ns2:MyElement2"/>
+		<attribute ref="ns2:MyAttribute"/>
+		<attribute ref="ns2:MyAttribute2"/>
 	</complexType>
   </element>
 
-  <element name="MyElement" type="ns2:MyElement"/>
+  <element name="MyElement" type="ns2:MyType"/>
 
-  <element name="MyElement" type="ns2:MyElement2"/>
+  <element name="MyElement" type="ns2:MyType"/>
 
 </schema>

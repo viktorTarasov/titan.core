@@ -107,11 +107,11 @@ public:
    * Searching methods
    * Look for a simpleType (or element or attribute) or a complexType (or attributeGroup or group)
    */
-  RootType * lookup(const RootType * ref, const Mstring& reference, wanted w) const;
-  RootType * lookup(const SimpleType * reference, wanted w) const;
-  RootType * lookup(const ComplexType * reference, wanted w) const;
+  RootType * lookup(const RootType * ref, const Mstring& reference, wanted w, ConstructType construct) const;
+  RootType * lookup(const SimpleType * reference, wanted w, ConstructType construct) const;
+  RootType * lookup(const ComplexType * reference, wanted w, ConstructType construct) const;
   RootType * lookup(const Mstring& name, const Mstring& nsuri,
-      const RootType *reference, wanted w) const;
+      const RootType *reference, wanted w, ConstructType construct) const;
 
   static unsigned int getNumErrors() {
     return num_errors;

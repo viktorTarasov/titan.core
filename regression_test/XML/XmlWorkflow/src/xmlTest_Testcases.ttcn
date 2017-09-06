@@ -2482,6 +2482,19 @@ group Elements{
   }//tc_
 
 
+  testcase tc_correct_ref_and_type() runs on xmlTest_CT {
+
+    f_shellCommandWithVerdict(xsd2ttcn_command & " correct_ref_and_type.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "http_www_example_org_correct_ref_and_type_e.ttcn",
+        "http_www_example_org_correct_ref_and_type.ttcn", c_numOfDiff);
+    }
+
+  }//tc_
+
+
 
   //========================================================
   // tc_element_nameInheritance_conv
@@ -2845,6 +2858,7 @@ control {
   execute(tc_simpletype_aliases());
   execute(tc_complextype_aliases());
 
+  execute(tc_correct_ref_and_type());
 
 
   execute(tc_element_nameInheritance_conv());
@@ -2862,6 +2876,7 @@ control {
   execute(tc_element_nillable_Isp_nilTrue_encDec());
   execute(tc_element_nillable_RemarkNillable_nilFalse_encDec());
   execute(tc_element_nillable_RemarkNillable_nilTrue_encDec());
+
 }
 
 } with {

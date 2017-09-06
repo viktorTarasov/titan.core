@@ -42,7 +42,6 @@ ComplexType::ComplexType(XMLParser * a_parser, TTCN3Module * a_module, Construct
 , lastType()
 , actualPath(empty_string)
 , actfield(this)
-, nameDep(NULL)
 , nillable_field(NULL)
 , basefield(NULL)
 , cmode(CT_undefined_mode)
@@ -72,7 +71,6 @@ ComplexType::ComplexType(ComplexType & other)
 , lastType(other.lastType)
 , actualPath(other.actualPath)
 , actfield(this)
-, nameDep(other.nameDep)
 , nillable_field(NULL)
 , basefield(NULL)
 , cmode(other.cmode)
@@ -122,7 +120,6 @@ ComplexType::ComplexType(ComplexType * other)
 , lastType()
 , actualPath(empty_string)
 , actfield(this)
-, nameDep(NULL)
 , nillable_field(NULL)
 , basefield(NULL)
 , cmode(CT_undefined_mode)
@@ -154,7 +151,6 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
 , lastType()
 , actualPath(empty_string)
 , actfield(this)
-, nameDep(NULL)
 , nillable_field(NULL)
 , basefield(NULL)
 , cmode(CT_simpletype_mode)
@@ -170,7 +166,7 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
     module->setActualXsdConstruct(c_complexType);
   }
   construct = c_complexType;
-
+  
   switch (c) {
     case fromTagUnion:
       type.upload(Mstring("union"), false);
@@ -197,6 +193,7 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
       pattern.modified = false;
       length.modified = false;
       whitespace.modified = false;
+      new_construct = c_complexType;
       break;
     case fromTypeSubstitution:
       type.upload(Mstring("union"), false);
@@ -211,6 +208,7 @@ ComplexType::ComplexType(const SimpleType & other, CT_fromST c)
       pattern.modified = false;
       length.modified = false;
       whitespace.modified = false;
+      new_construct = c_complexType;
   }
 }
 
@@ -724,7 +722,7 @@ void ComplexType::referenceResolving() {
   }
   resolved = InProgress;
   for (List<ComplexType*>::iterator ct = complexfields.begin(); ct; ct = ct->Next) {
-    // Referenece resolving of ComplexTypes
+    // Reference resolving of ComplexTypes
     ct->Data->referenceResolving();
   }
   for (List<AttributeType*>::iterator attr = attribfields.begin(); attr; attr = attr->Next) {
@@ -751,20 +749,11 @@ void ComplexType::reference_resolving_funtion() {
     return;
   }
 
-  SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, want_BOTH);
-  if (st == NULL && basefield == NULL) {
-    printError(module->getSchemaname(), name.convertedValue,
-      "Reference for a non-defined type: " + getReference().repr());
-    TTCN3ModuleInventory::getInstance().incrNumErrors();
-    outside_reference.set_resolved(NULL);
-    return;
-  }
+  resolveAttributeGroup();
 
-  resolveAttributeGroup(st);
+  resolveGroup();
 
-  resolveGroup(st);
-
-  resolveElement(st);
+  resolveElement();
 
   resolveSimpleTypeExtension();
 
@@ -774,7 +763,7 @@ void ComplexType::reference_resolving_funtion() {
 
   resolveComplexTypeRestriction();
 
-  resolveUnion(st);
+  resolveUnion();
 
   addToTypeSubstitutions();
 
@@ -1702,7 +1691,8 @@ void ComplexType::addNameSpaceAsVariant(RootType * root, RootType * other) {
 
 void ComplexType::resolveAttribute(AttributeType* attr) {
   if (attr->getXsdtype() == n_attribute && !attr->getReference().empty()) {
-    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(attr, want_BOTH);
+    ConstructType type_construct = attr->isFromRef() ? c_attribute : c_simpleType;
+    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(attr, want_BOTH, type_construct);
     if (st != NULL) {
       attr->setBuiltInBase(st->getBuiltInBase());
       if (attr->isFromRef()) {
@@ -1711,6 +1701,7 @@ void ComplexType::resolveAttribute(AttributeType* attr) {
         attr->setNameOfField(st->getName().originalValueWoPrefix);
         attr->setOrigModule(st->getModule());
         st->addToNameDepList(attr);
+        attr->nameDep = st;
         if (attr->getConstantDefaultForEmpty() != NULL) {
           st->addToNameDepList((RootType*)attr->getConstantDefaultForEmpty());
         }
@@ -1720,6 +1711,7 @@ void ComplexType::resolveAttribute(AttributeType* attr) {
             || st->getXsdtype() == n_NOTSET) // It really is a simpleType
           {
             st->addToNameDepList(attr);
+            attr->nameDep = st;
             if (attr->getConstantDefaultForEmpty() != NULL) {
               st->addToNameDepList((RootType*)attr->getConstantDefaultForEmpty());
             }
@@ -1728,14 +1720,22 @@ void ComplexType::resolveAttribute(AttributeType* attr) {
       attr->getReference().set_resolved(st);
     } else {
       printError(module->getSchemaname(), name.convertedValue,
-        "Reference for a non-defined type: " + attr->getReference().repr());
+        "Reference for a non-defined attribute or simpleType type: " + attr->getReference().repr());
       TTCN3ModuleInventory::getInstance().incrNumErrors();
     }
   }
 }
 
-void ComplexType::resolveAttributeGroup(SimpleType * st) {
+void ComplexType::resolveAttributeGroup() {
   if (xsdtype == n_attributeGroup && !outside_reference.empty()) {
+    SimpleType* st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, want_BOTH, c_attributeGroup);
+    if (st == NULL && basefield == NULL) {
+      printError(module->getSchemaname(), name.convertedValue,
+        "Reference for a non-defined attributeGroup type: " + getReference().repr());
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+      outside_reference.set_resolved(NULL);
+      return;
+    }
     ComplexType * ct = (ComplexType*) st;
     if(ct->resolved == No){
       ct->referenceResolving();
@@ -1788,8 +1788,16 @@ void ComplexType::resolveAttributeGroup(SimpleType * st) {
   }
 }
 
-void ComplexType::resolveGroup(SimpleType *st) {
+void ComplexType::resolveGroup() {
   if (xsdtype == n_group && !outside_reference.empty()) {
+    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, want_BOTH, c_group);
+    if (st == NULL && basefield == NULL) {
+      printError(module->getSchemaname(), name.convertedValue,
+        "Reference for a non-defined group type: " + getReference().repr());
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+      outside_reference.set_resolved(NULL);
+      return;
+    }
     ComplexType * ct = (ComplexType*) st;
     outside_reference.set_resolved(ct);
     setInvisible();
@@ -1843,8 +1851,17 @@ void ComplexType::resolveGroup(SimpleType *st) {
   }
 }
 
-void ComplexType::resolveElement(SimpleType *st) {
+void ComplexType::resolveElement() {
   if (xsdtype == n_element && !outside_reference.empty()) {
+    ConstructType type_construct = fromRef ? c_element : c_simpleOrComplexType;
+    SimpleType* st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, want_BOTH, type_construct);
+    if (st == NULL && basefield == NULL) {
+      printError(module->getSchemaname(), name.convertedValue,
+        "Reference for a non-defined element or simpleType or complexType type: " + getReference().repr());
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+      outside_reference.set_resolved(NULL);
+      return;
+    }
     outside_reference.set_resolved(st);
     type.upload(st->getModule()->getTargetNamespaceConnector() + Mstring(":") + st->getName().convertedValue);
     if (name.originalValueWoPrefix.empty()) {
@@ -1881,7 +1898,8 @@ void ComplexType::resolveElement(SimpleType *st) {
 
 void ComplexType::resolveSimpleTypeExtension() {
   if (mode == extensionMode && cmode == CT_simpletype_mode && basefield != NULL) {
-    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(basefield, want_BOTH);
+    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(basefield, want_BOTH, c_simpleOrComplexType);
+    
     if (st != NULL) {
       if (st->getXsdtype() != n_NOTSET && ((ComplexType*) st)->basefield != NULL) { // if the xsdtype != simpletype
         ComplexType * ct = (ComplexType*) st;
@@ -1955,11 +1973,15 @@ void ComplexType::resolveSimpleTypeExtension() {
             basefield->setTypeValue(old_type);
             basefield->getEnumeration().modified = false;
           }
+          if (!hasRestrOrExt) {
+            st->addToNameDepList(basefield);
+            basefield->nameDep = st;
+          }
         }
       }
     } else if(!isBuiltInType(basefield->getType().convertedValue)){
          printError(module->getSchemaname(), name.convertedValue,
-          "Reference for a non-defined type: " + basefield->getReference().repr());
+          "Reference for a non-defined simpleType or complexType type: " + basefield->getReference().repr());
        TTCN3ModuleInventory::getInstance().incrNumErrors();
        return;
     }
@@ -1969,10 +1991,10 @@ void ComplexType::resolveSimpleTypeExtension() {
 
 void ComplexType::resolveSimpleTypeRestriction() {
   if (mode == restrictionMode && cmode == CT_simpletype_mode && basefield != NULL && !basefield->outside_reference.empty()) {
-    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(basefield, want_BOTH);
+    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(basefield, want_BOTH, c_simpleOrComplexType);
     if (st == NULL) {
       printError(module->getSchemaname(), name.convertedValue,
-        "Reference for a non-defined type: " + basefield->getReference().repr());
+        "Reference for a non-defined simpleType or complexType type: " + basefield->getReference().repr());
       TTCN3ModuleInventory::getInstance().incrNumErrors();
       return;
     }
@@ -2034,10 +2056,10 @@ void ComplexType::resolveSimpleTypeRestriction() {
         }
     }
   } else if (mode == restrictionMode && cmode == CT_simpletype_mode && basefield != NULL) {
-    ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(basefield, want_CT);
+    ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(basefield, want_CT, c_simpleOrComplexType);
     if (ct == NULL && !isBuiltInType(basefield->getType().convertedValue)) {
       printError(module->getSchemaname(), name.convertedValue,
-        "Reference for a non-defined type: " + basefield->getReference().repr());
+        "Reference for a non-defined simpleType or complexType type: " + basefield->getReference().repr());
       TTCN3ModuleInventory::getInstance().incrNumErrors();
       return;
     }
@@ -2070,10 +2092,10 @@ void ComplexType::resolveSimpleTypeRestriction() {
 
 void ComplexType::resolveComplexTypeExtension() {
   if (mode == extensionMode && cmode == CT_complextype_mode && !outside_reference.empty()) {
-    ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(this, want_CT);
+    ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(this, want_CT, c_simpleOrComplexType);
     if (ct == NULL) {
       printError(module->getSchemaname(), name.convertedValue,
-        "Reference for a non-defined type: " + getReference().repr());
+        "Reference for a non-defined simpleType or complexType type: " + getReference().repr());
       TTCN3ModuleInventory::getInstance().incrNumErrors();
       return;
     }
@@ -2149,10 +2171,10 @@ void ComplexType::resolveComplexTypeExtension() {
 
 void ComplexType::resolveComplexTypeRestriction() {
   if (mode == restrictionMode && cmode == CT_complextype_mode && !outside_reference.empty()) {
-    ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(this, want_CT);
+    ComplexType * ct = (ComplexType*) TTCN3ModuleInventory::getInstance().lookup(this, want_CT, c_simpleOrComplexType);
     if (ct == NULL) {
       printError(module->getSchemaname(), name.convertedValue,
-        "Reference for a non-defined type: " + getReference().repr());
+        "Reference for a non-defined simpleType or complexType type: " + getReference().repr());
       TTCN3ModuleInventory::getInstance().incrNumErrors();
       return;
     }
@@ -2247,8 +2269,16 @@ bool ComplexType::hasComplexRestriction(ComplexType* ct) const {
   return false;
 }
 
-void ComplexType::resolveUnion(SimpleType *st) {
+void ComplexType::resolveUnion() {
   if (parent != NULL && parent->with_union && xsdtype == n_simpleType && !outside_reference.empty()) {
+    SimpleType * st = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, want_BOTH, c_simpleType);
+    if (st == NULL && basefield == NULL) {
+      printError(module->getSchemaname(), name.convertedValue,
+        "Reference for a non-defined type: " + getReference().repr());
+      TTCN3ModuleInventory::getInstance().incrNumErrors();
+      outside_reference.set_resolved(NULL);
+      return;
+    }
     if (st->getXsdtype() != n_NOTSET) {
       ComplexType * ct = (ComplexType*) st;
       outside_reference.set_resolved(ct);
@@ -2386,14 +2416,14 @@ Mstring ComplexType::findRoot(const BlockValue block_value, SimpleType* elem, co
         if(ct->basefield != NULL && ct->basefield->getType().convertedValue.getValueWithoutPrefix(':') == head_type){
           return head_type;
         }else if(ct->basefield != NULL){
-          st = (SimpleType*)TTCN3ModuleInventory::getInstance().lookup(ct->basefield, want_BOTH);
+          st = (SimpleType*)TTCN3ModuleInventory::getInstance().lookup(ct->basefield, want_BOTH, c_unknown);
         }
       }
       if(st == NULL){
         st = (SimpleType*)(elem->getReference().get_ref());
       }
     }else if(elem->getMode() == noMode && (block_value == restriction || block_value == extension)){
-      st = (SimpleType*)TTCN3ModuleInventory::getInstance().lookup(this, elem->getType().convertedValue, want_BOTH);
+      st = (SimpleType*)TTCN3ModuleInventory::getInstance().lookup(this, elem->getType().convertedValue, want_BOTH, c_unknown);
     }
     if(st != NULL && elem != st){
       return findRoot(block_value, st, head_type, false);

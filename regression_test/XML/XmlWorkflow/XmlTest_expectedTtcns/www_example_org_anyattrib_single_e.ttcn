@@ -57,18 +57,24 @@ with {
   variant "name as uncapitalized";
   variant (attrInGroup1) "attribute";
   variant (attrInGroup2) "attribute";
-  variant (attr) "anyAttributes from 'http://www.w3.org/1999/xhtml','www.example.org/anyattrib/single','www.example.org/anyattrib/single'";
+  variant (attr) "anyAttributes from 'http://www.w3.org/1999/xhtml', 'www.example.org/anyattrib/single', 'www.example.org/anyattrib/single'";
 };
 
 
-type record E45c
+type E45c_type E45c
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type record E45c_type
 {
 	record of XSD.String attr optional
 }
 with {
   variant "name as uncapitalized";
-  variant "element";
-  variant (attr) "anyAttributes from unqualified,'http://www.example.org/attribute'";
+  variant (attr) "anyAttributes from unqualified, 'http://www.example.org/attribute'";
 };
 
 
@@ -79,7 +85,7 @@ type record E45d
 with {
   variant "name as uncapitalized";
   variant "element";
-  variant (attr) "anyAttributes from 'www.example.org/anyattrib/single',unqualified,'http://www.example.org/attribute'";
+  variant (attr) "anyAttributes from 'www.example.org/anyattrib/single', unqualified, 'http://www.example.org/attribute'";
 };
 
 
@@ -125,7 +131,7 @@ type record MyType2
 with {
   variant "element";
   variant (ding) "attribute";
-  variant (attr) "anyAttributes from 'www.example.org/anyattrib/single',unqualified, 'www.example.org/anyattrib/single'";
+  variant (attr) "anyAttributes from 'www.example.org/anyattrib/single', unqualified, 'www.example.org/anyattrib/single'";
 };
 
 

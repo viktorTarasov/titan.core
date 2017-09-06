@@ -44,6 +44,16 @@ module www_example_org_substitutiongroup {
 import from XSD all;
 
 
+/* TEST IF THE ELEMENT REFERENCE IS FOUND */
+
+
+type XSD.Integer Head
+with {
+  variant "name as uncapitalized";
+  variant "attribute";
+};
+
+
 /* THE HEAD ELEMENT */
 
 

@@ -44,7 +44,14 @@ module www_example_org_enumeration_restriction {
 import from XSD all;
 
 
-type union E21unnamed
+type E21unnamed_type E21unnamed
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type union E21unnamed_type
 {
 	XSD.Integer alt_,
 	XSD.Float alt_1,
@@ -53,14 +60,13 @@ type union E21unnamed
 with {
   variant "name as uncapitalized";
   variant "useUnion";
-  variant "element";
   variant (alt_) "name as ''";
   variant (alt_1) "name as ''";
   variant (alt_2) "name as ''";
 };
 
 
-type E21unnamed E22 (
+type E21unnamed_type E22 (
 	{alt_1:=20.400000},
 	{alt_2:="small"},
 	{alt_:=50}
@@ -70,27 +76,38 @@ with {
 };
 
 
-type union String_int
+type String_int_type String_int
+with {
+  variant "element";
+};
+
+
+type union String_int_type
 {
 	XSD.String alt_,
 	XSD.Integer alt_1
 }
 with {
   variant "useUnion";
-  variant "element";
   variant (alt_) "name as ''";
   variant (alt_1) "name as ''";
 };
 
 
-type String_int Everything_is_string (
+type String_int_type Everything_is_string (
 	{alt_:="20.4"},
 	{alt_:="50"},
 	{alt_:="small"}
 );
 
 
-type union Mixed_Types
+type Mixed_Types_type Mixed_Types
+with {
+  variant "element";
+};
+
+
+type union Mixed_Types_type
 {
 	XSD.GDay alt_,
 	XSD.GYear alt_1,
@@ -106,7 +123,6 @@ type union Mixed_Types
 }
 with {
   variant "useUnion";
-  variant "element";
   variant (alt_) "name as ''";
   variant (alt_1) "name as ''";
   variant (alt_2) "name as ''";
@@ -121,7 +137,7 @@ with {
 };
 
 
-type Mixed_Types Mixed_Enum (
+type Mixed_Types_type Mixed_Enum (
 	{alt_10:="small"},
 	{alt_10:="somestring"},
 	{alt_1:="0085"},
@@ -138,18 +154,23 @@ type Mixed_Types Mixed_Enum (
 );
 
 
-type union Only_int
+type Only_int_type Only_int
+with {
+  variant "element";
+};
+
+
+type union Only_int_type
 {
 	XSD.Integer alt_
 }
 with {
   variant "useUnion";
-  variant "element";
   variant (alt_) "name as ''";
 };
 
 
-type Only_int Ints (
+type Only_int_type Ints (
 	{alt_:=14}
 );
 

@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
- targetNamespace="www.example.org/imported2">
+ targetNamespace="www.example.org/imported2"
+ xmlns:this="www.example.org/imported2">
 
 <xsd:simpleType name="foobar">
 	<xsd:restriction base="xsd:integer"/>
 </xsd:simpleType>
 
+<xsd:element name="foobarElem" type="this:foobar"/>
+
 <xsd:simpleType name="ding">
 	<xsd:restriction base="xsd:integer"/>
 </xsd:simpleType>
 
-<xsd:element name="bar">
-	<xsd:complexType>
-		<xsd:sequence>
-			<xsd:element name="something" type="xsd:string" minOccurs="0"/>
-		</xsd:sequence>
-	</xsd:complexType>
-</xsd:element>
+<xsd:element name="bar" type="this:bar_type"/>
+
+<xsd:complexType name="bar_type">
+	<xsd:sequence>
+		<xsd:element name="something" type="xsd:string" minOccurs="0"/>
+	</xsd:sequence>
+</xsd:complexType>
 
 </xsd:schema> 

@@ -177,6 +177,7 @@
         <File path="../xsd/defaultforempty_mod2.xsd" />
         <File path="../xsd/defaultforempty_same_ns1.xsd" />
         <File path="../xsd/defaultforempty_same_ns2.xsd" />
+        <File path="../xsd/correct_ref_and_type.xsd" />
             </File_Group>
             <File_Group name="XmlTest_xsds" >
                 <File path="../XmlTest_xsds/XmlTest_boolean.xsd" />
@@ -426,6 +427,7 @@
             <File path="../XmlTest_expectedTtcns/www_example_org_defaultforempty_mod1_e.ttcn" />
             <File path="../XmlTest_expectedTtcns/www_example_org_defaultforempty_mod2_e.ttcn" />
             <File path="../XmlTest_expectedTtcns/www_example_org_defaultforempty_same_ns_e.ttcn" />
+            <File path="../XmlTest_expectedTtcns/http_www_example_org_correct_ref_and_type_e.ttcn" />
             </File_Group>
             <File_Group name="XmlTest_src" >
                 <File path="xmlTest_Shell.ttcn" />

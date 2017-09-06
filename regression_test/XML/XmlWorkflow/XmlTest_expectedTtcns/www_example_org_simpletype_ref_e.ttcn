@@ -44,27 +44,33 @@ module www_example_org_simpletype_ref {
 import from XSD all;
 
 
-type record SomeType
-{
-	XSD.String something
-}
+type SomeType_type SomeType
 with {
   variant "element";
 };
 
 
-type record Type
+type record SomeType_type
 {
-	XSD.String something optional
-}
+	XSD.String something
+};
+
+
+type Type_type Type
 with {
   variant "element";
+};
+
+
+type record Type_type
+{
+	XSD.String something optional
 };
 
 
 type record OtherType
 {
-	SomeType billingAccountNumber,
+	SomeType_type billingAccountNumber,
 	XSD.Long installmentPlanId (-99999 .. 99999),
 	XSD.String info length(0 .. 30) optional
 };

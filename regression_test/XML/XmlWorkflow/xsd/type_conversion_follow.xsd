@@ -4,12 +4,22 @@
  targetNamespace="www.example.org/type/conversion/follow"
  xmlns:ns11="www.example.org/type/conversion/follow"> 
 
+<xsd:simpleType name="e46">
+	<xsd:restriction base="xsd:string">
+	</xsd:restriction>
+</xsd:simpleType>
+
+<xsd:simpleType name="e46_">
+	<xsd:restriction base="xsd:integer">
+	</xsd:restriction>
+</xsd:simpleType>
 
 <xsd:complexType name="e45"> 
 	<group ref="ns11:foobarGroup"/>
-		<attribute name="sd" type="ns11:e45_"/>
+	<attribute name="sd" type="ns11:e46_"/>
 	<attributeGroup ref="ns11:g25attr1"/>
 </xsd:complexType> 
+
 <xsd:complexType name="e45_"> 
 	<xsd:attribute name="attr" type="xsd:string"/> 
 </xsd:complexType> 
@@ -26,7 +36,7 @@
 </element>
 
 <xsd:attributeGroup name="g25attr1">
-	<xsd:attribute name="birthPlaceAttrGroup" type="ns11:e45_"/>
+	<xsd:attribute name="birthPlaceAttrGroup" type="ns11:e46_"/>
 	<xsd:attribute name="birthDateAttrGroup" type="xsd:string"/>
 </xsd:attributeGroup> 
 

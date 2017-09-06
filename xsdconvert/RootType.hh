@@ -138,7 +138,9 @@ protected:
   List<Mstring> hidden_variant;
   List<Mstring> comment;
 
-  ConstructType construct;
+  ConstructType construct; // It should not be modified because the nameconversion
+                           // is dependent on this and causes backward incompatibility
+  ConstructType new_construct; // It is used to make the lookup() function more accurate
   OriginType origin;
   bool visible;
 
@@ -252,6 +254,10 @@ public:
 
   ConstructType getConstruct() const {
     return construct;
+  }
+  
+  ConstructType getNewConstruct() const {
+    return new_construct;
   }
 
   OriginType getOrigin() const {

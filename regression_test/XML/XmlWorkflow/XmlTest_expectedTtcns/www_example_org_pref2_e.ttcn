@@ -55,6 +55,18 @@ with {
 };
 
 
+type MyType MyAttribute
+with {
+  variant "attribute";
+};
+
+
+type MyType MyAttribute2
+with {
+  variant "attribute";
+};
+
+
 type record MyType
 {
 	XSD.Integer myField

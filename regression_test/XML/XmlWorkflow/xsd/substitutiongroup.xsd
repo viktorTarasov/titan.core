@@ -4,6 +4,9 @@
  xmlns:subs="www.example.org/substitutiongroup"
  targetNamespace="www.example.org/substitutiongroup">
 
+<!-- TEST IF THE ELEMENT REFERENCE IS FOUND -->
+<xsd:attribute name="head" type="xsd:integer"/>
+
 <!-- THE HEAD ELEMENT -->
 <xsd:element name="head" type="xsd:string" />
 

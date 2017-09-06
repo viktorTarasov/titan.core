@@ -63,12 +63,16 @@ import from www_XmlTest_org_complex_import_B all;
 
 type record PurchaseReportImport
 {
-	www_XmlTest_org_complex_import_A.MyType myTypeA,
-	www_XmlTest_org_complex_import_B.MyType myTypeB
+	www_XmlTest_org_complex_import_A.MyType myType,
+	www_XmlTest_org_complex_import_B.MyType myType_1
 }
 with {
   variant "name as uncapitalized";
   variant "element";
+  variant (myType) "name as capitalized";
+  variant (myType) "namespace as 'www.XmlTest.org/complex_import_A' prefix 'A'";
+  variant (myType_1) "name as 'MyType'";
+  variant (myType_1) "namespace as 'www.XmlTest.org/complex_import_B' prefix 'B'";
 };
 
 

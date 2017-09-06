@@ -8,6 +8,7 @@
  Contributors:
   Balasko, Jeno
   Raduly, Csaba
+  Szabo, Bence Janos
 -->
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
             xmlns:A="www.XmlTest.org/complex_import_A"
@@ -34,8 +35,8 @@
   <element name="purchaseReportImport">
     <complexType>
       <sequence>
-        <element name="myTypeA" type="A:MyType"/>
-        <element name="myTypeB" type="B:MyType"/>
+        <element ref="A:MyType"/>
+        <element ref="B:MyType"/>
       </sequence>
     </complexType>
   </element>

@@ -50,22 +50,35 @@ with {
 };
 
 
-type XSD.String Member
+type Head_type Member
 with {
   variant "name as uncapitalized";
   variant "element";
 };
 
 
-type enumerated StringEnum
+type record StringEnum
 {
-	else_,
-	something
+	XSD.String headAttrib,
+	XSD.String something
 }
 with {
-  variant "text 'else_' as 'else'";
   variant "name as uncapitalized";
   variant "element";
+  variant (headAttrib) "attribute";
+  variant (something) "name as capitalized";
+};
+
+
+type record Head_type
+{
+	XSD.String headAttrib optional,
+	XSD.String something
+}
+with {
+  variant "name as uncapitalized";
+  variant (headAttrib) "attribute";
+  variant (something) "name as capitalized";
 };
 
 
@@ -105,10 +118,7 @@ with {
 
 type union Head_group_1
 {
-	record {
-		XSD.String headAttrib optional,
-		XSD.String something
-	} head,
+	Head_type head,
 	Member member,
 	Member2 member2,
 	StringEnum stringEnum
@@ -117,8 +127,6 @@ with {
   variant "untagged";
   variant (head) "form as qualified";
   variant (head) "abstract";
-  variant (head.headAttrib) "attribute";
-  variant (head.something) "name as capitalized";
   variant (member) "block";
   variant (member2) "block";
   variant (stringEnum) "block";

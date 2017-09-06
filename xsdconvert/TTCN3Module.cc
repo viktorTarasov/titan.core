@@ -220,6 +220,7 @@ void TTCN3Module::addMainType(const ConstructType typeOfMainType) {
     }
     case c_unknown:
     case c_schema:
+    case c_simpleOrComplexType:
       break;
   }
 

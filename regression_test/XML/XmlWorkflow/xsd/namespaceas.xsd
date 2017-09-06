@@ -14,7 +14,7 @@
 	<xsd:complexType>
 		<xsd:sequence>
 			<xsd:element name="something" type="other:foobar" minOccurs="0" />
-			<xsd:element ref="other:foobar"/>
+			<xsd:element ref="other:foobarElem"/>
 		</xsd:sequence>
 	</xsd:complexType>
 </xsd:element>
@@ -33,22 +33,22 @@
 		</xsd:element>
 		<xsd:element name="something2">
 			<xsd:complexType>
-				<xsd:simpleContent>
-					<xsd:extension base="other:bar"/>
-				</xsd:simpleContent>
+				<xsd:complexContent>
+					<xsd:extension base="other:bar_type"/>
+				</xsd:complexContent>
 			</xsd:complexType>
 		</xsd:element>
 		<xsd:element name="something3">
 			<xsd:complexType>
 				<xsd:complexContent>
-					<xsd:extension base="other:bar"/>
+					<xsd:extension base="other:bar_type"/>
 				</xsd:complexContent>
 			</xsd:complexType>
 		</xsd:element>
 		<xsd:element name="something4">
 			<xsd:complexType>
 					<xsd:complexContent>
-						<xsd:restriction base="other:bar">
+						<xsd:restriction base="other:bar_type">
 							<xsd:sequence>
 								<xsd:element name="something" type="string" minOccurs="1"/>
 							</xsd:sequence>

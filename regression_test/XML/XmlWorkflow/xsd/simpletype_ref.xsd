@@ -4,32 +4,34 @@
  xmlns:this="www.example.org/simpletype/ref"
  targetNamespace="www.example.org/simpletype/ref">
 
-<xsd:element name="SomeType">
-	<xsd:complexType>
-		<xsd:complexContent>
-			<xsd:restriction base="this:Type">
-				<xsd:sequence>
-					<xsd:element name="something" type="xsd:string"/>
-				</xsd:sequence>
-			</xsd:restriction>
-		</xsd:complexContent>
-	</xsd:complexType>
-</xsd:element>
+<xsd:element name="SomeType" type="this:SomeType_type"/>
 
-<xsd:element name="Type">
-	<xsd:complexType>
-		<xsd:sequence>
-			<xsd:element name="something" type="xsd:string" minOccurs="0" />
-		</xsd:sequence>
-	</xsd:complexType>
-</xsd:element>
+<xsd:complexType name="SomeType_type">
+	<xsd:complexContent>
+		<xsd:restriction base="this:Type_type">
+			<xsd:sequence>
+				<xsd:element name="something" type="xsd:string"/>
+			</xsd:sequence>
+		</xsd:restriction>
+	</xsd:complexContent>
+</xsd:complexType>
+
+<xsd:element name="Type" type="this:Type_type"/>
+
+<xsd:complexType name="Type_type">
+	<xsd:sequence>
+		<xsd:element name="something" type="xsd:string" minOccurs="0" />
+	</xsd:sequence>
+</xsd:complexType>
 
 <xsd:complexType name="OtherType">
 	<xsd:sequence>
 		<xsd:element name="billingAccountNumber">
-			<xsd:simpleType>
-				<xsd:restriction base="this:SomeType"/>
-			</xsd:simpleType>
+			<xsd:complexType>
+				<xsd:complexContent>
+					<xsd:extension base="this:SomeType_type"/>
+				</xsd:complexContent>
+			</xsd:complexType>
 		</xsd:element>
 		<xsd:element name="installmentPlanId">
 			<xsd:simpleType>

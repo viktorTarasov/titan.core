@@ -30,7 +30,8 @@ enum ConstructType {
   c_annotation,
   c_include,
   c_import,
-  c_idattrib
+  c_idattrib,
+  c_simpleOrComplexType
 };
 
 enum NameConversionMode {

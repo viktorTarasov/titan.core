@@ -21,16 +21,16 @@
 	<xsd:anyAttribute namespace="http://www.w3.org/1999/xhtml ##targetNamespace"/> 
 </xsd:complexType>
 
-<xsd:element name="e45c">
-	<xsd:complexType>
-		<xsd:anyAttribute namespace="##local http://www.example.org/attribute"/>
-	</xsd:complexType>
-</xsd:element>
+<xsd:element name="e45c" type="this:e45c_type"/>
+
+<xsd:complexType name="e45c_type">
+	<xsd:anyAttribute namespace="##local http://www.example.org/attribute"/>
+</xsd:complexType>
 
 <xsd:element name="e45d">
 	<xsd:complexType>
 		<xsd:complexContent>
-			<xsd:extension base="this:e45c">
+			<xsd:extension base="this:e45c_type">
 				<xsd:anyAttribute namespace="##targetNamespace"/>
 			</xsd:extension>
 		</xsd:complexContent>

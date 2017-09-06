@@ -7,14 +7,16 @@
 	 elementFormDefault="qualified"
 	 attributeFormDefault="unqualified">
 	 
-<xs:element name="Ol-name-type">
-	<xs:complexType>
-		<xs:sequence>
-			<xs:element name="allow-true-action" type="xs:integer">
-			</xs:element>
-		</xs:sequence>
-	</xs:complexType>
-</xs:element>
+<xs:element name="Ol-name-type" type="Ol-name-type_type"/>
+
+<xs:complexType name="Ol-name-type_type">
+	<xs:sequence>
+		<xs:element name="allow-true-action" type="xs:integer">
+		</xs:element>
+	</xs:sequence>
+</xs:complexType>
+
+<xs:attribute name="Attr" type="xs:string"/>
 
 <xs:element name="Ol-actions-type">
 	<xs:complexType>
@@ -24,8 +26,8 @@
 			<xs:element name="play-segmented-announcement" nillable="true">
 					<xs:complexType>
 						<xs:complexContent>
-							<xs:extension base="ns:Ol-name-type">
-								<xs:attribute name="announcement-name" type="ns:Ol-name-type" use="required"/>
+							<xs:extension base="ns:Ol-name-type_type">
+								<xs:attribute ref="ns:Attr" use="required"/>
 							</xs:extension>
 						</xs:complexContent>
 					</xs:complexType>
@@ -42,11 +44,11 @@
 			<xs:element name="play-segmented-announcement" nillable="true">
 					<xs:complexType>
 						<xs:complexContent>
-							<xs:extension base="ns:Ol-name-type">
+							<xs:extension base="ns:Ol-name-type_type">
 								<xs:sequence>
 									<xs:element name="elem" type="xs:string"/>
 								</xs:sequence>
-								<xs:attribute name="announcement-name" type="ns:Ol-name-type" use="required"/>
+								<xs:attribute ref="ns:Attr" use="required"/>
 							</xs:extension>
 						</xs:complexContent>
 					</xs:complexType>

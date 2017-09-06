@@ -4,24 +4,24 @@
  targetNamespace="www.example.org/enumeration/restriction"
  xmlns:this="www.example.org/enumeration/restriction">
 
-<xs:element name="e21unnamed">
-	<xs:simpleType>
-		<union>
- 			<xs:simpleType>
-				<restriction base="xs:integer"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:float"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<xs:restriction base="xs:string"/>
-			</xs:simpleType>
-		</union>
-	</xs:simpleType>
-</xs:element>
+<xs:element name="e21unnamed" type="this:e21unnamed_type"/>
+
+<xs:simpleType name="e21unnamed_type">
+	<union>
+		<xs:simpleType>
+			<restriction base="xs:integer"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:float"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<xs:restriction base="xs:string"/>
+		</xs:simpleType>
+	</union>
+</xs:simpleType>
 
 <xs:simpleType name="e22"> 
-	<xs:restriction base="this:e21unnamed">
+	<xs:restriction base="this:e21unnamed_type">
 		<xs:enumeration value="20.4"/>
 		<xs:enumeration value="50"/>
 		<xs:enumeration value="small"/>
@@ -29,69 +29,69 @@
 </xs:simpleType>
 
 
-<xs:element name="String_int">
-	<xs:simpleType>
-		<union>
-			<xs:simpleType>
-				<xs:restriction base="xs:string"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:integer"/>
-			</xs:simpleType>
-		</union>
-	</xs:simpleType>
-</xs:element>
+<xs:element name="String_int" type="this:String_int_type"/>
+
+<xs:simpleType name="String_int_type">
+	<union>
+		<xs:simpleType>
+			<xs:restriction base="xs:string"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:integer"/>
+		</xs:simpleType>
+	</union>
+</xs:simpleType>
 
 <xs:simpleType name="Everything_is_string"> 
-	<xs:restriction base="this:String_int">
+	<xs:restriction base="this:String_int_type">
 		<xs:enumeration value="20.4"/>
 		<xs:enumeration value="50"/>
 		<xs:enumeration value="small"/>
 	</xs:restriction>
 </xs:simpleType>
 
-<xs:element name="Mixed_Types">
-	<xs:simpleType>
-		<union>
-			<xs:simpleType>
-				<restriction base="xs:gDay"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<xs:restriction base="xs:gYear"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:gMonth"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:float"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:date"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:time"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:dateTime"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:gMonthDay"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:duration"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<restriction base="xs:gYearMonth"/>
-			</xs:simpleType>
-			<xs:simpleType>
-				<xs:restriction base="xs:string"/>
-			</xs:simpleType>	
-		</union>
-	</xs:simpleType>
-</xs:element>
+<xs:element name="Mixed_Types" type="this:Mixed_Types_type"/>
+	
+<xs:simpleType name="Mixed_Types_type">
+	<union>
+		<xs:simpleType>
+			<restriction base="xs:gDay"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<xs:restriction base="xs:gYear"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:gMonth"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:float"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:date"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:time"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:dateTime"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:gMonthDay"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:duration"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<restriction base="xs:gYearMonth"/>
+		</xs:simpleType>
+		<xs:simpleType>
+			<xs:restriction base="xs:string"/>
+		</xs:simpleType>	
+	</union>
+</xs:simpleType>
 
 <xs:simpleType name="Mixed_Enum"> 
-	<xs:restriction base="this:Mixed_Types">
+	<xs:restriction base="this:Mixed_Types_type">
 		<xs:enumeration value="somestring"/>
 		<xs:enumeration value="2014-01-01"/>
 		<xs:enumeration value="20.4"/>
@@ -108,20 +108,19 @@
 	</xs:restriction>
 </xs:simpleType>
 
-<xs:element name="Only_int">
-	<xs:simpleType>
-		<union>
-			<xs:simpleType>
-				<restriction base="xs:integer"/>
-			</xs:simpleType>
-		</union>
-	</xs:simpleType>
-</xs:element>
+<xs:element name="Only_int" type="this:Only_int_type"/>
+
+<xs:simpleType name="Only_int_type">
+	<union>
+		<xs:simpleType>
+			<restriction base="xs:integer"/>
+		</xs:simpleType>
+	</union>
+</xs:simpleType>
 
 <xs:simpleType name="Ints"> 
-	<xs:restriction base="this:Only_int">
+	<xs:restriction base="this:Only_int_type">
 		<xs:enumeration value="14"/>
-		<xs:enumeration value="somestring"/>
 	</xs:restriction>
 </xs:simpleType>
 

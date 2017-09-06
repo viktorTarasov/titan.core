@@ -66,13 +66,13 @@ const Mstring findBuiltInType(const RootType * ref, Mstring type);
 
 /// Lookup in a list of modules
 RootType * lookup(const List<TTCN3Module*> mods,
-        const SimpleType * reference, wanted w);
+        const SimpleType * reference, wanted w, ConstructType construct);
 /// Lookup in a list of modules
 RootType * lookup(const List<TTCN3Module*> mods,
-        const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w);
+        const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w, ConstructType construct);
 /// Lookup inside one module
 RootType *lookup1(const TTCN3Module *module,
-        const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w);
+        const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w, ConstructType construct);
 
 int multi(const TTCN3Module *module, ReferenceData const& outside_reference,
         const RootType *obj);

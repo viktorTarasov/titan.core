@@ -666,7 +666,7 @@ const Mstring& getPrefixByNameSpace(const RootType * root, const Mstring& namesp
 }
 
 const Mstring findBuiltInType(const RootType* ref, Mstring type){
-  RootType * root = TTCN3ModuleInventory::getInstance().lookup(ref, type, want_BOTH);
+  RootType * root = TTCN3ModuleInventory::getInstance().lookup(ref, type, want_BOTH, c_unknown);
   if(root != NULL && isBuiltInType(root->getType().originalValueWoPrefix)){
     return root->getType().originalValueWoPrefix;
   }else if(root != NULL){
@@ -676,18 +676,18 @@ const Mstring findBuiltInType(const RootType* ref, Mstring type){
   }
 }
 
-RootType * lookup(const List<TTCN3Module*> mods, const SimpleType * reference, wanted w) {
+RootType * lookup(const List<TTCN3Module*> mods, const SimpleType * reference, wanted w, ConstructType construct) {
   const Mstring& uri = reference->getReference().get_uri();
   const Mstring& name = reference->getReference().get_val();
 
-  return lookup(mods, name, uri, reference, w);
+  return lookup(mods, name, uri, reference, w, construct);
 }
 
 RootType * lookup(const List<TTCN3Module*> mods,
-  const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w) {
+  const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w, ConstructType construct) {
   RootType *ret = NULL;
   for (List<TTCN3Module*>::iterator module = mods.begin(); module; module = module->Next) {
-    ret = lookup1(module->Data, name, nsuri, reference, w);
+    ret = lookup1(module->Data, name, nsuri, reference, w, construct);
     if (ret != NULL) break;
   } // next doc
 
@@ -695,14 +695,26 @@ RootType * lookup(const List<TTCN3Module*> mods,
 }
 
 RootType *lookup1(const TTCN3Module *module,
-  const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w) {
+  const Mstring& name, const Mstring& nsuri, const RootType *reference, wanted w, ConstructType construct) {
   if (nsuri != module->getTargetNamespace()) return NULL;
-      
+  
   for (List<RootType*>::iterator type = module->getDefinedTypes().begin(); type; type = type->Next) {
-    switch (type->Data->getConstruct()) {
+    switch (type->Data->getNewConstruct()) {
       case c_simpleType:
+        if (construct != c_simpleType && construct != c_simpleOrComplexType && construct != c_unknown) {
+          break;
+        }
+        goto wantST;
       case c_element:
+        if (construct != c_element && construct != c_unknown) {
+          break;
+        }
+        goto wantST;
       case c_attribute:
+        if (construct != c_attribute && construct != c_unknown) {
+          break;
+        }
+wantST:
         if (w == want_ST || w == want_BOTH) {
           if ((const RootType*) reference != type->Data
             && name == type->Data->getName().originalValueWoPrefix) {
@@ -712,8 +724,20 @@ RootType *lookup1(const TTCN3Module *module,
         break;
 
       case c_complexType:
+        if (construct != c_complexType && construct != c_simpleOrComplexType && construct != c_unknown) {
+          break;
+        }
+        goto wantCT;
       case c_group:
+        if (construct != c_group && construct != c_unknown) {
+          break;
+        }
+        goto wantCT;
       case c_attributeGroup:
+        if (construct != c_attributeGroup && construct != c_unknown) {
+          break;
+        }
+wantCT:
         if (w == want_CT || w == want_BOTH) {
           if ((const RootType*) reference != type->Data
             && name == type->Data->getName().originalValueWoPrefix) {
@@ -733,7 +757,7 @@ RootType *lookup1(const TTCN3Module *module,
     if (it->Data != NULL && it->Data->getConstruct() == c_include &&
         ((ImportStatement*)(it->Data))->getSourceModule() != NULL &&
         ((ImportStatement*)(it->Data))->getSourceModule()->getTargetNamespace() == Mstring("NoTargetNamespace")) {
-      return lookup1(((ImportStatement*)(it->Data))->getSourceModule(), name, Mstring("NoTargetNamespace"), reference, w);
+      return lookup1(((ImportStatement*)(it->Data))->getSourceModule(), name, Mstring("NoTargetNamespace"), reference, w, construct);
     }
   }
   return NULL;
@@ -743,8 +767,8 @@ int multi(const TTCN3Module *module, ReferenceData const& outside_reference,
   const RootType *obj) {
   int multiplicity = 0;
 
-  RootType * st = ::lookup1(module, outside_reference.get_val(), outside_reference.get_uri(), obj, want_ST);
-  RootType * ct = ::lookup1(module, outside_reference.get_val(), outside_reference.get_uri(), obj, want_CT);
+  RootType * st = ::lookup1(module, outside_reference.get_val(), outside_reference.get_uri(), obj, want_ST, c_unknown);
+  RootType * ct = ::lookup1(module, outside_reference.get_val(), outside_reference.get_uri(), obj, want_CT, c_unknown);
   if (st || ct) {
     multiplicity = 1; // locally defined, no qualif needed
     // means that outside_reference.get_uri() == module->getTargetNamespace())
@@ -752,8 +776,8 @@ int multi(const TTCN3Module *module, ReferenceData const& outside_reference,
     // Look for definitions in the imported modules
     for (List<const TTCN3Module*>::iterator it = module->getImportedModules().begin(); it; it = it->Next) {
       // Artificial lookup
-      st = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_ST);
-      ct = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_CT);
+      st = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_ST, c_unknown);
+      ct = ::lookup1(it->Data, outside_reference.get_val(), it->Data->getTargetNamespace(), obj, want_CT, c_unknown);
       if (st || ct) {
         ++multiplicity;
       }
@@ -762,8 +786,8 @@ int multi(const TTCN3Module *module, ReferenceData const& outside_reference,
     // But if == 1 we need to check this module for a type definition with
     // the same name as outsize_reference.get_val()
     if (multiplicity == 1) {
-      st = ::lookup1(module, outside_reference.get_val(), module->getTargetNamespace(), obj, want_ST);
-      ct = ::lookup1(module, outside_reference.get_val(), module->getTargetNamespace(), obj, want_CT);
+      st = ::lookup1(module, outside_reference.get_val(), module->getTargetNamespace(), obj, want_ST, c_unknown);
+      ct = ::lookup1(module, outside_reference.get_val(), module->getTargetNamespace(), obj, want_CT, c_unknown);
       if (st || ct) {
         ++multiplicity;
       }

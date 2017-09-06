@@ -212,7 +212,7 @@ type record ComplexSimpleNotAlias_1
 {
 	XSD.String attrgroup1 optional,
 	XSD.String attrgroup2 optional,
-	XSD.String base length(4 .. infinity)
+	Length_1 base length(4 .. infinity)
 }
 with {
   variant "name as 'ComplexSimpleNotAlias'";
@@ -231,7 +231,7 @@ type LengthAlias2 ComplexSimpleAlias2;
 type record ComplexSimpleNotAlias2
 {
 	XSD.String attr optional,
-	XSD.String base length(4 .. infinity)
+	Length_1 base length(4 .. infinity)
 }
 with {
   variant (attr) "attribute";

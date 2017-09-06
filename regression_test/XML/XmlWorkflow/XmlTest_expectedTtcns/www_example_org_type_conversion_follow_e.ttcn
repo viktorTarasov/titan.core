@@ -44,11 +44,23 @@ module www_example_org_type_conversion_follow {
 import from XSD all;
 
 
+type XSD.String E46
+with {
+  variant "name as uncapitalized";
+};
+
+
+type XSD.Integer E46_1
+with {
+  variant "name as 'e46_'";
+};
+
+
 type record E45
 {
 	XSD.String birthDateAttrGroup optional,
-	E45_1 birthPlaceAttrGroup optional,
-	E45_1 sd optional,
+	E46_1 birthPlaceAttrGroup optional,
+	E46_1 sd optional,
 	E45_1 foo,
 	XSD.String bar
 }

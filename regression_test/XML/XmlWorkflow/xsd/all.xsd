@@ -26,13 +26,13 @@ targetNamespace="www.example.org/all">
 
 <xsd:annotation><xsd:documentation xml:lang="EN">All, mandatory</xsd:documentation></xsd:annotation>
 
-<xsd:complexType name="e29a"> 
+<xsd:group name="e29a"> 
 	<xsd:all>
 		<xsd:element name="foo" type="integer"/>
 		<xsd:element name="bar" type="float"/>
 		<xsd:element name="ding" type="string"/>
 	</xsd:all>
-</xsd:complexType>
+</xsd:group>
 
 <xsd:complexType name="e29aAndAttributes"> 
 	<xsd:all>

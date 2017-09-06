@@ -44,14 +44,26 @@ module name_conversion_extension_attrib {
 import from XSD all;
 
 
-type record Ol_name_type
+type Ol_name_type_type Ol_name_type
+with {
+  variant "name as 'Ol-name-type'";
+  variant "element";
+};
+
+
+type record Ol_name_type_type
 {
 	XSD.Integer allow_true_action
 }
 with {
-  variant "name as 'Ol-name-type'";
-  variant "element";
+  variant "name as 'Ol-name-type_type'";
   variant (allow_true_action) "name as 'allow-true-action'";
+};
+
+
+type XSD.String Attr
+with {
+  variant "attribute";
 };
 
 
@@ -59,8 +71,8 @@ type record Ol_actions_type
 {
 	XSD.Integer do_not_disturb,
 	record {
-		Ol_name_type announcement_name,
-		Ol_name_type content optional
+		Attr attr,
+		Ol_name_type_type content optional
 	} play_segmented_announcement
 }
 with {
@@ -69,8 +81,8 @@ with {
   variant (do_not_disturb) "name as 'do-not-disturb'";
   variant (play_segmented_announcement) "name as 'play-segmented-announcement'";
   variant (play_segmented_announcement) "useNil";
-  variant (play_segmented_announcement.announcement_name) "name as 'announcement-name'";
-  variant (play_segmented_announcement.announcement_name) "attribute";
+  variant (play_segmented_announcement.attr) "name as capitalized";
+  variant (play_segmented_announcement.attr) "attribute";
 };
 
 
@@ -78,7 +90,7 @@ type record Ol_actions_type2
 {
 	XSD.Integer do_not_disturb,
 	record {
-		Ol_name_type announcement_name,
+		Attr attr,
 		record {
 			XSD.Integer allow_true_action,
 			XSD.String elem
@@ -91,8 +103,8 @@ with {
   variant (do_not_disturb) "name as 'do-not-disturb'";
   variant (play_segmented_announcement) "name as 'play-segmented-announcement'";
   variant (play_segmented_announcement) "useNil";
-  variant (play_segmented_announcement.announcement_name) "name as 'announcement-name'";
-  variant (play_segmented_announcement.announcement_name) "attribute";
+  variant (play_segmented_announcement.attr) "name as capitalized";
+  variant (play_segmented_announcement.attr) "attribute";
   variant (play_segmented_announcement.content.allow_true_action) "name as 'allow-true-action'";
 };
 

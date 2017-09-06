@@ -47,13 +47,6 @@ import from XSD all;
 import from www_example_org_substitutiongroup_ref all;
 
 
-type Subsgroup_group Refgroup
-with {
-  variant "name as uncapitalized";
-  variant "element";
-};
-
-
 type record ComplexGroup
 {
 	Subsgroup_group subsgroup

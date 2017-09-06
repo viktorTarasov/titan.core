@@ -66,7 +66,8 @@ SimpleType::SimpleType(XMLParser * a_parser, TTCN3Module * a_module, ConstructTy
 , inList(false)
 , alias(NULL)
 , defaultForEmptyConstant(NULL)
-, parent(NULL) {
+, parent(NULL)
+, nameDep(NULL) {
 }
 
 SimpleType::SimpleType(const SimpleType& other)
@@ -93,12 +94,17 @@ SimpleType::SimpleType(const SimpleType& other)
 , inList(other.inList)
 , alias(other.alias)
 , defaultForEmptyConstant(other.defaultForEmptyConstant)
-, parent(NULL) {
+, parent(NULL)
+, nameDep(other.nameDep) {
   length.parent = this;
   pattern.parent = this;
   enumeration.parent = this;
   whitespace.p_parent = this;
   value.parent = this;
+  
+  if (nameDep != NULL) {
+    nameDep->addToNameDepList(this);
+  }
 }
 
 void SimpleType::loadWithValues() {
@@ -323,7 +329,7 @@ void SimpleType::addToSubstitutions(){
   if(!g_flag_used || substitutionGroup.empty()){
     return;
   }
-  SimpleType * st_ = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, substitutionGroup, want_BOTH);
+  SimpleType * st_ = (SimpleType*) TTCN3ModuleInventory::getInstance().lookup(this, substitutionGroup, want_BOTH, c_element);
   if(st_ == NULL){
     printError(module->getSchemaname(), name.convertedValue,
         "Reference for a non-defined type: " + substitutionGroup);
@@ -337,7 +343,7 @@ void SimpleType::addToSubstitutions(){
 
   st->referenceResolving();
   substitutionGroup = empty_string;
-  //Simpletype
+  //SimpleType
   if(st->subsGroup == NULL){
     ComplexType * head_element = new ComplexType(*st, ComplexType::fromElementSubstitution);
     for(List<RootType*>::iterator simpletype = st->nameDepList.begin(); simpletype; simpletype = simpletype->Next){
@@ -450,7 +456,7 @@ void SimpleType::collectElementTypes(SimpleType* found_ST, ComplexType* found_CT
   //Only if type substitution is enabled and it is a top level(simpletype) element or
   //it is a not top level element(complextype)
   if(h_flag_used && (hasVariant(Mstring("\"element\"")) || xsdtype == n_element)){
-    SimpleType * st =  NULL, *nameDep = NULL;
+    SimpleType * st =  NULL, *nameDepType = NULL;
     Mstring uri, value_, type_;
     if(found_ST != NULL || found_CT != NULL){
       // st := found_ST or found_CT, which is not null
@@ -464,7 +470,7 @@ void SimpleType::collectElementTypes(SimpleType* found_ST, ComplexType* found_CT
       value_ = type.convertedValue;
       if(outside_reference.empty()){
         type_ = value_;
-        nameDep = this;
+        nameDepType = this;
       }else {
         type_ = outside_reference.get_val();
       }
@@ -482,7 +488,7 @@ void SimpleType::collectElementTypes(SimpleType* found_ST, ComplexType* found_CT
         complex->Data->setVisible();
         if(st->getXsdtype() != n_NOTSET && this == st){ //otherwise records would be renamed too
           complex->Data->addToNameDepList(st);
-          ((ComplexType*)st)->setNameDep(nameDep);
+          ((ComplexType*)st)->setNameDep(nameDepType);
         }
         found = true;
         break;
@@ -494,7 +500,7 @@ void SimpleType::collectElementTypes(SimpleType* found_ST, ComplexType* found_CT
       if(prefix != empty_string){
         prefix += ":";
       }
-      st->getModule()->addElementType(prefix + type_, nameDep);
+      st->getModule()->addElementType(prefix + type_, nameDepType);
     }
   }
 }
@@ -591,11 +597,16 @@ void SimpleType::referenceResolving() {
   
   if(!outside_reference.empty()){
     SimpleType * found_ST = static_cast<SimpleType*> (
-      TTCN3ModuleInventory::getInstance().lookup(this, want_ST));
+      TTCN3ModuleInventory::getInstance().lookup(this, want_ST, c_simpleType));
     ComplexType * found_CT = static_cast<ComplexType*> (
-      TTCN3ModuleInventory::getInstance().lookup(this, want_CT));
+      TTCN3ModuleInventory::getInstance().lookup(this, want_CT, c_complexType));
     // It _is_ possible to find both
     collectElementTypes(found_ST, found_CT);
+    // If found_ST is a complexType with an xsd:union restricted to certain values
+    if (found_ST != NULL && found_ST->getType().convertedValue == Mstring("union") && mode == restrictionMode) {
+      found_CT = (ComplexType*)found_ST;
+      found_ST = NULL;
+    }
     if (found_ST != NULL) {
       if (!found_ST->outside_reference.empty() && !found_ST->outside_reference.is_resolved() && found_ST != this) {
         found_ST->referenceResolving();
@@ -614,9 +625,9 @@ void SimpleType::referenceResolving() {
       if (!isBuiltInType(type.convertedValue)) {
         found_CT->addToNameDepList(this);
       }
-    }else {
+    } else {
       printError(module->getSchemaname(), name.convertedValue,
-        "Reference for a non-defined type: " + outside_reference.repr());
+        "Reference for a non-defined simpleType or complexType type: " + outside_reference.repr());
       TTCN3ModuleInventory::getInstance().incrNumErrors();
       outside_reference.set_resolved(NULL);
     }
@@ -1251,7 +1262,7 @@ void EnumerationType::applyReference(const EnumerationType & other) {
 void EnumerationType::applyFacets() // string types, integer types, float types, time types
 {
   if (!modified) return;
-
+  
   facets.remove_dups();
 
   const Mstring & base = parent->getBuiltInBase();

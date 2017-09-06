@@ -20,7 +20,6 @@ xmlns:nss="www.example.org/attr/ext/rest"
 			<xsd:sequence>
 			</xsd:sequence>
 			<xsd:attribute name="gender" type="xsd:integer"/>
-			<xsd:attribute name="genderAttrBase" type="xsd:integer"/>
 		</xsd:extension>
 	</xsd:complexContent>
 </xsd:complexType>
@@ -42,7 +41,6 @@ xmlns:nss="www.example.org/attr/ext/rest"
 				<xsd:element name="ageElemExt" type="xsd:integer"/>
 			</xsd:sequence>
 			<xsd:attribute name="genderAttrBase" type="xsd:integer" use="prohibited"/>
-			<xsd:attribute name="boo" type="xsd:integer"/>
 		</xsd:restriction>
 	</xsd:complexContent>
 </xsd:complexType>
@@ -53,7 +51,7 @@ xmlns:nss="www.example.org/attr/ext/rest"
 			<xsd:sequence>
 				<xsd:element name="ageElemExt" type="xsd:integer"/>
 			</xsd:sequence>
-			<xsd:attribute name="genderAttrBase" type="xsd:integer" use="required"/>
+			<xsd:attribute name="genderAttrBase" type="xsd:integer" use="prohibited"/>
 		</xsd:restriction>
 	</xsd:complexContent>
 </xsd:complexType>
@@ -78,56 +76,52 @@ xmlns:nss="www.example.org/attr/ext/rest"
 				<xsd:element ref="nss:comment" minOccurs="1"/>
 			</xsd:sequence>
 			<xsd:attribute name="shipDate" type="xsd:date" use="required" />
-			<xsd:attribute name="boo" type="xsd:date"/>
 			<xsd:attribute name="orderDate" type="xsd:date" use="prohibited" />
 		</xsd:restriction>
 	</xsd:complexContent>
 </xsd:complexType> 
 
-<xsd:element name="e23">
-	<xsd:complexType>
-		<xsd:simpleContent>
-			<xsd:extension base="string">
-				<xsd:attribute name="foo" type="xsd:float"/>
-				<xsd:attribute name="bar" type="xsd:integer"/>
-				<xsd:attribute name="base" type="xsd:integer"/>
-			</xsd:extension>
-		</xsd:simpleContent>
-	</xsd:complexType>
-</xsd:element> 
+<xsd:element name="e23" type="nss:e23_type"/>
+
+<xsd:complexType name="e23_type">
+	<xsd:simpleContent>
+		<xsd:extension base="string">
+			<xsd:attribute name="foo" type="xsd:float"/>
+			<xsd:attribute name="bar" type="xsd:integer"/>
+			<xsd:attribute name="base" type="xsd:integer"/>
+		</xsd:extension>
+	</xsd:simpleContent>
+</xsd:complexType>
 
 
-<xsd:element name="e24">
-	<xsd:complexType>
-		<xsd:simpleContent>
-			<xsd:extension base="nss:e23">
-				<xsd:attribute name="foo" type="xsd:float"/>
-				<xsd:attribute name="goo" type="xsd:integer"/>
-				<xsd:attribute name="base" type="xsd:integer" use="required"/>
-			</xsd:extension>
-		</xsd:simpleContent>
-	</xsd:complexType>
-</xsd:element> 
+<xsd:element name="e24" type="nss:e24_type"/>
+
+<xsd:complexType name="e24_type">
+	<xsd:simpleContent>
+		<xsd:extension base="nss:e23_type">
+			<xsd:attribute name="goo" type="xsd:integer"/>
+		</xsd:extension>
+	</xsd:simpleContent>
+</xsd:complexType>
 
 
-<xsd:element name="e25">
-	<xsd:complexType>
-		<xsd:simpleContent>
-			<xsd:restriction base="nss:e24">
-				<xsd:length value="4"/> 
-				<xsd:attribute name="foo" type="xsd:float" use="prohibited"/>
-				<xsd:attribute name="goo" type="xsd:integer" use="required"/>
-				<xsd:attribute name="boo" type="xsd:integer"/>
-				<xsd:attribute name="base" type="xsd:integer" use="prohibited"/>
-			</xsd:restriction>
-		</xsd:simpleContent>
-	</xsd:complexType>
-</xsd:element> 
+<xsd:element name="e25" type="nss:e25_type"/>
+
+<xsd:complexType name="e25_type">
+	<xsd:simpleContent>
+		<xsd:restriction base="nss:e24_type">
+			<xsd:length value="4"/> 
+			<xsd:attribute name="foo" type="xsd:float" use="prohibited"/>
+			<xsd:attribute name="goo" type="xsd:integer" use="required"/>
+			<xsd:attribute name="base" type="xsd:integer" use="prohibited"/>
+		</xsd:restriction>
+	</xsd:simpleContent>
+</xsd:complexType>
 
 <xsd:element name="e26">
 	<xsd:complexType>
 		<xsd:simpleContent>
-			<xsd:extension base="nss:e25">
+			<xsd:extension base="nss:e25_type">
 				<xsd:attribute name="foo" type="xsd:float" use="required"/>
 			</xsd:extension>
 		</xsd:simpleContent>

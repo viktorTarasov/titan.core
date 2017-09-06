@@ -275,6 +275,8 @@ public:
   // Parent of the element (both complexType, and AttributeType) has this
   // Not responsible for this member
   ComplexType * parent;
+  
+  SimpleType * nameDep; // not owned
 
   /** Virtual methods
    *  inherited from RootType

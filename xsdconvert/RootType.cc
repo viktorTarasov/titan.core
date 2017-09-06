@@ -25,6 +25,7 @@ RootType::RootType(XMLParser * a_parser, TTCN3Module * a_module, const Construct
 , variant_ref()
 , comment()
 , construct(a_construct)
+, new_construct(a_construct)
 , origin(from_unknown)
 , visible(true)
 , nameDepList()

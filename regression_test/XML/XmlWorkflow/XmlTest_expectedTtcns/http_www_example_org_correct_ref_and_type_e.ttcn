@@ -1,0 +1,249 @@
+/*******************************************************************************
+* Copyright (c) 2000-2017 Ericsson Telecom AB
+*
+* XSD to TTCN-3 Translator
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*   Balasko, Jeno
+*   Szabo, Bence Janos
+*
+******************************************************************************/
+//
+//  File:          http_www_example_org_correct_ref_and_type.ttcn
+//  Description:
+//  References:
+//  Rev:
+//  Prodnr:
+//  Updated:       Wed Sep  6 13:38:35 2017
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//	Generated from file(s):
+//	- correct_ref_and_type.xsd
+//			/* xml version = "1.0" encoding = "UTF-8" */
+//			/* targetnamespace = "http://www.example.org/correct/ref/and/type" */
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+
+module http_www_example_org_correct_ref_and_type {
+
+
+import from XSD all;
+
+
+type record A_3
+{
+	XSD.AnySimpleType aGroup
+}
+with {
+  variant "untagged";
+};
+
+
+type record B_2
+{
+	XSD.AnySimpleType bGroup,
+	XSD.AnySimpleType aGroup
+}
+with {
+  variant "untagged";
+};
+
+
+type record B_1
+{
+	A_2 baseAttr optional,
+	XSD.String baseElem
+}
+with {
+  variant "name as 'B'";
+  variant (baseAttr) "attribute";
+};
+
+
+type XSD.Integer A_1
+with {
+  variant "name as 'A'";
+  variant "attribute";
+};
+
+
+type XSD.Integer B
+with {
+  variant "attribute";
+};
+
+
+type XSD.Integer C
+with {
+  variant "attribute";
+};
+
+
+type XSD.Integer A
+with {
+  variant "element";
+};
+
+
+type enumerated A_2
+{
+	simpleType,
+	simpleType1
+}
+with {
+  variant "text 'simpleType' as capitalized";
+  variant "text 'simpleType1' as capitalized";
+  variant "name as 'A'";
+};
+
+
+type union C_1
+{
+	XSD.Integer alt_,
+	XSD.String alt_1
+}
+with {
+  variant "name as 'C'";
+  variant "useUnion";
+  variant (alt_) "name as ''";
+  variant (alt_1) "name as ''";
+};
+
+
+type record Element
+{
+	A_1 a optional,
+	XSD.Integer attr optional,
+	B b optional,
+	A_2 simpleTypeAttr optional,
+	C_1 simpleTypeAttr2 optional,
+	A a_1,
+	A_2 simpleTypeRef,
+	B_1 complexTypeRef,
+	XSD.AnySimpleType bGroup,
+	XSD.AnySimpleType aGroup
+}
+with {
+  variant "element";
+  variant (a) "name as capitalized";
+  variant (a) "attribute";
+  variant (attr) "name as capitalized";
+  variant (attr) "attribute";
+  variant (b) "name as capitalized";
+  variant (b) "attribute";
+  variant (simpleTypeAttr) "name as capitalized";
+  variant (simpleTypeAttr) "attribute";
+  variant (simpleTypeAttr2) "name as capitalized";
+  variant (simpleTypeAttr2) "attribute";
+  variant (a_1) "name as 'A'";
+  variant (simpleTypeRef) "name as capitalized";
+  variant (complexTypeRef) "name as capitalized";
+};
+
+
+type enumerated AExtension
+{
+	simpleType
+}
+with {
+  variant "text 'simpleType' as capitalized";
+};
+
+
+type A_2 AType
+with {
+  variant "element";
+};
+
+
+type A_2 AAttr
+with {
+  variant "attribute";
+};
+
+
+type B_1 BType
+with {
+  variant "element";
+};
+
+
+type B_1 BAttr
+with {
+  variant "attribute";
+};
+
+
+type record SimpleTypExtension
+{
+	XSD.Integer attr optional,
+	A_2 base
+}
+with {
+  variant (attr) "attribute";
+  variant (base) "untagged";
+};
+
+
+type record SimpleTypeRestriction
+{
+	enumerated {
+		simpleType
+	} base
+}
+with {
+  variant (base) "untagged";
+  variant (base) "text 'simpleType' as capitalized";
+};
+
+
+type record ComplexTypeExtension
+{
+	A_2 extattr optional,
+	A_2 baseAttr optional,
+	XSD.String baseElem,
+	XSD.Integer extelem
+}
+with {
+  variant (extattr) "name as capitalized";
+  variant (extattr) "attribute";
+  variant (baseAttr) "attribute";
+  variant (extelem) "name as capitalized";
+};
+
+
+type record ComplexTypeRestriction
+{
+	XSD.String baseElem
+};
+
+
+type record ComplexTypeGroup
+{
+	record length(1 .. 4) of B_2 b_list
+}
+with {
+  variant (b_list) "untagged";
+};
+
+
+}
+with {
+  encode "XML";
+  variant "namespace as 'http://www.example.org/correct/ref/and/type' prefix 'this'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+}

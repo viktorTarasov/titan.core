@@ -341,7 +341,7 @@ void TTCN3ModuleInventory::printModuleNames() const {
   }
 }
 
-RootType * TTCN3ModuleInventory::lookup(const RootType* ref, const Mstring& reference, wanted w) const {
+RootType * TTCN3ModuleInventory::lookup(const RootType* ref, const Mstring& reference, wanted w, ConstructType construct) const {
   Mstring uri = reference.getPrefix(':');
   const Mstring& name = reference.getValueWithoutPrefix(':');
   if(uri.empty()){
@@ -358,26 +358,26 @@ RootType * TTCN3ModuleInventory::lookup(const RootType* ref, const Mstring& refe
   }else {
     uri = getNameSpaceByPrefix(ref, uri);
   }
-  return lookup(name, uri, NULL, w);
+  return lookup(name, uri, NULL, w, construct);
 }
 
-RootType * TTCN3ModuleInventory::lookup(const SimpleType * reference, wanted w) const {
+RootType * TTCN3ModuleInventory::lookup(const SimpleType * reference, wanted w, ConstructType construct) const {
   const Mstring& uri = reference->getReference().get_uri();
   const Mstring& name = reference->getReference().get_val();
 
-  return lookup(name, uri, reference, w);
+  return lookup(name, uri, reference, w, construct);
 }
 
-RootType * TTCN3ModuleInventory::lookup(const ComplexType * reference, wanted w) const {
+RootType * TTCN3ModuleInventory::lookup(const ComplexType * reference, wanted w, ConstructType construct) const {
   const Mstring& uri = reference->getReference().get_uri();
   const Mstring& name = reference->getReference().get_val();
 
-  return lookup(name, uri, reference, w);
+  return lookup(name, uri, reference, w, construct);
 }
 
 RootType * TTCN3ModuleInventory::lookup(const Mstring& name, const Mstring& nsuri,
-  const RootType *reference, wanted w) const {
-  return ::lookup(definedModules, name, nsuri, reference, w);
+  const RootType *reference, wanted w, ConstructType construct) const {
+  return ::lookup(definedModules, name, nsuri, reference, w, construct);
 }
 
 void TTCN3ModuleInventory::dump() const {

@@ -6,8 +6,6 @@
 
 <xsd:element name="subsgroup" type="xsd:string" abstract="true" />
 
-<xsd:element name="refgroup" type="A:subsgroup" />
-
 <xsd:complexType name="complexGroup">
 	<xsd:sequence>
 		<xsd:element ref="A:subsgroup"/>
