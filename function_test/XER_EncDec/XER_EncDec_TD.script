@@ -1462,6 +1462,56 @@ Dynamic test case error: Performing a valueof or send operation on a non-specifi
 :exmp.
 
 .*---------------------------------------------------------------------*
+:h4. Decoding record with untagged self recursive union field from incorrect XML
+.*---------------------------------------------------------------------*
+:xmp tab=0.
+
+<TC - Decoding record with untagged self recursive union field from incorrect XML>
+
+<STATIC>
+
+type component Test_CT{};
+
+<TTCN_TC:PURE_EXEC>
+
+type record MyRecord {
+  UntaggedUnion u
+} with {
+  encode "XML";
+}
+
+type union UntaggedUnion {
+  integer i,
+  UntaggedUnion u
+} with {
+  encode "XML";
+  variant "untagged";
+}
+
+external function ef_xer_dec(in octetstring par) return MyRecord
+  with { extension "prototype(convert) decode (XER:XER_EXTENDED) errorbehavior(ALL:ERROR)" }
+
+testcase tc_dec_self_recursive_untagged_field() runs on Test_CT {
+  var universal charstring bad_xml := "<MyRecord>\n\t<bad>44</bad>\n</MyRecord>\n\n";
+
+  var MyRecord v_res := ef_xer_dec(unichar2oct(bad_xml));
+
+  setverdict(pass);
+}
+
+control {
+  execute(tc_dec_self_recursive_untagged_field());
+}
+
+<RESULT>
+
+While XER-decoding type '@Temp.MyRecord': Component 'u':  'bad' does not match any alternative
+
+<END_TC>  
+  
+:exmp.
+
+.*---------------------------------------------------------------------*
 :h1.REFERENCES
 .*---------------------------------------------------------------------*
 :nl. Requirement specification(s):

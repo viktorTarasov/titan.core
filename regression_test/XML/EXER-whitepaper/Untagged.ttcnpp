@@ -786,6 +786,36 @@ testcase decode_ut_union2() runs on UTA
   CHECK_DECODE(exer_dec_untunion2, s_untunion2, UntaggedUnion2, c_untunion2);
 }
 
+
+// ------- untagged union with a recursive field
+
+type record MyRecord {
+  UntaggedUnion3 u
+}
+
+type union UntaggedUnion3 {
+  integer i,
+  UntaggedUnion3 u
+} with {
+  variant "untagged";
+}
+
+DECLARE_EXER_ENCODERS(MyRecord, untunion3);
+
+const MyRecord c_untunion3 := { u := { i := 44 } };
+
+const universal charstring s_untunion3 := "<MyRecord>\n\t<i>44</i>\n</MyRecord>\n\n";
+
+testcase encode_ut_union3() runs on UTA
+{
+  CHECK_METHOD(exer_enc_untunion3, c_untunion3, s_untunion3);
+}
+
+testcase decode_ut_union3() runs on UTA
+{
+  CHECK_DECODE(exer_dec_untunion3, s_untunion3, MyRecord, c_untunion3);
+}
+
 /* * * * * * * * * * * Run it! * * * * * * * * * * */
 
 control {
@@ -830,6 +860,9 @@ control {
 
   execute(encode_ut_union2());
   execute(decode_ut_union2());
+
+  execute(encode_ut_union3());
+  execute(decode_ut_union3());
 
   execute(encode_ut_union_recof());
   execute(decode_ut_union_recof());

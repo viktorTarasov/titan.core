@@ -1342,10 +1342,14 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
 
     /* An untagged union can start with the start tag of any alternative */
     for (i = 0; i < sdef->nElements; i++) {
-      src=mputprintf(src,
-        "  if (%s::can_start(name, uri, %s_xer_, flavor, flavor2)) return TRUE;\n"
-        , sdef->elements[i].type, sdef->elements[i].typegen
-      );
+      // An untagged union cannot start with itself. It would create an infinite
+      // recursion.
+      if (strcmp(sdef->elements[i].type, sdef->name) != 0) {
+        src=mputprintf(src,
+          "  if (%s::can_start(name, uri, %s_xer_, flavor, flavor2)) return TRUE;\n"
+          , sdef->elements[i].type, sdef->elements[i].typegen
+        );
+      }
     }
     src = mputstr(src, "  return FALSE;\n}\n\n");
 
