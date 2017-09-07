@@ -2244,7 +2244,18 @@ int UNIVERSAL_CHARSTRING::XER_decode(const XERdescriptor_t& p_td,
               "Invalid escape sequence '<%s/>'", name);
           }
           break; }
-
+        
+        case XML_READER_TYPE_ATTRIBUTE: {
+          if (omit_tag) {
+            const char * text = (const char*)reader.Value();
+            int len = strlen(text);
+            accumulator.put_s(len, (cbyte*)text);
+            decode_utf8(accumulator.get_len(), accumulator.get_data());
+            goto fini;
+          }
+          break;
+        }
+        
         case XML_READER_TYPE_END_ELEMENT: {
           decode_utf8(accumulator.get_len(), accumulator.get_data());
           if (!omit_tag) {

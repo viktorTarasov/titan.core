@@ -426,6 +426,151 @@ testcase dec_atr_schemaloc() runs on ATR
 }
 
 
+group UnionAttribute {
+
+type record MyRecord {
+  IntegerUnion iu,
+  CharstringUnion cu,
+  UniversalCharstringUnion ucu,
+  BooleanUnion bu,
+  FloatUnion fu,
+  BitstringUnion bsu,
+  OctetstringUnion ou,
+  HexStringUnion hu,
+  VerdictTypeUnion vu,
+
+  integer i
+
+} with {
+  variant (iu) "attribute";
+  variant (cu) "attribute";
+  variant (ucu) "attribute";
+  variant (bu) "attribute";
+  variant (fu) "attribute";
+  variant (bsu) "attribute";
+  variant (ou) "attribute";
+  variant (hu) "attribute";
+  variant (vu) "attribute";
+}
+
+type union IntegerUnion {
+  integer i
+}
+with {
+  variant "useUnion";
+variant "attribute";
+}
+
+type union CharstringUnion {
+  charstring cs
+}
+with {
+  variant "useUnion";
+variant "attribute";
+}
+
+type union UniversalCharstringUnion {
+  universal charstring uc
+}
+with {
+  variant "useUnion";
+  variant "attribute";
+}
+
+type union BooleanUnion {
+  boolean b
+}
+with {
+  variant "useUnion";
+  variant "attribute";
+}
+
+type union FloatUnion {
+  float f
+}
+with {
+  variant "useUnion";
+  variant "attribute";
+}
+
+type union BitstringUnion {
+  bitstring b
+}
+with {
+  variant "useUnion";
+  variant "attribute";
+}
+
+type union OctetstringUnion {
+  octetstring o
+}
+with {
+  variant "useUnion";
+  variant "attribute";
+}
+
+type union HexStringUnion {
+  hexstring h
+}
+with {
+  variant "useUnion";
+  variant "attribute";
+}
+
+type union VerdictTypeUnion {
+  verdicttype v
+}
+with {
+  variant "useUnion";
+  variant "attribute";
+}
+
+const MyRecord c_union_attr := {
+      iu := { i := 42 },
+      cu := { cs := "charstring" },
+      ucu := { uc := "universal charstring"},
+      bu := { b := false },
+      fu := { f := 3.14 },
+      bsu := { b := '010010'B },
+      ou := { o := 'DEAD00BEEF'O },
+      hu := { h := 'DEAD00BEEF'H },
+      vu := { v := inconc },
+      i := 42
+    };
+
+const universal charstring c_union_attr_str :=
+"<MyRecord xmlns:a='http://www.somewhere.com' "&
+"a:iu='42' "&
+"a:cu='charstring' "&
+"a:ucu='universal charstring' "&
+"a:bu='false' "&
+"a:fu='3.140000' "&
+"a:bsu='010010' "&
+"a:ou='DEAD00BEEF' "&
+"a:hu='DEAD00BEEF' "&
+"a:vu='inconc'>\n"&
+"\t<i>42</i>\n"&
+"</MyRecord>\n\n";
+
+DECLARE_EXER_ENCODERS(MyRecord, m_rec);
+
+testcase enc_attr_union() runs on ATR
+{
+  CHECK_METHOD(exer_enc_m_rec, c_union_attr, c_union_attr_str);
+}
+
+testcase dec_attr_union() runs on ATR
+{
+  CHECK_DECODE(exer_dec_m_rec, c_union_attr_str, MyRecord, c_union_attr);
+}
+
+} with {
+  variant "namespace as 'http://www.somewhere.com' prefix 'a'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+}
+
+
+
 control {
   execute(enc_atr());
   execute(dec_atr());
@@ -436,6 +581,9 @@ control {
   execute(hl19919(), 5.0); // too bad the timer can't save the testcase from its endless loop
 
   execute(dec_atr_schemaloc());
+
+  execute(enc_attr_union());
+  execute(dec_attr_union());
 }
 
 }

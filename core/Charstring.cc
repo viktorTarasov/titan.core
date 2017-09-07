@@ -1378,7 +1378,7 @@ unsigned int xlate(cbyte*in, int phase, unsigned char*dest) {
 int CHARSTRING::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                            unsigned int flavor, unsigned int /*flavor2*/, embed_values_dec_struct_t*) {
   int exer = is_exer(flavor);
-
+  
   if (exer && (p_td.xer_bits & XER_ATTRIBUTE)) {
     const char * name = verify_name(reader, p_td, exer);
     (void)name;
@@ -1413,7 +1413,7 @@ int CHARSTRING::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
         depth = reader.Depth();
       }
       else if ((depth != -1 || omit_tag)
-        && (XML_READER_TYPE_TEXT == type || XML_READER_TYPE_CDATA == type))
+        && (XML_READER_TYPE_TEXT == type || XML_READER_TYPE_CDATA == type || (omit_tag && XML_READER_TYPE_ATTRIBUTE)))
         // Process #text node if we already processed the element node, or
         // there is no element node because UNTAGGED is in effect.
       {
