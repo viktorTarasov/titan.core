@@ -11462,8 +11462,8 @@ error:
 
   LogArguments::LogArguments(const LogArguments& p)
   {
-    for (size_t i = 0; i < logargs.size(); ++i) {
-      logargs[i] = p.logargs[i]->clone();
+    for (size_t i = 0; i < p.logargs.size(); ++i) {
+      logargs.add(p.logargs[i]->clone());
     }
   }
   
