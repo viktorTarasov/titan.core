@@ -131,6 +131,6 @@ with {
 }
 with {
   encode "XML";
-  variant "namespace as 'http://www.w3.org/XML/1998/namespace'";
+  variant "namespace as 'http://www.w3.org/XML/1998/namespace' prefix 'xml'";
   variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
 }

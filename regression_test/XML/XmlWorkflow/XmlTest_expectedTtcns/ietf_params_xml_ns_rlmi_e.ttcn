@@ -129,6 +129,7 @@ type record Name
 with {
   variant "name as uncapitalized";
   variant "element";
+  variant (lang) "namespace as 'http://www.w3.org/XML/1998/namespace' prefix 'xml'";
   variant (lang) "attribute";
   variant (base) "untagged";
 };

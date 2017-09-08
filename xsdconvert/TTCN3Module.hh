@@ -216,6 +216,10 @@ public:
   const List<NamespaceType> & getDeclaredNamespaces() const {
     return declaredNamespaces;
   }
+  
+  List<NamespaceType> & getDeclaredNamespaces() {
+    return declaredNamespaces;
+  }
 
   void addImportedModule(const TTCN3Module *mod) {
     importedModules.push_back(mod);

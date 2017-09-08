@@ -112,6 +112,10 @@ void TTCN3Module::loadValuesFromSchemaTag(const Mstring& a_targetNamespace,
   BlockValue a_blockDefault) {
   if (a_targetNamespace.empty()) {
     targetNamespace = "NoTargetNamespace";
+  } else if (a_targetNamespace == "http://www.w3.org/XML/1998/namespace") {
+    targetNamespace = a_targetNamespace;
+    // http://www.w3.org/XML/1998/namespace automatically gets the xml namespace prefix
+    targetNamespace_connectedPrefix = "xml";
   } else {
     if (a_targetNamespace == XMLSchema) {
       notIntoFile();

@@ -103,7 +103,16 @@ void ImportStatement::referenceResolving(void) {
       }
     }
     visible = false;
-  } else module->addImportedModule(source_module);
+  } else {
+    // Add the xml namespace to the importing module's declared namespaces
+    if (from_namespace == "http://www.w3.org/XML/1998/namespace") {
+      NamespaceType tmp_ns_pair;
+      tmp_ns_pair.uri = from_namespace;
+      tmp_ns_pair.prefix = "xml";
+      module->getDeclaredNamespaces().push_back(tmp_ns_pair);
+    }
+    module->addImportedModule(source_module);
+  }
 }
 
 void ImportStatement::printToFile(FILE * file) {
