@@ -68,6 +68,22 @@ namespace Ttcn {
     if (!p_ref) FATAL_ERROR("PatternString::ps_elem_t::ps_elem_t()");
     ref = p_ref;
   }
+  
+  PatternString::ps_elem_t::ps_elem_t(const PatternString::ps_elem_t& p)
+    : kind(p.kind), str(NULL), ref(NULL), t(NULL), with_N(FALSE),
+    is_charstring(FALSE), is_universal_charstring(FALSE)
+  {
+    switch(kind) {
+    case PSE_STR:
+      str = new string(*p.str);
+      break;
+    case PSE_REF:
+      ref = p.ref->clone();
+      break;
+    case PSE_REFDSET:
+      FATAL_ERROR("PatternString::ps_elem_t::ps_elem_t");
+    }
+  }
 
   PatternString::ps_elem_t::~ps_elem_t()
   {
@@ -85,7 +101,7 @@ namespace Ttcn {
 
   PatternString::ps_elem_t* PatternString::ps_elem_t::clone() const
   {
-    FATAL_ERROR("PatternString::ps_elem_t::clone");
+    return new ps_elem_t(*this);
   }
 
   void PatternString::ps_elem_t::set_fullname(const string& p_fullname)
