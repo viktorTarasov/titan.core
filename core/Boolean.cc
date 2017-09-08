@@ -687,7 +687,7 @@ int BOOLEAN::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
             TTCN_EncDec::ET_INVAL_MSG, "Boolean must be empty element");
           value = (const char*)reader.LocalName();
         }
-        else if (XML_READER_TYPE_TEXT == type) {
+        else if (XML_READER_TYPE_TEXT == type || XML_READER_TYPE_ATTRIBUTE == type) {
           // TextBoolean
           value = (const char*)reader.Value();
         }
