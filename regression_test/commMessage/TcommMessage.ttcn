@@ -1514,6 +1514,60 @@ testcase commMessageReceiveAnyOrOmit() runs on commMessage_comp1 {
   }
 }
 
+function commMessage_behav_all_params(
+  in integer p_in, inout boolean p_inout, out octetstring p_out,
+  in template commMessage_tenum pt_in, inout template commMessage_trecord pt_inout, out template commMessage_tsetof pt_out)
+  runs on commMessage_comp1
+{
+  if (p_in != 10) {
+    setverdict(fail, "Incorrect 'in' value parameter: ", p_in);
+  }
+  if (p_inout != true) {
+    setverdict(fail, "Incorrect 'inout' value parameter: ", p_inout);
+  }
+  if (isbound(p_out)) {
+    setverdict(fail, "Incorrect 'out' value parameter: ", p_out);
+  }
+  if (log2str(pt_in) != "(exx1 (0), exx2 (1))") {
+    setverdict(fail, "Incorrect 'in' template parameter: ", pt_in);
+  }
+  if (not isvalue(pt_inout) or valueof(pt_inout) != { x1 := 5, x2 := 2.6 }) {
+    setverdict(fail, "Incorrect 'inout' template parameter: ", pt_inout);
+  }
+  if (isbound(pt_out)) {
+    setverdict(fail, "Incorrect 'out' template parameter: ", pt_out);
+  }
+  setverdict(pass);
+  p_inout := false;
+  p_out := 'ABCD'O;
+  pt_inout := ?;
+  pt_out := *;
+}
+
+testcase commMessageBehaviorFunctionParams() runs on commMessage_comp1 {
+  var boolean v_b := true;
+  var octetstring v_os := '1234'O;
+  var template commMessage_trecord vt_rec := { x1 := 5, x2 := 2.6 };
+  var template commMessage_tsetof vt_setof := { };
+  var commMessage_comp1 v_comp := commMessage_comp1.create;
+  v_comp.start(commMessage_behav_all_params(10, v_b, v_os,
+   commMessage_tenum: (exx1, exx2), vt_rec, vt_setof));
+  v_comp.done;
+  if (v_b != true) {
+    setverdict(fail, "'inout' value parameter was changed to: ", v_b);
+  }
+  if (v_os != '1234'O) {
+    setverdict(fail, "'out' value parameter was changed to: ", v_os);
+  }
+  if (not isvalue(vt_rec) or valueof(vt_rec) != { x1 := 5, x2 := 2.6 }) {
+    setverdict(fail, "'inout' template parameter was changed to: ", vt_rec);
+  }
+  if (not isvalue(vt_setof) or valueof(vt_setof) != { }) {
+    setverdict(fail, "'out' template parameter was changed to: ", vt_setof);
+  }
+  setverdict(pass);
+}
+
 control {
  execute(commMessageIntegerEncode());
  execute(commMessageValue());
@@ -1554,5 +1608,6 @@ control {
  execute(commMessageDualFacedPorts1());
  execute(commMessageDualFacedPorts2());
  execute(commMessageReceiveAnyOrOmit());
+ execute(commMessageBehaviorFunctionParams());
 }
 }
