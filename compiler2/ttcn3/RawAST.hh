@@ -97,6 +97,7 @@ public:
     int fieldorder;             /**< XDEFMSB, XDEFLSB */
     int lengthto_num;
     Common::Identifier **lengthto;      /**< list of fields to generate length for */
+    int lengthto_offset;
     Common::Identifier *pointerto;      /**< pointer to the specified field is contained
                                    in this field */
     int ptroffset;            /**< offset to the pointer value in bits

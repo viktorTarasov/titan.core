@@ -91,6 +91,7 @@ typedef struct{
     int fieldorder;             /* XDEFMSB, XDEFLSB */
     int lengthto_num;
     int *lengthto;              /* list of fields to generate length for */
+    int lengthto_offset;
     int pointerto;            /* pointer to the specified field is contained
                                    in this field */
     int ptrunit;                /* number of bits in pointerto value */

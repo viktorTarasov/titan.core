@@ -568,7 +568,13 @@ XExtensionBitGroupDef: XExtensionBitGroupKeyword '(' XYesOrNoOrReverse ','
 
 /* LengthTo */
 XLengthToDef : XLengthToKeyword '(' XRecordFieldRefList ')'
-        {  };
+        {  }
+| XLengthToKeyword '(' XRecordFieldRefList ')' '+' XNumber
+{ rawstruct->lengthto_offset = $6; }
+
+| XLengthToKeyword '(' XRecordFieldRefList ')' '-' XNumber
+{ rawstruct->lengthto_offset = -$6; }
+;
 
 /* PointerTo */
 XPointerToDef : XPointerToKeyword '(' XRecordFieldRef ')'

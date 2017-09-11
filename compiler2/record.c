@@ -625,6 +625,7 @@ char* generate_raw_coding(char* src,
         "  myleaf.body.node.nodes[%lu]->coding_descr = &%s_descr_;\n"
         "  myleaf.body.node.nodes[%lu]->calcof.lengthto.num_of_fields = %d;\n"
         "  myleaf.body.node.nodes[%lu]->calcof.lengthto.unit = %d;\n"
+        "  myleaf.body.node.nodes[%lu]->calcof.lengthto.offset = %d;\n"
         "  myleaf.body.node.nodes[%lu]->calcof.lengthto.fields = "
         "init_lengthto_fields_list(%d);\n"
         "  myleaf.body.node.nodes[%lu]->length = %d;\n",
@@ -632,6 +633,7 @@ char* generate_raw_coding(char* src,
         (unsigned long)i, sdef->elements[i].typedescrname,
         (unsigned long)i, sdef->elements[i].raw.lengthto_num,
         (unsigned long)i, sdef->elements[i].raw.unit,
+        (unsigned long)i, sdef->elements[i].raw.lengthto_offset,
         (unsigned long)i, sdef->elements[i].raw.lengthto_num,
         (unsigned long)i, sdef->elements[i].raw.fieldlength);
       for (a = 0; a < sdef->elements[i].raw.lengthto_num; a++) {
@@ -724,6 +726,8 @@ char* generate_raw_coding(char* src,
         "calcof.lengthto.num_of_fields = %d;\n"
         "  myleaf.body.node.nodes[%lu]->body.node.nodes[%d]->"
         "calcof.lengthto.unit = %d;\n"
+         "  myleaf.body.node.nodes[%lu]->body.node.nodes[%d]->"
+        "calcof.lengthto.offset = %d;\n"
         "  myleaf.body.node.nodes[%lu]->body.node.nodes[%d]->"
         "calcof.lengthto.fields = "
         "init_lengthto_fields_list(%d);\n",
@@ -735,6 +739,8 @@ char* generate_raw_coding(char* src,
         sdef->elements[i].raw.lengthto_num,
         (unsigned long)i, sdef->elements[i].raw.lengthindex->nthfield,
         sdef->elements[i].raw.unit,
+        (unsigned long)i, sdef->elements[i].raw.lengthindex->nthfield,
+        sdef->elements[i].raw.lengthto_offset,
         (unsigned long)i, sdef->elements[i].raw.lengthindex->nthfield,
         sdef->elements[i].raw.lengthto_num);
       for (a = 0; a < sdef->elements[i].raw.lengthto_num; a++) {
@@ -791,10 +797,13 @@ char* generate_raw_coding(char* src,
         "  myleaf.body.node.nodes[%lu]->body.node.nodes[sel_field]->"
         "calcof.lengthto.unit = %d;\n"
         "  myleaf.body.node.nodes[%lu]->body.node.nodes[sel_field]->"
+        "calcof.lengthto.offset = %d;\n"
+        "  myleaf.body.node.nodes[%lu]->body.node.nodes[sel_field]->"
         "calcof.lengthto.fields = init_lengthto_fields_list(%d);\n",
         (unsigned long)i,(unsigned long)i,
         (unsigned long)i,sdef->elements[i].raw.lengthto_num,
         (unsigned long)i,sdef->elements[i].raw.unit,
+        (unsigned long)i,sdef->elements[i].raw.lengthto_offset,
         (unsigned long)i,sdef->elements[i].raw.lengthto_num);
       for (a = 0; a < sdef->elements[i].raw.lengthto_num; a++) {
         if (sdef->elements[sdef->elements[i].raw.lengthto[a]].isOptional) {
@@ -1188,6 +1197,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
         "      myleaf.body.node.nodes[idx_map[%lu]]->coding_descr = &%s_descr_;\n"
         "      myleaf.body.node.nodes[idx_map[%lu]]->calcof.lengthto.num_of_fields = %d;\n"
         "      myleaf.body.node.nodes[idx_map[%lu]]->calcof.lengthto.unit = %d;\n"
+        "      myleaf.body.node.nodes[idx_map[%lu]]->calcof.lengthto.offset = %d;\n"
         "      myleaf.body.node.nodes[idx_map[%lu]]->calcof.lengthto.fields = "
         "init_lengthto_fields_list(%d);\n"
         "      myleaf.body.node.nodes[idx_map[%lu]]->length = %d;\n",
@@ -1195,6 +1205,7 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
         (unsigned long)i, sdef->elements[i].typedescrname,
         (unsigned long)i, sdef->elements[i].raw.lengthto_num,
         (unsigned long)i, sdef->elements[i].raw.unit,
+        (unsigned long)i, sdef->elements[i].raw.lengthto_offset,
         (unsigned long)i, sdef->elements[i].raw.lengthto_num,
         (unsigned long)i, sdef->elements[i].raw.fieldlength);
       for (a = 0; a < sdef->elements[i].raw.lengthto_num; a++) {
@@ -1350,6 +1361,8 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
         "        myleaf.body.node.nodes[idx_map[%lu]]->body.node.nodes[%d]->"
         "calcof.lengthto.unit = %d;\n"
         "        myleaf.body.node.nodes[idx_map[%lu]]->body.node.nodes[%d]->"
+        "calcof.lengthto.offset = %d;\n"
+        "        myleaf.body.node.nodes[idx_map[%lu]]->body.node.nodes[%d]->"
         "calcof.lengthto.fields = init_lengthto_fields_list(%d);\n",
         (unsigned long)i, sdef->elements[i].raw.lengthindex->nthfield,
         (unsigned long)i, sdef->elements[i].raw.lengthindex->nthfield,
@@ -1358,6 +1371,8 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
         sdef->elements[i].raw.lengthto_num,
         (unsigned long)i, sdef->elements[i].raw.lengthindex->nthfield,
         sdef->elements[i].raw.unit,
+        (unsigned long)i, sdef->elements[i].raw.lengthindex->nthfield,
+        sdef->elements[i].raw.lengthto_offset,
         (unsigned long)i, sdef->elements[i].raw.lengthindex->nthfield,
         sdef->elements[i].raw.lengthto_num);
       for (a = 0; a < sdef->elements[i].raw.lengthto_num; a++) {
@@ -1438,10 +1453,13 @@ char *generate_raw_coding_negtest(char *src, const struct_def *sdef,
         "      myleaf.body.node.nodes[idx_map[%lu]]->body.node.nodes[sel_field]->"
         "calcof.lengthto.unit = %d;\n"
         "      myleaf.body.node.nodes[idx_map[%lu]]->body.node.nodes[sel_field]->"
+        "calcof.lengthto.offset = %d;\n"
+        "      myleaf.body.node.nodes[idx_map[%lu]]->body.node.nodes[sel_field]->"
         "calcof.lengthto.fields = init_lengthto_fields_list(%d);\n",
         (unsigned long)i, (unsigned long)i,
         (unsigned long)i, sdef->elements[i].raw.lengthto_num,
         (unsigned long)i, sdef->elements[i].raw.unit,
+        (unsigned long)i, sdef->elements[i].raw.lengthto_offset,
         (unsigned long)i, sdef->elements[i].raw.lengthto_num);
       for (a = 0; a < sdef->elements[i].raw.lengthto_num; a++) {
         if (sdef->elements[sdef->elements[i].raw.lengthto[a]].isOptional) {
@@ -4883,6 +4901,16 @@ static char *genRawDecodeRecordField(char *src, const struct_def *sdef,
         ,sdef->elements[i].raw.lengthindex->nthfieldname
         );
       }
+      if (sdef->elements[i].raw.lengthto_offset != 0) {
+        src = mputprintf(src, "  field_%s%s.%s%s() = field_%s%s.%s%s() - %d;\n",
+          sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "",
+          sdef->elements[i].raw.lengthindex->nthfieldname,
+          sdef->elements[i].raw.lengthindex->fieldtype == OPTIONAL_FIELD ? "()" : "",
+          sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "",
+          sdef->elements[i].raw.lengthindex->nthfieldname,
+          sdef->elements[i].raw.lengthindex->fieldtype == OPTIONAL_FIELD ? "()" : "",
+          sdef->elements[i].raw.lengthto_offset);
+      }
       src=mputprintf(src,
         "  value_of_length_field%d+=field_%s%s.%s%s().get_long_long_val()*%d;\n"
         ,i,sdef->elements[i].name,sdef->elements[i].isOptional?"()":""
@@ -4901,12 +4929,20 @@ static char *genRawDecodeRecordField(char *src, const struct_def *sdef,
       src = mputprintf(src, "  switch (field_%s%s.get_selection()) {\n",
 	sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "");
       for (m = 1; m < sdef->elements[i].raw.union_member_num + 1; m++) {
-	src = mputprintf(src, "  case %s%s%s:\n"
+	src = mputprintf(src, "  case %s%s%s:\n", sdef->elements[i].raw.member_name[0],
+	  "::ALT_", sdef->elements[i].raw.member_name[m]);
+  if (sdef->elements[i].raw.lengthto_offset != 0) {
+    src = mputprintf(src, "    field_%s%s.%s() = field_%s%s.%s() - %d;\n",
+      sdef->elements[i].name,
+      sdef->elements[i].isOptional ? "()" : "",
+      sdef->elements[i].raw.member_name[m], sdef->elements[i].name,
+      sdef->elements[i].isOptional ? "()" : "",
+      sdef->elements[i].raw.member_name[m], sdef->elements[i].raw.lengthto_offset);     
+  }
+  src = mputprintf(src, 
 	  "    value_of_length_field%d += field_%s%s.%s().get_long_long_val() * %d;\n"
-	  "    break;\n", sdef->elements[i].raw.member_name[0],
-	  "::ALT_",
-	  sdef->elements[i].raw.member_name[m], i, sdef->elements[i].name,
-	  sdef->elements[i].isOptional ? "()" : "",
+	  "    break;\n", i, sdef->elements[i].name,
+    sdef->elements[i].isOptional ? "()" : "",
 	  sdef->elements[i].raw.member_name[m],
 	  sdef->elements[i].raw.unit == -1 ? 1 : sdef->elements[i].raw.unit);
       }
@@ -4915,6 +4951,12 @@ static char *genRawDecodeRecordField(char *src, const struct_def *sdef,
 	"  }\n", i);
     }
     else{
+      if (sdef->elements[i].raw.lengthto_offset != 0) {
+        src = mputprintf(src, "  field_%s%s = field_%s%s - %d;\n",
+          sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "",
+          sdef->elements[i].name, sdef->elements[i].isOptional ? "()" : "",
+          sdef->elements[i].raw.lengthto_offset);
+      }
       src=mputprintf(src,
         "  value_of_length_field%d+=field_%s%s.get_long_long_val()*%d;\n"
         ,i,sdef->elements[i].name,sdef->elements[i].isOptional?"()":""

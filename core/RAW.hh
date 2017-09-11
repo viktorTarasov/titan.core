@@ -87,6 +87,7 @@ struct RAW_enc_lengthto{
   int num_of_fields;
   RAW_enc_tr_pos* fields;
   int unit;
+  int offset;
 };
 
 struct RAW_coding_par{

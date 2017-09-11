@@ -180,6 +180,7 @@ void RAW_enc_tree::calc_fields()
         atm = get_node(calcof.lengthto.fields[0]);
         if (atm) szumm = atm->body.node.num_of_nodes;
       }
+      szumm += calcof.lengthto.offset;
       INTEGER temp(szumm);
       temp.RAW_encode(*coding_descr, *this);
       break; }
