@@ -9446,6 +9446,8 @@ namespace Ttcn {
       case Common::Assignment::A_PAR_TEMPL_IN:
       case Common::Assignment::A_PAR_VAL_INOUT:
       case Common::Assignment::A_PAR_TEMPL_INOUT:
+      case Common::Assignment::A_PAR_VAL_OUT:
+      case Common::Assignment::A_PAR_TEMPL_OUT:
         if (is_startable && par->get_Type()->is_component_internal())
           is_startable = false;
         break;
@@ -9482,6 +9484,8 @@ namespace Ttcn {
       case Common::Assignment::A_PAR_TEMPL_IN:
       case Common::Assignment::A_PAR_VAL_INOUT:
       case Common::Assignment::A_PAR_TEMPL_INOUT:
+      case Common::Assignment::A_PAR_VAL_OUT:
+      case Common::Assignment::A_PAR_TEMPL_OUT:
         if (par->get_Type()->is_component_internal()) {
           map<Type*,void> type_chain;
           char* err_str = mprintf("a parameter or embedded in a parameter of "
