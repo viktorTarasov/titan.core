@@ -32,6 +32,7 @@ private:
   Identifier *name;
   Value *value;
   string text; ///< for TEXT encoding instruction
+  string descaped_text; ///< made from text variable but replaces all the escaped values
   int_val_t *int_value;
   /** Copy constructor not implemented */
   EnumItem(const EnumItem&);
@@ -46,6 +47,7 @@ public:
   Value *get_value() const { return value; }
   void set_value(Value *p_value);
   const string& get_text() const { return text; }
+  const string& get_descaped_text() const { return descaped_text; }
   void set_text(const string& p_text);
   virtual void set_my_scope(Scope *p_scope);
   bool calculate_int_value();

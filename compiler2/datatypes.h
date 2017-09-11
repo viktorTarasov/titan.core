@@ -159,6 +159,7 @@ typedef struct {
     const char *name; /* identifier name */
     const char *dispname; /* identifier TTCN-3 name */
     const char *text; /* modified by TEXT */
+    const char *descaped_text; /* text but the escaped characters are descaped */
     int value;
 } enum_field;
 

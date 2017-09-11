@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 module Text
@@ -236,6 +237,36 @@ testcase decode_truth() runs on Plain
   CHECK_DECODE(exer_dec_x, estr_xdunno, XmlTruth, xdunno);
 }
 
+/* * * * * * * * * * * * * * * * * * * * * * */
+// Regression test for special escaped characters present in the text as variant
+
+type record Special
+{
+  enumerated {
+    numbers
+  } expr
+}
+with {
+  variant (expr) "text 'numbers' as '&lt;&gt;&quot;&amp;&apos;numbers&#60;&#62;&#34;&#38;&#39;'";
+};
+
+DECLARE_EXER_ENCODERS(Special, s);
+
+const Special spec  := { expr := numbers };
+
+const universal charstring estr_spec :=
+  "<Special>\n\t<expr>&lt;&gt;&quot;&amp;&apos;numbers&#60;&#62;&#34;&#38;&#39;</expr>\n</Special>\n\n";
+
+testcase encode_special() runs on Plain
+{
+  CHECK_METHOD(exer_enc_s,  spec, estr_spec);
+}
+
+testcase decode_special() runs on Plain
+{
+  CHECK_DECODE(exer_dec_s, estr_spec, Special, spec);
+}
+
 control
 {
   execute(encode_txt());
@@ -249,6 +280,9 @@ control
   
   execute(encode_truth());
   execute(decode_truth());
+
+  execute(encode_special());
+  execute(decode_special());
 }
 
 

@@ -1147,6 +1147,7 @@ void Type::generate_code_Enum(output_struct *target)
     else {
       e_def.xerText = TRUE;
       e_def.elements[i].text = ei->get_text().c_str();
+      e_def.elements[i].descaped_text = ei->get_descaped_text().c_str();
     }
     e_def.elements[i].value = ei->get_int_val()->get_val();
   }

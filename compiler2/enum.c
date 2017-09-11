@@ -268,8 +268,8 @@ void defEnumClass(const enum_def *edef, output_struct *output)
     "{\n", qualified_enum_type, name);
   for (i = 0; i < edef->nElements; i++) {
     if (edef->elements[i].text) {
-      src = mputprintf(src, "if (!strcmp(str_par, \"%s\") || !strcmp(str_par, \"%s\")) return %s;\n"
-        "else ", edef->elements[i].text, edef->elements[i].dispname, edef->elements[i].name);
+      src = mputprintf(src, "if (!strcmp(str_par, \"%s\") || !strcmp(str_par, \"%s\") || !strcmp(str_par, \"%s\")) return %s;\n"
+        "else ", edef->elements[i].text, edef->elements[i].descaped_text, edef->elements[i].dispname, edef->elements[i].name);
     }
     else {
       src = mputprintf(src, "if (!strcmp(str_par, \"%s\")) return %s;\n"

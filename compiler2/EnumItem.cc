@@ -77,6 +77,41 @@ void EnumItem::set_value(Value *p_value)
 void EnumItem::set_text(const string& p_text)
 {
   text = p_text;
+  
+  // De escape special XML characters if any found, into descaped_text
+  descaped_text = p_text;
+  size_t pos = 0;
+  while ((pos = descaped_text.find("&apos;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 6, "'");
+  }
+  while ((pos = descaped_text.find("&quot;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 6, "\\\"");
+  }
+  while ((pos = descaped_text.find("&lt;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 4, "<");
+  }
+  while ((pos = descaped_text.find("&gt;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 4, ">");
+  }
+  while ((pos = descaped_text.find("&amp;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 5, "&");
+  }
+  while ((pos = descaped_text.find("&#60;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 5, "<");
+  }
+  while ((pos = descaped_text.find("&#62;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 5, ">");
+  }
+  while ((pos = descaped_text.find("&#34;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 5, "\\\"");
+  }
+  while ((pos = descaped_text.find("&#38;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 5, "&");
+    pos++;
+  }
+  while ((pos = descaped_text.find("&#39;", 0)) != descaped_text.size()) {
+    descaped_text.replace(pos, 5, "'");
+  }
 }
 
 bool EnumItem::calculate_int_value() {
