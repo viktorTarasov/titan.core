@@ -53,10 +53,16 @@ with {
 type enumerated CType
 {
 	b2,
+	numbers,
+	something,
+	something_1,
 	uNKNOWN
 }
 with {
   variant "text 'b2' as capitalized";
+  variant "text 'numbers' as '&lt;&gt;&quot;&amp;&apos;numbers&lt;&gt;&quot;&amp;&apos;'";
+  variant "text 'something' as '&apos;&gt;something&apos;&gt;'";
+  variant "text 'something_1' as '&quot;&gt;something&quot;&gt;&amp;&amp;'";
   variant "text 'uNKNOWN' as capitalized";
 };
 

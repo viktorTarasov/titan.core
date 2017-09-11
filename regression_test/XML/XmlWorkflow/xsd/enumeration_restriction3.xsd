@@ -14,6 +14,9 @@
 		<maxLength value="32" />
 		<enumeration value="B2" />
 		<enumeration value="UNKNOWN" />
+		<enumeration value="'>something'>" />
+		<enumeration value='">something">&amp;&#38;' />
+		<enumeration value="&lt;&gt;&quot;&amp;&apos;numbers&#60;&#62;&#34;&#38;&#39;" />
 	</restriction>
 </simpleType>
 

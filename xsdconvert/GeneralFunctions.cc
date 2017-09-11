@@ -49,7 +49,7 @@ extern bool t_flag_used;
 // 				variant - generated variant string for TTCN-3
 //
 
-void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType type_of_the_name,
+void XSDName2TTCN3Name(const Mstring& in_str, QualifiedNames & used_names, modeType type_of_the_name,
   Mstring & res, Mstring & variant, bool no_replace) {
   static const char* TTCN3_reserved_words[] = {
     "action", "activate", "address", "alive", "all", "alt", "altstep", "and", "and4b", "any", "any2unistr", "anytype", "apply",
@@ -121,6 +121,21 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
   };
 
   Mstring ns_uri(variant);
+  
+  Mstring in = in_str;
+  
+  // First of all if the enum value contains &#38; , change it to &
+  if (type_of_the_name == enum_id_name) {
+    for (size_t i = 0; i < in.size(); i++) {
+      if (in[i] == '&' && i+4 < in.size() && in[i+1] == '#' && in[i+2] == '3' && in[i+3] == '8' && in[i+4] == ';') {
+        // Here convert the &#38; to &
+        in.eraseChar(i+4);
+        in.eraseChar(i+3);
+        in.eraseChar(i+2);
+        in.eraseChar(i+1);
+      }
+    }
+  }
 
   res.clear();
   variant.clear();
@@ -387,17 +402,40 @@ void XSDName2TTCN3Name(const Mstring& in, QualifiedNames & used_names, modeType 
           variant += "\"name as '" + in + "'\"";
         }
         break;
-      case enum_id_name:
-        if (tmp1 == tmp2) { // If the only difference is the case of the first letter
+      case enum_id_name: {
+        // Escape some special characters.
+        Mstring escaped_in;
+        bool found_spec = false;
+        for (size_t i = 0; i < in.size(); i++) {
+          if (in[i] == '\'') {
+            escaped_in = escaped_in + "&apos;";
+            found_spec = true;
+          } else if (in[i] == '\"') {
+            escaped_in = escaped_in + "&quot;";
+            found_spec = true;
+          } else if (in[i] == '>') {
+            escaped_in = escaped_in + "&gt;";
+            found_spec = true;
+          } else if (in[i] == '<') {
+            escaped_in = escaped_in + "&lt;";
+            found_spec = true;
+          } else if (in[i] == '&') {
+            escaped_in = escaped_in + "&amp;";
+            found_spec = true;
+          } else {
+            escaped_in = escaped_in + in[i];
+          }
+        }
+        if (tmp1 == tmp2 && found_spec == false) { // If the only difference is the case of the first letter
           if (isupper(in[0])) {
             variant += "\"text \'" + res + "\' as capitalized\"";
           } else {
             variant += "\"text \'" + res + "\' as uncapitalized\"";
           }
         } else { // Otherwise if other letters have changed too
-          variant += "\"text \'" + res + "\' as '" + in + "'\"";
+          variant += "\"text \'" + res + "\' as '" + escaped_in + "'\"";
         }
-        break;
+        break; }
       default:
         break;
     }
