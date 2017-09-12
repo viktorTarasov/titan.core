@@ -12,6 +12,7 @@
 module XSDBaseTypeTest {
 
     import from schema all;
+    import from XSD all;
 
     external function enc_UnnamedType(in UnnamedType pdu) return octetstring
      with { extension "prototype (convert) encode(XER:XER_EXTENDED)" }
@@ -1226,10 +1227,119 @@ module XSDBaseTypeTest {
       setverdict(pass);
     }
 
+///////////////////////////////////////////////////////////////////////////////
+
+    external function enc_nmtokens(in XSD.NMTOKENS pdu) return octetstring
+     with { extension "prototype (convert) encode(XER:XER_EXTENDED)" }
+  
+    external function dec_nmtokens(in octetstring stream) return XSD.NMTOKENS
+     with { extension "prototype (convert) decode(XER:XER_EXTENDED)" }
+
+    external function enc_idrefs(in XSD.IDREFS pdu) return octetstring
+     with { extension "prototype (convert) encode(XER:XER_EXTENDED)" }
+  
+    external function dec_idrefs(in octetstring stream) return XSD.IDREFS
+     with { extension "prototype (convert) decode(XER:XER_EXTENDED)" }
+
+    external function enc_entities(in XSD.ENTITIES pdu) return octetstring
+     with { extension "prototype (convert) encode(XER:XER_EXTENDED)" }
+  
+    external function dec_entities(in octetstring stream) return XSD.ENTITIES
+     with { extension "prototype (convert) decode(XER:XER_EXTENDED)" }
+
+    external function enc_seqrec(in SeqRec pdu) return octetstring
+     with { extension "prototype (convert) encode(XER:XER_EXTENDED)" }
+  
+    external function dec_seqrec(in octetstring stream) return SeqRec
+     with { extension "prototype (convert) decode(XER:XER_EXTENDED)" }
+
+    type record SeqRec {
+      XSD.NMTOKENS tokens_attr,
+      XSD.IDREFS refs_attr,
+      XSD.ENTITIES entities_attr,
+      XSD.NMTOKENS tokens,
+      XSD.IDREFS refs,
+      XSD.ENTITIES entities
+    } with {
+      encode "XML";
+      variant (tokens_attr)   "attribute";
+      variant (refs_attr)     "attribute";
+      variant (entities_attr) "attribute";
+    }
+
+    // XSD:NMTOKENS, XSD:IDREFS, XSD:ENTITIES should behave as they would have list
+    // variant.
+    testcase tc_sequence_types() runs on C system C {
+      var XSD.NMTOKENS tokens := { "a", "b", "c" };
+      var octetstring os := enc_nmtokens(tokens);
+      log(os);
+      var universal charstring exp := "<NMTOKENS>a b c</NMTOKENS>\n\n";
+      if (oct2unichar(os) != exp) {
+        setverdict(fail, match(oct2unichar(os), exp));
+      }
+
+      if (dec_nmtokens(os) != tokens) {
+        setverdict(fail, match(dec_nmtokens(os), tokens));
+      }
+
+      var XSD.IDREFS refs := { "a", "b", "c" };
+      os := enc_idrefs(refs);
+      log(os);
+      exp := "<IDREFS>a b c</IDREFS>\n\n";
+      if (oct2unichar(os) != exp) {
+        setverdict(fail, match(oct2unichar(os), exp));
+      }
+      
+      if (dec_idrefs(os) != refs) {
+        setverdict(fail, match(dec_idrefs(os), refs));
+      }
+
+      var XSD.ENTITIES entities := { "a", "b", "c" };
+      os := enc_entities(refs);
+      log(os);
+      exp := "<ENTITIES>a b c</ENTITIES>\n\n";
+      if (oct2unichar(os) != exp) {
+        setverdict(fail, match(oct2unichar(os), exp));
+      }
+      
+      if (dec_entities(os) != entities) {
+        setverdict(fail, match(dec_entities(os), entities));
+      }
+
+
+      var SeqRec srec := {
+        tokens_attr :=    { "a", "b", "c" },
+        refs_attr :=      { "e", "f", "g" },
+        entities_attr :=  { "i", "j", "k" },
+        tokens :=         { "l", "m", "n" },
+        refs :=           { "o", "p", "q" },
+        entities :=       { "r", "s", "t" }
+      }
+
+      os := enc_seqrec(srec);
+      log(os);
+      exp :=
+      "<SeqRec tokens_attr='a b c' refs_attr='e f g' entities_attr='i j k'>\n"&
+      "\t<tokens>l m n</tokens>\n"&
+      "\t<refs>o p q</refs>\n"&
+      "\t<entities>r s t</entities>\n"&
+      "</SeqRec>\n\n";
+      if (oct2unichar(os) != exp) {
+        setverdict(fail, match(oct2unichar(os), exp));
+      }
+
+      if (dec_seqrec(os) != srec) {
+        setverdict(fail, match(dec_seqrec(os), srec));
+      }
+
+      setverdict(pass);
+    }
+
     control {
         execute(tc_unnamed());
         execute(tc_named());
         execute(tc_use_type_with_use_union());
         execute(tc_without_xsd_type());
+        execute(tc_sequence_types());
     }
 }

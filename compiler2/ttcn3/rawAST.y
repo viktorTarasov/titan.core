@@ -1589,9 +1589,22 @@ xsddata: /* XSD:something */
     | XSDgMonthDay        { xerstruct->xsd_type = XSD_GMONTHDAY; }
     | XSDgDay             { xerstruct->xsd_type = XSD_GDAY; }
     | XSDgMonth           { xerstruct->xsd_type = XSD_GMONTH; }
-    | XSDNMTOKENS         { xerstruct->xsd_type = XSD_NMTOKENS; }
-    | XSDIDREFS           { xerstruct->xsd_type = XSD_IDREFS; }
-    | XSDENTITIES         { xerstruct->xsd_type = XSD_ENTITIES; }
+    // XSD:NMTOKENS, XSD:IDREFS and XSD:ENTIITES should behave it they have list variant
+    | XSDNMTOKENS
+    { 
+      xerstruct->xsd_type = XSD_NMTOKENS;
+      xerstruct->list_ = true;
+    }
+    | XSDIDREFS
+    { 
+      xerstruct->xsd_type = XSD_IDREFS;
+      xerstruct->list_ = true;
+    }
+    | XSDENTITIES
+    { 
+      xerstruct->xsd_type = XSD_ENTITIES;
+      xerstruct->list_ = true;
+    }
     | XSDboolean          { xerstruct->xsd_type = XSD_BOOLEAN; }
 
     | XSDanySimpleType    { xerstruct->xsd_type = XSD_ANYSIMPLETYPE; }
