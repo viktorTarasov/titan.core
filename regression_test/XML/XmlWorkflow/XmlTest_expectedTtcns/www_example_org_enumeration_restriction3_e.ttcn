@@ -116,6 +116,36 @@ with {
 };
 
 
+type enumerated NMTokens
+{
+	vxmlcurrency,
+	vxmldate,
+	vxmldigits,
+	vxmlnumber,
+	vxmltime
+}
+with {
+  variant "text 'vxmlcurrency' as 'vxml:currency'";
+  variant "text 'vxmldate' as 'vxml:date'";
+  variant "text 'vxmldigits' as 'vxml:digits'";
+  variant "text 'vxmlnumber' as 'vxml:number'";
+  variant "text 'vxmltime' as 'vxml:time'";
+};
+
+
+type enumerated IDRefs
+{
+	nmtokens_ref,
+	qname_ref
+};
+
+
+/* Still unsupported QName */
+
+
+type XSD.QName QName;
+
+
 }
 with {
   encode "XML";

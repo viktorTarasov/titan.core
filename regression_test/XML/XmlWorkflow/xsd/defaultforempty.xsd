@@ -53,7 +53,7 @@
 
 <xs:element name='AnySimpleTypeFixed' type="xs:anySimpleType" fixed='1.0.0'/>
 
-<!-- Unsupported anytype and QName -->
+<!-- Unsupported anytype and QName and IDREFS and ENTITIES and NMTOKENS -->
 <xs:element name='AnyTypeDefault' default='1.0.0'/>
 
 <xs:element name='AnyTypeFixed' fixed='1.0.0'/>
@@ -65,6 +65,14 @@
 <xs:element name='QNameDefault' type="xs:QName" default='Name'/>
 
 <xs:element name='QNameFixed' type="xs:QName" fixed='Name'/>
+
+<xs:element name='IDREFSDefault' type="xs:IDREFS" id="my_id" default='my_id'/>
+
+<xs:element name='IDREFSFixed' type="xs:IDREFS" fixed='my_id'/>
+
+<xs:element name='NMTOKENSDefault' type="xs:NMTOKENS" default='abc'/>
+
+<xs:element name='NMTOKENSFixed' type="xs:NMTOKENS" fixed='abc'/>
 
 <!-- Check if the name conversion follows to the constants too -->
 <xs:element name="AttrfixedMyString3_"/>

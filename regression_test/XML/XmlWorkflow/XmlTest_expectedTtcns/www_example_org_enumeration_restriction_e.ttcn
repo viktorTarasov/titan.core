@@ -195,10 +195,26 @@ with {
 };
 
 
-type XSD.NMTOKENS NMTOKENSEnumeration;
+type enumerated NMTOKENSEnumeration
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+};
 
 
-type XSD.IDREFS IDREFSEnumeration;
+type enumerated IDREFSEnumeration
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+};
 
 
 type record Element

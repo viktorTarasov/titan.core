@@ -1113,7 +1113,7 @@ group UnionTest {
 
  testcase tc_enumeration_union_restriction() runs on xmlTest_CT {
 
-    f_shellCommandWithVerdict(xsd2ttcn_command & "  enumeration_restriction.xsd","",c_shell_successWithWarning)
+    f_shellCommandWithVerdict(xsd2ttcn_command & "  enumeration_restriction.xsd","",c_shell_successWithoutWarningAndError)
 
     if(getverdict==pass) {
       f_compareFiles(
@@ -1135,7 +1135,7 @@ group UnionTest {
 
  testcase tc_enumeration_restriction3() runs on xmlTest_CT {
 
-    f_shellCommandWithVerdict(xsd2ttcn_command & "  enumeration_restriction3.xsd","",c_shell_successWithoutWarningAndError)
+    f_shellCommandWithVerdict(xsd2ttcn_command & "  enumeration_restriction3.xsd","",c_shell_successWithWarning)
 
     if(getverdict==pass) {
       f_compareFiles(

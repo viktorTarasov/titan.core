@@ -322,7 +322,7 @@ with {
 };
 
 
-/* Unsupported anytype and QName */
+/* Unsupported anytype and QName and IDREFS and ENTITIES and NMTOKENS */
 
 
 type XSD.AnyType AnyTypeDefault
@@ -356,6 +356,30 @@ with {
 
 
 type XSD.QName QNameFixed
+with {
+  variant "element";
+};
+
+
+type XSD.IDREFS IDREFSDefault
+with {
+  variant "element";
+};
+
+
+type XSD.IDREFS IDREFSFixed
+with {
+  variant "element";
+};
+
+
+type XSD.NMTOKENS NMTOKENSDefault
+with {
+  variant "element";
+};
+
+
+type XSD.NMTOKENS NMTOKENSFixed
 with {
   variant "element";
 };

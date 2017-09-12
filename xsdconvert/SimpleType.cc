@@ -1267,7 +1267,7 @@ void EnumerationType::applyFacets() // string types, integer types, float types,
 
   const Mstring & base = parent->getBuiltInBase();
 
-  if (isStringType(base)) // here length restriction is applicable
+  if (isStringType(base) || (isSequenceType(base) && base != "QName")) // here length restriction is applicable
   {
     List<Mstring> text_variants;
     for (List<Mstring>::iterator facet = facets.begin(); facet; facet = facet->Next) {
@@ -1370,7 +1370,7 @@ void EnumerationType::printToFile(FILE * file, unsigned int indent_level) const 
   if (!modified) return;
 
   const Mstring & base = parent->getBuiltInBase();
-  if (isStringType(base)) {
+  if (isStringType(base) || (isSequenceType(base) && base != "QName")) {
     for (QualifiedNames::iterator itemString = items_string.begin(); itemString; itemString = itemString->Next) {
       if (itemString != items_string.begin()) fputs(",\n", file);
       for (unsigned int l = 0; l != indent_level; ++l) fputs("\t", file);
@@ -1634,8 +1634,8 @@ void ValueType::printToFile(FILE * file) const {
       if(!isBuiltInType(type)){
         type = findBuiltInType(parent, type);
       }
+      const Mstring& name = type.getValueWithoutPrefix(':');
       if (isStringType(type) || isTimeType(type) || isQNameType(type) || isAnyType(type)) {
-        const Mstring& name = type.getValueWithoutPrefix(':');
         if (name != "hexBinary" && name != "base64Binary") {
           fprintf(file, " (\"%s\")", fixed_value.c_str());
         }
@@ -1652,7 +1652,7 @@ void ValueType::printToFile(FILE * file) const {
       } else if (isFloatType(type)) {
         Mstring val = xmlFloat2TTCN3FloatStr(fixed_value);
         fprintf(file, " (%s)", val.c_str());
-      } else {
+      } else if (name != "NMTOKENS" && name != "IDREFS" && name != "ENTITIES"){
         fprintf(file, " (%s)", fixed_value.c_str());
       }
     }
