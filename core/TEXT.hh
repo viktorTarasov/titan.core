@@ -8,6 +8,7 @@
  * Contributors:
  *   Balasko, Jeno
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *
@@ -106,7 +107,6 @@ private:
   size_t size_of_list;
   const Token_Match **list;
   int *last_match;
-  int last_ret_val;
   const char* last_pos;
   /// Copy constructor disabled
   Limit_Token_List(const Limit_Token_List&);

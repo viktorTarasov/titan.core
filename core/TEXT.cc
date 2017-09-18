@@ -10,6 +10,7 @@
  *   Delic, Adam
  *   Raduly, Csaba
  *   Szabados, Kristof
+ *   Szabo, Bence Janos
  *   Szabo, Janos Zoltan – initial implementation
  *   Szalai, Gabor
  *
@@ -84,7 +85,7 @@ int Token_Match::match_begin(TTCN_Buffer& buff) const
 {
   int retval=-1;
   int ret_val=-1;
-  if(null_match){ 
+  if(null_match){
     if (TTCN_EncDec::get_error_behavior(TTCN_EncDec::ET_LOG_MATCHING) !=
         TTCN_EncDec::EB_IGNORE) {
       char msg[ERRMSG_BUFSIZE2];
@@ -210,7 +211,6 @@ Limit_Token_List::Limit_Token_List(){
   size_of_list=16;
   list=(const Token_Match **)Malloc(size_of_list*sizeof(Token_Match *));
   last_match=(int *)Malloc(size_of_list*sizeof(int));
-  last_ret_val=-1;
   last_pos=NULL;
 }
 
@@ -241,24 +241,24 @@ int Limit_Token_List::match(TTCN_Buffer& buff, size_t lim){
 //TTCN_Logger::log(TTCN_Logger::DEBUG_ENCDEC,"Limit Token begin: %s\n\r",(const char*)buff.get_read_data());
   if(last_pos!=NULL){
     int diff=curr_pos-last_pos;
+    // Diff is negative if we started to decode one field of an union but
+    // ultimately it was not correct and we try with another field of an union.
+    // So take the absolute value of diff in this case to adjust last_match.
+    if (diff < 0) diff *= -1;
     if(diff){
       for(size_t a=0;a<num_of_tokens;a++){
         last_match[a]-=diff;
       }
-      last_ret_val-=diff;
     }
   }
   last_pos=curr_pos;
-//  if(last_ret_val<0){
-    for(size_t a=0;a<num_of_tokens-lim;a++){
-      if(last_match[a]<0) last_match[a]=list[a]->match_first(buff);
-      if(last_match[a]>=0){
-        if(ret_val==-1) ret_val=last_match[a];
-        else if(last_match[a]<ret_val) ret_val=last_match[a];
-      }
+  for(size_t a=0;a<num_of_tokens-lim;a++){
+    if(last_match[a]<0) last_match[a]=list[a]->match_first(buff);
+    if(last_match[a]>=0){
+      if(ret_val==-1) ret_val=last_match[a];
+      else if(last_match[a]<ret_val) ret_val=last_match[a];
     }
-    last_ret_val=ret_val;
-//  }
+  }
   if (TTCN_EncDec::get_error_behavior(TTCN_EncDec::ET_LOG_MATCHING)!=
       TTCN_EncDec::EB_IGNORE) {
     TTCN_Logger::log(TTCN_Logger::DEBUG_ENCDEC,
