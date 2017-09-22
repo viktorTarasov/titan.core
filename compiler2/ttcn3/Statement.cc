@@ -1089,14 +1089,15 @@ namespace Ttcn {
   }
 
   Statement::Statement(statementtype_t p_st, Reference *p_ref,
-                       TemplateInstance *p_templinst, Value *p_val)
+                       TemplateInstance *p_templinst, Value *p_val, bool p_translate)
     : statementtype(p_st), my_sb(0)
   {
     switch(statementtype) {
     case S_SEND:
-      if(!p_ref || !p_templinst)
+      if((!p_ref && p_translate == false) || !p_templinst)
         FATAL_ERROR("Statement::Statement()");
       port_op.portref=p_ref;
+      port_op.translate = p_translate;
       port_op.s.sendpar=p_templinst;
       port_op.s.toclause=p_val;
       break;
@@ -1169,13 +1170,14 @@ namespace Ttcn {
                        TemplateInstance *p_templinst,
                        TemplateInstance *p_fromclause,
                        ValueRedirect *p_redirectval, Reference *p_redirectsender,
-                       Reference* p_redirectindex)
+                       Reference* p_redirectindex, bool p_translate)
     : statementtype(p_st), my_sb(0)
   {
     switch(statementtype) {
     case S_RECEIVE:
     case S_CHECK_RECEIVE:
     case S_TRIGGER:
+      port_op.translate = p_translate;
       port_op.portref=p_ref;
       port_op.anyfrom = p_anyfrom;
       port_op.r.rcvpar=p_templinst;
@@ -1800,7 +1802,7 @@ namespace Ttcn {
       if (deactivate) deactivate->set_my_scope(p_scope);
       break;
     case S_SEND:
-      port_op.portref->set_my_scope(p_scope);
+      if (!port_op.translate) port_op.portref->set_my_scope(p_scope);
       port_op.s.sendpar->set_my_scope(p_scope);
       if(port_op.s.toclause) port_op.s.toclause->set_my_scope(p_scope);
       break;
@@ -2075,7 +2077,7 @@ namespace Ttcn {
       if (deactivate) deactivate->set_fullname(p_fullname+".deact");
       break;
     case S_SEND:
-      port_op.portref->set_fullname(p_fullname+".portref");
+      if (!port_op.translate) port_op.portref->set_fullname(p_fullname+".portref");
       port_op.s.sendpar->set_fullname(p_fullname+".sendpar");
       if(port_op.s.toclause)
         port_op.s.toclause->set_fullname(p_fullname+".to");
@@ -3577,7 +3579,17 @@ error:
   {
     Error_Context cntxt(this, "In send statement");
     // checking the port reference
-    Type *port_type = chk_port_ref(port_op.portref);
+    Type *port_type;
+    if (port_op.translate) {
+      PortScope* ps = my_sb->get_scope_port();
+      if (ps) {
+        port_type = ps->get_port_type();
+      } else {
+        error("Cannot determine the type or the port: Missing port clause on the function.");
+      }
+    } else {
+      port_type = chk_port_ref(port_op.portref);
+    }
     // determining the message type
     Type *msg_type = 0;
     bool msg_type_determined = false;
@@ -3961,7 +3973,17 @@ error:
     const char *stmt_name = get_stmt_name();
     Error_Context cntxt(this, "In %s statement", stmt_name);
     // checking the port reference
-    Type *port_type = chk_port_ref(port_op.portref, port_op.anyfrom);
+    Type *port_type;
+    if (port_op.translate) {
+      PortScope* ps = my_sb->get_scope_port();
+      if (ps) {
+        port_type = ps->get_port_type();
+      } else {
+        error("Cannot determine the type or the port: Missing port clause on the function.");
+      }
+    } else {
+      port_type = chk_port_ref(port_op.portref, port_op.anyfrom);
+    }
     // checking the parameter and/or value redirect
     if (port_op.r.rcvpar) {
       // the receive parameter (template instance) is present
@@ -4009,7 +4031,7 @@ error:
 	  port_op.portref->error("Port type `%s' does not have any incoming "
 	    "message types", port_type->get_typename().c_str());
 	}
-      } else if (!port_op.portref) {
+      } else if (!port_op.portref && port_op.translate == false) {
 	// the statement refers to 'any port'
 	port_op.r.rcvpar->error("Operation `any port.%s' cannot have parameter",
 	  stmt_name);
@@ -5902,7 +5924,7 @@ error:
       if (deactivate) deactivate->set_code_section(p_code_section);
       break;
     case S_SEND:
-      port_op.portref->set_code_section(p_code_section);
+      if (!port_op.translate) port_op.portref->set_code_section(p_code_section);
       port_op.s.sendpar->set_code_section(p_code_section);
       if (port_op.s.toclause)
         port_op.s.toclause->set_code_section(p_code_section);
@@ -7395,8 +7417,12 @@ error:
   {
     expression_struct expr;
     Code::init_expr(&expr);
-    port_op.portref->generate_code(&expr);
-    expr.expr = mputstr(expr.expr, ".send(");
+    if (!port_op.translate) {
+      port_op.portref->generate_code(&expr);
+      expr.expr = mputstr(expr.expr, ".send(");
+    } else {
+      expr.expr = mputstr(expr.expr, "send(");
+    }
     generate_code_expr_sendpar(&expr);
     if (port_op.s.toclause) {
       expr.expr = mputstr(expr.expr, ", ");
@@ -7878,10 +7904,16 @@ error:
   void Statement::generate_code_expr_receive(expression_struct *expr,
     const char *opname)
   {
-    if (port_op.portref) {
-      // The operation refers to a specific port.
-      port_op.portref->generate_code(expr);
-      expr->expr = mputprintf(expr->expr, ".%s(", opname);
+    if (port_op.portref || port_op.translate) {
+      if (!port_op.translate) {
+        // The operation refers to a specific port.
+        port_op.portref->generate_code(expr);
+        expr->expr = mputprintf(expr->expr, ".%s(", opname);
+      } else {
+        // No need for a reference because the send will be called
+        // on *this in the c++ code.
+        expr->expr = mputprintf(expr->expr, "%s(", opname);
+      }
       if (port_op.r.rcvpar) {
         // The receive parameter is present.
         bool has_decoded_redirect = port_op.r.redirect.value != NULL &&
@@ -7901,7 +7933,7 @@ error:
     generate_code_expr_fromclause(expr);
     expr->expr = mputstr(expr->expr, ", ");
     generate_code_expr_senderredirect(expr);
-    if (port_op.portref) {
+    if (port_op.portref || port_op.translate) {
       expr->expr = mputstr(expr->expr, ", ");
       if (port_op.r.redirect.index != NULL) {
         generate_code_index_redirect(expr, port_op.r.redirect.index, my_sb);

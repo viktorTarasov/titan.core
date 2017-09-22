@@ -103,7 +103,6 @@ module Setstate_neg {
 				setverdict(fail);
 			}
 		}
-
 		@try {
 			var charstring cs;
 			int_to_char(4, cs);

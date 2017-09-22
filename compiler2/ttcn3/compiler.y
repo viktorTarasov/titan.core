@@ -6320,7 +6320,12 @@ CommunicationStatements: // 353
 SendStatement: // 354
   Port DotSendOpKeyword PortSendOp
   {
-    $$ = new Statement(Statement::S_SEND, $1, $3.templ_inst, $3.val);
+    $$ = new Statement(Statement::S_SEND, $1, $3.templ_inst, $3.val, false);
+    $$->set_location(infile, @$);
+  }
+| PortKeyword DotSendOpKeyword PortSendOp
+  {
+    $$ = new Statement(Statement::S_SEND, NULL, $3.templ_inst, $3.val, true);
     $$->set_location(infile, @$);
   }
 ;
@@ -6549,7 +6554,14 @@ ReceiveStatement: // 380
   {
     $$ = new Statement(Statement::S_RECEIVE, $1.reference, $1.any_from,
                        $3.templ_inst, $3.fromclause, $3.redirectval,
-                       $3.redirectsender, $3.redirectindex);
+                       $3.redirectsender, $3.redirectindex, false);
+    $$->set_location(infile, @$);
+  }
+| PortKeyword DotReceiveOpKeyword PortReceiveOp
+  {
+    $$ = new Statement(Statement::S_RECEIVE, NULL, false,
+                       $3.templ_inst, $3.fromclause, $3.redirectval,
+                       $3.redirectsender, $3.redirectindex, true);
     $$->set_location(infile, @$);
   }
 ;
@@ -6731,7 +6743,7 @@ TriggerStatement: // 393
   {
     $$ = new Statement(Statement::S_TRIGGER, $1.reference, $1.any_from,
                        $3.templ_inst, $3.fromclause, $3.redirectval,
-                       $3.redirectsender, $3.redirectindex);
+                       $3.redirectsender, $3.redirectindex, false);
     $$->set_location(infile, @$);
   }
 ;
@@ -7113,7 +7125,7 @@ CheckStatement: // 415
     case Statement::S_CHECK_RECEIVE:
       $$ = new Statement(Statement::S_CHECK_RECEIVE, $1.reference, $1.any_from,
                          $3.templ_inst, $3.fromclause, $3.redirectval,
-                         $3.redirectsender, $3.redirectindex);
+                         $3.redirectsender, $3.redirectindex, false);
       break;
     case Statement::S_CHECK_GETCALL:
       $$ = new Statement(Statement::S_CHECK_GETCALL, $1.reference, $1.any_from,

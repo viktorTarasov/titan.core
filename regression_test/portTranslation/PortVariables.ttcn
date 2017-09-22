@@ -22,7 +22,12 @@ module PortVariables {
 
 	type port NVP1 message map to VP1 {
 		out charstring to integer with char_to_default_int_template() : charstring with char_to_default_char() : charstring with char_to_default_const_char() : RoI with char_to_default_roi() : integer with char_to_int();
-		in integer, charstring, RoI;
+		
+
+		in octetstring from integer with double_receive_test();
+		in integer from integer with int_to_int(), charstring, RoI;
+
+		out octetstring to integer with double_send_test();
 
 		const charstring c_cs := "DefaultConst"
 		var charstring cs := "Default";
@@ -95,7 +100,65 @@ module PortVariables {
 	}
 
 
+	function double_send_test(in octetstring input, out integer output) port NVP1 {
+		if (input == 'BEEF'O) {
+			output := lengthof(input);
+			// Send here and receive here
+			port.send('12345678'O);
+			timer t := 0.5;
+			t.start;
+			// '12345678'O was mapped to its length in double_receive_test() function
+			alt {
+				[] port.receive(4) { setverdict(pass); }
+				[] t.timeout    { setverdict(fail); }
+			}
+			t.stop;
+			port.setstate(0);
+			// Send again to receive in the testcase
+			port.send('1234567891'O);
+		} else if (input == '1234567891'O or input == '12345678'O) {
+			output := lengthof(input);
+			port.setstate(0);
+		} else if (input == 'AB'O or input == 'CD'O) {
+			// This just maps the value to integer, needed for the receive test
+			output := oct2int(input);
+			port.setstate(0);
+		}
+	} with {
+		extension "prototype(fast)";
+	}
 
+	function double_receive_test(in integer input, out octetstring output) port NVP1 {
+		if (int2oct(input,2) == '00AB'O) {
+			timer t := 0.5;
+
+			// Send and receive
+			port.send('12345678'O);
+			t.start;
+			// '12345678'O was mapped to its length in double_receive_test() function
+			alt {
+				[] port.receive(4) { setverdict(pass); }
+				[] t.timeout    { setverdict(fail); }
+			}
+			t.stop;
+
+			output := int2oct(input, 1);
+			port.setstate(0);
+
+		} else {
+			port.setstate(1);
+		}
+	} with {
+		extension "prototype(fast)";
+	}
+
+	function int_to_int(in integer input, out integer output) port NVP1 {
+		// we receive the length of '1234567891'O here
+		output := input;
+		port.setstate(0);
+	} with {
+		extension "prototype(fast)";
+	}
 
 
 	type component MyComp {
@@ -294,9 +357,46 @@ module PortVariables {
 		}
 	}
 
+	testcase tc_double_send_and_receive_test() runs on MyComp system System {
+		map(self:p[0], system:p1);
+
+		// Test that we can send and receive during the execution of the translation function
+		p[0].send('BEEF'O);
+
+		timer t := 0.5;
+		t.start;
+		alt {
+			// First receive the length of 1234567891
+			[] p[0].receive(5) { setverdict(pass); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+
+		t.start;
+		alt {
+			// Then receive length of BEEF
+			[] p[0].receive(2) { setverdict(pass); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+
+		// Test that we can send and receive during a receiving translation function
+		p[0].send('AB'O);
+
+		t.start;
+		alt {
+			// Then receive back 'AB'O
+			[] p[0].receive('AB'O) { setverdict(pass); }
+			[] t.timeout    { setverdict(fail); }
+		}
+		t.stop;
+	}
+
 	control {
 		execute(tc_variable_change_test(true));
 		// Test that the variables are restored to the default values
 		execute(tc_variable_change_test(false));
+
+		execute(tc_double_send_and_receive_test());
 	}
 }

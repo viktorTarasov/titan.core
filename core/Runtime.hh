@@ -96,9 +96,11 @@ private:
   static component_process_struct **components_by_compref,
   **components_by_pid;
   
-  // Translation flag is set to true before each port translation function called,
-  // and set to false after each port translation function.
-  static boolean translation_flag;
+  // Translation count is increased before each port translation function called,
+  // and decreased after each port translation function.
+  // Need to count because we can now send and receive in translation
+  // functions and can call another translation function.
+  static int translation_count;
   // The port which state will be changed by change_port_state
   static PORT* p;
 

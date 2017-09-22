@@ -118,14 +118,15 @@ struct TTCN_Runtime::component_process_struct {
 } **TTCN_Runtime::components_by_compref = NULL,
   **TTCN_Runtime::components_by_pid = NULL;
 
-boolean TTCN_Runtime::translation_flag = FALSE;
+int TTCN_Runtime::translation_count = 0;
 PORT* TTCN_Runtime::p = NULL;
 
 void TTCN_Runtime::set_port_state(const INTEGER& state, const CHARSTRING& info, boolean by_system) {
-  if (translation_flag) {
+  if (translation_count > 0) {
     if (p != NULL) {
       int lowed_end = by_system ? -1 : 0;
       if (state < lowed_end || state > 3) {
+        translation_count--;
         TTCN_error("The value of the first parameter in the setstate operation must be 0, 1, 2 or 3.");
       }
       p->change_port_state((translation_port_state)((int)state));
@@ -135,12 +136,23 @@ void TTCN_Runtime::set_port_state(const INTEGER& state, const CHARSTRING& info, 
     }
   } else {
     TTCN_error("setstate operation was called without being in a translation procedure.");
+    translation_count--;
   }
 }
 
 void TTCN_Runtime::set_translation_mode(boolean enabled, PORT* port) {
-  translation_flag = enabled;
-  p = port;
+  if (enabled) {
+    translation_count++;
+  } else {
+    translation_count--;
+    if (translation_count < 0) {
+      translation_count = 0; // Expect the unexpected
+    }
+  }
+  // Only allow p to be null if we really not in a translation procedure.
+  if (translation_count == 0 || port != NULL) {
+    p = port;
+  }
 }
 
 boolean TTCN_Runtime::is_idle()

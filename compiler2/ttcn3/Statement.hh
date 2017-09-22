@@ -289,6 +289,8 @@ namespace Ttcn {
       LogArguments *logargs; ///< used by S_ACTION, S_LOG, S_STOP_TESTCASE
       struct {
         Reference *portref; /**< NULL means any/all */
+        bool translate; /**< true if it an operation from a translation function:
+                         * For example: port.send(3) or port.receive(4)*/
         bool anyfrom;
 	union {
 	  struct {
@@ -547,7 +549,7 @@ namespace Ttcn {
     Statement(statementtype_t p_st, Value *p_val, LogArguments *p_logargs);
     /** Constructor used by S_SEND */
     Statement(statementtype_t p_st, Reference *p_ref,
-              TemplateInstance *p_templinst, Value *p_val);
+              TemplateInstance *p_templinst, Value *p_val, bool p_translate);
     /** Constructor used by S_CALL */
     Statement(statementtype_t p_st, Reference *p_ref,
               TemplateInstance *p_templinst, Value *p_timerval,
@@ -565,7 +567,7 @@ namespace Ttcn {
     Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
               TemplateInstance *p_templinst, TemplateInstance *p_fromclause,
               ValueRedirect *p_redirectval, Reference *p_redirectsender,
-              Reference* p_redirectindex);
+              Reference* p_redirectindex, bool p_translate);
     /** Constructor used by S_GETCALL and S_CHECK_GETCALL. p_ref==0
      *  means any port. */
     Statement(statementtype_t p_st, Reference *p_ref, bool p_anyfrom,
