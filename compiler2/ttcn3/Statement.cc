@@ -3585,7 +3585,7 @@ error:
       if (ps) {
         port_type = ps->get_port_type();
       } else {
-        error("Cannot determine the type or the port: Missing port clause on the function.");
+        error("Cannot determine the type of the port: Missing port clause on the function.");
       }
     } else {
       port_type = chk_port_ref(port_op.portref);
@@ -3979,7 +3979,7 @@ error:
       if (ps) {
         port_type = ps->get_port_type();
       } else {
-        error("Cannot determine the type or the port: Missing port clause on the function.");
+        error("Cannot determine the type of the port: Missing port clause on the function.");
       }
     } else {
       port_type = chk_port_ref(port_op.portref, port_op.anyfrom);
