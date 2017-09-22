@@ -300,6 +300,11 @@ with {
   variant (days[-]) "JSON: as number";
 }
 
+type union Uni522660 {
+  integer f12,
+  integer f1
+}
+
 } with {
   encode "JSON";
   extension "anytype integer, charstring, R, RoI, Thing";

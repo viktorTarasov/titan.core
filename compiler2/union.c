@@ -2326,7 +2326,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           , unbound_value);
         for (i = 0; i < sdef->nElements; ++i) {
           src = mputprintf(src,
-            "if (0 == strncmp(fld_name, \"%s\", name_len)) {\n"
+            "if (%d == name_len && 0 == strncmp(fld_name, \"%s\", name_len)) {\n"
             "      int ret_val = %s%s().JSON_decode(%s_descr_, p_tok, p_silent);\n"
             "      if (0 > ret_val) {\n"
             "        if (JSON_ERROR_INVALID_TOKEN) {\n"
@@ -2337,6 +2337,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
             "        dec_len += (size_t)ret_val;\n"
             "      }\n"
             "    } else "
+            , (int)strlen(sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname)
             , sdef->elements[i].jsonAlias ? sdef->elements[i].jsonAlias : sdef->elements[i].dispname
             , at_field, sdef->elements[i].name, sdef->elements[i].typedescrname
             , (unsigned long) strlen(sdef->elements[i].dispname), sdef->elements[i].dispname);

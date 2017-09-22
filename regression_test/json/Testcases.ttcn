@@ -824,6 +824,23 @@ testcase tc_multi_level_recordof() runs on MTC {
   f_bool2verdict(match(f_dec_multi_list(os), x));
 }
 
+testcase tc_bug_522660() runs on MTC {
+  var universal charstring enc1 := "{\"f12\":10}";
+  var universal charstring enc2 := "{\"f1\":10}";
+  var Uni522660 x1, x2;
+  var integer res1 := decvalue_unichar(enc1, x1);
+  var integer res2 := decvalue_unichar(enc2, x2);
+  if (res1 != 0 or x1 != { f12 := 10 }) {
+    setverdict(fail, "Test #1 failed. Result: ", res1, ". Decoded value: ", x1);
+  }
+  else if (res2 != 0 or x2 != { f1 := 10 }) {
+    setverdict(fail, "Test #2 failed. Result: ", res2, ". Decoded value: ", x2);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
 //=========================================================================
 // Control
 //=========================================================================
@@ -913,6 +930,8 @@ control {
   execute(tc_embedded_anytype());
   execute(tc_multi_level_record());
   execute(tc_multi_level_recordof());
+  
+  execute(tc_bug_522660());
 }
 
 
