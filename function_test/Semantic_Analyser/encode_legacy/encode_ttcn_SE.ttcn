@@ -150,6 +150,21 @@ type record C2 {
 external function f_enc_C2(in C2 x) return octetstring //^In external function definition \`f_enc_C2\'\:// //^error\: Input type \`\@encode_ttcn_SE\.C2\' does not support XER encoding\.//
   with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
 
+type set DummySet { //^In type definition//
+  integer f optional
+}
+with {
+  encode @local "XML"; //The '@local' modifier cannot be used with legacy codec handling//
+  variant @local "XML"."name as uncapitalized"; //The '@local' modifier cannot be used with legacy codec handling// //Invalid attribute format. Dot notation is only allowed for variant attributes when using the new codec handling.//
+  display @local "xx"."red"; //The '@local' modifier cannot be used with legacy codec handling// //Invalid attribute format. Dot notation is only allowed for variant attributes when using the new codec handling.//
+}
+
+const DummySet c_dummy := { f := - } with { optional @local "yy"."implicit omit" } //^In constant definition// //The '@local' modifier cannot be used with legacy codec handling// //Invalid attribute format. Dot notation is only allowed for variant attributes when using the new codec handling.//
+
+type set of DummySet DummySetList with { //^In type definition//
+  extension @local "qw"."optimize:memalloc"; //The '@local' modifier cannot be used with legacy codec handling// //Invalid attribute format. Dot notation is only allowed for variant attributes when using the new codec handling.//
+  encode "JSON"."RAW"; //Invalid attribute format. Dot notation is only allowed for variant attributes when using the new codec handling.//
+}
 
 } with {
   encode "whatever"

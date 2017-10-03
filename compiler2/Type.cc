@@ -61,7 +61,7 @@ extern Ttcn::ExtensionAttributes * parse_extattributes(
 
 namespace Common {
   
-  map<Type*, void> Type::CodingCheckTracker::types;
+  map<Type*, void> Type::RecursionTracker::types;
 
   using Ttcn::MultiWithAttrib;
   using Ttcn::SingleWithAttrib;
@@ -615,6 +615,7 @@ namespace Common {
     default_encoding.type = CODING_UNSET;
     default_decoding.type = CODING_UNSET;
     checked_incorrect_field = false;
+    encode_attrib_mod_conflict = false;
   }
 
   void Type::clean_up()
@@ -1216,6 +1217,11 @@ namespace Common {
 
   Type::truth Type::is_charenc()
   {
+    // this helps avoid infinite recursions in self-referencing types
+    if (RecursionTracker::is_happening(this)) {
+      return Maybe;
+    }
+    RecursionTracker tracker(this);
     switch(typetype) {
     case T_CHOICE_A:
     case T_CHOICE_T:
@@ -3265,12 +3271,17 @@ namespace Common {
     }
   }
   
-  void Type::add_coding(const string& name, bool silent)
+  void Type::add_coding(const string& name, Ttcn::attribute_modifier_t modifier, bool silent)
   {
     if (legacy_codec_handling) {
       FATAL_ERROR("Type::add_coding");
     }
     for (size_t i = 0; i < coding_table.size(); ++i) {
+      if (!encode_attrib_mod_conflict && modifier != coding_table[i]->modifier) {
+        encode_attrib_mod_conflict = true;
+        error("All 'encode' attributes of a type must have the same modifier "
+          "('override', '@local' or none)");
+      }
       const char* coding_name = coding_table[i]->built_in ?
         get_encoding_name(coding_table[i]->built_in_coding) :
         coding_table[i]->custom_coding.name;
@@ -3283,6 +3294,7 @@ namespace Common {
       if (get_type_refd_last()->can_have_coding(built_in_coding)) {
         coding_t* new_coding = new coding_t;
         new_coding->built_in = TRUE;
+        new_coding->modifier = modifier;
         new_coding->built_in_coding = built_in_coding;
         coding_table.add(new_coding);
         get_type_refd_last()->set_gen_coder_functions(built_in_coding);
@@ -3297,6 +3309,7 @@ namespace Common {
     else {
       coding_t* new_coding = new coding_t;
       new_coding->built_in = FALSE;
+      new_coding->modifier = modifier;
       new_coding->custom_coding.name = mcopystr(name.c_str());
       new_coding->custom_coding.encoders = new map<Type*, coder_function_t>;
       new_coding->custom_coding.decoders = new map<Type*, coder_function_t>;
@@ -3380,35 +3393,72 @@ namespace Common {
     return NULL; // not found
   }
   
-  Type* Type::get_type_w_coding_table()
+  Type* Type::get_type_w_coding_table(bool ignore_local /* = false */)
   {
-    // only return the type if it has a non-empty coding table
-    if (coding_table.size() != 0) {
+    // 1st priority: if local attributes are not ignored, and if the type 
+    // has its own 'encode' attributes (its coding table is not empty), then
+    // return the type
+    if (!ignore_local && coding_table.size() != 0) {
       return this;
     }
-    // first, check referenced types
+    
+    // 2nd priority: if this is a field or element type, and one of its parents
+    // has an 'encode' attribute with the 'override' modifier, then return the
+    // parent type
+    Type* t_parent = NULL;
+    if (parent_type != NULL && (ownertype == OT_COMP_FIELD ||
+        ownertype == OT_RECORD_OF || ownertype == OT_ARRAY)) {
+      // note: if one of the parent types has an overriding 'encode' attribute,
+      // then this returns the furthest parent with an overriding 'encode';
+      // if none of the 'encode' attributes are overriding, then the nearest
+      // parent with at least one 'encode' attribute is returned
+      t_parent = parent_type->get_type_w_coding_table(true);
+    }
+    if (t_parent != NULL) {
+      for (size_t i = 0; i < t_parent->coding_table.size(); ++i) {
+        if (t_parent->coding_table[i]->modifier == Ttcn::MOD_OVERRIDE) {
+          return t_parent;
+        }
+      }
+    }
+    
+    // 3rd priority: if local attributes are ignored, and if the type has its
+    // own (non-local) 'encode' attributes, then return the type
+    if (ignore_local && coding_table.size() != 0) {
+      bool local = false;
+      for (size_t i = 0; i < coding_table.size(); ++i) {
+        if (coding_table[i]->modifier == Ttcn::MOD_LOCAL) {
+          local = true;
+          break;
+        }
+      }
+      if (!local) {
+        return this;
+      }
+    }
+    
+    // 4th priority, if a referenced type has an 'encode' attribute, then return
+    // the referenced type
     if (is_ref()) {
-      Type* t = get_type_refd()->get_type_w_coding_table();
+      // note: this always returns the nearest referenced type with at least one
+      // 'encode' attribute
+      Type* t = get_type_refd()->get_type_w_coding_table(false);
       if (t != NULL) {
         return t;
       }
     }
-    // second, check the parent type if this is a field or element type
-    if (parent_type != NULL && (ownertype == OT_COMP_FIELD ||
-        ownertype == OT_RECORD_OF || ownertype == OT_ARRAY)) {
-      return parent_type->get_type_w_coding_table();
-    }
-    // if none of the above have a non-empty coding table, then return null
-    return NULL;
+    
+    // otherwise return the parent type pointer (whether it's null or not)
+    return t_parent;
   }
   
   bool Type::can_have_coding(MessageEncodingType_t coding)
   {
     // this helps avoid infinite recursions in self-referencing types
-    if (CodingCheckTracker::is_happening(this)) {
+    if (RecursionTracker::is_happening(this)) {
       return true;
     }
-    CodingCheckTracker tracker(this);
+    RecursionTracker tracker(this);
     
     // check whether the codec has been disabled by a compiler option or by
     // the license

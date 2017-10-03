@@ -1,0 +1,178 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+module encode_modifier { //^In TTCN-3 module//
+
+type enumerated Enum { x1, x2 }
+with {
+  encode "RAW";
+}
+
+type record of integer RoI;
+
+group Grp1 {
+
+group Grp2 {
+
+type record Rec {
+  Enum en,
+  RoI list
+}
+with {
+  encode "XML";
+}
+
+} /* Grp2 */
+with {
+  encode "TEXT";
+}
+
+} /* Grp1 */
+with {
+  encode override "JSON";
+}
+
+type union Uni {
+  Enum en,
+  Rec.list list
+}
+with {
+  encode override "TEXT";
+}
+
+group Grp3 {
+
+type set of octetstring SoOS
+with {
+  encode @local "RAW";
+}
+
+type set Set {
+  SoOS octs,
+  RoI ints
+}
+with {
+  encode @local "JSON";
+}
+
+} /* Grp3 */
+with {
+  encode "XML";
+}
+
+external function f_enc_rec1(in Rec x) return octetstring
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+external function f_enc_rec2(in Rec x) return charstring //^In external function definition// //does not support TEXT encoding//
+  with { extension "prototype(convert) encode(TEXT)" };
+external function f_enc_rec3(in Rec x) return octetstring //^In external function definition// //does not support JSON encoding//
+  with { extension "prototype(convert) encode(JSON)" };
+
+external function f_enc_rec_en1(in Rec.en x) return octetstring //^In external function definition// //does not support RAW encoding//
+  with { extension "prototype(convert) encode(RAW)" };
+external function f_enc_rec_en2(in Rec.en x) return octetstring //^In external function definition// //does not support XER encoding//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+external function f_enc_rec_en3(in Rec.en x) return charstring //^In external function definition// //does not support TEXT encoding//
+  with { extension "prototype(convert) encode(TEXT)" };
+external function f_enc_rec_en4(in Rec.en x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" };
+
+external function f_enc_rec_list1(in Rec.list x) return octetstring //^In external function definition// //does not support XER encoding//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+external function f_enc_rec_list2(in Rec.list x) return charstring //^In external function definition// //does not support TEXT encoding//
+  with { extension "prototype(convert) encode(TEXT)" };
+external function f_enc_rec_list3(in Rec.list x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" };
+
+external function f_enc_uni_en1(in Uni.en x) return octetstring //^In external function definition// //does not support RAW encoding//
+  with { extension "prototype(convert) encode(RAW)" };
+external function f_enc_uni_en2(in Uni.en x) return charstring
+  with { extension "prototype(convert) encode(TEXT)" };
+
+external function f_enc_uni_list1(in Uni.list x) return octetstring //^In external function definition// //does not support XER encoding//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+external function f_enc_uni_list2(in Uni.list x) return octetstring //^In external function definition// //does not support JSON encoding//
+  with { extension "prototype(convert) encode(JSON)" };
+external function f_enc_uni_list3(in Uni.list x) return charstring
+  with { extension "prototype(convert) encode(TEXT)" };
+
+external function f_enc_set1(in Set x) return octetstring
+  with { extension "prototype(convert) encode(JSON)" };
+external function f_enc_set2(in Set x) return octetstring //^In external function definition// //does not support XER encoding//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+
+external function f_enc_set_octs1(in Set.octs x) return octetstring
+  with { extension "prototype(convert) encode(RAW)" };
+external function f_enc_set_octs2(in Set.octs x) return octetstring //^In external function definition// //does not support JSON encoding//
+  with { extension "prototype(convert) encode(JSON)" };
+external function f_enc_set_octs3(in Set.octs x) return octetstring //^In external function definition// //does not support XER encoding//
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+
+external function f_enc_set_ints1(in Set.ints x) return octetstring //^In external function definition// //does not support JSON encoding//
+  with { extension "prototype(convert) encode(JSON)" };
+external function f_enc_set_ints2(in Set.ints x) return octetstring
+  with { extension "prototype(convert) encode(XER:XER_EXTENDED)" };
+
+
+type record MixedModifiersInType { //^In type definition// //All 'encode' attributes of a type must have the same modifier//
+  integer f1, //All 'encode' attributes of a type must have the same modifier//
+  charstring f2 //All 'encode' attributes of a type must have the same modifier//
+}
+with {
+  encode "RAW";
+  encode @local "JSON";
+  encode override (f1) "RAW";
+  encode (f1) "JSON";
+  encode @local (f2) "RAW";
+  encode override (f2) "JSON";
+}
+
+group MixedModifiersInGroup1 {
+  type record of integer DummyList; //^In type definition//
+}
+with {
+  encode @local "TEXT"; //All 'encode' attributes of a group or module must have the same modifier//
+  encode "XML";
+}
+
+group MixedModifiersInGroup2 {
+  type record DummyRecord { integer f }; //^In type definition//
+}
+with {
+  encode "TEXT"; //All 'encode' attributes of a group or module must have the same modifier//
+  encode override "XML";
+}
+
+group MixedModifiersInGroup3 {
+  type union DummyUnion { integer f }; //^In type definition//
+}
+with {
+  encode override "TEXT"; //All 'encode' attributes of a group or module must have the same modifier//
+  encode @local "XML";
+}
+
+type set DummySet { //^In type definition//
+  integer f optional
+}
+with {
+  encode "XML";
+  variant @local "name as uncapitalized"; //The '@local' modifier only affects 'encode' attributes. Modifier ignored.//
+  display @local "xx"."red"; //The '@local' modifier only affects 'encode' attributes. Modifier ignored.// //Invalid attribute format. Dot notation is only allowed for variant attributes when using the new codec handling.//
+}
+
+const DummySet c_dummy := { f := - } with { optional @local "yy"."implicit omit" } //^In constant definition// //The '@local' modifier only affects 'encode' attributes. Modifier ignored.// //Invalid attribute format. Dot notation is only allowed for variant attributes when using the new codec handling.//
+
+type set of DummySet DummySetList with { //^In type definition//
+  extension @local "qw"."optimize:memalloc"; //The '@local' modifier only affects 'encode' attributes. Modifier ignored.// //Invalid attribute format. Dot notation is only allowed for variant attributes when using the new codec handling.//
+  encode "JSON"."RAW"; //Invalid attribute format. Dot notation is only allowed for variant attributes when using the new codec handling.//
+}
+
+}

@@ -14,7 +14,7 @@ module ifq_SE {	//^In TTCN-3 module `ifq_SE'://
 
 type record foo {} //^In type definition//
 with {
-  variant ([-]) "attribute" //^error: Invalid field qualifier \[-\]//
+  variant ([-]) "attribute" //^error: Type `\@ifq_SE\.foo' cannot be indexed//
 }
 
 /*  integer _0; is a syntax error
