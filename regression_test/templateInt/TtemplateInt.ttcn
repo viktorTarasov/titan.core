@@ -346,6 +346,27 @@ testcase templateIntReverseOrderImported2() runs on templateInt_mycomp {
   }
 }
 
+type record of integer RoI;
+
+// same as the previous test, but the usage is in a local template
+testcase templateIntReverseOrderLocal() runs on templateInt_mycomp {
+  template integer t1 := tPard4;
+  template RoI t2 := { tPard4 };
+  var template integer vtExp1 := 19;
+  var template RoI vtExp2 := { 19 };
+  if (log2str(t1) == log2str(vtExp1) and
+      log2str(t2) == log2str(vtExp2)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", vtExp1, " and ", vtExp2,
+      ", got: ", t1, " and ", t2);
+  }
+}
+
+template integer tPard4(integer p := 19) := p;
+
+
 template integer IntTemplateParam(template integer i := 3) := i;
 
 testcase templateIntParam() runs on templateInt_mycomp {
@@ -392,6 +413,7 @@ control {
  execute(templateIntReverseOrder());
  execute(templateIntReverseOrderImported());
  execute(templateIntReverseOrderImported2());
+ execute(templateIntReverseOrderLocal());
  execute(templateIntParam());
 }
 }

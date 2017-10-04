@@ -5023,7 +5023,10 @@ compile_time:
       // the parameterized template's default values must also be generated
       // (this only generates their value assignments, their declarations will
       // be generated when the template's definition is reached)
-      if (ass->get_my_scope()->get_scope_mod_gen() == usage_mod) {
+      if (ass->get_my_scope()->get_scope_mod_gen() == usage_mod &&
+          my_scope->get_statementblock_scope() == NULL) {
+        // only if the template reference is global and is in the same module
+        // as the referenced parameterized template
         str = formal_parlist->generate_code_defval(str);
       }
     } else {
