@@ -1261,7 +1261,8 @@ int OCTETSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td,
   init_struct(decode_length / 8);
   buff.get_b((size_t) decode_length, val_ptr->octets_ptr, cp, top_bit_ord);
 
-  if (p_td.raw->length_restrition != -1) {
+  if (p_td.raw->length_restrition != -1 &&
+      decode_length > p_td.raw->length_restrition) {
     val_ptr->n_octets = p_td.raw->length_restrition;
     if (p_td.raw->endianness == ORDER_MSB) memmove(val_ptr->octets_ptr,
       val_ptr->octets_ptr + (decode_length / 8 - val_ptr->n_octets),

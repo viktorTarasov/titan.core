@@ -828,7 +828,8 @@ int HEXSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   init_struct(decode_length / 4);
   buff.get_b((size_t) decode_length, val_ptr->nibbles_ptr, cp, top_bit_ord);
 
-  if (p_td.raw->length_restrition != -1) {
+  if (p_td.raw->length_restrition != -1 &&
+      decode_length > p_td.raw->length_restrition) {
     val_ptr->n_nibbles = p_td.raw->length_restrition;
     if (p_td.raw->endianness == ORDER_MSB) {
       if ((decode_length - val_ptr->n_nibbles * 4) % 8) {

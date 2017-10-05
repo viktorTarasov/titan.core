@@ -1614,7 +1614,8 @@ int CHARSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td,
     temp_buff.get_string(*this);
     decode_length=str_len+8;
   }
-  if (p_td.raw->length_restrition != -1) {
+  if (p_td.raw->length_restrition != -1 &&
+      decode_length > p_td.raw->length_restrition) {
     val_ptr->n_chars = p_td.raw->length_restrition;
     if (p_td.raw->endianness == ORDER_MSB) memmove(val_ptr->chars_ptr,
       val_ptr->chars_ptr + (decode_length / 8 - val_ptr->n_chars),

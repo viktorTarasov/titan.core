@@ -1052,7 +1052,8 @@ int BITSTRING::RAW_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   cp.fieldorder = p_td.raw->fieldorder;
   cp.hexorder = ORDER_LSB;
   buff.get_b((size_t) decode_length, val_ptr->bits_ptr, cp, top_bit_ord);
-  if (p_td.raw->length_restrition != -1) {
+  if (p_td.raw->length_restrition != -1 &&
+      decode_length > p_td.raw->length_restrition) {
     val_ptr->n_bits = p_td.raw->length_restrition;
     if (p_td.raw->endianness == ORDER_LSB) {
       if ((decode_length - val_ptr->n_bits) % 8) {

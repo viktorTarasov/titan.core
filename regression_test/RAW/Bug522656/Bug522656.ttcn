@@ -1,0 +1,108 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Botond, Baranyi
+ *
+ ******************************************************************************/
+
+// RAW decoding strings with an empty buffer changes the length of the static 'empty
+// string' values to the length restriction, if a length restriction is set.
+module Bug522656 {
+
+type bitstring Bit2 length (2)
+with { variant "FIELDLENGTH(2)" }
+
+type hexstring Hex2 length (2)
+with { variant "FIELDLENGTH(2)" }
+
+type octetstring Oct1 length (1)
+with { variant "FIELDLENGTH(1)" }
+
+type charstring Char3 length (3)
+with { variant "FIELDLENGTH(3)" }
+
+type record Rec {
+  Bit2 b,
+  Hex2 h,
+  Oct1 o,
+  Char3 c
+}
+
+type component CT {}
+
+// This test case decodes the strings. The decoder is set to display only warnings
+// upon failure, and continue the decoding.
+// The changes in the empty strings are checked in other test cases.
+testcase tc_decode() runs on CT {
+  var Rec x;
+  var bitstring buffer := ''B;
+  var integer result := decvalue(buffer, x);
+  if (result != 0) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Decoded with empty buffer successful.");
+  }
+}
+
+// Make sure the empty bitstring value has not changed.
+testcase tc_bitstring() runs on CT {
+  var bitstring empty_bit := ''B;
+  if (lengthof(empty_bit) == 0) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Empty bitstring length: ", lengthof(empty_bit));
+  }
+}
+
+// Make sure the empty hexstring value has not changed.
+testcase tc_hexstring() runs on CT {
+  var hexstring empty_hex := ''H;
+  if (lengthof(empty_hex) == 0) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Empty hexstring length: ", lengthof(empty_hex));
+  }
+}
+
+// Make sure the empty octetstring value has not changed.
+testcase tc_octetstring() runs on CT {
+  var octetstring empty_oct := ''O;
+  if (lengthof(empty_oct) == 0) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Empty octetstring length: ", lengthof(empty_oct));
+  }
+}
+
+// Make sure the empty charstring value has not changed.
+testcase tc_charstring() runs on CT {
+  var charstring empty_char := "";
+  if (lengthof(empty_char) == 0) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Empty charstring length: ", lengthof(empty_char));
+  }
+}
+
+control {
+  execute(tc_decode()); // must be executed before the other test cases
+  execute(tc_bitstring());
+  execute(tc_hexstring());
+  execute(tc_octetstring());
+  execute(tc_charstring());
+}
+
+}
+with {
+  encode "RAW"
+}
