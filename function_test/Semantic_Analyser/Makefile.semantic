@@ -12,6 +12,8 @@
 #   Szabo, Bence Janos
 #
 ##############################################################################
+include ../../Makefile.personal
+
 SADIRS := ver param template any_from pattern_ref float recof_index \
 port_translation mtc_and_system_clause port_map_connect deterministic
 ifdef RT2

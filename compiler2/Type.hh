@@ -76,6 +76,13 @@ namespace Ttcn {
   class PortTypeBody;
   class Def_Type;
   class Ref_pard;
+  
+  /** Stores the modifier of an attribute */
+  enum attribute_modifier_t {
+    MOD_NONE, ///< no modifier
+    MOD_OVERRIDE, ///< 'override' modifier
+    MOD_LOCAL ///< '@local' modifier
+  };
 } // namespace Ttcn
 
 // not defined here
@@ -303,6 +310,7 @@ namespace Common {
       * codec handling. */
     struct coding_t {
       boolean built_in; ///< built-in or user defined codec
+      Ttcn::attribute_modifier_t modifier; ///< the 'encode' attribute's modifier
       union {
         MessageEncodingType_t built_in_coding; ///< built-in codec
         struct {
@@ -478,14 +486,18 @@ namespace Common {
       * method. */
     vector<MessageEncodingType_t> coders_to_generate;
     
-    /** Helper class that tracks the execution of a type's 'can_have_coding'
-      * function to prevent infinite recursions. */
-    class CodingCheckTracker {
+    /** Indicates whether an 'encode' attribute modifier conflict error has
+      * already been displayed for the type. */
+    bool encode_attrib_mod_conflict;
+    
+    /** Helper class that tracks the execution of recursive functions in the 
+      * Type class in order to prevent infinite recursions. */
+    class RecursionTracker {
       static map<Type*, void> types;
       Type* key;
     public:
-      CodingCheckTracker(Type* t): key(t) { types.add(t, NULL); }
-      ~CodingCheckTracker() { types.erase(key); }
+      RecursionTracker(Type* t): key(t) { types.add(t, NULL); }
+      ~RecursionTracker() { types.erase(key); }
       static bool is_happening(Type* t) { return types.has_key(t); }
     };
 
@@ -512,6 +524,13 @@ namespace Common {
     static void destroy_pooltypes();
     /** Returns the TTCN-3 equivalent of \a p_tt. */
     static typetype_t get_typetype_ttcn3(typetype_t p_tt);
+    
+    /** Fills the list parameter with the types that have an empty coding table.
+      * The types considered are the type itself and its field and element types.
+      * Recursive.
+      * @param only_own_table if true, then only the type's own coding table is
+      * checked, otherwise inherited coding tables are also checked */
+    void get_types_w_no_coding_table(vector<Type>& type_list, bool only_own_table);
 
   public:
     /** @name Constructors
@@ -652,7 +671,7 @@ namespace Common {
       * if the type can have that encoding.
       * @param name name of the encoding as it appears in the 'encode' attribute;
       * this may be the name of a built-in or a user-defined encoding */
-    void add_coding(const string& name, bool silent);
+    void add_coding(const string& name, Ttcn::attribute_modifier_t modifier, bool silent);
     
     /** Sets the encoder or decoder function for the user-defined encoding with
       * the specified name (when using new codec handling). */
@@ -666,8 +685,10 @@ namespace Common {
     /** Returns the type that contains this type's coding table (since types
       * with no 'encode' attributes of their own inherit the 'encode' attributes
       * of a referenced type or a parent type).
+      * @param ignore_local indicates whether to ignore attributes with the
+      * '@local' modifier
       * Only used with new codec handling. */
-    Type* get_type_w_coding_table();
+    Type* get_type_w_coding_table(bool ignore_local = false);
     
     const vector<coding_t>& get_coding_table() const { return coding_table; }
     

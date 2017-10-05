@@ -216,6 +216,7 @@ static const string anyname("anytype");
   SingleValueRedirect* single_value_redirect;
   param_eval_t eval;
   TypeMappingTargets *typemappingtargets;
+  attribute_modifier_t attrib_mod;
 
   struct {
     bool is_raw;
@@ -791,6 +792,7 @@ static const string anyname("anytype");
 %token DeterministicKeyword
 %token FuzzyKeyword
 %token IndexKeyword
+%token LocalKeyword
 
 /* TITAN specific keywords */
 %token TitanSpecificTryKeyword
@@ -922,7 +924,7 @@ static const string anyname("anytype");
  * Semantic types of nonterminals
  *********************************************************************/
 
-%type <bool_val> optAliveKeyword optOptionalKeyword optOverrideKeyword
+%type <bool_val> optAliveKeyword optOptionalKeyword
   optErrValueRaw optAllKeyword optDeterministicModifier
 %type <str> FreeText optLanguageSpec PatternChunk PatternChunkList
 %type <uchar_val> Group Plane Row Cell
@@ -935,6 +937,7 @@ static const string anyname("anytype");
 %type <typetype> PredefinedType
 %type <portoperationmode> PortOperationMode
 %type <operationtype> PredefinedOpKeyword1 PredefinedOpKeyword2 PredefinedOpKeyword3
+%type <attrib_mod> optAttributeModifier
 
 %type <activateop> ActivateOp
 %type <attribtype> AttribKeyword
@@ -8165,7 +8168,7 @@ MultiWithAttrib: // 529
 ;
 
 SingleWithAttrib: // 530
-  AttribKeyword optOverrideKeyword optAttribQualifier AttribSpec
+  AttribKeyword optAttributeModifier optAttribQualifier AttribSpec
   {
     $$ = new SingleWithAttrib($1,$2,$3,$4);
     $$->set_location(infile, @$);
@@ -8202,9 +8205,10 @@ AttribKeyword: // 531
   }
 ;
 
-optOverrideKeyword: // [536]
-  /* empty */ { $$ = false; }
-| OverrideKeyword { $$ = true; }
+optAttributeModifier: // [536]
+  /* empty */ { $$ = MOD_NONE; }
+| OverrideKeyword { $$ = MOD_OVERRIDE; }
+| LocalKeyword { $$ = MOD_LOCAL; }
 ;
 
 optAttribQualifier: // [537]
@@ -8315,15 +8319,8 @@ AttribSpec: // 542
   }
 | FreeText '.' FreeText
   {
-    if (legacy_codec_handling) {
-      Location loc(infile, @$);
-      loc.error("Invalid attribute format. Dot notation is only allowed for "
-        "variant attributes when using legacy codec handling.");
-    }
-    else {
-      $$ = new AttributeSpec(string($3), string($1));
-      $$->set_location(infile, @$);
-    }
+    $$ = new AttributeSpec(string($3), string($1));
+    $$->set_location(infile, @$);
     Free($1);
     Free($3);
   }

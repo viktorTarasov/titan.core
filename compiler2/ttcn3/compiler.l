@@ -526,6 +526,7 @@ xor4b		RETURN(Xor4bKeyword);
 "@deterministic" RETURN(DeterministicKeyword);
 "@fuzzy"         RETURN(FuzzyKeyword);
 "@index"         RETURN(IndexKeyword);
+"@local"         RETURN(LocalKeyword);
 
   /* special TITAN specific keywords */
 

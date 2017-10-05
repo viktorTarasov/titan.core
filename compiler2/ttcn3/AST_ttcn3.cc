@@ -6848,26 +6848,28 @@ namespace Ttcn {
             // First collect the fields of a record, set, union type which
             // does not support the encoding, then write it in the error message.
             char* message = NULL;
-            Type *t = input_type;
-            if (t->is_ref()) t = t->get_type_refd();
-            switch(t->get_typetype()) {
-              case Type::T_SEQ_T:
-              case Type::T_SET_T:
-              case Type::T_CHOICE_T: {
-                for (size_t i = 0; i < t->get_nof_comps(); i++) {
-                  if (!t->get_comp_byIndex(i)->get_type()->has_encoding(encoding_type, encoding_options)) {
-                    if (i == 0) {
-                      message = mputprintf(message, " The following fields do not support %s encoding: ",
-                        Type::get_encoding_name(encoding_type));
-                    } else {
-                      message = mputstr(message, ", ");
+            if (legacy_codec_handling) {
+              Type *t = input_type;
+              if (t->is_ref()) t = t->get_type_refd();
+              switch(t->get_typetype()) {
+                case Type::T_SEQ_T:
+                case Type::T_SET_T:
+                case Type::T_CHOICE_T: {
+                  for (size_t i = 0; i < t->get_nof_comps(); i++) {
+                    if (!t->get_comp_byIndex(i)->get_type()->has_encoding(encoding_type, encoding_options)) {
+                      if (i == 0) {
+                        message = mputprintf(message, " The following fields do not support %s encoding: ",
+                          Type::get_encoding_name(encoding_type));
+                      } else {
+                        message = mputstr(message, ", ");
+                      }
+                      message = mputstr(message, t->get_comp_id_byIndex(i).get_ttcnname().c_str());
                     }
-                    message = mputstr(message, t->get_comp_id_byIndex(i).get_ttcnname().c_str());
                   }
-                }
-                break; }
-              default:
-                break;
+                  break; }
+                default:
+                  break;
+              }
             }
             input_type->error("Input type `%s' does not support %s encoding.%s",
               input_type->get_typename().c_str(),

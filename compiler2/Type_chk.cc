@@ -338,7 +338,7 @@ void Type::parse_attributes()
         // see if there's an encode with override
         for(size_t i = real_attribs.size(); i > 0 && !override_ref; i--)
         {
-          if(real_attribs[i-1]->has_override()
+          if(real_attribs[i-1]->get_modifier() == Ttcn::MOD_OVERRIDE
             && real_attribs[i-1]->get_attribKeyword()
               != SingleWithAttrib::AT_ENCODE)
             override_ref = true;
@@ -491,7 +491,7 @@ void Type::parse_attributes()
               // Copy the attribute without qualifiers
               const SingleWithAttrib* swaref = self_attribs->get_element(i);
               swa = new SingleWithAttrib(swaref->get_attribKeyword(),
-                swaref->has_override(), 0, swaref->get_attribSpec().clone());
+                swaref->get_modifier(), 0, swaref->get_attribSpec().clone());
               new_self_attribs->add_element(swa);
             }
           }
@@ -558,7 +558,7 @@ void Type::parse_attributes()
                 // A copy of temp_single, with new qualifiers
                 SingleWithAttrib* temp_single2
                 = new SingleWithAttrib(temp_single->get_attribKeyword(),
-                  temp_single->has_override(),
+                  temp_single->get_modifier(),
                   calculated_qualifiers,
                   temp_single->get_attribSpec().clone());
                 temp_single2->set_location(*temp_single);
@@ -670,6 +670,37 @@ void change_name(string &name, XerAttributes::NameChange change) {
   } // switch for NAME
 }
 
+void Type::get_types_w_no_coding_table(vector<Type>& type_list, bool only_own_table)
+{
+  // this helps avoid infinite recursions in self-referencing types
+  if (RecursionTracker::is_happening(this)) {
+    return;
+  }
+  RecursionTracker tracker(this);
+  if ((only_own_table && coding_table.size() == 0) ||
+      (!only_own_table && get_type_w_coding_table() == NULL)) {
+    type_list.add(this);
+  }
+  switch (get_typetype_ttcn3()) {
+  case T_SEQ_T:
+  case T_SET_T:
+  case T_CHOICE_T:
+  case T_ANYTYPE:
+  case T_OPENTYPE:
+    for (size_t j = 0; j < get_nof_comps(); ++j) {
+      get_comp_byIndex(j)->get_type()->get_types_w_no_coding_table(type_list, only_own_table);
+    }
+    break;
+  case T_SEQOF:
+  case T_SETOF:
+  case T_ARRAY:
+    get_ofType()->get_types_w_no_coding_table(type_list, only_own_table);
+    break;
+  default:
+    break;
+  }
+}
+
 void Type::chk_encodings()
 {
   if (legacy_codec_handling) {
@@ -703,6 +734,7 @@ void Type::chk_encodings()
           for (size_t i = 0; i < mwa->get_nof_elements(); ++i) {
             const SingleWithAttrib* swa = mwa->get_element(i);
             if (swa->get_attribKeyword() == SingleWithAttrib::AT_ENCODE) {
+              Ttcn::attribute_modifier_t mod = swa->get_modifier();
               Ttcn::Qualifiers* quals = swa->get_attribQualifiers();
               if (quals != NULL && quals->get_nof_qualifiers() != 0) {
                 for (size_t j = 0; j < quals->get_nof_qualifiers(); ++j) {
@@ -715,26 +747,75 @@ void Type::chk_encodings()
                         "refers to a type from a different type definition");
                     }
                     else {
-                      t->add_coding(swa->get_attribSpec().get_spec(), false);
+                      t->add_coding(swa->get_attribSpec().get_spec(), mod, false);
                     }
                   }
                 }
               }
               else {
-                add_coding(swa->get_attribSpec().get_spec(), false);
+                add_coding(swa->get_attribSpec().get_spec(), mod, false);
               }
             }
           }
         }
-        if (get_type_w_coding_table() == NULL) {
-          // if there are no 'encode' attributes in this type, the referenced
-          // types, or the parent type, then try the nearest group or the module
-          const vector<SingleWithAttrib>& real = ap->get_real_attrib();
+        WithAttribPath* global_ap = NULL;
+        Ttcn::Def_Type* def = static_cast<Ttcn::Def_Type*>(owner);
+        Ttcn::Group* nearest_group = def->get_parent_group();
+
+        if (nearest_group != NULL) { // there is a group
+          global_ap = nearest_group->get_attrib_path();
+        }
+        else { // no group, use the module
+          Common::Module* mymod = my_scope->get_scope_mod();
+          // OT_TYPE_DEF is always from a TTCN-3 module
+          Ttcn::Module* my_ttcn_module = static_cast<Ttcn::Module *>(mymod);
+          global_ap = my_ttcn_module->get_attrib_path();
+        }
+        if (global_ap != NULL) {
+          bool has_global_override = false;
+          bool modifier_conflict = false;
+          Ttcn::attribute_modifier_t first_mod = Ttcn::MOD_NONE;
+          const vector<SingleWithAttrib>& real = global_ap->get_real_attrib();
           for (size_t i = 0; i < real.size(); ++i) {
             const SingleWithAttrib* swa = real[i];
             if (swa->get_attribKeyword() == SingleWithAttrib::AT_ENCODE) {
-              add_coding(swa->get_attribSpec().get_spec(), true);
+              Ttcn::attribute_modifier_t mod = swa->get_modifier();
+              if (i == 0) {
+                first_mod = mod;
+              }
+              else if (!modifier_conflict && mod != first_mod) {
+                modifier_conflict = true;
+                swa->error("All 'encode' attributes of a group or module must "
+                  "have the same modifier ('override', '@local' or none)");
+              }
+              if (mod == Ttcn::MOD_OVERRIDE) {
+                has_global_override = true;
+              }
+              if (has_global_override && modifier_conflict) {
+                break;
+              }
             }
+          }
+          // make a list of the type and its field and element types that inherit
+          // the global 'encode' attributes
+          // overriding global attributes are inherited by types with no coding
+          // table (no 'encode' attributes) of their own
+          // non-overriding global attributes are inherited by types that have
+          // no coding table of their own and cannot use the coding table of any 
+          // other type (get_type_w_coding_table() == NULL)
+          vector<Type> type_list;
+          get_types_w_no_coding_table(type_list, has_global_override);
+          if (type_list.size() != 0) {
+            for (size_t i = 0; i < real.size(); ++i) {
+              const SingleWithAttrib* swa = real[i];
+              if (swa->get_attribKeyword() == SingleWithAttrib::AT_ENCODE) {
+                for (size_t j = 0; j < type_list.size(); ++j) {
+                  type_list[j]->add_coding(swa->get_attribSpec().get_spec(),
+                    Ttcn::MOD_NONE, true);
+                }
+              }
+            }
+            type_list.clear();
           }
         }
       }
@@ -746,12 +827,12 @@ void Type::chk_encodings()
       case OT_COMP_FIELD:
       case OT_SELTYPE:
         // ASN.1 types automatically have BER, PER, XER and JSON encoding
-        add_coding(string("BER:2002"), true);
-        add_coding(string(get_encoding_name(CT_PER)), true);
-        add_coding(string(get_encoding_name(CT_JSON)), true);
+        add_coding(string("BER:2002"), Ttcn::MOD_NONE, true);
+        add_coding(string(get_encoding_name(CT_PER)), Ttcn::MOD_NONE, true);
+        add_coding(string(get_encoding_name(CT_JSON)), Ttcn::MOD_NONE, true);
         if (asn1_xer) {
           // XER encoding for ASN.1 types can be disabled with a command line option
-          add_coding(string(get_encoding_name(CT_XER)), true);
+          add_coding(string(get_encoding_name(CT_XER)), Ttcn::MOD_NONE, true);
         }
         break;
       default:
