@@ -192,6 +192,14 @@ public:
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  
+  /** Encodes accordingly to the OER encoding rules.
+    * Returns the length of the encoded data. */
+  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const;
+  
+  /** Decodes accordingly to the OER encoding rules.
+    * Returns the length of the decoded data. */
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf);
 };
 
 extern INTEGER operator+(int int_value, const INTEGER& other_value);

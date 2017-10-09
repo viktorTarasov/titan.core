@@ -227,6 +227,10 @@ verdicttype RETURN(VerdictTypeKeyword);
     yylval.encoding_type = Type::CT_JSON;
     RETURN(EncodingType);
   }
+  OER {
+    yylval.encoding_type = Type::CT_OER;
+    RETURN(EncodingType);
+  }
   {IDENTIFIER} {
     yylval.str = new string(yyleng, yytext);
     RETURN(CustomEncoding);

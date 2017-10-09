@@ -103,6 +103,7 @@ typedef struct {
   boolean hasText;
   boolean hasXer;
   boolean hasJson;
+  boolean hasOer;
   boolean xerUntagged;
   boolean xerUntaggedOne; /**< from Type::u.secho.has_single_charenc */
   boolean xerUseNilPossible; /* for sequence */
@@ -137,6 +138,7 @@ typedef struct {
   boolean hasText;
   boolean hasXer;
   boolean hasJson;
+  boolean hasOer;
   /** true if this is a record-of BOOLEAN, ENUMERATED or NULL */
   boolean xmlValueList;
   /* * true if this record-of has the LIST encoding instruction */
@@ -171,6 +173,7 @@ typedef struct {
     boolean hasText;
     boolean hasXer;
     boolean hasJson;
+    boolean hasOer;
     boolean xerUseNumber;
     boolean xerText; /* A component has the TEXT encoding instruction */
     size_t nElements;

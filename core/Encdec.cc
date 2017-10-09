@@ -194,6 +194,8 @@ void TTCN_EncDec::get_coding_from_str(const UNIVERSAL_CHARSTRING& coding_str,
     if (extra != NULL) {
       *extra = XER_EXTENDED;
     }
+  } else if (coding_str == "OER") {
+    *coding = CT_OER;
   }
   else if (coding_str.lengthof() == 0) {
     TTCN_error("Missing dynamic encoding string or default encoding string");

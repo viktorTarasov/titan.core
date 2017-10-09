@@ -666,7 +666,8 @@ namespace Ttcn {
                 (type->has_encoding(Type::CT_RAW)&&ti_type->has_encoding(Type::CT_RAW)) ||
                 (type->has_encoding(Type::CT_TEXT)&&ti_type->has_encoding(Type::CT_TEXT)) ||
                 (type->has_encoding(Type::CT_XER)&&ti_type->has_encoding(Type::CT_XER)) ||
-                (type->has_encoding(Type::CT_JSON)&&ti_type->has_encoding(Type::CT_JSON)))) {
+                (type->has_encoding(Type::CT_JSON)&&ti_type->has_encoding(Type::CT_JSON))) ||
+                (type->has_encoding(Type::CT_OER)&&ti_type->has_encoding(Type::CT_OER))) {
             act_attr->error("Type `%s' and type `%s' have no common encoding",
               ti_type->get_typename().c_str(), type->get_typename().c_str());
           }

@@ -201,6 +201,8 @@ void Type::chk()
     chk_variants();
   }
   
+  chk_oer();
+  
   chk_finished = true;
 }
 
@@ -826,10 +828,11 @@ void Type::chk_encodings()
       case OT_RECORD_OF:
       case OT_COMP_FIELD:
       case OT_SELTYPE:
-        // ASN.1 types automatically have BER, PER, XER and JSON encoding
+        // ASN.1 types automatically have BER, PER, XER, OER and JSON encoding
         add_coding(string("BER:2002"), Ttcn::MOD_NONE, true);
         add_coding(string(get_encoding_name(CT_PER)), Ttcn::MOD_NONE, true);
         add_coding(string(get_encoding_name(CT_JSON)), Ttcn::MOD_NONE, true);
+        add_coding(string(get_encoding_name(CT_OER)), Ttcn::MOD_NONE, true);
         if (asn1_xer) {
           // XER encoding for ASN.1 types can be disabled with a command line option
           add_coding(string(get_encoding_name(CT_XER)), Ttcn::MOD_NONE, true);
@@ -2972,6 +2975,65 @@ void Type::chk_xer() { // XERSTUFF semantic check
 
 }
 
+void Type::chk_oer() {
+  //if (!is_asn1()) return;
+  if (oerattrib == NULL) {
+    oerattrib = new OerAST();
+  }
+  switch (typetype) {
+    case T_BOOL:
+      break;
+    case T_INT_A: {
+      if (is_constrained()) {
+        Location loc;
+        int_limit_t upper = get_sub_type()->get_root()->get_int_limit(true, &loc);
+        int_limit_t lower = get_sub_type()->get_root()->get_int_limit(false, &loc);
+        bool lower_inf = lower.get_type() != int_limit_t::NUMBER;
+        bool upper_inf = upper.get_type() != int_limit_t::NUMBER;
+        if (lower_inf || upper_inf) {
+          oerattrib->signed_ = lower_inf;
+          oerattrib->bytes = -1;
+        } else {
+          int_val_t low = lower.get_value();
+          int_val_t up  = upper.get_value();
+          if (low < 0) {
+            oerattrib->signed_ = true;
+            if (low >= -128 && up <= 127) {
+              oerattrib->bytes = 1;
+            } else if (low >= -32768 && up <= 32767) {
+              oerattrib->bytes = 2;
+            } else if (low >= -2147483648 && up <= 2147483647) {
+              oerattrib->bytes = 4;
+            } else if ((low+1) >= -9223372036854775807LL && up <= 9223372036854775807LL) {
+              oerattrib->bytes = 8;
+            } else {
+              oerattrib->bytes = -1;
+            }
+          } else {
+            static int_val_t uns_8_byte("18446744073709551615", NULL);
+            oerattrib->signed_ = false;
+            if (up <= 255) {
+              oerattrib->bytes = 1;
+            } else if (up <= 65535) {
+              oerattrib->bytes = 2;
+            } else if (up <= 4294967295) {
+              oerattrib->bytes = 4;
+            } else if (up <= uns_8_byte) {
+              oerattrib->bytes = 8;
+            } else {
+              oerattrib->bytes = -1;
+            }
+          }
+        }
+      } else {
+        oerattrib->signed_ = true;
+        oerattrib->bytes = -1;
+      }
+      break; }
+    default:
+      break;
+  }
+}
 
 void Type::chk_Int_A()
 {

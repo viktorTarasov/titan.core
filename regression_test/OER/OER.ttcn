@@ -1,0 +1,752 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+ module OER {
+
+ 	import from Types all;
+
+ 	type component EmptyCT {
+
+ 	}
+
+ 	external function enc_MyBool(in MyBool pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_MyBool(in octetstring stream) return MyBool
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_UnLimitedInt(in UnLimitedInt pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_UnLimitedInt(in octetstring stream) return UnLimitedInt
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Unsigned1byteInt(in Unsigned1byteInt pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Unsigned1byteInt(in octetstring stream) return Unsigned1byteInt
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Unsigned1byteInt2(in Unsigned1byteInt2 pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Unsigned1byteInt2(in octetstring stream) return Unsigned1byteInt2
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Signed1byteInt(in Signed1byteInt pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Signed1byteInt(in octetstring stream) return Signed1byteInt
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Signed1byteInt2(in Signed1byteInt2 pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Signed1byteInt2(in octetstring stream) return Signed1byteInt2
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Unsigned2byteInt(in Unsigned2byteInt pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Unsigned2byteInt(in octetstring stream) return Unsigned2byteInt
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Signed2byteInt(in Signed2byteInt pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Signed2byteInt(in octetstring stream) return Signed2byteInt
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Unsigned4byteInt(in Unsigned4byteInt pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Unsigned4byteInt(in octetstring stream) return Unsigned4byteInt
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Signed4byteInt(in Signed4byteInt pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Signed4byteInt(in octetstring stream) return Signed4byteInt
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Unsigned8byteInt(in Unsigned8byteInt pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Unsigned8byteInt(in octetstring stream) return Unsigned8byteInt
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_Signed8byteInt(in Signed8byteInt pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_Signed8byteInt(in octetstring stream) return Signed8byteInt
+     with { extension "prototype (convert) decode(OER)" }
+
+    const MyBool b_true := true;
+    const MyBool b_false := false;
+
+ 	testcase tc_boolean() runs on EmptyCT {
+ 		var MyBool b;
+ 		var octetstring os;
+
+ 		os := enc_MyBool(b_true);
+ 		if (os != 'FF'O) {
+ 			setverdict(fail, "tc_boolean: ", match('FF'O, os));
+ 		}
+
+ 		b := dec_MyBool(os);
+ 		if (b != b_true) {
+ 			setverdict(fail, "tc_boolean: ", match(b_true, b));
+ 		}
+
+ 		os := enc_MyBool(b_false);
+ 		if (os != '00'O) {
+ 			setverdict(fail, "tc_boolean: ", match('00'O, os));
+ 		}
+
+ 		b := dec_MyBool(os);
+ 		if (b != b_false) {
+ 			setverdict(fail, "tc_boolean: ", match(b_false, b));
+ 		}
+
+ 		// Any non zero octet should be decoded into true
+ 		b := dec_MyBool('12'O);
+ 		if (b != b_true) {
+ 			setverdict(fail, "tc_boolean: ", match(b_true, b));
+ 		}
+
+ 		setverdict(pass);
+ 	}
+
+ 	testcase tc_integer() runs on EmptyCT {
+ 		var UnLimitedInt ui, ui2;
+ 		var octetstring os;
+
+ 		// encoding and decoding of an integer without length restriction
+
+ 		ui := 1;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '0101'O) {
+ 			setverdict(fail, "tc_integer: ", match('0101'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		ui := -1;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '01FF'O) {
+ 			setverdict(fail, "tc_integer: ", match('01FF'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		ui := 127;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '017F'O) {
+ 			setverdict(fail, "tc_integer: ", match('017F'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		ui := -127;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '0181'O) {
+ 			setverdict(fail, "tc_integer: ", match('0181'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		ui := 128;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '020080'O) {
+ 			setverdict(fail, "tc_integer: ", match('020080'O, os));
+ 		}
+
+ 		ui := -128;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '0180'O) {
+ 			setverdict(fail, "tc_integer: ", match('0180'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		ui := 9846213;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '0400963DC5'O) {
+ 			setverdict(fail, "tc_integer: ", match('0400963DC5'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		ui := -9846213;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '04FF69C23B'O) {
+ 			setverdict(fail, "tc_integer: ", match('04FF69C23B'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		ui := 9845446897897946465546213;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '0B0824DABEEC10E4EEF9AFE5'O) {
+ 			setverdict(fail, "tc_integer: ", match('0B0824DABEEC10E4EEF9AFE5'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		ui := -9845446897897946465546213;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '0BF7DB254113EF1B1106501B'O) {
+ 			setverdict(fail, "tc_integer: ", match('0BF7DB254113EF1B1106501B'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		ui := 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999900000009999999999999999999999999999999999999999999999999999999999999999999999999999922222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222227897687687687686976987686789769999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999983222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '820173595FD491DD19871F8088799D4156D07D92040D432871423CE7B3DFDACFD742D457B8D4333D104430E55C82432DB091EA1327D85726DC65F1AD66701DC78AF25CC364CF2692CB6215ADD3B2189001BFA2C5A028E17089EA842611D053957E1574BA3E56A64B0553572BAEC9553E6DB2F0B14744D019C427C1653614B62BC200C45D3DBC9C5146A20310BEB6E1D7FFF5D1229801725693F843A71C5973C717B7180B64279C1301949C0ABAEDFB3BC2AB3113F518144E23679926BB265DBD2B9D27ED4B6F01F20F8C8C221F1DFAE97E7594B5DE45A4F9CC3A596C7B079061A3A9FA4924659DD4537634D94D84A6794E12BE1F8046CEBB7DFD083FD40F834A7C3288D385BCF00CFF26F1FB0FB91494FB65DED255143DAD4442A0E7EEFDF63CECFFBA481C9B3A20723C843270CF3FEC071A14B08A88ADCD51EE4887E18503B58444EC32F1D66922454BDAA8295B227D513F877AD8F526E2035E9599334FC5BAAA1CE38E38E38E38E38E38E38E38E38E38E38E38E38E'O) {
+ 			setverdict(fail, "tc_integer: ", match('820173595FD491DD19871F8088799D4156D07D92040D432871423CE7B3DFDACFD742D457B8D4333D104430E55C82432DB091EA1327D85726DC65F1AD66701DC78AF25CC364CF2692CB6215ADD3B2189001BFA2C5A028E17089EA842611D053957E1574BA3E56A64B0553572BAEC9553E6DB2F0B14744D019C427C1653614B62BC200C45D3DBC9C5146A20310BEB6E1D7FFF5D1229801725693F843A71C5973C717B7180B64279C1301949C0ABAEDFB3BC2AB3113F518144E23679926BB265DBD2B9D27ED4B6F01F20F8C8C221F1DFAE97E7594B5DE45A4F9CC3A596C7B079061A3A9FA4924659DD4537634D94D84A6794E12BE1F8046CEBB7DFD083FD40F834A7C3288D385BCF00CFF26F1FB0FB91494FB65DED255143DAD4442A0E7EEFDF63CECFFBA481C9B3A20723C843270CF3FEC071A14B08A88ADCD51EE4887E18503B58444EC32F1D66922454BDAA8295B227D513F877AD8F526E2035E9599334FC5BAAA1CE38E38E38E38E38E38E38E38E38E38E38E38E38E'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}
+
+ 		// OPENSSL bignum creates incorrect binary representation for this number.
+
+ 		/*ui := 9769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686976987686789768768768768697698768678976876876876869769876867897687687687686;
+ 		os := enc_UnLimitedInt(ui);
+ 		if (os != '820161C2B98D7E037EE77AA14F2357CE18367378F20D6A4AC138D8CDE3BCF3BE442D11E66C3CCFF55879FEB8144FE1FF5D3D1243692BC6654950B66DCA57300CEC39974AEB8A2113A7F72E6B240A8CC1638B7631B0F234B8491ED11F6BF9591175CF1B7FD4A21542080CE4183905F326B7CBDAD437C440B1FB0B5ED8FCB3C51E15E71B41F767C3FD482822E875E541E3D9267E5075ED0C0F82F4F9984936443A04A62C131EF90D1CC707204738BA14B0037E203B80A223611C98DE0C0D9BD59F207D655165E5D5397888FF58FA57F039B299F19A387A12ACAE1CFC7090409CD2AA8B859A6AB058DFDC4E089C1A753CABC55730EE992860B4CDBAE918D87A7840AEE790790543267BB04BE8197343B74AC57FB12A8FF16E15DB4CA860270C974B7FF97FAB673B719CE9A252F96134061E8B4683A036C78C4D42A6F4DAC1521CE9F0C91424334D85F3F93ECA42CE421D6E521B6DD5778B73FFF44FB6A83CC46D542DD1EE06'O) {
+ 			setverdict(fail, "tc_integer: ", match('820161C2B98D7E037EE77AA14F2357CE18367378F20D6A4AC138D8CDE3BCF3BE442D11E66C3CCFF55879FEB8144FE1FF5D3D1243692BC6654950B66DCA57300CEC39974AEB8A2113A7F72E6B240A8CC1638B7631B0F234B8491ED11F6BF9591175CF1B7FD4A21542080CE4183905F326B7CBDAD437C440B1FB0B5ED8FCB3C51E15E71B41F767C3FD482822E875E541E3D9267E5075ED0C0F82F4F9984936443A04A62C131EF90D1CC707204738BA14B0037E203B80A223611C98DE0C0D9BD59F207D655165E5D5397888FF58FA57F039B299F19A387A12ACAE1CFC7090409CD2AA8B859A6AB058DFDC4E089C1A753CABC55730EE992860B4CDBAE918D87A7840AEE790790543267BB04BE8197343B74AC57FB12A8FF16E15DB4CA860270C974B7FF97FAB673B719CE9A252F96134061E8B4683A036C78C4D42A6F4DAC1521CE9F0C91424334D85F3F93ECA42CE421D6E521B6DD5778B73FFF44FB6A83CC46D542DD1EE06'O, os));
+ 		}
+ 		ui2 := dec_UnLimitedInt(os);
+ 		if (ui != ui2) {
+ 			setverdict(fail, "tc_integer: ", match(ui, ui2));
+ 		}*/
+
+
+ 		// encoding and decoding of an integer with length restriction of 0..255 (1 byte)
+ 		var Unsigned1byteInt u1i, u1ires;
+
+		u1i := 1;
+ 		os := enc_Unsigned1byteInt(u1i);
+ 		if (os != '01'O) {
+ 			setverdict(fail, "tc_integer: ", match('01'O, os));
+ 		}
+ 		u1ires := dec_Unsigned1byteInt(os);
+ 		if (u1i != u1ires) {
+ 			setverdict(fail, "tc_integer: ", match(u1i, u1ires));
+ 		}
+
+ 		u1i := 127;
+ 		os := enc_Unsigned1byteInt(u1i);
+ 		if (os != '7F'O) {
+ 			setverdict(fail, "tc_integer: ", match('7F'O, os));
+ 		}
+ 		u1ires := dec_Unsigned1byteInt(os);
+ 		if (u1i != u1ires) {
+ 			setverdict(fail, "tc_integer: ", match(u1i, u1ires));
+ 		}
+
+ 		u1i := 255;
+ 		os := enc_Unsigned1byteInt(u1i);
+ 		if (os != 'FF'O) {
+ 			setverdict(fail, "tc_integer: ", match('FF'O, os));
+ 		}
+ 		u1ires := dec_Unsigned1byteInt(os);
+ 		if (u1i != u1ires) {
+ 			setverdict(fail, "tc_integer: ", match(u1i, u1ires));
+ 		}
+
+ 		// encoding and decoding of an integer with length restriction of 35..94 (1 byte)
+ 		var Unsigned1byteInt2 u1i2, u1i2res;
+		u1i2 := 35;
+ 		os := enc_Unsigned1byteInt2(u1i2);
+ 		if (os != '23'O) {
+ 			setverdict(fail, "tc_integer: ", match('23'O, os));
+ 		}
+ 		u1i2res := dec_Unsigned1byteInt(os);
+ 		if (u1i2 != u1i2res) {
+ 			setverdict(fail, "tc_integer: ", match(u1i2, u1i2res));
+ 		}
+
+ 		u1i2 := 50;
+ 		os := enc_Unsigned1byteInt2(u1i2);
+ 		if (os != '32'O) {
+ 			setverdict(fail, "tc_integer: ", match('32'O, os));
+ 		}
+ 		u1i2res := dec_Unsigned1byteInt(os);
+ 		if (u1i2 != u1i2res) {
+ 			setverdict(fail, "tc_integer: ", match(u1i2, u1i2res));
+ 		}
+
+ 		u1i2 := 94;
+ 		os := enc_Unsigned1byteInt2(u1i2);
+ 		if (os != '5E'O) {
+ 			setverdict(fail, "tc_integer: ", match('5E'O, os));
+ 		}
+ 		u1i2res := dec_Unsigned1byteInt(os);
+ 		if (u1i2 != u1i2res) {
+ 			setverdict(fail, "tc_integer: ", match(u1i2, u1i2res));
+ 		}
+
+ 		// encoding and decoding of an integer with length restriction of -128..127 (1 byte)
+ 		var Signed1byteInt s1i, s1ires;
+
+		s1i := -128;
+ 		os := enc_Signed1byteInt(s1i);
+ 		if (os != '80'O) {
+ 			setverdict(fail, "tc_integer: ", match('80'O, os));
+ 		}
+ 		s1ires := dec_Signed1byteInt(os);
+ 		if (s1i != s1ires) {
+ 			setverdict(fail, "tc_integer: ", match(s1i, s1ires));
+ 		}
+
+ 		s1i := -35;
+ 		os := enc_Signed1byteInt(s1i);
+ 		if (os != 'DD'O) {
+ 			setverdict(fail, "tc_integer: ", match('DD'O, os));
+ 		}
+ 		s1ires := dec_Signed1byteInt(os);
+ 		if (s1i != s1ires) {
+ 			setverdict(fail, "tc_integer: ", match(s1i, s1ires));
+ 		}
+
+ 		s1i := 0;
+ 		os := enc_Signed1byteInt(s1i);
+ 		if (os != '00'O) {
+ 			setverdict(fail, "tc_integer: ", match('00'O, os));
+ 		}
+ 		s1ires := dec_Signed1byteInt(os);
+ 		if (s1i != s1ires) {
+ 			setverdict(fail, "tc_integer: ", match(s1i, s1ires));
+ 		}
+
+ 		s1i := 94;
+ 		os := enc_Signed1byteInt(s1i);
+ 		if (os != '5E'O) {
+ 			setverdict(fail, "tc_integer: ", match('5E'O, os));
+ 		}
+ 		s1ires := dec_Signed1byteInt(os);
+ 		if (s1i != s1ires) {
+ 			setverdict(fail, "tc_integer: ", match(s1i, s1ires));
+ 		}
+
+ 		s1i := 127;
+ 		os := enc_Signed1byteInt(s1i);
+ 		if (os != '7F'O) {
+ 			setverdict(fail, "tc_integer: ", match('7F'O, os));
+ 		}
+ 		s1ires := dec_Signed1byteInt(os);
+ 		if (s1i != s1ires) {
+ 			setverdict(fail, "tc_integer: ", match(s1i, s1ires));
+ 		}
+
+ 		// encoding and decoding of an integer with length restriction of -35..94 (1 byte)
+ 		var Signed1byteInt2 s1i2, s1i2res;
+
+		s1i2 := -35;
+ 		os := enc_Signed1byteInt2(s1i2);
+ 		if (os != 'DD'O) {
+ 			setverdict(fail, "tc_integer: ", match('DD'O, os));
+ 		}
+ 		s1i2res := dec_Signed1byteInt2(os);
+ 		if (s1i2 != s1i2res) {
+ 			setverdict(fail, "tc_integer: ", match(s1i2, s1i2res));
+ 		}
+
+ 		s1i2 := -4;
+ 		os := enc_Signed1byteInt2(s1i2);
+ 		if (os != 'FC'O) {
+ 			setverdict(fail, "tc_integer: ", match('FC'O, os));
+ 		}
+ 		s1i2res := dec_Signed1byteInt2(os);
+ 		if (s1i2 != s1i2res) {
+ 			setverdict(fail, "tc_integer: ", match(s1i2, s1i2res));
+ 		}
+
+ 		s1i2 := 0;
+ 		os := enc_Signed1byteInt2(s1i2);
+ 		if (os != '00'O) {
+ 			setverdict(fail, "tc_integer: ", match('00'O, os));
+ 		}
+ 		s1i2res := dec_Signed1byteInt2(os);
+ 		if (s1i2 != s1i2res) {
+ 			setverdict(fail, "tc_integer: ", match(s1i2, s1i2res));
+ 		}
+
+ 		s1i2 := 62;
+ 		os := enc_Signed1byteInt2(s1i2);
+ 		if (os != '3E'O) {
+ 			setverdict(fail, "tc_integer: ", match('3E'O, os));
+ 		}
+ 		s1i2res := dec_Signed1byteInt2(os);
+ 		if (s1i2 != s1i2res) {
+ 			setverdict(fail, "tc_integer: ", match(s1i2, s1i2res));
+ 		}
+
+ 		s1i2 := 94;
+ 		os := enc_Signed1byteInt2(s1i2);
+ 		if (os != '5E'O) {
+ 			setverdict(fail, "tc_integer: ", match('5E'O, os));
+ 		}
+ 		s1i2res := dec_Signed1byteInt2(os);
+ 		if (s1i2 != s1i2res) {
+ 			setverdict(fail, "tc_integer: ", match(s1i2, s1i2res));
+ 		}
+
+ 		// encoding and decoding of an integer with length restriction of 0..65535 (2 byte)
+ 		var Unsigned2byteInt u2i, u2ires;
+
+		u2i := 0;
+ 		os := enc_Unsigned2byteInt(u2i);
+ 		if (os != '0000'O) {
+ 			setverdict(fail, "tc_integer: ", match('0000'O, os));
+ 		}
+ 		u2ires := dec_Unsigned2byteInt(os);
+ 		if (u2i != u2ires) {
+ 			setverdict(fail, "tc_integer: ", match(u2i, u2ires));
+ 		}
+
+ 		u2i := 324;
+ 		os := enc_Unsigned2byteInt(u2i);
+ 		if (os != '0144'O) {
+ 			setverdict(fail, "tc_integer: ", match('0144'O, os));
+ 		}
+ 		u2ires := dec_Unsigned2byteInt(os);
+ 		if (u2i != u2ires) {
+ 			setverdict(fail, "tc_integer: ", match(u2i, u2ires));
+ 		}
+
+ 		u2i := 4357;
+ 		os := enc_Unsigned2byteInt(u2i);
+ 		if (os != '1105'O) {
+ 			setverdict(fail, "tc_integer: ", match('1105'O, os));
+ 		}
+ 		u2ires := dec_Unsigned2byteInt(os);
+ 		if (u2i != u2ires) {
+ 			setverdict(fail, "tc_integer: ", match(u2i, u2ires));
+ 		}
+
+ 		u2i := 17586;
+ 		os := enc_Unsigned2byteInt(u2i);
+ 		if (os != '44B2'O) {
+ 			setverdict(fail, "tc_integer: ", match('44B2'O, os));
+ 		}
+ 		u2ires := dec_Unsigned2byteInt(os);
+ 		if (u2i != u2ires) {
+ 			setverdict(fail, "tc_integer: ", match(u2i, u2ires));
+ 		}
+
+ 		u2i := 65535;
+ 		os := enc_Unsigned2byteInt(u2i);
+ 		if (os != 'FFFF'O) {
+ 			setverdict(fail, "tc_integer: ", match('FFFF'O, os));
+ 		}
+ 		u2ires := dec_Unsigned2byteInt(os);
+ 		if (u2i != u2ires) {
+ 			setverdict(fail, "tc_integer: ", match(u2i, u2ires));
+ 		}
+
+		// encoding and decoding of an integer with length restriction of -32768..32767 (2 bytes)
+ 		var Signed2byteInt s2i, s2ires;
+
+		s2i := -32768;
+ 		os := enc_Signed2byteInt(s2i);
+ 		if (os != '8000'O) {
+ 			setverdict(fail, "tc_integer: ", match('8000'O, os));
+ 		}
+ 		s2ires := dec_Signed2byteInt(os);
+ 		if (s2i != s2ires) {
+ 			setverdict(fail, "tc_integer: ", match(s2i, s2ires));
+ 		}
+
+ 		s2i := -3167;
+ 		os := enc_Signed2byteInt(s2i);
+ 		if (os != 'F3A1'O) {
+ 			setverdict(fail, "tc_integer: ", match('F3A1'O, os));
+ 		}
+ 		s2ires := dec_Signed2byteInt(os);
+ 		if (s2i != s2ires) {
+ 			setverdict(fail, "tc_integer: ", match(s2i, s2ires));
+ 		}
+
+ 		s2i := 0;
+ 		os := enc_Signed2byteInt(s2i);
+ 		if (os != '0000'O) {
+ 			setverdict(fail, "tc_integer: ", match('0000'O, os));
+ 		}
+ 		s2ires := dec_Signed2byteInt(os);
+ 		if (s2i != s2ires) {
+ 			setverdict(fail, "tc_integer: ", match(s2i, s2ires));
+ 		}
+
+ 		s2i := 17586;
+ 		os := enc_Signed2byteInt(s2i);
+ 		if (os != '44B2'O) {
+ 			setverdict(fail, "tc_integer: ", match('44B2'O, os));
+ 		}
+ 		s2ires := dec_Signed2byteInt(os);
+ 		if (s2i != s2ires) {
+ 			setverdict(fail, "tc_integer: ", match(s2i, s2ires));
+ 		}
+
+ 		s2i := 32767;
+ 		os := enc_Signed2byteInt(s2i);
+ 		if (os != '7FFF'O) {
+ 			setverdict(fail, "tc_integer: ", match('7FFF'O, os));
+ 		}
+ 		s2ires := dec_Signed2byteInt(os);
+ 		if (s2i != s2ires) {
+ 			setverdict(fail, "tc_integer: ", match(s2i, s2ires));
+ 		}
+
+ 		// encoding and decoding of an integer with length restriction of 0..4294967295 (4 byte)
+ 		var Unsigned4byteInt u4i, u4ires;
+
+		u4i := 0;
+ 		os := enc_Unsigned4byteInt(u4i);
+ 		if (os != '00000000'O) {
+ 			setverdict(fail, "tc_integer: ", match('00000000'O, os));
+ 		}
+ 		u4ires := dec_Unsigned4byteInt(os);
+ 		if (u4i != u4ires) {
+ 			setverdict(fail, "tc_integer: ", match(u4i, u4ires));
+ 		}
+
+ 		u4i := 525;
+ 		os := enc_Unsigned4byteInt(u4i);
+ 		if (os != '0000020D'O) {
+ 			setverdict(fail, "tc_integer: ", match('0000020D'O, os));
+ 		}
+ 		u4ires := dec_Unsigned4byteInt(os);
+ 		if (u4i != u4ires) {
+ 			setverdict(fail, "tc_integer: ", match(u4i, u4ires));
+ 		}
+
+ 		u4i := 5732789;
+ 		os := enc_Unsigned4byteInt(u4i);
+ 		if (os != '005779B5'O) {
+ 			setverdict(fail, "tc_integer: ", match('005779B5'O, os));
+ 		}
+ 		u4ires := dec_Unsigned4byteInt(os);
+ 		if (u4i != u4ires) {
+ 			setverdict(fail, "tc_integer: ", match(u4i, u4ires));
+ 		}
+
+ 		u4i := 153215874;
+ 		os := enc_Unsigned4byteInt(u4i);
+ 		if (os != '0921E382'O) {
+ 			setverdict(fail, "tc_integer: ", match('0921E382'O, os));
+ 		}
+ 		u4ires := dec_Unsigned4byteInt(os);
+ 		if (u4i != u4ires) {
+ 			setverdict(fail, "tc_integer: ", match(u4i, u4ires));
+ 		}
+
+ 		u4i := 4294967295;
+ 		os := enc_Unsigned4byteInt(u4i);
+ 		if (os != 'FFFFFFFF'O) {
+ 			setverdict(fail, "tc_integer: ", match('FFFFFFFF'O, os));
+ 		}
+ 		u4ires := dec_Unsigned4byteInt(os);
+ 		if (u4i != u4ires) {
+ 			setverdict(fail, "tc_integer: ", match(u4i, u4ires));
+ 		}
+
+ 		// encoding and decoding of an integer with length restriction of -2147483648..2147483647 (4 bytes)
+ 		var Signed4byteInt s4i, s4ires;
+
+		s4i := -2147483648;
+ 		os := enc_Signed4byteInt(s4i);
+ 		if (os != '80000000'O) {
+ 			setverdict(fail, "tc_integer: ", match('80000000'O, os));
+ 		}
+ 		s4ires := dec_Signed4byteInt(os);
+ 		if (s4i != s4ires) {
+ 			setverdict(fail, "tc_integer: ", match(s4i, s4ires));
+ 		}
+
+ 		s4i := -3132567;
+ 		os := enc_Signed4byteInt(s4i);
+ 		if (os != 'FFD03369'O) {
+ 			setverdict(fail, "tc_integer: ", match('FFD03369'O, os));
+ 		}
+ 		s4ires := dec_Signed4byteInt(os);
+ 		if (s4i != s4ires) {
+ 			setverdict(fail, "tc_integer: ", match(s4i, s4ires));
+ 		}
+
+ 		s4i := 0;
+ 		os := enc_Signed4byteInt(s4i);
+ 		if (os != '00000000'O) {
+ 			setverdict(fail, "tc_integer: ", match('00000000'O, os));
+ 		}
+ 		s4ires := dec_Signed4byteInt(os);
+ 		if (s4i != s4ires) {
+ 			setverdict(fail, "tc_integer: ", match(s4i, s4ires));
+ 		}
+
+ 		s4i := 13557586;
+ 		os := enc_Signed4byteInt(s4i);
+ 		if (os != '00CEDF52'O) {
+ 			setverdict(fail, "tc_integer: ", match('00CEDF52'O, os));
+ 		}
+ 		s4ires := dec_Signed4byteInt(os);
+ 		if (s4i != s4ires) {
+ 			setverdict(fail, "tc_integer: ", match(s4i, s4ires));
+ 		}
+
+ 		s4i := 2147483647;
+ 		os := enc_Signed4byteInt(s4i);
+ 		if (os != '7FFFFFFF'O) {
+ 			setverdict(fail, "tc_integer: ", match('7FFFFFFF'O, os));
+ 		}
+ 		s4ires := dec_Signed4byteInt(os);
+ 		if (s4i != s4ires) {
+ 			setverdict(fail, "tc_integer: ", match(s4i, s4ires));
+ 		}
+
+
+ 		// encoding and decoding of an integer with length restriction of 0..18446744073709551615 (8 bytes)
+ 		var Unsigned8byteInt u8i, u8ires;
+
+		u8i := 0;
+ 		os := enc_Unsigned8byteInt(u8i);
+ 		if (os != '0000000000000000'O) {
+ 			setverdict(fail, "tc_integer: ", match('0000000000000000'O, os));
+ 		}
+ 		u8ires := dec_Unsigned8byteInt(os);
+ 		if (u8i != u8ires) {
+ 			setverdict(fail, "tc_integer: ", match(u8i, u8ires));
+ 		}
+
+ 		u8i := 546536543425;
+ 		os := enc_Unsigned8byteInt(u8i);
+ 		if (os != '0000007F401DD4C1'O) {
+ 			setverdict(fail, "tc_integer: ", match('0000007F401DD4C1'O, os));
+ 		}
+ 		u8ires := dec_Unsigned8byteInt(os);
+ 		if (u8i != u8ires) {
+ 			setverdict(fail, "tc_integer: ", match(u8i, u8ires));
+ 		}
+
+ 		u8i := 25732228989890789;
+ 		os := enc_Unsigned8byteInt(u8i);
+ 		if (os != '005B6B537038B0E5'O) {
+ 			setverdict(fail, "tc_integer: ", match('005B6B537038B0E5'O, os));
+ 		}
+ 		u8ires := dec_Unsigned8byteInt(os);
+ 		if (u8i != u8ires) {
+ 			setverdict(fail, "tc_integer: ", match(u8i, u8ires));
+ 		}
+
+ 		u8i := 5326573878769649432;
+ 		os := enc_Unsigned8byteInt(u8i);
+ 		if (os != '49EBCAB8A9F08718'O) {
+ 			setverdict(fail, "tc_integer: ", match('49EBCAB8A9F08718'O, os));
+ 		}
+ 		u8ires := dec_Unsigned8byteInt(os);
+ 		if (u8i != u8ires) {
+ 			setverdict(fail, "tc_integer: ", match(u8i, u8ires));
+ 		}
+
+ 		u8i := 18446744073709551615;
+ 		os := enc_Unsigned8byteInt(u8i);
+ 		if (os != 'FFFFFFFFFFFFFFFF'O) {
+ 			setverdict(fail, "tc_integer: ", match('FFFFFFFFFFFFFFFF'O, os));
+ 		}
+ 		u8ires := dec_Unsigned8byteInt(os);
+ 		if (u8i != u8ires) {
+ 			setverdict(fail, "tc_integer: ", match(u8i, u8ires));
+ 		}
+
+ 		// encoding and decoding of an integer with length restriction of -9223372036854775808..9223372036854775807 (8 bytes)
+ 		var Signed8byteInt s8i, s8ires;
+
+		s8i := -9223372036854775808;
+ 		os := enc_Signed8byteInt(s8i);
+ 		if (os != '8000000000000000'O) {
+ 			setverdict(fail, "tc_integer: ", match('8000000000000000'O, os));
+ 		}
+ 		s8ires := dec_Signed8byteInt(os);
+ 		if (s8i != s8ires) {
+ 			setverdict(fail, "tc_integer: ", match(s8i, s8ires));
+ 		}
+
+ 		s8i := -3132543653654367;
+ 		os := enc_Signed8byteInt(s8i);
+ 		if (os != 'FFF4DEF7D847D0A1'O) {
+ 			setverdict(fail, "tc_integer: ", match('FFF4DEF7D847D0A1'O, os));
+ 		}
+ 		s8ires := dec_Signed8byteInt(os);
+ 		if (s8i != s8ires) {
+ 			setverdict(fail, "tc_integer: ", match(s8i, s8ires));
+ 		}
+
+ 		s8i := 0;
+ 		os := enc_Signed8byteInt(s8i);
+ 		if (os != '0000000000000000'O) {
+ 			setverdict(fail, "tc_integer: ", match('0000000000000000'O, os));
+ 		}
+ 		s8ires := dec_Signed8byteInt(os);
+ 		if (s8i != s8ires) {
+ 			setverdict(fail, "tc_integer: ", match(s8i, s8ires));
+ 		}
+
+ 		s8i := 1355758654384326;
+ 		os := enc_Signed8byteInt(s8i);
+ 		if (os != '0004D10E28FEE8C6'O) {
+ 			setverdict(fail, "tc_integer: ", match('0004D10E28FEE8C6'O, os));
+ 		}
+ 		s8ires := dec_Signed8byteInt(os);
+ 		if (s8i != s8ires) {
+ 			setverdict(fail, "tc_integer: ", match(s8i, s8ires));
+ 		}
+
+ 		s8i := 9223372036854775807;
+ 		os := enc_Signed8byteInt(s8i);
+ 		if (os != '7FFFFFFFFFFFFFFF'O) {
+ 			setverdict(fail, "tc_integer: ", match('7FFFFFFFFFFFFFFF'O, os));
+ 		}
+ 		s8ires := dec_Signed8byteInt(os);
+ 		if (s8i != s8ires) {
+ 			setverdict(fail, "tc_integer: ", match(s8i, s8ires));
+ 		}
+
+
+
+ 		setverdict(pass);
+ 	}
+
+ 	control {
+ 		execute(tc_boolean());
+ 		execute(tc_integer());
+ 	}
+ }

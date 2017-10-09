@@ -1,0 +1,47 @@
+--/////////////////////////////////////////////////////////////////////////////
+-- Copyright (c) 2000-2017 Ericsson Telecom AB
+-- All rights reserved. This program and the accompanying materials
+-- are made available under the terms of the Eclipse Public License v1.0
+-- which accompanies this distribution, and is available at
+-- http://www.eclipse.org/legal/epl-v10.html
+--
+-- Contributors:
+--   Szabo, Bence Janos
+--
+--/////////////////////////////////////////////////////////////////////////////
+Types
+DEFINITIONS
+
+AUTOMATIC TAGS
+
+::=
+
+BEGIN
+
+IMPORTS ; -- nothing
+
+MyBool ::= BOOLEAN
+
+UnLimitedInt ::= INTEGER
+
+Unsigned1byteInt ::= INTEGER (0..255)
+
+Unsigned1byteInt2 ::= INTEGER (35..94)
+
+Signed1byteInt ::= INTEGER (-128..127)
+
+Signed1byteInt2 ::= INTEGER (-35..94)
+
+Unsigned2byteInt ::= INTEGER (0..65535)
+
+Signed2byteInt ::= INTEGER (-32768..32767)
+
+Unsigned4byteInt ::= INTEGER (0..4294967295)
+
+Signed4byteInt ::= INTEGER (-2147483648..2147483647)
+
+Unsigned8byteInt ::= INTEGER (0..18446744073709551615)
+
+Signed8byteInt ::= INTEGER (-9223372036854775808..9223372036854775807)
+
+END

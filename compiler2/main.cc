@@ -233,6 +233,12 @@ boolean enable_json()
   return !json_disabled;
 }
 
+boolean enable_oer()
+{
+  // TODO: temp while no new compiler flag
+  return TRUE;
+}
+
 boolean disable_attribute_validation()
 {
   if (attribute_validation_disabled) return TRUE;

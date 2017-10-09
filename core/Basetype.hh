@@ -43,6 +43,7 @@ struct TTCN_RAWdescriptor_t;
 struct TTCN_TEXTdescriptor_t;
 struct XERdescriptor_t;
 struct TTCN_JSONdescriptor_t;
+struct TTCN_OERdescriptor_t;
 class  XmlReaderWrap;
 class Module_Param;
 class Module_Param_Name;
@@ -63,6 +64,7 @@ struct TTCN_Typedescriptor_t {
   const TTCN_TEXTdescriptor_t * const text; /**< Information for TEXT coding */
   const XERdescriptor_t * const xer; /**< Information for XER */
   const TTCN_JSONdescriptor_t * const json; /**< Information for JSON coding */
+  const TTCN_OERdescriptor_t * const oer; /**< Information for OER coding */
   const TTCN_Typedescriptor_t * const oftype_descr; /**< Record-of element's type descriptor */
   /** ASN subtype
    *
@@ -610,6 +612,15 @@ public:
    * @return decoded length
    * @note Basetype::JSON_decode throws an error. */
   VIRTUAL_IF_RUNTIME_2 int JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer&, boolean);
+  
+  /** Encode OER.
+   * @return encoded length
+   * @note Basetype::OER_encode throws an error. */
+  VIRTUAL_IF_RUNTIME_2 int OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const;
+  
+  /** Decode OER.
+   * @note Basetype::OER_decode throws an error. */
+  VIRTUAL_IF_RUNTIME_2 int OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf);
   
   /** not a component by default (components will return true) */
   inline boolean is_component() { return FALSE; }

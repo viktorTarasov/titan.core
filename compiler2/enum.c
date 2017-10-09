@@ -43,6 +43,7 @@ void defEnumClass(const enum_def *edef, output_struct *output)
   boolean text_needed= edef->hasText && enable_text();
   boolean xer_needed = edef->hasXer && enable_xer();
   boolean json_needed = edef->hasJson && enable_json();
+  boolean oer_needed = edef->hasOer && enable_oer();
 
   char *enum_type, *qualified_enum_type, *unknown_value, *unbound_value;
   enum_type = mcopystr("enum_type");
@@ -442,9 +443,11 @@ void defEnumClass(const enum_def *edef, output_struct *output)
     "}\n\n", name, enum_type, dispname);
 
   /* BER functions */
-  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed)
+  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed
+    || oer_needed) {
     def_encdec(name, &def, &src, ber_needed,
-               raw_needed,text_needed, xer_needed, json_needed, TRUE);
+               raw_needed,text_needed, xer_needed, json_needed, oer_needed, TRUE);
+  }
   if(ber_needed) {
     src=mputprintf(src,
        "ASN_BER_TLV_t* %s::BER_encode_TLV(const TTCN_Typedescriptor_t&"

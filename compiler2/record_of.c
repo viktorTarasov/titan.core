@@ -60,6 +60,7 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
   boolean text_needed = force_gen_seof || (sdef->hasText && enable_text());
   boolean xer_needed = force_gen_seof || (sdef->hasXer && enable_xer());
   boolean json_needed = force_gen_seof || (sdef->hasJson && enable_json());
+  boolean oer_needed = force_gen_seof || (sdef->hasOer && enable_oer());
 
   /* Class definition and private data members */
   def = mputprintf(def,
@@ -705,9 +706,11 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
     "}\n"
     "}\n\n", name, dispname, type, type);
 
-  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed)
+  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed 
+    || oer_needed) {
     def_encdec(name, &def, &src, ber_needed, raw_needed, text_needed,
-               xer_needed, json_needed, FALSE);
+               xer_needed, json_needed, oer_needed, FALSE);
+  }
 
   if(text_needed){
    src=mputprintf(src,
@@ -1677,6 +1680,7 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
   boolean text_needed = force_gen_seof || (sdef->hasText && enable_text());
   boolean xer_needed = force_gen_seof || (sdef->hasXer && enable_xer());
   boolean json_needed = force_gen_seof || (sdef->hasJson && enable_json());
+  boolean oer_needed = force_gen_seof || (sdef->hasOer && enable_oer());
 
   /* Class definition and private data members */
   def = mputprintf(def,
@@ -2202,9 +2206,11 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
     "}\n"
     "}\n\n", name, dispname, type);
 
-  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed)
+  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed
+    || oer_needed) {
     def_encdec(name, &def, &src, ber_needed, raw_needed, text_needed,
-               xer_needed, json_needed, FALSE);
+               xer_needed, json_needed, oer_needed, FALSE);
+  }
 
   if (text_needed) {
     src=mputprintf(src,

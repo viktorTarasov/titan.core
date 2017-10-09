@@ -48,8 +48,9 @@ public:
     CT_PER,  /**< PER */
     CT_RAW,  /**< RAW */
     CT_TEXT, /**< TEXT */
-    CT_XER,   /**< XER */
-    CT_JSON  /**< JSON */
+    CT_XER,  /**< XER */
+    CT_JSON, /**< JSON */
+    CT_OER   /**< OER */
   };
   /** Error type enum type. If you want to add new values, please put
     * them before ET_ALL. Values must be consecutive, starting at zero.

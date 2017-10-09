@@ -88,6 +88,7 @@
 #include "TEXT.hh"
 #include "XER.hh"
 #include "JSON.hh"
+#include "OER.hh"
 #include "Error.hh"
 #include "XmlReader.hh"
 #include "Profiler.hh"

@@ -351,7 +351,7 @@ int RAW_encode_enum_type(const TTCN_Typedescriptor_t& p_td,
   my_raw.prepadding      = p_td.raw->prepadding;
   my_raw.ptroffset       = p_td.raw->ptroffset;
   my_raw.unit            = p_td.raw->unit;
-  TTCN_Typedescriptor_t my_descr = { p_td.name, 0, &my_raw, NULL, NULL, NULL,
+  TTCN_Typedescriptor_t my_descr = { p_td.name, 0, &my_raw, NULL, NULL, NULL, NULL,
     NULL, TTCN_Typedescriptor_t::DONTCARE };
   INTEGER i(integer_value);
   i.RAW_encode(my_descr, myleaf);
@@ -380,7 +380,7 @@ int RAW_decode_enum_type(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& buff,
   my_raw.prepadding      = p_td.raw->prepadding;
   my_raw.ptroffset       = p_td.raw->ptroffset;
   my_raw.unit            = p_td.raw->unit;
-  TTCN_Typedescriptor_t my_descr = { p_td.name, 0, &my_raw, NULL, NULL, NULL,
+  TTCN_Typedescriptor_t my_descr = { p_td.name, 0, &my_raw, NULL, NULL, NULL, NULL,
     NULL, TTCN_Typedescriptor_t::DONTCARE };
   INTEGER i;
   /*  if(p_td.raw->endianness==ORDER_MSB)

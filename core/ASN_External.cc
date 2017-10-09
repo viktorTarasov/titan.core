@@ -213,19 +213,19 @@ namespace { /* anonymous namespace */
     field_encoding.octet__aligned()=ex.data__value();
   }
 
-  static const TTCN_Typedescriptor_t EXTERNALtransfer_encoding_descr_ = { "EXTERNALtransfer.encoding", &CHOICE_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+  static const TTCN_Typedescriptor_t EXTERNALtransfer_encoding_descr_ = { "EXTERNALtransfer.encoding", &CHOICE_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
   static const ASN_Tag_t EXTERNALtransfer_encoding_single__ASN1__type_tag_[] = { { ASN_TAG_CONT, 0u } };
   static const ASN_BERdescriptor_t EXTERNALtransfer_encoding_single__ASN1__type_ber_ = { 1u, EXTERNALtransfer_encoding_single__ASN1__type_tag_ };
-  static const TTCN_Typedescriptor_t EXTERNALtransfer_encoding_single__ASN1__type_descr_ = { "EXTERNALtransfer.encoding.single-ASN1-type", &EXTERNALtransfer_encoding_single__ASN1__type_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+  static const TTCN_Typedescriptor_t EXTERNALtransfer_encoding_single__ASN1__type_descr_ = { "EXTERNALtransfer.encoding.single-ASN1-type", &EXTERNALtransfer_encoding_single__ASN1__type_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
   static const ASN_Tag_t EXTERNALtransfer_encoding_octet__aligned_tag_[] = { { ASN_TAG_CONT, 1u } };
   static const ASN_BERdescriptor_t EXTERNALtransfer_encoding_octet__aligned_ber_ = { 1u, EXTERNALtransfer_encoding_octet__aligned_tag_ };
-  static const TTCN_Typedescriptor_t EXTERNALtransfer_encoding_octet__aligned_descr_ = { "EXTERNALtransfer.encoding.octet-aligned", &EXTERNALtransfer_encoding_octet__aligned_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+  static const TTCN_Typedescriptor_t EXTERNALtransfer_encoding_octet__aligned_descr_ = { "EXTERNALtransfer.encoding.octet-aligned", &EXTERNALtransfer_encoding_octet__aligned_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
   static const ASN_Tag_t EXTERNALtransfer_encoding_arbitrary_tag_[] = { { ASN_TAG_CONT, 2u } };
   static const ASN_BERdescriptor_t EXTERNALtransfer_encoding_arbitrary_ber_ = { 1u, EXTERNALtransfer_encoding_arbitrary_tag_ };
-  static const TTCN_Typedescriptor_t EXTERNALtransfer_encoding_arbitrary_descr_ = { "EXTERNALtransfer.encoding.arbitrary", &EXTERNALtransfer_encoding_arbitrary_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+  static const TTCN_Typedescriptor_t EXTERNALtransfer_encoding_arbitrary_descr_ = { "EXTERNALtransfer.encoding.arbitrary", &EXTERNALtransfer_encoding_arbitrary_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
   /* Member functions of C++ classes */
 

@@ -34,12 +34,14 @@ extern "C" {
    * @param[in]  raw  RAW  codec needed
    * @param[in]  text TEXT codec needed
    * @param[in]  xer  XER  codec needed
+   * @param[in]  json JSON codec needed
+   * @param[in]  oer  OER  codec needed
    * @param[in]  is_leaf
    *  */
   void def_encdec(const char *p_classname,
                   char **p_classdef, char **p_classsrc,
                   boolean ber, boolean raw, boolean text, boolean xer,
-                  boolean json, boolean is_leaf);
+                  boolean json, boolean oer, boolean is_leaf);
   char *genRawFieldChecker(char *src,
                   const rawAST_coding_taglist *taglist, boolean is_equal);
   char *genRawTagChecker(char *src, const rawAST_coding_taglist *taglist);

@@ -38,6 +38,7 @@
 #include "ttcn3/TextAST.hh"
 #include "ttcn3/BerAST.hh"
 #include "ttcn3/JsonAST.hh"
+#include "ttcn3/OerAST.hh"
 #include <float.h>
 
 class XerAttributes;
@@ -209,6 +210,7 @@ namespace Common {
       CT_UNDEF, /**< undefined/unused */
       CT_BER,   /**< ASN.1 BER (built-in) */
       CT_PER,   /**< ASN.1 PER (through user defined coder functions) */
+      CT_OER,   /**< ASN.1 OER (built-in) */
       CT_RAW,   /**< TTCN-3 RAW (built-in) */
       CT_TEXT,  /**< TTCN-3 TEXT (built-in) */
       CT_XER,    /**< TTCN-3 XER (built-in) */
@@ -361,6 +363,7 @@ namespace Common {
     XerAttributes *xerattrib;
     BerAST *berattrib;
     JsonAST *jsonattrib;
+    OerAST *oerattrib;
 
     vector<SubTypeParse> *parsed_restr; ///< parsed subtype restrictions are stored here until they are moved to the sub_type member
     SubType *sub_type; ///< effective/aggregate subtype of this type, NULL if neither inherited nor own subtype restrictions exist
@@ -910,6 +913,8 @@ namespace Common {
     void chk_xer_use_order(int num_attributes);
     void chk_xer_use_type();
     void chk_xer_use_union();
+    
+    void chk_oer();
 
     bool is_root_basic();
     int get_raw_length();
@@ -1225,8 +1230,9 @@ namespace Common {
     void generate_code_berdescriptor(output_struct *target);
     void generate_code_rawdescriptor(output_struct *target);
     void generate_code_textdescriptor(output_struct *target);
-    void generate_code_jsondescriptor(output_struct *target);
     void generate_code_xerdescriptor(output_struct *target);
+    void generate_code_jsondescriptor(output_struct *target);
+    void generate_code_oerdescriptor(output_struct *target);
     void generate_code_alias(output_struct *target);
     void generate_code_Enum(output_struct *target);
     void generate_code_Choice(output_struct *target);
@@ -1351,6 +1357,7 @@ namespace Common {
     string get_genname_textdescriptor();
     string get_genname_xerdescriptor();
     string get_genname_jsondescriptor();
+    string get_genname_oerdescriptor();
     /** Return the ASN base type to be written into the type descriptor */
     const char* get_genname_typedescr_asnbasetype();
     /** parse subtype information and add parent's subtype information to

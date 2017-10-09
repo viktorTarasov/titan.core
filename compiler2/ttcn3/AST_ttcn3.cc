@@ -7081,6 +7081,9 @@ namespace Ttcn {
     case Type::CT_JSON:
       if (enable_json()) return;
       break;
+    case Type::CT_OER:
+      if (enable_oer()) return;
+      break;
     case Type::CT_CUSTOM:
       return; // cannot be disabled
     default:

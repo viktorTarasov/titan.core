@@ -256,7 +256,7 @@ void decode_bytestring_cbor(TTCN_Buffer& buff, JSON_Tokenizer& tok, int minor_ty
 
 // RAW descriptor for raw encoding
 TTCN_RAWdescriptor_t cbor_float_raw_ = {64,SG_NO,ORDER_LSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1,CharCoding::UNKNOWN};
-const TTCN_Typedescriptor_t cbor_float_descr_ = { NULL, NULL, &cbor_float_raw_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+const TTCN_Typedescriptor_t cbor_float_descr_ = { NULL, NULL, &cbor_float_raw_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 
 void json2cbor_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, size_t& num_of_items) {
@@ -574,7 +574,7 @@ void cbor2json_coding(TTCN_Buffer& buff, JSON_Tokenizer& tok, bool in_object) {
 ////////////////////////////////////////////////////////////////////////////////
 
 const TTCN_RAWdescriptor_t bson_float_raw_ = {64,SG_NO,ORDER_MSB,ORDER_LSB,ORDER_LSB,ORDER_LSB,EXT_BIT_NO,ORDER_LSB,ORDER_LSB,TOP_BIT_INHERITED,0,0,0,8,0,NULL,-1,CharCoding::UNKNOWN};
-const TTCN_Typedescriptor_t bson_float_descr_ = { NULL, NULL, &bson_float_raw_, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+const TTCN_Typedescriptor_t bson_float_descr_ = { NULL, NULL, &bson_float_raw_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 // Never use buff.get_read_data() without checking if it has enough bytes in the
 // buffer.

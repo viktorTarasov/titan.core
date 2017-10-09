@@ -82,6 +82,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   boolean text_needed = sdef->hasText && enable_text();
   boolean xer_needed = sdef->hasXer && enable_xer();
   boolean json_needed = sdef->hasJson && enable_json();
+  boolean oer_needed = sdef->hasOer && enable_oer();
 
   char *selection_type, *unbound_value, *selection_prefix;
   selection_type = mcopystr("union_selection_type");
@@ -524,9 +525,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     "}\n"
     "}\n\n", dispname);
 
-  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed)
+  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed
+    || oer_needed) {
     def_encdec(name, &def, &src, ber_needed, raw_needed, text_needed,
-               xer_needed, json_needed, TRUE);
+               xer_needed, json_needed, oer_needed, TRUE);
+  }
 
   /* BER functions */
   if(ber_needed) {

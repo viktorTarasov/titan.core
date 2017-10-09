@@ -27,7 +27,7 @@
 void def_encdec(const char *p_classname,
                 char **p_classdef, char **p_classsrc,
                 boolean ber, boolean raw, boolean text, boolean xer,
-                boolean json, boolean is_leaf)
+                boolean json, boolean oer, boolean is_leaf)
 {
   char *def=NULL;
   char *src=NULL;

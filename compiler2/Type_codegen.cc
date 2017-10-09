@@ -279,7 +279,7 @@ void Type::generate_code_typedescriptor(output_struct *target)
   // FIXME: force_xer should be elminated. if a type needs a descriptor,
   // it should say so via get_genname_typedescriptor()
 
-  /* genname{type,ber,raw,text,xer,json}descriptor == gennameown is true if
+  /* genname{type,ber,raw,text,xer,json,oer}descriptor == gennameown is true if
    * the type needs its own {type,ber,raw,text,xer,json}descriptor
    * and can't use the descriptor of one of the built-in types.
    */
@@ -318,6 +318,13 @@ void Type::generate_code_typedescriptor(output_struct *target)
     const string& gennamejsondescriptor = get_genname_jsondescriptor();
     if (generate_json && gennamejsondescriptor == gennameown) {
       generate_code_jsondescriptor(target);
+    }
+    
+    bool generate_oer = enable_oer() && (legacy_codec_handling ?
+      has_encoding(CT_OER) : last->get_gen_coder_functions(CT_OER));
+    const string& gennameoerdescriptor = get_genname_oerdescriptor();
+    if (generate_oer && gennameoerdescriptor == gennameown) {
+      generate_code_oerdescriptor(target);
     }
 
     // the type descriptor must be always exported.
@@ -412,6 +419,13 @@ void Type::generate_code_typedescriptor(output_struct *target)
           "NULL, ");
       }
     }
+    
+    if (generate_oer)
+      target->source.global_vars = mputprintf(target->source.global_vars,
+        "&%s_oer_, ", gennamexerdescriptor.c_str());
+    else
+      target->source.global_vars = mputprintf(target->source.global_vars,
+        "NULL, ");
     
     if (T_SEQOF == last->typetype || T_SETOF == last->typetype) {
       target->source.global_vars=mputprintf(target->source.global_vars,
@@ -1066,6 +1080,25 @@ void Type::generate_code_jsondescriptor(output_struct *target)
   
 }
 
+void Type::generate_code_oerdescriptor(output_struct *target)
+{
+  target->header.global_vars = mputprintf(target->header.global_vars,
+    "extern const TTCN_OERdescriptor_t %s_oer_;\n", get_genname_own().c_str());
+  
+  if (NULL == oerattrib) {
+    target->source.global_vars = mputprintf(target->source.global_vars,
+      "const TTCN_OERdescriptor_t %s_oer_ = { -1, FALSE };\n"
+      , get_genname_own().c_str());
+  } else {
+    target->source.global_vars = mputprintf(target->source.global_vars,
+      "const TTCN_OERdescriptor_t %s_oer_ = { %i, %s };\n"
+      , get_genname_own().c_str() 
+      , oerattrib->bytes
+      , oerattrib->signed_ ? "TRUE" : "FALSE");
+  }
+  
+}
+
 void Type::generate_code_alias(output_struct *target)
 {
   if (!needs_alias()) return;
@@ -1136,6 +1169,7 @@ void Type::generate_code_Enum(output_struct *target)
   e_def.hasXer = legacy_codec_handling ? has_encoding(CT_XER) :
     get_gen_coder_functions(CT_XER);
   e_def.hasJson = get_gen_coder_functions(CT_JSON);
+  e_def.hasOer = get_gen_coder_functions(CT_OER);
   if (xerattrib) {
     e_def.xerUseNumber = xerattrib->useNumber_;
   }
@@ -1182,6 +1216,7 @@ void Type::generate_code_Choice(output_struct *target)
   sdef.hasXer = legacy_codec_handling ? has_encoding(CT_XER) :
     get_gen_coder_functions(CT_XER);
   sdef.hasJson = get_gen_coder_functions(CT_JSON);
+  sdef.hasOer = get_gen_coder_functions(CT_OER);
   sdef.has_opentypes = get_has_opentypes();
   sdef.opentype_outermost = get_is_opentype_outermost();
   sdef.ot = generate_code_ot(pool);
@@ -1594,6 +1629,7 @@ void Type::generate_code_Se(output_struct *target)
   sdef.hasXer = legacy_codec_handling ? has_encoding(CT_XER) :
     get_gen_coder_functions(CT_XER);
   sdef.hasJson = get_gen_coder_functions(CT_JSON);
+  sdef.hasOer = get_gen_coder_functions(CT_OER);
   if (xerattrib){
     Module *my_module = get_my_scope()->get_scope_mod();
     sdef.xerHasNamespaces = my_module->get_nof_ns() != 0;
@@ -2065,6 +2101,7 @@ void Type::generate_code_SeOf(output_struct *target)
   sofdef.hasXer = legacy_codec_handling ? has_encoding(CT_XER) :
     get_gen_coder_functions(CT_XER);
   sofdef.hasJson = get_gen_coder_functions(CT_JSON);
+  sofdef.hasOer = get_gen_coder_functions(CT_OER);
   if (xerattrib) {
     //sofdef.xerList      = xerattrib->list_;
     sofdef.xerAttribute = xerattrib->attribute_;

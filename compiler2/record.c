@@ -3200,6 +3200,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   boolean text_needed = sdef->hasText && enable_text();
   boolean xer_needed = sdef->hasXer && enable_xer();
   boolean json_needed = sdef->hasJson && enable_json();
+  boolean oer_needed = sdef->hasOer && enable_oer();
 
   /* class declaration code */
   output->header.class_decls = mputprintf(output->header.class_decls,
@@ -3545,9 +3546,11 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   src = mputstr(src, "}\n\n");
 
   /* The common "classname::encode()" and "classname::decode()" functions */
-  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed)
+  if(ber_needed || raw_needed || text_needed || xer_needed || json_needed
+    || oer_needed) {
     def_encdec(name, &def, &src, ber_needed, raw_needed,
-               text_needed, xer_needed, json_needed, FALSE);
+               text_needed, xer_needed, json_needed, oer_needed, FALSE);
+  }
 
   /* BER functions */
   if(ber_needed) {
@@ -5823,6 +5826,7 @@ static void defEmptyRecordClass(const struct_def *sdef,
     boolean text_needed = sdef->hasText && enable_text();
     boolean xer_needed = sdef->hasXer && enable_xer();
     boolean json_needed = sdef->hasJson && enable_json();
+    boolean oer_needed = sdef->hasOer && enable_oer();
 
     def = mputprintf(def,
 #ifndef NDEBUG
@@ -5960,9 +5964,11 @@ static void defEmptyRecordClass(const struct_def *sdef,
 	"bound_flag = TRUE;\n"
 	"}\n\n", name);
 
-    if(ber_needed || raw_needed || text_needed || xer_needed || json_needed)
+    if(ber_needed || raw_needed || text_needed || xer_needed || json_needed
+      || oer_needed) {
       def_encdec(name, &def, &src, ber_needed, raw_needed,
-                 text_needed, xer_needed, json_needed, FALSE);
+                 text_needed, xer_needed, json_needed, oer_needed, FALSE);
+    }
 
   /* BER functions */
   if(ber_needed) {

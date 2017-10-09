@@ -62,6 +62,7 @@ extern boolean enable_per(void);
 extern boolean enable_text(void);
 extern boolean enable_xer(void);
 extern boolean enable_json(void);
+extern boolean enable_oer(void);
 
 /**
   * Checks whether the checking of encoding/decoding attributes is disabled.

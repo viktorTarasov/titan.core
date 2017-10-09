@@ -46,6 +46,7 @@
 #include <openssl/crypto.h>
 
 #include "../common/dbgnew.hh"
+#include "OER.hh"
 
 #if defined(__GNUC__) && __GNUC__ >= 3
 // To provide prediction information for the compiler.
@@ -798,6 +799,12 @@ void INTEGER::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     JSON_encode(p_td, tok);
     p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'",
                p_td.name);
@@ -882,6 +889,12 @@ void INTEGER::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
                " message was received"
                , p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_decode(p_td, p_buf);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'",
@@ -1761,6 +1774,198 @@ int INTEGER::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_to
   return (int)dec_len;
 }
 
+
+int INTEGER::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const
+{
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound integer value.");
+    return -1;
+  }
+ 
+  // Most of the encoding is copied from the integer BER encoding.
+  if (native_flag) {
+    RInt value = val.native;
+    // Determine the number of octets to be used in the encoding.
+
+    unsigned long ulong_val = value >= 0
+      ? static_cast<unsigned long>(value):
+      ~ static_cast<unsigned long>(value);
+    
+    size_t len = 1;
+    // No length restriction on integer
+    if (p_td.oer->bytes == -1) {
+      ulong_val >>= 7;
+      while (ulong_val != 0) {
+        len++;
+        ulong_val >>= 8;
+      }
+      if (len < 128) {
+        p_buf.put_c(len);
+      } else {
+        // Impossible
+        TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNDEF,
+          "Encoding very big native integer");
+      }
+    } else {
+      len = p_td.oer->bytes;
+    }
+    
+    // Already in 2's complement encoding.
+    ulong_val=static_cast<unsigned long>(value);
+    p_buf.increase_length(len);
+    size_t size = p_buf.get_len();
+    unsigned char* uc = const_cast<unsigned char*>(p_buf.get_data()) + size - 1;
+    for (size_t i = 0; i < len; i++) {
+      unsigned char* u = uc - i;
+      *u = static_cast<unsigned char>(ulong_val);
+      ulong_val >>= 8;
+    }
+  } else {
+    const BIGNUM* const D = val.openssl;
+    size_t num_bytes = BN_num_bytes(D);
+    unsigned char* bn_as_bin = (unsigned char*) Malloc(num_bytes);
+    BN_bn2bin(D, bn_as_bin);
+
+    boolean pad = FALSE;
+    if (BN_is_negative(D)) {
+      for(size_t i = 0; i < num_bytes; ++i){
+        bn_as_bin[i] = ~bn_as_bin[i];
+      }
+
+      // add one
+      boolean stop = FALSE;
+      for (int i = num_bytes - 1; i >= 0 && !stop; --i) {
+        for (int j = 0; j < 8 && !stop; ++j) {
+          unsigned char mask = (0x1 << j);
+          if (!(bn_as_bin[i] & mask)) {
+            bn_as_bin[i] |= mask;
+            stop = TRUE;
+          } else {
+            bn_as_bin[i] ^= mask;
+          }
+        }
+      }
+      pad = !(bn_as_bin[0] & 0x80);
+    } else {
+      pad = bn_as_bin[0] & 0x80;
+    }
+    
+    if (p_td.oer->bytes == -1) {
+      if (num_bytes < 128) {
+        p_buf.put_c(num_bytes);
+      } else {
+        size_t bytes = num_bytes;
+        TTCN_Buffer buff;
+        // Encode length in maybe more than 1 bytes
+        size_t needed_bytes = 0;
+        while (bytes != 0) {
+          bytes >>= 8;
+          needed_bytes++;
+        }
+        for (int i = needed_bytes - 1; i >= 0; i--) {
+          buff.put_c(static_cast<unsigned char>(num_bytes >> i*8));
+        }
+        char c = 0;
+        c |= 1 << 7;
+        c+= needed_bytes;
+        p_buf.put_c(c);
+        p_buf.put_buf(buff);
+      }
+    } else {
+      int rem_bytes = p_td.oer->bytes - num_bytes;
+      char c = BN_is_negative(D) ? 0xFF : 0;
+      for (int i = 0; i < rem_bytes; i++) {
+        p_buf.put_c(c);
+      }
+    }
+    p_buf.put_s(num_bytes, bn_as_bin);
+    Free(bn_as_bin);
+  }
+  return 0;
+}
+
+int INTEGER::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf)
+{
+  // Most of the decoding is copied from the integer BER decoding.
+  size_t num_bytes = 0;
+  
+  // Get the number of bytes that the integer is encoded on
+  if (p_td.oer->bytes == -1) {
+    const unsigned char* uc = p_buf.get_read_data();
+    p_buf.increase_pos(1);
+    // First bit is 1, its length is encoded in subsequent bytes
+    if (*uc & 0x80) {
+      size_t bytes = *uc & 0x7F;
+      for (size_t i = 1; i < bytes+1; i++) {
+        num_bytes += uc[i] << (bytes-i)*8;
+      }
+      p_buf.increase_pos(bytes);
+    } else {
+      // its length is encoded in the last 7 bytes
+      num_bytes = *uc & 0x7F;
+    }
+  } else {
+    num_bytes = p_td.oer->bytes;
+  }
+  
+  const unsigned char* const ucstr = p_buf.get_read_data();
+  if ((num_bytes > sizeof(RInt)) || (num_bytes >= 4 && p_td.oer->signed_ == FALSE)) { // Bignum
+    const boolean negative = ucstr[0] & 0x80 && (p_td.oer->signed_ == TRUE || p_td.oer->bytes == -1);
+    BIGNUM *D = BN_new();
+    if (negative) {
+      unsigned char* const tmp = (unsigned char*) Malloc(num_bytes);
+      memcpy(tmp, ucstr, num_bytes);
+      // -1 
+      boolean stop = FALSE;
+      for (int i = num_bytes - 1; i >= 0 && !stop; --i) {
+        for(int j = 0; j < 8 && !stop; ++j) {
+          unsigned char mask = (0x1 << j);
+          if (tmp[i] & mask) {
+            tmp[i] ^= mask;
+            stop = TRUE;
+          } else {
+            tmp[i] |= mask;
+          }
+        }
+      }
+      for (size_t i = 0; i < num_bytes; ++i) {
+        tmp[i] = ~tmp[i];
+      }
+
+      BN_bin2bn(tmp, num_bytes, D);
+      Free(tmp);
+    } else { // positive case
+      BN_bin2bn(ucstr, num_bytes, D);
+    }
+
+    BN_set_negative(D, negative);
+    val.openssl = D;
+    native_flag = FALSE;
+    bound_flag = TRUE;
+  } else {
+    // Native integer
+    RInt int_val = 0; 
+    if (ucstr[0] & 0x80 && p_td.oer->signed_ == TRUE) { // negative 
+      for (size_t i = 0; i < sizeof(RInt) - num_bytes; ++i) {
+        int_val |= 0xFF;
+        int_val <<= 8;
+      }
+    }
+
+    int_val |= ucstr[0];
+    for (size_t i = 1; i < num_bytes; ++i) {
+      int_val <<= 8;
+      int_val |= ucstr[i];
+    }
+
+    val.native = int_val;
+    native_flag = TRUE;
+    bound_flag = TRUE;
+  }
+  p_buf.increase_pos(num_bytes);
+  return 0;
+}
 
 // Global functions.
 

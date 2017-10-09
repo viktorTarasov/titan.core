@@ -169,6 +169,8 @@ namespace Common {
       return "TEXT";
     case CT_JSON:
       return "JSON";
+    case CT_OER:
+      return "OER";
     case CT_CUSTOM:
       return "custom";
     default:
@@ -187,6 +189,7 @@ namespace Common {
     case CT_RAW:
     case CT_XER: // UTF-8 doesn't fit into charstring and universal is wasteful
     case CT_JSON:
+    case CT_OER:
       return get_pooltype(T_OSTR);
     case CT_TEXT:
       if(stream_variant==1){
@@ -605,6 +608,7 @@ namespace Common {
     xerattrib = 0;
     berattrib = 0;
     jsonattrib = 0;
+    oerattrib = 0;
     sub_type = 0;
     parsed_restr = 0;
     ownertype = OT_UNKNOWN;
@@ -760,6 +764,8 @@ namespace Common {
     berattrib = 0;
     delete jsonattrib;
     jsonattrib = 0;
+    delete oerattrib;
+    oerattrib = 0;
     if (parsed_restr) {
       for (size_t i = 0; i < parsed_restr->size(); i++)
         delete (*parsed_restr)[i];
@@ -3239,6 +3245,7 @@ namespace Common {
     case CT_TEXT:
     case CT_XER:
     case CT_JSON:
+    case CT_OER:
       break; // OK
     default:
       FATAL_ERROR("Type::set_gen_coder_functions");
@@ -3466,7 +3473,8 @@ namespace Common {
         (coding == CT_RAW && !enable_raw()) ||
         (coding == CT_TEXT && !enable_text()) ||
         (coding == CT_XER && !enable_xer()) ||
-        (coding == CT_JSON && !enable_json())) {
+        (coding == CT_JSON && !enable_json()) ||
+        (coding == CT_OER && !enable_oer())) {
       return false;
     }
     
@@ -3596,6 +3604,16 @@ namespace Common {
           return false;
         }
         
+      case CT_OER:
+        switch (typetype) {
+          case T_BOOL:
+          case T_INT_A:
+            // TODO: add more types as they are implemented in
+            // the enc/decoding
+            return true;
+          default:
+            return false;
+        }
       default:
         FATAL_ERROR("Type::can_have_coding");
       }
@@ -5297,6 +5315,8 @@ namespace Common {
     }
     else if (enc == "PER")
       return CT_PER;
+    else if (enc == "OER")
+      return CT_OER;
     else
       return CT_CUSTOM;
   }
@@ -6283,7 +6303,7 @@ namespace Common {
         (encoding_type == CT_CUSTOM && custom_encoding == NULL)) {
       FATAL_ERROR("Type::has_encoding");
     }
-    if (!legacy_codec_handling && encoding_type != CT_BER && encoding_type != CT_PER) {
+    if (!legacy_codec_handling && encoding_type != CT_BER && encoding_type != CT_PER && encoding_type != CT_OER) {
       // new codec handling (except for BER and PER, which work the same way as before)
       // check the coding table
       Type* t = get_type_w_coding_table();
@@ -6750,6 +6770,28 @@ namespace Common {
         } // else
       } // while
     } // case
+    case CT_OER: {
+      for ( ; ; ) {
+        if (t->is_asn1()) return true;
+        if (t->oerattrib) return true;
+        if (t->is_ref()) t = t->get_type_refd();
+        else {
+          switch (t->typetype) {
+          case T_ERROR:
+          case T_BOOL:
+          case T_INT:
+          case T_REAL:
+          case T_BSTR:
+          case T_OSTR:
+          case T_OID:
+            // these basic TTCN-3 types have ASN.1 equivalents
+            return true;
+          default:
+            return false;
+          }
+        }
+      }
+    }
     case CT_CUSTOM:
       // the encoding name parameter has to be the same as the encoding name
       // specified for the type
@@ -7204,7 +7246,8 @@ namespace Common {
        */
       if (t->is_tagged() || t->rawattrib || t->textattrib || t->jsonattrib ||
           (!t->is_asn1() && t->hasEncodeAttr(get_encoding_name(CT_JSON))) ||
-          (t->xerattrib && !t->xerattrib->empty() ))
+          (t->xerattrib && !t->xerattrib->empty() ) ||
+          (t->oerattrib && !t->oerattrib->empty() && t->is_asn1()))
       {
         return t->get_genname_own(p_scope);
       }
@@ -7389,6 +7432,17 @@ namespace Common {
     Type *t = this;
     while (true) {
       if (t->has_encoding(CT_JSON)) return t->get_genname_own(my_scope);
+      else if (t->is_ref()) t = t->get_type_refd();
+      else break;
+    }
+    return t->get_genname_typename(my_scope);
+  }
+  
+  string Type::get_genname_oerdescriptor()
+  {
+    Type *t = this;
+    while (true) {
+      if (t->has_encoding(CT_OER)) return t->get_genname_own(my_scope);
       else if (t->is_ref()) t = t->get_type_refd();
       else break;
     }

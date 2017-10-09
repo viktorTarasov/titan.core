@@ -51,55 +51,55 @@ make the type descriptors of embedded types static
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_tag_[] = { { ASN_TAG_CONT, 0u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_ber_ = { 1u, EMBEDDED_PDV_identification_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_descr_ = { "EMBEDDED PDV.identification", &EMBEDDED_PDV_identification_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_descr_ = { "EMBEDDED PDV.identification", &EMBEDDED_PDV_identification_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_syntaxes_abstract_tag_[] = { { ASN_TAG_CONT, 0u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_syntaxes_abstract_ber_ = { 1u, EMBEDDED_PDV_identification_syntaxes_abstract_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_syntaxes_abstract_descr_ = { "EMBEDDED PDV.identification.syntaxes.abstract", &EMBEDDED_PDV_identification_syntaxes_abstract_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_syntaxes_abstract_descr_ = { "EMBEDDED PDV.identification.syntaxes.abstract", &EMBEDDED_PDV_identification_syntaxes_abstract_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_syntaxes_transfer_tag_[] = { { ASN_TAG_CONT, 1u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_syntaxes_transfer_ber_ = { 1u, EMBEDDED_PDV_identification_syntaxes_transfer_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_syntaxes_transfer_descr_ = { "EMBEDDED PDV.identification.syntaxes.transfer", &EMBEDDED_PDV_identification_syntaxes_transfer_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_syntaxes_transfer_descr_ = { "EMBEDDED PDV.identification.syntaxes.transfer", &EMBEDDED_PDV_identification_syntaxes_transfer_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_syntaxes_tag_[] = { { ASN_TAG_CONT, 0u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_syntaxes_ber_ = { 1u, EMBEDDED_PDV_identification_syntaxes_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_syntaxes_descr_ = { "EMBEDDED PDV.identification.syntaxes", &EMBEDDED_PDV_identification_syntaxes_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_syntaxes_descr_ = { "EMBEDDED PDV.identification.syntaxes", &EMBEDDED_PDV_identification_syntaxes_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_syntax_tag_[] = { { ASN_TAG_CONT, 1u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_syntax_ber_ = { 1u, EMBEDDED_PDV_identification_syntax_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_syntax_descr_ = { "EMBEDDED PDV.identification.syntax", &EMBEDDED_PDV_identification_syntax_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_syntax_descr_ = { "EMBEDDED PDV.identification.syntax", &EMBEDDED_PDV_identification_syntax_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_presentation__context__id_tag_[] = { { ASN_TAG_CONT, 2u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_presentation__context__id_ber_ = { 1u, EMBEDDED_PDV_identification_presentation__context__id_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_presentation__context__id_descr_ = { "EMBEDDED PDV.identification.presentation-context-id", &EMBEDDED_PDV_identification_presentation__context__id_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_presentation__context__id_descr_ = { "EMBEDDED PDV.identification.presentation-context-id", &EMBEDDED_PDV_identification_presentation__context__id_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_context__negotiation_presentation__context__id_tag_[] = { { ASN_TAG_CONT, 0u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_context__negotiation_presentation__context__id_ber_ = { 1u, EMBEDDED_PDV_identification_context__negotiation_presentation__context__id_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_context__negotiation_presentation__context__id_descr_ = { "EMBEDDED PDV.identification.context-negotiation.presentation-context-id", &EMBEDDED_PDV_identification_context__negotiation_presentation__context__id_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_context__negotiation_presentation__context__id_descr_ = { "EMBEDDED PDV.identification.context-negotiation.presentation-context-id", &EMBEDDED_PDV_identification_context__negotiation_presentation__context__id_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_context__negotiation_transfer__syntax_tag_[] = { { ASN_TAG_CONT, 1u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_context__negotiation_transfer__syntax_ber_ = { 1u, EMBEDDED_PDV_identification_context__negotiation_transfer__syntax_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_context__negotiation_transfer__syntax_descr_ = { "EMBEDDED PDV.identification.context-negotiation.transfer-syntax", &EMBEDDED_PDV_identification_context__negotiation_transfer__syntax_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_context__negotiation_transfer__syntax_descr_ = { "EMBEDDED PDV.identification.context-negotiation.transfer-syntax", &EMBEDDED_PDV_identification_context__negotiation_transfer__syntax_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_context__negotiation_tag_[] = { { ASN_TAG_CONT, 3u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_context__negotiation_ber_ = { 1u, EMBEDDED_PDV_identification_context__negotiation_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_context__negotiation_descr_ = { "EMBEDDED PDV.identification.context-negotiation", &EMBEDDED_PDV_identification_context__negotiation_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_context__negotiation_descr_ = { "EMBEDDED PDV.identification.context-negotiation", &EMBEDDED_PDV_identification_context__negotiation_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_transfer__syntax_tag_[] = { { ASN_TAG_CONT, 4u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_transfer__syntax_ber_ = { 1u, EMBEDDED_PDV_identification_transfer__syntax_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_transfer__syntax_descr_ = { "EMBEDDED PDV.identification.transfer-syntax", &EMBEDDED_PDV_identification_transfer__syntax_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_transfer__syntax_descr_ = { "EMBEDDED PDV.identification.transfer-syntax", &EMBEDDED_PDV_identification_transfer__syntax_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::OBJID };
 
 static const ASN_Tag_t EMBEDDED_PDV_identification_fixed_tag_[] = { { ASN_TAG_CONT, 5u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_identification_fixed_ber_ = { 1u, EMBEDDED_PDV_identification_fixed_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_fixed_descr_ = { "EMBEDDED PDV.identification.fixed", &EMBEDDED_PDV_identification_fixed_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_identification_fixed_descr_ = { "EMBEDDED PDV.identification.fixed", &EMBEDDED_PDV_identification_fixed_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t EMBEDDED_PDV_data__value_tag_[] = { { ASN_TAG_CONT, 2u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_data__value_ber_ = { 1u, EMBEDDED_PDV_data__value_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_data__value_descr_ = { "EMBEDDED PDV.data-value", &EMBEDDED_PDV_data__value_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_data__value_descr_ = { "EMBEDDED PDV.data-value", &EMBEDDED_PDV_data__value_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::DONTCARE };
 
 static const ASN_Tag_t EMBEDDED_PDV_data__value__descriptor_tag_[] = { { ASN_TAG_CONT, 1u }};
 static const ASN_BERdescriptor_t EMBEDDED_PDV_data__value__descriptor_ber_ = { 1u, EMBEDDED_PDV_data__value__descriptor_tag_ };
-static const TTCN_Typedescriptor_t EMBEDDED_PDV_data__value__descriptor_descr_ = { "EMBEDDED PDV.data-value-descriptor", &EMBEDDED_PDV_data__value__descriptor_ber_, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING };
+static const TTCN_Typedescriptor_t EMBEDDED_PDV_data__value__descriptor_descr_ = { "EMBEDDED PDV.data-value-descriptor", &EMBEDDED_PDV_data__value__descriptor_ber_, NULL, NULL, NULL, NULL, NULL, NULL, TTCN_Typedescriptor_t::GRAPHICSTRING };
 
 /******************** EMBEDDED_PDV_identification ********************/
 
