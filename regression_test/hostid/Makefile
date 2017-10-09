@@ -56,6 +56,6 @@ dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
 
 run: $(TARGET)
-	$(TTCN3_DIR)/bin/ttcn3_start $^
+	$(TTCN3_DIR)/bin/ttcn3_start $^ config.cfg
 
 
