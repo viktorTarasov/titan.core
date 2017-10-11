@@ -6,7 +6,26 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
-Binary file (standard input) matches
+ *   Baji, Laszlo
+ *   Balasko, Jeno
+ *   Baranyi, Botond
+ *   Beres, Szabolcs
+ *   Bibo, Zoltan
+ *   Cserveni, Akos
+ *   Delic, Adam
+ *   Dimitrov, Peter
+ *   Feher, Csaba
+ *   Forstner, Matyas
+ *   Gecse, Roland
+ *   Kovacs, Ferenc
+ *   Nagy, Lenard
+ *   Raduly, Csaba
+ *   Szabados, Kristof
+ *   Szabo, Janos Zoltan – initial implementation
+ *   Szabo, Bence Janos
+ *   Szalai, Gabor
+ *   Tatarka, Gabor
+ *   Zalanyi, Balazs Andor
  *
  ******************************************************************************/
 #include "../common/dbgnew.hh"
