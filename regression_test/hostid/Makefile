@@ -36,6 +36,11 @@ OBJECTS = $(GENERATED_SOURCES:.cc=.o) $(USER_SOURCES:.cc=.o)
 
 TARGET = Hostid$(EXESUFFIX)
 
+CONFIG = config.cfg
+ifeq ($(findstring SOLARIS, $(PLATFORM)), SOLARIS)
+CONFIG = config_solaris.cfg
+endif
+
 all: $(TARGET)
 
 $(TARGET): $(GENERATED_SOURCES) $(USER_SOURCES)
@@ -56,6 +61,6 @@ dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
 
 run: $(TARGET)
-	$(TTCN3_DIR)/bin/ttcn3_start $^ config.cfg
+	$(TTCN3_DIR)/bin/ttcn3_start $^ $(CONFIG)
 
 
