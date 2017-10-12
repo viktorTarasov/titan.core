@@ -3004,45 +3004,50 @@ void Type::chk_oer() {
       break;
     case T_INT_A: {
       if (is_constrained()) {
-        Location loc;
-        int_limit_t upper = get_sub_type()->get_root()->get_int_limit(true, &loc);
-        int_limit_t lower = get_sub_type()->get_root()->get_int_limit(false, &loc);
-        bool lower_inf = lower.get_type() != int_limit_t::NUMBER;
-        bool upper_inf = upper.get_type() != int_limit_t::NUMBER;
-        if (lower_inf || upper_inf) {
-          oerattrib->signed_ = lower_inf;
-          oerattrib->bytes = -1;
-        } else {
-          int_val_t low = lower.get_value();
-          int_val_t up  = upper.get_value();
-          if (low < 0) {
-            oerattrib->signed_ = true;
-            if (low >= -128 && up <= 127) {
-              oerattrib->bytes = 1;
-            } else if (low >= -32768 && up <= 32767) {
-              oerattrib->bytes = 2;
-            } else if (low >= -2147483648 && up <= 2147483647) {
-              oerattrib->bytes = 4;
-            } else if ((low+1) >= -9223372036854775807LL && up <= 9223372036854775807LL) {
-              oerattrib->bytes = 8;
-            } else {
-              oerattrib->bytes = -1;
-            }
+        if (get_sub_type()->is_integer_subtype_notempty()) {
+          Location loc;
+          int_limit_t upper = get_sub_type()->get_int_limit(true, &loc);
+          int_limit_t lower = get_sub_type()->get_int_limit(false, &loc);
+          bool lower_inf = lower.get_type() != int_limit_t::NUMBER;
+          bool upper_inf = upper.get_type() != int_limit_t::NUMBER;
+          if (lower_inf || upper_inf) {
+            oerattrib->signed_ = lower_inf;
+            oerattrib->bytes = -1;
           } else {
-            static int_val_t uns_8_byte("18446744073709551615", NULL);
-            oerattrib->signed_ = false;
-            if (up <= 255) {
-              oerattrib->bytes = 1;
-            } else if (up <= 65535) {
-              oerattrib->bytes = 2;
-            } else if (up <= 4294967295) {
-              oerattrib->bytes = 4;
-            } else if (up <= uns_8_byte) {
-              oerattrib->bytes = 8;
+            int_val_t low = lower.get_value();
+            int_val_t up  = upper.get_value();
+            if (low < 0) {
+              oerattrib->signed_ = true;
+              if (low >= -128 && up <= 127) {
+                oerattrib->bytes = 1;
+              } else if (low >= -32768 && up <= 32767) {
+                oerattrib->bytes = 2;
+              } else if (low >= -2147483648LL && up <= 2147483647) {
+                oerattrib->bytes = 4;
+              } else if ((low+1) >= -9223372036854775807LL && up <= 9223372036854775807LL) {
+                oerattrib->bytes = 8;
+              } else {
+                oerattrib->bytes = -1;
+              }
             } else {
-              oerattrib->bytes = -1;
+              static int_val_t uns_8_byte("18446744073709551615", NULL);
+              oerattrib->signed_ = false;
+              if (up <= 255) {
+                oerattrib->bytes = 1;
+              } else if (up <= 65535) {
+                oerattrib->bytes = 2;
+              } else if (up <= 4294967295LL) {
+                oerattrib->bytes = 4;
+              } else if (up <= uns_8_byte) {
+                oerattrib->bytes = 8;
+              } else {
+                oerattrib->bytes = -1;
+              }
             }
           }
+        } else {
+          oerattrib->signed_ = true;
+          oerattrib->bytes = -1;
         }
       } else {
         oerattrib->signed_ = true;
