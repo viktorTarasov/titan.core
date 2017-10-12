@@ -218,6 +218,8 @@ public:
   bool is_length_compatible(const SubtypeConstraint *p_st) const;
   bool is_upper_limit_infinity() const;
   bool is_lower_limit_infinity() const;
+  bool is_integer_subtype_notempty() const
+    { return subtype==ST_INTEGER && integer_st && !integer_st->is_empty(); }
 };
 
 /**
