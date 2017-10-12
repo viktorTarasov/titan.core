@@ -2307,7 +2307,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "  }\n"
         "  return ret_val;\n");
       if (!sdef->jsonAsValue) {
-        src = mputprintf(src,
+        src = mputstr(src,
           " }\n"
           " else {\n" // if there is no 'as value' set in the type descriptor
           "  size_t dec_len = p_tok.get_next_token(&j_token, NULL, NULL);\n"
@@ -2324,9 +2324,7 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           "  if (JSON_TOKEN_NAME != j_token) {\n"
           "    JSON_ERROR(TTCN_EncDec::ET_INVAL_MSG, JSON_DEC_NAME_TOKEN_ERROR);\n"
           "    return JSON_ERROR_FATAL;\n"
-          "  } else {\n"
-          "    union_selection = %s;\n    "
-          , unbound_value);
+          "  } else {\n");
         for (i = 0; i < sdef->nElements; ++i) {
           src = mputprintf(src,
             "if (%d == name_len && 0 == strncmp(fld_name, \"%s\", name_len)) {\n"

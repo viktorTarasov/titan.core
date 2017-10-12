@@ -279,6 +279,9 @@ external function f_dec_R(in octetstring x) return R
 external function f_dec_A(in octetstring x) return A
   with { extension "prototype(convert)"; extension "decode(JSON)"; }
 
+external function f_dec_A_fast(in octetstring x, out A y)
+  with { extension "prototype(fast)"; extension "decode(JSON)"; }
+
 external function f_dec_ER(in octetstring x) return EmptyRec
   with { extension "prototype(convert)"; extension "decode(JSON)"; }
   
