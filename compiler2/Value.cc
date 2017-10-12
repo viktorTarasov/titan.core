@@ -7380,11 +7380,6 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
           chk_expr_operandtype_list(v1_gov, left, opname, v1, false);
         }
         if (!v2_gov) {
-          if (!v1_gov) {
-            error("Cannot determine the type of the right operand of `%s' operation", opname);
-            set_valuetype(V_ERROR);
-            return;
-          }
           // for recof/setof literals set the type from v1
           v2_gov = v1_gov;
           v2->set_my_governor(v1_gov);
