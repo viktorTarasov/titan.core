@@ -6773,7 +6773,7 @@ namespace Common {
     case CT_OER: {
       for ( ; ; ) {
         if (t->is_asn1()) return true;
-        if (t->oerattrib) return true;
+        //if (t->oerattrib) return true;
         if (t->is_ref()) t = t->get_type_refd();
         else {
           switch (t->typetype) {
