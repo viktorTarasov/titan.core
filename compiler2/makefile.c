@@ -2076,7 +2076,9 @@ static void print_makefile(struct makefile_struct *makefile)
           "# The path of your TTCN-3 Test Executor installation:\n"
           "# Uncomment this line to override the environment variable.\n"
           "%s"
-          "# TTCN3_DIR = %s\n"
+          "ifndef TTCN3_DIR\n"
+          "TTCN3_DIR = %s\n"
+          "endif\n"
       , titan_dir ?
         "# The value below points to the location of the TITAN version\n"
         "# that generated this makefile.\n" : ""
