@@ -3687,16 +3687,16 @@ void Type::chk_constructor_name(const Identifier& p_id)
   }
 }
 
-bool Type::chk_startability()
+bool Type::chk_startability(Location* caller_location)
 {
   if(typetype != T_FUNCTION) FATAL_ERROR("Type::chk_startable()");
   if(!checked) chk_Fat();
+  u.fatref.fp_list->chk_startability("Functions of type",
+    get_typename().c_str(), caller_location);
   if(u.fatref.is_startable) return true;
   if (!u.fatref.runs_on.ref) error("Functions of type `%s' cannot be started "
     "on a parallel test component because the type does not have `runs on' "
     "clause", get_typename().c_str());
-  u.fatref.fp_list->chk_startability("Functions of type",
-    get_typename().c_str());
   if (u.fatref.return_type && u.fatref.return_type->is_component_internal()) {
     map<Type*,void> type_chain;
     char* err_str = mprintf("the return type or embedded in the return type "

@@ -1483,7 +1483,7 @@ namespace Ttcn {
     virtual void chk();
     /** Checks and returns whether the function is startable.
      * Reports the appropriate error message(s) if not. */
-    bool chk_startable();
+    bool chk_startable(Location* caller_location);
 
     bool is_transparent() const { return transparent; }
 
@@ -1883,7 +1883,8 @@ namespace Ttcn {
      * function cannot be started on a PTC. Used by functions and function
      * types. Parameter \a p_what shall contain "Function" or "Function type",
      * \a p_name shall contain the name of the function or function type. */
-    void chk_startability(const char *p_what, const char *p_name);
+    void chk_startability(const char *p_what, const char *p_name,
+      Location* caller_location);
     /** Checks the compatibility of two formal parameter list.
      *  They are compatible if every parameter is compatible, has the same
      *    attribute, and name */

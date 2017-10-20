@@ -4610,7 +4610,7 @@ error:
     Def_Function *t_func = dynamic_cast<Def_Function*>(t_ass);
     if (!t_func) FATAL_ERROR("Statement::chk_start_comp()");
     // checking startability
-    if (!t_func->chk_startable()) return;
+    if (!t_func->chk_startable(this)) return;
     // checking the 'runs on' clause against the type of component reference
     Type *runs_on_type = t_func->get_RunsOnType();
     if (!comp_type || !runs_on_type) return;
@@ -4683,7 +4683,7 @@ error:
         "'runs on self' clause");
       return;
     }
-    if(!f_type->chk_startability()) return;
+    if(!f_type->chk_startability(this)) return;
     Type *runs_on_type = f_type->get_fat_runs_on_type();
     if (!comp_type || !runs_on_type) return;
     if (!runs_on_type->is_compatible(comp_type, NULL, NULL))

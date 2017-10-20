@@ -22,4 +22,31 @@ function f_in(in integer x) //^In function definition// //^warning: Passing an \
   f_out(x); //^In function instance// //^In actual parameter list of function// //^In parameter #1 for//
 }
 
+
+type component CT {}
+
+function f_start(in integer p1, out integer p2, inout integer p3) runs on CT {
+  p2 := p1;
+  p3 := p1;
+}
+
+type function FT_start(in integer p1, out integer p2, inout integer p3) runs on CT;
+
+testcase tc() runs on CT { //^In testcase definition//
+  var CT ct1 := CT.create;
+  var CT ct2 := CT.create;
+  var CT ct3 := CT.create;
+  var integer x1 := 10;
+  var integer x2 := 20;
+  var integer x3 := 30;
+  var integer y1 := 15;
+  var integer y2 := 30;
+  var integer y3 := 45;
+  var FT_start ft := refers(f_start); 
+  ct1.start(f_start(3, x1, y1)); //^In start test component statement// //The `out' and `inout' parameters of functions started on parallel test components will remain unchanged at the end of the operation//
+  ct2.start(f_start(6, x2, y2)); //^In start test component statement// //The `out' and `inout' parameters of functions started on parallel test components will remain unchanged at the end of the operation//
+  ct3.start(derefers(ft)(9, x3, y3)); //^In start test component statement// //The `out' and `inout' parameters of functions started on parallel test components will remain unchanged at the end of the operation//
+  all component.done;
+}
+
 }
