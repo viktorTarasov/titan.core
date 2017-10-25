@@ -83,6 +83,11 @@ void def_encdec(const char *p_classname,
       "int JSON_encode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;\n"
       "int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);\n");
   }
+  if(oer) {
+    def = mputprintf(def,
+      "int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n"
+      "int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);\n");
+  }
 
   src=mputprintf(src,
      "void %s::encode(const TTCN_Typedescriptor_t& p_td,"
@@ -142,6 +147,14 @@ void def_encdec(const char *p_classname,
      "    JSON_Tokenizer tok(va_arg(pvar, int) != 0);\n"
      "    JSON_encode(p_td, tok);\n"
      "    p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());\n"
+     "    break;}\n"
+     "  case TTCN_EncDec::CT_OER: {\n"
+     "    TTCN_EncDec_ErrorContext ec("
+     "\"While OER-encoding type '%%s': \", p_td.name);\n"
+     "    if(!p_td.oer)\n"
+     "      TTCN_EncDec_ErrorContext::error_internal\n"
+     "        (\"No OER descriptor available for type '%%s'.\", p_td.name);\n"
+     "    OER_encode(p_td, p_buf);\n"
      "    break;}\n"
      "  default:\n"
      "    TTCN_error(\"Unknown coding method requested to encode"
@@ -247,6 +260,15 @@ void def_encdec(const char *p_classname,
      "\"Can not decode type '%%s', because invalid or incomplete"
      " message was received\", p_td.name);\n"
      "    p_buf.set_pos(tok.get_buf_pos());\n"
+     "    break;}\n"
+     "  case TTCN_EncDec::CT_OER: {\n"
+     "    TTCN_EncDec_ErrorContext ec(\"While OER-decoding type '%%s': \","
+     " p_td.name);\n"
+     "    if(!p_td.oer)\n"
+     "      TTCN_EncDec_ErrorContext::error_internal\n"
+     "        (\"No OER descriptor available for type '%%s'.\", p_td.name);\n"
+    "     OER_struct p_oer;\n"
+     "    OER_decode(p_td, p_buf, p_oer);\n"
      "    break;}\n"
      "  default:\n"
      "    TTCN_error(\"Unknown coding method requested to decode"

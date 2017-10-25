@@ -29,6 +29,7 @@
 #include "Logger.hh"
 #include "Encdec.hh"
 #include "BER.hh"
+#include "OER.hh"
 
 #include "../common/dbgnew.hh"
 
@@ -147,6 +148,12 @@ void ASN_NULL::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     JSON_encode(p_td, tok);
     p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   case TTCN_EncDec::CT_RAW:
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'",
@@ -195,6 +202,13 @@ void ASN_NULL::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
                " message was received"
                , p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   case TTCN_EncDec::CT_RAW:
   default:
@@ -317,6 +331,20 @@ int ASN_NULL::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, b
   }
   bound_flag = TRUE;
   return (int)dec_len;
+}
+
+int ASN_NULL::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const {
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound ASN.1 NULL value.");
+    return -1;
+  }
+  return 0;
+}
+
+int ASN_NULL::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&) {
+  bound_flag = TRUE;
+  return 0;
 }
 
 boolean operator==(asn_null_type, const ASN_NULL& other_value)

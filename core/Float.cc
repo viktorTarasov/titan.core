@@ -36,6 +36,7 @@
 #include "Encdec.hh"
 #include "RAW.hh"
 #include "BER.hh"
+#include "OER.hh"
 #include "Charstring.hh"
 #include "Addfunc.hh"
 #include "XmlReader.hh"
@@ -364,6 +365,12 @@ void FLOAT::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     JSON_encode(p_td, tok);
     p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'",
                p_td.name);
@@ -430,6 +437,13 @@ void FLOAT::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
                " message was received"
                , p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'",
@@ -1152,6 +1166,212 @@ int FLOAT::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
   return (int)dec_len;
 }
 
+int FLOAT::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound float value.");
+    return -1;
+  }
+  // Mostly copied from BER
+  if (float_value==0.0) {
+    p_buf.put_c(0);
+  } else if (float_value==(double)INFINITY) {
+    p_buf.put_c(1);
+    p_buf.put_c(64);
+  } else if (float_value==-(double)INFINITY) {
+    p_buf.put_c(1);
+    p_buf.put_c(65);
+  } else if (isnan((double)float_value)) {
+    p_buf.put_c(1);
+    p_buf.put_c(66);
+  } else {
+    double mantissa, exponent;
+    exponent=floor(log10(fabs(float_value)))+1.0-DBL_DIG;
+    mantissa=floor(float_value*pow(10.0,-exponent)+0.5);
+    if(mantissa)while(!fmod(mantissa,10.0))mantissa/=10.0,exponent+=1.0;
+    char * uc =
+      mprintf("\x03%.f.E%s%.0f", mantissa, exponent==0.0?"+":"", exponent);
+    size_t len = mstrlen(uc);
+    p_buf.put_c(len);
+    p_buf.put_s(len, (unsigned char*)uc);
+    Free(uc);
+  }
+  return 0;
+}
+  
+int FLOAT::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct&) {
+  TTCN_EncDec_ErrorContext ec("While decoding REAL type: ");
+  const unsigned char* uc = p_buf.get_read_data();
+  const size_t bytes = uc[0];
+  p_buf.increase_pos(1);
+  uc = p_buf.get_read_data();
+  // Mostly copied from BER
+  if(bytes==0) {
+    float_value=0.0;
+  }
+  else if(uc[0] & 0x80) {
+    /* binary encoding */
+    /** \todo Perhaps it were good to implement this. Perhaps not. :) */
+    ec.warning("Sorry, decoding of binary encoded REAL values not"
+               " supported.");
+    float_value=0.0;
+  }
+  else if(uc[0] & 0x40) {
+    /* SpecialRealValue */
+    if(bytes>1)
+      ec.error(TTCN_EncDec::ET_INVAL_MSG,
+               "In case of SpecialRealValue, the length of V-part must be 1"
+               " (See X.690 8.5.8).");
+    if (uc[0] & 0x02) {
+      float_value=NOT_A_NUMBER;
+    } else if(uc[0] & 0x01)
+      /* MINUS-INFINITY */
+      float_value=-INFINITY;
+    else {
+      /* PLUS-INFINITY */
+      float_value=INFINITY;
+    }
+  }
+  else {
+    /* decimal encoding */
+    if((uc[0] & 0x3C) || (uc[0] & 0x3F) == 0x00 )
+      ec.error(TTCN_EncDec::ET_INVAL_MSG,
+               "This is a reserved value: 0x%x (See X.690 8.5.7).",
+               uc[0]);
+    int NR=uc[0] & 0x03; // which NumericalRepresentation
+    boolean
+      leadingzero=FALSE,
+      NR_error=FALSE;
+    const unsigned char
+      *Vstr_last=uc+bytes-1,
+      *sign=NULL,
+      *mant1=NULL,
+      *decmark=NULL,
+      *mant2=NULL,
+      *expmark=NULL,
+      *expsign=NULL,
+      *expo=NULL,
+      *ptr=uc+1;
+    size_t
+      mant1_len=0,
+      mant2_len=0,
+      expo_len=0;
+    long exponum;
+    if(bytes==1) goto dec_error;
+    while(*ptr==' ') {
+      if(ptr==Vstr_last) goto dec_error;
+      ptr++;
+    }
+    if(*ptr=='+' || *ptr=='-') {
+      sign=ptr;
+      if(ptr==Vstr_last) goto dec_error;
+      ptr++;
+    }
+    while(*ptr=='0') {
+      leadingzero=TRUE;
+      if(ptr==Vstr_last) goto str_end;
+      ptr++;
+    }
+    while(*ptr>='0' && *ptr<='9') {
+      if(mant1_len==0) mant1=ptr;
+      mant1_len++;
+      if(ptr==Vstr_last) goto str_end;
+      ptr++;
+    }
+    if(*ptr=='.' || *ptr==',') {
+      decmark=ptr;
+      if(ptr==Vstr_last) goto str_end;
+      ptr++;
+    }
+    while(*ptr>='0' && *ptr<='9') {
+      if(mant2_len==0) mant2=ptr;
+      mant2_len++;
+      if(ptr==Vstr_last) goto str_end;
+      ptr++;
+    }
+    if(!leadingzero && !mant1 && !mant2) goto dec_error;
+    if(*ptr=='e' || *ptr=='E') {
+      expmark=ptr;
+      if(ptr==Vstr_last) goto dec_error;
+      ptr++;
+    }
+    if(*ptr=='+' || *ptr=='-') {
+      expsign=ptr;
+      if(ptr==Vstr_last) goto dec_error;
+      ptr++;
+    }
+    while(*ptr=='0') {
+      expo=ptr;
+      if(ptr==Vstr_last) goto str_end;
+      ptr++;
+    }
+    while(*ptr>='0' && *ptr<='9') {
+      if(expo_len==0) expo=ptr;
+      expo_len++;
+      if(ptr==Vstr_last) goto str_end;
+      ptr++;
+    }
+    if(expo_len==0 && expo!=NULL) expo_len=1; /* only leading zero */
+    if(expsign && !expo) goto dec_error;
+    ec.error(TTCN_EncDec::ET_INVAL_MSG,
+             "Superfluous part at the end of decimal encoding.");
+  str_end:
+    /* check NR */
+    if(NR==1) {
+      if(decmark || expmark) NR_error=TRUE;
+    }
+    else if(NR==2) {
+      if(expmark) NR_error=TRUE;
+    }
+    if(NR_error)
+      ec.error(TTCN_EncDec::ET_INVAL_MSG,
+               "This decimal encoding does not conform to NR%d form.", NR);
+    while(mant2_len>1 && mant2[mant2_len-1]=='0') mant2_len--;
+    if(mant2_len==1 && *mant2=='0') mant2_len=0, mant2=NULL;
+    float_value=0.0;
+    if(mant1) for(size_t i=0; i<mant1_len; i++) {
+      float_value*=10.0;
+      float_value+=static_cast<double>(mant1[i]-'0');
+    } // for i if...
+    if(mant2) for(size_t i=0; i<mant2_len; i++) {
+      float_value*=10.0;
+      float_value+=static_cast<double>(mant2[i]-'0');
+    } // for i if...
+    exponum=0;
+    if(expo) {
+      if(ceil(log10(log10(DBL_MAX)))<expo_len) {
+        /* overflow */
+        if(expsign && *expsign=='-') {
+          float_value=0.0;
+        }
+        else {
+          if(sign && *sign=='-') float_value=-INFINITY;
+          else float_value=INFINITY;
+        }
+        goto end;
+      } // overflow
+      else {
+        /* no overflow */
+        for(size_t i=0; i<expo_len; i++) {
+          exponum*=10;
+          exponum+=static_cast<int>(expo[i]-'0');
+        } // for i
+        if(expsign && *expsign=='-')
+          exponum*=-1;
+      } // no overflow
+    } // if expo
+    if(mant2) exponum-=mant2_len;
+    float_value*=pow(10.0, static_cast<double>(exponum));
+    goto end;
+  dec_error:
+    ec.error(TTCN_EncDec::ET_INVAL_MSG, "Erroneous decimal encoding.");
+    float_value=0.0;
+  }
+ end:
+  p_buf.increase_pos(bytes);
+  bound_flag=TRUE;
+  return 0;
+}
 
 // global functions
 

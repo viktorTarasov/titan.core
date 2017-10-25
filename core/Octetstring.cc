@@ -37,6 +37,7 @@
 #include "Optional.hh"
 
 #include "../common/dbgnew.hh"
+#include "OER.hh"
 #include <string.h>
 #include <ctype.h>
 
@@ -653,6 +654,12 @@ void OCTETSTRING::encode(const TTCN_Typedescriptor_t& p_td,
     JSON_encode(p_td, tok);
     p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'",
                p_td.name);
@@ -739,6 +746,13 @@ void OCTETSTRING::decode(const TTCN_Typedescriptor_t& p_td,
                " message was received"
                , p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'",
@@ -1387,6 +1401,36 @@ int OCTETSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
     return JSON_ERROR_FATAL;    
   }
   return (int)dec_len;
+}
+
+int OCTETSTRING::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound octetstring value.");
+    return -1;
+  }
+  if (p_td.oer->length == -1) {
+    encode_oer_length(lengthof(), p_buf, FALSE);
+  }
+  p_buf.put_os(*this);
+  return 0;
+}
+  
+
+int OCTETSTRING::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct&) {
+  size_t bytes;
+  if (p_td.oer->length == -1) {
+    bytes = decode_oer_length(p_buf, FALSE);
+  } else {
+    bytes = p_td.oer->length;
+  }
+  init_struct(bytes);
+  const unsigned char* uc = p_buf.get_read_data();
+  for (size_t i = 0; i < bytes; i++) {
+    val_ptr->octets_ptr[i] = uc[i];
+  }
+  p_buf.increase_pos(bytes);
+  return 0;
 }
 
 // octetstring element class

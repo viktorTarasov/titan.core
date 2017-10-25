@@ -12,10 +12,13 @@
 #include "OerAST.hh"
 
 OerAST::OerAST() :
-  bytes(0),
-  signed_(false)
+  bytes(-1),
+  signed_(false),
+  length(-1),
+  extendable(false)
 {}
 
 bool OerAST::empty() const {
-  return bytes == 0 && signed_ == false;
+  return bytes == -1 && signed_ == false && length == -1 &&
+    extendable == false;
 }

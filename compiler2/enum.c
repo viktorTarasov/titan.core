@@ -869,6 +869,63 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "}\n\n"
       , name, unknown_value, enum_type, unbound_value, unbound_value);
   }
+  
+  if (oer_needed) {
+    // OER encode
+    src = mputprintf(src,
+      "int %s::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const\n"
+      "{\n"
+      "  if (enum_value == %s) {\n"
+      "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"
+      "      \"Encoding an unbound value of enumerated type %s.\");\n"
+      "    return -1;\n"
+      "  }\n\n"
+      "  if (enum_value >= 0 && enum_value < 128) {\n"
+      "    char c = enum_value;\n"
+      "    p_buf.put_c(c);\n"
+      "    p_buf.increase_pos(1);\n"
+      "  } else {\n"
+      // This case is the same as encoding a not restricted integer except
+      // the first bit is set to 1 before decoding
+      "    INTEGER intval(enum_value);\n"
+      "    TTCN_Buffer buf;\n"
+      "    intval.OER_encode(INTEGER_descr_, buf);\n"
+      "    unsigned char* uc = const_cast<unsigned char*>(buf.get_data());\n"
+      "    *uc |= 1 << 7;\n"
+      "    p_buf.put_buf(buf);\n"
+      "  }\n"
+      "  return 0;\n"
+      "}\n\n"
+      , name, unbound_value, dispname);
+    
+    // OER decode
+    src = mputprintf(src,
+      "int %s::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
+      "{\n"
+      "  const unsigned char* uc = p_buf.get_read_data();\n"
+      "  if (!(uc[0] & 0x80)) {\n"
+      "    if (is_valid_enum(uc[0])) {"
+      "       enum_value = static_cast<%s>(uc[0]);\n"
+      "    } else {\n"
+      "      enum_value = %s;\n"
+      "    }\n"
+      "  } else {\n"
+      // This case is the same as decoding a not restricted integer except
+      // the first bit is set to 0
+      "    unsigned char* uc2 = const_cast<unsigned char*>(p_buf.get_read_data());\n"
+      "    uc2[0] &= ~0x80;\n"
+      "    INTEGER intval;\n"
+      "    intval.OER_decode(INTEGER_descr_, p_buf, p_oer);\n"
+      "    if (is_valid_enum(intval.get_val().get_val())) {\n"
+      "      enum_value = static_cast<%s>(intval.get_val().get_val());\n"
+      "    } else {\n"
+      "      enum_value = %s;\n"
+      "    }\n"
+      "  }\n"
+      "  return 0;\n"
+      "}\n\n"
+      , name, enum_type, unknown_value, enum_type, unknown_value);
+  }
   /* end of class */
   def = mputstr(def, "};\n\n");
 

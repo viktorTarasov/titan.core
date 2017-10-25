@@ -38,6 +38,7 @@
 #include "RAW.hh"
 #include "BER.hh"
 #include "TEXT.hh"
+#include "OER.hh"
 #include "Charstring.hh"
 #include "Addfunc.hh"
 #include "XmlReader.hh"
@@ -894,7 +895,8 @@ void INTEGER::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
     if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
       "No OER descriptor available for type '%s'.", p_td.name);
-    OER_decode(p_td, p_buf);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'",
@@ -1782,7 +1784,7 @@ int INTEGER::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) c
       "Encoding an unbound integer value.");
     return -1;
   }
- 
+  
   // Most of the encoding is copied from the integer BER encoding.
   if (native_flag) {
     RInt value = val.native;
@@ -1827,7 +1829,6 @@ int INTEGER::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) c
     unsigned char* bn_as_bin = (unsigned char*) Malloc(num_bytes);
     BN_bn2bin(D, bn_as_bin);
 
-    boolean pad = FALSE;
     if (BN_is_negative(D)) {
       for(size_t i = 0; i < num_bytes; ++i){
         bn_as_bin[i] = ~bn_as_bin[i];
@@ -1846,37 +1847,15 @@ int INTEGER::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) c
           }
         }
       }
-      pad = !(bn_as_bin[0] & 0x80);
-    } else {
-      pad = bn_as_bin[0] & 0x80;
     }
     
     if (p_td.oer->bytes == -1) {
-      if (num_bytes < 128) {
-        p_buf.put_c(num_bytes);
-      } else {
-        size_t bytes = num_bytes;
-        TTCN_Buffer buff;
-        // Encode length in maybe more than 1 bytes
-        size_t needed_bytes = 0;
-        while (bytes != 0) {
-          bytes >>= 8;
-          needed_bytes++;
-        }
-        for (int i = needed_bytes - 1; i >= 0; i--) {
-          buff.put_c(static_cast<unsigned char>(num_bytes >> i*8));
-        }
-        char c = 0;
-        c |= 1 << 7;
-        c+= needed_bytes;
-        p_buf.put_c(c);
-        p_buf.put_buf(buff);
-      }
+      encode_oer_length(num_bytes, p_buf, FALSE);
     } else {
       int rem_bytes = p_td.oer->bytes - num_bytes;
-      char c = BN_is_negative(D) ? 0xFF : 0;
+      char pad = BN_is_negative(D) ? 0xFF : 0;
       for (int i = 0; i < rem_bytes; i++) {
-        p_buf.put_c(c);
+        p_buf.put_c(pad);
       }
     }
     p_buf.put_s(num_bytes, bn_as_bin);
@@ -1885,30 +1864,17 @@ int INTEGER::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) c
   return 0;
 }
 
-int INTEGER::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf)
+int INTEGER::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct&)
 {
   // Most of the decoding is copied from the integer BER decoding.
   size_t num_bytes = 0;
   
   // Get the number of bytes that the integer is encoded on
   if (p_td.oer->bytes == -1) {
-    const unsigned char* uc = p_buf.get_read_data();
-    p_buf.increase_pos(1);
-    // First bit is 1, its length is encoded in subsequent bytes
-    if (*uc & 0x80) {
-      size_t bytes = *uc & 0x7F;
-      for (size_t i = 1; i < bytes+1; i++) {
-        num_bytes += uc[i] << (bytes-i)*8;
-      }
-      p_buf.increase_pos(bytes);
-    } else {
-      // its length is encoded in the last 7 bytes
-      num_bytes = *uc & 0x7F;
-    }
+    num_bytes = decode_oer_length(p_buf, FALSE);
   } else {
     num_bytes = p_td.oer->bytes;
   }
-  
   const unsigned char* const ucstr = p_buf.get_read_data();
   if ((num_bytes > sizeof(RInt)) || (num_bytes >= 4 && p_td.oer->signed_ == FALSE)) { // Bignum
     const boolean negative = ucstr[0] & 0x80 && (p_td.oer->signed_ == TRUE || p_td.oer->bytes == -1);

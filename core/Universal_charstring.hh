@@ -405,6 +405,10 @@ public:
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
   
+  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
+  
   /** Converts a string containing a character coding format to its corresponding
     * enum value.
     * @param coding_str string containing the coding format

@@ -4652,6 +4652,142 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     src = mputstr(src, "}\n\n");
   }
   
+  if (oer_needed) {
+    // OER encode, RT1
+    src = mputprintf(src,
+      "int %s::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const\n"
+      "{\n"
+      "  if (!is_bound()) {\n" 
+      "  TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"
+      "    \"Encoding an unbound %s value.\");\n"
+      "  return -1;\n"
+      "  }\n", name, sdef->kind == SET ? "set" : "record");
+    size_t opt_elements = 0;
+    for (i = 0; i < sdef->nElements; i++) {
+      if (sdef->elements[i].isOptional || sdef->elements[i].isDefault) {
+        opt_elements++;
+      }
+    }
+    int needed_bytes = opt_elements / 8 + 1;
+
+    if (opt_elements != 0) {
+      src = mputprintf(src,
+        "  unsigned char c[%i] = {0};\n"
+        , needed_bytes);
+    }
+    int ind = 0;
+    int pos = 8;
+    for (i = 0; i < sdef->nElements; i++) {
+      if (sdef->elements[i].isOptional || sdef->elements[i].isDefault) {
+        pos--;
+        src = mputprintf(src,
+          "  if (field_%s.is_present()) {\n"
+          "    c[%i] += 1 << %i;\n"
+          "  }\n"
+          , sdef->elements[i].name, ind, pos);
+        if (pos == 0) {
+          pos = 8;
+          ind++;
+        }
+      }
+    }
+    if (opt_elements != 0) {
+      src = mputprintf(src,
+        "  p_buf.put_s(%i, c);\n"
+        , needed_bytes);
+    }
+    for (i = 0; i < sdef->nElements; i++) {
+      if (sdef->elements[i].isOptional || sdef->elements[i].isDefault) {
+        src = mputprintf(src,
+          "  if (field_%s.is_present())\n  "
+          , sdef->elements[i].name);
+      }
+      src = mputprintf(src,
+        "  field_%s.OER_encode(%s_descr_, p_buf);\n"
+        , sdef->elements[i].name, sdef->elements[i].typedescrname);
+    }
+    src = mputstr(src,
+      "  return 0;\n"
+      "}\n\n");
+    
+    // OER decode, RT1
+    src = mputprintf(src,
+      "int %s::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
+      "{\n", name);
+    if (opt_elements != 0) {
+      src = mputprintf(src, 
+        "  const unsigned char* uc = p_buf.get_read_data();\n"
+        "  p_buf.increase_pos(%i);\n"
+        , needed_bytes);
+    }
+    ind = 0;
+    pos = 8;
+    for (i = 0; i < sdef->nElements; i++) {
+      if (sdef->elements[i].isOptional || sdef->elements[i].isDefault) {
+        pos--;
+          src = mputprintf(src,
+            "  if (uc[%i] & (1 << %i))\n"
+            "    field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
+            , ind, pos, sdef->elements[i].name
+            , sdef->elements[i].typedescrname);
+          if (sdef->elements[i].isOptional) {
+            src = mputprintf(src, " else\n"
+              "    field_%s = OMIT_VALUE;\n"
+              , sdef->elements[i].name);
+          }
+        if (pos == 0) {
+          ind++;
+          pos = 8;
+        }
+      } else {
+        src = mputprintf(src,
+          "  field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
+          , sdef->elements[i].name
+          , sdef->elements[i].typedescrname);
+      }
+    }
+    if (sdef->has_opentypes) {
+      src = mputstr(src,
+        "  TTCN_EncDec_ErrorContext ec_1(\"While decoding opentypes: \");"
+        "  TTCN_Type_list p_typelist;\n"
+        "  OER_decode_opentypes(p_typelist, p_buf, p_oer);\n");
+    }
+    src = mputstr(src, 
+      "  return 0;\n"
+      "}\n\n");
+  }
+  
+  if(sdef->has_opentypes) {
+    /* OER_decode_opentypes() */
+    def=mputstr
+      (def,
+       "void OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer);\n");
+    src=mputprintf
+      (src,
+       "void %s::OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
+       "{\n"
+       "  p_typelist.push(this);\n"
+       "  TTCN_EncDec_ErrorContext ec_0(\"Component '\");\n"
+       "  TTCN_EncDec_ErrorContext ec_1;\n"
+       , name
+       );
+    for(i=0; i<sdef->nElements; i++) {
+      src=mputprintf
+        (src,
+         "  ec_1.set_msg(\"%s': \");\n"
+         "  field_%s.OER_decode_opentypes(p_typelist, p_buf, p_oer);\n"
+         , sdef->elements[i].dispname
+         , sdef->elements[i].name
+         );
+    } /* for i */
+    src=mputstr
+      (src,
+       "  p_typelist.pop();\n"
+       "}\n"
+       "\n"
+       );
+    } /* if sdef->has_opentypes */
+  
   /* end of class definition */
   def = mputstr(def, "};\n\n");
 
@@ -6180,6 +6316,30 @@ static void defEmptyRecordClass(const struct_def *sdef,
       "  }\n\n"
       "  bound_flag = TRUE;\n\n"
       "  return (int)dec_len;\n"
+      "}\n\n"
+      , name);
+  }
+    
+  if (oer_needed) {
+    // OER encode, RT1
+    src = mputprintf(src,
+      "int %s::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const\n"
+      "{\n"
+      "  if (!is_bound()) {\n"
+      "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"
+      "      \"Encoding an unbound value of type %s.\");\n"
+      "    return -1;\n"
+      "  }\n\n"
+      "  return 0;\n"
+      "}\n\n"
+      , name, dispname);
+    
+    // OER decode, RT1
+    src = mputprintf(src,
+      "int %s::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&)\n"
+      "{\n"
+      "  bound_flag = TRUE;\n"
+      "  return 0;\n"
       "}\n\n"
       , name);
   }

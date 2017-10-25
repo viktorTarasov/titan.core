@@ -330,6 +330,8 @@ public:
                   boolean no_err=FALSE, boolean first_call=TRUE);
   int JSON_encode_negtest(const Erroneous_descriptor_t*,
                           const TTCN_Typedescriptor_t&, JSON_Tokenizer&) const;
+  int OER_encode_negtest(const Erroneous_descriptor_t*,
+                          const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
 #endif
   
   /** Encodes accordingly to the JSON encoding rules.
@@ -339,6 +341,16 @@ public:
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  
+  /** Encodes accordingly to the OER encoding rules.
+    * Returns the length of the encoded data. */
+  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  
+  /** Decodes accordingly to the OER encoding rules.
+    * Returns the length of the decoded data. */
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
+  
+  void OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer);
   
 #ifdef TITAN_RUNTIME_2
   /** Called before an element of an optional record of/set of is indexed and passed as an
@@ -888,6 +900,58 @@ int OPTIONAL<T_type>::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokeni
     }
   }
   return dec_len;
+}
+
+template<typename T_type>
+int OPTIONAL<T_type>::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const
+{
+#ifdef TITAN_RUNTIME_2
+  switch(get_selection()) {
+#else
+  switch(optional_selection) {
+#endif
+  case OPTIONAL_PRESENT:
+    return optional_value->OER_encode(p_td, p_buf);
+  case OPTIONAL_OMIT:
+    return 0;
+  case OPTIONAL_UNBOUND:
+  default:
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound optional value.");
+    return -1;
+  }
+}
+
+#ifdef TITAN_RUNTIME_2
+template<typename T_type>
+int OPTIONAL<T_type>::OER_encode_negtest(const Erroneous_descriptor_t*,
+                                        const TTCN_Typedescriptor_t&,
+                                        TTCN_Buffer&) const 
+{
+// TODO
+  return 0;
+}
+#endif
+
+template<typename T_type>
+int OPTIONAL<T_type>::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer)
+{
+  set_to_present();
+  optional_value->OER_decode(p_td, p_buf, p_oer);
+  return 0;
+}
+
+template<typename T_type>
+void OPTIONAL<T_type>::OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer)
+{
+#ifdef TITAN_RUNTIME_2
+  if (is_present()) {
+    optional_selection = OPTIONAL_PRESENT;
+#else
+  if (optional_selection==OPTIONAL_PRESENT) {
+#endif
+    optional_value->OER_decode_opentypes(p_typelist, p_buf, p_oer);
+  }
 }
 
 #ifdef TITAN_RUNTIME_2

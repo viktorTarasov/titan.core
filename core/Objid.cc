@@ -28,6 +28,7 @@
 #include "../common/static_check.h"
 #include "Integer.hh"
 #include "Optional.hh"
+#include "OER.hh"
 
 static const size_t MIN_COMPONENTS = 2;
 
@@ -309,6 +310,12 @@ void OBJID::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     JSON_encode(p_td, tok);
     p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'",
                p_td.name);
@@ -361,6 +368,13 @@ void OBJID::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
                " message was received"
                , p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'",
@@ -661,6 +675,83 @@ int OBJID::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok,
     return JSON_ERROR_FATAL;    
   }
   return (int)dec_len;
+}
+
+int OBJID::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound object identifier value.");
+    return -1;
+  }
+  ASN_BER_TLV_t* new_tlv= BER_encode_TLV(p_td,0);
+  unsigned char *Vptr=new_tlv->V.str.Vstr;
+  encode_oer_length(new_tlv->V.str.Vlen, p_buf, FALSE);
+  p_buf.put_s(new_tlv->V.str.Vlen, Vptr);
+  ASN_BER_TLV_t::destruct(new_tlv, FALSE);
+  return 0;
+}
+  
+int OBJID::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct&) {
+  // The same as BER
+  TTCN_EncDec_ErrorContext ec("While decoding OBJID type: ");
+  boolean eoc=FALSE; // end-of-component
+  int i=0;
+  unsigned long long ull=0;
+  STATIC_ASSERT(sizeof(ull) > sizeof(objid_element));
+  size_t bytes = decode_oer_length(p_buf, FALSE);
+  const unsigned char* Vptr = p_buf.get_read_data();
+  boolean err_repr=FALSE;
+  while (Vptr < p_buf.get_read_data() + bytes) {
+    ull |= *Vptr & 0x7F;
+    if ((*Vptr & 0x80) && err_repr==FALSE) { // not-eoc
+      if (ull & unsigned_llong_7msb) {
+        ec.error(TTCN_EncDec::ET_REPR,
+                 "Value of the #%d component is too big.", i+1);
+        err_repr=TRUE;
+      }
+      ull<<=7;
+      eoc=FALSE;
+    }
+    else { // eoc
+      if (i==0 && p_td.asnbasetype==TTCN_Typedescriptor_t::OBJID) {
+        // first two component of objid
+        switch(ull/40ul) {
+        case 0:
+          (*this)[0]=0; break;
+        case 1:
+          (*this)[0]=1; break;
+        default:
+          (*this)[0]=2; break;
+        }
+        (*this)[1]=(int)(ull-40*(*this)[0]);
+        i=1;
+      }
+      else { // other components (>2)
+        // objid_element is UINT/ULONG; the result of the cast is Uxxx_MAX.
+        // It's computed at compile time.
+        if(ull > ((objid_element)-1)) {
+          if(err_repr==FALSE)
+            ec.error(TTCN_EncDec::ET_REPR,
+                     "Value of the #%d component is too big.", i+1);
+          (*this)[i]=(objid_element)-1;
+          // remember the first overflow
+          if (val_ptr->overflow_idx < 0) val_ptr->overflow_idx = i;
+        } // if ul too big
+        else
+          (*this)[i]=(objid_element)ull;
+      }
+      err_repr=FALSE;
+      ull=0;
+      eoc=TRUE;
+      i++;
+    } // eoc
+    Vptr++;
+  } // while Vptr...
+  if(eoc==FALSE)
+    ec.error(TTCN_EncDec::ET_INVAL_MSG,
+             "The last component (#%d) is unterminated.", i+1);
+  p_buf.increase_pos(bytes);
+  return 0;
 }
 
 void OBJID_template::clean_up()

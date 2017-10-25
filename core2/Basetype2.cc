@@ -35,6 +35,7 @@
 #include "Universal_charstring.hh"
 #include "Addfunc.hh"
 #include "PreGenRecordOf.hh"
+#include "Encdec.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -196,6 +197,13 @@ int Base_Type::JSON_encode_negtest_raw(JSON_Tokenizer&) const
   return 0;
 }
 
+int Base_Type::OER_encode_negtest_raw(JSON_Tokenizer&) const
+{
+  TTCN_error("A value of type %s cannot be used as erroneous raw value for OER encoding.",
+             get_descriptor()->name);
+  return 0;
+}
+
 int Base_Type::XER_encode_negtest(const Erroneous_descriptor_t* /*p_err_descr*/,
   const XERdescriptor_t& p_td, TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const
 {
@@ -213,6 +221,13 @@ int Base_Type::JSON_encode_negtest(const Erroneous_descriptor_t* /*p_err_descr*/
   const TTCN_Typedescriptor_t& /*p_td*/, JSON_Tokenizer& /*p_tok*/) const
 {
   TTCN_error("Internal error: calling Base_Type::JSON_encode_negtest().");
+  return 0;
+}
+
+int Base_Type::OER_encode_negtest(const Erroneous_descriptor_t* /*p_err_descr*/,
+  const TTCN_Typedescriptor_t& /*p_td*/, TTCN_Buffer& /*p_tok*/) const
+{
+  TTCN_error("Internal error: calling Base_Type::OER_encode_negtest().");
   return 0;
 }
 
@@ -1650,6 +1665,45 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
   return (int)dec_len;
 }
 
+int Record_Of_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound %s of value.", is_set() ? "set" : "record");
+    return -1;
+  }
+  encode_oer_length(get_nof_elements(), p_buf, TRUE);
+  for (int i = 0; i < get_nof_elements(); i++) {
+    get_at(i)->OER_encode(*p_td.oftype_descr, p_buf);
+  }
+  return 0;
+}
+  
+int Record_Of_Type::OER_encode_negtest(const Erroneous_descriptor_t*, const TTCN_Typedescriptor_t&, TTCN_Buffer&) const {
+  //TODO
+  return 0;
+}
+  
+int Record_Of_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+  size_t nof_elements = decode_oer_length(p_buf, TRUE);
+  set_size(nof_elements);
+  for (size_t i = 0; i < nof_elements; i++) {
+    get_at(i)->OER_decode(*p_td.oftype_descr, p_buf, p_oer);
+  }
+  return 0;
+}
+
+void Record_Of_Type::OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer)
+{
+  p_typelist.push(this);
+  TTCN_EncDec_ErrorContext ec_0("Component #");
+  TTCN_EncDec_ErrorContext ec_1;
+  for(int elem_i=0; elem_i<get_nof_elements(); elem_i++) {
+    ec_1.set_msg("%d: ", elem_i);
+    get_at(elem_i)->OER_decode_opentypes(p_typelist, p_buf, p_oer);
+  }
+  p_typelist.pop();
+}
+
 void Record_Of_Type::encode(const TTCN_Typedescriptor_t& p_td,
   TTCN_Buffer& p_buf, TTCN_EncDec::coding_t p_coding, ...) const
 {
@@ -1694,6 +1748,12 @@ void Record_Of_Type::encode(const TTCN_Typedescriptor_t& p_td,
     JSON_Tokenizer tok(va_arg(pvar, int) != 0);
     JSON_encode(p_td, tok);
     p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
     break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'", p_td.name);
@@ -1767,6 +1827,13 @@ void Record_Of_Type::decode(const TTCN_Typedescriptor_t& p_td,
       ec.error(TTCN_EncDec::ET_INCOMPL_MSG,"Can not decode type '%s', "
         "because invalid or incomplete message was received", p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'", p_td.name);
@@ -2875,6 +2942,12 @@ void Record_Type::encode(const TTCN_Typedescriptor_t& p_td,
     JSON_encode(p_td, tok);
     p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'", p_td.name);
   }
@@ -2964,6 +3037,13 @@ void Record_Type::decode(const TTCN_Typedescriptor_t& p_td,
         "Can not decode type '%s', because invalid or incomplete"
         " message was received", p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'", p_td.name);
@@ -6067,6 +6147,106 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   return (int)dec_len;
 }
 
+int Record_Type::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound %s value.", is_set() ? "set" : "record");
+    return -1;
+  }
+  int next_default_idx = 0;
+  const default_struct* default_indexes = get_default_indexes();
+  int field_count = get_count();
+  int pos = 8;
+  char c = 0;
+  for (int i = 0; i < field_count; i++) {
+    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==i);
+    if (is_default_field) {
+      next_default_idx++;
+    }
+    if (get_at(i)->is_optional() || is_default_field) {
+      pos--;
+      c += get_at(i)->is_present() << pos;
+      if (pos == 0) {
+        p_buf.put_c(c);
+        pos = 8;
+        c = 0;
+      }
+    }
+  }
+  if (pos != 8) {
+    p_buf.put_c(c);
+  }
+  for (int i = 0; i < field_count; ++i) {
+    get_at(i)->OER_encode(*fld_descr(i), p_buf);
+  }
+  return 0;
+}
+  
+int Record_Type::OER_encode_negtest(const Erroneous_descriptor_t*, const TTCN_Typedescriptor_t&, TTCN_Buffer&) const {
+  //TODO
+  return 0;
+}
+  
+int Record_Type::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+  int field_count = get_count();
+  size_t nof_opt = 0;
+  int next_default_idx = 0;
+  const default_struct* default_indexes = get_default_indexes();
+  for (int i = 0; i < field_count; i++) {
+    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==i);
+    if (is_default_field) {
+      next_default_idx++;
+    }
+    if (get_at(i)->is_optional() || is_default_field) {
+      nof_opt++;
+    }
+  }
+  size_t act_pos = 0;
+  size_t bytes = nof_opt / 8 + (nof_opt % 8 == 0 ? 0 : 1);
+  const unsigned char* uc = p_buf.get_read_data();
+  p_buf.increase_pos(bytes);
+  next_default_idx = 0;
+  for (int i = 0; i < field_count; ++i) {
+    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==i);
+    if (is_default_field) {
+      next_default_idx++;
+    }
+    if (get_at(i)->is_optional() || is_default_field) {
+      if (!(uc[0] & 1 << (7-act_pos))) {
+        get_at(i)->set_to_omit();
+      } else {
+        get_at(i)->OER_decode(*fld_descr(i), p_buf, p_oer);
+      }
+      act_pos++;
+      if (act_pos == 8) {
+        uc = uc + 1;
+        act_pos = 0;
+      }
+    } else {
+      get_at(i)->OER_decode(*fld_descr(i), p_buf, p_oer);
+    }
+  }
+  if (is_opentype_outermost()) {
+    TTCN_EncDec_ErrorContext ec_1("While decoding opentypes: ");
+    TTCN_Type_list p_typelist;
+    OER_decode_opentypes(p_typelist, p_buf, p_oer);
+  } /* if sdef->opentype_outermost */
+  return 0;
+}
+
+void Record_Type::OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer)
+{
+  p_typelist.push(this);
+  TTCN_EncDec_ErrorContext ec_0("Component '");
+  TTCN_EncDec_ErrorContext ec_1;
+  int field_cnt = get_count();
+  for(int i=0; i<field_cnt; i++) {
+    ec_1.set_msg("%s': ", fld_name(i));
+    get_at(i)->OER_decode_opentypes(p_typelist, p_buf, p_oer);
+  } /* for i */
+  p_typelist.pop();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Empty_Record_Type::Empty_Record_Type(): bound_flag(FALSE)
@@ -6190,6 +6370,12 @@ void Empty_Record_Type::encode(const TTCN_Typedescriptor_t& p_td,
     JSON_encode(p_td, tok);
     p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'", p_td.name);
   }
@@ -6266,6 +6452,13 @@ void Empty_Record_Type::decode(const TTCN_Typedescriptor_t& p_td,
         "Can not decode type '%s', because invalid or incomplete"
         " message was received", p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'", p_td.name);
@@ -6438,6 +6631,20 @@ int Empty_Record_Type::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&
   bound_flag = TRUE;
   
   return (int)dec_len;
+}
+
+int Empty_Record_Type::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const {
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound empty %s value.", is_set() ? "set" : "record");
+    return -1;
+  }
+  return 0;
+}
+  
+int Empty_Record_Type::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&) {
+  bound_flag = TRUE;
+  return 0;
 }
 
 boolean operator==(null_type /*null_value*/, const Empty_Record_Type& other_value)

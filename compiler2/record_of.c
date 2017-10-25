@@ -1637,6 +1637,61 @@ void defRecordOfClass1(const struct_of_def *sdef, output_struct *output)
       "}\n\n"
       , name, type, type, type);
   }
+  if (oer_needed) {
+    // OER encode, RT1
+    src = mputprintf(src,
+      "int %s::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const\n"
+      "{\n"
+      "  if (!is_bound()) {\n"
+      "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"
+      "      \"Encoding an unbound value of type %s.\");\n"
+      "    return -1;\n"
+      "  }\n\n"
+      "  encode_oer_length(val_ptr->n_elements, p_buf, TRUE);\n"
+      "  for (int i = 0; i < val_ptr->n_elements; ++i) {\n"
+      "    (*this)[i].OER_encode(*p_td.oftype_descr, p_buf);\n"
+      "  }\n"
+      "  return 0;\n"
+      "}\n\n"
+      , name, dispname);
+    
+    // OER decode, RT1
+    src = mputprintf(src,
+      "int %s::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
+      "{\n"
+      "  size_t nof_elem = decode_oer_length(p_buf, TRUE);\n"
+      "  set_size(nof_elem);\n"
+      "  for (size_t i = 0; i < nof_elem; i++) {\n"
+      "    (*this)[i].OER_decode(*p_td.oftype_descr, p_buf, p_oer);\n"
+      "  }\n"
+      "  return 0;\n"
+      "}\n\n"
+      , name);
+    
+    if(sdef->has_opentypes) {
+      /* OER_decode_opentypes() */
+      def=mputstr
+        (def,
+         "void OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer);\n");
+      src=mputprintf
+        (src,
+         "void %s::OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
+         "{\n"
+         "  p_typelist.push(this);\n"
+         "  TTCN_EncDec_ErrorContext ec_0(\"Component #\");\n"
+         "  TTCN_EncDec_ErrorContext ec_1;\n"
+         "  for(int elem_i=0; elem_i<n_elements; elem_i++) {\n"
+         "    ec_1.set_msg(\"%%d: \", elem_i);\n"
+         "    value_elements[elem_i].OER_decode_opentypes(p_typelist,"
+         " p_buf, p_oer);\n"
+         "  }\n"
+         "  p_typelist.pop();\n"
+         "}\n"
+         "\n"
+         , name
+         );
+    }
+  }
   /* end of class */
   def = mputstr(def, "};\n\n");
 
@@ -3087,6 +3142,61 @@ void defRecordOfClassMemAllocOptimized(const struct_of_def *sdef, output_struct 
       "  return (int)dec_len;\n"
       "}\n\n"
       , name, type);
+  }
+  if (oer_needed) {
+    // OER encode, RT1, mem. alloc. optimised
+    src = mputprintf(src,
+      "int %s::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const\n"
+      "{\n"
+      "  if (!is_bound()) {\n"
+      "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"
+      "      \"Encoding an unbound value of type %s.\");\n"
+      "    return -1;\n"
+      "  }\n\n"
+      "  encode_oer_length(n_elements, p_buf, TRUE);\n"
+      "  for (int i = 0; i < n_elements; ++i) {\n"
+      "    value_elements[i].OER_encode(*p_td.oftype_descr, p_buf);\n"
+      "  }\n"
+      "  return 0;\n"
+      "}\n\n"
+      , name, dispname);
+    
+    // OER decode, RT1, mem. alloc. optimised
+    src = mputprintf(src,
+      "int %s::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
+      "{\n"
+      "  size_t nof_elem = decode_oer_length(p_buf, TRUE);\n"
+      "  set_size(nof_elem);\n"
+      "  for (size_t i = 0; i < nof_elem; i++) {\n"
+      "    (*this)[i].OER_decode(*p_td.oftype_descr, p_buf, p_oer);\n"
+      "  }\n"
+      "  return 0;\n"
+      "}\n\n"
+      , name);
+    
+    if(sdef->has_opentypes) {
+      /* OER_decode_opentypes() */
+      def=mputstr
+        (def,
+         "void OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer);\n");
+      src=mputprintf
+        (src,
+         "void %s::OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
+         "{\n"
+         "  p_typelist.push(this);\n"
+         "  TTCN_EncDec_ErrorContext ec_0(\"Component #\");\n"
+         "  TTCN_EncDec_ErrorContext ec_1;\n"
+         "  for(int elem_i=0; elem_i<n_elements; elem_i++) {\n"
+         "    ec_1.set_msg(\"%%d: \", elem_i);\n"
+         "    value_elements[elem_i].OER_decode_opentypes(p_typelist,"
+         " p_buf, p_oer);\n"
+         "  }\n"
+         "  p_typelist.pop();\n"
+         "}\n"
+         "\n"
+         , name
+         );
+    }
   }
   /* end of class */
   def = mputstr(def, "};\n\n");

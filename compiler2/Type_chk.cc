@@ -2995,65 +2995,113 @@ void Type::chk_xer() { // XERSTUFF semantic check
 }
 
 void Type::chk_oer() {
-  //if (!is_asn1()) return;
   if (oerattrib == NULL) {
     oerattrib = new OerAST();
   }
-  switch (typetype) {
-    case T_BOOL:
-      break;
+  Type* t = get_type_refd_last();
+  switch (t->typetype) {
     case T_INT_A: {
-      if (is_constrained()) {
-        if (get_sub_type()->is_integer_subtype_notempty()) {
-          Location loc;
-          int_limit_t upper = get_sub_type()->get_int_limit(true, &loc);
-          int_limit_t lower = get_sub_type()->get_int_limit(false, &loc);
-          bool lower_inf = lower.get_type() != int_limit_t::NUMBER;
-          bool upper_inf = upper.get_type() != int_limit_t::NUMBER;
-          if (lower_inf || upper_inf) {
-            oerattrib->signed_ = lower_inf;
-            oerattrib->bytes = -1;
-          } else {
-            int_val_t low = lower.get_value();
-            int_val_t up  = upper.get_value();
-            if (low < 0) {
-              oerattrib->signed_ = true;
-              if (low >= -128 && up <= 127) {
-                oerattrib->bytes = 1;
-              } else if (low >= -32768 && up <= 32767) {
-                oerattrib->bytes = 2;
-              } else if (low >= -2147483648LL && up <= 2147483647) {
-                oerattrib->bytes = 4;
-              } else if ((low+1) >= -9223372036854775807LL && up <= 9223372036854775807LL) {
-                oerattrib->bytes = 8;
-              } else {
-                oerattrib->bytes = -1;
-              }
+      if (t->is_constrained() && t->get_sub_type()->is_subtype_notempty()) {
+        Location loc;
+        int_limit_t upper = t->get_sub_type()->get_int_limit(true, &loc);
+        int_limit_t lower = t->get_sub_type()->get_int_limit(false, &loc);
+        bool lower_inf = lower.get_type() != int_limit_t::NUMBER;
+        bool upper_inf = upper.get_type() != int_limit_t::NUMBER;
+        if (lower_inf || upper_inf) {
+          oerattrib->signed_ = lower_inf;
+          oerattrib->bytes = -1;
+        } else {
+          int_val_t low = lower.get_value();
+          int_val_t up  = upper.get_value();
+          if (low < 0) {
+            oerattrib->signed_ = true;
+            if (low >= -128 && up <= 127) {
+              oerattrib->bytes = 1;
+            } else if (low >= -32768 && up <= 32767) {
+              oerattrib->bytes = 2;
+            } else if (low >= -2147483648LL && up <= 2147483647) {
+              oerattrib->bytes = 4;
+            } else if ((low+1) >= -9223372036854775807LL && up <= 9223372036854775807LL) {
+              oerattrib->bytes = 8;
             } else {
-              static int_val_t uns_8_byte("18446744073709551615", NULL);
-              oerattrib->signed_ = false;
-              if (up <= 255) {
-                oerattrib->bytes = 1;
-              } else if (up <= 65535) {
-                oerattrib->bytes = 2;
-              } else if (up <= 4294967295LL) {
-                oerattrib->bytes = 4;
-              } else if (up <= uns_8_byte) {
-                oerattrib->bytes = 8;
-              } else {
-                oerattrib->bytes = -1;
-              }
+              oerattrib->bytes = -1;
+            }
+          } else {
+            static int_val_t uns_8_byte("18446744073709551615", NULL);
+            oerattrib->signed_ = false;
+            if (up <= 255) {
+              oerattrib->bytes = 1;
+            } else if (up <= 65535) {
+              oerattrib->bytes = 2;
+            } else if (up <= 4294967295LL) {
+              oerattrib->bytes = 4;
+            } else if (up <= uns_8_byte) {
+              oerattrib->bytes = 8;
+            } else {
+              oerattrib->bytes = -1;
             }
           }
-        } else {
-          oerattrib->signed_ = true;
-          oerattrib->bytes = -1;
         }
       } else {
         oerattrib->signed_ = true;
         oerattrib->bytes = -1;
       }
       break; }
+    case T_BSTR_A:
+    case T_OSTR:
+    case T_IA5STRING:
+    case T_VISIBLESTRING:
+    case T_NUMERICSTRING:
+    case T_PRINTABLESTRING:
+    case T_BMPSTRING:
+    case T_UNIVERSALSTRING:
+    case T_TELETEXSTRING:
+    case T_VIDEOTEXSTRING:
+    case T_GRAPHICSTRING:
+    case T_GENERALSTRING: {
+      if (t->is_constrained() && t->get_sub_type()->is_subtype_notempty()) {
+        Location loc;
+        int_limit_t upper = t->get_sub_type()->get_int_limit(true, &loc);
+        int_limit_t lower = t->get_sub_type()->get_int_limit(false, &loc);
+        bool lower_inf = lower.get_type() != int_limit_t::NUMBER;
+        bool upper_inf = upper.get_type() != int_limit_t::NUMBER;
+        if (!lower_inf && !upper_inf) {
+          int_val_t low = lower.get_value();
+          int_val_t up  = upper.get_value();
+          if (low == up) {
+            oerattrib->length = up.get_val();
+            if (typetype == T_BMPSTRING) {
+              oerattrib->length *= 2;
+            } else if (typetype == T_UNIVERSALSTRING) {
+              oerattrib->length *= 4;
+            }
+          }
+        }
+      }
+      break; }
+    case T_SEQ_A: {
+      // extendable is always false. Probably a bug with is_extendable()
+      if (t->get_sub_type()) {
+        oerattrib->extendable = t->get_sub_type()->is_extendable();
+      }
+      for (size_t i = 0; i < t->get_nof_comps(); i++) {
+        t->get_comp_byIndex(i)->get_type()->chk();
+      }
+      break; }
+    case T_SEQOF: {
+      t->get_ofType()->chk();
+      break;
+    }
+    case T_BOOL:
+    case T_ENUM_A:
+    case T_UTF8STRING:
+    case T_REAL:
+    case T_NULL:
+    case T_OID:
+    case T_ROID:
+    case T_EMBEDDED_PDV:
+    case T_EXTERNAL:
+      break;
     default:
       break;
   }

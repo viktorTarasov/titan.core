@@ -33,6 +33,7 @@
 #include "Encdec.hh"
 #include "RAW.hh"
 #include "BER.hh"
+#include "OER.hh"
 #include "TEXT.hh"
 #include "Charstring.hh"
 #include "XmlReader.hh"
@@ -344,7 +345,8 @@ void BOOLEAN::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
     if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
       "No OER descriptor available for type '%s'.", p_td.name);
-    OER_decode(p_td, p_buf);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'",
@@ -805,7 +807,7 @@ int BOOLEAN::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const
   return 1;
 }
 
-int BOOLEAN::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf)
+int BOOLEAN::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct&)
 {
   const unsigned char* c = p_buf.get_read_data();
   p_buf.increase_pos(1);

@@ -30,6 +30,7 @@
 #include "ASN_EmbeddedPDV.hh"
 
 #include "../common/dbgnew.hh"
+#include "OER.hh"
 
 /*
 
@@ -879,6 +880,68 @@ int EMBEDDED_PDV_identification::XER_decode(const XERdescriptor_t& p_td,
   }
   bail:
   return 1;
+}
+
+int EMBEDDED_PDV_identification::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  switch (union_selection) {
+  case ALT_syntaxes:
+    p_buf.put_c(128); // tag
+    field_syntaxes->OER_encode(p_td, p_buf);
+    break;
+  case ALT_syntax:
+    p_buf.put_c(129);
+    field_syntax->OER_encode(OBJID_descr_, p_buf);
+    break;
+  case ALT_presentation__context__id:
+    p_buf.put_c(130);
+    field_presentation__context__id->OER_encode(INTEGER_descr_, p_buf);
+    break;
+  case ALT_context__negotiation:
+    p_buf.put_c(131);
+    field_context__negotiation->OER_encode(p_td, p_buf);
+    break;
+  case ALT_transfer__syntax:
+    p_buf.put_c(132);
+    field_transfer__syntax->OER_encode(OBJID_descr_, p_buf);
+    break;
+  case ALT_fixed:
+    p_buf.put_c(133);
+    field_fixed->OER_encode(p_td, p_buf);
+    break;
+  default:
+    TTCN_EncDec_ErrorContext::error_internal("Unknown selection.");
+    break;
+  }
+  return 0;
+}
+
+int EMBEDDED_PDV_identification::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+  const unsigned char* uc = p_buf.get_read_data();
+  p_buf.increase_pos(1);
+  switch (uc[0]) {
+  case 128:
+    syntaxes().OER_decode(p_td, p_buf, p_oer);
+    break;
+  case 129:
+    syntax().OER_decode(OBJID_descr_, p_buf, p_oer);
+    break;
+  case 130:
+    presentation__context__id().OER_decode(INTEGER_descr_, p_buf, p_oer);
+    break;
+  case 131:
+    context__negotiation().OER_decode(p_td, p_buf, p_oer);
+    break;
+  case 132:
+    transfer__syntax().OER_decode(OBJID_descr_, p_buf, p_oer);
+    break;
+  case 133:
+    fixed().OER_decode(p_td, p_buf, p_oer);
+    break;
+  default:
+    TTCN_EncDec_ErrorContext::error_internal("Unknown selection.");
+    break;
+  }
+  return 0;
 }
 
 /******************** EMBEDDED_PDV_identification_template ********************/
@@ -1827,6 +1890,18 @@ int EMBEDDED_PDV_identification_syntaxes::XER_decode(const XERdescriptor_t& /*p_
   return 0; // TODO maybe return proper value
 }
 
+int EMBEDDED_PDV_identification_syntaxes::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {
+  field_abstract.OER_encode(OBJID_descr_, p_buf);
+  field_transfer.OER_encode(OBJID_descr_, p_buf);
+  return 0;
+}
+
+int EMBEDDED_PDV_identification_syntaxes::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+  field_abstract.OER_decode(OBJID_descr_, p_buf, p_oer);
+  field_transfer.OER_decode(OBJID_descr_, p_buf, p_oer);
+  return 0;
+}
+
 /******************** EMBEDDED_PDV_identification_syntaxes_template ********************/
 
 struct EMBEDDED_PDV_identification_syntaxes_template::single_value_struct {
@@ -2571,6 +2646,18 @@ int EMBEDDED_PDV_identification_context__negotiation::XER_decode(
   return 0; // TODO sensible return value
 }
 
+int EMBEDDED_PDV_identification_context__negotiation::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {
+  field_presentation__context__id.OER_encode(INTEGER_descr_, p_buf);
+  field_transfer__syntax         .OER_encode(OBJID_descr_, p_buf);
+  return 0;
+}
+
+int EMBEDDED_PDV_identification_context__negotiation::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+  field_presentation__context__id.OER_decode(INTEGER_descr_, p_buf, p_oer);
+  field_transfer__syntax         .OER_decode(OBJID_descr_, p_buf, p_oer);
+  return 0;
+}
+
 struct EMBEDDED_PDV_identification_context__negotiation_template::single_value_struct {
   INTEGER_template field_presentation__context__id;
   OBJID_template field_transfer__syntax;
@@ -3273,6 +3360,12 @@ void EMBEDDED_PDV::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     TTCN_EncDec_ErrorContext::error_internal
       ("No JSON descriptor available for type '%s'.", p_td.name);
     break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'", p_td.name);
   }
@@ -3320,6 +3413,13 @@ void EMBEDDED_PDV::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf,
     TTCN_EncDec_ErrorContext ec("While JSON-decoding type '%s': ", p_td.name);
     TTCN_EncDec_ErrorContext::error_internal
       ("No JSON descriptor available for type '%s'.", p_td.name);
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'", p_td.name);
@@ -3443,6 +3543,23 @@ int EMBEDDED_PDV::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
     }
   }
   return 1;
+}
+
+int EMBEDDED_PDV::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  if(!is_bound()) {
+    TTCN_EncDec_ErrorContext::error
+      (TTCN_EncDec::ET_UNBOUND, "Encoding an unbound value.");
+  }
+  field_identification.OER_encode(p_td, p_buf);
+  encode_oer_length(field_data__value.lengthof(), p_buf, FALSE);
+  p_buf.put_os(field_data__value);
+  return 0;
+}
+
+int EMBEDDED_PDV::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+  field_identification.OER_decode(p_td, p_buf, p_oer);
+  field_data__value.OER_decode(OCTETSTRING_descr_, p_buf, p_oer);
+  return 0;
 }
 
 struct EMBEDDED_PDV_template::single_value_struct {

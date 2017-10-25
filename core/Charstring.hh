@@ -280,6 +280,10 @@ public:
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
   
+  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
+  
 #ifdef TITAN_RUNTIME_2
   virtual int encode_raw(TTCN_Buffer& p_buf) const;
   /** Adds this charstring to the end of a JSON buffer as raw data.

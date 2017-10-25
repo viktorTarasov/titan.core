@@ -137,7 +137,7 @@ public:
   
   /** Decodes accordingly to the OER encoding rules.
     * Returns the length of the decoded data. */
-  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf);
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct&);
 };
 
 extern boolean operator&&(boolean bool_value, const BOOLEAN& other_value);

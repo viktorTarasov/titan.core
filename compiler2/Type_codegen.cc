@@ -1087,14 +1087,16 @@ void Type::generate_code_oerdescriptor(output_struct *target)
   
   if (NULL == oerattrib) {
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "const TTCN_OERdescriptor_t %s_oer_ = { -1, FALSE };\n"
+      "const TTCN_OERdescriptor_t %s_oer_ = { -1, FALSE, -1, FALSE };\n"
       , get_genname_own().c_str());
   } else {
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "const TTCN_OERdescriptor_t %s_oer_ = { %i, %s };\n"
+      "const TTCN_OERdescriptor_t %s_oer_ = { %i, %s, %i, %s };\n"
       , get_genname_own().c_str() 
       , oerattrib->bytes
-      , oerattrib->signed_ ? "TRUE" : "FALSE");
+      , oerattrib->signed_ ? "TRUE" : "FALSE"
+      , oerattrib->length
+      , oerattrib->extendable ? "TRUE" : "FALSE");
   }
   
 }

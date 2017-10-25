@@ -29,6 +29,7 @@
 #include "Objid.hh"
 #include "Octetstring.hh"
 #include "Universal_charstring.hh"
+#include "TEXT.hh"
 
 class EXTERNAL_identification;
 class EXTERNAL_identification_template;
@@ -425,6 +426,8 @@ public:
                  TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                  unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
+  int OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const;
+  int OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer);
 };
 
 class EXTERNAL_template : public Base_Template {

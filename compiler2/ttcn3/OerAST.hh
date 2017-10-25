@@ -16,6 +16,8 @@ class OerAST {
 public:
   int bytes;
   bool signed_;
+  int length;
+  bool extendable;
   
   OerAST();
   bool empty() const;

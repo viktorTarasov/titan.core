@@ -38,6 +38,7 @@
 #include "Addfunc.hh" // for unichar2int
 #include "TEXT.hh"
 #include "Optional.hh"
+#include "OER.hh"
 #include <string>
 #include <iostream>
 #include <stdint.h>
@@ -1174,6 +1175,12 @@ void UNIVERSAL_CHARSTRING::encode(const TTCN_Typedescriptor_t& p_td,
     JSON_encode(p_td, tok);
     p_buf.put_s(tok.get_buffer_length(), (const unsigned char*)tok.get_buffer());
     break; }
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'",
                p_td.name);
@@ -1258,6 +1265,13 @@ void UNIVERSAL_CHARSTRING::decode(const TTCN_Typedescriptor_t& p_td,
                " message was received"
                , p_td.name);
     p_buf.set_pos(tok.get_buf_pos());
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'",
@@ -2609,6 +2623,118 @@ int UNIVERSAL_CHARSTRING::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_To
   return (int)dec_len;
 }
 
+int UNIVERSAL_CHARSTRING::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound universal charstring value.");
+    return -1;
+  }
+  if (charstring)
+    const_cast<UNIVERSAL_CHARSTRING&>(*this).convert_cstr_to_uni();
+  TTCN_Buffer buf;
+  switch(p_td.asnbasetype) {
+  case TTCN_Typedescriptor_t::TELETEXSTRING:
+    buf.put_os(TTCN_TeletexString_2_ISO2022(*this));
+    break;
+  case TTCN_Typedescriptor_t::VIDEOTEXSTRING:
+    buf.put_os(TTCN_VideotexString_2_ISO2022(*this));
+    break;
+  case TTCN_Typedescriptor_t::GRAPHICSTRING:
+    buf.put_os(TTCN_GraphicString_2_ISO2022(*this));
+    break;
+  case TTCN_Typedescriptor_t::GENERALSTRING:
+    buf.put_os(TTCN_GeneralString_2_ISO2022(*this));
+    break;
+  case TTCN_Typedescriptor_t::UNIVERSALSTRING:
+    for(int i=0; i<val_ptr->n_uchars; i++) {
+      buf.put_c(val_ptr->uchars_ptr[i].uc_group);
+      buf.put_c(val_ptr->uchars_ptr[i].uc_plane);
+      buf.put_c(val_ptr->uchars_ptr[i].uc_row);
+      buf.put_c(val_ptr->uchars_ptr[i].uc_cell);
+    }
+    break;
+  case TTCN_Typedescriptor_t::BMPSTRING:
+    for(int i=0; i<val_ptr->n_uchars; i++) {
+      buf.put_c(val_ptr->uchars_ptr[i].uc_row);
+      buf.put_c(val_ptr->uchars_ptr[i].uc_cell);
+    }
+    break;
+  case TTCN_Typedescriptor_t::UTF8STRING:
+    encode_utf8(buf);
+    break;
+  default:
+    TTCN_EncDec_ErrorContext::error_internal
+      ("Missing/wrong basetype info for type '%s'.", p_td.name);
+  }
+  if (p_td.oer->length == -1) {
+    encode_oer_length(buf.get_len(), p_buf, FALSE);
+  }
+  p_buf.put_buf(buf);
+  return 0;
+}
+  
+int UNIVERSAL_CHARSTRING::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct&) {
+  size_t bytes;
+  if (p_td.oer->length == -1) {
+    bytes = decode_oer_length(p_buf, FALSE);
+  } else {
+    bytes = p_td.oer->length;
+  }
+  OCTETSTRING ostr(bytes, p_buf.get_read_data());
+  const unsigned char* os=ostr;
+  switch(p_td.asnbasetype) {
+  case TTCN_Typedescriptor_t::TELETEXSTRING:
+    *this=TTCN_ISO2022_2_TeletexString(ostr);
+    break;
+  case TTCN_Typedescriptor_t::VIDEOTEXSTRING:
+    *this=TTCN_ISO2022_2_VideotexString(ostr);
+    break;
+  case TTCN_Typedescriptor_t::GRAPHICSTRING:
+    *this=TTCN_ISO2022_2_GraphicString(ostr);
+    break;
+  case TTCN_Typedescriptor_t::GENERALSTRING:
+    *this=TTCN_ISO2022_2_GeneralString(ostr);
+    break;
+  case TTCN_Typedescriptor_t::UNIVERSALSTRING: {
+    if(bytes%4)
+      TTCN_EncDec_ErrorContext::error
+        (TTCN_EncDec::ET_DEC_UCSTR, "Length of UCS-4-coded character"
+         " string is not multiple of 4.");
+    int ucs_len=bytes/4;
+    init_struct(ucs_len);
+    for(int i=0; i<ucs_len; i++) {
+      val_ptr->uchars_ptr[i].uc_group=os[0];
+      val_ptr->uchars_ptr[i].uc_plane=os[1];
+      val_ptr->uchars_ptr[i].uc_row=os[2];
+      val_ptr->uchars_ptr[i].uc_cell=os[3];
+      os+=4;
+    }
+    break; }
+  case TTCN_Typedescriptor_t::BMPSTRING: {
+    if(bytes%2)
+      TTCN_EncDec_ErrorContext::error
+        (TTCN_EncDec::ET_DEC_UCSTR, "Length of UCS-2-coded character"
+         " string is not multiple of 2.");
+    int ucs_len=bytes/2;
+    init_struct(ucs_len);
+    for(int i=0; i<ucs_len; i++) {
+      val_ptr->uchars_ptr[i].uc_group=0;
+      val_ptr->uchars_ptr[i].uc_plane=0;
+      val_ptr->uchars_ptr[i].uc_row=os[0];
+      val_ptr->uchars_ptr[i].uc_cell=os[1];
+      os+=2;
+    }
+    break; }
+  case TTCN_Typedescriptor_t::UTF8STRING:
+    decode_utf8(bytes, os);
+    break;
+  default:
+    TTCN_EncDec_ErrorContext::error_internal
+      ("Missing/wrong basetype info for type '%s'.", p_td.name);
+  } // switch
+  p_buf.increase_pos(bytes);
+  return 0;
+}
 
 static void fill_continuing_octets(int n_continuing,
   unsigned char *continuing_ptr, int n_octets,

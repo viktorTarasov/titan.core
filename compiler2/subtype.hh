@@ -218,8 +218,19 @@ public:
   bool is_length_compatible(const SubtypeConstraint *p_st) const;
   bool is_upper_limit_infinity() const;
   bool is_lower_limit_infinity() const;
-  bool is_integer_subtype_notempty() const
-    { return subtype==ST_INTEGER && integer_st && !integer_st->is_empty(); }
+  bool is_subtype_notempty() const
+    { size_limit_t sl;
+      return (subtype==ST_INTEGER && integer_st && !integer_st->is_empty()) ||
+      (subtype==ST_BITSTRING && bitstring_st && !bitstring_st->is_empty()) ||
+      (subtype==ST_HEXSTRING && hexstring_st && !hexstring_st->is_empty()) ||
+      (subtype==ST_OCTETSTRING && octetstring_st && !octetstring_st->is_empty()) ||
+      (subtype==ST_CHARSTRING && charstring_st && 
+        charstring_st->get_size_limit(false, sl) == TTRUE &&
+        charstring_st->get_size_limit(true, sl) == TTRUE) ||
+      (subtype==ST_UNIVERSAL_CHARSTRING && universal_charstring_st &&
+        universal_charstring_st->get_size_limit(false, sl) == TTRUE &&
+        universal_charstring_st->get_size_limit(true, sl) == TTRUE);
+    }
 };
 
 /**

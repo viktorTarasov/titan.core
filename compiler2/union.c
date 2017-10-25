@@ -2368,6 +2368,191 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
     }
   }
 
+  if (oer_needed) {
+    // OER encode
+    src = mputprintf(src,
+      "int %s::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const\n"
+      "{\n", name);
+    src = mputstr(src, "  switch(union_selection) {\n");
+    for (i = 0; i < sdef->nElements; ++i) {
+      src = mputprintf(src, "  case %s_%s:\n", selection_prefix, sdef->elements[i].name);
+      if (sdef->has_opentypes == FALSE) {
+        src = mputprintf(src,
+          "    encode_oer_tag(*%s_descr_.ber, p_buf);\n"
+          "    field_%s->OER_encode(%s_descr_, p_buf);\n"
+          "    break;\n"
+          , sdef->elements[i].typedescrname, sdef->elements[i].name, sdef->elements[i].typedescrname);
+      } else {
+        src = mputprintf(src,
+          "    {\n"
+          "    TTCN_Buffer buf;\n"
+          "    field_%s->OER_encode(%s_descr_, buf);\n"
+          "    encode_oer_length(buf.get_len(), p_buf, FALSE);\n"
+          "    p_buf.put_buf(buf);\n"
+          "    break; }\n"
+          , sdef->elements[i].name, sdef->elements[i].typedescrname);
+      }
+    }
+    src = mputprintf(src, 
+      "  default:\n"
+      "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND, \n"
+      "      \"Encoding an unbound value of type %s.\");\n"
+      "    return -1;\n"
+      "  }\n\n"
+      , dispname);
+    src = mputstr(src,
+      "  return 0;\n"
+      "}\n");
+    
+    if (use_runtime_2) {
+      // OER encode for negative testing
+      def = mputstr(def,
+        "int OER_encode_negtest(const Erroneous_descriptor_t*, "
+        "const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n");
+     //todo
+    }
+    // OER decode
+    src = mputprintf(src,
+      "int %s::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
+      "{\n", name);
+    if (sdef->ot == NULL) {
+      src = mputstr(src, 
+        "  const ASN_Tag_t& descr = decode_oer_tag(p_buf);\n");
+      for (i = 0; i < sdef->nElements; ++i) {
+        src = mputprintf(src,
+          "  if (%s_descr_.ber->tags[%s_descr_.ber->n_tags-1].tagclass == descr.tagclass &&\n"
+          "      %s_descr_.ber->tags[%s_descr_.ber->n_tags-1].tagnumber == descr.tagnumber) {\n"
+          "    %s%s().OER_decode(%s_descr_, p_buf, p_oer);\n"
+          "  } else \n"
+          , sdef->elements[i].typedescrname, sdef->elements[i].typedescrname, sdef->elements[i].typedescrname
+          , sdef->elements[i].typedescrname, at_field, sdef->elements[i].name, sdef->elements[i].typedescrname);
+      }
+      src = mputprintf(src,
+      "{\n"
+      "    TTCN_error(\"Cannot find matching tag for type %s\");\n"
+      "}\n", name);
+    } else {
+      src = mputstr(src,
+        "  size_t pos = decode_oer_length(p_buf, FALSE);\n"
+        "  size_t prev_pos = p_buf.get_pos();\n"
+        "  p_buf.increase_pos(pos);\n"
+        "  p_oer.opentype_poses.push_back(prev_pos);\n"
+        );
+    }
+    src = mputstr(src, "  return 0;\n}\n");
+      
+    if (sdef->ot || sdef->has_opentypes) { /* theoretically, these are
+                                             mutually exlusive */
+      /* OER_decode_opentypes() */
+      def = mputstr(def, "void OER_decode_opentypes("
+	  "TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer);\n");
+      src = mputprintf(src, "void %s::OER_decode_opentypes("
+	  "TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
+	"{\n", name);
+      if (sdef->ot) {
+	AtNotationList_t *anl = &sdef->ot->anl;
+	OpentypeAlternativeList_t *oal = &sdef->ot->oal;
+        src = mputprintf(src,
+	  "  if (union_selection != %s) return;\n"
+	  "  TTCN_EncDec_ErrorContext ec_0(\"While decoding open type '%s': "
+	    "\");\n", unbound_value, dispname);
+        if (oal->nElements > 0) {
+	  size_t oal_i, anl_i;
+	  char *s2;
+          /* variable declarations - the referenced components */
+          for (anl_i = 0; anl_i < anl->nElements; anl_i++) {
+            AtNotation_t *an = anl->elements + anl_i;
+            src = mputprintf(src, "  const %s& f_%lu = static_cast<const %s*>"
+	      "(p_typelist.get_nth(%lu))->%s;\n", an->type_name,
+              (unsigned long) (anl_i + 1), an->parent_typename,
+	      (unsigned long) an->parent_level, an->sourcecode);
+          } /* for anl_i */
+          src = mputstr(src, "  {\n"
+	    "    TTCN_EncDec_ErrorContext ec_1(\"Alternative '\");\n"
+	    "    TTCN_EncDec_ErrorContext ec_2;\n");
+          s2 = mprintf("%*s", (int)(anl->nElements + 2) * 2, "");
+          for (oal_i = 0; oal_i < oal->nElements; oal_i++) {
+	    size_t if_level;
+	    OpentypeAlternative_t *oa = oal->elements + oal_i;
+            if (oal_i > 0) {
+              for (if_level = 0; if_level < anl->nElements; if_level++)
+                if (oa->const_valuenames[if_level]) break;
+              for (i = anl->nElements; i > if_level; i--)
+                src = mputprintf(src, "%*s}\n", (int)(i + 1) * 2, "");
+            } /* if oal_i */
+            else if_level = 0;
+            for (anl_i = if_level; anl_i < anl->nElements; anl_i++) {
+	      src = mputprintf(src, "%*s%sif (f_%lu == %s) {\n",
+		(int)(anl_i + 2) * 2, "",
+		oal_i && anl_i <= if_level ? "else " : "",
+                (unsigned long) (anl_i + 1), oa->const_valuenames[anl_i]);
+            } /* for anl_i */
+	    src = mputprintf(src, "%sunion_selection = %s_%s;\n"
+	      "%sfield_%s = new %s;\n"
+	      "%sec_2.set_msg(\"%s': \");\n"
+        "size_t pos = p_buf.get_pos();\n"
+        "p_buf.set_pos(p_oer.opentype_poses.at(0));\n"
+        "p_oer.opentype_poses.erase_at(0);\n"
+        "OER_struct tmp_oer;\n"
+	      "%sfield_%s->OER_decode(%s_descr_, p_buf, tmp_oer);\n"
+        "p_buf.set_pos(pos);\n",
+	      s2, selection_prefix, oa->alt, s2, oa->alt, oa->alt_typename, s2,
+	      oa->alt_dispname, s2, oa->alt, oa->alt_typedescrname);
+          } /* for oal_i */
+          Free(s2);
+          if (oal->nElements > 0)
+            for (i = anl->nElements; i > 0; i--)
+              src = mputprintf(src, "%*s}\n", (int)(i+1)*2, "");
+          src = mputprintf(src, "  }\n"
+	    "  if (union_selection == %s) {\n"
+	    "    ec_0.error(TTCN_EncDec::ET_DEC_OPENTYPE, \"Cannot decode "
+	      "open type: broken component relation constraint.\");\n"
+	    "    if (TTCN_EncDec::get_error_behavior("
+	      "TTCN_EncDec::ET_DEC_OPENTYPE) != TTCN_EncDec::EB_IGNORE) {\n"
+	    "      TTCN_Logger::log_str(TTCN_WARNING, \"The value%s of"
+	    " constraining component%s:\");\n", unbound_value,
+	    anl->nElements > 1 ? "s" : "", anl->nElements > 1 ? "s" : "");
+          for (anl_i = 0; anl_i < anl->nElements; anl_i++) {
+            AtNotation_t *an = anl->elements + anl_i;
+            src = mputprintf(src,
+	      "      TTCN_Logger::begin_event(TTCN_WARNING);\n"
+	      "      TTCN_Logger::log_event_str(\"Component '%s': \");\n"
+	      "      f_%lu.log();\n"
+	      "      TTCN_Logger::end_event();\n", an->dispname,
+              (unsigned long) (anl_i + 1));
+          } /* for anl_i */
+          src = mputstr(src, "    }\n"
+	    "  }\n");
+        } /* if oal->nElements>0 */
+        else {
+          src = mputstr(src, "  ec_0.error(TTCN_EncDec::ET_DEC_OPENTYPE, "
+	      "\"Cannot decode open type: the constraining object set is "
+	      "empty.\");\n");
+        } /* oal->nElements==0 */
+      } /* if sdef->ot */
+      else { /* if !sdef->ot (but has_opentypes) */
+        src = mputstr(src,
+	  "  p_typelist.push(this);\n"
+	  "  TTCN_EncDec_ErrorContext ec_0(\"Alternative '\");\n"
+	  "  TTCN_EncDec_ErrorContext ec_1;\n"
+	  "  switch (union_selection) {\n");
+        for (i = 0; i < sdef->nElements; i++) {
+          src = mputprintf(src, "  case %s_%s:\n"
+	    "    ec_1.set_msg(\"%s': \");\n"
+	    "    field_%s->OER_decode_opentypes(p_typelist, p_buf, p_oer);\n"
+	    "    break;\n", selection_prefix, sdef->elements[i].name,
+	    sdef->elements[i].dispname, sdef->elements[i].name);
+        } /* for i */
+        src = mputstr(src, "  default:\n"
+	  "    break;\n"
+	  "  }\n"
+	  "  p_typelist.pop();\n");
+      } /* if has opentypes */
+      src = mputstr(src, "}\n"
+	"\n");
+    } /* if sdef->ot || sdef->has_opentypes */
+  }
+
   /* end of class definition */
   def = mputstr(def, "};\n\n");
 

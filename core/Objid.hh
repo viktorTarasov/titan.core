@@ -115,6 +115,14 @@ public:
   /** Decodes accordingly to the JSON decoding rules.
     * Returns the length of the encoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  
+  /** Encodes accordingly to the OER encoding rules.
+    * Returns the length of the encoded data. */
+  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  
+  /** Decodes accordingly to the OER decoding rules.
+    * Returns the length of the encoded data. */
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
 };
 
 // objid template class

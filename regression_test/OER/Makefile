@@ -15,7 +15,7 @@ include $(TOPDIR)/Makefile.regression
 .SUFFIXES: .ttcn .asn .hh
 .PHONY: all clean dep run
 
-TTCN3_LIB = ttcn3$(RT2_SUFFIX)-parallel$(DYNAMIC_SUFFIX)
+TTCN3_LIB = ttcn3$(RT2_SUFFIX)$(DYNAMIC_SUFFIX)
 
 TTCN3_MODULES = OER.ttcn
 
@@ -48,10 +48,10 @@ compile: $(TTCN3_MODULES) $(ASN1_MODULES)
 	$(TTCN3_COMPILER) $(COMPILER_FLAGS) $^
 
 clean distclean:
-	$(RM) $(TARGET) $(GENERATED_HEADERS) $(GENERATED_SOURCES) $(OBJECTS) *.log Makefile.bak
+	$(RM) $(TARGET) $(GENERATED_HEADERS) $(GENERATED_SOURCES) $(OBJECTS) *.log Makefile.bak compile
 
 dep: $(GENERATED_SOURCES)
 	makedepend $(CPPFLAGS) $(GENERATED_SOURCES)
 
 run: $(TARGET)
-	$(TTCN3_DIR)/bin/ttcn3_start $(TARGET) OER.cfg
+	./$(TARGET) OER.cfg

@@ -10,13 +10,12 @@
 --
 --/////////////////////////////////////////////////////////////////////////////
 Types
-DEFINITIONS
+DEFINITIONS 
 
 AUTOMATIC TAGS
-
+EXTENSIBILITY IMPLIED
 ::=
-
-BEGIN
+ BEGIN
 
 IMPORTS ; -- nothing
 
@@ -43,5 +42,333 @@ Signed4byteInt ::= INTEGER (-2147483648..2147483647)
 Unsigned8byteInt ::= INTEGER (0..18446744073709551615)
 
 Signed8byteInt ::= INTEGER (-9223372036854775808..9223372036854775807)
+
+MyEnum ::= ENUMERATED 
+{
+  e0      (0),
+  e1      (1),
+  e2      (2),
+  ebig    (131321321),
+  esmall  (-21442124)
+}
+
+BitstringRestricted ::= BIT STRING (SIZE(8))
+
+BitstringRestricted2 ::= BIT STRING (SIZE(9))
+
+BitstringRestricted3 ::= BIT STRING (SIZE(3))
+
+BitstringUnrestricted ::= BIT STRING
+
+OctetstringRestricted ::= OCTET STRING (SIZE(4))
+
+OctetstringUnrestricted ::= OCTET STRING
+
+RealUnrestricted ::= REAL
+
+RealRestricted ::= REAL (0 | WITH COMPONENTS { mantissa (-99999..99999), base (1), exponent (-20..20)})
+
+NullType ::= NULL
+
+IA5StringRestricted ::= IA5String (SIZE(4))
+
+ISO646StringRestricted ::= ISO646String (SIZE(4))
+
+VisibleStringRestricted ::= VisibleString (SIZE(4))
+
+NumericStringRestricted ::= NumericString (SIZE(4))
+
+PrintableStringRestricted ::= PrintableString (SIZE(4))
+
+IA5StringUnrestricted ::= IA5String
+
+ISO646StringUnrestricted ::= ISO646String
+
+VisibleStringUnrestricted ::= VisibleString
+
+NumericStringUnrestricted ::= NumericString
+
+PrintableStringUnrestricted ::= PrintableString
+
+BMPStringRestricted ::= BMPString (SIZE(4))
+
+UniversalStringRestricted ::= UniversalString (SIZE(4))
+
+UTF8StringRestricted ::= UTF8String (SIZE(4))
+
+TeletexStringRestricted ::= TeletexString (SIZE(4))
+
+T61StringRestricted ::= T61String (SIZE(4))
+
+VideotexStringRestricted ::= VideotexString (SIZE(4))
+
+GraphicStringRestricted ::= GraphicString (SIZE(4))
+
+GeneralStringRestricted ::= GeneralString (SIZE(4))
+
+BMPStringUnrestricted ::= BMPString
+
+UniversalStringUnrestricted ::= UniversalString
+
+UTF8StringUnrestricted ::= UTF8String
+
+TeletexStringUnrestricted ::= TeletexString
+
+T61StringUnrestricted ::= T61String
+
+VideotexStringUnrestricted ::= VideotexString
+
+GraphicStringUnrestricted ::= GraphicString
+
+GeneralStringUnrestricted ::= GeneralString
+
+OBJID ::= OBJECT IDENTIFIER
+
+ROBJID ::= RELATIVE-OID
+
+myROBJID ROBJID ::= {1 2 3 4 5 6}
+
+myROBJID2 ROBJID ::= {1 35 994 431 5 1}
+
+--MyInt2 ::= INTEGER ( REAL(1.0..3.0) UNION PrintableString("abc") UNION INTEGER(1..10) )
+
+NoOptionalRecord ::= SEQUENCE {
+	ub UnLimitedInt,
+	u1b Unsigned1byteInt,
+	u1b2 Unsigned1byteInt2,
+	s1b Signed1byteInt,
+	s1b2 Signed1byteInt2,
+	u2b Unsigned2byteInt,
+	s2b Signed2byteInt,
+	u4b Unsigned4byteInt,
+	s4b Signed4byteInt,
+	u8b Unsigned8byteInt,
+	s8b Signed8byteInt,
+	me MyEnum,
+	bsr BitstringRestricted,
+	bsr2 BitstringRestricted2,
+	bsr3 BitstringRestricted3,
+	bsu BitstringUnrestricted,
+	osr OctetstringRestricted,
+	osu OctetstringUnrestricted,
+	ru RealUnrestricted,
+	rr RealRestricted,
+	nullt NullType,
+	iasr IA5StringRestricted,
+	isor ISO646StringRestricted,
+	vsr VisibleStringRestricted,
+	nsr NumericStringRestricted,
+	psr PrintableStringRestricted,
+	ias IA5StringUnrestricted,
+	iso ISO646StringUnrestricted,
+	vs VisibleStringUnrestricted,
+	ns NumericStringUnrestricted,
+	ps PrintableStringUnrestricted,
+	--bmpr BMPStringRestricted,
+	--usr UniversalStringRestricted,
+	--utfr UTF8StringRestricted,
+	--tsr TeletexStringRestricted,
+	--t61sr T61StringRestricted,
+	--visr VideotexStringRestricted,
+	--gsr GraphicStringRestricted,
+	--gesr GeneralStringRestricted,
+	bmpu BMPStringUnrestricted,
+	usu UniversalStringUnrestricted,
+	uftu UTF8StringUnrestricted,
+	tsu TeletexStringUnrestricted,
+	t61u T61StringUnrestricted,
+	vsu VideotexStringUnrestricted,
+	gsu GraphicStringUnrestricted,
+	gesu GeneralStringUnrestricted
+	--ob OBJID,
+	--rob ROBJID
+}
+
+
+OptionalRecord ::= SEQUENCE {
+	ub UnLimitedInt OPTIONAL,
+	u1b Unsigned1byteInt OPTIONAL,
+	u1b2 Unsigned1byteInt2 OPTIONAL,
+	s1b Signed1byteInt OPTIONAL,
+	s1b2 Signed1byteInt2 OPTIONAL,
+	u2b Unsigned2byteInt OPTIONAL,
+	s2b Signed2byteInt OPTIONAL,
+	u4b Unsigned4byteInt OPTIONAL,
+	s4b Signed4byteInt OPTIONAL,
+	u8b Unsigned8byteInt OPTIONAL,
+	s8b Signed8byteInt OPTIONAL,
+	me MyEnum OPTIONAL,
+	bsr BitstringRestricted OPTIONAL,
+	bsr2 BitstringRestricted2 OPTIONAL,
+	bsr3 BitstringRestricted3 OPTIONAL,
+	bsu BitstringUnrestricted OPTIONAL,
+	osr OctetstringRestricted OPTIONAL,
+	osu OctetstringUnrestricted OPTIONAL,
+	ru RealUnrestricted OPTIONAL,
+	rr RealRestricted OPTIONAL,
+	nullt NullType OPTIONAL,
+	iasr IA5StringRestricted OPTIONAL,
+	isor ISO646StringRestricted OPTIONAL,
+	vsr VisibleStringRestricted OPTIONAL,
+	nsr NumericStringRestricted OPTIONAL,
+	psr PrintableStringRestricted OPTIONAL,
+	ias IA5StringUnrestricted OPTIONAL,
+	iso ISO646StringUnrestricted OPTIONAL,
+	vs VisibleStringUnrestricted OPTIONAL,
+	ns NumericStringUnrestricted OPTIONAL,
+	ps PrintableStringUnrestricted OPTIONAL,
+	--bmpr BMPStringRestricted,
+	--usr UniversalStringRestricted,
+	--utfr UTF8StringRestricted,
+	--tsr TeletexStringRestricted,
+	--t61sr T61StringRestricted,
+	--visr VideotexStringRestricted,
+	--gsr GraphicStringRestricted,
+	--gesr GeneralStringRestricted,
+	bmpu BMPStringUnrestricted OPTIONAL,
+	usu UniversalStringUnrestricted OPTIONAL,
+	uftu UTF8StringUnrestricted OPTIONAL,
+	tsu TeletexStringUnrestricted OPTIONAL,
+	t61u T61StringUnrestricted OPTIONAL,
+	vsu VideotexStringUnrestricted OPTIONAL,
+	gsu GraphicStringUnrestricted OPTIONAL,
+	gesu GeneralStringUnrestricted OPTIONAL
+	--ob OBJID,
+	--rob ROBJID
+}
+
+ExtensionRecord ::= SEQUENCE {
+	me MyEnum,
+	...,
+	f INTEGER
+}
+
+EmptyRecord ::= SEQUENCE {
+
+}
+
+SomeOptionalRecord ::= SEQUENCE {
+	f0 INTEGER DEFAULT 5,
+	f1 INTEGER,
+	f2 INTEGER OPTIONAL,
+	f3 INTEGER,
+	f4 INTEGER OPTIONAL,
+	f5 INTEGER OPTIONAL,
+	f6 INTEGER,
+	f7 INTEGER OPTIONAL,
+	f8 INTEGER,
+	f9 INTEGER DEFAULT 2
+}
+
+MyPDV ::= EMBEDDED PDV
+
+Union ::= CHOICE {
+	f1 [APPLICATION 64] INTEGER,
+	f2 [APPLICATION 63] INTEGER,
+	f3 [APPLICATION 62] INTEGER,
+	f4 [APPLICATION 16383] INTEGER,
+	f5 INTEGER,
+	f6 [PRIVATE 325] INTEGER,
+	f7 [PRIVATE 7596] INTEGER,
+	f8 [PRIVATE 18] INTEGER,
+	f9 [PRIVATE 3] Unsigned1byteInt
+}
+
+MySet ::= SET {
+	r1 [PRIVATE 2] [PRIVATE 7] REAL,
+	f1 [PRIVATE 4] INTEGER,
+	f2 INTEGER OPTIONAL,
+	f3 [APPLICATION 234] INTEGER,
+	f4 [APPLICATION 2] INTEGER,
+	f5 [3] INTEGER,
+	f6 [1] INTEGER
+}
+
+MyRecordOf ::= SEQUENCE OF SomeOptionalRecord
+
+MySetOf ::= SET OF MySet
+
+ROI ::= SEQUENCE OF Unsigned1byteInt
+
+MyExternal ::= EXTERNAL
+
+
+SUBPRODUCT ::= CLASS {
+&code	       INTEGER (1..99999) UNIQUE,
+&OtherFeature
+} WITH SYNTAX { CODE &code, OTHERFEATURE &OtherFeature}
+
+
+SubProductCatalog SUBPRODUCT ::= {
+{CODE 109, OTHERFEATURE Weight}
+}
+
+SubItem ::= SEQUENCE {
+	itemCode       	SUBPRODUCT.&code ({SubProductCatalog }),
+	otherFeature    SUBPRODUCT.&OtherFeature ({SubProductCatalog}{@itemCode})
+}
+
+PRODUCT ::= CLASS {
+&OtherFeature,
+&code	       INTEGER (1..99999) UNIQUE,
+&description	VisibleString (SIZE (1..100)),
+--OpenType-- &Feature	    
+} WITH SYNTAX { OTHERFEATURE &OtherFeature, CODE &code , DESCRIPTION &description , FEATURE &Feature }
+
+ProductCatalog PRODUCT ::= {
+{OTHERFEATURE SubItem, CODE 104, DESCRIPTION "Bookshelf",  FEATURE Weight}
+}
+
+Generation ::= ENUMERATED {two-G, three-G, four-G}
+Weight ::= IA5String
+
+Item ::= SEQUENCE {
+otherFeature    PRODUCT.&OtherFeature ({ProductCatalog}{@itemCode}),
+itemCode       	PRODUCT.&code ({ProductCatalog }),
+itemDescription	PRODUCT.&description({ProductCatalog}{@itemCode}),
+feature        	PRODUCT.&Feature ({ProductCatalog}{@itemCode}),
+isTaxable	      BOOLEAN
+}
+
+
+PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
+	name Name,
+	title [0] VisibleString,
+	number EmployeeNumber,
+	dateOfHire [1] Date,
+	nameOfSpouse [2] Name,
+	children [3] IMPLICIT
+	SEQUENCE OF ChildInformation DEFAULT {}
+
+}
+
+ChildInformation ::= SET
+{ 
+	name Name,
+	dateOfBirth [0] Date
+}
+
+Name ::= [APPLICATION 1] IMPLICIT SEQUENCE
+{
+	givenName VisibleString,
+	initial VisibleString,
+	familyName VisibleString
+}
+
+EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
+
+Date ::= [APPLICATION 3] IMPLICIT VisibleString -- YYYYMMDD
+
+johny PersonnelRecord ::= { name {givenName "John", initial "P", familyName "Smith"},
+title "Director",
+number 51,
+dateOfHire "19710917",
+nameOfSpouse {givenName "Mary", initial "T", familyName "Smith"},
+children
+{{name {givenName "Ralph", initial "T", familyName "Smith"},
+dateOfBirth "19571111"},
+{name {givenName "Susan", initial "B", familyName "Jones"},
+dateOfBirth "19590717"}}}
+
 
 END

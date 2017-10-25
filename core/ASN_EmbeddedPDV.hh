@@ -102,6 +102,8 @@ public:
                  TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                  unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
+  int OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer&) const;
+  int OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer&, OER_struct&);
 private:
   boolean BER_decode_set_selection(const ASN_BER_TLV_t& p_tlv);
 public:
@@ -224,6 +226,8 @@ public:
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
   int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, unsigned int, int, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, unsigned int, embed_values_dec_struct_t*);
+  int OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer&) const;
+  int OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer&, OER_struct&);
 };
 
 class EMBEDDED_PDV_identification_syntaxes_template : public Base_Template {
@@ -331,6 +335,8 @@ public:
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
   int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, unsigned int, int, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t&, XmlReaderWrap& reader, unsigned int, unsigned int, embed_values_dec_struct_t*);
+  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
 };
 
 class EMBEDDED_PDV_identification_context__negotiation_template : public Base_Template {
@@ -444,6 +450,8 @@ public:
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td, const ASN_BER_TLV_t& p_tlv, unsigned L_form);
   int XER_encode(const XERdescriptor_t&, TTCN_Buffer&, unsigned int, unsigned int, int, embed_values_enc_struct_t*) const;
   int XER_decode(const XERdescriptor_t&, XmlReaderWrap&, unsigned int, unsigned int, embed_values_dec_struct_t*);
+  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
 };
 
 class EMBEDDED_PDV_template : public Base_Template {

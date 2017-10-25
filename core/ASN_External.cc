@@ -40,6 +40,7 @@
 #include "Addfunc.hh"
 
 #include "../common/dbgnew.hh"
+#include "OER.hh"
 
 /*
  * This type is used to BER encode/decode the EXTERNAL type.
@@ -120,6 +121,8 @@ namespace { /* anonymous namespace */
                    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
     int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                    unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
+    int OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const;
+    int OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer);
   private:
     boolean BER_decode_set_selection(const ASN_BER_TLV_t& p_tlv);
   public:
@@ -178,6 +181,8 @@ namespace { /* anonymous namespace */
                    TTCN_Buffer& p_buf, unsigned int flavor, unsigned int flavor2, int indent, embed_values_enc_struct_t*) const;
     int XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
                    unsigned int flavor, unsigned int flavor2, embed_values_dec_struct_t*);
+    int OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const;
+    int OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer);
   };
 
   /** Transform the information from the visible format to the encoding format
@@ -505,6 +510,48 @@ namespace { /* anonymous namespace */
     bail:
     return 0; // FIXME return value
   }
+  
+  int EXTERNALtransfer_encoding::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {
+    switch (union_selection) {
+    case ALT_single__ASN1__type:
+      encode_oer_tag(*EXTERNALtransfer_encoding_single__ASN1__type_descr_.ber, p_buf);
+      field_single__ASN1__type->OER_encode(BITSTRING_descr_, p_buf);
+      break;
+    case ALT_octet__aligned:
+      encode_oer_tag(*EXTERNALtransfer_encoding_octet__aligned_descr_.ber, p_buf);
+      field_octet__aligned    ->OER_encode(OCTETSTRING_descr_, p_buf);
+      break;
+    case ALT_arbitrary:
+      field_arbitrary         ->OER_encode(BITSTRING_descr_, p_buf);
+      break;
+    case UNBOUND_VALUE:
+      TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+        "Encoding an unbound value");
+      break;
+    default:
+      TTCN_EncDec_ErrorContext::error_internal("Unknown selection.");
+      // TODO something at all ?
+      break;
+    }
+    return 0;
+  }
+  
+  int EXTERNALtransfer_encoding::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+    const ASN_Tag_t& tag = decode_oer_tag(p_buf);
+    if (tag.tagclass == EXTERNALtransfer_encoding_single__ASN1__type_ber_.tags[0].tagclass &&
+        tag.tagnumber == EXTERNALtransfer_encoding_single__ASN1__type_ber_.tags[0].tagnumber) {
+      single__ASN1__type().OER_decode(BITSTRING_descr_, p_buf, p_oer);
+    } else if (tag.tagclass == EXTERNALtransfer_encoding_octet__aligned_ber_.tags[0].tagclass &&
+               tag.tagnumber == EXTERNALtransfer_encoding_octet__aligned_ber_.tags[0].tagnumber) {
+      octet__aligned().OER_decode(OCTETSTRING_descr_, p_buf, p_oer);
+    } else if (tag.tagclass == EXTERNALtransfer_encoding_arbitrary_ber_.tags[0].tagclass &&
+               tag.tagnumber == EXTERNALtransfer_encoding_arbitrary_ber_.tags[0].tagnumber) {
+      arbitrary().OER_decode(BITSTRING_descr_, p_buf, p_oer);
+    } else {
+      TTCN_EncDec_ErrorContext::error_internal("Unknown selection.");
+    }
+    return 0;
+  }
 
   /******************** EXTERNALtransfer class ********************/
 
@@ -630,6 +677,48 @@ namespace { /* anonymous namespace */
     }
     return 1; // decode successful
   }
+  
+  int EXTERNALtransfer::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+    char c = 0;
+    if (field_direct__reference.is_present()) {
+      c += 1 << 7;
+    }
+    if (field_indirect__reference.is_present()) {
+      c += 1 << 6;
+    }
+    if (field_data__value__descriptor.is_present()) {
+      c += 1 << 5;
+    }
+    p_buf.put_c(c);
+    field_direct__reference      .OER_encode(OBJID_descr_, p_buf);
+    field_indirect__reference    .OER_encode(INTEGER_descr_, p_buf);
+    field_data__value__descriptor.OER_encode(ObjectDescriptor_descr_, p_buf);
+    field_encoding               .OER_encode(p_td, p_buf);
+    return 0;
+  }
+  
+  int EXTERNALtransfer::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+    const unsigned char* uc = p_buf.get_read_data();
+    p_buf.increase_pos(1);
+    if ((uc[0] >> 7) & 1) {
+      field_direct__reference.OER_decode(OBJID_descr_, p_buf, p_oer);
+    } else {
+      field_direct__reference = OMIT_VALUE;
+    }
+    if ((uc[0] >> 6) & 1) {
+      field_indirect__reference.OER_decode(INTEGER_descr_, p_buf, p_oer);
+    } else {
+      field_indirect__reference = OMIT_VALUE;
+    }
+    if ((uc[0] >> 5) & 1) {
+      field_data__value__descriptor.OER_decode(ObjectDescriptor_descr_, p_buf, p_oer);
+    } else {
+      field_data__value__descriptor = OMIT_VALUE;
+    }
+    field_encoding.OER_decode(OCTETSTRING_descr_, p_buf, p_oer);
+    return 0;
+  }
+  
 } // end of anonymous namespace
 
 /*
@@ -734,6 +823,24 @@ int EXTERNAL::XER_decode(const XERdescriptor_t& p_td, XmlReaderWrap& reader,
   xfer.XER_decode(p_td, reader, flavor, flavor2, 0);
   transfer(&xfer);
   return 1; // decode successful
+}
+
+int EXTERNAL::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  if(!is_bound()) {
+    TTCN_EncDec_ErrorContext::error
+      (TTCN_EncDec::ET_UNBOUND, "Encoding an unbound value.");
+  }
+  EXTERNALtransfer xfer;
+  xfer.load(*this);
+  return xfer.OER_encode(p_td, p_buf);
+  return 0;
+}
+
+int EXTERNAL::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+  EXTERNALtransfer xfer;
+  xfer.OER_decode(p_td, p_buf, p_oer);
+  transfer(&xfer);
+  return 0;
 }
 
 /* generated stuff */
@@ -3468,6 +3575,12 @@ void EXTERNAL::encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTC
     TTCN_EncDec_ErrorContext::error_internal
       ("No JSON descriptor available for type '%s'.", p_td.name);
     break;}
+  case TTCN_EncDec::CT_OER: {
+    TTCN_EncDec_ErrorContext ec("While OER-encoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_encode(p_td, p_buf);
+    break;}
   default:
     TTCN_error("Unknown coding method requested to encode type '%s'", p_td.name);
   }
@@ -3515,6 +3628,13 @@ void EXTERNAL::decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, TTC
     TTCN_EncDec_ErrorContext ec("While JSON-decoding type '%s': ", p_td.name);
     TTCN_EncDec_ErrorContext::error_internal
       ("No JSON descriptor available for type '%s'.", p_td.name);
+    break;}
+  case TTCN_EncDec::CT_OER: {
+      TTCN_EncDec_ErrorContext ec("While OER-decoding type '%s': ", p_td.name);
+    if(!p_td.oer)  TTCN_EncDec_ErrorContext::error_internal(
+      "No OER descriptor available for type '%s'.", p_td.name);
+    OER_struct p_oer;
+    OER_decode(p_td, p_buf, p_oer);
     break;}
   default:
     TTCN_error("Unknown coding method requested to decode type '%s'", p_td.name);

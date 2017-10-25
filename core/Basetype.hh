@@ -49,6 +49,7 @@ class Module_Param;
 class Module_Param_Name;
 struct embed_values_enc_struct_t;
 struct embed_values_dec_struct_t;
+struct OER_struct;
 
 /** @brief Type descriptor
  *
@@ -396,6 +397,7 @@ public:
   virtual int encode_raw(TTCN_Buffer& p_buf) const;
   virtual int RAW_encode_negtest_raw(RAW_enc_tree& p_myleaf) const;
   virtual int JSON_encode_negtest_raw(JSON_Tokenizer&) const;
+  virtual int OER_encode_negtest_raw(JSON_Tokenizer&) const; //TODO
 #endif
 
   /** Examines whether this message corresponds the tags in the
@@ -620,7 +622,21 @@ public:
   
   /** Decode OER.
    * @note Basetype::OER_decode throws an error. */
-  VIRTUAL_IF_RUNTIME_2 int OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf);
+  VIRTUAL_IF_RUNTIME_2 int OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer);
+  
+   VIRTUAL_IF_RUNTIME_2 void OER_decode_opentypes(
+    TTCN_Type_list& /*p_typelist*/, TTCN_Buffer& /*p_buf*/, OER_struct& /*p_oer*/) {}
+   
+   #ifdef TITAN_RUNTIME_2
+  /** Encode with OER encoding negative test.
+    * @return the length of the encoding
+    * @param p_err_descr erroneous type descriptor
+    * @param p_td type descriptor
+    * @param p_tok JSON tokenizer for the encoded data
+    * @note Basetype::JSON_encode_negtest throws an error. */
+  virtual int OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td,
+          TTCN_Buffer& p_buf) const;
+#endif
   
   /** not a component by default (components will return true) */
   inline boolean is_component() { return FALSE; }
@@ -850,6 +866,22 @@ public:
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  
+  /** Encodes accordingly to the OER encoding rules.
+    * Returns the length of the encoded data. */
+  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  
+  /** Negative testing for the OER encoder
+    * Encodes this value according to the OER encoding rules, but with the
+    * modifications (errors) specified in the erroneous descriptor parameter. */
+  int OER_encode_negtest(const Erroneous_descriptor_t*, const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  
+  /** Decodes accordingly to the OER encoding rules.
+    * Returns the length of the decoded data. */
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
+  
+  virtual void OER_decode_opentypes(
+    TTCN_Type_list& /*p_typelist*/, TTCN_Buffer& /*p_buf*/, OER_struct& /*p_oer*/);
 
   /** @returns \c true  if this is a set-of type,
    *           \c false if this is a record-of type */
@@ -997,6 +1029,21 @@ public:
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  
+  /** Encodes accordingly to the JSON encoding rules.
+    * Returns the length of the encoded data. */
+  int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  
+  /** Negative testing for the OER encoder
+    * Encodes this value according to the OER encoding rules, but with the
+    * modifications (errors) specified in the erroneous descriptor parameter. */
+  int OER_encode_negtest(const Erroneous_descriptor_t*, const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  
+  /** Decodes accordingly to the OER encoding rules.
+    * Returns the length of the decoded data. */
+  int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
+  
+  virtual void OER_decode_opentypes(TTCN_Type_list& p_typelist, TTCN_Buffer& p_buf, OER_struct& p_oer);
 
   void set_err_descr(Erroneous_descriptor_t* p_err_descr) { err_descr=p_err_descr; }
   Erroneous_descriptor_t* get_err_descr() const { return err_descr; }
@@ -1061,6 +1108,14 @@ public:
   /** Decodes accordingly to the JSON encoding rules.
     * Returns the length of the decoded data. */
   virtual int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
+  
+  /** Encodes accordingly to the OER encoding rules.
+    * Returns the length of the encoded data. */
+  virtual int OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;
+  
+  /** Decodes accordingly to the OER encoding rules.
+    * Returns the length of the decoded data. */
+  virtual int OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer&, OER_struct&);
 };
 
 struct Enum_Type : public Base_Type {
