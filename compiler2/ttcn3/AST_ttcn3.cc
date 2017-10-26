@@ -10297,7 +10297,7 @@ namespace Ttcn {
         const char *tmp_id_str = tmp_id.c_str();
         expression_struct ref_expr;
         Code::init_expr(&ref_expr);
-        ref->generate_code_const_ref(&ref_expr);
+        ref->generate_code(&ref_expr);
         ref_expr.preamble = mputprintf(ref_expr.preamble, "%s& %s = %s;\n",
           is_template_par ? actual_par_type->get_genname_template(my_scope).c_str() :
           actual_par_type->get_genname_value(my_scope).c_str(), tmp_id_str, ref_expr.expr);

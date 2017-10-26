@@ -395,6 +395,40 @@ testcase templateIntParam() runs on templateInt_mycomp {
   }
 }
 
+type record R {
+  integer field1,
+  record {
+    integer subfield1,
+    integer subfield2
+  } field2 optional
+}
+
+function f_param_restriction(in template(value) integer p1, inout template(present) integer p2, out template (present) integer p3) {
+  p2 := 10;
+  p3 := p1;
+}
+
+testcase templateIntParamRestriction() runs on templateInt_mycomp {
+  var template R vt_test := {
+    field1 := 1,
+    field2 := ?
+  };
+  f_param_restriction(vt_test.field1, vt_test.field2.subfield1, vt_test.field2.subfield2);
+  var template R vt_expected := {
+    field1 := 1,
+    field2 := {
+      subfield1 := 10,
+      subfield2 := 1
+    }
+  };
+  if (log2str(vt_test) == log2str(vt_expected)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Expected: ", vt_expected, ", got: ", vt_test);
+  }
+}
+
 
 control {
  execute(templateIntSpec());
@@ -415,5 +449,6 @@ control {
  execute(templateIntReverseOrderImported2());
  execute(templateIntReverseOrderLocal());
  execute(templateIntParam());
+ execute(templateIntParamRestriction());
 }
 }
