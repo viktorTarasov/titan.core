@@ -3084,14 +3084,8 @@ void Type::chk_oer() {
       if (t->get_sub_type()) {
         oerattrib->extendable = t->get_sub_type()->is_extendable();
       }
-      for (size_t i = 0; i < t->get_nof_comps(); i++) {
-        t->get_comp_byIndex(i)->get_type()->chk();
-      }
       break; }
-    case T_SEQOF: {
-      t->get_ofType()->chk();
-      break;
-    }
+    case T_SEQOF:
     case T_BOOL:
     case T_ENUM_A:
     case T_UTF8STRING:

@@ -22,7 +22,7 @@ void encode_oer_length(size_t num_bytes, TTCN_Buffer& buf, boolean seof) {
     buf.put_c(num_bytes);
   } else {
     size_t bytes = num_bytes;
-    // Encode length in maybe more than 1 bytes
+    // Encode length in maybe more than 1 byte
     size_t needed_bytes = 0;
     while (bytes != 0) {
       bytes >>= 8;

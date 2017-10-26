@@ -2755,6 +2755,12 @@
     external function dec_Item(in octetstring stream) return Item
      with { extension "prototype (convert) decode(OER)" }
 
+    external function enc_ErrorReturn(in ErrorReturn pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_ErrorReturn(in octetstring stream) return ErrorReturn
+     with { extension "prototype (convert) decode(OER)" }
+
  	testcase tc_opentype() runs on EmptyCT {
  		var Item pf, pfres;
  		var octetstring os;
@@ -2773,6 +2779,33 @@
  		pfres := dec_Item(os);
  		if (pf != pfres) {
  			setverdict(fail, "tc_opentype: ", match(pf, pfres));
+ 		}
+
+
+ 		var ErrorReturn er, erres;
+
+ 		er := {
+ 			errorCategory := "A",
+ 			errors := {
+ 				{
+ 					errorCode := 1,
+ 					errorInfo := {errorSet_1_Type := 365}
+ 				},
+ 				{
+ 					errorCode := 2,
+ 					errorInfo := {errorSet_2_Type := "If U can decode this, U can be happy. Smile! :-)"}
+ 				}
+ 			}
+ 		}
+
+ 		os := enc_ErrorReturn(er);
+ 		if (os != 'C041010201010302016D01023130496620552063616E206465636F646520746869732C20552063616E2062652068617070792E20536D696C6521203A2D29'O) {
+ 			setverdict(fail, "tc_opentype: ", match('C041010201010302016D01023130496620552063616E206465636F646520746869732C20552063616E2062652068617070792E20536D696C6521203A2D29'O, os));
+ 		}
+
+ 		erres := dec_ErrorReturn(os);
+ 		if (er != erres) {
+ 			setverdict(fail, "tc_opentype: ", match(er, erres));
  		}
 
  		setverdict(pass);

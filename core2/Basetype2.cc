@@ -197,7 +197,7 @@ int Base_Type::JSON_encode_negtest_raw(JSON_Tokenizer&) const
   return 0;
 }
 
-int Base_Type::OER_encode_negtest_raw(JSON_Tokenizer&) const
+int Base_Type::OER_encode_negtest_raw(TTCN_Buffer&) const
 {
   TTCN_error("A value of type %s cannot be used as erroneous raw value for OER encoding.",
              get_descriptor()->name);

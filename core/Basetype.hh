@@ -397,7 +397,7 @@ public:
   virtual int encode_raw(TTCN_Buffer& p_buf) const;
   virtual int RAW_encode_negtest_raw(RAW_enc_tree& p_myleaf) const;
   virtual int JSON_encode_negtest_raw(JSON_Tokenizer&) const;
-  virtual int OER_encode_negtest_raw(JSON_Tokenizer&) const; //TODO
+  virtual int OER_encode_negtest_raw(TTCN_Buffer&) const; //TODO
 #endif
 
   /** Examines whether this message corresponds the tags in the

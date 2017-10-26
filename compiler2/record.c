@@ -4746,7 +4746,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
           , sdef->elements[i].typedescrname);
       }
     }
-    if (sdef->has_opentypes) {
+    if (sdef->opentype_outermost) {
       src = mputstr(src,
         "  TTCN_EncDec_ErrorContext ec_1(\"While decoding opentypes: \");"
         "  TTCN_Type_list p_typelist;\n"

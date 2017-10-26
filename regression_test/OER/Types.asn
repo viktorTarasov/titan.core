@@ -371,4 +371,39 @@ dateOfBirth "19571111"},
 dateOfBirth "19590717"}}}
 
 
+
+ERROR-CLASS ::= CLASS
+{
+  &category	PrintableString(SIZE(1)),
+  &code		INTEGER,
+  &Type	DEFAULT INTEGER
+}
+WITH SYNTAX {&category &code [&Type]}
+
+ErrorSet ERROR-CLASS ::=
+{
+  {"A" 1 [1] INTEGER} |
+  {"A" 2 [1] VisibleString} |
+  {"B" 1 [1] PrintableString} |
+  {"B" 2 [1] BOOLEAN} |
+  oneErrorObject
+}
+
+oneErrorObject ERROR-CLASS ::= { "C" 3 ENUMERATED{foobar} }
+
+ErrorReturn ::= SEQUENCE
+{
+  errorCategory	ERROR-CLASS.&category ({ErrorSet}) OPTIONAL,
+  errors	SEQUENCE OF SEQUENCE
+  {
+    errorCode	ERROR-CLASS.&code({ErrorSet}{@errorCategory}),
+    errorInfo	[99] ERROR-CLASS.&Type({ErrorSet}{@errorCategory,@.errorCode})
+  } OPTIONAL
+}
+
+
+
+
+
+
 END
