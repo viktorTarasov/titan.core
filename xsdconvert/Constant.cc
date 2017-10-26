@@ -108,8 +108,11 @@ void Constant::finalModification() {
     type.upload(newtype);
   }
   
-  // Theese types do not support enumeration restriction
-  if (tmp_type == "NMTOKENS" || tmp_type == "IDREFS" || tmp_type == "ENTITIES") {
+  // These types do not support enumeration restriction
+  if (!(parent->getEnumeration().modified ||
+     (parent->getReference().get_ref() != NULL &&
+     ((SimpleType*)(parent->getReference().get_ref()))->getEnumeration().modified))
+    && (tmp_type == "NMTOKENS" || tmp_type == "IDREFS" || tmp_type == "ENTITIES")) {
     // These are not supported by TITAN.
     // Reset the default value and fixed value
     parent->getValue().default_value = "";

@@ -44,6 +44,18 @@ module www_example_org_enumeration_restriction {
 import from XSD all;
 
 
+const NMTOKENSEnumeration c_defaultForEmpty_1 := false_;
+
+
+const IDREFSEnumeration c_defaultForEmpty_2 := false_;
+
+
+const NMTOKENSEnumType c_defaultForEmpty_3 := false_;
+
+
+const IDREFSEnumType c_defaultForEmpty_4 := false_;
+
+
 type E21unnamed_type E21unnamed
 with {
   variant "name as uncapitalized";
@@ -224,9 +236,65 @@ type record Element
 }
 with {
   variant "element";
+  variant (modal) "defaultForEmpty as c_defaultForEmpty_1";
   variant (modal) "attribute";
+  variant (modal2) "defaultForEmpty as c_defaultForEmpty_2";
   variant (modal2) "attribute";
 };
+
+
+type NMTOKENSEnumType NMTOKENSEnumElem
+with {
+  variant "defaultForEmpty as c_defaultForEmpty_3";
+  variant "element";
+};
+
+
+type enumerated NMTOKENSEnumType
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+};
+
+
+type NMTOKENSType NMTOKENSElem
+with {
+  variant "element";
+};
+
+
+type XSD.NMTOKENS NMTOKENSType;
+
+
+type IDREFSEnumType IDREFSEnumElem
+with {
+  variant "defaultForEmpty as c_defaultForEmpty_4";
+  variant "element";
+};
+
+
+type enumerated IDREFSEnumType
+{
+	false_,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'true_' as 'true'";
+};
+
+
+type IDREFSType IDREFSElem
+with {
+  variant "element";
+};
+
+
+type XSD.IDREFS IDREFSType;
 
 
 }

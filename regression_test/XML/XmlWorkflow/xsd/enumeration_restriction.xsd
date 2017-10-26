@@ -167,4 +167,36 @@
 </xs:complexType>
 </xs:element>
 
+
+<xs:element name="NMTOKENSEnumElem" type="this:NMTOKENSEnumType" default="false"/>
+
+<xs:simpleType name="NMTOKENSEnumType">
+   <xs:restriction base="xs:NMTOKENS">
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+   </xs:restriction>
+</xs:simpleType>
+
+<xs:element name="NMTOKENSElem" type="this:NMTOKENSType" default="false"/>
+
+<xs:simpleType name="NMTOKENSType">
+   <xs:restriction base="xs:NMTOKENS"/>
+</xs:simpleType>
+
+
+<xs:element name="IDREFSEnumElem" type="this:IDREFSEnumType" default="false"/>
+
+<xs:simpleType name="IDREFSEnumType">
+   <xs:restriction base="xs:IDREFS">
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+   </xs:restriction>
+</xs:simpleType>
+
+<xs:element name="IDREFSElem" type="this:IDREFSType" default="false"/>
+
+<xs:simpleType name="IDREFSType">
+   <xs:restriction base="xs:IDREFS"/>
+</xs:simpleType>
+
 </xs:schema>
