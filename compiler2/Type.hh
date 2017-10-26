@@ -343,6 +343,7 @@ namespace Common {
     bool raw_parsed;
     bool raw_checked;
     bool xer_checked;
+    bool variants_checked;
     bool raw_length_calculated;
     bool has_opentypes;
     bool opentype_outermost;

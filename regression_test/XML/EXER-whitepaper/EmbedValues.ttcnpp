@@ -314,6 +314,66 @@ testcase decode_emb_array_opt2() runs on EMB
   CHECK_DECODE(exer_dec_emb_outer3, str_emb_array_w_holes, Outer3, c_emb_array_w_holes3);
 }
 
+
+type record Item
+{
+  record of universal charstring embed_values,
+  Rule_expansion rule_expansion,
+  integer i
+}
+with {
+  variant "embedValues";
+};
+
+
+type union Rule_expansion
+{
+  One_of one_of
+}
+
+type record One_of
+{
+  record of record {
+    Item item
+  } sequence_list
+}
+
+DECLARE_EXER_ENCODERS(One_of, oneof);
+
+const One_of c_emb_oneof :=
+  {
+    sequence_list := {
+      {
+        item := {
+          embed_values := {"","",""},
+          rule_expansion := {
+            one_of := {sequence_list := {}}
+          },
+          i := 3
+        }
+      }
+    }
+  }
+
+const universal charstring str_emb_oneof :=
+"<One_of>\n"&
+"\t<sequence_list>\n"&
+"\t\t<SEQUENCE>\n"&
+"<item><rule_expansion><one_of><sequence_list/></one_of></rule_expansion><i>3</i></item>"&
+"\t\t</SEQUENCE>\n"&
+"\t</sequence_list>\n"&
+"</One_of>\n\n";
+
+testcase encode_emb_oneof() runs on EMB
+{
+  CHECK_METHOD(exer_enc_oneof, c_emb_oneof, str_emb_oneof);
+}
+
+testcase decode_emb_oneof() runs on EMB
+{
+  CHECK_DECODE(exer_dec_oneof, str_emb_oneof, One_of, c_emb_oneof);
+}
+
 control {
   execute(encode_emb());
   execute(decode_emb());
@@ -327,6 +387,8 @@ control {
   execute(decode_emb_array_opt());
   execute(encode_emb_array_opt2());
   execute(decode_emb_array_opt2());
+  execute(encode_emb_oneof());
+  execute(decode_emb_oneof());
 }
 
 }

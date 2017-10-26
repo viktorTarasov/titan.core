@@ -590,6 +590,7 @@ namespace Common {
     raw_parsed  = false;
     raw_checked = false;
     xer_checked = false;
+    variants_checked = false;
     raw_length_calculated = false;
     has_opentypes = false;
     opentype_outermost = false;

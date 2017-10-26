@@ -211,7 +211,7 @@ void Type::chk()
    * components.
    */
   if (!parent_type) chk_table_constraints();
-
+  
   if (legacy_codec_handling) {
     chk_coding_attribs();
   }
@@ -227,6 +227,9 @@ void Type::chk()
 
 void Type::chk_coding_attribs()
 {
+  if (!legacy_codec_handling && !variants_checked) {
+    return;
+  }
   if (typetype == T_SEQ_T || typetype == T_SET_T || typetype == T_CHOICE_T) {
     // If this record/set/union type has no attributes but one of its fields does,
     // create an empty attribute structure.
@@ -262,28 +265,39 @@ void Type::chk_coding_attribs()
   chk_xer();
   
   if (!legacy_codec_handling) {
-    switch (typetype) {
-    case T_SEQ_T:
-    case T_SEQ_A:
-    case T_SET_T:
-    case T_SET_A:
-    case T_CHOICE_T:
-    case T_CHOICE_A:
-    case T_ANYTYPE:
-    case T_OPENTYPE:
-      for (size_t i = 0; i < get_nof_comps(); ++i) {
-        get_comp_byIndex(i)->get_type()->chk_coding_attribs();
+    if (RecursionTracker::is_happening(this)) {
+      return;
+    }
+    
+    RecursionTracker tracker(this);
+    
+    if (is_ref()) {
+      get_type_refd()->chk_coding_attribs();
+    }
+    else {
+      switch (typetype) {
+      case T_SEQ_T:
+      case T_SEQ_A:
+      case T_SET_T:
+      case T_SET_A:
+      case T_CHOICE_T:
+      case T_CHOICE_A:
+      case T_ANYTYPE:
+      case T_OPENTYPE:
+        for (size_t i = 0; i < get_nof_comps(); ++i) {
+          get_comp_byIndex(i)->get_type()->chk_coding_attribs();
+        }
+        break;
+
+      case T_ARRAY:
+      case T_SEQOF:
+      case T_SETOF:
+        get_ofType()->chk_coding_attribs();
+        break;
+
+      default:
+        break;
       }
-      break;
-
-    case T_ARRAY:
-    case T_SEQOF:
-    case T_SETOF:
-      get_ofType()->chk_coding_attribs();
-      break;
-
-    default:
-      break;
     }
   }
 }
@@ -873,6 +887,7 @@ void Type::chk_variants()
   if (legacy_codec_handling) {
     FATAL_ERROR("Type::chk_encodings");
   }
+  variants_checked = true;
   if (is_asn1() || ownertype != OT_TYPE_DEF) {
     return;
   }
@@ -2578,14 +2593,17 @@ void Type::chk_xer() { // XERSTUFF semantic check
     ||ownertype==OT_COMP_FIELD
     ||ownertype==OT_RECORD_OF) {
     if (is_ref()) {
-      // Merge XER attributes from the referenced type.
-      // This implements X.693amd1 clause 15.1.2
-      XerAttributes * newx = new XerAttributes;
       Type *t1 = get_type_refd();
       // chk_refd() (called by chk() for T_REFD) does not check
       // the referenced type; do it now. This makes it fully recursive.
       t1->chk();
-
+      if (!legacy_codec_handling && !t1->xer_checked) {
+        xer_checked = false;
+        return;
+      }
+      // Merge XER attributes from the referenced type.
+      // This implements X.693amd1 clause 15.1.2
+      XerAttributes * newx = new XerAttributes;
       size_t old_text = 0;
       if (t1->xerattrib && !t1->xerattrib->empty()) {
         old_text = t1->xerattrib->num_text_;
