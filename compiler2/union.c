@@ -2409,6 +2409,12 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       def = mputstr(def,
         "int OER_encode_negtest(const Erroneous_descriptor_t*, "
         "const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n");
+      src = mputprintf(src,
+        "int %s::OER_encode_negtest(const Erroneous_descriptor_t*, "
+        "const TTCN_Typedescriptor_t&, TTCN_Buffer&) const {\n"
+        "  return 0;\n"
+        "}\n"
+        , name);
      //todo
     }
     // OER decode
