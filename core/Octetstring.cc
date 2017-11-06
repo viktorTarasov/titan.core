@@ -808,6 +808,15 @@ int OCTETSTRING::JSON_encode_negtest_raw(JSON_Tokenizer& p_tok) const
   }
   return 0;
 }
+
+int OCTETSTRING::OER_encode_negtest_raw(TTCN_Buffer& p_buf) const
+{
+  if (val_ptr != NULL) {
+    p_buf.put_os(*this);
+    return val_ptr->n_octets;
+  }
+  return 0;
+}
 #endif
 
 boolean OCTETSTRING::BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,

@@ -2371,8 +2371,11 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
   if (oer_needed) {
     // OER encode
     src = mputprintf(src,
-      "int %s::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const\n"
+      "int %s::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const\n"
       "{\n", name);
+    if (use_runtime_2) {
+      src = mputstr(src, "  if (err_descr) return OER_encode_negtest(err_descr, p_td, p_buf);\n");
+    }
     src = mputstr(src, "  switch(union_selection) {\n");
     for (i = 0; i < sdef->nElements; ++i) {
       src = mputprintf(src, "  case %s_%s:\n", selection_prefix, sdef->elements[i].name);
@@ -2410,12 +2413,61 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
         "int OER_encode_negtest(const Erroneous_descriptor_t*, "
         "const TTCN_Typedescriptor_t&, TTCN_Buffer&) const;\n");
       src = mputprintf(src,
-        "int %s::OER_encode_negtest(const Erroneous_descriptor_t*, "
-        "const TTCN_Typedescriptor_t&, TTCN_Buffer&) const {\n"
-        "  return 0;\n"
-        "}\n"
+        "int %s::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, "
+        "const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {\n"
         , name);
-     //todo
+      if (sdef->nElements > 0) {
+        src = mputstr(src,
+          "  const Erroneous_values_t* err_vals = NULL;\n"
+          "  const Erroneous_descriptor_t* emb_descr = NULL;\n"
+          "  switch(union_selection) {\n");
+
+        for (i = 0; i < sdef->nElements; ++i) {
+          src = mputprintf(src,
+            "  case %s_%s:\n"
+            "    err_vals = p_err_descr->get_field_err_values(%d);\n"
+            "    emb_descr = p_err_descr->get_field_emb_descr(%d);\n"
+            "    if (NULL != err_vals && NULL != err_vals->value) {\n"
+            "      if (NULL != err_vals->value->errval) {\n"
+            "        if(err_vals->value->raw){\n"
+            "          err_vals->value->errval->OER_encode_negtest_raw(p_buf);\n"
+            "        } else {\n"
+            "          if (NULL == err_vals->value->type_descr) {\n"
+            "            TTCN_error(\"internal error: erroneous value typedescriptor missing\");\n"
+            "          }\n"
+            "          encode_oer_tag(*err_vals->value->type_descr->ber, p_buf);\n"
+            "          err_vals->value->errval->OER_encode(*err_vals->value->type_descr, p_buf);\n"
+            "        }\n"
+            "      }\n"
+            "    } else {\n"
+            "      if (NULL != emb_descr) {\n"
+            "        field_%s->OER_encode_negtest(emb_descr, %s_descr_, p_buf);\n"
+            "      } else {\n"
+            "        field_%s->OER_encode(%s_descr_, p_buf);\n"
+            "      }\n"
+            "    }\n"
+            "    break;\n"
+            , selection_prefix, sdef->elements[i].name, (int)i, (int)i
+            , sdef->elements[i].name, sdef->elements[i].typedescrname
+            , sdef->elements[i].name, sdef->elements[i].typedescrname);
+        }
+        src = mputprintf(src, 
+          "  default:\n"
+          "    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND, \n"
+          "      \"Encoding an unbound value of type %s.\");\n"
+          "    return -1;\n"
+          "  }\n\n"
+          "  return 0;\n"
+          "}\n\n"
+          , dispname);
+      }
+      else {
+        src = mputprintf(src,
+          "  TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND, \n"
+          "    \"Cannot encode union of type %s, because it has zero alternatives.\");\n"
+          "  return -1;\n"
+          "}\n\n", dispname);
+      }
     }
     // OER decode
     src = mputprintf(src,

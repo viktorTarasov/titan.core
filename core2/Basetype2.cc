@@ -1666,6 +1666,11 @@ int Record_Of_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenize
 }
 
 int Record_Of_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  
+  if (err_descr) {
+	  return OER_encode_negtest(err_descr, p_td, p_buf);
+  }
+  
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound %s of value.", is_set() ? "set" : "record");
@@ -1678,8 +1683,102 @@ int Record_Of_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p
   return 0;
 }
   
-int Record_Of_Type::OER_encode_negtest(const Erroneous_descriptor_t*, const TTCN_Typedescriptor_t&, TTCN_Buffer&) const {
-  //TODO
+int Record_Of_Type::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  if (!is_bound()) {
+    TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
+      "Encoding an unbound %s of value.", is_set() ? "set" : "record");
+    return -1;
+  }
+  int values_idx = 0;
+  int nof_elems = get_nof_elements();
+  for (int i = 0; i < get_nof_elements(); ++i) {
+    const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(i, values_idx);
+    if (-1 != p_err_descr->omit_before && p_err_descr->omit_before > i) {
+      nof_elems--;
+      continue;
+    }
+    
+    if (NULL != err_vals && NULL != err_vals->before) {
+      if (err_vals->before->raw == FALSE) {
+        nof_elems++;
+      }
+    }
+    
+    if (NULL != err_vals && NULL != err_vals->after) {
+      if (err_vals->after->raw == FALSE) {
+        nof_elems++;
+      }
+    }
+    
+    if (-1 != p_err_descr->omit_after && p_err_descr->omit_after < i) {
+      nof_elems--;
+      continue;
+    }
+  }
+  encode_oer_length(nof_elems, p_buf, TRUE);
+  values_idx = 0;
+  int edescr_idx = 0;
+  for (int i = 0; i < get_nof_elements(); ++i) {
+    if (-1 != p_err_descr->omit_before && p_err_descr->omit_before > i) {
+      continue;
+    }
+    
+    const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(i, values_idx);
+    const Erroneous_descriptor_t* emb_descr = p_err_descr->next_field_emb_descr(i, edescr_idx);
+    
+    if (NULL != err_vals && NULL != err_vals->before) {
+      if (NULL == err_vals->before->errval) {
+        TTCN_error("internal error: erroneous before value missing");
+      }
+      if (err_vals->before->raw) {
+        err_vals->before->errval->OER_encode_negtest_raw(p_buf);
+      } else {
+        if (NULL == err_vals->before->type_descr) {
+          TTCN_error("internal error: erroneous before typedescriptor missing");
+        }
+        err_vals->before->errval->OER_encode(*(err_vals->before->type_descr), p_buf);
+      }
+    }
+    
+    if (NULL != err_vals && NULL != err_vals->value) {
+      if (NULL != err_vals->value->errval) {
+        if (err_vals->value->raw) {
+          err_vals->value->errval->OER_encode_negtest_raw(p_buf);
+        } else {
+          if (NULL == err_vals->value->type_descr) {
+            TTCN_error("internal error: erroneous before typedescriptor missing");
+          }
+          err_vals->value->errval->OER_encode(*(err_vals->value->type_descr), p_buf);
+        }
+      }
+    }
+    else {
+      if (NULL != emb_descr) {
+        get_at(i)->OER_encode_negtest(emb_descr, *p_td.oftype_descr, p_buf);
+      } else {
+        get_at(i)->OER_encode(*p_td.oftype_descr, p_buf);
+      }
+    }
+    
+    if (NULL != err_vals && NULL != err_vals->after) {
+      if (NULL == err_vals->after->errval) {
+        TTCN_error("internal error: erroneous after value missing");
+      }
+      if (err_vals->after->raw) {
+        err_vals->after->errval->OER_encode_negtest_raw(p_buf);
+      } else {
+        if (NULL == err_vals->after->type_descr) {
+          TTCN_error("internal error: erroneous before typedescriptor missing");
+        }
+        err_vals->after->errval->OER_encode(*(err_vals->after->type_descr), p_buf);
+      }
+    }
+    
+    if (-1 != p_err_descr->omit_after && p_err_descr->omit_after <= i) {
+      break;
+    }
+  }
+  
   return 0;
 }
   
@@ -6147,7 +6246,12 @@ int Record_Type::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& 
   return (int)dec_len;
 }
 
-int Record_Type::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {
+int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
+  
+  if (err_descr) {		
+    return OER_encode_negtest(err_descr, p_td, p_buf);		
+  }
+  
   if (!is_bound()) {
     TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,
       "Encoding an unbound %s value.", is_set() ? "set" : "record");
@@ -6182,8 +6286,101 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) co
   return 0;
 }
   
-int Record_Type::OER_encode_negtest(const Erroneous_descriptor_t*, const TTCN_Typedescriptor_t&, TTCN_Buffer&) const {
-  //TODO
+int Record_Type::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {
+  int values_idx = 0;
+  int edescr_idx = 0;
+  int field_count = get_count();
+  int next_default_idx = 0;
+  const default_struct* default_indexes = get_default_indexes();
+  int pos = 8;
+  char c = 0;
+  for (int i = 0; i < field_count; i++) {
+    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==i);
+    if (is_default_field) {
+      next_default_idx++;
+    }
+    if (get_at(i)->is_optional() || is_default_field) {
+      pos--;
+      const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(i, values_idx);
+      int present = 1;
+      if ((NULL != err_vals && NULL != err_vals->value && NULL == err_vals->value->errval) || !get_at(i)->is_present()) {
+        present = 0;
+      }
+      c += present << pos;
+      if (pos == 0) {
+        p_buf.put_c(c);
+        pos = 8;
+        c = 0;
+      }
+    }
+  }
+  if (pos != 8) {
+    p_buf.put_c(c);
+  }
+  values_idx = 0;
+  for (int i = 0; i < field_count; ++i) {
+    if (-1 != p_err_descr->omit_before && p_err_descr->omit_before > i) {
+      continue;
+    }
+    
+    const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(i, values_idx);
+    const Erroneous_descriptor_t* emb_descr = p_err_descr->next_field_emb_descr(i, edescr_idx);
+    
+    if (NULL != err_vals && NULL != err_vals->before) {
+      if (NULL == err_vals->before->errval) {
+        TTCN_error("internal error: erroneous before value missing");
+      }
+      if (err_vals->before->raw) {
+        err_vals->before->errval->OER_encode_negtest_raw(p_buf);
+      } else {
+        if (NULL == err_vals->before->type_descr) {
+          TTCN_error("internal error: erroneous before typedescriptor missing");
+        }
+        // it's an extra field
+        err_vals->before->errval->OER_encode(*(err_vals->before->type_descr), p_buf);
+      }
+    }
+    
+    if (NULL != err_vals && NULL != err_vals->value) {
+      if (NULL != err_vals->value->errval) {
+        if (err_vals->value->raw) {
+          err_vals->value->errval->OER_encode_negtest_raw(p_buf);
+        } else {
+          if (NULL == err_vals->value->type_descr) {
+            TTCN_error("internal error: erroneous before typedescriptor missing");
+          }
+          err_vals->value->errval->OER_encode(*(err_vals->value->type_descr), p_buf);
+        }
+      }
+    } else {
+      if (NULL != fld_descr(i)->oer || get_at(i)->is_present()) {
+        if (NULL != emb_descr) {
+          get_at(i)->OER_encode_negtest(emb_descr, *fld_descr(i), p_buf);
+        } else {
+          get_at(i)->OER_encode(*fld_descr(i), p_buf);
+        }
+      }
+    }
+    
+    if (NULL != err_vals && NULL != err_vals->after) {
+      if (NULL == err_vals->after->errval) {
+        TTCN_error("internal error: erroneous after value missing");
+      }
+      if (err_vals->after->raw) {
+        err_vals->after->errval->OER_encode_negtest_raw(p_buf);
+      } else {
+        if (NULL == err_vals->after->type_descr) {
+          TTCN_error("internal error: erroneous before typedescriptor missing");
+        }
+        // it's an extra field
+        err_vals->after->errval->OER_encode(*(err_vals->after->type_descr), p_buf);
+      }
+    }
+    
+    if (-1 != p_err_descr->omit_after && p_err_descr->omit_after <= i) {
+      break;
+    }
+  }
   return 0;
 }
   

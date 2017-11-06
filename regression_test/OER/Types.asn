@@ -43,6 +43,10 @@ Unsigned8byteInt ::= INTEGER (0..18446744073709551615)
 
 Signed8byteInt ::= INTEGER (-9223372036854775808..9223372036854775807)
 
+-- Some compile only check
+OperationReturnID-CIP ::= [1] OCTET STRING ('010001'H)
+OperationReturnID-CIP2 ::= [1] BIT STRING ('010001'B)
+
 MyEnum ::= ENUMERATED 
 {
   e0      (0),

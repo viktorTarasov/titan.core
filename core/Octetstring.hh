@@ -161,6 +161,7 @@ public:
     * Used during the negative testing of the JSON encoder.
     * @return The number of bytes added. */
   int JSON_encode_negtest_raw(JSON_Tokenizer&) const;
+  int OER_encode_negtest_raw(TTCN_Buffer&) const;
 #endif
   boolean BER_decode_TLV(const TTCN_Typedescriptor_t& p_td,
                          const ASN_BER_TLV_t& p_tlv, unsigned L_form);

@@ -221,9 +221,15 @@ public:
   bool is_subtype_notempty() const
     { size_limit_t sl;
       return (subtype==ST_INTEGER && integer_st && !integer_st->is_empty()) ||
-      (subtype==ST_BITSTRING && bitstring_st && !bitstring_st->is_empty()) ||
-      (subtype==ST_HEXSTRING && hexstring_st && !hexstring_st->is_empty()) ||
-      (subtype==ST_OCTETSTRING && octetstring_st && !octetstring_st->is_empty()) ||
+      (subtype==ST_BITSTRING && bitstring_st && !bitstring_st->is_empty() && 
+        bitstring_st->get_size_limit(false, sl) == TTRUE &&
+        bitstring_st->get_size_limit(true, sl) == TTRUE) ||
+      (subtype==ST_HEXSTRING && hexstring_st && !hexstring_st->is_empty() && 
+        hexstring_st->get_size_limit(false, sl) == TTRUE &&
+        hexstring_st->get_size_limit(true, sl) == TTRUE) ||
+      (subtype==ST_OCTETSTRING && octetstring_st && !octetstring_st->is_empty() && 
+        octetstring_st->get_size_limit(false, sl) == TTRUE &&
+        octetstring_st->get_size_limit(true, sl) == TTRUE) ||
       (subtype==ST_CHARSTRING && charstring_st && 
         charstring_st->get_size_limit(false, sl) == TTRUE &&
         charstring_st->get_size_limit(true, sl) == TTRUE) ||

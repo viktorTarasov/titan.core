@@ -42,7 +42,7 @@ TTCN3_MODULES = negtest.ttcn NegTestTestcases.ttcn \
 NegTest_TEXT_Types.ttcn NegTest_TEXT_Testcases.ttcn \
 NegTest_RAW_Types.ttcn NegTest_RAW_Testcases.ttcn \
 www_XmlTest_org_negativeTest_XML_Types.ttcn NegTest_XML_Testcases.ttcn XSD.ttcn UsefulTtcn3Types.ttcn \
-NegTest_JSON.ttcn NegTest_Update.ttcn
+NegTest_JSON.ttcn NegTest_Update.ttcn NegTest_OER.ttcn
 
 ASN1_MODULES = Types.asn NegTestTypes.asn
 
@@ -116,6 +116,9 @@ run5: $(TARGET)
 
 run6: $(TARGET)
 	./$(TARGET) NegTest_JSON.cfg
+
+run7: $(TARGET)
+	./$(TARGET) NegTest_OER.cfg
 
 
 ifeq ($(findstring n,$(MAKEFLAGS)),)

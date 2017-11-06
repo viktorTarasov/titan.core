@@ -1,0 +1,264 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Szabo, Bence Janos
+ *
+ ******************************************************************************/
+
+// This module tests the 'negative testing' feature of the OER encoder.
+module NegTest_OER {
+
+import from NegTestTypes all;
+
+type component CT {}
+
+/************ Encoding functions ************/
+external function f_enc_msb(in MySeqBool x) return octetstring
+  with { extension "prototype(convert) encode(OER)" }
+
+external function f_enc_msi4(in MySeqInt4 x) return octetstring
+  with { extension "prototype(convert) encode(OER)" }
+
+external function f_enc_opt(in MySeqIntOpt x) return octetstring
+  with { extension "prototype(convert) encode(OER)" }
+
+external function f_enc_def(in MySeqIntDef x) return octetstring
+  with { extension "prototype(convert) encode(OER)" }
+
+external function f_enc_MySetIntSeqIntSeqInt2SeqReal2(in MySetIntSeqIntSeqInt2SeqReal2 x) return octetstring
+  with { extension "prototype(convert) encode(OER)" }
+
+external function f_enc_MySeqOfInt(in MySeqOfInt x) return octetstring
+  with { extension "prototype(convert) encode(OER)" }
+
+external function f_enc_MyUnionBasicTypes(in MyUnionBasicTypes x) return octetstring
+  with { extension "prototype(convert) encode(OER)" }
+
+/************* Erroneous values *************/
+const MySeqBool msb1 := { b := false } with { erroneous(b) "value := true" };
+const MySeqBool msb2 := { b := false } with { erroneous(b) "value := integer:1" };
+const MySeqBool msb3 := { b := false } with { erroneous(b) "value := omit" };
+
+const MySeqInt4 msi1 := { i := 1, j := 2, k := 3, l := 4 } with { erroneous(k) "before := omit all" };
+const MySeqInt4 msi2 := { i := 1, j := 2, k := 3, l := 4 } with { erroneous(j) "after := omit all" };
+const MySeqInt4 msi3 := { i := 1, j := 2, k := 3, l := 4 } with { erroneous(j) "value(raw) := 'ABCDEF'O" };
+const MySeqInt4 msi4 := { i := 1, j := 2, k := 3, l := 4 } with { erroneous(j) "after(raw) := 'ABCDEF'O" };
+const MySeqInt4 msi5 := { i := 1, j := 2, k := 3, l := 4 } with { erroneous(j) "before(raw) := 'ABCDEF'O" };
+const MySeqInt4 msi6 := { i := 1, j := 2, k := 3, l := 4 } with { erroneous(j) "after := integer:8" };
+const MySeqInt4 msi7 := { i := 1, j := 2, k := 3, l := 4 } with { erroneous(j) "before := integer:8" };
+
+const MySeqIntOpt msiaod1 := {i := 1, j := 2, k := 3, l := 4} with { erroneous(j) "value := omit" };
+const MySeqIntDef msiaod2 := {i := 1, j := 2, k := 3, l := 4} with { erroneous(j) "value := omit" };
+const MySeqIntDef msiaod3 := {i := 1, j := 2, k := 3, l := 4} with { erroneous(l) "value := omit" };
+
+const MySetIntSeqIntSeqInt2SeqReal2 msisiqisr := { i := 2, jkl := {i := 3, jk := {i := 4, j := 5}}, xy := {x := 1.0, y := 2.0}}
+with { erroneous(i) "value := 1";
+       erroneous(jkl.i) "value := 2";
+       erroneous(jkl.jk.j) "value := 4";}
+
+const MySeqOfInt msoi1 := {1,2,3,4} with {erroneous([0]) "value := 2"};
+const MySeqOfInt msoi2 := {1,2,3,4} with {erroneous([1]) "value := omit"};
+const MySeqOfInt msoi3 := {1,2,3,4} with {erroneous([1]) "value := MyCharstring:\"asd\""};
+
+const MySeqOfInt msoi4 := {1,2,3,4} with {erroneous([2]) "before := omit all"};
+const MySeqOfInt msoi5 := {1,2,3,4} with {erroneous([1]) "after := omit all"};
+const MySeqOfInt msoi6 := {1,2,3,4} with {erroneous([2]) "value(raw) := 'ABCDEF'O"};
+const MySeqOfInt msoi7 := {1,2,3,4} with {erroneous([2]) "before(raw) := 'ABCDEF'O"};
+const MySeqOfInt msoi8 := {1,2,3,4} with {erroneous([2]) "after(raw) := 'ABCDEF'O"};
+const MySeqOfInt msoi9 := {1,2,3,4} with {erroneous([2]) "after := MyCharstring:\"asd\""};
+const MySeqOfInt msoi10 := {1,2,3,4} with {erroneous([2]) "before := MyCharstring:\"asd\""};
+
+const MyUnionBasicTypes mubt1 := { i := 1 } with {erroneous(i) "value := 2"};
+const MyUnionBasicTypes mubt2 := { i := 1 } with {erroneous(i) "value := MyCharstring:\"asd\""};
+const MyUnionBasicTypes mubt3 := { i := 1 } with {erroneous(i) "value := omit"};
+const MyUnionBasicTypes mubt4 := { i := 1 } with {erroneous(i) "value(raw) := 'ABCD'O"};
+
+/******** Test cases for records ********/
+testcase tc_record_change_value() runs on CT {
+  var octetstring res := f_enc_msb(msb1);
+  log(res);
+  if ('FF'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_msb(msb2);
+  log(res);
+  if ('0101'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_msb(msb3);
+  log(res);
+  if (''O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+testcase tc_record_omit_before_after() runs on CT {
+  var octetstring res := f_enc_msi4(msi1);
+  log(res);
+  if ('01030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_msi4(msi2);
+  log(res);
+  if ('01010102'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+testcase tc_record_raw() runs on CT {
+  var octetstring res := f_enc_msi4(msi3);
+  log(res);
+  if ('0101ABCDEF01030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_msi4(msi4);
+  log(res);
+  if ('01010102ABCDEF01030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_msi4(msi5);
+  log(res);
+  if ('0101ABCDEF010201030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+testcase tc_record_insert() runs on CT {
+  var octetstring res := f_enc_msi4(msi6);
+  log(res);
+  if ('01010102010801030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_msi4(msi7);
+  log(res);
+  if ('01010108010201030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+testcase tc_record_optional() runs on CT {
+  var octetstring res := f_enc_opt(msiaod1);
+  log(res);
+  if ('80010101030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_def(msiaod2);
+  log(res);
+  if ('80010101030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_def(msiaod3);
+  log(res);
+  if ('00010101020103'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+testcase tc_record_deep() runs on CT {
+  var octetstring res := f_enc_MySetIntSeqIntSeqInt2SeqReal2(msisiqisr);
+  log(res);
+  if ('800101010201040104800603312E452B300603322E452B30'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+/******** Test cases for record-ofs ********/
+testcase tc_record_of_change_value() runs on CT {
+  var octetstring res := f_enc_MySeqOfInt(msoi1);
+  log(res);
+  if ('01040102010201030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MySeqOfInt(msoi2);
+  log(res);
+  if ('0104010101030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MySeqOfInt(msoi3);
+  log(res);
+  if ('010401010361736401030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+testcase tc_record_of_omit_before_after() runs on CT {
+  var octetstring res := f_enc_MySeqOfInt(msoi4);
+  log(res);
+  if ('010201030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MySeqOfInt(msoi5);
+  log(res);
+  if ('010201010102'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+testcase tc_record_of_raw() runs on CT {
+  var octetstring res := f_enc_MySeqOfInt(msoi6);
+  log(res);
+  if ('010401010102ABCDEF0104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MySeqOfInt(msoi7);
+  log(res);
+  if ('010401010102ABCDEF01030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MySeqOfInt(msoi8);
+  log(res);
+  if ('0104010101020103ABCDEF0104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+testcase tc_record_of_insert() runs on CT {
+  var octetstring res := f_enc_MySeqOfInt(msoi9);
+  log(res);
+  if ('0105010101020103036173640104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MySeqOfInt(msoi10);
+  log(res);
+  if ('0105010101020361736401030104'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+/******** Test cases for unions ********/
+testcase tc_union_change_value() runs on CT {
+  var octetstring res := f_enc_MyUnionBasicTypes(mubt1);
+  log(res);
+  if ('020102'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MyUnionBasicTypes(mubt2);
+  log(res);
+  if ('1A03617364'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MyUnionBasicTypes(mubt3);
+  log(res);
+  if (''O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MyUnionBasicTypes(mubt4);
+  log(res);
+  if ('ABCD'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+}
+
+
+/*************** Control part ***************/
+control {
+  execute(tc_record_change_value());
+  execute(tc_record_omit_before_after());
+  execute(tc_record_raw());
+  execute(tc_record_insert());
+  execute(tc_record_optional());
+  execute(tc_record_deep());
+
+  execute(tc_record_of_change_value());
+  execute(tc_record_of_omit_before_after());
+  execute(tc_record_of_raw());
+  execute(tc_record_of_insert());
+
+  execute(tc_union_change_value());
+}
+
+}
