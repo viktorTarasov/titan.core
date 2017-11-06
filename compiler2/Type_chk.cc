@@ -3013,6 +3013,7 @@ void Type::chk_xer() { // XERSTUFF semantic check
 }
 
 void Type::chk_oer() {
+  if (!enable_oer()) return;
   if (oerattrib == NULL) {
     oerattrib = new OerAST();
   }

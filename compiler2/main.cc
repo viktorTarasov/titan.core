@@ -151,7 +151,8 @@ Modules *modules = NULL;
 
 // Features can be disabled in the license or by commandline switches
 static bool raw_disabled = false, ber_disabled = false, per_disabled = false,
-  text_disabled = false, xer_disabled = false, json_disabled = false;
+  text_disabled = false, xer_disabled = false, json_disabled = false,
+  oer_disabled = false;
 static bool attribute_validation_disabled = FALSE;
 #ifdef LICENSE
 static bool has_raw_feature = false, has_ber_feature = false,
@@ -235,8 +236,7 @@ boolean enable_json()
 
 boolean enable_oer()
 {
-  // TODO: temp while no new compiler flag
-  return TRUE;
+  return !oer_disabled;
 }
 
 boolean disable_attribute_validation()
@@ -422,6 +422,7 @@ static void usage()
     "	-n:		activate debugger (generates extra code for debugging)\n"
     "	-N:		ignore UNTAGGED encoding instruction on top level unions (legacy behaviour)\n"
     "	-o dir:		output files will be placed into dir\n"
+    "	-O:		disable OER encoder/decoder functions\n"
     "	-p:		parse only (no semantic check or code generation)\n"
     "	-P pduname:	define top-level pdu\n"
     "	-q:		suppress all messages (quiet mode)\n"
@@ -499,7 +500,7 @@ int main(int argc, char *argv[])
     Sflag = false, Kflag = false, jflag = false, zflag = false, Fflag = false,
     Mflag = false, Eflag = false, nflag = false, Bflag = false, errflag = false,
     print_usage = false, ttcn2json = false, Nflag = false, Dflag = false,
-    eflag = false; 
+    eflag = false, Oflag = false;
 
   CodeGenHelper cgh;
 
@@ -595,7 +596,7 @@ int main(int argc, char *argv[])
 
   if (!ttcn2json) {
     for ( ; ; ) {
-      int c = getopt(argc, argv, "aA:bBcC:dDeEfFgijJ:K:lLMnNo:pP:qQ:rRsStT:uU:vV:wxXyYz:0-");
+      int c = getopt(argc, argv, "aA:bBcC:dDeEfFgijJ:K:lLMnNo:OpP:qQ:rRsStT:uU:vV:wxXyYz:0-");
       if (c == -1) break;
       switch (c) {
       case 'a':
@@ -683,6 +684,10 @@ int main(int argc, char *argv[])
       case 'o':
         SET_FLAG(o);
         output_dir = optarg;
+        break;
+      case 'O':
+        SET_FLAG(O);
+        oer_disabled = TRUE;
         break;
       case 'Y':
         SET_FLAG(Y);
@@ -834,7 +839,7 @@ int main(int argc, char *argv[])
         bflag || fflag || iflag || lflag || oflag || pflag || qflag ||
         rflag || sflag || tflag || uflag || wflag || xflag || Xflag || Rflag ||
         Uflag || yflag || Kflag || jflag || zflag || Fflag || Mflag || Eflag ||
-        nflag || Bflag || Dflag || eflag) {
+        nflag || Bflag || Dflag || eflag || Oflag) {
         errflag = true;
         print_usage = true;
       }
