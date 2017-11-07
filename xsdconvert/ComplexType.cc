@@ -344,10 +344,12 @@ void ComplexType::loadWithValues() {
         if(cmode == CT_simpletype_mode){
           //If a simple top level element is nillable
           ComplexType * nilrec = new ComplexType(this);
+          nilrec->xsdtype = n_element;
           if (atts.type.empty()) {
             nilrec->type.upload(Mstring("record"), false);
           } else {
             nilrec->type.upload(atts.type);
+            nilrec->setReference(atts.type);
           }
           nilrec->name.upload(Mstring("content"));
           nilrec->isOptional = true;
@@ -362,10 +364,12 @@ void ComplexType::loadWithValues() {
           //From a complexType element is nillable
           ComplexType * record = new ComplexType(this);
           ComplexType * nilrec = new ComplexType(record);
+          nilrec->xsdtype = n_element;
           if (atts.type.empty()) {
             nilrec->type.upload(Mstring("record"), false);
           } else {
             nilrec->type.upload(atts.type);
+            nilrec->setReference(atts.type);
           }
           record->name.upload(atts.name);
           record->type.upload(Mstring("record"), false);

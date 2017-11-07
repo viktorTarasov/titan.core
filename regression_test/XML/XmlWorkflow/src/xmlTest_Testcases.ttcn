@@ -1580,6 +1580,16 @@ group ComplexType {
     }
   }//tc_
 
+  testcase tc_nillable_nameconversion() runs on xmlTest_CT {
+    f_shellCommandWithVerdict(xsd2ttcn_command & " nillable_nameconversion.xsd","",c_shell_successWithoutWarningAndError)
+
+    if(getverdict==pass) {
+      f_compareFiles(
+        "www_example_org_nillable_nameconversion_e.ttcn",
+         "www_example_org_nillable_nameconversion.ttcn", c_numOfDiff);
+    }
+  }//tc_
+
  //Fixed or defaultforempty attribute is not allowed on nillable elements according to TITAN
  testcase tc_nillable_fixed() runs on xmlTest_CT {
     f_shellCommandWithVerdict(xsd2ttcn_command & " nillable_fixed.xsd","",c_shell_successWithoutWarningAndError)
@@ -2769,6 +2779,7 @@ control {
   execute(tc_complex_restriction_converter()); //Failed, TR HL32896
   execute(tc_complex_restriction_with_use());
   execute(tc_complex_nillable());
+  execute(tc_nillable_nameconversion());
   execute(tc_nillable_fixed());
   execute(tc_no_ns_connector());
   execute(tc_xmlschema());

@@ -1,0 +1,94 @@
+/******************************************************************************
+* Copyright (c) 2000-2017 Ericsson Telecom AB
+*
+* XSD to TTCN-3 Translator
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*   Szabo, Bence Janos
+*
+******************************************************************************/
+//
+//  File:          www_example_org_nillable_nameconversion.ttcn
+//  Description:
+//  References:
+//  Rev:
+//  Prodnr:
+//  Updated:       Thu Aug  1 13:47:14 2014
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//	Generated from file(s):
+//	- nillable_nameconversion.xsd
+//			/* xml version = "1.0" encoding = "UTF-8" */
+//			/* targetnamespace = "www.example.org/nillable/nameconversion" */
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+
+module www_example_org_nillable_nameconversion {
+
+
+import from XSD all;
+
+
+type record ListOfUInt16_1
+{
+	record of XSD.UnsignedShort uInt16_list
+}
+with {
+  variant "name as 'ListOfUInt16'";
+  variant (uInt16_list) "untagged";
+  variant (uInt16_list[-]) "name as 'UInt16'";
+};
+
+
+type record ListOfUInt16
+{
+	ListOfUInt16_1 content optional
+}
+with {
+  variant "useNil";
+  variant "element";
+};
+
+
+type record ListOfUIntType
+{
+	record {
+		ListOfUInt16_1 content optional
+	} listOfUInt16
+}
+with {
+  variant (listOfUInt16) "name as capitalized";
+  variant (listOfUInt16) "useNil";
+};
+
+
+type record Int32
+{
+	XSD.Int content optional
+}
+with {
+  variant "useNil";
+  variant "element";
+};
+
+
+}
+with {
+  encode "XML";
+  variant "namespace as 'www.example.org/nillable/nameconversion' prefix 'n'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+}
