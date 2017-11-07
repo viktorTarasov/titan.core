@@ -977,10 +977,10 @@ testcase tc_timer_timeout() runs on CT {
   timer master;
   timer t[3];
   var integer idx;
-  t[0].start(0.4);
-  t[1].start(0.6);
-  t[2].start(0.2);
-  master.start(1.0); // just for safety
+  t[0].start(2.0);
+  t[1].start(3.0);
+  t[2].start(1.0);
+  master.start(4.0); // just for safety
   alt {
     [] any from t.timeout -> @index value idx {
       if (idx != 2) {
@@ -996,13 +996,16 @@ testcase tc_timer_timeout() runs on CT {
   }
 }
 
+// FIXME: The timers are not the best solution because in some cases the scheduler
+//        makes unexpected results.
+
 // tests for 'any from <timer array>.running'
 testcase tc_timer_running() runs on CT {
   timer t[3];
   var integer idx;
   t[0].start(0.05);
-  t[1].start(0.3);
-  t[2].start(0.3);
+  t[1].start(0.5);
+  t[2].start(0.5);
   t[0].timeout;
   if (any from t.running -> @index value idx) {
     if (idx != 1) {
@@ -1035,12 +1038,12 @@ testcase tc_component_done() runs on CT {
   cta[0] := CT.create;
   cta[1] := CT.create;
   cta[2] := CT.create;
-  cta[0].start(f_behavior_done(0.4));
-  cta[1].start(f_behavior_done(0.4));
-  cta[2].start(f_behavior_done(0.2));
+  cta[0].start(f_behavior_done(2.0));
+  cta[1].start(f_behavior_done(2.0));
+  cta[2].start(f_behavior_done(1.0));
   var integer idx;
   timer t;
-  t.start(1.0);
+  t.start(3.0);
   alt {
     [] any from cta.done(IntDone: ?) -> @index value idx {
       if (idx != 2) {
@@ -1076,10 +1079,10 @@ testcase tc_component_done() runs on CT {
   cta2[0] := CT.create;
   cta2[1] := CT.create;
   cta2[2] := CT.create;
-  cta2[0].start(f_behavior_done(0.4));
-  cta2[1].start(f_behavior_done(0.2));
-  cta2[2].start(f_behavior_done(0.4));
-  t.start(1.0);
+  cta2[0].start(f_behavior_done(2.0));
+  cta2[1].start(f_behavior_done(1.0));
+  cta2[2].start(f_behavior_done(2.0));
+  t.start(3.0);
   alt {
     [] any from f_comp_array(cta2).done(IntDone: ?) -> @index value idx2 {
       if (idx2 != 1) {
@@ -1114,12 +1117,12 @@ testcase tc_component_done() runs on CT {
   cta3[0] := CT.create;
   cta3[1] := CT.create;
   cta3[2] := CT.create;
-  cta3[0].start(f_behavior_done(0.2));
-  cta3[1].start(f_behavior_done(0.4));
-  cta3[2].start(f_behavior_done(0.4));
+  cta3[0].start(f_behavior_done(1.0));
+  cta3[1].start(f_behavior_done(2.0));
+  cta3[2].start(f_behavior_done(2.0));
   var F_type f_ptr := refers(f_comp_array);
   var integer idx3;
-  t.start(1.0);
+  t.start(3.0);
   alt {
     [] any from f_ptr.apply(cta3).done(IntDone: ?) -> @index value idx3 {
       if (idx3 != 0) {
@@ -1156,12 +1159,12 @@ testcase tc_component_killed() runs on CT {
   cta[0] := CT.create;
   cta[1] := CT.create;
   cta[2] := CT.create;
-  cta[0].start(f_behavior_done(0.4));
-  cta[1].start(f_behavior_done(0.4));
-  cta[2].start(f_behavior_done(0.2));
+  cta[0].start(f_behavior_done(2.0));
+  cta[1].start(f_behavior_done(2.0));
+  cta[2].start(f_behavior_done(1.0));
   var integer idx;
   timer t;
-  t.start(1.0);
+  t.start(3.0);
   alt {
     [] any from cta.killed -> @index value idx {
       if (idx != 2) {
@@ -1197,10 +1200,10 @@ testcase tc_component_killed() runs on CT {
   cta2[0] := CT.create;
   cta2[1] := CT.create;
   cta2[2] := CT.create;
-  cta2[0].start(f_behavior_done(0.4));
-  cta2[1].start(f_behavior_done(0.2));
-  cta2[2].start(f_behavior_done(0.4));
-  t.start(1.0);
+  cta2[0].start(f_behavior_done(2.0));
+  cta2[1].start(f_behavior_done(1.0));
+  cta2[2].start(f_behavior_done(2.0));
+  t.start(3.0);
   alt {
     [] any from f_comp_array(cta2).killed -> @index value idx2 {
       if (idx2 != 1) {
@@ -1235,12 +1238,12 @@ testcase tc_component_killed() runs on CT {
   cta3[0] := CT.create;
   cta3[1] := CT.create;
   cta3[2] := CT.create;
-  cta3[0].start(f_behavior_done(0.2));
-  cta3[1].start(f_behavior_done(0.4));
-  cta3[2].start(f_behavior_done(0.4));
+  cta3[0].start(f_behavior_done(1.0));
+  cta3[1].start(f_behavior_done(2.0));
+  cta3[2].start(f_behavior_done(2.0));
   var F_type f_ptr := refers(f_comp_array);
   var integer idx3;
-  t.start(1.0);
+  t.start(3.0);
   alt {
     [] any from f_ptr.apply(cta3).killed -> @index value idx3 {
       if (idx3 != 0) {
@@ -1278,7 +1281,7 @@ testcase tc_component_running() runs on CT {
   cta[2] := CT.create;
   cta[0].start(f_behavior_done(0.05));
   cta[1].start(f_behavior_done(0.05));
-  cta[2].start(f_behavior_done(0.3));
+  cta[2].start(f_behavior_done(0.5));
   cta[0].done;
   cta[1].done;
   var integer idx;
@@ -1306,7 +1309,7 @@ testcase tc_component_running() runs on CT {
   cta2[1] := CT.create;
   cta2[2] := CT.create;
   cta2[0].start(f_behavior_done(0.05));
-  cta2[1].start(f_behavior_done(0.3));
+  cta2[1].start(f_behavior_done(0.5));
   cta2[2].start(f_behavior_done(0.05));
   cta2[0].done;
   cta2[2].done;
@@ -1334,7 +1337,7 @@ testcase tc_component_running() runs on CT {
   cta3[0] := CT.create;
   cta3[1] := CT.create;
   cta3[2] := CT.create;
-  cta3[0].start(f_behavior_done(0.3));
+  cta3[0].start(f_behavior_done(0.5));
   cta3[1].start(f_behavior_done(0.05));
   cta3[2].start(f_behavior_done(0.05));
   cta3[1].done;
@@ -1369,7 +1372,7 @@ testcase tc_component_alive() runs on CT {
   cta[2] := CT.create;
   cta[0].start(f_behavior_done(0.05));
   cta[1].start(f_behavior_done(0.05));
-  cta[2].start(f_behavior_done(0.3));
+  cta[2].start(f_behavior_done(0.5));
   cta[0].killed;
   cta[1].killed;
   var integer idx;
@@ -1397,7 +1400,7 @@ testcase tc_component_alive() runs on CT {
   cta2[1] := CT.create;
   cta2[2] := CT.create;
   cta2[0].start(f_behavior_done(0.05));
-  cta2[1].start(f_behavior_done(0.3));
+  cta2[1].start(f_behavior_done(0.5));
   cta2[2].start(f_behavior_done(0.05));
   cta2[0].killed;
   cta2[2].killed;
@@ -1425,7 +1428,7 @@ testcase tc_component_alive() runs on CT {
   cta3[0] := CT.create;
   cta3[1] := CT.create;
   cta3[2] := CT.create;
-  cta3[0].start(f_behavior_done(0.3));
+  cta3[0].start(f_behavior_done(0.5));
   cta3[1].start(f_behavior_done(0.05));
   cta3[2].start(f_behavior_done(0.05));
   cta3[1].killed;
