@@ -256,6 +256,7 @@ struct makefile_struct {
   boolean disabletext;
   boolean disablexer;
   boolean disablejson;
+  boolean disableoer;
   boolean forcexerinasn;
   boolean defaultasomit;
   boolean gccmsgformat;
@@ -2230,7 +2231,7 @@ static void print_makefile(struct makefile_struct *makefile)
           "AR = ar\n"
           "ARFLAGS = \n\n"
           "# Flags for the TTCN-3 and ASN.1 compiler:\n"
-          "COMPILER_FLAGS =%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n\n"
+          "COMPILER_FLAGS =%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n\n"
           "# Execution mode: (either ttcn3 or ttcn3-parallel)\n"
           "TTCN3_LIB = ttcn3%s%s%s\n\n"
 #ifdef LICENSE
@@ -2258,6 +2259,7 @@ static void print_makefile(struct makefile_struct *makefile)
           (makefile->disabletext ? " -x" : ""),
           (makefile->disablexer ? " -X" : ""),
           (makefile->disablejson ? " -j" : ""),
+          (makefile->disableoer ? " -O" : ""),
           (makefile->forcexerinasn ? " -a" : ""),
           (makefile->defaultasomit ? " -d" : ""),
           (makefile->gccmsgformat ? " -g" : ""),
@@ -4649,7 +4651,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   struct string_list* ttcn3_prep_defines, struct string_list* ttcn3_prep_undefines, struct string_list* prep_includes,
   struct string_list* prep_defines, struct string_list* prep_undefines, char *codesplittpd, boolean quietly, boolean disablesubtypecheck,
   const char* cxxcompiler, const char* optlevel, const char* optflags, boolean disableber, boolean disableraw, boolean disabletext,
-  boolean disablexer, boolean disablejson, boolean forcexerinasn, boolean defaultasomit, boolean gccmsgformat,
+  boolean disablexer, boolean disablejson, boolean disableoer, boolean forcexerinasn, boolean defaultasomit, boolean gccmsgformat,
   boolean linenumbersonlymsg, boolean includesourceinfo, boolean addsourcelineinfo, boolean suppresswarnings,
   boolean outparamboundness, boolean omit_in_value_list, boolean warnings_for_bad_variants, boolean activate_debugger,
   boolean ignore_untagged_on_top_union, boolean disable_predef_ext_folder, boolean enable_legacy_encoding,
@@ -4694,6 +4696,7 @@ static void generate_makefile(size_t n_arguments, char *arguments[],
   makefile.disabletext = disabletext;
   makefile.disablexer = disablexer;
   makefile.disablejson = disablejson;
+  makefile.disableoer = disableoer;
   makefile.forcexerinasn = forcexerinasn;
   makefile.defaultasomit = defaultasomit;
   makefile.gccmsgformat = gccmsgformat;
@@ -4926,7 +4929,7 @@ int main(int argc, char *argv[])
     dxflag = FALSE, fxflag = FALSE, doflag = FALSE,
     gfflag = FALSE, lnflag = FALSE, isflag = FALSE, asflag = FALSE,
     Sflag = FALSE, Vflag = FALSE, Dflag = FALSE, Wflag = FALSE,
-    djflag = FALSE, Zflag = FALSE, Hflag = FALSE, Mflag = FALSE,
+    djflag = FALSE, doerflag = FALSE, Zflag = FALSE, Hflag = FALSE, Mflag = FALSE,
     diflag = FALSE, zflag = FALSE, Eflag = FALSE, nflag = FALSE,
     Nflag = FALSE, Gflag = FALSE;
   boolean error_flag = FALSE;
@@ -5367,7 +5370,7 @@ int main(int argc, char *argv[])
       &gflag, &sflag, &cflag, &aflag, &pflag,
       &Rflag, &lflag, &mflag, &Pflag, &Lflag, rflag, Fflag, Tflag, output_file, &abs_work_dir, sub_project_dirs, program_name, prj_graph_fp,
       create_symlink_list, ttcn3_prep_includes, ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, &csmode,
-      &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
+      &quflag, &dsflag, &cxxcompiler, &optlevel, &optflags, &dbflag, &drflag, &dtflag, &dxflag, &djflag, &doerflag, &fxflag, &doflag, &gfflag, &lnflag, &isflag,
       &asflag, &temp_wflag, &Yflag, &Mflag, &Eflag, &nflag, &Nflag, &diflag, &Gflag,
       solspeclibraries, sol8speclibraries, linuxspeclibraries, freebsdspeclibraries, win32speclibraries, &ttcn3prep,
       linkerlibraries, additionalObjects, linkerlibsearchpath, Vflag, Dflag, &Zflag, &Hflag,
@@ -5416,7 +5419,7 @@ int main(int argc, char *argv[])
       Rflag, lflag, mflag, Cflag, code_splitting_mode, tcov_file_name, profiled_file_list,
       file_list_file_name, Lflag, Zflag, Hflag, rflag ? sub_project_dirs : NULL, ttcn3_prep_includes,
       ttcn3_prep_defines, ttcn3_prep_undefines, prep_includes, prep_defines, prep_undefines, csmode, quflag, dsflag, cxxcompiler, optlevel, optflags, dbflag,
-      drflag, dtflag, dxflag, djflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, wflag, Yflag, Mflag, Eflag, nflag, Nflag, diflag,
+      drflag, dtflag, dxflag, djflag, doerflag, fxflag, doflag, gfflag, lnflag, isflag, asflag, wflag, Yflag, Mflag, Eflag, nflag, Nflag, diflag,
       Gflag, solspeclibraries, sol8speclibraries, linuxspeclibraries,
       freebsdspeclibraries, win32speclibraries, ttcn3prep, linkerlibraries, additionalObjects,
       linkerlibsearchpath, generatorCommandOutput, target_placement_list);

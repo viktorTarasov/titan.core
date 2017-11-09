@@ -118,6 +118,7 @@
                     <xs:element name="disableTEXT" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="disableXER" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="disableJSON" minOccurs="0" maxOccurs="1" type="xs:boolean" />
+                    <xs:element name="disableOER" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="forceXERinASN.1" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="defaultasOmit" minOccurs="0" maxOccurs="1" type="xs:boolean" />
                     <xs:element name="enumHackProperty" minOccurs="0" maxOccurs="1" type="xs:boolean" /> <!-- deprecated -->
