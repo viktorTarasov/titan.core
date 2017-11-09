@@ -3631,6 +3631,7 @@ namespace Common {
           case T_EMBEDDED_PDV:
           case T_SEQOF:
           case T_EXTERNAL:
+          case T_OBJECTDESCRIPTOR:
             return true;
           default:
             return false;
@@ -6793,7 +6794,10 @@ namespace Common {
     } // case
     case CT_OER: {
       for ( ; ; ) {
-        if (t->is_asn1()) return true;
+        if (t->is_asn1()) { 
+          t->set_gen_coder_functions(CT_OER);
+          return true;
+        }
         //if (t->oerattrib) return true;
         if (t->is_ref()) t = t->get_type_refd();
         else {
@@ -6806,6 +6810,7 @@ namespace Common {
           case T_OSTR:
           case T_OID:
             // these basic TTCN-3 types have ASN.1 equivalents
+            t->set_gen_coder_functions(CT_OER);
             return true;
           default:
             return false;

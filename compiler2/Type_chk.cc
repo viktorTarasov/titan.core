@@ -3116,6 +3116,8 @@ void Type::chk_oer() {
     case T_EXTERNAL:
       break;
     default:
+      delete oerattrib;
+      oerattrib = NULL;
       break;
   }
 }

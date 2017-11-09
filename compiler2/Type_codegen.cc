@@ -422,7 +422,7 @@ void Type::generate_code_typedescriptor(output_struct *target)
     
     if (generate_oer)
       target->source.global_vars = mputprintf(target->source.global_vars,
-        "&%s_oer_, ", gennamexerdescriptor.c_str());
+        "&%s_oer_, ", gennameoerdescriptor.c_str());
     else
       target->source.global_vars = mputprintf(target->source.global_vars,
         "NULL, ");
