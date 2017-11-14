@@ -9,6 +9,7 @@
  *   Balasko, Jeno
  *   Delic, Adam
  *   Raduly, Csaba
+ *   Szabo, Bence Janos
  *
  ******************************************************************************/
 #include "TableConstraint.hh"
@@ -258,6 +259,7 @@ namespace Asn {
 	  const Common::Identifier& altname = t_type->get_otaltname(is_strange);
           if(!t_ot->has_comp_withName(altname)) {
             Type * otype = new Type(Type::T_REFDSPEC, t_type);
+            otype->set_my_scope(t_type->get_my_scope());
             otype->set_genname(t_type->get_genname_own());
             t_ot->add_comp(new CompField(altname.clone(),
 					 otype));
@@ -268,7 +270,6 @@ namespace Asn {
 		"open type `%s'", dispname_str, t_ot->get_fullname().c_str());
           } // t_ot ! has the type
         } // for i (objs)
-        t_ot->set_my_scope(t_ot->get_my_scope());
         t_ot->set_fullname(t_ot->get_fullname());
         t_ot->chk();
       } // if ans
