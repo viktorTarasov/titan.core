@@ -1896,7 +1896,7 @@ optDecodedModifier
 %left '*' '/' ModKeyword RemKeyword
 %left UnarySign
 
-%expect 66
+%expect 67
 
 %start GrammarRoot
 
@@ -1909,7 +1909,7 @@ For 9 tokens the parser cannot decide whether the token is a part of
 the return expression (shift) or it is the beginning of the next statement
 (reduce).
 
-2.) 10 distinct states, each with one conflict caused by token '['
+2.) 11 distinct states, each with one conflict caused by token '['
 The local definitions in altsteps can be followed immediately by the guard
 expression. When the parser sees the '[' token it cannot decide whether it
 belongs to the local definition as array dimension or array subreference
@@ -1925,6 +1925,7 @@ The situations are the following:
 - var template t v <here> [
 - var t v := function(...)<subrefs> <here> [
 - var template t v := decmatch (...) ref <here> [
+- var t v := valueof(...)<subrefs> <here> [
 
 3.) 1 conflict
 The sequence identifier.objid can be either the beginning of a module name
@@ -4177,8 +4178,19 @@ MatchOp: // 160
 
 ValueofOp: // 162
   ValueofKeyword '(' optError TemplateInstance optError ')'
+  optExtendedFieldReference
   {
-    $$ = new Value(Value::OPTYPE_VALUEOF, $4);
+    if ($7.nElements == 0) {
+      $$ = new Value(Value::OPTYPE_VALUEOF, $4);
+    }
+    else {
+      FieldOrArrayRefs* subrefs = new FieldOrArrayRefs;
+      for (size_t i = 0; i < $7.nElements; ++i) {
+        subrefs->add($7.elements[i]);
+      }
+      Free($7.elements);
+      $$ = new Value(Value::OPTYPE_VALUEOF, $4, subrefs);
+    }
     $$->set_location(infile, @$);
   }
 | ValueofKeyword '(' error ')'

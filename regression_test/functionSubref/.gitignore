@@ -1,0 +1,10 @@
+TfunctionSubref
+TfunctionSubref.exe
+TfunctionSubref*.cc
+TfunctionSubref*.hh
+TpardTemplateSubref*.cc
+TpardTemplateSubref*.hh
+TvalueofSubref*.cc
+TvalueofSubref*.hh
+compile
+functionSubref*.log

@@ -751,6 +751,8 @@ public:
   tribool get_size_limit(bool is_upper, size_limit_t& limit) const;
 
   string to_string() const;
+  
+  size_t get_min_length() const;
 };
 
 template<unsigned char BITCNT, unsigned short ELEMSIZE>
@@ -1026,6 +1028,15 @@ string StringSizeAndValueListConstraint<BITCNT,ELEMSIZE>::to_string() const
     ret_val += ')';
   }
   return ret_val;
+}
+
+template <unsigned char BITCNT, unsigned short ELEMSIZE>
+size_t StringSizeAndValueListConstraint<BITCNT, ELEMSIZE>::get_min_length() const
+{
+  if (size_constraint.is_empty() == TTRUE) {
+    return 0;
+  }
+  return size_constraint.get_minimal().get_size();
 }
 
 typedef StringSizeAndValueListConstraint<1,1> BitstringConstraint;

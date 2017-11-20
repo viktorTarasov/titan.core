@@ -1,0 +1,7 @@
+namedBits
+namedBits.exe
+NamedBits*.cc
+NamedBits*.hh
+Tests*.cc
+Tests*.hh
+namedBits*.log

@@ -4393,6 +4393,12 @@ void Type::chk_this_value_namedbits(Value *value)
     if(bstring->size() < bitnum + 1) bstring->resize(bitnum + 1, '0');
     (*bstring)[bitnum] = '1';
   }
+  if (sub_type != NULL) {
+    size_t min_length = sub_type->get_min_length();
+    if (bstring->size() < min_length) {
+      bstring->resize(min_length, '0');
+    }
+  }
   value->set_valuetype(Value::V_BSTR, bstring);
 }
 

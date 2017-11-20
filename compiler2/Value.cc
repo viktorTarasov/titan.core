@@ -291,9 +291,11 @@ namespace Common {
         u.expr.v3 = p.u.expr.v3->clone();
         u.expr.ti4 = p.u.expr.ti4->clone();
         break;
+      case OPTYPE_VALUEOF: // ti1 [subrefs2]
+        u.expr.subrefs2 = p.u.expr.subrefs2 != NULL ? u.expr.subrefs2->clone() : NULL;
+        // fall through
       case OPTYPE_LENGTHOF: // ti1
       case OPTYPE_SIZEOF:  // ti1
-      case OPTYPE_VALUEOF: // ti1
       case OPTYPE_ISPRESENT:
       case OPTYPE_TTCN2STRING:
       case OPTYPE_ISVALUE:
@@ -637,9 +639,11 @@ namespace Common {
       delete u.expr.v3;
       delete u.expr.ti4;
       break;
+    case OPTYPE_VALUEOF: // ti1 [subrefs2]
+      delete u.expr.subrefs2;
+      // fall through
     case OPTYPE_LENGTHOF: // ti1
     case OPTYPE_SIZEOF:  // ti1
-    case OPTYPE_VALUEOF: // ti1
     case OPTYPE_ISVALUE:
     case OPTYPE_ISBOUND:
     case OPTYPE_ISPRESENT:
@@ -1030,6 +1034,29 @@ namespace Common {
     case OPTYPE_TTCN2STRING:
       if(!p_ti1) FATAL_ERROR("Value::Value()");
       u.expr.ti1=p_ti1;
+      if (p_optype == OPTYPE_VALUEOF) {
+        u.expr.subrefs2 = NULL;
+      }
+      break;
+    default:
+      FATAL_ERROR("Value::Value()");
+    } // switch
+  }
+  
+  // ti1 subrefs2
+  Value::Value(operationtype_t p_optype, TemplateInstance* p_ti1,
+               Ttcn::FieldOrArrayRefs* p_subrefs2)
+    : GovernedSimple(S_V), valuetype(V_EXPR), my_governor(0), in_brackets(false)
+  {
+    u.expr.v_optype = p_optype;
+    u.expr.state = EXPR_NOT_CHECKED;
+    switch (p_optype) {
+    case OPTYPE_VALUEOF:
+      if (p_ti1 == NULL || p_subrefs2 == NULL) {
+        FATAL_ERROR("Value::Value()");
+      }
+      u.expr.ti1 = p_ti1;
+      u.expr.subrefs2 = p_subrefs2;
       break;
     default:
       FATAL_ERROR("Value::Value()");
@@ -1841,9 +1868,13 @@ namespace Common {
       u.expr.v3->set_fullname(p_fullname+".<operand3>");
       u.expr.ti4->set_fullname(p_fullname+".<operand4>");
       break;
+    case OPTYPE_VALUEOF: // ti1 [subrefs2]
+      if (u.expr.subrefs2 != NULL) {
+        u.expr.subrefs2->set_fullname(p_fullname + ".<subrefs>");
+      }
+      // fall through
     case OPTYPE_LENGTHOF: // ti1
     case OPTYPE_SIZEOF:   // ti1
-    case OPTYPE_VALUEOF: // ti1
     case OPTYPE_ISVALUE:
     case OPTYPE_ISBOUND:
     case OPTYPE_ISPRESENT:
@@ -2097,9 +2128,13 @@ namespace Common {
       u.expr.v3->set_my_scope(p_scope);
       u.expr.ti4->set_my_scope(p_scope);
       break;
+    case OPTYPE_VALUEOF: // ti1 [subrefs2]
+      if (u.expr.subrefs2 != NULL) {
+        u.expr.subrefs2->set_my_scope(p_scope);
+      }
+      // fall through
     case OPTYPE_LENGTHOF: // ti1
     case OPTYPE_SIZEOF: // ti1
-    case OPTYPE_VALUEOF: // ti1
     case OPTYPE_ISVALUE:
     case OPTYPE_ISBOUND:
     case OPTYPE_ISPRESENT:
@@ -2470,7 +2505,7 @@ namespace Common {
         break;
       case OPTYPE_LENGTHOF: // ti1
       case OPTYPE_SIZEOF: // ti1
-      case OPTYPE_VALUEOF: // ti1
+      case OPTYPE_VALUEOF: // ti1 [subrefs2]
       case OPTYPE_ISVALUE:
       case OPTYPE_ISBOUND:
       case OPTYPE_ISPRESENT:
@@ -3312,7 +3347,17 @@ namespace Common {
       case OPTYPE_VALUEOF: {
         Error_Context cntxt(this, "In the operand of operation `%s'",
                             get_opname());
-        return u.expr.ti1->get_expr_returntype(Type::EXPECTED_TEMPLATE);}
+        if (u.expr.subrefs2 != NULL) {
+          Type* t = u.expr.ti1->get_expr_governor(Type::EXPECTED_TEMPLATE);
+          if (t != NULL) {
+            t = t->get_type_refd_last()->get_field_type(u.expr.subrefs2, exp_val);
+            return t->get_type_refd_last()->get_typetype();
+          }
+          return Type::T_UNDEF;
+        }
+        else {
+          return u.expr.ti1->get_expr_returntype(Type::EXPECTED_TEMPLATE);
+        } }
       case OPTYPE_TMR_READ:
       case OPTYPE_INT2FLOAT:
       case OPTYPE_STR2FLOAT:
@@ -3718,9 +3763,13 @@ namespace Common {
       case OPTYPE_REPLACE:{
       	Type *tmp_type = u.expr.ti1->get_expr_governor(exp_val ==
           Type::EXPECTED_DYNAMIC_VALUE ? Type::EXPECTED_TEMPLATE : exp_val);
-	if(tmp_type) tmp_type = tmp_type->get_type_refd_last();
-	return tmp_type;
-	  }
+        if (u.expr.v_optype == OPTYPE_VALUEOF && tmp_type != NULL) {
+          tmp_type = tmp_type->get_type_refd_last()->
+            get_field_type(u.expr.subrefs2, exp_val);
+        }
+        if(tmp_type) tmp_type = tmp_type->get_type_refd_last();
+        return tmp_type;
+      }
       case OPTYPE_ROTL:
       case OPTYPE_ROTR:
         return u.expr.v1->get_expr_governor(exp_val);
@@ -3986,7 +4035,7 @@ namespace Common {
       return "decomp()";
     case OPTYPE_REPLACE:
       return "replace()";
-    case OPTYPE_VALUEOF: // t1
+    case OPTYPE_VALUEOF: // t1 [subrefs2]
       return "valueof()";
     case OPTYPE_UNDEF_RUNNING:
       return "<timer or component> running";
@@ -7649,16 +7698,17 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_ISCHOSEN_T: // t1 i2
       chk_expr_operands_ischosen(refch, exp_val);
       break;
-    case OPTYPE_VALUEOF: { // ti1
+    case OPTYPE_VALUEOF: { // ti1 [subrefs2]
       if (exp_val == Type::EXPECTED_DYNAMIC_VALUE)
 	exp_val = Type::EXPECTED_TEMPLATE;
       Error_Context cntxt(this, "In the operand of operation `%s'", opname);
-      Type *governor = my_governor;
+      Type *governor = (u.expr.subrefs2 == NULL) ? my_governor : NULL;
       if (!governor) governor = chk_expr_operands_ti(u.expr.ti1, exp_val);
       if (!governor) return;
       chk_expr_eval_ti(u.expr.ti1, governor, refch, exp_val);
       if (valuetype == V_ERROR) return;
       u.expr.ti1->get_Template()->chk_specific_value(false);
+      // the subreferences have already been checked by get_expr_returntype
       break; }
     case OPTYPE_ISPRESENT: // TODO: rename UsedInIsbound to better name
     case OPTYPE_ISBOUND: {
@@ -8751,17 +8801,20 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       valuetype = V_BOOL;
       u.val_bool = b;
       break; }
-    case OPTYPE_VALUEOF: // ti1
+    case OPTYPE_VALUEOF: // ti1 [subrefs2]
       if (!u.expr.ti1->get_DerivedRef() &&
           u.expr.ti1->get_Template()->is_Value() &&
           !u.expr.ti1->get_Type()) {
         // FIXME actually if the template instance has a type
         // it might still be foldable.
         // the argument is a single specific value
-        v1 = u.expr.ti1->get_Template()->get_Value();
+        v1 = u.expr.ti1->get_Template()->get_Value()->
+          get_refd_sub_value(u.expr.subrefs2, 0, false, refch);
         Type *governor = my_governor;
         if (governor == NULL) {
           governor = u.expr.ti1->get_expr_governor(exp_val);
+          if (governor != NULL) governor = governor->get_type_refd_last()->
+            get_field_type(u.expr.subrefs2, exp_val);
           if (governor != NULL) governor = governor->get_type_refd_last();
         }
         if (governor == NULL) governor = v1->get_my_governor()->get_type_refd_last();
@@ -9360,7 +9413,7 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
           || u.expr.v3->is_unfoldable(refch, exp_val)
           || u.expr.ti4->get_specific_value()->is_unfoldable(refch, exp_val);
       }
-      case OPTYPE_VALUEOF: // ti1
+      case OPTYPE_VALUEOF: // ti1 [subrefs2]
         /* \todo if you have motivation to implement the eval function
            for valueof()... */
         return true;
@@ -10627,9 +10680,20 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       u.expr.ti4->chk_recursions(refch);
       refch.prev_state();
       break;
+    case OPTYPE_VALUEOF: // ti1 [subrefs2]
+      if (u.expr.subrefs2 != NULL) {
+        for (size_t i = 0; i < u.expr.subrefs2->get_nof_refs(); ++i) {
+          Ttcn::FieldOrArrayRef* subref = u.expr.subrefs2->get_ref(i);
+          if (subref->get_type() == Ttcn::FieldOrArrayRef::ARRAY_REF) {
+            refch.mark_state();
+            subref->get_val()->chk_recursions(refch);
+            refch.prev_state();
+          }
+        }
+      }
+      // fall through
     case OPTYPE_LENGTHOF: // ti1
     case OPTYPE_SIZEOF: // ti1
-    case OPTYPE_VALUEOF: // ti1
     case OPTYPE_ISPRESENT:
     case OPTYPE_TTCN2STRING:
       refch.mark_state();
@@ -10985,10 +11049,19 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_REGEXP: // ti1 t2 v3
       self_ref |= chk_expr_self_ref_templ(u.expr.ti1->get_Template(), lhs);
       self_ref |= chk_expr_self_ref_templ(u.expr.t2 ->get_Template(), lhs);
-      // no break
+      break;
+    case OPTYPE_VALUEOF: // ti1 [subrefs2]
+      if (u.expr.subrefs2 != NULL) {
+        for (size_t i = 0; i < u.expr.subrefs2->get_nof_refs(); ++i) {
+          Ttcn::FieldOrArrayRef* subref = u.expr.subrefs2->get_ref(i);
+          if (subref->get_type() == Ttcn::FieldOrArrayRef::ARRAY_REF) {
+            self_ref |= chk_expr_self_ref_val(subref->get_val(), lhs);
+          }
+        }
+      }
+      // fall through
     case OPTYPE_LENGTHOF: // ti1
     case OPTYPE_SIZEOF: // ti1
-    case OPTYPE_VALUEOF: // ti1
     case OPTYPE_TTCN2STRING:
       self_ref |= chk_expr_self_ref_templ(u.expr.ti1->get_Template(), lhs);
       break;
@@ -11575,6 +11648,9 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         string ret_val("valueof(");
         u.expr.ti1->append_stringRepr(ret_val);
         ret_val += ')';
+        if (u.expr.subrefs2 != NULL) {
+          u.expr.subrefs2->append_stringRepr(ret_val);
+        }
 	return ret_val; }
       case OPTYPE_LOG2STR:
         return string("log2str(...)");
@@ -12445,9 +12521,18 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         str = u.expr.ti1->rearrange_init_code(str, usage_mod);
         str = u.expr.v2->rearrange_init_code(str, usage_mod);
         break;
+      case OPTYPE_VALUEOF:
+        if (u.expr.subrefs2 != NULL) {
+          for (size_t i = 0; i < u.expr.subrefs2->get_nof_refs(); ++i) {
+            Ttcn::FieldOrArrayRef* subref = u.expr.subrefs2->get_ref(i);
+            if (subref->get_type() == Ttcn::FieldOrArrayRef::ARRAY_REF) {
+              str = subref->get_val()->rearrange_init_code(str, usage_mod);
+            }
+          }
+        }
+        // fall through
       case OPTYPE_LENGTHOF:
       case OPTYPE_SIZEOF:
-      case OPTYPE_VALUEOF:
       case OPTYPE_ISPRESENT:
       case OPTYPE_TTCN2STRING:
         str = u.expr.ti1->rearrange_init_code(str, usage_mod);
@@ -12980,9 +13065,13 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
         FATAL_ERROR("Value::generate_code_expr_expr()");
       }
       break; }
-    case OPTYPE_VALUEOF: // ti1
+    case OPTYPE_VALUEOF: // ti1 [subrefs2]
       u.expr.ti1->generate_code(expr);
       expr->expr = mputstr(expr->expr, ".valueof()");
+      if (u.expr.subrefs2 != NULL) {
+        u.expr.subrefs2->generate_code(expr,
+          u.expr.ti1->get_expr_governor(Type::EXPECTED_DYNAMIC_VALUE));
+      }
       break;
     case OPTYPE_ISTEMPLATEKIND: // ti1 v2
       u.expr.ti1->generate_code(expr);
@@ -14904,10 +14993,20 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       return u.expr.ti1->has_single_expr() &&
              u.expr.v2->has_single_expr() && u.expr.v3->has_single_expr() &&
              u.expr.ti4->has_single_expr();
+    case OPTYPE_VALUEOF: // ti1 [subrefs2]
+      if (u.expr.subrefs2 != NULL) {
+        for (size_t i = 0; i < u.expr.subrefs2->get_nof_refs(); ++i) {
+          Ttcn::FieldOrArrayRef* subref = u.expr.subrefs2->get_ref(i);
+          if (subref->get_type() == Ttcn::FieldOrArrayRef::ARRAY_REF &&
+              !subref->get_val()->has_single_expr()) {
+            return false;
+          }
+        }
+      }
+      // fall through
     case OPTYPE_ISVALUE: // ti1
     case OPTYPE_LENGTHOF: // ti1
     case OPTYPE_SIZEOF: // ti1
-    case OPTYPE_VALUEOF: // ti1
       return u.expr.ti1->has_single_expr();
     case OPTYPE_LOG2STR:
     case OPTYPE_ANY2UNISTR:

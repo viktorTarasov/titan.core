@@ -1,0 +1,52 @@
+--/////////////////////////////////////////////////////////////////////////////
+-- Copyright (c) 2000-2017 Ericsson Telecom AB
+-- All rights reserved. This program and the accompanying materials
+-- are made available under the terms of the Eclipse Public License v1.0
+-- which accompanies this distribution, and is available at
+-- http://www.eclipse.org/legal/epl-v10.html
+--
+-- Contributors:
+--   Baranyi, Botond
+--
+--/////////////////////////////////////////////////////////////////////////////
+
+NamedBits
+DEFINITIONS
+
+AUTOMATIC TAGS
+
+::=
+
+BEGIN
+
+IMPORTS ; -- nothing
+
+Workdays1 ::=
+BIT STRING { monday(0), tuesday(1), wednesday(3), thursday(4), friday(5) }
+
+Workdays2 ::=
+BIT STRING { monday(0), tuesday(1), wednesday(3), thursday(4), friday(5) } (SIZE(7))
+
+Workdays3 ::=
+BIT STRING { monday(0), tuesday(1), wednesday(3), thursday(4), friday(5) } (SIZE(0..7))
+
+Workdays4 ::=
+BIT STRING { monday(0), tuesday(1), wednesday(3), thursday(4), friday(5) } (SIZE(7..10))
+
+myWorkdays11 Workdays1 ::= { monday }
+myWorkdays12 Workdays1 ::= { monday, wednesday, friday }
+myWorkdays13 Workdays1 ::= { tuesday, thursday }
+
+myWorkdays21 Workdays2 ::= { monday }
+myWorkdays22 Workdays2 ::= { monday, wednesday, friday }
+myWorkdays23 Workdays2 ::= { tuesday, thursday }
+
+myWorkdays31 Workdays3 ::= { monday }
+myWorkdays32 Workdays3 ::= { monday, wednesday, friday }
+myWorkdays33 Workdays3 ::= { tuesday, thursday }
+
+myWorkdays41 Workdays4 ::= { monday }
+myWorkdays42 Workdays4 ::= { monday, wednesday, friday }
+myWorkdays43 Workdays4 ::= { tuesday, thursday }
+
+END

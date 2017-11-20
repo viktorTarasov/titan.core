@@ -18,7 +18,7 @@
 TOPDIR := ..
 include $(TOPDIR)/Makefile.regression
 
-ADIRS = parse errorMessages errorMessages2 transformations keyword hyphen enum1 enum2 codeGeneration2 Test38 Test303 Test307 Test308 Test309 Test310 Test338 Test340 Test342 Test344 Test346 Test348 Test350 Test352 Test354 Test356 Test358 Test360
+ADIRS = parse errorMessages errorMessages2 transformations keyword hyphen enum1 enum2 codeGeneration2 Test38 Test303 Test307 Test308 Test309 Test310 Test338 Test340 Test342 Test344 Test346 Test348 Test350 Test352 Test354 Test356 Test358 Test360 namedBits
 
 #still not OK: Test330 Test332
 

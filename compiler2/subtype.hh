@@ -237,6 +237,7 @@ public:
         universal_charstring_st->get_size_limit(false, sl) == TTRUE &&
         universal_charstring_st->get_size_limit(true, sl) == TTRUE);
     }
+  size_t get_min_length() const;
 };
 
 /**

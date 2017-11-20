@@ -1,0 +1,86 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+module Tests {
+
+import from NamedBits all;
+
+type component CT {}
+
+testcase tc_named_bits_no_restriction() runs on CT {
+  if (myWorkdays11 != '1'B) {
+    setverdict(fail, "myWorkdays11 := ", myWorkdays11);
+  }
+  else if (myWorkdays12 != '100101'B) {
+    setverdict(fail, "myWorkdays12 := ", myWorkdays12);
+  }
+  else if (myWorkdays13 != '01001'B) {
+    setverdict(fail, "myWorkdays13 := ", myWorkdays13);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
+testcase tc_named_bits_fixed_length() runs on CT {
+  if (myWorkdays21 != '1000000'B) {
+    setverdict(fail, "myWorkdays21 := ", myWorkdays21);
+  }
+  else if (myWorkdays22 != '1001010'B) {
+    setverdict(fail, "myWorkdays22 := ", myWorkdays22);
+  }
+  else if (myWorkdays23 != '0100100'B) {
+    setverdict(fail, "myWorkdays23 := ", myWorkdays23);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
+testcase tc_named_bits_low_length_range() runs on CT {
+  if (myWorkdays31 != '1'B) {
+    setverdict(fail, "myWorkdays31 := ", myWorkdays31);
+  }
+  else if (myWorkdays32 != '100101'B) {
+    setverdict(fail, "myWorkdays32 := ", myWorkdays32);
+  }
+  else if (myWorkdays33 != '01001'B) {
+    setverdict(fail, "myWorkdays33 := ", myWorkdays33);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
+testcase tc_named_bits_high_length_range() runs on CT {
+  if (myWorkdays41 != '1000000'B) {
+    setverdict(fail, "myWorkdays41 := ", myWorkdays41);
+  }
+  else if (myWorkdays42 != '1001010'B) {
+    setverdict(fail, "myWorkdays42 := ", myWorkdays42);
+  }
+  else if (myWorkdays43 != '0100100'B) {
+    setverdict(fail, "myWorkdays43 := ", myWorkdays43);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
+control {
+  execute(tc_named_bits_no_restriction());
+  execute(tc_named_bits_fixed_length());
+  execute(tc_named_bits_low_length_range());
+  execute(tc_named_bits_high_length_range());
+}
+
+}

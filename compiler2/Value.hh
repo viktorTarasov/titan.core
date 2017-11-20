@@ -51,6 +51,7 @@ namespace Ttcn {
   class LogArguments;
   class JsonOmitCombination;
   class LengthRestriction;
+  class FieldOrArrayRefs;
 }
 
 namespace Common {
@@ -350,6 +351,7 @@ namespace Common {
           Ttcn::ParsedActualParameters *t_list2;
           Ttcn::ActualParList *ap_list2;
           Ttcn::Ref_base *r2;
+          Ttcn::FieldOrArrayRefs* subrefs2;
         };
         Value *v3;
         union {
@@ -419,6 +421,9 @@ namespace Common {
     Value(operationtype_t p_optype, Value* p_v1, Ttcn::Ref_base* p_r2, bool p_b4);
     /** Constructor used by V_EXPR "ti1": LENGTHOF, SIZEOF, VALUEOF, TTCN2STRING */
     Value(operationtype_t p_optype, TemplateInstance *p_ti1);
+    /** Constructor used by V_EXPR "ti1 subrefs2": VALUEOF */
+    Value(operationtype_t p_optype, TemplateInstance *p_ti1,
+      Ttcn::FieldOrArrayRefs* p_subrefs2);
     /** Constructor used by V_EXPR "r1": TMR_READ, ACTIVATE */
     Value(operationtype_t p_optype, Ttcn::Ref_base *p_r1);
     /** Constructor used by V_EXPR "r1 [r2] b4": UNDEF_RUNNING */

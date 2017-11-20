@@ -1285,6 +1285,14 @@ bool SubtypeConstraint::is_lower_limit_infinity() const
   return false;
 }
 
+size_t SubtypeConstraint::get_min_length() const
+{
+  if (subtype != ST_BITSTRING) {
+    FATAL_ERROR("SubtypeConstraint::get_min_length()");
+  }
+  return bitstring_st != NULL ? bitstring_st->get_min_length() : 0;
+}
+
 
 void SubtypeConstraint::except(const SubtypeConstraint* other)
 {
