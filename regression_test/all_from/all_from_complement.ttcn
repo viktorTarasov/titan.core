@@ -502,23 +502,60 @@ testcase tc_functionRef_rof_c_eq() runs on A {
 // control part is NOT used during the test!
 control {
   //  execute(tc_complementInt_eq());
-  execute(tc_complementInt0());
-  execute(tc_complementInt1());
-  execute(tc_complementInt2());
-  execute(tc_complementInt3());
-  execute(tc_complementInt4());
-  execute(tc_complementInt5());
-  execute(tc_complementInt6());  
-
-  execute(tc_complementInt1s());
-  execute(tc_complementInt2s());
-  execute(tc_complementInt3s());
-  execute(tc_complementInt4s());
-  execute(tc_complementInt5s());
-  execute(tc_complementInt6s());
-
-  execute(tc_complementCharstring1());
-  execute(tc_complementCharstring2());
+execute(tc_complementInt0_eq());
+execute(tc_complementImportingInt0_eq());
+execute(tc_complementInt0());
+execute(tc_complementImportingInt0());
+execute(tc_complementInt1_eq());
+execute(tc_complementInt1());
+execute(tc_complementInt2_eq());
+execute(tc_complementInt2());
+execute(tc_complementInt3_eq());
+execute(tc_complementInt3());
+execute(tc_complementInt4_eq());
+execute(tc_complementInt4());
+execute(tc_complementInt5_eq());
+execute(tc_complementInt5());
+execute(tc_complementInt6_eq());
+execute(tc_complementInt6());
+execute(tc_complementInt13roi_eq());
+execute(tc_complementInt13roi());
+execute(tc_complementInt13soi_eq());
+execute(tc_complementInt13soi());
+execute(tc_complementInt13roi_c_eq());
+execute(tc_complementInt13roi_c());
+execute(tc_complementInt13soi_c_eq());
+execute(tc_complementInt13soi_c());
+execute(tc_complementInt0s_eq());
+execute(tc_complementInt0s());
+execute(tc_complementInt1s_eq());
+execute(tc_complementInt1s());
+execute(tc_complementInt2s_eq());
+execute(tc_complementInt2s());
+execute(tc_complementInt3s());
+execute(tc_complementInt4s());
+execute(tc_complementInt5s());
+execute(tc_complementInt6s());
+execute(tc_complementInt0_eq_dyn());
+execute(tc_complementInt0_eq_2dyn());
+execute(tc_complementInt0_dyn());
+execute(tc_complementInt0_2dyn());
+execute(tc_complementInt1_dyn());
+execute(tc_complementInt1_2dyn());
+execute(tc_complementInt2_dyn());
+execute(tc_complementInt2_2dyn());
+execute(tc_complementInt3_dyn());
+execute(tc_complementInt3_2dyn());
+execute(tc_complementInt0s_eq_dyn());
+execute(tc_complementInt0s_eq_2dyn());
+execute(tc_complementInt0s_dyn());
+execute(tc_complementInt0s_2dyn());
+execute(tc_complementCharstring1());
+execute(tc_complementCharstring2());
+execute(tc_complementMyRec1_eq());
+execute(tc_complementMyRec1());
+execute(tc_complementMyRec2_eq());
+execute(tc_functionRef_rof_c_eq());
 }
 
 }
