@@ -3132,7 +3132,7 @@ void defUnionTemplate(const struct_def *sdef, output_struct *output)
     "}\n"
     "break;\n"
     "case COMPLEMENTED_LIST:\n"
-    "TTCN_Logger::log_event_str(\"complement \");\n"
+    "TTCN_Logger::log_event_str(\"complement\");\n"
     "case VALUE_LIST:\n"
     "TTCN_Logger::log_char('(');\n"
     "for (unsigned int list_count = 0; list_count < value_list.n_values; "

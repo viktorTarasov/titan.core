@@ -93,7 +93,7 @@ testcase tc_all_from_with_functions() runs on CT_Empty {
   if (log2str(t1) == "{ permutation(3, 4) }" and log2str(t2) == "{ 3, 4 }" and
     log2str(t3) == "{ permutation(3, 4) }" and log2str(t4) == "{ permutation(1, 2) }" and
     log2str(t5) == "(1, 2, 1, 2, (6 .. 9), 10)" and 
-    log2str(t6) == "complement (1, 2, 1, 2, (6 .. 9), 10)" and
+    log2str(t6) == "complement(1, 2, 1, 2, (6 .. 9), 10)" and
     log2str(t7) == "subset(1, 2, 3, 4, 5) length (2 .. 3)" and
     log2str(t8) == "superset(1, 2, 3, 4, 5) length (6 .. 8)" and
     log2str(t9) == "(1, 2, 3, 4, 6)" and log2str(t10) == "{ (1, 2, 3, 4, 6), ((20 .. 30)) }" and

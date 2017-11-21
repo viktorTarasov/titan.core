@@ -1236,7 +1236,7 @@ void Record_Of_Template::log() const
     } else TTCN_Logger::log_event_str("{ }");
     break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');
@@ -2252,7 +2252,7 @@ void Set_Of_Template::log() const
     } else TTCN_Logger::log_event_str("{ }");
     break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');
@@ -2870,7 +2870,7 @@ void Record_Template::log() const
     } else TTCN_Logger::log_event_str("{ }");
   break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');
@@ -3430,7 +3430,7 @@ void Empty_Record_Template::log() const
     TTCN_Logger::log_event_str("{ }");
   break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');

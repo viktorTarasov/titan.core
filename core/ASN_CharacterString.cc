@@ -1359,7 +1359,7 @@ void CHARACTER_STRING_identification_template::log() const
     }
     break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');
@@ -2211,7 +2211,7 @@ void CHARACTER_STRING_identification_syntaxes_template::log() const
     TTCN_Logger::log_event_str(" }");
     break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');
@@ -2945,7 +2945,7 @@ void CHARACTER_STRING_identification_context__negotiation_template::log() const
     TTCN_Logger::log_event_str(" }");
     break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');
@@ -3849,7 +3849,7 @@ void CHARACTER_STRING_template::log() const
     TTCN_Logger::log_event_str(" }");
     break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');

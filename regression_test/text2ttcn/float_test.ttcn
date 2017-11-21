@@ -103,7 +103,7 @@ modulepar {
     if( log2str(t_f_a) != "*") { setverdict(fail)};
     if( log2str(t_f_q) != "?") { setverdict(fail)};
     if( log2str(t_f_vl) != "(0.000000, 1.200000, -1.900000)") { setverdict(fail) };
-    if( log2str(t_f_c) != "complement (0.000000, 1.200000, -1.900000)") { setverdict(fail) };
+    if( log2str(t_f_c) != "complement(0.000000, 1.200000, -1.900000)") { setverdict(fail) };
   }
 
   testcase tc_float_ModulePar() runs on MC {
@@ -115,8 +115,8 @@ modulepar {
     if( log2str(tspt_f_vl1) != "0.000000") { setverdict(fail) };
     if( log2str(tspt_f_vl2) != "(0.000000, 1.200000)") { setverdict(fail) };
     if( log2str(tspt_f_vl3) != "(0.000000, 1.200000, -1.900000)") { setverdict(fail) };
-    if( log2str(tspt_f_c1) != "complement (0.000000)") { setverdict(fail) };
-    if( log2str(tspt_f_c3) != "complement (0.000000, 1.200000, -1.900000)") { setverdict(fail) };
+    if( log2str(tspt_f_c1) != "complement(0.000000)") { setverdict(fail) };
+    if( log2str(tspt_f_c3) != "complement(0.000000, 1.200000, -1.900000)") { setverdict(fail) };
     //log(tspt_f_r);
     if( log2str(tspt_f_r) != "(-1.900000 .. 3.100000)") { setverdict(fail) };
   }
@@ -249,7 +249,7 @@ modulepar {
   testcase tc_float_modified4c() runs on MC {
     var template float vlt := tspt_f11;
     log( vlt );
-    if( log2str(vlt) != "complement (9.000000)" ) { setverdict(fail) } else { setverdict(pass) }      
+    if( log2str(vlt) != "complement(9.000000)" ) { setverdict(fail) } else { setverdict(pass) }      
     var RoF vl_good_values :=  { -1000000.0, 0.01, -1.91, 8.99999, 9.0001, 2.0, 20001.0e9, 4294967296.0, 4294967296.0+1.0}
     var RoF vl_wrong_values := { 9.0 }
     f_checkMatchingValues_float( vlt, vl_good_values, vl_wrong_values );
@@ -317,7 +317,7 @@ modulepar {
   testcase tc_float_modified4cifp() runs on MC {
     var template float vlt := tspt_f12;
     log( vlt );
-    if( log2str(vlt) != "complement (9.000000) ifpresent" ) { setverdict(fail) } else { setverdict(pass) }      
+    if( log2str(vlt) != "complement(9.000000) ifpresent" ) { setverdict(fail) } else { setverdict(pass) }      
     var RoF vl_good_values :=  { -1000000.0, 0.01, -1.91, 8.99999,  9.0001, 2.0, 20001.0e9, 4294967296.0, 4294967296.0+1.0}
     var RoF vl_wrong_values := { 9.0 }
     f_checkMatchingValues_float( vlt, vl_good_values, vl_wrong_values );

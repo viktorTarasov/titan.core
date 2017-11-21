@@ -125,7 +125,7 @@ modulepar {
     if( log2str(t_i_q) != "?") { setverdict(fail)};
     //log(t_i_vl);
     if( log2str(t_i_vl) != "(0, 1, -1)") { setverdict(fail) };
-    if( log2str(t_i_c) != "complement (0, 1, -1)") { setverdict(fail) };
+    if( log2str(t_i_c) != "complement(0, 1, -1)") { setverdict(fail) };
   }
 
   testcase tc_integer_NoModulePar_Embedded() runs on MC {
@@ -329,7 +329,7 @@ modulepar {
   //complement
   testcase tc_integer_modified4c() runs on MC {
     log( tspt_i11);
-    if( log2str(tspt_i11) != "complement (9)" ) { setverdict(fail) } else { setverdict(pass) }
+    if( log2str(tspt_i11) != "complement(9)" ) { setverdict(fail) } else { setverdict(pass) }
     var RoI vl_good_values := {-100000, -1, 0,1, 4294967296, 4294967296+1}
     var RoI vl_wrong_values := {9} 
     f_checkMatchingValues_int( tspt_i11, vl_good_values, vl_wrong_values );

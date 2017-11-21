@@ -658,7 +658,7 @@ void VERDICTTYPE_template::log() const
     else TTCN_Logger::log_event("<unknown verdict value: %d>", single_value);
     break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');

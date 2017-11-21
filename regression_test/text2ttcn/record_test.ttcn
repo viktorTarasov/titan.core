@@ -827,7 +827,7 @@ testcase tc_REC_log2str() runs on MC {
   log(tspt_rec_mod4vr);
   if(log2str(tspt_rec_mod4vr) == "{ i := 1, f := 1.000000, cs := (\"ABBA\", \"baba\"), bs := '0100'B }") { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4c);
-  if(log2str(tspt_rec_mod4c) == "complement ({ i := 1, f := 1.000000, cs := (\"ABBA\", \"baba\"), bs := '0100'B })") { setverdict(pass) } else {setverdict(fail)}
+  if(log2str(tspt_rec_mod4c) == "complement({ i := 1, f := 1.000000, cs := (\"ABBA\", \"baba\"), bs := '0100'B })") { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4vl);
   if(log2str(tspt_rec_mod4vl) == "{ i := 1, f := 1.000000, cs := (\"ABBA\", \"baba\"), bs := '0100'B }") { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4vq);
@@ -854,7 +854,7 @@ testcase tc_REC_ifp_log2str() runs on MC {
   log(tspt_rec_mod4vrifp);
   if(log2str(tspt_rec_mod4vrifp) == "{ i := (1 .. 2) ifpresent, f := ? ifpresent, cs := \"ABBA\" ifpresent, bs := '0100'B ifpresent }" ) { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4cifp);
-  if(log2str(tspt_rec_mod4cifp) == "complement ({ i := 1 ifpresent, f := 1.000000 ifpresent, cs := (\"ABBA\", \"baba\") ifpresent, bs := '0100'B ifpresent })") { setverdict(pass) } else {setverdict(fail)}
+  if(log2str(tspt_rec_mod4cifp) == "complement({ i := 1 ifpresent, f := 1.000000 ifpresent, cs := (\"ABBA\", \"baba\") ifpresent, bs := '0100'B ifpresent })") { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4vlifp);
   if(log2str(tspt_rec_mod4vlifp) == "{ i := 1 ifpresent, f := 1.000000 ifpresent, cs := (\"ABBA\", \"baba\") ifpresent, bs := '0100'B ifpresent }" ) { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4vqifp);
@@ -948,7 +948,7 @@ testcase tc_REC_ttcn2string() runs on MC {
   log(tspt_rec_mod4vr);
   if(ttcn2string(tspt_rec_mod4vr) == "{ i := 1, f := 1.000000, cs := (\"ABBA\", \"baba\"), bs := '0100'B }") { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4c);
-  if(ttcn2string(tspt_rec_mod4c) == "complement ({ i := 1, f := 1.000000, cs := (\"ABBA\", \"baba\"), bs := '0100'B })") { setverdict(pass) } else {setverdict(fail)}
+  if(ttcn2string(tspt_rec_mod4c) == "complement({ i := 1, f := 1.000000, cs := (\"ABBA\", \"baba\"), bs := '0100'B })") { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4vl);
   if(ttcn2string(tspt_rec_mod4vl) == "{ i := 1, f := 1.000000, cs := (\"ABBA\", \"baba\"), bs := '0100'B }") { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4vq);
@@ -975,7 +975,7 @@ testcase tc_REC_ifp_ttcn2string() runs on MC {
   log(tspt_rec_mod4vrifp);
   if(ttcn2string(tspt_rec_mod4vrifp) == "{ i := (1 .. 2) ifpresent, f := ? ifpresent, cs := \"ABBA\" ifpresent, bs := '0100'B ifpresent }" ) { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4cifp);
-  if(ttcn2string(tspt_rec_mod4cifp) == "complement ({ i := 1 ifpresent, f := 1.000000 ifpresent, cs := (\"ABBA\", \"baba\") ifpresent, bs := '0100'B ifpresent })") { setverdict(pass) } else {setverdict(fail)}
+  if(ttcn2string(tspt_rec_mod4cifp) == "complement({ i := 1 ifpresent, f := 1.000000 ifpresent, cs := (\"ABBA\", \"baba\") ifpresent, bs := '0100'B ifpresent })") { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4vlifp);
   if(ttcn2string(tspt_rec_mod4vlifp) == "{ i := 1 ifpresent, f := 1.000000 ifpresent, cs := (\"ABBA\", \"baba\") ifpresent, bs := '0100'B ifpresent }" ) { setverdict(pass) } else {setverdict(fail)}
   log(tspt_rec_mod4vqifp);

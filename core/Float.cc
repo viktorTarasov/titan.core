@@ -1703,7 +1703,7 @@ void FLOAT_template::log() const
     log_float(single_value);
     break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
     // no break
   case VALUE_LIST:
     TTCN_Logger::log_char('(');

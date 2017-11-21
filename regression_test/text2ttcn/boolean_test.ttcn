@@ -230,7 +230,7 @@ modulepar {
 
   testcase tc_boolean_c() runs on MC {
     log(tspt_b_c);
-    if( log2str( tspt_b_c)  != "complement (true)" ) { setverdict(fail) } else {setverdict(pass) } 
+    if( log2str( tspt_b_c)  != "complement(true)" ) { setverdict(fail) } else {setverdict(pass) } 
     var RoB vl_good_values := {false};
     var RoB vl_wrong_values := {true};
     f_checkMatchingValues_bool(tspt_b_c,vl_good_values,vl_wrong_values);
@@ -328,7 +328,7 @@ modulepar {
   //modified for complement(true)
   testcase tc_boolean_modified4ct() runs on MC {
     log(tspt_b_a11);
-    if( log2str( tspt_b_a11)  != "complement (true)" ) { setverdict(fail) } else {setverdict(pass) } 
+    if( log2str( tspt_b_a11)  != "complement(true)" ) { setverdict(fail) } else {setverdict(pass) } 
     var RoB vl_good_values := {false};
     var RoB vl_wrong_values := {true};
     f_checkMatchingValues_bool(tspt_b_a11,vl_good_values,vl_wrong_values);

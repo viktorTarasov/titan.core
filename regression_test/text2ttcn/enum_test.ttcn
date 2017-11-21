@@ -113,11 +113,11 @@ testcase tc_enum_ModulePar() runs on MC {
    log(log2str(tspt_enum_mod4o));
    if(log2str(tspt_enum_mod4o) == "omit" ) {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4c0));
-   if(log2str(tspt_enum_mod4c0) == "complement (omit)" ) {setverdict(pass)} else {setverdict(fail)}
+   if(log2str(tspt_enum_mod4c0) == "complement(omit)" ) {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4c1));
-   if(log2str(tspt_enum_mod4c1) == "complement (first (0))" ) {setverdict(pass)} else {setverdict(fail)}
+   if(log2str(tspt_enum_mod4c1) == "complement(first (0))" ) {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4c2));
-   if(log2str(tspt_enum_mod4c2) == "complement (first (0), second (1))" ) {setverdict(pass)} else {setverdict(fail)}
+   if(log2str(tspt_enum_mod4c2) == "complement(first (0), second (1))" ) {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4vl1));
    if(log2str(tspt_enum_mod4vl1) == "first (0)" ) {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4vl2));
@@ -132,11 +132,11 @@ testcase tc_enum_ModulePar() runs on MC {
    log(log2str(tspt_enum_mod4oifp));
    if(log2str(tspt_enum_mod4oifp) == "omit ifpresent") {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4c0ifp));
-   if(log2str(tspt_enum_mod4c0ifp) == "complement (omit) ifpresent" ) {setverdict(pass)} else {setverdict(fail)}
+   if(log2str(tspt_enum_mod4c0ifp) == "complement(omit) ifpresent" ) {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4c1ifp));
-   if(log2str(tspt_enum_mod4c1ifp) == "complement (first (0)) ifpresent" ) {setverdict(pass)} else {setverdict(fail)}
+   if(log2str(tspt_enum_mod4c1ifp) == "complement(first (0)) ifpresent" ) {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4c2ifp));
-   if(log2str(tspt_enum_mod4c2ifp) == "complement (first (0), second (1)) ifpresent" ) {setverdict(pass)} else {setverdict(fail)}
+   if(log2str(tspt_enum_mod4c2ifp) == "complement(first (0), second (1)) ifpresent" ) {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4vl1ifp));
    if(log2str(tspt_enum_mod4vl1ifp) == "first (0) ifpresent" ) {setverdict(pass)} else {setverdict(fail)}
    log(log2str(tspt_enum_mod4vl2ifp));

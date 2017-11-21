@@ -1321,7 +1321,7 @@ void defEnumTemplate(const enum_def *edef, output_struct *output)
      "TTCN_Logger::log_event_enum(%s::enum_to_str(single_value), single_value);\n"
      "break;\n"
      "case COMPLEMENTED_LIST:\n"
-     "TTCN_Logger::log_event_str(\"complement \");\n"
+     "TTCN_Logger::log_event_str(\"complement\");\n"
      "case VALUE_LIST:\n"
      "TTCN_Logger::log_char('(');\n"
      "for (unsigned int elem_count = 0; elem_count < value_list.n_values; "

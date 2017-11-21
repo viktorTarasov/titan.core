@@ -553,7 +553,7 @@ void ASN_NULL_template::log() const
     TTCN_Logger::log_event_str("NULL");
     break;
   case COMPLEMENTED_LIST:
-    TTCN_Logger::log_event_str("complement ");
+    TTCN_Logger::log_event_str("complement");
   case VALUE_LIST:
     TTCN_Logger::log_char('(');
     for (unsigned int i = 0; i < value_list.n_values; i++) {

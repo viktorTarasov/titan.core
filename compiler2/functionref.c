@@ -646,7 +646,7 @@ void defFunctionrefTemplate(const funcref_def *fdef, output_struct *output)
     "Module_List::log_%s((genericfunc_t)single_value);\n"
     "break;\n"
     "case COMPLEMENTED_LIST:\n"
-    "TTCN_Logger::log_event_str(\"complement \");\n"
+    "TTCN_Logger::log_event_str(\"complement\");\n"
     "case VALUE_LIST:\n"
     "TTCN_Logger::log_char('(');\n"
     "for(unsigned int i = 0; i < value_list.n_values; i++) {\n"
