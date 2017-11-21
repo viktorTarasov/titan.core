@@ -59,6 +59,11 @@ Options can be overridden by the content of  a file named Makefile.personal whic
 adapt to local installation directories, change config options etc.
 Below, a small number of typical scenarios are presented.
 
+Note: For each scenario below on Raspberry Pi "-fsigned-char" needs to be added to compiler flags in Makefile.personal:
+
+COMPILERFLAGS := -Wall -fsigned-char
+
+
 a) JNI  disabled, gcc compiler (default)
 
 The JNI interface is used by the Eclipse Titan Executor or by the Java Executor API.
@@ -103,9 +108,6 @@ XMLDIR := /usr
 JNI := yes
 GEN_PDF := no
 
-Note: For Raspberry Pi "-fsigned-char" needs to be added to compiler flags in Makefile.personal:
-
-COMPILERFLAGS := -Wall -fsigned-char
 
 4. Run make
 
