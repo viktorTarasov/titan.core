@@ -411,7 +411,7 @@ module chinese // Build2
     ptc1 := MyPtcType1.create;
     ptc2 := MyPTCType2.create;
     ptc1.start(fn_ptc_verdict_fail());
-    ptc2.start(fn_ptc_verdict_inconc());
+    ptc2.start(fn_ptc2_verdict_inconc());
 	ptc1.done;  // ETHRGE
 	ptc2.done;  // ETHRGE
   }
@@ -476,11 +476,11 @@ module chinese // Build2
 		ptc2.start(fn_ptc_verdict_pass());
 		ptc3.start(fn_ptc_verdict_pass());
 		ptc4.start(fn_ptc_verdict_pass());
-		ptc5.start(fn_ptc_verdict_pass());
-		ptc6.start(fn_ptc_verdict_pass());
-		ptc7.start(fn_ptc_verdict_pass());
-		ptc8.start(fn_ptc_verdict_pass());
-		ptc9.start(fn_ptc_verdict_pass());
+		ptc5.start(fn_ptc2_verdict_pass());
+		ptc6.start(fn_ptc2_verdict_pass());
+		ptc7.start(fn_ptc2_verdict_pass());
+		ptc8.start(fn_ptc2_verdict_pass());
+		ptc9.start(fn_ptc2_verdict_pass());
 	ptc0.done;  // ETHRGE
 	ptc1.done;  // ETHRGE
 	ptc2.done;  // ETHRGE

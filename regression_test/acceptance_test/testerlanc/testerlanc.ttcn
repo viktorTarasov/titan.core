@@ -68,7 +68,7 @@ testcase tc(in charstring str, in float tout) runs on mycomptype {
 const integer N := 100;
 
 control {
-	execute(tc("Hello!", 30));
+	execute(tc("Hello!", 30.0));
 }
 
 }
