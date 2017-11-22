@@ -1187,11 +1187,14 @@ namespace Ttcn {
     vector<SingleValueRedirect> v;
     /** pointer to the type of the redirected value, not owned */
     Type* value_type;
+    /** indicates whether the value redirect is restricted to only one value of
+      * type 'verdicttype' */
+    bool verdict_only;
     
     ValueRedirect(const ValueRedirect&);
     ValueRedirect& operator=(const ValueRedirect&);
   public:
-    ValueRedirect(): v(), value_type(NULL) { }
+    ValueRedirect(): v(), value_type(NULL), verdict_only(false) { }
     virtual ~ValueRedirect();
     virtual ValueRedirect* clone() const;
     virtual void set_my_scope(Scope* p_scope);
@@ -1209,6 +1212,10 @@ namespace Ttcn {
       * type of the redirected value. Called when the value's type cannot be
       * determined or is erroneous. */
     void chk_erroneous();
+    /** Performs the full semantic analysis on the value redirect.
+      * Only used by the 'done' statement, when it can only redirect a value of
+      * type 'verdicttype'. */
+    void chk_verdict_only();
     /** Performs the full semantic analysis on the value redirect.
       * @param p_type the type of the redirected value */
     void chk(Type* p_type);

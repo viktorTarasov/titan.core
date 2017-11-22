@@ -506,7 +506,7 @@ private:
   static void send_running(component_struct *tc, boolean answer);
   static void send_alive(component_struct *tc, boolean answer);
   static void send_done_ack(component_struct *tc, boolean answer,
-    const char *return_type, int return_value_len,
+    verdicttype local_verdict, const char *return_type, int return_value_len,
     const void *return_value);
   static void send_killed_ack(component_struct *tc, boolean answer);
   static void send_connect_listen(component_struct *tc,
@@ -537,7 +537,7 @@ private:
   static void send_component_status_mtc(component component_reference,
     boolean is_done, boolean is_killed, boolean is_any_done,
     boolean is_all_done, boolean is_any_killed, boolean is_all_killed,
-    const char *return_type, int return_value_len,
+    verdicttype local_verdict, const char *return_type, int return_value_len,
     const void *return_value);
   static void send_execute_control(const char *module_name);
   static void send_execute_testcase(const char *module_name,

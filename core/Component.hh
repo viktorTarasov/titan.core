@@ -27,6 +27,7 @@ class Module_Param;
 
 template<typename T>
 class OPTIONAL;
+class VERDICTTYPE;
 
 // value class for all component types
 
@@ -78,7 +79,7 @@ public:
   inline boolean is_present() const { return is_bound(); }
 #endif
 
-  alt_status done(Index_Redirect*) const;
+  alt_status done(VERDICTTYPE* value_redirect, Index_Redirect*) const;
   alt_status killed(Index_Redirect*) const;
 
   boolean running(Index_Redirect*) const;

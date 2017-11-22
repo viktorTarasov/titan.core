@@ -105,6 +105,7 @@ int TTCN_Runtime::component_status_table_size = 0;
 component TTCN_Runtime::component_status_table_offset = FIRST_PTC_COMPREF;
 struct TTCN_Runtime::component_status_table_struct {
     alt_status done_status, killed_status;
+    verdicttype local_verdict;
     char *return_type;
     Text_Buf *return_value;
 } *TTCN_Runtime::component_status_table = NULL;
@@ -861,7 +862,8 @@ void TTCN_Runtime::function_finished(const char *function_name)
   send_function_finished(text_buf);
 }
 
-alt_status TTCN_Runtime::component_done(component component_reference)
+alt_status TTCN_Runtime::component_done(component component_reference,
+  verdicttype* ptc_verdict /* = NULL */)
 {
   if (in_controlpart()) TTCN_error("Done operation cannot be performed "
     "in the control part.");
@@ -880,7 +882,7 @@ alt_status TTCN_Runtime::component_done(component component_reference)
   case ALL_COMPREF:
     return all_component_done();
   default:
-    return ptc_done(component_reference);
+    return ptc_done(component_reference, ptc_verdict);
   }
 }
 
@@ -1110,7 +1112,8 @@ void TTCN_Runtime::kill_execution()
   throw TC_End();
 }
 
-alt_status TTCN_Runtime::ptc_done(component component_reference)
+alt_status TTCN_Runtime::ptc_done(component component_reference,
+  verdicttype* ptc_verdict)
 {
   if (is_single()) TTCN_error("Done operation on a component reference "
     "cannot be performed in single mode.");
@@ -1151,6 +1154,9 @@ alt_status TTCN_Runtime::ptc_done(component component_reference)
   success:
   TTCN_Logger::log_par_ptc(API::ParallelPTC_reason::ptc__done,
     NULL, NULL, component_reference);
+  if (ptc_verdict != NULL) {
+    *ptc_verdict = component_status_table[index].local_verdict;
+  }
   return ALT_YES;
 }
 
@@ -2509,7 +2515,7 @@ void TTCN_Runtime::process_alive(boolean result_value)
   running_alive_result = result_value;
 }
 
-void TTCN_Runtime::process_done_ack(boolean done_status,
+void TTCN_Runtime::process_done_ack(boolean done_status, verdicttype ptc_verdict,
   const char *return_type, int return_value_len, const void *return_value)
 {
   switch (executor_state) {
@@ -2524,7 +2530,7 @@ void TTCN_Runtime::process_done_ack(boolean done_status,
     TTCN_error("Internal error: Message DONE_ACK arrived in invalid "
       "state.");
   }
-  if (done_status) set_component_done(create_done_killed_compref,
+  if (done_status) set_component_done(create_done_killed_compref, ptc_verdict,
     return_type, return_value_len, return_value);
   create_done_killed_compref = NULL_COMPREF;
 }
@@ -2646,7 +2652,7 @@ void TTCN_Runtime::process_kill_process(component component_reference)
 }
 
 void TTCN_Runtime::set_component_done(component component_reference,
-  const char *return_type, int return_value_len,
+  verdicttype ptc_verdict, const char *return_type, int return_value_len,
   const void *return_value)
 {
   switch (component_reference) {
@@ -2669,6 +2675,7 @@ void TTCN_Runtime::set_component_done(component component_reference,
   default: {
     int index = get_component_status_table_index(component_reference);
     component_status_table[index].done_status = ALT_YES;
+    component_status_table[index].local_verdict = ptc_verdict;
     Free(component_status_table[index].return_type);
     delete component_status_table[index].return_value;
     if (return_type != NULL && return_type[0] != '\0') {
@@ -2749,6 +2756,7 @@ int TTCN_Runtime::get_component_status_table_index(
 	      Malloc(sizeof(*component_status_table));
     component_status_table[0].done_status = ALT_UNCHECKED;
     component_status_table[0].killed_status = ALT_UNCHECKED;
+    component_status_table[0].local_verdict = NONE;
     component_status_table[0].return_type = NULL;
     component_status_table[0].return_value = NULL;
     component_status_table_size = 1;
@@ -2770,6 +2778,7 @@ int TTCN_Runtime::get_component_status_table_index(
         i <= component_index; i++) {
         component_status_table[i].done_status = ALT_UNCHECKED;
         component_status_table[i].killed_status = ALT_UNCHECKED;
+        component_status_table[i].local_verdict = NONE;
         component_status_table[i].return_type = NULL;
         component_status_table[i].return_value = NULL;
       }
@@ -2792,6 +2801,7 @@ int TTCN_Runtime::get_component_status_table_index(
     for (int i = 0; i < offset_diff; i++) {
       component_status_table[i].done_status = ALT_UNCHECKED;
       component_status_table[i].killed_status = ALT_UNCHECKED;
+      component_status_table[i].local_verdict = NONE;
       component_status_table[i].return_type = NULL;
       component_status_table[i].return_value = NULL;
     }

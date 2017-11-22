@@ -28,6 +28,7 @@
 #include "Param_Types.hh"
 #include "Runtime.hh"
 #include "Optional.hh"
+#include "Verdicttype.hh"
 
 #include "../common/dbgnew.hh"
 
@@ -93,11 +94,16 @@ void COMPONENT::log() const
   else TTCN_Logger::log_event_unbound();
 }
 
-alt_status COMPONENT::done(Index_Redirect*) const
+alt_status COMPONENT::done(VERDICTTYPE* value_redirect, Index_Redirect*) const
 {
   if (component_value == UNBOUND_COMPREF) TTCN_error("Performing done "
     "operation on an unbound component reference.");
-  return TTCN_Runtime::component_done(component_value);
+  verdicttype ptc_verdict = NONE;
+  alt_status status = TTCN_Runtime::component_done(component_value, &ptc_verdict);
+  if (value_redirect != NULL) {
+    *value_redirect = ptc_verdict;
+  }
+  return status;
 }
 
 alt_status COMPONENT::killed(Index_Redirect*) const

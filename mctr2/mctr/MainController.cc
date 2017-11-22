@@ -1573,12 +1573,13 @@ void MainController::component_stopped(component_struct *tc)
       // the return value was requested
       send_component_status_mtc(tc->comp_ref, TRUE, FALSE,
         any_component_done_requested, all_done_result, FALSE, FALSE,
-        tc->return_type, tc->return_value_len, tc->return_value);
+        tc->local_verdict, tc->return_type, tc->return_value_len,
+        tc->return_value);
     } else {
       // the return value was not requested
       send_component_status_mtc(NULL_COMPREF, FALSE, FALSE,
         any_component_done_requested, all_done_result, FALSE, FALSE,
-        NULL, 0, NULL);
+        NONE, NULL, 0, NULL);
     }
     if (any_component_done_requested) {
       any_component_done_requested = FALSE;
@@ -1672,12 +1673,12 @@ void MainController::component_terminated(component_struct *tc)
     if (send_done_to_mtc) {
       // the return value was requested
       send_component_status_mtc(tc->comp_ref, TRUE, TRUE, TRUE,
-        all_done_result, TRUE, all_killed_result, tc->return_type,
-        tc->return_value_len, tc->return_value);
+        all_done_result, TRUE, all_killed_result, tc->local_verdict,
+        tc->return_type, tc->return_value_len, tc->return_value);
     } else {
       // the return value was not requested
       send_component_status_mtc(tc->comp_ref, FALSE, TRUE, TRUE,
-        all_done_result, TRUE, all_killed_result, NULL, 0, NULL);
+        all_done_result, TRUE, all_killed_result, NONE, NULL, 0, NULL);
     }
     any_component_done_requested = FALSE;
     any_component_done_sent = TRUE;
@@ -3307,11 +3308,13 @@ void MainController::send_alive(component_struct *tc, boolean answer)
 }
 
 void MainController::send_done_ack(component_struct *tc, boolean answer,
-  const char *return_type, int return_value_len, const void *return_value)
+  verdicttype local_verdict, const char *return_type, int return_value_len,
+  const void *return_value)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_DONE_ACK);
   text_buf.push_int(answer ? 1 : 0);
+  text_buf.push_int(local_verdict);
   text_buf.push_string(return_type);
   text_buf.push_raw(return_value_len, return_value);
   send_message(tc->tc_fd, text_buf);
@@ -3498,7 +3501,8 @@ void MainController::send_cancel_done_mtc(component component_reference,
 void MainController::send_component_status_mtc(component component_reference,
   boolean is_done, boolean is_killed, boolean is_any_done,
   boolean is_all_done, boolean is_any_killed, boolean is_all_killed,
-  const char *return_type, int return_value_len, const void *return_value)
+  verdicttype local_verdict, const char *return_type, int return_value_len,
+  const void *return_value)
 {
   Text_Buf text_buf;
   text_buf.push_int(MSG_COMPONENT_STATUS);
@@ -3509,6 +3513,7 @@ void MainController::send_component_status_mtc(component component_reference,
   text_buf.push_int(is_all_done ? 1 : 0);
   text_buf.push_int(is_any_killed ? 1 : 0);
   text_buf.push_int(is_all_killed ? 1 : 0);
+  text_buf.push_int(local_verdict);
   text_buf.push_string(return_type);
   text_buf.push_raw(return_value_len, return_value);
   send_message(mtc->tc_fd, text_buf);
@@ -4755,7 +4760,7 @@ void MainController::process_done_req(component_struct *tc)
   case ANY_COMPREF:
     if (tc == mtc) {
       boolean answer = is_any_component_done();
-      send_done_ack(mtc, answer, NULL, 0, NULL);
+      send_done_ack(mtc, answer, NONE, NULL, 0, NULL);
       if (answer) any_component_done_sent = TRUE;
       else any_component_done_requested = TRUE;
     } else send_error_str(tc->tc_fd, "Operation 'any component.done' can "
@@ -4764,7 +4769,7 @@ void MainController::process_done_req(component_struct *tc)
   case ALL_COMPREF:
     if (tc == mtc) {
       boolean answer = !is_any_component_running();
-      send_done_ack(mtc, answer, NULL, 0, NULL);
+      send_done_ack(mtc, answer, NONE, NULL, 0, NULL);
       if (!answer) all_component_done_requested = TRUE;
     } else send_error_str(tc->tc_fd, "Operation 'all component.done' can "
       "only be performed on the MTC.");
@@ -4787,8 +4792,8 @@ void MainController::process_done_req(component_struct *tc)
   case TC_EXITING:
   case TC_EXITED:
   case PTC_KILLING:
-    send_done_ack(tc, TRUE, comp->return_type, comp->return_value_len,
-      comp->return_value);
+    send_done_ack(tc, TRUE, comp->local_verdict, comp->return_type,
+      comp->return_value_len, comp->return_value);
     break;
   case TC_IDLE:
   case TC_CREATE:
@@ -4803,7 +4808,7 @@ void MainController::process_done_req(component_struct *tc)
   case PTC_FUNCTION:
   case PTC_STARTING:
   case PTC_STOPPING_KILLING:
-    send_done_ack(tc, FALSE, NULL, 0, NULL);
+    send_done_ack(tc, FALSE, NONE, NULL, 0, NULL);
     add_requestor(&comp->done_requestors, tc);
     break;
   case PTC_STALE:

@@ -1512,12 +1512,14 @@ void TTCN_Communication::process_done_ack(int msg_end)
 {
   // decoding the mandatory attributes
   boolean answer = incoming_buf.pull_int().get_val();
+  verdicttype ptc_verdict = static_cast<verdicttype>(
+    incoming_buf.pull_int().get_val());
   char *return_type = incoming_buf.pull_string();
   // the return value starts here
   int return_value_begin = incoming_buf.get_pos();
 
   try {
-    TTCN_Runtime::process_done_ack(answer, return_type,
+    TTCN_Runtime::process_done_ack(answer, ptc_verdict, return_type,
       msg_end - return_value_begin,
       incoming_buf.get_data() + return_value_begin);
   } catch (...) {
@@ -1567,12 +1569,14 @@ void TTCN_Communication::process_component_status_mtc(int msg_end)
   boolean is_any_killed = incoming_buf.pull_int().get_val();
   boolean is_all_killed = incoming_buf.pull_int().get_val();
   if (is_done) {
-    // the return type and value is valid
+    // the return type and value are valid
+    verdicttype ptc_verdict = static_cast<verdicttype>(
+      incoming_buf.pull_int().get_val());
     char *return_type = incoming_buf.pull_string();
     int return_value_begin = incoming_buf.get_pos();
     try {
-      TTCN_Runtime::set_component_done(component_reference, return_type,
-        msg_end - return_value_begin,
+      TTCN_Runtime::set_component_done(component_reference, ptc_verdict, 
+        return_type, msg_end - return_value_begin,
         incoming_buf.get_data() + return_value_begin);
     } catch (...) {
       // avoid memory leaks
@@ -1584,9 +1588,9 @@ void TTCN_Communication::process_component_status_mtc(int msg_end)
   }
   if (is_killed) TTCN_Runtime::set_component_killed(component_reference);
   if (is_any_done)
-    TTCN_Runtime::set_component_done(ANY_COMPREF, NULL, 0, NULL);
+    TTCN_Runtime::set_component_done(ANY_COMPREF, NONE, NULL, 0, NULL);
   if (is_all_done)
-    TTCN_Runtime::set_component_done(ALL_COMPREF, NULL, 0, NULL);
+    TTCN_Runtime::set_component_done(ALL_COMPREF, NONE, NULL, 0, NULL);
   if (is_any_killed) TTCN_Runtime::set_component_killed(ANY_COMPREF);
   if (is_all_killed) TTCN_Runtime::set_component_killed(ALL_COMPREF);
   incoming_buf.cut_message();
@@ -1604,11 +1608,13 @@ void TTCN_Communication::process_component_status_ptc(int msg_end)
   boolean is_killed = incoming_buf.pull_int().get_val();
   if (is_done) {
     // the return type and value is valid
+    verdicttype ptc_verdict = static_cast<verdicttype>(
+      incoming_buf.pull_int().get_val());
     char *return_type = incoming_buf.pull_string();
     int return_value_begin = incoming_buf.get_pos();
     try {
-      TTCN_Runtime::set_component_done(component_reference, return_type,
-        msg_end - return_value_begin,
+      TTCN_Runtime::set_component_done(component_reference, ptc_verdict,
+        return_type, msg_end - return_value_begin,
         incoming_buf.get_data() + return_value_begin);
     } catch (...) {
       // avoid memory leaks

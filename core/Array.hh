@@ -970,14 +970,14 @@ public:
   int JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer&, boolean);
   
   // alt-status priority: ALT_YES (return immediately) > ALT_REPEAT > ALT_MAYBE > ALT_NO
-  alt_status done(Index_Redirect* index_redirect) const
+  alt_status done(VERDICTTYPE* value_redirect, Index_Redirect* index_redirect) const
   {
     if (index_redirect != NULL) {
       index_redirect->incr_pos();
     }
     alt_status result = ALT_NO;
     for (unsigned int i = 0; i < array_size; ++i) {
-      alt_status ret_val = array_elements[i].done(index_redirect);
+      alt_status ret_val = array_elements[i].done(value_redirect, index_redirect);
       if (ret_val == ALT_YES) {
         if (index_redirect != NULL) {
           index_redirect->add_index((int)i + index_offset);

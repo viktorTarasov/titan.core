@@ -1,0 +1,138 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Botond, Baranyi – initial implementation
+ *
+ ******************************************************************************/
+
+module DoneTest {
+
+/***************** Types *****************/
+type record Rec {
+  integer num,
+  charstring str
+}
+with {
+  extension "done";
+}
+
+type component CT {}
+
+/*********** Behavior functions ***********/
+function f_behavior_retval() runs on CT return Rec {
+  return { num := 10, str := "ab" };
+}
+
+function f_behavior_none() runs on CT {
+}
+
+function f_behavior_pass() runs on CT {
+  setverdict(pass);
+}
+
+/*************** Test cases ***************/
+
+// Testing 'done' statement on single component with no value redirect
+testcase tc_done_single() runs on CT {
+  var CT comp := CT.create;
+  comp.start(f_behavior_retval());
+  comp.done;
+  if (comp.running) {
+    setverdict(fail);
+  }
+  setverdict(pass);
+}
+
+// Testing 'done' statement on all components
+testcase tc_done_all() runs on CT {
+  var CT comps[3];
+  comps[0] := CT.create;
+  comps[1] := CT.create;
+  comps[2] := CT.create;
+  comps[0].start(f_behavior_retval());
+  comps[1].start(f_behavior_none());
+  comps[2].start(f_behavior_pass());
+  all component.done;
+  if (comps[0].running or comps[1].running or comps[2].running) {
+    setverdict(fail);
+  }
+  setverdict(pass);
+}
+
+// Testing 'done' statement on any components
+testcase tc_done_any() runs on CT {
+  var CT comps[3];
+  comps[0] := CT.create;
+  comps[1] := CT.create;
+  comps[2] := CT.create;
+  comps[0].start(f_behavior_retval());
+  comps[1].start(f_behavior_none());
+  comps[2].start(f_behavior_pass());
+  any component.done;
+  if (comps[0].running and comps[1].running and comps[2].running) {
+    setverdict(fail);
+  }
+  setverdict(pass);
+}
+
+// Testing 'done' statement on single component with value redirect
+// (in this case the value redirect stores the behavior function's return value,
+// because there is a matching template in the 'done' statement)
+testcase tc_done_retval_redirect() runs on CT {
+  var CT comp := CT.create;
+  comp.start(f_behavior_retval());
+  var Rec x;
+  comp.done(Rec: ?) -> value x;
+  if (comp.running or x != { num := 10, str := "ab" }) {
+    setverdict(fail);
+  }
+  setverdict(pass);
+}
+
+// Testing 'done' statement on single component with value redirect
+// (in this case the value redirect stores the local verdict on the component,
+// because there is no matching template in the 'done' statement)
+testcase tc_done_verdict_redirect() runs on CT {
+  var CT comp := CT.create;
+  comp.start(f_behavior_pass());
+  var verdicttype x;
+  comp.done -> value x;
+  if (comp.running or x != pass) {
+    setverdict(fail);
+  }
+  setverdict(pass);
+}
+
+// Testing 'done' statement on any component from a component array, and with value redirect
+// (in this case the value redirect stores the local verdict on the component,
+// because there is no matching template in the 'done' statement)
+testcase tc_any_from_done_verdict_redirect() runs on CT {
+  var CT comps[2];
+  comps[0] := CT.create;
+  comps[1] := CT.create;
+  comps[0].start(f_behavior_retval());
+  comps[1].start(f_behavior_none());
+  var verdicttype x;
+  any from comps.done -> value x; // the local verdict on both components is 'none'
+  if ((comps[0].running and comps[1].running) or x != none) {
+    setverdict(fail);
+  }
+  setverdict(pass);
+}
+
+/************** Control part **************/
+control {
+  execute(tc_done_single());
+  execute(tc_done_all());
+  execute(tc_done_any());
+  execute(tc_done_retval_redirect());
+  execute(tc_done_verdict_redirect());
+  execute(tc_any_from_done_verdict_redirect());
+}
+
+}

@@ -212,7 +212,8 @@ public:
   static void send_function_finished(Text_Buf& text_buf);
   static void function_finished(const char *function_name);
 
-  static alt_status component_done(component component_reference);
+  static alt_status component_done(component component_reference,
+    verdicttype* ptc_verdict = NULL);
   static alt_status component_done(component component_reference,
     const char *return_type, Text_Buf*& text_buf);
   static alt_status component_killed(component component_reference);
@@ -226,7 +227,8 @@ public:
   __attribute__ ((__noreturn__));
 
 private:
-  static alt_status ptc_done(component component_reference);
+  static alt_status ptc_done(component component_reference,
+    verdicttype* ptc_verdict);
   static alt_status any_component_done();
   static alt_status all_component_done();
   static alt_status ptc_killed(component component_reference);
@@ -309,7 +311,7 @@ public:
   static void process_create_ack(component new_component);
   static void process_running(boolean result_value);
   static void process_alive(boolean result_value);
-  static void process_done_ack(boolean done_status,
+  static void process_done_ack(boolean done_status, verdicttype ptc_verdict,
     const char *return_type, int return_value_len,
     const void *return_value);
   static void process_killed_ack(boolean killed_status);
@@ -318,7 +320,7 @@ public:
   static void process_kill_process(component component_reference);
 
   static void set_component_done(component component_reference,
-    const char *return_type, int return_value_len,
+    verdicttype ptc_verdict, const char *return_type, int return_value_len,
     const void *return_value);
   static void set_component_killed(component component_reference);
   static void cancel_component_done(component component_reference);

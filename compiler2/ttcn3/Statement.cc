@@ -4775,9 +4775,9 @@ error:
         comp_op.donereturn.redirect->chk(return_type);
       }
     } else if (comp_op.donereturn.redirect) {
-      comp_op.donereturn.redirect->error("Redirect cannot be used for the "
-	"return value without a matching template");
-      comp_op.donereturn.redirect->chk_erroneous();
+      // if there is no matching template, then the value redirect stores the
+      // PTC's verdict instead of the return value
+      comp_op.donereturn.redirect->chk_verdict_only();
     }
     if (comp_op.index_redirect != NULL && ref_type != NULL) {
       ArrayDimensions dummy;
@@ -8161,41 +8161,41 @@ error:
   {
     if (comp_op.compref) {
       if (comp_op.donereturn.donematch) {
-	// value returning done
-  // figure out what type the done() function belongs to
-  Type *t = comp_op.donereturn.donematch
-    ->get_expr_governor(Type::EXPECTED_TEMPLATE);
-  if (!t) FATAL_ERROR("Statement::generate_code_expr_done()");
-  while (t->is_ref() && !t->has_done_attribute())
-    t = t->get_type_refd();
-  if (!t->has_done_attribute())
-    FATAL_ERROR("Statement::generate_code_expr_done()");
-  // determine whether the done() function is in the same module
-  Common::Module *t_mod = t->get_my_scope()->get_scope_mod_gen();
-  if (t_mod != my_sb->get_scope_mod_gen()) {
-    expr->expr = mputprintf(expr->expr, "%s::",
-      t_mod->get_modid().get_name().c_str());
-  }
-	expr->expr = mputstr(expr->expr, "done(");
-	comp_op.compref->generate_code_expr(expr);
-	expr->expr = mputstr(expr->expr, ", ");
-  bool has_decoded_redirect = comp_op.donereturn.redirect != NULL &&
-    comp_op.donereturn.redirect->has_decoded_modifier();
-	comp_op.donereturn.donematch->generate_code(expr, TR_NONE, has_decoded_redirect);
-	expr->expr = mputstr(expr->expr, ", ");
-	if (comp_op.donereturn.redirect) {
-	  // value redirect is present
-	  comp_op.donereturn.redirect->generate_code(expr, comp_op.donereturn.donematch);
-	} else {
-	  // value redirect is omitted
-	  expr->expr = mputstr(expr->expr, "NULL");
-	}
-  expr->expr = mputstr(expr->expr, ", ");
+        // value returning done
+        // figure out what type the done() function belongs to
+        Type *t = comp_op.donereturn.donematch
+          ->get_expr_governor(Type::EXPECTED_TEMPLATE);
+        if (!t) FATAL_ERROR("Statement::generate_code_expr_done()");
+        while (t->is_ref() && !t->has_done_attribute())
+          t = t->get_type_refd();
+        if (!t->has_done_attribute())
+          FATAL_ERROR("Statement::generate_code_expr_done()");
+        // determine whether the done() function is in the same module
+        Common::Module *t_mod = t->get_my_scope()->get_scope_mod_gen();
+        if (t_mod != my_sb->get_scope_mod_gen()) {
+          expr->expr = mputprintf(expr->expr, "%s::",
+            t_mod->get_modid().get_name().c_str());
+        }
+        expr->expr = mputstr(expr->expr, "done(");
+        comp_op.compref->generate_code_expr(expr);
+        expr->expr = mputstr(expr->expr, ", ");
+        bool has_decoded_redirect = comp_op.donereturn.redirect != NULL &&
+          comp_op.donereturn.redirect->has_decoded_modifier();
+        comp_op.donereturn.donematch->generate_code(expr, TR_NONE, has_decoded_redirect);
+        expr->expr = mputstr(expr->expr, ", ");
       } else {
-	// simple done
-	comp_op.compref->generate_code_expr_mandatory(expr);
-	expr->expr = mputstr(expr->expr, ".done(");
+        // simple done
+        comp_op.compref->generate_code_expr_mandatory(expr);
+        expr->expr = mputstr(expr->expr, ".done(");        
       }
+      if (comp_op.donereturn.redirect != NULL) {
+        // value redirect is present
+        comp_op.donereturn.redirect->generate_code(expr, comp_op.donereturn.donematch);
+      } else {
+        // value redirect is omitted
+        expr->expr = mputstr(expr->expr, "NULL");
+      }
+      expr->expr = mputstr(expr->expr, ", ");
       if (comp_op.index_redirect != NULL) {
         generate_code_index_redirect(expr, comp_op.index_redirect, my_sb);
       }
@@ -10262,13 +10262,14 @@ error:
   bool ValueRedirect::chk_RT1_restrictions() const
   {
     if (v.size() > 1) {
-      error("Redirecting multiple values is not supported in the Load Test "
-        "Runtime.");
+      error(verdict_only ? "Only one redirect is allowed in this case." :
+        "Redirecting multiple values is not supported in the Load Test Runtime.");
       return false;
     }
     if (v[0]->get_subrefs() != NULL) {
-      error("Redirecting parts of a value is not supported in the Load Test "
-        "Runtime.");
+      error(verdict_only ? "Cannot apply field names or array indexes to a "
+        "variable of type `verdicttype'." :
+        "Redirecting parts of a value is not supported in the Load Test Runtime.");
       return false;
     }
     return true;
@@ -10290,9 +10291,15 @@ error:
     }
   }
   
+  void ValueRedirect::chk_verdict_only()
+  {
+    verdict_only = true;
+    chk(Type::get_pooltype(Type::T_VERDICT));
+  }
+  
   void ValueRedirect::chk(Type* p_type)
   {
-    if (!use_runtime_2 && !chk_RT1_restrictions()) {
+    if ((verdict_only || !use_runtime_2) && !chk_RT1_restrictions()) {
       return;
     }
     bool invalid_type = p_type->get_typetype() == Type::T_ERROR;
@@ -10370,7 +10377,7 @@ error:
         exp_type = p_type;
       }
       if (exp_type != NULL && var_type != NULL) {
-        if (use_runtime_2) {
+        if (use_runtime_2 && !verdict_only) {
           // check for type compatibility in RT2
           TypeCompatInfo info(v[i]->get_var_ref()->get_my_scope()->get_scope_mod(),
             exp_type, var_type, true, false);
@@ -10407,7 +10414,7 @@ error:
   void ValueRedirect::generate_code(expression_struct* expr,
                                     TemplateInstance* matched_ti)
   {
-    if (use_runtime_2) {
+    if (use_runtime_2 && !verdict_only) {
       // a value redirect class is generated for this redirect in the expression's
       // preamble and instantiated in the expression
       Scope* scope = v[0]->get_var_ref()->get_my_scope();
@@ -10980,7 +10987,7 @@ error:
       Free(inst_params_str);
       expr->expr = mputprintf(expr->expr, "&%s", instance_id.c_str());
     }
-    else { // RT1
+    else { // RT1 or verdict only
       // in this case only the address of the one variable needs to be generated
       expr->expr = mputstr(expr->expr, "&(");
       v[0]->get_var_ref()->generate_code(expr);
