@@ -140,7 +140,7 @@ modulepar {
     log( t_rec(t_i_vl,omit,omit,omit));
     if( log2str(t_rec(t_i_vl,omit,omit,omit)) !=  "{ i := (0, 1, -1), f := omit, cs := omit, bs := omit }") { setverdict(fail) };
     log( t_rec(t_i_c,omit,omit,omit));
-    if( log2str(t_rec(t_i_c,omit,omit,omit)) != "{ i := complement (0, 1, -1), f := omit, cs := omit, bs := omit }") { setverdict(fail) };
+    if( log2str(t_rec(t_i_c,omit,omit,omit)) != "{ i := complement(0, 1, -1), f := omit, cs := omit, bs := omit }") { setverdict(fail) };
   }
 
   testcase tc_integer_Embedded() runs on MC {
@@ -159,7 +159,7 @@ modulepar {
     log( t_rec(tspt_i_vl3,omit,omit,omit));
     if( log2str(t_rec(tspt_i_vl3,omit,omit,omit)) !=  "{ i := (0, 1, -1), f := omit, cs := omit, bs := omit }") { setverdict(fail) };
     log( t_rec(tspt_i_c,omit,omit,omit));
-    if( log2str(t_rec(tspt_i_c,omit,omit,omit)) != "{ i := complement (0, 1, -1), f := omit, cs := omit, bs := omit }") { setverdict(fail) };
+    if( log2str(t_rec(tspt_i_c,omit,omit,omit)) != "{ i := complement(0, 1, -1), f := omit, cs := omit, bs := omit }") { setverdict(fail) };
   }
 
   testcase tc_integer_Embedded_value() runs on MC {

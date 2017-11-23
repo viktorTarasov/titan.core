@@ -38,7 +38,7 @@ modulepar {
   template boolean tspt_b_oifp := omit ifpresent;  // omit ifpresent is meaningless!!!! => Should be comp error!!! TODO: put into neg test!!!
   template boolean tspt_b_aifp := * ifpresent;  // ?????? only "? ispresent" acceptable 
   template boolean tspt_b_qifp := ? ifpresent;
-  template boolean tspt_b_c := complement (true); //complemented list
+  template boolean tspt_b_c := complement(true); //complemented list
   template boolean tspt_b_tl :=  (true,false); //template list
   //template boolean tspt_b_n := not(true);
  
@@ -119,7 +119,7 @@ modulepar {
     if( log2str( t_rec_b(t_b_aifp) )  != "{ b := * ifpresent, o := omit, h := omit }" ) { setverdict(fail) };
     if( log2str( t_rec_b(t_b_qifp) )  != "{ b := ? ifpresent, o := omit, h := omit }" ) { setverdict(fail) };
     //log(t_rec_b(t_b_c));
-    if( log2str( t_rec_b(t_b_c) )  != "{ b := complement (true), o := omit, h := omit }" ) { setverdict(fail) };
+    if( log2str( t_rec_b(t_b_c) )  != "{ b := complement(true), o := omit, h := omit }" ) { setverdict(fail) };
   }
 
   //modulepar template - template string check
@@ -145,7 +145,7 @@ modulepar {
     log( "template value:", t_rec_b(tspt_b_qifp) );
     if( log2str( t_rec_b(tspt_b_qifp) )  != "{ b := ? ifpresent, o := omit, h := omit }" ) { setverdict(fail) };
     log( "template value:", t_rec_b(tspt_b_c) );
-    if( log2str( t_rec_b(tspt_b_c) )  != "{ b := complement (true), o := omit, h := omit }" ) { setverdict(fail) };
+    if( log2str( t_rec_b(tspt_b_c) )  != "{ b := complement(true), o := omit, h := omit }" ) { setverdict(fail) };
   }
 
   //true

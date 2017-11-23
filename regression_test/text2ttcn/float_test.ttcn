@@ -131,8 +131,8 @@ modulepar {
     if( log2str(t_rec(1,tspt_f_vl1,omit,omit)) != "{ i := 1, f := 0.000000, cs := omit, bs := omit }") { setverdict(fail) };
     if( log2str(t_rec(1,tspt_f_vl2,omit,omit)) != "{ i := 1, f := (0.000000, 1.200000), cs := omit, bs := omit }") { setverdict(fail) };
     if( log2str(t_rec(1,tspt_f_vl3,omit,omit)) != "{ i := 1, f := (0.000000, 1.200000, -1.900000), cs := omit, bs := omit }") { setverdict(fail) };
-    if( log2str(t_rec(1,tspt_f_c1,omit,omit)) != "{ i := 1, f := complement (0.000000), cs := omit, bs := omit }") { setverdict(fail) };
-    if( log2str(t_rec(1,tspt_f_c3,omit,omit)) != "{ i := 1, f := complement (0.000000, 1.200000, -1.900000), cs := omit, bs := omit }") { setverdict(fail) };
+    if( log2str(t_rec(1,tspt_f_c1,omit,omit)) != "{ i := 1, f := complement(0.000000), cs := omit, bs := omit }") { setverdict(fail) };
+    if( log2str(t_rec(1,tspt_f_c3,omit,omit)) != "{ i := 1, f := complement(0.000000, 1.200000, -1.900000), cs := omit, bs := omit }") { setverdict(fail) };
     //log(tspt_f_r);
     if( log2str(t_rec(1,tspt_f_r,omit,omit)) != "{ i := 1, f := (-1.900000 .. 3.100000), cs := omit, bs := omit }" ) { setverdict(fail) };
   }

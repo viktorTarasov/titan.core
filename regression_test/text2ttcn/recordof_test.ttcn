@@ -221,7 +221,7 @@ modulepar {
     log(t_recof_i_r);
     if( log2str(t_recof_i_r) != "{ 1, (1 .. 3) }") { setverdict(fail) } else { setverdict(pass) };
     log(t_recof_i_c);
-    if( log2str(t_recof_i_c) != "{ 1, complement (1, 2, 3) }") { setverdict(fail) } else { setverdict(pass) };
+    if( log2str(t_recof_i_c) != "{ 1, complement(1, 2, 3) }") { setverdict(fail) } else { setverdict(pass) };
     log(t_recof_i_lv);
     if( log2str(t_recof_i_lv) != "? length (3)") { setverdict(fail) } else { setverdict(pass) };
     log(t_recof_i_lr);
@@ -258,7 +258,7 @@ modulepar {
     log(tspt_recof_i_r);
     if( log2str(tspt_recof_i_r) != "{ 1, (1 .. 3) }") { setverdict(fail) } else { setverdict(pass) };
     log(tspt_recof_i_c);
-    if( log2str(tspt_recof_i_c) != "{ 1, complement (1, 2, 3) }") { setverdict(fail) } else { setverdict(pass) };
+    if( log2str(tspt_recof_i_c) != "{ 1, complement(1, 2, 3) }") { setverdict(fail) } else { setverdict(pass) };
     log(tspt_recof_i_lv);
     if( log2str(tspt_recof_i_lv) != "? length (3)") { setverdict(fail) } else { setverdict(pass) };
     log(tspt_recof_i_lr);
@@ -529,7 +529,7 @@ modulepar {
     var template RoI vlt := { permutation (1,2,3),10 }
     log("Before mod: ",vlt);   //Before mod: { permutation(1, 2, 3), 10 }
     vlt := { 1, complement(1,2,3),3,4 } ;
-    log("after mod: ",vlt); //after mod:  { permutation(1, complement (1, 2, 3), 3), 4 } but it should be { 1, complement(1,2,3),3,4 } 
+    log("after mod: ",vlt); //after mod:  { permutation(1, complement(1, 2, 3), 3), 4 } but it should be { 1, complement(1,2,3),3,4 } 
     var RoRoI vl_good_values := {{1,0,3,4},{1,4,3,4},{1,5,3,4},{1,-1,3,4}}
     var RoRoI vl_wrong_values := { {}, {2},{1,1,3,4},{1,2,3,4},{1,3,3,4},{1,2,3,4},{1,3},{3,1,1,4} } 
     f_checkMatchingValues_roi(vlt,vl_good_values,vl_wrong_values);
@@ -538,7 +538,7 @@ modulepar {
   //fails
   testcase tc_recordof_i_mod4c_undefined() runs on MC {
     //original:
-    log(tspt_recof_i_mod4cu); //expected: { 1, complement(1,2,3),3,4 } , got:  { permutation(1, complement (1, 2, 3), 3), 4 }
+    log(tspt_recof_i_mod4cu); //expected: { 1, complement(1,2,3),3,4 } , got:  { permutation(1, complement(1, 2, 3), 3), 4 }
     var RoRoI vl_good_values :=   {{1,0,3,4},{1,4,3,4},{1,5,3,4},{1,-1,3,4}}
     var RoRoI vl_wrong_values :=  { {}, {2},{1,1,3,4},{1,2,3,4},{1,3,3,4},{1,2,3,4},{1,3},{3,1,1,4} } 
     f_checkMatchingValues_roi(tspt_recof_i_mod4cu,vl_good_values,vl_wrong_values);
@@ -629,7 +629,7 @@ modulepar {
     log(tspt_recof_f_r);
     if( log2str(tspt_recof_f_r) != "{ 1.000000, (1.000000 .. 3.000000) }") { setverdict(fail) } else { setverdict(pass) };
     log(tspt_recof_f_c);
-    if( log2str(tspt_recof_f_c) != "{ 1.000000, complement (1.000000, 2.000000, 3.000000) }") { setverdict(fail) } else { setverdict(pass) };
+    if( log2str(tspt_recof_f_c) != "{ 1.000000, complement(1.000000, 2.000000, 3.000000) }") { setverdict(fail) } else { setverdict(pass) };
     log(tspt_recof_f_lv);
     if( log2str(tspt_recof_f_lv) != "? length (3)") { setverdict(fail) } else { setverdict(pass) };
     log(tspt_recof_f_lr);

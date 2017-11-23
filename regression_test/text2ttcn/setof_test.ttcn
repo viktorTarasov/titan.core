@@ -133,11 +133,11 @@ testcase tc_setof_ModulePar() runs on MC {
   log(log2str(tspt_setof_mod4o));
   if( log2str(tspt_setof_mod4o) == "omit") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4c0));
-  if( log2str(tspt_setof_mod4c0) == "{ complement (omit) }") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(tspt_setof_mod4c0) == "{ complement(omit) }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4c1));
-  if( log2str(tspt_setof_mod4c1) == "{ complement (\"a\"), \"b\" }") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(tspt_setof_mod4c1) == "{ complement(\"a\"), \"b\" }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4c2));
-  if( log2str(tspt_setof_mod4c2) == "{ complement (\"a\", \"b\"), \"c\" }") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(tspt_setof_mod4c2) == "{ complement(\"a\", \"b\"), \"c\" }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4c3));
   if( log2str(tspt_setof_mod4c3) == "complement({ \"a\" }, { \"a\", \"b\" }, { \"c\" })") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4vl));
@@ -164,11 +164,11 @@ testcase tc_setof_ModulePar() runs on MC {
   log(log2str(tspt_setof_mod4oifp));
   if( log2str(tspt_setof_mod4oifp) == "omit ifpresent") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4c0ifp));
-  if( log2str(tspt_setof_mod4c0ifp) == "{ complement (omit) } ifpresent") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(tspt_setof_mod4c0ifp) == "{ complement(omit) } ifpresent") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4c1ifp));
-  if( log2str(tspt_setof_mod4c1ifp) == "{ complement (\"a\"), \"b\" } ifpresent") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(tspt_setof_mod4c1ifp) == "{ complement(\"a\"), \"b\" } ifpresent") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4c2ifp));
-  if( log2str(tspt_setof_mod4c2ifp) == "{ complement (\"a\", \"b\"), \"c\" } ifpresent") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(tspt_setof_mod4c2ifp) == "{ complement(\"a\", \"b\"), \"c\" } ifpresent") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4c3ifp));
   if( log2str(tspt_setof_mod4c3ifp) == "complement({ \"a\" }, { \"a\", \"b\" }, { \"c\" }) ifpresent") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(tspt_setof_mod4vlifp));
@@ -195,11 +195,11 @@ testcase tc_setof_ModulePar_emb() runs on MC {
   log(log2str(t_rsocs(tspt_setof_mod4o)));
   if( log2str(t_rsocs(tspt_setof_mod4o)) == "{ s := omit }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4c0)));
-  if( log2str(t_rsocs(tspt_setof_mod4c0)) == "{ s := { complement (omit) } }") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(t_rsocs(tspt_setof_mod4c0)) == "{ s := { complement(omit) } }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4c1)));
-  if( log2str(t_rsocs(tspt_setof_mod4c1)) == "{ s := { complement (\"a\"), \"b\" } }") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(t_rsocs(tspt_setof_mod4c1)) == "{ s := { complement(\"a\"), \"b\" } }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4c2)));
-  if( log2str(t_rsocs(tspt_setof_mod4c2)) == "{ s := { complement (\"a\", \"b\"), \"c\" } }") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(t_rsocs(tspt_setof_mod4c2)) == "{ s := { complement(\"a\", \"b\"), \"c\" } }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4c3)));
   if( log2str(t_rsocs(tspt_setof_mod4c3)) == "{ s := complement({ \"a\" }, { \"a\", \"b\" }, { \"c\" }) }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4vl)));
@@ -225,11 +225,11 @@ testcase tc_setof_ModulePar_emb() runs on MC {
   log(log2str(t_rsocs(tspt_setof_mod4oifp)));
   if( log2str(t_rsocs(tspt_setof_mod4oifp)) == "{ s := omit ifpresent }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4c0ifp)));
-  if( log2str(t_rsocs(tspt_setof_mod4c0ifp)) == "{ s := { complement (omit) } ifpresent }") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(t_rsocs(tspt_setof_mod4c0ifp)) == "{ s := { complement(omit) } ifpresent }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4c1ifp)));
-  if( log2str(t_rsocs(tspt_setof_mod4c1ifp)) == "{ s := { complement (\"a\"), \"b\" } ifpresent }") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(t_rsocs(tspt_setof_mod4c1ifp)) == "{ s := { complement(\"a\"), \"b\" } ifpresent }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4c2ifp)));
-  if( log2str(t_rsocs(tspt_setof_mod4c2ifp)) == "{ s := { complement (\"a\", \"b\"), \"c\" } ifpresent }") { setverdict(pass)} else { setverdict(fail) }
+  if( log2str(t_rsocs(tspt_setof_mod4c2ifp)) == "{ s := { complement(\"a\", \"b\"), \"c\" } ifpresent }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4c3ifp)));
   if( log2str(t_rsocs(tspt_setof_mod4c3ifp)) == "{ s := complement({ \"a\" }, { \"a\", \"b\" }, { \"c\" }) ifpresent }") { setverdict(pass)} else { setverdict(fail) }
   log(log2str(t_rsocs(tspt_setof_mod4vlifp)));
