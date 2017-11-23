@@ -2692,8 +2692,8 @@ end:
               tpl->error("Matching mechanism can not be used as target of 'all from'");
               break;
             default:
-              tpl->error("A template of type '%s' can not be used as target of 'all from'",
-                type->get_typename().c_str());
+              tpl->error("'%s' can not be used as target of 'all from'",
+                tpl->get_templatetype_str());
               break;
             }
           }
