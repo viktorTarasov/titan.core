@@ -88,8 +88,6 @@ int Token_Match::match_begin(TTCN_Buffer& buff) const
   if(null_match){
     if (TTCN_EncDec::get_error_behavior(TTCN_EncDec::ET_LOG_MATCHING) !=
         TTCN_EncDec::EB_IGNORE) {
-      char msg[ERRMSG_BUFSIZE2];
-      regerror(ret_val, &posix_regexp_begin, msg, ERRMSG_BUFSIZE2);
       TTCN_Logger::log(TTCN_Logger::DEBUG_ENCDEC, "match_begin data: %s",
         (const char*)buff.get_read_data());
       TTCN_Logger::begin_event(TTCN_Logger::DEBUG_ENCDEC);
