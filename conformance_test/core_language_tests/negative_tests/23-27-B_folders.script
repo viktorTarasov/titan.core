@@ -5006,7 +5006,7 @@ module NegSem_B010206_superset_005 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: A template of type '@NegSem_B010206_superset_005.SoI' can not be used as target of 'all from'
+error: 'superset match' can not be used as target of 'all from'
 <END_RESULT>
 
 <END_TC>
@@ -5078,7 +5078,7 @@ module NegSem_B010206_superset_006 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: A template of type '@NegSem_B010206_superset_006.SoI' can not be used as target of 'all from'
+error: 'subset match' can not be used as target of 'all from'
 <END_RESULT>
 
 <END_TC>
@@ -5498,7 +5498,7 @@ module NegSem_B010207_subset_005 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: A template of type '@NegSem_B010207_subset_005.SoI' can not be used as target of 'all from'
+error: 'superset match' can not be used as target of 'all from'
 <END_RESULT>
 
 <END_TC>
@@ -5571,7 +5571,7 @@ module NegSem_B010207_subset_006 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: A template of type '@NegSem_B010207_subset_006.SoI' can not be used as target of 'all from'
+error: 'subset match' can not be used as target of 'all from'
 <END_RESULT>
 
 <END_TC>
@@ -6055,7 +6055,7 @@ module NegSem_B010303_permutation_002 {
 <END_MODULE>
 
 <RESULT COUNT 1>
-error: A template of type 'integer' can not be used as target of 'all from'
+error: 'specific value' can not be used as target of 'all from'
 <END_RESULT>
 
 <END_TC>
