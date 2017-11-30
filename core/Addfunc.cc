@@ -1221,120 +1221,146 @@ double str2float(const CHARSTRING& value)
   if (value_len == 0) TTCN_error("The argument of function str2float() is "
     "an empty string, which does not represent a valid float value.");
   const char *value_str = value;
-  enum { S_INITIAL, S_FIRST_M, S_ZERO_M, S_MORE_M, S_FIRST_F, S_MORE_F,
-    S_INITIAL_E, S_FIRST_E, S_ZERO_E, S_MORE_E, S_END, S_ERR }
-  state = S_INITIAL;
-  // state: expected characters
-  // S_INITIAL: +, -, first digit of integer part in mantissa,
-  //            leading whitespace
-  // S_FIRST_M: first digit of integer part in mantissa
-  // S_ZERO_M, S_MORE_M: more digits of mantissa, decimal dot, E
-  // S_FIRST_F: first digit of fraction
-  // S_MORE_F: more digits of fraction, E, trailing whitespace
-  // S_INITIAL_E: +, -, first digit of exponent
-  // S_FIRST_E: first digit of exponent
-  // S_ZERO_E, S_MORE_E: more digits of exponent, trailing whitespace
-  // S_END: trailing whitespace
-  // S_ERR: error was found, stop
-  boolean leading_ws = FALSE, leading_zero = FALSE;
-  for (int i = 0; i < value_len; i++) {
-    char c = value_str[i];
+  size_t start = 0;
+  size_t end = value_len;
+  boolean leading_ws = FALSE;
+  boolean trailing_ws = FALSE;
+  boolean leading_zero = FALSE;
+  double ret_val;
+  while (is_whitespace(value_str[start])) {
+    leading_ws = TRUE;
+    ++start;
+  }
+  while (end > start && is_whitespace(value_str[end - 1])) {
+    trailing_ws = TRUE;
+    --end;
+  }
+  if ((end - start == 8 &&
+       strncmp(value_str + start, "infinity", end - start) == 0)) {
+    ret_val = INFINITY;
+  }
+  else if ((end - start == 9 &&
+            strncmp(value_str + start, "-infinity", end - start) == 0)) {
+    ret_val = -INFINITY;
+  }
+  else if ((end - start == 12 &&
+            strncmp(value_str + start, "not_a_number", end - start) == 0)) {
+#ifdef NAN
+    ret_val = NAN;
+#else
+    ret_val = INFINITY + (-INFINITY);
+#endif
+  }
+  else {
+    enum { S_INITIAL, S_FIRST_M, S_ZERO_M, S_MORE_M, S_FIRST_F, S_MORE_F,
+      S_INITIAL_E, S_FIRST_E, S_ZERO_E, S_MORE_E, S_ERR }
+    state = S_INITIAL;
+    // state: expected characters
+    // S_INITIAL: +, -, first digit of integer part in mantissa,
+    //            leading whitespace
+    // S_FIRST_M: first digit of integer part in mantissa
+    // S_ZERO_M, S_MORE_M: more digits of mantissa, decimal dot, E
+    // S_FIRST_F: first digit of fraction
+    // S_MORE_F: more digits of fraction, E, trailing whitespace
+    // S_INITIAL_E: +, -, first digit of exponent
+    // S_FIRST_E: first digit of exponent
+    // S_ZERO_E, S_MORE_E: more digits of exponent, trailing whitespace
+    // S_END: trailing whitespace
+    // S_ERR: error was found, stop
+    for (int i = 0; i < value_len; i++) {
+      char c = value_str[i];
+      switch (state) {
+      case S_INITIAL:
+        if (c == '+' || c == '-') state = S_FIRST_M;
+        else if (c == '0') state = S_ZERO_M;
+        else if (c >= '1' && c <= '9') state = S_MORE_M;
+        else state = S_ERR;
+        break;
+      case S_FIRST_M: // first mantissa digit
+        if (c == '0') state = S_ZERO_M;
+        else if (c >= '1' && c <= '9') state = S_MORE_M;
+        else state = S_ERR;
+        break;
+      case S_ZERO_M: // leading mantissa zero
+        if (c == '.') state = S_FIRST_F;
+        else if (c == 'E' || c == 'e') state = S_INITIAL_E;
+        else if (c >= '0' && c <= '9') {
+          leading_zero = TRUE;
+          state = S_MORE_M;
+        } else state = S_ERR;
+        break;
+      case S_MORE_M:
+        if (c == '.') state = S_FIRST_F;
+        else if (c == 'E' || c == 'e') state = S_INITIAL_E;
+        else if (c >= '0' && c <= '9') {}
+        else state = S_ERR;
+        break;
+      case S_FIRST_F:
+        if (c >= '0' && c <= '9') state = S_MORE_F;
+        else state = S_ERR;
+        break;
+      case S_MORE_F:
+        if (c == 'E' || c == 'e') state = S_INITIAL_E;
+        else if (c >= '0' && c <= '9') {}
+        else state = S_ERR;
+        break;
+      case S_INITIAL_E:
+        if (c == '+' || c == '-') state = S_FIRST_E;
+        else if (c == '0') state = S_ZERO_E;
+        else if (c >= '1' && c <= '9') state = S_MORE_E;
+        else state = S_ERR;
+        break;
+      case S_FIRST_E:
+        if (c == '0') state = S_ZERO_E;
+        else if (c >= '1' && c <= '9') state = S_MORE_E;
+        else state = S_ERR;
+        break;
+      case S_ZERO_E:
+        if (c >= '0' && c <= '9') {
+          leading_zero = TRUE;
+          state = S_MORE_E;
+        }
+        else state = S_ERR;
+        break;
+      case S_MORE_E:
+        if (c >= '0' && c <= '9') {}
+        else state = S_ERR;
+        break;
+      default:
+        break;
+      }
+      if (state == S_ERR) {
+        TTCN_error_begin("The argument of function str2float(), which is ");
+        value.log();
+        TTCN_Logger::log_event_str(", does not represent a valid float "
+          "value. Invalid character `");
+        TTCN_Logger::log_char_escaped(c);
+        TTCN_Logger::log_event("' was found at index %d.", i);
+        TTCN_error_end();
+      }
+    }
     switch (state) {
-    case S_INITIAL:
-      if (c == '+' || c == '-') state = S_FIRST_M;
-      else if (c == '0') state = S_ZERO_M;
-      else if (c >= '1' && c <= '9') state = S_MORE_M;
-      else if (is_whitespace(c)) leading_ws = TRUE;
-      else state = S_ERR;
+    case S_MORE_F:
+    case S_ZERO_E:
+    case S_MORE_E:
+      // OK, originally
       break;
-    case S_FIRST_M: // first mantissa digit
-      if (c == '0') state = S_ZERO_M;
-      else if (c >= '1' && c <= '9') state = S_MORE_M;
-      else state = S_ERR;
-      break;
-    case S_ZERO_M: // leading mantissa zero
-      if (c == '.') state = S_FIRST_F;
-      else if (c == 'E' || c == 'e') state = S_INITIAL_E;
-      else if (c >= '0' && c <= '9') {
-        leading_zero = TRUE;
-        state = S_MORE_M;
-      } else state = S_ERR;
-      break;
+    case S_ZERO_M:
     case S_MORE_M:
-      if (c == '.') state = S_FIRST_F;
-      else if (c == 'E' || c == 'e') state = S_INITIAL_E;
-      else if (c >= '0' && c <= '9') {}
-      else state = S_ERR;
+      // OK now (decimal dot missing after mantissa)
       break;
     case S_FIRST_F:
-      if (c >= '0' && c <= '9') state = S_MORE_F;
-      else state = S_ERR;
-      break;
-    case S_MORE_F:
-      if (c == 'E' || c == 'e') state = S_INITIAL_E;
-      else if (c >= '0' && c <= '9') {}
-      else if (is_whitespace(c)) state = S_END;
-      else state = S_ERR;
-      break;
-    case S_INITIAL_E:
-      if (c == '+' || c == '-') state = S_FIRST_E;
-      else if (c == '0') state = S_ZERO_E;
-      else if (c >= '1' && c <= '9') state = S_MORE_E;
-      else state = S_ERR;
-      break;
-    case S_FIRST_E:
-      if (c == '0') state = S_ZERO_E;
-      else if (c >= '1' && c <= '9') state = S_MORE_E;
-      else state = S_ERR;
-      break;
-    case S_ZERO_E:
-      if (c >= '0' && c <= '9') {
-        leading_zero = TRUE;
-        state = S_MORE_E;
-      } else if (is_whitespace(c)) state = S_END;
-      else state = S_ERR;
-      break;
-    case S_MORE_E:
-      if (c >= '0' && c <= '9') {}
-      else if (is_whitespace(c)) state = S_END;
-      else state = S_ERR;
-      break;
-    case S_END:
-      if (!is_whitespace(c)) state = S_ERR;
+      // OK now (fraction part missing)
       break;
     default:
-      break;
-    }
-    if (state == S_ERR) {
       TTCN_error_begin("The argument of function str2float(), which is ");
       value.log();
-      TTCN_Logger::log_event_str(", does not represent a valid float "
-        "value. Invalid character `");
-      TTCN_Logger::log_char_escaped(c);
-      TTCN_Logger::log_event("' was found at index %d.", i);
+      TTCN_Logger::log_event_str(", does not represent a valid float value. "
+        "Premature end of the string.");
       TTCN_error_end();
+      break;
     }
-  }
-  switch (state) {
-  case S_MORE_F:
-  case S_ZERO_E:
-  case S_MORE_E:
-    // OK, originally
-    break;
-  case S_ZERO_M:
-  case S_MORE_M:
-    // OK now (decimal dot missing after mantissa)
-    break;
-  case S_FIRST_F:
-    // OK now (fraction part missing)
-    break;
-  default:
-    TTCN_error_begin("The argument of function str2float(), which is ");
-    value.log();
-    TTCN_Logger::log_event_str(", does not represent a valid float value. "
-      "Premature end of the string.");
-    TTCN_error_end();
-    break;
+    ret_val = atof(value_str);
   }
   if (leading_ws) {
     TTCN_warning_begin("Leading whitespace was detected in the argument "
@@ -1350,14 +1376,14 @@ double str2float(const CHARSTRING& value)
     TTCN_Logger::log_char('.');
     TTCN_warning_end();
   }
-  if (state == S_END) {
+  if (trailing_ws) {
     TTCN_warning_begin("Trailing whitespace was detected in the argument "
       "of function str2float(): ");
     value.log();
     TTCN_Logger::log_char('.');
     TTCN_warning_end();
   }
-  return atof(value_str);
+  return ret_val;
 }
 
 // C.33 - regexp
@@ -2801,6 +2827,15 @@ HEXSTRING str2hex(const CHARSTRING_ELEMENT& value)
 
 CHARSTRING float2str(double value)
 {
+  if (value == INFINITY) {
+    return CHARSTRING("infinity");
+  }
+  if (value == -INFINITY) {
+    return CHARSTRING("-infinity");
+  }
+  if (value != value) {
+    return CHARSTRING("not_a_number");
+  }
   boolean f = value == 0.0
     || (value > -MAX_DECIMAL_FLOAT && value <= -MIN_DECIMAL_FLOAT)
     || (value >= MIN_DECIMAL_FLOAT && value < MAX_DECIMAL_FLOAT);

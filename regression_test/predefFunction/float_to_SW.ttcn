@@ -76,6 +76,9 @@ const charstring f2scon4 := float2str(-0.345)
 const charstring f2scon5 := float2str(0.1234567)
 const charstring f2scon6 := float2str(123456748901.0)
 const charstring f2scon7 := float2str(123456758901.0)
+const charstring f2scon8 := float2str(infinity);
+const charstring f2scon9 := float2str(-infinity);
+const charstring f2scon10 := float2str(not_a_number);
 
 
 testcase float_to_str() runs on PDTestComponent{ //In testcase definition//
@@ -112,6 +115,21 @@ testcase float_to_str() runs on PDTestComponent{ //In testcase definition//
                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 	if ((f2scon7 == "1.234568e+11")
 	and (f2scon7 == float2str(123456758901.0)))
+	     {setverdict(pass);}
+	else {setverdict(fail);} //^In else statement// \
+                            //^warning\: Control never reaches this code because of previous effective condition\(s\)//
+	if ((f2scon8 == "infinity")
+	and (f2scon8 == float2str(infinity)))
+	     {setverdict(pass);}
+	else {setverdict(fail);} //^In else statement// \
+                            //^warning\: Control never reaches this code because of previous effective condition\(s\)//
+	if ((f2scon9 == "-infinity")
+	and (f2scon9 == float2str(-infinity)))
+	     {setverdict(pass);}
+	else {setverdict(fail);} //^In else statement// \
+                            //^warning\: Control never reaches this code because of previous effective condition\(s\)//
+	if ((f2scon10 == "not_a_number")
+	and (f2scon10 == float2str(not_a_number)))
 	     {setverdict(pass);}
 	else {setverdict(fail);} //^In else statement// \
                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//

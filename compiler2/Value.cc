@@ -5421,8 +5421,31 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       return;
     } else if (v_last->valuetype != V_CSTR) return;
     const string& s = v_last->get_val_str();
-    enum { S_INITIAL, S_INITIAL_WS, S_FIRST_M, S_ZERO_M, S_MORE_M, S_FIRST_F,
-      S_MORE_F, S_INITIAL_E, S_FIRST_E, S_ZERO_E, S_MORE_E, S_END, S_ERR }
+    size_t start = 0;
+    size_t end = s.size();
+    while (string::is_whitespace(s[start])) {
+      if (start == 0) {
+        val->warning("Leading whitespace was detected and ignored in the "
+          "operand of operation `%s'", opname);
+      }
+      ++start;
+    }
+    while (end > start && string::is_whitespace(s[end - 1])) {
+      if (end == s.size()) {
+        val->warning("Trailing whitespace was detected and ignored in the "
+          "operand of operation `%s'", opname);
+      }
+      --end;
+    }
+    if ((end - start == 8 && s.find("infinity", start) == start) ||
+        (end - start == 9 && s.find("-infinity", start) == start) ||
+        (end - start == 12 && s.find("not_a_number", start) == start)) {
+      // special values => OK
+      return;
+    }
+    // otherwise look for a real number
+    enum { S_INITIAL, S_FIRST_M, S_ZERO_M, S_MORE_M, S_FIRST_F,
+      S_MORE_F, S_INITIAL_E, S_FIRST_E, S_ZERO_E, S_MORE_E, S_ERR }
       state = S_INITIAL;
     // state: expected characters
     // S_INITIAL, S_INITIAL_WS: +, -, first digit of integer part in mantissa,
@@ -5436,21 +5459,14 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     // S_ZERO_E, S_MORE_E: more digits of exponent, trailing whitespace
     // S_END: trailing whitespace
     // S_ERR: error was found, stop
-    for (size_t i = 0; i < s.size(); i++) {
+    for (size_t i = start; i < end; i++) {
       char c = s[i];
       switch (state) {
       case S_INITIAL:
-      case S_INITIAL_WS:
 	if (c == '+' || c == '-') state = S_FIRST_M;
 	else if (c == '0') state = S_ZERO_M;
 	else if (c >= '1' && c <= '9') state = S_MORE_M;
-	else if (string::is_whitespace(c)) {
-	  if (state == S_INITIAL) {
-	    val->warning("Leading whitespace was detected and ignored in the "
-	      "operand of operation `%s'", opname);
-	    state = S_INITIAL_WS;
-	  }
-	} else state = S_ERR;
+	else state = S_ERR;
 	break;
       case S_FIRST_M:
 	if (c == '0') state = S_ZERO_M;
@@ -5479,7 +5495,6 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       case S_MORE_F:
 	if (c == 'E' || c == 'e') state = S_INITIAL_E;
 	else if (c >= '0' && c <= '9') {}
-	else if (string::is_whitespace(c)) state = S_END;
 	else state = S_ERR;
 	break;
       case S_INITIAL_E:
@@ -5498,16 +5513,12 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
 	  val->warning("Leading zero digit was detected and ignored in the "
 	    "exponent of the operand of operation `%s'", opname);
 	  state = S_MORE_E;
-	} else if (string::is_whitespace(c)) state = S_END;
+	}
 	else state = S_ERR;
 	break;
       case S_MORE_E:
 	if (c >= '0' && c <= '9') {}
-	else if (string::is_whitespace(c)) state = S_END;
 	else state = S_ERR;
-	break;
-      case S_END:
-	if (!string::is_whitespace(c)) state = S_ERR;
 	break;
       default:
 	break;
@@ -5529,7 +5540,6 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     }
     switch (state) {
     case S_INITIAL:
-    case S_INITIAL_WS:
       val->error("%s operand of operation `%s' should be a string containing a "
 	"valid float value instead of an empty string", opnum, opname);
       set_valuetype(V_ERROR);
@@ -5553,10 +5563,6 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
 	"valid float value, but the exponent is missing after the `E' sign",
 	opnum, opname);
       set_valuetype(V_ERROR);
-      break;
-    case S_END:
-      val->warning("Trailing whitespace was detected and ignored in the "
-	"operand of operation `%s'", opname);
       break;
     default:
       break;
@@ -8096,7 +8102,20 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
     case OPTYPE_STR2FLOAT: {
       if(is_unfoldable()) break;
       v1=u.expr.v1->get_value_refd_last();
-      Real r=string2Real(v1->get_val_str(), *u.expr.v1);
+      const string& s = v1->get_val_str();
+      Real r;
+      if (s.find("-infinity") != s.size()) {
+        r = -REAL_INFINITY;
+      }
+      else if (s.find("infinity") != s.size()) {
+        r = REAL_INFINITY;
+      }
+      else if (s.find("not_a_number") != s.size()) {
+        r = REAL_NAN;
+      }
+      else {
+        r = string2Real(s, *u.expr.v1);
+      }
       clean_up();
       valuetype=V_REAL;
       u.val_Real=r;

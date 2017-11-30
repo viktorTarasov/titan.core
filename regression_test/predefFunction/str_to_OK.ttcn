@@ -94,6 +94,10 @@ modulepar float s2fpar11:= str2float("-0");
 modulepar float s2fpar12:= str2float("-0.");
 modulepar float s2fpar13:= str2float("-0.0");
 
+modulepar float s2fpar14:= str2float("infinity");
+modulepar float s2fpar15:= str2float("-infinity");
+modulepar float s2fpar16:= str2float("not_a_number");
+
 
 
 // modulepar prevents constant folding
@@ -118,6 +122,10 @@ modulepar charstring s2fmp10_str:= "+001.";
 modulepar charstring s2fmp11_str:= "-0";
 modulepar charstring s2fmp12_str:= "-0.";
 modulepar charstring s2fmp13_str:= "-0.0";
+
+modulepar charstring s2fmp14_str := "infinity";
+modulepar charstring s2fmp15_str := "-infinity";
+modulepar charstring s2fmp16_str := "not_a_number";
 
 
 //modulepar float s2fmp := str2float("")
@@ -148,6 +156,10 @@ modulepar float s2fmp10:= str2float("+001."); //In module parameter definition//
 modulepar float s2fmp11:= str2float("-0");
 modulepar float s2fmp12:= str2float("-0.");
 modulepar float s2fmp13:= str2float("-0.0");
+
+modulepar float s2fmp14:= str2float("infinity");
+modulepar float s2fmp15:= str2float("-infinity");
+modulepar float s2fmp16:= str2float("not_a_number");
 
 
 
@@ -245,6 +257,19 @@ testcase str_to_float() runs on PDTestComponent{ //In testcase definition//
 	and (s2fpar13== -0.0))
 	     {setverdict(pass);}
 	else {setverdict(fail, __LINE__);}
+	if ((s2fpar14 == str2float("infinity"))
+	and (s2fpar14 == infinity))
+	     {setverdict(pass);}
+	else {setverdict(fail, __LINE__);}
+	if ((s2fpar15 == str2float("-infinity"))
+	and (s2fpar15 == -infinity))
+	     {setverdict(pass);}
+	else {setverdict(fail, __LINE__);}
+	if ((s2fpar16 == str2float("not_a_number"))
+	and (s2fpar16 == not_a_number))
+	     {setverdict(pass);}
+	else {setverdict(fail, __LINE__);}
+
 // run-time
 	if ((s2fmp == str2float(s2fmp_str))
 	and (s2fmp == 0.0))
@@ -327,6 +352,18 @@ testcase str_to_float() runs on PDTestComponent{ //In testcase definition//
 
 	if ((s2fmp13 == str2float(s2fmp13_str))
 	and (s2fmp13 == -0.0))
+	     {setverdict(pass);}
+	else {setverdict(fail, __LINE__);}
+	if ((s2fmp14 == str2float(s2fmp14_str))
+	and (s2fmp14 == infinity))
+	     {setverdict(pass);}
+	else {setverdict(fail, __LINE__);}
+	if ((s2fmp15 == str2float(s2fmp15_str))
+	and (s2fmp15 == -infinity))
+	     {setverdict(pass);}
+	else {setverdict(fail, __LINE__);}
+	if ((s2fmp16 == str2float(s2fmp16_str))
+	and (s2fmp16 == not_a_number))
 	     {setverdict(pass);}
 	else {setverdict(fail, __LINE__);}
 }

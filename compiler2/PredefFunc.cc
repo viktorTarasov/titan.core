@@ -597,6 +597,15 @@ namespace Common {
 
   string *float2str(const Real& value)
   {
+    if (value == REAL_INFINITY) {
+      return new string("infinity");
+    }
+    if (value == -REAL_INFINITY) {
+      return new string("-infinity");
+    }
+    if (value != value) {
+      return new string("not_a_number");
+    }
     char str_buf[64];
     if ( (value > -MAX_DECIMAL_FLOAT && value <= -MIN_DECIMAL_FLOAT)
       || (value >= MIN_DECIMAL_FLOAT && value <   MAX_DECIMAL_FLOAT)

@@ -85,6 +85,9 @@ modulepar charstring f2spar4 := float2str(-0.345)
 modulepar charstring f2spar5 := float2str(0.1234567)
 modulepar charstring f2spar6 := float2str(123456748901.0)
 modulepar charstring f2spar7 := float2str(123456758901.0)
+modulepar charstring f2spar8 := float2str(infinity)
+modulepar charstring f2spar9 := float2str(-infinity)
+modulepar charstring f2spar10 := float2str(not_a_number)
 
 
 testcase float_to_str() runs on PDTestComponent{
@@ -117,7 +120,18 @@ testcase float_to_str() runs on PDTestComponent{
 	and (f2spar7 == float2str(123456758901.0)))
 	     {setverdict(pass);}
 	else {setverdict(fail);}
-
+	if ((f2spar8 == "infinity")
+	and (f2spar8 == float2str(infinity)))
+	     {setverdict(pass);}
+	else {setverdict(fail);}
+	if ((f2spar9 == "-infinity")
+	and (f2spar9 == float2str(-infinity)))
+	     {setverdict(pass);}
+	else {setverdict(fail);}
+	if ((f2spar10 == "not_a_number")
+	and (f2spar10 == float2str(not_a_number)))
+	     {setverdict(pass);}
+	else {setverdict(fail);}
 }
 
 control {

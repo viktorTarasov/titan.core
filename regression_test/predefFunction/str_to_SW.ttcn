@@ -81,24 +81,14 @@ const float s2fcon11:= str2float("-0");
 const float s2fcon12:= str2float("-0.");
 const float s2fcon13:= str2float("-0.0");
 
-
-// HL67862
-const charstring s2fmp7_str := "1";
-const charstring s2fmp7m_str:= "-1";
-const charstring s2fmp8m_str:= "-1.";
-const charstring s2fmp8_str := "1.";
-const charstring s2fmp9_str := "+001";
-const charstring s2fmp10_str:= "+001.";
-const charstring s2fmp11_str:= "-0";
-const charstring s2fmp12_str:= "-0.";
-const charstring s2fmp13_str:= "-0.0";
+const float s2fcon14:= str2float("infinity");
+const float s2fcon15:= str2float("-infinity");
+const float s2fcon16:= str2float("not_a_number");
 
 
 
 
 testcase str_to_float() runs on PDTestComponent{ //In testcase definition//
-
-// compile-time
 	if ((s2fcon == str2float("0.0"))
 	and (s2fcon == 0.0))
 	     {setverdict(pass);}
@@ -183,64 +173,18 @@ testcase str_to_float() runs on PDTestComponent{ //In testcase definition//
 	     {setverdict(pass);}
 	else {setverdict(fail);} //^In else statement// \
                              //^warning\: Control never reaches this code because of previous effective condition\(s\)//
-/* run-time
-	if ((s2fmp == str2float(s2fmp_str))
-	and (s2fmp == 0.0))
+	if ((s2fcon14== str2float("infinity")) and (s2fcon14== infinity))
 	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp1 == str2float(s2fmp1_str))
-	and (s2fmp1 == 12345678901.0))
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
+	if ((s2fcon15== str2float("-infinity")) and (s2fcon15== -infinity))
 	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp2 == str2float("000000000000" & "12345678901.0"))
-	and (s2fmp2 == 12345678901.0))
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
+	if ((s2fcon16== str2float("not_a_number" )) and (s2fcon16== not_a_number))
 	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp3 == str2float("-12" & "345678901.0"))
-	and (s2fmp3 == -12345678901.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp4 == str2float(s2fmp4_str))
-	and (s2fmp4 == 1234.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp5 == str2float(s2fmp5_str))
-	and (s2fmp5 == 1.234))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp6 == str2float(s2fmp6_str))
-	and (s2fmp6 == 1.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-
-	if ((s2fmp7  == str2float(s2fmp7_str)) and (s2fmp7 == 1.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp7m == str2float(s2fmp7m_str)) and (s2fmp7m==-1.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp8m == str2float(s2fmp8m_str)) and (s2fmp8m==-1.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp8  == str2float(s2fmp8_str)) and (s2fmp8 == 1.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp9  == str2float(s2fmp9_str)) and (s2fmp9 == 1.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp10 == str2float(s2fmp10_str)) and (s2fmp10== 1.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp11 == str2float(s2fmp11_str)) and (s2fmp11==-0.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp12 == str2float(s2fmp12_str)) and (s2fmp12== 0.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-	if ((s2fmp13 == str2float(s2fmp13_str)) and (s2fmp13== 0.0))
-	     {setverdict(pass);}
-	else {setverdict(fail);}
-*/
+	else {setverdict(fail);} //^In else statement// \
+                             //^warning\: Control never reaches this code because of previous effective condition\(s\)//
 }
 
 
