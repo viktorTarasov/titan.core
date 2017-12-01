@@ -48,6 +48,10 @@
 
 #define ERRMSG_BUFSIZE 512
 
+#ifndef INFINITY
+#define INFINITY (DBL_MAX*DBL_MAX)
+#endif
+
 // table to reverse the hex digits within an octet
 // input: ABCDEFGH, output: DCBAHGFE
 static const unsigned char nibble_reverse_table[] =
