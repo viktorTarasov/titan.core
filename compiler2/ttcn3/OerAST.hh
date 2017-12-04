@@ -12,14 +12,20 @@
 #ifndef OERAST_HH
 #define OERAST_HH
 
+#include "../vector.hh"
+
 class OerAST {
 public:
   int bytes;
   bool signed_;
   int length;
   bool extendable;
+  int nr_of_root_comps;
+  vector<int> ext_attr_groups;
+  vector<int> p;
   
   OerAST();
+  ~OerAST();
   bool empty() const;
 };
 

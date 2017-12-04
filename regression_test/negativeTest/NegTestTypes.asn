@@ -341,4 +341,11 @@ MyUnionComplexTypes ::= CHOICE {
   sofreal MySeqOfReal
 }
 
+MyUnionExtended ::= CHOICE {
+  b BOOLEAN,
+  n NULL,
+  ...,
+  i INTEGER
+}
+
 END

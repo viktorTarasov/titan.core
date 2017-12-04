@@ -130,6 +130,7 @@ namespace Common {
     bool has_comp_withName(const Identifier& p_name);
     CompField* get_comp_byName(const Identifier& p_name);
     void tr_compsof(ReferenceChain *refch, bool in_ellipsis);
+    ExtAndExc* get_ext_and_exc() const { return ee; }
     bool has_ellipsis() const { return ee != 0; }
     bool needs_auto_tags();
     void add_auto_tags();
@@ -160,6 +161,9 @@ namespace Common {
     virtual bool has_comp_withName(const Identifier& p_name) const = 0;
     virtual CompField* get_comp_byName(const Identifier& p_name) const = 0;
     virtual void tr_compsof(ReferenceChain *refch, bool is_set) = 0;
+    virtual bool is_ext_attr_group() const { return false; }
+    virtual int get_group_number() const { return 0; }
+    virtual void set_group_number(int) {}
   };
 
   /**
@@ -168,18 +172,21 @@ namespace Common {
   class ExtAdds : public Node {
   private:
     vector<ExtAdd> eas;
+    // The number of ExtAddGrps
+    int num_of_groups;
     /** Copy constructor not implemented */
     ExtAdds(const ExtAdds& p);
     /** Assignment disabled */
     ExtAdds& operator=(const ExtAdds& p);
   public:
-    ExtAdds() : Node(), eas() { }
+    ExtAdds() : Node(), eas(), num_of_groups(0) { }
     virtual ~ExtAdds();
     virtual ExtAdds *clone() const;
     virtual void set_fullname(const string& p_fullname);
     virtual void set_my_scope(Scope *p_scope);
     size_t get_nof_comps() const;
     CompField* get_comp_byIndex(size_t n) const;
+    int get_group_byIndex(size_t n) const;
     bool has_comp_withName(const Identifier& p_name) const;
     CompField* get_comp_byName(const Identifier& p_name) const;
     void tr_compsof(ReferenceChain *refch, bool is_set);
@@ -215,6 +222,7 @@ namespace Common {
     void tr_compsof(ReferenceChain *refch, bool is_set)
       { eas->tr_compsof(refch, is_set); }
     void set_eas(ExtAdds *p_eas);
+    ExtAdds * get_eas() const { return eas; }
     virtual void dump(unsigned level) const;
   };
 
@@ -226,6 +234,8 @@ namespace Common {
     /** can be NULL if not present */
     Value *versionnumber;
     CTs *cts;
+    // Needed for oer coding
+    int groupnumber;
     /** Copy constructor not implemented */
     ExtAddGrp(const ExtAddGrp& p);
     /** Assignment disabled */
@@ -242,6 +252,10 @@ namespace Common {
     virtual CompField* get_comp_byName(const Identifier& p_name) const;
     virtual void tr_compsof(ReferenceChain *refch, bool is_set);
     virtual void dump(unsigned level) const;
+    virtual bool is_ext_attr_group() const { return true; }
+    virtual int get_group_number() const { return groupnumber; }
+    virtual void set_group_number(int num) { groupnumber = num; }
+
   };
 
   /**

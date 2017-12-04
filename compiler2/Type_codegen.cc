@@ -1087,16 +1087,47 @@ void Type::generate_code_oerdescriptor(output_struct *target)
   
   if (NULL == oerattrib) {
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "const TTCN_OERdescriptor_t %s_oer_ = { -1, FALSE, -1, FALSE };\n"
+      "const TTCN_OERdescriptor_t %s_oer_ = { -1, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };\n"
       , get_genname_own().c_str());
   } else {
+     target->source.global_vars = mputprintf(target->source.global_vars,
+      "const int %s_oer_ext_arr_[%lu] = {"
+      , get_genname_own().c_str()
+      , oerattrib->ext_attr_groups.size());
+    for (size_t i = 0; i < oerattrib->ext_attr_groups.size(); i++) {
+      target->source.global_vars = mputprintf(target->source.global_vars,
+        "%i", *oerattrib->ext_attr_groups[i]);
+      if (i != oerattrib->ext_attr_groups.size() - 1) {
+        target->source.global_vars = mputstr(target->source.global_vars, ", ");
+      }
+    }
+     target->source.global_vars = mputstr(target->source.global_vars, "};\n");
+     target->source.global_vars = mputprintf(target->source.global_vars,
+      "const int %s_oer_p_[%lu] = {"
+      , get_genname_own().c_str()
+      , oerattrib->p.size());
+    for (size_t i = 0; i < oerattrib->p.size(); i++) {
+      target->source.global_vars = mputprintf(target->source.global_vars,
+        "%i", *oerattrib->p[i]);
+      if (i != oerattrib->p.size() - 1) {
+        target->source.global_vars = mputstr(target->source.global_vars, ", ");
+      }
+    }
+     target->source.global_vars = mputstr(target->source.global_vars, "};\n");
     target->source.global_vars = mputprintf(target->source.global_vars,
-      "const TTCN_OERdescriptor_t %s_oer_ = { %i, %s, %i, %s };\n"
+      "const TTCN_OERdescriptor_t %s_oer_ = { %i, %s, %i, %s, %i, %lu, %s_oer_ext_arr_, %lu, %s_oer_p_"
       , get_genname_own().c_str() 
       , oerattrib->bytes
       , oerattrib->signed_ ? "TRUE" : "FALSE"
       , oerattrib->length
-      , oerattrib->extendable ? "TRUE" : "FALSE");
+      , oerattrib->extendable ? "TRUE" : "FALSE"
+      , oerattrib->nr_of_root_comps
+      , oerattrib->ext_attr_groups.size()
+      , get_genname_own().c_str()
+      , oerattrib->p.size()
+      , get_genname_own().c_str());
+    
+    target->source.global_vars = mputstr(target->source.global_vars, "};\n");
   }
   
 }
@@ -1219,6 +1250,10 @@ void Type::generate_code_Choice(output_struct *target)
     get_gen_coder_functions(CT_XER);
   sdef.hasJson = get_gen_coder_functions(CT_JSON);
   sdef.hasOer = get_gen_coder_functions(CT_OER);
+  if (oerattrib) {
+    sdef.oerExtendable = oerattrib->extendable;
+    sdef.oerNrOrRootcomps = oerattrib->nr_of_root_comps;
+  }
   sdef.has_opentypes = get_has_opentypes();
   sdef.opentype_outermost = get_is_opentype_outermost();
   sdef.ot = generate_code_ot(pool);
@@ -1632,6 +1667,20 @@ void Type::generate_code_Se(output_struct *target)
     get_gen_coder_functions(CT_XER);
   sdef.hasJson = get_gen_coder_functions(CT_JSON);
   sdef.hasOer = get_gen_coder_functions(CT_OER);
+  if (oerattrib) {
+    sdef.oerExtendable = oerattrib->extendable;
+    sdef.oerNrOrRootcomps = oerattrib->nr_of_root_comps;
+    sdef.oerEagNum = oerattrib->ext_attr_groups.size();
+    sdef.oerEag = (int*)Malloc(sdef.oerEagNum*sizeof(int));
+    for (int i = 0; i < sdef.oerEagNum; i++) {
+      sdef.oerEag[i] = *(oerattrib->ext_attr_groups[i]);
+    }
+    sdef.oerPNum = oerattrib->p.size();
+    sdef.oerP = (int*)Malloc(sdef.oerPNum*sizeof(int));
+    for (int i = 0; i < sdef.oerPNum; i++) {
+      sdef.oerP[i] = *(oerattrib->p[i]);
+    }
+  }
   if (xerattrib){
     Module *my_module = get_my_scope()->get_scope_mod();
     sdef.xerHasNamespaces = my_module->get_nof_ns() != 0;
@@ -2046,6 +2095,12 @@ void Type::generate_code_Se(output_struct *target)
     }
   }
   Free(sdef.elements);
+  if (sdef.oerEag) {
+    Free(sdef.oerEag);
+  }
+  if (sdef.oerP) {
+    Free(sdef.oerP);
+  }
 }
 
 bool Type::is_untagged() const { return xerattrib && xerattrib->untagged_; }

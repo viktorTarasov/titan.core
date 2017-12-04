@@ -4655,56 +4655,193 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   if (oer_needed) {
     // OER encode, RT1
     src = mputprintf(src,
-      "int %s::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const\n"
+      "int %s::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const\n"
       "{\n"
       "  if (!is_bound()) {\n" 
       "  TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"
       "    \"Encoding an unbound %s value.\");\n"
       "  return -1;\n"
       "  }\n", name, sdef->kind == SET ? "set" : "record");
+
+    if (sdef->oerExtendable && sdef->oerNrOrRootcomps != sdef->nElements) {
+      src = mputstr(src,
+        "  boolean has_extension = FALSE;\n");
+      for (i = sdef->oerNrOrRootcomps; i < sdef->nElements; i++) {
+        src = mputprintf(src,
+        "  has_extension = has_extension || (field_%s.is_bound() && field_%s.is_present());\n",
+          sdef->elements[i].name, sdef->elements[sdef->oerP[i]].name);
+      }
+    }
     size_t opt_elements = 0;
-    for (i = 0; i < sdef->nElements; i++) {
-      if (sdef->elements[i].isOptional || sdef->elements[i].isDefault) {
+    size_t limit = sdef->oerExtendable ? sdef->oerNrOrRootcomps : sdef->nElements;
+    for (i = 0; i < limit; i++) {
+      if (sdef->elements[sdef->oerP[i]].isOptional || sdef->elements[sdef->oerP[i]].isDefault) {
         opt_elements++;
       }
     }
-    int needed_bytes = opt_elements / 8 + 1;
+    int bits = opt_elements+(sdef->oerExtendable == TRUE);
+    int needed_bytes = bits / 8 + (bits % 8 == 0 ? 0 : 1);
 
-    if (opt_elements != 0) {
-      src = mputprintf(src,
-        "  unsigned char c[%i] = {0};\n"
-        , needed_bytes);
-    }
-    int ind = 0;
     int pos = 8;
-    for (i = 0; i < sdef->nElements; i++) {
-      if (sdef->elements[i].isOptional || sdef->elements[i].isDefault) {
+    if (opt_elements != 0 || sdef->oerExtendable) {
+      src = mputstr(src,
+        "  char c = 0;\n");
+      if (sdef->oerExtendable && sdef->oerNrOrRootcomps != sdef->nElements) {
+        pos--;
+        src = mputprintf(src,
+          "  if (has_extension) {\n"
+          "    c += %i;\n"
+          "  }\n", 1 << 7);
+      }
+    }
+    
+    int ind = 0;
+    for (i = 0; i < limit; i++) {
+      if (sdef->elements[sdef->oerP[i]].isOptional || sdef->elements[sdef->oerP[i]].isDefault) {
         pos--;
         src = mputprintf(src,
           "  if (field_%s.is_present()) {\n"
-          "    c[%i] += 1 << %i;\n"
+          "    c += %i;\n"
           "  }\n"
-          , sdef->elements[i].name, ind, pos);
+          , sdef->elements[sdef->oerP[i]].name
+          , 1 << pos);
         if (pos == 0) {
           pos = 8;
           ind++;
+          src = mputstr(src,
+            "  p_buf.put_c(c);\n"
+            "  c = 0\n;");
         }
       }
     }
-    if (opt_elements != 0) {
-      src = mputprintf(src,
-        "  p_buf.put_s(%i, c);\n"
-        , needed_bytes);
+    if (opt_elements != 0 || sdef->oerExtendable) {
+      if (pos != 8 || ind == 0) {
+        src = mputstr(src,
+          "  p_buf.put_c(c);\n");
+      }
     }
-    for (i = 0; i < sdef->nElements; i++) {
-      if (sdef->elements[i].isOptional || sdef->elements[i].isDefault) {
+    for (i = 0; i < limit; i++) {
+      if (sdef->elements[sdef->oerP[i]].isOptional || sdef->elements[sdef->oerP[i]].isDefault) {
         src = mputprintf(src,
           "  if (field_%s.is_present())\n  "
-          , sdef->elements[i].name);
+          , sdef->elements[sdef->oerP[i]].name);
       }
       src = mputprintf(src,
         "  field_%s.OER_encode(%s_descr_, p_buf);\n"
-        , sdef->elements[i].name, sdef->elements[i].typedescrname);
+        , sdef->elements[sdef->oerP[i]].name, sdef->elements[sdef->oerP[i]].typedescrname);
+    }
+
+    if (sdef->oerExtendable && sdef->oerNrOrRootcomps != sdef->nElements) {
+      bits = 0;
+      int eag_pos = 0;
+      for (i = limit; i < sdef->nElements; i++) {
+        if (sdef->oerEagNum != 0 && sdef->oerEag[eag_pos] == i - limit) {
+          eag_pos++;
+          bits++;
+          i += sdef->oerEag[eag_pos] - sdef->oerEag[eag_pos-1] - 1;
+          eag_pos++;
+        } else {
+          bits++;
+        }
+      }
+      needed_bytes = bits / 8 + (bits % 8 == 0 ? 0 : 1);
+      src = mputprintf(src,
+        "  if (has_extension) {\n"
+        "%s"
+        "    TTCN_Buffer tmp_buf;\n"
+        "    TTCN_Buffer tmp_buf2;\n"
+        "    TTCN_Buffer tmp_buf3;\n"
+        "    c = 0;\n"
+        , sdef->oerEagNum != 0 ? "    boolean has_present = FALSE;\n" : "");
+      eag_pos = 0;
+      pos = 8;
+      ind = 0;
+      for (i = limit; i < sdef->nElements; i++) {
+        pos--;
+        if (sdef->oerEagNum != 0 && sdef->oerEag[eag_pos] == i - limit) {
+          eag_pos++;
+          int opt_elems = 0;
+          for (int j = i; j < limit + sdef->oerEag[eag_pos]; j++) {
+            if (sdef->elements[sdef->oerP[j]].isOptional || sdef->elements[sdef->oerP[j]].isDefault) {
+              opt_elems++;
+            }
+            src = mputprintf(src,
+              "    has_present = has_present || field_%s.is_present();\n", sdef->elements[sdef->oerP[j]].name);
+          }
+          src = mputprintf(src,
+            "    if (has_present) {\n"
+            "      has_present = FALSE;\n"
+            "      c += %i;\n", 1 << pos);
+          if (opt_elems != 0) {
+            src = mputstr(src,
+              "      char c2 = 0;\n");
+            int pos2 = 8;
+            int ind2 = 0;
+            for (int j = i; j < limit + sdef->oerEag[eag_pos]; j++) {
+              if (sdef->elements[sdef->oerP[j]].isOptional || sdef->elements[sdef->oerP[j]].isDefault) {
+                pos2--;
+                src = mputprintf(src,
+                  "      if (field_%s.is_present()) {\n"
+                  "        c2 += %i;\n"
+                  "      }\n"
+                  , sdef->elements[sdef->oerP[j]].name, 1 << pos2);
+                if (pos2 == 0) {
+                  pos2 = 8;
+                  ind2++;
+                  src = mputstr(src,
+                    "      tmp_buf2.put_c(c2);\n"
+                    "      c2 = 0;\n");
+                }
+              }
+            }
+            if (pos2 != 8) {
+              src = mputstr(src,
+                "      tmp_buf2.put_c(c2);\n");
+            }
+          }
+          for (int j = i; j < limit + sdef->oerEag[eag_pos]; j++) {
+            src = mputprintf(src,
+              "      field_%s.OER_encode(%s_descr_, tmp_buf2);\n"
+              , sdef->elements[sdef->oerP[j]].name, sdef->elements[sdef->oerP[j]].typedescrname);
+          }
+          src = mputstr(src,
+            "      encode_oer_length(tmp_buf2.get_len(), tmp_buf, FALSE);\n"
+            "      tmp_buf.put_buf(tmp_buf2);\n"
+            "      tmp_buf2.clear();\n"
+            "    }\n");
+          i += sdef->oerEag[eag_pos] - sdef->oerEag[eag_pos-1] - 1;
+          eag_pos++;
+        } else {
+          src = mputprintf(src,
+            "    if (field_%s.is_present()) {\n"
+            "      c += %i;\n"
+            "      field_%s.OER_encode(%s_descr_, tmp_buf2);\n"
+            "      encode_oer_length(tmp_buf2.get_len(), tmp_buf, FALSE);\n"
+            "      tmp_buf.put_buf(tmp_buf2);\n"
+            "      tmp_buf2.clear();\n"
+            "    }\n"
+             , sdef->elements[sdef->oerP[i]].name, 1 << pos
+             , sdef->elements[sdef->oerP[i]].name, sdef->elements[sdef->oerP[i]].typedescrname);
+        }
+        if (pos == 0) {
+          ind++;
+          pos = 8;
+          src = mputstr(src,
+            "    tmp_buf3.put_c(c);\n"
+            "    c = 0;\n");
+        }
+      }
+      if (pos != 8) {
+        src = mputstr(src,
+            "    tmp_buf3.put_c(c);\n");
+      }
+      src = mputprintf(src,
+        "    encode_oer_length(%i, p_buf, FALSE);\n"
+        "    p_buf.put_c(%i);\n"
+        "    p_buf.put_buf(tmp_buf3);\n"
+        "    p_buf.put_buf(tmp_buf);\n"
+        "    tmp_buf.clear();\n"
+        "  }\n", needed_bytes+1, pos);
     }
     src = mputstr(src,
       "  return 0;\n"
@@ -4714,7 +4851,9 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     src = mputprintf(src,
       "int %s::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer)\n"
       "{\n", name);
-    if (opt_elements != 0) {
+    bits = opt_elements+(sdef->oerExtendable == TRUE);
+    needed_bytes = bits / 8 + (bits % 8 == 0 ? 0 : 1);
+    if (needed_bytes != 0) {
       src = mputprintf(src, 
         "  const unsigned char* uc = p_buf.get_read_data();\n"
         "  p_buf.increase_pos(%i);\n"
@@ -4722,18 +4861,26 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     }
     ind = 0;
     pos = 8;
-    for (i = 0; i < sdef->nElements; i++) {
-      if (sdef->elements[i].isOptional || sdef->elements[i].isDefault) {
+    if (sdef->oerExtendable) {
+      src = mputstr(src,
+        "  boolean has_extension = FALSE;\n"
+        "  if (uc[0] & 0x80) {\n"
+        "    has_extension = TRUE;\n"
+        "  }\n");
+      pos--;
+    }
+    for (i = 0; i < limit; i++) {
+      if (sdef->elements[sdef->oerP[i]].isOptional || sdef->elements[sdef->oerP[i]].isDefault) {
         pos--;
           src = mputprintf(src,
             "  if (uc[%i] & (1 << %i))\n"
             "    field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
             , ind, pos, sdef->elements[i].name
-            , sdef->elements[i].typedescrname);
-          if (sdef->elements[i].isOptional) {
+            , sdef->elements[sdef->oerP[i]].typedescrname);
+          if (sdef->elements[sdef->oerP[i]].isOptional) {
             src = mputprintf(src, " else\n"
               "    field_%s = OMIT_VALUE;\n"
-              , sdef->elements[i].name);
+              , sdef->elements[sdef->oerP[i]].name);
           }
         if (pos == 0) {
           ind++;
@@ -4742,10 +4889,104 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
       } else {
         src = mputprintf(src,
           "  field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
-          , sdef->elements[i].name
-          , sdef->elements[i].typedescrname);
+          , sdef->elements[sdef->oerP[i]].name
+          , sdef->elements[sdef->oerP[i]].typedescrname);
       }
     }
+    
+    if (sdef->oerExtendable) {
+      src = mputstr(src,
+        "  if (has_extension) {\n"
+        "    size_t bytes = decode_oer_length(p_buf, FALSE);\n"
+        "    uc = p_buf.get_read_data();\n"
+        "    p_buf.increase_pos(bytes);\n"
+        "    uc++;\n");
+      int eag_pos = 0;
+      pos = 8;
+      ind = 0;
+      for (i = limit; i < sdef->nElements; i++) {
+        pos--;
+        src = mputprintf(src,
+          "    if (!(uc[%i] & %i)) {\n"
+          , ind, 1 << pos);
+        if (sdef->oerEagNum != 0 && sdef->oerEag[eag_pos] == i - limit) {
+          eag_pos++;
+          for (int j = i; j < limit + sdef->oerEag[eag_pos]; j++) {
+            if (sdef->elements[sdef->oerP[j]].isOptional) {
+              src = mputprintf(src,
+                "      field_%s = OMIT_VALUE;\n"
+                , sdef->elements[sdef->oerP[j]].name);
+            }
+          }
+          eag_pos--;
+        } else {
+          if (sdef->elements[sdef->oerP[i]].isOptional) {
+            src = mputprintf(src,
+              "      field_%s = OMIT_VALUE;\n"
+              , sdef->elements[i].name);
+          }
+        }
+        src = mputstr(src,
+          "    } else {\n"
+          "      decode_oer_length(p_buf, FALSE);\n");
+        if (sdef->oerEagNum != 0 && sdef->oerEag[eag_pos] == i - limit) {
+          eag_pos++;
+          int nof_opt = 0;
+          for (int j = i; j < limit + sdef->oerEag[eag_pos]; j++) {
+            if (sdef->elements[sdef->oerP[j]].isOptional || sdef->elements[sdef->oerP[j]].isDefault) {
+              nof_opt++;
+            }
+          }
+          needed_bytes = nof_opt / 8 + (nof_opt % 8 == 0 ? 0 : 1);
+          src = mputprintf(src,
+            "      const unsigned char* uc2 = p_buf.get_read_data();\n"
+            "      (void)uc2;\n"
+            "      p_buf.increase_pos(%i);\n"
+            , needed_bytes);
+          int pos2 = 8;
+          int ind2 = 0;
+          for (int j = i; j < limit + sdef->oerEag[eag_pos]; j++) {
+            if (sdef->elements[sdef->oerP[j]].isOptional || sdef->elements[sdef->oerP[j]].isDefault) {
+              pos2--;
+              src = mputprintf(src,
+                "      if (uc2[%i] & %i) {\n"
+                "        field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
+                "      }\n"
+                , ind2, 1 << pos2, sdef->elements[sdef->oerP[j]].name, sdef->elements[sdef->oerP[j]].typedescrname);
+              if (sdef->elements[sdef->oerP[j]].isOptional) {
+                src = mputprintf(src,
+                  "        else {\n"
+                  "          field_%s = OMIT_VALUE;\n"
+                  "        }\n"
+                  , sdef->elements[sdef->oerP[j]].name);
+              }
+              if (pos2 == 0) {
+                pos2 = 8;
+                ind2++;
+              }
+            } else {
+              src = mputprintf(src,
+                "      field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
+                , sdef->elements[sdef->oerP[j]].name, sdef->elements[sdef->oerP[j]].typedescrname);
+            }
+          }
+          i += sdef->oerEag[eag_pos] - sdef->oerEag[eag_pos-1] - 1;
+          eag_pos++;
+        } else {
+          src = mputprintf(src,
+            "      field_%s.OER_decode(%s_descr_, p_buf, p_oer);\n"
+            , sdef->elements[sdef->oerP[i]].name, sdef->elements[sdef->oerP[i]].typedescrname);
+        }
+        src = mputstr(src, "    }\n");
+        if (pos == 0) {
+          pos = 8;
+          ind++;
+        }
+      }
+      src = mputstr(src,
+        "  }\n");
+    }
+    
     if (sdef->opentype_outermost) {
       src = mputstr(src,
         "  TTCN_EncDec_ErrorContext ec_1(\"While decoding opentypes: \");"

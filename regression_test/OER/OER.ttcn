@@ -2058,6 +2058,12 @@
     external function dec_Union(in octetstring stream) return Union
      with { extension "prototype (convert) decode(OER)" }
 
+    external function enc_UnionExtended(in UnionExtended pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_UnionExtended(in octetstring stream) return UnionExtended
+     with { extension "prototype (convert) decode(OER)" }
+
  	testcase tc_union() runs on EmptyCT {
  		var Union u, ures;
  		var octetstring os;
@@ -2170,6 +2176,20 @@
  			setverdict(fail, "tc_union: ", match(u, ures));
  		}
 
+        var UnionExtended u2, ures2;
+
+        u2 := {
+            f10 := 10
+        }
+        os := enc_UnionExtended(u2);
+        if (os != 'E102010A'O) {
+            setverdict(fail, "tc_union: ", match('E102010A'O, os));
+        }
+        ures2 := dec_UnionExtended(os);
+        if (u2 != ures2) {
+            setverdict(fail, "tc_union: ", match(u2, ures2));
+        }
+
  		setverdict(pass);
  	}
 
@@ -2183,6 +2203,36 @@
      with { extension "prototype (convert) encode(OER)" }
   
     external function dec_ExtensionRecord(in octetstring stream) return ExtensionRecord
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_ExtensionRecord2(in ExtensionRecord2 pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_ExtensionRecord2(in octetstring stream) return ExtensionRecord2
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_ExtensionRecord3(in ExtensionRecord3 pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_ExtensionRecord3(in octetstring stream) return ExtensionRecord3
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_ExtensionRecord4(in ExtensionRecord4 pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_ExtensionRecord4(in octetstring stream) return ExtensionRecord4
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_ExtensionRecord5(in ExtensionRecord5 pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_ExtensionRecord5(in octetstring stream) return ExtensionRecord5
+     with { extension "prototype (convert) decode(OER)" }
+
+    external function enc_ExtensionRecord6(in ExtensionRecord6 pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_ExtensionRecord6(in octetstring stream) return ExtensionRecord6
      with { extension "prototype (convert) decode(OER)" }
 
     external function enc_NoOptionalRecord(in NoOptionalRecord pdu) return octetstring
@@ -2203,6 +2253,7 @@
     external function dec_SomeOptionalRecord(in octetstring stream) return SomeOptionalRecord
      with { extension "prototype (convert) decode(OER)" }
 
+
  	testcase tc_sequence() runs on EmptyCT {
  		var octetstring os;
 
@@ -2217,17 +2268,583 @@
  			setverdict(fail, "tc_sequence: ", match(emr, emrres));
  		}
 
- 		// Test extension bit presence, FAILS, possibly some bug with is_extendable() function
- 		/*var ExtensionRecord er, erres;
- 		er := { me := e2 }
+ 		var ExtensionRecord er, erres;
+ 		er := { me := 1, me2 := 2 }
  		os := enc_ExtensionRecord(er);
- 		if (os != '0001'O) {
- 			setverdict(fail, "tc_sequence: ", match('0001'O, os));
+ 		if (os != '0001010102'O) {
+ 			setverdict(fail, "tc_sequence: ", match('0001010102'O, os));
  		}
  		erres := dec_ExtensionRecord(os);
  		if (er != erres) {
  			setverdict(fail, "tc_sequence: ", match(er, erres));
- 		}*/
+ 		}
+
+        var ExtensionRecord2 er2, erres2;
+        er2 := {
+            me := 1,
+            me2 := 2,
+            me3 := omit,
+            me4 := 4
+        }
+        os := enc_ExtensionRecord2(er2);
+        if (os != '40010101020104'O) {
+            setverdict(fail, "tc_sequence: ", match('40010101020104'O, os));
+        }
+        erres2 := dec_ExtensionRecord2(os);
+        if (not(match(log2str(er2), log2str(erres2)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er2), log2str(erres2)));
+        }
+
+        er2 := {
+            me := 1,
+            me2 := 2,
+            me3 := omit,
+            me4 := 4,
+            f0 := 0,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := 6,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9
+        }
+        os := enc_ExtensionRecord2(er2);
+        if (os != 'C00101010201040305FFC0020100020101020102020103020104020105020106020107020108020109'O) {
+            setverdict(fail, "tc_sequence: ", match('C00101010201040305FFC0020100020101020102020103020104020105020106020107020108020109'O, os));
+        }
+        erres2 := dec_ExtensionRecord2(os);
+        if (not(match(log2str(er2), log2str(erres2)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er2), log2str(erres2)));
+        }
+
+        er2 := {
+            me := 1,
+            me2 := 2,
+            me3 := omit,
+            me4 := 4,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := omit,
+            f6 := 6,
+            f7 := omit,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord2(er2);
+        if (os != 'C00101010201040305DAE002010002010102010302010402010602010802010900'O) {
+            setverdict(fail, "tc_sequence: ", match('C00101010201040305DAE002010002010102010302010402010602010802010900'O, os));
+        }
+        erres2 := dec_ExtensionRecord2(os);
+        if (not(match(log2str(er2), log2str(erres2)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er2), log2str(erres2)));
+        }
+
+        var ExtensionRecord2 er3, erres3, erres4;
+        er3 := {
+            me := 1,
+            me2 := 2,
+            me3 := omit,
+            me4 := 4,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := omit,
+            f5 := omit,
+            f6 := 6,
+            f7 := omit,
+            f8 := 8,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord2(er3);
+        if (os != 'C00101010201040305D2A002010002010102010302010602010800'O) {
+            setverdict(fail, "tc_sequence: ", match('C00101010201040305D2A002010002010102010302010602010800'O, os));
+        }
+        erres3 := {
+            me := 1,
+            me2 := 2,
+            me3 := omit,
+            me4 := 4,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := omit,
+            f5 := omit,
+            f6 := 6,
+            f7 := omit,
+            f8 := 8,
+            f9 := -,
+            f_nul := NULL
+        }
+        erres2 := dec_ExtensionRecord2(os);
+        if (not(match(log2str(erres3), log2str(erres2)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(erres3), log2str(erres2)));
+        }
+
+        var ExtensionRecord2 er4;
+        er4 := {
+            me := 1,
+            me2 := 2,
+            me3 := omit,
+            me4 := 4,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f6 := 6,
+            f7 := omit,
+            f8 := 8
+        }
+        os := enc_ExtensionRecord2(er4);
+        if (os != 'C00101010201040305D280020100020101020103020106020108'O) {
+            setverdict(fail, "tc_sequence: ", match('C00101010201040305D280020100020101020103020106020108'O, os));
+        }
+        erres4 := {
+            me := 1,
+            me2 := 2,
+            me3 := omit,
+            me4 := 4,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := omit,
+            f5 := omit,
+            f6 := 6,
+            f7 := omit,
+            f8 := 8,
+            f9 := -,
+            f_nul := -
+        }
+        erres2 := dec_ExtensionRecord2(os);
+        if (not(match(log2str(erres4), log2str(erres2)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(erres4), log2str(erres2)));
+        }
+
+        var ExtensionRecord3 er5, erres5;
+        er5 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := omit,
+            f5 := omit,
+            f6 := omit,
+            f7 := -,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        @try {
+            os := enc_ExtensionRecord3(er5);
+            setverdict(fail);
+        } @catch (e) {
+            setverdict(pass);
+        }
+
+        er5 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := omit,
+            f5 := omit,
+            f6 := omit,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord3(er5);
+        if (os != 'C0010102029C078001000101010305000107010802010900'O) {
+            setverdict(fail, "tc_sequence: ", match('C0010102029C078001000101010305000107010802010900'O, os));
+        }
+        erres5 := dec_ExtensionRecord3(os);
+        if (not(match(log2str(er5), log2str(erres5)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er5), log2str(erres5)));
+        }
+
+        er5 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := omit,
+            f5 := 5,
+            f6 := omit,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord3(er5);
+        if (os != 'C001010202BC078001000101010302010505000107010802010900'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010202BC078001000101010302010505000107010802010900'O, os));
+        }
+        erres5 := dec_ExtensionRecord3(os);
+        if (not(match(log2str(er5), log2str(erres5)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er5), log2str(erres5)));
+        }
+
+        er5 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := omit,
+            f5 := 5,
+            f6 := 6,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord3(er5);
+        if (os != 'C001010202BC0780010001010103020105078001060107010802010900'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010202BC0780010001010103020105078001060107010802010900'O, os));
+        }
+        erres5 := dec_ExtensionRecord3(os);
+        if (not(match(log2str(er5), log2str(erres5)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er5), log2str(erres5)));
+        }
+
+        er5 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := 6,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord3(er5);
+        if (os != 'C001010202FC078001000101010303800104020105078001060107010802010900'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010202FC078001000101010303800104020105078001060107010802010900'O, os));
+        }
+        erres5 := dec_ExtensionRecord3(os);
+        if (not(match(log2str(er5), log2str(erres5)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er5), log2str(erres5)));
+        }
+
+        er5 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := 6,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord3(er5);
+        if (os != 'C001010202FC09C0010001010102010303800104020105078001060107010802010900'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010202FC09C0010001010102010303800104020105078001060107010802010900'O, os));
+        }
+        erres5 := dec_ExtensionRecord3(os);
+        if (not(match(log2str(er5), log2str(erres5)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er5), log2str(erres5)));
+        }
+
+        var ExtensionRecord4 er6, erres6;
+        er6 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := 6,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord4(er6);
+        if (os != 'C001010202FC09F001000101010201030380010402010507C00106010701080201090180'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010202FC09F001000101010201030380010402010507C00106010701080201090180'O, os));
+        }
+        erres6 := dec_ExtensionRecord4(os);
+        if (not(match(log2str(er6), log2str(erres6)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er6), log2str(erres6)));
+        }
+
+        er6 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := omit,
+            f7 := omit,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord4(er6);
+        if (os != 'C001010202FC09F0010001010102010303800104020105030001080201090180'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010202FC09F0010001010102010303800104020105030001080201090180'O, os));
+        }
+        erres6 := dec_ExtensionRecord4(os);
+        if (not(match(log2str(er6), log2str(erres6)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er6), log2str(erres6)));
+        }
+
+        er6 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := omit,
+            f7 := omit,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord4(er6);
+        if (os != 'C001010202FC07D001000101010303800104020105030001080201090180'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010202FC07D001000101010303800104020105030001080201090180'O, os));
+        }
+        erres6 := dec_ExtensionRecord4(os);
+        if (not(match(log2str(er6), log2str(erres6)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er6), log2str(erres6)));
+        }
+
+        er6 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := omit,
+            f7 := omit,
+            f8 := 8,
+            f9 := 9,
+            f_nul := omit
+        }
+        os := enc_ExtensionRecord4(er6);
+        if (os != 'C001010202F807D00100010101030380010402010503000108020109'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010202F807D00100010101030380010402010503000108020109'O, os));
+        }
+        erres6 := dec_ExtensionRecord4(os);
+        if (not(match(log2str(er6), log2str(erres6)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er6), log2str(erres6)));
+        }
+
+
+        var ExtensionRecord5 er7, erres7, erres71;
+
+        er7 := {
+            me := 1,
+            f2 := omit
+        }
+        os := enc_ExtensionRecord5(er7);
+        if (os != '400101'O) {
+            setverdict(fail, "tc_sequence: ", match('400101'O, os));
+        }
+        erres71 := { me := 1 }
+        erres7 := dec_ExtensionRecord5(os);
+        if (not(match(log2str(erres7), log2str(erres71)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(erres7), log2str(erres71)));
+        }
+
+        er7 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := 6,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord5(er7);
+        if (os != 'C001010206C016FFC001000101010201030104010501060107010801090180'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010206C016FFC001000101010201030104010501060107010801090180'O, os));
+        }
+        erres7 := dec_ExtensionRecord5(os);
+        if (not(match(log2str(er7), log2str(erres7)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er7), log2str(erres7)));
+        }
+
+        er7 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := omit,
+            f6 := omit,
+            f7 := omit,
+            f8 := 8,
+            f9 := omit,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord5(er7);
+        if (os != 'C001010206C00CD880010001010103010401080180'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010206C00CD880010001010103010401080180'O, os));
+        }
+        erres7 := dec_ExtensionRecord5(os);
+        if (not(match(log2str(er7), log2str(erres7)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er7), log2str(erres7)));
+        }
+
+        var ExtensionRecord6 er8, erres8;
+        er8 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4,
+            f5 := 5,
+            f6 := 6,
+            f7 := 7,
+            f8 := 8,
+            f9 := 9,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord6(er8);
+        if (os != 'C001010302FFE0038001000380010103800102038001030380010403800105038001060380010703800108038001090180'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010302FFE0038001000380010103800102038001030380010403800105038001060380010703800108038001090180'O, os));
+        }
+        erres8 := dec_ExtensionRecord6(os);
+        if (not(match(log2str(er8), log2str(erres8)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er8), log2str(erres8)));
+        }
+
+        er8 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := omit,
+            f6 := omit,
+            f7 := omit,
+            f8 := 8,
+            f9 := omit,
+            f_nul := NULL
+        }
+        os := enc_ExtensionRecord6(er8);
+        if (os != 'C001010302D8A003800100038001010380010303800104038001080180'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010302D8A003800100038001010380010303800104038001080180'O, os));
+        }
+        erres8 := dec_ExtensionRecord6(os);
+        if (not(match(log2str(er8), log2str(erres8)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er8), log2str(erres8)));
+        }
+
+        er8 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := omit,
+            f6 := omit,
+            f7 := omit,
+            f8 := 8,
+            f9 := omit,
+            f_nul := NULL,
+            f10 := 10
+        }
+        os := enc_ExtensionRecord6(er8);
+        if (os != 'C001010302D8B00380010003800101038001030380010403800108018002010A'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010302D8B00380010003800101038001030380010403800108018002010A'O, os));
+        }
+        erres8 := dec_ExtensionRecord6(os);
+        if (not(match(log2str(er8), log2str(erres8)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er8), log2str(erres8)));
+        }
+
+        er8 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := omit,
+            f6 := omit,
+            f7 := omit,
+            f8 := 8,
+            f9 := omit,
+            f_nul := NULL,
+            f10 := 10,
+            f11 := 11,
+            f12 := 12
+        }
+        os := enc_ExtensionRecord6(er8);
+        if (os != 'C001010302D8B80380010003800101038001030380010403800108018002010A04010B010C'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010302D8B80380010003800101038001030380010403800108018002010A04010B010C'O, os));
+        }
+        erres8 := dec_ExtensionRecord6(os);
+        if (not(match(log2str(er8), log2str(erres8)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er8), log2str(erres8)));
+        }
+
+        er8 := {
+            me := 1,
+            f0 := 0,
+            f1 := 1,
+            f2 := omit,
+            f3 := 3,
+            f4 := 4,
+            f5 := omit,
+            f6 := omit,
+            f7 := omit,
+            f8 := 8,
+            f9 := omit,
+            f_nul := NULL,
+            f10 := 10,
+            f11 := 11,
+            f12 := 12,
+            f13 := 13
+        }
+        os := enc_ExtensionRecord6(er8);
+        if (os != 'C001010302D8BC0380010003800101038001030380010403800108018002010A04010B010C02010D'O) {
+            setverdict(fail, "tc_sequence: ", match('C001010302D8BC0380010003800101038001030380010403800108018002010A04010B010C02010D'O, os));
+        }
+        erres8 := dec_ExtensionRecord6(os);
+        if (not(match(log2str(er8), log2str(erres8)))) {
+            setverdict(fail, "tc_sequence: ", match(log2str(er8), log2str(erres8)));
+        }
 
  		var NoOptionalRecord nr, nrres;
 
@@ -2549,6 +3166,12 @@
     external function dec_MySet(in octetstring stream) return MySet
      with { extension "prototype (convert) decode(OER)" }
 
+    external function enc_MySetExtended(in MySetExtended pdu) return octetstring
+     with { extension "prototype (convert) encode(OER)" }
+  
+    external function dec_MySetExtended(in octetstring stream) return MySetExtended
+     with { extension "prototype (convert) decode(OER)" }
+
  	testcase tc_set() runs on EmptyCT {
  		var MySet ms, msres;
  		var octetstring os;
@@ -2570,6 +3193,65 @@
  		if (ms != msres) {
  			setverdict(fail, "tc_set: ", match(ms, msres));
  		}
+
+        var MySetExtended ms2, msres2;
+
+        ms2 := {
+            r1 := 3.14,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4, 
+            f5 := 5,
+            f6 := 6
+        }
+        os := enc_MySetExtended(ms2);
+        if (os != '400102010401030106010508033331342E452D320101'O) {
+            setverdict(fail, "tc_set: ", match('400102010401030106010508033331342E452D320101'O, os));
+        }
+        msres2 := dec_MySetExtended(os);
+        if (log2str(ms2) != log2str(msres2)) {
+            setverdict(fail, "tc_set: ", match(log2str(ms2), log2str(msres2)));
+        }
+
+        ms2 := {
+            r1 := 3.14,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4, 
+            f5 := 5,
+            f6 := 6,
+            f7 := 7
+        }
+        os := enc_MySetExtended(ms2);
+        if (os != 'C00102010401030106010508033331342E452D320101020680020107'O) {
+            setverdict(fail, "tc_set: ", match('C00102010401030106010508033331342E452D320101020680020107'O, os));
+        }
+        msres2 := dec_MySetExtended(os);
+        if (log2str(ms2) != log2str(msres2)) {
+            setverdict(fail, "tc_set: ", match(log2str(ms2), log2str(msres2)));
+        }
+
+        ms2 := {
+            r1 := 3.14,
+            f1 := 1,
+            f2 := 2,
+            f3 := 3,
+            f4 := 4, 
+            f5 := 5,
+            f6 := 6,
+            f7 := 7,
+            f8 := 8
+        }
+        os := enc_MySetExtended(ms2);
+        if (os != 'C00102010401030106010508033331342E452D3201010206C0020107020108'O) {
+            setverdict(fail, "tc_set: ", match('C00102010401030106010508033331342E452D3201010206C0020107020108'O, os));
+        }
+        msres2 := dec_MySetExtended(os);
+        if (log2str(ms2) != log2str(msres2)) {
+            setverdict(fail, "tc_set: ", match(log2str(ms2), log2str(msres2)));
+        }
 
  		setverdict(pass);
  	}

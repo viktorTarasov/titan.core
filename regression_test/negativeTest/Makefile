@@ -44,7 +44,7 @@ NegTest_RAW_Types.ttcn NegTest_RAW_Testcases.ttcn \
 www_XmlTest_org_negativeTest_XML_Types.ttcn NegTest_XML_Testcases.ttcn XSD.ttcn UsefulTtcn3Types.ttcn \
 NegTest_JSON.ttcn NegTest_Update.ttcn NegTest_OER.ttcn
 
-ASN1_MODULES = Types.asn NegTestTypes.asn
+ASN1_MODULES = Types.asn NegTestTypes.asn NegTestTypes2.asn
 
 GENERATED_SOURCES = $(TTCN3_MODULES:.ttcn=.cc) $(ASN1_MODULES:.asn=.cc)
 GENERATED_HEADERS = $(TTCN3_MODULES:.ttcn=.hh) $(ASN1_MODULES:.asn=.hh)

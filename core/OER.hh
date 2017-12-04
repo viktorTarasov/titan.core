@@ -24,7 +24,20 @@ struct TTCN_OERdescriptor_t
   int bytes;
   boolean signed_;
   int length;
-  boolean extendable; // Always false. Possibly a bug with is_extendable()
+  boolean extendable;
+  int nr_of_root_comps;
+  // length of the eag int array
+  int eag_len;
+  // contains the start and end index of the extension groups, indexed from the
+  // index of last root component.
+  // {2 4} means that the 3rd and 4th element of the extensions are in a group.
+  // always contains even number of integers
+  const int * const eag;
+  int p_len;
+  // Contains the correct order of fields. (CER coding reorders fields)
+  // p[1] = 2 means that the reordered fields are not correct for OER coding,
+  // and the first field must be the second while coding in oer.
+  const int * const p;
 };
 
 struct OER_struct

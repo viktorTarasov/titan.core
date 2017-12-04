@@ -1,0 +1,27 @@
+--/////////////////////////////////////////////////////////////////////////////
+-- Copyright (c) 2000-2017 Ericsson Telecom AB
+-- All rights reserved. This program and the accompanying materials
+-- are made available under the terms of the Eclipse Public License v1.0
+-- which accompanies this distribution, and is available at
+-- http://www.eclipse.org/legal/epl-v10.html
+--
+-- Contributors:
+--   Szabo, Bence Janos
+--
+--/////////////////////////////////////////////////////////////////////////////
+NegTestTypes2
+DEFINITIONS
+AUTOMATIC TAGS
+::= BEGIN
+IMPORTS ;
+
+
+ExtensionRecord ::= SEQUENCE {
+  me INTEGER DEFAULT 5,
+  ...,
+  f0 INTEGER DEFAULT 5,
+  f1 INTEGER DEFAULT 5,
+  f2 INTEGER OPTIONAL
+}
+
+END

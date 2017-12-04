@@ -159,46 +159,46 @@ ASN_Tag_t decode_oer_tag(TTCN_Buffer& buf) {
   return tag;
 }
 
-const TTCN_OERdescriptor_t BOOLEAN_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t BOOLEAN_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t INTEGER_oer_ = { -1, TRUE, 0, FALSE };
+const TTCN_OERdescriptor_t INTEGER_oer_ = { -1, TRUE, 0, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t BITSTRING_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t BITSTRING_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t OCTETSTRING_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t OCTETSTRING_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL , 0, NULL};
 
-const TTCN_OERdescriptor_t FLOAT_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t FLOAT_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t ASN_NULL_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t ASN_NULL_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t IA5String_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t IA5String_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t VisibleString_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t VisibleString_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t NumericString_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t NumericString_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t PrintableString_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t PrintableString_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t BMPString_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t BMPString_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t UniversalString_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t UniversalString_oer_ = { 0, FALSE, -1, FALSE , 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t UTF8String_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t UTF8String_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t TeletexString_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t TeletexString_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL , 0, NULL};
 
-const TTCN_OERdescriptor_t VideotexString_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t VideotexString_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t GraphicString_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t GraphicString_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t GeneralString_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t GeneralString_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t OBJID_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t OBJID_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t ASN_ROID_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t ASN_ROID_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t EMBEDDED_PDV_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t EMBEDDED_PDV_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t EXTERNAL_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t EXTERNAL_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };
 
-const TTCN_OERdescriptor_t ObjectDescriptor_oer_ = { 0, FALSE, -1, FALSE };
+const TTCN_OERdescriptor_t ObjectDescriptor_oer_ = { 0, FALSE, -1, FALSE, 0, 0, NULL, 0, NULL };

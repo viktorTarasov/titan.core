@@ -14,6 +14,7 @@
 module NegTest_OER {
 
 import from NegTestTypes all;
+import from NegTestTypes2 all;
 
 type component CT {}
 
@@ -37,6 +38,12 @@ external function f_enc_MySeqOfInt(in MySeqOfInt x) return octetstring
   with { extension "prototype(convert) encode(OER)" }
 
 external function f_enc_MyUnionBasicTypes(in MyUnionBasicTypes x) return octetstring
+  with { extension "prototype(convert) encode(OER)" }
+
+external function f_enc_MyUnionExtended(in MyUnionExtended x) return octetstring
+  with { extension "prototype(convert) encode(OER)" }
+
+external function f_enc_ExtensionRecord(in ExtensionRecord x) return octetstring
   with { extension "prototype(convert) encode(OER)" }
 
 /************* Erroneous values *************/
@@ -77,6 +84,64 @@ const MyUnionBasicTypes mubt1 := { i := 1 } with {erroneous(i) "value := 2"};
 const MyUnionBasicTypes mubt2 := { i := 1 } with {erroneous(i) "value := MyCharstring:\"asd\""};
 const MyUnionBasicTypes mubt3 := { i := 1 } with {erroneous(i) "value := omit"};
 const MyUnionBasicTypes mubt4 := { i := 1 } with {erroneous(i) "value(raw) := 'ABCD'O"};
+
+const MyUnionExtended mue1 := { i := 1 } with {erroneous(i) "value := 2"};
+const MyUnionExtended mue2 := { i := 1 } with {erroneous(i) "value(raw) := 'ABCD'O"};
+
+const ExtensionRecord er1 := {
+            me := 1,
+            f0 := 1
+} with {erroneous(f0) "value := 3"}
+
+const ExtensionRecord er2 := {
+            me := 1,
+            f0 := 1
+} with {erroneous(f0) "value := 3"
+        erroneous(f0) "after(raw) := 'AABB'O"}
+
+const ExtensionRecord er3 := {
+            me := 1,
+            f0 := 1
+} with {erroneous(f0) "value := 3"
+        erroneous(f0) "before(raw) := 'AABB'O"}
+
+const ExtensionRecord er4 := {
+            me := 1,
+            f0 := 1,
+            f1 := 2,
+            f2 := omit
+} with {erroneous(f0) "value := 3"
+        erroneous(f2) "value := 2"}
+
+const ExtensionRecord er5 := {
+            me := 1,
+            f0 := 1,
+            f1 := 2,
+            f2 := omit
+} with {erroneous(f0) "value := 3"
+        erroneous(f2) "value(raw) := 'ABCD'O"}
+
+const ExtensionRecord er6 := {
+            me := 1,
+            f0 := 1,
+            f1 := 2,
+            f2 := omit
+} with {erroneous(f0) "value := 3"
+        erroneous(f1) "value := omit"}
+
+const ExtensionRecord er7 := {
+            me := 1,
+            f0 := 1,
+            f1 := 2,
+            f2 := omit
+} with {erroneous(f1) "before := omit all"}
+
+const ExtensionRecord er8 := {
+            me := 1,
+            f0 := 1,
+            f1 := 2,
+            f2 := 3
+} with {erroneous(f0) "after := omit all"}
 
 /******** Test cases for records ********/
 testcase tc_record_change_value() runs on CT {
@@ -241,7 +306,61 @@ testcase tc_union_change_value() runs on CT {
   log(res);
   if ('ABCD'O == res) { setverdict(pass); }
   else { setverdict(fail, res); }
+
+  res := f_enc_MyUnionExtended(mue1);
+  log(res);
+  if ('02020102'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_MyUnionExtended(mue2);
+  log(res);
+  if ('ABCD'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
 }
+
+testcase tc_extension_record() runs on CT {
+  var octetstring res := f_enc_ExtensionRecord(er1);
+  log(res);
+  if ('C00101020580020103'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_ExtensionRecord(er2);
+  log(res);
+  if ('C00101020580040103AABB'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_ExtensionRecord(er3);
+  log(res);
+  if ('C0010102058004AABB0103'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_ExtensionRecord(er4);
+  log(res);
+  if ('C001010205E0020103020102020102'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_ExtensionRecord(er5);
+  log(res);
+  if ('C001010205E0020103020102ABCD00'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_ExtensionRecord(er6);
+  log(res);
+  if ('C00101020580020103'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_ExtensionRecord(er7);
+  log(res);
+  if ('C00205C0020102'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+  res := f_enc_ExtensionRecord(er8);
+  log(res);
+  if ('C001010205E0020101'O == res) { setverdict(pass); }
+  else { setverdict(fail, res); }
+
+}
+
 
 
 /*************** Control part ***************/
@@ -259,6 +378,8 @@ control {
   execute(tc_record_of_insert());
 
   execute(tc_union_change_value());
+
+  execute(tc_extension_record());
 }
 
 }

@@ -709,6 +709,19 @@ namespace Common {
       get_fullname().c_str(), (unsigned long) n);
     return 0;
   }
+  
+  int ExtAdds::get_group_byIndex(size_t n) const
+  {
+    size_t offset = n;
+    for(size_t i = 0; i < eas.size(); i++) {
+      size_t size = eas[i]->get_nof_comps();
+      if (offset < size) return eas[i]->get_group_number();
+      else offset -= size;
+    }
+    FATAL_ERROR("%s: Requested index %lu does not exist.", \
+      get_fullname().c_str(), (unsigned long) n);
+    return 0;
+  }
 
   bool ExtAdds::has_comp_withName(const Identifier& p_name) const
   {
@@ -737,6 +750,10 @@ namespace Common {
   {
     if(!p_ea)
       FATAL_ERROR("NULL parameter: Asn::ExtAdds::add_ea()");
+    if (p_ea->is_ext_attr_group()) {
+      num_of_groups++;
+      p_ea->set_group_number(num_of_groups);
+    }
     eas.add(p_ea);
   }
 

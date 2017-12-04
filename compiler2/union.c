@@ -2381,10 +2381,14 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
       src = mputprintf(src, "  case %s_%s:\n", selection_prefix, sdef->elements[i].name);
       if (sdef->has_opentypes == FALSE) {
         src = mputprintf(src,
+          "    {TTCN_Buffer buf;\n"
           "    encode_oer_tag(*%s_descr_.ber, p_buf);\n"
-          "    field_%s->OER_encode(%s_descr_, p_buf);\n"
-          "    break;\n"
-          , sdef->elements[i].typedescrname, sdef->elements[i].name, sdef->elements[i].typedescrname);
+          "    field_%s->OER_encode(%s_descr_, buf);\n"
+          "%s"
+          "    p_buf.put_buf(buf);\n"
+          "    break;\n}"
+          , sdef->elements[i].typedescrname, sdef->elements[i].name, sdef->elements[i].typedescrname
+          , (!sdef->oerExtendable || i < sdef->oerNrOrRootcomps) ? "" : "    encode_oer_length(buf.get_len(), p_buf, FALSE);\n");
       } else {
         src = mputprintf(src,
           "    {\n"
@@ -2428,26 +2432,32 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
             "    err_vals = p_err_descr->get_field_err_values(%d);\n"
             "    emb_descr = p_err_descr->get_field_emb_descr(%d);\n"
             "    if (NULL != err_vals && NULL != err_vals->value) {\n"
+            "      TTCN_Buffer tmp_buf;\n"
             "      if (NULL != err_vals->value->errval) {\n"
             "        if(err_vals->value->raw){\n"
-            "          err_vals->value->errval->OER_encode_negtest_raw(p_buf);\n"
+            "          err_vals->value->errval->OER_encode_negtest_raw(tmp_buf);\n"
             "        } else {\n"
             "          if (NULL == err_vals->value->type_descr) {\n"
             "            TTCN_error(\"internal error: erroneous value typedescriptor missing\");\n"
             "          }\n"
             "          encode_oer_tag(*err_vals->value->type_descr->ber, p_buf);\n"
-            "          err_vals->value->errval->OER_encode(*err_vals->value->type_descr, p_buf);\n"
+            "          err_vals->value->errval->OER_encode(*err_vals->value->type_descr, tmp_buf);\n"
+            "%s"
             "        }\n"
             "      }\n"
+            "      p_buf.put_buf(tmp_buf);\n"
             "    } else {\n"
             "      if (NULL != emb_descr) {\n"
             "        field_%s->OER_encode_negtest(emb_descr, %s_descr_, p_buf);\n"
             "      } else {\n"
+            "        encode_oer_tag(*err_vals->value->type_descr->ber, p_buf);\n"
             "        field_%s->OER_encode(%s_descr_, p_buf);\n"
             "      }\n"
             "    }\n"
             "    break;\n"
             , selection_prefix, sdef->elements[i].name, (int)i, (int)i
+            , (!sdef->oerExtendable || i < sdef->oerNrOrRootcomps) ?
+              "" : "          encode_oer_length(tmp_buf.get_len(), p_buf, FALSE);\n"
             , sdef->elements[i].name, sdef->elements[i].typedescrname
             , sdef->elements[i].name, sdef->elements[i].typedescrname);
         }
@@ -2482,10 +2492,13 @@ void defUnionClass(struct_def const *sdef, output_struct *output)
           src = mputprintf(src,
             "  if (%s_descr_.ber->tags[%s_descr_.ber->n_tags-1].tagclass == descr.tagclass &&\n"
             "      %s_descr_.ber->tags[%s_descr_.ber->n_tags-1].tagnumber == descr.tagnumber) {\n"
+            "%s"
             "    %s%s().OER_decode(%s_descr_, p_buf, p_oer);\n"
             "  } else \n"
             , sdef->elements[i].typedescrname, sdef->elements[i].typedescrname, sdef->elements[i].typedescrname
-            , sdef->elements[i].typedescrname, at_field, sdef->elements[i].name, sdef->elements[i].typedescrname);
+            , sdef->elements[i].typedescrname,
+            (!sdef->oerExtendable || i < sdef->oerNrOrRootcomps) ? "" : "      decode_oer_length(p_buf, FALSE);\n"
+            , at_field, sdef->elements[i].name, sdef->elements[i].typedescrname);
         }
         src = mputprintf(src,
         "{\n"

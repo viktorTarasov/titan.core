@@ -3098,10 +3098,92 @@ void Type::chk_oer() {
         }
       }
       break; }
+    case T_CHOICE_A:
+      oerattrib->extendable = t->u.secho.ctss->has_ellipsis();
+      if (oerattrib->extendable) {
+        oerattrib->nr_of_root_comps = t->u.secho.ctss->get_nof_root_comps();
+      }
+      break;
+    case T_SET_A: {
+      oerattrib->extendable = t->u.secho.ctss->has_ellipsis();
+      if (oerattrib->extendable) {
+        oerattrib->nr_of_root_comps = t->u.secho.ctss->get_nof_root_comps();
+      }
+      // TITAN will reorder the fields for DER coding, which is mostly fine.
+      // Until the extensions... In OER the DER ordering is good, but the extended
+      // fields do not need the reordering.
+      // Here a "map" called p is created which contains the good indexes of the fields.
+      size_t nElements = t->get_nof_comps();
+      vector<CompField> se_comps;
+      map<Tag, CompField> se_comps_map;
+      for(size_t i=0; i<nElements; i++) {
+        CompField* cf=t->get_comp_byIndex(i);
+        Tag *tag = cf->get_type()->get_smallest_tag();
+        se_comps_map.add(*tag, cf);
+        delete tag;
+      }
+      for(size_t i=0; i<nElements; i++)
+        se_comps.add(se_comps_map.get_nth_elem(i));
+      se_comps_map.clear();
+      
+      size_t limit = oerattrib->extendable ? oerattrib->nr_of_root_comps : nElements;
+      vector<CompField> se_comps2;
+      for(size_t i=0; i<limit; i++) {
+        CompField* cf=t->get_comp_byIndex(i);
+        Tag *tag = cf->get_type()->get_smallest_tag();
+        se_comps_map.add(*tag, cf);
+        delete tag;
+      }
+      for(size_t i=0; i<limit; i++)
+        se_comps2.add(se_comps_map.get_nth_elem(i));
+      se_comps_map.clear();
+      for(size_t i=limit; i<nElements; i++)
+        se_comps2.add(t->get_comp_byIndex(i));
+      
+      for (size_t i = 0; i < nElements; i++) {
+        const Identifier& id = se_comps[i]->get_name();
+        for (size_t j = 0; j < nElements; j++) {
+          if (id == se_comps2[j]->get_name()) {
+            oerattrib->p.add(new int(j));
+            break;
+          }
+        }
+      }
+      se_comps.clear();
+      se_comps2.clear();
+    }
     case T_SEQ_A: {
-      // extendable is always false. Probably a bug with is_extendable()
-      if (t->get_sub_type()) {
-        oerattrib->extendable = t->get_sub_type()->is_extendable();
+      oerattrib->extendable = t->u.secho.ctss->has_ellipsis();
+      if (oerattrib->extendable) {
+        oerattrib->nr_of_root_comps = t->u.secho.ctss->get_nof_root_comps();
+        ExtAdds* eas = t->u.secho.ctss->get_ext_and_exc()->get_eas();
+        int last_idx = 0;
+        for (size_t i = 0; i < eas->get_nof_comps(); i++) {
+          int idx = eas->get_group_byIndex(i);
+          if (last_idx != 0 && last_idx == idx) {
+            // do nothing, the field is part of the group
+          } else if (last_idx != 0 && idx == 0) {
+            // the group is ended
+            oerattrib->ext_attr_groups.add(new int(i));
+            last_idx = 0;
+          } else if (last_idx != 0 && idx != 0) {
+            // The group is ended, but new one comes immediately
+            last_idx = idx;
+            oerattrib->ext_attr_groups.add(new int(i));
+            oerattrib->ext_attr_groups.add(new int(i));
+          } else if (last_idx == 0 && idx != 0) {
+            // new group
+            last_idx = idx;
+            oerattrib->ext_attr_groups.add(new int(i));
+          }
+        }
+        if (last_idx != 0) {
+          oerattrib->ext_attr_groups.add(new int(eas->get_nof_comps()));
+        }
+      }
+      if (t->typetype != T_SET_A) {
+        for (size_t i = 0; i < t->get_nof_comps(); i++) 
+          oerattrib->p.add(new int(i));
       }
       break; }
     case T_SEQOF:

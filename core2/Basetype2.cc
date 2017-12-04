@@ -36,6 +36,7 @@
 #include "Addfunc.hh"
 #include "PreGenRecordOf.hh"
 #include "Encdec.hh"
+#include "OER.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -6262,14 +6263,30 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
   int field_count = get_count();
   int pos = 8;
   char c = 0;
-  for (int i = 0; i < field_count; i++) {
-    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==i);
+  int limit = field_count;
+  bool has_extension = false;
+  // If extendable record and has real extensions the first bit of the
+  // preamble is 1
+  if (p_td.oer->extendable) {
+    for (int i = p_td.oer->nr_of_root_comps; i < field_count; i++) {
+      // If there are extension fields the first bit is 1
+      if (get_at(p_td.oer->p[i])->is_bound() && get_at(p_td.oer->p[i])->is_present()) {
+        c = 1 << 7;
+        has_extension = true;
+        break;
+      }
+    }
+    pos--;
+    limit = p_td.oer->nr_of_root_comps;
+  }
+  for (int i = 0; i < limit; i++) {
+    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
     if (is_default_field) {
       next_default_idx++;
     }
-    if (get_at(i)->is_optional() || is_default_field) {
+    if (get_at(p_td.oer->p[i])->is_optional() || is_default_field) {
       pos--;
-      c += get_at(i)->is_present() << pos;
+      c += get_at(p_td.oer->p[i])->is_present() << pos;
       if (pos == 0) {
         p_buf.put_c(c);
         pos = 8;
@@ -6280,13 +6297,113 @@ int Record_Type::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_bu
   if (pos != 8) {
     p_buf.put_c(c);
   }
-  for (int i = 0; i < field_count; ++i) {
-    get_at(i)->OER_encode(*fld_descr(i), p_buf);
+  for (int i = 0; i < limit; ++i) {
+    get_at(p_td.oer->p[i])->OER_encode(*fld_descr(p_td.oer->p[i]), p_buf);
+  }
+
+  // If the record is extendable and has real extensions
+  if (has_extension) {
+    // Calculate the extension addition presence bitmap
+    TTCN_Buffer tmp_buf;
+    c = 0;
+    pos = 8;
+    int eag_pos = p_td.oer->eag_len == 0 ? -1 : 0;
+    for (int i = limit; i < field_count; i++) {
+      pos--;
+      if (eag_pos != -1 && p_td.oer->eag[eag_pos] == i - limit) {
+        eag_pos++;
+        for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+          if (get_at(p_td.oer->p[j])->is_bound() && get_at(p_td.oer->p[j])->is_present()) {
+            // Add bit if there are at least one present field
+            c += 1 << pos;
+            break;
+          }
+        }
+        i += p_td.oer->eag[eag_pos] - p_td.oer->eag[eag_pos-1] - 1;
+        eag_pos++;
+      } else {
+        // extension attribute groups counted as one in the presence bitmap
+        if (get_at(p_td.oer->p[i])->is_present()) {
+          c += 1 << pos;
+        }
+      }
+      // Prepare next octet of the bitmap
+      if (pos == 0) {
+        tmp_buf.put_c(c);
+        pos = 8;
+        c = 0;
+      }
+    }
+    // Put remaining presence bitmap
+    if (pos != 8) {
+      tmp_buf.put_c(c);
+    }
+ 
+    encode_oer_length(1 + tmp_buf.get_len(), p_buf, FALSE);
+    // Put the 'remaining bit' octet if there are any
+    p_buf.put_c(pos);
+    p_buf.put_buf(tmp_buf);
+    tmp_buf.clear();
+    
+    eag_pos = p_td.oer->eag_len == 0 ? -1 : 0;
+    for (int i = limit; i < field_count; ++i) {
+      boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+      if (is_default_field) {
+        next_default_idx++;
+      }
+      if (eag_pos != -1 && p_td.oer->eag[eag_pos] == i - limit) {
+        // If it is the start of the ext attribute group then calculate presence bitmap,
+        // because it is encoded as a sequence
+        eag_pos++;
+        c = 0;
+        pos = 8;
+        if (is_default_field) {
+          next_default_idx--;
+        }
+        bool has_present = false;
+        for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+          if (get_at(p_td.oer->p[j])->is_present()) {
+            has_present = true;
+          }
+          is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+          if (is_default_field) {
+            next_default_idx++;
+          }
+          if (get_at(p_td.oer->p[j])->is_optional() || is_default_field) {
+            pos--;
+            c += get_at(p_td.oer->p[j])->is_present() << pos;
+            if (pos == 0) {
+              tmp_buf.put_c(c);
+              pos = 8;
+              c = 0;
+            }
+          }
+        }
+        if (pos != 8) {
+          tmp_buf.put_c(c);
+        }
+        if (has_present) {
+          for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+            get_at(p_td.oer->p[j])->OER_encode(*fld_descr(p_td.oer->p[j]), tmp_buf);
+          }
+          encode_oer_length(tmp_buf.get_len(), p_buf, FALSE);
+          p_buf.put_buf(tmp_buf);
+        }
+        tmp_buf.clear();
+        i += p_td.oer->eag[eag_pos] - p_td.oer->eag[eag_pos-1] - 1;
+        eag_pos++;
+      } else if (get_at(p_td.oer->p[i])->is_bound() && get_at(p_td.oer->p[i])->is_present()) {
+        get_at(p_td.oer->p[i])->OER_encode(*fld_descr(p_td.oer->p[i]), tmp_buf);
+        encode_oer_length(tmp_buf.get_len(), p_buf, FALSE);
+        p_buf.put_buf(tmp_buf);
+        tmp_buf.clear();
+      }
+    }
   }
   return 0;
 }
   
-int Record_Type::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const {
+int Record_Type::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const {
   int values_idx = 0;
   int edescr_idx = 0;
   int field_count = get_count();
@@ -6294,16 +6411,37 @@ int Record_Type::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, c
   const default_struct* default_indexes = get_default_indexes();
   int pos = 8;
   char c = 0;
-  for (int i = 0; i < field_count; i++) {
-    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==i);
+  int limit = field_count;
+  bool has_extension = false;
+  // If extendable record and has real extensions the first bit of the
+  // preamble is 1
+  if (p_td.oer->extendable) {
+    for (int i = p_td.oer->nr_of_root_comps; i < field_count; i++) {
+      const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(p_td.oer->p[i], values_idx);
+      boolean present = FALSE;
+      if (NULL != err_vals && NULL != err_vals->value && NULL != err_vals->value->errval) {
+        present = TRUE;
+      }
+      // If there are extension fields the first bit is 1
+      if ((get_at(p_td.oer->p[i])->is_bound() && get_at(p_td.oer->p[i])->is_present()) || present) {
+        c = 1 << 7;
+        has_extension = true;
+        break;
+      }
+    }
+    pos--;
+    limit = p_td.oer->nr_of_root_comps;
+  }
+  for (int i = 0; i < limit; i++) {
+    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
     if (is_default_field) {
       next_default_idx++;
     }
-    if (get_at(i)->is_optional() || is_default_field) {
+    if (get_at(p_td.oer->p[i])->is_optional() || is_default_field) {
       pos--;
-      const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(i, values_idx);
+      const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(p_td.oer->p[i], values_idx);
       int present = 1;
-      if ((NULL != err_vals && NULL != err_vals->value && NULL == err_vals->value->errval) || !get_at(i)->is_present()) {
+      if ((NULL != err_vals && NULL != err_vals->value && NULL == err_vals->value->errval) || !get_at(p_td.oer->p[i])->is_present()) {
         present = 0;
       }
       c += present << pos;
@@ -6318,13 +6456,13 @@ int Record_Type::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, c
     p_buf.put_c(c);
   }
   values_idx = 0;
-  for (int i = 0; i < field_count; ++i) {
+  for (int i = 0; i < limit; ++i) {
     if (-1 != p_err_descr->omit_before && p_err_descr->omit_before > i) {
       continue;
     }
     
-    const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(i, values_idx);
-    const Erroneous_descriptor_t* emb_descr = p_err_descr->next_field_emb_descr(i, edescr_idx);
+    const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(p_td.oer->p[i], values_idx);
+    const Erroneous_descriptor_t* emb_descr = p_err_descr->next_field_emb_descr(p_td.oer->p[i], edescr_idx);
     
     if (NULL != err_vals && NULL != err_vals->before) {
       if (NULL == err_vals->before->errval) {
@@ -6353,11 +6491,11 @@ int Record_Type::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, c
         }
       }
     } else {
-      if (NULL != fld_descr(i)->oer || get_at(i)->is_present()) {
+      if (NULL != fld_descr(p_td.oer->p[i])->oer || get_at(p_td.oer->p[i])->is_present()) {
         if (NULL != emb_descr) {
-          get_at(i)->OER_encode_negtest(emb_descr, *fld_descr(i), p_buf);
+          get_at(p_td.oer->p[i])->OER_encode_negtest(emb_descr, *fld_descr(p_td.oer->p[i]), p_buf);
         } else {
-          get_at(i)->OER_encode(*fld_descr(i), p_buf);
+          get_at(p_td.oer->p[i])->OER_encode(*fld_descr(p_td.oer->p[i]), p_buf);
         }
       }
     }
@@ -6381,38 +6519,303 @@ int Record_Type::OER_encode_negtest(const Erroneous_descriptor_t* p_err_descr, c
       break;
     }
   }
+  
+  // If the record is extendable and has real extensions
+  if (has_extension) {
+    // Calculate the extension addition presence bitmap
+    TTCN_Buffer tmp_buf;
+    c = 0;
+    pos = 8;
+    int eag_pos = p_td.oer->eag_len == 0 ? -1 : 0;
+    int old_values_idx = values_idx;
+    for (int i = limit; i < field_count; i++) {
+      pos--;
+      if (eag_pos != -1 && p_td.oer->eag[eag_pos] == i - limit) {
+        eag_pos++;
+        for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+          const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(p_td.oer->p[j], values_idx);
+          boolean present = FALSE;
+          boolean omit = FALSE;
+          if (NULL != err_vals && NULL != err_vals->value && NULL != err_vals->value->errval) {
+            present = TRUE;
+          }
+          if (NULL != err_vals && NULL != err_vals->value && NULL == err_vals->value->errval) {
+            omit = TRUE;
+          }
+          if (!omit && ((get_at(p_td.oer->p[j])->is_bound() && get_at(p_td.oer->p[j])->is_present()) || present)) {
+            // Add bit if there are at least one present field
+            c += 1 << pos;
+            break;
+          }
+        }
+        i += p_td.oer->eag[eag_pos] - p_td.oer->eag[eag_pos-1] - 1;
+        eag_pos++;
+      } else {
+        // Normal extension field
+        const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(p_td.oer->p[i], values_idx);
+        boolean present = FALSE;
+        boolean omit = FALSE;
+        if (NULL != err_vals && NULL != err_vals->value && NULL != err_vals->value->errval) {
+          present = TRUE;
+        }
+        if (NULL != err_vals && NULL != err_vals->value && NULL == err_vals->value->errval) {
+          omit = TRUE;
+        }
+        if (!omit && (get_at(p_td.oer->p[i])->is_present() || present)) {
+          c += 1 << pos;
+        }
+      }
+      // Prepare next octet of the bitmap
+      if (pos == 0) {
+        tmp_buf.put_c(c);
+        pos = 8;
+        c = 0;
+      }
+    }
+    // Put remaining presence bitmap
+    if (pos != 8) {
+      tmp_buf.put_c(c);
+    }
+ 
+    encode_oer_length(1 + tmp_buf.get_len(), p_buf, FALSE);
+    // Put the 'remaining bit' octet if there are any
+    p_buf.put_c(pos);
+    p_buf.put_buf(tmp_buf);
+    tmp_buf.clear();
+    values_idx = old_values_idx;
+    eag_pos = p_td.oer->eag_len == 0 ? -1 : 0;
+    for (int i = limit; i < field_count; ++i) {
+      boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+      if (is_default_field) {
+        next_default_idx++;
+      }
+      
+      if (eag_pos != -1 && p_td.oer->eag[eag_pos] == i - limit) {
+        // If it is the start of the ext attribute group then calculate presence bitmap,
+        // because it is encoded as a sequence
+        eag_pos++;
+        c = 0;
+        pos = 8;
+        if (is_default_field) {
+          next_default_idx--;
+        }
+        bool has_present = false;
+        for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+          const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(p_td.oer->p[j], values_idx);
+          boolean present = FALSE;
+          boolean omit = FALSE;
+          if (NULL != err_vals && NULL != err_vals->value && NULL != err_vals->value->errval) {
+            present = TRUE;
+          }
+          if (NULL != err_vals && NULL != err_vals->value && NULL == err_vals->value->errval) {
+            omit = TRUE;
+          }
+          if (!omit && (get_at(p_td.oer->p[j])->is_present() || present)) {
+            has_present = true;
+          }
+          is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+          if (is_default_field) {
+            next_default_idx++;
+          }
+          if (get_at(p_td.oer->p[j])->is_optional() || is_default_field) {
+            pos--;
+            c += (!omit && (get_at(p_td.oer->p[j])->is_present() || present)) << pos;
+            if (pos == 0) {
+              tmp_buf.put_c(c);
+              pos = 8;
+              c = 0;
+            }
+          }
+        }
+        if (pos != 8) {
+          tmp_buf.put_c(c);
+        }
+        if (has_present) {
+          for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+            const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(p_td.oer->p[j], values_idx);
+            const Erroneous_descriptor_t* emb_descr = p_err_descr->next_field_emb_descr(p_td.oer->p[j], edescr_idx);
+            if (-1 != p_err_descr->omit_before && p_err_descr->omit_before > j) {
+              continue;
+            }
+            if (NULL != err_vals && NULL != err_vals->before) {
+              if (NULL == err_vals->before->errval) {
+                TTCN_error("internal error: erroneous before value missing");
+              }
+              if (err_vals->before->raw) {
+                err_vals->before->errval->OER_encode_negtest_raw(tmp_buf);
+              } else {
+                if (NULL == err_vals->before->type_descr) {
+                  TTCN_error("internal error: erroneous before typedescriptor missing");
+                }
+                // it's an extra field
+                err_vals->before->errval->OER_encode(*(err_vals->before->type_descr), tmp_buf);
+              }
+            }
+
+            if (NULL != err_vals && NULL != err_vals->value) {
+              if (NULL != err_vals->value->errval) {
+                if (err_vals->value->raw) {
+                  err_vals->value->errval->OER_encode_negtest_raw(tmp_buf);
+                } else {
+                  if (NULL == err_vals->value->type_descr) {
+                    TTCN_error("internal error: erroneous before typedescriptor missing");
+                  }
+                  err_vals->value->errval->OER_encode(*(err_vals->value->type_descr), tmp_buf);
+                }
+              }
+            } else {
+              if (NULL != fld_descr(p_td.oer->p[j])->oer || get_at(p_td.oer->p[j])->is_present()) {
+                if (NULL != emb_descr) {
+                  get_at(p_td.oer->p[j])->OER_encode_negtest(emb_descr, *fld_descr(p_td.oer->p[j]), tmp_buf);
+                } else if (get_at(p_td.oer->p[j])->is_bound()) {
+                  get_at(p_td.oer->p[j])->OER_encode(*fld_descr(p_td.oer->p[j]), tmp_buf);
+                }
+              }
+            }
+
+            if (NULL != err_vals && NULL != err_vals->after) {
+              if (NULL == err_vals->after->errval) {
+                TTCN_error("internal error: erroneous after value missing");
+              }
+              if (err_vals->after->raw) {
+                err_vals->after->errval->OER_encode_negtest_raw(tmp_buf);
+              } else {
+                if (NULL == err_vals->after->type_descr) {
+                  TTCN_error("internal error: erroneous before typedescriptor missing");
+                }
+                // it's an extra field
+                err_vals->after->errval->OER_encode(*(err_vals->after->type_descr), tmp_buf);
+              }
+            }
+            if (-1 != p_err_descr->omit_after && p_err_descr->omit_after <= j) {
+              break;
+            }
+          }
+          encode_oer_length(tmp_buf.get_len(), p_buf, FALSE);
+          p_buf.put_buf(tmp_buf);
+        }
+        tmp_buf.clear();
+        i += p_td.oer->eag[eag_pos] - p_td.oer->eag[eag_pos-1] - 1;
+        eag_pos++;
+      } else if (get_at(p_td.oer->p[i])->is_bound()) {
+        const Erroneous_values_t* err_vals = p_err_descr->next_field_err_values(p_td.oer->p[i], values_idx);
+        const Erroneous_descriptor_t* emb_descr = p_err_descr->next_field_emb_descr(p_td.oer->p[i], edescr_idx);
+        if (-1 != p_err_descr->omit_before && p_err_descr->omit_before > i) {
+          continue;
+        }
+        boolean need_length = TRUE;
+        if (NULL != err_vals && NULL != err_vals->before) {
+          if (NULL == err_vals->before->errval) {
+            TTCN_error("internal error: erroneous before value missing");
+          }
+          if (err_vals->before->raw) {
+            err_vals->before->errval->OER_encode_negtest_raw(tmp_buf);
+          } else {
+            if (NULL == err_vals->before->type_descr) {
+              TTCN_error("internal error: erroneous before typedescriptor missing");
+            }
+            // it's an extra field
+            err_vals->before->errval->OER_encode(*(err_vals->before->type_descr), tmp_buf);
+          }
+        }
+        
+        if (NULL != err_vals && NULL != err_vals->value) {
+          if (NULL != err_vals->value->errval) {
+            if (err_vals->value->raw) {
+              err_vals->value->errval->OER_encode_negtest_raw(p_buf);
+            } else {
+              if (NULL == err_vals->value->type_descr) {
+                TTCN_error("internal error: erroneous before typedescriptor missing");
+              }
+              err_vals->value->errval->OER_encode(*(err_vals->value->type_descr), tmp_buf);
+            }
+          } else {
+            need_length = FALSE;
+          }
+        } else {
+          if (NULL != fld_descr(p_td.oer->p[i])->oer || get_at(p_td.oer->p[i])->is_present()) {
+            if (NULL != emb_descr) {
+              get_at(p_td.oer->p[i])->OER_encode_negtest(emb_descr, *fld_descr(p_td.oer->p[i]), tmp_buf);
+            } else {
+              if (!get_at(p_td.oer->p[i])->is_present()) {
+                need_length = FALSE;
+              }
+              get_at(p_td.oer->p[i])->OER_encode(*fld_descr(p_td.oer->p[i]), tmp_buf);
+            }
+          }
+        }
+
+        if (NULL != err_vals && NULL != err_vals->after) {
+          if (NULL == err_vals->after->errval) {
+            TTCN_error("internal error: erroneous after value missing");
+          }
+          if (err_vals->after->raw) {
+            err_vals->after->errval->OER_encode_negtest_raw(tmp_buf);
+          } else {
+            if (NULL == err_vals->after->type_descr) {
+              TTCN_error("internal error: erroneous before typedescriptor missing");
+            }
+            // it's an extra field
+            err_vals->after->errval->OER_encode(*(err_vals->after->type_descr), tmp_buf);
+          }
+        }
+        if (need_length) {
+          encode_oer_length(tmp_buf.get_len(), p_buf, FALSE);
+          p_buf.put_buf(tmp_buf);
+        }
+        tmp_buf.clear();
+        
+        if (-1 != p_err_descr->omit_after && p_err_descr->omit_after <= i) {
+          break;
+        }
+      }
+    }
+  }
   return 0;
 }
   
-int Record_Type::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OER_struct& p_oer) {
+int Record_Type::OER_decode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf, OER_struct& p_oer) {
   int field_count = get_count();
+  
+  const unsigned char* uc = p_buf.get_read_data();
+  bool has_extension = false;
+  size_t act_pos = 0;
   size_t nof_opt = 0;
+  int limit = field_count;
+  if (p_td.oer->extendable) {
+    // First bit 1 if there are extensions
+    if (uc[0] & 0x80) {
+      has_extension = true;
+    }
+    act_pos++;
+    nof_opt++;
+    limit = p_td.oer->nr_of_root_comps;
+  }
+  
   int next_default_idx = 0;
   const default_struct* default_indexes = get_default_indexes();
-  for (int i = 0; i < field_count; i++) {
-    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==i);
+  for (int i = 0; i < limit; i++) {
+    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
     if (is_default_field) {
       next_default_idx++;
     }
-    if (get_at(i)->is_optional() || is_default_field) {
+    if (get_at(p_td.oer->p[i])->is_optional() || is_default_field) {
       nof_opt++;
     }
   }
-  size_t act_pos = 0;
   size_t bytes = nof_opt / 8 + (nof_opt % 8 == 0 ? 0 : 1);
-  const unsigned char* uc = p_buf.get_read_data();
   p_buf.increase_pos(bytes);
   next_default_idx = 0;
-  for (int i = 0; i < field_count; ++i) {
-    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==i);
+  for (int i = 0; i < limit; ++i) {
+    boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
     if (is_default_field) {
       next_default_idx++;
     }
-    if (get_at(i)->is_optional() || is_default_field) {
+    if (get_at(p_td.oer->p[i])->is_optional() || is_default_field) {
       if (!(uc[0] & 1 << (7-act_pos))) {
-        get_at(i)->set_to_omit();
+        get_at(p_td.oer->p[i])->set_to_omit();
       } else {
-        get_at(i)->OER_decode(*fld_descr(i), p_buf, p_oer);
+        get_at(p_td.oer->p[i])->OER_decode(*fld_descr(p_td.oer->p[i]), p_buf, p_oer);
       }
       act_pos++;
       if (act_pos == 8) {
@@ -6420,9 +6823,110 @@ int Record_Type::OER_decode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf, OE
         act_pos = 0;
       }
     } else {
-      get_at(i)->OER_decode(*fld_descr(i), p_buf, p_oer);
+      get_at(p_td.oer->p[i])->OER_decode(*fld_descr(p_td.oer->p[i]), p_buf, p_oer);
     }
   }
+  
+  // If there are extensions in the sequence
+  if (has_extension) {
+    bytes = decode_oer_length(p_buf, FALSE);
+    // uc points to the 'remaining bit' octet 
+    uc = p_buf.get_read_data();
+    p_buf.increase_pos(bytes);
+    // uc points to the extension presence bitmap
+    uc++;
+    int eag_pos = p_td.oer->eag_len == 0 ? -1 : 0;
+    act_pos = 0;
+    // Decode fields
+    for (int i = limit; i < field_count; ++i) {
+      boolean is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[i]);
+      if (is_default_field) {
+        next_default_idx++;
+      }
+      // If extension field is not present in the presence bitmap
+      if (!(uc[0] & 1 << (7-act_pos))) {
+        // If its an extension attribute group, handle the group as one
+        if (eag_pos != -1 && p_td.oer->eag[eag_pos] == i - limit) {
+          eag_pos++;
+          for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+            if (get_at(p_td.oer->p[j])->is_optional()) {
+              get_at(p_td.oer->p[j])->set_to_omit();
+            }
+          }
+          i += p_td.oer->eag[eag_pos] - p_td.oer->eag[eag_pos-1] - 1;
+          eag_pos++;
+        } else {
+          if (get_at(p_td.oer->p[i])->is_optional()) {
+            get_at(p_td.oer->p[i])->set_to_omit();
+          }
+        }
+      } else {
+        // Extension field or group is present
+        decode_oer_length(p_buf, FALSE);
+        if (eag_pos != -1 && p_td.oer->eag[eag_pos] == i - limit) {
+          eag_pos++;
+          nof_opt = 0;
+          // Compensate for earlier increment
+          if (is_default_field) {
+            next_default_idx--;
+          }
+          int old_next_default_idx = next_default_idx;
+          // Count optional and default fields
+          for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+            is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+            if (is_default_field) {
+              next_default_idx++;
+            }
+            if (get_at(p_td.oer->p[j])->is_optional() || is_default_field) {
+              nof_opt++;
+            }
+          }
+          // uc2 points to the presence bitmap of the extension attr group
+          const unsigned char* uc2 = p_buf.get_read_data();
+          size_t act_pos2 = 0;
+          bytes = nof_opt / 8 + (nof_opt % 8 == 0 ? 0 : 1);
+          p_buf.increase_pos(bytes);
+          next_default_idx = old_next_default_idx;
+          for (int j = i; j < limit + p_td.oer->eag[eag_pos]; j++) {
+            is_default_field = default_indexes && (default_indexes[next_default_idx].index==p_td.oer->p[j]);
+            if (is_default_field) {
+              next_default_idx++;
+            }
+            if (get_at(p_td.oer->p[j])->is_optional() || is_default_field) {
+              // Field is not present
+              if (!(uc2[0] & 1 << (7-act_pos2))) {
+                if (get_at(p_td.oer->p[j])->is_optional()) {
+                  get_at(p_td.oer->p[j])->set_to_omit();
+                }
+              } else {
+                // Field is present
+                get_at(p_td.oer->p[j])->OER_decode(*fld_descr(p_td.oer->p[j]), p_buf, p_oer);
+              }
+              act_pos2++;
+              // Fetch the remaining of the presence bitmap from the next octet
+              if (act_pos2 == 8) {
+                uc2++;
+                act_pos2 = 0;
+              }
+            } else {
+              get_at(p_td.oer->p[j])->OER_decode(*fld_descr(p_td.oer->p[j]), p_buf, p_oer);
+            }
+          }
+          i += p_td.oer->eag[eag_pos] - p_td.oer->eag[eag_pos-1] - 1;
+          eag_pos++;
+        } else {
+          get_at(p_td.oer->p[i])->OER_decode(*fld_descr(p_td.oer->p[i]), p_buf, p_oer);
+        }
+      }
+      act_pos++;
+      // Fetch the remaining of the extension presence bitmap from the next octet
+      if (act_pos == 8) {
+        uc++;
+        act_pos = 0;
+      }
+    }
+  }
+  
   if (is_opentype_outermost()) {
     TTCN_EncDec_ErrorContext ec_1("While decoding opentypes: ");
     TTCN_Type_list p_typelist;

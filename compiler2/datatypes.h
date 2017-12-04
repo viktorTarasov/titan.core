@@ -104,6 +104,12 @@ typedef struct {
   boolean hasXer;
   boolean hasJson;
   boolean hasOer;
+  boolean oerExtendable;
+  int oerNrOrRootcomps;
+  int oerEagNum;
+  int* oerEag;
+  int oerPNum;
+  int* oerP;
   boolean xerUntagged;
   boolean xerUntaggedOne; /**< from Type::u.secho.has_single_charenc */
   boolean xerUseNilPossible; /* for sequence */
