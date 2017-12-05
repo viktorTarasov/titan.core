@@ -4655,7 +4655,7 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
   if (oer_needed) {
     // OER encode, RT1
     src = mputprintf(src,
-      "int %s::OER_encode(const TTCN_Typedescriptor_t& p_td, TTCN_Buffer& p_buf) const\n"
+      "int %s::OER_encode(const TTCN_Typedescriptor_t&, TTCN_Buffer& p_buf) const\n"
       "{\n"
       "  if (!is_bound()) {\n" 
       "  TTCN_EncDec_ErrorContext::error(TTCN_EncDec::ET_UNBOUND,\n"

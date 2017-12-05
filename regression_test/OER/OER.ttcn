@@ -2279,6 +2279,13 @@
  			setverdict(fail, "tc_sequence: ", match(er, erres));
  		}
 
+        er := { me := 1, me2 := 2 }
+        os := '8001010102020780020103'O;
+        erres := dec_ExtensionRecord(os);
+        if (er != erres) {
+            setverdict(fail, "tc_sequence: ", match(er, erres));
+        }
+
         var ExtensionRecord2 er2, erres2;
         er2 := {
             me := 1,

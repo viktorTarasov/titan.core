@@ -3152,7 +3152,15 @@ void Type::chk_oer() {
       se_comps.clear();
       se_comps2.clear();
     }
+    // no break
     case T_SEQ_A: {
+      // These asn1 types are sequences but don't need any checking.
+      // It could screw up XER coding for example.
+      if (t->get_typename().find("CHARACTER STRING", 0) != t->get_typename().size() ||
+          t->get_typename().find("EMBEDDED PDV", 0) != t->get_typename().size() ||
+          t->get_typename().find("@EXTERNAL", 0) != t->get_typename().size()) {
+        break;
+      }
       oerattrib->extendable = t->u.secho.ctss->has_ellipsis();
       if (oerattrib->extendable) {
         oerattrib->nr_of_root_comps = t->u.secho.ctss->get_nof_root_comps();
