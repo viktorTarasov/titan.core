@@ -1403,7 +1403,9 @@ double operator/(double double_value, const FLOAT& other_value)
 boolean operator==(double double_value, const FLOAT& other_value)
 {
   other_value.must_bound("Unbound right operand of float comparison.");
-  return double_value == other_value.float_value;
+  return double_value == other_value.float_value || // check if they're both NaN
+    (double_value != double_value &&
+     other_value.float_value != other_value.float_value);
 }
 
 boolean operator<(double double_value, const FLOAT& other_value)

@@ -363,10 +363,21 @@ testcase str_to_float() runs on PDTestComponent{ //In testcase definition//
 	     {setverdict(pass);}
 	else {setverdict(fail, __LINE__);}
 	if ((s2fmp16 == str2float(s2fmp16_str))
+	and (str2float(s2fmp16_str) == s2fmp16)
 	and (s2fmp16 == not_a_number))
 	     {setverdict(pass);}
 	else {setverdict(fail, __LINE__);}
 }
+
+testcase str_to_float_var_nan() runs on PDTestComponent {
+  var charstring vl_cs := "not_a_number";
+  if(str2float(vl_cs) == not_a_number){
+    setverdict(pass)
+  } else {
+    setverdict(fail,"expected not_a_number got:", str2float(vl_cs));
+  }
+}
+
 
 
 /*--- STR2HEX --------------------------------------------------*/
@@ -627,6 +638,7 @@ testcase str_to_oct() runs on PDTestComponent{
 control {
 	execute (str_to_bit());
 	execute (str_to_float());
+	execute (str_to_float_var_nan());
 	execute (str_to_hex());
 	execute (str_to_int());
 	execute (str_to_oct());
