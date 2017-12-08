@@ -518,7 +518,7 @@ void Type::generate_code_xerdescriptor(output_struct* target)
         continue;
       }
       else { // probably a built-in type, punt with the C++ class name
-        last_s = ot->get_genname_value(0);
+        last_s = ot->get_genname_value(ot->get_my_scope());
         break;
       }
     }

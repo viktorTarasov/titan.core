@@ -1,0 +1,52 @@
+--/////////////////////////////////////////////////////////////////////////////
+-- Copyright (c) 2000-2017 Ericsson Telecom AB
+-- All rights reserved. This program and the accompanying materials
+-- are made available under the terms of the Eclipse Public License v1.0
+-- which accompanies this distribution, and is available at
+-- http://www.eclipse.org/legal/epl-v10.html
+--
+-- Contributors:
+--   Baranyi, Botond
+--
+--/////////////////////////////////////////////////////////////////////////////
+Types
+DEFINITIONS 
+
+AUTOMATIC TAGS
+EXTENSIBILITY IMPLIED
+::=
+ BEGIN
+
+IMPORTS ; -- nothing
+
+
+ERROR-CLASS ::= CLASS
+{
+  &category	PrintableString(SIZE(1)),
+  &code		INTEGER,
+  &Type	DEFAULT INTEGER
+}
+WITH SYNTAX {&category &code [&Type]}
+
+ErrorSet ERROR-CLASS ::=
+{
+  {"A" 1 [1] INTEGER} |
+  {"A" 2 [1] VisibleString} |
+  {"B" 1 [1] PrintableString} |
+  {"B" 2 [1] BOOLEAN} |
+  oneErrorObject
+}
+
+oneErrorObject ERROR-CLASS ::= { "C" 3 ENUMERATED{foobar} }
+
+ErrorReturn ::= SEQUENCE
+{
+  errorCategory	ERROR-CLASS.&category ({ErrorSet}) OPTIONAL,
+  errors	SEQUENCE OF SEQUENCE
+  {
+    errorCode	ERROR-CLASS.&code({ErrorSet}{@errorCategory}),
+    errorInfo	[99] ERROR-CLASS.&Type({ErrorSet}{@errorCategory,@.errorCode})
+  } OPTIONAL
+}
+
+END

@@ -32,6 +32,9 @@ type record Rec {
   Oct1 o,
   Char3 c
 }
+with {
+  variant "";
+}
 
 type component CT {}
 

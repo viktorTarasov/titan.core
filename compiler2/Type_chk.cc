@@ -861,6 +861,7 @@ void Type::chk_encodings()
       case OT_RECORD_OF:
       case OT_COMP_FIELD:
       case OT_SELTYPE:
+      case OT_FIELDSETTING:
         // ASN.1 types automatically have BER, PER, XER, OER and JSON encoding
         add_coding(string("BER:2002"), Ttcn::MOD_NONE, true);
         add_coding(string(get_encoding_name(CT_PER)), Ttcn::MOD_NONE, true);
