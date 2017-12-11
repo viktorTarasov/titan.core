@@ -2966,14 +2966,9 @@ boolean Record_Type::is_equal(const Base_Type* other_value) const
   const Record_Type* other_record = static_cast<const Record_Type*>(other_value);
   int field_cnt = get_count();
   for (int field_idx=0; field_idx<field_cnt; field_idx++) {
-    const Base_Type* elem = get_at(field_idx);
-    const Base_Type* other_elem = other_record->get_at(field_idx);
-    if (elem->is_bound()) {
-      if (other_elem->is_bound()) {
-         if (!elem->is_equal(other_elem))
-           return FALSE;
-      } else return FALSE;
-    } else if (other_elem->is_bound()) return FALSE;
+    if (!get_at(field_idx)->is_equal(other_record->get_at(field_idx))) {
+      return FALSE;
+    }
   }
   return TRUE;
 }

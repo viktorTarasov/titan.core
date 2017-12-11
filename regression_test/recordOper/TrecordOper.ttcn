@@ -2315,6 +2315,29 @@ testcase tc_anytype_rec_template() runs on recordOper_mycomp {
 
 
 //###########################################################################//
+
+testcase tc_record_equality() runs on recordOper_mycomp {
+  var recordOper_trecord vl_rec_partial1 := { x1 := 1 };
+  var recordOper_trecord vl_rec_partial2 := { x1 := 1 };
+  @try {
+    if (vl_rec_partial1 == vl_rec_partial2) {
+      setverdict(fail, "Equal.");
+    }
+    else {
+      setverdict(fail, "Not equal.");
+    }
+  }
+  @catch (vl_msg) {
+    if (match(vl_msg, pattern "*Unbound left operand of float comparison*")) {
+      setverdict(pass);
+    }
+    else {
+      setverdict(fail, "Invalid error caught: ", vl_msg);
+    }
+  }
+}
+
+//###########################################################################//
     
 control {
  const recordOper_trecord cl_temp1:={ x1:=omit, x2:=3.4 }; // can constants be declared in the control part
@@ -2398,6 +2421,8 @@ control {
  execute(tc_anytype_rec_template());
  execute(tc_anytype_rec_template_param());
  execute(tc_anytype_rec_template_param_modifies());
+ 
+ execute(tc_record_equality());
 }
 }
 with {
