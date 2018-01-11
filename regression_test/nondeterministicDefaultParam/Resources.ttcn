@@ -1,0 +1,89 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// This module contains resources for testing non-deterministic external functions as
+// default values for parameterized templates.
+
+// Warning: The templates declared in this module depend on each other. Be careful
+// when modifying them or adding new ones (only in Runtime 1).
+module Resources {
+
+// non-deterministic external function 
+// (always returns a number greater than the previous number by 1, starting with 1)
+external function ef_next_number() return integer;
+
+// resets the counter for ef_next_number
+external function ef_reset();
+
+/************* Types *****************/
+type record Rec {
+  boolean b1,
+  boolean b2,
+  bitstring bs1,
+  bitstring bs2
+}
+
+type set Set {
+  set of integer soi1,
+  set of integer soi2,
+  record of integer roi
+}
+
+type component CT {}
+
+/******************** Templates *********************/
+template integer t_int(template integer p := ef_next_number()) := p;
+
+template integer t_int_expr(
+  template integer p1 := (2 + ef_next_number()) * 5,
+  template integer p2 := (10 - ef_next_number()) mod 5)
+:= valueof(p1) + 1000 * valueof(p2);
+
+template charstring t_str_expr(
+  template charstring p1 := int2char(ef_next_number() + 64) & "-",
+  template charstring p2 := int2str(ef_next_number()),
+  template charstring p3 := log2str(".", ef_next_number()))
+:= valueof(p1) & valueof(p2) & valueof(p3);
+
+template Rec t_rec_expr(
+  template boolean pb1 := not (ef_next_number() < 2),
+  template boolean pb2 := (ef_next_number() == 6) and true,
+  template bitstring pbs1 := (int2bit(ef_next_number(), 8) or4b '00010000'B) << 2,
+  template bitstring pbs2 := (int2bit(ef_next_number() / 2, 4) & '1111'B) @> 3)
+:= { pb1, pb2, pbs1, pbs2 };
+
+template integer t_int_value_list(template integer p := ef_next_number()) := (0, p, 25);
+
+template integer t_int_range(template integer p := ef_next_number()) := (0..valueof(p));
+
+template integer t_int_complement_list_and_range(
+  template integer p1 := ef_next_number(),
+  template integer p2 := ef_next_number())
+:= complement (0, p1, (valueof(p2)..100));
+
+template Set t_set(
+  template Set.soi1 p1 := subset(0, 1, 2, ef_next_number()),
+  template Set.soi2 p2 := superset(0, ef_next_number(), 60),
+  template Set.roi p3 := { 1, permutation(0, ef_next_number(), 100, 200) })
+:= { soi1 := p1, soi2 := p2, roi := p3 };
+
+template Rec t_rec_named_template_list(
+  template Rec p := { b1 := false, b2 := ?, bs1 := int2bit(ef_next_number(), 6), bs2 := ? })
+:= p;
+
+template Set t_set_template_lists(
+  template Set.soi1 p1 := { 0, 1, ef_next_number() },
+  template Set.soi2 p2 := { [1] := 1, [0] := ef_next_number(), [2] := 300 },
+  template Set.roi p3 := { [0] := 0, [ef_next_number()] := 3 })
+:= { soi1 := p1, soi2 := p2, roi := p3 };
+
+}

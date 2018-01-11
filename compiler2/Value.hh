@@ -836,6 +836,11 @@ namespace Common {
   public:
     /** Returns true if this value is of a string type */
     bool is_string_type(Type::expected_value_t exp_val);
+    
+    /** Sets the flag \a code_generated to false in this value and all of its
+     * parts. */
+    virtual void reset_code_generated();
+    
     /** Public entry points for code generation. */
     /** Generates the equivalent C++ code for the value. It is used
      *  when the value is part of a complex expression (e.g. as

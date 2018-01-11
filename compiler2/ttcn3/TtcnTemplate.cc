@@ -3395,6 +3395,53 @@ end:
     }
     return needs_runtime_check;
   }
+  
+  void Template::reset_code_generated()
+  {
+    if (!get_code_generated()) {
+      return;
+    }
+    GovernedSimple::reset_code_generated();
+    switch (templatetype) {
+    case SPECIFIC_VALUE:
+      u.specific_value->reset_code_generated();
+      break;
+    case TEMPLATE_LIST:
+    case VALUE_LIST:
+    case COMPLEMENTED_LIST:
+    case SUPERSET_MATCH:
+    case SUBSET_MATCH:
+    case PERMUTATION_MATCH:
+      for (size_t i = 0; i < u.templates->get_nof_ts(); ++i) {
+        u.templates->get_t_byIndex(i)->reset_code_generated();
+      }
+      break;
+    case INDEXED_TEMPLATE_LIST:
+      for (size_t i = 0; i < u.indexed_templates->get_nof_its(); ++i) {
+        IndexedTemplate* it = u.indexed_templates->get_it_byIndex(i);
+        it->get_template()->reset_code_generated();
+        it->get_index().get_val()->reset_code_generated();
+      }
+      break;
+    case NAMED_TEMPLATE_LIST:
+      for (size_t i = 0; i < u.named_templates->get_nof_nts(); ++i) {
+        u.named_templates->get_nt_byIndex(i)->get_template()->reset_code_generated();
+      }
+      break;
+    case ALL_FROM:
+      u.all_from->reset_code_generated();
+      break;
+    case DECODE_MATCH:
+      u.dec_match.target->get_Template()->reset_code_generated();
+      break;
+    case TEMPLATE_CONCAT:
+      u.concat.op1->reset_code_generated();
+      u.concat.op2->reset_code_generated();
+      break;
+    default: // todo: value range? template refd?
+      break;
+    }
+  }
 
   void Template::generate_code_expr(expression_struct *expr,
     template_restriction_t template_restriction)

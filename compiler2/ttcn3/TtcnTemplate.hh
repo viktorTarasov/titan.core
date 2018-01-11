@@ -412,6 +412,10 @@ namespace Ttcn {
                          template_restriction_t template_restriction,
                          const Location* usage_loc);
 
+    /** Sets the flag \a code_generated to false in this template and all of its
+     * parts. */
+    virtual void reset_code_generated();
+    
     /** Public entry points for code generation. */
     /** Generates the equivalent C++ code for the template. It is used
      *  when the template is part of a complex expression

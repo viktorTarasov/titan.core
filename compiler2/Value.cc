@@ -12207,6 +12207,184 @@ void Value::chk_expr_operand_execute_refd(Value *v1,
       return false;
     }
   }
+  
+  void Value::reset_code_generated()
+  {
+    // this is currently only used for default values of template parameters,
+    // so it only checks the values that can appear in default values
+    if (!get_code_generated()) {
+      return;
+    }
+    GovernedSimple::reset_code_generated();
+    switch (valuetype) {
+    case V_SEQOF:
+    case V_SETOF:
+    case V_ARRAY:
+      if (is_indexed()) {
+        for (size_t i = 0; i < u.val_vs->get_nof_ivs(); ++i) {
+          u.val_vs->get_iv_byIndex(i)->get_value()->reset_code_generated();
+        }
+      }
+      else {
+        for (size_t i = 0; i < u.val_vs->get_nof_vs(); ++i) {
+          u.val_vs->get_v_byIndex(i)->reset_code_generated();
+        }
+      }
+      break;
+    case V_SEQ:
+    case V_SET:
+      for (size_t i = 0; i < u.val_nvs->get_nof_nvs(); ++i) {
+        u.val_nvs->get_nv_byIndex(i)->get_value()->reset_code_generated();
+      }
+      break;
+    case V_CHOICE:
+    case V_OPENTYPE:
+      u.choice.alt_value->reset_code_generated();
+      break;
+    case V_EXPR:
+      switch (u.expr.v_optype) {
+      case OPTYPE_UNARYPLUS: // v1
+      case OPTYPE_UNARYMINUS:
+      case OPTYPE_NOT:
+      case OPTYPE_NOT4B:
+      case OPTYPE_BIT2HEX:
+      case OPTYPE_BIT2INT:
+      case OPTYPE_BIT2OCT:
+      case OPTYPE_BIT2STR:
+      case OPTYPE_BSON2JSON:
+      case OPTYPE_CBOR2JSON:
+      case OPTYPE_CHAR2INT:
+      case OPTYPE_CHAR2OCT:
+      case OPTYPE_FLOAT2INT:
+      case OPTYPE_FLOAT2STR:
+      case OPTYPE_HEX2BIT:
+      case OPTYPE_HEX2INT:
+      case OPTYPE_HEX2OCT:
+      case OPTYPE_HEX2STR:
+      case OPTYPE_INT2CHAR:
+      case OPTYPE_INT2FLOAT:
+      case OPTYPE_INT2STR:
+      case OPTYPE_INT2UNICHAR:
+      case OPTYPE_JSON2BSON:
+      case OPTYPE_JSON2CBOR:
+      case OPTYPE_OCT2BIT:
+      case OPTYPE_OCT2CHAR:
+      case OPTYPE_OCT2HEX:
+      case OPTYPE_OCT2INT:
+      case OPTYPE_OCT2STR:
+      case OPTYPE_STR2BIT:
+      case OPTYPE_STR2FLOAT:
+      case OPTYPE_STR2HEX:
+      case OPTYPE_STR2INT:
+      case OPTYPE_STR2OCT:
+      case OPTYPE_UNICHAR2INT:
+      case OPTYPE_UNICHAR2CHAR:
+      case OPTYPE_ENUM2INT:
+      case OPTYPE_RNDWITHVAL:
+      case OPTYPE_REMOVE_BOM:
+      case OPTYPE_GET_STRINGENCODING:
+      case OPTYPE_DECODE_BASE64:
+      case OPTYPE_HOSTID:
+        u.expr.v1->reset_code_generated();
+        break;
+      case OPTYPE_ADD: // v1 v2
+      case OPTYPE_SUBTRACT:
+      case OPTYPE_MULTIPLY:
+      case OPTYPE_DIVIDE:
+      case OPTYPE_MOD:
+      case OPTYPE_REM:
+      case OPTYPE_CONCAT:
+      case OPTYPE_EQ:
+      case OPTYPE_LT:
+      case OPTYPE_GT:
+      case OPTYPE_NE:
+      case OPTYPE_GE:
+      case OPTYPE_LE:
+      case OPTYPE_AND:
+      case OPTYPE_OR:
+      case OPTYPE_XOR:
+      case OPTYPE_AND4B:
+      case OPTYPE_OR4B:
+      case OPTYPE_XOR4B:
+      case OPTYPE_SHL:
+      case OPTYPE_SHR:
+      case OPTYPE_ROTL:
+      case OPTYPE_ROTR:
+      case OPTYPE_INT2BIT:
+      case OPTYPE_INT2HEX:
+      case OPTYPE_INT2OCT:
+      case OPTYPE_UNICHAR2OCT:
+      case OPTYPE_OCT2UNICHAR:
+      case OPTYPE_ENCODE_BASE64:
+        u.expr.v1->reset_code_generated();
+        u.expr.v2->reset_code_generated();
+        break;
+      case OPTYPE_DECODE: // r1 r2 [v3] [v4]
+        u.expr.v3->reset_code_generated();
+        u.expr.v4->reset_code_generated();
+        break;
+      case OPTYPE_SUBSTR:
+      case OPTYPE_ENCODE:
+        u.expr.ti1->get_Template()->reset_code_generated();
+        u.expr.v2->reset_code_generated();
+        u.expr.v3->reset_code_generated();
+        break;
+      case OPTYPE_REGEXP:
+        u.expr.ti1->get_Template()->reset_code_generated();
+        u.expr.t2->get_Template()->reset_code_generated();
+        u.expr.v3->reset_code_generated();
+        break;
+      case OPTYPE_DECOMP: // v1 v2 v3
+        u.expr.v1->reset_code_generated();
+        u.expr.v2->reset_code_generated();
+        u.expr.v3->reset_code_generated();
+        break;
+      case OPTYPE_REPLACE:
+        u.expr.ti1->get_Template()->reset_code_generated();
+        u.expr.v2->reset_code_generated();
+        u.expr.v3->reset_code_generated();
+        u.expr.ti4->get_Template()->reset_code_generated();
+        break;
+      case OPTYPE_VALUEOF: // ti1 [subrefs2]
+      case OPTYPE_LENGTHOF: // ti1
+      case OPTYPE_SIZEOF:  // ti1
+      case OPTYPE_ISVALUE:
+      case OPTYPE_ISBOUND:
+      case OPTYPE_ISPRESENT:
+      case OPTYPE_TTCN2STRING:
+        u.expr.ti1->get_Template()->reset_code_generated();
+        break;
+      case OPTYPE_ISTEMPLATEKIND: // ti1 v2
+        u.expr.ti1->get_Template()->reset_code_generated();
+        u.expr.v2->reset_code_generated();
+        break;
+      case OPTYPE_ENCVALUE_UNICHAR: // ti1 [v2] [v3] [v4]
+        u.expr.ti1->get_Template()->reset_code_generated();
+        u.expr.v2->reset_code_generated();
+        u.expr.v3->reset_code_generated();
+        u.expr.v4->reset_code_generated();
+        break;
+      case OPTYPE_DECVALUE_UNICHAR: // r1 r2 [v3] [v4] [v5]
+        u.expr.v3->reset_code_generated();
+        u.expr.v4->reset_code_generated();
+        u.expr.v5->reset_code_generated();
+        break;
+      case OPTYPE_MATCH: // v1 t2
+        u.expr.v1->reset_code_generated();
+        u.expr.t2->get_Template()->reset_code_generated();
+        break;
+      case OPTYPE_LOG2STR:
+      case OPTYPE_ANY2UNISTR:
+        // TODO if needed
+        break;
+      default:
+        break;
+      }
+      break;
+    default:
+      break;
+    }
+  }
 
   void Value::generate_code_expr(expression_struct *expr)
   {

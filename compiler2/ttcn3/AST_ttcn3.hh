@@ -1802,6 +1802,10 @@ namespace Ttcn {
     /** Generates the C++ object that represents the default value for the
      * parameter (if present). */
     virtual void generate_code_defval(output_struct *target, bool clean_up = false);
+    /** Generates the C++ initialization code of the specified template instance
+     * (even if it has been generated already). */
+    static char* generate_code_defval_template(char* str, TemplateInstance* ti,
+      const string& name, template_restriction_t temp_res);
     /** Generates the C++ equivalent of the formal parameter, appends it to
      * \a str and returns the resulting string.
      * The name of the parameter is not displayed if the parameter is unused

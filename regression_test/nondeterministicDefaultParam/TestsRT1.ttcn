@@ -1,0 +1,188 @@
+/******************************************************************************
+ * Copyright (c) 2000-2017 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Baranyi, Botond
+ *
+ ******************************************************************************/
+
+// This module contains tests for using non-deterministic external functions as
+// default values for parameterized templates in Runtime 1.
+// In Runtime 1 all default values are calculated before test execution starts.
+// This means that the external function's counter is never reset, so it returns
+// a number 1 greater than in the previous template. These default values are
+// calculated in the order of their declaration in Resources.ttcn.
+module TestsRT1 {
+
+import from Resources all;
+
+testcase tc_pard_def_int() runs on CT
+{
+  // this is only here to mirror the RT2 tests
+  // it has no effect, since all parameter default values have already been calculated
+  ef_reset();
+  // the parameterized template is used 4 times here, but all 4 contain the same value
+  var template integer temps[4] := { t_int, t_int(), t_int(-), t_int(p := -) };
+  var template integer exp_temps[4] := { 1, 1, 1, 1 };
+  if (valueof(temps) == valueof(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+testcase tc_pard_def_int_expr() runs on CT
+{
+  ef_reset();
+  var template integer temps[4] := { t_int_expr, t_int_expr(), t_int_expr(-, -), t_int_expr(p1 := -, p2 := -) };
+  var template integer exp_temps[4] := { 2020, 2020, 2020, 2020 };
+  if (valueof(temps) == valueof(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+testcase tc_pard_def_str_expr() runs on CT
+{
+  ef_reset();
+  var template charstring temps[4] := { t_str_expr, t_str_expr(), t_str_expr(-, -, -),
+    t_str_expr(p1 := -, p2 := -, p3 := -) };
+  var template charstring exp_temps[4] := { "D-5.6", "D-5.6", "D-5.6", "D-5.6" };
+  if (valueof(temps) == valueof(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+testcase tc_pard_def_rec_expr() runs on CT
+{
+  ef_reset();
+  var template Rec temps[4] := { t_rec_expr, t_rec_expr(), t_rec_expr(-, -, -, -),
+    t_rec_expr(pb1 := -, pb2 := -, pbs1 := -, pbs2 := -) };
+  var template Rec exp_temps[4] := { { true, false, '01100100'B, '11101011'B }, { true, false, '01100100'B, '11101011'B },
+    { true, false, '01100100'B, '11101011'B }, { true, false, '01100100'B, '11101011'B } };
+  if (valueof(temps) == valueof(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+testcase tc_pard_def_int_value_list() runs on CT
+{
+  ef_reset();
+  var template integer temps[4] := { t_int_value_list, t_int_value_list(), t_int_value_list(-), t_int_value_list(p := -) };
+  var template integer exp_temps[4] := { (0, 11, 25), (0, 11, 25), (0, 11, 25), (0, 11, 25) };
+  if (log2str(temps) == log2str(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+testcase tc_pard_def_int_range() runs on CT
+{
+  ef_reset();
+  var template integer temps[4] := { t_int_range, t_int_range(), t_int_range(-), t_int_range(p := -) };
+  var template integer exp_temps[4] := { (0..12), (0..12), (0..12), (0..12) };
+  if (log2str(temps) == log2str(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+testcase tc_pard_def_int_complement_list_and_range() runs on CT
+{
+  ef_reset();
+  var template integer temps[4] := { t_int_complement_list_and_range, t_int_complement_list_and_range(),
+    t_int_complement_list_and_range(-, -), t_int_complement_list_and_range(p1 := -, p2 := -) };
+  var template integer exp_temps[4] := { complement (0, 13, (14..100)), complement (0, 13, (14..100)),
+    complement (0, 13, (14..100)), complement (0, 13, (14..100)) };
+  if (log2str(temps) == log2str(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+testcase tc_pard_def_set() runs on CT
+{
+  ef_reset();
+  var template Set temps[4] := { t_set, t_set(), t_set(-, -, -), t_set(p1 := -, p2 := -, p3 := -) };
+  var template Set exp_temps[4] := {
+    { soi1 := subset(0, 1, 2, 15), soi2 := superset(0, 16, 60), roi := { 1, permutation(0, 17, 100, 200) } },
+    { soi1 := subset(0, 1, 2, 15), soi2 := superset(0, 16, 60), roi := { 1, permutation(0, 17, 100, 200) } },
+    { soi1 := subset(0, 1, 2, 15), soi2 := superset(0, 16, 60), roi := { 1, permutation(0, 17, 100, 200) } },
+    { soi1 := subset(0, 1, 2, 15), soi2 := superset(0, 16, 60), roi := { 1, permutation(0, 17, 100, 200) } } };
+  if (log2str(temps) == log2str(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+testcase tc_pard_def_rec_named_template_list() runs on CT
+{
+  ef_reset();
+  var template Rec temps[4] := { t_rec_named_template_list, t_rec_named_template_list(),
+    t_rec_named_template_list(-), t_rec_named_template_list(p := -) };
+  var template Rec exp_temps[4] := {
+    { b1 := false, b2 := ?, bs1 := '010010'B, bs2 := ? },
+    { b1 := false, b2 := ?, bs1 := '010010'B, bs2 := ? },
+    { b1 := false, b2 := ?, bs1 := '010010'B, bs2 := ? },
+    { b1 := false, b2 := ?, bs1 := '010010'B, bs2 := ? } };
+  if (log2str(temps) == log2str(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+testcase tc_pard_def_template_lists() runs on CT
+{
+  ef_reset();
+  var template Set temps[4] := { t_set_template_lists, t_set_template_lists(), t_set_template_lists(-, -, -),
+    t_set_template_lists(p1 := -, p2 := -, p3 := -) };
+  var template Set exp_temps[4] := {
+    { soi1 := { 0, 1, 19 }, soi2 := { 20, 1, 300 }, roi := { [0] := 0, [21] := 3 } },
+    { soi1 := { 0, 1, 19 }, soi2 := { 20, 1, 300 }, roi := { [0] := 0, [21] := 3 } },
+    { soi1 := { 0, 1, 19 }, soi2 := { 20, 1, 300 }, roi := { [0] := 0, [21] := 3 } },
+    { soi1 := { 0, 1, 19 }, soi2 := { 20, 1, 300 }, roi := { [0] := 0, [21] := 3 } } };
+  if (log2str(temps) == log2str(exp_temps)) {
+    setverdict(pass);
+  }
+  else {
+    setverdict(fail, "Got: ", temps, ", expected: ", exp_temps);
+  }
+}
+
+control {
+  execute(tc_pard_def_int());
+  execute(tc_pard_def_int_expr());
+  execute(tc_pard_def_str_expr());
+  execute(tc_pard_def_rec_expr());
+  execute(tc_pard_def_int_value_list());
+  execute(tc_pard_def_int_range());
+  execute(tc_pard_def_int_complement_list_and_range());
+  execute(tc_pard_def_set());
+  execute(tc_pard_def_rec_named_template_list());
+  execute(tc_pard_def_template_lists());
+}
+
+}

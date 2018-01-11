@@ -504,6 +504,8 @@ public:
     bool get_code_generated() const { return code_generated; }
     /** Sets the flag \a code_generated to true. */
     void set_code_generated() { code_generated = true; }
+    /** Sets the flag \a code_generated to false. */
+    virtual void reset_code_generated() { code_generated = false; }
 
     /** Adds an error descriptor to the template or value (for negative testing) */
     void add_err_descr(Ttcn::Statement* p_update_statement,
