@@ -504,6 +504,23 @@ testcase tc_attribute_as_number_negtest() runs on MTC {
   setverdict(pass);
 }
 
+// Testing the attribute 'default' on structures
+testcase tc_attribute_default_struct() runs on MTC {
+  var DefaultEmptyStructs val;
+  var DefaultEmptyStructs exp_val := { {}, {}, {}, {} };
+  var universal charstring data := "{}";
+  var integer res := decvalue_unichar(data, val);
+  if (res != 0 or lengthof(data) != 0) {
+    setverdict(fail, "Decoding failed. Result: ", res, ", remaining JSON data: ", data);
+  }
+  else if (val != exp_val) {
+    setverdict(fail, "Invalid decoded value. Expected: ", exp_val, ", got: ", val);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
 
 control {
   execute(tc_NoAttributeOnUpperLevel())
@@ -529,5 +546,6 @@ control {
   execute(tc_attribute_as_value_fields());
   execute(tc_attribute_as_number());
   execute(tc_attribute_as_number_negtest());
+  execute(tc_attribute_default_struct());
 }
 }

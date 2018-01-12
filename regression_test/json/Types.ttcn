@@ -305,6 +305,19 @@ type union Uni522660 {
   integer f1
 }
 
+type record DefaultEmptyStructs {
+  record { } r,
+  set { } s,
+  record of integer ro,
+  set of charstring so
+}
+with {
+  variant (r) "JSON: default({})";
+  variant (s) "JSON: default({})";
+  variant (ro) "JSON: default({})";
+  variant (so) "JSON: default({})";
+}
+
 } with {
   encode "JSON";
   extension "anytype integer, charstring, R, RoI, Thing";

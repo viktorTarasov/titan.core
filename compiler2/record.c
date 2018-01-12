@@ -6539,8 +6539,13 @@ static void defEmptyRecordClass(const struct_def *sdef,
     
     // JSON decode, RT1
     src = mputprintf(src,
-      "int %s::JSON_decode(const TTCN_Typedescriptor_t&, JSON_Tokenizer& p_tok, boolean p_silent)\n"
+      "int %s::JSON_decode(const TTCN_Typedescriptor_t& p_td, JSON_Tokenizer& p_tok, boolean p_silent)\n"
       "{\n"
+      "  if (NULL != p_td.json->default_value && 0 == p_tok.get_buffer_length()) {\n"
+      // use the default value
+      "    bound_flag = TRUE;\n"
+      "    return strlen(p_td.json->default_value);\n"
+      "  }\n"
       "  json_token_t token = JSON_TOKEN_NONE;\n"
       "  size_t dec_len = p_tok.get_next_token(&token, NULL, NULL);\n"
       "  if (JSON_TOKEN_ERROR == token) {\n"

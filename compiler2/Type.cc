@@ -3142,6 +3142,21 @@ namespace Common {
         err = true;
       }
       break;
+    case T_SEQ_T:
+    case T_SET_T:
+      if (last->get_nof_comps() != 0) {
+        error("JSON default values are not available for record/set types with "
+          "1 or more fields");
+        break;
+      }
+      // else fall through
+    case T_SEQOF:
+    case T_SETOF:
+      if (dval_len != 2 || dval[0] != '{' || dval[1] != '}') {
+        error("Invalid JSON default value for type `%s'. Only the empty array "
+          "is allowed.", last->get_typename().c_str());
+      }
+      break;
     default:
       error("JSON default values are not available for type `%s'",
         last->get_stringRepr().c_str());
