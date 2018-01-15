@@ -104,7 +104,7 @@ public:
     ET_OMITTED_TAG,   /**< During encoding the key of a tag references
                            an optional field with omitted value */
     ET_NEGTEST_CONFL, /**< Contradictory negative testing and RAW attributes. */
-    ET_ALL,           /**< Used only when setting error behavior. 25 */
+    ET_ALL,           /**< Used only when setting error behavior. 26 */
     ET_INTERNAL,      /**< Internal error. Error behavior cannot be set
                            for this. */
     ET_NONE           /**< There was no error. */

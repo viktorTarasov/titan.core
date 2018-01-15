@@ -56,6 +56,7 @@ TTCN_EncDec::default_error_behavior[TTCN_EncDec::ET_ALL] = {
   TTCN_EncDec::EB_IGNORE,
   TTCN_EncDec::EB_WARNING,
   TTCN_EncDec::EB_ERROR,
+  TTCN_EncDec::EB_ERROR,
   TTCN_EncDec::EB_ERROR
 };
 
@@ -84,6 +85,7 @@ TTCN_EncDec::error_behavior[TTCN_EncDec::ET_ALL] = {
   TTCN_EncDec::EB_ERROR,
   TTCN_EncDec::EB_IGNORE,
   TTCN_EncDec::EB_WARNING,
+  TTCN_EncDec::EB_ERROR,
   TTCN_EncDec::EB_ERROR,
   TTCN_EncDec::EB_ERROR
 };
