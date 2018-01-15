@@ -8172,25 +8172,40 @@ namespace Ttcn {
           mputprintf(target->header.function_prototypes,
             "extern verdicttype testcase_%s_defparams(boolean has_timer, double timer_value);\n",
             genname_str);
+        expression_struct expr;
+        Code::init_expr(&expr);
         target->source.function_bodies = mputprintf(target->source.function_bodies,
-          "verdicttype testcase_%s_defparams(boolean has_timer, double timer_value) {\n"
-          "  return testcase_%s(",
-          genname_str, genname_str);
+          "verdicttype testcase_%s_defparams(boolean has_timer, double timer_value) {\n",
+          genname_str);
+        expr.expr = mprintf("  return testcase_%s(", genname_str);
 
         for (size_t i = 0; i < fp_list->get_nof_fps(); ++i) {
           FormalPar *fp = fp_list->get_fp_byIndex(i);
           ActualPar *ap = fp->get_defval();
           switch (ap->get_selection()) {
           case ActualPar::AP_VALUE:
-            target->source.function_bodies = mputstr(target->source.function_bodies,
+            expr.expr = mputstr(expr.expr,
               ap->get_Value()->get_genname_own(my_scope).c_str());
             break;
           case ActualPar::AP_TEMPLATE:
-            target->source.function_bodies = mputstr(target->source.function_bodies,
-              ap->get_TemplateInstance()->get_Template()->get_genname_own(my_scope).c_str());
+            if (use_runtime_2) {
+              string tmp_id = my_scope->get_scope_mod_gen()->get_temporary_id();
+              expr.preamble = mputprintf(expr.preamble, "%s %s;\n",
+                fp->get_Type()->get_genname_template(my_scope).c_str(), tmp_id.c_str());
+              // use the actual parameter's scope, not the formal parameter's, when
+              // generating the template's initialization code
+              ap->get_TemplateInstance()->set_my_scope(my_scope);
+              expr.preamble = FormalPar::generate_code_defval_template(expr.preamble,
+                ap->get_TemplateInstance(), tmp_id, ap->get_gen_restriction_check());
+              expr.expr = mputstr(expr.expr, tmp_id.c_str());
+            }
+            else {
+              expr.expr = mputstr(expr.expr,
+                ap->get_TemplateInstance()->get_Template()->get_genname_own(my_scope).c_str());
+            }
             break;
           case ActualPar::AP_REF:
-            target->source.function_bodies = mputstr(target->source.function_bodies,
+            expr.expr = mputstr(expr.expr,
               ap->get_Ref()->get_refd_assignment()->get_genname_from_scope(my_scope).c_str());
             break;
           case ActualPar::AP_DEFAULT:
@@ -8203,13 +8218,15 @@ namespace Ttcn {
           }
 
           // always append a comma, because has_timer and timer_value follows
-          target->source.function_bodies = mputstrn(target->source.function_bodies,
-            ", ", 2);
+          expr.expr = mputstrn(expr.expr, ", ", 2);
         }
-
-        target->source.function_bodies = mputstr(target->source.function_bodies,
-          "has_timer, timer_value);\n"
-          "}\n\n");
+        
+        // the expression_struct merging algorithm adds would add an extra block,
+        // so just append the preamble and expr fields manually
+        target->source.function_bodies = mputprintf(target->source.function_bodies,
+          "%s%shas_timer, timer_value);\n"
+          "}\n\n", expr.preamble == NULL ? "" : expr.preamble, expr.expr);
+        Code::free_expr(&expr);
         // Add the non-parameterized wrapper *after* the parameterized one,
         // with the same name. Linear search will always find the first
         // (user-visible, parameterized) testcase.
