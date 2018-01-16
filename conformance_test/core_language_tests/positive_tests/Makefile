@@ -25,7 +25,7 @@ run:
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -R -f -t pos_conf_tests.tpd && \
 	cd bin && \
 	$(MAKE) && \
-	$(TTCN3_DIR)/bin/ttcn3_start pos_conf_tests pos_conf_tests.cfg && \
+	$(TTCN3_DIR)/bin/ttcn3_start pos_conf_tests ../pos_conf_tests.cfg && \
 	cd ..
 
 clean:
