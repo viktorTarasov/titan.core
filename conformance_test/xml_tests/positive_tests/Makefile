@@ -25,7 +25,7 @@ run:
 	$(TTCN3_DIR)/bin/ttcn3_makefilegen -f -t XML_tests.tpd && \
 	cd bin && \
 	$(MAKE) && \
-	$(TTCN3_DIR)/bin/ttcn3_start XML_tests XML_tests.cfg && \
+	$(TTCN3_DIR)/bin/ttcn3_start XML_tests ../XML_tests.cfg && \
 	cd ..
 
 clean:
