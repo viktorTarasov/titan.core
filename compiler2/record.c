@@ -4686,12 +4686,14 @@ void defRecordClass1(const struct_def *sdef, output_struct *output)
     if (opt_elements != 0 || sdef->oerExtendable) {
       src = mputstr(src,
         "  char c = 0;\n");
-      if (sdef->oerExtendable && sdef->oerNrOrRootcomps != sdef->nElements) {
+      if (sdef->oerExtendable) {
         pos--;
-        src = mputprintf(src,
-          "  if (has_extension) {\n"
-          "    c += %i;\n"
-          "  }\n", 1 << 7);
+        if (sdef->oerNrOrRootcomps != sdef->nElements) {
+          src = mputprintf(src,
+            "  if (has_extension) {\n"
+            "    c += %i;\n"
+            "  }\n", 1 << 7);
+        }
       }
     }
     

@@ -883,7 +883,6 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "  if (enum_value >= 0 && enum_value < 128) {\n"
       "    char c = enum_value;\n"
       "    p_buf.put_c(c);\n"
-      "    p_buf.increase_pos(1);\n"
       "  } else {\n"
       // This case is the same as encoding a not restricted integer except
       // the first bit is set to 1 before decoding
@@ -904,11 +903,12 @@ void defEnumClass(const enum_def *edef, output_struct *output)
       "{\n"
       "  const unsigned char* uc = p_buf.get_read_data();\n"
       "  if (!(uc[0] & 0x80)) {\n"
-      "    if (is_valid_enum(uc[0])) {"
-      "       enum_value = static_cast<%s>(uc[0]);\n"
+      "    if (is_valid_enum(uc[0])) {\n"
+      "      enum_value = static_cast<%s>(uc[0]);\n"
       "    } else {\n"
       "      enum_value = %s;\n"
       "    }\n"
+      "    p_buf.increase_pos(1);\n"
       "  } else {\n"
       // This case is the same as decoding a not restricted integer except
       // the first bit is set to 0

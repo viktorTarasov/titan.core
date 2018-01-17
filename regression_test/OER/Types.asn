@@ -520,6 +520,19 @@ ErrorReturn ::= SEQUENCE
 }
 
 
+-- Types for the test of bugfix 529017
+Rec529017 ::= SEQUENCE
+{
+  en Enum529017,
+  i INTEGER OPTIONAL,
+  ...
+}
+
+Enum529017 ::= ENUMERATED
+{
+  val0,
+  val1
+}
 
 
 

@@ -3522,6 +3522,28 @@
 
  		setverdict(pass);
  	}
+ 	
+ 	
+ 	external function enc_Rec529017(in Rec529017 pdu) return octetstring
+ 	 	with { extension "prototype (convert) encode(OER)" }
+  
+ 	external function dec_Rec529017(in octetstring stream) return Rec529017
+ 	 	with { extension "prototype (convert) decode(OER)" }
+ 	
+ 	// Testing the fixes to record encoding and enum decoding made for bug 529017
+ 	testcase tc_529017() runs on EmptyCT {
+ 	  var Rec529017 x := { val0, 4 };
+ 	  var octetstring enc := enc_Rec529017(x);
+ 	  var octetstring enc_exp := '40000104'O;
+ 	  if (enc != enc_exp) {
+ 	    setverdict(fail, "Encoding failed. Got: ", enc, ", expected: ", enc_exp);
+ 	  }
+ 	  var Rec529017 dec := dec_Rec529017(enc_exp);
+ 	  if (dec != x) {
+ 	    setverdict(fail, "Decoding failed. Got: ", dec, ", expected: ", x);
+ 	  }
+ 	  setverdict(pass);
+ 	}
 
  	control {
  		execute(tc_boolean());
@@ -3542,5 +3564,7 @@
  		execute(tc_external());
  		execute(tc_opentype());
  		execute(tc_example());
+ 		execute(tc_529017());
  	}
- }
+ 	
+}
