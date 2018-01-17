@@ -509,7 +509,7 @@ OCTETSTRING::operator const unsigned char*() const
 void OCTETSTRING::log() const
 {
   if (val_ptr != NULL) {
-    boolean only_printable = TRUE;
+    boolean only_printable = TTCN_Logger::get_log_format() == TTCN_Logger::LF_LEGACY;
     TTCN_Logger::log_char('\'');
     for (int i = 0; i < val_ptr->n_octets; i++) {
       unsigned char octet = val_ptr->octets_ptr[i];

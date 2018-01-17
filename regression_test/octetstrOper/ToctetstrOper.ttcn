@@ -517,6 +517,34 @@ testcase tc_simple_octetstring_unbound() runs on octetstrOper_comptype {
   if(isbound(vl_o3)) {setverdict(pass)} else {setverdict(fail)}
 }
 
+const octetstring c_printable := '616263'O; // "abc"
+
+// Testing log2str on a printable octetstring.
+// In this case the charstring value is displayed in brackets after the octetstring value.
+testcase tc_printable_octetstring_log2str() runs on octetstrOper_comptype {
+  var charstring res := log2str(c_printable);
+  var charstring exp := "'616263'O (\"abc\")";
+  if (res != exp) {
+    setverdict(fail, "Expected: ", exp, ", got: ", res);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
+// Testing ttcn2string on a printable octetstring.
+// In this case the charstring value is not displayed.
+testcase tc_printable_octetstring_ttcn2string() runs on octetstrOper_comptype {
+  var charstring res := ttcn2string(c_printable);
+  var charstring exp := "'616263'O";
+  if (res != exp) {
+    setverdict(fail, "Expected: ", exp, ", got: ", res);
+  }
+  else {
+    setverdict(pass);
+  }
+}
+
 control {
   const octetstring cl_1:='AA11'O;
   var octetstring vl_1;
@@ -564,5 +592,7 @@ control {
   execute(octetstrIsvalue());
   execute(octetstrIsbound());
   execute(tc_simple_octetstring_unbound());
+  execute(tc_printable_octetstring_log2str());
+  execute(tc_printable_octetstring_ttcn2string());
 }
 }
